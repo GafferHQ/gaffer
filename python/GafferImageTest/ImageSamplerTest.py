@@ -38,7 +38,6 @@ import imath
 import math
 
 import IECore
-import IECoreImage
 
 import Gaffer
 import GafferTest

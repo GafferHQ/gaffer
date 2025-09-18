@@ -51,7 +51,6 @@ import OpenImageIO
 
 import IECore
 import IECoreScene
-import IECoreImage
 import IECoreArnold
 
 import GafferTest
@@ -1078,7 +1077,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 
 		worldToCameraKey = "worldtocamera"
-		if hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206 :
+		if OpenImageIO.VERSION >= 20206 :
 			worldToCameraKey = "worldToCamera"
 
 		for i in range( 3 ) :
@@ -3401,10 +3400,8 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "/procedural", SphereProcedural( color = internalColor ), colorAttributes( r, color = inheritedColor ) )
 		r.render()
 
-		image = IECoreImage.ImageReader( outputFileName ).read()
-		dimensions = image.dataWindow.size() + imath.V2i( 1 )
-		centreIndex = dimensions.x * int( dimensions.y * 0.5 ) + int( dimensions.x * 0.5 )
-		color = imath.Color3f( image["R"][centreIndex], image["G"][centreIndex], image["B"][centreIndex] )
+		image = OpenImageIO.ImageBuf( outputFileName )
+		color = imath.Color3f( image.getpixel( image.spec().width // 2, image.spec().height // 2 )[:3] )
 		self.assertEqual( color, internalColor or inheritedColor )
 
 	def testProceduralShaderInheritance( self ) :
@@ -3594,10 +3591,8 @@ class RendererTest( GafferTest.TestCase ) :
 			del renderer
 
 			# We should find the curves visible in the centre pixel.
-			image = IECoreImage.ImageReader( outputFileName ).read()
-			dimensions = image.dataWindow.size() + imath.V2i( 1 )
-			centreIndex = dimensions.x * int( dimensions.y * 0.5 ) + int( dimensions.x * 0.5 )
-			color = imath.Color3f( image["R"][centreIndex], image["G"][centreIndex], image["B"][centreIndex] )
+			image = OpenImageIO.ImageBuf( outputFileName )
+			color = imath.Color3f( image.getpixel( image.spec().width // 2, image.spec().height // 2 )[:3] )
 			self.assertEqual( color, imath.Color3f( 1 ) )
 
 	def testProceduralCancellation( self ) :
@@ -4218,12 +4213,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.render()
 
-		imageReader = IECoreImage.ImageReader( fileName )
-		data = imageReader.readChannel( "Y", raw = True )
-		self.assertIsInstance( data, IECore.FloatVectorData )
+		image = OpenImageIO.ImageBuf( fileName )
+		pixelVal = image.getpixel( image.spec().width // 2, image.spec().height // 2 )
 
 		# Reinterpret float as int.
-		id = struct.pack( "f", data[len(data)//2] )
+		id = struct.pack( "f", pixelVal[0] )
 		id = struct.unpack( "I", id )[0]
 		self.assertEqual( id, 101 )
 
@@ -4286,15 +4280,15 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.render()
 
-		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		beautyImage = OpenImageIO.ImageBuf( beautyFileName )
 		self.assertEqual(
-			set( beautyImage.keys() ),
+			set( beautyImage.spec().channelnames ),
 			{ "beauty.{}".format( c ) for c in "RGBA" }
 		)
 
-		diffuseImage = IECore.Reader.create( diffuseFileName ).read()
+		diffuseImage = OpenImageIO.ImageBuf( diffuseFileName )
 		self.assertEqual(
-			set( diffuseImage.keys() ),
+			set( diffuseImage.spec().channelnames ),
 			{ "diffuse.{}".format( c ) for c in "RGB" }
 		)
 
@@ -4388,15 +4382,15 @@ class RendererTest( GafferTest.TestCase ) :
 		# belong in it.
 		lightGroups.append( "default" )
 
-		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		beautyImage = OpenImageIO.ImageBuf( beautyFileName )
 		self.assertEqual(
-			set( beautyImage.keys() ),
+			set( beautyImage.spec().channelnames ),
 			{ "RGBA_{}.{}".format( g, c ) for g in lightGroups for c in "RGBA" }
 		)
 
-		diffuseImage = IECore.Reader.create( diffuseFileName ).read()
+		diffuseImage = OpenImageIO.ImageBuf( diffuseFileName )
 		self.assertEqual(
-			set( diffuseImage.keys() ),
+			set( diffuseImage.spec().channelnames ),
 			{ "diffuse_{}.{}".format( g, c ) for g in lightGroups for c in "RGB" }
 		)
 
@@ -4447,9 +4441,9 @@ class RendererTest( GafferTest.TestCase ) :
 		# belong in it.
 		lightGroups.append( "default" )
 
-		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		beautyImage = OpenImageIO.ImageBuf( beautyFileName )
 		self.assertEqual(
-			set( beautyImage.keys() ),
+			set( beautyImage.spec().channelnames ),
 			{ "beauty_{}.{}".format( g, c ) for g in lightGroups for c in "RGBA" }
 		)
 
