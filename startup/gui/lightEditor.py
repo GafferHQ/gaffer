@@ -240,7 +240,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	for parameter in [
 		"aov", "samples", "volume_samples", "sss", "indirect", "volume", "cast_volumetric_shadows",
 		"max_bounces", "camera", "transmission", "spread", "roundness", "soft_edge", "resolution",
-		"portal_mode", "aov_indirect"
+		"portal_mode", "aov_indirect", "lens_radius", "aspect_ratio", "shadow_density"
 	] :
 		GafferSceneUI.LightEditor.registerParameter(
 			"light", f"arnold:{parameter}", "Arnold",
