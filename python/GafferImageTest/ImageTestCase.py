@@ -39,7 +39,6 @@ import os
 import pathlib
 
 import IECore
-import IECoreImage
 
 import Gaffer
 import GafferTest

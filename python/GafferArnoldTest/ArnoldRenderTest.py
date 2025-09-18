@@ -45,7 +45,6 @@ import arnold
 import imath
 
 import IECore
-import IECoreImage
 import IECoreScene
 import IECoreArnold
 

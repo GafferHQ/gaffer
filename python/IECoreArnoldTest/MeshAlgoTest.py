@@ -41,7 +41,6 @@ import imath
 
 import IECore
 import IECoreScene
-import IECoreImage
 import IECoreArnold
 
 class MeshAlgoTest( unittest.TestCase ) :
