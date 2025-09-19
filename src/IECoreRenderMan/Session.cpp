@@ -35,10 +35,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Session.h"
+#include "Loader.h"
 
 #include "Imath/ImathMatrixAlgo.h"
 
-#include "RixPredefinedStrings.hpp"
+#include "RiEntrypoints.h"
 #include "XcptErrorCodes.h"
 
 #include "fmt/format.h"
@@ -136,11 +137,13 @@ struct Session::ExceptionHandler : public RixXcpt::XcptHandler
 };
 
 Session::Session( IECoreScenePreview::Renderer::RenderType renderType, const RtParamList &options, const IECore::MessageHandlerPtr &messageHandler )
-	:	riley( nullptr ), renderType( renderType ), m_portalsDirty( false )
+	:	riley( nullptr ), renderType( renderType ),
+		m_riCtl( (RixRiCtl *)Loader::context()->GetRixInterface( k_RixRiCtl ) ),
+		m_portalsDirty( false )
 {
 	// `argv[0]==""` prevents RenderMan doing its own signal handling.
 	vector<const char *> args = { "" };
-	PRManSystemBegin( args.size(), args.data() );
+	m_riCtl->PRManSystemBegin( args.size(), args.data() );
 
 	args.clear(); // PRManRenderBegin() doesn't want `argv[0]` as above.
 	int32_t recover = 0;
@@ -156,16 +159,16 @@ Session::Session( IECoreScenePreview::Renderer::RenderType renderType, const RtP
 		args.push_back( "1" );
 	}
 
-	PRManRenderBegin( args.size(), args.data() );
+	m_riCtl->PRManRenderBegin( args.size(), args.data() );
 
 	if( messageHandler )
 	{
 		m_exceptionHandler = std::make_unique<ExceptionHandler>( messageHandler );
-		auto rixXcpt = (RixXcpt *)RixGetContext()->GetRixInterface( k_RixXcpt );
+		auto rixXcpt = (RixXcpt *)Loader::context()->GetRixInterface( k_RixXcpt );
 		rixXcpt->Register( m_exceptionHandler.get() );
 	}
 
-	auto rileyManager = (RixRileyManager *)RixGetContext()->GetRixInterface( k_RixRileyManager );
+	auto rileyManager = (RixRileyManager *)Loader::context()->GetRixInterface( k_RixRileyManager );
 	/// \todo What is the `rileyVariant` argument for? XPU?
 	riley = rileyManager->CreateRiley( RtUString(), RtParamList() );
 
@@ -174,17 +177,17 @@ Session::Session( IECoreScenePreview::Renderer::RenderType renderType, const RtP
 
 Session::~Session()
 {
-	auto rileyManager = (RixRileyManager *)RixGetContext()->GetRixInterface( k_RixRileyManager );
+	auto rileyManager = (RixRileyManager *)Loader::context()->GetRixInterface( k_RixRileyManager );
 	rileyManager->DestroyRiley( riley );
 
 	if( m_exceptionHandler )
 	{
-		auto rixXcpt = (RixXcpt *)RixGetContext()->GetRixInterface( k_RixXcpt );
+		auto rixXcpt = (RixXcpt *)Loader::context()->GetRixInterface( k_RixXcpt );
 		rixXcpt->Unregister( m_exceptionHandler.get() );
 	}
 
-	PRManRenderEnd();
-	PRManSystemEnd();
+	m_riCtl->PRManRenderEnd();
+	m_riCtl->PRManSystemEnd();
 }
 
 riley::CameraId Session::createCamera( RtUString name, const riley::ShadingNode &projection, const riley::Transform &transform, const RtParamList &properties, const RtParamList &options )
@@ -389,7 +392,7 @@ void Session::updatePortals()
 	// Link the lights appropriately.
 
 	RtParamList mutedAttributes;
-	mutedAttributes.SetInteger( Rix::k_lighting_mute, 1 );
+	mutedAttributes.SetInteger( Loader::strings().k_lighting_mute, 1 );
 
 	for( const auto &[id, info] : m_domeAndPortalLights )
 	{
