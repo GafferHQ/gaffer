@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- RenderManShader, RenderManLight, RenderManLightFilter : Added support for conditional parameter visibility, hiding parameters when they are irrelevant due to the value of other parameters.
 - OSLShader : Added support for conditional visibility metadata in the format used by RenderMan's OSL shaders.
 
 Fixes

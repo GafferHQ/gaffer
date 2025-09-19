@@ -154,11 +154,32 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 						self.assertNotIn( "{}:".format( parameter.getName() ), description )
 						self.assertEqual( description.count( "<p>" ), description.count( "</p>" ) )
 
+					# Check that there are no errors or warnings when evaluating
+					# conditional visibility.
+					Gaffer.Metadata.value( parameter, "layout:activator" )
+					Gaffer.Metadata.value( parameter, "layout:visibilityActivator" )
+
 				shadersLoaded.add( argsFile.stem )
 
 		# Guard against shaders being moved and this test therefore not
 		# loading anything.
 		self.assertIn( "PxrSurface", shadersLoaded )
+
+	def testSpecificActivator( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrSurface" )
+
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["diffuseExponent"], "layout:visibilityActivator" ), True )
+		shader["parameters"]["diffuseRoughness"].setValue( 0.1 )
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["diffuseExponent"], "layout:visibilityActivator" ), False )
+
+		shader.loadShader( "LamaConductor" )
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["fresnelMode"], "layout:activator" ), True )
+
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["exteriorIOR"], "layout:activator" ), False )
+		shader["parameters"]["overrideExteriorIOR"].setValue( True )
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["exteriorIOR"], "layout:activator" ), True )
 
 	def testAllOSLActivators( self ) :
 
