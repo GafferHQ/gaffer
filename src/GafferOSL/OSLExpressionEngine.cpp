@@ -301,9 +301,6 @@ class RendererServices : public OSL::RendererServices
 // OSLExpressionEngine
 //////////////////////////////////////////////////////////////////////////
 
-namespace
-{
-
 using Replacement = pair<string, string>;
 bool replacementGreater( const Replacement &lhs, const Replacement &rhs )
 {
@@ -324,8 +321,6 @@ void replaceAll( std::string &s, vector<Replacement> &replacements )
 		replace_all( s, r.first, r.second );
 	}
 }
-
-} // namespace
 
 // Forward declaration to use as friend
 bool evaluateActivatorExpression( const std::string &, const Gaffer::Plug *, const Gaffer::Context * );
