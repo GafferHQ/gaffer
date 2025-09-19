@@ -1321,5 +1321,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( script["VectorToColor1"]["parameters"]["vec"].getInput(), script["ColorToVector"]["out"]["vec"] )
 		self.assertEqual( script["ColorToFloat"]["parameters"]["c"].getInput(), script["ColorToVector"]["out"]["vec"] )
 
+	def testStringArrayMetadata( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "stringArrayDefaults.osl" )
+		node = GafferOSL.OSLShader()
+		node.loadShader( shader )
+
+		self.assertEqual( node["parameters"]["size4Initialisers1"].defaultValue(), IECore.StringVectorData( [ "a", "", "", "" ] ) )
+		self.assertEqual( node["parameters"]["size4Initialisers4"].defaultValue(), IECore.StringVectorData( [ "a", "b", "c", "d" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

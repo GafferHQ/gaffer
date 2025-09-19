@@ -475,7 +475,10 @@ Plug *loadStringArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 		defaultValueDataWritable.resize( parameter->sdefault.size() );
 		for( size_t i = 0; i < parameter->sdefault.size(); i++ )
 		{
-			defaultValueDataWritable[i] = parameter->sdefault[i].c_str();
+			if( !parameter->sdefault[i].empty() )
+			{
+				defaultValueDataWritable[i] = parameter->sdefault[i].c_str();
+			}
 		}
 	}
 

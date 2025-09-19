@@ -5,6 +5,7 @@ Fixes
 -----
 
 - SceneInspector : Fixed units used to show transform rotation - it is now shown in degrees again (#6604).
+- OSLShader : Fixed crash loading string array parameters without default values for all elements.
 
 1.6.1.0 (relative to 1.6.0.0)
 =======
