@@ -175,6 +175,24 @@ def __plugNoduleLabel( plug ) :
 
 	return label
 
+def __plugActivator( plug ) :
+
+	node = plug.node()
+	expression = node.parameterMetadata( plug, "enabledExpression" )
+	if expression :
+		return node.evaluateActivatorExpression( expression )
+
+	return True
+
+def __plugVisibilityActivator( plug ) :
+
+	node = plug.node()
+	expression = node.parameterMetadata( plug, "visibleExpression" )
+	if expression :
+		return node.evaluateActivatorExpression( expression )
+
+	return True
+
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLShader,
@@ -198,6 +216,8 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", __plugNoduleType,
 			"noduleLayout:visible", __plugNoduleVisibility,
 			"noduleLayout:label", __plugNoduleLabel,
+			"layout:activator", __plugActivator,
+			"layout:visibilityActivator", __plugVisibilityActivator,
 
 		],
 

@@ -1514,6 +1514,20 @@ void OSLShader::reloadShader()
 	Shader::reloadShader();
 }
 
+namespace GafferOSL
+{
+
+// Forward declare function defined in OSLExpressionEngine.cpp. It happens to be easier to implement
+// activator expressions in there, but in terms of public API they are more at home on OSLShader.
+bool evaluateActivatorExpression( const std::string &expression, const Gaffer::Plug *parameterPlug, const Gaffer::Context *context );
+
+} // namespace GafferOSL
+
+bool OSLShader::evaluateActivatorExpression( const std::string &expression ) const
+{
+	return GafferOSL::evaluateActivatorExpression( expression, parametersPlug(), Context::current() );
+}
+
 bool OSLShader::registerCompatibleShader( const IECore::InternedString shaderType )
 {
 	ShaderTypeSet &cs = compatibleShaders();
