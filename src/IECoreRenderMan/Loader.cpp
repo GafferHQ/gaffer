@@ -36,9 +36,78 @@
 
 #include "Loader.h"
 
+#include "IECore/MessageHandler.h"
+
+#include "fmt/format.h"
+
+#include <filesystem>
+
+#ifdef _MSC_VER
+#include "Windows.h"
+#else
+#include "dlfcn.h"
+#endif
+
 RixContext *IECoreRenderMan::Loader::context()
 {
-	static RixContext *g_context = RixGetContextViaRMANTREE();
+	static RixContext *g_context = [] () -> RixContext * {
+
+		const char *rmanTree = getenv( "RMANTREE" );
+		if( !rmanTree )
+		{
+			IECore::msg( IECore::Msg::Error, "IECoreRenderMan::Loader", "RMANTREE environment variable not set" );
+			return nullptr;
+		}
+
+		std::filesystem::path libPath( rmanTree );
+		libPath = libPath / "lib" / "libprman";
+
+#ifdef _MSC_VER
+
+		libPath.replace_extension( ".dll" );
+		HMODULE handle = LoadLibrary( libPath.generic_string().c_str() );
+		if( !handle )
+		{
+			IECore::msg( IECore::Msg::Error, "IECoreRenderMan::Loader", fmt::format( "Unable to load \"{}\"", libPath.generic_string() ) );
+			return nullptr;
+		}
+
+		void *symbol = GetProcAddress( handle, "RixGetContext" );
+		if( !symbol )
+		{
+			IECore::msg( IECore::Msg::Error, "IECoreRenderMan::Loader", "Unable to get address of RixGetContext" );
+			return nullptr;
+		}
+
+#else
+
+		libPath.replace_extension( ".so" );
+		void *handle = dlopen( libPath.c_str(), RTLD_NOW );
+		if( !handle )
+		{
+			if( char *e = dlerror() )
+			{
+				IECore::msg( IECore::Msg::Error, "IECoreRenderMan::Loader", e );
+			}
+			return nullptr;
+		}
+
+		void *symbol = dlsym( handle, "RixGetContext" );
+		if( !symbol )
+		{
+			if( char *e = dlerror() )
+			{
+				IECore::msg( IECore::Msg::Error, "IECoreRenderMan::Loader", e );
+			}
+			return nullptr;
+		}
+
+#endif
+
+		auto rixGetContext = (RixContext *(*)())symbol;
+		return rixGetContext();
+
+	}();
 	return g_context;
 }
 
