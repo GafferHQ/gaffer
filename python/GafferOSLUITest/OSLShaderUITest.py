@@ -136,6 +136,25 @@ class OSLShaderUITest( GafferOSLTest.OSLTestCase ) :
 		parameters["c"].setValue( imath.Color3f( 0.2, 0.4, 0 ) )
 		self.assertEqual( Gaffer.Metadata.value( parameters["test4"], "layout:visibilityActivator" ), True )
 
+	def testConditionalVisMetadata( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parents[1] / "GafferOSLTest" / "shaders" / "conditionalVisMetadata.osl" )
+		node = GafferOSL.OSLShader()
+		node.loadShader( shader )
+
+		parameters = node["parameters"]
+		for i in range( 5 ):
+			parameters["i"].setValue( i )
+			self.assertEqual( Gaffer.Metadata.value( parameters["test1"], "layout:activator" ), i > 2 )
+
+		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), False )
+		parameters["s"].setValue( "foo" )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), True )
+
+		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), False )
+		parameters["i2"].setValue( 72 )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), True )
+
 	def tearDown( self ) :
 
 		Gaffer.Metadata.deregisterValue( "osl:shader:ObjectProcessing/InFloat:name", "userDefault" )

@@ -951,3 +951,101 @@ class _ShaderDialogue( _ShaderDialogueBase ) :
 
 	def shaderSelectedSignal( self ) :
 		return self._resultSelectedSignal()
+
+##########################################################################
+# Conditional parameter visibility
+##########################################################################
+
+# Evaluates conditional visibility as it is defined in third-party `.args`
+# files. `queryFunction` is called to look up metadata values for keys such as
+# `conditionalVisOp` etc.
+#
+## \todo Define a standard Gaffer mechanism for shader parameter visibility
+#  that closely matches our general-purpose plug visibility mechanism, and
+#  then hook `.args` files into that. That might look something like this :
+#
+# - Allow `layout:activator:{name}` metadata to be registered to `{shaderType}:{shaderName}`
+#   shader targets, and forward these to the `Shader.parameters` plug. The difficulty here
+#   is forwarding targets whose names are not known in advance - our Metadata API doesn't
+#   currently support that. And the value would need to be a Python expression which we
+#   `eval()`, which isn't ideal.
+# - Allow `layout:visibilityActivator` metadata to be registered to `{shaderType}:{shaderName}:{parameterName}
+#   parameter targest, with values referencing the names of activators registered above. Forward
+#   this to `Shader.parameters.*` plugs.
+# - Convert `.args` conditional visibility into expressions suitable for use in the above and
+#   register them as metadata.
+# - Likewise convert our OSL visibility metadata into expressions suitable for use in the
+#   above.
+def _evaluateConditionalVisibility( parametersPlug, queryFunction ) :
+
+	return __evaluateConditionalOp( parametersPlug, queryFunction, "conditionalVis", defaultValue = True )
+
+def _evaluateConditionalLock( parametersPlug, queryFunction ) :
+
+	return __evaluateConditionalOp( parametersPlug, queryFunction, "conditionalLock", defaultValue = False )
+
+def __evaluateConditionalOp( parametersPlug, queryFunction, prefix, defaultValue = None ) :
+
+	op = queryFunction( f"{prefix}Op" )
+	if op is None :
+		if defaultValue is not None :
+			return defaultValue
+		IECore.msg( IECore.Msg.Level.Warning, "ShaderUI", f"`{prefix}Op` is missing" )
+		return True
+
+	if op in ( "and", "or" ) :
+
+		left = __queryOrWarn( queryFunction, f"{prefix}Left" )
+		right = __queryOrWarn( queryFunction, f"{prefix}Right" )
+
+		if left is None or right is None :
+			return True
+
+		operand1 = __evaluateConditionalOp( parametersPlug, queryFunction, left )
+		operand2 = __evaluateConditionalOp( parametersPlug, queryFunction, right )
+
+	else :
+
+		path = __queryOrWarn( queryFunction, f"{prefix}Path" )
+		value = __queryOrWarn( queryFunction, f"{prefix}Value" )
+
+		if path is None or value is None :
+			return True
+
+		plugName = path.rpartition( "/" )[2]
+		pathPlug = parametersPlug.getChild( plugName )
+		if pathPlug is None :
+			IECore.msg( IECore.Msg.Level.Warning, "ShaderUI", f"`{path}` not found" )
+			return True
+
+		operand1 = pathPlug.getValue()
+		operand2 = operand1.__class__( value )
+
+	match op :
+		case "equalTo" :
+			return operand1 == operand2
+		case "notEqualTo" :
+			return operand1 != operand2
+		case "greaterThan" :
+			return operand1 > operand2
+		case "lessThan" :
+			return operand1 < operand2
+		case "greaterThanOrEqualTo" :
+			return operand1 >= operand2
+		case "lessThanOrEqualTo" :
+			return operand1 <= operand2
+		case "or" :
+			return operand1 or operand2
+		case "and" :
+			return operand1 and operand2
+		case _ :
+			IECore.msg( IECore.Msg.Level.Warning, "ShaderUI", f"Unknown operation `{op}`" )
+			return True
+
+def __queryOrWarn( query, key ) :
+
+	result = query( key )
+	if result is None :
+		IECore.msg( IECore.Msg.Level.Warning, "ShaderUI", f"`{key}` is missing" )
+
+	return result

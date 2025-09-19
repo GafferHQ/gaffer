@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.1.0)
 =======
 
+Improvements
+------------
+
+- OSLShader : Added support for conditional visibility metadata in the format used by RenderMan's OSL shaders.
+
 Fixes
 -----
 

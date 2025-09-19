@@ -42,6 +42,8 @@ from xml.etree import ElementTree
 import IECore
 
 import Gaffer
+import GafferOSL
+import GafferOSLUI
 import GafferUITest
 
 import GafferRenderMan
@@ -157,6 +159,45 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 		# Guard against shaders being moved and this test therefore not
 		# loading anything.
 		self.assertIn( "PxrSurface", shadersLoaded )
+
+	def testAllOSLActivators( self ) :
+
+		# Load every RenderMan OSL shader and check that there are no
+		# errors or warnings when evaluating their conditional visibility.
+
+		shaderDir = pathlib.Path( os.environ["RMANTREE"] ) / "lib" / "shaders"
+		shadersLoaded = set()
+
+		for osoFile in shaderDir.glob( "*.oso" ) :
+
+			with self.subTest( shader = osoFile.stem ) :
+
+				node = GafferOSL.OSLShader( osoFile.stem )
+				node.loadShader( osoFile.stem )
+
+				for parameter in node["parameters"] :
+					Gaffer.Metadata.value( parameter, "layout:activator" )
+					Gaffer.Metadata.value( parameter, "layout:visibilityActivator" )
+
+				shadersLoaded.add( osoFile.stem )
+
+		# Guard against shaders being moved and this test therefore not
+		# loading anything.
+		self.assertIn( "PxrHairColor", shadersLoaded )
+
+	def testSpecificOSLActivators( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "PxrHairColor" )
+
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["melanin"], "layout:activator" ), True )
+
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["melanin"], "layout:visibilityActivator" ), True )
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["Color"], "layout:visibilityActivator" ), False )
+
+		shader["parameters"]["mode"].setValue( 1 ) # Artistic
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["melanin"], "layout:visibilityActivator" ), False )
+		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["Color"], "layout:visibilityActivator" ), True )
 
 if __name__ == "__main__":
 	unittest.main()
