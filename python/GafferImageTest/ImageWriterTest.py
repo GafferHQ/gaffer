@@ -49,7 +49,6 @@ import inspect
 import OpenImageIO
 
 import IECore
-import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -553,7 +552,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			# reference images were written with an older OIIO that mistakenly read/writes
 			# this metadata. Note non-OIIO apps like RV do not read this metadata.
 			# See https://github.com/OpenImageIO/oiio/pull/2521 for an explanation
-			ignoreDataWindow = ext in ( "tif", "tiff" ) and hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206
+			ignoreDataWindow = ext in ( "tif", "tiff" ) and OpenImageIO.VERSION >= 20206
 
 			if not removeAlpha:
 				self.assertImagesEqual( expectedOutput["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
@@ -825,7 +824,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# reference images were written with an older OIIO that mistakenly read/writes
 		# this metadata. Note non-OIIO apps like RV do not read this metadata.
 		# See https://github.com/OpenImageIO/oiio/pull/2521 for an explanation
-		ignoreDataWindow = ext in ( "tif", "tiff" ) and hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206
+		ignoreDataWindow = ext in ( "tif", "tiff" ) and OpenImageIO.VERSION >= 20206
 
 		self.assertImagesEqual( misledWriter["in"], misledReader["out"], ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
 		self.assertImagesEqual( misledReader["out"], regularReader["out"], ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )

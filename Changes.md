@@ -18,7 +18,12 @@ Breaking Changes
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 
-1.6.x.x (relative to 1.6.0.0)
+1.6.x.x (relative to 1.6.1.0)
+=======
+
+
+
+1.6.1.0 (relative to 1.6.0.0)
 =======
 
 Improvements

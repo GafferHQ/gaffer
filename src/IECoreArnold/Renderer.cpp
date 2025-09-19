@@ -810,6 +810,35 @@ class ArnoldOutput : public IECore::RefCounted
 					}
 					else if( tokens[0] == "lpe" )
 					{
+						// The history behind our naming of LPE's is a bit weird, I'm documenting it here
+						// so that if anyone looks at this code in the future, they don't repeat this
+						// confusion.
+						//
+						// We first tried setting something like:
+						// m_lpeName = "ieCoreArnold:lpe:" + m_lpeValue;
+						// This resulted in the layerName being ignored in testLightGroupOutputs, and it
+						// just using the lpe name as the layer name in the resulting exr.
+						//
+						// Because of this, we thought that in order to get the correct layer names when
+						// light groups are used, we must set the lpe name to be equal to the layer name,
+						// resulting in the current code.
+						//
+						// However, it turns out that Arnold ignoring the layer name only occurs when the
+						// lpe name has an `*` in it. So we actually could have used the code:
+						//
+						// m_lpeName = "ieCoreArnold:lpe:" + boost::replace_all_copy( m_lpeValue, "*", "<STAR>" );
+						// ... and everything works fine.
+						//
+						// However, using the lpe value as the name is a bit ugly looking anyway. The only real
+						// downside to the current approach is that two aovs using the same lpe put it in the
+						// lpe list twice, but that's not really a problem. If we were starting from scratch
+						// now that we know we don't need to exactly match the layer name, one change I would
+						// make would be at least always including the "ieCoreArnold:lpe:" prefix.
+						//
+						// But anyway, the current conclusion is that since none of the proposed changes
+						// really improve things, it's better to just leave this as-is, in case someone is using
+						// the current LPE names
+
 						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + m_name.string();
 						m_lpeValue = tokens[1];
 						m_data = m_lpeName;
