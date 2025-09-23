@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Limited. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,40 +34,27 @@
 #
 ##########################################################################
 
-from .SceneViewTest import SceneViewTest
-from .ShaderAssignmentUITest import ShaderAssignmentUITest
-from .StandardGraphLayoutTest import StandardGraphLayoutTest
-from .SceneGadgetTest import SceneGadgetTest
-from .SceneInspectorTest import SceneInspectorTest
-from .HierarchyViewTest import HierarchyViewTest
-from .DocumentationTest import DocumentationTest
-from .ShaderViewTest import ShaderViewTest
-from .ShaderUITest import ShaderUITest
-from .TranslateToolTest import TranslateToolTest
-from .ScaleToolTest import ScaleToolTest
-from .RotateToolTest import RotateToolTest
-from .CameraToolTest import CameraToolTest
-from .VisualiserTest import VisualiserTest
-from .TransformToolTest import TransformToolTest
-from .CropWindowToolTest import CropWindowToolTest
-from .NodeUITest import NodeUITest
-from .ParameterInspectorTest import ParameterInspectorTest
-from .AttributeInspectorTest import AttributeInspectorTest
-from .HistoryPathTest import HistoryPathTest
-from .LightEditorTest import LightEditorTest
-from .SetMembershipInspectorTest import SetMembershipInspectorTest
-from .SetEditorTest import SetEditorTest
-from .LightToolTest import LightToolTest
-from .OptionInspectorTest import OptionInspectorTest
-from .LightPositionToolTest import LightPositionToolTest
-from .RenderPassEditorTest import RenderPassEditorTest
-from .SelectionToolTest import SelectionToolTest
-from .InspectorColumnTest import InspectorColumnTest
-from .ScriptNodeAlgoTest import ScriptNodeAlgoTest
-from .AttributeEditorTest import AttributeEditorTest
-from .CatalogueUITest import CatalogueUITest
-from .BasicInspectorTest import BasicInspectorTest
-from .VisibilityColumnTest import VisibilityColumnTest
+import unittest
+
+import Gaffer
+import GafferUITest
+import GafferScene
+import GafferSceneUI
+
+class VisibilityColumnTest( GafferUITest.TestCase ) :
+
+	def testVisibilityColumnUsesScriptContext( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"]["cacheRoot"] = Gaffer.NameValuePlug( "cacheRoot", "${GAFFER_ROOT}" )
+
+		script["reader"] = GafferScene.SceneReader()
+		script["reader"]["fileName"].setValue( "${cacheRoot}/resources/gafferBot/caches/gafferBot.scc" )
+
+		column = GafferSceneUI.Private.VisibilityColumn( script["reader"]["out"], None )
+		cellData = column.cellData( GafferScene.ScenePath( script["reader"]["out"], script.context(), "/GAFFERBOT" ), None )
+		self.assertEqual( cellData.icon, "locationVisibleTransparent.png" )
+		self.assertEqual( cellData.value, None )
 
 if __name__ == "__main__":
 	unittest.main()
