@@ -34,42 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GeometryAlgo.h"
+#pragma once
 
-#include "Loader.h"
+#include "ri.hpp"
 
-#include "IECoreScene/SpherePrimitive.h"
-
-using namespace IECoreScene;
-using namespace IECoreRenderMan;
-
-namespace
+namespace IECoreRenderMan::Loader
 {
 
-RtUString convertStaticSphere( const IECoreScene::SpherePrimitive *sphere, RtPrimVarList &primVars, const std::string &messageContext )
-{
-	primVars.SetDetail(
-		sphere->variableSize( PrimitiveVariable::Uniform ),
-		sphere->variableSize( PrimitiveVariable::Vertex ),
-		sphere->variableSize( PrimitiveVariable::Varying ),
-		sphere->variableSize( PrimitiveVariable::FaceVarying )
-	);
+/// Loads `libprman` and returns the RixContext from which the rest of
+/// the RenderMan API can be accessed.
+RixContext *context();
 
-	GeometryAlgo::convertPrimitiveVariables( sphere, primVars );
+/// Accessor for RenderMan's predefined RtUString constants. This takes
+/// care of loading them from `libprman`.
+const RiPredefinedStrings &strings();
 
-	const float radius = sphere->radius();
-	const float zMin = sphere->zMin();
-	const float zMax = sphere->zMax();
-	const float thetaMax = sphere->thetaMax();
-
-	primVars.SetFloatDetail( Loader::strings().k_Ri_radius, &radius, RtDetailType::k_constant );
-	primVars.SetFloatDetail( Loader::strings().k_Ri_zmin, &zMin, RtDetailType::k_constant );
-	primVars.SetFloatDetail( Loader::strings().k_Ri_zmax, &zMax, RtDetailType::k_constant );
-	primVars.SetFloatDetail( Loader::strings().k_Ri_thetamax, &thetaMax, RtDetailType::k_constant );
-
-	return Loader::strings().k_Ri_Sphere;
-}
-
-GeometryAlgo::ConverterDescription<SpherePrimitive> g_sphereConverterDescription( convertStaticSphere );
-
-} // namespace
+} // namespace IECoreRenderMan::Loader

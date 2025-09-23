@@ -37,9 +37,8 @@
 #include "Camera.h"
 
 #include "ParamListAlgo.h"
+#include "Loader.h"
 #include "Transform.h"
-
-#include "RixPredefinedStrings.hpp"
 
 #include "boost/algorithm/string/predicate.hpp"
 
@@ -67,12 +66,12 @@ Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Sess
 	// Parameters
 
 	RtParamList cameraParamList;
-	cameraParamList.SetFloat( Rix::k_nearClip, camera->getClippingPlanes()[0] );
-	cameraParamList.SetFloat( Rix::k_farClip, camera->getClippingPlanes()[1] );
+	cameraParamList.SetFloat( Loader::strings().k_nearClip, camera->getClippingPlanes()[0] );
+	cameraParamList.SetFloat( Loader::strings().k_farClip, camera->getClippingPlanes()[1] );
 
 	const Box2f frustum = camera->frustum();
 	array<float, 4> screenWindow = { frustum.min.x, frustum.max.x, frustum.min.y, frustum.max.y };
-	cameraParamList.SetFloatArray( Rix::k_Ri_ScreenWindow, screenWindow.data(), screenWindow.size() );
+	cameraParamList.SetFloatArray( Loader::strings().k_Ri_ScreenWindow, screenWindow.data(), screenWindow.size() );
 
 	// Projection shader
 
@@ -118,8 +117,8 @@ Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Sess
 	RtParamList options;
 
 	const Imath::V2i resolution = camera->renderResolution();
-	options.SetIntegerArray( Rix::k_Ri_FormatResolution, resolution.getValue(), 2 );
-	options.SetFloat( Rix::k_Ri_FormatPixelAspectRatio, camera->getPixelAspectRatio() );
+	options.SetIntegerArray( Loader::strings().k_Ri_FormatResolution, resolution.getValue(), 2 );
+	options.SetFloat( Loader::strings().k_Ri_FormatPixelAspectRatio, camera->getPixelAspectRatio() );
 
 	Box2f cropWindow = camera->getCropWindow();
 	if( cropWindow.isEmpty() )
@@ -129,7 +128,7 @@ Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Sess
 		cropWindow = Box2f( V2f( 0 ), V2f( 1 ) );
 	}
 	float renderManCropWindow[4] = { cropWindow.min.x, cropWindow.max.x, cropWindow.min.y, cropWindow.max.y };
-	options.SetFloatArray( Rix::k_Ri_CropWindow, renderManCropWindow, 4 );
+	options.SetFloatArray( Loader::strings().k_Ri_CropWindow, renderManCropWindow, 4 );
 
 	// Camera
 

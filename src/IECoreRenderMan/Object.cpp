@@ -36,9 +36,8 @@
 
 #include "Object.h"
 
+#include "Loader.h"
 #include "Transform.h"
-
-#include "RixPredefinedStrings.hpp"
 
 using namespace std;
 using namespace IECoreRenderMan;
@@ -56,7 +55,7 @@ const RtUString g_defaultShadowGroup( "defaultShadowGroup" );
 Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, LightLinker *lightLinker, const Session *session )
 	:	m_session( session ), m_lightLinker( lightLinker ), m_geometryInstance( riley::GeometryInstanceId::InvalidId() ), m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
 {
-	m_extraAttributes.SetString( Rix::k_identifier_name, RtUString( name.c_str() ) );
+	m_extraAttributes.SetString( Loader::strings().k_identifier_name, RtUString( name.c_str() ) );
 
 	RtParamList allAttributes = m_attributes->instanceAttributes();
 	allAttributes.Update( m_extraAttributes );
@@ -166,13 +165,13 @@ void Object::link( const IECore::InternedString &type, const IECoreScenePreview:
 	{
 		setMemberData = &m_linkedLights;
 		setType = LightLinker::SetType::Light;
-		attributeName = Rix::k_lighting_subset;
+		attributeName = Loader::strings().k_lighting_subset;
 	}
 	else if( type == g_shadowedLights )
 	{
 		setMemberData = &m_shadowedLights;
 		setType = LightLinker::SetType::Shadow;
-		attributeName = Rix::k_grouping_membership;
+		attributeName = Loader::strings().k_grouping_membership;
 		defaultAttributeValue = g_defaultShadowGroup;
 	}
 	else
@@ -198,7 +197,7 @@ void Object::link( const IECore::InternedString &type, const IECoreScenePreview:
 
 void Object::assignID( uint32_t id )
 {
-	m_extraAttributes.SetInteger( Rix::k_identifier_id, id );
+	m_extraAttributes.SetInteger( Loader::strings().k_identifier_id, id );
 	attributes( m_attributes.get() );
 }
 

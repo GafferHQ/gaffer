@@ -35,10 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GeometryAlgo.h"
+#include "Loader.h"
 
 #include "IECoreScene/PointsPrimitive.h"
-
-#include "RixPredefinedStrings.hpp"
 
 using namespace IECoreScene;
 using namespace IECoreRenderMan;
@@ -60,14 +59,14 @@ RtUString convertStaticPoints( const IECoreScene::PointsPrimitive *points, RtPri
 {
 	convertPointsTopology( points, primVars );
 	GeometryAlgo::convertPrimitiveVariables( points, primVars, messageContext );
-	return Rix::k_Ri_Points;
+	return Loader::strings().k_Ri_Points;
 }
 
 RtUString convertAnimatedPoints( const std::vector<const IECoreScene::PointsPrimitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	convertPointsTopology( samples[0], primVars );
 	GeometryAlgo::convertPrimitiveVariables( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
-	return Rix::k_Ri_Points;
+	return Loader::strings().k_Ri_Points;
 }
 
 GeometryAlgo::ConverterDescription<PointsPrimitive> g_pointsConverterDescription( convertStaticPoints, convertAnimatedPoints );

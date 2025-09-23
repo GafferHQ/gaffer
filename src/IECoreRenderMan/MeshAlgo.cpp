@@ -36,9 +36,9 @@
 
 #include "GeometryAlgo.h"
 
-#include "IECoreScene/MeshPrimitive.h"
+#include "Loader.h"
 
-#include "RixPredefinedStrings.hpp"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "fmt/format.h"
 
@@ -129,25 +129,25 @@ RtUString convertMeshTopology( const IECoreScene::MeshPrimitive *mesh, RtPrimVar
 		mesh->variableSize( PrimitiveVariable::FaceVarying )
 	);
 
-	primVars.SetIntegerDetail( Rix::k_Ri_nvertices, mesh->verticesPerFace()->readable().data(), RtDetailType::k_uniform );
-	primVars.SetIntegerDetail( Rix::k_Ri_vertices, mesh->vertexIds()->readable().data(), RtDetailType::k_facevarying );
+	primVars.SetIntegerDetail( Loader::strings().k_Ri_nvertices, mesh->verticesPerFace()->readable().data(), RtDetailType::k_uniform );
+	primVars.SetIntegerDetail( Loader::strings().k_Ri_vertices, mesh->vertexIds()->readable().data(), RtDetailType::k_facevarying );
 
-	RtUString geometryType = Rix::k_Ri_PolygonMesh;
+	RtUString geometryType = Loader::strings().k_Ri_PolygonMesh;
 	if( mesh->interpolation() != MeshPrimitive::interpolationLinear.string() )
 	{
-		geometryType = Rix::k_Ri_SubdivisionMesh;
+		geometryType = Loader::strings().k_Ri_SubdivisionMesh;
 		if( mesh->interpolation() == MeshPrimitive::interpolationCatmullClark.string() )
 		{
-			primVars.SetString( Rix::k_Ri_scheme, Rix::k_catmullclark );
+			primVars.SetString( Loader::strings().k_Ri_scheme, Loader::strings().k_catmullclark );
 		}
 		else if( mesh->interpolation() == MeshPrimitive::interpolationLoop.string() )
 		{
-			primVars.SetString( Rix::k_Ri_scheme, Rix::k_loop );
+			primVars.SetString( Loader::strings().k_Ri_scheme, Loader::strings().k_loop );
 		}
 		else
 		{
 			msg( Msg::Error, messageContext, fmt::format( "Unknown mesh interpolation \"{}\"", mesh->interpolation() ) );
-			primVars.SetString( Rix::k_Ri_scheme, Rix::k_catmullclark );
+			primVars.SetString( Loader::strings().k_Ri_scheme, Loader::strings().k_catmullclark );
 		}
 
 		vector<RtUString> tagNames;
@@ -159,7 +159,7 @@ RtUString convertMeshTopology( const IECoreScene::MeshPrimitive *mesh, RtPrimVar
 
 		for( int creaseLength : mesh->creaseLengths()->readable() )
 		{
-			tagNames.push_back( Rix::k_crease );
+			tagNames.push_back( Loader::strings().k_crease );
 			tagArgCounts.push_back( creaseLength ); // integer argument count
 			tagArgCounts.push_back( 1 ); // float argument count
 			tagArgCounts.push_back( 0 ); // string argument count
@@ -172,7 +172,7 @@ RtUString convertMeshTopology( const IECoreScene::MeshPrimitive *mesh, RtPrimVar
 
 		if( mesh->cornerIds()->readable().size() )
 		{
-			tagNames.push_back( Rix::k_corner );
+			tagNames.push_back( Loader::strings().k_corner );
 			tagArgCounts.push_back( mesh->cornerIds()->readable().size() ); // integer argument count
 			tagArgCounts.push_back( mesh->cornerIds()->readable().size() ); // float argument count
 			tagArgCounts.push_back( 0 ); // string argument count
@@ -182,24 +182,24 @@ RtUString convertMeshTopology( const IECoreScene::MeshPrimitive *mesh, RtPrimVar
 
 		// Interpolation rules
 
-		tagNames.push_back( Rix::k_interpolateboundary );
+		tagNames.push_back( Loader::strings().k_interpolateboundary );
 		tagArgCounts.insert( tagArgCounts.end(), { 1, 0, 0 } );
 		tagIntArgs.push_back( interpolateBoundary( mesh, messageContext ) );
 
-		tagNames.push_back( Rix::k_facevaryinginterpolateboundary );
+		tagNames.push_back( Loader::strings().k_facevaryinginterpolateboundary );
 		tagArgCounts.insert( tagArgCounts.end(), { 1, 0, 0 } );
 		tagIntArgs.push_back( faceVaryingInterpolateBoundary( mesh, messageContext ) );
 
-		tagNames.push_back( Rix::k_smoothtriangles );
+		tagNames.push_back( Loader::strings().k_smoothtriangles );
 		tagArgCounts.insert( tagArgCounts.end(), { 1, 0, 0 } );
 		tagIntArgs.push_back( smoothTriangles( mesh, messageContext ) );
 
 		// Pseudo-primvars to hold the tags
 
-		primVars.SetStringArray( Rix::k_Ri_subdivtags, tagNames.data(), tagNames.size() );
-		primVars.SetIntegerArray( Rix::k_Ri_subdivtagnargs, tagArgCounts.data(), tagArgCounts.size() );
-		primVars.SetFloatArray( Rix::k_Ri_subdivtagfloatargs, tagFloatArgs.data(), tagFloatArgs.size() );
-		primVars.SetIntegerArray( Rix::k_Ri_subdivtagintargs, tagIntArgs.data(), tagIntArgs.size() );
+		primVars.SetStringArray( Loader::strings().k_Ri_subdivtags, tagNames.data(), tagNames.size() );
+		primVars.SetIntegerArray( Loader::strings().k_Ri_subdivtagnargs, tagArgCounts.data(), tagArgCounts.size() );
+		primVars.SetFloatArray( Loader::strings().k_Ri_subdivtagfloatargs, tagFloatArgs.data(), tagFloatArgs.size() );
+		primVars.SetIntegerArray( Loader::strings().k_Ri_subdivtagintargs, tagIntArgs.data(), tagIntArgs.size() );
 	}
 
 	return geometryType;
