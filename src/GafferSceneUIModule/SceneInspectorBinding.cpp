@@ -61,6 +61,8 @@
 #include "IECoreScene/ShaderNetwork.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
+#include "IECore/AngleConversion.h"
+
 #include "Imath/ImathMatrixAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -647,7 +649,7 @@ InspectorTree::Inspections transformInspectionProvider( ScenePlug *scene, const 
 						switch( component )
 						{
 							case 't' : return new V3fData( t );
-							case 'r' : return new V3fData( r );
+							case 'r' : return new V3fData( IECore::radiansToDegrees( r ) );
 							case 's' : return new V3fData( s );
 							default : return new V3fData( h );
 						}
