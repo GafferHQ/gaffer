@@ -56,7 +56,6 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "Riley.h"
-#include "RixPredefinedStrings.hpp"
 
 #include "boost/algorithm/string/predicate.hpp"
 

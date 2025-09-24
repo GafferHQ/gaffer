@@ -123,6 +123,8 @@ def registerMetadata( argsFile, parametersToIgnore = set() ) :
 				if element.attrib.get( "options" ) :
 					__parsePresets( element.attrib.get( "options" ), currentParameterTarget, currentParameterType )
 
+				__parseConditionalVisibility( element, currentParameterTarget )
+
 			elif event == "end" :
 
 				currentParameterTarget = None
@@ -140,9 +142,11 @@ def registerMetadata( argsFile, parametersToIgnore = set() ) :
 				# specify `shaderType` first. Store it and register at the end.
 				targetDescription = description
 
-		elif element.tag == "hintdict" and element.attrib.get( "name" ) == "options" :
-			if event == "end" and currentParameterTarget :
+		elif element.tag == "hintdict" and event == "end" and currentParameterTarget :
+			if element.attrib.get( "name" ) == "options" :
 				__parsePresets( element, currentParameterTarget, currentParameterType )
+			elif element.attrib.get( "name" ) == "conditionalVisOps" :
+				__parseConditionalVisibility( element, currentParameterTarget )
 
 		elif element.tag == "rfhdata" and event == "end" :
 			Gaffer.Metadata.registerValue( target, "classification", element.attrib.get( "classification" ) )
@@ -250,6 +254,34 @@ def __parsePresets( options, parameterTarget, parameterType ) :
 
 	Gaffer.Metadata.registerValue( parameterTarget, "presetNames", presetNames )
 	Gaffer.Metadata.registerValue( parameterTarget, "presetValues", presetValues )
+
+def __parseConditionalVisibility( source, parameterTarget ) :
+
+	# Register conditional visibility metadata using an `ri:` prefix on the key,
+	# since this isn't a Gaffer-native format. This metadata is picked up by
+	# RenderManShaderUI and translated into Gaffer's standard `layout:activator`
+	# and `layout:visibilityActivator` metadata on the fly.
+
+	if source.tag == "hintdict" :
+		# Visibility definition neatly confined in `hintdict`, where all child
+		# elements are relevant.
+		for element in source :
+			Gaffer.Metadata.registerValue( parameterTarget, "ri:{}".format( element.attrib["name"] ), element.attrib["value"] )
+	else :
+		# Visibility defined via attributes on param. Since we can't identify
+		# all relevant attributes by name alone, we must discover them by
+		# following the "parse tree".
+		assert( source.tag == "param" )
+		prefixes = [ "conditionalVis", "conditionalLock" ]
+		while prefixes :
+			prefix = prefixes.pop()
+			for suffix in [ "Op", "Left", "Right", "Path", "Value" ] :
+				name = f"{prefix}{suffix}"
+				value = source.attrib.get( name )
+				if value is not None :
+					Gaffer.Metadata.registerValue( parameterTarget, "ri:{}".format( name ), value )
+					if suffix in [ "Left", "Right" ] :
+						prefixes.append( value )
 
 def __cleanDescription( parameterTarget, element ) :
 

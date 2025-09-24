@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferSceneUI
 
 import GafferOSL
 
@@ -175,6 +176,37 @@ def __plugNoduleLabel( plug ) :
 
 	return label
 
+def __plugActivator( plug ) :
+
+	# Prefer our own format, in which activation is defined by a single
+	# OSL expression with access to all plug values and all OSL constructs.
+
+	node = plug.node()
+	expression = node.parameterMetadata( plug, "enabledExpression" )
+	if expression :
+		return node.evaluateActivatorExpression( expression )
+
+	# Fall back to a far less satisfying but more pervasive format.
+
+	node = plug.node()
+	return not GafferSceneUI.ShaderUI._evaluateConditionalLock(
+		node["parameters"],
+		lambda key : node.parameterMetadata( plug, key )
+	)
+
+def __plugVisibilityActivator( plug ) :
+
+	node = plug.node()
+	expression = node.parameterMetadata( plug, "visibleExpression" )
+	if expression :
+		return node.evaluateActivatorExpression( expression )
+
+	node = plug.node()
+	return GafferSceneUI.ShaderUI._evaluateConditionalVisibility(
+		node["parameters"],
+		lambda key : node.parameterMetadata( plug, key ),
+	)
+
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLShader,
@@ -198,6 +230,8 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", __plugNoduleType,
 			"noduleLayout:visible", __plugNoduleVisibility,
 			"noduleLayout:label", __plugNoduleLabel,
+			"layout:activator", __plugActivator,
+			"layout:visibilityActivator", __plugVisibilityActivator,
 
 		],
 

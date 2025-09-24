@@ -1250,31 +1250,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# Or should it raise an exception?  The current behaviour of leaving unsubstituted strings is probably
 		# not right.
 
-	def testActivatorMetadata( self ) :
-		c = Gaffer.Context()
-
-		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "activatorMetadata.osl" )
-		n = GafferOSL.OSLShader()
-		n.loadShader( s )
-
-		parameters = n["parameters"]
-		for i in range( 5 ):
-			parameters["i"].setValue( i )
-			self.assertEqual( Gaffer.Metadata.value( parameters["test1"], "layout:activator" ), i > 2 )
-
-		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), False )
-		parameters["s"].setValue( "foo" )
-		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), True )
-
-		parameters["i"].setValue( 9 )
-		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), False )
-		parameters["i2"].setValue( 8 )
-		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), True )
-
-		self.assertEqual( Gaffer.Metadata.value( parameters["test4"], "layout:visibilityActivator" ), False )
-		parameters["c"].setValue( imath.Color3f( 0.2, 0.4, 0 ) )
-		self.assertEqual( Gaffer.Metadata.value( parameters["test4"], "layout:visibilityActivator" ), True )
-
 	def testVdbVolumeType( self ) :
 
 		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "vdbVolume.osl" )
@@ -1320,6 +1295,15 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( script["ColorToVector2"]["parameters"]["col"].getInput(), script["FloatToColor"]["out"]["c"] )
 		self.assertEqual( script["VectorToColor1"]["parameters"]["vec"].getInput(), script["ColorToVector"]["out"]["vec"] )
 		self.assertEqual( script["ColorToFloat"]["parameters"]["c"].getInput(), script["ColorToVector"]["out"]["vec"] )
+
+	def testStringArrayMetadata( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "stringArrayDefaults.osl" )
+		node = GafferOSL.OSLShader()
+		node.loadShader( shader )
+
+		self.assertEqual( node["parameters"]["size4Initialisers1"].defaultValue(), IECore.StringVectorData( [ "a", "", "", "" ] ) )
+		self.assertEqual( node["parameters"]["size4Initialisers4"].defaultValue(), IECore.StringVectorData( [ "a", "b", "c", "d" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

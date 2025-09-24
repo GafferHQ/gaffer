@@ -35,10 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GeometryAlgo.h"
+#include "Loader.h"
 
 #include "IECoreScene/CurvesPrimitive.h"
-
-#include "RixPredefinedStrings.hpp"
 
 using namespace IECore;
 using namespace IECoreScene;
@@ -59,25 +58,25 @@ void convertCurvesTopology( const IECoreScene::CurvesPrimitive *curves, RtPrimVa
 	if( curves->basis().standardBasis() == StandardCubicBasis::Unknown )
 	{
 		IECore::msg( IECore::Msg::Warning, messageContext, "Unsupported CubicBasis" );
-		primVars.SetString( Rix::k_Ri_type, Rix::k_linear );
+		primVars.SetString( Loader::strings().k_Ri_type, Loader::strings().k_linear );
 	}
 	else if( curves->basis().standardBasis() == StandardCubicBasis::Linear )
 	{
-		primVars.SetString( Rix::k_Ri_type, Rix::k_linear );
+		primVars.SetString( Loader::strings().k_Ri_type, Loader::strings().k_linear );
 	}
 	else
 	{
-		primVars.SetString( Rix::k_Ri_type, Rix::k_cubic );
+		primVars.SetString( Loader::strings().k_Ri_type, Loader::strings().k_cubic );
 		switch( curves->basis().standardBasis() )
 		{
 			case StandardCubicBasis::Bezier :
-				primVars.SetString( Rix::k_Ri_Basis, Rix::k_bezier );
+				primVars.SetString( Loader::strings().k_Ri_Basis, Loader::strings().k_bezier );
 				break;
 			case StandardCubicBasis::BSpline :
-				primVars.SetString( Rix::k_Ri_Basis, Rix::k_bspline );
+				primVars.SetString( Loader::strings().k_Ri_Basis, Loader::strings().k_bspline );
 				break;
 			case StandardCubicBasis::CatmullRom :
-				primVars.SetString( Rix::k_Ri_Basis, Rix::k_catmullrom );
+				primVars.SetString( Loader::strings().k_Ri_Basis, Loader::strings().k_catmullrom );
 				break;
 			default :
 				// Should have dealt with Unknown and Linear above
@@ -85,22 +84,22 @@ void convertCurvesTopology( const IECoreScene::CurvesPrimitive *curves, RtPrimVa
 		}
 	}
 
-	primVars.SetString( Rix::k_Ri_wrap, curves->periodic() ? Rix::k_periodic : Rix::k_nonperiodic );
-	primVars.SetIntegerDetail( Rix::k_Ri_nvertices, curves->verticesPerCurve()->readable().data(), RtDetailType::k_uniform );
+	primVars.SetString( Loader::strings().k_Ri_wrap, curves->periodic() ? Loader::strings().k_periodic : Loader::strings().k_nonperiodic );
+	primVars.SetIntegerDetail( Loader::strings().k_Ri_nvertices, curves->verticesPerCurve()->readable().data(), RtDetailType::k_uniform );
 }
 
 RtUString convertStaticCurves( const IECoreScene::CurvesPrimitive *curves, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	convertCurvesTopology( curves, primVars, messageContext );
 	GeometryAlgo::convertPrimitiveVariables( curves, primVars, messageContext );
-	return Rix::k_Ri_Curves;
+	return Loader::strings().k_Ri_Curves;
 }
 
 RtUString convertAnimatedCurves( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	convertCurvesTopology( samples[0], primVars, messageContext );
 	GeometryAlgo::convertPrimitiveVariables( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
-	return Rix::k_Ri_Curves;
+	return Loader::strings().k_Ri_Curves;
 }
 
 GeometryAlgo::ConverterDescription<CurvesPrimitive> g_curvesConverterDescription( convertStaticCurves, convertAnimatedCurves );

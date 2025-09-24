@@ -174,6 +174,43 @@ def __loadShader( shaderName, nodeType ) :
 GafferSceneUI.ShaderUI.hideShaders( IECore.PathMatcher( [ "/Pxr*" ] ) )
 
 ##########################################################################
+# Conditional visibility
+##########################################################################
+
+def __parameterActivator( plug ) :
+
+	shader = plug.node()
+	metadataTarget = shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( shader["parameters"] )
+	return not GafferSceneUI.ShaderUI._evaluateConditionalLock(
+		shader["parameters"],
+		lambda key : Gaffer.Metadata.value( metadataTarget, f"ri:{key}" )
+	)
+
+def __parameterVisibilityActivator( plug ) :
+
+	shader = plug.node()
+	metadataTarget = shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( shader["parameters"] )
+	return GafferSceneUI.ShaderUI._evaluateConditionalVisibility(
+		shader["parameters"],
+		lambda key : Gaffer.Metadata.value( metadataTarget, f"ri:{key}" )
+	)
+
+Gaffer.Metadata.registerValue( GafferRenderMan.RenderManShader, "parameters.*", "layout:activator", __parameterActivator )
+Gaffer.Metadata.registerValue( GafferRenderMan.RenderManShader, "parameters.*", "layout:visibilityActivator", __parameterVisibilityActivator )
+
+def __internalParameterActivator( plug ) :
+
+	return __parameterActivator( plug.node()["__shader"]["parameters"][plug.getName()] )
+
+def __internalParameterVisibilityActivator( plug ) :
+
+	return __parameterVisibilityActivator( plug.node()["__shader"]["parameters"][plug.getName()] )
+
+for nodeType in ( GafferRenderMan.RenderManLight, GafferRenderMan.RenderManLightFilter ) :
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "layout:activator", __internalParameterActivator )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "layout:visibilityActivator", __internalParameterVisibilityActivator )
+
+##########################################################################
 # Additional Metadata
 ##########################################################################
 
