@@ -2707,6 +2707,33 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( newScript["n"]["text"].getValue(), "test" )
 
+	def testIsolatedReadOnly( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		Gaffer.MetadataAlgo.setReadOnly( s["n"], True, True )
+		for p in Gaffer.ValuePlug.RecursiveRange( s["n"] ) :
+			Gaffer.MetadataAlgo.setReadOnly( p, True, True )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["text"] = "gottaBeBakedIn"' )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual( newScript["n"]["text"].getValue(), "gottaBeBakedIn" )
+
 	def testIsolatedAnimation( self ) :
 
 		s = Gaffer.ScriptNode()
