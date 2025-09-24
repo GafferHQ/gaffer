@@ -158,47 +158,8 @@ Gaffer::ConstContextPtr InspectorColumn::inspectorContext( const Gaffer::Path &p
 
 PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	CellData result;
 	Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
-	if( !inspectorResult )
-	{
-		return result;
-	}
-
-	result = cellDataFromValue( inspectorResult->value() );
-
-	result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
-	std::string toolTip;
-	if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
-	{
-		toolTip = "Source : " + inspectorResult->fallbackDescription();
-		result.foreground = g_fallbackValueForegroundColor;
-	}
-	else if( const auto source = inspectorResult->source() )
-	{
-		toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
-	}
-
-	/// \todo Should we have the ability to create read-only columns?
-	if( inspectorResult->editable() )
-	{
-		toolTip += !toolTip.empty() ? "\n\n" : "";
-		if( runTimeCast<const IECore::BoolData>( result.value ) )
-		{
-			toolTip += "Double-click to toggle";
-		}
-		else
-		{
-			toolTip += "Double-click to edit";
-		}
-	}
-
-	if( !toolTip.empty() )
-	{
-		result.toolTip = new StringData( toolTip );
-	}
-
-	return result;
+	return cellDataFromInspection( inspectorResult.get() );
 }
 
 PathColumn::CellData InspectorColumn::headerData( const IECore::Canceller *canceller ) const
@@ -266,4 +227,48 @@ PathColumn::CellData InspectorColumn::cellDataFromValue( const IECore::Object *v
 	}
 
 	return CellData();
+}
+
+PathColumn::CellData InspectorColumn::cellDataFromInspection( const GafferSceneUI::Private::Inspector::Result *inspection ) const
+{
+	CellData result;
+	if( !inspection )
+	{
+		return result;
+	}
+
+	result = cellDataFromValue( inspection->value() );
+
+	result.background = g_sourceTypeColors.at( (int)inspection->sourceType() );
+	std::string toolTip;
+	if( inspection->sourceType() == Inspector::Result::SourceType::Fallback )
+	{
+		toolTip = "Source : " + inspection->fallbackDescription();
+		result.foreground = g_fallbackValueForegroundColor;
+	}
+	else if( const auto source = inspection->source() )
+	{
+		toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
+	}
+
+	/// \todo Should we have the ability to create read-only columns?
+	if( inspection->editable() )
+	{
+		toolTip += !toolTip.empty() ? "\n\n" : "";
+		if( runTimeCast<const IECore::BoolData>( result.value ) )
+		{
+			toolTip += "Double-click to toggle";
+		}
+		else
+		{
+			toolTip += "Double-click to edit";
+		}
+	}
+
+	if( !toolTip.empty() )
+	{
+		result.toolTip = new StringData( toolTip );
+	}
+
+	return result;
 }

@@ -185,12 +185,16 @@ class MuteColumn : public InspectorColumn
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = InspectorColumn::cellData( path, canceller );
-
-			if( auto value = runTimeCast<const BoolData>( result.value ) )
+			Inspector::ConstResultPtr inspection = inspect( path, canceller );
+			CellData result = InspectorColumn::cellDataFromInspection( inspection.get() );
+			if( !inspection )
 			{
-				Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
-				if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
+				return result;
+			}
+
+			if( auto value = runTimeCast<const BoolData>( inspection->value() ) )
+			{
+				if( inspection->sourceType() != Inspector::Result::SourceType::Fallback )
 				{
 					result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
 				}
@@ -199,7 +203,7 @@ class MuteColumn : public InspectorColumn
 					result.icon = value->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
 				}
 			}
-			if( !result.icon )
+			else
 			{
 				// Use a transparent icon to reserve space in the UI. Without this,
 				// the top row will resize when setting the mute value, causing a full
@@ -276,24 +280,30 @@ class SetMembershipColumn : public InspectorColumn
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = InspectorColumn::cellData( path, canceller );
+			// Get basic cell data from base class, including the tooltip and
+			// background colour to indicate source type.
 
-			if( auto value = runTimeCast<const BoolData>( result.value ) )
+			Inspector::ConstResultPtr inspection = inspect( path, canceller );
+			CellData result = InspectorColumn::cellDataFromInspection( inspection.get() );
+			if( !inspection )
 			{
-				if( value->readable() )
+				return result;
+			}
+
+			// Replace value with an improved icon indicating set membership.
+
+			if( inspection->typedValue<bool>( false ) )
+			{
+				if( inspection->sourceType() != Inspector::Result::SourceType::Fallback )
 				{
-					Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
-					if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
-					{
-						result.icon = m_setMemberIconData;
-					}
-					else
-					{
-						result.icon = m_setMemberIconFadedData;
-					}
+					result.icon = m_setMemberIconData;
+				}
+				else
+				{
+					result.icon = m_setMemberIconFadedData;
 				}
 			}
-			if( !result.icon )
+			else
 			{
 				result.icon = m_setMemberUndefinedIconData;
 			}

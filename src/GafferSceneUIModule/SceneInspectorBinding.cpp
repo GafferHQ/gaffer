@@ -1618,11 +1618,11 @@ class InspectorDiffColumn : public GafferSceneUI::Private::InspectorColumn
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = InspectorColumn::cellData( path, canceller );
-
-			/// \todo Rejig InspectorColumn so we can share the inspection it already did.
 			GafferSceneUI::Private::Inspector::ResultPtr inspectionA = inspect( path, canceller );
 			GafferSceneUI::Private::Inspector::ResultPtr inspectionB = m_otherColumn->inspect( path, canceller );
+
+			CellData result = InspectorColumn::cellDataFromInspection( inspectionA.get() );
+
 			const Object *valueA = inspectionA ? inspectionA->value() : nullptr;
 			const Object *valueB = inspectionB ? inspectionB->value() : nullptr;
 
