@@ -187,12 +187,6 @@ class MuteColumn : public InspectorColumn
 		{
 			CellData result = InspectorColumn::cellData( path, canceller );
 
-			auto scenePath = runTimeCast<const ScenePath>( &path );
-			if( !scenePath )
-			{
-				return result;
-			}
-
 			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
 				Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
@@ -283,12 +277,6 @@ class SetMembershipColumn : public InspectorColumn
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
 		{
 			CellData result = InspectorColumn::cellData( path, canceller );
-
-			auto scenePath = runTimeCast<const ScenePath>( &path );
-			if( !scenePath )
-			{
-				return result;
-			}
 
 			if( auto value = runTimeCast<const BoolData>( result.value ) )
 			{
