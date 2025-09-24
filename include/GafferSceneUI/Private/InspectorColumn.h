@@ -76,6 +76,13 @@ class GAFFERSCENEUI_API InspectorColumn : public GafferUI::PathColumn
 		/// be reused by `_HistoryWindow`.
 		static CellData cellDataFromValue( const IECore::Object *value );
 
+	protected :
+
+		/// The internal implementation of `cellData()`. Available as a separate
+		/// function so that derived classes can override `cellData()` without
+		/// having to make their own separate call to `inspect()`.
+		CellData cellDataFromInspection( const GafferSceneUI::Private::Inspector::Result *inspection ) const;
+
 	private :
 
 		void inspectorDirtied();
