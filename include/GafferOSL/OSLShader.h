@@ -71,6 +71,8 @@ class GAFFEROSL_API OSLShader : public GafferScene::Shader
 		const IECore::Data *shaderMetadata( const IECore::InternedString &name ) const;
 		/// Returns an OSL metadata item from the specified shader parameter.
 		const IECore::Data *parameterMetadata( const Gaffer::Plug *plug, const IECore::InternedString &name ) const;
+		/// Evaluates an OSL expression using the current values of the shader parameters.
+		bool evaluateActivatorExpression( const std::string &expression ) const;
 
 		/// Allows other renderer shaders to connect to OSL shaders by registering them.
 		/// Returns true on success, false if already added.

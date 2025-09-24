@@ -188,6 +188,12 @@ void loadShader( OSLLight &l, const std::string &shaderName )
 	l.loadShader( shaderName );
 }
 
+bool evaluateActivatorExpressionWrapper( OSLShader &shader, const std::string &expression )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return shader.evaluateActivatorExpression( expression );
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferOSL )
@@ -197,6 +203,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 		.def( "shaderMetadata", &shaderMetadata, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "parameterMetadata", &parameterMetadata, ( boost::python::arg_( "plug" ), boost::python::arg_( "_copy" ) = true ) )
 		.def( "shadingEngine", &oslShaderShadingEngine, ( boost::python::arg_( "substitutions" ) = object() ) )
+		.def( "evaluateActivatorExpression", &evaluateActivatorExpressionWrapper )
 	;
 
 	GafferBindings::DependencyNodeClass<OSLImage>();

@@ -1,10 +1,17 @@
 1.6.x.x (relative to 1.6.1.0)
 =======
 
+Improvements
+------------
+
+- RenderManShader, RenderManLight, RenderManLightFilter : Added support for conditional parameter visibility, hiding parameters when they are irrelevant due to the value of other parameters.
+- OSLShader : Added support for conditional visibility metadata in the format used by RenderMan's OSL shaders.
+
 Fixes
 -----
 
 - SceneInspector : Fixed units used to show transform rotation - it is now shown in degrees again (#6604).
+- OSLShader : Fixed crash loading string array parameters without default values for all elements.
 
 1.6.1.0 (relative to 1.6.0.0)
 =======
