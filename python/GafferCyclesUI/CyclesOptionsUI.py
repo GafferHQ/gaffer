@@ -300,7 +300,7 @@ def __registerDenoiserPresets() :
 
 	if GafferCycles.hasOpenImageDenoise :
 		presetNames.append( "Open Image Denoise" )
-		presetValues.apend( "openimagedenoise" )
+		presetValues.append( "openimagedenoise" )
 
 	Gaffer.Metadata.registerValue( "option:cycles:integrator:denoiser_type", "presetNames", IECore.StringVectorData( presetNames ) )
 	Gaffer.Metadata.registerValue( "option:cycles:integrator:denoiser_type", "presetValues", IECore.StringVectorData( presetValues ) )
