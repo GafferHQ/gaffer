@@ -14,6 +14,7 @@ Fixes
 - Arnold : Fixed `options.frame` value, which was previously always `0`. This fixes the `arnold/frame` EXR metadata.
 - SceneInspector : The Globals tab no longer shows the A/B columns when only locations are being compared.
 - BoolWidget : Fixed label text styling when disabled.
+- Scene Editors : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
 
 API
 ---
