@@ -468,6 +468,21 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertTrue( "ri" in Gaffer.Metadata.registeredValues( n ) )
 		self.assertTrue( "rpi" in Gaffer.Metadata.registeredValues( n["op1"] ) )
 
+	def testNoDuplicatesInRegisteredValues( self ) :
+
+		Gaffer.Metadata.registerValue( Gaffer.Node, "duplicatesTest", "Node registration" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, Gaffer.Node, "duplicatesTest" )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "duplicatesTest", "AddNode registration" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, GafferTest.AddNode, "duplicatesTest" )
+
+		node = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( node, "duplicatesTest", "Instance registration" )
+
+		keys = Gaffer.Metadata.registeredValues( node )
+		self.assertEqual(
+			keys.count( "duplicatesTest" ), 1
+		)
+
 	def testInstanceDestruction( self ) :
 
 		for i in range( 0, 1000 ) :
