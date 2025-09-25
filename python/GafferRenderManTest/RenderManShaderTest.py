@@ -289,5 +289,97 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( script["shaderAssignment"]["shader"].getInput().isSame( script["dot"]["out"] ) )
 		self.assertTrue( script["shaderAssignment"]["shader"].source().isSame( script["shader"]["out"]["bxdf_out"] ) )
 
+	def testSplines( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "LamaIridescence" )
+
+		self.assertEqual( shader['parameters'].keys(), [
+			'targetHue',
+			'incidentAngle',
+			'roughness',
+			'colorPreservation',
+			'tailMix',
+			'tailLength',
+			'anisotropy',
+			'anisotropyDirection',
+			'anisotropyRotation',
+			'relativeFilmThickness',
+			'minFilmThickness',
+			'maxFilmThickness',
+			'filmIOR',
+			'passIridescence',
+			'overrideExteriorIOR',
+			'exteriorIOR',
+			'energyCompensation',
+			'surfaceMollification',
+			'motionMollification',
+			'lobeName',
+			'matte',
+		] )
+
+		self.assertEqual( shader['parameters']['targetHue'].getFlags(), Gaffer.Plug.Flags.Default )
+		self.assertEqual( shader['parameters']['targetHue'].direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( shader['parameters']['targetHue'].defaultValue(),
+			Gaffer.SplineDefinitionfColor3f(
+				(
+					( 0, imath.Color3f( 1, 0.25, 0.25 ) ),
+					( 0.166, imath.Color3f( 1, 1, 0.25 ) ),
+					( 0.333, imath.Color3f( 0.25, 1, 0.25 ) ),
+					( 0.5, imath.Color3f( 0.25, 1, 1 ) ),
+					( 0.666, imath.Color3f( 0.25, 0.25, 1 ) ),
+					( 0.833, imath.Color3f( 1, 0.25, 1 ) ),
+					( 1, imath.Color3f( 1, 0.25, 0.25 ) ),
+				),
+				Gaffer.SplineDefinitionInterpolation.CatmullRom
+			)
+		)
+
+		self.assertEqual( shader['parameters']['incidentAngle'].getFlags(), Gaffer.Plug.Flags.Default )
+		self.assertEqual( shader['parameters']['incidentAngle'].direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( shader['parameters']['incidentAngle'].defaultValue(),
+			Gaffer.SplineDefinitionff(
+				(
+					( 0, 0 ),
+					( 1, 1 ),
+				),
+				Gaffer.SplineDefinitionInterpolation.Linear
+			)
+		)
+
+		# Test something where the spline isn't first to make sure we're getting the order right
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrRampLightFilter" )
+
+		self.maxDiff = None
+		self.assertEqual( shader['parameters'].keys(), [
+			'combineMode',
+			'rampType',
+			'beginDist',
+			'endDist',
+			'ramp',
+			'density',
+			'invert',
+			'intensity',
+			'diffuse',
+			'specular',
+			'saturation',
+			'colorRamp',
+			'coordsys',
+			'linkingGroups'
+		] )
+
+		self.assertEqual( shader['parameters']['ramp'].getFlags(), Gaffer.Plug.Flags.Default )
+		self.assertEqual( shader['parameters']['ramp'].direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( shader['parameters']['ramp'].defaultValue(),
+			Gaffer.SplineDefinitionff(
+				(
+					( 0, 0 ),
+					( 1, 1 ),
+				),
+				Gaffer.SplineDefinitionInterpolation.Linear
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()
