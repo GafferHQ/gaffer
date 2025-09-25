@@ -285,19 +285,18 @@ Inspector::ResultPtr Inspector::inspect() const
 		return nullptr;
 	}
 
-	ConstObjectPtr value = this->value( history.get() );
-	bool fallbackValue = false;
-	std::string fallbackDescription;
-	if( !value )
+	ResultPtr result = new Result( this->value( history.get() ), targetEditScope() );
+	if( !result->m_value )
 	{
-		value = this->fallbackValue( history.get(), fallbackDescription );
-		fallbackValue = (bool)value;
+		result->m_fallbackValue = this->fallbackValue( history.get(), result->m_fallbackDescription );
+		if( result->m_fallbackValue && result->m_fallbackDescription.empty() )
+		{
+			IECore::msg( IECore::Msg::Level::Error, "Inspector", "Fallback value without a description" );
+		}
 	}
-
-	ResultPtr result = new Result( value, targetEditScope() );
 	inspectHistoryWalk( history.get(), result.get() );
 
-	if( !result->m_value && !result->editable() )
+	if( !result->m_value && !result->m_fallbackValue && !result->editable() )
 	{
 		// The property doesn't exist, and there's no
 		// way of making it.
@@ -335,12 +334,6 @@ Inspector::ResultPtr Inspector::inspect() const
 		result->m_editors = {
 			fmt::format( formatString, "edit" ), "", fmt::format( formatString, "disable" ), nullptr, nullptr
 		};
-	}
-
-	if( fallbackValue )
-	{
-		result->m_sourceType = Result::SourceType::Fallback;
-		result->m_fallbackDescription = fallbackDescription.empty() ? "Fallback value" : fallbackDescription;
 	}
 
 	return result;
@@ -981,9 +974,14 @@ Inspector::Result::Result( const IECore::ConstObjectPtr &value, const Gaffer::Ed
 {
 }
 
-const IECore::Object *Inspector::Result::value() const
+const IECore::Object *Inspector::Result::value( bool useFallbacks ) const
 {
-	return m_value.get();
+	if( m_value )
+	{
+		return m_value.get();
+	}
+
+	return useFallbacks ? m_fallbackValue.get() : nullptr;
 }
 
 Gaffer::ValuePlug *Inspector::Result::source() const

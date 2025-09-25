@@ -194,7 +194,7 @@ class MuteColumn : public InspectorColumn
 
 			if( auto value = runTimeCast<const BoolData>( inspection->value() ) )
 			{
-				if( inspection->sourceType() != Inspector::Result::SourceType::Fallback )
+				if( inspection->fallbackDescription().empty() )
 				{
 					result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
 				}
@@ -294,7 +294,7 @@ class SetMembershipColumn : public InspectorColumn
 
 			if( inspection->typedValue<bool>( false ) )
 			{
-				if( inspection->sourceType() != Inspector::Result::SourceType::Fallback )
+				if( inspection->fallbackDescription().empty() )
 				{
 					result.icon = m_setMemberIconData;
 				}

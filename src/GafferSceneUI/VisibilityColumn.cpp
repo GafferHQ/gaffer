@@ -91,7 +91,7 @@ InspectorColumn::CellData VisibilityColumn::cellData( const Gaffer::Path &path, 
 	const auto visibilityValue = runTimeCast<const BoolData>( inspectorResult->value() );
 
 	std::string toolTip;
-	if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
+	if( !inspectorResult->value( /* useFallbacks = */ false ) )
 	{
 		result.icon = visible ? g_locationVisibleTransparentIcon : g_locationInvisibleTransparentIcon;
 		toolTip = visible ? "Location visible by inheritance." : "Location invisible by inheritance. It will not be rendered, and neither will its descendants.";

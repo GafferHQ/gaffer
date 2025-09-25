@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.2.0)
 =======
 
+Fixes
+-----
 
+- LightEditor, AttributeEditor, HierarchyView, RenderPassEditor : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
 
 1.6.2.0 (relative to 1.6.1.0)
 =======

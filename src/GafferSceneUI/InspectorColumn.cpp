@@ -59,7 +59,6 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 { (int)Inspector::Result::SourceType::EditScope, new Color4fData( Imath::Color4f( 48, 100, 153, 150 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Other, nullptr },
-{ (int)Inspector::Result::SourceType::Fallback, nullptr },
 };
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
@@ -241,7 +240,7 @@ PathColumn::CellData InspectorColumn::cellDataFromInspection( const GafferSceneU
 
 	result.background = g_sourceTypeColors.at( (int)inspection->sourceType() );
 	std::string toolTip;
-	if( inspection->sourceType() == Inspector::Result::SourceType::Fallback )
+	if( inspection->fallbackDescription().size() )
 	{
 		toolTip = "Source : " + inspection->fallbackDescription();
 		result.foreground = g_fallbackValueForegroundColor;

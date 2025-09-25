@@ -71,11 +71,13 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		editable,
 		nonEditableReason = "",
 		edit = None,
-		editWarning = ""
+		editWarning = "",
+		fallbackDescription = "",
 	) :
 
 		self.assertEqual( result.source(), source )
 		self.assertEqual( result.sourceType(), sourceType )
+		self.assertEqual( result.fallbackDescription(), fallbackDescription )
 		self.assertEqual( result.editable(), editable )
 
 		if editable :
@@ -131,7 +133,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
-			GafferSceneUI.Private.Inspector.Result.SourceType.Fallback
+			GafferSceneUI.Private.Inspector.Result.SourceType.Other
 		)
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /" )
 
@@ -141,7 +143,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
-			GafferSceneUI.Private.Inspector.Result.SourceType.Fallback
+			GafferSceneUI.Private.Inspector.Result.SourceType.Other
 		)
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
@@ -373,6 +375,31 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "editScope2.SetMembershipEdits is locked."
 		)
 
+	def testSourceForEditScopeMembershipRemoval( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A" )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( plane["out"] )
+		editScope["in"].setInput( plane["out"] )
+
+		self.assertEqual( editScope["out"].set( "A" ).value, IECore.PathMatcher( [ "/plane" ] ) )
+
+		GafferScene.EditScopeAlgo.setSetMembership(
+			editScope,
+			IECore.PathMatcher( [ "/plane" ] ),
+			"A",
+			GafferScene.EditScopeAlgo.SetMembership.Removed
+		)
+
+		self.assertEqual( editScope["out"].set( "A" ).value, IECore.PathMatcher() )
+		inspection = self.__inspect( editScope["out"], "/plane", "A", editScope )
+		self.assertTrue( editScope["SetMembershipEdits"].isAncestorOf( inspection.source() ) )
+		self.assertTrue( inspection.sourceType(), inspection.SourceType.EditScope )
+		self.assertEqual( inspection.value(), IECore.BoolData( False ) )
+		self.assertEqual( inspection.fallbackDescription(), "Default value" )
+
 	def testNonExistentLocation( self ) :
 
 		plane = GafferScene.Plane()
@@ -388,7 +415,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( plane["out"], "/plane", "planeSet" ),
 			source = plane["sets"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			fallbackDescription = "Default value",
 			editable = True
 		)
 
