@@ -1759,7 +1759,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 					IECore::Msg::Warning, "RenderController",
 					fmt::format(
 						"{} attribute edit{} required geometry to be regenerated",
-						m_failedAttributeEdits, m_failedAttributeEdits > 1 ? "s" : ""
+						m_failedAttributeEdits.load(), m_failedAttributeEdits > 1 ? "s" : ""
 					)
 				);
 				m_failedAttributeEdits = 0;

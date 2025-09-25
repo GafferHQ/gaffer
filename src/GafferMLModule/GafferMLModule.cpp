@@ -112,7 +112,7 @@ std::string tensorRepr( const Tensor &tensor )
 	{
 		// We don't have a good `repr()` for this - just return a default one
 		// and the ValuePlugSerialiser will attempt a base 64 encoding instead.
-		return fmt::format( "<GafferML._GafferML.Tensor object at {}>", (void *)&tensor );
+		return fmt::format( "<GafferML._GafferML.Tensor object at {}>", reinterpret_cast<uintptr_t>( (void *)&tensor ) );
 	}
 }
 
@@ -152,7 +152,7 @@ object tensorGetItem( const Tensor &tensor, const std::vector<int64_t> &location
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING :
 			return object( tensor.value().GetStringTensorElement( toLinearIndex( tensor.shape(), location ) ) );
 		default :
-			throw IECore::Exception( fmt::format( "Unsupported element type {}", elementType ) );
+			throw IECore::Exception( fmt::format( "Unsupported element type {}", Tensor::elementDataTypeToString( elementType ) ) );
 	}
 }
 

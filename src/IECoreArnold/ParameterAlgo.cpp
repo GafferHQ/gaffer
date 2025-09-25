@@ -75,12 +75,12 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 		AtArray *a = ParameterAlgo::dataToArray( value, parameterType );
 		if( !a )
 		{
-			msg( Msg::Warning, messageContext, fmt::format( "Unable to create array from data of type \"{}\" for parameter \"{}\"", value->typeName(), name ) );
+			msg( Msg::Warning, messageContext, fmt::format( "Unable to create array from data of type \"{}\" for parameter \"{}\"", value->typeName(), name.c_str() ) );
 			return;
 		}
 		if( AiArrayGetType( a ) != parameterType )
 		{
-			msg( Msg::Warning, messageContext, fmt::format( "Unable to create array of type {} from data of type \"{}\" for parameter \"{}\"", AiParamGetTypeName( parameterType ), value->typeName(), name ) );
+			msg( Msg::Warning, messageContext, fmt::format( "Unable to create array of type {} from data of type \"{}\" for parameter \"{}\"", AiParamGetTypeName( parameterType ), value->typeName(), name.c_str() ) );
 			return;
 		}
 		AiNodeSetArray( node, name, a );
@@ -99,7 +99,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					}
 					else
 					{
-						msg( Msg::Warning, "setParameter", fmt::format( "Int64Data value {} is out of range for parameter \"{}\"", data->readable(), name ) );
+						msg( Msg::Warning, "setParameter", fmt::format( "Int64Data value {} is out of range for parameter \"{}\"", data->readable(), name.c_str() ) );
 					}
 				}
 				else if( const IntData *data = dataCast<IntData>( name, value, messageContext ) )
@@ -117,7 +117,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					}
 					else
 					{
-						msg( Msg::Warning, "setParameter", fmt::format( "UInt64Data value {} is out of range for parameter \"{}\"", data->readable(), name ) );
+						msg( Msg::Warning, "setParameter", fmt::format( "UInt64Data value {} is out of range for parameter \"{}\"", data->readable(), name.c_str() ) );
 					}
 				}
 				else if( const IntData *data = runTimeCast<const IntData>( value ) )
@@ -251,7 +251,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					nodeStr = AiNodeEntryGetName( AiNodeGetNodeEntry( node ) );
 				}
 
-				msg( Msg::Warning, messageContext, fmt::format( "Arnold parameter \"{}\" on node \"{}\" has unsupported type \"{}\".", name, nodeStr, AiParamGetTypeName( parameterType ) ) );
+				msg( Msg::Warning, messageContext, fmt::format( "Arnold parameter \"{}\" on node \"{}\" has unsupported type \"{}\".", name.c_str(), nodeStr, AiParamGetTypeName( parameterType ) ) );
 			}
 		}
 	}
@@ -396,7 +396,7 @@ void setParameter( AtNode *node, AtString name, const IECore::Data *value, const
 			msg(
 				Msg::Warning,
 				messageContext,
-				fmt::format( "Unsupported data type \"{}\" for name \"{}\"", value->typeName(), name )
+				fmt::format( "Unsupported data type \"{}\" for name \"{}\"", value->typeName(), name.c_str() )
 			);
 		}
 	}
