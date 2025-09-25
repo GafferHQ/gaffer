@@ -1,10 +1,10 @@
 1.5.x.x (relative to 1.5.16.2)
 =======
 
-Fixes
------
-- RendererAlgo : Prevent renderID overwrite if an existing renderID exists (for merge drivers writing to the same catalogue).
+Improvements
+------------
 
+- Outputs : Custom `gaffer:renderID` parameters are now preserved, allowing custom "netrender" style workflows to be implemented.
 
 1.5.16.2 (relative to 1.5.16.1)
 ========

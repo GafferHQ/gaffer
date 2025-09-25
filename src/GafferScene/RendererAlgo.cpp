@@ -1660,10 +1660,10 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 
 	// Add parameters that provide unique identifiers for the render and the
 	// output. This is used by the Catalogue to know when to start a new image
-	// and when to just update an existing one. We only create a new renderID
-	// if one doesn't already exist, allowing it to be propagated from a parent
-	// context.
-	if ( !param->member<StringData>( "gaffer:renderID" ) )
+	// and when to just update an existing one. If `gaffer:renderID` has been
+	// defined on the Output already then we assume the user knows what they are
+	// doing instead of replacing it - this facilitates "netrender" style workflows.
+	if( !param->member<StringData>( "gaffer:renderID" ) )
 	{
 		param->writable()["gaffer:renderID"] = new StringData( fmt::format( "{}:{}", getpid(), reinterpret_cast<uintptr_t>( renderer ) ) );
 	}
