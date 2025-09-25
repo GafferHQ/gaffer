@@ -1,6 +1,9 @@
 1.5.x.x (relative to 1.5.16.2)
 =======
 
+Fixes
+-----
+- RendererAlgo : Prevent renderID overwrite if an existing renderID exists (for merge drivers writing to the same catalogue).
 
 
 1.5.16.2 (relative to 1.5.16.1)
