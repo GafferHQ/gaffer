@@ -866,6 +866,7 @@ std::vector<IECore::InternedString> Metadata::registeredValues( const GraphCompo
 {
 	std::vector<IECore::InternedString> keys;
 
+	size_t numSources = 0;
 	if( registrationTypes & RegistrationTypes::TypeId  )
 	{
 		IECore::TypeId typeId = target->typeId();
@@ -875,6 +876,7 @@ std::vector<IECore::InternedString> Metadata::registeredValues( const GraphCompo
 			if( nIt != graphComponentMetadataMap().end() )
 			{
 				const auto &index = nIt->second.values.get<1>();
+				numSources += index.empty() ? 0 : 1;
 				for( auto vIt = index.rbegin(), veIt = index.rend(); vIt != veIt; ++vIt )
 				{
 					keys.push_back( vIt->first );
@@ -906,6 +908,7 @@ std::vector<IECore::InternedString> Metadata::registeredValues( const GraphCompo
 							if( StringAlgo::match( plugPath, it->first ) )
 							{
 								const auto &index = it->second.get<1>();
+								numSources += index.empty() ? 0 : 1;
 								for( auto vIt = index.rbegin(), veIt = index.rend(); vIt != veIt; ++vIt )
 								{
 									plugPathKeys.push_back( vIt->first );
@@ -925,7 +928,26 @@ std::vector<IECore::InternedString> Metadata::registeredValues( const GraphCompo
 
 	if( registrationTypes & RegistrationTypes::Instance )
 	{
+		const size_t numTypeIdKeys = keys.size();
 		registeredInstanceValues( target, keys, registrationTypes );
+		numSources += ( keys.size() > numTypeIdKeys ) ? 1 : 0;
+	}
+
+	if( numSources > 1 )
+	{
+		// We've combined keys from multiple source maps, so need to remove any
+		// duplicates. The approach here is `O( N^2 )`, but for 100 keys it
+		// beats using a separate `unordered_set` by around 30%, and we're
+		// unlikely to have that many keys anyway.
+		keys.erase(
+			std::remove_if(
+				keys.begin(), keys.end(),
+				[&] ( const InternedString &key ) {
+					return std::find( const_cast<const InternedString *>( keys.data() ), &key, key ) != &key;
+				}
+			),
+			keys.end()
+		);
 	}
 
 	return keys;

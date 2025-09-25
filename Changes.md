@@ -1,7 +1,11 @@
 1.6.x.x (relative to 1.6.2.0)
 =======
 
+Fixes
+-----
 
+- GraphEditor : Fixed duplicate annotations that occurred when default annotation metadata was registered for a particular node type.
+- Metadata : Removed duplicate items returned by `registeredValues()`.
 
 1.6.2.0 (relative to 1.6.1.0)
 =======

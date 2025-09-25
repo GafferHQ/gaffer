@@ -779,6 +779,17 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			Gaffer.MetadataAlgo.Annotation( "hi" ),
 		)
 
+	def testAnnotationsDoesntReturnDuplicates( self ) :
+
+		Gaffer.Metadata.registerValue( Gaffer.Node, "annotation:user:text", "TypeId annotation" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, Gaffer.Node, "annotation:user:text" )
+
+		node = Gaffer.Node()
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( node ), [ "user" ] )
+
+		Gaffer.MetadataAlgo.addAnnotation( node, "user", Gaffer.MetadataAlgo.Annotation( "Instance annotation", imath.Color3f( 1, 0, 0 ) ) )
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( node ), [ "user" ] )
+
 	def testNonUserAnnotationTemplates( self ) :
 
 		defaultTemplates = Gaffer.MetadataAlgo.annotationTemplates()
