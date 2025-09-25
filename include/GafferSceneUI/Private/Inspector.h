@@ -291,15 +291,23 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// =======
 
 		/// The inspected value that should be displayed by the UI.
-		const IECore::Object *value() const;
+		/// If the inspected value is null, then `useFallbacks` allows
+		/// a fallback value to be returned instead - for example a
+		/// known default value or an inherited attribute value.
+		const IECore::Object *value( bool useFallbacks = true ) const;
 		/// The inspected value cast to its native type. If the inspected
 		/// value is not of the requested type, the given default value
 		/// will be returned.
 		template<typename T>
-		const T typedValue( const T &defaultValue ) const;
+		const T typedValue( const T &defaultValue, bool useFallbacks = true ) const;
 
 		/// The plug that was used to author the current value, or null if
 		/// it cannot be determined.
+		///
+		/// > Note : Does not consider fallback values. When a fallback is in
+		/// > effect because the main value is null, `source()` will either
+		/// > return `nullptr` or the edit which was responsible for removing
+		/// > the value.
 		Gaffer::ValuePlug *source() const;
 		/// The target EditScope.
 		Gaffer::EditScope *editScope() const;
@@ -316,15 +324,14 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 			Downstream,
 			/// No EditScope was specified, or the EditScope was not found in
 			/// the value's history.
-			Other,
-			/// The value was provided from a fallback value from the Inspector.
-			Fallback
+			Other
 		};
 
 		/// The relationship between `source()` and `editScope()`.
 		SourceType sourceType() const;
-		/// Returns a user-facing description of the source of the
-		/// fallback value when `SourceType` is `Fallback`.
+		/// If a fallback value is in effect due to the primary value
+		/// being null, returns a user-facing description of the fallback
+		/// value. Otherwise returns an empty string.
 		const std::string &fallbackDescription() const;
 
 		/// Editing
@@ -371,6 +378,7 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		friend class Inspector;
 
 		const IECore::ConstObjectPtr m_value;
+		IECore::ConstObjectPtr m_fallbackValue;
 		Gaffer::ValuePlugPtr m_source;
 		SourceType m_sourceType;
 		std::string m_fallbackDescription;
