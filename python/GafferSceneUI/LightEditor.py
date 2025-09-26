@@ -275,9 +275,18 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		for rendererKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( attribute, rendererKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ self.__columnCache.setdefault( ( c, currentSection ), c( self.settings()["in"], self.settings()["editScope"] ) ) for c in section.values() ]
+				sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
 
 		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
+
+	def __acquireColumn( self, columnCreator, section ) :
+
+		column = self.__columnCache.get( ( columnCreator, section ) )
+		if column is None :
+			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
+			self.__columnCache[ ( columnCreator, section ) ] = column
+
+		return column
 
 	def __selectedPathsChanged( self, scriptNode ) :
 

@@ -289,12 +289,18 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		for groupKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [
-					( self.__columnCache.setdefault( ( c, currentSection ), c( self.settings()["in"], self.settings()["editScope"] ) ), index )
-					for ( c, index ) in section.values()
-				]
+				sectionColumns += [ ( self.__acquireColumn( c, currentSection ), index ) for ( c, index ) in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + self.__orderedColumns( sectionColumns ) )
+
+	def __acquireColumn( self, columnCreator, section ) :
+
+		column = self.__columnCache.get( ( columnCreator, section ) )
+		if column is None :
+			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
+			self.__columnCache[ ( columnCreator, section ) ] = column
+
+		return column
 
 	@staticmethod
 	def __orderedColumns( columnsAndIndices ) :
