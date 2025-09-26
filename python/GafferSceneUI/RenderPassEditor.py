@@ -832,10 +832,14 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			tabGroup = self.getPlug().node()["tabGroup"].getValue()
 
+			tabNames = []
 			for groupKey, sections in RenderPassEditor._RenderPassEditor__columnRegistry.items() :
 				if IECore.StringAlgo.match( tabGroup, groupKey ) :
-					for section in sections.keys() :
-						self._qtWidget().addTab( section )
+					tabNames.extend( sections.keys() )
+			# Deduplicate sections while preserving order in case the same
+			# section has been registered to multiple matching groupKeys.
+			for name in list( dict.fromkeys( tabNames ) ) :
+				self._qtWidget().addTab( name )
 		finally :
 			self.__ignoreCurrentChanged = False
 
