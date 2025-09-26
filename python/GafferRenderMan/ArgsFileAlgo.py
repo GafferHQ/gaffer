@@ -105,7 +105,9 @@ def registerMetadata( argsFile, parametersToIgnore = set() ) :
 				if currentParameterType is None :
 					currentParameterType = element.attrib["type"] + element.attrib.get( "arraySize", "" )
 
-				Gaffer.Metadata.registerValue( currentParameterTarget, "label", element.attrib.get( "label" ) )
+				label = element.attrib.get( "label" )
+				if label:
+					Gaffer.Metadata.registerValue( currentParameterTarget, "label", label )
 				Gaffer.Metadata.registerValue( currentParameterTarget, "description", element.attrib.get( "help" ) )
 				Gaffer.Metadata.registerValue( currentParameterTarget, "layout:section", ".".join( pageStack ) )
 				Gaffer.Metadata.registerValue( currentParameterTarget, "plugValueWidget:type", __widgetTypes.get( element.attrib.get( "widget" ) ) )
