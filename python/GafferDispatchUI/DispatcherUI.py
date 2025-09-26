@@ -253,7 +253,18 @@ Gaffer.Metadata.registerNode(
 			considered to be immediate too, regardless of their settings.
 			"""
 
-		)
+		),
+
+		"dispatcher.isolate" : (
+
+			"description",
+			"""
+			Causes this node to be executed from a script containing *only* this node.
+			Any plugs on this node with inputs will be computed at dispatch time and
+			saved in the script.
+			""",
+
+		),
 
 	}
 

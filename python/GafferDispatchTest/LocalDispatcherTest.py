@@ -1332,5 +1332,84 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			# On Linux, everything actually makes sense.
 			self.assertEqual( childEnvironment["gafferLocalDispatcherTestMIXEDcaseA"], "testTEST" )
 
+	def testIsolate( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["fileName"].setValue( self.temporaryDirectory() / "fullScriptName.txt" )
+		s["n"]["text"].setValue( "${script:name}" )
+
+		s["i"] = GafferDispatchTest.TextWriter()
+		s["i"]["dispatcher"]["isolate"].setValue( True )
+		s["i"]["fileName"].setValue( self.temporaryDirectory() / "isolatedScriptName.txt" )
+		s["i"]["text"].setValue( "${script:name}" )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["b2"] = Gaffer.Box()
+
+		s["b"]["b2"]["i2"] = GafferDispatchTest.TextWriter()
+		s["b"]["b2"]["i2"]["dispatcher"]["isolate"].setValue( True )
+		s["b"]["b2"]["i2"]["fileName"].setValue( self.temporaryDirectory() / "boxedScriptName.txt" )
+		s["b"]["b2"]["i2"]["text"].setValue( "${script:name}" )
+
+		promotedTaskPlug = Gaffer.PlugAlgo.promote( s["b"]["b2"]["i2"]["task"] )
+		promotedTaskPlug = Gaffer.PlugAlgo.promote( promotedTaskPlug )
+
+		s["d"] = self.__createLocalDispatcher()
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+		s["d"]["tasks"][1].setInput( s["i"]["task"] )
+		s["d"]["tasks"][2].setInput( promotedTaskPlug )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CurrentFrame )
+
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		self.assertTrue( ( dispatchDir / "untitled.gfr" ).is_file() )
+		self.assertTrue( ( dispatchDir / "untitled.i_1.gfr" ).is_file() )
+		self.assertTrue( ( dispatchDir / "untitled.b.b2.i2_1.gfr" ).is_file() )
+
+		with open( self.temporaryDirectory() / "fullScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )
+
+		with open( self.temporaryDirectory() / "isolatedScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled.i_1" )
+
+		with open( self.temporaryDirectory() / "boxedScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled.b.b2.i2_1" )
+
+	def testIsolateForeground( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["fileName"].setValue( self.temporaryDirectory() / "test####.txt" )
+		s["n"]["text"].setValue( "####" )
+		s["n"]["dispatcher"]["isolate"].setValue( True )
+
+		s["d"] = self.__createLocalDispatcher()
+		s["d"]["executeInBackground"].setValue( False )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-10" )
+
+		with IECore.CapturingMessageHandler() as mh :
+			s["d"]["task"].execute()
+			s["d"].jobPool().waitForAll()
+
+		for i in range( 1, 11 ) :
+			paddedI = str( i ).zfill( 4 )
+			with open( self.temporaryDirectory() / "test{}.txt".format( paddedI ) ) as inFile :
+				self.assertEqual( inFile.readlines()[0].strip(), paddedI )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.MessageHandler.Level.Warning )
+		self.assertEqual( mh.messages[0].context, "LocalDispatcher" )
+		self.assertEqual( mh.messages[0].message, "Isolated execution is ignored for foreground dispatches." )
+
+
 if __name__ == "__main__":
 	unittest.main()
