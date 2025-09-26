@@ -1366,7 +1366,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["d"]["task"].execute()
 		s["d"].jobPool().waitForAll()
 
-		dispatchDir = next( self.temporaryDirectory().iterdir() )
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
 
 		self.assertTrue( ( dispatchDir / "untitled.gfr" ).is_file() )
 		self.assertTrue( ( dispatchDir / "untitled.i_1.gfr" ).is_file() )
