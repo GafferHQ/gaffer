@@ -826,5 +826,53 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
 			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "" )
 
+	def testSetMembershipDependingOnSetContextVariable( self ) :
+
+		# Build a classic set-defining spreadsheet.
+
+		sphere = GafferScene.Sphere()
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( plane["out"] )
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["selector"].setValue( "${mySetName}" )
+		spreadsheet["rows"].addColumn( Gaffer.StringVectorDataPlug( "paths" ) )
+
+		setDefinitions = {
+			"A" : "/group/sphere",
+			"B" : "/group/plane",
+			"C" : "/group",
+		}
+
+		for setName, path in setDefinitions.items() :
+			row = spreadsheet["rows"].addRow()
+			row["name"].setValue( setName )
+			row["cells"]["paths"]["value"].setValue( IECore.StringVectorData( [ path ] ) )
+			row["cells"]["paths"]["enabled"].setValue( True )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setInput( spreadsheet["out"]["paths"] )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( group["out"] )
+		setNode["name"].setInput( spreadsheet["activeRowNames"] )
+		setNode["filter"].setInput( pathFilter["out"] )
+		setNode["setVariable"].setValue( "mySetName" )
+
+		# Check we've built the scene we think we have.
+
+		self.assertEqual( { str( n ) for n in setNode["out"].setNames() }, { "A", "B", "C" } )
+
+		for setName, path in setDefinitions.items() :
+			self.assertEqual( setNode["out"].set( setName ).value, IECore.PathMatcher( [ path ] ) )
+
+		# Check that a SetMembershipInspector understands what we've done.
+
+		for setName, path in setDefinitions.items() :
+			inspection = self.__inspect( setNode["out"], path, setName )
+			self.assertEqual( inspection.source(), spreadsheet["rows"].row( setName )["cells"] )
+
 if __name__ == "__main__" :
 	unittest.main()

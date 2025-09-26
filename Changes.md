@@ -21,7 +21,10 @@ Breaking Changes
 1.6.x.x (relative to 1.6.2.0)
 =======
 
+Fixes
+-----
 
+- LightEditor : Fixed bug that could cause filter evaluation in an invalid context.
 
 1.6.2.0 (relative to 1.6.1.0)
 =======
