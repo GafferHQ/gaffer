@@ -432,7 +432,7 @@ void NodeParameter::updateParameter() const
 			AiNodeResetParameter( m_node, m_parameterName );
 			msg(
 				Msg::Warning, "NodeParameter",
-				fmt::format( "{}.{} : Node \"{}\" not found", AiNodeGetName( m_node ), m_parameterName, m_parameterValue )
+				fmt::format( "{}.{} : Node \"{}\" not found", AiNodeGetName( m_node ), m_parameterName.c_str(), m_parameterValue.c_str() )
 			);
 		}
 	}

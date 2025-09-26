@@ -85,6 +85,8 @@ class GAFFERML_API Tensor : public IECore::Object
 		IECore::DataPtr asData();
 		IECore::ConstDataPtr asData() const;
 
+		static const char *elementDataTypeToString( ONNXTensorElementDataType elementDataType );
+
 	private :
 
 		struct State : public IECore::RefCounted
