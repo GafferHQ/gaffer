@@ -2523,7 +2523,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s["d"]["task"].execute()
 
-		dispatchDir = next( self.temporaryDirectory().iterdir() )
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
 		newScript = Gaffer.ScriptNode()
 		newScript["fileName"].setValue( dispatchDir / "untitled.n_1.gfr" )
 		newScript.load()
