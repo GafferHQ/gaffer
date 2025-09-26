@@ -65,8 +65,6 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
-const InternedString g_setMembershipContextVariableName( "setMembership:set" );
-
 // This uses the same strategy that ValuePlug uses for the hash cache,
 // using `plug->dirtyCount()` to invalidate previous cache entries when
 // a plug is dirtied.
@@ -319,12 +317,16 @@ Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlg
 			return nullptr;
 		}
 
-		const FilterPlug *filterPlug = setSource->filterPlug();
-
-		Context::EditableScope setNameScope( history->context.get() );
-		setNameScope.set( g_setMembershipContextVariableName, &m_setName );
-
-		PathMatcher::Result filterResult = (PathMatcher::Result)filterPlug->match( history->scene.get() );
+		unsigned filterResult;
+		{
+			Context::EditableScope filterScope( history->context.get() );
+			const std::string setVariable = setSource->setVariablePlug()->getValue();
+			if( !setVariable.empty() )
+			{
+				filterScope.set( setVariable, &m_setName );
+			}
+			filterResult = setSource->filterPlug()->match( setSource->inPlug() );
+		}
 
 		if( !( filterResult & ( PathMatcher::Result::ExactMatch | PathMatcher::Result::AncestorMatch ) ) )
 		{
