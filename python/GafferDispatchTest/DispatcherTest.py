@@ -2357,7 +2357,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s["d"]["task"].execute()
 
-		dispatchDir = next( self.temporaryDirectory().iterdir() )
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
 
 		newScript = Gaffer.ScriptNode()
 		newScript["fileName"].setValue( dispatchDir / "untitled.n_1.gfr" )
@@ -2418,7 +2418,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s["d"]["task"].execute()
 
-		dispatchDir = next( self.temporaryDirectory().iterdir() )
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
 
 		newScript = Gaffer.ScriptNode()
 
@@ -2463,7 +2463,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s["d"]["task"].execute()
 
-		dispatchDir = next( self.temporaryDirectory().iterdir() )
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
 
 		for i in range( 1, 6 ) :
 			self.assertTrue( ( dispatchDir / "untitled.n_{}.gfr".format( i ) ).is_file() )
@@ -2495,7 +2495,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s["d"]["task"].execute()
 
-		dispatchDir = next( self.temporaryDirectory().iterdir() )
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
 		newScript = Gaffer.ScriptNode()
 		newScript["fileName"].setValue( dispatchDir / "untitled.n_1.gfr" )
 		newScript.load()
