@@ -257,7 +257,7 @@ const std::string &CapturingRenderer::CapturedObject::capturedName() const
 	return m_name;
 }
 
-const std::vector<IECore::ConstObjectPtr> &CapturingRenderer::CapturedObject::capturedSamples() const
+const IECoreScenePreview::Renderer::ObjectSamples &CapturingRenderer::CapturedObject::capturedSamples() const
 {
 	return m_capturedSamples;
 }

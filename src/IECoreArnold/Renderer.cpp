@@ -2465,18 +2465,18 @@ class InstanceCache : public IECore::RefCounted
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
-			if( !arnoldAttributes->canInstanceGeometry( samples.front() ) )
+			if( !arnoldAttributes->canInstanceGeometry( samples.front().get() ) )
 			{
 				return Instance( convert( samples, times, arnoldAttributes, nodeName, /* messageContext = */ nodeName ) );
 			}
 
 			IECore::MurmurHash h;
-			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+			for( const auto &sample : samples )
 			{
-				(*it)->hash( h );
+				sample->hash( h );
 			}
 			h.append( times.data(), times.size() );
-			arnoldAttributes->hashGeometry( samples.front(), h );
+			arnoldAttributes->hashGeometry( samples.front().get(), h );
 
 			SharedAtNodePtr node;
 			Cache::const_accessor readAccessor;
@@ -2573,7 +2573,7 @@ class InstanceCache : public IECore::RefCounted
 		{
 			ensureUniformTimeSamples( times );
 			AtNode *node = nullptr;
-			if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front() ) )
+			if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front().get() ) )
 			{
 				node = convertProcedural( procedural, attributes, m_universe, nodeName, m_parentNode );
 			}
@@ -2589,7 +2589,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( attributes )
 			{
-				attributes->applyGeometry( samples.front(), node );
+				attributes->applyGeometry( samples.front().get(), node );
 			}
 
 			return SharedAtNodePtr( node, m_nodeDeleter );

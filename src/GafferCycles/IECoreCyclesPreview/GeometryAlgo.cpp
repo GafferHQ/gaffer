@@ -244,31 +244,28 @@ ccl::Geometry *convert( const IECoreScenePreview::Renderer::ObjectSamples &sampl
 		// Make memory-wasting redundant samples to work around this. Samples are
 		// expected to be spaced evenly in time, so we have to insert a redundant sample
 		// in every gap.
-		vector<ConstObjectPtr> interpolatedSamples;
-		interpolatedSamples.reserve( samples.size() - 1 );
-		vector<const IECore::Object *> processedSamples;
+		IECoreScenePreview::Renderer::ObjectSamples processedSamples;
+		processedSamples.reserve( samples.size() * 2 - 1 );
 		vector<float> processedTimes;
-		processedSamples.reserve( samples.size() + interpolatedSamples.size() );
-		processedTimes.reserve( times.size() + interpolatedSamples.size() );
+		processedTimes.reserve( samples.size() * 2 - 1 );
 		for( size_t i = 0; i < samples.size(); ++i )
 		{
 			processedSamples.push_back( samples[i] );
 			processedTimes.push_back( times[i] );
 			if( i + 1 < samples.size() )
 			{
-				interpolatedSamples.push_back( linearObjectInterpolation( samples[i], samples[i+1], 0.5f ) );
-				processedSamples.push_back( interpolatedSamples.back().get() );
+				processedSamples.push_back( linearObjectInterpolation( samples[i].get(), samples[i+1].get(), 0.5f ) );
 				processedTimes.push_back( Imath::lerp( times[i], times[i+1], 0.5f ) );
 			}
 		}
 		return convert( processedSamples, processedTimes, session );
 	}
 
-	const IECore::Object *firstSample = samples.front();
+	const IECore::Object *firstSample = samples.front().get();
 	const IECore::TypeId firstSampleTypeId = firstSample->typeId();
-	for( std::vector<const IECore::Object *>::const_iterator it = samples.begin()+1, eIt = samples.end(); it != eIt; ++it )
+	for( const auto &sample : samples )
 	{
-		if( (*it)->typeId() != firstSampleTypeId )
+		if( sample->typeId() != firstSampleTypeId )
 		{
 			throw IECore::Exception( "Inconsistent object types." );
 		}
@@ -289,7 +286,7 @@ ccl::Geometry *convert( const IECoreScenePreview::Renderer::ObjectSamples &sampl
 	}
 	else
 	{
-		return it->second.converter( samples.front(), session->scene.get() );
+		return it->second.converter( samples.front().get(), session->scene.get() );
 	}
 }
 

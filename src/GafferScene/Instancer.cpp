@@ -3162,12 +3162,6 @@ struct Prototype : public IECore::RefCounted
 
 			GafferScene::Private::RendererAlgo::deformationMotionTimes( renderOptions, m_attributes.get(), m_objectSampleTimes );
 			GafferScene::Private::RendererAlgo::objectSamples( prototypesPlug->objectPlug(), m_objectSampleTimes, m_object );
-
-			m_objectPointers.reserve( m_object.size() );
-			for( ConstObjectPtr &i : m_object )
-			{
-				m_objectPointers.push_back( i.get() );
-			}
 		}
 		else
 		{
@@ -3188,11 +3182,7 @@ struct Prototype : public IECore::RefCounted
 		}
 	}
 
-	std::vector<ConstObjectPtr> m_object;
-
-	// Rather awkwardly, we need to store the objects as raw pointers as well, because Renderer::object
-	// requires a vector of pointers for the animated case.
-	std::vector<const Object *> m_objectPointers;
+	IECoreScenePreview::Renderer::ObjectSamples m_object;
 	IECoreScenePreview::Renderer::SampleTimes m_objectSampleTimes;
 	ConstCompoundObjectPtr m_attributes;
 	IECoreScenePreview::Renderer::AttributesInterfacePtr m_rendererAttributes;
@@ -3456,7 +3446,7 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 				if( proto->m_objectSampleTimes.size() )
 				{
 					objectInterface = renderer->object(
-						name, proto->m_objectPointers, proto->m_objectSampleTimes, attribs
+						name, proto->m_object, proto->m_objectSampleTimes, attribs
 					);
 				}
 				else

@@ -420,7 +420,7 @@ RtUString IECoreRenderMan::GeometryAlgo::convert( const IECoreScenePreview::Rend
 	}
 	else
 	{
-		return it->second.converter( samples.front(), primVars, messageContext );
+		return it->second.converter( samples.front().get(), primVars, messageContext );
 	}
 }
 

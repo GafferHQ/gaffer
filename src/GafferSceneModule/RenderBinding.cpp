@@ -92,7 +92,7 @@ object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object python
 	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
 
 	bool result;
-	std::vector<IECore::ConstObjectPtr> samples;
+	IECoreScenePreview::Renderer::ObjectSamples samples;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
 		result = GafferScene::Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples, hash );

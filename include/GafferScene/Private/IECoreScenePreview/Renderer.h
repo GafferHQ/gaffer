@@ -158,8 +158,8 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		using ObjectSetPtr = std::shared_ptr<ObjectSet>;
 		using ConstObjectSetPtr = std::shared_ptr<const ObjectSet>;
 		using TransformSamples = std::vector<Imath::M44f>;
-		using CameraSamples = std::vector<const IECoreScene::Camera *>;
-		using ObjectSamples = std::vector<const IECore::Object *>;
+		using CameraSamples = std::vector<IECoreScene::ConstCameraPtr>;
+		using ObjectSamples = std::vector<IECore::ConstObjectPtr>;
 		using SampleTimes = std::vector<float>;
 
 		/// A handle to an object in the renderer. The reference counting semantics of an

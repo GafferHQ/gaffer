@@ -1498,18 +1498,18 @@ class GeometryCache
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
 
-			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
+			if( !cyclesAttributes->canInstanceGeometry( samples.front().get() ) )
 			{
 				return convert( samples, times, cyclesAttributes, nodeName );
 			}
 
 			IECore::MurmurHash h;
-			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+			for( const auto &sample : samples )
 			{
-				(*it)->hash( h );
+				sample->hash( h );
 			}
 			h.append( times.data(), times.size() );
-			cyclesAttributes->hashGeometry( samples.front(), h );
+			cyclesAttributes->hashGeometry( samples.front().get(), h );
 
 			Geometry::const_accessor readAccessor;
 			if( m_geometry.find( readAccessor, h ) )
@@ -1581,7 +1581,7 @@ class GeometryCache
 				geometry->name = ccl::ustring( nodeName.c_str() );
 			}
 
-			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ) )
+			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front().get() ) )
 			{
 				assert( geometry->is_volume() );
 				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_session->scene.get(), attributes->getVolumePrecision(), attributes->getVolumeClipping() );

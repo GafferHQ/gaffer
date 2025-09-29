@@ -969,9 +969,9 @@ class InstanceCache : public IECore::RefCounted
 		DelightHandleSharedPtr get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 		{
 			IECore::MurmurHash hash;
-			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+			for( const auto &sample : samples )
 			{
-				(*it)->hash( hash );
+				sample->hash( hash );
 			}
 			hash.append( times.data(), times.size() );
 

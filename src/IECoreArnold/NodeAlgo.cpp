@@ -98,11 +98,11 @@ AtNode *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, flo
 		return nullptr;
 	}
 
-	const IECore::Object *firstSample = samples.front();
+	const IECore::Object *firstSample = samples.front().get();
 	const IECore::TypeId firstSampleTypeId = firstSample->typeId();
-	for( std::vector<const IECore::Object *>::const_iterator it = samples.begin()+1, eIt = samples.end(); it != eIt; ++it )
+	for( const auto &sample : samples )
 	{
-		if( (*it)->typeId() != firstSampleTypeId )
+		if( sample->typeId() != firstSampleTypeId )
 		{
 			IECore::msg( IECore::Msg::Error, messageContext, "Inconsistent object types." );
 			return nullptr;

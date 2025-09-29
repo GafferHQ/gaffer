@@ -191,7 +191,7 @@ bool convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const 
 	}
 	else
 	{
-		return it->second.converter( samples.front(), context, handle );
+		return it->second.converter( samples.front().get(), context, handle );
 	}
 }
 

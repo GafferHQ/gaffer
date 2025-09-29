@@ -79,7 +79,7 @@ Renderer::~Renderer()
 
 Renderer::ObjectInterfacePtr Renderer::camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
-	return camera( name, samples[0], attributes );
+	return camera( name, samples[0].get(), attributes );
 }
 
 IECore::DataPtr Renderer::command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters )

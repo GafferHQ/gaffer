@@ -108,7 +108,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 
 				const std::string &capturedName() const;
 
-				const std::vector<IECore::ConstObjectPtr> &capturedSamples() const;
+				const ObjectSamples &capturedSamples() const;
 				const SampleTimes &capturedSampleTimes() const;
 
 				const TransformSamples &capturedTransforms() const;
@@ -142,7 +142,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 
 				CapturingRenderer *m_renderer;
 				const std::string m_name;
-				std::vector<IECore::ConstObjectPtr> m_capturedSamples;
+				ObjectSamples m_capturedSamples;
 				SampleTimes m_capturedSampleTimes;
 				TransformSamples m_capturedTransforms;
 				SampleTimes m_capturedTransformTimes;

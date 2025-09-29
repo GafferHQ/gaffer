@@ -474,7 +474,7 @@ bool transformSamples( const M44fPlug *transformPlug, const IECoreScenePreview::
 	return true;
 }
 
-bool objectSamples( const ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash )
+bool objectSamples( const ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECoreScenePreview::Renderer::ObjectSamples &samples, IECore::MurmurHash *hash )
 {
 	std::vector< IECore::MurmurHash > sampleHashes;
 	if( !sampleTimes.size() )
@@ -1469,7 +1469,7 @@ struct CameraOutput : public LocationOutput
 			std::vector<ConstObjectPtr> samples;
 			GafferScene::Private::RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
 
-			vector<ConstCameraPtr> cameraSamples; cameraSamples.reserve( samples.size() );
+			IECoreScenePreview::Renderer::CameraSamples cameraSamples; cameraSamples.reserve( samples.size() );
 			for( const auto &sample : samples )
 			{
 				if( auto cameraSample = runTimeCast<const Camera>( sample.get() ) )
@@ -1506,14 +1506,9 @@ struct CameraOutput : public LocationOutput
 				}
 				else
 				{
-					IECoreScenePreview::Renderer::CameraSamples rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
-					for( auto &c : cameraSamples )
-					{
-						rawCameraSamples.push_back( c.get() );
-					}
 					objectInterface = renderer()->camera(
 						name( path ),
-						rawCameraSamples,
+						cameraSamples,
 						sampleTimes,
 						attributesInterface().get()
 					);
@@ -1680,13 +1675,7 @@ struct ObjectOutput : public LocationOutput
 		else
 		{
 			assert( sampleTimes.size() == samples.size() );
-			/// \todo Can we rejig things so this conversion isn't necessary?
-			vector<const Object *> objectsVector; objectsVector.reserve( samples.size() );
-			for( const auto &sample : samples )
-			{
-				objectsVector.push_back( sample.get() );
-			}
-			objectInterface = renderer()->object( name( path ), objectsVector, sampleTimes, attributesInterface.get() );
+			objectInterface = renderer()->object( name( path ), samples, sampleTimes, attributesInterface.get() );
 		}
 
 		if( objectInterface )

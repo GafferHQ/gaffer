@@ -119,7 +119,7 @@ GAFFERSCENE_API bool transformSamples( const Gaffer::M44fPlug *transformPlug, co
 /// Samples the object from the current location in preparation for output to the renderer. Sample times and
 /// hash behave the same as for the transformSamples() method. Multiple samples will only be generated for
 /// Primitives and Cameras, since other object types cannot be interpolated anyway.
-GAFFERSCENE_API bool objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash = nullptr );
+GAFFERSCENE_API bool objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECoreScenePreview::Renderer::ObjectSamples &samples, IECore::MurmurHash *hash = nullptr );
 
 GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );

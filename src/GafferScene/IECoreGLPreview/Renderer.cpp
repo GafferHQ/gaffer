@@ -997,7 +997,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
-			return object( name, samples.front(), attributes );
+			return object( name, samples.front().get(), attributes );
 		}
 
 		void render() override

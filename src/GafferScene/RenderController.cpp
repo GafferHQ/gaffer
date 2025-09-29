@@ -908,7 +908,7 @@ class RenderController::SceneGraph
 				return true;
 			}
 
-			vector<ConstObjectPtr> samples;
+			IECoreScenePreview::Renderer::ObjectSamples samples;
 			if( !Private::RendererAlgo::objectSamples( objectPlug, m_deformationTimes, samples, &m_objectHash ) )
 			{
 				return false;
@@ -951,7 +951,7 @@ class RenderController::SceneGraph
 			ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
 			if( type == CameraType )
 			{
-				vector<ConstCameraPtr> cameraSamples; cameraSamples.reserve( samples.size() );
+				IECoreScenePreview::Renderer::CameraSamples cameraSamples; cameraSamples.reserve( samples.size() );
 				for( const auto &sample : samples )
 				{
 					if( auto cameraSample = runTimeCast<const Camera>( sample.get() ) )
@@ -987,14 +987,9 @@ class RenderController::SceneGraph
 					}
 					else
 					{
-						IECoreScenePreview::Renderer::CameraSamples rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
-						for( auto &c : cameraSamples )
-						{
-							rawCameraSamples.push_back( c.get() );
-						}
 						m_objectInterface = renderer->camera(
 							name,
-							rawCameraSamples,
+							cameraSamples,
 							m_deformationTimes,
 							attributesInterface( renderer )
 						);
@@ -1025,13 +1020,7 @@ class RenderController::SceneGraph
 				}
 				else
 				{
-					/// \todo Can we rejig things so this conversion isn't necessary?
-					vector<const Object *> objectsVector; objectsVector.reserve( samples.size() );
-					for( const auto &sample : samples )
-					{
-						objectsVector.push_back( sample.get() );
-					}
-					m_objectInterface = renderer->object( name, objectsVector, m_deformationTimes, attributesInterface( renderer ) );
+					m_objectInterface = renderer->object( name, samples, m_deformationTimes, attributesInterface( renderer ) );
 				}
 			}
 
