@@ -109,6 +109,8 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
 		)
 
+		self.__columnCache = {}
+
 		self._updateFromSet()
 		self.__transferSelectionFromScriptNode()
 		self.__updateColumns()
@@ -213,12 +215,21 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				if currentSection == "All" and not sections.get( "All" ) :
 					for section in sections.values() :
-						sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+						sectionColumns += [ self.__acquireColumn( c, "All" ) for c in section.values() ]
 				else :
 					section = sections.get( currentSection or None, {} )
-					sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+					sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__locationNameColumn, self.__visibilityColumn ] + sectionColumns )
+
+	def __acquireColumn( self, columnCreator, section ) :
+
+		column = self.__columnCache.get( ( columnCreator, section ) )
+		if column is None :
+			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
+			self.__columnCache[ ( columnCreator, section ) ] = column
+
+		return column
 
 	def __selectedPathsChanged( self, scriptNode ) :
 

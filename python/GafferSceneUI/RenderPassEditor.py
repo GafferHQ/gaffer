@@ -141,6 +141,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 			GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__pathListing )
 
+		self.__columnCache = {}
+
 		self._updateFromSet()
 		self.__updateColumns()
 		self.__updateButtonStatus()
@@ -287,9 +289,18 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		for groupKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ ( c( self.settings()["in"], self.settings()["editScope"] ), index ) for ( c, index ) in section.values() ]
+				sectionColumns += [ ( self.__acquireColumn( c, currentSection ), index ) for ( c, index ) in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + self.__orderedColumns( sectionColumns ) )
+
+	def __acquireColumn( self, columnCreator, section ) :
+
+		column = self.__columnCache.get( ( columnCreator, section ) )
+		if column is None :
+			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
+			self.__columnCache[ ( columnCreator, section ) ] = column
+
+		return column
 
 	@staticmethod
 	def __orderedColumns( columnsAndIndices ) :
@@ -904,10 +915,14 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			tabGroup = self.getPlug().node()["tabGroup"].getValue()
 
+			tabNames = []
 			for groupKey, sections in RenderPassEditor._RenderPassEditor__columnRegistry.items() :
 				if IECore.StringAlgo.match( tabGroup, groupKey ) :
-					for section in sections.keys() :
-						self._qtWidget().addTab( section )
+					tabNames.extend( sections.keys() )
+			# Deduplicate sections while preserving order in case the same
+			# section has been registered to multiple matching groupKeys.
+			for name in list( dict.fromkeys( tabNames ) ) :
+				self._qtWidget().addTab( name )
 		finally :
 			self.__ignoreCurrentChanged = False
 
