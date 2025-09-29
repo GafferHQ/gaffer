@@ -18,13 +18,13 @@ Breaking Changes
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 
-1.6.x.x (relative to 1.6.2.0)
+1.6.x.x (relative to 1.6.2.1)
 =======
 
-Improvements
-------------
 
-- LightEditor, RenderPassEditor, AttributeEditor : Column width adjustments are now preserved when switching tabs.
+
+1.6.2.1 (relative to 1.6.2.0)
+=======
 
 Fixes
 -----
@@ -32,6 +32,7 @@ Fixes
 - LightEditor : Fixed bug that could cause filter evaluation in an invalid context.
 - Outputs : Custom `gaffer:renderID` parameters are now preserved, allowing custom "netrender" style workflows to be implemented.
 - RenderPassEditor : Fixed bug that could cause duplicate tabs to appear when registering custom columns to an existing section via a different group key.
+- LightEditor, RenderPassEditor, AttributeEditor : Column width adjustments are now preserved when switching tabs.
 
 1.6.2.0 (relative to 1.6.1.0)
 =======
@@ -312,7 +313,12 @@ Build
 - Qt.py : Updated to version 1.4.6.
 - USD : Updated to version 25.05.01.
 
-1.5.16.x (relative to 1.5.16.2)
+1.5.16.x (relative to 1.5.16.3)
+========
+
+
+
+1.5.16.3 (relative to 1.5.16.2)
 ========
 
 Fixes
