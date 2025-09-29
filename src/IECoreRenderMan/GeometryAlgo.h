@@ -34,6 +34,8 @@
 
 #pragma once
 
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+
 #include "IECoreScene/Primitive.h"
 
 #include "IECore/Object.h"
@@ -56,11 +58,11 @@ RtUString convert( const IECore::Object *object, RtPrimVarList &primVars, const 
 
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-RtUString convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext = "GeometryAlgo::convert" );
+RtUString convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext = "GeometryAlgo::convert" );
 
 /// Signature of a function which can convert an IECore::Object into a geometry prototype.
 using Converter = RtUString (*)( const IECore::Object *object, RtParamList &primVars, const std::string &messageContext );
-using MotionConverter = RtUString (*)( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext );
+using MotionConverter = RtUString (*)( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext );
 
 /// Registers a converter for a specific type. Use the ConverterDescription
 /// utility class in preference to this, since it provides additional type
@@ -77,7 +79,7 @@ class ConverterDescription
 
 		/// Type-specific conversion functions.
 		using Converter = RtUString (*)( const T *object, RtPrimVarList &primVars, const std::string &messageContext );
-		using MotionConverter = RtUString (*)( const std::vector<const T *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext );
+		using MotionConverter = RtUString (*)( const std::vector<const T *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{
@@ -95,6 +97,6 @@ class ConverterDescription
 
 /// Primitive converters should call this function before doing their own type-specific conversion.
 void convertPrimitive( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext );
-void convertPrimitive( const std::vector<const IECoreScene::Primitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext );
+void convertPrimitive( const std::vector<const IECoreScene::Primitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext );
 
 } // namespace IECoreRenderMan::GeometryAlgo

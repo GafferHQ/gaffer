@@ -63,7 +63,7 @@ class GAFFERSCENE_API CompoundRenderer final : public IECoreScenePreview::Render
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr object( const std::string &name, const IECoreScenePreview::Renderer::ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		void render() override;
 		void pause() override;
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override;

@@ -88,7 +88,7 @@ std::shared_ptr<RenderManifest> interactiveRenderRenderManifestWrapper( Interact
 
 object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, IECore::MurmurHash *hash, bool copy )
 {
-	std::vector<float> sampleTimes;
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
 
 	bool result;
@@ -121,11 +121,11 @@ object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object python
 
 object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, object pythonSampleTimes, IECore::MurmurHash *hash )
 {
-	std::vector<float> sampleTimes;
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
 
 	bool result;
-	std::vector<M44f> samples;
+	IECoreScenePreview::Renderer::TransformSamples samples;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
 		result = GafferScene::Private::RendererAlgo::transformSamples( &transformPlug, sampleTimes, samples, hash );

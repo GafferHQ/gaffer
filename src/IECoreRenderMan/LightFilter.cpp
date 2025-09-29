@@ -87,7 +87,7 @@ void LightFilter::transform( const Imath::M44f &transform )
 	}
 }
 
-void LightFilter::transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+void LightFilter::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	AnimatedTransform animatedTransform( samples, times );
 

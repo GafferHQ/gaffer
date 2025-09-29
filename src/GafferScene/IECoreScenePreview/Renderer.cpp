@@ -77,7 +77,7 @@ Renderer::~Renderer()
 
 }
 
-Renderer::ObjectInterfacePtr Renderer::camera( const std::string &name,  const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr Renderer::camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	return camera( name, samples[0], attributes );
 }

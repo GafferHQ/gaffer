@@ -177,7 +177,7 @@ bool convert( const IECore::Object *object, NSIContext_t context, const char *ha
 	return it->second.converter( object, context, handle );
 }
 
-bool convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle )
 {
 	Registry &r = registry();
 	auto it = r.find( samples.front()->typeId() );

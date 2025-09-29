@@ -138,7 +138,7 @@ void Object::transform( const Imath::M44f &transform )
 	}
 }
 
-void Object::transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+void Object::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	AnimatedTransform animatedTransform( samples, times );
 	const riley::GeometryInstanceResult result = m_session->riley->ModifyGeometryInstance(

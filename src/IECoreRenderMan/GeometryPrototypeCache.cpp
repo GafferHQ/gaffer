@@ -60,9 +60,9 @@ GeometryPrototypePtr GeometryPrototypeCache::get( const IECore::Object *object, 
 	return get( { object }, { 0.0f }, attributes, messageContext );
 }
 
-GeometryPrototypePtr GeometryPrototypeCache::get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, const Attributes *attributes, const std::string &messageContext )
+GeometryPrototypePtr GeometryPrototypeCache::get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, const Attributes *attributes, const std::string &messageContext )
 {
-	auto converter = [&] ( const vector<const IECore::Object *> &samples, const vector<float> &sampleTimes, const Attributes *attributes, Session *session, GeometryPrototypePtr &result ) {
+	auto converter = [&] ( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, const Attributes *attributes, Session *session, GeometryPrototypePtr &result ) {
 
 		riley::DisplacementId displacement;
 		if( auto d = attributes->displacement() )

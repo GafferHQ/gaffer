@@ -145,10 +145,10 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &rend
 
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
 {
-	std::vector<const IECore::Object *> samples;
+	IECoreScenePreview::Renderer::ObjectSamples samples;
 	container_utils::extend_container( samples, pythonSamples );
 
-	std::vector<float> times;
+	IECoreScenePreview::Renderer::SampleTimes times;
 	container_utils::extend_container( times, pythonTimes );
 
 	return renderer.object( name, samples, times, attributes );
@@ -162,10 +162,10 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr rendererCamera1( Renderer &rend
 
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererCamera2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
 {
-	std::vector<const IECoreScene::Camera *> samples;
+	IECoreScenePreview::Renderer::CameraSamples samples;
 	container_utils::extend_container( samples, pythonSamples );
 
-	std::vector<float> times;
+	IECoreScenePreview::Renderer::SampleTimes times;
 	container_utils::extend_container( times, pythonTimes );
 
 	return renderer.camera( name, samples, times, attributes );
@@ -185,10 +185,10 @@ void objectInterfaceTransform1( Renderer::ObjectInterface &objectInterface, cons
 
 void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, object pythonSamples, object pythonTimes )
 {
-	std::vector<Imath::M44f> samples;
+	IECoreScenePreview::Renderer::TransformSamples samples;
 	container_utils::extend_container( samples, pythonSamples );
 
-	std::vector<float> times;
+	IECoreScenePreview::Renderer::SampleTimes times;
 	container_utils::extend_container( times, pythonTimes );
 
 	return objectInterface.transform( samples, times );

@@ -330,7 +330,7 @@ std::string renderManifestFilePath( const IECore::CompoundObject *globals )
 	return renderManifestFilePathData->readable();
 }
 
-bool motionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, const InternedString &attributeName, const InternedString &segmentsAttributeName, std::vector<float> &times )
+bool motionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, const InternedString &attributeName, const InternedString &segmentsAttributeName, IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	unsigned int segments = 0;
 	if( motionBlur )
@@ -368,17 +368,17 @@ bool motionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *att
 	return changed;
 }
 
-bool transformMotionTimes( const RenderOptions &renderOptions, const CompoundObject *attributes, std::vector<float> &times )
+bool transformMotionTimes( const RenderOptions &renderOptions, const CompoundObject *attributes, IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	return motionTimes( renderOptions.transformBlur, renderOptions.shutter, attributes, g_transformBlurAttributeName, g_transformBlurSegmentsAttributeName, times );
 }
 
-bool deformationMotionTimes( const RenderOptions &renderOptions, const CompoundObject *attributes, std::vector<float> &times )
+bool deformationMotionTimes( const RenderOptions &renderOptions, const CompoundObject *attributes, IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	return motionTimes( renderOptions.deformationBlur, renderOptions.shutter, attributes, g_deformationBlurAttributeName, g_deformationBlurSegmentsAttributeName, times );
 }
 
-bool transformSamples( const M44fPlug *transformPlug, const std::vector<float> &sampleTimes, std::vector<Imath::M44f> &samples, IECore::MurmurHash *hash )
+bool transformSamples( const M44fPlug *transformPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECoreScenePreview::Renderer::TransformSamples &samples, IECore::MurmurHash *hash )
 {
 	std::vector< IECore::MurmurHash > sampleHashes;
 	if( !sampleTimes.size() )
@@ -474,7 +474,7 @@ bool transformSamples( const M44fPlug *transformPlug, const std::vector<float> &
 	return true;
 }
 
-bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash )
+bool objectSamples( const ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash )
 {
 	std::vector< IECore::MurmurHash > sampleHashes;
 	if( !sampleTimes.size() )
@@ -585,7 +585,7 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 				// open time so that non-interpolable objects appear in the right
 				// position relative to non-blurred objects.
 				Context::Scope frameScope( frameContext );
-				std::vector<float> tempTimes = {};
+				IECoreScenePreview::Renderer::SampleTimes tempTimes = {};
 
 				// Use the hash from the shutter samples. This is technically incorrect, since we are going
 				// to evaluate the object on-frame, and the on-frame sample may not have been included in the
@@ -1306,7 +1306,7 @@ struct LocationOutput
 			return m_renderer;
 		}
 
-		void deformationMotionTimes( std::vector<float> &times )
+		void deformationMotionTimes( IECoreScenePreview::Renderer::SampleTimes &times )
 		{
 			GafferScene::Private::RendererAlgo::deformationMotionTimes( m_options, m_attributes.get(), times );
 		}
@@ -1372,27 +1372,27 @@ struct LocationOutput
 
 		void updateTransform( const ScenePlug *scene )
 		{
-			vector<float> sampleTimes;
+			IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 			GafferScene::Private::RendererAlgo::transformMotionTimes( m_options, m_attributes.get(), sampleTimes );
-			vector<M44f> samples;
+			IECoreScenePreview::Renderer::TransformSamples samples;
 			GafferScene::Private::RendererAlgo::transformSamples( scene->transformPlug(), sampleTimes, samples );
 
 			if( samples.size() == 1 )
 			{
-				for( vector<M44f>::iterator it = m_transformSamples.begin(), eIt = m_transformSamples.end(); it != eIt; ++it )
+				for( auto &sample : m_transformSamples )
 				{
-					*it = samples.front() * *it;
+					sample = samples.front() * sample;
 				}
 			}
 			else
 			{
-				vector<M44f> updatedTransformSamples;
+				IECoreScenePreview::Renderer::TransformSamples updatedTransformSamples;
 				updatedTransformSamples.reserve( samples.size() );
 
-				vector<float> updatedTransformTimes;
+				IECoreScenePreview::Renderer::SampleTimes updatedTransformTimes;
 				updatedTransformTimes.reserve( samples.size() );
 
-				vector<M44f>::const_iterator s = samples.begin();
+				auto s = samples.begin();
 				for( const float sampleTime : sampleTimes )
 				{
 					updatedTransformSamples.push_back( *s++ * transform( sampleTime ) );
@@ -1415,14 +1415,14 @@ struct LocationOutput
 				return m_transformSamples[0];
 			}
 
-			vector<float>::const_iterator t1 = lower_bound( m_transformTimes.begin(), m_transformTimes.end(), time );
+			auto t1 = lower_bound( m_transformTimes.begin(), m_transformTimes.end(), time );
 			if( t1 == m_transformTimes.begin() || *t1 == time )
 			{
 				return m_transformSamples[t1 - m_transformTimes.begin()];
 			}
 			else
 			{
-				vector<float>::const_iterator t0 = t1 - 1;
+				auto t0 = t1 - 1;
 				const float l = lerpfactor( time, *t0, *t1 );
 				const M44f &s0 = m_transformSamples[t0 - m_transformTimes.begin()];
 				const M44f &s1 = m_transformSamples[t1 - m_transformTimes.begin()];
@@ -1439,8 +1439,8 @@ struct LocationOutput
 		const GafferScene::Private::RendererAlgo::RenderSets &m_renderSets;
 		const ScenePlug::ScenePath &m_root;
 
-		std::vector<M44f> m_transformSamples;
-		std::vector<float> m_transformTimes;
+		IECoreScenePreview::Renderer::TransformSamples m_transformSamples;
+		IECoreScenePreview::Renderer::SampleTimes m_transformTimes;
 
 };
 
@@ -1463,10 +1463,10 @@ struct CameraOutput : public LocationOutput
 		if( ( cameraMatch & IECore::PathMatcher::ExactMatch ) && purposeIncluded() )
 		{
 			// Sample cameras and apply globals
-			vector<float> sampleTimes;
+			IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 			deformationMotionTimes( sampleTimes );
 
-			vector<ConstObjectPtr> samples;
+			std::vector<ConstObjectPtr> samples;
 			GafferScene::Private::RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
 
 			vector<ConstCameraPtr> cameraSamples; cameraSamples.reserve( samples.size() );
@@ -1506,7 +1506,7 @@ struct CameraOutput : public LocationOutput
 				}
 				else
 				{
-					vector<const Camera *> rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
+					IECoreScenePreview::Renderer::CameraSamples rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
 					for( auto &c : cameraSamples )
 					{
 						rawCameraSamples.push_back( c.get() );
@@ -1654,7 +1654,7 @@ struct ObjectOutput : public LocationOutput
 			return true;
 		}
 
-		vector<float> sampleTimes;
+		IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 		deformationMotionTimes( sampleTimes );
 
 		vector<ConstObjectPtr> samples;

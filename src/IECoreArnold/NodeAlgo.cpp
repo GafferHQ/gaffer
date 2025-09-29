@@ -91,7 +91,7 @@ AtNode *convert( const IECore::Object *object, AtUniverse *universe, const std::
 	return it->second.converter( object, universe, nodeName, parentNode, messageContext );
 }
 
-AtNode *convert( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	if( samples.empty() )
 	{

@@ -34,6 +34,8 @@
 
 #pragma once
 
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+
 #include "IECoreArnold/Export.h"
 
 #include "IECore/Object.h"
@@ -54,14 +56,14 @@ IECOREARNOLD_API AtNode *convert( const IECore::Object *object, AtUniverse *univ
 /// equivalent moving Arnold object. If no motion converter
 /// is available, then returns a standard conversion of the
 /// first sample.
-IECOREARNOLD_API AtNode *convert( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr, const std::string &messageContext = "NodeAlgo::convert" );
+IECOREARNOLD_API AtNode *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr, const std::string &messageContext = "NodeAlgo::convert" );
 
 /// Signature of a function which can convert an IECore::Object
 /// into an Arnold object.
 using Converter = AtNode *(*)( const IECore::Object *sample, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext );
 /// Signature of a function which can convert a series of IECore::Object
 /// samples into a moving Arnold object.
-using MotionConverter = AtNode *(*)( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext );
+using MotionConverter = AtNode *(*)( const IECoreScenePreview::Renderer::ObjectSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to

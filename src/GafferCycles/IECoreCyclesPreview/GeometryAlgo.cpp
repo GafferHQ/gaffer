@@ -230,7 +230,7 @@ ccl::Geometry *convert( const IECore::Object *object, ccl::Scene *scene )
 	return it->second.converter( object, scene );
 }
 
-ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, ccl::Session *session )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, ccl::Session *session )
 {
 	if( samples.empty() )
 	{

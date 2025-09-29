@@ -96,7 +96,7 @@ RtUString convertStaticCurves( const IECoreScene::CurvesPrimitive *curves, RtPri
 	return Loader::strings().k_Ri_Curves;
 }
 
-RtUString convertAnimatedCurves( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
+RtUString convertAnimatedCurves( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	if( CurvesAlgo::isPinned( samples[0] ) )
 	{

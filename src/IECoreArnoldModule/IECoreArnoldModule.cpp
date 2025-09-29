@@ -131,7 +131,7 @@ object convertWrapper( const IECore::Object *object, boost::python::object unive
 
 object convertWrapper2( object pythonSamples, float motionStart, float motionEnd, boost::python::object universe, const std::string &nodeName )
 {
-	std::vector<const IECore::Object *> samples;
+	IECoreScenePreview::Renderer::ObjectSamples samples;
 	container_utils::extend_container( samples, pythonSamples );
 
 	return atNodeToPythonObject( NodeAlgo::convert( samples, motionStart, motionEnd, pythonObjectToAtUniverse( universe ), nodeName, nullptr ) );

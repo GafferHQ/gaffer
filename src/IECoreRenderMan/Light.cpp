@@ -180,14 +180,14 @@ void Light::transform( const Imath::M44f &transform )
 	}
 }
 
-void Light::transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+void Light::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
 	{
 		return;
 	}
 
-	vector<Imath::M44f> correctedSamples = samples;
+	IECoreScenePreview::Renderer::TransformSamples correctedSamples = samples;
 	for( auto &m : correctedSamples )
 	{
 		m = m_preTransform * m;

@@ -51,7 +51,7 @@ RtUString convertStaticPoints( const IECoreScene::PointsPrimitive *points, RtPri
 	return Loader::strings().k_Ri_Points;
 }
 
-RtUString convertAnimatedPoints( const std::vector<const IECoreScene::PointsPrimitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
+RtUString convertAnimatedPoints( const std::vector<const IECoreScene::PointsPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	GeometryAlgo::convertPrimitive( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
 	return Loader::strings().k_Ri_Points;

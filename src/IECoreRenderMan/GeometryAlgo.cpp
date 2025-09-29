@@ -334,7 +334,7 @@ void convertP( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarLi
 	}
 }
 
-void convertP( const std::vector<const IECoreScene::Primitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
+void convertP( const std::vector<const IECoreScene::Primitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
 {
 	const auto firstSampleIt = samples[0]->variables.find( g_p );
 	if( firstSampleIt == samples[0]->variables.end() )
@@ -406,7 +406,7 @@ RtUString IECoreRenderMan::GeometryAlgo::convert( const IECore::Object *object, 
 	return it->second.converter( object, primVars, messageContext );
 }
 
-RtUString IECoreRenderMan::GeometryAlgo::convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
+RtUString IECoreRenderMan::GeometryAlgo::convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	Registry &r = registry();
 	auto it = r.find( samples.front()->typeId() );
@@ -436,7 +436,7 @@ void IECoreRenderMan::GeometryAlgo::convertPrimitive( const IECoreScene::Primiti
 	convertPrimitiveVariables( primitive, primVarList, messageContext );
 }
 
-void IECoreRenderMan::GeometryAlgo::convertPrimitive( const std::vector<const IECoreScene::Primitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext = "GeometryAlgo::convertPrimitive" )
+void IECoreRenderMan::GeometryAlgo::convertPrimitive( const std::vector<const IECoreScene::Primitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
 {
 	convertDetail( samples[0], primVarList );
 	// "P" is the only primitive variable that RenderMan allows to be animated

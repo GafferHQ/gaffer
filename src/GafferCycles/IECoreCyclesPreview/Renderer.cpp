@@ -1490,8 +1490,8 @@ class GeometryCache
 
 		// Can be called concurrently with other get() calls.
 		SharedGeometryPtr get(
-			const std::vector<const IECore::Object *> &samples,
-			const std::vector<float> &times,
+			const IECoreScenePreview::Renderer::ObjectSamples &samples,
+			const IECoreScenePreview::Renderer::SampleTimes &times,
 			const IECoreScenePreview::Renderer::AttributesInterface *attributes,
 			const std::string &nodeName
 		)
@@ -1508,10 +1508,7 @@ class GeometryCache
 			{
 				(*it)->hash( h );
 			}
-			for( std::vector<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; ++it )
-			{
-				h.append( *it );
-			}
+			h.append( times.data(), times.size() );
 			cyclesAttributes->hashGeometry( samples.front(), h );
 
 			Geometry::const_accessor readAccessor;
@@ -1572,8 +1569,8 @@ class GeometryCache
 		}
 
 		SharedGeometryPtr convert(
-			const std::vector<const IECore::Object *> &samples,
-			const std::vector<float> &times,
+			const IECoreScenePreview::Renderer::ObjectSamples &samples,
+			const IECoreScenePreview::Renderer::SampleTimes &times,
 			const CyclesAttributes *attributes,
 			const std::string &nodeName
 		)
@@ -1771,7 +1768,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			ccl::array<ccl::Transform> motion;
 			ccl::Geometry *geo = m_object->get_geometry();
@@ -1996,7 +1993,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			// Cycles doesn't support motion samples on lights (yet)
 			transform( samples[0] );
@@ -2201,7 +2198,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 			m_transformSamples = { transform };
 		}
 
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			m_transformSamples = samples;
 		}
@@ -2295,7 +2292,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		IECoreScene::ConstCameraPtr m_camera;
-		std::vector<Imath::M44f> m_transformSamples;
+		IECoreScenePreview::Renderer::TransformSamples m_transformSamples;
 
 };
 
@@ -2674,7 +2671,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();

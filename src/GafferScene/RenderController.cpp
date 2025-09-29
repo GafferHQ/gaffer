@@ -801,7 +801,7 @@ class RenderController::SceneGraph
 				m_transformHash = IECore::MurmurHash();
 			}
 
-			vector<M44f> samples;
+			IECoreScenePreview::Renderer::TransformSamples samples;
 			if( !Private::RendererAlgo::transformSamples( transformPlug, m_transformTimes, samples, &m_transformHash ) )
 			{
 				return false;
@@ -987,7 +987,7 @@ class RenderController::SceneGraph
 					}
 					else
 					{
-						vector<const Camera *> rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
+						IECoreScenePreview::Renderer::CameraSamples rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
 						for( auto &c : cameraSamples )
 						{
 							rawCameraSamples.push_back( c.get() );
@@ -1150,14 +1150,14 @@ class RenderController::SceneGraph
 				return m_fullTransform[0];
 			}
 
-			vector<float>::const_iterator t1 = lower_bound( m_transformTimesOutput->begin(), m_transformTimesOutput->end(), time );
+			auto t1 = lower_bound( m_transformTimesOutput->begin(), m_transformTimesOutput->end(), time );
 			if( t1 == m_transformTimesOutput->begin() || *t1 == time )
 			{
 				return m_fullTransform[t1 - m_transformTimesOutput->begin()];
 			}
 			else
 			{
-				vector<float>::const_iterator t0 = t1 - 1;
+				auto t0 = t1 - 1;
 				const float l = lerpfactor( time, *t0, *t1 );
 				const M44f &s0 = m_fullTransform[t0 - m_transformTimesOutput->begin()];
 				const M44f &s1 = m_fullTransform[t1 - m_transformTimesOutput->begin()];
@@ -1202,7 +1202,7 @@ class RenderController::SceneGraph
 
 		IECore::MurmurHash m_objectHash;
 		ObjectInterfaceHandle m_objectInterface;
-		std::vector<float> m_deformationTimes;
+		IECoreScenePreview::Renderer::SampleTimes m_deformationTimes;
 
 		IECore::MurmurHash m_attributesHash;
 		IECore::CompoundObjectPtr m_fullAttributes;
@@ -1211,13 +1211,13 @@ class RenderController::SceneGraph
 		bool m_purposeIncluded;
 
 		IECore::MurmurHash m_transformHash;
-		std::vector<Imath::M44f> m_fullTransform;
-		std::vector<float> m_transformTimes;
+		IECoreScenePreview::Renderer::TransformSamples m_fullTransform;
+		IECoreScenePreview::Renderer::SampleTimes m_transformTimes;
 
 		// The m_transformTimes represents what times we sample the transform at.  The actual
 		// times we output at may differ due to the transform samples turning out to not vary,
 		// or inheriting parent samples
-		std::vector<float> *m_transformTimesOutput;
+		IECoreScenePreview::Renderer::SampleTimes *m_transformTimesOutput;
 
 		IECore::MurmurHash m_childNamesHash;
 		std::vector<std::unique_ptr<SceneGraph>> m_children;

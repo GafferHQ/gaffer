@@ -212,7 +212,7 @@ void Camera::transform( const Imath::M44f &transform )
 	transformInternal( { transform }, { 0.0f } );
 }
 
-void Camera::transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+void Camera::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	transformInternal( samples, times );
 }
@@ -234,7 +234,7 @@ void Camera::assignInstanceID( uint32_t id )
 {
 }
 
-void Camera::transformInternal( std::vector<Imath::M44f> samples, const std::vector<float> &times )
+void Camera::transformInternal( IECoreScenePreview::Renderer::TransformSamples samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	for( auto &m : samples )
 	{

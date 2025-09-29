@@ -69,7 +69,7 @@ struct AnimatedTransform : riley::Transform
 
 	/// Caution : `transformSamples` and `sampleTimes` are referenced
 	/// directly, and must live until the AnimatedTransform is passed to Riley.
-	AnimatedTransform( const std::vector<Imath::M44f> &transformSamples, const std::vector<float> &sampleTimes )
+	AnimatedTransform( const IECoreScenePreview::Renderer::TransformSamples &transformSamples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes )
 	{
 		samples = transformSamples.size();
 		matrix = reinterpret_cast<const RtMatrix4x4 *>( transformSamples.data() );

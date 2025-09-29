@@ -534,7 +534,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			} );
 		}
 
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			transform( samples.front() );
 		}
@@ -995,7 +995,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			return object( name, samples.front(), attributes );
 		}

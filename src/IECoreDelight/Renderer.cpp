@@ -966,17 +966,14 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		DelightHandleSharedPtr get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+		DelightHandleSharedPtr get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 		{
 			IECore::MurmurHash hash;
 			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
 			{
 				(*it)->hash( hash );
 			}
-			for( std::vector<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; ++it )
-			{
-				hash.append( *it );
-			}
+			hash.append( times.data(), times.size() );
 
 			Cache::accessor a;
 			m_cache.insert( a, hash );
@@ -1084,7 +1081,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			m_haveTransform = true;
 		}
 
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			if( m_haveTransform )
 			{
@@ -1648,7 +1645,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 

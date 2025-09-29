@@ -150,7 +150,7 @@ struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInte
 		}
 	}
 
-	void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+	void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 	{
 		for( auto &o : objects )
 		{
@@ -396,7 +396,7 @@ Renderer::ObjectInterfacePtr CompoundRenderer::object( const std::string &name, 
 	return result;
 }
 
-Renderer::ObjectInterfacePtr CompoundRenderer::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CompoundRenderer::object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	auto compoundAttributes = static_cast<const CompoundAttributesInterface *>( attributes );
 	CompoundObjectInterfacePtr result = new CompoundObjectInterface;

@@ -157,6 +157,10 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		using ObjectSet = boost::unordered_set<ObjectInterfacePtr>;
 		using ObjectSetPtr = std::shared_ptr<ObjectSet>;
 		using ConstObjectSetPtr = std::shared_ptr<const ObjectSet>;
+		using TransformSamples = std::vector<Imath::M44f>;
+		using CameraSamples = std::vector<const IECoreScene::Camera *>;
+		using ObjectSamples = std::vector<const IECore::Object *>;
+		using SampleTimes = std::vector<float>;
 
 		/// A handle to an object in the renderer. The reference counting semantics of an
 		/// ObjectInterfacePtr are as follows :
@@ -193,7 +197,7 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 				/// matrices.
 				virtual void transform( const Imath::M44f &transform ) = 0;
 				/// As above, but specifying a moving transform.
-				virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) = 0;
+				virtual void transform( const TransformSamples &samples, const SampleTimes &times ) = 0;
 				/// Assigns a new block of attributes to the object, replacing any
 				/// previously assigned attributes. This may only be used in Interactive
 				/// mode, and then only when the renderer is paused. Returns true on
@@ -274,7 +278,7 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		/// that calls `camera( name, samples[0], attributes )` is provided for renderers which don't
 		/// support animated cameras. Renderers that do support animated cameras should implement a suitable
 		/// override.
-		virtual ObjectInterfacePtr camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes = nullptr );
+		virtual ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes = nullptr );
 
 		/// Adds a named light with the initially supplied set of attributes, which are expected
 		/// to provide at least a light shader. Object may be non-null to specify arbitrary geometry
@@ -298,7 +302,7 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		/// coordinate systems have their own dedicated calls?
 		virtual ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
 		/// As above, but specifying a deforming object.
-		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
 
 		/// Performs the render - should be called after the
 		/// entire scene has been specified using the methods

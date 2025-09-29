@@ -34,6 +34,8 @@
 
 #pragma once
 
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+
 #include "IECoreDelight/Export.h"
 
 #include "IECoreScene/Primitive.h"
@@ -59,12 +61,12 @@ namespace NodeAlgo
 IECOREDELIGHT_API bool convert( const IECore::Object *object, NSIContext_t context, const char *handle );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-IECOREDELIGHT_API bool convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, NSIContext_t context, const char *handle );
+IECOREDELIGHT_API bool convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle );
 
 /// Signature of a function which can convert an IECore::Object
 /// into an NSI node.
 using Converter = bool (*)( const IECore::Object *, NSIContext_t, const char * );
-using MotionConverter = bool (*)( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, NSIContext_t constant, const char * );
+using MotionConverter = bool (*)( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t constant, const char * );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to

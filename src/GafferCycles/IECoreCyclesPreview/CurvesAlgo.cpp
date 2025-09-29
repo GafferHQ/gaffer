@@ -149,7 +149,7 @@ ccl::Geometry *convert( const IECoreScene::CurvesPrimitive *curve, ccl::Scene *s
 	return hair;
 }
 
-ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, size_t primarySampleIndex, ccl::Scene *scene )
+ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
 	ccl::Hair *result = convertCommon( curves[primarySampleIndex], scene );
 	GeometryAlgo::convertMotion( vector<const IECoreScene::Primitive *>( curves.begin(), curves.end() ), primarySampleIndex, *result );
