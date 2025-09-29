@@ -10,6 +10,8 @@ Fixes
 -----
 
 - LightEditor : Fixed bug that could cause filter evaluation in an invalid context.
+- Outputs : Custom `gaffer:renderID` parameters are now preserved, allowing custom "netrender" style workflows to be implemented.
+- RenderPassEditor : Fixed bug that could cause duplicate tabs to appear when registering custom columns to an existing section via a different group key.
 
 1.6.2.0 (relative to 1.6.1.0)
 =======
@@ -290,10 +292,14 @@ Build
 - Qt.py : Updated to version 1.4.6.
 - USD : Updated to version 25.05.01.
 
-1.5.x.x (relative to 1.5.16.2)
-=======
+1.5.16.x (relative to 1.5.16.2)
+========
 
+Fixes
+-----
 
+- Outputs : Custom `gaffer:renderID` parameters are now preserved, allowing custom "netrender" style workflows to be implemented.
+- RenderPassEditor : Fixed bug that could cause duplicate tabs to appear when registering custom columns to an existing section via a different group key.
 
 1.5.16.2 (relative to 1.5.16.1)
 ========
