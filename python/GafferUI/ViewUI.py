@@ -51,32 +51,32 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"toolbarLayout:section", "Top",
+			"toolbarLayout:section" : "Top",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
 			# Most Views don't yet have any functionality that
 			# uses EditScopes, so we'll opt in to showing the
 			# widget on specific subclasses.
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"user" : [
+		"user" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
 	}
 
@@ -92,89 +92,89 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"displayTransform" : [
+		"displayTransform" : {
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layoutPlugValueWidget:orientation", "horizontal",
-			"label", "",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation" : "horizontal",
+			"label" : "",
 
-		],
+		},
 
-		"displayTransform.name" : [
+		"displayTransform.name" : {
 
-			"description",
+			"description" :
 			"""
 			The colour transform used for correcting the Viewer output for display.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"label", "",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"label" : "",
 
-			"presetNames", lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
-			"presetValues", lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
+			"presetNames" : lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
+			"presetValues" : lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
 
-		],
+		},
 
-		"displayTransform.soloChannel" : [
+		"displayTransform.soloChannel" : {
 
-			"plugValueWidget:type", "GafferUI.ViewUI._SoloChannelPlugValueWidget",
-			"label", "",
+			"plugValueWidget:type" : "GafferUI.ViewUI._SoloChannelPlugValueWidget",
+			"label" : "",
 
-		],
+		},
 
-		"displayTransform.clipping" : [
+		"displayTransform.clipping" : {
 
-			"description",
+			"description" :
 			"""
 			Highlights the regions in which the colour values go above 1 or below 0.
 			""",
 
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:image:on", "clippingOn.png",
-			"togglePlugValueWidget:image:off", "clippingOff.png",
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "clippingOn.png",
+			"togglePlugValueWidget:image:off" : "clippingOff.png",
 
-		],
+		},
 
-		"displayTransform.exposure" : [
+		"displayTransform.exposure" : {
 
-			"description",
+			"description" :
 			"""
 			Applies an exposure adjustment to the image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:image:on", "exposureOn.png",
-			"togglePlugValueWidget:image:off", "exposureOff.png",
-			"togglePlugValueWidget:defaultToggleValue", 1,
-			"numericPlugValueWidget:fixedCharacterWidth", 5,
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "exposureOn.png",
+			"togglePlugValueWidget:image:off" : "exposureOff.png",
+			"togglePlugValueWidget:defaultToggleValue" : 1,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
-		"displayTransform.gamma" : [
+		"displayTransform.gamma" : {
 
-			"description",
+			"description" :
 			"""
 			Applies a gamma correction to the image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:image:on", "gammaOn.png",
-			"togglePlugValueWidget:image:off", "gammaOff.png",
-			"togglePlugValueWidget:defaultToggleValue", 2,
-			"numericPlugValueWidget:fixedCharacterWidth", 5,
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "gammaOn.png",
+			"togglePlugValueWidget:image:off" : "gammaOff.png",
+			"togglePlugValueWidget:defaultToggleValue" : 2,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
-		"displayTransform.absolute" : [
+		"displayTransform.absolute" : {
 
-			"description",
+			"description" :
 			"""
 			Converts negative values to positive.
 			""",
 
-			"layout:visibilityActivator", False,
+			"layout:visibilityActivator" : False,
 
-		],
+		},
 
 	}
 

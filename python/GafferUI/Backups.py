@@ -289,45 +289,45 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"backups" : [
+		"backups" : {
 
-			"description",
+			"description" :
 			"""
 			Controls a mechanism used to create automatic
 			backup copies of scripts.
 			""",
 
-			"layout:section", "Backups",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Backups",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:activator:backupsEnabled", __backupsEnabled,
-			"layout:activator:backupNumberEnabled", __backupNumberEnabled,
+			"layout:activator:backupsEnabled" : __backupsEnabled,
+			"layout:activator:backupNumberEnabled" : __backupNumberEnabled,
 
-		],
+		},
 
-		"backups.enabled" : [
+		"backups.enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Turns the backup system on and off.
 			""",
 
-		],
+		},
 
-		"backups.frequency" : [
+		"backups.frequency" : {
 
-			"description",
+			"description" :
 			"""
 			How often backups are made, measured in minutes.
 			""",
 
-			"layout:activator", "backupsEnabled",
+			"layout:activator" : "backupsEnabled",
 
-		],
+		},
 
-		"backups.fileName" : [
+		"backups.fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the backup file to be created. This may
 			use any of the following variables :
@@ -343,13 +343,13 @@ Gaffer.Metadata.registerNode(
 			- `#` : the same as `${backup:number}`.
 			""",
 
-			"layout:activator", "backupsEnabled",
+			"layout:activator" : "backupsEnabled",
 
-		],
+		},
 
-		"backups.files" : [
+		"backups.files" : {
 
-			"description",
+			"description" :
 			"""
 			The number of backups to keep for each script. Only
 			used if the backup filename includes `${backup:number}`.
@@ -357,9 +357,9 @@ Gaffer.Metadata.registerNode(
 			will be overwritten.
 			""",
 
-			"layout:activator", "backupNumberEnabled",
+			"layout:activator" : "backupNumberEnabled",
 
-		],
+		},
 
 	}
 

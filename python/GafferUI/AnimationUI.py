@@ -56,16 +56,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"curves" : [
+		"curves" : {
 
-			"description",
+			"description" :
 			"""
 			Stores animation curves. Rather than access
 			these directly, prefer to use the Animation::acquire()
 			method.
 			""",
 
-		],
+		},
 
 	},
 

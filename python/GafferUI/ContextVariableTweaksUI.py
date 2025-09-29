@@ -56,40 +56,40 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"ignoreMissing" : [
+		"ignoreMissing" : {
 
-			"description",
+			"description" :
 			"""
 			Ignores tweaks targeting missing context variables. When off, missing context
 			variables cause the node to error, unless the tweak mode is `CreateIfMissing`.
 			""",
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"tweaks" : [
+		"tweaks" : {
 
-			"description",
+			"description" :
 			"""
 			The tweaks to be made to the context variables. Arbitrary numbers of user defined
 			tweaks may be added as children of this plug via the user interface, or
 			using the ContextVariableTweaks API via python.
 			""",
 
-			"layout:section", "Settings.Tweaks",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget::footer:widgetType", "GafferUI.ContextVariableTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:section" : "Settings.Tweaks",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget::footer:widgetType" : "GafferUI.ContextVariableTweaksUI._TweaksFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"tweaks.*" : [
+		"tweaks.*" : {
 
-			"tweakPlugValueWidget:propertyType", "context variable",
+			"tweakPlugValueWidget:propertyType" : "context variable",
 
-		]
+		}
 
 	}
 

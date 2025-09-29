@@ -52,30 +52,30 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"fileName" : (
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			Where the script is stored.
 			""",
 
-		),
+		},
 
-		"unsavedChanges" : (
+		"unsavedChanges" : {
 
-			"description",
+			"description" :
 			"""
 			Indicates whether or not the script has been
 			modified since it was last saved.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		),
+		},
 
-		"frameRange" : (
+		"frameRange" : {
 
-			"description",
+			"description" :
 			"""
 			Defines the start and end frames for the script.
 			These don't enforce anything, but are typically
@@ -84,13 +84,13 @@ Gaffer.Metadata.registerNode(
 			time slider.
 			""",
 
-			"plugValueWidget:type", "GafferUI.CompoundNumericPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.CompoundNumericPlugValueWidget",
 
-		),
+		},
 
-		"frameRange.start" : (
+		"frameRange.start" : {
 
-			"description",
+			"description" :
 			"""
 			The start frame. This doesn't enforce anything,
 			but is typically used by dispatchers to control
@@ -98,11 +98,11 @@ Gaffer.Metadata.registerNode(
 			the range of the time slider.
 			""",
 
-		),
+		},
 
-		"frameRange.end" : (
+		"frameRange.end" : {
 
-			"description",
+			"description" :
 			"""
 			The end frame. This doesn't enforce anything,
 			but is typically used by dispatchers to control
@@ -110,11 +110,11 @@ Gaffer.Metadata.registerNode(
 			the range of the time slider.
 			""",
 
-		),
+		},
 
-		"frame" : (
+		"frame" : {
 
-			"description",
+			"description" :
 			"""
 			The current frame.
 
@@ -133,31 +133,31 @@ Gaffer.Metadata.registerNode(
 			> `context.getFrame()` instead.
 			""",
 
-			"layout:visibilityActivator", "hidden",
+			"layout:visibilityActivator" : "hidden",
 
-		),
+		},
 
-		"framesPerSecond" : (
+		"framesPerSecond" : {
 
-			"description",
+			"description" :
 			"""
 			The framerate used to convert between the current
 			frame number and the time in seconds.
 			""",
 
-		),
+		},
 
-		"variables" : (
+		"variables" : {
 
-			"description",
+			"description" :
 			"""
 			Container for user-defined variables which can
 			be used in expressions anywhere in the script.
 			""",
 
-			"layout:section", "Variables",
+			"layout:section" : "Variables",
 
-		),
+		},
 
 	},
 

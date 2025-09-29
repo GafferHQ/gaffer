@@ -61,46 +61,46 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"contextVariable" : [
+		"contextVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The context variable used to vary the values of the inputs being
 			collected. This should be used in the node network upstream of the
 			inputs.
 			""",
 
-			"noduleLayout:visible", False,
+			"noduleLayout:visible" : False,
 
-		],
+		},
 
-		"indexContextVariable" : [
+		"indexContextVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The context variable used to specify the index being collected. This
 			may be used in the node network upstream of the inputs.
 			""",
 
-			"noduleLayout:visible", False,
+			"noduleLayout:visible" : False,
 
-		],
+		},
 
-		"contextValues" : [
+		"contextValues" : {
 
-			"description",
+			"description" :
 			"""
 			The values of the context variable. Collection will be performed once
 			for each context value.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"enabled" : [
+		"enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables or disables collection. This may be varied based on the
 			context variable, so that collection may be disabled in some
@@ -108,78 +108,78 @@ Gaffer.Metadata.registerNode(
 			included in the output arrays.
 			""",
 
-			"layout:section", "Settings",
-			"nodule:type", "GafferUI::StandardNodule",
+			"layout:section" : "Settings",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			Container of inputs to be collected from. Inputs may be added by
 			calling `collectNode.addInput( plug )` or using the UI. Each input
 			provides a corresponding output parented under the `out` plug.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:section", "Settings.Inputs",
+			"layout:section" : "Settings.Inputs",
 
-			"layout:customWidget:footer:widgetType", "GafferUI.CollectUI._InputFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferUI.CollectUI._InputFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.2,
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferUI.CollectUI._InputAdder",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.2,
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferUI.CollectUI._InputAdder",
 
-		],
+		},
 
-		"in.*" : [
+		"in.*" : {
 
-			"description",
+			"description" :
 			lambda plug : f"""An input value to be collected once in each context, with an array of the results
 			being provided by `out.{plug.getName()}`.""",
 
-			"renameable", True,
+			"renameable" : True,
 
-		],
+		},
 
-		"enabledValues" : [
+		"enabledValues" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs an array of the context values for which collection was enabled by the `enabled` plug.
 			""",
 
 			# We show the value for this plug in the `_OutputPlugValueWidget`.
-			"plugValueWidget:type", "",
-			"noduleLayout:index", 0,
+			"plugValueWidget:type" : "",
+			"noduleLayout:index" : 0,
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			Container of array outputs corresponding to the inputs provided by the `in` plug.
 			""",
 
-			"plugValueWidget:type", "GafferUI.CollectUI._OutputPlugValueWidget",
-			"layout:section", "Results",
+			"plugValueWidget:type" : "GafferUI.CollectUI._OutputPlugValueWidget",
+			"layout:section" : "Results",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.2,
-			"noduleLayout:index", 1,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.2,
+			"noduleLayout:index" : 1,
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description",
+			"description" :
 			lambda plug : f"""An array of all the results collected from `in.{plug.getName()}`.""",
 
-		],
+		},
 
 	}
 )

@@ -1673,19 +1673,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"label", "",
+			"label" : "",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 185,
-			"editScopePlugValueWidget:showLabel", True,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width" : 185,
+			"editScopePlugValueWidget:showLabel" : True,
 
-		],
+		},
 
 	}
 

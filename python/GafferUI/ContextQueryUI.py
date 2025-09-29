@@ -168,9 +168,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"queries" : [
+		"queries" : {
 
-			"description",
+			"description" :
 			"""
 			The context variables to be queried - arbitrary numbers of context
 			variables may be added as children of this plug via the user interface,
@@ -180,101 +180,101 @@ Gaffer.Metadata.registerNode(
 			appropriate type.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:footer:widgetType", "GafferUI.ContextQueryUI._ContextQueryFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferUI.ContextQueryUI._ContextQueryFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"queries.*" : [
+		"queries.*" : {
 
-			"description",
+			"description" :
 			"""
 			A pair of variable name to query and default value.
 			""",
 
-		],
+		},
 
-		"queries.*.name" : [
+		"queries.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the variable to query.
 			""",
 
-		],
+		},
 
-		"queries.*.value" : [
+		"queries.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			The value to output if the variable does not exist.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.4,
-			"noduleLayout:customGadget:addButton:gadgetType", ""
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.4,
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description",
+			"description" :
 			"""
 			The result of the query.
 			""",
 
-			"label", functools.partial( __getLabel, parentPlug = ""),
+			"label" : functools.partial( __getLabel, parentPlug = ""),
 
-			"plugValueWidget:type", "GafferUI.ContextQueryUI._OutputWidget",
+			"plugValueWidget:type" : "GafferUI.ContextQueryUI._OutputWidget",
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 
-		],
+		},
 
-		"out.*.exists" : [
+		"out.*.exists" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs true if the variable exists in the context, and is a compatible type.
 			""",
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "exists" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
-		],
+		},
 
-		"out.*.value" : [
+		"out.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the value of the specified variable, or the default value
 			if the variable does not exist ( or is incompatible ).
 			""",
 
-		],
+		},
 
-		"out.*.value..." : [
+		"out.*.value..." : {
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "values" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "values" ),
 
-		],
+		},
 
 	}
 )
