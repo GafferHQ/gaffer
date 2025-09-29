@@ -292,7 +292,12 @@ Build
 - Qt.py : Updated to version 1.4.6.
 - USD : Updated to version 25.05.01.
 
-1.5.16.x (relative to 1.5.16.2)
+1.5.16.x (relative to 1.5.16.3)
+========
+
+
+
+1.5.16.3 (relative to 1.5.16.2)
 ========
 
 Fixes
