@@ -1,10 +1,10 @@
-1.6.x.x (relative to 1.6.2.0)
+1.6.x.x (relative to 1.6.2.1)
 =======
 
-Improvements
-------------
 
-- LightEditor, RenderPassEditor, AttributeEditor : Column width adjustments are now preserved when switching tabs.
+
+1.6.2.1 (relative to 1.6.2.0)
+=======
 
 Fixes
 -----
@@ -12,6 +12,7 @@ Fixes
 - LightEditor : Fixed bug that could cause filter evaluation in an invalid context.
 - Outputs : Custom `gaffer:renderID` parameters are now preserved, allowing custom "netrender" style workflows to be implemented.
 - RenderPassEditor : Fixed bug that could cause duplicate tabs to appear when registering custom columns to an existing section via a different group key.
+- LightEditor, RenderPassEditor, AttributeEditor : Column width adjustments are now preserved when switching tabs.
 
 1.6.2.0 (relative to 1.6.1.0)
 =======
