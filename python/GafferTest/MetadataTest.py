@@ -656,15 +656,17 @@ class MetadataTest( GafferTest.TestCase ) :
 			"nodeGadget:color", imath.Color3f( 1, 0, 0 ),
 
 			plugs = {
-				"a" : [
-					"description",
+				# Preferred dict-based registration.
+				"a" : {
+					"description" :
 					"""Another multi
 					line description""",
 
-					"preset:One", 1,
-					"preset:Two", 2,
-					"preset:Three", 3,
-				],
+					"preset:One" : 1,
+					"preset:Two" : 2,
+					"preset:Three" : 3,
+				},
+				# Legacy list-based registration.
 				"b" : (
 					"description",
 					"""
