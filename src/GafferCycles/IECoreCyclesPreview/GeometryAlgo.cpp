@@ -246,7 +246,7 @@ ccl::Geometry *convert( const IECoreScenePreview::Renderer::ObjectSamples &sampl
 		// in every gap.
 		IECoreScenePreview::Renderer::ObjectSamples processedSamples;
 		processedSamples.reserve( samples.size() * 2 - 1 );
-		vector<float> processedTimes;
+		IECoreScenePreview::Renderer::SampleTimes processedTimes;
 		processedTimes.reserve( samples.size() * 2 - 1 );
 		for( size_t i = 0; i < samples.size(); ++i )
 		{
@@ -418,7 +418,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 }
 
-void convertMotion( const std::vector<const IECoreScene::Primitive *> &samples, size_t primarySampleIndex, ccl::Geometry &geometry )
+void convertMotion( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &samples, size_t primarySampleIndex, ccl::Geometry &geometry )
 {
 	if( samples.size() < 2 )
 	{

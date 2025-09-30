@@ -616,7 +616,7 @@ AtArray *dataToArray( const IECore::Data *data, int aiType )
 	return AiArrayConvert( size( data ), 1, aiType, address( data ) );
 }
 
-AtArray *dataToArray( const std::vector<const IECore::Data *> &samples, int aiType )
+AtArray *dataToArray( const DataSamples &samples, int aiType )
 {
 	if( aiType == AI_TYPE_NONE )
 	{
@@ -634,7 +634,7 @@ AtArray *dataToArray( const std::vector<const IECore::Data *> &samples, int aiTy
 		AiArrayDestroy
 	);
 
-	for( vector<const IECore::Data *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+	for( auto it = samples.begin(); it != samples.end(); ++it )
 	{
 		if( (*it)->typeId() != samples.front()->typeId() )
 		{

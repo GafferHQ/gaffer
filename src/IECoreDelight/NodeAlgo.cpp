@@ -208,7 +208,7 @@ void primitiveVariableParameterList( const IECoreScene::Primitive *primitive, Pa
 	}
 }
 
-void primitiveVariableParameterLists( const std::vector<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices )
+void primitiveVariableParameterLists( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices )
 {
 	for( const auto &variable : primitives.front()->variables )
 	{

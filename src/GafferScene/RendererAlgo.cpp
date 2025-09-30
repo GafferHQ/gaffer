@@ -1466,7 +1466,7 @@ struct CameraOutput : public LocationOutput
 			IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 			deformationMotionTimes( sampleTimes );
 
-			std::vector<ConstObjectPtr> samples;
+			IECoreScenePreview::Renderer::ObjectSamples samples;
 			GafferScene::Private::RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
 
 			IECoreScenePreview::Renderer::CameraSamples cameraSamples; cameraSamples.reserve( samples.size() );
@@ -1652,7 +1652,7 @@ struct ObjectOutput : public LocationOutput
 		IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 		deformationMotionTimes( sampleTimes );
 
-		vector<ConstObjectPtr> samples;
+		IECoreScenePreview::Renderer::ObjectSamples samples;
 		GafferScene::Private::RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
 		if( !samples.size() )
 		{

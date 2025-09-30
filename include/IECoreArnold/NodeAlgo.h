@@ -60,10 +60,10 @@ IECOREARNOLD_API AtNode *convert( const IECoreScenePreview::Renderer::ObjectSamp
 
 /// Signature of a function which can convert an IECore::Object
 /// into an Arnold object.
-using Converter = AtNode *(*)( const IECore::Object *sample, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext );
+using Converter = std::function<AtNode *( const IECore::Object *sample, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext )>;
 /// Signature of a function which can convert a series of IECore::Object
 /// samples into a moving Arnold object.
-using MotionConverter = AtNode *(*)( const IECoreScenePreview::Renderer::ObjectSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext );
+using MotionConverter = std::function<AtNode *( const IECoreScenePreview::Renderer::ObjectSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext )>;
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
@@ -79,15 +79,28 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		using Converter = AtNode *(*)( const T *, AtUniverse *, const std::string &, const AtNode *, const std::string & );
-		using MotionConverter = AtNode *(*)( const std::vector<const T *> &, float, float, AtUniverse *, const std::string &, const AtNode *, const std::string & );
+		using TypedConverter = AtNode *(*)( const T *, AtUniverse *, const std::string &, const AtNode *, const std::string & );
+		using TypedObjectSamples = IECoreScenePreview::Renderer::Samples<const T *>;
+		using TypedMotionConverter = AtNode *(*)( const TypedObjectSamples &, float, float, AtUniverse *, const std::string &, const AtNode *, const std::string & );
 
-		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
+		ConverterDescription( TypedConverter converter, TypedMotionConverter motionConverter = nullptr )
 		{
+			MotionConverter motionConverterWrapper;
+			if( motionConverter )
+			{
+				motionConverterWrapper = [motionConverter] ( const IECoreScenePreview::Renderer::ObjectSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext )
+				{
+					return motionConverter( IECoreScenePreview::Renderer::staticSamplesCast<const T *>( samples ), motionStart, motionEnd, universe, nodeName, parent, messageContext );
+				};
+			}
+
 			registerConverter(
 				T::staticTypeId(),
-				reinterpret_cast<NodeAlgo::Converter>( converter ),
-				reinterpret_cast<NodeAlgo::MotionConverter>( motionConverter )
+				[converter] ( const IECore::Object *sample, AtUniverse *universe, const std::string &nodeName, const AtNode *parent, const std::string &messageContext )
+				{
+					return converter( static_cast<const T *>( sample ), universe, nodeName, parent, messageContext );
+				},
+				motionConverterWrapper
 			);
 		}
 

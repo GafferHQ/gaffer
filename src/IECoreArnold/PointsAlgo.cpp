@@ -113,11 +113,11 @@ AtNode *convert( const IECoreScene::PointsPrimitive *points, AtUniverse *univers
 	return result;
 }
 
-AtNode *convert( const std::vector<const IECoreScene::PointsPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::PointsPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	AtNode *result = convertCommon( samples.front(), universe, nodeName, parentNode, messageContext );
 
-	std::vector<const IECoreScene::Primitive *> primitiveSamples( samples.begin(), samples.end() );
+	const auto primitiveSamples = IECoreScenePreview::Renderer::staticSamplesCast<const Primitive *>( samples );
 	if( !ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString, messageContext ) )
 	{
 		AiNodeDestroy( result );
@@ -125,7 +125,6 @@ AtNode *convert( const std::vector<const IECoreScene::PointsPrimitive *> &sample
 	}
 
 	ShapeAlgo::convertRadius( primitiveSamples, result, messageContext );
-
 
 	AiNodeSetFlt( result, g_motionStartArnoldString, motionStart );
 	AiNodeSetFlt( result, g_motionEndArnoldString, motionEnd );

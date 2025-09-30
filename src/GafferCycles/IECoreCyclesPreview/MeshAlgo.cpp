@@ -250,10 +250,10 @@ ccl::Geometry *convert( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *scen
 	return cmesh;
 }
 
-ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::MeshPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::Mesh *result = convertCommon( meshes[primarySampleIndex], scene );
-	GeometryAlgo::convertMotion( vector<const IECoreScene::Primitive *>( meshes.begin(), meshes.end() ), primarySampleIndex, *result );
+	ccl::Mesh *result = convertCommon( samples[primarySampleIndex], scene );
+	GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
 	return result;
 }
 

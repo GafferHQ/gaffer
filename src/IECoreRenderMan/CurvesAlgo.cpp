@@ -96,12 +96,12 @@ RtUString convertStaticCurves( const IECoreScene::CurvesPrimitive *curves, RtPri
 	return Loader::strings().k_Ri_Curves;
 }
 
-RtUString convertAnimatedCurves( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
+RtUString convertAnimatedCurves( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	if( CurvesAlgo::isPinned( samples[0] ) )
 	{
-		std::vector<CurvesPrimitivePtr> processedCurves;
-		std::vector<const CurvesPrimitive *> processedSamples;
+		boost::container::small_vector<CurvesPrimitivePtr, 2> processedCurves;
+		boost::container::small_vector<const CurvesPrimitive *, 2> processedSamples;
 		processedCurves.reserve( samples.size() );
 		processedSamples.reserve( samples.size() );
 		for( auto sample : samples )
@@ -113,7 +113,7 @@ RtUString convertAnimatedCurves( const std::vector<const IECoreScene::CurvesPrim
 		return convertAnimatedCurves( processedSamples, sampleTimes, primVars, messageContext );
 	}
 
-	GeometryAlgo::convertPrimitive( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
+	GeometryAlgo::convertPrimitive( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), sampleTimes, primVars, messageContext );
 	convertCurvesTopology( samples[0], primVars, messageContext );
 	return Loader::strings().k_Ri_Curves;
 }

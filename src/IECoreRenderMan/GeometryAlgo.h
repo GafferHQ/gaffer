@@ -61,8 +61,8 @@ RtUString convert( const IECore::Object *object, RtPrimVarList &primVars, const 
 RtUString convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext = "GeometryAlgo::convert" );
 
 /// Signature of a function which can convert an IECore::Object into a geometry prototype.
-using Converter = RtUString (*)( const IECore::Object *object, RtParamList &primVars, const std::string &messageContext );
-using MotionConverter = RtUString (*)( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext );
+using Converter = std::function<RtUString ( const IECore::Object *object, RtPrimVarList &primVars, const std::string &messageContext )>;
+using MotionConverter = std::function<RtUString ( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )>;
 
 /// Registers a converter for a specific type. Use the ConverterDescription
 /// utility class in preference to this, since it provides additional type
@@ -78,15 +78,28 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		using Converter = RtUString (*)( const T *object, RtPrimVarList &primVars, const std::string &messageContext );
-		using MotionConverter = RtUString (*)( const std::vector<const T *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext );
+		using TypedConverter = RtUString (*)( const T *object, RtPrimVarList &primVars, const std::string &messageContext );
+		using TypedObjectSamples = IECoreScenePreview::Renderer::Samples<const T *>;
+		using TypedMotionConverter = RtUString (*)( const TypedObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext );
 
-		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
+		ConverterDescription( TypedConverter converter, TypedMotionConverter motionConverter = nullptr )
 		{
+			MotionConverter motionConverterWrapper;
+			if( motionConverter )
+			{
+				motionConverterWrapper = [motionConverter] ( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
+				{
+					return motionConverter( IECoreScenePreview::Renderer::staticSamplesCast<const T *>( samples ), sampleTimes, primVars, messageContext );
+				};
+			}
+
 			registerConverter(
 				T::staticTypeId(),
-				reinterpret_cast<GeometryAlgo::Converter>( converter ),
-				reinterpret_cast<GeometryAlgo::MotionConverter>( motionConverter )
+				[converter] ( const IECore::Object *sample, RtPrimVarList &primVars, const std::string &messageContext )
+				{
+					return converter( static_cast<const T *>( sample ), primVars, messageContext );
+				},
+				motionConverterWrapper
 			);
 		}
 
@@ -95,8 +108,10 @@ class ConverterDescription
 /// Primitive conversion helpers
 /// ============================
 
+using PrimitiveSamples = IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *>;
+
 /// Primitive converters should call this function before doing their own type-specific conversion.
 void convertPrimitive( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext );
-void convertPrimitive( const std::vector<const IECoreScene::Primitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext );
+void convertPrimitive( const PrimitiveSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext );
 
 } // namespace IECoreRenderMan::GeometryAlgo

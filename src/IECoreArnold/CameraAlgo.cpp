@@ -233,10 +233,10 @@ float apertureSize( const IECoreScene::Camera *camera )
 }
 
 template<typename F>
-auto parameterSamples( const std::vector<const IECoreScene::Camera *> &cameraSamples, F &&parameterFunction )
+auto parameterSamples( const IECoreArnold::CameraAlgo::CameraSamples &cameraSamples, F &&parameterFunction )
 {
 	using SampleType = std::invoke_result_t<F, const IECoreScene::Camera *>;
-	std::vector<SampleType> result;
+	IECoreScenePreview::Renderer::Samples<SampleType> result;
 	result.reserve( cameraSamples.size() );
 	for( const auto &camera : cameraSamples )
 	{
@@ -250,7 +250,7 @@ auto parameterSamples( const std::vector<const IECoreScene::Camera *> &cameraSam
 	return result;
 }
 
-void setAnimatedFloat( AtNode *node, AtString name, const std::vector<const IECoreScene::Camera *> &cameraSamples, float (*parameterFunction)( const IECoreScene::Camera * ) )
+void setAnimatedFloat( AtNode *node, AtString name, const IECoreArnold::CameraAlgo::CameraSamples &cameraSamples, float (*parameterFunction)( const IECoreScene::Camera * ) )
 {
 	const auto samples = parameterSamples( cameraSamples, parameterFunction );
 	if( samples.size() > 1 )
@@ -282,7 +282,7 @@ AtNode *CameraAlgo::convert( const IECoreScene::Camera *camera, AtUniverse *univ
 	return result;
 }
 
-AtNode *CameraAlgo::convert( const std::vector<const IECoreScene::Camera *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *CameraAlgo::convert( const CameraSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	AtNode *result = convertCommon( samples[0], universe, nodeName, parentNode, messageContext );
 	if( samples[0]->getProjection()=="perspective" )

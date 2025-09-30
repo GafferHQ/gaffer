@@ -248,14 +248,14 @@ AtNode *convert( const IECoreScene::CurvesPrimitive *curves, AtUniverse *univers
 	return result;
 }
 
-AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	// Arnold does not support Vertex PrimitiveVariables (see `ShapeAlgo::convertPrimitiveVariable()`),
 	// so we must resample unless Vertex and Varying have equivalent variable sizes.
-	std::vector<ConstCurvesPrimitivePtr> updatedSamples;
-	std::vector<const Primitive *> primitiveSamples;
+	IECoreScenePreview::Renderer::Samples<ConstCurvesPrimitivePtr> updatedSamples;
+	ShapeAlgo::PrimitiveSamples primitiveSamples;
 	// Also convert "N" to orientations
-	std::vector<const Data *> nSamples;
+	IECoreScenePreview::Renderer::Samples<const Data *> nSamples;
 	updatedSamples.reserve( samples.size() );
 	primitiveSamples.reserve( samples.size() );
 	nSamples.reserve( samples.size() );
