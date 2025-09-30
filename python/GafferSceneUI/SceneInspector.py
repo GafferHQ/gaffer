@@ -72,7 +72,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			self["compare"]["renderPass"] = Gaffer.OptionalValuePlug( valuePlug = Gaffer.StringPlug() )
 
 			self["locationFilter"] = Gaffer.StringPlug()
+			self["isolateLocationDifferences"] = Gaffer.BoolPlug()
+
 			self["globalsFilter"] = Gaffer.StringPlug()
+			self["isolateGlobalsDifferences"] = Gaffer.BoolPlug()
 
 			# Stop the input scenes claiming that all locations exist when
 			# they don't have an input.
@@ -121,6 +124,14 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			self["__bScene"]["in"].setInput( self["__switch"]["out"] )
 			self["__bScene"]["variables"].addChild( Gaffer.NameValuePlug( "__sceneInspector:inputIndex", 1 ) )
 
+		def _locationComparisonEnablers( self ) :
+
+			return [ p["enabled"] for p in self["compare"] ]
+
+		def _globalsComparisonEnablers( self ) :
+
+			return [ self["compare"][n]["enabled"] for n in [ "scene", "renderPass" ] ]
+
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::SceneInspector::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
@@ -161,7 +172,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Location" } ) :
 
-					GafferUI.PlugValueWidget.create( self.settings()["locationFilter"] )
+					GafferUI.PlugLayout(
+						self.settings(), orientation = GafferUI.ListContainer.Orientation.Horizontal,
+						rootSection = "LocationFilterRow"
+					)
 
 					self.__locationPathListing = GafferUI.PathListingWidget(
 						_GafferSceneUI._SceneInspector.InspectorPath(
@@ -181,7 +195,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Globals" } ) :
 
-					GafferUI.PlugValueWidget.create( self.settings()["globalsFilter"] )
+					GafferUI.PlugLayout(
+						self.settings(), orientation = GafferUI.ListContainer.Orientation.Horizontal,
+						rootSection = "GlobalsFilterRow"
+					)
 
 					self.__globalsPathListing = GafferUI.PathListingWidget(
 						_GafferSceneUI._SceneInspector.InspectorPath(
@@ -231,8 +248,19 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 		if plug.isSame( self.settings()["locationFilter"] ) :
 			self.__updateFilter( self.__locationPathListing.getPath().tree(), plug )
-		elif plug.isSame( self.settings()["globalsFilter"] ) :
+
+		if plug.isSame( self.settings()["globalsFilter"] ) :
 			self.__updateFilter( self.__globalsPathListing.getPath().tree(), plug )
+
+		if plug.isSame( self.settings()["isolateLocationDifferences"] ) or plug in self.settings()._locationComparisonEnablers() :
+			self.__locationPathListing.getPath().tree().setIsolateDifferences(
+				self.settings()["isolateLocationDifferences"].getValue() and any( p.getValue() for p in self.settings()._locationComparisonEnablers() )
+			)
+
+		if plug.isSame( self.settings()["isolateGlobalsDifferences"] ) or plug in self.settings()._globalsComparisonEnablers() :
+			self.__globalsPathListing.getPath().tree().setIsolateDifferences(
+				self.settings()["isolateGlobalsDifferences"].getValue() and any( p.getValue() for p in self.settings()._globalsComparisonEnablers() )
+			)
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __lazyUpdateFromContexts( self ) :
@@ -377,6 +405,21 @@ Gaffer.Metadata.registerNode(
 			# are available.
 			"togglePlugValueWidget:defaultToggleValue", "*",
 			"stringPlugValueWidget:placeholderText", "Filter...",
+			"layout:section", "LocationFilterRow"
+
+		],
+
+		"isolateLocationDifferences" : [
+
+			"description",
+			"""
+			Hides all rows where the A and B columns both have the same value.
+			""",
+
+			"label", "Isolate Differences",
+			"layout:section", "LocationFilterRow",
+			"boolPlugValueWidget:labelVisible", True,
+			"layout:visibilityActivator", lambda plug : any( p.getValue() for p in plug.node()._locationComparisonEnablers() ),
 
 		],
 
@@ -392,6 +435,21 @@ Gaffer.Metadata.registerNode(
 			"togglePlugValueWidget:image:off", "search.png",
 			"togglePlugValueWidget:defaultToggleValue", "*",
 			"stringPlugValueWidget:placeholderText", "Filter...",
+			"layout:section", "GlobalsFilterRow",
+
+		],
+
+		"isolateGlobalsDifferences" : [
+
+			"description",
+			"""
+			Hides all rows where the A and B columns both have the same value.
+			""",
+
+			"label", "Isolate Differences",
+			"layout:section", "GlobalsFilterRow",
+			"boolPlugValueWidget:labelVisible", True,
+			"layout:visibilityActivator", lambda plug : any( p.getValue() for p in plug.node()._globalsComparisonEnablers() ),
 
 		],
 

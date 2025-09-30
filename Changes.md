@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- SceneInspector : Removed redundant scene inspections when not in comparison mode.
+- SceneInspector :
+  - Added "Isolate Differences" option for comparison modes. This filters out all properties which have the same value in the A and B columns.
+  - Removed redundant scene inspections when not in comparison mode.
 
 Fixes
 -----
