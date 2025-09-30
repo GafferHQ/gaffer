@@ -143,10 +143,10 @@ ccl::Geometry *convert( const IECoreScene::PointsPrimitive *points, ccl::Scene *
 	return pointCloud;
 }
 
-ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &points, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::PointsPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::PointCloud *result = convertCommon( points[primarySampleIndex], scene );
-	GeometryAlgo::convertMotion( vector<const IECoreScene::Primitive *>( points.begin(), points.end() ), primarySampleIndex, *result );
+	ccl::PointCloud *result = convertCommon( samples[primarySampleIndex], scene );
+	GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
 	return result;
 }
 

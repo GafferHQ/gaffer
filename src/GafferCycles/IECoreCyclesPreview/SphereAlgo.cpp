@@ -107,7 +107,7 @@ ccl::Geometry *convert( const IECoreScene::SpherePrimitive *sphere, ccl::Scene *
 	return result;
 }
 
-ccl::Geometry *convert( const vector<const IECoreScene::SpherePrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::SpherePrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
 	ccl::Geometry *result = convertCommon( samples[primarySampleIndex], scene );
 	return result;

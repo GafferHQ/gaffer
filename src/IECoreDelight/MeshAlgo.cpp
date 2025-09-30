@@ -135,7 +135,7 @@ bool convertStatic( const IECoreScene::MeshPrimitive *mesh, NSIContext_t context
 	return true;
 }
 
-bool convertAnimated( const vector<const IECoreScene::MeshPrimitive *> &meshes, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convertAnimated( const IECoreScenePreview::Renderer::Samples<const IECoreScene::MeshPrimitive *> &meshes, const IECoreScenePreview::Renderer::SampleTimes &times, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "mesh", 0, nullptr );
 
@@ -144,7 +144,7 @@ bool convertAnimated( const vector<const IECoreScene::MeshPrimitive *> &meshes, 
 
 	vector<ParameterList> animatedParameters;
 	NodeAlgo::primitiveVariableParameterLists(
-		vector<const Primitive *>( meshes.begin(), meshes.end() ),
+		IECoreScenePreview::Renderer::staticSamplesCast<const Primitive *>( meshes ),
 		parameters, animatedParameters,
 		meshes.front()->vertexIds()
 	);

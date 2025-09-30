@@ -334,7 +334,7 @@ void convertP( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarLi
 	}
 }
 
-void convertP( const std::vector<const IECoreScene::Primitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
+void convertP( const GeometryAlgo::PrimitiveSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
 {
 	const auto firstSampleIt = samples[0]->variables.find( g_p );
 	if( firstSampleIt == samples[0]->variables.end() )
@@ -436,7 +436,7 @@ void IECoreRenderMan::GeometryAlgo::convertPrimitive( const IECoreScene::Primiti
 	convertPrimitiveVariables( primitive, primVarList, messageContext );
 }
 
-void IECoreRenderMan::GeometryAlgo::convertPrimitive( const std::vector<const IECoreScene::Primitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
+void IECoreRenderMan::GeometryAlgo::convertPrimitive( const PrimitiveSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
 {
 	convertDetail( samples[0], primVarList );
 	// "P" is the only primitive variable that RenderMan allows to be animated

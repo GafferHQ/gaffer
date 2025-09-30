@@ -44,6 +44,7 @@
 #include "IECore/CompoundObject.h"
 #include "IECore/MessageHandler.h"
 
+#include "boost/container/small_vector.hpp"
 #include "boost/unordered_set.hpp"
 
 namespace IECoreScenePreview
@@ -157,10 +158,23 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		using ObjectSet = boost::unordered_set<ObjectInterfacePtr>;
 		using ObjectSetPtr = std::shared_ptr<ObjectSet>;
 		using ConstObjectSetPtr = std::shared_ptr<const ObjectSet>;
-		using TransformSamples = std::vector<Imath::M44f>;
-		using CameraSamples = std::vector<IECoreScene::ConstCameraPtr>;
-		using ObjectSamples = std::vector<IECore::ConstObjectPtr>;
-		using SampleTimes = std::vector<float>;
+
+		/// Types for storing animation samples to be passed to the
+		/// Renderer. We use `small_vector` to avoid allocations in the
+		/// common case of static objects or single-segment motion blur.
+
+		template<typename T>
+		using Samples = boost::container::small_vector<T, 2>;
+		using TransformSamples = Samples<Imath::M44f>;
+		using CameraSamples = Samples<IECoreScene::ConstCameraPtr>;
+		using ObjectSamples = Samples<IECore::ConstObjectPtr>;
+		using SampleTimes = Samples<float>;
+
+		/// Convenience function for casting between sample types. Typically
+		/// used by implementations to downcast from ObjectSamples to a more
+		/// specific type.
+		template<typename T, typename S>
+		static Samples<T> staticSamplesCast( const Samples<S> &samples );
 
 		/// A handle to an object in the renderer. The reference counting semantics of an
 		/// ObjectInterfacePtr are as follows :
@@ -354,3 +368,5 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 IE_CORE_DECLAREPTR( Renderer )
 
 } // namespace IECoreScenePreview
+
+#include "GafferScene/Private/IECoreScenePreview/Renderer.inl"

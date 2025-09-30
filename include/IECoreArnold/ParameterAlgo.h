@@ -36,6 +36,8 @@
 
 #include "IECoreArnold/Export.h"
 
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+
 #include "IECore/CompoundData.h"
 
 #include "ai_nodes.h"
@@ -67,7 +69,8 @@ IECOREARNOLD_API int parameterType( const IECore::Data *data, bool &array );
 /// If the equivalent Arnold type for the data is already known, then it may be passed directly.
 /// If not it will be inferred using parameterType().
 IECOREARNOLD_API AtArray *dataToArray( const IECore::Data *data, int aiType = AI_TYPE_NONE );
-IECOREARNOLD_API AtArray *dataToArray( const std::vector<const IECore::Data *> &samples, int aiType = AI_TYPE_NONE );
+using DataSamples = IECoreScenePreview::Renderer::Samples<const IECore::Data *>;
+IECOREARNOLD_API AtArray *dataToArray( const DataSamples &samples, int aiType = AI_TYPE_NONE );
 
 } // namespace ParameterAlgo
 
