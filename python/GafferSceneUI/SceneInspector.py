@@ -233,10 +233,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 	def _updateFromSettings( self, plug ) :
 
 		if plug.getName() == "enabled" and self.settings()["compare"].isAncestorOf( plug ) :
-			comparing = any( p["enabled"].getValue() for p in self.settings()["compare"] )
-			columns = self.__diffColumns if comparing else self.__standardColumns
-			self.__locationPathListing.setColumns( columns )
-			self.__globalsPathListing.setColumns( columns )
+			comparingGlobals = any( self.settings()["compare"][n]["enabled"].getValue() for n in [ "scene", "renderPass" ] )
+			comparingLocations = comparingGlobals or self.settings()["compare"]["location"]["enabled"].getValue()
+			self.__locationPathListing.setColumns( self.__diffColumns if comparingLocations else self.__standardColumns )
+			self.__globalsPathListing.setColumns( self.__diffColumns if comparingGlobals else self.__standardColumns )
 
 		if plug in (
 			self.settings()["location"],
