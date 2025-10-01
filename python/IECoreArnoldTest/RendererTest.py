@@ -3094,6 +3094,11 @@ class RendererTest( GafferTest.TestCase ) :
 						seed or frame or 1
 					)
 
+					self.assertEqual(
+						arnold.AiNodeGetFlt( options, "frame" ),
+						frame or 1
+					)
+
 	def testLogDirectoryCreation( self ) :
 
 		# Directory for log file should be made automatically if
