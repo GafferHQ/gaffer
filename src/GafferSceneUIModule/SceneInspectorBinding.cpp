@@ -449,6 +449,12 @@ class InspectorTree : public IECore::RefCounted
 
 			for( const auto &context : m_contexts )
 			{
+				if( &context == &m_contexts[1] && *context == *m_contexts[0] )
+				{
+					// Second context is identical to the first, so skip it.
+					continue;
+				}
+
 				Context::EditableScope scope( context.get() );
 				if( canceller )
 				{

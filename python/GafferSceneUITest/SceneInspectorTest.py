@@ -421,5 +421,62 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Custom/Smallest Face" )
 		self.assertFalse( path.isValid() )
 
+	def testInspectorsNotCalledUnnecessarily( self ) :
+
+		log = []
+		def loggingInspector( scene, editScope ) :
+
+			log.append( Gaffer.Context( Gaffer.Context.current() ) )
+			return []
+
+		GafferSceneUI.SceneInspector.registerInspectors( "Location/Logger", loggingInspector )
+		self.addCleanup( GafferSceneUI.SceneInspector.deregisterInspectors, "Location/Logger" )
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( group["out"], [ Gaffer.Context(), Gaffer.Context() ], None )
+
+		def assertExpectedCalls( numCalls ) :
+
+			del log[:]
+			path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location" )
+			path.children()
+
+			self.assertEqual( len( log ), numCalls )
+			for i in range( len( log ) ) :
+				self.assertEqual( log[i], tree.getContexts()[i] )
+
+		assertExpectedCalls( 0 ) # Path not in context, so no inspection
+
+		context = Gaffer.Context()
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/group/plane" )
+		tree.setContexts( [ context, context ] )
+
+		assertExpectedCalls( 1 ) # Same path in each context, so just one inspection
+		assertExpectedCalls( 0 ) # Reuses previous inspection
+
+		contextB = Gaffer.Context( context )
+		contextB["scene:path"] = GafferScene.ScenePlug.stringToPath( "/group/sphere" )
+		tree.setContexts( [ context, contextB ] )
+
+		assertExpectedCalls( 2 ) # Two different paths, so two inspections
+		assertExpectedCalls( 0 ) # Reuses previous inspections
+
+		contextB = Gaffer.Context( context )
+		contextB["renderPass"] = "myRenderPass"
+		tree.setContexts( [ context, contextB ] )
+
+		assertExpectedCalls( 2 ) # Same path but different render pass, so two inspections
+		assertExpectedCalls( 0 ) # Reuses previous inspections
+
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/i'm/not/here" )
+		tree.setContexts( [ context, context ] )
+
+		assertExpectedCalls( 0 ) # Path not valid, so no inspection
+
 if __name__ == "__main__":
 	unittest.main()

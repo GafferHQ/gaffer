@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.2.1)
 =======
 
+Improvements
+------------
+
+- SceneInspector : Removed redundant scene inspections when not in comparison mode.
+
 Fixes
 -----
 

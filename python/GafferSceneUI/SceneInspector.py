@@ -224,6 +224,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 		if plug in (
 			self.settings()["location"],
 			self.settings()["compare"]["location"],
+			self.settings()["compare"]["scene"]["enabled"],
 			self.settings()["compare"]["renderPass"],
 		) :
 			self.__lazyUpdateFromContexts()
@@ -248,7 +249,8 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 		result = []
 		for inputIndex in range( 0, 2 ) :
 			context = Gaffer.Context( self.context() )
-			context["__sceneInspector:inputIndex"] = inputIndex
+			if self.settings()["compare"]["scene"]["enabled"].getValue() :
+				context["__sceneInspector:inputIndex"] = inputIndex
 			result.append( context )
 
 		if self.settings()["compare"]["renderPass"]["enabled"].getValue() :
