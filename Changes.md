@@ -11,6 +11,7 @@ API
 ---
 
 - Metadata : The `registerNode()` function now accepts dictionaries containing plug metadata. This should be preferred to the previous list-based values.
+- SceneInspector : Added `deregisterInspectors()` method.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======

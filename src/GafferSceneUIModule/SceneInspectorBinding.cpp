@@ -235,6 +235,21 @@ class InspectorTree : public IECore::RefCounted
 			inspectionProviders().push_back( { path, inspectionProvider } );
 		}
 
+		static void deregisterInspectors( const vector<InternedString> &path )
+		{
+			auto &providers = inspectionProviders();
+			providers.erase(
+				std::remove_if(
+					providers.begin(),
+					providers.end(),
+					[&] ( const auto &item ) {
+						return item.first == path;
+					}
+				),
+				providers.end()
+			);
+		}
+
 		// Convenience for making registrations using a static variable.
 		struct Registration : boost::noncopyable
 		{
@@ -1640,6 +1655,7 @@ void GafferSceneUIModule::bindSceneInspector()
 			.def( "getFilter", &InspectorTree::getFilter, return_value_policy<copy_const_reference>() )
 			.def( "dirtiedSignal", &InspectorTree::dirtiedSignal, return_internal_reference<1>() )
 			.def( "registerInspectors", &inspectorTreeRegisterInspectorsWrapper ).staticmethod( "registerInspectors" )
+			.def( "deregisterInspectors",  &InspectorTree::deregisterInspectors ).staticmethod( "deregisterInspectors" )
 		;
 
 		class_<InspectorTree::Inspection>( "Inspection" )

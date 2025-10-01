@@ -292,6 +292,7 @@ GafferUI.Editor.registerType( "SceneInspector", SceneInspector )
 # InspectorTree isn't public API. Expose the `registerInspectors()` function and the `Inspection` class
 # on SceneInspector itself to make them available to extension authors.
 SceneInspector.registerInspectors = _GafferSceneUI._SceneInspector.InspectorTree.registerInspectors
+SceneInspector.deregisterInspectors = _GafferSceneUI._SceneInspector.InspectorTree.deregisterInspectors
 SceneInspector.Inspection = _GafferSceneUI._SceneInspector.InspectorTree.Inspection
 
 ##########################################################################

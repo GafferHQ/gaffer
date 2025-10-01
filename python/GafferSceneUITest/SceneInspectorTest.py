@@ -36,6 +36,8 @@
 
 import string
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferTest
@@ -379,6 +381,45 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 				self.assertEqual( parameterInput, GafferSceneUI.Private.ParameterInspector.connectionSource( inspectedValue ) )
 				if not parameterInput :
 					self.assertEqual( inspectedValue, shaderNetwork.getShader( shaderName ).parameters[parameterName] )
+
+	def testCustomInspectors( self ) :
+
+		def customInspector( scene, editScope ) :
+
+			return [
+				GafferSceneUI.SceneInspector.Inspection(
+					"Smallest Face",
+					GafferSceneUI.Private.BasicInspector( scene["object"], editScope, lambda objectPlug : objectPlug.getValue().minVerticesPerFace() )
+				),
+				GafferSceneUI.SceneInspector.Inspection(
+					"Largest Face",
+					GafferSceneUI.Private.BasicInspector( scene["object"], editScope, lambda objectPlug : objectPlug.getValue().maxVerticesPerFace() )
+				),
+			]
+
+		GafferSceneUI.SceneInspector.registerInspectors( "Location/Custom", customInspector )
+		self.addCleanup( GafferSceneUI.SceneInspector.deregisterInspectors, "Location/Custom" )
+
+		sphere = GafferScene.Sphere()
+		context = Gaffer.Context()
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/sphere" )
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( sphere["out"], [ context, context ], None )
+
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Custom/Smallest Face" )
+		self.assertTrue( path.isValid() )
+		with context :
+			self.assertEqual( path.property( "inspector:inspector" ).inspect().value(), IECore.IntData( 3 ) )
+
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Custom/Largest Face" )
+		self.assertTrue( path.isValid() )
+		with context :
+			self.assertEqual( path.property( "inspector:inspector" ).inspect().value(), IECore.IntData( 4 ) )
+
+		GafferSceneUI.SceneInspector.deregisterInspectors( "Location/Custom" )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( sphere["out"], [ context, context ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Custom/Smallest Face" )
+		self.assertFalse( path.isValid() )
 
 if __name__ == "__main__":
 	unittest.main()
