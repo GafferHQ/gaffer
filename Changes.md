@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Arnold : Fixed `options.frame` value, which was previously always `0`. This fixes the `arnold/frame` EXR metadata.
+- BoolWidget : Fixed label text styling when disabled.
 
 API
 ---

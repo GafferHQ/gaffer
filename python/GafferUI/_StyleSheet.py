@@ -540,7 +540,7 @@ _styleSheet = string.Template(
 		background-color: none;
 	}
 
-	QPushButton:disabled, QComboBox:disabled, QLabel::disabled {
+	QPushButton:disabled, QComboBox:disabled, QLabel::disabled, QCheckBox::disabled {
 		color: $tintLighterStrong;
 	}
 
