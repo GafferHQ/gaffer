@@ -49,49 +49,49 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"source" : [
+		"source" : {
 
-			"description",
+			"description" :
 			"""
 			The scene from which the attributes are copied.
 			""",
 
-		],
+		},
 
-		"attributes" : [
+		"attributes" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the attributes to be copied. These should be
 			separated by spaces and can use Gaffer's standard wildcards
 			to match multiple attributes.
 			""",
 
-		],
+		},
 
-		"sourceLocation" : [
+		"sourceLocation" : {
 
-			"description",
+			"description" :
 			"""
 			The location in the source scene that attributes are copied from.
 			By default, attributes are copied from the location equivalent to the one
 			they are being copied to.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "source",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "source",
 
-		],
+		},
 
-		"deleteExisting" : [
+		"deleteExisting" : {
 
-			"description",
+			"description" :
 			"""
 			Deletes all attributes from the input scene before adding the copied
 			attributes.
 			""",
 
-		],
+		},
 
 	}
 

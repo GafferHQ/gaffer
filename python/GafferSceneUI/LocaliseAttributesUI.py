@@ -48,27 +48,27 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"attributes" : [
+		"attributes" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the attributes to localise. These should be
 			separated by spaces and can use Gaffer's standard wildcards
 			to match multiple attributes.
 			""",
 
-		],
+		},
 
-		"includeGlobalAttributes" : [
+		"includeGlobalAttributes" : {
 
-			"description",
+			"description" :
 			"""
 			When enabled, global attributes matching the names in
 			`attributes` will be localised if an equivalent local
 			or inherited attribute is not found.
 			""",
 
-		],
+		},
 
 	}
 

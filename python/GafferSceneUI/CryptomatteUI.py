@@ -151,40 +151,40 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The input image containing Cryptomatte image layers and optional metadata.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The resulting image.
 			""",
 
-		],
+		},
 
-		"layer" : [
+		"layer" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the Cryptomatte layer to use.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetNames", __layerPresetNames,
-			"presetValues", __layerPresetValues,
-			"presetsPlugValueWidget:allowCustom", True,
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetNames" : __layerPresetNames,
+			"presetValues" : __layerPresetValues,
+			"presetsPlugValueWidget:allowCustom" : True,
+		},
 
-		"manifestSource" : [
+		"manifestSource" : {
 
-			"description",
+			"description" :
 			"""
 			The source of the Cryptomatte manifest.
 
@@ -197,16 +197,16 @@ Gaffer.Metadata.registerNode(
 			 - Sidecar File: From a JSON file specified on the `sidecarFile` plug.
 			""",
 
-			"preset:None", GafferScene.Cryptomatte.ManifestSource.None_,
-			"preset:Metadata", GafferScene.Cryptomatte.ManifestSource.Metadata,
-			"preset:Sidecar File", GafferScene.Cryptomatte.ManifestSource.Sidecar,
+			"preset:None" : GafferScene.Cryptomatte.ManifestSource.None_,
+			"preset:Metadata" : GafferScene.Cryptomatte.ManifestSource.Metadata,
+			"preset:Sidecar File" : GafferScene.Cryptomatte.ManifestSource.Sidecar,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
 
-		"manifestDirectory" : [
+		"manifestDirectory" : {
 
-			"description",
+			"description" :
 			"""
 			A directory of JSON files containing Cryptomatte manifests.
 
@@ -219,14 +219,14 @@ Gaffer.Metadata.registerNode(
 
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", False,
-			"layout:visibilityActivator", "metadataManifest",
-		],
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : False,
+			"layout:visibilityActivator" : "metadataManifest",
+		},
 
-		"sidecarFile" : [
+		"sidecarFile" : {
 
-			"description",
+			"description" :
 			"""
 			A JSON file containing a Cryptomatte manifest.
 
@@ -234,17 +234,17 @@ Gaffer.Metadata.registerNode(
 			as a placeholder for the frame numbers.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"fileSystemPath:extensions", "json",
-			"fileSystemPath:extensionsLabel", "Show only JSON files",
-			"fileSystemPath:includeSequences", True,
-			"layout:visibilityActivator", "sidecarManifest",
-		],
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"fileSystemPath:extensions" : "json",
+			"fileSystemPath:extensionsLabel" : "Show only JSON files",
+			"fileSystemPath:includeSequences" : True,
+			"layout:visibilityActivator" : "sidecarManifest",
+		},
 
-		"matteNames" : [
+		"matteNames" : {
 
-			"description",
+			"description" :
 			"""
 			The list of names to be extracted as a matte.
 
@@ -274,26 +274,26 @@ Gaffer.Metadata.registerNode(
 			 - `<value>`.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.CryptomatteUI._CryptomatteNamesPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferSceneUI.CryptomatteUI._CryptomatteNamesPlugValueWidget",
+		},
 
-		"outputChannel" : [
+		"outputChannel" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the output channel containing the extracted matte.
 			""",
 
-		],
+		},
 
-		"manifestScene" : [
+		"manifestScene" : {
 
-			"description",
+			"description" :
 			"""
 			A scene containing locations representing the contents of the Cryptomatte manifest.
 			""",
 
-		],
+		},
 
 	}
 

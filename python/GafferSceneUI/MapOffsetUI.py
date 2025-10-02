@@ -50,35 +50,35 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"offset" : [
+		"offset" : {
 
-			"description",
+			"description" :
 			"""
 			An offset added to the texture coordinates. Note that moving the
 			texture coordinates in the positive direction will move the texture
 			in the negative direction.
 			""",
 
-		],
+		},
 
-		"udim" : [
+		"udim" : {
 
-			"description",
+			"description" :
 			"""
 			A specific UDIM to offset the texture coordinates to. The UDIM is
 			converted to an offset which is added to the offset above.
 			""",
 
-		],
+		},
 
-		"uvSet" : [
+		"uvSet" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable holding the UV coordinates.
 			""",
 
-		],
+		},
 
 	}
 

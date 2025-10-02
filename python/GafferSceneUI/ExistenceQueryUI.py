@@ -48,48 +48,48 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query.
 			"""
 
-		],
+		},
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The location to query for existence.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", ""
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"nodule:type" : ""
 
-		],
+		},
 
-		"exists" : [
+		"exists" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs true if the specified location exists, otherwise false.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
-		"closestAncestor" : [
+		"closestAncestor" : {
 
-			"description",
+			"description" :
 			"""
 			Path to the closest ancestor that exists.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		]
+		}
 	}
 )

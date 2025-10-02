@@ -51,23 +51,23 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"type" : [
+		"type" : {
 
-			"description",
+			"description" :
 			"""
 			The render type to assign.
 			""",
 
-			"preset:Unchanged", "",
-			"preset:Particle", "particle",
-			"preset:Sphere", "sphere",
-			"preset:Disk", "disk",
-			"preset:Patch", "patch",
-			"preset:Blobby", "blobby",
+			"preset:Unchanged" : "",
+			"preset:Particle" : "particle",
+			"preset:Sphere" : "sphere",
+			"preset:Disk" : "disk",
+			"preset:Patch" : "patch",
+			"preset:Blobby" : "blobby",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
 	}
 )

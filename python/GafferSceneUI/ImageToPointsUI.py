@@ -63,51 +63,51 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"sets" : [
+		"sets" : {
 
-			"layout:divider", True,
+			"layout:divider" : True,
 
-		],
+		},
 
-		"image" : [
+		"image" : {
 
-			"description",
+			"description" :
 			"""
 			The image to be converted into a points primitive.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			The view within the image to be converted.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
-			"layout:divider", True,
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
+			"layout:divider" : True,
 
-		],
+		},
 
-		"position" : [
+		"position" : {
 
-			"description",
+			"description" :
 			"""
 			The image channels used to provide 3d positions for the points.
 			If `None`, the pixel's 2d position within the image is used instead.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
-			"rgbaChannelsPlugValueWidget:allowNone", True,
+			"plugValueWidget:type" : "GafferImageUI.RGBAChannelsPlugValueWidget",
+			"rgbaChannelsPlugValueWidget:allowNone" : True,
 
-		],
+		},
 
-		"primitiveVariables" : [
+		"primitiveVariables" : {
 
-			"description",
+			"description" :
 			"""
 			The image channels to be converted to primitive variables on
 			the points primitive. The chosen channels are converted using the
@@ -118,56 +118,56 @@ Gaffer.Metadata.registerNode(
 			- Other channels are converted to individual float primitive variables.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
-		],
+		},
 
-		"width" : [
+		"width" : {
 
-			"description",
+			"description" :
 			"""
 			The width of the points. If `widthChannel` is used as well, then this acts as
 			a multiplier on the channel values.
 			"""
 
-		],
+		},
 
-		"widthChannel" : [
+		"widthChannel" : {
 
-			"description",
+			"description" :
 			"""
 			The channel used to provide per-point width values for the points primitive.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:imagePlugName", "image",
-			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "" ] ),
-			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "None" ] ),
-			"layout:divider", True,
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:imagePlugName" : "image",
+			"channelPlugValueWidget:extraChannels" : IECore.StringVectorData( [ "" ] ),
+			"channelPlugValueWidget:extraChannelLabels" : IECore.StringVectorData( [ "None" ] ),
+			"layout:divider" : True,
 
-		],
+		},
 
-		"ignoreTransparent" : [
+		"ignoreTransparent" : {
 
-			"description",
+			"description" :
 			"""
 			Omits pixels from the points primitive if their alpha value is less than or equal
 			to `alphaThreshold`.
 			""",
 
-		],
+		},
 
-		"alphaThreshold" : [
+		"alphaThreshold" : {
 
-			"description",
+			"description" :
 			"""
 			Threshold used to exclude pixels from the points primitive when `ignoreTransparent`
 			is on.
 			""",
 
-			"layout:activator", lambda plug : plug.node()["ignoreTransparent"].getValue()
+			"layout:activator" : lambda plug : plug.node()["ignoreTransparent"].getValue()
 
-		],
+		},
 
 	}
 

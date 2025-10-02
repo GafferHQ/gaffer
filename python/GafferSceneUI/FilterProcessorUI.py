@@ -52,23 +52,23 @@ Gaffer.Metadata.registerNode(
 	plugs = {
 
 
-		"enabled" : [
+		"enabled" : {
 
-			"description",
+			"description" :
 			"""
 			The on/off state of the filter. When it is off, the
 			result of the first input is passed through unchanged.
 			""",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"description", lambda plug : "The input filter" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
-			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
-			"noduleLayout:spacing", 2.0,
+			"description" : lambda plug : "The input filter" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
+			"nodule:type" : lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
+			"noduleLayout:spacing" : 2.0,
 
-		],
+		},
 
 	},
 

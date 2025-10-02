@@ -49,16 +49,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
-			"description", "The scene to look for variables in.",
-		],
-		"primitiveVariable" : [
-			"description", "The name of the primitive vairable to check for.",
-			"nodule:type", "",
-		],
-		"out" : [
-			"description", "True if the given primitive variable exists.",
-		],
+		"in" : {
+			"description" : "The scene to look for variables in.",
+		},
+		"primitiveVariable" : {
+			"description" : "The name of the primitive vairable to check for.",
+			"nodule:type" : "",
+		},
+		"out" : {
+			"description" : "True if the given primitive variable exists.",
+		},
 
 	}
 

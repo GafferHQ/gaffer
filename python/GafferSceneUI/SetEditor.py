@@ -266,39 +266,37 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			Filters the displayed sets by name. Accepts standard wildcards such as `*` and `?`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:image:on", "searchOn.png",
-			"togglePlugValueWidget:image:off", "search.png",
-			"togglePlugValueWidget:defaultToggleValue", "*",
-			"togglePlugValueWidget:customWidgetType", "GafferSceneUI.SetEditor._FilterPlugValueWidget",
-			"stringPlugValueWidget:placeholderText", "Filter...",
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"togglePlugValueWidget:customWidgetType" : "GafferSceneUI.SetEditor._FilterPlugValueWidget",
+			"stringPlugValueWidget:placeholderText" : "Filter...",
 
-		],
+		},
 
-		"hideEmptySets" : [
+		"hideEmptySets" : {
 
-			"description",
-			"Hides sets with no members.",
-			"boolPlugValueWidget:labelVisible", True,
-			"layout:section", "Filter",
+			"description" : "Hides sets with no members.",
+			"boolPlugValueWidget:labelVisible" : True,
+			"layout:section" : "Filter",
 
-		],
+		},
 
-		"hideEmptySelection" : [
+		"hideEmptySelection" : {
 
-			"description",
-			"Hides sets with no selected members or descendants.",
-			"boolPlugValueWidget:labelVisible", True,
-			"layout:section", "Filter",
+			"description" : "Hides sets with no selected members or descendants.",
+			"boolPlugValueWidget:labelVisible" : True,
+			"layout:section" : "Filter",
 
-		],
+		},
 
 	},
 

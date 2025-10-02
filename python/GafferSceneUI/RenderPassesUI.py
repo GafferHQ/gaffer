@@ -69,9 +69,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of render passes to be created.
 
@@ -80,9 +80,9 @@ Gaffer.Metadata.registerNode(
 			> and appended to the end.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.RenderPassesUI._RenderPassVectorDataPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.RenderPassesUI._RenderPassVectorDataPlugValueWidget",
 
-		],
+		},
 
 	}
 

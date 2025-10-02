@@ -180,18 +180,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query the camera from.
 			""",
 
-		],
+		},
 
-		"cameraMode" : [
+		"cameraMode" : {
 
-			"description",
+			"description" :
 			"""
 			How the camera to be queried is specified.
 
@@ -199,17 +199,17 @@ Gaffer.Metadata.registerNode(
 			- Location : Uses the camera specified on the `location` plug.
 			""",
 
-			"preset:Render Camera", GafferScene.CameraQuery.CameraMode.RenderCamera,
-			"preset:Location", GafferScene.CameraQuery.CameraMode.Location,
+			"preset:Render Camera" : GafferScene.CameraQuery.CameraMode.RenderCamera,
+			"preset:Location" : GafferScene.CameraQuery.CameraMode.Location,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"nodule:type", "",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The location within the scene containing a camera to query.
 			> Note : If the location does not exist then the query will not be
@@ -217,19 +217,19 @@ Gaffer.Metadata.registerNode(
 			> each output `source` plug set to "None" (`0`).
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", "",
-			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
-			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"nodule:type" : "",
+			"scenePathPlugValueWidget:setNames" : IECore.StringVectorData( [ "__cameras" ] ),
+			"scenePathPlugValueWidget:setsLabel" : "Show only cameras",
 
-			"layout:visibilityActivator", "cameraModeIsLocation",
+			"layout:visibilityActivator" : "cameraModeIsLocation",
 
-		],
+		},
 
-		"queries" : [
+		"queries" : {
 
-			"description",
+			"description" :
 			"""
 			The camera parameters to be queried - arbitrary numbers of queries may
 			be added as children of this plug via the user interface, or via python.
@@ -246,59 +246,59 @@ Gaffer.Metadata.registerNode(
 			> on the camera or values from the scene globals.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Settings.Queries",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Settings.Queries",
 
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.CameraQueryUI._CameraQueryFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.CameraQueryUI._CameraQueryFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"queries.*" : [
+		"queries.*" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the parameter to query.
 			""",
 
-			"layout:label", "",
+			"layout:label" : "",
 
-			"plugValueWidget:type", "GafferSceneUI.CameraQueryUI._QueryWidget",
+			"plugValueWidget:type" : "GafferSceneUI.CameraQueryUI._QueryWidget",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.4,
-			"noduleLayout:customGadget:addButton:gadgetType", "",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.4,
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description",
+			"description" :
 			"""
 			The result of the query.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 
-		],
+		},
 
-		"out.*.source" : [
+		"out.*.source" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the source of the value returned by the query.
 
@@ -308,24 +308,24 @@ Gaffer.Metadata.registerNode(
 			- Fallback (`3`) : The query did not find a result and fell back to returning the default value of the parameter.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"out.*.value" : [
+		"out.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the value returned by the query.
 			""",
 
-		],
+		},
 
-		"out.*.value..." : [
+		"out.*.value..." : {
 
-			"noduleLayout:label", __getLabel,
+			"noduleLayout:label" : __getLabel,
 
-		],
+		},
 
 	}
 )

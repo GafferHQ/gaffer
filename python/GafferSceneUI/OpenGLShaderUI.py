@@ -66,11 +66,11 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters.*" : [
+		"parameters.*" : {
 
-			"nodule:type", lambda plug : "GafferUI::StandardNodule" if isinstance( plug, GafferImage.ImagePlug ) else ""
+			"nodule:type" : lambda plug : "GafferUI::StandardNodule" if isinstance( plug, GafferImage.ImagePlug ) else ""
 
-		],
+		},
 
 	},
 

@@ -59,19 +59,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used to choose the source locations to be merged. Source locations are
 			pruned from the output scene, unless they are reused as part of a destination location
 			(or a separate source scene is connected).
 			"""
-		],
+		},
 
-		"source" : [
+		"source" : {
 
-			"description",
+			"description" :
 			"""
 			An optional alternate scene to provide the locations to be merged. When connected :
 
@@ -79,12 +79,12 @@ Gaffer.Metadata.registerNode(
 			- Source locations are not pruned from the output scene.
 			"""
 
-		],
+		},
 
 
-		"destination" : [
+		"destination" : {
 
-			"description",
+			"description" :
 			"""
 			The destination location where filtered locations will be merged to. The destination
 			location will be created if it doesn't exist already. If the name overlaps with an existing
@@ -92,7 +92,7 @@ Gaffer.Metadata.registerNode(
 			of scene:path in order to individually map input locations to different destinations.
 			""",
 
-		],
+		},
 
 
 	},

@@ -184,9 +184,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			Filters the input scene to isolate locations with matching names.
 			The filter may contain any of Gaffer's standard wildcards, and may
@@ -201,32 +201,32 @@ Gaffer.Metadata.registerNode(
 			  whose name starts with `building`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:image:on", "searchOn.png",
-			"togglePlugValueWidget:image:off", "search.png",
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
 			# We need a non-default value to toggle to, so that the first
 			# toggling can highlight the icon. `*` seems like a reasonable value
 			# since it has no effect on the filtering, and hints that wildcards
 			# are available.
-			"togglePlugValueWidget:defaultToggleValue", "*",
-			"stringPlugValueWidget:placeholderText", "Filter...",
-			"layout:section", "Filter"
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"layout:section" : "Filter"
 
-		],
+		},
 
-		"setFilter" : [
+		"setFilter" : {
 
-			"description",
+			"description" :
 			"""
 			Filters the input scene to isolate locations belonging to specific
 			sets.
 			""",
 
-			"label", "",
-			"plugValueWidget:type", "GafferSceneUI.SceneEditor._SetFilterPlugValueWidget",
-			"layout:section", "Filter"
+			"label" : "",
+			"plugValueWidget:type" : "GafferSceneUI.SceneEditor._SetFilterPlugValueWidget",
+			"layout:section" : "Filter"
 
-		],
+		},
 
 	}
 

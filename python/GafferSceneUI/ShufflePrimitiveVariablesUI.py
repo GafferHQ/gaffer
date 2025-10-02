@@ -56,9 +56,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shuffles" : [
+		"shuffles" : {
 
-			"description",
+			"description" :
 			"""
 			The primitive variables to be shuffled - arbitrary numbers of primitive variables
 			may be shuffled via the source/destination plugs. The deleteSource plug may be
@@ -67,9 +67,9 @@ Gaffer.Metadata.registerNode(
 			data with the same name.
 			""",
 
-			"divider", True,
+			"divider" : True,
 
-		],
+		},
 
 	}
 

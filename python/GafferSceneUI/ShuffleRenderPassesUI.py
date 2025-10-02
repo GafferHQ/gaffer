@@ -52,40 +52,40 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The input scene.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The processed output scene.
 			""",
 
-		],
+		},
 
-		"shuffles" : [
+		"shuffles" : {
 
-			"description",
+			"description" :
 			"""
 			The definition of the shuffling to be performed - an
 			arbitrary number of render pass edits can be made by adding
 			ShufflePlugs as children of this plug.
 			""",
 
-		],
+		},
 
-		"shuffles.*.source" : [
+		"shuffles.*.source" : {
 
-			"ui:scene:acceptsRenderPassName", True,
+			"ui:scene:acceptsRenderPassName" : True,
 
-		]
+		}
 
 	}
 

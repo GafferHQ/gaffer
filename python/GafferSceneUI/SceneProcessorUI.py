@@ -51,32 +51,32 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description", lambda plug : "The input scene" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
-			"plugValueWidget:type", "",
-			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
-			"noduleLayout:spacing", 2.0,
+			"description" : lambda plug : "The input scene" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
+			"plugValueWidget:type" : "",
+			"nodule:type" : lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
+			"noduleLayout:spacing" : 2.0,
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The processed output scene.
 			""",
 
-		],
+		},
 
-		"enabled" : [
+		"enabled" : {
 
-			"description",
+			"description" :
 			"""
 			The on/off state of the node. When it is off, the node outputs the input scene unchanged.
 			""",
 
-		],
+		},
 
 	},
 

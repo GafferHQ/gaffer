@@ -59,47 +59,47 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parent" : [
+		"parent" : {
 
-			"description",
+			"description" :
 			"""
 			For internal use only.
 			""",
 
 			# we hide the parent (which comes from the base class) because
 			# the value for it is computed from the target plug automatically.
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"target" : [
+		"target" : {
 
-			"description",
+			"description" :
 			"""
 			The part of the scene to be duplicated.
 
 			> Caution : Deprecated. Please connect a filter instead.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			# We want people to use filters rather than the `target` plug. So
 			# hide it unless it is already being used.
-			"layout:visibilityActivator", "targetInUse",
+			"layout:visibilityActivator" : "targetInUse",
 
-		],
+		},
 
-		"copies" : [
+		"copies" : {
 
-			"description",
+			"description" :
 			"""
 			The number of copies to be made.
 			""",
 
-		],
+		},
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name given to the copies. If this
 			is left empty, the name from the target
@@ -111,28 +111,28 @@ Gaffer.Metadata.registerNode(
 			if necessary to keep the names unique.
 			""",
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			The transform to be applied to the copies. The transform
 			is applied iteratively, so the second copy is transformed
 			twice, the third copy is transformed three times and so on.
 			""",
 
-		],
+		},
 
-		"destination" : [
+		"destination" : {
 
-			"description",
+			"description" :
 			"""
 			The location where the copies will be placed in the output scene.
 			The default value places them alongside the original.
 			""",
 
-		],
+		},
 
 	}
 )

@@ -63,9 +63,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"transformMode" : [
+		"transformMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to merge transforms when the same location
 			exists in multiple input scenes. Keep mode keeps the transform
@@ -73,15 +73,15 @@ Gaffer.Metadata.registerNode(
 			transform of the last input.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Keep", GafferScene.MergeScenes.Mode.Keep,
-			"preset:Replace", GafferScene.MergeScenes.Mode.Replace,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Keep" : GafferScene.MergeScenes.Mode.Keep,
+			"preset:Replace" : GafferScene.MergeScenes.Mode.Replace,
 
-		],
+		},
 
-		"attributesMode" : [
+		"attributesMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to merge attributes when the same location
 			exists in multiple input scenes. Keep mode keeps the attributes
@@ -90,16 +90,16 @@ Gaffer.Metadata.registerNode(
 			from first to last.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Keep", GafferScene.MergeScenes.Mode.Keep,
-			"preset:Replace", GafferScene.MergeScenes.Mode.Replace,
-			"preset:Merge", GafferScene.MergeScenes.Mode.Merge,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Keep" : GafferScene.MergeScenes.Mode.Keep,
+			"preset:Replace" : GafferScene.MergeScenes.Mode.Replace,
+			"preset:Merge" : GafferScene.MergeScenes.Mode.Merge,
 
-		],
+		},
 
-		"objectMode" : [
+		"objectMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to merge objects when the same location
 			exists in multiple input scenes. Keep mode keeps the object
@@ -107,15 +107,15 @@ Gaffer.Metadata.registerNode(
 			object from the last input which has one.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Keep", GafferScene.MergeScenes.Mode.Keep,
-			"preset:Replace", GafferScene.MergeScenes.Mode.Replace,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Keep" : GafferScene.MergeScenes.Mode.Keep,
+			"preset:Replace" : GafferScene.MergeScenes.Mode.Replace,
 
-		],
+		},
 
-		"globalsMode" : [
+		"globalsMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to merge scene globals. Keep mode keeps the globals
 			from the first input, Replace mode replaces them with the globals
@@ -123,16 +123,16 @@ Gaffer.Metadata.registerNode(
 			from first to last.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Keep", GafferScene.MergeScenes.Mode.Keep,
-			"preset:Replace", GafferScene.MergeScenes.Mode.Replace,
-			"preset:Merge", GafferScene.MergeScenes.Mode.Merge,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Keep" : GafferScene.MergeScenes.Mode.Keep,
+			"preset:Replace" : GafferScene.MergeScenes.Mode.Replace,
+			"preset:Merge" : GafferScene.MergeScenes.Mode.Merge,
 
-		],
+		},
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"description",
+			"description" :
 			"""
 			Adjusts bounding boxes to take account of the merging operation.
 
@@ -140,7 +140,7 @@ Gaffer.Metadata.registerNode(
 			> `transformsMode` is not `Keep`.
 			""",
 
-		],
+		},
 
 	}
 

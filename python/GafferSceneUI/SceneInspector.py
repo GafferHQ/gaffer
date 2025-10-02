@@ -346,112 +346,112 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The scene location to inspect. Defaults to the currently selected location. Use
 			the HierarchyView or Viewer to select a location.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.SceneInspector._LocationPlugValueWidget",
-			"layout:section", "TopRow",
-			"layout:visibilityActivator", lambda plug : not plug.parent()["compare"]["location"]["enabled"].getValue(),
+			"plugValueWidget:type" : "GafferSceneUI.SceneInspector._LocationPlugValueWidget",
+			"layout:section" : "TopRow",
+			"layout:visibilityActivator" : lambda plug : not plug.parent()["compare"]["location"]["enabled"].getValue(),
 
-		],
+		},
 
-		"compare" : [
+		"compare" : {
 
-			"plugValueWidget:type", "GafferSceneUI.SceneInspector._ComparePlugValueWidget",
-			"layout:visibilityActivator", "anyComparisonEnabled",
-			"layout:section", "CompareRow",
+			"plugValueWidget:type" : "GafferSceneUI.SceneInspector._ComparePlugValueWidget",
+			"layout:visibilityActivator" : "anyComparisonEnabled",
+			"layout:section" : "CompareRow",
 
-		],
+		},
 
-		"compare.location.value" : [
+		"compare.location.value" : {
 
-			"scenePathPlugValueWidget:scene", "__bScene.out",
+			"scenePathPlugValueWidget:scene" : "__bScene.out",
 
-		],
+		},
 
-		"compare.renderPass.value" : [
+		"compare.renderPass.value" : {
 
-			"renderPassPlugValueWidget:scene", "__bScene.out",
+			"renderPassPlugValueWidget:scene" : "__bScene.out",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:section", "TopRow",
-			"layout:width", 130,
-			"layout:index", -1,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:section" : "TopRow",
+			"layout:width" : 130,
+			"layout:index" : -1,
 
-		],
+		},
 
-		"locationFilter" : [
+		"locationFilter" : {
 
-			"description",
+			"description" :
 			"""
 			Filters the displayed properties. Accepts standard wildcards such as `*` and `?`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:image:on", "searchOn.png",
-			"togglePlugValueWidget:image:off", "search.png",
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
 			# We need a non-default value to toggle to, so that the first
 			# toggling can highlight the icon. `*` seems like a reasonable value
 			# since it has no effect on the filtering, and hints that wildcards
 			# are available.
-			"togglePlugValueWidget:defaultToggleValue", "*",
-			"stringPlugValueWidget:placeholderText", "Filter...",
-			"layout:section", "LocationFilterRow"
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"layout:section" : "LocationFilterRow"
 
-		],
+		},
 
-		"isolateLocationDifferences" : [
+		"isolateLocationDifferences" : {
 
-			"description",
+			"description" :
 			"""
 			Hides all rows where the A and B columns both have the same value.
 			""",
 
-			"label", "Isolate Differences",
-			"layout:section", "LocationFilterRow",
-			"boolPlugValueWidget:labelVisible", True,
-			"layout:visibilityActivator", lambda plug : any( p.getValue() for p in plug.node()._locationComparisonEnablers() ),
+			"label" : "Isolate Differences",
+			"layout:section" : "LocationFilterRow",
+			"boolPlugValueWidget:labelVisible" : True,
+			"layout:visibilityActivator" : lambda plug : any( p.getValue() for p in plug.node()._locationComparisonEnablers() ),
 
-		],
+		},
 
-		"globalsFilter" : [
+		"globalsFilter" : {
 
-			"description",
+			"description" :
 			"""
 			Filters the displayed properties. Accepts standard wildcards such as `*` and `?`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:image:on", "searchOn.png",
-			"togglePlugValueWidget:image:off", "search.png",
-			"togglePlugValueWidget:defaultToggleValue", "*",
-			"stringPlugValueWidget:placeholderText", "Filter...",
-			"layout:section", "GlobalsFilterRow",
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"layout:section" : "GlobalsFilterRow",
 
-		],
+		},
 
-		"isolateGlobalsDifferences" : [
+		"isolateGlobalsDifferences" : {
 
-			"description",
+			"description" :
 			"""
 			Hides all rows where the A and B columns both have the same value.
 			""",
 
-			"label", "Isolate Differences",
-			"layout:section", "GlobalsFilterRow",
-			"boolPlugValueWidget:labelVisible", True,
-			"layout:visibilityActivator", lambda plug : any( p.getValue() for p in plug.node()._globalsComparisonEnablers() ),
+			"label" : "Isolate Differences",
+			"layout:section" : "GlobalsFilterRow",
+			"boolPlugValueWidget:labelVisible" : True,
+			"layout:visibilityActivator" : lambda plug : any( p.getValue() for p in plug.node()._globalsComparisonEnablers() ),
 
-		],
+		},
 
 	}
 

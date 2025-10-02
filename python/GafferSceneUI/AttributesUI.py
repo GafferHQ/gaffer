@@ -58,58 +58,58 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"attributes" : [
+		"attributes" : {
 
-			"description",
+			"description" :
 			"""
 			The attributes to be applied - arbitrary numbers of user defined
 			attributes may be added as children of this plug via the user
 			interface, or using the CompoundDataPlug API via python.
 			""",
 
-			"compoundDataPlugValueWidget:editable", False,
+			"compoundDataPlugValueWidget:editable" : False,
 
-		],
+		},
 
-		"attributes.*" : [
+		"attributes.*" : {
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-			"description", lambda plug : __attributeMetadata( plug, "description" ),
-			"label", lambda plug : __attributeMetadata( plug, "label" ),
-			"layout:section", lambda plug : __attributeMetadata( plug, "layout:section" ),
+			"description" : lambda plug : __attributeMetadata( plug, "description" ),
+			"label" : lambda plug : __attributeMetadata( plug, "label" ),
+			"layout:section" : lambda plug : __attributeMetadata( plug, "layout:section" ),
 
-		],
+		},
 
-		"attributes.*.value" : [
+		"attributes.*.value" : {
 
-			"plugValueWidget:type", lambda plug : __attributeMetadata( plug, "plugValueWidget:type" ),
-			"presetNames", lambda plug : __attributeMetadata( plug, "presetNames" ),
-			"presetValues", lambda plug : __attributeMetadata( plug, "presetValues" ),
+			"plugValueWidget:type" : lambda plug : __attributeMetadata( plug, "plugValueWidget:type" ),
+			"presetNames" : lambda plug : __attributeMetadata( plug, "presetNames" ),
+			"presetValues" : lambda plug : __attributeMetadata( plug, "presetValues" ),
 
-		],
+		},
 
-		"global" : [
+		"global" : {
 
-			"description",
+			"description" :
 			"""
 			Causes the attributes to be applied to the scene globals
 			instead of the individual locations defined by the filter.
 			""",
 
-			"layout:section", "Filter",
+			"layout:section" : "Filter",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"layout:activator", "isNotGlobal",
+			"layout:activator" : "isNotGlobal",
 
-		],
+		},
 
-		"extraAttributes" : [
+		"extraAttributes" : {
 
-			"description",
+			"description" :
 			"""
 			An additional set of attributes to be added. Arbitrary numbers
 			of attributes may be specified within a single `IECore.CompoundObject`,
@@ -124,11 +124,11 @@ Gaffer.Metadata.registerNode(
 			is taken.
 			""",
 
-			"plugValueWidget:type", "",
-			"layout:section", "Extra",
-			"nodule:type", "",
+			"plugValueWidget:type" : "",
+			"layout:section" : "Extra",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

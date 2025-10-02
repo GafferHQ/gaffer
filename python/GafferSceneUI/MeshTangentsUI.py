@@ -65,9 +65,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The style of how to calculate the Tangents.
 			(UV) calculates the tangents based on the gradient of the the corresponding UVs
@@ -76,91 +76,91 @@ Gaffer.Metadata.registerNode(
 			(PrimitiveCentroid) points the tangent towards the primitive centroid and the bitangent orthogonal to tangent and normal
 			""",
 
-			"preset:UV", GafferScene.MeshTangents.Mode.UV,
-			"preset:FirstEdge", GafferScene.MeshTangents.Mode.FirstEdge,
-			"preset:TwoEdges", GafferScene.MeshTangents.Mode.TwoEdges,
-			"preset:PrimitiveCentroid", GafferScene.MeshTangents.Mode.PrimitiveCentroid,
+			"preset:UV" : GafferScene.MeshTangents.Mode.UV,
+			"preset:FirstEdge" : GafferScene.MeshTangents.Mode.FirstEdge,
+			"preset:TwoEdges" : GafferScene.MeshTangents.Mode.TwoEdges,
+			"preset:PrimitiveCentroid" : GafferScene.MeshTangents.Mode.PrimitiveCentroid,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
 
-		"orthogonal" : [
-			"description",
+		"orthogonal" : {
+			"description" :
 			"""
 			Adjusts vTangent to be orthogonal to the uTangent.
 			""",
-		],
+		},
 
-		"leftHanded" : [
-			"description",
+		"leftHanded" : {
+			"description" :
 			"""
 			Make the local coordinate frame left handed
 			""",
-			"layout:activator", "leftHandedActivator",
-		],
+			"layout:activator" : "leftHandedActivator",
+		},
 
-		"position" : [
-			"description",
+		"position" : {
+			"description" :
 			"""
 			Name of the primitive variable which contains the position data used to calculate tangents & binormals.
 			For example 'Pref' would compute tangents using the reference positions (if defined)
 			""",
-			"layout:section", "Settings.Input",
-		],
+			"layout:section" : "Settings.Input",
+		},
 
-		"normal" : [
-			"description",
+		"normal" : {
+			"description" :
 			"""
 			Name of the primitive variable which contains the normals used to calculate tangents & binormals.
 			""",
-			"layout:section", "Settings.Input",
-			"layout:activator", "uvDeactivator",
-		],
+			"layout:section" : "Settings.Input",
+			"layout:activator" : "uvDeactivator",
+		},
 
-		"uvSet" : [
-			"description",
+		"uvSet" : {
+			"description" :
 			"""
 			Name of the UV set primitive variable used to calculate uTangent & vTangent.
 			""",
-			"layout:section", "Settings.Input",
-			"layout:activator", "uvActivator",
-		],
+			"layout:section" : "Settings.Input",
+			"layout:activator" : "uvActivator",
+		},
 
-		"uTangent" : [
-			"description",
+		"uTangent" : {
+			"description" :
 			"""
 			Name of the primitive variable which will contain the uTangent data.
 			""",
-			"layout:section", "Settings.Output",
-			"layout:activator", "uvActivator",
-		],
+			"layout:section" : "Settings.Output",
+			"layout:activator" : "uvActivator",
+		},
 
-		"vTangent" : [
-			"description",
+		"vTangent" : {
+			"description" :
 			"""
 			Name of the primitive variable which will contain the vTangent data.
 			""",
-			"layout:section", "Settings.Output",
-			"layout:activator", "uvActivator",
-		],
+			"layout:section" : "Settings.Output",
+			"layout:activator" : "uvActivator",
+		},
 
-		"tangent" : [
-			"description",
+		"tangent" : {
+			"description" :
 			"""
 			Name of the primitive variable which will contain the tangent data.
 			""",
-			"layout:section", "Settings.Output",
-			"layout:activator", "uvDeactivator",
-		],
+			"layout:section" : "Settings.Output",
+			"layout:activator" : "uvDeactivator",
+		},
 
-		"biTangent" : [
-			"description",
+		"biTangent" : {
+			"description" :
 			"""
 			Name of the primitive variable which will contain the biTangent data.
 			""",
-			"layout:section", "Settings.Output",
-			"layout:activator", "uvDeactivator",
-		]
+			"layout:section" : "Settings.Output",
+			"layout:activator" : "uvDeactivator",
+		}
 	}
 
 )

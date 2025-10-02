@@ -167,21 +167,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"interpolation" : [
+		"interpolation" : {
 
-			"description",
+			"description" :
 			"""
 			Target interpolation for the primitive variables
 			""",
 
-			"preset:Constant", IECoreScene.PrimitiveVariable.Interpolation.Constant,
-			"preset:Uniform", IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-			"preset:Vertex", IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			"preset:FaceVarying", IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
+			"preset:Constant" : IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			"preset:Uniform" : IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			"preset:Vertex" : IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			"preset:FaceVarying" : IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		]
+		}
 	}
 
 )

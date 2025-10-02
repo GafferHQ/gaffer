@@ -58,39 +58,39 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"camera" : [
+		"camera" : {
 
-			"description",
+			"description" :
 			"""
 			The location of the camera to use for the projection.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
-			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:setNames" : IECore.StringVectorData( [ "__cameras" ] ),
+			"scenePathPlugValueWidget:setsLabel" : "Show only cameras",
 
-		],
+		},
 
-		"position" : [
+		"position" : {
 
-			"description",
+			"description" :
 			"""
 			The primitive variable that provides the position to be
 			used in the projection.
 			""",
 
-		],
+		},
 
-		"uvSet" : [
+		"uvSet" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable used to store the
 			projected UV coordinates. This may be changed to store
 			multiple sets of UVs on a single mesh.
 			""",
 
-		],
+		},
 
 	}
 

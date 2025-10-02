@@ -48,27 +48,27 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			Filter to specify the branches to prune. The specified
 			locations and all locations below them will be removed from
 			the scene.
 			""",
 
-		],
+		},
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"description",
+			"description" :
 			"""
 			Computes new tightened bounding boxes taking into account
 			the removed locations. This can be an expensive operation -
 			turn on with care.
 			""",
 
-		],
+		},
 
 	}
 

@@ -120,217 +120,217 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"toolbarLayout:index", -1,
-			"toolbarLayout:width", 130,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"toolbarLayout:index" : -1,
+			"toolbarLayout:width" : 130,
 
-		],
+		},
 
-		"renderer" : [
+		"renderer" : {
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layoutPlugValueWidget:orientation", "horizontal",
-			"toolbarLayout:index", 1,
-			"toolbarLayout:label", "",
-			"toolbarLayout:width", 100,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation" : "horizontal",
+			"toolbarLayout:index" : 1,
+			"toolbarLayout:label" : "",
+			"toolbarLayout:width" : 100,
 
-		],
+		},
 
-		"renderer.name" : [
+		"renderer.name" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"layout:label", "",
-			"presetNames", lambda plug : IECore.StringVectorData( GafferSceneUI.SceneView.registeredRenderers() ),
-			"presetValues", lambda plug : IECore.StringVectorData( GafferSceneUI.SceneView.registeredRenderers() ),
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"layout:label" : "",
+			"presetNames" : lambda plug : IECore.StringVectorData( GafferSceneUI.SceneView.registeredRenderers() ),
+			"presetValues" : lambda plug : IECore.StringVectorData( GafferSceneUI.SceneView.registeredRenderers() ),
 
-		],
+		},
 
-		"renderer.*" : [
+		"renderer.*" : {
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._RendererSettingsPlugValueWidget",
-			"layout:visibilityActivator", __rendererPlugActivator,
-			"layout:label", "",
+			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._RendererSettingsPlugValueWidget",
+			"layout:visibilityActivator" : __rendererPlugActivator,
+			"layout:label" : "",
 
-		],
+		},
 
-		"drawingMode" : [
+		"drawingMode" : {
 
-			"description",
+			"description" :
 			"""
 			Defines how the scene is drawn in the viewport.
 			""",
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._DrawingModePlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._DrawingModePlugValueWidget",
 
-		],
+		},
 
-		"shadingMode" : [
+		"shadingMode" : {
 
-			"description",
+			"description" :
 			"""
 			Defines how the scene is shaded in the viewport.
 			""",
-			"toolbarLayout:divider", True,
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._ShadingModePlugValueWidget",
+			"toolbarLayout:divider" : True,
+			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._ShadingModePlugValueWidget",
 
-		],
+		},
 
-		"minimumExpansionDepth" : [
+		"minimumExpansionDepth" : {
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._ExpansionPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._ExpansionPlugValueWidget",
 
-		],
+		},
 
-		"selectionMask" : [
+		"selectionMask" : {
 
-			"description",
+			"description" :
 			"""
 			Defines what types of objects are selectable in the viewport.
 			""",
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._SelectionMaskPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._SelectionMaskPlugValueWidget",
 
-			"toolbarLayout:divider", True,
+			"toolbarLayout:divider" : True,
 
-		],
+		},
 
-		"camera" : [
+		"camera" : {
 
-			"description",
+			"description" :
 			"""
 			Defines the camera used to view the scene.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._CameraPlugValueWidget",
-			"toolbarLayout:divider", True,
-			"toolbarLayout:label", "",
-			"layout:activator:hidden", lambda plug : False,
-			"layout:activator:lookThroughEnabled", lambda plug : plug["lookThroughEnabled"].getValue(),
-			"layout:activator:lookThroughDisabled", lambda plug : not plug["lookThroughEnabled"].getValue(),
-			"layout:activator:cameraIsFreePerspective", lambda plug : not plug["lookThroughEnabled"].getValue() and plug["freeCamera"].getValue() == "perspective",
-			"layout:section:Free Camera:collapsed", False,
-			"layout:section:Light Look Through:collapsed", False,
+			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._CameraPlugValueWidget",
+			"toolbarLayout:divider" : True,
+			"toolbarLayout:label" : "",
+			"layout:activator:hidden" : lambda plug : False,
+			"layout:activator:lookThroughEnabled" : lambda plug : plug["lookThroughEnabled"].getValue(),
+			"layout:activator:lookThroughDisabled" : lambda plug : not plug["lookThroughEnabled"].getValue(),
+			"layout:activator:cameraIsFreePerspective" : lambda plug : not plug["lookThroughEnabled"].getValue() and plug["freeCamera"].getValue() == "perspective",
+			"layout:section:Free Camera:collapsed" : False,
+			"layout:section:Light Look Through:collapsed" : False,
 
-		],
+		},
 
-		"camera.freeCamera" : [
+		"camera.freeCamera" : {
 
-			"description",
+			"description" :
 			"""
 			Chooses the default camera to be used when `camera.lookThroughEnabled` is off.
 			""",
 
-			"layout:visibilityActivator", "hidden"
+			"layout:visibilityActivator" : "hidden"
 
-		],
+		},
 
-		"camera.fieldOfView" : [
+		"camera.fieldOfView" : {
 
-			"description",
+			"description" :
 			"""
 			The field of view for the viewport's default perspective camera.
 			""",
 
-			"layout:section", "Free Camera",
-			"layout:activator", "cameraIsFreePerspective",
+			"layout:section" : "Free Camera",
+			"layout:activator" : "cameraIsFreePerspective",
 
-		],
+		},
 
-		"camera.clippingPlanes" : [
+		"camera.clippingPlanes" : {
 
-			"description",
+			"description" :
 			"""
 			The near and far clipping planes for the viewport's default perspective camera.
 			""",
 
-			"layout:section", "Free Camera",
-			"layout:activator", "lookThroughDisabled",
+			"layout:section" : "Free Camera",
+			"layout:activator" : "lookThroughDisabled",
 
-		],
+		},
 
-		"camera.lightLookThroughDefaultDistantAperture" : [
-			"layout:section", "Light Look Through",
-			"layout:activator", "lookThroughEnabled",
-			"label", "Default Distant Aperture",
-			"description",
+		"camera.lightLookThroughDefaultDistantAperture" : {
+			"layout:section" : "Light Look Through",
+			"layout:activator" : "lookThroughEnabled",
+			"label" : "Default Distant Aperture",
+			"description" :
 			"""
 			The orthographic aperture used when converting distant lights
 			( which are theoretically infinite in extent ).  May be overridden
 			by the visualisation setting on the light.
 			""",
-		],
+		},
 
-		"camera.lightLookThroughDefaultClippingPlanes" : [
-			"layout:section", "Light Look Through",
-			"layout:activator", "lookThroughEnabled",
-			"label", "Default Clipping Planes",
-			"description",
+		"camera.lightLookThroughDefaultClippingPlanes" : {
+			"layout:section" : "Light Look Through",
+			"layout:activator" : "lookThroughEnabled",
+			"label" : "Default Clipping Planes",
+			"description" :
 			"""
 			Clipping planes for cameras implied by lights.  When creating a perspective camera, a near clip
 			<= 0 is invalid, and will be replaced with 0.01.  Also, certain lights only start casting
 			light at some distance - if near clip is less than this, it will be increased.  May be overridden
 			by the visualisation setting on the light.
 			""",
-		],
+		},
 
-		"camera.lookThroughEnabled" : [
+		"camera.lookThroughEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			When enabled, locks the view to look through a specific camera in the scene.
 			By default, the current render camera is used, but this can be changed using the camera.lookThroughCamera
 			setting.
 			""",
 
-			"layout:visibilityActivator", "hidden"
+			"layout:visibilityActivator" : "hidden"
 
-		],
+		},
 
-		"camera.lookThroughCamera" : [
+		"camera.lookThroughCamera" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the camera to look through when lookThrough.enabled is on. The default value
 			means that the current render camera will be used - the paths to other cameras may be specified
 			to choose another camera."
 			""",
 
-			"layout:visibilityActivator", "hidden"
+			"layout:visibilityActivator" : "hidden"
 
-		],
+		},
 
-		"grid" : [
+		"grid" : {
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._GridPlugValueWidget",
-			"toolbarLayout:divider", True,
+			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._GridPlugValueWidget",
+			"toolbarLayout:divider" : True,
 
-		],
+		},
 
-		"gnomon" : [
+		"gnomon" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"inspector" : [
+		"inspector" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"fps" : [
+		"fps" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"displayTransform.soloChannel" : [
+		"displayTransform.soloChannel" : {
 
 			# The `RGBAL`` shortcuts conflict with shortcuts used for
 			# Tools, so we disable them.
-			"view:displayTransform:useShortcuts", False,
+			"view:displayTransform:useShortcuts" : False,
 
-		],
+		},
 
 	}
 

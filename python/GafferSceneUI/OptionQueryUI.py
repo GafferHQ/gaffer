@@ -165,18 +165,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query the options from.
 			""",
 
-		],
+		},
 
-		"queries" : [
+		"queries" : {
 
-			"description",
+			"description" :
 			"""
 			The options to be queried - arbitrary numbers of options may be added
 			as children of this plug via the user interface, or via python. Each
@@ -185,101 +185,101 @@ Gaffer.Metadata.registerNode(
 			not be retrieved.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.OptionQueryUI._OptionQueryFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.OptionQueryUI._OptionQueryFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"queries.*" : [
+		"queries.*" : {
 
-			"description",
+			"description" :
 			"""
 			A pair of option name to query and default value.
 			""",
 
-		],
+		},
 
-		"queries.*.name" : [
+		"queries.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the option to query.
 			""",
 
-		],
+		},
 
-		"queries.*.value" : [
+		"queries.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			The value to output if the option does not exist.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.4,
-			"noduleLayout:customGadget:addButton:gadgetType", "",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.4,
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description",
+			"description" :
 			"""
 			The result of the query.
 			""",
 
-			"label", functools.partial( __getLabel, parentPlug = ""),
+			"label" : functools.partial( __getLabel, parentPlug = ""),
 
-			"plugValueWidget:type", "GafferSceneUI.OptionQueryUI._OutputWidget",
+			"plugValueWidget:type" : "GafferSceneUI.OptionQueryUI._OutputWidget",
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 
-		],
+		},
 
-		"out.*.exists" : [
+		"out.*.exists" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs true if the option exists, otherwise false.
 			""",
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "exists" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
-		],
+		},
 
-		"out.*.value" : [
+		"out.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the value of the option, or the default value if the option
 			does not exist.
 			""",
 
-		],
+		},
 
-		"out.*.value..." : [
+		"out.*.value..." : {
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "values" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "values" ),
 
-		],
+		},
 
 	}
 )

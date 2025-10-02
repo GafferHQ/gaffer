@@ -93,9 +93,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"localise" : [
+		"localise" : {
 
-			"description",
+			"description" :
 			"""
 			Turn on to allow location-specific tweaks to be made to attributes
 			inherited from ancestors or the scene globals. Attributes will be
@@ -103,53 +103,53 @@ Gaffer.Metadata.registerNode(
 			The original inherited attributes will remain untouched.
 			"""
 
-		],
+		},
 
-		"ignoreMissing" : [
+		"ignoreMissing" : {
 
-			"description",
+			"description" :
 			"""
 			Ignores tweaks targeting missing attributes. When off, missing attributes
 			cause the node to error.
 			"""
 
-		],
+		},
 
-		"tweaks" : [
+		"tweaks" : {
 
-			"description",
+			"description" :
 			"""
 			The tweaks to be made to the attributes. Arbitrary numbers of user defined
 			tweaks may be added as children of this plug via the user interface, or
 			using the AttributeTweaks API via python.
 			""",
 
-			"layout:section", "Settings.Tweaks",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.AttributeTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:section" : "Settings.Tweaks",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.AttributeTweaksUI._TweaksFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"tweaks.*" : [
+		"tweaks.*" : {
 
-			"tweakPlugValueWidget:propertyType", "attribute",
+			"tweakPlugValueWidget:propertyType" : "attribute",
 
-		],
+		},
 
-		"tweaks.*.value" : [
+		"tweaks.*.value" : {
 
-			"description", functools.partial( __attributeMetadata, name = "description" ),
-			"plugValueWidget:type", functools.partial( __attributeMetadata, name = "plugValueWidget:type" ),
-			"presetsPlugValueWidget:allowCustom", functools.partial( __attributeMetadata, name = "presetsPlugValueWidget:allowCustom" ),
-			"ui:scene:acceptsSetExpression", functools.partial( __attributeMetadata, name = "ui:scene:acceptsSetExpression" ),
+			"description" : functools.partial( __attributeMetadata, name = "description" ),
+			"plugValueWidget:type" : functools.partial( __attributeMetadata, name = "plugValueWidget:type" ),
+			"presetsPlugValueWidget:allowCustom" : functools.partial( __attributeMetadata, name = "presetsPlugValueWidget:allowCustom" ),
+			"ui:scene:acceptsSetExpression" : functools.partial( __attributeMetadata, name = "ui:scene:acceptsSetExpression" ),
 
-			"presetNames", __attributeMetadataPresetNames,
-			"presetValues", __attributeMetadataPresetValues,
+			"presetNames" : __attributeMetadataPresetNames,
+			"presetValues" : __attributeMetadataPresetValues,
 
-		],
+		},
 
 	}
 )
