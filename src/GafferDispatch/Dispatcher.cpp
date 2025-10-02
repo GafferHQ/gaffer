@@ -39,6 +39,7 @@
 #include "Gaffer/Box.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextProcessor.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
@@ -238,6 +239,7 @@ namespace
 
 const InternedString g_batchSize( "batchSize" );
 const InternedString g_isolatedPlugName( "isolated" );
+const InternedString g_allowIsolationName( "dispatcher:allowIsolation" );
 const InternedString g_immediatePlugName( "immediate" );
 const InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 const InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
@@ -422,7 +424,13 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 {
 	parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
-	parentPlug->addChild( new BoolPlug( g_isolatedPlugName, Plug::In, false ) );
+	if( auto allowIsolation = Metadata::value<BoolData>( parentPlug->node(), g_allowIsolationName ) )
+	{
+		if( allowIsolation->readable() )
+		{
+			parentPlug->addChild( new BoolPlug( g_isolatedPlugName, Plug::In, false ) );
+		}
+	}
 
 	const CreatorMap &m = creators();
 	for( const auto &[name, creator] : m )
