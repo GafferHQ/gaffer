@@ -35,6 +35,7 @@ API
 ---
 
 - GridContainer : Added `nextRow()` context manager, to simplify the process of arranging child widgets in rows.
+- SceneInspector : Added `draggedAttributes()`, `draggedOptions()` and `draggedParameters()` static methods.
 
 1.6.5.1 (relative to 1.6.5.0)
 =======
