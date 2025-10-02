@@ -43,6 +43,7 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue" : True,
 		"description" : "Whether the render pass is enabled for rendering.",
 		"label" : "Enabled",
+		"layout:section" : "Render Pass",
 
 	},
 
@@ -58,6 +59,7 @@ Gaffer.Metadata.registerValues( {
 		> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
 		""",
 		"label" : "Type",
+		"layout:section" : "Render Pass",
 
 	},
 
