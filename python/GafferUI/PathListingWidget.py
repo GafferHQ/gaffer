@@ -46,6 +46,7 @@ import IECore
 
 import Gaffer
 from . import _GafferUI
+from ._HeaderView import _HeaderView
 from ._StyleSheet import _styleColors
 import GafferUI
 
@@ -1031,6 +1032,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.__init__( self )
 
+		self.setHeader( _HeaderView( QtCore.Qt.Horizontal, self ) )
 		# Our `sizeHint()` depends on the header's size, so we need to
 		# ask for a geometry update any time it changes.
 		self.header().geometriesChanged.connect( self.updateGeometry )
