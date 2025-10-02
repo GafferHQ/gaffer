@@ -15,6 +15,9 @@ Improvements
   - Added Interpretation row for primitive variables, with values of "Point", "Vector", "Normal" or "UV".
   - Added editing capabilities to the Local Transform properties.
 - LightEditor : Added Transform section, with columns displaying the light's transform.
+- RenderPassEditor :
+  - Added "Favourites" section. Columns from any other section can be marked for display in this section by right-clicking on their header and selecting "Favourite" from the menu.
+  - A default set of favourite columns can be configured by registering metadata containing a list of option names in a startup file. `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "favouriteColumns", "userDefault", IECore.StringVectorData( [ "option:render:cameraInclusions", "option:render:matteInclusions" ] ) )`
 - ImageToTensor : Added `tensorElementType` plug to choose between `Float`, `Float16` and `BFloat16`.
 - TensorToImage : Added conversion from `Float16` and `BFloat16` tensor elements in addition to the existing `Float` support.
 - RenderManOptions : Added XPU device configuration options.

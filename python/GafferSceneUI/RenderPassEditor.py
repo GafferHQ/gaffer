@@ -53,6 +53,7 @@ from GafferUI.PlugValueWidget import sole
 from . import _GafferSceneUI
 
 from Qt import QtWidgets
+from Qt import QtCore
 
 class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
@@ -66,6 +67,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self["section"] = Gaffer.StringPlug( defaultValue = "Main" )
 			self["editScope"] = Gaffer.Plug()
 			self["displayGrouped"] = Gaffer.BoolPlug()
+
+			self["favouriteColumns"] = Gaffer.StringVectorDataPlug()
 
 			self["__adaptors"] = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
 			self["__adaptors"]["in"].setInput( self["in"] )
@@ -117,6 +120,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
 
+			## \todo Provide public API for this in PathListingWidget, we currently use a different approach
+			# for header-only context menus in CatalogueUI.
+			self.__pathListing._qtWidget().header().setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+			self.__pathListing._qtWidget().header().customContextMenuRequested.connect( Gaffer.WeakMethod( self.__headerContextMenuRequested ) )
+
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
 				self.__addButton = GafferUI.Button(
@@ -152,6 +160,17 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 	@classmethod
 	def registerOption( cls, groupKey, optionName, section = "Main", columnName = None, index = None ) :
 
+		GafferSceneUI.RenderPassEditor.registerColumn(
+			groupKey,
+			optionName,
+			cls.__optionColumnCreator( optionName, columnName ),
+			section,
+			index
+		)
+
+	@classmethod
+	def __optionColumnCreator( cls, optionName, columnName = None ) :
+
 		optionLabel = Gaffer.Metadata.value( "option:" + optionName, "label" )
 		if not columnName :
 			columnName = optionLabel or optionName.split( ":" )[-1]
@@ -162,16 +181,10 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			## \todo PathListingWidget's PathModel should be handling this instead.
 			toolTip += GafferUI.DocumentationAlgo.markdownToHTML( optionDescription )
 
-		GafferSceneUI.RenderPassEditor.registerColumn(
-			groupKey,
-			optionName,
-			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
-				GafferSceneUI.Private.OptionInspector( scene, editScope, optionName ),
-				columnName,
-				toolTip
-			),
-			section,
-			index
+		return lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
+			GafferSceneUI.Private.OptionInspector( scene, editScope, optionName ),
+			columnName,
+			toolTip
 		)
 
 	# Registers a column in the Render Pass Editor.
@@ -268,6 +281,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
 			self.__updateColumns()
+		elif plug == self.settings()["favouriteColumns"] and self.__currentSectionEditable() :
+			self.__updateColumns()
 		elif plug == self.settings()["displayGrouped"] :
 			self.__displayGroupedChanged()
 		elif plug in ( self.settings()["in"], self.settings()["editScope"] ) :
@@ -286,10 +301,22 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		sectionColumns = []
 
-		for groupKey, sections in self.__columnRegistry.items() :
-			if IECore.StringAlgo.match( tabGroup, groupKey ) :
-				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ ( self.__acquireColumn( c, currentSection ), index ) for ( c, index ) in section.values() ]
+		if currentSection == "Favourites" :
+			for ( index, favouriteName ) in enumerate( self.settings()["favouriteColumns"].getValue() ) :
+				if favouriteName.startswith( "option:" ) :
+					sectionColumns.append( ( self.__acquireColumn( favouriteName, currentSection ), index ) )
+				else :
+					IECore.msg( IECore.Msg.Level.Warning, "RenderPassEditor", "Unknown favourite \"{}\". Option favourites should start with \"option:\".".format( favouriteName ) )
+
+			if len( sectionColumns ) == 0 :
+				# Include a blank spacer column when there are no favourites.
+				sectionColumns.append( ( GafferUI.StandardPathColumn( "", "", GafferUI.PathColumn.SizeMode.Stretch ), 0 ) )
+
+		else :
+			for groupKey, sections in self.__columnRegistry.items() :
+				if IECore.StringAlgo.match( tabGroup, groupKey ) :
+					section = sections.get( currentSection or None, {} )
+					sectionColumns += [ ( self.__acquireColumn( c, currentSection ), index ) for ( c, index ) in section.values() ]
 
 		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + self.__orderedColumns( sectionColumns ) )
 
@@ -297,8 +324,12 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		column = self.__columnCache.get( ( columnCreator, section ) )
 		if column is None :
+			columnKey = columnCreator
+			if isinstance( columnCreator, str ) and columnCreator.startswith( "option:" ) :
+				columnCreator = self.__optionColumnCreator( columnCreator[7:], section )
+
 			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
-			self.__columnCache[ ( columnCreator, section ) ] = column
+			self.__columnCache[ ( columnKey, section ) ] = column
 
 		return column
 
@@ -318,6 +349,86 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		)
 
 		return [ x[0] for x in orderedColumns ]
+
+	def __favouriteColumn( self, column, favourite ) :
+
+		if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+			return
+
+		inspector = column.inspector( self.__pathListing.getPath() )
+		if isinstance( inspector, GafferSceneUI.Private.OptionInspector ) :
+			self.__favourite( "option:" + inspector.name(), favourite )
+
+	def __favourite( self, optionName, favourite = True, index = None ) :
+
+		favourites = list( self.settings()["favouriteColumns"].getValue() )
+		if favourite :
+			if optionName not in favourites :
+				if index is not None :
+					favourites.insert( index, optionName )
+				else :
+					favourites.append( optionName )
+		else :
+			favourites.remove( optionName )
+
+		self.settings()["favouriteColumns"].setValue( IECore.StringVectorData( favourites ) )
+
+	def __resetFavourites( self, userDefault = False ) :
+
+		if userDefault :
+			Gaffer.NodeAlgo.applyUserDefault( self.settings()["favouriteColumns"] )
+		else :
+			self.settings()["favouriteColumns"].setToDefault()
+
+	def __currentSectionEditable( self ) :
+
+		return self.settings()["section"].getValue() == "Favourites"
+
+	def __headerContextMenuRequested( self, pos ) :
+
+		column = self.__pathListing.columnAt( imath.V2f( pos.x(), pos.y() ) )
+		m = IECore.MenuDefinition()
+		userEditableSection = self.__currentSectionEditable()
+		if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+
+			if userEditableSection :
+				m.append(
+					"/Remove",
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__favouriteColumn ), column, False ),
+					}
+				)
+			else :
+				m.append(
+					"/Favourite",
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__favouriteColumn ), column ),
+						"checkBox" : "option:{}".format( column.inspector( self.__pathListing.getPath() ).name() ) in self.settings()["favouriteColumns"].getValue(),
+					}
+				)
+
+		if userEditableSection and column not in self.__commonColumns :
+
+			m.append( "/__resetFavouritesDivider", { "divider" : True } )
+
+			if Gaffer.NodeAlgo.hasUserDefault( self.settings()["favouriteColumns"] ) :
+				m.append(
+					"/Reset to Default",
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__resetFavourites ), True ),
+					}
+				)
+
+			m.append(
+				"/Remove All",
+				{
+					"command" : Gaffer.WeakMethod( self.__resetFavourites ),
+				}
+			)
+
+		if m.size() :
+			self.__contextMenu = GafferUI.Menu( m )
+			self.__contextMenu.popup( parent = self )
 
 	def __displayGroupedChanged( self ) :
 
@@ -799,6 +910,12 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"favouriteColumns" : [
+
+			"plugValueWidget:type", "",
+
+		]
+
 	}
 
 )
@@ -918,6 +1035,8 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# section has been registered to multiple matching groupKeys.
 			for name in list( dict.fromkeys( tabNames ) ) :
 				self._qtWidget().addTab( name )
+
+			self._qtWidget().addTab( "Favourites" )
 		finally :
 			self.__ignoreCurrentChanged = False
 
