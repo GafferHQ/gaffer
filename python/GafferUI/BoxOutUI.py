@@ -50,9 +50,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"passThrough" : (
+		"passThrough" : {
 
-			"description",
+			"description" :
 			"""
 			May be connected to a BoxIn node to define
 			an input that is passed through when the Box
@@ -65,22 +65,22 @@ Gaffer.Metadata.registerNode(
 			  to insert it.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		),
+		},
 
-		"enabled" : (
+		"enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Automatically connected to the Box.enabled plugs
 			to control the pass-through behaviour.
 			""",
 
-			"plugValueWidget:type", "",
-			"nodule:type", "",
+			"plugValueWidget:type" : "",
+			"nodule:type" : "",
 
-		),
+		},
 
 	}
 

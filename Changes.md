@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.2.1)
 =======
 
+API
+---
 
+- Metadata : The `registerNode()` function now accepts dictionaries containing plug metadata. This should be preferred to the previous list-based values.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======

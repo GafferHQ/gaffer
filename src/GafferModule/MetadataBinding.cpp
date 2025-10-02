@@ -244,15 +244,34 @@ object registerNode( tuple args, dict kw )
 		{
 			StringAlgo::MatchPattern plugPath = extract<StringAlgo::MatchPattern>( plugsItems[i][0] )();
 			object plugValues = plugsItems[i][1];
-			for( size_t vi = 0, ve = len( plugValues ); vi < ve; vi += 2 )
+
+			extract<dict> plugValuesDictExtractor( plugValues );
+			if( plugValuesDictExtractor.check() )
 			{
-				InternedString name = extract<InternedString>( plugValues[vi] );
-				Metadata::registerValue(
-					nodeTypeId,
-					plugPath,
-					name,
-					objectToPlugValueFunction( name, plugValues[vi+1] )
-				);
+				list plugValuesItems = plugValuesDictExtractor().items();
+				for( size_t vi = 0, ve = len( plugValuesItems ); vi < ve; vi++ )
+				{
+					InternedString name = extract<InternedString>( plugValuesItems[vi][0] );
+					Metadata::registerValue(
+						nodeTypeId,
+						plugPath,
+						name,
+						objectToPlugValueFunction( name, plugValuesItems[vi][1] )
+					);
+				}
+			}
+			else
+			{
+				for( size_t vi = 0, ve = len( plugValues ); vi < ve; vi += 2 )
+				{
+					InternedString name = extract<InternedString>( plugValues[vi] );
+					Metadata::registerValue(
+						nodeTypeId,
+						plugPath,
+						name,
+						objectToPlugValueFunction( name, plugValues[vi+1] )
+					);
+				}
 			}
 		}
 	}

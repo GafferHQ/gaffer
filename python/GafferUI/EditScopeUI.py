@@ -86,19 +86,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"renameable", False,
-			"deletable", False,
+			"renameable" : False,
+			"deletable" : False,
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"renameable", False,
-			"deletable", False,
+			"renameable" : False,
+			"deletable" : False,
 
-		],
+		},
 
 	},
 

@@ -80,21 +80,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"deletable", True,
-			"renameable", True,
+			"deletable" : True,
+			"renameable" : True,
 
-		],
+		},
 
-		"user" : [
+		"user" : {
 
 			# Disable the + button added by NodeUI, since
 			# we want users to use the button in the Settings
 			# tab instead.
-			"layout:customWidget:addButton:widgetType", "",
+			"layout:customWidget:addButton:widgetType" : "",
 
-		],
+		},
 
 	}
 

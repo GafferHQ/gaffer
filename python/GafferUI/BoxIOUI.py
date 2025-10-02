@@ -55,29 +55,29 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name given to the external plug that
 			this node represents.
 			""",
 
-			"nodule:type", ""
+			"nodule:type" : ""
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
 	}
 

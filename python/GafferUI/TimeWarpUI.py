@@ -50,27 +50,27 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"speed" : [
+		"speed" : {
 
-			"description",
+			"description" :
 			"""
 			Multiplies the current frame value.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"offset" : [
+		"offset" : {
 
-			"description",
+			"description" :
 			"""
 			Adds to the current frame value (after multiplication with speed).
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

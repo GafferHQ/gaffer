@@ -91,49 +91,49 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"selector" : [
+		"selector" : {
 
-			"description",
+			"description" :
 			"""
 			The value that the row names will be matched against.
 			Typically this will refer to a Context Variable using
 			the `${variableName}` syntax.
 			""",
 
-			"preset:Render Pass", "${renderPass}",
+			"preset:Render Pass" : "${renderPass}",
 
-			"divider", True,
+			"divider" : True,
 
-		],
+		},
 
-		"rows" : [
+		"rows" : {
 
-			"description",
+			"description" :
 			"""
 			Holds a child RowPlug for each row in the spreadsheet.
 			""",
 
-		],
+		},
 
-		"rows.default" : [
+		"rows.default" : {
 
-			"description",
+			"description" :
 			"""
 			The default row. This provides output values when no other
 			row matches the `selector`.
 			""",
 
-		],
+		},
 
-		"rows.*.name" : [
+		"rows.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the row. This is matched against the `selector`
 			to determine which row is chosen to be passed to the output.
@@ -141,53 +141,53 @@ Gaffer.Metadata.registerNode(
 			standard wildcards.
 			""",
 
-		],
+		},
 
-		"rows.*.enabled" : [
+		"rows.*.enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables or disables this row. Disabled rows are ignored.
 			""",
 
-		],
+		},
 
-		"rows.*.cells" : [
+		"rows.*.cells" : {
 
-			"description",
+			"description" :
 			"""
 			Contains a child CellPlug for each column in the spreadsheet.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The outputs from the spreadsheet. Contains a child plug for each
 			column in the spreadsheet.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"enabledRowNames" : [
+		"enabledRowNames" : {
 
-			"description",
+			"description" :
 			"""
 			An output plug containing the names of all currently enabled rows.
 			""",
 
-			"layout:section", "Advanced",
-			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget"
+			"layout:section" : "Advanced",
+			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget"
 
-		],
+		},
 
-		"resolvedRows" : [
+		"resolvedRows" : {
 
-			"description",
+			"description" :
 			"""
 			An output plug containing the resolved cell values for all enabled
 			rows, This can be used to drive expressions in situations where the
@@ -206,14 +206,14 @@ Gaffer.Metadata.registerNode(
 			> `selector`.
 			""",
 
-			"layout:section", "Advanced",
-			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget"
+			"layout:section" : "Advanced",
+			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget"
 
-		],
+		},
 
-		"activeRowIndex" : [
+		"activeRowIndex" : {
 
-			"description",
+			"description" :
 			"""
 			An output containing the index of the row that matches the selector
 			in the current context.
@@ -225,9 +225,9 @@ Gaffer.Metadata.registerNode(
 			> no row is matched.
 			""",
 
-			"layout:section", "Advanced",
+			"layout:section" : "Advanced",
 
-		],
+		},
 
 	}
 

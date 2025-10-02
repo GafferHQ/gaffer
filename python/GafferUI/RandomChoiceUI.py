@@ -70,17 +70,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
 			# Prevents creation of unwanted BoxIn nodes when
 			# plugs are promoted.
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"seed" : [
+		"seed" : {
 
-			"description",
+			"description" :
 			"""
 			Seed for the random number generator. Different seeds
 			produce different random numbers. When controlling two
@@ -89,11 +89,11 @@ Gaffer.Metadata.registerNode(
 			values are different.
 			""",
 
-		],
+		},
 
-		"seedVariable" : [
+		"seedVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The most important plug for achieving interesting variation.
 			Should be set to the name of a context variable which will
@@ -102,58 +102,58 @@ Gaffer.Metadata.registerNode(
 			location, or `frame` to generate a different value per frame.
 			""",
 
-			"preset:Time", "frame",
-			"preset:Scene Location", "scene:path",
+			"preset:Time" : "frame",
+			"preset:Scene Location" : "scene:path",
 
-		],
+		},
 
-		"choices" : [
+		"choices" : {
 
-			"description",
+			"description" :
 			"""
 			The choices that will be randomly selected between based on the seed.
 			""",
 
-			"plugValueWidget:type", "GafferUI.VectorDataPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.VectorDataPlugValueWidget",
 
-			"layout:visibilityActivator", "isSetup",
+			"layout:visibilityActivator" : "isSetup",
 
-		],
+		},
 
-		"choices.values" : [
+		"choices.values" : {
 
-			"description",
+			"description" :
 			"""
 			The list of values for the choices. Use the `choices.weights` plug
 			to assign a relative probability to each choice.
 			""",
 
-			"vectorDataPlugValueWidget:header", "Value",
+			"vectorDataPlugValueWidget:header" : "Value",
 
-		],
+		},
 
-		"choices.weights" : [
+		"choices.weights" : {
 
-			"description",
+			"description" :
 			"""
 			The list of weights for the choices. Choices with a higher weight
 			have a greater chance of being chosen.
 			""",
 
-			"vectorDataPlugValueWidget:header", "Weight",
-			"vectorDataPlugValueWidget:index", -1,
-			"vectorDataPlugValueWidget:elementDefaultValue", 1.0,
+			"vectorDataPlugValueWidget:header" : "Weight",
+			"vectorDataPlugValueWidget:index" : -1,
+			"vectorDataPlugValueWidget:elementDefaultValue" : 1.0,
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs a random choice from the `choices` plug.
 			""",
 
-		]
+		}
 
 	}
 

@@ -48,34 +48,34 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"variables" : [
+		"variables" : {
 
-			"description",
+			"description" :
 			"""
 			The variables to be added. Each variable is represented
 			as a child plug, created either through the UI or using the
 			CompoundDataPlug API.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"extraVariables" : [
+		"extraVariables" : {
 
-			"description",
+			"description" :
 			"""
 			An additional set of variables to be added. Arbitrary numbers
 			of variables may be specified within a single IECore::CompoundData
@@ -88,10 +88,10 @@ Gaffer.Metadata.registerNode(
 			is taken.
 			""",
 
-			"layout:section", "Extra",
-			"nodule:type", "",
+			"layout:section" : "Extra",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 
