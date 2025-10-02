@@ -1149,6 +1149,9 @@ class _TreeView( QtWidgets.QTreeView ) :
 		if stretchLastColumn :
 			numColumnsToResize -= 1 # leave the last section alone, as it's expandable
 
+		if columnsChanged :
+			self.__lastColumnWidth = 0
+
 		columns = self.__getColumns()
 		columnWidthsChanged = False
 		for i in range( 0, numColumnsToResize ) :
