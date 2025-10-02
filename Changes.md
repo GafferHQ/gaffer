@@ -17,6 +17,7 @@ Improvements
 - LightEditor : Added Transform section, with columns displaying the light's transform.
 - RenderPassEditor :
   - Added "Favourites" section. Columns from any other section can be marked for display in this section by right-clicking on their header and selecting "Favourite" from the menu. Columns can be reordered within the Favourites section by dragging their header.
+  - Any standard or renderer-specific option can be added as a favourite by clicking on the `+` column header and choosing it from the menu.
   - A default set of favourite columns can be configured by registering metadata containing a list of option names in a startup file. `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "favouriteColumns", "userDefault", IECore.StringVectorData( [ "option:render:cameraInclusions", "option:render:matteInclusions" ] ) )`
 - ImageToTensor : Added `tensorElementType` plug to choose between `Float`, `Float16` and `BFloat16`.
 - TensorToImage : Added conversion from `Float16` and `BFloat16` tensor elements in addition to the existing `Float` support.
