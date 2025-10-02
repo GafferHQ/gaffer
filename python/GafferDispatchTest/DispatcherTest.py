@@ -120,6 +120,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcher" )
 		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcherWithCustomPlugs" )
 
+		Gaffer.Metadata.deregisterValue( GafferDispatch.TaskList, "dispatcher:allowIsolation" )
+
 	def testBadJobDirectory( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -2345,6 +2347,18 @@ class DispatcherTest( GafferTest.TestCase ) :
 		pythonCommand = GafferDispatch.PythonCommand()
 		self.assertIs( SetupPlugsTestDispatcher.lastNode, pythonCommand )
 
+	def testIsolatedPlugExistence( self ) :
+
+		for nodeType, exists in [
+			( GafferDispatchTest.TextWriter, True ),
+			( GafferDispatch.PythonCommand, True ),
+			( GafferDispatch.SystemCommand, True ),
+			( GafferDispatch.TaskList, False ),
+			( GafferDispatch.FrameMask, False )
+		] :
+			n = nodeType()
+			self.assertEqual( "isolated" in n["dispatcher"], exists )
+
 	def testIsolatedScriptContext( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -2628,6 +2642,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n"]["dispatcher"]["isolated"].setValue( True )
 		s["n"]["text"].setValue( "nothing to see here" )
 
+		Gaffer.Metadata.registerValue( GafferDispatch.TaskList, "dispatcher:allowIsolation", True )
 		s["t"] = GafferDispatch.TaskList()
 		s["t"]["dispatcher"]["isolated"].setValue( True )
 		s["t"]["preTasks"][0].setInput( s["n"]["task"] )
