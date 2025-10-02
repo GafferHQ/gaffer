@@ -270,6 +270,7 @@ Gaffer.Metadata.registerValues( {
 		InteractiveRender nodes.
 		""",
 		"label" : "Default Renderer",
+		"columnLayout:label" : "Renderer",
 		"layout:section" : "Renderer",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
@@ -378,6 +379,7 @@ Gaffer.Metadata.registerValues( {
 		# for others. We should look into whether shipping a standard font with Gaffer would reduce
 		# this ambiguity.
 		"label" : "Camera Inclusions",
+		"columnLayout:label" : "Camera Inclusions / Catchers",
 		"layout:section" : "Visibility Set",
 
 		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
@@ -403,6 +405,7 @@ Gaffer.Metadata.registerValues( {
 		in the scene take precedence over this option.
 		""",
 		"label" : "Camera Exclusions",
+		"columnLayout:label" : "Camera Exclusions / Casters",
 		"layout:section" : "Visibility Set",
 
 		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
@@ -460,6 +463,7 @@ Gaffer.Metadata.registerValues( {
 		node with appropriate filters.
 		""",
 		"label" : "Transform",
+		"columnLayout:label" : "Transform Blur",
 		"layout:section" : "Motion Blur",
 
 	},
@@ -476,6 +480,7 @@ Gaffer.Metadata.registerValues( {
 		node with appropriate filters.
 		""",
 		"label" : "Deformation",
+		"columnLayout:label" : "Deformation Blur",
 		"layout:section" : "Motion Blur",
 
 	},

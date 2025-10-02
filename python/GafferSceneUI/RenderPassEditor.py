@@ -163,15 +163,19 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		GafferSceneUI.RenderPassEditor.registerColumn(
 			groupKey,
 			optionName,
-			cls.__optionColumnCreator( optionName, columnName ),
+			cls.__optionColumnCreator( optionName, section, columnName ),
 			section,
 			index
 		)
 
 	@classmethod
-	def __optionColumnCreator( cls, optionName, columnName = None ) :
+	def __optionColumnCreator( cls, optionName, section, columnName = None ) :
 
-		optionLabel = Gaffer.Metadata.value( "option:" + optionName, "label" )
+		if section == "Favourites" :
+			optionLabel = Gaffer.Metadata.value( "option:" + optionName, "label" )
+		else :
+			optionLabel = Gaffer.Metadata.value( "option:" + optionName, f"columnLayout:label" ) or Gaffer.Metadata.value( "option:" + optionName, "label" )
+
 		if not columnName :
 			columnName = optionLabel or optionName.split( ":" )[-1]
 
