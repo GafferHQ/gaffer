@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.2.1)
 =======
 
+Fixes
+-----
+
+- Arnold : Fixed `options.frame` value, which was previously always `0`. This fixes the `arnold/frame` EXR metadata.
+
 API
 ---
 
