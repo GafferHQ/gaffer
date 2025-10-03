@@ -300,6 +300,7 @@ const AtString g_driverEXRArnoldString( "driver_exr" );
 const AtString g_enableProgressiveRenderString( "enable_progressive_render" );
 const AtString g_fileNameArnoldString( "filename" );
 const AtString g_filtersArnoldString( "filters" );
+const AtString g_frameArnoldString( "frame" );
 const AtString g_funcPtrArnoldString( "funcptr" );
 const AtString g_ginstanceArnoldString( "ginstance" );
 const AtString g_ignoreMotionBlurArnoldString( "ignore_motion_blur" );
@@ -4025,6 +4026,11 @@ class ArnoldGlobals
 			updateDrivers();
 
 			AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
+
+			AiNodeSetFlt(
+				options, g_frameArnoldString,
+				m_frame.value_or( 1 )
+			);
 
 			AiNodeSetInt(
 				options, g_aaSeedArnoldString,

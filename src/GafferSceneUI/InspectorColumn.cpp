@@ -59,7 +59,6 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 { (int)Inspector::Result::SourceType::EditScope, new Color4fData( Imath::Color4f( 48, 100, 153, 150 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Other, nullptr },
-{ (int)Inspector::Result::SourceType::Fallback, nullptr },
 };
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
@@ -158,47 +157,8 @@ Gaffer::ConstContextPtr InspectorColumn::inspectorContext( const Gaffer::Path &p
 
 PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	CellData result;
 	Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
-	if( !inspectorResult )
-	{
-		return result;
-	}
-
-	result = cellDataFromValue( inspectorResult->value() );
-
-	result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
-	std::string toolTip;
-	if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
-	{
-		toolTip = "Source : " + inspectorResult->fallbackDescription();
-		result.foreground = g_fallbackValueForegroundColor;
-	}
-	else if( const auto source = inspectorResult->source() )
-	{
-		toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
-	}
-
-	/// \todo Should we have the ability to create read-only columns?
-	if( inspectorResult->editable() )
-	{
-		toolTip += !toolTip.empty() ? "\n\n" : "";
-		if( runTimeCast<const IECore::BoolData>( result.value ) )
-		{
-			toolTip += "Double-click to toggle";
-		}
-		else
-		{
-			toolTip += "Double-click to edit";
-		}
-	}
-
-	if( !toolTip.empty() )
-	{
-		result.toolTip = new StringData( toolTip );
-	}
-
-	return result;
+	return cellDataFromInspection( inspectorResult.get() );
 }
 
 PathColumn::CellData InspectorColumn::headerData( const IECore::Canceller *canceller ) const
@@ -266,4 +226,48 @@ PathColumn::CellData InspectorColumn::cellDataFromValue( const IECore::Object *v
 	}
 
 	return CellData();
+}
+
+PathColumn::CellData InspectorColumn::cellDataFromInspection( const GafferSceneUI::Private::Inspector::Result *inspection ) const
+{
+	CellData result;
+	if( !inspection )
+	{
+		return result;
+	}
+
+	result = cellDataFromValue( inspection->value() );
+
+	result.background = g_sourceTypeColors.at( (int)inspection->sourceType() );
+	std::string toolTip;
+	if( inspection->fallbackDescription().size() )
+	{
+		toolTip = "Source : " + inspection->fallbackDescription();
+		result.foreground = g_fallbackValueForegroundColor;
+	}
+	else if( const auto source = inspection->source() )
+	{
+		toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
+	}
+
+	/// \todo Should we have the ability to create read-only columns?
+	if( inspection->editable() )
+	{
+		toolTip += !toolTip.empty() ? "\n\n" : "";
+		if( runTimeCast<const IECore::BoolData>( result.value ) )
+		{
+			toolTip += "Double-click to toggle";
+		}
+		else
+		{
+			toolTip += "Double-click to edit";
+		}
+	}
+
+	if( !toolTip.empty() )
+	{
+		result.toolTip = new StringData( toolTip );
+	}
+
+	return result;
 }

@@ -60,23 +60,23 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"The initial starting point for the loop."
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"The final result of the loop.",
 
-		],
+		},
 
-		"previous" : [
+		"previous" : {
 
-			"description",
+			"description" :
 			"""
 			The result from the previous iteration of the loop, or
 			the primary input if no iterations have been performed yet.
@@ -85,32 +85,32 @@ Gaffer.Metadata.registerNode(
 			around into the next plug.
 			""",
 
-		],
+		},
 
-		"next" : [
+		"next" : {
 
-			"description",
+			"description" :
 			"""
 			The input to be used as the start of the next iteration of
 			the loop.
 			""",
 
-		],
+		},
 
-		"iterations" : [
+		"iterations" : {
 
-			"description",
+			"description" :
 			"""
 			The number of times the loop is applied to form the output.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"indexVariable" : [
+		"indexVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The name of a Context Variable used to specify the index
 			of the current iteration. This can be referenced from
@@ -118,9 +118,9 @@ Gaffer.Metadata.registerNode(
 			performed during each iteration of the loop.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

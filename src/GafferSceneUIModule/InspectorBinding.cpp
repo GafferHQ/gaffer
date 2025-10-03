@@ -68,9 +68,10 @@ GafferSceneUI::Private::Inspector::ResultPtr inspectWrapper( const GafferSceneUI
 	return inspector.inspect();
 }
 
-IECore::ObjectPtr valueWrapper( const GafferSceneUI::Private::Inspector::Result &result )
+IECore::ObjectPtr valueWrapper( const GafferSceneUI::Private::Inspector::Result &result, bool useFallbacks )
 {
-	return result.value() ? result.value()->copy() : nullptr;
+	const IECore::Object *v = result.value( useFallbacks );
+	return v ? v->copy() : nullptr;
 }
 
 Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Result &result, bool createIfNecessary )
@@ -167,7 +168,7 @@ void GafferSceneUIModule::bindInspector()
 		PathClass<Inspector::HistoryPath>();
 
 		scope resultScope = RefCountedClass<Inspector::Result, IECore::RefCounted>( "Result" )
-			.def( "value", &valueWrapper )
+			.def( "value", &valueWrapper, ( arg( "useFallbacks" ) = true ) )
 			.def( "source", &Inspector::Result::source, return_value_policy<CastToIntrusivePtr>() )
 			.def( "editScope", &Inspector::Result::editScope, return_value_policy<CastToIntrusivePtr>() )
 			.def( "sourceType", &Inspector::Result::sourceType )
@@ -188,7 +189,6 @@ void GafferSceneUIModule::bindInspector()
 			.value( "EditScope", Inspector::Result::SourceType::EditScope )
 			.value( "Downstream", Inspector::Result::SourceType::Downstream )
 			.value( "Other", Inspector::Result::SourceType::Other )
-			.value( "Fallback", Inspector::Result::SourceType::Fallback )
 		;
 	}
 

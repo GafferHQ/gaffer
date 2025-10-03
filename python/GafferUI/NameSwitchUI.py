@@ -66,118 +66,118 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"selector" : [
+		"selector" : {
 
-			"description",
+			"description" :
 			"""
 			The value that the input names will be matched against.
 			Typically this will refer to a Context Variable using
 			the `${variableName}` syntax.
 			""",
 
-			"preset:Render Pass", "${renderPass}",
+			"preset:Render Pass" : "${renderPass}",
 
-			"nodule:type", "",
-			"divider", True,
+			"nodule:type" : "",
+			"divider" : True,
 			# Needed to make sure the Settings tab comes first,
 			# because otherwise the first plug is `connectedInputs`
 			# which is in the Advanced tab.
-			"layout:index", 0,
+			"layout:index" : 0,
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", "GafferUI.NameSwitchUI._InPlugValueWidget",
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferUI.NameSwitchUI.PlugAdder",
+			"plugValueWidget:type" : "GafferUI.NameSwitchUI._InPlugValueWidget",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferUI.NameSwitchUI.PlugAdder",
 
-		],
+		},
 
-		"in.in0" : [
+		"in.in0" : {
 
-			"deletable", False,
+			"deletable" : False,
 
-		],
+		},
 
-		"in.in0.value" : [
+		"in.in0.value" : {
 
-			"noduleLayout:label", "default",
+			"noduleLayout:label" : "default",
 
-		],
+		},
 
-		"in.*" : [
+		"in.*" : {
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"plugValueWidget:type", "GafferUI.NameSwitchUI._RowPlugValueWidget",
-			"deletable", True,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"plugValueWidget:type" : "GafferUI.NameSwitchUI._RowPlugValueWidget",
+			"deletable" : True,
 
-		],
+		},
 
-		"in.*.name" : [
+		"in.*.name" : {
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"in.*.enabled" : [
+		"in.*.enabled" : {
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"in.*.value" : [
+		"in.*.value" : {
 
-			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget",
-			"noduleLayout:label", lambda plug : plug.parent()["name"].getValue(),
+			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
+			"noduleLayout:label" : lambda plug : plug.parent()["name"].getValue(),
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 
-		],
+		},
 
-		"out.name" : [
+		"out.name" : {
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"out.enabled" : [
+		"out.enabled" : {
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"out.value" : [
+		"out.value" : {
 
-			"noduleLayout:label", "out",
+			"noduleLayout:label" : "out",
 
-		],
+		},
 
-		"connectedInputs" : [
+		"connectedInputs" : {
 
-			"layout:index", -4,
+			"layout:index" : -4,
 
-		],
+		},
 
-		"enabledNames" : [
+		"enabledNames" : {
 
-			"description",
+			"description" :
 			"""
 			An output plug containing the names of all currently enabled inputs.
 			Example uses include driving `Collect.contextValues` to collect all
 			the inputs, or `Wedge.strings` to dispatch a task per input.
 			""",
 
-			"layout:section", "Advanced",
-			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget",
-			"nodule:type", "",
+			"layout:section" : "Advanced",
+			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
+			"nodule:type" : "",
 
-			"layout:index", -3,
+			"layout:index" : -3,
 
-		],
+		},
 
 	}
 

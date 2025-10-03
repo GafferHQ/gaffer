@@ -73,9 +73,8 @@ VisibilityColumn::VisibilityColumn( const GafferScene::ScenePlugPtr &scene, cons
 
 InspectorColumn::CellData VisibilityColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	CellData result = InspectorColumn::cellData( path, canceller );
-
 	Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
+	CellData result = cellDataFromInspection( inspectorResult.get() );
 	if( !inspectorResult )
 	{
 		return result;
@@ -92,7 +91,7 @@ InspectorColumn::CellData VisibilityColumn::cellData( const Gaffer::Path &path, 
 	const auto visibilityValue = runTimeCast<const BoolData>( inspectorResult->value() );
 
 	std::string toolTip;
-	if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
+	if( !inspectorResult->value( /* useFallbacks = */ false ) )
 	{
 		result.icon = visible ? g_locationVisibleTransparentIcon : g_locationInvisibleTransparentIcon;
 		toolTip = visible ? "Location visible by inheritance." : "Location invisible by inheritance. It will not be rendered, and neither will its descendants.";

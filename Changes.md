@@ -21,7 +21,26 @@ Breaking Changes
 1.6.x.x (relative to 1.6.2.1)
 =======
 
+Improvements
+------------
 
+- SceneInspector :
+  - Added "Isolate Differences" option for comparison modes. This filters out all properties which have the same value in the A and B columns.
+  - Removed redundant scene inspections when not in comparison mode.
+
+Fixes
+-----
+
+- Arnold : Fixed `options.frame` value, which was previously always `0`. This fixes the `arnold/frame` EXR metadata.
+- SceneInspector : The Globals tab no longer shows the A/B columns when only locations are being compared.
+- BoolWidget : Fixed label text styling when disabled.
+- Scene Editors : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
+
+API
+---
+
+- Metadata : The `registerNode()` function now accepts dictionaries containing plug metadata. This should be preferred to the previous list-based values.
+- SceneInspector : Added `deregisterInspectors()` method.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======

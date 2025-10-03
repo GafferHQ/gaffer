@@ -63,46 +63,46 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"user" : (
+		"user" : {
 
-			"description",
+			"description" :
 			"""
 			Container for user-defined plugs. Nodes
 			should never make their own plugs here,
 			so users are free to do as they wish.
 			""",
 
-			"layout:index", -1, # Last
-			"layout:section", "User",
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:index" : -1, # Last
+			"layout:section" : "User",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:addButton:widgetType", "GafferUI.UserPlugs.plugCreationWidget",
-			"layout:customWidget:addButton:index", -1, # Last
+			"layout:customWidget:addButton:widgetType" : "GafferUI.UserPlugs.plugCreationWidget",
+			"layout:customWidget:addButton:index" : -1, # Last
 
-		),
+		},
 
-		"user.*" : (
+		"user.*" : {
 
-			"deletable", True,
-			"renameable", True,
+			"deletable" : True,
+			"renameable" : True,
 
-		),
+		},
 
-		"*" : (
+		"*" : {
 
-			"layout:section", "Settings"
+			"layout:section" : "Settings"
 
-		),
+		},
 
-		"..." : (
+		"..." : {
 
 			# Just because a plug is renameable and/or deletable on one node
 			# does not mean it should still be when promoted to another.
-			"renameable:promotable", False,
-			"deletable:promotable", False,
+			"renameable:promotable" : False,
+			"deletable:promotable" : False,
 
-		),
+		},
 
 	}
 

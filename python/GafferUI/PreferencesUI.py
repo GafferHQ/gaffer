@@ -48,17 +48,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"layout:section", "",
+			"layout:section" : "",
 
-		],
+		},
 
-		"user" : [
+		"user" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
 	}
 
