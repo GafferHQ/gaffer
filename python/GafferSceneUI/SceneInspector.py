@@ -310,12 +310,16 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 	def __updateFilter( self, tree, plug ) :
 
 		pattern = plug.getValue()
-		if not pattern :
-			pattern = "*"
-		elif not IECore.StringAlgo.hasWildcards( pattern ) :
-				pattern = f"*{pattern}*"
+		if "/" in pattern :
+			# Initial "/*" needed to match the "/Location"
+			# or "/Global" root that the user doesn't see.
+			pathPattern = f"/*/{pattern}/..."
+		elif IECore.StringAlgo.hasWildcards( pattern ) :
+			pathPattern = f"/.../{pattern}/..."
+		else :
+			pathPattern = f"/.../*{pattern}*/..."
 
-		tree.setFilter( pattern )
+		tree.setFilter( pathPattern )
 
 GafferUI.Editor.registerType( "SceneInspector", SceneInspector )
 
@@ -393,7 +397,19 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Filters the displayed properties. Accepts standard wildcards such as `*` and `?`.
+			Filters the displayed properties. The filter may contain any of Gaffer's
+			standard wildcards, and may either be used to match individual property
+			names or entire paths.
+
+			Examples
+			--------
+
+			- `velocity` : Shows all properties which have `velocity` anywhere
+			  in their name, be they attributes, primitive variables or anything else.
+			- `/Object/Primitive Variables` : Shows primitive variables.
+			- `/Attributes/Standard` : Shows standard attributes.
+			- `/Attributes/*/*surface/*/*color*` : Shows surface shader parameters whose
+			  name contains `color`.
 			""",
 
 			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
@@ -427,7 +443,17 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Filters the displayed properties. Accepts standard wildcards such as `*` and `?`.
+			Filters the displayed properties. The filter may contain any of Gaffer's
+			standard wildcards, and may either be used to match individual property
+			names or entire paths.
+
+			Examples
+			--------
+
+			- `samples` : Shows all properties which have `samples` anywhere
+			  in their name, be they options, outputs or anything else.
+			- `/Options/Standard` : Shows standard options.
+			- `/Outputs/.../Data` : Shows the Data field for all outputs.
 			""",
 
 			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
