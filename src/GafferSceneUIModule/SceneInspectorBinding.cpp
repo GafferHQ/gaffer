@@ -131,7 +131,7 @@ class InspectorTree : public IECore::RefCounted
 		using Contexts = std::array<Gaffer::ConstContextPtr, 2>;
 
 		InspectorTree( const ScenePlugPtr &scene, const Contexts &contexts, const Gaffer::PlugPtr &editScope )
-			:	m_scene( scene ), m_editScope( editScope ), m_filter( "*" )
+			:	m_scene( scene ), m_editScope( editScope ), m_filter( "*" ), m_isolateDifferences( false )
 		{
 			setContexts( contexts );
 			scene->node()->plugDirtiedSignal().connect( boost::bind( &InspectorTree::plugDirtied, this, ::_1 ) );
@@ -198,6 +198,24 @@ class InspectorTree : public IECore::RefCounted
 			return m_filter;
 		}
 
+		void setIsolateDifferences( bool isolateDifferences )
+		{
+			bool dirty = false;
+			{
+				std::scoped_lock lock( m_mutex );
+				if( isolateDifferences != m_isolateDifferences )
+				{
+					m_isolateDifferences = isolateDifferences;
+					dirty = true;
+					m_rootItem.reset();
+				}
+			}
+			if( dirty )
+			{
+				m_dirtiedSignal();
+			}
+		}
+
 		using DirtiedSignal = Gaffer::Signals::Signal<void ()>;
 
 		DirtiedSignal &dirtiedSignal()
@@ -233,6 +251,21 @@ class InspectorTree : public IECore::RefCounted
 		static void registerInspectors( const vector<InternedString> &path, const InspectionProvider &inspectionProvider )
 		{
 			inspectionProviders().push_back( { path, inspectionProvider } );
+		}
+
+		static void deregisterInspectors( const vector<InternedString> &path )
+		{
+			auto &providers = inspectionProviders();
+			providers.erase(
+				std::remove_if(
+					providers.begin(),
+					providers.end(),
+					[&] ( const auto &item ) {
+						return item.first == path;
+					}
+				),
+				providers.end()
+			);
 		}
 
 		// Convenience for making registrations using a static variable.
@@ -434,6 +467,12 @@ class InspectorTree : public IECore::RefCounted
 
 			for( const auto &context : m_contexts )
 			{
+				if( &context == &m_contexts[1] && *context == *m_contexts[0] )
+				{
+					// Second context is identical to the first, so skip it.
+					continue;
+				}
+
 				Context::EditableScope scope( context.get() );
 				if( canceller )
 				{
@@ -484,7 +523,60 @@ class InspectorTree : public IECore::RefCounted
 				}
 			}
 
+			if( m_isolateDifferences )
+			{
+				isolateDifferencesWalk( m_rootItem.get(), canceller );
+			}
+
 			return m_rootItem;
+		}
+
+		// Removes children from `tree` as necessary, and returns
+		// true if this item should be kept by its parent, false
+		// otherwise.
+		bool isolateDifferencesWalk( TreeItem *item, const IECore::Canceller *canceller ) const
+		{
+			for( auto it = item->children.begin(); it != item->children.end(); /* empty */ )
+			{
+				if( !isolateDifferencesWalk( it->second.get(), canceller ) )
+				{
+					it = item->children.erase( it );
+				}
+				else
+				{
+					++it;
+				}
+			}
+
+			if( !item->children.empty() )
+			{
+				return true;
+			}
+
+			if( !item->inspector )
+			{
+				return false;
+			}
+
+			std::array<ConstObjectPtr, 2> values;
+			for( size_t i = 0; i < m_contexts.size(); ++i )
+			{
+				Context::EditableScope scope( m_contexts[i].get() );
+				scope.setCanceller( canceller );
+				auto inspection = item->inspector->inspect();
+				values[i] = inspection ? inspection->value() : nullptr;
+			}
+
+			if( (bool)values[0] != (bool)values[1] )
+			{
+				return true;
+			}
+			else if( !values[0] )
+			{
+				return false;
+			}
+
+			return values[0]->isNotEqualTo( values[1].get() );
 		}
 
 		using InspectionProviders = vector<std::pair<vector<InternedString>, InspectionProvider>>;
@@ -507,6 +599,7 @@ class InspectorTree : public IECore::RefCounted
 		mutable std::shared_ptr<TreeItem> m_rootItem;
 		Contexts m_contexts;
 		IECore::StringAlgo::MatchPattern m_filter;
+		bool m_isolateDifferences;
 
 };
 
@@ -1592,6 +1685,12 @@ void inspectorTreeSetFilterWrapper( InspectorTree &tree, const IECore::StringAlg
 	tree.setFilter( filter );
 }
 
+void inspectorTreeSetIsolateDifferencesWrapper( InspectorTree &tree, bool isolateDifferences )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	tree.setIsolateDifferences( isolateDifferences );
+}
+
 void inspectorTreeRegisterInspectorsWrapper( const vector<InternedString> &path, object pythonInspectionProvider )
 {
 	InspectorTree::InspectionProvider inspectionProvider = [pythonInspectionProvider] ( ScenePlug *scene, const Gaffer::PlugPtr &editScope ) {
@@ -1638,8 +1737,10 @@ void GafferSceneUIModule::bindSceneInspector()
 			.def( "getContexts", &inspectorTreeGetContextsWrapper )
 			.def( "setFilter", &inspectorTreeSetFilterWrapper )
 			.def( "getFilter", &InspectorTree::getFilter, return_value_policy<copy_const_reference>() )
+			.def( "setIsolateDifferences", &inspectorTreeSetIsolateDifferencesWrapper )
 			.def( "dirtiedSignal", &InspectorTree::dirtiedSignal, return_internal_reference<1>() )
 			.def( "registerInspectors", &inspectorTreeRegisterInspectorsWrapper ).staticmethod( "registerInspectors" )
+			.def( "deregisterInspectors",  &InspectorTree::deregisterInspectors ).staticmethod( "deregisterInspectors" )
 		;
 
 		class_<InspectorTree::Inspection>( "Inspection" )
