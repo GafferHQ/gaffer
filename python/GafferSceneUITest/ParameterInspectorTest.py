@@ -73,10 +73,11 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
 			return inspector.inspect()
 
-	def __assertExpectedResult( self, result, source, sourceType, editable, nonEditableReason = "", edit = None, editWarning = "" ) :
+	def __assertExpectedResult( self, result, source, sourceType, editable, nonEditableReason = "", edit = None, editWarning = "", fallbackDescription = "" ) :
 
 		self.assertEqual( result.source(), source )
 		self.assertEqual( result.sourceType(), sourceType )
+		self.assertEqual( result.fallbackDescription(), fallbackDescription )
 		self.assertEqual( result.editable(), editable )
 
 		if editable :
@@ -1306,11 +1307,11 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			inspection,
 			source = None,
-			sourceType = SourceType.Fallback,
+			sourceType = SourceType.Other,
+			fallbackDescription = "Inherited from /group",
 			editable = False,
 			nonEditableReason = "No editable source found in history."
 		)
-		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
 		planeShader = GafferSceneTest.TestShader()
 		planeShader["type"].setValue( "test:surface" )
