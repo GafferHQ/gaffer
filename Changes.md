@@ -8,6 +8,7 @@ Improvements
   - Added "Isolate Differences" option for comparison modes. This filters out all properties which have the same value in the A and B columns.
   - Removed redundant scene inspections when not in comparison mode.
 - Arnold : Added support for M44f `header:*` output metadata.
+- FocalBlur : Added presets for `focalLengthWorldScale` and placeholder text for `cameraPath`.
 
 Fixes
 -----

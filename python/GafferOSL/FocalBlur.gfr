@@ -7,8 +7,8 @@ import imath
 
 Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 1, persistent=False )
 Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 6, persistent=False )
-Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 0, persistent=False )
-Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 2, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 1, persistent=False )
 
 __children = {}
 
@@ -623,6 +623,11 @@ Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"],
 Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"], 'nodule:type', '' )
 Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"], 'layout:visibilityActivator', 'cameraCustom' )
 Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"], 'description', 'The scale to convert from focal length units to world space units.\n\nCombined with f-stop to calculate the lens aperture. Set this to scale the lens units into scene units, to ensure the depth of field blur correctly scales to the scene. Once this plug is set, the `fStop` plug can be adjusted to match a real-world lens setting.' )
+Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"], 'preset:No Conversion\t   ( 1.0 )', 1.0 )
+Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"], 'preset:Millimeters to Centimeters\t   ( 0.1 )', 0.10000000149011612 )
+Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"], 'preset:Millimeters to Decimeters\t   ( 0.01 )', 0.009999999776482582 )
+Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"], 'preset:Millimeters to Meters\t   ( 0.001 )', 0.0010000000474974513 )
+Gaffer.Metadata.registerValue( __children["FocalBlur"]["focalLengthWorldScale"], 'plugValueWidget:type', 'GafferUI.PresetsPlugValueWidget' )
 __children["FocalBlur"]["FormatQuery"]["image"].setInput( __children["FocalBlur"]["Dot26"]["out"] )
 Gaffer.Metadata.registerValue( __children["FocalBlur"]["FormatQuery"]["size"], 'compoundNumericNodule:childrenVisible', True )
 __children["FocalBlur"]["FormatQuery"]["__uiPosition"].setValue( imath.V2f( 791.788635, 27.9471207 ) )
