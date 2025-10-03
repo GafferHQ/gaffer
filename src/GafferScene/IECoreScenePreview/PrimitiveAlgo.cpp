@@ -1448,7 +1448,7 @@ IECoreScene::PrimitivePtr PrimitiveAlgo::mergePrimitives(
 	else
 	{
 		throw IECore::Exception( fmt::format(
-			"Unsupported Primitive type for merging: {}", primitives[0].first->typeId()
+			"Unsupported Primitive type for merging: {}", IECore::RunTimeTyped::typeNameFromTypeId( primitives[0].first->typeId() )
 		) );
 	}
 }

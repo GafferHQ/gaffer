@@ -233,7 +233,7 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 				for( int i = 0; i < layer.numChannels; ++i )
 				{
 					spec.channelnames.push_back(
-						fmt::format( "{}{}{}", layerName, layerName.size() ? "." : "", g_channels[i] )
+						fmt::format( "{}{}{}", layerName, layerName.size() ? "." : "", g_channels[i].string() )
 					);
 				}
 			}
