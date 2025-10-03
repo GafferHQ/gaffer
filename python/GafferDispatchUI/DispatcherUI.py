@@ -224,6 +224,7 @@ Gaffer.Metadata.registerNode(
 		"dispatcher" : (
 
 			"layout:activator:doesNotRequireSequenceExecution", lambda plug : not plug.node()["task"].requiresSequenceExecution(),
+			"layout:activator:immediateIsOff", lambda plug : not plug["immediate"].getValue(),
 
 		),
 
@@ -253,7 +254,20 @@ Gaffer.Metadata.registerNode(
 			considered to be immediate too, regardless of their settings.
 			"""
 
-		)
+		),
+
+		"dispatcher.isolated" : (
+
+			"description",
+			"""
+			Causes this node to be executed from a script containing *only* this node.
+			This is a useful optimisation when the load time for the full script is
+			high compared to the time taken to execute the task.
+			""",
+
+			"layout:activator", "immediateIsOff",
+
+		),
 
 	}
 
