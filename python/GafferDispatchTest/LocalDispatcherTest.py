@@ -1332,5 +1332,51 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			# On Linux, everything actually makes sense.
 			self.assertEqual( childEnvironment["gafferLocalDispatcherTestMIXEDcaseA"], "testTEST" )
 
+	def testIsolated( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["fileName"].setValue( self.temporaryDirectory() / "fullScriptName.txt" )
+		s["n"]["text"].setValue( "${script:name}" )
+
+		s["i"] = GafferDispatchTest.TextWriter()
+		s["i"]["dispatcher"]["isolated"].setValue( True )
+		s["i"]["fileName"].setValue( self.temporaryDirectory() / "isolatedScriptName.txt" )
+		s["i"]["text"].setValue( "${script:name}" )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["b2"] = Gaffer.Box()
+
+		s["b"]["b2"]["i2"] = GafferDispatchTest.TextWriter()
+		s["b"]["b2"]["i2"]["dispatcher"]["isolated"].setValue( True )
+		s["b"]["b2"]["i2"]["fileName"].setValue( self.temporaryDirectory() / "boxedScriptName.txt" )
+		s["b"]["b2"]["i2"]["text"].setValue( "${script:name}" )
+
+		promotedTaskPlug = Gaffer.PlugAlgo.promote( s["b"]["b2"]["i2"]["task"] )
+		promotedTaskPlug = Gaffer.PlugAlgo.promote( promotedTaskPlug )
+
+		s["d"] = self.__createLocalDispatcher()
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+		s["d"]["tasks"][1].setInput( s["i"]["task"] )
+		s["d"]["tasks"][2].setInput( promotedTaskPlug )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CurrentFrame )
+
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		with open( self.temporaryDirectory() / "fullScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )
+
+		with open( self.temporaryDirectory() / "isolatedScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )
+
+		with open( self.temporaryDirectory() / "boxedScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )
+
+
 if __name__ == "__main__":
 	unittest.main()

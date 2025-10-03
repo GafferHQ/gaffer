@@ -252,3 +252,5 @@ def __codeObjectCacheGetter( expression ) :
 _codeObjectCache = IECore.LRUCache( __codeObjectCacheGetter, 10000 )
 
 IECore.registerRunTimeTyped( PythonCommand, typeName = "GafferDispatch::PythonCommand" )
+
+Gaffer.Metadata.registerValue( PythonCommand, "dispatcher:allowIsolation", True )
