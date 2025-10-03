@@ -294,6 +294,8 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# hash for the tasks being dispatched relies on the index file, which doesn't exist
 		# prior to dispatch.
 		self["__RenderDispatcher"] = GafferDispatch.PythonCommand()
+		if "isolated" in self["__RenderDispatcher"]["dispatcher"] :
+			self["__RenderDispatcher"]["dispatcher"].removeChild( self["__RenderDispatcher"]["dispatcher"]["isolated"] )
 		self["__RenderDispatcher"]["preTasks"][0].setInput( self["__CleanPreTasks"]["out"] )
 		self["__RenderDispatcher"]["command"].setValue( inspect.cleandoc(
 			"""
