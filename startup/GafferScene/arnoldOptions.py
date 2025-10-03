@@ -345,6 +345,7 @@ Gaffer.Metadata.registerValues( {
 		gets lower than the `ai:AA_adaptive_threshold` option.
 		""",
 		"label", "Enable Adaptive Sampling",
+		"columnLayout:label", "Adaptive Sampling",
 		"layout:section", "Adaptive Sampling",
 
 	],
@@ -375,6 +376,7 @@ Gaffer.Metadata.registerValues( {
 		longer to achieve smaller amounts of noise.
 		""",
 		"label", "AA Adaptive Threshold",
+		"columnLayout:label", "Adaptive Threshold",
 		"layout:section", "Adaptive Sampling",
 
 	],

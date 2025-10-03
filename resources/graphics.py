@@ -573,6 +573,7 @@
 		'plugAdder',
 		'plugAdderHighlighted',
 		'plus',
+		'plusHighlighted',
 		'railBottom',
 		'railGap',
 		'railLine',

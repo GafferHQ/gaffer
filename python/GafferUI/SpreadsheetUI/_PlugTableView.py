@@ -59,6 +59,7 @@ from ._PlugTableModel import _PlugTableModel
 from ._ProxySelectionModel import _ProxySelectionModel
 from ._SectionChooser import _SectionChooser
 
+from .._HeaderView import _HeaderView
 from .._TableView import _TableView
 
 class _PlugTableView( GafferUI.Widget ) :
@@ -79,8 +80,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		tableView.verticalHeader().setVisible( False )
 		tableView.setAlternatingRowColors( True )
 
-		self.__horizontalHeader = GafferUI.Widget( QtWidgets.QHeaderView( QtCore.Qt.Horizontal, tableView ) )
-		self.__horizontalHeader._qtWidget().setDefaultAlignment( QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter )
+		self.__horizontalHeader = GafferUI.Widget( _HeaderView( QtCore.Qt.Horizontal, tableView ) )
 		tableView.setHorizontalHeader( self.__horizontalHeader._qtWidget() )
 		self.__horizontalHeader.buttonPressSignal().connect( Gaffer.WeakMethod( self.__headerButtonPress ) )
 

@@ -11483,5 +11483,18 @@
          sodipodi:nodetypes="cc"
          inkscape:label="path29" />
     </g>
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#3c3c3c;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       d="m 69.75,65.362183 v 5 h -5 v 5.999998 h 5 v 5 h 6 v -5 h 5 v -5.999998 h -5 v -5 z"
+       id="plusHighlighted"
+       sodipodi:nodetypes="ccccccccccccc"
+       inkscape:label="#rect3638" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path17"
+       d="m 70.75,66.362183 v 5 h -5 v 3.999998 h 5 v 5 h 4 v -5 h 5 v -3.999998 h -5 v -5 z"
+       style="fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none"
+       sodipodi:nodetypes="ccccccccccccc" />
   </g>
 </svg>
