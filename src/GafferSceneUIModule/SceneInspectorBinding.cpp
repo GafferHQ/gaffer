@@ -131,7 +131,7 @@ class InspectorTree : public IECore::RefCounted
 		using Contexts = std::array<Gaffer::ConstContextPtr, 2>;
 
 		InspectorTree( const ScenePlugPtr &scene, const Contexts &contexts, const Gaffer::PlugPtr &editScope )
-			:	m_scene( scene ), m_editScope( editScope ), m_filter( "*" ), m_isolateDifferences( false )
+			:	m_scene( scene ), m_editScope( editScope ), m_filter( "/..." ), m_isolateDifferences( false )
 		{
 			setContexts( contexts );
 			scene->node()->plugDirtiedSignal().connect( boost::bind( &InspectorTree::plugDirtied, this, ::_1 ) );
@@ -464,6 +464,7 @@ class InspectorTree : public IECore::RefCounted
 			// expensive calls to `TreeItem::inspector` _are_ deferred.
 
 			m_rootItem = std::make_shared<TreeItem>();
+			const IECore::StringAlgo::MatchPatternPath filterPath = IECore::StringAlgo::matchPatternPath( m_filter );
 
 			for( const auto &context : m_contexts )
 			{
@@ -505,19 +506,17 @@ class InspectorTree : public IECore::RefCounted
 						continue;
 					}
 
-					TreeItem *inspectorRootItem = nullptr;
 					for( const auto &[subPath, inspector] : inspections )
 					{
-						if( !IECore::StringAlgo::matchMultiple( subPath.size() ? subPath.back() : root.back(), m_filter ) )
+						vector<InternedString> fullPath = root;
+						fullPath.insert( fullPath.end(), subPath.begin(), subPath.end() );
+
+						if( !StringAlgo::match( fullPath, filterPath ) )
 						{
 							continue;
 						}
 
-						if( !inspectorRootItem )
-						{
-							inspectorRootItem = m_rootItem->insertDescendant( root );
-						}
-						TreeItem *inspectorItem = inspectorRootItem->insertDescendant( subPath );
+						TreeItem *inspectorItem = m_rootItem->insertDescendant( fullPath );
 						inspectorItem->inspector = inspector;
 					}
 				}
