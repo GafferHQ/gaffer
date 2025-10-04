@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.0.0a2)
 =======
 
+Features
+--------
+
+- FlamencoDispatcher : Added a new node for sending tasks to Blender's [Flamenco]((https://flamenco.blender.org) render farm manager.
+
 API
 ---
 
