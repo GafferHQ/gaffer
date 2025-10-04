@@ -51,6 +51,7 @@ import os
 # - "path:leaf"
 # - "path:valid"
 # - "path:bookmarks"
+# - "pathPlugValueWidget:placeholderText" : The text displayed when the string value is left empty
 class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## path should be an instance of Gaffer.Path, optionally with
@@ -148,6 +149,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.pathWidget().setErrored( exception is not None )
 		self.__path.setFromString( sole( values ) or "" )
+		self.pathWidget().setPlaceholderText( self.__placeholderText() )
 
 	def _updateFromEditable( self ) :
 
@@ -188,3 +190,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 			v = Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:" + name )
 
 		return v
+
+	def __placeholderText( self ) :
+
+		return Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:placeholderText" )

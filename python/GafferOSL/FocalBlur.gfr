@@ -839,7 +839,7 @@ __children["FocalBlur"]["Dot25"]["__uiPosition"].setValue( imath.V2f( 822.9505, 
 __children["FocalBlur"]["Dot26"]["in"].setInput( __children["FocalBlur"]["Dot25"]["out"] )
 __children["FocalBlur"]["Dot26"]["__uiPosition"].setValue( imath.V2f( 822.9505, 35.2791519 ) )
 Gaffer.Metadata.registerValue( __children["FocalBlur"]["cameraPath"], 'nodule:type', '' )
-Gaffer.Metadata.registerValue( __children["FocalBlur"]["cameraPath"], 'stringPlugValueWidget:placeholderText', 'Render Camera' )
+Gaffer.Metadata.registerValue( __children["FocalBlur"]["cameraPath"], 'pathPlugValueWidget:placeholderText', 'Render Camera' )
 Gaffer.Metadata.registerValue( __children["FocalBlur"]["cameraPath"], 'layout:section', 'Settings' )
 Gaffer.Metadata.registerValue( __children["FocalBlur"]["cameraPath"], 'layout:index', 7 )
 Gaffer.Metadata.registerValue( __children["FocalBlur"]["cameraPath"], 'layout:visibilityActivator', 'cameraScene' )
