@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.5.0)
 =======
 
+Fixes
+-----
 
+- CyclesShader : Fixed unstable ordering of parameter presets. These are now sorted alphabetically.
 
 1.6.5.0 (relative to 1.6.4.0)
 =======
