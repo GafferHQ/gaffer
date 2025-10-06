@@ -41,6 +41,7 @@ from pxr import Kind
 
 import IECore
 
+import GafferUSD
 import GafferSceneUI
 
 ##########################################################################
@@ -61,30 +62,7 @@ def __kindSelectionModifier( targetKind, scene, pathString ) :
 
 	return path
 
-
-usdKinds = Kind.Registry.GetAllKinds()
-
-# Build a simplified hierarchy for sorting
-kindPaths = []
-for kind in usdKinds :
-	kindPath = kind
-	kindParent = Kind.Registry.GetBaseKind( kind )
-	while kindParent != "" :
-		kindPath = kindParent + "/" + kindPath
-		kindParent = Kind.Registry.GetBaseKind( kindParent )
-	kindPaths.append( kindPath )
-
-kindPaths.sort( reverse = True)
-
-# We prefer to have "subcomponent" at the end.
-try :
-	kindPaths.remove( "subcomponent" )
-	kindPaths.append( "subcomponent" )
-except :
-	pass
-
-for kindPath in kindPaths :
-	kind = kindPath.split( "/" )[-1]
+for kind in GafferUSD.KindAlgo.topologicallySorted() :
 	GafferSceneUI.SelectionTool.registerSelectMode(
 		"USD Kind/" + IECore.CamelCase.toSpaced( kind ),
 		functools.partial( __kindSelectionModifier, kind ),
