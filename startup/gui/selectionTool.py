@@ -105,13 +105,13 @@ def __shaderSource( attributeKeyword, scene, pathString ) :
 				k != "surface:full" and
 				k != "surface:preview" and
 				k != "displacement:full" and
-				k != "displacement:preview" and 
+				k != "displacement:preview" and
 				isinstance( v, IECoreScene.ShaderNetwork )
 			) :
 				return path
-		
+
 		path.pop()
-	
+
 	return []
 
 GafferSceneUI.SelectionTool.registerSelectMode( "Shader Assignment/Surface", functools.partial( __shaderSource, "surface" ) )
