@@ -16,6 +16,7 @@ Fixes
 - BoolWidget : Fixed label text styling when disabled.
 - Scene Editors : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
 - USDAttributes : Fixed unstable ordering of `kind` presets. These are now sorted to match the kind hierarchy.
+- CyclesShader : Fixed unstable ordering of parameter presets. These are now sorted alphabetically.
 
 API
 ---

@@ -62,9 +62,9 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	if socketType == "enum" :
 		presetNames = IECore.StringVectorData()
 		presetValues = IECore.StringVectorData()
-		for enumName, enumValues in value["enum_values"].items() :
+		for enumName in sorted( value["enum_values"].keys() ):
 			presetNames.append(enumName)
-			presetValues.append( enumValues.value )
+			presetValues.append( value["enum_values"][enumName].value )
 		__metadata[paramPath]["presetNames"] = presetNames
 		__metadata[paramPath]["presetValues"] = presetValues
 		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
