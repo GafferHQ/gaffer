@@ -70,65 +70,65 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"color" : [
+		"color" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of the rectangle.
 			""",
 
-		],
+		},
 
-		"area" : [
+		"area" : {
 
-			"description",
+			"description" :
 			"""
 			The area of the rectangle before the transform is applied.
 			""",
 
-		],
+		},
 
-		"lineWidth" : [
+		"lineWidth" : {
 
-			"description",
+			"description" :
 			"""
 			The width of the outline, measured in pixels.
 			""",
 
-		],
+		},
 
-		"cornerRadius" : [
+		"cornerRadius" : {
 
-			"description",
+			"description" :
 			"""
 			Used to give the rectangle rounded corners. A radius of
 			0 gives square corners.
 			""",
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			Transformation applied to the rectangle.
 			""",
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			A transformation applied to the rectangle. The translate and
 			pivot values are specified in pixels, and the rotate value is
 			specified in degrees.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Transform",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Transform",
 
-		],
+		},
 
 	}
 

@@ -50,61 +50,61 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"image" : [
+		"image" : {
 
-			"description",
+			"description" :
 			"""
 			The image to query.
 			""",
 
-		],
+		},
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			The view to be queried.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
-			"viewPlugValueWidget:allowUseCurrentContext", True,
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
+			"viewPlugValueWidget:allowUseCurrentContext" : True,
 
-		],
+		},
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The format of the image ( as a FormatPlug, compatible with inputs on Constant or Resize ).
 			""",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"layout:section", "Settings.Out",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"layout:section" : "Settings.Out",
 
-		],
-		"format.displayWindow" : [
-			"nodule:type", "GafferUI::CompoundNodule",
-		],
+		},
+		"format.displayWindow" : {
+			"nodule:type" : "GafferUI::CompoundNodule",
+		},
 
-		"center" : [
+		"center" : {
 
-			"description",
+			"description" :
 			"""
 			The middle of the displayWindow.  Stored as V2f, since it could be a half-pixel.
 			""",
-			"layout:section", "Settings.Out",
+			"layout:section" : "Settings.Out",
 
-		],
+		},
 
-		"size" : [
+		"size" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the displayWindow as V2i.
 			""",
-			"layout:section", "Settings.Out",
+			"layout:section" : "Settings.Out",
 
-		],
+		},
 
 	}
 

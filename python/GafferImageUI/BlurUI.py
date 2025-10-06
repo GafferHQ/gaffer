@@ -57,41 +57,41 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"radius" : [
+		"radius" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the blur in pixels. This can be varied independently
 			in the x and y directions, and fractional values are supported for
 			fine control.
 			""",
 
-		],
+		},
 
-		"boundingMode" : [
+		"boundingMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used when the filter references pixels outside the
 			input data window.
 			""",
 
-			"preset:Black", GafferImage.Sampler.BoundingMode.Black,
-			"preset:Clamp", GafferImage.Sampler.BoundingMode.Clamp,
+			"preset:Black" : GafferImage.Sampler.BoundingMode.Black,
+			"preset:Clamp" : GafferImage.Sampler.BoundingMode.Clamp,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"expandDataWindow" : [
+		"expandDataWindow" : {
 
-			"description",
+			"description" :
 			"""
 			Expands the data window to include the external pixels
 			which the blur will bleed onto.
 			"""
 
-		]
+		}
 
 	}
 

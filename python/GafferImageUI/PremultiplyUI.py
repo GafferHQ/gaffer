@@ -49,9 +49,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"alphaChannel" : [
+		"alphaChannel" : {
 
-			"description",
+			"description" :
 			"""
 			The channel to use as the alpha channel.
 			The selected channel does not have to be 'A', but whichever
@@ -61,23 +61,23 @@ Gaffer.Metadata.registerNode(
 			remain the same as the input.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 
-		],
+		},
 
-		"ignoreMissingAlpha" : [
+		"ignoreMissingAlpha" : {
 
-			"description",
+			"description" :
 			"""
 			If set, this node will do nothing if the specified `alphaChannel`
 			is not found, instead of throwing an error.
 			""",
 
-		],
+		},
 
-		"useDeepVisibility" : [
+		"useDeepVisibility" : {
 
-			"description",
+			"description" :
 			"""
 			When processing a deep image, you may use this to multiply by
 			the visibility of the current sample, taking into account the
@@ -86,9 +86,9 @@ Gaffer.Metadata.registerNode(
 			by multiplying RGB by visibility, and then wiping out the 'A'
 			channel.
 			""",
-			"layout:section", "Advanced",
+			"layout:section" : "Advanced",
 
-		],
+		},
 
 	}
 

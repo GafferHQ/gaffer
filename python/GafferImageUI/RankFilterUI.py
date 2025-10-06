@@ -57,55 +57,55 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"radius" : [
+		"radius" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the filter in pixels. This can be varied independently
 			in the x and y directions.
 			""",
 
-		],
+		},
 
-		"boundingMode" : [
+		"boundingMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used when the filter references pixels outside the
 			input data window.
 			""",
 
-			"preset:Black", GafferImage.Sampler.BoundingMode.Black,
-			"preset:Clamp", GafferImage.Sampler.BoundingMode.Clamp,
+			"preset:Black" : GafferImage.Sampler.BoundingMode.Black,
+			"preset:Clamp" : GafferImage.Sampler.BoundingMode.Clamp,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"expandDataWindow" : [
+		"expandDataWindow" : {
 
-			"description",
+			"description" :
 			"""
 			Expands the data window to include the external pixels
 			which the filter radius covers.
 			"""
 
-		],
+		},
 
-		"masterChannel" : [
+		"masterChannel" : {
 
-			"description",
+			"description" :
 			"""
 			If specified, this channel will be used to compute the pixel index to select for all
 			channels.  You would probably want to use this with a channel that represents the overall
 			luminance of the image.  It will produce a rank filter which is lower quality, but preserves
 			additivity between channels, and is a bit faster.
 			""",
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "" ] ),
-			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "None" ] ),
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:extraChannels" : IECore.StringVectorData( [ "" ] ),
+			"channelPlugValueWidget:extraChannelLabels" : IECore.StringVectorData( [ "None" ] ),
 
-		]
+		}
 
 	},
 

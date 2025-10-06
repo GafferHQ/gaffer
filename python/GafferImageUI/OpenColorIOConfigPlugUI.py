@@ -89,15 +89,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"openColorIO" : [
+		"openColorIO" : {
 
-			"layout:section", "OpenColorIO",
+			"layout:section" : "OpenColorIO",
 
-		],
+		},
 
-		"openColorIO.config" : [
+		"openColorIO.config" : {
 
-			"description",
+			"description" :
 			"""
 			The OpenColorIO config to use.
 
@@ -105,21 +105,21 @@ Gaffer.Metadata.registerNode(
 			of the node graph, or to perform wedging across several contexts.
 			""",
 
-		],
+		},
 
-		"openColorIO.workingSpace" : [
+		"openColorIO.workingSpace" : {
 
-			"description",
+			"description" :
 			"""
 			The color space in which Gaffer performs image processing. ImageReaders will automatically load
 			images into this space, and ImageWriters will automatically convert images from this space.
 			""",
 
-		],
+		},
 
-		"openColorIO.variables" : [
+		"openColorIO.variables" : {
 
-			"description",
+			"description" :
 			"""
 			Variables used to customise the default
 			[OpenColorIO context](https://opencolorio.readthedocs.io/en/latest/guides/authoring/overview.html#environment).
@@ -130,12 +130,12 @@ Gaffer.Metadata.registerNode(
 			of the node graph, or to perform wedging across several variable values.
 			""",
 
-		],
+		},
 
-		"openColorIO.displayTransform" : [
+		"openColorIO.displayTransform" : {
 
-			"label", "UI Display Transform",
-			"description",
+			"label" : "UI Display Transform",
+			"description" :
 			"""
 			The colour transform used for showing colours in the UI - in swatches and colour pickers etc.
 			This is a combination of an OpenColorIO Display and an OpenColorIO View.
@@ -143,7 +143,7 @@ Gaffer.Metadata.registerNode(
 			> Note : The Viewer has its own display transform configured in the Viewer itself.
 			""",
 
-		],
+		},
 
 	}
 

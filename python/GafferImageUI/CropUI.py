@@ -71,9 +71,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"areaSource" : [
+		"areaSource" : {
 
-			"description",
+			"description" :
 			"""
 			Where to source the actual area to use. If this is
 			set to DataWindow, it will use the input's Data Window,
@@ -82,44 +82,44 @@ Gaffer.Metadata.registerNode(
 			the Area plug.
 			""",
 
-			"preset:Area", GafferImage.Crop.AreaSource.Area,
-			"preset:Format", GafferImage.Crop.AreaSource.Format,
-			"preset:DataWindow", GafferImage.Crop.AreaSource.DataWindow,
-			"preset:DisplayWindow", GafferImage.Crop.AreaSource.DisplayWindow,
+			"preset:Area" : GafferImage.Crop.AreaSource.Area,
+			"preset:Format" : GafferImage.Crop.AreaSource.Format,
+			"preset:DataWindow" : GafferImage.Crop.AreaSource.DataWindow,
+			"preset:DisplayWindow" : GafferImage.Crop.AreaSource.DisplayWindow,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"area" : [
+		"area" : {
 
-			"description",
+			"description" :
 			"""
 			The custom area to set the Data/Display Window to.
 			This plug is only used if 'Area Source' is set to
 			Area.
 			""",
 
-			"layout:activator", "areaSourceIsArea",
+			"layout:activator" : "areaSourceIsArea",
 
-		],
+		},
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The Format to use as the area to set the Data/Display
 			Window to. This plug is only used if 'Area Source' is
 			set to Format.
 			""",
 
-			"layout:activator", "areaSourceIsFormat",
+			"layout:activator" : "areaSourceIsFormat",
 
-		],
+		},
 
-		"formatCenter" : [
+		"formatCenter" : {
 
-			"description",
+			"description" :
 			"""
 			Whether to center the output image (based on the
 			existing display window) inside the new display
@@ -128,43 +128,43 @@ Gaffer.Metadata.registerNode(
 			Window' it checked.
 			""",
 
-			"layout:activator", "areaSourceIsFormatAndAffectDisplayWindowIsOn",
-			"layout:divider", True
+			"layout:activator" : "areaSourceIsFormatAndAffectDisplayWindowIsOn",
+			"layout:divider" : True
 
-		],
+		},
 
-		"affectDataWindow" : [
+		"affectDataWindow" : {
 
-			"description",
+			"description" :
 			"""
 			Whether to intersect the defined area with the input Data
 			Window. It will never pad black onto the Data Window, it
 			will only ever reduce the existing Data Window.
 			""",
 
-		],
+		},
 
-		"affectDisplayWindow" : [
+		"affectDisplayWindow" : {
 
-			"description",
+			"description" :
 			"""
 			Whether to assign a new Display Window based on the defined
 			area.
 			""",
 
-		],
+		},
 
-		"resetOrigin" : [
+		"resetOrigin" : {
 
-			"description",
+			"description" :
 			"""
 			Shifts the cropped image area back to the origin, so that
 			the bottom left of the display window is at ( 0, 0 ).
 			""",
 
-			"layout:activator", "affectDisplayWindowIsOn",
+			"layout:activator" : "affectDisplayWindowIsOn",
 
-		]
+		}
 
 	}
 

@@ -50,23 +50,23 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"horizontal" : [
+		"horizontal" : {
 
-			"description",
+			"description" :
 			"""
 			Mirrors horizontally, flopping the image left to right.
 			""",
 
-		],
+		},
 
-		"vertical" : [
+		"vertical" : {
 
-			"description",
+			"description" :
 			"""
 			Mirrors vertically, flipping the image top to bottom.
 			""",
 
-		],
+		},
 
 	}
 

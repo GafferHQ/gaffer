@@ -62,47 +62,47 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"color" : [
+		"color" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of the text.
 			""",
 
-		],
+		},
 
-		"text" : [
+		"text" : {
 
-			"description",
+			"description" :
 			"""
 			The text to be rendered.
 			""",
 
-			"plugValueWidget:type", "GafferUI.MultiLineStringPlugValueWidget",
-			"multiLineStringPlugValueWidget:continuousUpdate", True,
+			"plugValueWidget:type" : "GafferUI.MultiLineStringPlugValueWidget",
+			"multiLineStringPlugValueWidget:continuousUpdate" : True,
 
-		],
+		},
 
-		"font" : [
+		"font" : {
 
-			"description",
+			"description" :
 			"""
 			The font to render the text with. This should be a .ttf font file which
 			is located on the paths specified by the IECORE_FONT_PATHS
 			environment variable.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:bookmarks", "font",
-			"path:leaf", True,
-			"path:valid", True,
-			"fileSystemPath:extensions", "ttf",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:bookmarks" : "font",
+			"path:leaf" : True,
+			"path:valid" : True,
+			"fileSystemPath:extensions" : "ttf",
 
-		],
+		},
 
-		"size" : [
+		"size" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the font in pixels. For best quality results
 			for constant sized text prefer this over the scale setting
@@ -110,11 +110,11 @@ Gaffer.Metadata.registerNode(
 			the size.
 			""",
 
-		],
+		},
 
-		"area" : [
+		"area" : {
 
-			"description",
+			"description" :
 			"""
 			The area of the image within which the text is rendered.
 			The text will be word wrapped to fit within the area and
@@ -123,43 +123,43 @@ Gaffer.Metadata.registerNode(
 			instead.
 			""",
 
-		],
+		},
 
-		"horizontalAlignment" : [
+		"horizontalAlignment" : {
 
-			"description",
+			"description" :
 			"""
 			Determines whether the text is aligned to the left or
 			right of the text area, or centered within it.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Left", GafferImage.Text.HorizontalAlignment.Left,
-			"preset:Right", GafferImage.Text.HorizontalAlignment.Right,
-			"preset:Center", GafferImage.Text.HorizontalAlignment.Center,
+			"preset:Left" : GafferImage.Text.HorizontalAlignment.Left,
+			"preset:Right" : GafferImage.Text.HorizontalAlignment.Right,
+			"preset:Center" : GafferImage.Text.HorizontalAlignment.Center,
 
-		],
+		},
 
-		"verticalAlignment" : [
+		"verticalAlignment" : {
 
-			"description",
+			"description" :
 			"""
 			Determines whether the text is aligned to the bottom or
 			top of the text area, or centered within it.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Bottom", GafferImage.Text.VerticalAlignment.Bottom,
-			"preset:Top", GafferImage.Text.VerticalAlignment.Top,
-			"preset:Center", GafferImage.Text.VerticalAlignment.Center,
+			"preset:Bottom" : GafferImage.Text.VerticalAlignment.Bottom,
+			"preset:Top" : GafferImage.Text.VerticalAlignment.Top,
+			"preset:Center" : GafferImage.Text.VerticalAlignment.Center,
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			A transformation applied to the entire text area after
 			layout has been performed. The translate and pivot values
@@ -167,10 +167,10 @@ Gaffer.Metadata.registerNode(
 			in degrees.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Transform",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Transform",
 
-		],
+		},
 
 	}
 

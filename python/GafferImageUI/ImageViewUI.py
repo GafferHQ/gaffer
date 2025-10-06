@@ -83,91 +83,91 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			Chooses view to display from a multi-view image.  The "default" view is used for normal images
 			that don't have specific views.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
-			"toolbarLayout:width", 125,
-			"label", "",
-			"toolbarLayout:divider", True,
+			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
+			"toolbarLayout:width" : 125,
+			"label" : "",
+			"toolbarLayout:divider" : True,
 
-		],
+		},
 
-		"compare" : [
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareParentPlugValueWidget",
-			"toolbarLayout:divider", True,
-			"label", "",
-		],
+		"compare" : {
+			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._CompareParentPlugValueWidget",
+			"toolbarLayout:divider" : True,
+			"label" : "",
+		},
 
-		"compare.mode" : [
+		"compare.mode" : {
 
-			"description",
+			"description" :
 			"""
 			Enables a comparison mode to view two images at once - they can be composited under or over, or
 			subtracted for a difference view.  Or replace mode just shows the front image, which is useful
 			in combination with the Wipe tool.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareModePlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._CompareModePlugValueWidget",
 
-		],
+		},
 
-		"compare.matchDisplayWindows" : [
+		"compare.matchDisplayWindows" : {
 			# matchDisplayWindows is also handled by _CompareModePlugValueWidget
-			"plugValueWidget:type", "",
-		],
+			"plugValueWidget:type" : "",
+		},
 
-		"compare.wipe" : [
+		"compare.wipe" : {
 
-			"description",
+			"description" :
 			"""
 			Enables a wipe tool to hide part of the image, for comparing with the background image.
 			Hotkey W.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareWipePlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._CompareWipePlugValueWidget",
 
-		],
+		},
 
-		"compare.image" : [
+		"compare.image" : {
 
-			"description",
+			"description" :
 			"""
 			The image to compare with.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareImageWidget",
+			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._CompareImageWidget",
 
-		],
+		},
 
-		"compare.catalogueOutput" : [
+		"compare.catalogueOutput" : {
 			# catalogueOutput is also handled by _CompareImageWidget
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-			"preset:1", "output:1",
-			"preset:2", "output:2",
-			"preset:3", "output:3",
-			"preset:4", "output:4",
-		],
+			"preset:1" : "output:1",
+			"preset:2" : "output:2",
+			"preset:3" : "output:3",
+			"preset:4" : "output:4",
+		},
 
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			Chooses an RGBA layer or an auxiliary channel to display.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ChannelsPlugValueWidget",
-			"toolbarLayout:width", 175,
-			"label", "",
+			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._ChannelsPlugValueWidget",
+			"toolbarLayout:width" : 175,
+			"label" : "",
 
-		],
+		},
 
 
 	}

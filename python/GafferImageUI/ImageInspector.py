@@ -235,12 +235,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"view" : [
+		"view" : {
 
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
-			"description", "The view to inspect",
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
+			"description" : "The view to inspect",
 
-		],
+		},
 
 	}
 

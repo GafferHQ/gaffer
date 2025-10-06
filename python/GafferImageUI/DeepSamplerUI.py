@@ -49,32 +49,32 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"image" : [
+		"image" : {
 
-			"description",
+			"description" :
 			"""
 			The image to be sampled.
 			""",
 
-		],
+		},
 
-		"pixel" : [
+		"pixel" : {
 
-			"description",
+			"description" :
 			"""
 			The integer coordinates of the pixel to sample.
 			""",
 
-		],
+		},
 
-		"pixelData" : [
+		"pixelData" : {
 
-			"description",
+			"description" :
 			"""
 			The sampled data, as a CompoundData with one FloatVectorData per channel.
 			""",
 
-		]
+		}
 
 	}
 )
