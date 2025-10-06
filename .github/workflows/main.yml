@@ -10,6 +10,10 @@ on:
       - '*'
   release:
       types: [published]
+  workflow_call:
+    inputs:
+      buildType:
+        type: string
 
 jobs:
 
@@ -100,10 +104,13 @@ jobs:
       ARNOLD_FORCE_ABORT_ON_LICENSE_FAIL: 0 # And don't abort because the license isn't found
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
+      GAFFER_NIGHTLY: ${{ inputs.buildType == 'nightly' && '1' || '0' }}
 
     steps:
 
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        ref: ${{ env.GAFFER_NIGHTLY == '1' && 'pendingNightly' || '' }}
 
     - name: Install Windows SDK
       run: |
@@ -291,7 +298,7 @@ jobs:
 
     - name: Publish Release
       run: |
-        python ./config/publishRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} --repo ${{ github.repository }} --releaseId ${{ env.GAFFER_GITHUB_RELEASEID }}
+        python ./config/publishRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} --repo ${{ github.repository }} --releaseId ${{ env.GAFFER_GITHUB_RELEASEID }} ${{ env.GAFFER_NIGHTLY == '1' && '--maxAssets 10' || '' }}
       if: matrix.publish && env.GAFFER_GITHUB_RELEASEID != ''
       env:
         GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
