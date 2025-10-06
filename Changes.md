@@ -25,6 +25,7 @@ Fixes
 - SceneInspector : Fixed sporadic incomplete updates, particularly when an interactive render was running.
 - Render, InteractiveRender, StandardOptions : Fixed bugs allowing Cycles and 3Delight to appear as available renderers even when hidden from the UI or not configured.
 - Options, Attributes : Fixed missing presets.
+- CyclesShader : Fixed unstable ordering of parameter presets. These are now sorted alphabetically.
 
 API
 ---
