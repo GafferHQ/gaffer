@@ -141,6 +141,8 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 		/// will be returned verbatim by the `name()` method.
 		Inspector( const Gaffer::ConstPlugPtr &target, const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope );
 
+		Gaffer::EditScope *targetEditScope() const;
+
 		/// Methods to be implemented in derived classes
 		/// ============================================
 		///
@@ -207,8 +209,6 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 		/// edit `plug` to set `value`. Called with `history->context` as the
 		/// current context.
 		virtual EditFunction editFunction( const GafferScene::SceneAlgo::History *history ) const;
-
-		Gaffer::EditScope *targetEditScope() const;
 
 	private :
 
