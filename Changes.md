@@ -15,6 +15,7 @@ Fixes
 - SceneInspector : The Globals tab no longer shows the A/B columns when only locations are being compared.
 - BoolWidget : Fixed label text styling when disabled.
 - Scene Editors : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
+- USDAttributes : Fixed unstable ordering of `kind` presets. These are now sorted to match the kind hierarchy.
 
 API
 ---
