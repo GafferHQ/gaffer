@@ -41,6 +41,7 @@ from .USDShaderTest import USDShaderTest
 from .USDLightTest import USDLightTest
 from ._PointInstancerAdaptorTest import _PointInstancerAdaptorTest
 from .PromotePointInstancesTest import PromotePointInstancesTest
+from .KindAlgoTest import KindAlgoTest
 
 if __name__ == "__main__":
 	import unittest
