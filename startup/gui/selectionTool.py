@@ -64,7 +64,10 @@ def __kindSelectionModifier( targetKind, scene, pathString ) :
 
 for kind in GafferUSD.KindAlgo.topologicallySorted() :
 	GafferSceneUI.SelectionTool.registerSelectMode(
-		"USD Kind/" + IECore.CamelCase.toSpaced( kind ),
+		"USD Kind/{indent}{label}".format(
+			indent = "  " * ( len( GafferUSD.KindAlgo.path( kind ) ) - 1 ),
+			label = IECore.CamelCase.toSpaced( kind )
+		),
 		functools.partial( __kindSelectionModifier, kind ),
 	)
 
