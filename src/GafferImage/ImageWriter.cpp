@@ -82,10 +82,9 @@
 #endif
 #include <zlib.h>
 
-OIIO_NAMESPACE_USING
-
 using namespace std;
 using namespace Imath;
+using namespace OIIO;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferDispatch;
