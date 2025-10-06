@@ -38,10 +38,7 @@
 import github
 
 import argparse
-import datetime
 import os
-import subprocess
-import sys
 
 # A script to publish a build to a GitHub Release
 
