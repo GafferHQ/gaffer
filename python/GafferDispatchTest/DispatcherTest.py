@@ -2689,6 +2689,39 @@ class DispatcherTest( GafferTest.TestCase ) :
 			[ dispatchDir / "isolated" / "n" ]
 		)
 
+	class TextWriterWithChildNode( GafferDispatchTest.TextWriter ) :
+		def __init__( self, name = "TextWriterWithChildNode" ) :
+			GafferDispatchTest.TextWriter.__init__( self, name )
+
+			self["e"] = Gaffer.Expression()
+			self["e"].setExpression( 'parent["text"] = "test"' )
+
+	def testIsolatedInputFromChildNode( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = DispatcherTest.TextWriterWithChildNode()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+
+		s["n"]["e"] = Gaffer.Expression()
+		s["n"]["e"].setExpression( 'parent["text"] = "test"' )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-10" )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual( newScript["n"]["text"].getValue(), "test" )
+
 	def testIsolatedReadOnly( self ) :
 
 		s = Gaffer.ScriptNode()

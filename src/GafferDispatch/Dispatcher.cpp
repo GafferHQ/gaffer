@@ -141,7 +141,7 @@ ValuePlug *acquireCellValuePlug( Spreadsheet *spreadsheet, const InternedString 
 
 void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, const std::vector<float> &frames )
 {
-	if( !sourcePlug->getInput() || !PlugAlgo::canSetValueFromData( destinationPlug ) )
+	if( !PlugAlgo::canSetValueFromData( destinationPlug ) )
 	{
 		return;
 	}
@@ -1160,9 +1160,18 @@ void Dispatcher::isolateBatch( TaskBatch *batch ) const
 		auto destinationPlug = destinationNode->descendant<ValuePlug>( (*it)->relativeName( sourceNode ) );
 		assert( destinationPlug != nullptr );
 
-		bakePlugValue( destinationPlug, (*it).get(), batch->frames() );
+		if( destinationPlug->getInput() )
+		{
+			// We could find ourselves here if `destinationPlug->getInput()` comes from a child node
+			// of `destinationNode`. These inputs are serialised, so we need to avoid trying to bake
+			// the plug value.
+			it.prune();
+			continue;
+		}
+
 		if( (*it)->getInput() )
 		{
+			bakePlugValue( destinationPlug, (*it).get(), batch->frames() );
 			it.prune();
 		}
 	}
