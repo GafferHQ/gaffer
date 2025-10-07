@@ -59,17 +59,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
 			# The `name` plug is inherited from Shader, but unused by ArnoldDisplacement.
 			# Hide it to avoid confusion. See comments in ArnoldDisplacement.h.
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"map" : [
+		"map" : {
 
-			"description",
+			"description" :
 			"""
 			The Arnold shader that provides the displacement
 			map. Connect a float or colour input to displace
@@ -77,26 +77,26 @@ Gaffer.Metadata.registerNode(
 			in a specific direction.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
-			"noduleLayout:section", "left",
+			"nodule:type" : "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
 
-		],
+		},
 
-		"height" : [
+		"height" : {
 
-			"description",
+			"description" :
 			"""
 			Controls the amount of displacement. Only used when
 			performing displacement along the normal.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"padding" : [
+		"padding" : {
 
-			"description",
+			"description" :
 			"""
 			Padding added to an object's bounding box to take
 			into account displacement. Arnold will subdivide
@@ -107,13 +107,13 @@ Gaffer.Metadata.registerNode(
 			will emit a warning message.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"zeroValue" : [
+		"zeroValue" : {
 
-			"description",
+			"description" :
 			"""
 			Defines a value that will cause no displacement to
 			occur. For instance, if the displacement map contains
@@ -122,23 +122,23 @@ Gaffer.Metadata.registerNode(
 			in some places and out in others.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"autoBump" : [
+		"autoBump" : {
 
-			"description",
+			"description" :
 			"""
 			Automatically turns the details of the displacement map
 			into bump, wherever the mesh is not subdivided enough
 			to properly capture them.
 			""",
 
-			"nodule:type", "",
-			"layout:visibilityActivator", "autoBumpVisibility",
+			"nodule:type" : "",
+			"layout:visibilityActivator" : "autoBumpVisibility",
 
-		],
+		},
 
 	}
 

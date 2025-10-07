@@ -203,19 +203,19 @@ Gaffer.Metadata.registerNode(
 
 		# Sections
 
-		"attributes" : [
+		"attributes" : {
 
-			"layout:section:Visibility:summary", __visibilitySummary,
-			"layout:section:Displacement.Auto Bump Visibility:summary", __autoBumpVisibilitySummary,
-			"layout:section:Transform:summary", __transformSummary,
-			"layout:section:Shading:summary", __shadingSummary,
-			"layout:section:Subdivision:summary", __subdivisionSummary,
-			"layout:section:Curves:summary", __curvesSummary,
-			"layout:section:Points:summary", __pointsSummary,
-			"layout:section:Volume:summary", __volumeSummary,
-			"layout:section:Toon:summary", __toonSummary,
+			"layout:section:Visibility:summary" : __visibilitySummary,
+			"layout:section:Displacement.Auto Bump Visibility:summary" : __autoBumpVisibilitySummary,
+			"layout:section:Transform:summary" : __transformSummary,
+			"layout:section:Shading:summary" : __shadingSummary,
+			"layout:section:Subdivision:summary" : __subdivisionSummary,
+			"layout:section:Curves:summary" : __curvesSummary,
+			"layout:section:Points:summary" : __pointsSummary,
+			"layout:section:Volume:summary" : __volumeSummary,
+			"layout:section:Toon:summary" : __toonSummary,
 
-		],
+		},
 
 	}
 

@@ -246,24 +246,24 @@ Gaffer.Metadata.registerNode(
 
 		# Sections
 
-		"options" : [
+		"options" : {
 
-			"layout:section:Rendering:summary", __renderingSummary,
-			"layout:section:Sampling:summary", __samplingSummary,
-			"layout:section:Adaptive Sampling:summary", __adaptiveSamplingSummary,
-			"layout:section:Interactive Rendering:summary", __interactiveRenderingSummary,
-			"layout:section:Ray Depth:summary", __rayDepthSummary,
-			"layout:section:Subdivision:summary", __subdivisionSummary,
-			"layout:section:Texturing:summary", __texturingSummary,
-			"layout:section:Features:summary", __featuresSummary,
-			"layout:section:Search Paths:summary", __searchPathsSummary,
-			"layout:section:Error Handling:summary", __errorHandlingSummary,
-			"layout:section:Logging:summary", __loggingSummary,
-			"layout:section:Statistics:summary", __statisticsSummary,
-			"layout:section:Licensing:summary", __licensingSummary,
-			"layout:section:GPU:summary", __gpuSummary,
+			"layout:section:Rendering:summary" : __renderingSummary,
+			"layout:section:Sampling:summary" : __samplingSummary,
+			"layout:section:Adaptive Sampling:summary" : __adaptiveSamplingSummary,
+			"layout:section:Interactive Rendering:summary" : __interactiveRenderingSummary,
+			"layout:section:Ray Depth:summary" : __rayDepthSummary,
+			"layout:section:Subdivision:summary" : __subdivisionSummary,
+			"layout:section:Texturing:summary" : __texturingSummary,
+			"layout:section:Features:summary" : __featuresSummary,
+			"layout:section:Search Paths:summary" : __searchPathsSummary,
+			"layout:section:Error Handling:summary" : __errorHandlingSummary,
+			"layout:section:Logging:summary" : __loggingSummary,
+			"layout:section:Statistics:summary" : __statisticsSummary,
+			"layout:section:Licensing:summary" : __licensingSummary,
+			"layout:section:GPU:summary" : __gpuSummary,
 
-		],
+		},
 
 	}
 

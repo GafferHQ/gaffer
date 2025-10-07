@@ -54,21 +54,21 @@ Gaffer.Metadata.registerNode(
 
 		# Parameters specific to Arnold's "light_blocker" shader
 
-		"parameters.shader" : [
+		"parameters.shader" : {
 
-			"description",
+			"description" :
 			"""
 			Shader to be used for the light_blocker filter. UVs are only
 			available if the geometry type is set to "box". Shading will need
 			to be based on P otherwise.
 			""",
 
-		],
+		},
 
-		"parameters.density" : [
+		"parameters.density" : {
 
-			"userDefault", 1
+			"userDefault" : 1
 
-		],
+		},
 	}
 )
