@@ -49,18 +49,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"displayFilter" : [
+		"displayFilter" : {
 
-			"description",
+			"description" :
 			"""
 			The display filter to be assigned. This should be connected to the
 			output of a RenderManShader node containing a display filter.
 			""",
 
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
 	}
 

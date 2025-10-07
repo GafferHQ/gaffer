@@ -80,12 +80,12 @@ Gaffer.Metadata.registerNode(
 
 		# Sections
 
-		"attributes" : [
+		"attributes" : {
 
-			"layout:section:Visibility:summary", __visibilitySummary,
-			"layout:section:Shading:summary", __shadingSummary,
+			"layout:section:Visibility:summary" : __visibilitySummary,
+			"layout:section:Shading:summary" : __shadingSummary,
 
-		],
+		},
 
 	}
 

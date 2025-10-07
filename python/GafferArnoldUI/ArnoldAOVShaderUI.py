@@ -51,14 +51,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"optionSuffix" : [
+		"optionSuffix" : {
 
-			"description",
+			"description" :
 			"""
 			This suffix defines where the aov shader is stored in the render options. If you use
 			an existing suffix, you will overwrite instead of creating a new AOV shader.
 			""",
-		],
+		},
 
 	}
 )

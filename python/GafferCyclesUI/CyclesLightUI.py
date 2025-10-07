@@ -43,44 +43,44 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters.*" : [
+		"parameters.*" : {
 
 			# Most light parameters are not connectable.
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
 		# Metadata for "virtual" parameters that don't exist
 		# in the Cycles API, and therefore won't have metadata
 		# provided via CyclesShaderUI.
 
-		"parameters.exposure" : [
+		"parameters.exposure" : {
 
-			"nodule:type", ""
+			"nodule:type" : ""
 
-		],
+		},
 
-		"parameters.width" : [
+		"parameters.width" : {
 
-			"nodule:type", ""
+			"nodule:type" : ""
 
-		],
+		},
 
-		"parameters.height" : [
+		"parameters.height" : {
 
-			"nodule:type", ""
+			"nodule:type" : ""
 
-		],
+		},
 
-		"parameters.normalize" : [
+		"parameters.normalize" : {
 
-			"nodule:type", ""
+			"nodule:type" : ""
 
-		],
+		},
 
-		"parameters.is_sphere" : [
+		"parameters.is_sphere" : {
 
-			"description",
+			"description" :
 			"""
 			Treat the light as a sphere. Disable to avoid
 			sharp boundaries when the light intersects with
@@ -92,7 +92,7 @@ Gaffer.Metadata.registerNode(
 			> earlier.
 			""",
 
-		],
+		},
 
 	}
 
