@@ -139,7 +139,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 
 		/// Protected constructor for use by derived classes. The `name` argument
 		/// will be returned verbatim by the `name()` method.
-		Inspector( const Gaffer::ConstPlugPtr &target, const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope );
+		Inspector( const std::vector<Gaffer::PlugPtr> &targets, const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope );
 
 		Gaffer::EditScope *targetEditScope() const;
 
@@ -213,6 +213,9 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 	private :
 
 		void inspectHistoryWalk( const GafferScene::SceneAlgo::History *history, Result *result ) const;
+		void plugDirtied( Gaffer::Plug *plug );
+		void plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug );
+		void nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node );
 		void editScopeInputChanged( const Gaffer::Plug *plug );
 
 		/// Utility class representing the history of the property in a
@@ -266,7 +269,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 
 		};
 
-		const Gaffer::ConstPlugPtr m_target;
+		const std::vector<Gaffer::PlugPtr> m_targets;
 		const std::string m_type;
 		const std::string m_name;
 		const Gaffer::PlugPtr m_editScope;

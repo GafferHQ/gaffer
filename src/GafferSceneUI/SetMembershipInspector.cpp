@@ -231,17 +231,10 @@ SetMembershipInspector::SetMembershipInspector(
 	const GafferScene::ScenePlugPtr &scene,
 	const Gaffer::PlugPtr &editScope,
 	IECore::InternedString setName
-) :
-Inspector( scene, "setMembership", setName.string(), editScope ),
-m_scene( scene ),
-m_setName( setName )
+)
+	:	Inspector( { scene->setPlug() }, "setMembership", setName.string(), editScope ),
+		m_scene( scene ), m_setName( setName )
 {
-	m_scene->node()->plugDirtiedSignal().connect(
-		boost::bind( &SetMembershipInspector::plugDirtied, this, ::_1 )
-	);
-
-	Metadata::plugValueChangedSignal().connect( boost::bind( &SetMembershipInspector::plugMetadataChanged, this, ::_3, ::_4 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &SetMembershipInspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
 }
 
 GafferScene::SceneAlgo::History::ConstPtr SetMembershipInspector::history() const
@@ -413,52 +406,5 @@ Inspector::DisableEditFunctionOrFailure SetMembershipInspector::disableEditFunct
 		] () {
 			return ::editSetMembership( plug.get(), setName.string(), path, EditScopeAlgo::SetMembership::Unchanged );
 		};
-	}
-}
-
-void SetMembershipInspector::plugDirtied( Gaffer::Plug *plug )
-{
-	if( plug == m_scene->setPlug() )
-	{
-		dirtiedSignal()( this );
-	}
-}
-
-void SetMembershipInspector::plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug )
-{
-	if( !plug )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-	nodeMetadataChanged( key, plug->node() );
-}
-
-void SetMembershipInspector::nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node )
-{
-	if( !node )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-
-	EditScope *scope = targetEditScope();
-	if( !scope )
-	{
-		return;
-	}
-
-	if(
-		MetadataAlgo::readOnlyAffectedByChange( scope, node, key ) ||
-		( MetadataAlgo::readOnlyAffectedByChange( key ) && scope->isAncestorOf( node ) )
-	)
-	{
-		// Might affect `EditScopeAlgo::setMembershipReadOnlyReason()`
-		// which we call in `acquireEditFunction()`.
-		/// \todo Can we ditch the signal processing and call `setMembershipReadOnlyReason()`
-		/// just-in-time from `editable()`? In the past that wasn't possible
-		/// because editability changed the appearance of the UI, but it isn't
-		/// doing that currently.
-		dirtiedSignal()( this );
 	}
 }

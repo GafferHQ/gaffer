@@ -256,9 +256,27 @@ void edit( Gaffer::ValuePlug *plug, const IECore::Object *value )
 
 IE_CORE_DEFINERUNTIMETYPED( Inspector )
 
-Inspector::Inspector( const Gaffer::ConstPlugPtr &target, const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope )
-	:	m_target( target ), m_type( type ), m_name( name ), m_editScope( editScope )
+Inspector::Inspector( const std::vector<Gaffer::PlugPtr> &targets, const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope )
+	:	m_targets( targets ), m_type( type ), m_name( name ), m_editScope( editScope )
 {
+	assert( !targets.empty() );
+	for( const auto &target : targets )
+	{
+		// Check all targets are on the same node, as assumed by `plugDirtied()` and
+		// `HistoryPath::cancellationSubject()`.
+		if( target->node() != targets.front()->node() )
+		{
+			throw IECore::Exception( fmt::format( "Targets {} and {} are not on the same node", target->fullName(), targets.front()->fullName() ) );
+		}
+	}
+
+	m_targets.front()->node()->plugDirtiedSignal().connect(
+		boost::bind( &Inspector::plugDirtied, this, ::_1 )
+	);
+
+	Metadata::plugValueChangedSignal().connect( boost::bind( &Inspector::plugMetadataChanged, this, ::_3, ::_4 ) );
+	Metadata::nodeValueChangedSignal().connect( boost::bind( &Inspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
+
 	if( editScope && editScope->node() )
 	{
 		editScope->node()->plugInputChangedSignal().connect(
@@ -573,6 +591,54 @@ Gaffer::EditScope *Inspector::targetEditScope() const
 			return runTimeCast<EditScope>( plug->node() );
 		}
 	);
+}
+
+
+void Inspector::plugDirtied( Gaffer::Plug *plug )
+{
+	if( std::find( m_targets.begin(), m_targets.end(), plug ) != m_targets.end() )
+	{
+		dirtiedSignal()( this );
+	}
+}
+
+void Inspector::plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug )
+{
+	if( !plug )
+	{
+		// Assume readOnly metadata is only registered on instances.
+		return;
+	}
+	nodeMetadataChanged( key, plug->node() );
+}
+
+void Inspector::nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node )
+{
+	if( !node )
+	{
+		// Assume readOnly metadata is only registered on instances.
+		return;
+	}
+
+	EditScope *scope = targetEditScope();
+	if( !scope )
+	{
+		return;
+	}
+
+	if(
+		MetadataAlgo::readOnlyAffectedByChange( scope, node, key ) ||
+		( MetadataAlgo::readOnlyAffectedByChange( key ) && scope->isAncestorOf( node ) )
+	)
+	{
+		// Might affect `EditScopeAlgo::*ReadOnlyReason()` methods which we
+		// expect derived classes to be calling.
+		/// \todo Can we ditch the signal processing and call `attributeEditReadOnlyReason()`
+		/// just-in-time from `editable()`? In the past that wasn't possible
+		/// because editability changed the appearance of the UI, but it isn't
+		/// doing that currently.
+		dirtiedSignal()( this );
+	}
 }
 
 void Inspector::editScopeInputChanged( const Gaffer::Plug *plug )
@@ -921,7 +987,7 @@ PathPtr Inspector::HistoryPath::copy() const
 
 const Gaffer::Plug *Inspector::HistoryPath::cancellationSubject() const
 {
-	return m_historyProvider->inspector->m_target.get();
+	return m_historyProvider->inspector->m_targets[0].get();
 }
 
 void Inspector::HistoryPath::doChildren( std::vector<PathPtr> &children, const Canceller *canceller) const

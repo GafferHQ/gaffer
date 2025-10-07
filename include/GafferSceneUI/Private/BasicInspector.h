@@ -78,7 +78,6 @@ class GAFFERSCENEUI_API BasicInspector : public Inspector
 		// Logically part of constructor, but in a separate function to avoid
 		// bloating the template.
 		void init();
-		void plugDirtied( Gaffer::Plug *plug );
 
 		const Gaffer::ValuePlugPtr m_plug;
 		using ValueFunction = std::function<IECore::ConstObjectPtr( const Gaffer::Plug * )>;

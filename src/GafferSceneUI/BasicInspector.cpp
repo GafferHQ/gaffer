@@ -131,10 +131,6 @@ void BasicInspector::init()
 	{
 		throw IECore::Exception( fmt::format( "Plug \"{}\" is not a child of a ScenePlug", m_plug->fullName() ) );
 	}
-
-	m_plug->node()->plugDirtiedSignal().connect(
-		boost::bind( &BasicInspector::plugDirtied, this, ::_1 )
-	);
 }
 
 GafferScene::SceneAlgo::History::ConstPtr BasicInspector::history() const
@@ -157,12 +153,4 @@ IECore::ConstObjectPtr BasicInspector::value( const GafferScene::SceneAlgo::Hist
 	/// appropriate canceller for us before calling `value()`?
 	Context::Scope scope( history->context.get() );
 	return m_valueFunction( history->scene->getChild<ValuePlug>( m_plug->getName() ) );
-}
-
-void BasicInspector::plugDirtied( Gaffer::Plug *plug )
-{
-	if( plug == m_plug )
-	{
-		dirtiedSignal()( this );
-	}
 }
