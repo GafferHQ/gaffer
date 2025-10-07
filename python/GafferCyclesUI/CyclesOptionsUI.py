@@ -332,22 +332,22 @@ Gaffer.Metadata.registerNode(
 
 		# Sections
 
-		"options" : [
+		"options" : {
 
-			"layout:section:Session:summary", __sessionSummary,
-			"layout:section:Scene:summary", __sceneSummary,
-			"layout:section:Sampling:summary", __samplingSummary,
-			"layout:section:Path-Guiding:summary", __pathGuidingSummary,
-			"layout:section:Ray Depth:summary", __rayDepthSummary,
-			"layout:section:Volumes:summary", __volumesSummary,
-			"layout:section:Caustics:summary", __causticsSummary,
-			"layout:section:Subdivision:summary", __subdivisionSummary,
-			"layout:section:Film:summary", __filmSummary,
-			"layout:section:Denoising:summary", __denoisingSummary,
-			"layout:section:Background:summary", __backgroundSummary,
-			"layout:section:Log:summary", __logSummary,
+			"layout:section:Session:summary" : __sessionSummary,
+			"layout:section:Scene:summary" : __sceneSummary,
+			"layout:section:Sampling:summary" : __samplingSummary,
+			"layout:section:Path-Guiding:summary" : __pathGuidingSummary,
+			"layout:section:Ray Depth:summary" : __rayDepthSummary,
+			"layout:section:Volumes:summary" : __volumesSummary,
+			"layout:section:Caustics:summary" : __causticsSummary,
+			"layout:section:Subdivision:summary" : __subdivisionSummary,
+			"layout:section:Film:summary" : __filmSummary,
+			"layout:section:Denoising:summary" : __denoisingSummary,
+			"layout:section:Background:summary" : __backgroundSummary,
+			"layout:section:Log:summary" : __logSummary,
 
-		],
+		},
 
 	}
 )
