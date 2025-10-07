@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import functools
 import string
 
 import IECore
@@ -477,6 +478,37 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		tree.setContexts( [ context, context ] )
 
 		assertExpectedCalls( 0 ) # Path not valid, so no inspection
+
+	def testConcurrentTrees( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["sphere"] = GafferScene.Sphere()
+
+		script["attributes"] = GafferScene.StandardAttributes()
+		for plug in Gaffer.Plug.Range( script["attributes"]["attributes"] ) :
+			plug["enabled"].setValue( True )
+
+		context = Gaffer.Context()
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/sphere" )
+
+		for i in range( 0, 10 ) :
+
+			trees = []
+			paths = []
+			for i in range( 0, 100 ) :
+				trees.append( _GafferSceneUI._SceneInspector.InspectorTree( script["attributes"]["out"], [ context, context ], None ) )
+				paths.append( _GafferSceneUI._SceneInspector.InspectorPath( trees[-1], "/" ) )
+
+			def usePath( canceller, path ) :
+
+				path.children()
+
+			tasks = []
+			for path in paths :
+				tasks.append( Gaffer.BackgroundTask( script["attributes"]["out"], functools.partial( usePath, path = path ) ) )
+
+			for task in tasks :
+				task.wait()
 
 if __name__ == "__main__":
 	unittest.main()

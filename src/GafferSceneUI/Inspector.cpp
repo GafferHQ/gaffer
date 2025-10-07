@@ -269,20 +269,6 @@ Inspector::Inspector( const std::vector<Gaffer::PlugPtr> &targets, const std::st
 			throw IECore::Exception( fmt::format( "Targets {} and {} are not on the same node", target->fullName(), targets.front()->fullName() ) );
 		}
 	}
-
-	m_targets.front()->node()->plugDirtiedSignal().connect(
-		boost::bind( &Inspector::plugDirtied, this, ::_1 )
-	);
-
-	Metadata::plugValueChangedSignal().connect( boost::bind( &Inspector::plugMetadataChanged, this, ::_3, ::_4 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &Inspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
-
-	if( editScope && editScope->node() )
-	{
-		editScope->node()->plugInputChangedSignal().connect(
-			boost::bind( &Inspector::editScopeInputChanged, this, ::_1 )
-		);
-	}
 }
 
 const std::string &Inspector::type() const
@@ -359,7 +345,32 @@ Inspector::ResultPtr Inspector::inspect() const
 
 Inspector::InspectorSignal &Inspector::dirtiedSignal()
 {
-	return m_dirtiedSignal;
+	if( !m_dirtiedSignal )
+	{
+		m_dirtiedSignal.emplace();
+
+		// Connect to signals that allow us to emit `m_dirtiedSignal` when
+		// necessary. We delay doing this until `dirtiedSignal()` is first
+		// accessed for the sake of the SceneInspector. The SceneInspector
+		// constructs Inspectors from background tasks, where connecting to
+		// signals is not allowed, but it fortunately doesn't use
+		// `dirtiedSignal()`.
+
+		m_targets.front()->node()->plugDirtiedSignal().connect(
+			boost::bind( &Inspector::plugDirtied, this, ::_1 )
+		);
+
+		Metadata::plugValueChangedSignal().connect( boost::bind( &Inspector::plugMetadataChanged, this, ::_3, ::_4 ) );
+		Metadata::nodeValueChangedSignal().connect( boost::bind( &Inspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
+
+		if( m_editScope && m_editScope->node() )
+		{
+			m_editScope->node()->plugInputChangedSignal().connect(
+				boost::bind( &Inspector::editScopeInputChanged, this, ::_1 )
+			);
+		}
+	}
+	return *m_dirtiedSignal;
 }
 
 void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *history, Result *result ) const

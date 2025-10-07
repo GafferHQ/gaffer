@@ -273,7 +273,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RunTimeTyped, public Gaffer::
 		const std::string m_type;
 		const std::string m_name;
 		const Gaffer::PlugPtr m_editScope;
-		InspectorSignal m_dirtiedSignal;
+		std::optional<InspectorSignal> m_dirtiedSignal;
 
 		// So we can access HistoryPath.
 		friend void GafferSceneUIModule::bindInspector();
