@@ -404,9 +404,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"images" : [
+		"images" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the list of images currently
 			stored in the catalogue.
@@ -417,28 +417,28 @@ Gaffer.Metadata.registerNode(
 			here.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"imageIndex" : [
+		"imageIndex" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the index of the currently
 			selected image. This forms the output
 			from the catalogue node.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.CatalogueUI.ImageListing",
-			"label", "",
-			"layout:section", "Images",
+			"plugValueWidget:type" : "GafferSceneUI.CatalogueUI.ImageListing",
+			"label" : "",
+			"layout:section" : "Images",
 
-		],
+		},
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			Used to distinguish between catalogues, so that when
 			multiple catalogues exist, it is possible to send a
@@ -447,25 +447,25 @@ Gaffer.Metadata.registerNode(
 			from the renderer output with the value of this plug.
 			""",
 
-		],
+		},
 
-		"directory" : [
+		"directory" : {
 
-			"description",
+			"description" :
 			"""
 			The directory where completed renders
 			are saved. This allows them to remain
 			in the catalogue for the next session.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", False,
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : False,
 
-		],
+		},
 
-		"imageNames" : [
+		"imageNames" : {
 
-			"description",
+			"description" :
 			"""
 			Output containing all the names of the images in the Catalogue.
 			Possible uses include :
@@ -474,9 +474,9 @@ Gaffer.Metadata.registerNode(
 			- Making a ContactSheet using the Collect mode and a CatalogueSelect.
 			""",
 
-			"layout:section", "Advanced"
+			"layout:section" : "Advanced"
 
-		],
+		},
 
 	},
 

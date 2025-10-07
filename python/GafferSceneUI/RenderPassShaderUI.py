@@ -67,38 +67,38 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"renderer" : [
+		"renderer" : {
 
-			"description",
+			"description" :
 			"""
 			The renderer the shader should affect. Shaders assigned to a specific
 			renderer will take precedence over shaders assigned to "All" when
 			rendering with that renderer.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"presetNames", __rendererPresetNames,
-			"presetValues", __rendererPresetValues,
+			"presetNames" : __rendererPresetNames,
+			"presetValues" : __rendererPresetValues,
 
-		],
+		},
 
-		"usage" : [
+		"usage" : {
 
-			"description",
+			"description" :
 			"""
 			How the shader is to be used.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"shader" : [
+		"shader" : {
 
-			"layout:index", -1,
+			"layout:index" : -1,
 
-		],
+		},
 
 	}
 

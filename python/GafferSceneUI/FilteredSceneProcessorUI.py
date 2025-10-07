@@ -60,21 +60,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used to control which parts of the scene are
 			processed. A Filter node should be connected here.
 			""",
 
-			"layout:section", "Filter",
-			"noduleLayout:section", "right",
-			"layout:index", -3, # Just before the enabled plug,
-			"nodule:type", "GafferUI::StandardNodule",
-			"plugValueWidget:type", "GafferSceneUI.FilterPlugValueWidget",
+			"layout:section" : "Filter",
+			"noduleLayout:section" : "right",
+			"layout:index" : -3, # Just before the enabled plug,
+			"nodule:type" : "GafferUI::StandardNodule",
+			"plugValueWidget:type" : "GafferSceneUI.FilterPlugValueWidget",
 
-		],
+		},
 
 	},
 

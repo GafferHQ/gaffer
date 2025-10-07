@@ -58,9 +58,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shuffles" : [
+		"shuffles" : {
 
-			"description",
+			"description" :
 			"""
 			The attributes to be shuffled - arbitrary numbers of attributes may be shuffled
 			via the source/destination plugs. The deleteSource plug may be used to remove the
@@ -68,7 +68,7 @@ Gaffer.Metadata.registerNode(
 			each shuffle should replace already written destination data with the same name.
 			""",
 
-		],
+		},
 
 	}
 

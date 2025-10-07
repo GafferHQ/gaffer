@@ -55,71 +55,71 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"type" : [
+		"type" : {
 
-			"description",
+			"description" :
 			"""
 			The type of object to produce. May be a SpherePrimitive or a Mesh.
 			""",
 
-			"preset:Primitive", GafferScene.Sphere.Type.Primitive,
-			"preset:Mesh", GafferScene.Sphere.Type.Mesh,
+			"preset:Primitive" : GafferScene.Sphere.Type.Primitive,
+			"preset:Mesh" : GafferScene.Sphere.Type.Mesh,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"radius" : [
+		"radius" : {
 
-			"description",
+			"description" :
 			"""
 			Radius of the sphere.
 			""",
 
-		],
+		},
 
-		"zMin" : [
+		"zMin" : {
 
-			"description",
+			"description" :
 			"""
 			Limits the extent of the sphere along the lower pole.
 			Valid values are in the range [-1,1] and should always
 			be less than zMax.
 			""",
 
-		],
+		},
 
-		"zMax" : [
+		"zMax" : {
 
-			"description",
+			"description" :
 			"""
 			Limits the extent of the sphere along the upper pole.
 			Valid values are in the range [-1,1] and should always
 			be greater than zMin.
 			""",
 
-		],
+		},
 
-		"thetaMax" : [
+		"thetaMax" : {
 
-			"description",
+			"description" :
 			"""
 			Limits the extent of the sphere around the pole axis.
 			Valid values are in the range [0,360].
 			""",
 
-		],
+		},
 
-		"divisions" : [
+		"divisions" : {
 
-			"description",
+			"description" :
 			"""
 			Controls tesselation of the sphere when type is Mesh.
 			""",
 
-			"layout:activator", "typeIsMesh",
+			"layout:activator" : "typeIsMesh",
 
-		],
+		},
 
 	}
 

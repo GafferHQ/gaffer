@@ -54,16 +54,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"object" : [
+		"object" : {
 
-			"description",
+			"description" :
 			"""
 			The object to be placed in the output scene.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
 	}
 

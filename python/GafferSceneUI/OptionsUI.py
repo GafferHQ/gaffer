@@ -56,47 +56,47 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"options" : [
+		"options" : {
 
-			"description",
+			"description" :
 			"""
 			The options to be applied - arbitrary numbers of user defined options may be added
 			as children of this plug via the user interface, or using the CompoundDataPlug API via
 			python.
 			""",
 
-			"compoundDataPlugValueWidget:editable", False,
+			"compoundDataPlugValueWidget:editable" : False,
 
-		],
+		},
 
-		"options.*" : [
+		"options.*" : {
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-			"description", lambda plug : __optionMetadata( plug, "description" ),
-			"label", lambda plug : __optionMetadata( plug, "label" ),
-			"layout:section", lambda plug : __optionMetadata( plug, "layout:section" ),
+			"description" : lambda plug : __optionMetadata( plug, "description" ),
+			"label" : lambda plug : __optionMetadata( plug, "label" ),
+			"layout:section" : lambda plug : __optionMetadata( plug, "layout:section" ),
 
-		],
+		},
 
-		"options.*.value" : [
+		"options.*.value" : {
 
-			"plugValueWidget:type", lambda plug : __optionMetadata( plug, "plugValueWidget:type" ),
-			"presetNames", lambda plug : __optionMetadata( plug, "presetNames" ),
-			"presetValues", lambda plug : __optionMetadata( plug, "presetValues" ),
-			"presetsPlugValueWidget:allowCustom", lambda plug : __optionMetadata( plug, "presetsPlugValueWidget:allowCustom" ),
-			"path:leaf", lambda plug : __optionMetadata( plug, "path:leaf" ),
-			"path:valid", lambda plug : __optionMetadata( plug, "path:valid" ),
-			"fileSystemPath:extensions", lambda plug : __optionMetadata( plug, "fileSystemPath:extensions" ),
-			"fileSystemPath:extensionsLabel", lambda plug : __optionMetadata( plug, "fileSystemPath:extensionsLabel" ),
-			"scenePathPlugValueWidget:setNames", lambda plug : __optionMetadata( plug, "scenePathPlugValueWidget:setNames" ),
-			"scenePathPlugValueWidget:setsLabel", lambda plug : __optionMetadata( plug, "scenePathPlugValueWidget:setsLabel" ),
+			"plugValueWidget:type" : lambda plug : __optionMetadata( plug, "plugValueWidget:type" ),
+			"presetNames" : lambda plug : __optionMetadata( plug, "presetNames" ),
+			"presetValues" : lambda plug : __optionMetadata( plug, "presetValues" ),
+			"presetsPlugValueWidget:allowCustom" : lambda plug : __optionMetadata( plug, "presetsPlugValueWidget:allowCustom" ),
+			"path:leaf" : lambda plug : __optionMetadata( plug, "path:leaf" ),
+			"path:valid" : lambda plug : __optionMetadata( plug, "path:valid" ),
+			"fileSystemPath:extensions" : lambda plug : __optionMetadata( plug, "fileSystemPath:extensions" ),
+			"fileSystemPath:extensionsLabel" : lambda plug : __optionMetadata( plug, "fileSystemPath:extensionsLabel" ),
+			"scenePathPlugValueWidget:setNames" : lambda plug : __optionMetadata( plug, "scenePathPlugValueWidget:setNames" ),
+			"scenePathPlugValueWidget:setsLabel" : lambda plug : __optionMetadata( plug, "scenePathPlugValueWidget:setsLabel" ),
 
-		],
+		},
 
-		"extraOptions" : [
+		"extraOptions" : {
 
-			"description",
+			"description" :
 			"""
 			An additional set of options to be added. Arbitrary numbers
 			of options may be specified within a single `IECore.CompoundObject`,
@@ -111,11 +111,11 @@ Gaffer.Metadata.registerNode(
 			is taken.
 			""",
 
-			"plugValueWidget:type", "",
-			"layout:section", "Extra",
-			"nodule:type", "",
+			"plugValueWidget:type" : "",
+			"layout:section" : "Extra",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

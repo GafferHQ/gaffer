@@ -368,31 +368,31 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"label", "",
+			"label" : "",
 
-		],
+		},
 
-		"attribute" : [
+		"attribute" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"layout:width", 100,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"layout:width" : 100,
 
-		],
+		},
 
-		"section" : [
+		"section" : {
 
-			"plugValueWidget:type", "GafferSceneUI.LightEditor._SectionPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.LightEditor._SectionPlugValueWidget",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 130,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width" : 130,
 
-		],
+		},
 
 	}
 

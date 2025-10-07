@@ -55,25 +55,25 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"names" : (
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			Space separated list of set names to be removed.
 			""",
 
-			"ui:scene:acceptsSetNames", True,
+			"ui:scene:acceptsSetNames" : True,
 
-		),
+		},
 
-		"invertNames" : (
+		"invertNames" : {
 
-			"description",
+			"description" :
 			"""
 			When on, matching names are kept, and non-matching names are removed.
 			""",
 
-		),
+		},
 
 	},
 

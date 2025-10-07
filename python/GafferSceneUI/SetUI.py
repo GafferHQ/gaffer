@@ -88,9 +88,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			Create mode creates a new set containing only the
 			specified paths. If a set with the same name already
@@ -105,17 +105,17 @@ Gaffer.Metadata.registerNode(
 			is done.
 			""",
 
-			"preset:Create", GafferScene.Set.Mode.Create,
-			"preset:Add", GafferScene.Set.Mode.Add,
-			"preset:Remove", GafferScene.Set.Mode.Remove,
+			"preset:Create" : GafferScene.Set.Mode.Create,
+			"preset:Add" : GafferScene.Set.Mode.Add,
+			"preset:Remove" : GafferScene.Set.Mode.Remove,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the set that will be created or edited. Multiple sets
 			may be created or modified by entering their names separated by
@@ -123,24 +123,24 @@ Gaffer.Metadata.registerNode(
 			be modified.
 			""",
 
-			"ui:scene:acceptsSetName", True,
+			"ui:scene:acceptsSetName" : True,
 
-		],
+		},
 
-		"setVariable" : [
+		"setVariable" : {
 
-			"description",
+			"description" :
 			"""
 			A context variable created to pass the name of the set
 			being processed to the nodes connected to the `filter`
 			plug. This can be used to vary the filter for each set.
 			""",
 
-		],
+		},
 
-		"paths" : [
+		"paths" : {
 
-			"description",
+			"description" :
 			"""
 			The paths to be added to or removed from the set.
 
@@ -150,19 +150,19 @@ Gaffer.Metadata.registerNode(
 			invalid sets.
 			""",
 
-			"vectorDataPlugValueWidget:dragPointer", "objects",
-			"layout:visibilityActivator", "pathsInUse",
+			"vectorDataPlugValueWidget:dragPointer" : "objects",
+			"layout:visibilityActivator" : "pathsInUse",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			Defines the locations to be added to or removed from the set.
 			""",
 
-		],
+		},
 
 	}
 

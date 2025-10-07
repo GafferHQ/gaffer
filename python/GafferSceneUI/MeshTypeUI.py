@@ -61,24 +61,24 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"meshType" : [
+		"meshType" : {
 
-			"description",
+			"description" :
 			"""
 			The interpolation type to apply to the mesh.
 			""",
 
-			"preset:Unchanged", "",
-			"preset:Polygon", "linear",
-			"preset:Subdivision Surface", "catmullClark",
+			"preset:Unchanged" : "",
+			"preset:Polygon" : "linear",
+			"preset:Subdivision Surface" : "catmullClark",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"calculatePolygonNormals" : [
+		"calculatePolygonNormals" : {
 
-			"description",
+			"description" :
 			"""
 			Causes new vertex normals to be calculated for
 			polygon meshes. Has no effect for subdivision
@@ -87,11 +87,11 @@ Gaffer.Metadata.registerNode(
 			represented as primitive variables named "N".
 			""",
 
-		],
+		},
 
-		"overwriteExistingNormals" : [
+		"overwriteExistingNormals" : {
 
-			"description",
+			"description" :
 			"""
 			By default, vertex normals will only be calculated for
 			polygon meshes which don't already have them. Turning
@@ -99,11 +99,11 @@ Gaffer.Metadata.registerNode(
 			meshes which had them already.
 			""",
 
-		],
+		},
 
-		"interpolateBoundary" : [
+		"interpolateBoundary" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies which parts of mesh boundaries are forced to exactly meet the boundary.
 			Without this forcing, a subdivision surface will naturally shrink back from the boundary as it
@@ -115,21 +115,21 @@ Gaffer.Metadata.registerNode(
 			providing the split meshes with a border of shared polygons in order to get continuous tangents.
 			""",
 
-			"preset:Unchanged", "",
-			"preset:None", IECoreScene.MeshPrimitive.interpolateBoundaryNone,
-			"preset:Edge Only", IECoreScene.MeshPrimitive.interpolateBoundaryEdgeOnly,
-			"preset:Edge And Corner", IECoreScene.MeshPrimitive.interpolateBoundaryEdgeAndCorner,
+			"preset:Unchanged" : "",
+			"preset:None" : IECoreScene.MeshPrimitive.interpolateBoundaryNone,
+			"preset:Edge Only" : IECoreScene.MeshPrimitive.interpolateBoundaryEdgeOnly,
+			"preset:Edge And Corner" : IECoreScene.MeshPrimitive.interpolateBoundaryEdgeAndCorner,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"faceVaryingLinearInterpolation" : [
+		"faceVaryingLinearInterpolation" : {
 
 			# This name is so long it's getting cropped ... better to lose the end than the start.
-			"label", "Face Varying Linear Interp..",
+			"label" : "Face Varying Linear Interp..",
 
-			"description",
+			"description" :
 			"""
 			Specifies where face varying primitive variables should use a simple linear interpolation instead
 			of being smoothed.
@@ -142,33 +142,33 @@ Gaffer.Metadata.registerNode(
 			https://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html#schemes-and-options
 			""",
 
-			"preset:Unchanged", "",
-			"preset:None", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationNone,
-			"preset:Corners Only", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersOnly,
-			"preset:Corners Plus 1", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus1,
-			"preset:Corners Plus 2", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus2,
-			"preset:Boundaries", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationBoundaries,
-			"preset:All", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationAll,
+			"preset:Unchanged" : "",
+			"preset:None" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationNone,
+			"preset:Corners Only" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersOnly,
+			"preset:Corners Plus 1" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus1,
+			"preset:Corners Plus 2" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus2,
+			"preset:Boundaries" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationBoundaries,
+			"preset:All" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationAll,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"triangleSubdivisionRule" : [
+		"triangleSubdivisionRule" : {
 
-			"description",
+			"description" :
 			"""
 			Option to use a non-standard `Smooth` subdivision rule that provides slightly better results
 			at triangular faces in Catmull-Clark meshes than the standard Catmull-Clark algorithm.
 			""",
 
-			"preset:Unchanged", "",
-			"preset:CatmullClark", IECoreScene.MeshPrimitive.triangleSubdivisionRuleCatmullClark,
-			"preset:Smooth", IECoreScene.MeshPrimitive.triangleSubdivisionRuleSmooth,
+			"preset:Unchanged" : "",
+			"preset:CatmullClark" : IECoreScene.MeshPrimitive.triangleSubdivisionRuleCatmullClark,
+			"preset:Smooth" : IECoreScene.MeshPrimitive.triangleSubdivisionRuleSmooth,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
 	}
 

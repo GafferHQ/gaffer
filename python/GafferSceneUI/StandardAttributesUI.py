@@ -88,13 +88,13 @@ Gaffer.Metadata.registerNode(
 
 		# sections
 
-		"attributes" : [
+		"attributes" : {
 
-			"layout:section:Attributes:summary", __attributesSummary,
-			"layout:section:Instancing:summary", __instancingSummary,
-			"layout:section:Motion Blur:summary", __motionBlurSummary,
+			"layout:section:Attributes:summary" : __attributesSummary,
+			"layout:section:Instancing:summary" : __instancingSummary,
+			"layout:section:Motion Blur:summary" : __motionBlurSummary,
 
-		],
+		},
 
 	}
 

@@ -55,29 +55,29 @@ Gaffer.Metadata.registerNode(
 	"ui:spreadsheet:selectorContextVariablePlug", "suffixContextVariable",
 
 	plugs = {
-		"primitiveVariables" : [
+		"primitiveVariables" : {
 
-			"description",
+			"description" :
 			"""
 			A match pattern for which primitive variables will be copied.
 			"""
 
-		],
+		},
 
-		"suffixes" : [
+		"suffixes" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the new suffixes to add to copies of the target
 			primitive variables.  The new suffixed variables will be
 			copied from different Contexts.
 			""",
 
-		],
+		},
 
-		"suffixContextVariable" : [
+		"suffixContextVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The name of a Context Variable that is set to the current
 			suffix when evaluating the input object. This can be used
@@ -89,11 +89,11 @@ Gaffer.Metadata.registerNode(
 			different times.
 			""",
 
-		],
+		},
 
-		"requireVariation" : [
+		"requireVariation" : {
 
-			"description",
+			"description" :
 			"""
 			If true, newly copied primitive variables will only be created
 			if the source object is differs in some of the suffix Contexts.
@@ -102,7 +102,7 @@ Gaffer.Metadata.registerNode(
 			original primitive variables ).
 			"""
 
-		],
+		},
 
 	}
 

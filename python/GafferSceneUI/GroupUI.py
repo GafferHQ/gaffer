@@ -56,37 +56,37 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the group to be created. All the input
 			scenes will be parented under this group.
 			""",
 
-		],
+		},
 
-		"sets" : [
+		"sets" : {
 
-			"description",
+			"description" :
 			"""
 			A list of sets to include the group in. The
 			names should be separated by spaces.
 			""",
 
-			"layout:divider", True,
+			"layout:divider" : True,
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			The transform for the group itself. This will be
 			inherited by the objects parented under it.
 			""",
 
-		],
+		},
 
 	}
 

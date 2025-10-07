@@ -736,73 +736,73 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"label", "",
+			"label" : "",
 
-		],
+		},
 
-		"tabGroup" : [
+		"tabGroup" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"layout:width", 100,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"layout:width" : 100,
 
-		],
+		},
 
-		"section" : [
+		"section" : {
 
-			"plugValueWidget:type", "GafferSceneUI.RenderPassEditor._SectionPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.RenderPassEditor._SectionPlugValueWidget",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 130,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width" : 130,
 
-		],
+		},
 
-		"displayGrouped" : [
+		"displayGrouped" : {
 
-			"description",
+			"description" :
 			"""
 			Click to toggle between list and grouped display of render passes.
 			""",
 
-			"layout:section", "Filter",
-			"layout:divider", True,
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:image:on", "pathListingTree.png",
-			"togglePlugValueWidget:image:off", "pathListingList.png",
+			"layout:section" : "Filter",
+			"layout:divider" : True,
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "pathListingTree.png",
+			"togglePlugValueWidget:image:off" : "pathListingList.png",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			Filters the displayed render passes. Accepts standard wildcards such as `*` and `?`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "search",
-			"togglePlugValueWidget:defaultToggleValue", "*",
-			"stringPlugValueWidget:placeholderText", "Filter...",
-			"layout:section", "Filter",
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix" : "search",
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"layout:section" : "Filter",
 
-		],
+		},
 
-		"hideDisabled" : [
+		"hideDisabled" : {
 
-			"description",
+			"description" :
 			"""
 			Hides render passes that are disabled for rendering.
 			""",
 
-			"boolPlugValueWidget:labelVisible", True,
-			"layout:section", "Filter",
+			"boolPlugValueWidget:labelVisible" : True,
+			"layout:section" : "Filter",
 
-		],
+		},
 
 	}
 

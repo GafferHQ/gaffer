@@ -104,13 +104,13 @@ Gaffer.Metadata.registerNode(
 
 		# Section summaries
 
-		"attributes" : [
+		"attributes" : {
 
-			"layout:section:Drawing:summary", __drawingSummary,
-			"layout:section:Points Primitives:summary", __pointsPrimitivesSummary,
-			"layout:section:Curves Primitives:summary", __curvesPrimitivesSummary,
+			"layout:section:Drawing:summary" : __drawingSummary,
+			"layout:section:Points Primitives:summary" : __pointsPrimitivesSummary,
+			"layout:section:Curves Primitives:summary" : __curvesPrimitivesSummary,
 
-		],
+		},
 
 	}
 

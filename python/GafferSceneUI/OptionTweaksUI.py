@@ -92,51 +92,51 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"ignoreMissing" : [
+		"ignoreMissing" : {
 
-			"description",
+			"description" :
 			"""
 			Ignores tweaks targeting missing options. When off, missing options
 			cause the node to error.
 			"""
 
-		],
+		},
 
-		"tweaks" : [
+		"tweaks" : {
 
-			"description",
+			"description" :
 			"""
 			The tweaks to be made to the options. Arbitrary numbers of user defined
 			tweaks may be added as children of this plug via the user interface, or
 			using the OptionTweaks API via python.
 			""",
 
-			"layout:section", "Settings.Tweaks",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.OptionTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:section" : "Settings.Tweaks",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.OptionTweaksUI._TweaksFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"tweaks.*" : [
+		"tweaks.*" : {
 
-			"tweakPlugValueWidget:propertyType", "option",
+			"tweakPlugValueWidget:propertyType" : "option",
 
-		],
+		},
 
-		"tweaks.*.value" : [
+		"tweaks.*.value" : {
 
-			"description", functools.partial( __optionMetadata, name = "description" ),
-			"plugValueWidget:type", functools.partial( __optionMetadata, name = "plugValueWidget:type" ),
-			"presetsPlugValueWidget:allowCustom", functools.partial( __optionMetadata, name = "presetsPlugValueWidget:allowCustom" ),
-			"ui:scene:acceptsSetExpression", functools.partial( __optionMetadata, name = "ui:scene:acceptsSetExpression" ),
+			"description" : functools.partial( __optionMetadata, name = "description" ),
+			"plugValueWidget:type" : functools.partial( __optionMetadata, name = "plugValueWidget:type" ),
+			"presetsPlugValueWidget:allowCustom" : functools.partial( __optionMetadata, name = "presetsPlugValueWidget:allowCustom" ),
+			"ui:scene:acceptsSetExpression" : functools.partial( __optionMetadata, name = "ui:scene:acceptsSetExpression" ),
 
-			"presetNames", __optionMetadataPresetNames,
-			"presetValues", __optionMetadataPresetValues,
+			"presetNames" : __optionMetadataPresetNames,
+			"presetValues" : __optionMetadataPresetValues,
 
-		],
+		},
 
 	}
 )

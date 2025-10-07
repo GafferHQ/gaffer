@@ -58,43 +58,43 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parent" : [
+		"parent" : {
 
 			# Deliberately not documenting parent plug, so that
 			# it is given documentation more specific to each
 			# derived class.
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"layout:activator", "filterNotConnected",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"layout:activator" : "filterNotConnected",
 			# We'd prefer users to use the `filter` rather than the `parent` plug.
 			# Hide it if it isn't already being used (from a time before the introduction
 			# of the filter).
-			"layout:visibilityActivator", "parentInUse",
+			"layout:visibilityActivator" : "parentInUse",
 
-		],
+		},
 
-		"destination" : [
+		"destination" : {
 
 			# Deliberately not documenting destination plug, so that
 			# it is given documentation more specific to each
 			# derived class.
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"ui:spreadsheet:selectorValue", "${scene:path}",
-			"layout:index", -2,
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"ui:spreadsheet:selectorValue" : "${scene:path}",
+			"layout:index" : -2,
 
-		],
+		},
 
-		"copySourceAttributes" : [
+		"copySourceAttributes" : {
 
-			"description",
+			"description" :
 			"""
 			Copies attributes to newly created destination locations to match the attributes at the source location.
 			""",
-			"layout:activator", "nonDefaultDestination",
-			"layout:index", -1,
+			"layout:activator" : "nonDefaultDestination",
+			"layout:index" : -1,
 
-		],
+		},
 
 	}
 )

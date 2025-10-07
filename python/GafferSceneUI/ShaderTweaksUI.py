@@ -60,26 +60,26 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shader" : [
+		"shader" : {
 
-			"description",
+			"description" :
 			"""
 			The type of shader to modify. This is actually the name
 			of an attribute which contains the shader network.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetsPlugValueWidget:allowCustom", True,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetsPlugValueWidget:allowCustom" : True,
 
-			"preset:None", "",
+			"preset:None" : "",
 
-			"layout:index", 0
+			"layout:index" : 0
 
-		],
+		},
 
-		"localise" : [
+		"localise" : {
 
-			"description",
+			"description" :
 			"""
 			Turn on to allow location-specific tweaks to be made to inherited
 			shaders. Shaders will be localised to locations matching the
@@ -87,24 +87,24 @@ Gaffer.Metadata.registerNode(
 			remain untouched.
 			""",
 
-			"layout:index", 1
-		],
+			"layout:index" : 1
+		},
 
-		"ignoreMissing" : [
+		"ignoreMissing" : {
 
-			"description",
+			"description" :
 			"""
 			Ignores tweaks targeting missing parameters. When off, missing parameters
 			cause the node to error.
 			""",
 
-			"layout:index", 2
+			"layout:index" : 2
 
-		],
+		},
 
-		"tweaks" : [
+		"tweaks" : {
 
-			"description",
+			"description" :
 			"""
 			The tweaks to be made to the parameters of the shader.
 			Arbitrary numbers of user defined tweaks may be
@@ -112,29 +112,29 @@ Gaffer.Metadata.registerNode(
 			interface, or using the ShaderTweaks API via python.
 			""",
 
-			"layout:section", "Settings.Tweaks",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.ShaderTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:section" : "Settings.Tweaks",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.ShaderTweaksUI._TweaksFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderTweaksUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferSceneUI.ShaderTweaksUI.PlugAdder",
 
-		],
+		},
 
-		"tweaks.*" : [
+		"tweaks.*" : {
 
 			# ClosurePlugs are visible by default, because the only thing you can do with them is make
 			# connections. Other plugs can be shown individually using PlugAdder above.
-			"noduleLayout:visible", lambda plug : isinstance( plug["value"], GafferScene.ClosurePlug ),
-			"tweakPlugValueWidget:propertyType", "parameter",
-			"plugValueWidget:type", "GafferSceneUI.ShaderTweaksUI._ShaderTweakPlugValueWidget",
+			"noduleLayout:visible" : lambda plug : isinstance( plug["value"], GafferScene.ClosurePlug ),
+			"tweakPlugValueWidget:propertyType" : "parameter",
+			"plugValueWidget:type" : "GafferSceneUI.ShaderTweaksUI._ShaderTweakPlugValueWidget",
 
-		],
+		},
 
 	}
 

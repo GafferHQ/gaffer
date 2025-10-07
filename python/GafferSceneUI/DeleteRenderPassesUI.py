@@ -52,25 +52,25 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			Defines how the names listed in the `names` plug
 			are treated. Delete mode deletes the listed names.
 			Keep mode keeps the listed names, deleting all others.
 			""",
 
-			"preset:Delete", GafferScene.DeleteRenderPasses.Mode.Delete,
-			"preset:Keep", GafferScene.DeleteRenderPasses.Mode.Keep,
+			"preset:Delete" : GafferScene.DeleteRenderPasses.Mode.Delete,
+			"preset:Keep" : GafferScene.DeleteRenderPasses.Mode.Keep,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of render passes to be deleted (or kept
 			if the mode is set to Keep). Names should be separated
@@ -78,9 +78,9 @@ Gaffer.Metadata.registerNode(
 			wildcards.
 			""",
 
-			"ui:scene:acceptsRenderPassNames", True,
+			"ui:scene:acceptsRenderPassNames" : True,
 
-		],
+		},
 
 	}
 

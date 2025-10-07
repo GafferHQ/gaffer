@@ -80,15 +80,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"active" : [
+		"active" : {
 
-			"boolPlugValueWidget:image", "gafferSceneUISelectionTool.png"
+			"boolPlugValueWidget:image" : "gafferSceneUISelectionTool.png"
 
-		],
+		},
 
-		"selectMode" : [
+		"selectMode" : {
 
-			"description",
+			"description" :
 			"""
 			The standard mode selects locations based on an `id` layer with a corresponding manifest.
 			`Instance` mode instead picks instance ids based on an `instanceID` layer ( this will only
@@ -96,16 +96,16 @@ Gaffer.Metadata.registerNode(
 			renderer, but do set up special instance id information ).
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Standard", "standard",
-			"preset:Instance", "instance",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Standard" : "standard",
+			"preset:Instance" : "instance",
 
-			"label", "Select",
+			"label" : "Select",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 80,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 80,
 
-		],
+		},
 
 	}
 

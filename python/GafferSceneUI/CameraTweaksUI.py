@@ -70,19 +70,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"ignoreMissing" : [
+		"ignoreMissing" : {
 
-			"description",
+			"description" :
 			"""
 			Ignores tweaks that would normally cause an error if the input
 			parameter was missing.
 			""",
 
-		],
+		},
 
-		"tweaks" : [
+		"tweaks" : {
 
-			"description",
+			"description" :
 			"""
 			Add a camera tweak.
 
@@ -91,18 +91,18 @@ Gaffer.Metadata.registerNode(
 			interface, or via the CameraTweaks API in Python.
 			""",
 
-			"layout:section", "Settings.Tweaks",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.CameraTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:section" : "Settings.Tweaks",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.CameraTweaksUI._TweaksFooter",
+			"layout:customWidget:footer:index" : -1,
 
-		],
+		},
 
-		"tweaks.*" : [
+		"tweaks.*" : {
 
-			"tweakPlugValueWidget:propertyType", "parameter",
+			"tweakPlugValueWidget:propertyType" : "parameter",
 
-		],
+		},
 
 	}
 

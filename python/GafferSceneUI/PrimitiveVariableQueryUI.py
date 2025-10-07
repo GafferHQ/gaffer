@@ -201,33 +201,33 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query the primitive variable from.
 			""",
 
-		],
+		},
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The location within the scene to query the primitive variable at.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", ""
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"nodule:type" : ""
 
-		],
+		},
 
-		"queries" : [
+		"queries" : {
 
-			"description",
+			"description" :
 			"""
 			The primitive variables to be queried - arbitrary numbers of primitive
 			variables may be added as children of this plug via the user interface,
@@ -236,132 +236,132 @@ Gaffer.Metadata.registerNode(
 			default value to use if the primitive variable can not be retrieved.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.PrimitiveVariableQueryUI._PrimitiveVariableQueryFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.PrimitiveVariableQueryUI._PrimitiveVariableQueryFooter",
+			"layout:customWidget:footer:index" : -1,
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"queries.*" : [
+		"queries.*" : {
 
-			"description",
+			"description" :
 			"""
 			A pair of primitive variable name to query and default value.
 			""",
 
-		],
+		},
 
-		"queries.*.name" : [
+		"queries.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable to query.
 			""",
 
-		],
+		},
 
-		"queries.*.value" : [
+		"queries.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			The value to output if the primitive variable does not exist.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.4,
-			"noduleLayout:customGadget:addButton:gadgetType", "",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.4,
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description",
+			"description" :
 			"""
 			The result of the query.
 			""",
 
-			"label", functools.partial( __getLabel, parentPlug = ""),
+			"label" : functools.partial( __getLabel, parentPlug = ""),
 
-			"plugValueWidget:type", "GafferSceneUI.PrimitiveVariableQueryUI._OutputWidget",
+			"plugValueWidget:type" : "GafferSceneUI.PrimitiveVariableQueryUI._OutputWidget",
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 
-		],
+		},
 
-		"out.*.exists" : [
+		"out.*.exists" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs true if the primitive variable exists, otherwise false.
 			""",
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "exists" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
-		],
+		},
 
-		"out.*.value" : [
+		"out.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the value of the primitive variable, or the default value if
 			the primitive variable does not exist.
 			""",
 
-		],
+		},
 
-		"out.*.value..." : [
+		"out.*.value..." : {
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "values" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "values" ),
 
-		],
+		},
 
-		"out.*.type" : [
+		"out.*.type" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the type of the primitive variable data, or empty string if
 			the primitive variable does not exist.
 			""",
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "type" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "type" ),
 
-		],
+		},
 
-		"out.*.interpolation" : [
+		"out.*.interpolation" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the interpolation of the primitive variable, or `Invalid` if
 			the primitive variable does not exist.
 			""",
 
-			"preset:Invalid", IECoreScene.PrimitiveVariable.Interpolation.Invalid,
-			"preset:Constant", IECoreScene.PrimitiveVariable.Interpolation.Constant,
-			"preset:Uniform", IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-			"preset:Vertex", IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			"preset:Varying", IECoreScene.PrimitiveVariable.Interpolation.Varying,
-			"preset:FaceVarying", IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
+			"preset:Invalid" : IECoreScene.PrimitiveVariable.Interpolation.Invalid,
+			"preset:Constant" : IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			"preset:Uniform" : IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			"preset:Vertex" : IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			"preset:Varying" : IECoreScene.PrimitiveVariable.Interpolation.Varying,
+			"preset:FaceVarying" : IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "interpolation" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "interpolation" ),
 
-		],
+		},
 
 	}
 )

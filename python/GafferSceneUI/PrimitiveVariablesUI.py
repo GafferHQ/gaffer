@@ -52,9 +52,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"primitiveVariables" : [
+		"primitiveVariables" : {
 
-			"description",
+			"description" :
 			"""
 			The primitive variables to be applied - arbitrary numbers of user
 			defined primitive variables may be added as children of this plug
@@ -62,7 +62,7 @@ Gaffer.Metadata.registerNode(
 			python.
 			""",
 
-		]
+		}
 
 	}
 

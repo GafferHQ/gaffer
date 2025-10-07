@@ -50,92 +50,92 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query the bounds for.
 			"""
 
-		],
+		},
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The location within the scene to query the bound at.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", ""
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"nodule:type" : ""
 
-		],
+		},
 
-		"space" : [
+		"space" : {
 
-			"description",
+			"description" :
 			"""
 			The space to query the bound in.
 			""",
 
-			"preset:Local", GafferScene.BoundQuery.Space.Local,
-			"preset:World", GafferScene.BoundQuery.Space.World,
-			"preset:Relative", GafferScene.BoundQuery.Space.Relative,
+			"preset:Local" : GafferScene.BoundQuery.Space.Local,
+			"preset:World" : GafferScene.BoundQuery.Space.World,
+			"preset:Relative" : GafferScene.BoundQuery.Space.Relative,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"nodule:type", ""
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"nodule:type" : ""
+		},
 
-		"relativeLocation" : [
+		"relativeLocation" : {
 
-			"description",
+			"description" :
 			"""
 			The location within the scene to use for relative space mode.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"layout:activator", "spaceIsRelative",
-			"nodule:type", ""
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"layout:activator" : "spaceIsRelative",
+			"nodule:type" : ""
 
-		],
+		},
 
-		"bound" : [
+		"bound" : {
 
-			"description",
+			"description" :
 			"""
 			Bounding box at specified location in specified space.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
-		"center" : [
+		"center" : {
 
-			"description",
+			"description" :
 			"""
 			Center point vector of the requested bound.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
-		"size" : [
+		"size" : {
 
-			"description",
+			"description" :
 			"""
 			Size vector of the requested bound.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 	}
 )

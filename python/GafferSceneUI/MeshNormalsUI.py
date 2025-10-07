@@ -53,21 +53,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"interpolation" : [
-			"description",
+		"interpolation" : {
+			"description" :
 			"""
 			The interpolation of the normal primitive variable we are creating. Affects the shape of the resulting normals, because Uniform ( Per-Face ) normals are inherently faceted, whereas Vertex normals are always smooth.
 			""",
 
-			"preset:Uniform (Faceted)", IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-			"preset:Vertex (Smooth)", IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			"preset:FaceVarying (Mixed)", IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
+			"preset:Uniform (Faceted)" : IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			"preset:Vertex (Smooth)" : IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			"preset:FaceVarying (Mixed)" : IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
 
-		"weighting" : [
-			"description",
+		"weighting" : {
+			"description" :
 			"""
 			How to weight the multiple faces that contribute to the normal of a vertex.
 			"Equal" averages all faces connected to the vertex - simple to compute, but low quality.
@@ -75,40 +75,40 @@ Gaffer.Metadata.registerNode(
 			"Area" may give good results on hard edge models with tight chamfers and large flat faces.
 			""",
 
-			"preset:Equal", IECoreScene.MeshAlgo.NormalWeighting.Equal,
-			"preset:Angle", IECoreScene.MeshAlgo.NormalWeighting.Angle,
-			"preset:Area", IECoreScene.MeshAlgo.NormalWeighting.Area,
+			"preset:Equal" : IECoreScene.MeshAlgo.NormalWeighting.Equal,
+			"preset:Angle" : IECoreScene.MeshAlgo.NormalWeighting.Angle,
+			"preset:Area" : IECoreScene.MeshAlgo.NormalWeighting.Area,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"layout:activator", "weighting",
-		],
+			"layout:activator" : "weighting",
+		},
 
-		"thresholdAngle" : [
-			"description",
+		"thresholdAngle" : {
+			"description" :
 			"""
 			Used to decide whether edges are smooth or sharp when generating a normal primvar with FaceVarying
 			interpolation. FaceVertices with normals that differ by less than this angle will be averaged
 			together into a smooth normal.
 			""",
 
-			"layout:activator", "thresholdAngle",
-		],
+			"layout:activator" : "thresholdAngle",
+		},
 
-		"position" : [
-			"description",
+		"position" : {
+			"description" :
 			"""
 			The name of the position primitive variable that drives everything.
 			""",
-			"divider", True,
-		],
+			"divider" : True,
+		},
 
-		"normal" : [
-			"description",
+		"normal" : {
+			"description" :
 			"""
 			The name of the normal primitive variable to output.
 			""",
-		]
+		}
 	}
 
 )

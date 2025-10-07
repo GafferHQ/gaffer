@@ -67,43 +67,43 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"from" : [
+		"from" : {
 
-			"description",
+			"description" :
 			"""
 			The ancestor to isolate the objects from. Only locations below
 			this will be removed.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 
-		],
+		},
 
-		"keepLights" : [
+		"keepLights" : {
 
-			"description",
+			"description" :
 			"""
 			Keeps all lights and light filters, regardless of other settings.
 			This is useful when isolating an asset but wanting to render it
 			using a light rig located elsewhere in the scene.
 			""",
 
-		],
+		},
 
-		"keepCameras" : [
+		"keepCameras" : {
 
-			"description",
+			"description" :
 			"""
 			Keeps all cameras, regardless of other settings. This is
 			useful when isolating an asset but wanting to render it
 			through a camera located elsewhere in the scene.
 			""",
 
-		],
+		},
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"description",
+			"description" :
 			"""
 			By default, the bounding boxes of ancestor locations are
 			automatically updated when children are removed. This can
@@ -112,7 +112,7 @@ Gaffer.Metadata.registerNode(
 			contents at each location, but may be bigger than necessary.
 			""",
 
-		],
+		},
 
 	}
 

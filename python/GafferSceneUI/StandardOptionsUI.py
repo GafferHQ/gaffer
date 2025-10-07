@@ -134,15 +134,15 @@ Gaffer.Metadata.registerNode(
 
 		# Section summaries
 
-		"options" : [
+		"options" : {
 
-			"layout:section:Camera:summary", __cameraSummary,
-			"layout:section:Renderer:summary", __rendererSummary,
-			"layout:section:Render Set:summary", __renderSetSummary,
-			"layout:section:Motion Blur:summary", __motionBlurSummary,
-			"layout:section:Statistics:summary", __statisticsSummary,
+			"layout:section:Camera:summary" : __cameraSummary,
+			"layout:section:Renderer:summary" : __rendererSummary,
+			"layout:section:Render Set:summary" : __renderSetSummary,
+			"layout:section:Motion Blur:summary" : __motionBlurSummary,
+			"layout:section:Statistics:summary" : __statisticsSummary,
 
-		],
+		},
 
 	}
 

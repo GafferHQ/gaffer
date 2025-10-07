@@ -66,9 +66,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"paths" : [
+		"paths" : {
 
-			"description",
+			"description" :
 			"""
 			The list of paths to the locations to be matched by the filter.
 			A path is formed by a sequence of names separated by `/`, and
@@ -91,18 +91,18 @@ Gaffer.Metadata.registerNode(
 			 - `/.../house` matches `/house`, `/street/house` and `/city/street/house`.
 			""",
 
-			"nodule:type", "",
-			"ui:scene:acceptsPaths", True,
+			"nodule:type" : "",
+			"ui:scene:acceptsPaths" : True,
 
-			"vectorDataPlugValueWidget:dragPointer", "objects",
+			"vectorDataPlugValueWidget:dragPointer" : "objects",
 
-			"plugValueWidget:type", "GafferSceneUI.PathFilterUI._PathsPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.PathFilterUI._PathsPlugValueWidget",
 
-		],
+		},
 
-		"roots" : [
+		"roots" : {
 
-			"description",
+			"description" :
 			"""
 			An optional filter input used to provide multiple root locations
 			which the `paths` are relative to. This can be useful when working
@@ -111,9 +111,9 @@ Gaffer.Metadata.registerNode(
 			are treated as being relative to `/`, the true scene root.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
 	}
 

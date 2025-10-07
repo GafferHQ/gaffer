@@ -55,26 +55,26 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of attributes to be removed. Names should be
 			separated by spaces and can use Gaffer's standard wildcards.
 			""",
 
-			"ui:scene:acceptsAttributeNames", True,
+			"ui:scene:acceptsAttributeNames" : True,
 
-		],
+		},
 
-		"invertNames" : [
+		"invertNames" : {
 
-			"description",
+			"description" :
 			"""
 			When on, matching names are kept, and non-matching names are removed.
 			""",
 
-		],
+		},
 
 	}
 

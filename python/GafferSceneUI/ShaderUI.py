@@ -101,123 +101,123 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the shader being represented. This should
 			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
 			""",
 
-			"label", "Shader",
-			"readOnly", True,
-			"layout:section", "",
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferSceneUI.ShaderUI._ShaderNamePlugValueWidget",
+			"label" : "Shader",
+			"readOnly" : True,
+			"layout:section" : "",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferSceneUI.ShaderUI._ShaderNamePlugValueWidget",
 
-		],
+		},
 
-		"type" : [
+		"type" : {
 
-			"description",
+			"description" :
 			"""
 			The type of the shader being represented. This should
 			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
 			""",
 
-			"readOnly", True,
-			"layout:section", "",
-			"nodule:type", "",
-			"plugValueWidget:type", "",
+			"readOnly" : True,
+			"layout:section" : "",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"parameters" : [
+		"parameters" : {
 
-			"description",
+			"description" :
 			"""
 			Where the parameters for the shader are represented.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferSceneUI.ShaderUI.PlugAdder",
 
-		],
+		},
 
-		"parameters.*" : [
+		"parameters.*" : {
 
-			"label", functools.partial( __parameterMetadata, key = "label" ),
-			"description", functools.partial( __parameterMetadata, key = "description" ),
-			"layout:section", functools.partial( __parameterMetadata, key = "layout:section" ),
-			"layout:accessory", functools.partial( __parameterMetadata, key = "layout:accessory" ),
-			"layout:divider", functools.partial( __parameterMetadata, key = "layout:divider" ),
-			"plugValueWidget:type", functools.partial( __parameterMetadata, key = "plugValueWidget:type" ),
-			"presetNames", functools.partial( __parameterMetadata, key = "presetNames" ),
-			"presetValues", functools.partial( __parameterMetadata, key = "presetValues" ),
-			"nodule:type", functools.partial( __parameterMetadata, key = "nodule:type" ),
-			"noduleLayout:visible", functools.partial( __parameterMetadata, key = "noduleLayout:visible", shaderFallbackKey = "noduleLayout:defaultVisibility" ),
+			"label" : functools.partial( __parameterMetadata, key = "label" ),
+			"description" : functools.partial( __parameterMetadata, key = "description" ),
+			"layout:section" : functools.partial( __parameterMetadata, key = "layout:section" ),
+			"layout:accessory" : functools.partial( __parameterMetadata, key = "layout:accessory" ),
+			"layout:divider" : functools.partial( __parameterMetadata, key = "layout:divider" ),
+			"plugValueWidget:type" : functools.partial( __parameterMetadata, key = "plugValueWidget:type" ),
+			"presetNames" : functools.partial( __parameterMetadata, key = "presetNames" ),
+			"presetValues" : functools.partial( __parameterMetadata, key = "presetValues" ),
+			"nodule:type" : functools.partial( __parameterMetadata, key = "nodule:type" ),
+			"noduleLayout:visible" : functools.partial( __parameterMetadata, key = "noduleLayout:visible", shaderFallbackKey = "noduleLayout:defaultVisibility" ),
 
-		],
+		},
 
-		"parameters.*.[rgbxyz]" : [
+		"parameters.*.[rgbxyz]" : {
 
-			"noduleLayout:label", __parameterComponentNoduleLabel,
+			"noduleLayout:label" : __parameterComponentNoduleLabel,
 
-		],
+		},
 
-		"parameters.*..." : [
+		"parameters.*..." : {
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
+			"noduleLayout:section" : "left",
 
-			"userDefault", functools.partial( __parameterMetadata, key = "userDefault" ),
+			"userDefault" : functools.partial( __parameterMetadata, key = "userDefault" ),
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The output from the shader.
 			""",
 
-			"noduleLayout:section", "right",
-			"plugValueWidget:type", "",
+			"noduleLayout:section" : "right",
+			"plugValueWidget:type" : "",
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferSceneUI.ShaderUI.PlugAdder",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"noduleLayout:section", "right",
+			"noduleLayout:section" : "right",
 
-		],
+		},
 
-		"attributeSuffix" : [
+		"attributeSuffix" : {
 
-			"description",
+			"description" :
 			"""
 			Suffix for the attribute used for shader assignment.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "",
-			"layout:section", "",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "",
+			"layout:section" : "",
 
-		],
+		},
 
 	}
 

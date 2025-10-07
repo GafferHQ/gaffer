@@ -50,18 +50,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The filters to be combined. Any number
 			of inputs may be added here.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"plugValueWidget:type", "",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
 	}
 

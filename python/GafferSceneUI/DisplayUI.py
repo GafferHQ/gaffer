@@ -61,9 +61,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"port" : [
+		"port" : {
 
-			"description",
+			"description" :
 			"""
 			The port number on which to run the display server.
 			Outputs which specify this port number will appear
@@ -71,7 +71,7 @@ Gaffer.Metadata.registerNode(
 			port numbers to receive multiple images at once.
 			""",
 
-		],
+		},
 
 	}
 

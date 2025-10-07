@@ -50,18 +50,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shader" : [
+		"shader" : {
 
-			"description",
+			"description" :
 			"""
 			The shader to be assigned. This will be stored as an
 			option within the scene globals.
 			""",
 
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
 	}
 )

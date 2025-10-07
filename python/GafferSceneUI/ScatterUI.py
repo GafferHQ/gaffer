@@ -52,9 +52,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parent" : [
+		"parent" : {
 
-			"description",
+			"description" :
 			"""
 			The location of the mesh to scatter the
 			points over. The generated points will
@@ -65,44 +65,44 @@ Gaffer.Metadata.registerNode(
 			over.
 			""",
 
-		],
+		},
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name given to the object generated -
 			this will be placed under the parent in
 			the scene hierarchy.
 			""",
 
-		],
+		},
 
-		"density" : [
+		"density" : {
 
-			"description",
+			"description" :
 			"""
 			The number of points per unit area of the mesh,
 			measured in object space.
 			""",
 
-		],
+		},
 
-		"densityPrimitiveVariable" : [
+		"densityPrimitiveVariable" : {
 
-			"description",
+			"description" :
 			"""
 			A float primitive variable used to specify a varying
 			point density across the surface of the mesh. Multiplied
 			with the density setting above.
 			""",
 
-			"divider", True,
-		],
+			"divider" : True,
+		},
 
-		"referencePosition" : [
+		"referencePosition" : {
 
-			"description",
+			"description" :
 			"""
 			If you want to preserve the uv positions of the points while the mesh animates, you can
 			set up an alternate reference position primitive variable ( usually the same as P, but
@@ -110,11 +110,11 @@ Gaffer.Metadata.registerNode(
 			and therefore how many points each face receives.
 			""",
 
-		],
+		},
 
-		"uv" : [
+		"uv" : {
 
-			"description",
+			"description" :
 			"""
 			The UV set used to distribute points. The size of faces in 3D space is used to determine
 			the number of points on each face, so the UV set should not affect the overall look of
@@ -123,43 +123,43 @@ Gaffer.Metadata.registerNode(
 			space for the given UV set, you may encounter performance problems.
 			""",
 
-			"divider", True,
-		],
+			"divider" : True,
+		},
 
-		"primitiveVariables" : [
+		"primitiveVariables" : {
 
-			"description",
+			"description" :
 			"""
 			Primitive variables to sample from the source mesh and output on the generated points.
 			Supports a Gaffer match pattern, with multiple space seperated variable names, optionally
 			using `*` as a wildcard.
 			""",
 
-		],
+		},
 
-		"pointType" : [
+		"pointType" : {
 
-			"description",
+			"description" :
 			"""
 			The render type of the points. This defaults to
 			"gl:point" so that the points are rendered in a
 			lightweight manner in the viewport.
 			""",
 
-			"preset:GL Point", "gl:point",
-			"preset:Particle", "particle",
-			"preset:Sphere", "sphere",
-			"preset:Disk", "disk",
-			"preset:Patch", "patch",
-			"preset:Blobby", "blobby",
+			"preset:GL Point" : "gl:point",
+			"preset:Particle" : "particle",
+			"preset:Sphere" : "sphere",
+			"preset:Disk" : "disk",
+			"preset:Patch" : "patch",
+			"preset:Blobby" : "blobby",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"destination" : [
+		"destination" : {
 
-			"description",
+			"description" :
 			"""
 			The location where the points primitives will be placed in the output scene.
 			When the destination is evaluated, the `${scene:path}` variable holds
@@ -170,7 +170,7 @@ Gaffer.Metadata.registerNode(
 			> source mesh.
 			""",
 
-		],
+		},
 
 	}
 
