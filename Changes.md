@@ -15,12 +15,15 @@ Fixes
 - SceneInspector : The Globals tab no longer shows the A/B columns when only locations are being compared.
 - BoolWidget : Fixed label text styling when disabled.
 - Scene Editors : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
+- USDAttributes : Fixed unstable ordering of `kind` presets. These are now sorted to match the kind hierarchy.
+- CyclesShader : Fixed unstable ordering of parameter presets. These are now sorted alphabetically.
 
 API
 ---
 
 - Metadata : The `registerNode()` function now accepts dictionaries containing plug metadata. This should be preferred to the previous list-based values.
 - SceneInspector : Added `deregisterInspectors()` method.
+- KindAlgo : Added GafferUSD namespace with utility functions for dealing with kinds.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======

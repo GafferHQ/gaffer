@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,12 +34,36 @@
 #
 ##########################################################################
 
-from . import KindAlgo
+import collections
+import pxr.Kind
 
-__import__( "GafferScene" )
+def path( kind ) :
 
-from ._GafferUSD import *
-from ._PointInstancerAdaptor import _PointInstancerAdaptor
-from .PromotePointInstances import PromotePointInstances
+	result = []
+	while kind :
+		result.append( kind )
+		kind = pxr.Kind.Registry.GetBaseKind( kind )
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferUSD" )
+	result.reverse()
+	return result
+
+def topologicallySorted() :
+
+	derivedKinds = collections.defaultdict( set )
+
+	for kind in pxr.Kind.Registry.GetAllKinds() :
+		while kind :
+			baseKind = pxr.Kind.Registry.GetBaseKind( kind )
+			derivedKinds[baseKind].add( kind )
+			kind = baseKind
+
+	result = []
+	def walk( kind ) :
+
+		if kind :
+			result.append( kind )
+		for derivedKind in sorted( derivedKinds[kind] ) :
+			walk( derivedKind )
+
+	walk( "" )
+	return result

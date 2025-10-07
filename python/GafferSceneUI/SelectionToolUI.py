@@ -125,7 +125,7 @@ class SelectModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			assert( len( values ) == 1 )
 
 			if values[0] in modes :
-				self.__menuButton.setText( values[0].partition( "/" )[-1] )
+				self.__menuButton.setText( values[0].partition( "/" )[-1].lstrip() )
 			else :
 				self.__menuButton.setText( "Invalid" )
 
