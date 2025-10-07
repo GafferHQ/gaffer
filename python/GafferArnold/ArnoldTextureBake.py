@@ -294,8 +294,6 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# hash for the tasks being dispatched relies on the index file, which doesn't exist
 		# prior to dispatch.
 		self["__RenderDispatcher"] = GafferDispatch.PythonCommand()
-		if "isolated" in self["__RenderDispatcher"]["dispatcher"] :
-			self["__RenderDispatcher"]["dispatcher"].removeChild( self["__RenderDispatcher"]["dispatcher"]["isolated"] )
 		self["__RenderDispatcher"]["preTasks"][0].setInput( self["__CleanPreTasks"]["out"] )
 		self["__RenderDispatcher"]["command"].setValue( inspect.cleandoc(
 			"""
@@ -319,9 +317,11 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			d.dispatch( [ self.parent()["__CleanUpSwitch"] ] )
 			"""
 		) )
-		# Connect through the dispatch settings to the render dispatcher
+		# Connect through the dispatch settings to the render dispatcher. We loop through the
+		# children ourselves to handle `dispatcher` plugs with different child plugs.
 		# ( The image dispatcher runs much quicker, and should be OK using default settings )
-		self["__RenderDispatcher"]["dispatcher"].setInput( self["dispatcher"] )
+		for c in [ i for i in self["__RenderDispatcher"]["dispatcher"].children() if i.getName() in self["dispatcher"] ] :
+			c.setInput( self["dispatcher"][c.getName()] )
 
 		# Set up variables so the dispatcher knows that the render and image dispatches depend on
 		# the file paths ( in case they are varying in a wedge )
