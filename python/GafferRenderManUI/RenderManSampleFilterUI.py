@@ -49,18 +49,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"sampleFilter" : [
+		"sampleFilter" : {
 
-			"description",
+			"description" :
 			"""
 			The sample filter to be assigned. This should be connected to the
 			output of a RenderManShader node containing a sample filter.
 			""",
 
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
 	}
 
