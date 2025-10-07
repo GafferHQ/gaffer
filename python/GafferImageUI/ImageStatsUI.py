@@ -54,43 +54,43 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The input image to be analysed.
 			""",
 
-		],
+		},
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			The view to be analysed.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
-			"viewPlugValueWidget:allowUseCurrentContext", True,
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
+			"viewPlugValueWidget:allowUseCurrentContext" : True,
 
-		],
+		},
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the four channels to be analysed.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferImageUI.RGBAChannelsPlugValueWidget",
 
-		],
+		},
 
-		"areaSource" : [
+		"areaSource" : {
 
-			"description",
+			"description" :
 			"""
 			Where to source the area to be analysed. If this is
 			set to DataWindow, it will use the input's Data Window,
@@ -99,55 +99,55 @@ Gaffer.Metadata.registerNode(
 			the Area plug.
 			""",
 
-			"preset:Area", GafferImage.ImageStats.AreaSource.Area,
-			"preset:DataWindow", GafferImage.ImageStats.AreaSource.DataWindow,
-			"preset:DisplayWindow", GafferImage.ImageStats.AreaSource.DisplayWindow,
+			"preset:Area" : GafferImage.ImageStats.AreaSource.Area,
+			"preset:DataWindow" : GafferImage.ImageStats.AreaSource.DataWindow,
+			"preset:DisplayWindow" : GafferImage.ImageStats.AreaSource.DisplayWindow,
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"userDefault", GafferImage.ImageStats.AreaSource.DisplayWindow,
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"userDefault" : GafferImage.ImageStats.AreaSource.DisplayWindow,
 
-		],
+		},
 
-		"area" : [
+		"area" : {
 
-			"description",
+			"description" :
 			"""
 			The area of the image to be analysed.
 			This plug is only used if 'Area Source' is set to Area.
 			""",
 
-			"layout:activator", "areaSourceIsArea",
-			"userDefault", lambda plug : GafferImage.FormatPlug.getDefaultFormat( Gaffer.Context.current() ).getDisplayWindow()
+			"layout:activator" : "areaSourceIsArea",
+			"userDefault" : lambda plug : GafferImage.FormatPlug.getDefaultFormat( Gaffer.Context.current() ).getDisplayWindow()
 
-		],
+		},
 
-		"average" : [
+		"average" : {
 
-			"description",
+			"description" :
 			"""
 			The per-channel mean values computed from the input image region.
 			""",
 
-		],
+		},
 
-		"min" : [
+		"min" : {
 
-			"description",
+			"description" :
 			"""
 			The per-channel minimum values computed from the input image region.
 			""",
 
-		],
+		},
 
-		"max" : [
+		"max" : {
 
-			"description",
+			"description" :
 			"""
 			The per-channel maximum values computed from the input image region.
 			""",
 
-		],
+		},
 
 	}
 

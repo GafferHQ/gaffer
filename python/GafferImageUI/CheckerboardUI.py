@@ -56,66 +56,66 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The resolution and aspect ratio of the image.
 			""",
 
-		],
+		},
 
-		"colorA" : [
+		"colorA" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of half of the squares of the pattern.
 			""",
 
-		],
+		},
 
-		"colorB" : [
+		"colorB" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of the other half of the squares of the pattern.
 			""",
 
-		],
+		},
 
-		"size" : [
+		"size" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the squares in pixels. This can be varied independently
 			in the x and y directions.
 			""",
 
-		],
+		},
 
-		"layer" : [
+		"layer" : {
 
-			"description",
+			"description" :
 			"""
 			The layer to generate. The output channels will
 			be named ( layer.R, layer.G, layer.B and layer.A ).
 			""",
-			"stringPlugValueWidget:placeholderText", "[RGBA]",
-		],
+			"stringPlugValueWidget:placeholderText" : "[RGBA]",
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			A transformation applied to the entire checkerboard pattern.
 			The translate and pivot values are specified in pixels,
 			and the rotate value is specified in degrees.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Transform",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Transform",
 
-		],
+		},
 
 
 	}

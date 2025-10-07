@@ -50,22 +50,22 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"colorSource" : [
+		"colorSource" : {
 
-			"description",
+			"description" :
 			"""
 			This image ( which must be flat ) drives the color of the output image.
 			""",
 
-		],
-		"useColorSourceAlpha" : [
+		},
+		"useColorSourceAlpha" : {
 
-			"description",
+			"description" :
 			"""
 			If selected, adjusts the alpha of each deep sample so that the composited result will match
 			the alpha of colorSource.
 			""",
-		],
+		},
 
 	}
 

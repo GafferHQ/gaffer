@@ -48,16 +48,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shuffles" : [
+		"shuffles" : {
 
-			"description",
+			"description" :
 			"""
 			The definition of the shuffling to be performed - an
 			arbitrary number of metadata edits can be made by adding
 			ShufflePlugs as children of this plug.
 			""",
 
-		],
+		},
 
 	}
 

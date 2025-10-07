@@ -78,50 +78,50 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"inputColorSpace" : [
+		"inputColorSpace" : {
 
-			"description",
+			"description" :
 			"""
 			The colour space of the input image.
 			""",
 
-			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
-			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
-			"openColorIO:extraPresetNames", IECore.StringVectorData( [ "Working Space" ] ),
-			"openColorIO:extraPresetValues", IECore.StringVectorData( [ "" ] ),
+			"presetNames" : OpenColorIOTransformUI.colorSpacePresetNames,
+			"presetValues" : OpenColorIOTransformUI.colorSpacePresetValues,
+			"openColorIO:extraPresetNames" : IECore.StringVectorData( [ "Working Space" ] ),
+			"openColorIO:extraPresetValues" : IECore.StringVectorData( [ "" ] ),
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
 
-		"display" : [
+		"display" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the display to use. Defaults to the default display as
 			defined by the current OpenColorIO config.
 			""",
 
-			"presetNames", __displayPresetNames,
-			"presetValues", __displayPresetValues,
+			"presetNames" : __displayPresetNames,
+			"presetValues" : __displayPresetValues,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the view to use. Defaults to the default view for the
 			display, as defined by the current OpenColorIO config.
 			""",
 
-			"presetNames", __viewPresetNames,
-			"presetValues", __viewPresetValues,
+			"presetNames" : __viewPresetNames,
+			"presetValues" : __viewPresetValues,
 
-			"plugValueWidget:type", "GafferImageUI.DisplayTransformUI._ViewPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.DisplayTransformUI._ViewPlugValueWidget",
 
-		],
+		},
 
 	}
 

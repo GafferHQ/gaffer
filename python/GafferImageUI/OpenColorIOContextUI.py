@@ -60,100 +60,100 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"config" : [
+		"config" : {
 
-			"description",
+			"description" :
 			"""
 			The OpenColorIO config to use.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"config.enabled" : [
+		"config.enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables the `config.value` plug, allowing the OpenColorIO config
 			to be specified.
 			""",
 
-		],
+		},
 
-		"config.value" : [
+		"config.value" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the OpenColorIO config to be used.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetsPlugValueWidget:allowCustom", True,
-			"presetsPlugValueWidget:customWidgetType", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:valid", True,
-			"path:bookmarks", "openColorIOConfig",
-			"fileSystemPath:extensions", "ocio",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetsPlugValueWidget:allowCustom" : True,
+			"presetsPlugValueWidget:customWidgetType" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:valid" : True,
+			"path:bookmarks" : "openColorIOConfig",
+			"fileSystemPath:extensions" : "ocio",
 
-			"preset:$OCIO", "",
-			"preset:ACES 1.3 - CG Config", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1",
-			"preset:ACES 1.3 - Studio Config", "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1",
-			"preset:Legacy (Gaffer 1.2)", "${GAFFER_ROOT}/openColorIO/config.ocio",
+			"preset:$OCIO" : "",
+			"preset:ACES 1.3 - CG Config" : "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1",
+			"preset:ACES 1.3 - Studio Config" : "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1",
+			"preset:Legacy (Gaffer 1.2)" : "${GAFFER_ROOT}/openColorIO/config.ocio",
 
-		],
+		},
 
-		"workingSpace" : [
+		"workingSpace" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the color space in which Gaffer processes images.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"workingSpace.enabled" : [
+		"workingSpace.enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables the `workingSpace.value` plug, allowing the working space
 			to be specified.
 			""",
 
-		],
+		},
 
-		"workingSpace.value" : [
+		"workingSpace.value" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the working color space to be used.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetNames", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames,
-			"presetValues", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues,
-			"openColorIO:categories", "working-space",
-			"openColorIO:includeRoles", True,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetNames" : GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames,
+			"presetValues" : GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues,
+			"openColorIO:categories" : "working-space",
+			"openColorIO:includeRoles" : True,
 
-		],
+		},
 
-		"variables" : [
+		"variables" : {
 
-			"description",
+			"description" :
 			"""
 			Context variables used to customise the
 			[OpenColorIO context](https://opencolorio.readthedocs.io/en/latest/guides/authoring/overview.html#environment)
@@ -161,42 +161,42 @@ Gaffer.Metadata.registerNode(
 			"environment vars".
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Settings.Variables",
-			"nodule:type", "",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Settings.Variables",
+			"nodule:type" : "",
 
-			"layout:customWidget:footer:widgetType", "GafferImageUI.OpenColorIOContextUI._VariablesFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferImageUI.OpenColorIOContextUI._VariablesFooter",
+			"layout:customWidget:footer:index" : -1,
 
-		],
+		},
 
-		"variables.*" : [
+		"variables.*" : {
 
-			"deletable", True,
+			"deletable" : True,
 
-		],
+		},
 
-		"variables.*.name" : [
+		"variables.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the variable to be created.
 			""",
 
-		],
+		},
 
-		"variables.*.value" : [
+		"variables.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			The value to be given to the variable.
 			""",
 
-		],
+		},
 
-		"extraVariables" : [
+		"extraVariables" : {
 
-			"description",
+			"description" :
 			"""
 			An additional set of variables to be created. These are defined as
 			key/value pairs in an `IECore::CompoundData` object, which
@@ -207,10 +207,10 @@ Gaffer.Metadata.registerNode(
 			is taken.
 			""",
 
-			"layout:section", "Extra",
-			"nodule:type", "",
+			"layout:section" : "Extra",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

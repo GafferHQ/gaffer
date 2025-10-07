@@ -49,18 +49,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The input image data.
 			""",
 
-		],
+		},
 
-		"depthMode" : [
+		"depthMode" : {
 
-			"description",
+			"description" :
 			"""
 			Controls the contents of the output depth channels.  "Depth Range" outputs the
 			minimum and maximum depth values of any sample in the pixel as Z and ZBack.
@@ -68,13 +68,13 @@ Gaffer.Metadata.registerNode(
 			based on the alpha values of the samples.  "None" outputs no Z or ZBack channel.
 			""",
 
-			"preset:Depth Range", GafferImage.DeepToFlat.DepthMode.Range,
-			"preset:Filtered Depth", GafferImage.DeepToFlat.DepthMode.Filtered,
-			"preset:None", GafferImage.DeepToFlat.DepthMode.None_,
+			"preset:Depth Range" : GafferImage.DeepToFlat.DepthMode.Range,
+			"preset:Filtered Depth" : GafferImage.DeepToFlat.DepthMode.Filtered,
+			"preset:None" : GafferImage.DeepToFlat.DepthMode.None_,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
 	}
 

@@ -50,54 +50,54 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in.in0" : [
+		"in.in0" : {
 
-			"description",
+			"description" :
 			"""
 			The B input.
 			""",
 
-		],
+		},
 
-		"in.in1" : [
+		"in.in1" : {
 
-			"description",
+			"description" :
 			"""
 			The A input.
 			""",
 
-		],
+		},
 
-		"mask" : [
+		"mask" : {
 
-			"description",
+			"description" :
 			"""
 			The image which contains the mask channel.
 			""",
-			"noduleLayout:section", "right",
-		],
+			"noduleLayout:section" : "right",
+		},
 
-		"mix" : [
+		"mix" : {
 
-			"description",
+			"description" :
 			"""
 			Control the blend between the two input images.
 			0 to take first input, 1 to take second input.
 			Multiplied together with the mask.
 			""",
-		],
+		},
 
-		"maskChannel" : [
+		"maskChannel" : {
 
-			"description",
+			"description" :
 			"""
 			The channel which controls the blend.  Clamped between 0 and 1.
 			0 to take first input, 1 to take second input.
 			""",
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:imagePlugName", "mask",
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:imagePlugName" : "mask",
 
-		],
+		},
 
 	}
 

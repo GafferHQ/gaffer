@@ -55,37 +55,37 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"inputSpace" : [
+		"inputSpace" : {
 
-			"description",
+			"description" :
 			"""
 			The colour space of the input image.
 			""",
 
-			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
-			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
+			"presetNames" : OpenColorIOTransformUI.colorSpacePresetNames,
+			"presetValues" : OpenColorIOTransformUI.colorSpacePresetValues,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"openColorIO:extraPresetNames", IECore.StringVectorData( [ "Working Space" ] ),
-			"openColorIO:extraPresetValues", IECore.StringVectorData( [ "" ] ),
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"openColorIO:extraPresetNames" : IECore.StringVectorData( [ "Working Space" ] ),
+			"openColorIO:extraPresetValues" : IECore.StringVectorData( [ "" ] ),
 
-		],
+		},
 
-		"outputSpace" : [
+		"outputSpace" : {
 
-			"description",
+			"description" :
 			"""
 			The colour space of the output image.
 			""",
 
-			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
-			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
+			"presetNames" : OpenColorIOTransformUI.colorSpacePresetNames,
+			"presetValues" : OpenColorIOTransformUI.colorSpacePresetValues,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"openColorIO:extraPresetNames", IECore.StringVectorData( [ "Working Space" ] ),
-			"openColorIO:extraPresetValues", IECore.StringVectorData( [ "" ] ),
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"openColorIO:extraPresetNames" : IECore.StringVectorData( [ "Working Space" ] ),
+			"openColorIO:extraPresetValues" : IECore.StringVectorData( [ "" ] ),
 
-		]
+		}
 
 	}
 

@@ -48,42 +48,42 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"image" : [
+		"image" : {
 
-			"description",
+			"description" :
 			"""
 			The image to be sampled.
 			""",
 
-		],
+		},
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			The view to be sampled.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
-			"viewPlugValueWidget:allowUseCurrentContext", True,
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
+			"viewPlugValueWidget:allowUseCurrentContext" : True,
 
-		],
+		},
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the four channels to be sampled.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.RGBAChannelsPlugValueWidget",
 
-		],
+		},
 
-		"pixel" : [
+		"pixel" : {
 
-			"description",
+			"description" :
 			"""
 			The coordinates of the pixel to sample. These can have
 			fractional values and bilinear interpolation will be used
@@ -94,28 +94,28 @@ Gaffer.Metadata.registerNode(
 			at 0.5, 0.5.
 			""",
 
-		],
+		},
 
-		"interpolate" : [
+		"interpolate" : {
 
-			"description",
+			"description" :
 			"""
 			Turn on to blend with adjacent pixels when sampling away from the center of the pixel at 0.5, 0.5.
 			If off, you always sample exactly one pixel.
 			""",
 
-			"userDefault", False,
+			"userDefault" : False,
 
-		],
+		},
 
-		"color" : [
+		"color" : {
 
-			"description",
+			"description" :
 			"""
 			The sampled colour.
 			""",
 
-		]
+		}
 
 	}
 
