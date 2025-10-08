@@ -76,53 +76,53 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"tweaks.shutterType.name" : [
-			"readOnly", True,
-		],
+		"tweaks.shutterType.name" : {
+			"readOnly" : True,
+		},
 
-		"tweaks.shutterType.value" : [
+		"tweaks.shutterType.value" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Box", "box",
-			"preset:Triangle", "triangle",
-			"preset:Curve", "curve",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Box" : "box",
+			"preset:Triangle" : "triangle",
+			"preset:Curve" : "curve",
 
-		],
+		},
 
-		"tweaks.shutterCurve.name" : [
-			"readOnly", True,
-		],
+		"tweaks.shutterCurve.name" : {
+			"readOnly" : True,
+		},
 
-		"tweaks.rollingShutter.name" : [
-			"readOnly", True,
-		],
+		"tweaks.rollingShutter.name" : {
+			"readOnly" : True,
+		},
 
-		"tweaks.rollingShutter.value" : [
+		"tweaks.rollingShutter.value" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Off", "off",
-			"preset:Top", "top",
-			"preset:Bottom", "bottom",
-			"preset:Left", "left",
-			"preset:Right", "right",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Off" : "off",
+			"preset:Top" : "top",
+			"preset:Bottom" : "bottom",
+			"preset:Left" : "left",
+			"preset:Right" : "right",
 
-		],
+		},
 
-		"tweaks.rollingShutterDuration.name" : [
-			"readOnly", True,
-		],
+		"tweaks.rollingShutterDuration.name" : {
+			"readOnly" : True,
+		},
 
-		"tweaks.apertureBlades.name" : [
-			"readOnly", True,
-		],
+		"tweaks.apertureBlades.name" : {
+			"readOnly" : True,
+		},
 
-		"tweaks.apertureBladeCurvature.name" : [
-			"readOnly", True,
-		],
+		"tweaks.apertureBladeCurvature.name" : {
+			"readOnly" : True,
+		},
 
-		"tweaks.apertureRotation.name" : [
-			"readOnly", True,
-		],
+		"tweaks.apertureRotation.name" : {
+			"readOnly" : True,
+		},
 
 	}
 
