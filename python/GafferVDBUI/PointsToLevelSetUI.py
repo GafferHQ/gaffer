@@ -34,10 +34,10 @@
 #
 ##########################################################################
 
-import GafferUI
+import Gaffer
 import GafferVDB
 
-GafferUI.Metadata.registerNode(
+Gaffer.Metadata.registerNode(
 
 	GafferVDB.PointsToLevelSet,
 
@@ -50,9 +50,9 @@ GafferUI.Metadata.registerNode(
 
 	plugs = {
 
-		"width" : [
+		"width" : {
 
-			"description",
+			"description" :
 			"""
 			The name of a `float` primitive variable specifying the width of each point.
 			The primitive variable may have either `Vertex` or `Constant` interpolation.
@@ -62,30 +62,30 @@ GafferUI.Metadata.registerNode(
 			> the level set. Smaller points will be ignored, and reported as a warning.
 			"""
 
-		],
+		},
 
-		"widthScale" : [
+		"widthScale" : {
 
-			"description",
+			"description" :
 			"""
 			An additional multiplier on the width of each point.
 			"""
 
-		],
+		},
 
-		"useVelocity" : [
+		"useVelocity" : {
 
-			"description",
+			"description" :
 			"""
 			Enables the creation of trails behind the points, based
 			on the `velocity` primitive variable.
 			""",
 
-		],
+		},
 
-		"velocity" : [
+		"velocity" : {
 
-			"description",
+			"description" :
 			"""
 			The name of a `V3f` primitive variable specifying the velocity
 			of each point. Velocity is specified in local-space units per
@@ -93,47 +93,47 @@ GafferUI.Metadata.registerNode(
 			motion within a single frame.
 			""",
 
-			"layout:activator", "usingVelocity",
+			"layout:activator" : "usingVelocity",
 
-		],
+		},
 
-		"velocityScale" : [
+		"velocityScale" : {
 
-			"description",
+			"description" :
 			"""
 			An additional multiplier applied to the velocity of each point.
 			""",
 
-			"layout:activator", "usingVelocity",
+			"layout:activator" : "usingVelocity",
 
-		],
+		},
 
-		"grid" : [
+		"grid" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the level set grid to be created.
 			"""
 
-		],
+		},
 
-		"voxelSize" : [
+		"voxelSize" : {
 
-			"description",
+			"description" :
 			"""
 			Size of a voxel in the level set grid, specified in local space. Smaller voxel
 			sizes will increase resolution, but take more memory and computation time.
 			"""
-		],
+		},
 
-		"halfBandwidth" : [
+		"halfBandwidth" : {
 
-			"description",
+			"description" :
 			"""
 			Defines the exterior and interior width of the level set in voxel units.
 			"""
 
-		],
+		},
 
 	}
 
