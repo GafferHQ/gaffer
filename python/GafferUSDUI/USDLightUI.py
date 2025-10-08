@@ -45,21 +45,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters" : [
+		"parameters" : {
 
-			"layout:section:Basic:collapsed", False,
+			"layout:section:Basic:collapsed" : False,
 
-		],
+		},
 
-		"parameters.colorTemperature" : [ "layout:activator", lambda plug : plug.parent()["enableColorTemperature"].getValue() ],
+		"parameters.colorTemperature" : { "layout:activator" : lambda plug : plug.parent()["enableColorTemperature"].getValue() },
 
-		"parameters.shaping:ies:file.value" : [
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:bookmarks", "iesProfile",
-			"path:leaf", True,
-			"path:value", True,
-			"fileSystemPath:extensions", "ies",
-		],
+		"parameters.shaping:ies:file.value" : {
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:bookmarks" : "iesProfile",
+			"path:leaf" : True,
+			"path:value" : True,
+			"fileSystemPath:extensions" : "ies",
+		},
 
 	}
 )
