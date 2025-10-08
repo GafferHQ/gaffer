@@ -68,15 +68,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"sets" : [
+		"sets" : {
 
-			"layout:divider", True,
+			"layout:divider" : True,
 
-		],
+		},
 
-		"projection" : [
+		"projection" : {
 
-			"description",
+			"description" :
 			"""
 			The base camera type.
 
@@ -87,18 +87,18 @@ Gaffer.Metadata.registerNode(
 			this camera's parameters.
 			""",
 
-			"preset:Perspective", "perspective",
-			"preset:Orthographic", "orthographic",
+			"preset:Perspective" : "perspective",
+			"preset:Orthographic" : "orthographic",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"layout:divider", True,
+			"layout:divider" : True,
 
-		],
+		},
 
-		"perspectiveMode" : [
+		"perspectiveMode" : {
 
-			"description",
+			"description" :
 			"""
 			The input values to use in defining the perspective
 			projection. They can be either a horizontal field of view
@@ -109,18 +109,18 @@ Gaffer.Metadata.registerNode(
 			`aperture` and `focalLength` parameters on the camera.
 			""",
 
-			"preset:Field Of View", GafferScene.Camera.PerspectiveMode.FieldOfView,
-			"preset:Aperture and Focal Length", GafferScene.Camera.PerspectiveMode.ApertureFocalLength,
+			"preset:Field Of View" : GafferScene.Camera.PerspectiveMode.FieldOfView,
+			"preset:Aperture and Focal Length" : GafferScene.Camera.PerspectiveMode.ApertureFocalLength,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"layout:visibilityActivator", "perspective",
+			"layout:visibilityActivator" : "perspective",
 
-		],
+		},
 
-		"fieldOfView" : [
+		"fieldOfView" : {
 
-			"description",
+			"description" :
 			"""
 			The horizontal field of view, in degrees.
 
@@ -131,13 +131,13 @@ Gaffer.Metadata.registerNode(
 			`focalLength` parameter.
 			""",
 
-			"layout:visibilityActivator", "perspectiveModeFOV",
+			"layout:visibilityActivator" : "perspectiveModeFOV",
 
-		],
+		},
 
-		"apertureAspectRatio" : [
+		"apertureAspectRatio" : {
 
-			"description",
+			"description" :
 			"""
 			The vertical field of view, according to the ratio
 			`(horizontal FOV) / (vertical FOV)`. A value of 1 would
@@ -151,13 +151,13 @@ Gaffer.Metadata.registerNode(
 			`resolution` and `filmFit` render settings.
 			""",
 
-			"layout:visibilityActivator", "perspectiveModeFOV",
+			"layout:visibilityActivator" : "perspectiveModeFOV",
 
-		] ,
+		},
 
-		"aperture" : [
+		"aperture" : {
 
-			"description",
+			"description" :
 			"""
 			The width and height of the aperture when using the
 			_Aperture and Focal Length_ perspective mode. Use this in
@@ -181,29 +181,29 @@ Gaffer.Metadata.registerNode(
 			render options.
 			""",
 
-			"layout:visibilityActivator", "perspectiveModeFocalLength",
+			"layout:visibilityActivator" : "perspectiveModeFocalLength",
 
-			"preset:Academy 35mm   	21.946 × 16.000",			imath.V2f( 21.946, 16 ),
-			"preset:Super 35mm   	24.892 × 18.669",			imath.V2f( 24.892, 18.669 ),
-			"preset:Micro Four Thirds   	17.30 × 13.00",		imath.V2f( 17.3, 13 ),
-			"preset:APS-C   	22.30 × 14.90",					imath.V2f( 22.3, 14.9 ),
-			"preset:Full Frame 35mm   	36.00 × 24.00",			imath.V2f( 36, 24 ),
-			"preset:Alexa SXT 4:3 2.8k   	23.76 × 17.82",		imath.V2f( 23.76, 17.82 ),
-			"preset:Alexa SXT Open Gate 3.4k   	28.25 × 18.17",	imath.V2f( 28.25, 18.17 ),
-			"preset:Alexa 65 16:9 5.1k   	42.24 × 23.76",		imath.V2f( 42.24, 23.76 ),
-			"preset:Alexa 65 Open Gate 6.5k   	54.12 × 25.58",	imath.V2f( 54.12, 25.58 ),
-			"preset:RED EPIC-W 5K S35   	30.72 × 18.00",		imath.V2f( 30.72, 18 ),
-			"preset:RED EPIC-W 8K S35   	29.90 × 15.77",		imath.V2f( 29.9, 15.77 ),
+			"preset:Academy 35mm   	21.946 × 16.000" : imath.V2f( 21.946, 16 ),
+			"preset:Super 35mm   	24.892 × 18.669" : imath.V2f( 24.892, 18.669 ),
+			"preset:Micro Four Thirds   	17.30 × 13.00" : imath.V2f( 17.3, 13 ),
+			"preset:APS-C   	22.30 × 14.90" : imath.V2f( 22.3, 14.9 ),
+			"preset:Full Frame 35mm   	36.00 × 24.00" : imath.V2f( 36, 24 ),
+			"preset:Alexa SXT 4:3 2.8k   	23.76 × 17.82" : imath.V2f( 23.76, 17.82 ),
+			"preset:Alexa SXT Open Gate 3.4k   	28.25 × 18.17" : imath.V2f( 28.25, 18.17 ),
+			"preset:Alexa 65 16:9 5.1k   	42.24 × 23.76" : imath.V2f( 42.24, 23.76 ),
+			"preset:Alexa 65 Open Gate 6.5k   	54.12 × 25.58" : imath.V2f( 54.12, 25.58 ),
+			"preset:RED EPIC-W 5K S35   	30.72 × 18.00" : imath.V2f( 30.72, 18 ),
+			"preset:RED EPIC-W 8K S35   	29.90 × 15.77" : imath.V2f( 29.9, 15.77 ),
 
-			"presetsPlugValueWidget:allowCustom", True,
+			"presetsPlugValueWidget:allowCustom" : True,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"focalLength" : [
+		"focalLength" : {
 
-			"description",
+			"description" :
 			"""
 			The focal length portion of the _Aperture and Focal Length_
 			perspective mode. This is equivalent to the lens's focal
@@ -222,27 +222,27 @@ Gaffer.Metadata.registerNode(
 			`resolution` and `filmFit` render options.
 			""",
 
-			"layout:visibilityActivator", "perspectiveModeFocalLength",
+			"layout:visibilityActivator" : "perspectiveModeFocalLength",
 
-		],
+		},
 
 
-		"orthographicAperture" : [
+		"orthographicAperture" : {
 
-			"description",
+			"description" :
 			"""
 			The width and height of the orthographic camera's aperture,
 			in world space units.
 			""",
 
-			"layout:visibilityActivator", "orthographic",
-			"layout:divider", True,
+			"layout:visibilityActivator" : "orthographic",
+			"layout:divider" : True,
 
-		],
+		},
 
-		"apertureOffset" : [
+		"apertureOffset" : {
 
-			"description",
+			"description" :
 			"""
 			Offsets the aperture parallel to the image plane, to
 			achieve a skewed viewing frustum. The scale of the offset
@@ -260,24 +260,24 @@ Gaffer.Metadata.registerNode(
 			plate that has been asymmetrically cropped.
 			""",
 
-		],
+		},
 
-		"fStop" : [
+		"fStop" : {
 
-			"description",
+			"description" :
 			"""
 			The setting equivalent to the f-number on a camera, which ultimately determines the strength of the depth of field blur. A lower value produces more blur. As in a real camera, `fStop` is defined as `focalLength / lens aperture`.
 
 			To enable depth of field blur (if your renderer supports it), give this plug a value greater than 0, and, on a downstream StandardOptions node, enable the _Depth Of Field_ plug and turn it on.
 
 			""",
-			"layout:section", "Depth of Field",
+			"layout:section" : "Depth of Field",
 
-		],
+		},
 
-		"focalLengthWorldScale" : [
+		"focalLengthWorldScale" : {
 
-			"description",
+			"description" :
 			"""
 			The scale to convert from focal length units to world space
 			units. Combined with f-stop to calculate the lens aperture.
@@ -305,57 +305,57 @@ Gaffer.Metadata.registerNode(
 			simulate a 35mm lens.
 			""",
 
-			"preset:No Conversion	   ( 1.0 )", 1.0,
-			"preset:Millimeters to Centimeters	   ( 0.1 )", 0.1,
-			"preset:Millimeters to Decimeters	   ( 0.01 )", 0.01,
-			"preset:Millimeters to Meters	   ( 0.001 )", 0.001,
+			"preset:No Conversion	   ( 1.0 )" : 1.0,
+			"preset:Millimeters to Centimeters	   ( 0.1 )" : 0.1,
+			"preset:Millimeters to Decimeters	   ( 0.01 )" : 0.01,
+			"preset:Millimeters to Meters	   ( 0.001 )" : 0.001,
 
-			"presetsPlugValueWidget:allowCustom", True,
+			"presetsPlugValueWidget:allowCustom" : True,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"layout:activator", "dof",
-			"layout:section", "Depth of Field",
+			"layout:activator" : "dof",
+			"layout:section" : "Depth of Field",
 
-		],
+		},
 
-		"focusDistance" : [
+		"focusDistance" : {
 
-			"description",
+			"description" :
 			"""
 			The distance from the camera at which objects are in
 			perfect focus, in world space units.
 			""",
-			"layout:activator", "dof",
-			"layout:section", "Depth of Field",
-		],
+			"layout:activator" : "dof",
+			"layout:section" : "Depth of Field",
+		},
 
-		"clippingPlanes" : [
+		"clippingPlanes" : {
 
-			"description",
+			"description" :
 			"""
 			The near and far clipping planes, defining a region of
 			forward depth within which objects are visible to this
 			camera.
 			""",
 
-		],
+		},
 
-		"renderSettingOverrides" : [
+		"renderSettingOverrides" : {
 
-			"description",
+			"description" :
 			"""
 			Render settings specified here will override their
 			corresponding global render options.
 			""",
-			"layout:section", "Render Overrides",
-			"compoundDataPlugValueWidget:editable", False,
+			"layout:section" : "Render Overrides",
+			"compoundDataPlugValueWidget:editable" : False,
 
-		],
+		},
 
-		"renderSettingOverrides.*" : [
+		"renderSettingOverrides.*" : {
 
-			"description",
+			"description" :
 			lambda plug : (
 				"Overrides the `render:{name}` option:\n\n{description}".format(
 					name = plug["name"].getValue(),
@@ -363,63 +363,64 @@ Gaffer.Metadata.registerNode(
 				)
 			),
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-		],
+		},
 
-		"renderSettingOverrides.filmFit.value" : [
+		"renderSettingOverrides.filmFit.value" : {
 
-			"plugValueWidget:type", Gaffer.Metadata.value( "option:render:filmFit", "plugValueWidget:type" ),
-			"presetNames", Gaffer.Metadata.value( "option:render:filmFit", "presetNames" ),
-			"presetValues", Gaffer.Metadata.value( "option:render:filmFit", "presetValues" ),
+			"plugValueWidget:type" : Gaffer.Metadata.value( "option:render:filmFit", "plugValueWidget:type" ),
+			"presetNames" : Gaffer.Metadata.value( "option:render:filmFit", "presetNames" ),
+			"presetValues" : Gaffer.Metadata.value( "option:render:filmFit", "presetValues" ),
 
-		],
+		},
 
-		"visualiserAttributes" : [
+		"visualiserAttributes" : {
 
-				"description",
+				"description" :
 				"""
 				Attributes that affect the visualisation of this camera in the Viewer.
 				""",
 
-				"layout:section", "Visualisation",
-				"compoundDataPlugValueWidget:editable", False,
+				"layout:section" : "Visualisation",
+				"compoundDataPlugValueWidget:editable" : False,
 
-		],
+		},
 
-		"visualiserAttributes.*" : [
+		"visualiserAttributes.*" : {
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-		],
+		},
 
-		"visualiserAttributes.scale" : [
+		"visualiserAttributes.scale" : {
 
-				"description",
-				"""
-				Scales non-geometric visualisations in the viewport to make them
-				easier to work with.
-				""",
+			"description" :
+			"""
+			Scales non-geometric visualisations in the viewport to make them
+			easier to work with.
+			""",
 
-		],
+		},
 
-		"visualiserAttributes.frustum" : [
+		"visualiserAttributes.frustum" : {
 
-				"description",
-				"""
-				Controls whether the camera draws a visualisation of its frustum.
-				"""
+			"description" :
+			"""
+			Controls whether the camera draws a visualisation of its frustum.
+			"""
 
-		],
+		},
 
-		"visualiserAttributes.frustum.value" : [
+		"visualiserAttributes.frustum.value" : {
 
-				"preset:Off", "off",
-				"preset:When Selected", "whenSelected",
-				"preset:On", "on",
+			"preset:Off" : "off",
+			"preset:When Selected" : "whenSelected",
+			"preset:On" : "on",
 
-				"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget"
+
+		},
 
 	}
 
