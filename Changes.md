@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.2.1)
 =======
 
+Features
+--------
+
+- SystemCommand, PythonCommand : Added `isolated` plug. An isolated task is executed from a script containing only that node. This is a useful optimisation when the load time for the full script is high compared to the time taken to execute the task (#6541)
+
 Improvements
 ------------
 
@@ -32,6 +37,7 @@ API
 - Metadata : The `registerNode()` function now accepts dictionaries containing plug metadata. This should be preferred to the previous list-based values.
 - SceneInspector : Added `deregisterInspectors()` method.
 - PathPlugValueWidget : Added support for placeholder text, via `pathPlugValueWidget:placeholderText` metadata.
+- TaskNode : Added "dispatcher:allowIsolation" metadata, which can be used to add the `isolated` plug to a `TaskNode`.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======

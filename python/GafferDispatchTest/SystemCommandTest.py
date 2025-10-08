@@ -37,6 +37,7 @@
 import os
 import subprocess
 import unittest
+import imath
 
 import IECore
 
@@ -45,6 +46,12 @@ import GafferTest
 import GafferDispatch
 
 class SystemCommandTest( GafferTest.TestCase ) :
+
+	def __createLocalDispatcher( self, jobPool = None ) :
+
+		result = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		result["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
+		return result
 
 	def test( self ) :
 
@@ -108,9 +115,8 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		s["n"] = GafferDispatch.SystemCommand()
 		s["n"]["command"].setValue( "echo 1 > {}".format( ( self.temporaryDirectory() / "systemCommandTest.####.txt" ).as_posix() ) )
 
-		s["d"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["d"] = self.__createLocalDispatcher()
 		s["d"]["tasks"][0].setInput( s["n"]["task"] )
-		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 		s["d"]["framesMode"].setValue( s["d"].FramesMode.CustomRange )
 		s["d"]["frameRange"].setValue( "1-10" )
 
@@ -150,6 +156,49 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		c = GafferDispatch.SystemCommand()
 		self.assertEqual( c["command"].getValue(), "" )
 		self.assertEqual( c["task"].hash(), IECore.MurmurHash() )
+
+	def testIsolated( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatch.SystemCommand()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["command"].setValue( 'echo simple >{}'.format( ( self.temporaryDirectory() / "simpleTest.txt" ).as_posix() ) )
+
+		s["n2"] = GafferDispatch.SystemCommand()
+		s["n2"]["dispatcher"]["isolated"].setValue( True )
+		s["n2"]["command"].setValue( 'echo ${{script:name}} > {}'.format( ( self.temporaryDirectory() / "scriptNameTest.txt" ).as_posix() ) )
+
+		s["n3"] = GafferDispatch.SystemCommand()
+		s["n3"]["dispatcher"]["isolated"].setValue( True )
+		s["n3"]["command"].setValue( 'echo {colorValue} > {fileName}' )
+		s["n3"]["substitutions"].addMembers(
+			IECore.CompoundData(
+				{
+					"colorValue" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+					"fileName" : ( self.temporaryDirectory() / "substitutionsTest.txt" ).as_posix()
+				}
+			)
+		)
+
+		s["d"] = self.__createLocalDispatcher()
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CurrentFrame )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+		s["d"]["tasks"][1].setInput( s["n2"]["task"] )
+		s["d"]["tasks"][2].setInput( s["n3"]["task"] )
+
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
+
+		with open( self.temporaryDirectory() / "simpleTest.txt" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "simple" )
+
+		with open( self.temporaryDirectory() / "scriptNameTest.txt" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )
+
+		with open( self.temporaryDirectory() / "substitutionsTest.txt" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "1 2 3")
 
 if __name__ == "__main__":
 	unittest.main()

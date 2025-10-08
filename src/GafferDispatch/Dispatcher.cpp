@@ -36,19 +36,24 @@
 
 #include "GafferDispatch/Dispatcher.h"
 
+#include "Gaffer/Box.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextProcessor.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Switch.h"
 
+#include "IECore/FileSequenceFunctions.h"
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 #include "fmt/format.h"
 
@@ -67,6 +72,9 @@ namespace
 {
 
 const InternedString g_frame( "frame" );
+const InternedString g_isolatedBlindDataKey( "isolated" );
+const InternedString g_isolatedAnimationNodeName( "isolatedAnimation" );
+const BoolDataPtr g_trueData = new BoolData( true );
 
 // TaskBatch contexts are identical to the contexts of their corresponding
 // Tasks, except that they omit the `frame` variable. We need to construct a
@@ -114,6 +122,112 @@ struct BatchContextPool
 
 };
 
+ValuePlug *acquireCellValuePlug( Spreadsheet *spreadsheet, const InternedString columnName, const float frame )
+{
+	const std::string rowName = fmt::format( "{}", frame );
+	if( auto row = spreadsheet->rowsPlug()->row( rowName ) )
+	{
+		assert( row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) );
+		return row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName )->valuePlug();
+	}
+
+	Spreadsheet::RowPlug *newRow = spreadsheet->rowsPlug()->addRow();
+	newRow->namePlug()->setValue( rowName );
+	newRow->enabledPlug()->setValue( true );
+
+	assert( newRow->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) );
+	return newRow->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName )->valuePlug();
+}
+
+void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, const std::vector<float> &frames )
+{
+	if( !PlugAlgo::canSetValueFromData( destinationPlug ) )
+	{
+		return;
+	}
+
+	ScriptNode *destinationScript = destinationPlug->node()->scriptNode();
+	Spreadsheet *animationSpreadsheet = destinationScript->getChild<Spreadsheet>( g_isolatedAnimationNodeName );
+
+	Context::EditableScope frameContext( Context::current() );
+	frameContext.setFrame( frames.front() );
+
+	const DataPtr originalValue = PlugAlgo::getValueAsData( sourcePlug );
+	PlugAlgo::setValueFromData( destinationPlug, originalValue.get() );
+
+	const MurmurHash originalHash = sourcePlug->hash();
+
+	InternedString columnName( "" );
+	bool animating = false;
+
+	for( std::vector<float>::const_iterator it = frames.begin() + 1, eIt = frames.end(); it != eIt; ++it )
+	{
+		frameContext.setFrame( *it );
+
+		const MurmurHash frameValueHash = sourcePlug->hash();
+
+		if( !animating && frameValueHash != originalHash )
+		{
+			animating = true;
+			if( !animationSpreadsheet )
+			{
+				Node *parentNode = destinationPlug->node()->parent<Node>();
+				parentNode->addChild( new Spreadsheet( g_isolatedAnimationNodeName ) );
+				animationSpreadsheet = parentNode->getChild<Spreadsheet>( parentNode->children().size() - 1 );
+				animationSpreadsheet->selectorPlug()->setValue( "${frame}" );
+			}
+
+			if( columnName.string().empty() )
+			{
+				columnName = boost::replace_all_copy( destinationPlug->relativeName( destinationPlug->node() ), ".", "_" );
+				animationSpreadsheet->rowsPlug()->addColumn( destinationPlug, columnName );
+
+				destinationPlug->setInput( animationSpreadsheet->outPlug()->getChild<Plug>( columnName ) );
+
+				// We set the plug values for all frames if any are animated. Go back and set
+				// the previous frame cell values.
+				for( std::vector<float>::const_iterator pIt = frames.begin(); pIt != it; ++pIt )
+				{
+					frameContext.setFrame( *pIt );
+					const DataPtr previousValue = PlugAlgo::getValueAsData( sourcePlug );
+					ValuePlug *cellValuePlug = acquireCellValuePlug( animationSpreadsheet, columnName, *pIt );
+					PlugAlgo::setValueFromData( cellValuePlug, previousValue.get() );
+				}
+
+				frameContext.setFrame( *it );
+			}
+		}
+
+		if( animating )
+		{
+			ValuePlug *cellValuePlug = acquireCellValuePlug( animationSpreadsheet, columnName, *it );
+			const DataPtr frameValue = PlugAlgo::getValueAsData( sourcePlug );
+			PlugAlgo::setValueFromData( cellValuePlug, frameValue.get() );
+		}
+	}
+}
+
+void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *sourceScript, const std::vector<float> &frames )
+{
+	StandardSetPtr plugsToSerialise = new StandardSet();
+
+	for( const auto &sourcePlug : Gaffer::ValuePlug::RecursiveInputRange( *sourceScript ) )
+	{
+		plugsToSerialise->add( const_cast<ValuePlug *>( sourcePlug.get() ) );
+	}
+
+	const std::string scriptVariablesSerialisation = sourceScript->serialise( sourceScript, plugsToSerialise.get() );
+	destinationScript->execute( scriptVariablesSerialisation );
+
+	for( const auto &sourcePlug : Gaffer::ValuePlug::RecursiveInputRange( *sourceScript ) )
+	{
+		auto destinationPlug = destinationScript->descendant<ValuePlug>( sourcePlug->relativeName( sourceScript ) );
+		assert( destinationPlug );
+
+		bakePlugValue( destinationPlug, sourcePlug.get(), frames );
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,6 +238,8 @@ namespace
 {
 
 const InternedString g_batchSize( "batchSize" );
+const InternedString g_isolatedPlugName( "isolated" );
+const InternedString g_allowIsolationName( "dispatcher:allowIsolation" );
 const InternedString g_immediatePlugName( "immediate" );
 const InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 const InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
@@ -308,6 +424,13 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 {
 	parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
+	if( auto allowIsolation = Metadata::value<BoolData>( parentPlug->node(), g_allowIsolationName ) )
+	{
+		if( allowIsolation->readable() )
+		{
+			parentPlug->addChild( new BoolPlug( g_isolatedPlugName, Plug::In, false ) );
+		}
+	}
 
 	const CreatorMap &m = creators();
 	for( const auto &[name, creator] : m )
@@ -625,6 +748,12 @@ class Dispatcher::Batcher
 				batch->m_immediate = true;
 			}
 
+			const BoolPlug *isolatePlug = dispatcherPlug( task )->getChild<const BoolPlug>( g_isolatedPlugName );
+			if( isolatePlug && isolatePlug->getValue() )
+			{
+				batch->blindData()->writable()[g_isolatedBlindDataKey] = g_trueData;
+			}
+
 			// Remember which batch we stored this task in, for
 			// the next time someone asks for it.
 			batchForTask = batch;
@@ -891,7 +1020,7 @@ void Dispatcher::execute() const
 		}
 	}
 
-	executeAndPruneImmediateBatches( batcher.rootBatch() );
+	preprocessBatches( batcher.rootBatch() );
 
 	// Save the script. If we're in a nested dispatch, this may have been done already by
 	// the outer dispatch, hence the call to `exists()`. Performing the saving here is
@@ -924,7 +1053,7 @@ void Dispatcher::execute() const
 	}
 }
 
-void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate ) const
+void Dispatcher::preprocessBatches( TaskBatch *batch, bool immediate ) const
 {
 	if( batch->m_visited )
 	{
@@ -936,7 +1065,7 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 	TaskBatches &preTasks = batch->m_preTasks;
 	for( TaskBatches::iterator it = preTasks.begin(); it != preTasks.end(); )
 	{
-		executeAndPruneImmediateBatches( it->get(), immediate );
+		preprocessBatches( it->get(), immediate );
 		if( (*it)->m_executed )
 		{
 			batch->m_preTasksSet.erase( it->get() );
@@ -953,8 +1082,103 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 		batch->execute();
 		batch->m_executed = true;
 	}
+	else if( batch->blindData()->member( g_isolatedBlindDataKey ) && !batch->frames().empty() )
+	{
+		isolateBatch( batch );
+	}
 
 	batch->m_visited = true;
+
+}
+
+void Dispatcher::isolateBatch( TaskBatch *batch ) const
+{
+	auto sourceNode = runTimeCast<const TaskNode>( batch->plug()->node() );
+	const ScriptNode *sourceScript = sourceNode->scriptNode();  // `execute()` has already checked that this will be valid
+
+	std::filesystem::path scriptPath( batch->context()->get<std::string>( g_scriptFileNameContextEntry ) );
+	const std::string sourceNodeRelativeName = sourceNode->relativeName( sourceScript );
+	const std::vector<FrameList::Frame> intFrames( batch->frames().begin(), batch->frames().end() );
+	FrameListPtr batchFrames = frameListFromList( intFrames );
+
+	std::filesystem::path isolatedPath =
+		scriptPath.parent_path() /
+		"isolated" /
+		sourceNodeRelativeName /
+		batch->context()->hash().toString() /
+		batchFrames->asString() /
+		( scriptPath.stem().string() + ".gfr" )
+	;
+
+	ContextPtr isolatedContext = new Context( *batch->context() );
+	isolatedContext->set( g_scriptFileNameContextEntry, isolatedPath.generic_string() );
+	batch->m_context = isolatedContext;
+
+	ScriptNodePtr destinationScript = new ScriptNode();
+
+	Context::Scope batchScope( batch->context() );
+
+	isolateScriptPlugs( destinationScript.get(), sourceScript, batch->frames() );
+
+	NodePtr topBox = nullptr;
+	Node *lowestContainer = destinationScript.get();
+	const GraphComponent *node = sourceNode->parent();
+	while( node != sourceScript )
+	{
+		BoxPtr newChild = new Box( node->getName() );
+		if( topBox )
+		{
+			newChild->addChild( topBox );
+		}
+		else
+		{
+			// The `TaskNode` will be in a `Box`, rather than a child of the script,
+			// and this is the first iteration of this loop. This will be the `Box`
+			// to add the `TaskNode` to.
+			lowestContainer = newChild.get();
+		}
+		topBox = newChild;
+		node = node->parent();
+	}
+
+	if( topBox )
+	{
+		destinationScript->addChild( topBox );
+	}
+
+	auto parentNode = sourceNode->parent<Node>();
+	StandardSetPtr sourceSet = new StandardSet();
+	sourceSet->add( const_cast<TaskNode*>( sourceNode ) );
+	const std::string serialisation = sourceScript->serialise( parentNode, sourceSet.get() );
+	destinationScript->execute( serialisation, lowestContainer );
+
+	TaskNode *destinationNode = lowestContainer->getChild<TaskNode>( sourceNode->getName() );
+	assert( destinationNode );
+
+	for( ValuePlug::RecursiveInputIterator it( sourceNode ); !it.done(); ++it )
+	{
+		auto destinationPlug = destinationNode->descendant<ValuePlug>( (*it)->relativeName( sourceNode ) );
+		assert( destinationPlug != nullptr );
+
+		if( destinationPlug->getInput() )
+		{
+			// Since the destination node is isolated, this must be an internal connection
+			// forming part of the node's implementation. Leave it alone.
+			it.prune();
+			continue;
+		}
+
+		if( (*it)->getInput() )
+		{
+			bakePlugValue( destinationPlug, (*it).get(), batch->frames() );
+			it.prune();
+		}
+	}
+
+	destinationScript->fileNamePlug()->setValue( isolatedPath.generic_string() );
+	std::filesystem::create_directories( isolatedPath.parent_path() );
+	destinationScript->serialiseToFile( isolatedPath );
+
 }
 
 //////////////////////////////////////////////////////////////////////////
