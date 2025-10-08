@@ -18,6 +18,9 @@ Improvements
   - Removed redundant scene inspections when not in comparison mode.
 - Arnold : Added support for M44f `header:*` output metadata.
 - FocalBlur : Added presets for `focalLengthWorldScale` and placeholder text for `cameraPath`.
+- Viewer :
+  - Moved purpose menu items from the Drawing Mode menu to the Expansion menu.
+  - Added purpose presets for Render (Default + Render purposes), Preview (Default + Proxy) and Preview with Guides (Default + Proxy + Guide).
 
 Fixes
 -----
