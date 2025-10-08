@@ -203,19 +203,19 @@ def __uiDefinition( box, moduleName ) :
 
 		moduleName = moduleName,
 		name = box.getName(),
-		metadata = __indent( __metadata( box ), 1 ),
+		metadata = __indent( __metadata( box, ", " ), 1 ),
 		plugMetadata = __indent( __plugMetadata( box ), 1 )
 
 	)
 
-def __metadata( graphComponent ) :
+def __metadata( graphComponent, separator ) :
 
 	items = []
 	for k in Gaffer.Metadata.registeredValues( graphComponent, Gaffer.Metadata.RegistrationTypes.InstancePersistent ) :
 
 		v = Gaffer.Metadata.value( graphComponent, k )
 		items.append(
-			"{k}, {v},".format( k = repr( k ), v = IECore.repr( v ) )
+			"{k}{s}{v},".format( k = repr( k ), s = separator, v = IECore.repr( v ) )
 		)
 
 	return "\n".join( items )
@@ -227,10 +227,10 @@ def __plugMetadata( box ) :
 
 		if isinstance( graphComponent, Gaffer.Plug ) :
 
-			m = __metadata( graphComponent )
+			m = __metadata( graphComponent, " : " )
 			if m :
 				items.append(
-					"\"{name}\" : [\n{m}\n],\n".format(
+					"\"{name}\" : {{\n{m}\n}},\n".format(
 						name = graphComponent.relativeName( graphComponent.node() ),
 						m = __indent( m, 1 )
 					)
