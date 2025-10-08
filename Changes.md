@@ -30,6 +30,7 @@ Fixes
 - Scene Editors : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
 - GraphEditor : Fixed duplicate annotations that occurred when default annotation metadata was registered for a particular node type.
 - Metadata : Removed duplicate items returned by `registeredValues()`.
+- PlugLayout : Fixed functions defining dynamic `layout:activator` metadata on plugs not being evaluated in the correct context.
 
 API
 ---
