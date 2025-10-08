@@ -50,9 +50,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mask" : (
+		"mask" : {
 
-			"description",
+			"description" :
 			"""
 			The subset of frames that will be executed by upstream tasks.
 			Any frames not included here will be ignored, regardless
@@ -62,7 +62,7 @@ Gaffer.Metadata.registerNode(
 			> settings on the Dispatcher.
 			""",
 
-		),
+		},
 
 	}
 

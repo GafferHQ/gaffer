@@ -63,37 +63,37 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"user" : (
+		"user" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		),
+		},
 
-		"tasks" : (
+		"tasks" : {
 
-			"description",
+			"description" :
 			"""
 			The tasks to be executed by this dispatcher.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.4,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.4,
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		),
+		},
 
-		"preTasks" : (
+		"preTasks" : {
 
 			# Move to the left to give greater precedence to
 			# the `tasks` plug at the top.
-			"noduleLayout:section", "left",
+			"noduleLayout:section" : "left",
 
-		),
+		},
 
-		"framesMode" : (
+		"framesMode" : {
 
-			"description",
+			"description" :
 			"""
 			Determines the active frame range to be dispatched as
 			follows :
@@ -107,45 +107,45 @@ Gaffer.Metadata.registerNode(
 			    the `frameRange` plug.
 			""",
 
-			"preset:Current Frame", GafferDispatch.Dispatcher.FramesMode.CurrentFrame,
-			"preset:Full Range", GafferDispatch.Dispatcher.FramesMode.FullRange,
-			"preset:Custom Range", GafferDispatch.Dispatcher.FramesMode.CustomRange,
+			"preset:Current Frame" : GafferDispatch.Dispatcher.FramesMode.CurrentFrame,
+			"preset:Full Range" : GafferDispatch.Dispatcher.FramesMode.FullRange,
+			"preset:Custom Range" : GafferDispatch.Dispatcher.FramesMode.CustomRange,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		),
+		},
 
-		"frameRange" : (
+		"frameRange" : {
 
-			"description",
+			"description" :
 			"""
 			The frame range to be used when framesMode is "CustomRange".
 			""",
 
-			"layout:visibilityActivator", "framesModeIsCustomRange",
+			"layout:visibilityActivator" : "framesModeIsCustomRange",
 
-		),
+		},
 
-		"jobName" : (
+		"jobName" : {
 
-			"description",
+			"description" :
 			"""
 			A descriptive name for the job.
 			"""
 
-		),
+		},
 
-		"jobsDirectory" : (
+		"jobsDirectory" : {
 
-			"description",
+			"description" :
 			"""
 			A directory to store temporary files used by the dispatcher.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", False,
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : False,
 
-		),
+		},
 
 	}
 
@@ -221,28 +221,28 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"dispatcher" : (
+		"dispatcher" : {
 
-			"layout:activator:doesNotRequireSequenceExecution", lambda plug : not plug.node()["task"].requiresSequenceExecution(),
-			"layout:activator:immediateIsOff", lambda plug : not plug["immediate"].getValue(),
+			"layout:activator:doesNotRequireSequenceExecution" : lambda plug : not plug.node()["task"].requiresSequenceExecution(),
+			"layout:activator:immediateIsOff" : lambda plug : not plug["immediate"].getValue(),
 
-		),
+		},
 
-		"dispatcher.batchSize" : (
+		"dispatcher.batchSize" : {
 
-			"description",
+			"description" :
 			"""
 			Maximum number of frames to batch together when dispatching tasks.
 			If the node requires sequence execution `batchSize` will be ignored.
 			""",
 
-			"layout:activator", "doesNotRequireSequenceExecution",
+			"layout:activator" : "doesNotRequireSequenceExecution",
 
-		),
+		},
 
-		"dispatcher.immediate" : (
+		"dispatcher.immediate" : {
 
-			"description",
+			"description" :
 			"""
 			Causes this node to be executed immediately upon dispatch,
 			rather than have its execution be scheduled normally by
@@ -254,20 +254,20 @@ Gaffer.Metadata.registerNode(
 			considered to be immediate too, regardless of their settings.
 			"""
 
-		),
+		},
 
-		"dispatcher.isolated" : (
+		"dispatcher.isolated" : {
 
-			"description",
+			"description" :
 			"""
 			Causes this node to be executed from a script containing *only* this node.
 			This is a useful optimisation when the load time for the full script is
 			high compared to the time taken to execute the task.
 			""",
 
-			"layout:activator", "immediateIsOff",
+			"layout:activator" : "immediateIsOff",
 
-		),
+		},
 
 	}
 
