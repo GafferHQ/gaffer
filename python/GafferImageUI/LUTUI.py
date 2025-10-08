@@ -52,48 +52,48 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the LUT file to be read. Only OpenColorIO
 			supported files will function as expected.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "color",
-			"fileSystemPath:extensions", " ".join( GafferImage.LUT.supportedExtensions() ),
-			"fileSystemPath:extensionsLabel", "Show only LUT files",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:bookmarks" : "color",
+			"fileSystemPath:extensions" : " ".join( GafferImage.LUT.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel" : "Show only LUT files",
 
-		],
+		},
 
-		"interpolation" : [
+		"interpolation" : {
 
-			"description",
+			"description" :
 			"""
 			The interpolation mode for the color transformation.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Best", GafferImage.LUT.Interpolation.Best,
-			"preset:Linear", GafferImage.LUT.Interpolation.Linear,
-			"preset:Tetrahedral", GafferImage.LUT.Interpolation.Tetrahedral,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Best" : GafferImage.LUT.Interpolation.Best,
+			"preset:Linear" : GafferImage.LUT.Interpolation.Linear,
+			"preset:Tetrahedral" : GafferImage.LUT.Interpolation.Tetrahedral,
 
-		],
+		},
 
-		"direction" : [
+		"direction" : {
 
-			"description",
+			"description" :
 			"""
 			The direction to perform the color transformation.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Forward", GafferImage.OpenColorIOTransform.Direction.Forward,
-			"preset:Inverse", GafferImage.OpenColorIOTransform.Direction.Inverse,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Forward" : GafferImage.OpenColorIOTransform.Direction.Forward,
+			"preset:Inverse" : GafferImage.OpenColorIOTransform.Direction.Inverse,
 
-		],
+		},
 
 	}
 

@@ -60,20 +60,20 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"targetScene" : [
+		"targetScene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene containing the target location to which objects are
 			constrained. If this is unconnected, the main input scene
 			is used instead.
 			""",
 
-		],
+		},
 
-		"target" : [
+		"target" : {
 
-			"description",
+			"description" :
 			"""
 			The scene location to which the objects are constrained.
 			The world space transform of this location forms the basis
@@ -81,56 +81,56 @@ Gaffer.Metadata.registerNode(
 			and targetOffset values before the constraint is applied.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "targetScene in",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "targetScene in",
 
-		],
+		},
 
-		"ignoreMissingTarget" : [
+		"ignoreMissingTarget" : {
 
-			"description",
+			"description" :
 			"""
 			Causes the constraint to do nothing if the target location
 			doesn't exist in the scene, instead of erroring.
 			""",
 
-		],
+		},
 
-		"targetMode" : [
+		"targetMode" : {
 
-			"description",
+			"description" :
 			"""
 			The precise location of the target transform - this can be
 			derived from the origin, bounding box or from a specific primitive
 			uv coordinate or vertex id of the target location.
 			""",
 
-			"preset:Origin", GafferScene.Constraint.TargetMode.Origin,
-			"preset:BoundMin", GafferScene.Constraint.TargetMode.BoundMin,
-			"preset:BoundMax", GafferScene.Constraint.TargetMode.BoundMax,
-			"preset:BoundCenter", GafferScene.Constraint.TargetMode.BoundCenter,
-			"preset:UV", GafferScene.Constraint.TargetMode.UV,
-			"preset:Vertex", GafferScene.Constraint.TargetMode.Vertex,
+			"preset:Origin" : GafferScene.Constraint.TargetMode.Origin,
+			"preset:BoundMin" : GafferScene.Constraint.TargetMode.BoundMin,
+			"preset:BoundMax" : GafferScene.Constraint.TargetMode.BoundMax,
+			"preset:BoundCenter" : GafferScene.Constraint.TargetMode.BoundCenter,
+			"preset:UV" : GafferScene.Constraint.TargetMode.UV,
+			"preset:Vertex" : GafferScene.Constraint.TargetMode.Vertex,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"targetUV" : [
+		"targetUV" : {
 
-			"description",
+			"description" :
 			"""
 			UV coordinate used in \"UV\" target mode.
 			The node will error if the specified uv coordinate is out of range or does not map unambiguously
 			to a single position on the primitive's surface unless ignoreMissingTarget is true.
 			""",
 
-			"layout:activator", "targetModeIsUV",
-		],
+			"layout:activator" : "targetModeIsUV",
+		},
 
-		"targetVertex" : [
+		"targetVertex" : {
 
-			"description",
+			"description" :
 			"""
 			Vertex id used in \"Vertex\" target mode.
 			The node will error if the specified vertex id is out of range unless ignoreMissingTarget is true.
@@ -139,12 +139,12 @@ Gaffer.Metadata.registerNode(
 			construct a local coordinate frame.
 			""",
 
-			"layout:activator", "targetModeIsVertex",
-		],
+			"layout:activator" : "targetModeIsVertex",
+		},
 
-		"targetOffset" : [
+		"targetOffset" : {
 
-			"description",
+			"description" :
 			"""
 			An offset applied to the target transform before the constraint
 			is applied. The offset is measured in the object space of the
@@ -152,31 +152,31 @@ Gaffer.Metadata.registerNode(
 			the offset is measured relative to the local surface coordinate frame.
 			""",
 
-			"divider", True,
+			"divider" : True,
 
-		],
+		},
 
-		"keepReferencePosition" : [
+		"keepReferencePosition" : {
 
-			"description",
+			"description" :
 			"""
 			Adjusts the constraint so that the original position of the object
 			at the `referenceFrame` is maintained.
 			""",
 
-		],
+		},
 
-		"referenceFrame" : [
+		"referenceFrame" : {
 
-			"description",
+			"description" :
 			"""
 			The reference frame used by the `keepReferencePosition` mode. The constraint
 			is adjusted so that the original position at this frame is maintained.
 			""",
 
-			"layout:activator", "keepReferencePositionIsOn",
+			"layout:activator" : "keepReferencePositionIsOn",
 
-		],
+		},
 
 	},
 

@@ -51,19 +51,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"metadata" : [
+		"metadata" : {
 
-			"description",
+			"description" :
 			"""
 			The metadata to be applied - arbitrary numbers of user defined metadata may be added
 			as children of this plug via the user interface, or using the CompoundDataPlug python API
 			""",
 
-		],
+		},
 
-		"extraMetadata" : [
+		"extraMetadata" : {
 
-			"description",
+			"description" :
 			"""
 			Additional metadata to be added, specified within a single
 			`IECore.CompoundObject`. This is convenient when using an expression
@@ -76,10 +76,10 @@ Gaffer.Metadata.registerNode(
 			taken.
 			""",
 
-			"layout:section", "Extra",
-			"nodule:type", "",
+			"layout:section" : "Extra",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

@@ -195,17 +195,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"out" : [
+		"out" : {
 
-			"nodule:type", __outPlugNoduleType,
-			"noduleLayout:spacing", 0.2,
+			"nodule:type" : __outPlugNoduleType,
+			"noduleLayout:spacing" : 0.2,
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"noduleLayout:visible", True,
+			"noduleLayout:visible" : True,
 
-		]
+		}
 	}
 )

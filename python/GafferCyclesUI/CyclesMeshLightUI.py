@@ -56,32 +56,32 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"cameraVisibility" : [
+		"cameraVisibility" : {
 
-			"description",
+			"description" :
 			"""
 			Whether or not the mesh light is visible to camera
 			rays.
 			""",
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-		],
+		},
 
-		"lightGroup" : [
+		"lightGroup" : {
 
-			"description",
+			"description" :
 			"""
 			The light group that the mesh light will contribute to.
 			""",
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-		],
+		},
 
-		"parameters" : [
+		"parameters" : {
 
-			"description",
+			"description" :
 			"""
 			The parameters of the Cycles emission shader that
 			is applied to the meshes.
@@ -89,33 +89,33 @@ Gaffer.Metadata.registerNode(
 
 			## \todo Extend the Metadata API so we can register a provider for "*",
 			# which can automatically transfer all internal metadata.
-			"noduleLayout:section", functools.partial( __shaderMetadata, name = "noduleLayout:section" ),
-			"nodule:type", functools.partial( __shaderMetadata, name = "nodule:type" ),
-			"noduleLayout:spacing", functools.partial( __shaderMetadata, name = "noduleLayout:spacing" ),
-			"plugValueWidget:type", functools.partial( __shaderMetadata, name = "plugValueWidget:type" ),
+			"noduleLayout:section" : functools.partial( __shaderMetadata, name = "noduleLayout:section" ),
+			"nodule:type" : functools.partial( __shaderMetadata, name = "nodule:type" ),
+			"noduleLayout:spacing" : functools.partial( __shaderMetadata, name = "noduleLayout:spacing" ),
+			"plugValueWidget:type" : functools.partial( __shaderMetadata, name = "plugValueWidget:type" ),
 
-		],
+		},
 
-		"parameters.*" : [
+		"parameters.*" : {
 
-			"description",
+			"description" :
 			"""
 			Refer to Cycles's documentation of the emission
 			shader.
 			""",
 
-			"nodule:type", functools.partial( __shaderMetadata, name = "nodule:type" ),
-			"noduleLayout:section", functools.partial( __shaderMetadata, name = "noduleLayout:section" ),
-			"nodule:color", functools.partial( __shaderMetadata, name = "nodule:color" ),
-			"plugValueWidget:type", functools.partial( __shaderMetadata, name = "plugValueWidget:type" ),
-			"presetNames", functools.partial( __shaderMetadata, name = "presetNames" ),
-			"presetValues", functools.partial( __shaderMetadata, name = "presetValues" ),
+			"nodule:type" : functools.partial( __shaderMetadata, name = "nodule:type" ),
+			"noduleLayout:section" : functools.partial( __shaderMetadata, name = "noduleLayout:section" ),
+			"nodule:color" : functools.partial( __shaderMetadata, name = "nodule:color" ),
+			"plugValueWidget:type" : functools.partial( __shaderMetadata, name = "plugValueWidget:type" ),
+			"presetNames" : functools.partial( __shaderMetadata, name = "presetNames" ),
+			"presetValues" : functools.partial( __shaderMetadata, name = "presetValues" ),
 
-		],
+		},
 
-		"defaultLight" : [
+		"defaultLight" : {
 
-			"description",
+			"description" :
 			"""
 			Whether this light illuminates all geometry by default. When
 			toggled, the light will be added to the \"defaultLights\" set, which
@@ -123,9 +123,9 @@ Gaffer.Metadata.registerNode(
 			nodes.
 			""",
 
-			"layout:section", "Light Linking",
+			"layout:section" : "Light Linking",
 
-		]
+		}
 
 	}
 

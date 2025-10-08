@@ -50,15 +50,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shader" : [
+		"shader" : {
 
-			"description",
+			"description" :
 			"""
 			The integrator to be assigned. A RenderManShader node holding an integrator
 			such as PxrPathTracer or PxrUnified should be connected here.
 			"""
 
-		],
+		},
 
 	}
 

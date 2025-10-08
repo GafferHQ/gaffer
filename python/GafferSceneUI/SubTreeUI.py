@@ -53,22 +53,22 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"root" : [
+		"root" : {
 
-			"description",
+			"description" :
 			"""
 			The location to become the new root for the output scene.
 			All locations below this will be kept, and all others will
 			be discarded.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 
-		],
+		},
 
-		"includeRoot" : [
+		"includeRoot" : {
 
-			"description",
+			"description" :
 			"""
 			Causes the root location to also be kept in the output scene, in
 			addition to its children. For instance, if the scene contains only
@@ -78,39 +78,39 @@ Gaffer.Metadata.registerNode(
 			instead.
 			""",
 
-		],
+		},
 
-		"inheritTransform" : [
+		"inheritTransform" : {
 
-			"description",
+			"description" :
 			"""
 			Maintains the subtree's world-space position by applying the `root`
 			location's full transform to the subtree's children.
 			"""
 
-		],
+		},
 
-		"inheritAttributes" : [
+		"inheritAttributes" : {
 
-			"description",
+			"description" :
 			"""
 			Maintains the subtree's attributes (including shader assignments) by
 			applying the `root` location's full attributes to the subtree's
 			children.
 			"""
 
-		],
+		},
 
-		"inheritSetMembership" : [
+		"inheritSetMembership" : {
 
-			"description",
+			"description" :
 			"""
 			Maintains the subtree's membership in sets by transferring the
 			`root` location's memberships to the subtree's children.
 			"""
 
 
-		],
+		},
 
 	}
 

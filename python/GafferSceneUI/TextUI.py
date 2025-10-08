@@ -56,32 +56,32 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"text" : [
+		"text" : {
 
-			"description",
+			"description" :
 			"""
 			The text to output. This is triangulated into a mesh
 			representation using the specified font.
 			""",
 
-		],
+		},
 
-		"font" : [
+		"font" : {
 
-			"description",
+			"description" :
 			"""
 			The font to use - this should be a .ttf font file which
 			is located on the paths specified by the IECORE_FONT_PATHS
 			environment variable.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:bookmarks", "font",
-			"path:leaf", True,
-			"path:valid", True,
-			"fileSystemPath:extensions", "ttf",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:bookmarks" : "font",
+			"path:leaf" : True,
+			"path:valid" : True,
+			"fileSystemPath:extensions" : "ttf",
 
-		],
+		},
 
 	}
 

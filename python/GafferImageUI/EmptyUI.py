@@ -48,14 +48,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The resolution and aspect ratio of the image.
 			""",
 
-		],
+		},
 
 	}
 

@@ -50,9 +50,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"position" : [
+		"position" : {
 
-			"description",
+			"description" :
 			"""
 			The primitive variable containing the positions to use
 			for the wireframe. This must have either Vertex or FaceVarying
@@ -62,16 +62,16 @@ Gaffer.Metadata.registerNode(
 			> UVs for a mesh.
 			"""
 
-		],
+		},
 
-		"width" : [
+		"width" : {
 
-			"description",
+			"description" :
 			"""
 			The width of the curves used to represent the wireframe.
 			"""
 
-		],
+		},
 
 	}
 )

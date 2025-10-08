@@ -52,9 +52,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"imager" : [
+		"imager" : {
 
-			"description",
+			"description" :
 			"""
 			The imager to be assigned. The output of an ArnoldShader node
 			holding an imager should be connected here. Multiple imagers may be
@@ -63,14 +63,14 @@ Gaffer.Metadata.registerNode(
 			node.
 			""",
 
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The mode used to combine the `imager` input with any imagers that
 			already exist in the globals.
@@ -83,12 +83,12 @@ Gaffer.Metadata.registerNode(
 			  any pre-existing imagers.
 			""",
 
-			"preset:Replace", GafferArnold.ArnoldImager.Mode.Replace,
-			"preset:InsertFirst", GafferArnold.ArnoldImager.Mode.InsertFirst,
-			"preset:InsertLast", GafferArnold.ArnoldImager.Mode.InsertLast,
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Replace" : GafferArnold.ArnoldImager.Mode.Replace,
+			"preset:InsertFirst" : GafferArnold.ArnoldImager.Mode.InsertFirst,
+			"preset:InsertLast" : GafferArnold.ArnoldImager.Mode.InsertLast,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
 	}
 

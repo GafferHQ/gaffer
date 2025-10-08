@@ -49,27 +49,27 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the primitive variables to be affected.
 			Names should be separated by spaces, and Gaffer's
 			standard wildcard characters may be used.
 			""",
 
-		],
+		},
 
-		"invertNames" : [
+		"invertNames" : {
 
-			"description",
+			"description" :
 			"""
 			When on, the primitive variables matched by names
 			are unaffected, and the non-matching primitive
 			variables are affected instead.
 			""",
 
-		],
+		},
 
 	}
 

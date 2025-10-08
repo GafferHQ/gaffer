@@ -67,21 +67,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"active" : [
+		"active" : {
 
-			"boolPlugValueWidget:image", "gafferImageUIColorInspectorTool.png"
+			"boolPlugValueWidget:image" : "gafferImageUIColorInspectorTool.png"
 
-		],
+		},
 
-		"inspectors" : [
-			"plugValueWidget:type", "GafferImageUI.ColorInspectorToolUI._ColorInspectorsPlugValueWidget",
-			"label", "",
+		"inspectors" : {
+			"plugValueWidget:type" : "GafferImageUI.ColorInspectorToolUI._ColorInspectorsPlugValueWidget",
+			"label" : "",
 
-			"toolbarLayout:section", "Bottom",
-		],
+			"toolbarLayout:section" : "Bottom",
+		},
 
-		"inspectors.*" : [
-			"description", lambda plug :
+		"inspectors.*" : {
+			"description" : lambda plug :
 			{
 				GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Cursor : "Displays the color values of the pixel under the cursor.",
 				GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Pixel : "Displays the color values of pixel inspector {}.".format( plug.getName()[9:] ),
@@ -89,10 +89,10 @@ Gaffer.Metadata.registerNode(
 			}[ plug["mode"].getValue() ] + """
 			Shows value of each channel, hue/saturation/value, and Exposure Value which is measured in stops relative to 18% grey.
 			""",
-			"label", "",
-			"plugValueWidget:type", "GafferImageUI.ColorInspectorToolUI._ColorInspectorPlugValueWidget",
-			"layout:index", lambda plug : 1024-int( "".join( ['0'] + [ i for i in plug.getName() if i.isdigit() ] ) )
-		],
+			"label" : "",
+			"plugValueWidget:type" : "GafferImageUI.ColorInspectorToolUI._ColorInspectorPlugValueWidget",
+			"layout:index" : lambda plug : 1024-int( "".join( ['0'] + [ i for i in plug.getName() if i.isdigit() ] ) )
+		},
 
 	}
 

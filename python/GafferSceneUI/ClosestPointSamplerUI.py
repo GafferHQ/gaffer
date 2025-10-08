@@ -50,20 +50,20 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"position" : [
+		"position" : {
 
-			"description",
+			"description" :
 			"""
 			The primitive variable that provides the positions
 			to find the closest point to. This defaults to "P",
 			the vertex position of the sampling object.
 			""",
 
-			"layout:section", "Settings.Input",
+			"layout:section" : "Settings.Input",
 			# Put the Input section before the Output section
-			"layout:index", 2,
+			"layout:index" : 2,
 
-		],
+		},
 
 	}
 

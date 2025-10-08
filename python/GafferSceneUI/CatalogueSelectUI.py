@@ -72,20 +72,22 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"imageName" : [
+		"imageName" : {
 
-			"description",
-			"The name of the image to extract.",
+			"description" :
+			"""
+			The name of the image to extract.
+			""",
 
-			"presetNames", __imagePresetNames,
-			"presetValues", __imagePresetValues,
+			"presetNames" : __imagePresetNames,
+			"presetValues" : __imagePresetValues,
 			# Don't promote presets so they are still computed dynamically for
 			# the promoted plug rather than being baked.
-			"presetNames:promotable", False,
-			"presetValues:promotable", False,
-			"presetsPlugValueWidget:allowCustom", True,
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"presetNames:promotable" : False,
+			"presetValues:promotable" : False,
+			"presetsPlugValueWidget:allowCustom" : True,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		]
+		}
 	}
 )

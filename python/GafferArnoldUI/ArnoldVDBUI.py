@@ -51,55 +51,55 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the VDB file to be loaded.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:valid", True,
-			"path:bookmarks", "vdb",
-			"fileSystemPath:extensions", "vdb",
-			"fileSystemPath:extensionsLabel", "Show only VDB files",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:valid" : True,
+			"path:bookmarks" : "vdb",
+			"fileSystemPath:extensions" : "vdb",
+			"fileSystemPath:extensionsLabel" : "Show only VDB files",
 
-		],
+		},
 
-		"grids" : [
+		"grids" : {
 
-			"description",
+			"description" :
 			"""
 			A space separated list of grids to be loaded and made available as
 			channels in the volume shader.
 			""",
 
-		],
+		},
 
-		"velocityGrids" : [
+		"velocityGrids" : {
 
-			"description",
+			"description" :
 			"""
 			A space separated list of grids used to be used to generate motion
 			blur. Should either contain a single vector grid or 3 float grids.
 			"""
 
-		],
+		},
 
-		"velocityScale" : [
+		"velocityScale" : {
 
-			"description",
+			"description" :
 			"""
 			A scale factor applied to the velocity grids, to either increase
 			or decrease motion blur.
 			""",
 
-		],
+		},
 
-		"stepSize" : [
+		"stepSize" : {
 
-			"description",
+			"description" :
 			"""
 			The ray marching step size. This should be small enough to capture
 			the smallest details in the volume. Values which are too large will
@@ -110,11 +110,11 @@ Gaffer.Metadata.registerNode(
 			on top of this automatic size.
 			""",
 
-		],
+		},
 
-		"stepScale" : [
+		"stepScale" : {
 
-			"description",
+			"description" :
 			"""
 			A multiplier applied to the step size. This is most useful when the
 			step size is computed automatically. Typically stepScale would be
@@ -123,7 +123,7 @@ Gaffer.Metadata.registerNode(
 			a value of 4 might be a good starting point for such a file.
 			""",
 
-		],
+		},
 
 	}
 

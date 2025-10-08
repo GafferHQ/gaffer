@@ -167,19 +167,19 @@ Gaffer.Metadata.registerNode(
 
 		# Sections
 
-		"options" : [
+		"options" : {
 
-			"layout:section:Rendering:summary", __renderingSummary,
-			"layout:section:Quality:summary", __qualitySummary,
-			"layout:section:Features:summary", __featuresSummary,
-			"layout:section:Statistics:summary", __statisticsSummary,
-			"layout:section:Ray Depth:summary", __rayDepthSummary,
-			"layout:section:Ray Length:summary", __rayLengthSummary,
-			"layout:section:Texturing:summary", __texturingSummary,
-			"layout:section:Network Cache:summary", __networkCacheSummary,
-			"layout:section:Licensing:summary", __licensingSummary,
+			"layout:section:Rendering:summary" : __renderingSummary,
+			"layout:section:Quality:summary" : __qualitySummary,
+			"layout:section:Features:summary" : __featuresSummary,
+			"layout:section:Statistics:summary" : __statisticsSummary,
+			"layout:section:Ray Depth:summary" : __rayDepthSummary,
+			"layout:section:Ray Length:summary" : __rayLengthSummary,
+			"layout:section:Texturing:summary" : __texturingSummary,
+			"layout:section:Network Cache:summary" : __networkCacheSummary,
+			"layout:section:Licensing:summary" : __licensingSummary,
 
-		],
+		},
 
 	}
 

@@ -68,82 +68,82 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to be rendered.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"renderer" : [
+		"renderer" : {
 
-			"description",
+			"description" :
 			"""
 			The renderer to use. Default mode uses the `render:defaultRenderer` option from
 			the input scene globals to choose the renderer. This can be authored using
 			the StandardOptions node.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.RenderUI.RendererPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.RenderUI.RendererPlugValueWidget",
 
-			"preset:Default", "",
-			"presetNames", rendererPresetNames,
-			"presetValues", rendererPresetNames,
+			"preset:Default" : "",
+			"presetNames" : rendererPresetNames,
+			"presetValues" : rendererPresetNames,
 
-		],
+		},
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The type of render to perform.
 			""",
 
-			"preset:Render", GafferScene.Render.Mode.RenderMode,
-			"preset:Scene Description", GafferScene.Render.Mode.SceneDescriptionMode,
+			"preset:Render" : GafferScene.Render.Mode.RenderMode,
+			"preset:Scene Description" : GafferScene.Render.Mode.SceneDescriptionMode,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the file to be generated when in scene description mode.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
 
-			"layout:activator", "modeIsSceneDescription",
+			"layout:activator" : "modeIsSceneDescription",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			A direct pass-through of the input scene.
 			""",
 
-		],
+		},
 
-		"resolvedRenderer" : [
+		"resolvedRenderer" : {
 
-			"description",
+			"description" :
 			"""
 			The renderer that will be used, accounting for the value of the
 			`render:defaultRenderer` option if `renderer` is set to "Default".
 			""",
 
-			"layout:section", "Advanced",
+			"layout:section" : "Advanced",
 
-		],
+		},
 
 	}
 )

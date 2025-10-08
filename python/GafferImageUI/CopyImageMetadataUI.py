@@ -51,33 +51,33 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"copyFrom" : [
+		"copyFrom" : {
 
-			"description",
+			"description" :
 			"""
 			The image to copy the metadata entries from.
 			""",
 
-		],
+		},
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of metadata entries to be copied. This is a space separated
 			list of entry names, which accepts Gaffer's standard string wildcards.
 			""",
 
-		],
+		},
 
-		"invertNames" : [
+		"invertNames" : {
 
-			"description",
+			"description" :
 			"""
 			When on, matching names are ignored, and non-matching names are copied instead.
 			""",
 
-		],
+		},
 
 	}
 

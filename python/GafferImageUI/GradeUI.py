@@ -56,95 +56,95 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"blackPoint" : [
+		"blackPoint" : {
 
-			"description",
+			"description" :
 			"""
 			The input colour which is considered to be
 			"black". This colour is remapped to the
 			lift value in the output image.
 			""",
 
-		],
+		},
 
-		"whitePoint" : [
+		"whitePoint" : {
 
-			"description",
+			"description" :
 			"""
 			The input colour which is considered to be
 			"white". This colour is remapped to the
 			gain value in the output image.
 			""",
 
-		],
+		},
 
-		"lift" : [
+		"lift" : {
 
-			"description",
+			"description" :
 			"""
 			The colour that input pixels at the blackPoint
 			become in the output image. This can be thought
 			of as lifting the darker values of the image.
 			""",
 
-		],
+		},
 
-		"gain" : [
+		"gain" : {
 
-			"description",
+			"description" :
 			"""
 			The colour that input pixels at the whitePoint
 			become in the output image. This can be thought
 			of as defining the lighter values of the image.
 			""",
 
-		],
+		},
 
-		"multiply" : [
+		"multiply" : {
 
-			"description",
+			"description" :
 			"""
 			An additional multiplier on the output values.
 			""",
 
-		],
+		},
 
-		"offset" : [
+		"offset" : {
 
-			"description",
+			"description" :
 			"""
 			An additional offset added to the output values.
 			""",
 
-		],
+		},
 
-		"gamma" : [
+		"gamma" : {
 
-			"description",
+			"description" :
 			"""
 			A gamma correction applied after all the remapping
 			defined above.
 			""",
 
-		],
+		},
 
-		"blackClamp" : [
+		"blackClamp" : {
 
-			"description",
+			"description" :
 			"""
 			Clamps input values so they don't go below 0.
 			""",
 
-		],
+		},
 
-		"whiteClamp" : [
+		"whiteClamp" : {
 
-			"description",
+			"description" :
 			"""
 			Clamps output values so they don't go above 1.
 			""",
 
-		],
+		},
 
 	}
 

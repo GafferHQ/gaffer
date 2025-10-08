@@ -103,9 +103,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"context" : [
+		"context" : {
 
-			"description",
+			"description" :
 			"""
 			> Warning : Deprecated - please use the `OpenColorIOContext`
 			> node instead.
@@ -117,17 +117,17 @@ Gaffer.Metadata.registerNode(
 			# to provide a button for only adding strings.
 			## \todo Perhaps we should invent some metadata scheme to give
 			# this behaviour to the CompoundDataPlugValueWidget?
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:addButton:widgetType", "GafferImageUI.OpenColorIOTransformUI._ContextFooter",
-			"layout:customWidget:addButton:index", -1,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:addButton:widgetType" : "GafferImageUI.OpenColorIOTransformUI._ContextFooter",
+			"layout:customWidget:addButton:index" : -1,
 
-			"layout:section", "Context",
-			"layout:index", -3,
+			"layout:section" : "Context",
+			"layout:index" : -3,
 			# Only show plug if it has been used previously, to discourage new
 			# use (since the plug is deprecated).
-			"layout:visibilityActivator", lambda plug : bool( len( plug ) ),
+			"layout:visibilityActivator" : lambda plug : bool( len( plug ) ),
 
-		],
+		},
 
 	}
 

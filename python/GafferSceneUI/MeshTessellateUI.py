@@ -66,14 +66,14 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:schemeNotOverridden", lambda node : node["scheme"].getValue() == "",
 
 	plugs = {
-		"divisions" : [
-			"description",
+		"divisions" : {
+			"description" :
 			"""
 			The number of vertices to insert in each edge during tessellation.
 			""",
-		],
-		"calculateNormals" : [
-			"description",
+		},
+		"calculateNormals" : {
+			"description" :
 			"""
 			Calculate normals based on the limit surface. If there are existing normals, they will be
 			overwritten. If this is not set, existing normals will be interpolated like any other primvar.
@@ -81,9 +81,9 @@ Gaffer.Metadata.registerNode(
 			Note that we currently output Vertex normals, which makes sense for most subdivs, but does not
 			accurately capture infinitely sharp creases.
 			""",
-		],
-		"scheme" : [
-			"description",
+		},
+		"scheme" : {
+			"description" :
 			"""
 			Overrides the subdivision scheme that determines the shape of the surface. By default, the
 			subdivision scheme used comes from the mesh's interpolation property, which should be set with
@@ -91,14 +91,14 @@ Gaffer.Metadata.registerNode(
 			useful if a mesh has not been tagged correctly ( for example, if you want to force a mesh
 			to be smooth, you can set scheme to CatmullClark ).
 			""",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:From Mesh", "",
-			"preset:Bilinear", "bilinear",
-			"preset:Catmull-Clark", "catmullClark",
-			"preset:Loop", "loop",
-		],
-		"tessellatePolygons" : [
-			"description",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:From Mesh" : "",
+			"preset:Bilinear" : "bilinear",
+			"preset:Catmull-Clark" : "catmullClark",
+			"preset:Loop" : "loop",
+		},
+		"tessellatePolygons" : {
+			"description" :
 			"""
 			Force bilinear tessellation of meshes without subdivision schemes.
 
@@ -107,11 +107,11 @@ Gaffer.Metadata.registerNode(
 			tessellation won't change the shape of the surface, but sometimes forcing tessellation is useful
 			anyways ( for example, to apply deformation on a denser mesh ).
 			""",
-			"layout:activator", "schemeNotOverridden",
-		],
-		"interpolateBoundary" : [
+			"layout:activator" : "schemeNotOverridden",
+		},
+		"interpolateBoundary" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies which parts of mesh boundaries are forced to exactly meet the boundary.
 			Without this forcing, a subdivision surface will naturally shrink back from the boundary as it
@@ -123,19 +123,19 @@ Gaffer.Metadata.registerNode(
 			providing the split meshes with a border of shared polygons in order to get continuous tangents.
 			""",
 
-			"preset:From Mesh", "",
-			"preset:None", IECoreScene.MeshPrimitive.interpolateBoundaryNone,
-			"preset:Edge Only", IECoreScene.MeshPrimitive.interpolateBoundaryEdgeOnly,
-			"preset:Edge And Corner", IECoreScene.MeshPrimitive.interpolateBoundaryEdgeAndCorner,
+			"preset:From Mesh" : "",
+			"preset:None" : IECoreScene.MeshPrimitive.interpolateBoundaryNone,
+			"preset:Edge Only" : IECoreScene.MeshPrimitive.interpolateBoundaryEdgeOnly,
+			"preset:Edge And Corner" : IECoreScene.MeshPrimitive.interpolateBoundaryEdgeAndCorner,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
-		"faceVaryingLinearInterpolation" : [
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
+		"faceVaryingLinearInterpolation" : {
 
 			# This name is so long it's getting cropped ... better to lose the end than the start.
-			"label", "Face Varying Linear Interp..",
+			"label" : "Face Varying Linear Interp..",
 
-			"description",
+			"description" :
 			"""
 			Specifies where face varying primitive variables should use a simple linear interpolation instead
 			of being smoothed.
@@ -148,30 +148,30 @@ Gaffer.Metadata.registerNode(
 			https://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html#schemes-and-options
 			""",
 
-			"preset:From Mesh", "",
-			"preset:None", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationNone,
-			"preset:Corners Only", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersOnly,
-			"preset:Corners Plus 1", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus1,
-			"preset:Corners Plus 2", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus2,
-			"preset:Boundaries", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationBoundaries,
-			"preset:All", IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationAll,
+			"preset:From Mesh" : "",
+			"preset:None" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationNone,
+			"preset:Corners Only" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersOnly,
+			"preset:Corners Plus 1" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus1,
+			"preset:Corners Plus 2" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationCornersPlus2,
+			"preset:Boundaries" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationBoundaries,
+			"preset:All" : IECoreScene.MeshPrimitive.faceVaryingLinearInterpolationAll,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
-		"triangleSubdivisionRule" : [
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
+		"triangleSubdivisionRule" : {
 
-			"description",
+			"description" :
 			"""
 			Option to use a non-standard `Smooth` subdivision rule that provides slightly better results
 			at triangular faces in Catmull-Clark meshes than the standard Catmull-Clark algorithm.
 			""",
 
-			"preset:From Mesh", "",
-			"preset:CatmullClark", IECoreScene.MeshPrimitive.triangleSubdivisionRuleCatmullClark,
-			"preset:Smooth", IECoreScene.MeshPrimitive.triangleSubdivisionRuleSmooth,
+			"preset:From Mesh" : "",
+			"preset:CatmullClark" : IECoreScene.MeshPrimitive.triangleSubdivisionRuleCatmullClark,
+			"preset:Smooth" : IECoreScene.MeshPrimitive.triangleSubdivisionRuleSmooth,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
 	}
 
 )

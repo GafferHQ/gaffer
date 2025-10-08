@@ -55,9 +55,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"relativeTransform" : [
+		"relativeTransform" : {
 
-			"description",
+			"description" :
 			"""
 			Transforms the constrained object relative to the target location.
 
@@ -65,10 +65,10 @@ Gaffer.Metadata.registerNode(
 			> to modify the reference position instead.
 			""",
 
-			"layout:section", "Transform",
-			"layout:activator", "keepReferencePositionIsOff",
+			"layout:section" : "Transform",
+			"layout:activator" : "keepReferencePositionIsOff",
 
-		],
+		},
 
 	}
 

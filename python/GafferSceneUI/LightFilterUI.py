@@ -76,63 +76,63 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"layout:index", 0,
+			"layout:index" : 0,
 
-		],
+		},
 
-		"filteredLights" : [
+		"filteredLights" : {
 
-			"description",
+			"description" :
 			"""
 			The lights that are being filtered. Accepts a SetExpression. You
 			might want to set it to 'defaultLights' to have the filter affect
 			all lights that haven't been excluded from that set.
 			""",
 
-			"layout:index", 1,
-		],
+			"layout:index" : 1,
+		},
 
-		"sets" : [
+		"sets" : {
 
-			"layout:divider", True,
-			"layout:index", 3,
+			"layout:divider" : True,
+			"layout:index" : 3,
 
-		],
+		},
 
-		"parameters" : [
+		"parameters" : {
 
-			"description",
+			"description" :
 			"""
 			The parameters of the light filter shader - these will vary based on the type.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
 
 
-		],
+		},
 
-		"parameters.*" : [
+		"parameters.*" : {
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
-			"nodule:type", "",
+			"noduleLayout:section" : "left",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"parameters..." : [
+		"parameters..." : {
 
-			"userDefault", __parameterUserDefault,
+			"userDefault" : __parameterUserDefault,
 
-		],
+		},
 
 	}
 

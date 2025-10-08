@@ -49,35 +49,35 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the object in the output scene.
 			""",
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			The transform applied to the object.
 			""",
 
-			"layout:section", "Transform",
+			"layout:section" : "Transform",
 
-		],
+		},
 
-		"sets" : [
+		"sets" : {
 
-			"description",
+			"description" :
 			"""
 			A list of sets to include the object in. The
 			names should be separated by spaces.
 			""",
 
-		],
+		},
 
 	}
 

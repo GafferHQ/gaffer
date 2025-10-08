@@ -59,9 +59,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"setExpression" : [
+		"setExpression" : {
 
-			"description",
+			"description" :
 			"""
 			A set expression that computes a set that defines
 			the locations to be matched.
@@ -92,11 +92,11 @@ Gaffer.Metadata.registerNode(
 			entries that help construct set expressions.
 			""",
 
-			"ui:scene:acceptsSetExpression", True,
-			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
-			"nodule:type", "",
+			"ui:scene:acceptsSetExpression" : True,
+			"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

@@ -600,9 +600,14 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		light = GafferSceneTest.TestLight()
 		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
+		globalAttributes = GafferScene.Attributes()
+		globalAttributes["in"].setInput( light["out"] )
+		globalAttributes["global"].setValue( True )
+		globalAttributes["attributes"].addChild( Gaffer.NameValuePlug( "gl:visualiser:scale", 1.0 ) )
+
 		editScope1 = Gaffer.EditScope()
 		editScope1.setup( light["out"] )
-		editScope1["in"].setInput( light["out"] )
+		editScope1["in"].setInput( globalAttributes["out"] )
 
 		editScope2 = Gaffer.EditScope()
 		editScope2.setup( editScope1["out"] )
@@ -632,6 +637,10 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( cs ), 3 )
 		settings["editScope"].setInput( None )
 		self.assertEqual( len( cs ), 4 )
+
+		# As should changing a global attribute.
+		globalAttributes["attributes"][0]["value"].setValue( 20 )
+		self.assertEqual( len( cs ), 5 )
 
 	def testNonExistentLocation( self ) :
 

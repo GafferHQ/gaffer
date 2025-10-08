@@ -50,42 +50,42 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"referenceFrame" : [
+		"referenceFrame" : {
 
-			"divider", True,
+			"divider" : True,
 
-		],
+		},
 
-		"xEnabled" : [
+		"xEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables the constraint in the world space x axis.
 			""",
 
-		],
+		},
 
-		"yEnabled" : [
+		"yEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables the constraint in the world space y axis.
 			""",
 
-		],
+		},
 
-		"zEnabled" : [
+		"zEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables the constraint in the world space z axis.
 			""",
 
-		],
+		},
 
-		"offset" : [
+		"offset" : {
 
-			"description",
+			"description" :
 			"""
 			A world space translation offset applied on top
 			of the target position.
@@ -94,9 +94,9 @@ Gaffer.Metadata.registerNode(
 			> to modify the reference position instead.
 			""",
 
-			"layout:activator", "keepReferencePositionIsOff",
+			"layout:activator" : "keepReferencePositionIsOff",
 
-		],
+		},
 
 	}
 

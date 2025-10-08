@@ -52,31 +52,31 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"nodule:type", lambda plug : "GafferUI::StandardNodule" if isinstance( plug, GafferScene.ScenePlug ) else "",
+			"nodule:type" : lambda plug : "GafferUI::StandardNodule" if isinstance( plug, GafferScene.ScenePlug ) else "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The output scene.
 			""",
 
-		],
+		},
 
 
-		"enabled" : [
+		"enabled" : {
 
-			"description",
+			"description" :
 			"""
 			The on/off state of the node. When it is off, the node outputs
 			an empty scene.
 			""",
 
-		],
+		},
 
 	}
 

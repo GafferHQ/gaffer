@@ -58,29 +58,29 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"attributes" : [
+		"attributes" : {
 
-			"compoundDataPlugValueWidget:editable", True,
+			"compoundDataPlugValueWidget:editable" : True,
 
-		],
+		},
 
-		"attributes.*" : [
+		"attributes.*" : {
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", False,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : False,
 
-		],
+		},
 
-		"attributes.*.name" : [
+		"attributes.*.name" : {
 
-			"ui:scene:acceptsAttributeName", True,
+			"ui:scene:acceptsAttributeName" : True,
 
-		],
+		},
 
-		"extraAttributes" : [
+		"extraAttributes" : {
 
-			"plugValueWidget:type", None,
+			"plugValueWidget:type" : None,
 
-		],
+		},
 
 	}
 

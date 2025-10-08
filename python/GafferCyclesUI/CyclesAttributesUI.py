@@ -127,16 +127,16 @@ Gaffer.Metadata.registerNode(
 
 		# Sections
 
-		"attributes" : [
+		"attributes" : {
 
-			"layout:section:Visibility:summary", __visibilitySummary,
-			"layout:section:Rendering:summary", __renderingSummary,
-			"layout:section:Subdivision:summary", __subdivisionSummary,
-			"layout:section:Volume:summary", __volumeSummary,
-			"layout:section:Object:summary", __objectSummary,
-			"layout:section:Shader:summary", __shaderSummary,
+			"layout:section:Visibility:summary" : __visibilitySummary,
+			"layout:section:Rendering:summary" : __renderingSummary,
+			"layout:section:Subdivision:summary" : __subdivisionSummary,
+			"layout:section:Volume:summary" : __volumeSummary,
+			"layout:section:Object:summary" : __objectSummary,
+			"layout:section:Shader:summary" : __shaderSummary,
 
-		],
+		},
 
 	}
 

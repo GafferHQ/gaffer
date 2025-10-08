@@ -72,9 +72,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mode": [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The method to use for placing the light.
 
@@ -84,18 +84,18 @@ Gaffer.Metadata.registerNode(
 			the target point.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 100,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 100,
 
-			"preset:Shadow", GafferSceneUI.LightPositionTool.Mode.Shadow,
-			"preset:Highlight", GafferSceneUI.LightPositionTool.Mode.Highlight,
-			"preset:Diffuse", GafferSceneUI.LightPositionTool.Mode.Diffuse,
+			"preset:Shadow" : GafferSceneUI.LightPositionTool.Mode.Shadow,
+			"preset:Highlight" : GafferSceneUI.LightPositionTool.Mode.Highlight,
+			"preset:Diffuse" : GafferSceneUI.LightPositionTool.Mode.Diffuse,
 
-			"viewer:cyclePresetShortcut", "O",
+			"viewer:cyclePresetShortcut" : "O",
 
-		]
+		}
 
 	}
 

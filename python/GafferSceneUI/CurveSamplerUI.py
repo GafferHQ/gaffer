@@ -50,23 +50,23 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"curveIndex" : [
+		"curveIndex" : {
 
-			"description",
+			"description" :
 			"""
 			The name of an integer primitive variable that specifies the index of
 			the curve to be sampled. If left unspecified, the first curve will be sampled.
 			""",
 
-			"layout:section", "Settings.Input",
+			"layout:section" : "Settings.Input",
 			# Put the Input section before the Output section
-			"layout:index", 2,
+			"layout:index" : 2,
 
-		],
+		},
 
-		"v" : [
+		"v" : {
 
-			"description",
+			"description" :
 			"""
 			The name of a float primitive variable that specifies the parametric
 			position on the curve to be sampled. A value of 0 corresponds to
@@ -78,9 +78,9 @@ Gaffer.Metadata.registerNode(
 			> will contain `False` to indicate failure.
 			""",
 
-			"layout:section", "Settings.Input",
+			"layout:section" : "Settings.Input",
 
-		],
+		},
 
 	}
 

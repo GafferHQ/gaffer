@@ -60,59 +60,59 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the file to be loaded. The file can be
 			in any of the formats supported by Cortex's SceneInterfaces.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:valid", True,
-			"path:bookmarks", "sceneCache",
-			"fileSystemPath:extensions", " ".join( IECoreScene.SceneInterface.supportedExtensions() ),
-			"fileSystemPath:extensionsLabel", "Show only cache files",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:valid" : True,
+			"path:bookmarks" : "sceneCache",
+			"fileSystemPath:extensions" : " ".join( IECoreScene.SceneInterface.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel" : "Show only cache files",
 
-		],
+		},
 
-		"refreshCount" : [
+		"refreshCount" : {
 
-			"description",
+			"description" :
 			"""
 			May be incremented to force a reload if the file has
 			changed on disk - otherwise old contents may still
 			be loaded via Gaffer's cache.
 			""",
 
-			"plugValueWidget:type", "GafferUI.RefreshPlugValueWidget",
-			"layout:label", "",
-			"layout:accessory", True,
+			"plugValueWidget:type" : "GafferUI.RefreshPlugValueWidget",
+			"layout:label" : "",
+			"layout:accessory" : True,
 
-		],
+		},
 
-		"tags" : [
+		"tags" : {
 
-			"description",
+			"description" :
 			"""
 			Limits the parts of the scene loaded to only those
 			with a specific set of tags.
 			""",
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			The transform used to position the cache. This is applied to
 			all children of the cache root.
 			""",
 
-			"layout:section", "Transform",
+			"layout:section" : "Transform",
 
-		],
+		},
 
 	}
 

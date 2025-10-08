@@ -44,9 +44,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The mode used to combine the filter input with any
 			filters that already exist in the scene globals.
@@ -59,12 +59,12 @@ Gaffer.Metadata.registerNode(
 			  any pre-existing filters.
 			""",
 
-			"preset:Replace", GafferRenderMan.RenderManOutputFilter.Mode.Replace,
-			"preset:InsertFirst", GafferRenderMan.RenderManOutputFilter.Mode.InsertFirst,
-			"preset:InsertLast", GafferRenderMan.RenderManOutputFilter.Mode.InsertLast,
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Replace" : GafferRenderMan.RenderManOutputFilter.Mode.Replace,
+			"preset:InsertFirst" : GafferRenderMan.RenderManOutputFilter.Mode.InsertFirst,
+			"preset:InsertLast" : GafferRenderMan.RenderManOutputFilter.Mode.InsertLast,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
 	}
 

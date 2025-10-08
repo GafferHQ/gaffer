@@ -48,24 +48,24 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"boundingMode" : [
+		"boundingMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used when accessing pixels outside the
 			input data window.
 			""",
 
-			"preset:Black", GafferImage.Sampler.BoundingMode.Black,
-			"preset:Clamp", GafferImage.Sampler.BoundingMode.Clamp,
+			"preset:Black" : GafferImage.Sampler.BoundingMode.Black,
+			"preset:Clamp" : GafferImage.Sampler.BoundingMode.Clamp,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used to perform the resampling. The name
 			of any OIIO filter may be specified, but this UI
@@ -75,20 +75,20 @@ Gaffer.Metadata.registerNode(
 			fast.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Blackman-Harris", "blackman-harris",
-			"preset:Cubic", "cubic",
-			"preset:Keys", "keys",
-			"preset:Simon", "simon",
-			"preset:Rifman", "rifman",
-			"preset:Bilinear", "bilinear",
+			"preset:Blackman-Harris" : "blackman-harris",
+			"preset:Cubic" : "cubic",
+			"preset:Keys" : "keys",
+			"preset:Simon" : "simon",
+			"preset:Rifman" : "rifman",
+			"preset:Bilinear" : "bilinear",
 
-		],
+		},
 
-		"useDerivatives" : [
+		"useDerivatives" : {
 
-			"description",
+			"description" :
 			"""
 			Whether accurate filter sizes should be computed that take into account the amount
 			of distortion in the size and shape of pixels.  Should have minimal impact on warps
@@ -96,9 +96,9 @@ Gaffer.Metadata.registerNode(
 			heavy distortion.  Fixes problems with aliasing, at the cost of some extra calculations.
 			""",
 
-			"userDefault", False,
-			"layout:activator", lambda plug : plug.node()["filter"].getValue() != "bilinear",
-		],
+			"userDefault" : False,
+			"layout:activator" : lambda plug : plug.node()["filter"].getValue() != "bilinear",
+		},
 
 	}
 

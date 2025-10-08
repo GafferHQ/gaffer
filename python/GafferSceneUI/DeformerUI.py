@@ -43,9 +43,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"description",
+			"description" :
 			"""
 			Adjusts bounding boxes to account for the changes made to the object.
 
@@ -54,9 +54,9 @@ Gaffer.Metadata.registerNode(
 			> will only change slightly, you may prefer to turn this off.
 			""",
 
-			"layout:index", -1,
+			"layout:index" : -1,
 
-		],
+		},
 
 	}
 

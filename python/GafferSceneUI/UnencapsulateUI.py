@@ -56,11 +56,11 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parent" : [
+		"parent" : {
 
-			"description", "Deprecated. Use `filter` input instead.",
+			"description" : "Deprecated. Use `filter` input instead.",
 
-		],
+		},
 
 	}
 

@@ -59,9 +59,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"sets" : [
+		"sets" : {
 
-			"description",
+			"description" :
 			"""
 			A space separated list of sets to consider membership of. This
 			supports wild cards, eg: asset:* to allow membership display to
@@ -69,59 +69,59 @@ Gaffer.Metadata.registerNode(
 			of any sets in the input scene.
 			""",
 
-			"ui:scene:acceptsSetNames", True
-		],
+			"ui:scene:acceptsSetNames" : True
+		},
 
-		"includeInherited" : [
+		"includeInherited" : {
 
-			"description",
+			"description" :
 			"""
 			When enabled, objects that inherit Set membership from their parents
 			will also be coloured. Disabling this will only color objects that
 			are exactly matched by any given Set.
 			"""
 
-		],
+		},
 
-		"stripeWidth" : [
+		"stripeWidth" : {
 
-			"description",
+			"description" :
 			"""
 			The thickness (in pixels) of the stripes used to indicate an object
 			is in more than one set.
 			"""
 
-		],
+		},
 
-		"colorOverrides" : [
+		"colorOverrides" : {
 
-			"description",
+			"description" :
 			"""
 			Allows the randomly generated set colors to be overridden by
 			specific colors to use for Sets matching the supplied filter. This
 			can be a name, or a match string.
 			""",
 
-			"layout:section", "Settings.Color Overrides",
+			"layout:section" : "Settings.Color Overrides",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.SetVisualiserUI._OverridesFooter",
-			"layout:customWidget:footer:index", -1
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.SetVisualiserUI._OverridesFooter",
+			"layout:customWidget:footer:index" : -1
 
-		],
+		},
 
-		"colorOverrides.*.name" : [
+		"colorOverrides.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies which set or sets to apply the override to. This can be
 			a name, or a match string. Right-click to insert the name of any
 			set in the input scene.
 			""",
 
-			"ui:scene:acceptsSetName", True
+			"ui:scene:acceptsSetName" : True
 
-		]
+		}
 
 	}
 

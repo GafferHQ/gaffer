@@ -56,9 +56,9 @@ Gaffer.Metadata.registerNode(
 	plugs = {
 
 
-		"connectivity" : [
+		"connectivity" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable which will determine the segmentation.
 			You may specify an empty string, or any vertex primitive variable to use
@@ -69,18 +69,18 @@ Gaffer.Metadata.registerNode(
 			but they just output which faces have the same uniform value, or put all
 			faces in one segment.
 			""",
-			"layout:section", "Settings.Inputs"
-		],
+			"layout:section" : "Settings.Inputs"
+		},
 
-		"segment" : [
+		"segment" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the uniform primitive variable which will be created to hold
 			the segment index for each face.
 			""",
-			"layout:section", "Settings.Outputs"
-		],
+			"layout:section" : "Settings.Outputs"
+		},
 
 	}
 

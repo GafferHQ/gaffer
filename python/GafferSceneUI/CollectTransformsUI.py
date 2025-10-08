@@ -54,19 +54,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"attributes" : [
+		"attributes" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the new attributes to create.  The new attributes will be
 			copied from the transform in different Contexts.
 			""",
 
-		],
+		},
 
-		"attributeContextVariable" : [
+		"attributeContextVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The name of a Context Variable that is set to the current
 			attribute name when evaluating the transform. This can be used
@@ -78,26 +78,26 @@ Gaffer.Metadata.registerNode(
 			different times.
 			""",
 
-		],
+		},
 
-		"space" : [
+		"space" : {
 
-			"description",
+			"description" :
 			"""
 			If you select world space, the created attributes will contain a concatenation
 			of all transforms from the root of the scene to the current location.
 			""",
 
-			"preset:Local", GafferScene.Transform.Space.Local,
-			"preset:World", GafferScene.Transform.Space.World,
+			"preset:Local" : GafferScene.Transform.Space.Local,
+			"preset:World" : GafferScene.Transform.Space.World,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"requireVariation" : [
+		"requireVariation" : {
 
-			"description",
+			"description" :
 			"""
 			If true, new attributes will only be created
 			if the transform differs in some of the Contexts.
@@ -105,11 +105,11 @@ Gaffer.Metadata.registerNode(
 			( you can just use the transform instead of accessing the new attributes ).
 			"""
 
-		],
+		},
 
-		"transforms" : [
+		"transforms" : {
 
-			"description",
+			"description" :
 			"""
 			This hidden plug is a CompoundObject that contains just the new
 			transform attributes.
@@ -118,9 +118,9 @@ Gaffer.Metadata.registerNode(
 			cases where you can improve performance by naughtily plugging
 			it into an expression.
 			""",
-			"plugValueWidget:type", ""
+			"plugValueWidget:type" : ""
 
-		],
+		},
 
 	}
 

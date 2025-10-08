@@ -49,33 +49,33 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"referenceFrame" : [
+		"referenceFrame" : {
 
-			"divider", True,
+			"divider" : True,
 
-		],
+		},
 
-		"aim" : [
+		"aim" : {
 
-			"description",
+			"description" :
 			"""
 			The aim vector, specified in object space. The
 			object will be transformed so that this vector
 			points at the target.
 			""",
 
-		],
+		},
 
-		"up" : [
+		"up" : {
 
-			"description",
+			"description" :
 			"""
 			The up vector, specified in object space. The
 			object will be transformed so that this vector
 			points up in world space, as far as is possible.
 			""",
 
-		],
+		},
 
 	}
 

@@ -59,24 +59,24 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of globals to be removed. Names should be
 			separated by spaces and can use Gaffer's standard wildcards.
 			""",
 
-		],
+		},
 
-		"invertNames" : [
+		"invertNames" : {
 
-			"description",
+			"description" :
 			"""
 			When on, matching names are kept, and non-matching names are removed.
 			""",
 
-		],
+		},
 
 	}
 

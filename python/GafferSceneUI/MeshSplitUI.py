@@ -50,28 +50,28 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parent" : [
+		"parent" : {
 
-			"description",
+			"description" :
 			"""
 			Legacy plug. Do not use.
 			"""
 
-		],
+		},
 
-		"segment" : [
+		"segment" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable to split based on.  Must be a
 			Uniform ( per-face ) primitive variable.  A separate mesh will be
 			created for each unique value of this primitive variable.
 			""",
-		],
+		},
 
-		"nameFromSegment" : [
+		"nameFromSegment" : {
 
-			"description",
+			"description" :
 			"""
 			If true, the resulting meshes will be named based on the value of
 			the primitive variable chosen by `segment`.  Requires that the chosen
@@ -79,11 +79,11 @@ Gaffer.Metadata.registerNode(
 
 			Otherwise, the resulting meshes will just be named based on an integer index.
 			""",
-		],
+		},
 
-		"preciseBounds" : [
+		"preciseBounds" : {
 
-			"description",
+			"description" :
 			"""
 			Create tightly fitted bounding boxes that exactly fit each split child mesh.
 			This requires visiting the vertices of the input mesh, so is more expensive.
@@ -91,7 +91,7 @@ Gaffer.Metadata.registerNode(
 			- this is technically correct, since they are all contained within this
 			bounding box, but isn't as informative.
 			""",
-		],
+		},
 
 	}
 

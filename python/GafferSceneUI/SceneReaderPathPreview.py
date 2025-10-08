@@ -219,53 +219,53 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"toolbarLayout:section", "Top",
+			"toolbarLayout:section" : "Top",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"user" : [
+		"user" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"lookAt" : [
+		"lookAt" : {
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 
-		],
+		},
 
-		"depth" : [
+		"depth" : {
 
-			"numericPlugValueWidget:fixedCharacterWidth", 5,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
-		"angle" : [
+		"angle" : {
 
-			"numericPlugValueWidget:fixedCharacterWidth", 5,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
-		"elevation" : [
+		"elevation" : {
 
-			"numericPlugValueWidget:fixedCharacterWidth", 5,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
 	}
 

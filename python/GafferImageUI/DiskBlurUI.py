@@ -54,52 +54,52 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"radius" : [
+		"radius" : {
 
-			"description",
+			"description" :
 			"""
 			The radius of the disk to blur by in pixels.
 			""",
 
-		],
+		},
 
-		"radiusChannel" : [
+		"radiusChannel" : {
 
-			"description",
+			"description" :
 			"""
 			An optional input image channel which defines a blur radius per pixel, allowing the radius to be
 			varied across the image. The per-pixel radius is multiplied with the main radius control.
 			""",
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "" ] ),
-			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "None" ] ),
-		],
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:extraChannels" : IECore.StringVectorData( [ "" ] ),
+			"channelPlugValueWidget:extraChannelLabels" : IECore.StringVectorData( [ "None" ] ),
+		},
 
-		"approximationThreshold" : [
+		"approximationThreshold" : {
 
-			"description",
+			"description" :
 			"""
 			The maximum acceptable error caused by omitting anti-aliasing for a particular disk. Since very
 			large disks often contribute very little to each individual output pixel, omitting anti-aliasing
 			for them can provide a substantial speed improvement.
 			""",
-			"layout:section", "Advanced"
+			"layout:section" : "Advanced"
 
-		],
+		},
 
-		"maxRadius" : [
+		"maxRadius" : {
 
-			"description",
+			"description" :
 			"""
 			An upper limit on the disk radius (`radiusChannel * radius`). Larger disks will be clamped to this
 			size. Used to accelerate rendering, so higher-than-necessary settings may reduce speed.
 			""",
 
-		],
+		},
 
-		"layerBoundaries" : [
+		"layerBoundaries" : {
 
-			"description",
+			"description" :
 			"""
 			Defines a series of layers which are alpha-composited to generate the final image. Each layer
 			contains all the disks within a specific radius range, allowing "foreground" disks to occlude
@@ -115,9 +115,9 @@ Gaffer.Metadata.registerNode(
 			layers (it uses the DiskBlur node internally).
 			""",
 
-			"layout:section", "Advanced"
+			"layout:section" : "Advanced"
 
-		],
+		},
 
 	}
 

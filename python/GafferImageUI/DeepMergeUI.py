@@ -49,14 +49,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in.*" : [
+		"in.*" : {
 
-			"description",
+			"description" :
 			"""
 			A deep or flat image input.
 			""",
 
-		],
+		},
 
 	}
 

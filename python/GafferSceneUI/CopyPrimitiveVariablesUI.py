@@ -49,29 +49,29 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"source" : [
+		"source" : {
 
-			"description",
+			"description" :
 			"""
 			The scene from which the primitive variables are copied.
 			""",
 
-		],
+		},
 
-		"primitiveVariables" : [
+		"primitiveVariables" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the primitive variables to be copied. These should be
 			separated by spaces and can use Gaffer's standard wildcards
 			to match multiple variables.
 			""",
 
-		],
+		},
 
-		"sourceLocation" : [
+		"sourceLocation" : {
 
-			"description",
+			"description" :
 			"""
 			The location in the source scene that primitive variables are copied from.
 			By default, variables are copied from the location equivalent to the one
@@ -79,28 +79,28 @@ Gaffer.Metadata.registerNode(
 			does not exist; instead, no variables are copied.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "source",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "source",
 
-		],
+		},
 
-		"prefix" : [
+		"prefix" : {
 
-			"description",
+			"description" :
 			"""
 			A prefix applied to the names of the copied primitive variables.
 			""",
 
-		],
+		},
 
-		"ignoreIncompatible" : [
+		"ignoreIncompatible" : {
 
-			"description",
+			"description" :
 			"""
 			Causes the node to not error when attempting to copy primitive variables from
 			the source object that are not compatible with the destination object.
 			""",
-		]
+		}
 
 	}
 

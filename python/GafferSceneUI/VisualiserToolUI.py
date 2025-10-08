@@ -64,9 +64,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"dataName" : [
+		"dataName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the data to visualise. Primitive variable names must be
 			prefixed by `primitiveVariable:`. For example, `primitiveVariable:uv`
@@ -77,26 +77,26 @@ Gaffer.Metadata.registerNode(
 			value `vertex:index`.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 150,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 150,
 
-			"plugValueWidget:type", "GafferSceneUI.VisualiserToolUI._DataNameChooser",
+			"plugValueWidget:type" : "GafferSceneUI.VisualiserToolUI._DataNameChooser",
 
-		],
-		"opacity" : [
+		},
+		"opacity" : {
 
-			"description",
+			"description" :
 			"""
 			The amount the visualiser will occlude the scene locations being visualised.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 45,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 45,
 
-		],
-		"mode" : [
+		},
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The method for displaying the data.
 
@@ -106,20 +106,20 @@ Gaffer.Metadata.registerNode(
 			modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
 			""",
 
-			"preset:Auto", GafferSceneUI.VisualiserTool.Mode.Auto,
-			"preset:Color", GafferSceneUI.VisualiserTool.Mode.Color,
-			"preset:Color (Auto Range)", GafferSceneUI.VisualiserTool.Mode.ColorAutoRange,
-			"preset:Vertex Label", GafferSceneUI.VisualiserTool.Mode.VertexLabel,
+			"preset:Auto" : GafferSceneUI.VisualiserTool.Mode.Auto,
+			"preset:Color" : GafferSceneUI.VisualiserTool.Mode.Color,
+			"preset:Color (Auto Range)" : GafferSceneUI.VisualiserTool.Mode.ColorAutoRange,
+			"preset:Vertex Label" : GafferSceneUI.VisualiserTool.Mode.VertexLabel,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 150,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 150,
 
-		],
-		"valueMin" : [
+		},
+		"valueMin" : {
 
-			"description",
+			"description" :
 			"""
 			The minimum data channel value that will be mapped to 0.
 
@@ -127,15 +127,15 @@ Gaffer.Metadata.registerNode(
 			and second channels are used. For V3f data all three channels are used.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 175,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 175,
 
-			"toolbarLayout:visibilityActivator", "modeIsColor",
+			"toolbarLayout:visibilityActivator" : "modeIsColor",
 
-		],
-		"valueMax" : [
+		},
+		"valueMax" : {
 
-			"description",
+			"description" :
 			"""
 			The maximum data channel value that will be mapped to 1.
 
@@ -143,52 +143,52 @@ Gaffer.Metadata.registerNode(
 			and second channels are used. For V3f data all three channels are used.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 175,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 175,
 
-			"toolbarLayout:visibilityActivator", "modeIsColor",
+			"toolbarLayout:visibilityActivator" : "modeIsColor",
 
-		],
-		"size": [
+		},
+		"size" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the size of the displayed text.
 			""",
 
-			"plugValueWidget:type", ""
+			"plugValueWidget:type" : ""
 
-		],
-		"vectorScale" : [
+		},
+		"vectorScale" : {
 
-			"description",
+			"description" :
 			"""
 			The scale factor to apply to vectors.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 45,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 45,
 
-			"toolbarLayout:visibilityActivator", "modeIsAuto",
+			"toolbarLayout:visibilityActivator" : "modeIsAuto",
 
-		],
+		},
 
-		"vectorColor" : [
+		"vectorColor" : {
 
-			"description",
+			"description" :
 			"""
 			The colour to use for drawing vectors.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 175,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 175,
 
-			"toolbarLayout:visibilityActivator", "modeIsAuto",
-			"colorPlugValueWidget:colorChooserButtonVisible", False,
+			"toolbarLayout:visibilityActivator" : "modeIsAuto",
+			"colorPlugValueWidget:colorChooserButtonVisible" : False,
 
-			"plugValueWidget:type", "GafferSceneUI.VisualiserToolUI._UntransformedColorWidget",
+			"plugValueWidget:type" : "GafferSceneUI.VisualiserToolUI._UntransformedColorWidget",
 
-		],
+		},
 
 	},
 )

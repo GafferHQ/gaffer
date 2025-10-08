@@ -48,50 +48,50 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shadow" : [
+		"shadow" : {
 
-			"description",
+			"description" :
 			"""
 			Enables the rendering of a drop shadow which can be coloured, offset and
 			blurred.
 			""",
 
-			"layout:section", "Shadow",
+			"layout:section" : "Shadow",
 
-		],
+		},
 
-		"shadowColor" : [
+		"shadowColor" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of the shadow.
 			""",
 
-			"layout:section", "Shadow",
+			"layout:section" : "Shadow",
 
-		],
+		},
 
-		"shadowOffset" : [
+		"shadowOffset" : {
 
-			"description",
+			"description" :
 			"""
 			The offset of the shadow, measured in pixels.
 			""",
 
-			"layout:section", "Shadow",
+			"layout:section" : "Shadow",
 
-		],
+		},
 
-		"shadowBlur" : [
+		"shadowBlur" : {
 
-			"description",
+			"description" :
 			"""
 			A blur applied to the shadow, measured in pixels.
 			""",
 
-			"layout:section", "Shadow",
+			"layout:section" : "Shadow",
 
-		],
+		},
 
 	}
 

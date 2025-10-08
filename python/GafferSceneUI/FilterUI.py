@@ -50,29 +50,29 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"enabled" : [
+		"enabled" : {
 
-			"description",
+			"description" :
 			"""
 			The on/off state of the filter. When it is off, the
 			filter does not match any locations.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The result of the filter. This should be connected into
 			the "filter" plug of a FilteredSceneProcessor.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		]
+		}
 
 	}
 

@@ -63,6 +63,7 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/core/span.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/lexical_cast.hpp"
@@ -82,6 +83,7 @@
 #include "tbb/spin_mutex.h"
 
 #include "fmt/format.h"
+#include "fmt/ranges.h"
 
 #include <condition_variable>
 #include <filesystem>
@@ -202,6 +204,10 @@ std::string formatHeaderParameter( const std::string name, const IECore::Data *d
 	else if( const IECore::Color4fData *c4fData = IECore::runTimeCast<const IECore::Color4fData>( data ) )
 	{
 		return fmt::format( "string '{}' ({} {} {} {})", name, c4fData->readable().r, c4fData->readable().g, c4fData->readable().b, c4fData->readable().a );
+	}
+	else if( const IECore::M44fData *m44fData = IECore::runTimeCast<const IECore::M44fData>( data ) )
+	{
+		return fmt::format( "matrix '{}' {}", name, fmt::join( boost::span( m44fData->readable().getValue(), 16 ), " " ) );
 	}
 	else
 	{

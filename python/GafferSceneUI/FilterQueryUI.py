@@ -53,30 +53,30 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query the filter for.
 			""",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter to query.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget",
-			"noduleLayout:section", "right",
+			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
+			"noduleLayout:section" : "right",
 
-		],
+		},
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The location within the scene to query the filter at.
 
@@ -84,58 +84,58 @@ Gaffer.Metadata.registerNode(
 			> performed and all outputs will be set to their default values.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", "",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"exactMatch" : [
+		"exactMatch" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs `True` if the filter matches the location, and `False` otherwise.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
-		"descendantMatch" : [
+		"descendantMatch" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs `True` if the filter matches a descendant of the location,
 			and `False` otherwise.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
-		"ancestorMatch" : [
+		"ancestorMatch" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs `True` if the filter matches an ancestor of the location,
 			and `False` otherwise.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
-		"closestAncestor" : [
+		"closestAncestor" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the location of the first ancestor matched by the filter.
 			In the case of an exact match, this will be the location itself.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
 	}
 

@@ -79,10 +79,6 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 
 	private :
 
-		void plugDirtied( Gaffer::Plug *plug );
-		void plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug );
-		void nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node );
-
 		const GafferScene::ScenePlugPtr m_scene;
 		const IECore::InternedString m_setName;
 };

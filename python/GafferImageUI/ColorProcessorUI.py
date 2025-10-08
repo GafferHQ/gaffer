@@ -49,29 +49,29 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the channels to process. Names should be
 			separated by spaces and can use Gaffer's standard
 			wildcards.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
-		],
+		},
 
-		"processUnpremultiplied" : [
+		"processUnpremultiplied" : {
 
-			"description",
+			"description" :
 			"""
 			Unpremultiplies data before processing, and premultiply again after processing.  This allows
 			accurate processing of nodes that deal with color, when running on partially transparent or
 			deep images.
 			""",
 
-		],
+		},
 
 	}
 

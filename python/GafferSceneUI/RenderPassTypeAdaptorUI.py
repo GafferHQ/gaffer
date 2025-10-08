@@ -69,23 +69,23 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"client" : [
+		"client" : {
 
-			"description",
+			"description" :
 			"""
 			The client to adapt render pass types to.
 			""",
 
-		],
+		},
 
-		"renderer" : [
+		"renderer" : {
 
-			"description",
+			"description" :
 			"""
 			The renderer to adapt render pass types to.
 			""",
 
-		],
+		},
 
 	}
 

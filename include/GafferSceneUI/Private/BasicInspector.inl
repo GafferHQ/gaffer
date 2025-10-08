@@ -45,7 +45,7 @@ BasicInspector::BasicInspector(
 	const ValueFunctionType &&valueFunction,
 	const std::string &type, const std::string &name
 )
-	: 	Inspector( plug, type, name, editScope ), m_plug( plug )
+	: 	Inspector( { plug }, type, name, editScope ), m_plug( plug )
 {
 	// Wrapper downcasts the plug to the correct type, removing the
 	// need to do that manually in the supplied lambda.

@@ -52,14 +52,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"offset" : [
+		"offset" : {
 
-			"description",
+			"description" :
 			"""
 			The amount to offset the image by.
 			""",
 
-		],
+		},
 
 	}
 

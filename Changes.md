@@ -26,21 +26,32 @@ Improvements
 
 - SceneInspector :
   - Added "Isolate Differences" option for comparison modes. This filters out all properties which have the same value in the A and B columns.
+  - Improved filtering :
+    - By default, filters now match any part of the hierarchy, allowing primitive variables to be matched.
+    - Filters may optionally specify a full path, such as `/Object/Primitive Variables/velocity` to avoid matches elsewhere in the hierarchy.
+    - The new behaviour matches the filters in the HierarchyView and AttributeEditor.
   - Removed redundant scene inspections when not in comparison mode.
+- Arnold : Added support for M44f `header:*` output metadata.
+- FocalBlur : Added presets for `focalLengthWorldScale` and placeholder text for `cameraPath`.
 
 Fixes
 -----
 
 - Arnold : Fixed `options.frame` value, which was previously always `0`. This fixes the `arnold/frame` EXR metadata.
-- SceneInspector : The Globals tab no longer shows the A/B columns when only locations are being compared.
+- SceneInspector :
+  - Fixed potential crashes caused by a thread-safety bug. These were more likely in layouts with multiple SceneInspectors.
+  - The Globals tab no longer shows the A/B columns when only locations are being compared.
 - BoolWidget : Fixed label text styling when disabled.
 - Scene Editors : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
+- GraphEditor : Fixed duplicate annotations that occurred when default annotation metadata was registered for a particular node type.
+- Metadata : Removed duplicate items returned by `registeredValues()`.
 
 API
 ---
 
 - Metadata : The `registerNode()` function now accepts dictionaries containing plug metadata. This should be preferred to the previous list-based values.
 - SceneInspector : Added `deregisterInspectors()` method.
+- PathPlugValueWidget : Added support for placeholder text, via `pathPlugValueWidget:placeholderText` metadata.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======

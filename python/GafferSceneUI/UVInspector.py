@@ -120,15 +120,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"textureFileName" : [
+		"textureFileName" : {
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "image",
-			"fileSystemPath:extensions", " ".join( GafferImage.ImageReader.supportedExtensions() ),
-			"fileSystemPath:extensionsLabel", "Show only image files",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:bookmarks" : "image",
+			"fileSystemPath:extensions" : " ".join( GafferImage.ImageReader.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel" : "Show only image files",
 
-		],
+		},
 
 	}
 

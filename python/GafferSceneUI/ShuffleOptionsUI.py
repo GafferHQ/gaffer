@@ -48,15 +48,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shuffles" : [
+		"shuffles" : {
 
-			"description",
+			"description" :
 			"""
 			Defines the shuffling to be performed. Add shuffles by pressing `+`
 			in the UI, or adding `ShufflePlug` children using the API.
 			""",
 
-		],
+		},
 
 	}
 

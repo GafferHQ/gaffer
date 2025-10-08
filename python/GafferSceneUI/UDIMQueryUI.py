@@ -72,63 +72,63 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query UDIMs from.
 			""",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used to control which parts of the scene are
 			processed. A Filter node should be connected here.
 			""",
 
-			"layout:section", "Filter",
-			"noduleLayout:section", "right",
-			"layout:index", -3, # Just before the enabled plug,
-			"nodule:type", "GafferUI::StandardNodule",
-			"plugValueWidget:type", "GafferSceneUI.FilterPlugValueWidget",
+			"layout:section" : "Filter",
+			"noduleLayout:section" : "right",
+			"layout:index" : -3, # Just before the enabled plug,
+			"nodule:type" : "GafferUI::StandardNodule",
+			"plugValueWidget:type" : "GafferSceneUI.FilterPlugValueWidget",
 
-		],
+		},
 
-		"uvSet" : [
+		"uvSet" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable which drives the UVs to compute UDIMs from.
 			Should be a Face-Varying or Vertex interpolated V2f.
 			""",
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"attributes" : [
+		"attributes" : {
 
-			"description",
+			"description" :
 			"""
 			A space separated list of attribute names ( may use wildcards ), to collect from meshes
 			which have UDIMs, and return as part of the output.  Inherited attributes are included.
 			""",
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			A 3 level dictionary of results stored in a CompoundObject, as described in the node description.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
 	}
 

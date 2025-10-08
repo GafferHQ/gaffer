@@ -306,17 +306,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The scene location to inspect. Defaults to the currently selected location. Use
 			the HierarchyView or Viewer to select a location.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.SceneInspector._LocationPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.SceneInspector._LocationPlugValueWidget",
 
-		],
+		},
 
 	}
 
