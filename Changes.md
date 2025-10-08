@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- SceneInspector : Added editing capabilities to the Local Transform properties.
 - OSLShader : Improved loading of spline parameters with additional duplicate endpoints (including some RenderMan shaders).
 
 Fixes
