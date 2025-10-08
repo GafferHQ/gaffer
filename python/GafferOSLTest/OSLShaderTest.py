@@ -730,7 +730,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# Just adding documentation that this is currently broken, but I'm not supposed to be worrying about
 		# the parameter import path at the moment ( it's not using
 		# IECoreScene::ShaderNetworkAlgo::collapseSplineParameters yet )
-		"""self.assertTrue( isinstance( n["parameters"]["checkLinearSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["checkLinearSpline"], Gaffer.SplineffPlug ) )
 		self.assertEqual(
 			n["parameters"]["checkLinearSpline"].getValue().spline(),
 			IECore.Splineff(
@@ -740,7 +740,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 					( 4, 5 ),
 				]
 			)
-		)"""
+		)
 
 		shader = n.attributes()["osl:shader"].outputShader()
 
@@ -801,8 +801,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				IECore.CubicBasisf.linear(),
 				[
 					( 0, 0 ),
-					( 0, 0 ),
-					( 1, 1 ),
 					( 1, 1 ),
 				]
 			)
@@ -831,8 +829,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				IECore.CubicBasisf.linear(),
 				[
 					( 0, 0 ),
-					( 0, 0 ),
-					( 1, 1 ),
 					( 1, 1 ),
 				]
 			)
@@ -859,8 +855,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				IECore.CubicBasisf.linear(),
 				[
 					( 0, 0 ),
-					( 0, 0 ),
-					( 1, 1 ),
 					( 1, 1 ),
 				]
 			)

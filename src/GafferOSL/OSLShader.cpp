@@ -860,6 +860,35 @@ void updatePoints( SplinefColor3f::PointContainer &points, const OSLQuery::Param
 	}
 }
 
+
+// This needs to match the logic in getEndPointDuplication as used by ShaderNetworkAlgo::collapseSplines
+template< class PointContainer >
+void trimExtraOSLEndPoints( PointContainer &points, SplineDefinitionInterpolation interpolation )
+{
+	int trimFront = 0;
+	int trimBack = 0;
+
+	if( interpolation == SplineDefinitionInterpolationLinear )
+	{
+		trimFront = 1;
+		trimBack = 1;
+	}
+	else if( interpolation == SplineDefinitionInterpolationConstant )
+	{
+		trimFront = 1;
+		trimBack = 2;
+	}
+
+	typename PointContainer::reverse_iterator endTrimmed = points.rbegin();
+	advance( endTrimmed, trimBack );
+	points.erase( endTrimmed.base(), points.rbegin().base() );
+
+	typename PointContainer::iterator startTrimmed = points.begin();
+	advance( startTrimmed, trimFront );
+	points.erase( points.begin(), startTrimmed );
+}
+
+
 // From https://gitlab.com/3Delight/3delight-for-houdini/-/blob/master/osl_utilities.cpp
 SplineDefinitionInterpolation basisFrom3DelightInt( int basis )
 {
@@ -909,6 +938,12 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 	}
 
 	updatePoints( defaultValue.points, positionsParameter, valuesParameter );
+
+
+	// SplineDefinition takes care of trimming end points that are needed for endpoint multiplicity when
+	// evaluating splines ... but it doesn't take care of extra multiplicity that OSL adds to linear and constant
+	// splines.
+	trimExtraOSLEndPoints( defaultValue.points, defaultValue.interpolation );
 
 	// The OSL spline representation includes the need for duplicated end points in order to hit the end.
 	// We need to remove these. We ignore the success or failure of trimming because some renderers have
