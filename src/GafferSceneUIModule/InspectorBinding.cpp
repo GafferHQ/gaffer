@@ -43,6 +43,7 @@
 #include "GafferSceneUI/Private/BasicInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
 #include "GafferSceneUI/Private/SetMembershipInspector.h"
+#include "GafferSceneUI/Private/TransformInspector.h"
 #include "GafferSceneUI/Private/OptionInspector.h"
 
 #include "GafferBindings/PathBinding.h"
@@ -233,4 +234,28 @@ void GafferSceneUIModule::bindInspector()
 			( arg( "plug" ), arg( "editScope" ), arg( "valueFunction" ), arg( "type" ) = "", arg( "name" ) = "" )
 		) )
 	;
+
+	{
+		scope scope = RunTimeTypedClass<TransformInspector>( "TransformInspector" )
+			.def(
+				init<const ScenePlugPtr &, const PlugPtr &, TransformInspector::Space, TransformInspector::Component>(
+					( arg( "scene" ), arg( "editScope" ), arg( "space" ), arg( "component") )
+				)
+			)
+		;
+
+		enum_<TransformInspector::Space>( "Space" )
+			.value( "Local", TransformInspector::Space::Local )
+			.value( "World", TransformInspector::Space::World )
+		;
+
+		enum_<TransformInspector::Component>( "Component" )
+			.value( "Matrix", TransformInspector::Component::Matrix )
+			.value( "Translate", TransformInspector::Component::Translate )
+			.value( "Rotate", TransformInspector::Component::Rotate )
+			.value( "Scale", TransformInspector::Component::Scale )
+			.value( "Shear", TransformInspector::Component::Shear )
+		;
+	}
+
 }
