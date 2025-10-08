@@ -8,6 +8,7 @@ Improvements
   - Added "Isolate Differences" option for comparison modes. This filters out all properties which have the same value in the A and B columns.
   - Removed redundant scene inspections when not in comparison mode.
 - Arnold : Added support for M44f `header:*` output metadata.
+- FocalBlur : Added presets for `focalLengthWorldScale` and placeholder text for `cameraPath`.
 
 Fixes
 -----
@@ -26,6 +27,7 @@ API
 
 - Metadata : The `registerNode()` function now accepts dictionaries containing plug metadata. This should be preferred to the previous list-based values.
 - SceneInspector : Added `deregisterInspectors()` method.
+- PathPlugValueWidget : Added support for placeholder text, via `pathPlugValueWidget:placeholderText` metadata.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======
