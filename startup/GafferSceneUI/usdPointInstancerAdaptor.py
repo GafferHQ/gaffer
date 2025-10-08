@@ -59,13 +59,13 @@ def __expandUSDPointInstancersMenu( menuDefinition, plugValueWidget ) :
 			modifiedList = currentList + [ renderer ]
 		renderAdaptor["enabledRenderers"].setValue( IECore.StringVectorData( modifiedList ) )
 
-	menuDefinition.append( "/AttributesDivider", { "divider" : True } )
-	menuDefinition.append(
+	menuDefinition.insertAfter(
 		"/Expand USD Instancers",
 		{
 			"command" : callBackFunc,
 			"checkBox" : current
-		}
+		},
+		"/Expand All"
 	)
 
 GafferSceneUI.SceneViewUI._ExpansionPlugValueWidget.menuSignal().connect( __expandUSDPointInstancersMenu )

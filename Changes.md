@@ -8,6 +8,9 @@ Improvements
 - OSLShader :
  - Improved loading of spline parameters with additional duplicate endpoints.
  - Added support for loading splines from RenderMan shaders.
+- Viewer :
+  - Moved purpose menu items from the Drawing Mode menu to the Expansion menu, and renamed the Expansion menu to `Visibility`.
+  - Added purpose presets for Render (Default + Render purposes), Preview (Default + Proxy) and Preview with Guides (Default + Proxy + Guide).
 
 Fixes
 -----
