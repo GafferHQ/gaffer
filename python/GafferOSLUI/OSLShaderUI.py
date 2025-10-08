@@ -218,36 +218,36 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters.*" : [
+		"parameters.*" : {
 
-			"description", __plugDescription,
-			"label", __plugLabel,
-			"layout:divider", __plugDivider,
-			"layout:section", __plugPage,
-			"presetNames", __plugPresetNames,
-			"presetValues", __plugPresetValues,
-			"plugValueWidget:type", __plugWidgetType,
-			"nodule:type", __plugNoduleType,
-			"noduleLayout:visible", __plugNoduleVisibility,
-			"noduleLayout:label", __plugNoduleLabel,
-			"layout:activator", __plugActivator,
-			"layout:visibilityActivator", __plugVisibilityActivator,
+			"description" : __plugDescription,
+			"label" : __plugLabel,
+			"layout:divider" : __plugDivider,
+			"layout:section" : __plugPage,
+			"presetNames" : __plugPresetNames,
+			"presetValues" : __plugPresetValues,
+			"plugValueWidget:type" : __plugWidgetType,
+			"nodule:type" : __plugNoduleType,
+			"noduleLayout:visible" : __plugNoduleVisibility,
+			"noduleLayout:label" : __plugNoduleLabel,
+			"layout:activator" : __plugActivator,
+			"layout:visibilityActivator" : __plugVisibilityActivator,
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"nodule:type", __outPlugNoduleType,
-			"noduleLayout:spacing", 0.2,
+			"nodule:type" : __outPlugNoduleType,
+			"noduleLayout:spacing" : 0.2,
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"noduleLayout:visible", __plugNoduleVisibility,
-			"noduleLayout:label", __plugNoduleLabel,
+			"noduleLayout:visible" : __plugNoduleVisibility,
+			"noduleLayout:label" : __plugNoduleLabel,
 
-		]
+		}
 
 	}
 
