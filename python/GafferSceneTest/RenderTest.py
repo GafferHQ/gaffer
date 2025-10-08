@@ -60,6 +60,9 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	# And set this to the file extension used for scene description, if
 	# scene description is supported.
 	sceneDescriptionSuffix = None
+	# May be filled with types that aren't supported as `header:*` output
+	# metadata parameters.
+	unsupportedOutputMetadataTypes = []
 
 	@classmethod
 	def setUpClass( cls ) :
@@ -538,6 +541,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			"test:int" : IECore.IntData( 1 ),
 			"test:float" : IECore.FloatData( 2.5 ),
 			"test:string" : IECore.StringData( "foo" ),
+			"test:matrix" : IECore.M44fData( imath.M44f( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ) ),
 		}
 
 		fileName = self.temporaryDirectory() / "test.exr"
@@ -564,6 +568,8 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		imageReader["fileName"].setValue( fileName )
 
 		for k, v in metadata.items() :
+			if type( v ) in self.unsupportedOutputMetadataTypes :
+				continue
 			self.assertIn( k, imageReader["out"].metadata() )
 			self.assertEqual( imageReader["out"].metadata()[k], v )
 
