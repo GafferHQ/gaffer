@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- LightEditor : Added Transform section, with columns displaying the light's transform.
 - SceneInspector : Added editing capabilities to the Local Transform properties.
 - OSLShader : Improved loading of spline parameters with additional duplicate endpoints (including some RenderMan shaders).
 
