@@ -217,17 +217,10 @@ AttributeInspector::AttributeInspector(
 	IECore::InternedString attribute,
 	const std::string &name,
 	const std::string &type
-) :
-Inspector( scene, type, name == "" ? attribute.string() : name, editScope ),
-m_scene( scene ),
-m_attribute( attribute )
+)
+	:	Inspector( { scene->attributesPlug(), scene->globalsPlug() }, type, name == "" ? attribute.string() : name, editScope ),
+		m_scene( scene ), m_attribute( attribute )
 {
-	m_scene->node()->plugDirtiedSignal().connect(
-		boost::bind( &AttributeInspector::plugDirtied, this, ::_1 )
-	);
-
-	Metadata::plugValueChangedSignal().connect( boost::bind( &AttributeInspector::plugMetadataChanged, this, ::_3, ::_4 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &AttributeInspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
 }
 
 GafferScene::SceneAlgo::History::ConstPtr AttributeInspector::history() const
@@ -405,53 +398,6 @@ Inspector::AcquireEditFunctionOrFailure AttributeInspector::acquireEditFunction(
 				createIfNecessary
 			);
 		};
-	}
-}
-
-void AttributeInspector::plugDirtied( Gaffer::Plug *plug )
-{
-	if( plug == m_scene->attributesPlug() || plug == m_scene->globalsPlug() )
-	{
-		dirtiedSignal()( this );
-	}
-}
-
-void AttributeInspector::plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug )
-{
-	if( !plug )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-	nodeMetadataChanged( key, plug->node() );
-}
-
-void AttributeInspector::nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node )
-{
-	if( !node )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-
-	EditScope *scope = targetEditScope();
-	if( !scope )
-	{
-		return;
-	}
-
-	if(
-		MetadataAlgo::readOnlyAffectedByChange( scope, node, key ) ||
-		( MetadataAlgo::readOnlyAffectedByChange( key ) && scope->isAncestorOf( node ) )
-	)
-	{
-		// Might affect `EditScopeAlgo::attributeEditReadOnlyReason()`
-		// which we call in `acquireEditFunction()`.
-		/// \todo Can we ditch the signal processing and call `attributeEditReadOnlyReason()`
-		/// just-in-time from `editable()`? In the past that wasn't possible
-		/// because editability changed the appearance of the UI, but it isn't
-		/// doing that currently.
-		dirtiedSignal()( this );
 	}
 }
 
