@@ -52,87 +52,87 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:variableSampling", lambda node : node["samplingMode"].getValue() == GafferScene.MotionPath.SamplingMode.Variable,
 	"layout:activator:fixedSampling", lambda node : node["samplingMode"].getValue() == GafferScene.MotionPath.SamplingMode.Fixed,
 
-	plugs={
+	plugs = {
 
-		"start" : [
+		"start" : {
 
-			"description",
+			"description" :
 			"""
 			The first frame of motion tracking can be specified relative to the current frame or as an absolute value.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layoutPlugValueWidget:orientation", "horizontal",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation" : "horizontal",
 
-		],
+		},
 
-		"start.mode" : [
+		"start.mode" : {
 
-			"description",
+			"description" :
 			"""
-			Controls whether `start.frame` is relative to the current frame or an absolute value. 
+			Controls whether `start.frame` is relative to the current frame or an absolute value.
 			""",
 
-			"preset:Relative", GafferScene.MotionPath.FrameMode.Relative,
-			"preset:Absolute", GafferScene.MotionPath.FrameMode.Absolute,
+			"preset:Relative" : GafferScene.MotionPath.FrameMode.Relative,
+			"preset:Absolute" : GafferScene.MotionPath.FrameMode.Absolute,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"layout:label", "",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"layout:label" : "",
 
-		],
+		},
 
-		"start.frame" : [
+		"start.frame" : {
 
-			"description",
+			"description" :
 			"""
 			The first frame of motion tracking.
 			""",
 
-			"layout:label", "",
+			"layout:label" : "",
 
-		],
+		},
 
-		"end" : [
+		"end" : {
 
-			"description",
+			"description" :
 			"""
 			The last frame of motion tracking can be specified relative to the current frame or as an absolute value.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layoutPlugValueWidget:orientation", "horizontal",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation" : "horizontal",
 
-		],
+		},
 
-		"end.mode" : [
+		"end.mode" : {
 
-			"description",
+			"description" :
 			"""
 			Controls whether `end.frame` is relative to the current frame or an absolute value.
 			""",
 
-			"preset:Relative", GafferScene.MotionPath.FrameMode.Relative,
-			"preset:Absolute", GafferScene.MotionPath.FrameMode.Absolute,
+			"preset:Relative" : GafferScene.MotionPath.FrameMode.Relative,
+			"preset:Absolute" : GafferScene.MotionPath.FrameMode.Absolute,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"layout:label", "",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"layout:label" : "",
 
-		],
+		},
 
-		"end.frame" : [
+		"end.frame" : {
 
-			"description",
+			"description" :
 			"""
 			The last frame of motion tracking.
 			""",
 
-			"layout:label", "",
+			"layout:label" : "",
 
-		],
+		},
 
-		"samplingMode" : [
+		"samplingMode" : {
 
-			"description",
+			"description" :
 			"""
 			Use "Fixed" mode for a curve with a constant vertex count.
 
@@ -142,19 +142,19 @@ Gaffer.Metadata.registerNode(
 
 			> Caution : In "Variable" mode it may not be possible to render with
 			deformation blur enabled. Be sure to disable it via `StandardAttributes`
-			if you want to render a variable sampled curve. 
+			if you want to render a variable sampled curve.
 			""",
 
-			"preset:Variable", GafferScene.MotionPath.SamplingMode.Variable,
-			"preset:Fixed", GafferScene.MotionPath.SamplingMode.Fixed,
+			"preset:Variable" : GafferScene.MotionPath.SamplingMode.Variable,
+			"preset:Fixed" : GafferScene.MotionPath.SamplingMode.Fixed,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"step" : [
+		"step" : {
 
-			"description",
+			"description" :
 			"""
 			The sampling rate between `start.frame` and `end.frame`.
 
@@ -162,32 +162,32 @@ Gaffer.Metadata.registerNode(
 			even if the `step` does not exactly fit the range.
 
 			> Caution : With a small `step` size it may not be possible to render
-			with deformation blur enabled. 
+			with deformation blur enabled.
 			""",
 
-			"layout:activator", "variableSampling",
+			"layout:activator" : "variableSampling",
 
-		],
+		},
 
-		"samples" : [
+		"samples" : {
 
-			"description",
+			"description" :
 			"""
 			The exact number of samples (including `start.frame` and `end.frame`) when using a "Fixed" `samplingMode`.
 			""",
 
-			"layout:activator", "fixedSampling",
+			"layout:activator" : "fixedSampling",
 
-		],
+		},
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"description",
+			"description" :
 			"""
 			Opt in or out of bounds calculations.
 			""",
 
-		],
+		},
 
 	}
 

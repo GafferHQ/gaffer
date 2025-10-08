@@ -66,21 +66,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"data" : [
+		"data" : {
 
-			"description",
+			"description" :
 			"""
 			The data to be converted.
 			""",
 
-			"layout:index", 0,
-			"noduleLayout:index", 0,
+			"layout:index" : 0,
+			"noduleLayout:index" : 0,
 
-		],
+		},
 
-		"shapeMode" : [
+		"shapeMode" : {
 
-			"description",
+			"description" :
 			"""
 			Method used to determine the shape of the tensor.
 
@@ -89,20 +89,20 @@ Gaffer.Metadata.registerNode(
 			- Custom : The shape is specified manually using the `shape` plug.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Automatic", GafferML.DataToTensor.ShapeMode.Automatic,
-			"preset:Custom", GafferML.DataToTensor.ShapeMode.Custom,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Automatic" : GafferML.DataToTensor.ShapeMode.Automatic,
+			"preset:Custom" : GafferML.DataToTensor.ShapeMode.Custom,
 
-			"layout:index", 1,
-			"layout:visibilityActivator", "isSetup",
+			"layout:index" : 1,
+			"layout:visibilityActivator" : "isSetup",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"shape" : [
+		"shape" : {
 
-			"description",
+			"description" :
 			"""
 			Defines the shape of the tensor. The product of the shape
 			must equal the number of elements provided by the `data`
@@ -111,24 +111,24 @@ Gaffer.Metadata.registerNode(
 			Only used when ShapeMode is Custom.
 			""",
 
-			"layout:index", 2,
-			"noduleLayout:index", 2,
+			"layout:index" : 2,
+			"noduleLayout:index" : 2,
 
-			"layout:activator", lambda plug : plug.node()["shapeMode"].getValue() == GafferML.DataToTensor.ShapeMode.Custom,
-			"layout:visibilityActivator", "isSetup",
+			"layout:activator" : lambda plug : plug.node()["shapeMode"].getValue() == GafferML.DataToTensor.ShapeMode.Custom,
+			"layout:visibilityActivator" : "isSetup",
 
-		],
+		},
 
-		"tensor" : [
+		"tensor" : {
 
-			"description",
+			"description" :
 			"""
 			The output tensor.
 			""",
 
-			"layout:visibilityActivator", False,
+			"layout:visibilityActivator" : False,
 
-		],
+		},
 
 	}
 )

@@ -48,15 +48,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"variables" : [
+		"variables" : {
 
-			"description",
+			"description" :
 			"""
 			The variables to be added - arbitrary numbers of variables
 			can be added here.
 			""",
 
-		]
+		}
 
 	}
 

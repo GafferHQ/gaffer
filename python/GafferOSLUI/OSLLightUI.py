@@ -55,27 +55,27 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters" : [
+		"parameters" : {
 
-			"layout:index", -1, # Move after shape parameters
+			"layout:index" : -1, # Move after shape parameters
 
-		],
+		},
 
-		"shaderName" : [
+		"shaderName" : {
 
-			"description",
+			"description" :
 			"""
 			The OSL shader to be assigned to the light
 			geometry.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"shape" : [
+		"shape" : {
 
-			"description",
+			"description" :
 			"""
 			The shape of the light. Typically, disks
 			should be used with spotlight shaders and spheres
@@ -84,63 +84,63 @@ Gaffer.Metadata.registerNode(
 			particular renderer.
 			""",
 
-			"preset:Disk", GafferOSL.OSLLight.Shape.Disk,
-			"preset:Sphere", GafferOSL.OSLLight.Shape.Sphere,
-			"preset:Geometry", GafferOSL.OSLLight.Shape.Geometry,
+			"preset:Disk" : GafferOSL.OSLLight.Shape.Disk,
+			"preset:Sphere" : GafferOSL.OSLLight.Shape.Sphere,
+			"preset:Geometry" : GafferOSL.OSLLight.Shape.Geometry,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"radius" : [
+		"radius" : {
 
-			"description",
+			"description" :
 			"""
 			The radius of the disk or sphere shape. Has no effect for
 			other shapes.
 			""",
 
-			"layout:visibilityActivator", "shapeHasRadius",
+			"layout:visibilityActivator" : "shapeHasRadius",
 
-		],
+		},
 
-		"geometryType" : [
+		"geometryType" : {
 
-			"description",
+			"description" :
 			"""
 			The type of geometry to create when shape is set
 			to "Geometry". This should contain the name of a geometry
 			type specific to the renderer being used.
 			""",
 
-			"layout:visibilityActivator", "shapeIsGeometry",
+			"layout:visibilityActivator" : "shapeIsGeometry",
 
-		],
+		},
 
-		"geometryBound" : [
+		"geometryBound" : {
 
-			"description",
+			"description" :
 			"""
 			The bounding box of the geometry. Only relevant when the
 			shape is set to "Geometry".
 			""",
 
-			"layout:visibilityActivator", "shapeIsGeometry",
+			"layout:visibilityActivator" : "shapeIsGeometry",
 
-		],
+		},
 
-		"geometryParameters" : [
+		"geometryParameters" : {
 
-			"description",
+			"description" :
 			"""
 			Arbitary parameters which specify the features of the "Geometry"
 			shape type.
 			""",
 
-			"layout:section", "Settings.Geometry",
-			"layout:visibilityActivator", "shapeIsGeometry",
+			"layout:section" : "Settings.Geometry",
+			"layout:visibilityActivator" : "shapeIsGeometry",
 
-		],
+		},
 
 	}
 

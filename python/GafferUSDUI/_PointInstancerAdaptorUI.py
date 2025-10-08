@@ -49,19 +49,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"renderer" : [
+		"renderer" : {
 
-			"description",
+			"description" :
 			"""
 			Part of the standard renderAdaptor API, this is how a render adaptor is passed a string for
 			the current renderer name. Used to decide whether encapsulation is supported.
 			""",
 
-		],
+		},
 
-		"enabledRenderers" : [
+		"enabledRenderers" : {
 
-			"description",
+			"description" :
 			"""
 			If a renderer is listed in this list, the adaptor will be enabled by
 			default for that renderer (it can still be overridden by the option
@@ -70,7 +70,7 @@ Gaffer.Metadata.registerNode(
 			startup/GafferSceneUI/usdPointInstancerAdaptor.py
 			""",
 
-		],
+		},
 
 	}
 

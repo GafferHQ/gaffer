@@ -67,23 +67,23 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description", "Generated automatically - do not edit.",
-			"plugValueWidget:type", "",
+			"description" : "Generated automatically - do not edit.",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"type" : [
+		"type" : {
 
-			"description", "Generated automatically - do not edit.",
-			"plugValueWidget:type", "",
+			"description" : "Generated automatically - do not edit.",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"parameters" : [
+		"parameters" : {
 
-			"description",
+			"description" :
 			"""
 			The inputs to the shader. Any number of inputs may be created
 			by adding child plugs. Supported plug types and the corresponding
@@ -99,25 +99,25 @@ Gaffer.Metadata.registerNode(
 			- SplinefColor3f ( triplet of `float [], color [], string` )
 			""",
 
-			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLCodeUI._ParametersFooter",
-			"layout:customWidget:footer:index", -1,
-			"layout:section", "Settings.Inputs",
+			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLCodeUI._ParametersFooter",
+			"layout:customWidget:footer:index" : -1,
+			"layout:section" : "Settings.Inputs",
 
-		],
+		},
 
-		"parameters.*" : [
+		"parameters.*" : {
 
-			"renameable", True,
-			"deletable", True,
+			"renameable" : True,
+			"deletable" : True,
 			# Since the names are used directly as variable names in the code,
 			# it's best to avoid any fancy label formatting for them.
-			"label", lambda plug : plug.getName(),
+			"label" : lambda plug : plug.getName(),
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The outputs from the shader. Any number of outputs may be created
 			by adding child plugs. Supported plug types are as for the input
@@ -125,36 +125,36 @@ Gaffer.Metadata.registerNode(
 			used as an output.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLCodeUI._ParametersFooter",
-			"layout:customWidget:footer:index", -1,
-			"layout:section", "Settings.Outputs",
+			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLCodeUI._ParametersFooter",
+			"layout:customWidget:footer:index" : -1,
+			"layout:section" : "Settings.Outputs",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"renameable", True,
-			"deletable", True,
-			"label", lambda plug : plug.getName(),
+			"renameable" : True,
+			"deletable" : True,
+			"label" : lambda plug : plug.getName(),
 
-		],
+		},
 
-		"code" : [
+		"code" : {
 
-			"description",
+			"description" :
 			"""
 			The code for the body of the OSL shader. This should read from the
 			input parameters and write to the output parameters.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferOSLUI.OSLCodeUI._CodePlugValueWidget",
-			"layout:label", "",
-			"layout:section", "Settings.Code",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferOSLUI.OSLCodeUI._CodePlugValueWidget",
+			"layout:label" : "",
+			"layout:section" : "Settings.Code",
 
-		],
+		},
 
 	}
 

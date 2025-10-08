@@ -51,31 +51,31 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"executeInBackground" : (
+		"executeInBackground" : {
 
-			"description",
+			"description" :
 			"""
 			Executes the dispatched tasks in separate processes via a
 			background thread.
 			""",
 
-		),
+		},
 
-		"ignoreScriptLoadErrors" : (
+		"ignoreScriptLoadErrors" : {
 
-			"description",
+			"description" :
 			"""
 			Ignores errors loading the script when executing in the background.
 			This is not recommended - fix the problem instead.
 			""",
 
-			"layout:activator", "executeInBackgroundIsOn",
+			"layout:activator" : "executeInBackgroundIsOn",
 
-		),
+		},
 
-		"environmentCommand" : (
+		"environmentCommand" : {
 
-			"description",
+			"description" :
 			"""
 			Optional system command to modify the environment when launching
 			tasks in the background. Background tasks are launched in a separate
@@ -93,9 +93,9 @@ Gaffer.Metadata.registerNode(
 			```
 			""",
 
-			"layout:activator", "executeInBackgroundIsOn",
+			"layout:activator" : "executeInBackgroundIsOn",
 
-		),
+		},
 
 	}
 

@@ -57,9 +57,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"service" : [
+		"service" : {
 
-			"description",
+			"description" :
 			"""
 			A Tractor "service key expression" used to select
 			blades on which tasks will be executed. The default
@@ -69,18 +69,18 @@ Gaffer.Metadata.registerNode(
 			plugs on each dispatched node.
 			""",
 
-		],
+		},
 
-		"envKey" : [
+		"envKey" : {
 
-			"description",
+			"description" :
 			"""
 			An arbitrary key passed to the remote Tractor blade,
 			to be used by environment handlers which configure
 			the way the blade launches commands.
 			""",
 
-		],
+		},
 
 	}
 
@@ -92,32 +92,32 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"dispatcher.tractor" : [
+		"dispatcher.tractor" : {
 
-			"description",
+			"description" :
 			"""
 			Settings that control how tasks are
 			dispatched to Tractor.
 			""",
 
-			"layout:section", "Tractor",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Tractor",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-		],
+		},
 
-		"dispatcher.tractor.service" : [
+		"dispatcher.tractor.service" : {
 
-			"description",
+			"description" :
 			"""
 			A Tractor "service key expression" used to select
 			blades on which tasks will be executed.
 			""",
 
-		],
+		},
 
-		"dispatcher.tractor.tags" : [
+		"dispatcher.tractor.tags" : {
 
-			"description",
+			"description" :
 			"""
 			A space separated list of tags that can be
 			used with Tractor's limits to constrain
@@ -127,7 +127,7 @@ Gaffer.Metadata.registerNode(
 			count.
 			""",
 
-		],
+		},
 
 	}
 

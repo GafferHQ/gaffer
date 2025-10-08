@@ -48,43 +48,43 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"command" : (
+		"command" : {
 
-			"description",
+			"description" :
 			"""
 			The command to be run. This may reference values
 			from substitutions with '{substitutionName}' syntax.
 			""",
 
-		),
+		},
 
-		"substitutions" : (
+		"substitutions" : {
 
-			"description",
+			"description" :
 			"""
 			An arbitrary set of name/value pairs which can be
 			referenced in command with '{substitutionsName}' syntax.
 			""",
 
-			"layout:section", "Settings.Substitutions",
+			"layout:section" : "Settings.Substitutions",
 
-		),
+		},
 
-		"environmentVariables" : (
+		"environmentVariables" : {
 
-			"description",
+			"description" :
 			"""
 			An arbitrary set of name/value pairs which will be set as
 			environment variables when running the command.
 			""",
 
-			"layout:section", "Settings.Environment Variables",
+			"layout:section" : "Settings.Environment Variables",
 
-		),
+		},
 
-		"shell" : (
+		"shell" : {
 
-			"description",
+			"description" :
 			"""
 			When enabled, the specified command is interpreted as a shell
 			command and run in a child shell. This allows semantics such
@@ -98,9 +98,9 @@ Gaffer.Metadata.registerNode(
 			> environment.
 			""",
 
-			"layout:section", "Advanced",
+			"layout:section" : "Advanced",
 
-		)
+		}
 
 	}
 
