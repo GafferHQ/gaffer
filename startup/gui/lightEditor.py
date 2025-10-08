@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import functools
 import os
 
 import IECore
@@ -333,3 +334,21 @@ for attributeName in [
 	"gl:light:drawingMode",
 ] :
 	GafferSceneUI.LightEditor.registerAttribute( "*", attributeName, "Visualisation" )
+
+# Register transform columns
+
+def transformColumn( scene, editScope, space, component ) :
+
+	inspector = GafferSceneUI.Private.TransformInspector( scene, editScope, space, component )
+	return GafferSceneUI.Private.InspectorColumn( inspector )
+
+for space in GafferSceneUI.Private.TransformInspector.Space.values.values() :
+	for component in GafferSceneUI.Private.TransformInspector.Component.values.values() :
+		if component == GafferSceneUI.Private.TransformInspector.Component.Matrix :
+			continue
+		GafferSceneUI.LightEditor.registerColumn(
+			"*",
+			f"{space}.{component}",
+			functools.partial( transformColumn, space = space, component = component ),
+			"Transform"
+		)

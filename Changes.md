@@ -12,6 +12,7 @@ Improvements
 - SceneInspector :
   - Added Interpretation row for primitive variables, with values of "Point", "Vector", "Normal" or "UV".
   - Added editing capabilities to the Local Transform properties.
+- LightEditor : Added Transform section, with columns displaying the light's transform.
 - ImageToTensor : Added `tensorElementType` plug to choose between `Float`, `Float16` and `BFloat16`.
 - TensorToImage : Added conversion from `Float16` and `BFloat16` tensor elements in addition to the existing `Float` support.
 
