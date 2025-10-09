@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import collections
-
 import IECore
 
 import Gaffer
@@ -84,8 +82,8 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label", "Kind",
 		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in GafferUSD.KindAlgo.topologicallySorted() ] ),
-		"presetValues", IECore.StringVectorData( GafferUSD.KindAlgo.topologicallySorted() ),
+		"presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in GafferUSD.KindAlgo.topologicallySorted() if k != "model" ] ),
+		"presetValues", IECore.StringVectorData( [ k for k in GafferUSD.KindAlgo.topologicallySorted() if k != "model" ] ),
 
 	],
 
