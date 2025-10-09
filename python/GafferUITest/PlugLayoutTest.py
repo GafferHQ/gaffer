@@ -232,6 +232,7 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 				self["b"] = Gaffer.BoolPlug()
 				self["s"] = Gaffer.StringPlug()
+				self["s2"] = Gaffer.StringPlug()
 
 				self["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
 				self["out"].setInput( self["s"] )
@@ -251,6 +252,11 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 					"layout:activator", "bIsOn",
 
+				],
+				"s2" : [
+
+					"layout:activator", lambda plug : plug.parent()["b"].getValue()
+
 				]
 
 			},
@@ -268,9 +274,11 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 		l = GafferUI.PlugLayout( s["n"] )
 		self.assertEqual( l.plugValueWidget( s["n"]["s"] ).enabled(), False )
+		self.assertEqual( l.plugValueWidget( s["n"]["s2"] ).enabled(), False )
 
 		p["value"].setValue( True )
 		self.assertEqual( l.plugValueWidget( s["n"]["s"] ).enabled(), True )
+		self.assertEqual( l.plugValueWidget( s["n"]["s2"] ).enabled(), True )
 
 		# When a node is focussed, the layout should use the tracked context
 		# instead of the script context.
@@ -287,11 +295,13 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 			s.setFocus( s["contextVariables"] )
 
 		self.assertFalse( l.plugValueWidget( s["n"]["s"] ).enabled() )
+		self.assertFalse( l.plugValueWidget( s["n"]["s2"] ).enabled() )
 
 		with GafferUITest.ContextTrackerTest.UpdateHandler() :
 			s.setFocus( s["stringIO"] )
 
 		self.assertTrue( l.plugValueWidget( s["n"]["s"] ).enabled() )
+		self.assertTrue( l.plugValueWidget( s["n"]["s2"] ).enabled() )
 
 	def testMultipleLayouts( self ) :
 

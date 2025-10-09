@@ -326,17 +326,16 @@ class PlugLayout( GafferUI.Widget ) :
 				activatorName = activatorMetadata
 				result = activators.get( activatorName )
 				if result is None :
-					with self.context() :
-						metadataName = self.__layoutName + ":activator:" + activatorName
-						result = self.__metadataValue( self.__parent, metadataName )
-						if isinstance( result, str ) :
-							localsAndGlobals = { "parent" : self.__parent }
-							result = eval( result, localsAndGlobals, localsAndGlobals )
-						if result is None and metadataName not in Gaffer.Metadata.registeredValues( self.__parent ) :
-							IECore.msg(
-								IECore.Msg.Level.Warning, "PlugLayout",
-								"Activator metadata `{}` not registered".format( metadataName )
-							)
+					metadataName = self.__layoutName + ":activator:" + activatorName
+					result = self.__metadataValue( self.__parent, metadataName )
+					if isinstance( result, str ) :
+						localsAndGlobals = { "parent" : self.__parent }
+						result = eval( result, localsAndGlobals, localsAndGlobals )
+					if result is None and metadataName not in Gaffer.Metadata.registeredValues( self.__parent ) :
+						IECore.msg(
+							IECore.Msg.Level.Warning, "PlugLayout",
+							"Activator metadata `{}` not registered".format( metadataName )
+						)
 					result = result if result is not None else False
 					activators[activatorName] = result
 
@@ -344,8 +343,9 @@ class PlugLayout( GafferUI.Widget ) :
 
 		for item, widget in self.__widgets.items() :
 			if widget is not None :
-				widget.setEnabled( active( self.__itemMetadataValue( item, "activator" ) ) )
-				widget.setVisible( active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
+				with self.context() :
+					widget.setEnabled( active( self.__itemMetadataValue( item, "activator" ) ) )
+					widget.setVisible( active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
 
 	def __updateSummariesWalk( self, section ) :
 
