@@ -31,6 +31,7 @@ Fixes
 - GraphEditor : Fixed duplicate annotations that occurred when default annotation metadata was registered for a particular node type.
 - Metadata : Removed duplicate items returned by `registeredValues()`.
 - PlugLayout : Fixed context used to evaluate `layout:activator` metadata.
+- Catalogue : Fixed to support IPv4-only environments.
 
 API
 ---
@@ -39,6 +40,11 @@ API
 - SceneInspector : Added `deregisterInspectors()` method.
 - PathPlugValueWidget : Added support for placeholder text, via `pathPlugValueWidget:placeholderText` metadata.
 - TaskNode : Added "dispatcher:allowIsolation" metadata, which can be used to add the `isolated` plug to a `TaskNode`.
+
+Build
+-----
+
+- Cortex : Updated to 10.6.0.2.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======
