@@ -863,10 +863,10 @@ void updatePoints( SplinefColor3f::PointContainer &points, const OSLQuery::Param
 
 // This needs to match the logic in getEndPointDuplication as used by ShaderNetworkAlgo::collapseSplines
 template< class PointContainer >
-void trimExtraOSLEndPoints( PointContainer &points, SplineDefinitionInterpolation interpolation )
+void trimExtraOSLEndPoints( PointContainer &points, SplineDefinitionInterpolation interpolation, const std::string name )
 {
-	int trimFront = 0;
-	int trimBack = 0;
+	unsigned int trimFront = 0;
+	unsigned int trimBack = 0;
 
 	if( interpolation == SplineDefinitionInterpolationLinear )
 	{
@@ -877,6 +877,11 @@ void trimExtraOSLEndPoints( PointContainer &points, SplineDefinitionInterpolatio
 	{
 		trimFront = 1;
 		trimBack = 2;
+	}
+
+	if( points.size() <= trimFront + trimBack )
+	{
+		return;
 	}
 
 	typename PointContainer::reverse_iterator endTrimmed = points.rbegin();
@@ -943,7 +948,7 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 	// SplineDefinition takes care of trimming end points that are needed for endpoint multiplicity when
 	// evaluating splines ... but it doesn't take care of extra multiplicity that OSL adds to linear and constant
 	// splines.
-	trimExtraOSLEndPoints( defaultValue.points, defaultValue.interpolation );
+	trimExtraOSLEndPoints( defaultValue.points, defaultValue.interpolation, name.string() );
 
 	// The OSL spline representation includes the need for duplicated end points in order to hit the end.
 	// We need to remove these. We ignore the success or failure of trimming because some renderers have
