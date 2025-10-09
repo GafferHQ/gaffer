@@ -756,6 +756,8 @@ ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNe
 
 	correctParameters( result.get() );
 
+	IECoreScene::ShaderNetworkAlgo::expandSplines( result.get() );
+
 	IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( result.get() );
 
 	return result;
