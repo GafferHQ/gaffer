@@ -1078,6 +1078,12 @@ RenderPassEditor.RenderPassChooserWidget = RenderPassChooserWidget
 # - `renderPassPlugValueWidget:scene` : The name of a plug on the same node,
 #   used to provide the list of passes to choose from. If not specified, the
 #   focus node is used instead.
+# - `renderPassPlugValueWidget:searchable` : Boolean to toggle
+#   the search field. Defaults on.
+# - `renderPassPlugValueWidget:displayGrouped` : Boolean to toggle
+#   grouping into submenus. Defaults off.
+# - `renderPassPlugValueWidget:hideDisabled` : Boolean to toggle
+#   hiding of disabled passes. Defaults off.
 #
 ## \todo We should probably move this to its own file and expose it
 # publicly as `GafferSceneUI.RenderPassPlugValueWidget`.
@@ -1125,9 +1131,6 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__currentRenderPass = ""
 		self.__renderPasses = {}
-
-		self.__displayGrouped = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:displayGrouped" ) or False
-		self.__hideDisabled = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:hideDisabled" ) or False
 
 		self.__updateSettingsInput()
 		self.__updateMenuButton()
@@ -1204,13 +1207,23 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__menuButton.setEnabled( self._editable() )
 
+	def __getDisplayGrouped( self ) :
+
+		return any( Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:displayGrouped" ) for plug in self.getPlugs() )
+
 	def __setDisplayGrouped( self, grouped ) :
 
-		self.__displayGrouped = grouped
+		for plug in self.getPlugs() :
+			Gaffer.Metadata.registerValue( plug, "renderPassPlugValueWidget:displayGrouped", grouped )
+
+	def __getHideDisabled( self ) :
+
+		return any( Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:hideDisabled" ) for plug in self.getPlugs() )
 
 	def __setHideDisabled( self, hide ) :
 
-		self.__hideDisabled = hide
+		for plug in self.getPlugs() :
+			Gaffer.Metadata.registerValue( plug, "renderPassPlugValueWidget:hideDisabled", hide )
 
 	def __menuDefinition( self ) :
 
@@ -1218,7 +1231,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/__RenderPassesDivider__", { "divider" : True, "label" : "Render Passes" } )
 
-		renderPasses = self.__renderPasses.get( "enabled", [] ) if self.__hideDisabled else self.__renderPasses.get( "all", [] )
+		renderPasses = self.__renderPasses.get( "enabled", [] ) if self.__getHideDisabled() else self.__renderPasses.get( "all", [] )
 
 		if self.__renderPasses is None :
 			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
@@ -1227,14 +1240,14 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			groupingFn = GafferSceneUI.RenderPassEditor.pathGroupingFunction()
 			prefixes = IECore.PathMatcher()
-			if self.__displayGrouped :
+			if self.__getDisplayGrouped() :
 				for name in renderPasses :
 					prefixes.addPath( groupingFn( name ) )
 
 			for name in sorted( renderPasses ) :
 
 				prefix = "/"
-				if self.__displayGrouped :
+				if self.__getDisplayGrouped() :
 					if prefixes.match( name ) & IECore.PathMatcher.Result.ExactMatch :
 						prefix += name
 					else :
@@ -1264,7 +1277,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append(
 			"/Display Grouped",
 			{
-				"checkBox" : self.__displayGrouped,
+				"checkBox" : self.__getDisplayGrouped(),
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setDisplayGrouped ) ),
 				"description" : "Toggle grouped display of render passes.",
 				"searchable" : False
@@ -1274,7 +1287,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append(
 			"/Hide Disabled",
 			{
-				"checkBox" : self.__hideDisabled,
+				"checkBox" : self.__getHideDisabled(),
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setHideDisabled ) ),
 				"description" : "Hide render passes disabled for rendering.",
 				"searchable" : False

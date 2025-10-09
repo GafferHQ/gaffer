@@ -33,6 +33,9 @@ Fixes
 - PlugLayout : Fixed context used to evaluate `layout:activator` metadata.
 - Catalogue : Fixed to support IPv4-only environments.
 - NodeEditor : Fixed error colour for preset widgets.
+- RenderPass menus : Fixed handling of `renderPassPlugValueWidget:displayGrouped` and `renderPassPlugValueWidget:hideDisabled` configuration metadata.
+  - Changes to the metadata after the menu is created are now reflected in the menu configuration.
+  - The main menu configuration is saved in the `.gfr` file.
 
 API
 ---
