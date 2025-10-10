@@ -1251,7 +1251,10 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.__updatePending :
 			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
 		elif len( renderPasses ) == 0 :
-			result.append( "/No Render Passes Available", { "active" : False, "searchable" : False } )
+			if not self.__renderPasses :
+				result.append( "/No Render Passes Available", { "active" : False, "searchable" : False } )
+			else :
+				result.append( "/All Render Passes Disabled", { "active" : False, "searchable" : False } )
 		else :
 			groupingFn = GafferSceneUI.RenderPassEditor.pathGroupingFunction()
 			prefixes = IECore.PathMatcher()
