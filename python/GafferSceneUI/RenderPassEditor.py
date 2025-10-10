@@ -1205,6 +1205,15 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.__currentRenderPass is not None :
 			self.__updateMenuButton()
 
+		if exception is not None and not isinstance( exception, Gaffer.ProcessException ) :
+			# A ProcessException indicates an error computing plug values, which
+			# we leave to the rest of the UI to report. Any other type of exception
+			# indicates a coding error, which we want to know about.
+			IECore.msg(
+				IECore.Msg.Level.Error, "_RenderPassPlugValueWidget",
+				"".join( traceback.format_exception( exception ) )
+			)
+
 	def _updateFromMetadata( self ) :
 
 		self.__updateSettingsInput()
