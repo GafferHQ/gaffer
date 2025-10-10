@@ -695,7 +695,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n = GafferOSL.OSLShader()
 		n.loadShader( s )
 
-		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline", "checkLinearSpline" ] )
+		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline", "checkLinearSpline", "constDefault" ] )
 
 		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
 		self.assertEqual(
@@ -727,10 +727,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		# Just adding documentation that this is currently broken, but I'm not supposed to be worrying about
-		# the parameter import path at the moment ( it's not using
-		# IECoreScene::ShaderNetworkAlgo::collapseSplineParameters yet )
-		"""self.assertTrue( isinstance( n["parameters"]["checkLinearSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["checkLinearSpline"], Gaffer.SplineffPlug ) )
 		self.assertEqual(
 			n["parameters"]["checkLinearSpline"].getValue().spline(),
 			IECore.Splineff(
@@ -740,7 +737,18 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 					( 4, 5 ),
 				]
 			)
-		)"""
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["constDefault"], Gaffer.SplinefColor3fPlug ) )
+		self.assertEqual(
+			n["parameters"]["constDefault"].getValue().spline(),
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.constant(),
+				[
+					( 2, imath.Color3f( 2 ) ),
+				]
+			)
+		)
 
 		shader = n.attributes()["osl:shader"].outputShader()
 
@@ -767,6 +775,32 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 					( 0, imath.Color3f( 0 ) ),
 					( 1, imath.Color3f( 1 ) ),
 					( 1, imath.Color3f( 1 ) ),
+					( 1, imath.Color3f( 1 ) ),
+				]
+			)
+		)
+
+	def testSplineParametersTooShort( self ) :
+
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "splineParametersTooShort.osl" )
+		n = GafferOSL.OSLShader()
+
+		with IECore.CapturingMessageHandler() as mh :
+			n.loadShader( s )
+
+		self.assertEqual( len( mh.messages ), 3 ) # TODO - warning should only be emitted once, this will be fixed in upcoming commit
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( mh.messages[0].message, "Too few points in default value for \"colorSpline\"" )
+
+		self.assertEqual( n["parameters"].keys(), [ "colorSpline" ] )
+
+		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
+		self.assertEqual(
+			n["parameters"]["colorSpline"].getValue().spline(),
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.linear(),
+				[
+					( 0, imath.Color3f( 0 ) ),
 					( 1, imath.Color3f( 1 ) ),
 				]
 			)
@@ -801,8 +835,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				IECore.CubicBasisf.linear(),
 				[
 					( 0, 0 ),
-					( 0, 0 ),
-					( 1, 1 ),
 					( 1, 1 ),
 				]
 			)
@@ -831,8 +863,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				IECore.CubicBasisf.linear(),
 				[
 					( 0, 0 ),
-					( 0, 0 ),
-					( 1, 1 ),
 					( 1, 1 ),
 				]
 			)
@@ -859,8 +889,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				IECore.CubicBasisf.linear(),
 				[
 					( 0, 0 ),
-					( 0, 0 ),
-					( 1, 1 ),
 					( 1, 1 ),
 				]
 			)
