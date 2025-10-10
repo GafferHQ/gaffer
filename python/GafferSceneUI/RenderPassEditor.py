@@ -1078,6 +1078,12 @@ RenderPassEditor.RenderPassChooserWidget = RenderPassChooserWidget
 # - `renderPassPlugValueWidget:scene` : The name of a plug on the same node,
 #   used to provide the list of passes to choose from. If not specified, the
 #   focus node is used instead.
+# - `renderPassPlugValueWidget:searchable` : Boolean to toggle
+#   the search field. Defaults on.
+# - `renderPassPlugValueWidget:displayGrouped` : Boolean to toggle
+#   grouping into submenus. Defaults off.
+# - `renderPassPlugValueWidget:hideDisabled` : Boolean to toggle
+#   hiding of disabled passes. Defaults off.
 #
 ## \todo We should probably move this to its own file and expose it
 # publicly as `GafferSceneUI.RenderPassPlugValueWidget`.
@@ -1099,6 +1105,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self["__adaptors"]["in"].setInput( self["in"] )
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassPlugValueWidget::Settings" )
+
+	__PassStatus = collections.namedtuple( "__PassStatus", [ "enabled", "adaptedEnabled" ] )
 
 	def __init__( self, plug, showLabel = False, **kw ) :
 
@@ -1124,10 +1132,9 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 
 		self.__currentRenderPass = ""
+		# Maps from pass name to __PassStatus
 		self.__renderPasses = {}
-
-		self.__displayGrouped = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:displayGrouped" ) or False
-		self.__hideDisabled = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:hideDisabled" ) or False
+		self.__updatePending = False
 
 		self.__updateSettingsInput()
 		self.__updateMenuButton()
@@ -1144,8 +1151,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.__currentRenderPass == "" :
 			return "No render pass is active."
 
-		if self.__currentRenderPass not in self.__renderPasses.get( "all", [] ) :
-			return "{} is not provided by the focus node.".format( self.__currentRenderPass )
+		if self.__currentRenderPass not in self.__renderPasses :
+			return "{} is not available.".format( self.__currentRenderPass )
 		else :
 			return "{} is the current render pass.".format( self.__currentRenderPass )
 
@@ -1167,18 +1174,12 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				adaptedRenderPassNames = globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() )
 				context["renderPassEditor:enableAdaptors"] = False
 				for renderPass in globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() ) :
-					renderPasses.setdefault( "all", [] ).append( renderPass )
 					context["renderPass"] = renderPass
+					context["renderPassEditor:enableAdaptors"] = False
+					enabled = globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value
 					context["renderPassEditor:enableAdaptors"] = True
-					if renderPass not in adaptedRenderPassNames :
-						# The render pass has been deleted by a render adaptor so present it as disabled
-						renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
-					elif globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
-						renderPasses.setdefault( "enabled", [] ).append( renderPass )
-					else :
-						context["renderPassEditor:enableAdaptors"] = False
-						if globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
-							renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
+					adaptedEnabled = renderPass in adaptedRenderPassNames and globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value
+					renderPasses[renderPass] = _RenderPassPlugValueWidget.__PassStatus( enabled, adaptedEnabled )
 
 			result.append( {
 				"value" : plug.getValue(),
@@ -1190,11 +1191,25 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromValues( self, values, exception ) :
 
 		self.__currentRenderPass = sole( v["value"] for v in values )
-		self.__renderPasses = sole( v["renderPasses"] for v in values )
+		self.__renderPasses = sole( v["renderPasses"] for v in values ) or {}
+
+		# We're called with an empty set of values as a signal that a background
+		# update is starting.
+		self.__updatePending = exception is None and not len( values ) and self.getPlugs()
+		if not self.__updatePending :
+			self.__busyWidget.setVisible( False )
 
 		if self.__currentRenderPass is not None :
-			self.__busyWidget.setVisible( False )
 			self.__updateMenuButton()
+
+		if exception is not None and not isinstance( exception, Gaffer.ProcessException ) :
+			# A ProcessException indicates an error computing plug values, which
+			# we leave to the rest of the UI to report. Any other type of exception
+			# indicates a coding error, which we want to know about.
+			IECore.msg(
+				IECore.Msg.Level.Error, "_RenderPassPlugValueWidget",
+				"".join( traceback.format_exception( exception ) )
+			)
 
 	def _updateFromMetadata( self ) :
 
@@ -1204,13 +1219,23 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__menuButton.setEnabled( self._editable() )
 
+	def __getDisplayGrouped( self ) :
+
+		return any( Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:displayGrouped" ) for plug in self.getPlugs() )
+
 	def __setDisplayGrouped( self, grouped ) :
 
-		self.__displayGrouped = grouped
+		for plug in self.getPlugs() :
+			Gaffer.Metadata.registerValue( plug, "renderPassPlugValueWidget:displayGrouped", grouped )
+
+	def __getHideDisabled( self ) :
+
+		return any( Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:hideDisabled" ) for plug in self.getPlugs() )
 
 	def __setHideDisabled( self, hide ) :
 
-		self.__hideDisabled = hide
+		for plug in self.getPlugs() :
+			Gaffer.Metadata.registerValue( plug, "renderPassPlugValueWidget:hideDisabled", hide )
 
 	def __menuDefinition( self ) :
 
@@ -1218,23 +1243,29 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/__RenderPassesDivider__", { "divider" : True, "label" : "Render Passes" } )
 
-		renderPasses = self.__renderPasses.get( "enabled", [] ) if self.__hideDisabled else self.__renderPasses.get( "all", [] )
+		if self.__getHideDisabled() :
+			renderPasses = [ name for name, status in self.__renderPasses.items() if status.adaptedEnabled ]
+		else :
+			renderPasses = self.__renderPasses.keys()
 
-		if self.__renderPasses is None :
+		if self.__updatePending :
 			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
 		elif len( renderPasses ) == 0 :
-			result.append( "/No Render Passes Available", { "active" : False, "searchable" : False } )
+			if not self.__renderPasses :
+				result.append( "/No Render Passes Available", { "active" : False, "searchable" : False } )
+			else :
+				result.append( "/All Render Passes Disabled", { "active" : False, "searchable" : False } )
 		else :
 			groupingFn = GafferSceneUI.RenderPassEditor.pathGroupingFunction()
 			prefixes = IECore.PathMatcher()
-			if self.__displayGrouped :
+			if self.__getDisplayGrouped() :
 				for name in renderPasses :
 					prefixes.addPath( groupingFn( name ) )
 
 			for name in sorted( renderPasses ) :
 
 				prefix = "/"
-				if self.__displayGrouped :
+				if self.__getDisplayGrouped() :
 					if prefixes.match( name ) & IECore.PathMatcher.Result.ExactMatch :
 						prefix += name
 					else :
@@ -1264,7 +1295,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append(
 			"/Display Grouped",
 			{
-				"checkBox" : self.__displayGrouped,
+				"checkBox" : self.__getDisplayGrouped(),
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setDisplayGrouped ) ),
 				"description" : "Toggle grouped display of render passes.",
 				"searchable" : False
@@ -1274,7 +1305,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append(
 			"/Hide Disabled",
 			{
-				"checkBox" : self.__hideDisabled,
+				"checkBox" : self.__getHideDisabled(),
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setHideDisabled ) ),
 				"description" : "Hide render passes disabled for rendering.",
 				"searchable" : False
@@ -1298,10 +1329,15 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if renderPass == "" :
 			return ""
 
-		if renderPass in self.__renderPasses.get( "adaptorDisabled", [] ) :
-			return "{} has been automatically disabled by a render adaptor.".format( renderPass )
-		elif renderPass not in self.__renderPasses.get( "enabled", [] ) :
-			return "{} has been disabled.".format( renderPass )
+		match self.__renderPasses[renderPass] : # `enabled`, `adaptedEnabled`
+			case ( True, True ) :
+				return ""
+			case ( True, False ) :
+				return f"{renderPass} has been automatically disabled by a render adaptor."
+			case ( False, False ) :
+				return f"{renderPass} has been disabled."
+			case ( False, True ) :
+				return f"{renderPass} has been automatically enabled by a render adaptor."
 
 		return ""
 
@@ -1323,14 +1359,21 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if activeIndicator and renderPass == self.__currentRenderPass :
 			return self.__activeRenderPassIcon()
-		elif renderPass not in self.__renderPasses.get( "all", [] ) :
+		elif renderPass not in self.__renderPasses :
 			return "warningSmall.png"
-		elif renderPass in self.__renderPasses.get( "enabled", [] ) :
-			return "renderPass.png"
-		elif renderPass in self.__renderPasses.get( "adaptorDisabled", [] ) :
-			return "adaptorDisabledRenderPass.png"
 		else :
-			return "disabledRenderPass.png"
+			match self.__renderPasses[renderPass] : # `enabled`, `adaptedEnabled`
+				case ( True, True ) :
+					return "renderPass.png"
+				case ( True, False ) :
+					return "adaptorDisabledRenderPass.png"
+				case ( False, False ) :
+					return "disabledRenderPass.png"
+				case ( False, True ) :
+					## \todo We don't have a different icon for this, but perhaps
+					# we should? One use case might be an adaptor that automatically
+					# adds variants of existing render passes.
+					return "renderPass.png"
 
 	def __updateMenuButton( self ) :
 
