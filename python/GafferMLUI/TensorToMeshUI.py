@@ -51,39 +51,39 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"position" : [
+		"position" : {
 
-			"description",
+			"description" :
 			"""
 			The input tensor containing the point positions for the mesh to create. Typically this would be connected
 			to the output of an Inference node that is doing mesh generation/processing.
 			""",
 
-			"plugValueWidget:type", "",
-			"nodule:type", "GafferUI::StandardNodule",
+			"plugValueWidget:type" : "",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
-		"vertexIds" : [
+		},
+		"vertexIds" : {
 
-			"description",
+			"description" :
 			"""
 			The input tensor containing the vertex ids for the mesh to create. Typically this would be connected
 			to the output of an Inference node that is doing mesh generation/processing.
 			""",
 
-			"plugValueWidget:type", "",
-			"nodule:type", "GafferUI::StandardNodule",
+			"plugValueWidget:type" : "",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The output mesh.
 			""",
 
-		],
+		},
 
 
 	}

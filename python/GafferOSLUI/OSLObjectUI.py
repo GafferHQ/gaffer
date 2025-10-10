@@ -174,15 +174,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"layout:index", -2,
+			"layout:index" : -2,
 
-		],
+		},
 
-		"primitiveVariables" : [
+		"primitiveVariables" : {
 
-			"description",
+			"description" :
 			"""
 			Define primitive varibles to output by adding child plugs and connecting
 			corresponding OSL shaders.  Supported plug types are :
@@ -197,197 +197,197 @@ Gaffer.Metadata.registerNode(
 			If you want to add multiple outputs at once, you can also add a closure plug,
 			which can accept a connection from an OSLCode with a combined output closure.
 			""",
-			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLObjectUI._PrimitiveVariablesFooter",
-			"layout:customWidget:footer:index", -1,
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLObjectUI._PrimitiveVariablesFooter",
+			"layout:customWidget:footer:index" : -1,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferOSLUI.OSLObjectUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferOSLUI.OSLObjectUI.PlugAdder",
 
-			"layout:index", -1,
+			"layout:index" : -1,
 
-		],
-		"primitiveVariables.*" : [
+		},
+		"primitiveVariables.*" : {
 
-			"deletable", True,
+			"deletable" : True,
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", lambda plug : isinstance( plug["value"], GafferOSL.ClosurePlug ),
-		],
-		"primitiveVariables.*.name" : [
-			"nodule:type", "",
-		],
-		"primitiveVariables.*.enabled" : [
-			"nodule:type", "",
-		],
-		"primitiveVariables.*.value" : [
+			"noduleLayout:section" : "left",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : lambda plug : isinstance( plug["value"], GafferOSL.ClosurePlug ),
+		},
+		"primitiveVariables.*.name" : {
+			"nodule:type" : "",
+		},
+		"primitiveVariables.*.enabled" : {
+			"nodule:type" : "",
+		},
+		"primitiveVariables.*.value" : {
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
-			"noduleLayout:label", lambda plug : plug.parent().getName() if plug.typeId() == GafferOSL.ClosurePlug.staticTypeId() else plug.parent()["name"].getValue(),
-			"ui:visibleDimensions", lambda plug : 2 if hasattr( plug, "interpretation" ) and plug.interpretation() == IECore.GeometricData.Interpretation.UV else None,
-		],
+			"noduleLayout:section" : "left",
+			"noduleLayout:label" : lambda plug : plug.parent().getName() if plug.typeId() == GafferOSL.ClosurePlug.staticTypeId() else plug.parent()["name"].getValue(),
+			"ui:visibleDimensions" : lambda plug : 2 if hasattr( plug, "interpretation" ) and plug.interpretation() == IECore.GeometricData.Interpretation.UV else None,
+		},
 
-		"interpolation" : [
+		"interpolation" : {
 
-			"description",
+			"description" :
 			"""
 			The interpolation type of the primitive variables created by this node.
 			For instance, Uniform interpolation means that the shader is run once per face on a mesh, allowing it to output primitive variables with a value per face.
 			All non-constant input primitive variables are resampled to match the selected interpolation so that they can be accessed from the shader.
 			""",
 
-			"preset:Uniform", IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-			"preset:Vertex", IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			"preset:FaceVarying", IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
+			"preset:Uniform" : IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			"preset:Vertex" : IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			"preset:FaceVarying" : IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
 
-		],
+		},
 
-		"useTransform" : [
+		"useTransform" : {
 
-			"description",
+			"description" :
 			"""
 			Makes the object's transform available to OSL, so that you can use OSL functions that convert
 			from object to world space.
 			""",
 
-		],
+		},
 
-		"useAttributes" : [
+		"useAttributes" : {
 
-			"description",
+			"description" :
 			"""
 			Makes the Gaffer attributes at the object's location available to OSL through the getattribute
 			function.  Once this is on, you can use OSL nodes such as InFloat or InString to retrieve the
 			attribute values.
 			""",
 
-		],
+		},
 
-		"source" : [
+		"source" : {
 
-			"description",
+			"description" :
 			"""
 			The input scene which provides the locations to be referenced by the `sourceLocations`
 			plugs.
 			"""
 
-		],
+		},
 
-		"sourceLocations" : [
+		"sourceLocations" : {
 
-			"description",
+			"description" :
 			"""
 			Defines additional scene locations to be made accessible via the `pointcloud_search()`,
 			`pointcloud_get()` and `transform()` OSL functions.
 			""",
 
-			"layout:section", "Source Locations",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Source Locations",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:header:widgetType", "GafferOSLUI.OSLObjectUI._SourceLocationsHeader",
-			"layout:customWidget:header:index", 0,
+			"layout:customWidget:header:widgetType" : "GafferOSLUI.OSLObjectUI._SourceLocationsHeader",
+			"layout:customWidget:header:index" : 0,
 
-			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLObjectUI._SourceLocationsFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLObjectUI._SourceLocationsFooter",
+			"layout:customWidget:footer:index" : -1,
 
-		],
+		},
 
-		"sourceLocations.*" : [
+		"sourceLocations.*" : {
 
-			"deletable", True,
-			"label", "",
+			"deletable" : True,
+			"label" : "",
 
-			"layout:activator:isEnabled", lambda plug : plug["enabled"].getValue(),
+			"layout:activator:isEnabled" : lambda plug : plug["enabled"].getValue(),
 
-		],
+		},
 
-		"sourceLocations.*.name" : [
+		"sourceLocations.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			The name to give to the location. This is how it will be referred to from OSL
 			in the `pointcloud_search()`, `pointcloud_get()` and `transform()` functions.
 			""",
 
-			"label", "",
-			"layout:activator", "isEnabled",
-			"layout:width", GafferUI.PlugWidget.labelWidth(),
+			"label" : "",
+			"layout:activator" : "isEnabled",
+			"layout:width" : GafferUI.PlugWidget.labelWidth(),
 
-		],
+		},
 
-		"sourceLocations.*.enabled" : [
+		"sourceLocations.*.enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables the location for access in OSL.
 			""",
 
-			"label", "",
-			"boolPlugValueWidget:displayMode", "switch",
+			"label" : "",
+			"boolPlugValueWidget:displayMode" : "switch",
 
-		],
+		},
 
-		"sourceLocations.*.location" : [
+		"sourceLocations.*.location" : {
 
-			"description",
+			"description" :
 			"""
 			The location to be made accessible from OSL. This must exist in the
 			`source` scene.
 			""",
 
-			"label", "",
-			"layout:activator", "isEnabled",
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "source",
+			"label" : "",
+			"layout:activator" : "isEnabled",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "source",
 
-		],
+		},
 
-		"sourceLocations.*.pointCloud" : [
+		"sourceLocations.*.pointCloud" : {
 
-			"description",
+			"description" :
 			"""
 			Makes the location accessible via the `pointcloud_search()` and
 			`pointcloud_get()` OSL functions. The location should contain a primitive
 			with at least a position ('P') primitive variable.
 			""",
 
-			"label", "",
-			"layout:activator", "isEnabled",
+			"label" : "",
+			"layout:activator" : "isEnabled",
 
-		],
+		},
 
-		"sourceLocations.*.transform" : [
+		"sourceLocations.*.transform" : {
 
-			"description",
+			"description" :
 			"""
 			Makes the location's transform accessible via the `transform()` OSL functions.
 			""",
 
-			"label", "",
-			"layout:activator", "isEnabled",
-			"layout:width", 175,
+			"label" : "",
+			"layout:activator" : "isEnabled",
+			"layout:width" : 175,
 
-		],
+		},
 
-		"ignoreMissingSourceLocations" : [
+		"ignoreMissingSourceLocations" : {
 
-			"description",
+			"description" :
 			"""
 			Determines whether a missing source location will trigger an error
 			(the default) or be ignored. When a missing source is ignored, the
@@ -395,9 +395,9 @@ Gaffer.Metadata.registerNode(
 			return `0`, allowing the shader to handle the problem itself.
 			""",
 
-			"label", "Ignore Missing Source",
+			"label" : "Ignore Missing Source",
 
-		],
+		},
 
 	}
 

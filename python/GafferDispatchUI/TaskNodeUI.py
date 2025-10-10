@@ -52,83 +52,83 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"preTasks" : (
+		"preTasks" : {
 
-			"description",
+			"description" :
 			"""
 			Input connections to upstream nodes which must be
 			executed before this node.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.4,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.4,
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		),
+		},
 
-		"preTasks.*" : (
+		"preTasks.*" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		),
+		},
 
-		"postTasks" : (
+		"postTasks" : {
 
-			"description",
+			"description" :
 			"""
 			Input connections to nodes which must be
 			executed after this node, but which don't
 			need to be executed before downstream nodes.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "right",
-			"noduleLayout:spacing", 0.2,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "right",
+			"noduleLayout:spacing" : 0.2,
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		),
+		},
 
-		"postTasks.*" : (
+		"postTasks.*" : {
 
-			"plugValueWidget:type", "",
-			"noduleLayout:section", "right",
+			"plugValueWidget:type" : "",
+			"noduleLayout:section" : "right",
 
-		),
+		},
 
-		"task" : (
+		"task" : {
 
-			"description",
+			"description" :
 			"""
 			Output connections to downstream nodes which must
 			not be executed until after this node.
 			""",
 
-			"plugValueWidget:type", "",
-			"nodule:type", "GafferUI::StandardNodule",
+			"plugValueWidget:type" : "",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		),
+		},
 
-		"dispatcher" : (
+		"dispatcher" : {
 
-			"description",
+			"description" :
 			"""
 			Container for custom plugs which dispatchers use to
 			control their behaviour.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Dispatcher",
-			"layout:index", -3, # Just before the node section,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Dispatcher",
+			"layout:index" : -3, # Just before the node section,
 
-		),
+		},
 
 	}
 

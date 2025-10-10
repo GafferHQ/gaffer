@@ -18,8 +18,18 @@ Breaking Changes
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 
-1.6.x.x (relative to 1.6.2.1)
+1.6.x.x (relative to 1.6.3.0)
 =======
+
+
+
+1.6.3.0 (relative to 1.6.2.1)
+=======
+
+Features
+--------
+
+- SystemCommand, PythonCommand : Added `isolated` plug. An isolated task is executed from a script containing only that node. This is a useful optimisation when the load time for the full script is high compared to the time taken to execute the task (#6541).
 
 Improvements
 ------------
@@ -45,6 +55,14 @@ Fixes
 - Scene Editors : Fixed cell background colour when a property is deleted by the current EditScope. It is now blue to indicate the edit, whereas before it had the default colour.
 - GraphEditor : Fixed duplicate annotations that occurred when default annotation metadata was registered for a particular node type.
 - Metadata : Removed duplicate items returned by `registeredValues()`.
+- PlugLayout : Fixed context used to evaluate `layout:activator` metadata.
+- Catalogue : Fixed to support IPv4-only environments.
+- NodeEditor : Fixed error colour for preset widgets.
+- RenderPass menus : Fixed handling of `renderPassPlugValueWidget:displayGrouped` and `renderPassPlugValueWidget:hideDisabled` configuration metadata.
+  - Fixed error handling. Previously if an error occurred when computing the available render passes, the menu would fail to build.
+  - Fixed "Refresh" menu item, which is shown when the available render passes are still being computed.
+  - Changes to the metadata after the menu is created are now reflected in the menu configuration.
+  - The main menu configuration is saved in the `.gfr` file.
 
 API
 ---
@@ -52,6 +70,12 @@ API
 - Metadata : The `registerNode()` function now accepts dictionaries containing plug metadata. This should be preferred to the previous list-based values.
 - SceneInspector : Added `deregisterInspectors()` method.
 - PathPlugValueWidget : Added support for placeholder text, via `pathPlugValueWidget:placeholderText` metadata.
+- TaskNode : Added "dispatcher:allowIsolation" metadata, which can be used to add the `isolated` plug to a `TaskNode`.
+
+Build
+-----
+
+- Cortex : Updated to 10.6.0.2.
 
 1.6.2.1 (relative to 1.6.2.0)
 =======

@@ -49,9 +49,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"index" : [
+		"index" : {
 
-			"description",
+			"description" :
 			"""
 			The index of the input task which is executed. A value
 			of 0 chooses the first input, 1 the second and so on. Values
@@ -59,7 +59,7 @@ Gaffer.Metadata.registerNode(
 			the beginning.
 			""",
 
-		],
+		},
 
 	}
 

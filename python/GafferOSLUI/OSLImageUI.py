@@ -189,15 +189,15 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:defaultFormatActive", lambda node : not node["in"].getInput(),
 
 	plugs = {
-		"defaultFormat" : [
-			"description",
+		"defaultFormat" : {
+			"description" :
 			"""
 			The resolution and aspect ratio to output when there is no input image provided.
 			""",
-			"layout:activator", "defaultFormatActive",
-		],
-		"channels" : [
-			"description",
+			"layout:activator" : "defaultFormatActive",
+		},
+		"channels" : {
+			"description" :
 			"""
 			Define image channels to output by adding child plugs and connecting
 			corresponding OSL shaders.  You can drive RGB layers with a color,
@@ -206,46 +206,46 @@ Gaffer.Metadata.registerNode(
 			If you want to add multiple channels at once, you can also add a closure plug,
 			which can accept a connection from an OSLCode with a combined output closure.
  			""",
-			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLImageUI._ChannelsFooter",
-			"layout:customWidget:footer:index", -1,
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLImageUI._ChannelsFooter",
+			"layout:customWidget:footer:index" : -1,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferOSLUI.OSLImageUI.PlugAdder",
-		],
-		"channels.*" : [
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferOSLUI.OSLImageUI.PlugAdder",
+		},
+		"channels.*" : {
 
-			"deletable", True,
+			"deletable" : True,
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", lambda plug : isinstance( plug["value"], GafferOSL.ClosurePlug ),
-		],
-		"channels.*.name" : [
-			"nodule:type", "",
-			"stringPlugValueWidget:placeholderText", lambda plug : "[RGB]" if isinstance( plug.parent()["value"], Gaffer.Color3fPlug ) else None,
-		],
-		"channels.*.enabled" : [
-			"nodule:type", "",
-		],
-		"channels.*.value" : [
+			"noduleLayout:section" : "left",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : lambda plug : isinstance( plug["value"], GafferOSL.ClosurePlug ),
+		},
+		"channels.*.name" : {
+			"nodule:type" : "",
+			"stringPlugValueWidget:placeholderText" : lambda plug : "[RGB]" if isinstance( plug.parent()["value"], Gaffer.Color3fPlug ) else None,
+		},
+		"channels.*.enabled" : {
+			"nodule:type" : "",
+		},
+		"channels.*.value" : {
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
-			"noduleLayout:label", __channelLabelFromPlug,
-			"ui:visibleDimensions", lambda plug : 2 if hasattr( plug, "interpretation" ) and plug.interpretation() == IECore.GeometricData.Interpretation.UV else None,
-		],
+			"noduleLayout:section" : "left",
+			"noduleLayout:label" : __channelLabelFromPlug,
+			"ui:visibleDimensions" : lambda plug : 2 if hasattr( plug, "interpretation" ) and plug.interpretation() == IECore.GeometricData.Interpretation.UV else None,
+		},
 	}
 
 )

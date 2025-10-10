@@ -68,52 +68,52 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"base" : [
+		"base" : {
 
-			"description",
+			"description" :
 			"""
 			The base scene that the `layer` input is compared to.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"layer" : [
+		"layer" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to be written to `fileName`. This is compared to the
 			`base` scene, and only differences are written to the file.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the USD file to be written.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "sceneCache",
-			"fileSystemPath:extensions", "usd usda usdc",
-			"fileSystemPath:extensionsLabel", "Show only USD files",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:bookmarks" : "sceneCache",
+			"fileSystemPath:extensions" : "usd usda usdc",
+			"fileSystemPath:extensionsLabel" : "Show only USD files",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			A direct pass-through of the `layer` input.
 			""",
 
-		],
+		},
 
 	}
 

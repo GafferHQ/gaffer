@@ -48,14 +48,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"sequence" : (
+		"sequence" : {
 
-			"description",
+			"description" :
 			"""
 			Don't allow any tasks which depend on this list to run until all frames
 			of the tasks in this list have run.
 			""",
-		),
+		},
 	}
 
 )

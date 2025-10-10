@@ -53,31 +53,31 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"image" : [
+		"image" : {
 
-			"description",
+			"description" :
 			"""
 			The image to be converted.
 			""",
 
-		],
+		},
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			The image view to take the tensor data from.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
 
-			"noduleLayout:visible", False,
+			"noduleLayout:visible" : False,
 
-		],
+		},
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			The list of channels to convert. Channels are added to the
 			tensor in the order specified, so can be shuffled by changing
@@ -86,33 +86,33 @@ Gaffer.Metadata.registerNode(
 			conventions.
 			""",
 
-			"noduleLayout:visible", False,
+			"noduleLayout:visible" : False,
 
-		],
+		},
 
-		"interleaveChannels" : [
+		"interleaveChannels" : {
 
-			"description",
+			"description" :
 			"""
 			Interleaves the channel data, so that all channels for a single
 			pixel are adjacent in memory. Whether or not this is needed depends
 			on the input requirements of the model the tensor is used with.
 			""",
 
-			"noduleLayout:visible", False,
+			"noduleLayout:visible" : False,
 
-		],
+		},
 
-		"tensor" : [
+		"tensor" : {
 
-			"description",
+			"description" :
 			"""
 			The output tensor.
 			""",
 
-			"layout:visibilityActivator", lambda plug : False,
+			"layout:visibilityActivator" : lambda plug : False,
 
-		],
+		},
 
 	}
 )

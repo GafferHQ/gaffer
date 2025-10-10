@@ -91,3 +91,5 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 		subprocess.check_call( command, shell = useShell, env = env )
 
 IECore.registerRunTimeTyped( SystemCommand, typeName = "GafferDispatch::SystemCommand" )
+
+Gaffer.Metadata.registerValue( SystemCommand, "dispatcher:allowIsolation", True )

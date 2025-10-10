@@ -77,20 +77,20 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"variable" : [
+		"variable" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the Context Variable defined by the wedge.
 			This should be used in upstream expressions to apply the
 			wedged value to specific nodes.
 			""",
 
-		],
+		},
 
-		"indexVariable" : [
+		"indexVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The name of an index Context Variable defined by the wedge.
 			This is assigned values starting at 0 and incrementing for
@@ -104,11 +104,11 @@ Gaffer.Metadata.registerNode(
 			wedged renders.
 			""",
 
-		],
+		},
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to define the range of values used by
 			the wedge. It is possible to define numeric or color
@@ -116,48 +116,48 @@ Gaffer.Metadata.registerNode(
 			strings.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Float Range", int( GafferDispatch.Wedge.Mode.FloatRange ),
-			"preset:Int Range", int( GafferDispatch.Wedge.Mode.IntRange ),
-			"preset:Color Range", int( GafferDispatch.Wedge.Mode.ColorRange ),
-			"preset:Float List", int( GafferDispatch.Wedge.Mode.FloatList ),
-			"preset:Int List", int( GafferDispatch.Wedge.Mode.IntList ),
-			"preset:String List", int( GafferDispatch.Wedge.Mode.StringList ),
+			"preset:Float Range" : int( GafferDispatch.Wedge.Mode.FloatRange ),
+			"preset:Int Range" : int( GafferDispatch.Wedge.Mode.IntRange ),
+			"preset:Color Range" : int( GafferDispatch.Wedge.Mode.ColorRange ),
+			"preset:Float List" : int( GafferDispatch.Wedge.Mode.FloatList ),
+			"preset:Int List" : int( GafferDispatch.Wedge.Mode.IntList ),
+			"preset:String List" : int( GafferDispatch.Wedge.Mode.StringList ),
 
-		],
+		},
 
 		# Float Ramge
 
-		"floatMin" : [
+		"floatMin" : {
 
-			"description",
+			"description" :
 			"""
 			The smallest value of the wedge range when the
 			mode is set to "Float Range". Has no effect in
 			other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsFloatRange",
+			"layout:visibilityActivator" : "modeIsFloatRange",
 
-		],
+		},
 
-		"floatMax" : [
+		"floatMax" : {
 
-			"description",
+			"description" :
 			"""
 			The largest allowable value of the wedge range
 			when the mode is set to "Float Range". Has no
 			effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsFloatRange",
+			"layout:visibilityActivator" : "modeIsFloatRange",
 
-		],
+		},
 
-		"floatSteps" : [
+		"floatSteps" : {
 
-			"description",
+			"description" :
 			"""
 			The number of steps in the value range
 			defined when in "Float Range" mode. The
@@ -166,41 +166,41 @@ Gaffer.Metadata.registerNode(
 			other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsFloatRange",
+			"layout:visibilityActivator" : "modeIsFloatRange",
 
-		],
+		},
 
 		# Int Range
 
-		"intMin" : [
+		"intMin" : {
 
-			"description",
+			"description" :
 			"""
 			The smallest value of the wedge range when the
 			mode is set to "Int Range". Has no effect in
 			other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsIntRange",
+			"layout:visibilityActivator" : "modeIsIntRange",
 
-		],
+		},
 
-		"intMax" : [
+		"intMax" : {
 
-			"description",
+			"description" :
 			"""
 			The largest allowable value of the wedge range
 			when the mode is set to "Int Range". Has no
 			effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsIntRange",
+			"layout:visibilityActivator" : "modeIsIntRange",
 
-		],
+		},
 
-		"intStep" : [
+		"intStep" : {
 
-			"description",
+			"description" :
 			"""
 			The step between successive values when the
 			mode is set to "Int Range". Values are
@@ -211,28 +211,28 @@ Gaffer.Metadata.registerNode(
 			be used at all. Has no effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsIntRange",
+			"layout:visibilityActivator" : "modeIsIntRange",
 
-		],
+		},
 
 		# Color Range
 
-		"ramp" : [
+		"ramp" : {
 
-			"description",
+			"description" :
 			"""
 			The range of colours used when the mode
 			is set to "Colour Range". Has no effect in
 			other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsColorRange",
+			"layout:visibilityActivator" : "modeIsColorRange",
 
-		],
+		},
 
-		"colorSteps" : [
+		"colorSteps" : {
 
-			"description",
+			"description" :
 			"""
 			The number of steps in the wedge range
 			defined when in "Colour Range" mode. The
@@ -241,48 +241,48 @@ Gaffer.Metadata.registerNode(
 			other modes.
 			""",
 
-			"label", "Steps",
-			"layout:visibilityActivator", "modeIsColorRange",
+			"label" : "Steps",
+			"layout:visibilityActivator" : "modeIsColorRange",
 
-		],
+		},
 
 		# Lists
 
-		"floats" : [
+		"floats" : {
 
-			"description",
+			"description" :
 			"""
 			The list of values used when in "Float List"
 			mode. Has no effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsFloatList",
+			"layout:visibilityActivator" : "modeIsFloatList",
 
-		],
+		},
 
-		"ints" : [
+		"ints" : {
 
-			"description",
+			"description" :
 			"""
 			The list of values used when in "Int List"
 			mode. Has no effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsIntList",
+			"layout:visibilityActivator" : "modeIsIntList",
 
-		],
+		},
 
-		"strings" : [
+		"strings" : {
 
-			"description",
+			"description" :
 			"""
 			The list of values used when in "String List"
 			mode. Has no effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsStringList",
+			"layout:visibilityActivator" : "modeIsStringList",
 
-		],
+		},
 
 	}
 

@@ -230,25 +230,25 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"out" : [
+		"out" : {
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 
-		],
+		},
 
-		"parameters.*" : [
+		"parameters.*" : {
 
-			"nodule:type", __noduleType,
+			"nodule:type" : __noduleType,
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description", __description,
-			"layout:index", __layoutIndex,
-			"noduleLayout:index", __layoutIndex,
+			"description" : __description,
+			"layout:index" : __layoutIndex,
+			"noduleLayout:index" : __layoutIndex,
 
-		],
+		},
 
 	}
 )
@@ -261,27 +261,27 @@ for nodeType in ( GafferUSD.USDShader, GafferUSD.USDLight ) :
 
 		plugs = {
 
-			"parameters.*" : [
+			"parameters.*" : {
 
-				"label", __label,
-				"description", __description,
-				"layout:index", __layoutIndex,
-				"layout:section", __layoutSection,
-				"noduleLayout:index", __layoutIndex,
-				"plugValueWidget:type", __widgetType,
-				"presetNames", __presetNames,
-				"presetValues", __presetValues,
+				"label" : __label,
+				"description" : __description,
+				"layout:index" : __layoutIndex,
+				"layout:section" : __layoutSection,
+				"noduleLayout:index" : __layoutIndex,
+				"plugValueWidget:type" : __widgetType,
+				"presetNames" : __presetNames,
+				"presetValues" : __presetValues,
 
-			],
+			},
 
 			# Again, but for the `value` plug on OptionalValuePlugs.
-			"parameters.*.value" : [
+			"parameters.*.value" : {
 
-				"plugValueWidget:type", __widgetType,
-				"presetNames", __presetNames,
-				"presetValues", __presetValues,
+				"plugValueWidget:type" : __widgetType,
+				"presetNames" : __presetNames,
+				"presetValues" : __presetValues,
 
-			],
+			},
 
 		}
 

@@ -98,7 +98,6 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		# might just be member data for a subclass of one of those.
 		dispatchData = {}
 		dispatchData["scriptNode"] = rootBatch.preTasks()[0].node().scriptNode()
-		dispatchData["scriptFile"] = Gaffer.Context.current()["dispatcher:scriptFileName"]
 		dispatchData["batchesToTasks"] = {}
 		dispatchData["taskData"] = {}
 
@@ -180,7 +179,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 			args = [
 				"gaffer", "execute",
-				"-script", dispatchData["scriptFile"],
+				"-script", batch.context()["dispatcher:scriptFileName"],
 				"-nodes", nodeName,
 				"-frames", frames,
 			]
