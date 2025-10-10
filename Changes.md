@@ -34,6 +34,8 @@ Fixes
 - Catalogue : Fixed to support IPv4-only environments.
 - NodeEditor : Fixed error colour for preset widgets.
 - RenderPass menus : Fixed handling of `renderPassPlugValueWidget:displayGrouped` and `renderPassPlugValueWidget:hideDisabled` configuration metadata.
+  - Fixed error handling. Previously if an error occurred when computing the available render passes, the menu would fail to build.
+  - Fixed "Refresh" menu item, which is shown when the available render passes are still being computed.
   - Changes to the metadata after the menu is created are now reflected in the menu configuration.
   - The main menu configuration is saved in the `.gfr` file.
 

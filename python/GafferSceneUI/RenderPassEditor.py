@@ -1131,6 +1131,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__currentRenderPass = ""
 		self.__renderPasses = {}
+		self.__updatePending = False
 
 		self.__updateSettingsInput()
 		self.__updateMenuButton()
@@ -1193,10 +1194,15 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromValues( self, values, exception ) :
 
 		self.__currentRenderPass = sole( v["value"] for v in values )
-		self.__renderPasses = sole( v["renderPasses"] for v in values )
+		self.__renderPasses = sole( v["renderPasses"] for v in values ) or {}
+
+		# We're called with an empty set of values as a signal that a background
+		# update is starting.
+		self.__updatePending = exception is None and not len( values ) and self.getPlugs()
+		if not self.__updatePending :
+			self.__busyWidget.setVisible( False )
 
 		if self.__currentRenderPass is not None :
-			self.__busyWidget.setVisible( False )
 			self.__updateMenuButton()
 
 	def _updateFromMetadata( self ) :
@@ -1233,7 +1239,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		renderPasses = self.__renderPasses.get( "enabled", [] ) if self.__getHideDisabled() else self.__renderPasses.get( "all", [] )
 
-		if self.__renderPasses is None :
+		if self.__updatePending :
 			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
 		elif len( renderPasses ) == 0 :
 			result.append( "/No Render Passes Available", { "active" : False, "searchable" : False } )
