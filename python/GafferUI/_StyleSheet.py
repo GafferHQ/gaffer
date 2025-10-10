@@ -515,7 +515,9 @@ _styleSheet = string.Template(
 		text-align: left;
 	}
 
-	*[gafferPlugValueWidget="true"] QPushButton[gafferClass="GafferUI.MenuButton"][gafferError="true"] {
+	/* Todo : I have no idea what `gafferPlugValueWidget` is for - I'm fairly sure it can be removed. */
+	*[gafferPlugValueWidget="true"] QPushButton[gafferClass="GafferUI.MenuButton"][gafferError="true"],
+	*[gafferPlugValueWidget="true"] QPushButton[gafferClass="GafferUI.MenuButton"][gafferError="true"]:disabled {
 		background-color : $errorColor;
 	}
 

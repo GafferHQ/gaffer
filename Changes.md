@@ -32,6 +32,7 @@ Fixes
 - Metadata : Removed duplicate items returned by `registeredValues()`.
 - PlugLayout : Fixed context used to evaluate `layout:activator` metadata.
 - Catalogue : Fixed to support IPv4-only environments.
+- NodeEditor : Fixed error colour for preset widgets.
 
 API
 ---
