@@ -1152,7 +1152,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return "No render pass is active."
 
 		if self.__currentRenderPass not in self.__renderPasses :
-			return "{} is not provided by the focus node.".format( self.__currentRenderPass )
+			return "{} is not available.".format( self.__currentRenderPass )
 		else :
 			return "{} is the current render pass.".format( self.__currentRenderPass )
 
