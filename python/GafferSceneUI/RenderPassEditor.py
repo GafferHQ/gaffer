@@ -1106,6 +1106,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassPlugValueWidget::Settings" )
 
+	__PassStatus = collections.namedtuple( "__PassStatus", [ "enabled", "adaptedEnabled" ] )
+
 	def __init__( self, plug, showLabel = False, **kw ) :
 
 		self.__settings = self.Settings()
@@ -1130,6 +1132,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 
 		self.__currentRenderPass = ""
+		# Maps from pass name to __PassStatus
 		self.__renderPasses = {}
 		self.__updatePending = False
 
@@ -1148,7 +1151,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.__currentRenderPass == "" :
 			return "No render pass is active."
 
-		if self.__currentRenderPass not in self.__renderPasses.get( "all", [] ) :
+		if self.__currentRenderPass not in self.__renderPasses :
 			return "{} is not provided by the focus node.".format( self.__currentRenderPass )
 		else :
 			return "{} is the current render pass.".format( self.__currentRenderPass )
@@ -1171,18 +1174,12 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				adaptedRenderPassNames = globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() )
 				context["renderPassEditor:enableAdaptors"] = False
 				for renderPass in globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() ) :
-					renderPasses.setdefault( "all", [] ).append( renderPass )
 					context["renderPass"] = renderPass
+					context["renderPassEditor:enableAdaptors"] = False
+					enabled = globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value
 					context["renderPassEditor:enableAdaptors"] = True
-					if renderPass not in adaptedRenderPassNames :
-						# The render pass has been deleted by a render adaptor so present it as disabled
-						renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
-					elif globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
-						renderPasses.setdefault( "enabled", [] ).append( renderPass )
-					else :
-						context["renderPassEditor:enableAdaptors"] = False
-						if globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
-							renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
+					adaptedEnabled = renderPass in adaptedRenderPassNames and globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value
+					renderPasses[renderPass] = _RenderPassPlugValueWidget.__PassStatus( enabled, adaptedEnabled )
 
 			result.append( {
 				"value" : plug.getValue(),
@@ -1246,7 +1243,10 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/__RenderPassesDivider__", { "divider" : True, "label" : "Render Passes" } )
 
-		renderPasses = self.__renderPasses.get( "enabled", [] ) if self.__getHideDisabled() else self.__renderPasses.get( "all", [] )
+		if self.__getHideDisabled() :
+			renderPasses = [ name for name, status in self.__renderPasses.items() if status.adaptedEnabled ]
+		else :
+			renderPasses = self.__renderPasses.keys()
 
 		if self.__updatePending :
 			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
@@ -1326,10 +1326,15 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if renderPass == "" :
 			return ""
 
-		if renderPass in self.__renderPasses.get( "adaptorDisabled", [] ) :
-			return "{} has been automatically disabled by a render adaptor.".format( renderPass )
-		elif renderPass not in self.__renderPasses.get( "enabled", [] ) :
-			return "{} has been disabled.".format( renderPass )
+		match self.__renderPasses[renderPass] : # `enabled`, `adaptedEnabled`
+			case ( True, True ) :
+				return ""
+			case ( True, False ) :
+				return f"{renderPass} has been automatically disabled by a render adaptor."
+			case ( False, False ) :
+				return f"{renderPass} has been disabled."
+			case ( False, True ) :
+				return f"{renderPass} has been automatically enabled by a render adaptor."
 
 		return ""
 
@@ -1351,14 +1356,21 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if activeIndicator and renderPass == self.__currentRenderPass :
 			return self.__activeRenderPassIcon()
-		elif renderPass not in self.__renderPasses.get( "all", [] ) :
+		elif renderPass not in self.__renderPasses :
 			return "warningSmall.png"
-		elif renderPass in self.__renderPasses.get( "enabled", [] ) :
-			return "renderPass.png"
-		elif renderPass in self.__renderPasses.get( "adaptorDisabled", [] ) :
-			return "adaptorDisabledRenderPass.png"
 		else :
-			return "disabledRenderPass.png"
+			match self.__renderPasses[renderPass] : # `enabled`, `adaptedEnabled`
+				case ( True, True ) :
+					return "renderPass.png"
+				case ( True, False ) :
+					return "adaptorDisabledRenderPass.png"
+				case ( False, False ) :
+					return "disabledRenderPass.png"
+				case ( False, True ) :
+					## \todo We don't have a different icon for this, but perhaps
+					# we should? One use case might be an adaptor that automatically
+					# adds variants of existing render passes.
+					return "renderPass.png"
 
 	def __updateMenuButton( self ) :
 
