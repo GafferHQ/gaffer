@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.3.0)
 =======
 
+Fixes
+-----
 
+- VectorDataWidget : Fixed errors showing popup colour choosers.
 
 1.6.3.0 (relative to 1.6.2.1)
 =======
