@@ -111,6 +111,9 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 		return
 
 	if not quickBoolean or not __toggleBoolean( pathListing, inspections ) :
+
+		# Not toggleable, so show popup editor.
+
 		edits = [ i.acquireEdit() for i in inspections ]
 		warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
 
@@ -120,8 +123,6 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 					if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
 						edit["enabled"].setValue( True )
 
-		# The plugs are either not boolean, boolean with mixed values,
-		# or attributes that don't exist and are not boolean. Show the popup.
 		__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
 
 		if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
