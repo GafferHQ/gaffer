@@ -1314,7 +1314,11 @@ class _Delegate( QtWidgets.QStyledItemDelegate ) :
 		# fall through to the base class which will provide a default
 		# editor.
 		if self.__editor is not None :
-			if not isinstance( self.__editor, GafferUI.Window ) :
+			if isinstance( self.__editor, GafferUI.PopupWindow ) :
+				self.__editor.popup( parent = GafferUI.Widget._owner( parent ) )
+			elif isinstance( self.__editor, GafferUI.Window ) :
+				self.__editor.setVisible( True )
+			else :
 				self.__editor._qtWidget().setParent( parent )
 			return self.__editor._qtWidget()
 		else :
@@ -1520,11 +1524,7 @@ class _ColorDelegate( _Delegate ) :
 			return GafferUI.NumericWidget( value )
 		else :
 			self.__colorChooser = GafferUI.ColorChooser( value )
-			self.__popup = GafferUI.PopupWindow( "", child = self.__colorChooser )
-
-			self.__popup.popup( parent = self )
-
-			return self.__popup
+			return GafferUI.PopupWindow( "", child = self.__colorChooser )
 
 	def setEditorData( self, editor, index ) :
 
