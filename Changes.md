@@ -1,7 +1,10 @@
 1.5.16.x (relative to 1.5.16.3)
 ========
 
+Fixes
+-----
 
+- Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.
 
 1.5.16.3 (relative to 1.5.16.2)
 ========
