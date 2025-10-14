@@ -114,15 +114,16 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 
 		# Not toggleable, so show popup editor.
 
-		edits = [ i.acquireEdit() for i in inspections ]
-		warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+		with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
 
-		if ensureEnabled :
-			with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+			edits = [ i.acquireEdit() for i in inspections ]
+
+			if ensureEnabled :
 				for edit in edits :
 					if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
 						edit["enabled"].setValue( True )
 
+		warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
 		__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
 
 		if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :

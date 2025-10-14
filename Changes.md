@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.
+- SceneEditors : Fixed undo after creating a new edit in an EditScope.
 
 1.5.16.3 (relative to 1.5.16.2)
 ========
