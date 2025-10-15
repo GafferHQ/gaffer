@@ -173,9 +173,9 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setPlugValues( self, mergeGroup="" ) :
 
-		with Gaffer.UndoScope( self.scriptNode(), mergeGroup=mergeGroup ) :
+		with self._blockedUpdateFromValues() :
 
-			with self._blockedUpdateFromValues() :
+			with Gaffer.UndoScope( self.scriptNode(), mergeGroup=mergeGroup ) :
 
 				for plug in self.getPlugs() :
 
