@@ -412,12 +412,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		script = self.scriptNode()
 		if Gaffer.MetadataAlgo.readOnly( script ) :
-			with GafferUI.PopupWindow() as self.__popup :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Image( "warningSmall.png" )
-					GafferUI.Label( "<h4>The script is read-only.</h4>" )
-
-			self.__popup.popup( parent = self )
+			GafferUI.PopupWindow.showWarning( "The script is read-only.", parent = self )
 			return
 
 		with Gaffer.UndoScope( script ) :

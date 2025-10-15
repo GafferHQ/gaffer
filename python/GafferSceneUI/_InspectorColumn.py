@@ -87,13 +87,7 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 				inspections.append( inspection )
 
 	if len( inspections ) == 0 :
-		with GafferUI.PopupWindow() as __inspectorColumnPopup :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-				GafferUI.Image( "warningSmall.png" )
-				GafferUI.Label( "<h4>The selected cells cannot be edited in the current Edit Scope</h4>" )
-
-		__inspectorColumnPopup.popup( parent = pathListing )
-
+		GafferUI.PopupWindow.showWarning( "The selected cells cannot be edited in the current Edit Scope", parent = pathListing )
 		return
 
 	nonEditable = [ i for i in inspections if not i.editable() ]
@@ -119,12 +113,7 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 			__inspectorColumnPopup.popup( parent = pathListing )
 
 	else :
-		with GafferUI.PopupWindow() as __inspectorColumnPopup :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-				GafferUI.Image( "warningSmall.png" )
-				GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
-
-		__inspectorColumnPopup.popup( parent = pathListing )
+		GafferUI.PopupWindow.showWarning( nonEditable[0].nonEditableReason(), parent = pathListing )
 
 def __toggleableInspections( pathListing ) :
 
@@ -163,13 +152,7 @@ def __toggleEditEnabled( pathListing ) :
 	inspections, nonEditableReason, shouldDisable = __toggleableInspections( pathListing )
 
 	if nonEditableReason != "" :
-		with GafferUI.PopupWindow() as __inspectorColumnPopup :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-				GafferUI.Image( "warningSmall.png" )
-				GafferUI.Label( "<h4>{}</h4>".format( nonEditableReason ) )
-
-			__inspectorColumnPopup.popup( parent = pathListing )
-
+		GafferUI.PopupWindow.showWarning( nonEditableReason, parent = pathListing )
 		return
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
@@ -337,7 +320,7 @@ def __validateSelection( pathListing ) :
 		if firstSelectedColumn is None :
 			firstSelectedColumn = column
 		elif type( column ) != type( firstSelectedColumn ) :
-			__warningPopup( pathListing, "Cannot edit columns with mixed types" )
+			GafferUI.PopupWindow.showWarning( "Cannot edit columns with mixed types", parent = pathListing )
 			return False
 
 	return True
@@ -610,12 +593,12 @@ def __drop( column, path, pathListing, event ) :
 		return True
 
 	if __dropMode( column, path, inspection, event ) == __DropMode.NotEditable :
-		__warningPopup( pathListing, "Cannot modify set expressions containing operators with drag and drop." )
+		GafferUI.PopupWindow.showWarning( "Cannot modify set expressions containing operators with drag and drop.", parent = pathListing )
 		return True
 
 	data = __dropData( column, path, inspection, event )
 	if not inspection.canEdit( data ) :
-		__warningPopup( pathListing, inspection.nonEditableReason( data ) or "Unable to edit." )
+		GafferUI.PopupWindow.showWarning( inspection.nonEditableReason( data ) or "Unable to edit.", parent = pathListing )
 		return True
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
@@ -650,17 +633,6 @@ def __dropData( column, path, inspection, event ) :
 		return IECore.StringData( " ".join( sorted( strings ) ) )
 	else :
 		return IECore.StringVectorData( sorted( strings ) )
-
-def __warningPopup( parent, message ) :
-
-	global __inspectorColumnPopup
-
-	with GafferUI.PopupWindow() as __inspectorColumnPopup :
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-			GafferUI.Image( "warningSmall.png" )
-			GafferUI.Label( "<h4>{}</h4>".format( message ) )
-
-	__inspectorColumnPopup.popup( parent = parent )
 
 def __cellMetadata( column, path, metadataKey ) :
 
@@ -826,7 +798,7 @@ def _copySelectedValues( pathListing ) :
 
 	dataOrReason = _dataFromPathListingOrReason( pathListing )
 	if isinstance( dataOrReason, str ) :
-		__warningPopup( pathListing, dataOrReason )
+		GafferUI.PopupWindow.showWarning( dataOrReason, parent = pathListing )
 		return
 
 	scriptNode = pathListing.ancestor( GafferUI.Editor ).scriptNode()
@@ -917,7 +889,7 @@ def _pasteValues( pathListing ) :
 	objectMatrix = __getObjectMatrixFromClipboard( pathListing )
 	pasteFunctionsOrReason = __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix )
 	if isinstance( pasteFunctionsOrReason, str ) :
-		__warningPopup( pathListing, pasteFunctionsOrReason )
+		GafferUI.PopupWindow.showWarning( pasteFunctionsOrReason, parent = pathListing )
 		return
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
@@ -1087,13 +1059,13 @@ def __toggleVisibility( pathListing ) :
 				continue
 
 			if not inspection.editable() :
-				__warningPopup( pathListing, inspection.nonEditableReason() )
+				GafferUI.PopupWindow.showWarning( inspection.nonEditableReason(), parent = pathListing )
 				return
 
 			inspections.append( ( inspection, pathString ) )
 
 	if len( inspections ) == 0 :
-		__warningPopup( pathListing, "The selected cells cannot be edited in the current Edit Scope" )
+		GafferUI.PopupWindow.showWarning( "The selected cells cannot be edited in the current Edit Scope", parent = pathListing )
 		return
 
 	editor = pathListing.ancestor( GafferUI.Editor )
