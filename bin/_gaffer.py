@@ -76,6 +76,16 @@ def prependToPath( pathToPrepend, envVar ) :
 
 gafferRoot = pathlib.Path( __file__ ).resolve().parents[1]
 
+# Clean environment setup
+# =======================
+
+# Not every environment variable we set for Gaffer itself is something
+# we want to be inherited by subprocesses that Gaffer launches. Store
+# clean copies that can be restored by `__gaffer.py`.
+
+if sys.platform == "linux" :
+	os.environ["__GAFFER_RESTORE_LD_PRELOAD"] = os.environ.get( "LD_PRELOAD", "__NONE__" )
+
 # Cortex Setup
 # ============
 
