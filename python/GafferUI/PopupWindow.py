@@ -84,6 +84,16 @@ class PopupWindow( GafferUI.Window ) :
 
 		return GafferUI.Widget.parent( self )
 
+	@classmethod
+	def showWarning( cls, warning, parent = None, center = None ) :
+
+		with GafferUI.PopupWindow() as cls.__warningPopup :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				GafferUI.Image( "warningSmall.png" )
+				GafferUI.Label( f"<h4>{warning}</h4>" )
+
+		cls.__warningPopup.popup( parent = parent, center = center )
+
 	def __paintEvent( self, event ) :
 
 		painter = QtGui.QPainter( self._qtWidget() )

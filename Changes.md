@@ -6,6 +6,11 @@ Fixes
 
 - VectorDataWidget : Fixed errors showing popup colour choosers.
 
+API
+---
+
+- PopupWindow : Added `showWarning()` class method.
+
 1.6.3.0 (relative to 1.6.2.1)
 =======
 
