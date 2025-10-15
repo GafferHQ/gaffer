@@ -200,7 +200,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# they might not even emit `plugDirtiedSignal() if they happens to clamp to the same
 		# value as before. We block calls to `_updateFromValues()` while setting
 		# the value to avoid having to do the work twice if `plugDirtiedSignal()` _is_ emitted.
-		self._requestUpdateFromValues()
+		self._requestUpdateFromValues( lazy = False )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug, NumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntPlug, NumericPlugValueWidget )
