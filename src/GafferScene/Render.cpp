@@ -51,6 +51,8 @@
 
 #include "IECore/ObjectPool.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include <filesystem>
 #include <memory>
 
@@ -374,7 +376,7 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::RenderSets renderSets( adaptedInPlug() );
 		GafferScene::Private::RendererAlgo::LightLinks lightLinks( renderer.get() );
 
-		if( renderer->name().string() == "RenderMan" )
+		if( boost::starts_with( renderer->name().string(), "RenderMan" ) )
 		{
 			// Workaround for RenderMan API limitations. The backend needs to acquire the Riley
 			// session before we commence multithreaded calls to the Renderer API.

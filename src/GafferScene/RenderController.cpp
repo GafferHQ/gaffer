@@ -1712,7 +1712,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			m_defaultAttributes = m_renderer->attributes( defaultAttributes.get() );
 		}
 
-		if( m_renderer->name().string() == "RenderMan" )
+		if( boost::starts_with( m_renderer->name().string(), "RenderMan" ) )
 		{
 			// Workaround for RenderMan API limitations. The backend needs to acquire the Riley
 			// session before we commence multithreaded calls to the Renderer API.
