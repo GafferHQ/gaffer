@@ -56,6 +56,7 @@ Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geomet
 	:	m_session( session ), m_lightLinker( lightLinker ), m_geometryInstance( riley::GeometryInstanceId::InvalidId() ), m_attributes( attributes ), m_geometryPrototype( geometryPrototype )
 {
 	m_extraAttributes.SetString( Loader::strings().k_identifier_name, RtUString( name.c_str() ) );
+	m_extraAttributes.SetString( Loader::strings().k_grouping_membership, g_defaultShadowGroup );
 
 	RtParamList allAttributes = m_attributes->instanceAttributes();
 	allAttributes.Update( m_extraAttributes );
