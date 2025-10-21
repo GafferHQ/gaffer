@@ -96,6 +96,7 @@ class Globals : public boost::noncopyable
 		/// Perhaps a better approach would be to change the Renderer API so
 		/// that the initial options must be passed to the Renderer constructor?
 
+		RtParamList m_rileyParameters;
 		RtParamList m_options;
 		std::string m_cameraOption;
 		IECoreScene::ConstShaderPtr m_integratorToConvert;
