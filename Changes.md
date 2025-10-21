@@ -9,6 +9,10 @@ Improvements
 Fixes
 -----
 
+- NodeEditor :
+  - Fixed visual bug whereby numeric values could temporarily appear to exceed their min/max range, particularly when using virtual sliders.
+  - Fixed unnecessary updates when editing a plug value.
+  - Fixed bug adding rows to VectorData plugs - the newly added rows were being deselected immediately after they appeared.
 - VectorDataWidget : Fixed errors showing popup colour choosers.
 
 1.6.3.0 (relative to 1.6.2.1)
