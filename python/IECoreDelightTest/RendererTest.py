@@ -318,8 +318,6 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		del renderer
 
-		print( self.temporaryDirectory() / "test.nsia" )
-
 		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
 		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
