@@ -230,50 +230,38 @@ T SplineDefinition<T>::spline() const
 template<typename T>
 bool SplineDefinition<T>::trimEndPoints()
 {
-	int multiplicity = endPointMultiplicity();
-
-	if( (int)points.size() < multiplicity * 2 )
+	if( points.empty() )
 	{
-		// Not enough points to make a curve once we account for endpoint multiplicity
-		return false;
+		return true;
 	}
 
-	if( multiplicity > 1 )
+	// Count how many initial points have an X value matching the first point
+	typename PointContainer::const_iterator startDuplicates = ++points.begin();
+	while( startDuplicates != points.end() && startDuplicates->first == points.begin()->first )
 	{
-		typename PointContainer::const_iterator it = points.begin();
-		for( int i = 1; i < multiplicity; i++ )
-		{
-			++it;
-			if( *it != *points.begin() )
-			{
-				// We don't have enough matching points to equal the endPointMultiplicity
-				return false;
-			}
-		}
+		startDuplicates++;
+	}
+	// We need to keep one of these points, the rest are duplicates and should be removed
+	startDuplicates--;
 
-		typename PointContainer::const_reverse_iterator rit = points.rbegin();
-		for( int i = 1; i < multiplicity; i++ )
-		{
-			++rit;
-			if( *rit != *points.rbegin() )
-			{
-				// We don't have enough matching points to equal the endPointMultiplicity
-				return false;
-			}
-		}
+	points.erase( points.begin(), startDuplicates );
 
-		// We have an appropriate amount of duplication of the end points.  This will be added automatically
-		// when converting to a Cortex spline, so we trim it off of the source points here
-
-		typename PointContainer::reverse_iterator endMultiplicity = points.rbegin();
-		advance( endMultiplicity, multiplicity - 1 );
-		points.erase( endMultiplicity.base(), points.rbegin().base() );
-
-		typename PointContainer::iterator startMultiplicity = points.begin();
-		advance( startMultiplicity, multiplicity - 1 );
-		points.erase( points.begin(), startMultiplicity );
+	// Count how many points have an X value matching the last point
+	typename PointContainer::const_reverse_iterator endDuplicates = ++points.rbegin();
+	while( endDuplicates != points.rend() && endDuplicates->first == points.rbegin()->first )
+	{
+		endDuplicates++;
 	}
 
+	// We need to keep one of these points, the rest are duplicates and should be removed
+	endDuplicates--;
+
+	points.erase( endDuplicates.base(), points.rbegin().base() );
+
+	// This originally indicated whether the end point duplication matched the expected multiplicity
+	// for a certain interpolation. We no longer make assumptions about how the input data handles end
+	// point multiplicity, and instead just remove any duplicates, so we no longer consider any inputs
+	// to be invalid.
 	return true;
 }
 

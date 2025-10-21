@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-shader splineParameters
+shader splineParametersTooShort
 (
 
-	float floatSplinePositions[] = { 0, 0, 1, 1 },
-	float floatSplineValues[] = { 0, 0, 1, 1 },
-	string floatSplineBasis = "catmull-rom",
-
-	color colorSplineValues[] = { 0, 0, 0, 1, 1, 1  },
-	float colorSplinePositions[] = { 0, 0, 0, 1, 1, 1  },
-	string colorSplineBasis = "bspline",
-
-	float checkLinearSplineValues[] = { 3, 3, 5, 5  },
-	float checkLinearSplinePositions[] = { 2, 2, 4, 4  },
-	string checkLinearSplineBasis = "linear",
-
-	color constDefaultValues[] = { 2, 2, 2, 2  },
-	float constDefaultPositions[] = { 2, 2, 2, 2  },
-	string constDefaultBasis = "constant",
+	color colorSplineValues[] = { 0, 1  },
+	float colorSplinePositions[] = { 0, 1 },
+	string colorSplineBasis = "linear",
 
 	output closure color out = 0
 )
