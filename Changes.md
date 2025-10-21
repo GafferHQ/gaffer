@@ -1,15 +1,15 @@
 1.6.x.x (relative to 1.6.3.0)
 =======
 
+Improvements
+------------
+
+- OSLShader : Improved loading of spline parameters with additional duplicate endpoints (including some RenderMan shaders).
+
 Fixes
 -----
 
 - VectorDataWidget : Fixed errors showing popup colour choosers.
-
-Improvements
-------------
-
-- OSLShader : Loading spline plugs now handles default values with varying end point multiplicity conventions better ( will allow some PRMan shaders to load correctly ).
 
 1.6.3.0 (relative to 1.6.2.1)
 =======
