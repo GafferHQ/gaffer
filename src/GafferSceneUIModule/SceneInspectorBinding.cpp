@@ -438,6 +438,28 @@ class InspectorTree : public IECore::RefCounted
 			}
 		}
 
+		bool contextValidForPath( const Path::Names &path ) const
+		{
+			if( path.size() && path[0] == g_locationPathName )
+			{
+				if(
+					!Context::current()->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) ||
+					!m_scene->existsPlug()->getValue()
+				)
+				{
+					return false;
+				}
+			}
+			else if( path.size() && path[0] == g_globalsPathName )
+			{
+				if( Context::current()->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
 		std::shared_ptr<const TreeItem> rootItem( const IECore::Canceller *canceller ) const
 		{
 			std::scoped_lock lock( m_mutex );
@@ -482,22 +504,9 @@ class InspectorTree : public IECore::RefCounted
 
 				for( const auto &[root, provider] : inspectionProviders() )
 				{
-					if( root[0] == g_locationPathName )
+					if( !contextValidForPath( root ) )
 					{
-						if(
-							!context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) ||
-							!m_scene->existsPlug()->getValue()
-						)
-						{
-							continue;
-						}
-					}
-					else if( root[0] == g_globalsPathName )
-					{
-						if( context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
-						{
-							continue;
-						}
+						continue;
 					}
 
 					auto inspections = provider( m_scene.get(), m_editScope );
@@ -524,7 +533,7 @@ class InspectorTree : public IECore::RefCounted
 
 			if( m_isolateDifferences )
 			{
-				isolateDifferencesWalk( m_rootItem.get(), canceller );
+				isolateDifferencesWalk( m_rootItem.get(), Path::Names(), canceller );
 			}
 
 			return m_rootItem;
@@ -533,11 +542,14 @@ class InspectorTree : public IECore::RefCounted
 		// Removes children from `tree` as necessary, and returns
 		// true if this item should be kept by its parent, false
 		// otherwise.
-		bool isolateDifferencesWalk( TreeItem *item, const IECore::Canceller *canceller ) const
+		bool isolateDifferencesWalk( TreeItem *item, const Path::Names &path, const IECore::Canceller *canceller ) const
 		{
+			Path::Names childPath = path;
+			childPath.resize( childPath.size() + 1 );
 			for( auto it = item->children.begin(); it != item->children.end(); /* empty */ )
 			{
-				if( !isolateDifferencesWalk( it->second.get(), canceller ) )
+				childPath.back() = it->first;
+				if( !isolateDifferencesWalk( it->second.get(), childPath, canceller ) )
 				{
 					it = item->children.erase( it );
 				}
@@ -561,9 +573,12 @@ class InspectorTree : public IECore::RefCounted
 			for( size_t i = 0; i < m_contexts.size(); ++i )
 			{
 				Context::EditableScope scope( m_contexts[i].get() );
-				scope.setCanceller( canceller );
-				auto inspection = item->inspector->inspect();
-				values[i] = inspection ? inspection->value() : nullptr;
+				if( contextValidForPath( path ) )
+				{
+					scope.setCanceller( canceller );
+					auto inspection = item->inspector->inspect();
+					values[i] = inspection ? inspection->value() : nullptr;
+				}
 			}
 
 			if( (bool)values[0] != (bool)values[1] )

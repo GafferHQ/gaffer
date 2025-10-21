@@ -510,5 +510,21 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 			for task in tasks :
 				task.wait()
 
+	def testIsolateDifferencesWithMissingPath( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		contextA = Gaffer.Context()
+		contextA["scene:path"] = GafferScene.ScenePlug.stringToPath( "/sphere" )
+		contextB = Gaffer.Context()
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( sphere["out"], [ contextA, contextB ], None )
+		tree.setIsolateDifferences( True )
+
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/" )
+		# If we're not careful with the implementation, this will throw an error about
+		# `scene:path` being missing from the context.
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/Location" ] )
+
 if __name__ == "__main__":
 	unittest.main()
