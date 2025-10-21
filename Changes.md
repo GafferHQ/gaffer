@@ -13,7 +13,14 @@ Fixes
   - Fixed visual bug whereby numeric values could temporarily appear to exceed their min/max range, particularly when using virtual sliders.
   - Fixed unnecessary updates when editing a plug value.
   - Fixed bug adding rows to VectorData plugs - the newly added rows were being deselected immediately after they appeared.
+- SceneWriter : Fixed identifiers used when writing RenderMan shaders.
 - VectorDataWidget : Fixed errors showing popup colour choosers.
+- Startup : Fixed UnicodeDecodeError when running in non-UTF8 locales.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.1.0.
 
 1.6.3.0 (relative to 1.6.2.1)
 =======
