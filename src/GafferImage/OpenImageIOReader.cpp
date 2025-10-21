@@ -66,12 +66,11 @@
 
 #include <memory>
 
-OIIO_NAMESPACE_USING
-
 using namespace std;
 using namespace boost::placeholders;
 using namespace tbb;
 using namespace Imath;
+using namespace OIIO;
 using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
