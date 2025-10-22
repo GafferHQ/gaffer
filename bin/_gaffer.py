@@ -331,6 +331,7 @@ def setUpRenderMan() :
 	appendToPath( rmanTree / "lib", libraryPath )
 	appendToPath( rmanTree / "bin", "PATH" )
 	appendToPath( rmanTree / "bin", "PYTHONPATH" )
+	appendToPath( rmanTree / "bin" / "pythonbindings", "PYTHONPATH" )
 	appendToPath( rmanTree / "lib" / "plugins", "RMAN_RIXPLUGINPATH" )
 	appendToPath( rmanTree / "lib" / "shaders", "OSL_SHADER_PATHS" )
 	appendToPath( pluginRoot / "plugins", "RMAN_DISPLAYS_PATH" )

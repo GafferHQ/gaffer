@@ -272,6 +272,31 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		},
 
+		# Add options to specify which devices XPU should use. Since there don't
+		# seem to be any names for this specified in the USD schemas shipping
+		# with RenderMan, we're using the names from HdPrmanLoaderTokens in the
+		# hdPrman source code.
+
+		"option:ri:xpuCpuConfig" : [
+
+			"defaultValue", 1,
+			"description", "Enables the CPU device for rendering.",
+			"label", "CPU",
+			"layout:section", "XPU Devices",
+			"plugValueWidget:type", "GafferUI.BoolPlugValueWidget",
+
+		],
+
+		"option:ri:xpuGpuConfig" : [
+
+			"defaultValue", IECore.IntVectorData(),
+			"description", "The list of GPU devices to enable for rendering.",
+			"label", "GPU",
+			"layout:section", "XPU Devices",
+			"plugValueWidget:type", "GafferRenderManUI.RenderManOptionsUI._GPUConfigPlugValueWidget",
+
+		],
+
 	} )
 
 Gaffer.Metadata.registerValue( "option:ri:*", "category", "RenderMan" )

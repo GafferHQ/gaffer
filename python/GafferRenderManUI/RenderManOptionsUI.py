@@ -34,8 +34,16 @@
 #
 ##########################################################################
 
+import collections
+import functools
+
+import IECore
+
 import Gaffer
+import GafferUI
 import GafferRenderMan
+
+from GafferUI.PlugValueWidget import sole
 
 Gaffer.Metadata.registerNode(
 
@@ -49,3 +57,82 @@ Gaffer.Metadata.registerNode(
 	""",
 
 )
+
+class _GPUConfigPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
+
+		self._addPopupMenu( self.__menuButton )
+
+		self.__currentValue = []
+
+	# Returns a dictionary mapping device IDs to labels.
+	@staticmethod
+	def __devices() :
+
+		from rman import pxrcore
+
+		result = {}
+		for i in range( pxrcore.GetGpgpuCount( pxrcore.k_cuda ) ) :
+			descriptor = pxrcore.GpgpuDescriptor()
+			pxrcore.GetGpgpuDescriptor( pxrcore.k_cuda, i, descriptor )
+			result[i] = descriptor.name
+
+		return result
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__currentValue = sole( values ) or []
+
+		if not self.__currentValue :
+			self.__menuButton.setText( "None" )
+		else :
+			devices = self.__devices()
+			self.__menuButton.setText(
+				", ".join( [
+					"{} ({})".format( i, devices.get( i, "Unavailable" ) )
+					for i in self.__currentValue
+				] )
+			)
+
+		self.__menuButton.setErrored( exception is not None )
+
+	def _updateFromEditable( self ) :
+
+		self.__menuButton.setEnabled( self._editable() )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		devices = self.__devices()
+		for i in self.__currentValue :
+			devices.setdefault( i, "Unavailable" )
+
+		for i in sorted( devices.keys() ) :
+			result.append(
+				"{} ({})".format( i, devices[i] ),
+				{
+					"checkBox" : i in self.__currentValue,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__toggleIndex ), index = i ),
+				}
+			)
+
+		return result
+
+	def __toggleIndex( self, checked, index ) :
+
+		if checked :
+			newValue = sorted( set( self.__currentValue ).union( [ index ] ) )
+		else :
+			newValue = [ i for i in self.__currentValue if i != index ]
+
+		newValue = IECore.IntVectorData( newValue )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for plug in self.getPlugs() :
+				plug.setValue( newValue )
