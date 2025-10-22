@@ -611,7 +611,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Expansion" )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Visibility" )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "expansion.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -635,6 +635,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		expandAll = bool( self.getPlug().getValue() )
 
 		m = IECore.MenuDefinition()
+		m.append( "/Expansion", { "divider" : True, "label" : "Expansion" } )
 		m.append( "/Expand Selection", { "command" : self.getPlug().node().expandSelection, "active" : not expandAll, "shortCut" : "Down" } )
 		m.append( "/Expand Selection Fully", { "command" : functools.partial( self.getPlug().node().expandSelection, depth = 999 ), "active" : not expandAll, "shortCut" : "Shift+Down" } )
 		m.append( "/Collapse Selection", { "command" : self.getPlug().node().collapseSelection, "active" : not expandAll, "shortCut" : "Up" } )
