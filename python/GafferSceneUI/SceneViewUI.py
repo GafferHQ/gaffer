@@ -658,7 +658,8 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			{
 				"checkBox" : set( includedPurposes ) == set( renderElements ),
 				"active" : includedPurposesEnabled,
-				"command" : functools.partial( drawingModePlug["includedPurposes"]["value"].setValue, IECore.StringVectorData( renderElements ) )
+				"command" : functools.partial( drawingModePlug["includedPurposes"]["value"].setValue, IECore.StringVectorData( renderElements ) ),
+				"description" : 'Shows objects with "default" and "render" USD purposes.'
 			}
 		)
 		m.append(
@@ -666,7 +667,8 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			{
 				"checkBox" : set( includedPurposes ) == set( previewElements ),
 				"active" : includedPurposesEnabled,
-				"command" : functools.partial( drawingModePlug["includedPurposes"]["value"].setValue, IECore.StringVectorData( previewElements ) )
+				"command" : functools.partial( drawingModePlug["includedPurposes"]["value"].setValue, IECore.StringVectorData( previewElements ) ),
+				"description" : 'Shows objects with "default" and "preview" USD purposes.'
 			}
 		)
 		m.append(
@@ -674,7 +676,8 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			{
 				"checkBox" : set( includedPurposes ) == set( previewWithGuidesElements ),
 				"active" : includedPurposesEnabled,
-				"command" : functools.partial( drawingModePlug["includedPurposes"]["value"].setValue, IECore.StringVectorData( previewWithGuidesElements ) )
+				"command" : functools.partial( drawingModePlug["includedPurposes"]["value"].setValue, IECore.StringVectorData( previewWithGuidesElements ) ),
+				"description" : 'Shows objects with "default", "proxy" and "guide" USD purposes.'
 			}
 		)
 
@@ -699,6 +702,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 				{
 					"checkBox" : not includedPurposesEnabled,
 					"command" : lambda checked : drawingModePlug["includedPurposes"]["enabled"].setValue( not checked ),
+					"description" : "Shows objects with USD purposes that match the global `option:render:includedPurposes` variable which can be set from a StandardOptions node."
 				}
 			)
 
