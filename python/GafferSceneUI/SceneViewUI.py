@@ -685,16 +685,16 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 				( p != purpose and p in includedPurposes ) or ( p == purpose and p not in includedPurposes )
 			] )
 			m.append(
-				"/Values/{}".format( purpose.capitalize() ),
+				"/Custom/{}".format( purpose.capitalize() ),
 				{
 					"checkBox" : purpose in includedPurposes,
 					"active" : includedPurposesEnabled,
 					"command" : functools.partial( drawingModePlug["includedPurposes"]["value"].setValue, newPurposes ),
 				}
 			)
-			m.append( "/Values/SceneDivider", { "divider" : True } )
+			m.append( "/Custom/SceneDivider", { "divider" : True } )
 			m.append(
-				"/Values/From Scene",
+				"/Custom/From Scene",
 				{
 					"checkBox" : not includedPurposesEnabled,
 					"command" : lambda checked : drawingModePlug["includedPurposes"]["enabled"].setValue( not checked ),
