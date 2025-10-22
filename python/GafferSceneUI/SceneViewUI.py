@@ -681,6 +681,8 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
+		m.append( "/CustomDivider", { "divider" : True } )
+
 		allPurposes = [ "default", "render", "proxy", "guide" ]
 		for purpose in allPurposes :
 			newPurposes = IECore.StringVectorData( [
@@ -696,15 +698,15 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 					"command" : functools.partial( drawingModePlug["includedPurposes"]["value"].setValue, newPurposes ),
 				}
 			)
-			m.append( "/Custom/SceneDivider", { "divider" : True } )
-			m.append(
-				"/Custom/From Scene",
-				{
-					"checkBox" : not includedPurposesEnabled,
-					"command" : lambda checked : drawingModePlug["includedPurposes"]["enabled"].setValue( not checked ),
-					"description" : "Shows objects with USD purposes that match the global `option:render:includedPurposes` variable which can be set from a StandardOptions node."
-				}
-			)
+		m.append( "/SceneDivider", { "divider" : True } )
+		m.append(
+			"/From Scene",
+			{
+				"checkBox" : not includedPurposesEnabled,
+				"command" : lambda checked : drawingModePlug["includedPurposes"]["enabled"].setValue( not checked ),
+				"description" : "Shows objects with USD purposes that match the global `option:render:includedPurposes` variable which can be set from a StandardOptions node."
+			}
+		)
 
 		self.menuSignal()( m, self )
 
