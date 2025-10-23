@@ -17,6 +17,8 @@ Fixes
 - SceneInspector : Fixed `Context has no variable named "scene:path"` error when "Isolate Differences" is on.
 - VectorDataWidget : Fixed errors showing popup colour choosers.
 - Startup : Fixed UnicodeDecodeError when running in non-UTF8 locales.
+- Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.
+- Scene Editors : Fixed undo after creating a new edit in an EditScope.
 
 Build
 -----
@@ -375,7 +377,11 @@ Build
 1.5.16.x (relative to 1.5.16.3)
 ========
 
+Fixes
+-----
 
+- Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.
+- SceneEditors : Fixed undo after creating a new edit in an EditScope.
 
 1.5.16.3 (relative to 1.5.16.2)
 ========

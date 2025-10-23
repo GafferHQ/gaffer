@@ -91,29 +91,30 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 		return
 
 	nonEditable = [ i for i in inspections if not i.editable() ]
+	if len( nonEditable ) :
+		GafferUI.PopupWindow.showWarning( nonEditable[0].nonEditableReason(), parent = pathListing )
+		return
 
-	if len( nonEditable ) == 0 :
-		if not quickBoolean or not __toggleBoolean( pathListing, inspections ) :
+	if not quickBoolean or not __toggleBoolean( pathListing, inspections ) :
+
+		# Not toggleable, so show popup editor.
+
+		with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+
 			edits = [ i.acquireEdit() for i in inspections ]
-			warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
 
 			if ensureEnabled :
-				with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
-					for edit in edits :
-						if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
-							edit["enabled"].setValue( True )
+				for edit in edits :
+					if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
+						edit["enabled"].setValue( True )
 
-			# The plugs are either not boolean, boolean with mixed values,
-			# or attributes that don't exist and are not boolean. Show the popup.
-			__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
+		warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+		__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
 
-			if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-				__inspectorColumnPopup.plugValueWidget().setNameVisible( False )
+		if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
+			__inspectorColumnPopup.plugValueWidget().setNameVisible( False )
 
-			__inspectorColumnPopup.popup( parent = pathListing )
-
-	else :
-		GafferUI.PopupWindow.showWarning( nonEditable[0].nonEditableReason(), parent = pathListing )
+		__inspectorColumnPopup.popup( parent = pathListing )
 
 def __toggleableInspections( pathListing ) :
 
