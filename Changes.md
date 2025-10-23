@@ -21,15 +21,15 @@ Fixes
 - Scene Editors : Fixed undo after creating a new edit in an EditScope.
 - RenderPasses : Fixed drawing of custom widgets registered by `registerRenderPassNameWidget()`.
 
-Build
------
-
-- Cortex : Updated to version 10.6.1.0.
-
 API
 ---
 
 - PopupWindow : Added `showWarning()` class method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.1.0.
 
 1.6.3.0 (relative to 1.6.2.1)
 =======
