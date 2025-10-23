@@ -323,6 +323,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 	## Returns a context manager that blocks the connections used to
 	# call `_updateFromValues()` when the plug is dirtied. This may
 	# be used to avoid recursion when the widget edits the plug value.
+	# > Note : When used with an UndoScope, the UndoScope must be nested
+	# > _inside_ `_blockedUpdateFromValues()`, as plugs are not signalled
+	# > as dirty until the UndoScope closes.
 	def _blockedUpdateFromValues( self ) :
 
 		return Gaffer.Signals.BlockedConnection( self.__plugDirtiedConnections )

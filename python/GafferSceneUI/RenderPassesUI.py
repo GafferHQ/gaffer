@@ -160,17 +160,14 @@ class _RenderPassVectorDataPlugValueWidget( GafferUI.VectorDataPlugValueWidget )
 
 		return _Editor()
 
-class _Editor( GafferUI.ListContainer ) :
+class _Editor( GafferUI.PopupWindow ) :
 
 	def __init__( self ) :
 
-		GafferUI.ListContainer.__init__( self, orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
-		with self :
-			self.__nameWidget = createRenderPassNameWidget()
+		self.__nameWidget = createRenderPassNameWidget()
+		GafferUI.PopupWindow.__init__( self, "", child = self.__nameWidget )
 
 		self._qtWidget().setFocusProxy( self.__nameWidget._qtWidget() )
-
-		GafferUI.Widget.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ) )
 
 	def setValue( self, value ) :
 
@@ -179,8 +176,3 @@ class _Editor( GafferUI.ListContainer ) :
 	def getValue( self ) :
 
 		return self.__nameWidget.getRenderPassName()
-
-	def __focusChanged( self, oldWidget, newWidget ) :
-
-		if not self.isAncestorOf( newWidget ) :
-			self.setVisible( False )

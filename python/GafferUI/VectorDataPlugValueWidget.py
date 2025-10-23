@@ -136,8 +136,8 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		assert( widget is self.__dataWidget )
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			with self._blockedUpdateFromValues() :
+		with self._blockedUpdateFromValues() :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				data = self.__dataWidget.getData()
 				for plug, value in zip( self.__dataPlugs(), self.__dataWidget.getData() ) :
 					plug.setValue( value )

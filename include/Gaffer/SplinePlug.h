@@ -57,6 +57,16 @@ enum SplineDefinitionInterpolation
 	SplineDefinitionInterpolationConstant,
 };
 
+// Represents a spline in a way closely aligned with how a user interacts with a spline in the UI.
+// The significant differences from IECore::Spline are that end points are not duplicated, and the
+// MonotoneCubic interpolation is supported.
+//
+// This class takes care of converting to IECore::Spline, and helps with converting back from it.
+//
+// In the future, we aim to move this to Cortex, and use it for all setup of splines, and replace
+// IECore::Spline with IECore::SplineEvaluator, which would store things in the right
+// format for fast evaluation, but would be totally opaque otherwise - the only way to set up an
+// evaluator would be using setting up a SplineDefinition and calling SplineDefinition::evaluator().
 
 template<typename T>
 struct GAFFER_API SplineDefinition
@@ -80,11 +90,18 @@ struct GAFFER_API SplineDefinition
 
 
 	// Convert to Cortex Spline
+	// In the future, IECore::Spline may be replaced with IECore::SplineEvaluator, and this
+	// function would be the only way to setup one.
 	T spline() const;
 
-	// If you are starting with a curve representation that needs duplicated end point values, and you're
-	// converting it into this representation, you need to trim off the duplicated end point values,
-	// and you can do that with this method
+	// Removes start and end points with duplicated X values.
+	//
+	// Sources of spline data may or may not contain duplicated end points for a variety of reasons
+	// ( such as IECore::Splineff having duplicated end points so that spline evaluation will reach
+	// the final value, or OSL have duplicated end points even for constant and linear splines ).
+	//
+	// The spline UI's that Gaffer uses to interact with splines don't support duplicated end
+	// points well, so regardless of why they are there, this function will remove them.
 	bool trimEndPoints();
 
 	bool operator==( const SplineDefinition<T> &rhs ) const

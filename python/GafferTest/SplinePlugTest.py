@@ -45,18 +45,19 @@ import GafferTest
 class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testSplineDefinition( self ) :
+		# trimEndPoints now removes any duplicates, regardless of what the interpolation type is
 
 		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.Linear )
 		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
 		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.Linear )
 		self.assertTrue( d.trimEndPoints() )
-		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+		self.assertEqual( d.points(), ((0,0), (1,1)) )
 
 		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.CatmullRom )
 		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
 		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.CatmullRom )
 		self.assertTrue( d.trimEndPoints() )
-		self.assertEqual( d.points(), ((0, 0), (0,0), (1,1), (1,1)) )
+		self.assertEqual( d.points(), ((0, 0), (1,1)) )
 
 		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.BSpline )
 		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
@@ -68,14 +69,24 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
 		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
 		self.assertTrue( d.trimEndPoints() )
-		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
-
-		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.BSpline )
-		self.assertFalse( d.trimEndPoints() ) # Not enough CVs for BSpline
+		self.assertEqual( d.points(), ((0, 0), (1,1)) )
 
 
+		# The only time it doesn't remove duplicates is if there are no duplicates
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0.5,0.5), (1,1), (1.5,1.5)), Gaffer.SplineDefinitionInterpolation.BSpline )
+		self.assertTrue( d.trimEndPoints() )
+		self.assertEqual( d.points(), ((0, 0), (0.5,0.5), (1,1), (1.5,1.5)) )
+
+
+		# We trim anything with matching X values, even if the Y-values differ
 		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1.1)), Gaffer.SplineDefinitionInterpolation.BSpline )
-		self.assertFalse( d.trimEndPoints() ) # Endpoints don't match
+		self.assertTrue( d.trimEndPoints() )
+		self.assertEqual( d.points(), ((0, 0), (1,1) ) )
+
+		# We stop trimming as soon as we find anything with a different X value
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1.25,1)), Gaffer.SplineDefinitionInterpolation.BSpline )
+		self.assertTrue( d.trimEndPoints() )
+		self.assertEqual( d.points(), ((0, 0), (1,1), (1,1), (1.25, 1 )) )
 
 	def testConstructor( self ) :
 

@@ -443,7 +443,7 @@ Plug *loadStringParameter( const OSLQuery::Parameter *parameter, const InternedS
 	string defaultValue;
 	if( parameter->sdefault.size() )
 	{
-		defaultValue = parameter->sdefault[0].c_str();
+		defaultValue = parameter->sdefault[0].string();
 	}
 
 	StringPlug *existingPlug = parent->getChild<StringPlug>( name );
@@ -477,7 +477,7 @@ Plug *loadStringArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 		{
 			if( !parameter->sdefault[i].empty() )
 			{
-				defaultValueDataWritable[i] = parameter->sdefault[i].c_str();
+				defaultValueDataWritable[i] = parameter->sdefault[i].string();
 			}
 		}
 	}
@@ -933,7 +933,7 @@ bool findGafferSplineParameters( const OSLQuery &query, const OSLQuery::Paramete
 	const char *suffix = nullptr;
 	for( const char **suffixPtr = suffixes; *suffixPtr; ++suffixPtr )
 	{
-		if( boost::ends_with( parameter->name.c_str(), *suffixPtr ) )
+		if( boost::ends_with( parameter->name.string(), *suffixPtr ) )
 		{
 			suffix = *suffixPtr;
 			break;
@@ -1157,7 +1157,7 @@ Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 
 	if( !result )
 	{
-		msg( Msg::Warning, "OSLShader::loadShader", fmt::format( "Parameter \"{}\" has unsupported type", parameter->name.c_str() ) );
+		msg( Msg::Warning, "OSLShader::loadShader", fmt::format( "Parameter \"{}\" has unsupported type", parameter->name.string() ) );
 	}
 
 	return result;
@@ -1178,7 +1178,7 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 			continue;
 		}
 
-		if( !boost::starts_with( parameter->name.c_str(), prefix ) )
+		if( !boost::starts_with( parameter->name.string(), prefix ) )
 		{
 			continue;
 		}
@@ -1269,7 +1269,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	typePlug->source<StringPlug>()->setValue(
 		typeIt != g_typeOverrides.end() ?
 		typeIt->second :
-		std::string( "osl:" ) + ( query->shadertype().c_str() )
+		std::string( "osl:" ) + ( query->shadertype().string() )
 	);
 
 	const IECore::CompoundData *metadata = OSLShader::metadata();
@@ -1331,7 +1331,7 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 	}
 	else if( metadata.type == TypeDesc::STRING )
 	{
-		return new IECore::StringData( metadata.sdefault[0].c_str() );
+		return new IECore::StringData( metadata.sdefault[0].string() );
 	}
 	else if( metadata.type.aggregate == TypeDesc::VEC3 )
 	{
@@ -1384,7 +1384,7 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 		}
 	}
 
-	IECore::msg( IECore::Msg::Warning, "OSLShader", string( "Metadata \"" ) + metadata.name.c_str() + "\" has unsupported type" );
+	IECore::msg( IECore::Msg::Warning, "OSLShader", string( "Metadata \"" ) + metadata.name.string() + "\" has unsupported type" );
 	return nullptr;
 }
 
@@ -1396,7 +1396,7 @@ static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Para
 		DataPtr data = convertMetadata( *it );
 		if( data )
 		{
-			result->writable()[it->name.c_str()] = data;
+			result->writable()[it->name.string()] = data;
 		}
 	}
 	return result;
@@ -1451,7 +1451,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 			}
 			else
 			{
-				parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
+				parameterMetadata->writable()[parameter->name.string()] = convertMetadata( parameter->metadata );
 			}
 		}
 	}
