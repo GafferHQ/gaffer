@@ -14,7 +14,7 @@ import Gaffer
 parser = argparse.ArgumentParser(
 	description = inspect.cleandoc(
 	"""
-	Utility to help convert node metadata registrations from
+	Utility to help convert `Metadata.registerValues()` calls from
 	old list-based syntax to new dict-based one.
 
 	1. Run `gaffer env python convertMetadataRegistrations.py --store original.json` to save a copy of the original metadata for later comparison.
@@ -56,37 +56,26 @@ def convert( fileName ) :
 	with open( fileName ) as f :
 		lines = f.readlines()
 
-	inRegisterNode = False
-	inPlugs = False
+	inRegisterValues = False
 
 	for lineNumber in range( len( lines ) ) :
 
 		line = lines[lineNumber]
 
-		if line.startswith( "Gaffer.Metadata.registerNode(" ) :
-			inRegisterNode = True
+		if line.startswith( "Gaffer.Metadata.registerValues(" ) :
+			inRegisterValues = True
 
-		if not inRegisterNode :
+		if not inRegisterValues :
 			continue
 
 		if line == ")\n" :
-			inRegisterNode = False
+			inRegisterValues = False
 			continue
 
-		if line == "\tplugs = {\n" :
-			inPlugs = True
+		line = re.sub( r'^(\t"[a-zA-Z0-9_*?:.[\]]+") ?: ?[\[(]', r"\1 : {", line )
+		line = re.sub( r"^(\t)[\])](,?\n)", r"\1}\2", line )
 
-		if not inPlugs :
-			continue
-
-		if line.startswith( "\t}" ) :
-			inPlugs = False
-			break
-
-		line = re.sub( r'^(\t\t"[a-zA-Z0-9_*?:.[\]]+") ?: ?[\[(]', r"\1 : {", line )
-		line = re.sub( r"^(\t\t)[\])](,?\n)", r"\1}\2", line )
-
-		line = re.sub( r'^(\t\t\t"[a-zA-Z0-9_:\-. ()]+"),(.*)', r"\1 :\2", line )
+		line = re.sub( r'^(\t\t"[a-zA-Z0-9_:\-. ()]+"),(.*)', r"\1 :\2", line )
 
 		lines[lineNumber] = line
 
@@ -100,32 +89,11 @@ def allMetadata() :
 	app._executeStartupFiles( "gui" )
 
 	result = {}
-	for module in sys.modules.values() :
 
-		for attrName in dir( module ) :
-
-			attr = getattr( module, attrName )
-			if not inspect.isclass( attr ) or not issubclass( attr, Gaffer.Node ) :
-				continue
-
-			try :
-				node = attr()
-			except Exception as e :
-				continue
-
-			def storeMetadata( target ) :
-
-				for key in Gaffer.Metadata.registeredValues( target ) :
-					try :
-						value = Gaffer.Metadata.value( target, key )
-					except Exception as e :
-						value = str( e )
-
-					result[f"{module.__name__}.{target.fullName()}/{key}"] = IECore.repr( value ) if value else  "None"
-
-			storeMetadata( node )
-			for child in Gaffer.GraphComponent.RecursiveRange( node ) :
-				storeMetadata( child )
+	for target in Gaffer.Metadata.targetsWithMetadata( "*", "defaultValue" ) :
+		for key in Gaffer.Metadata.registeredValues( target ) :
+			value = Gaffer.Metadata.value( target, key )
+			result[f"{target}.{key}"] = IECore.repr( value ) if value else "None"
 
 	return result
 
