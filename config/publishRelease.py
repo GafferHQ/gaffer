@@ -38,10 +38,7 @@
 import github
 
 import argparse
-import datetime
 import os
-import subprocess
-import sys
 
 # A script to publish a build to a GitHub Release
 
@@ -74,6 +71,13 @@ parser.add_argument(
 	help = "A suitable access token to authenticate the GitHub API."
 )
 
+parser.add_argument(
+	"--maxAssets",
+	type = int,
+	required = False,
+	help = "The maximum number of assets allowed in the release. If provided, the oldest assets over this limit will be deleted."
+)
+
 args = parser.parse_args()
 
 if not args.githubAccessToken :
@@ -94,3 +98,9 @@ asset = release.upload_asset( args.archive, content_type="application/gzip" )
 
 print( "Success, %s available at %s" % ( args.archive, asset.browser_download_url ) )
 
+if args.maxAssets is not None :
+	assets = sorted( release.get_assets(), key = lambda a: a.created_at, reverse = True )
+
+	for asset in assets[args.maxAssets:] :
+		asset.delete_asset()
+		print( f"Deleted old asset: '{asset.name}'" )

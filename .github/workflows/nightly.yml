@@ -1,0 +1,100 @@
+name: Nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+      - cron: 0 0 * * *
+
+jobs:
+
+  Check:
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      buildNightly: ${{ steps.checkConditions.outputs.GAFFER_NIGHTLY }}
+
+    steps:
+
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        fetch-depth: 0
+
+    - name: Check conditions
+      id: checkConditions
+      run: |
+        # Check the current repo for an existing release for the "nightly" tag. The
+        # nightly build process updates this release with new assets so we skip the
+        # build if we have nowhere to put them. This prevents nightly builds from
+        # occurring automatically on forked repositories without a matching release.
+        if ! gh release view nightly > /dev/null 2>&1; then
+          echo "No release for 'nightly' tag found, skipping nightly build."
+          exit
+        fi
+
+        # We only want to produce a new build when something has changed, so we compare
+        # HEAD with the current "nightly" tag and only build when they differ.
+        if [ "$(git rev-parse HEAD)" = "$(git rev-list -n 1 tags/nightly)" ]; then
+          echo "HEAD already matches current 'nightly' tag, skipping nightly build."
+          exit
+        fi
+
+        # Nightly builds should represent our latest code changes. If `main` is behind
+        # either of our two most recently updated `_maintenance` branches, then skip the
+        # nightly build as it would be out of date.
+        ## \todo Notify maintainers to merge changes forwards to `main`.
+        for branch in $(git for-each-ref --sort=-committerdate --format='%(refname:short)' refs/heads | grep '_maintenance$' | head -n 2); do
+          behind=$(git rev-list --count main..$branch)
+          if [ $behind -gt 0 ]; then
+            echo "main is $behind commits behind $branch, skipping nightly build."
+            exit
+          fi
+        done
+
+        # We use the "pendingNightly" tag to define the commit used to build the
+        # current nightly. This insulates us from changes if new commits are merged
+        # to `main` while this workflow is in progress.
+        git config user.name "${GITHUB_ACTOR}"
+        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git tag -fa pendingNightly -m "pending nightly build"
+        git push --force origin refs/tags/pendingNightly
+
+        echo GAFFER_NIGHTLY=1 >> $GITHUB_OUTPUT
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  Build:
+
+    needs: Check
+
+    uses: ./.github/workflows/main.yml
+    with:
+      buildType: 'nightly'
+    if: needs.Check.outputs.buildNightly == '1'
+
+  Tag:
+
+    needs: [ Check, Build ]
+
+    runs-on: ubuntu-latest
+    if: needs.Check.outputs.buildNightly == '1'
+
+    steps:
+
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        fetch-depth: 0
+
+    - name: Update Nightly Tag
+      # After a successful build, move the "nightly" tag to the commit tagged
+      # "pendingNightly" so the "nightly" tag represents the commit from which
+      # the latest nightly was built. This keeps the GitHub release up to date
+      # and allows us to avoid building a new nightly from the same commit.
+      run: |
+        git config user.name "${GITHUB_ACTOR}"
+        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git tag -fa nightly refs/tags/pendingNightly^{} -m "nightly build"
+        git push --force origin refs/tags/nightly
+        git push --delete origin refs/tags/pendingNightly
+      shell: bash
