@@ -18,7 +18,9 @@ Fixes
 - VectorDataWidget : Fixed errors showing popup colour choosers.
 - Startup : Fixed UnicodeDecodeError when running in non-UTF8 locales.
 - Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.
-- Scene Editors : Fixed undo after creating a new edit in an EditScope.
+- Scene Editors :
+  - Fixed undo after creating a new edit in an EditScope.
+  - Fixed "Inspect..." menu item when a property's source can not be determined.
 - RenderPasses : Fixed drawing of custom widgets registered by `registerRenderPassNameWidget()`.
 
 Build
