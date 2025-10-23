@@ -193,11 +193,25 @@ void registerValues( dict valuesDict )
 	for( size_t i = 0, e = len( items ); i < e; ++i )
 	{
 		InternedString target = extract<InternedString>( items[i][0] );
-		object values = items[i][1];
-		for( size_t vi = 0, ve = len( values ); vi < ve; vi += 2 )
+
+		extract<dict> valuesDictExtractor( items[i][1] );
+		if( valuesDictExtractor.check() )
 		{
-			InternedString key = extract<InternedString>( values[vi] );
-			Metadata::registerValue( target, key, objectToValueFunction( key, values[vi+1] ) );
+			list valuesItems = valuesDictExtractor().items();
+			for( size_t vi = 0, ve = len( valuesItems ); vi < ve; vi++ )
+			{
+				const InternedString key = extract<InternedString>( valuesItems[vi][0] );
+				Metadata::registerValue( target, key, objectToValueFunction( key, valuesItems[vi][1] ) );
+			}
+		}
+		else
+		{
+			object values = items[i][1];
+			for( size_t vi = 0, ve = len( values ); vi < ve; vi += 2 )
+			{
+				const InternedString key = extract<InternedString>( values[vi] );
+				Metadata::registerValue( target, key, objectToValueFunction( key, values[vi+1] ) );
+			}
 		}
 	}
 }

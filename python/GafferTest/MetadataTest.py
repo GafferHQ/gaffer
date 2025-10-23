@@ -1445,6 +1445,7 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		Gaffer.Metadata.registerValues( {
 
+			# Legacy list-based registration.
 			"testTarget1" : [
 
 				"description", "testTarget1",
@@ -1452,16 +1453,17 @@ class MetadataTest( GafferTest.TestCase ) :
 
 			],
 
-			"testTarget2" : [
+			# Preferred dict-based registration.
+			"testTarget2" : {
 
-				"description",
+				"description" :
 				"""
 				multi line
 				description
 				""",
-				"otherValue", IECore.StringVectorData( [ "A", "B", "C" ] )
+				"otherValue" : IECore.StringVectorData( [ "A", "B", "C" ] )
 
-			]
+			}
 
 		} )
 
@@ -1469,9 +1471,11 @@ class MetadataTest( GafferTest.TestCase ) :
 			for key in ( "description", "otherValue" ) :
 				self.addCleanup( Gaffer.Metadata.deregisterValue, target, key )
 
+		self.assertEqual( Gaffer.Metadata.registeredValues( "testTarget1" ), [ "description", "otherValue" ] )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget1", "description" ), "testTarget1" )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget1", "otherValue" ), 100 )
 
+		self.assertEqual( Gaffer.Metadata.registeredValues( "testTarget2" ), [ "description", "otherValue" ] )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget2", "description" ), "multi line\ndescription" )
 		self.assertEqual( Gaffer.Metadata.value( "testTarget2", "otherValue" ), IECore.StringVectorData( [ "A", "B", "C" ] ) )
 

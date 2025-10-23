@@ -25,6 +25,7 @@ API
 ---
 
 - PopupWindow : Added `showWarning()` class method.
+- Metadata : The `registerValues()` function now accepts dictionaries containing target metadata. This should be preferred to the previous list-based registrations.
 
 Build
 -----
