@@ -578,11 +578,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			if reason is None :
 				self.__connectEditScope( dropNode )
 			else :
-				with GafferUI.PopupWindow() as self.__popup :
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-						GafferUI.Image( "warningSmall.png" )
-						GafferUI.Label( f"<h4>{reason}</h4>" )
-				self.__popup.popup( parent = self )
+				GafferUI.PopupWindow.showWarning( reason, parent = self )
 
 		self.__menuButton.setHighlighted( False )
 

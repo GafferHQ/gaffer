@@ -422,14 +422,10 @@ class _InspectorWidget( GafferUI.Widget ) :
 
 		else :
 
-			with GafferUI.PopupWindow() as self.__popup :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Image( "warningSmall.png" )
-					GafferUI.Label( "<h4>{}</h4>".format(
-						self.__formatWarnings( [ r.nonEditableReason() for r in self.__inspectorResults ] )
-					) )
-
-			self.__popup.popup( parent = self )
+			GafferUI.PopupWindow.showWarning(
+				self.__formatWarnings( [ r.nonEditableReason() for r in self.__inspectorResults ] ),
+				parent = self
+			)
 
 		return True
 

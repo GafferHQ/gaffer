@@ -390,11 +390,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			try :
 				valuePlug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, plugOrData )
 			except :
-				with GafferUI.PopupWindow() as self.__popupWindow :
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-						GafferUI.Image( "warningSmall.png" )
-						GafferUI.Label( "<h4>Unsupported data type</h4>" )
-				self.__popupWindow.popup( parent = self )
+				GafferUI.PopupWindow.showWarning( "Unsupported data type", parent = self )
 				return True
 
 		tweakPlug = Gaffer.TweakPlug(

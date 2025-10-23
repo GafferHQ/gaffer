@@ -191,12 +191,12 @@ def __pruneSelection( editor ) :
 	# leak out and get used to delete nodes in the node graph.
 	editScope = __editScopeOrReason( editor )
 	if isinstance( editScope, str ) :
-		__warningPopup( editor, editScope )
+		GafferUI.PopupWindow.showWarning( editScope, parent = editor )
 		return True
 
 	readOnlyReason = GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScope )
 	if readOnlyReason is not None :
-		__warningPopup( editor, "{} is read-only.".format( readOnlyReason ) )
+		GafferUI.PopupWindow.showWarning( "{} is read-only.".format( readOnlyReason ), parent = editor )
 		return True
 
 	with editor.context() :
@@ -204,7 +204,7 @@ def __pruneSelection( editor ) :
 		# to interact with processors directly.
 		pruningProcessor = editScope.acquireProcessor( "PruningEdits", createIfNecessary = False )
 		if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
-			__warningPopup( editor, "{} is disabled.".format( pruningProcessor.relativeName( editScope.parent() ) ) )
+			GafferUI.PopupWindow.showWarning( "{} is disabled.".format( pruningProcessor.relativeName( editScope.parent() ) ), parent = editor )
 			return True
 
 	## \todo Maybe we might want to ask if we can prune a common ancestor
@@ -232,7 +232,7 @@ def __editSelectionVisibility( editor, makeVisible = False ) :
 	# leak out and get used to delete nodes in the node graph.
 	editScope = __editScopeOrReason( editor )
 	if isinstance( editScope, str ) :
-		__warningPopup( editor, editScope )
+		GafferUI.PopupWindow.showWarning( editScope, parent = editor )
 		return True
 
 	if isinstance( editor, GafferUI.Viewer ) :
@@ -259,7 +259,7 @@ def __editSelectionVisibility( editor, makeVisible = False ) :
 		# to interact with processors directly.
 		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
 		if attributeEdits is not None and not attributeEdits["enabled"].getValue() :
-			__warningPopup( editor, "{} is disabled.".format( attributeEdits.relativeName( editScope.parent() ) ) )
+			GafferUI.PopupWindow.showWarning( "{} is disabled.".format( attributeEdits.relativeName( editScope.parent() ) ), parent = editor )
 			return True
 
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
@@ -295,15 +295,6 @@ def __selectAncestorsClicked( widget, scriptNode, ancestors ) :
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scriptNode, ancestors )
 	widget.ancestor( GafferUI.Window ).close()
 	return True
-
-def __warningPopup( parent, message ) :
-
-	with GafferUI.PopupWindow() as parent.__editScopeWarningPopup :
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-			GafferUI.Image( "warningSmall.png" )
-			GafferUI.Label( "<h4>{}</h4>".format( message ) )
-
-	parent.__editScopeWarningPopup.popup( parent = parent )
 
 # Processor Widgets
 # =================

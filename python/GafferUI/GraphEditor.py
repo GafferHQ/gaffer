@@ -349,13 +349,7 @@ class GraphEditor( GafferUI.Editor ) :
 		else :
 
 			if self.__readOnlyPopup is None :
-
-				with GafferUI.PopupWindow() as self.__readOnlyPopup :
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-						GafferUI.Image( "warningSmall.png" )
-						GafferUI.Label( "Node Graph Not Editable" )
-
-			self.__readOnlyPopup.popup( center = self.bound().center(), parent = self )
+				GafferUI.PopupWindow.showWarning( "Node Graph Not Editable", parent = self, center = self.bound().center() )
 
 	def __nodeMenuVisibilityChanged( self, widget ) :
 
