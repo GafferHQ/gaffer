@@ -20,7 +20,9 @@ Fixes
   - Fixed unnecessary updates when editing a plug value.
   - Fixed bug adding rows to VectorData plugs - the newly added rows were being deselected immediately after they appeared.
 - SceneWriter : Fixed identifiers used when writing RenderMan shaders.
-- SceneInspector : Fixed `Context has no variable named "scene:path"` error when "Isolate Differences" is on.
+- SceneInspector :
+  - Fixed handling of nested UsdShadeNodeGraphs loaded from USD files.
+  - Fixed `Context has no variable named "scene:path"` error when "Isolate Differences" is on.
 - VectorDataWidget : Fixed errors showing popup colour choosers.
 - Startup : Fixed UnicodeDecodeError when running in non-UTF8 locales.
 - Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.

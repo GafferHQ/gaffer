@@ -206,6 +206,7 @@ void GafferSceneUIModule::bindInspector()
 				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ), arg( "inheritAttributes" ) = false )
 			)
 		)
+		.def( "parameter", &ParameterInspector::parameter, return_value_policy<copy_const_reference>() )
 		.def( "connectionSource", &ParameterInspector::connectionSource )
 		.staticmethod( "connectionSource" )
 	;

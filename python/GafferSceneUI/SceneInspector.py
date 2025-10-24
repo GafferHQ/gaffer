@@ -1022,12 +1022,14 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 				return
 			for selection in columnSelection.paths() :
 				path.setFromString( selection )
-				if not isinstance( column.inspector( path ), GafferSceneUI.Private.ParameterInspector ) :
+				inspector = column.inspector( path )
+				if not isinstance( inspector, GafferSceneUI.Private.ParameterInspector ) :
 					return
 
 				result = column.inspect( path )
 				if result is not None and result.value() is not None and ( connectionSource := GafferSceneUI.Private.ParameterInspector.connectionSource( result.value() ) ) :
-					newColumnSelection.addPath( "/".join( path[:-2] + [connectionSource.shader] ) )
+					depthFromNetworkRoot = 2 + inspector.parameter().shader.count( "/" )
+					newColumnSelection.addPath( "/".join( path[:-depthFromNetworkRoot] + [connectionSource.shader] ) )
 					newSelectionCount += 1
 
 		newSelection.append( newColumnSelection )
