@@ -667,7 +667,9 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 
 				GafferUI.Label( "<b>Source</b>", parenting = { "index" : ( 0, 0 ), "alignment" : (  GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
 
-				if inspection.source() is not None :
+				if inspection.fallbackDescription() :
+					GafferUI.Label( inspection.fallbackDescription(), parenting = { "index" : ( 1, 0 ) } )
+				elif inspection.source() is not None :
 					node = inspection.source().node()
 					nameLabel = GafferUI.NameLabel(
 						node,
@@ -676,8 +678,6 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 					)
 					nameLabel.setFormatter( lambda l : ".".join( x.getName() for x in l ) )
 					nameLabel.dragEndSignal().connectFront( Gaffer.WeakMethod( self.__nameLabelDragEnd ) )
-				elif inspection.sourceType() == inspection.SourceType.Fallback :
-					GafferUI.Label( inspection.fallbackDescription(), parenting = { "index" : ( 1, 0 ) } )
 
 				GafferUI.Label( "<b>Value</b>", parenting = { "index" : ( 0, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
 
