@@ -40,74 +40,74 @@ import IECore
 
 Gaffer.Metadata.registerValues( {
 
-	"camera:parameter:shutter_type" : [
+	"camera:parameter:shutter_type" : {
 
-		"defaultValue", "box",
-		"label", "Shutter Type",
-		"layout:section", "Arnold",
+		"defaultValue" : "box",
+		"label" : "Shutter Type",
+		"layout:section" : "Arnold",
 
-		"presetNames", IECore.StringVectorData( [ "Box", "Triangle", "Curve" ] ),
-		"presetValues", IECore.StringVectorData( [ "box", "triangle", "curve" ] ),
+		"presetNames" : IECore.StringVectorData( [ "Box", "Triangle", "Curve" ] ),
+		"presetValues" : IECore.StringVectorData( [ "box", "triangle", "curve" ] ),
 
-	],
+	},
 
-	"camera:parameter:shutter_curve" : [
+	"camera:parameter:shutter_curve" : {
 
-		"defaultValue", IECore.SplineffData(),
-		"label", "Shutter Curve",
-		"layout:section", "Arnold",
+		"defaultValue" : IECore.SplineffData(),
+		"label" : "Shutter Curve",
+		"layout:section" : "Arnold",
 
-	],
+	},
 
-	"camera:parameter:rolling_shutter" : [
+	"camera:parameter:rolling_shutter" : {
 
-		"defaultValue", "off",
-		"label", "Rolling Shutter",
-		"layout:section", "Arnold",
+		"defaultValue" : "off",
+		"label" : "Rolling Shutter",
+		"layout:section" : "Arnold",
 
-		"presetNames", IECore.StringVectorData( [ "Off", "Top", "Bottom", "Left", "Right" ] ),
-		"presetValues", IECore.StringVectorData( [ "off", "top", "bottom", "left", "right" ] ),
+		"presetNames" : IECore.StringVectorData( [ "Off", "Top", "Bottom", "Left", "Right" ] ),
+		"presetValues" : IECore.StringVectorData( [ "off", "top", "bottom", "left", "right" ] ),
 
-	],
+	},
 
-	"camera:parameter:rolling_shutter_duration" : [
+	"camera:parameter:rolling_shutter_duration" : {
 
-		"defaultValue", 0.0,
-		"minValue", 0.0,
-		"maxValue", 1.0,
-		"label", "Rolling Shutter Duration",
-		"layout:section", "Arnold",
+		"defaultValue" : 0.0,
+		"minValue" : 0.0,
+		"maxValue" : 1.0,
+		"label" : "Rolling Shutter Duration",
+		"layout:section" : "Arnold",
 
-	],
+	},
 
-	"camera:parameter:aperture_blades" : [
+	"camera:parameter:aperture_blades" : {
 
-		"defaultValue", 6,
-		"minValue", 0,
-		"maxValue", 40,
-		"label", "Aperture Blades",
-		"layout:section", "Arnold",
+		"defaultValue" : 6,
+		"minValue" : 0,
+		"maxValue" : 40,
+		"label" : "Aperture Blades",
+		"layout:section" : "Arnold",
 
-	],
+	},
 
-	"camera:parameter:aperture_blade_curvature" : [
+	"camera:parameter:aperture_blade_curvature" : {
 
-		"defaultValue", 0.0,
-		"minValue", -20.0,
-		"maxValue", 20.0,
-		"label", "Aperture Blade Curvature",
-		"layout:section", "Arnold",
+		"defaultValue" : 0.0,
+		"minValue" : -20.0,
+		"maxValue" : 20.0,
+		"label" : "Aperture Blade Curvature",
+		"layout:section" : "Arnold",
 
-	],
+	},
 
-	"camera:parameter:aperture_rotation" : [
+	"camera:parameter:aperture_rotation" : {
 
-		"defaultValue", 0.0,
-		"minValue", 0.0,
-		"maxValue", 360.0,
-		"label", "Aperture Rotation",
-		"layout:section", "Arnold",
+		"defaultValue" : 0.0,
+		"minValue" : 0.0,
+		"maxValue" : 360.0,
+		"label" : "Aperture Rotation",
+		"layout:section" : "Arnold",
 
-	],
+	},
 
 } )

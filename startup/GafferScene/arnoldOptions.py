@@ -76,10 +76,10 @@ Gaffer.Metadata.registerValues( {
 
 	# Rendering
 
-	"option:ai:bucket_size" : [
+	"option:ai:bucket_size" : {
 
-		"defaultValue", 64,
-		"description",
+		"defaultValue" : 64,
+		"description" :
 		"""
 		Controls the size of the image buckets.
 		The default size is 64x64 pixels.
@@ -88,32 +88,32 @@ Gaffer.Metadata.registerValues( {
 		they need to perform redundant computations
 		and filtering.
 		""",
-		"label", "Bucket Size",
-		"layout:section", "Rendering",
+		"label" : "Bucket Size",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"option:ai:bucket_scanning" : [
+	"option:ai:bucket_scanning" : {
 
-		"defaultValue", "spiral",
-		"description",
+		"defaultValue" : "spiral",
+		"description" :
 		"""
 		Controls the order in which buckets are
 		processed. A spiral pattern is the default.
 		""",
-		"label", "Bucket Scanning",
-		"layout:section", "Rendering",
+		"label" : "Bucket Scanning",
+		"layout:section" : "Rendering",
 
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( ["Top", "Left", "Random", "Spiral", "Hilbert"] ),
-		"presetValues", IECore.StringVectorData( ["top", "left", "random", "spiral", "hilbert"] ),
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( ["Top", "Left", "Random", "Spiral", "Hilbert"] ),
+		"presetValues" : IECore.StringVectorData( ["top", "left", "random", "spiral", "hilbert"] ),
 
-	],
+	},
 
-	"option:ai:parallel_node_init" : [
+	"option:ai:parallel_node_init" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Enables Arnold's parallel node initialization.
 		Note that some Arnold features may not be
@@ -121,31 +121,31 @@ Gaffer.Metadata.registerValues( {
 		can cause crashes. One such example is Cryptomatte
 		and its use in the AlSurface shader.
 		""",
-		"label", "Parallel Node Init",
-		"layout:section", "Rendering",
+		"label" : "Parallel Node Init",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"option:ai:threads" : [
+	"option:ai:threads" : {
 
-		"defaultValue", 0,
-		"description",
+		"defaultValue" : 0,
+		"description" :
 		"""
 		Specifies the number of threads Arnold
 		is allowed to use. A value of 0 gives
 		Arnold access to all available threads.
 		""",
-		"label", "Threads",
-		"layout:section", "Rendering",
+		"label" : "Threads",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
 	# Sampling
 
-	"option:ai:AA_samples" : [
+	"option:ai:AA_samples" : {
 
-		"defaultValue", 3,
-		"description",
+		"defaultValue" : 3,
+		"description" :
 		"""
 		Controls the number of rays per pixel
 		traced from the camera. The more samples,
@@ -156,72 +156,72 @@ Gaffer.Metadata.registerValues( {
 		means 9 rays are traced, 4 means 16 rays are
 		traced and so on.
 		""",
-		"label", "AA Samples",
-		"layout:section", "Sampling",
+		"label" : "AA Samples",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:GI_diffuse_samples" : [
+	"option:ai:GI_diffuse_samples" : {
 
-		"defaultValue", 2,
-		"description",
+		"defaultValue" : 2,
+		"description" :
 		"""
 		Controls the number of rays traced when
 		computing indirect illumination ("bounce light").
 		The number of actual diffuse rays traced is the
 		square of this number.
 		""",
-		"label", "Diffuse Samples",
-		"layout:section", "Sampling",
+		"label" : "Diffuse Samples",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:GI_specular_samples" : [
+	"option:ai:GI_specular_samples" : {
 
-		"defaultValue", 2,
-		"description",
+		"defaultValue" : 2,
+		"description" :
 		"""
 		Controls the number of rays traced when
 		computing specular reflections. The number of actual
 		specular rays traced is the square of this number.
 		""",
-		"label", "Specular Samples",
-		"layout:section", "Sampling",
+		"label" : "Specular Samples",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:GI_transmission_samples" : [
+	"option:ai:GI_transmission_samples" : {
 
-		"defaultValue", 2,
-		"description",
+		"defaultValue" : 2,
+		"description" :
 		"""
 		Controls the number of rays traced when
 		computing specular refractions. The number of actual
 		transmitted specular rays traced is the square of this number.
 		""",
-		"label", "Transmission Samples",
-		"layout:section", "Sampling",
+		"label" : "Transmission Samples",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:GI_sss_samples" : [
+	"option:ai:GI_sss_samples" : {
 
-		"defaultValue", 2,
-		"description",
+		"defaultValue" : 2,
+		"description" :
 		"""
 		Controls the number of rays traced when
 		computing subsurface scattering. The number of actual
 		subsurface rays traced is the square of this number.
 		""",
-		"label", "SSS Samples",
-		"layout:section", "Sampling",
+		"label" : "SSS Samples",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:GI_volume_samples" : [
+	"option:ai:GI_volume_samples" : {
 
-		"defaultValue", 2,
-		"description",
+		"defaultValue" : 2,
+		"description" :
 		"""
 		Controls the number of rays traced when
 		computing indirect lighting for volumes.
@@ -230,15 +230,15 @@ Gaffer.Metadata.registerValues( {
 		ray depth must be increased from the default
 		value of 0 before this setting is of use.
 		""",
-		"label", "Volume Samples",
-		"layout:section", "Sampling",
+		"label" : "Volume Samples",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:light_samples" : [
+	"option:ai:light_samples" : {
 
-		"defaultValue", 0,
-		"description",
+		"defaultValue" : 0,
+		"description" :
 		"""
 		Specifies a fixed number of light samples to be taken at each
 		shading point. This enables "Global Light Sampling", which provides
@@ -254,15 +254,15 @@ Gaffer.Metadata.registerValues( {
 		> https://help.autodesk.com/view/ARNOL/ENU/?guid=arnold_user_guide_ac_render_settings_ac_lights_settings_html
 		> for more details.
 		""",
-		"label", "Light Samples",
-		"layout:section", "Sampling",
+		"label" : "Light Samples",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:AA_seed" : [
+	"option:ai:AA_seed" : {
 
-		"defaultValue", 1,
-		"description",
+		"defaultValue" : 1,
+		"description" :
 		"""
 		Seeds the randomness used when generating samples.
 		By default this is set to the current frame number
@@ -271,71 +271,71 @@ Gaffer.Metadata.registerValues( {
 		that sampling noise does not change from frame to
 		frame.
 		""",
-		"label", "AA Seed",
-		"layout:section", "Sampling",
+		"label" : "AA Seed",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:AA_sample_clamp" : [
+	"option:ai:AA_sample_clamp" : {
 
-		"defaultValue", 10.0,
-		"description",
+		"defaultValue" : 10.0,
+		"description" :
 		"""
 		Sets a maximum for the values of individual pixel samples. This
 		can help reduce fireflies.
 		""",
-		"label", "Sample Clamp",
-		"layout:section", "Sampling",
+		"label" : "Sample Clamp",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:AA_sample_clamp_affects_aovs" : [
+	"option:ai:AA_sample_clamp_affects_aovs" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Applies the sample clamping settings to all RGB and RGBA
 		AOVs, in addition to the beauty image.
 		""",
-		"label", "Clamp AOVs",
-		"layout:section", "Sampling",
+		"label" : "Clamp AOVs",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:indirect_sample_clamp" : [
+	"option:ai:indirect_sample_clamp" : {
 
-		"defaultValue", 10.0,
-		"description",
+		"defaultValue" : 10.0,
+		"description" :
 		"""
 		Clamp fireflies resulting from indirect calculations.
 		May cause problems with dulling highlights in reflections.
 		""",
-		"label", "Indirect Sample Clamp",
-		"layout:section", "Sampling",
+		"label" : "Indirect Sample Clamp",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
-	"option:ai:low_light_threshold" : [
+	"option:ai:low_light_threshold" : {
 
-		"defaultValue", 0.001,
-		"description",
+		"defaultValue" : 0.001,
+		"description" :
 		"""
 		Light paths with less energy than this will be discarded. This
 		saves tracing shadow rays, but cuts off the light when it gets dim.
 		Raising this improves performance, but makes the image potentially
 		darker in some areas.
 		""",
-		"label", "Low Light Threshold",
-		"layout:section", "Sampling",
+		"label" : "Low Light Threshold",
+		"layout:section" : "Sampling",
 
-	],
+	},
 
 	# Adaptive Sampling
 
-	"option:ai:enable_adaptive_sampling" : [
+	"option:ai:enable_adaptive_sampling" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		If adaptive sampling is enabled, Arnold will
 		take a minimum of (AA Samples * AA Samples)
@@ -344,221 +344,221 @@ Gaffer.Metadata.registerValues( {
 		pixel, or until the remaining estimated noise
 		gets lower than the `ai:AA_adaptive_threshold` option.
 		""",
-		"label", "Enable Adaptive Sampling",
-		"layout:section", "Adaptive Sampling",
+		"label" : "Enable Adaptive Sampling",
+		"layout:section" : "Adaptive Sampling",
 
-	],
+	},
 
-	"option:ai:AA_samples_max" : [
+	"option:ai:AA_samples_max" : {
 
-		"defaultValue", 0,
-		"description",
+		"defaultValue" : 0,
+		"description" :
 		"""
 		The maximum sampling rate during adaptive
 		sampling. Like `ai:AA_samples`, this value is
 		squared. So `ai:AA_samples_max` == `6` means up to
 		36 samples per pixel.
 		""",
-		"label", "AA Samples Max",
-		"layout:section", "Adaptive Sampling",
+		"label" : "AA Samples Max",
+		"layout:section" : "Adaptive Sampling",
 
-	],
+	},
 
-	"option:ai:AA_adaptive_threshold" : [
+	"option:ai:AA_adaptive_threshold" : {
 
-		"defaultValue", 0.05,
-		"description",
+		"defaultValue" : 0.05,
+		"description" :
 		"""
 		How much leftover noise is acceptable when
 		terminating adaptive sampling. Higher values
 		accept more noise, lower values keep rendering
 		longer to achieve smaller amounts of noise.
 		""",
-		"label", "AA Adaptive Threshold",
-		"layout:section", "Adaptive Sampling",
+		"label" : "AA Adaptive Threshold",
+		"layout:section" : "Adaptive Sampling",
 
-	],
+	},
 
 	# Interactive rendering
 
-	"option:ai:enable_progressive_render" : [
+	"option:ai:enable_progressive_render" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Enables progressive rendering, with a series of coarse low-resolution
 		renders followed by a full quality render updated continuously.
 		""",
-		"label", "Progressive",
-		"layout:section", "Interactive Rendering",
+		"label" : "Progressive",
+		"layout:section" : "Interactive Rendering",
 
-	],
+	},
 
-	"option:ai:progressive_min_AA_samples" : [
+	"option:ai:progressive_min_AA_samples" : {
 
-		"defaultValue", -4,
-		"minValue", -10,
-		"maxValue", 0,
-		"description",
+		"defaultValue" : -4,
+		"minValue" : -10,
+		"maxValue" : 0,
+		"description" :
 		"""
 		Controls the coarseness of the first low resolution pass
 		of interactive rendering. A value of `-4` starts with 16x16 pixel
 		blocks, `-3` gives 8x8 blocks, `-2` gives 4x4, `-1` gives 2x2 and
 		`0` disables the low resolution passes completely.
 		""",
-		"label", "Min AA Samples",
-		"layout:section", "Interactive Rendering",
+		"label" : "Min AA Samples",
+		"layout:section" : "Interactive Rendering",
 
-	],
+	},
 
 	# Ray Depth
 
-	"option:ai:GI_total_depth" : [
+	"option:ai:GI_total_depth" : {
 
-		"defaultValue", 10,
-		"description",
+		"defaultValue" : 10,
+		"description" :
 		"""
 		The maximum depth of any ray (Diffuse + Specular +
 		Transmission + Volume).
 		""",
-		"label", "Total Depth",
-		"layout:section", "Ray Depth",
+		"label" : "Total Depth",
+		"layout:section" : "Ray Depth",
 
-	],
+	},
 
-	"option:ai:GI_diffuse_depth" : [
+	"option:ai:GI_diffuse_depth" : {
 
-		"defaultValue", 2,
-		"description",
+		"defaultValue" : 2,
+		"description" :
 		"""
 		Controls the number of ray bounces when
 		computing indirect illumination ("bounce light").
 		""",
-		"label", "Diffuse Depth",
-		"layout:section", "Ray Depth",
+		"label" : "Diffuse Depth",
+		"layout:section" : "Ray Depth",
 
-	],
+	},
 
-	"option:ai:GI_specular_depth" : [
+	"option:ai:GI_specular_depth" : {
 
-		"defaultValue", 2,
-		"description",
+		"defaultValue" : 2,
+		"description" :
 		"""
 		Controls the number of ray bounces when
 		computing specular reflections.
 		""",
-		"label", "Specular Depth",
-		"layout:section", "Ray Depth",
+		"label" : "Specular Depth",
+		"layout:section" : "Ray Depth",
 
-	],
+	},
 
-	"option:ai:GI_transmission_depth" : [
+	"option:ai:GI_transmission_depth" : {
 
-		"defaultValue", 2,
-		"description",
+		"defaultValue" : 2,
+		"description" :
 		"""
 		Controls the number of ray bounces when
 		computing specular refractions.
 		""",
-		"label", "Transmission Depth",
-		"layout:section", "Ray Depth",
+		"label" : "Transmission Depth",
+		"layout:section" : "Ray Depth",
 
-	],
+	},
 
-	"option:ai:GI_volume_depth" : [
+	"option:ai:GI_volume_depth" : {
 
-		"defaultValue", 0,
-		"description",
+		"defaultValue" : 0,
+		"description" :
 		"""
 		Controls the number of ray bounces when
 		computing indirect lighting on volumes.
 		""",
-		"label", "Volume Depth",
-		"layout:section", "Ray Depth",
+		"label" : "Volume Depth",
+		"layout:section" : "Ray Depth",
 
-	],
+	},
 
-	"option:ai:auto_transparency_depth" : [
+	"option:ai:auto_transparency_depth" : {
 
-		"defaultValue", 10,
-		"description",
+		"defaultValue" : 10,
+		"description" :
 		"""
 		The number of allowable transparent layers - after
 		this the last object will be treated as opaque.
 		""",
-		"label", "Transparency Depth",
-		"layout:section", "Ray Depth",
+		"label" : "Transparency Depth",
+		"layout:section" : "Ray Depth",
 
-	],
+	},
 
 	# Subdivision
 
-	"option:ai:max_subdivisions" : [
+	"option:ai:max_subdivisions" : {
 
-		"defaultValue", 999,
-		"description",
+		"defaultValue" : 999,
+		"description" :
 		"""
 		A global override for the maximum polymesh.subdiv_iterations.
 		""",
-		"layout:section", "Subdivision",
-		"label", "Max Subdivisions",
+		"layout:section" : "Subdivision",
+		"label" : "Max Subdivisions",
 
-	],
+	},
 
-	"option:ai:subdiv_dicing_camera" : [
+	"option:ai:subdiv_dicing_camera" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		If specified, adaptive subdivision will be performed
 		relative to this camera, instead of the render camera.
 		""",
-		"layout:section", "Subdivision",
-		"label", "Subdiv Dicing Camera",
+		"layout:section" : "Subdivision",
+		"label" : "Subdiv Dicing Camera",
 
-		"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-		"path:valid", True,
-		"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
-		"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+		"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+		"path:valid" : True,
+		"scenePathPlugValueWidget:setNames" : IECore.StringVectorData( [ "__cameras" ] ),
+		"scenePathPlugValueWidget:setsLabel" : "Show only cameras",
 
-	],
+	},
 
-	"option:ai:subdiv_frustum_culling" : [
+	"option:ai:subdiv_frustum_culling" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Disable subdivision of polygons outside the camera frustum.
 		(Uses dicing camera if one has been set).
 		Saves performance, at the cost of inaccurate reflections
 		and shadows.
 		""",
-		"label", "Subdiv Frustum Culling",
-		"layout:section", "Subdivision",
+		"label" : "Subdiv Frustum Culling",
+		"layout:section" : "Subdivision",
 
-	],
+	},
 
-	"option:ai:subdiv_frustum_padding" : [
+	"option:ai:subdiv_frustum_padding" : {
 
-		"defaultValue", 0.0,
-		"description",
+		"defaultValue" : 0.0,
+		"description" :
 		"""
 		When using subdiv frustum culling, adds a world space bound
 		around the frustum where subdivision still occurs. Can be
 		used to improve shadows, reflections, and objects that motion
 		blur into frame.
 		""",
-		"label", "Subdiv Frustum Padding",
-		"layout:section", "Subdivision",
+		"label" : "Subdiv Frustum Padding",
+		"layout:section" : "Subdivision",
 
-	],
+	},
 
 	# Texturing
 
-	"option:ai:texture_max_memory_MB" : [
+	"option:ai:texture_max_memory_MB" : {
 
-		"defaultValue", 4096.0,
-		"description",
+		"defaultValue" : 4096.0,
+		"description" :
 		"""
 		The maximum amount of memory to use for caching
 		textures. Tiles are loaded on demand and cached,
@@ -566,28 +566,28 @@ Gaffer.Metadata.registerValues( {
 		recently used tiles are discarded to make room
 		for more. Measured in megabytes.
 		""",
-		"label", "Max Memory MB",
-		"layout:section", "Texturing",
+		"label" : "Max Memory MB",
+		"layout:section" : "Texturing",
 
-	],
+	},
 
-	"option:ai:texture_per_file_stats" : [
+	"option:ai:texture_per_file_stats" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Turns on detailed statistics output for
 		each individual texture file used.
 		""",
-		"label", "Per File Stats",
-		"layout:section", "Texturing",
+		"label" : "Per File Stats",
+		"layout:section" : "Texturing",
 
-	],
+	},
 
-	"option:ai:texture_max_sharpen" : [
+	"option:ai:texture_max_sharpen" : {
 
-		"defaultValue", 1.5,
-		"description",
+		"defaultValue" : 1.5,
+		"description" :
 		"""
 		Controls the sharpness of texture lookups,
 		providing a tradeoff between sharpness and
@@ -601,15 +601,15 @@ Gaffer.Metadata.registerValues( {
 		doesn't justify the increased render time and
 		memory usage.
 		""",
-		"label", "Max Sharpen",
-		"layout:section", "Texturing",
+		"label" : "Max Sharpen",
+		"layout:section" : "Texturing",
 
-	],
+	},
 
-	"option:ai:texture_use_existing_tx" : [
+	"option:ai:texture_use_existing_tx" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Automatically uses a `<filename>.tx` file if it exists, in
 		preference to a `<filename>.jpg` (or any other file format) that has
@@ -620,15 +620,15 @@ Gaffer.Metadata.registerValues( {
 		> Info : The `.tx` file format provides improved performance and
 		reduced memory usage, because it contains mip-mapped textures.
 		""",
-		"label", "Use Existing `.tx`",
-		"layout:section", "Texturing",
+		"label" : "Use Existing `.tx`",
+		"layout:section" : "Texturing",
 
-	],
+	},
 
-	"option:ai:texture_auto_generate_tx" : [
+	"option:ai:texture_auto_generate_tx" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Automatically generates a `<filename>.tx` when given
 		`<filename>.jpg` (or any other file format). Requires that
@@ -641,355 +641,355 @@ Gaffer.Metadata.registerValues( {
 		target folder at the same time, resulting in potential crashes,
 		corrupt textures, and poor performance.
 		""",
-		"label", "Auto Generate `.tx`",
-		"layout:section", "Texturing",
+		"label" : "Auto Generate `.tx`",
+		"layout:section" : "Texturing",
 
-	],
+	},
 
-	"option:ai:texture_auto_tx_path" : [
+	"option:ai:texture_auto_tx_path" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		Specifies an alternate destination folder for textures generated
 		when the `ai:texture_auto_generate_tx` option is enabled.
 		""",
-		"label", "Auto `.tx` Path",
-		"layout:section", "Texturing",
+		"label" : "Auto `.tx` Path",
+		"layout:section" : "Texturing",
 
-		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+		"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 
-	],
+	},
 
 	# Features
 
-	"option:ai:ignore_textures" : [
+	"option:ai:ignore_textures" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Ignores all file textures, rendering as
 		if they were all white.
 		""",
-		"label", "Ignore Textures",
-		"layout:section", "Features",
+		"label" : "Ignore Textures",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_shaders" : [
+	"option:ai:ignore_shaders" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Ignores all shaders, rendering as a
 		simple facing ratio shader instead.
 		""",
-		"label", "Ignore Shaders",
-		"layout:section", "Features",
+		"label" : "Ignore Shaders",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_atmosphere" : [
+	"option:ai:ignore_atmosphere" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Ignores all atmosphere shaders.
 		""",
-		"label", "Ignore Atmosphere",
-		"layout:section", "Features",
+		"label" : "Ignore Atmosphere",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_lights" : [
+	"option:ai:ignore_lights" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Ignores all lights.
 		""",
-		"label", "Ignore Lights",
-		"layout:section", "Features",
+		"label" : "Ignore Lights",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_shadows" : [
+	"option:ai:ignore_shadows" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Skips all shadow calculations.
 		""",
-		"label", "Ignore Shadows",
-		"layout:section", "Features",
+		"label" : "Ignore Shadows",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_subdivision" : [
+	"option:ai:ignore_subdivision" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Treats all subdivision surfaces
 		as simple polygon meshes instead.
 		""",
-		"label", "Ignore Subdivision",
-		"layout:section", "Features",
+		"label" : "Ignore Subdivision",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_displacement" : [
+	"option:ai:ignore_displacement" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Ignores all displacement shaders.
 		""",
-		"label", "Ignore Displacement",
-		"layout:section", "Features",
+		"label" : "Ignore Displacement",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_bump" : [
+	"option:ai:ignore_bump" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Ignores all bump mapping.
 		""",
-		"label", "Ignore Bump",
-		"layout:section", "Features",
+		"label" : "Ignore Bump",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_sss" : [
+	"option:ai:ignore_sss" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Disables all subsurface scattering.
 		""",
-		"label", "Ignore SSS",
-		"layout:section", "Features",
+		"label" : "Ignore SSS",
+		"layout:section" : "Features",
 
-	],
+	},
 
-	"option:ai:ignore_imagers" : [
+	"option:ai:ignore_imagers" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Disables all imagers.
 		""",
-		"label", "Ignore Imagers",
-		"layout:section", "Features",
+		"label" : "Ignore Imagers",
+		"layout:section" : "Features",
 
-	],
+	},
 
 	# Search Paths
 
-	"option:ai:texture_searchpath" : [
+	"option:ai:texture_searchpath" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		The locations used to search for texture
 		files.
 		""",
-		"label", "Textures",
-		"layout:section", "Search Paths",
+		"label" : "Textures",
+		"layout:section" : "Search Paths",
 
-	],
+	},
 
-	"option:ai:procedural_searchpath" : [
+	"option:ai:procedural_searchpath" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		The locations used to search for procedural
 		DSOs.
 		""",
-		"label", "Procedurals",
-		"layout:section", "Search Paths",
+		"label" : "Procedurals",
+		"layout:section" : "Search Paths",
 
-	],
+	},
 
-	"option:ai:plugin_searchpath" : [
+	"option:ai:plugin_searchpath" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		The locations used to search for shaders and other plugins.
 		""",
-		"label", "Plugins (Shaders)",
-		"layout:section", "Search Paths",
+		"label" : "Plugins (Shaders)",
+		"layout:section" : "Search Paths",
 
-	],
+	},
 
 	# Error Handling
 
-	"option:ai:abort_on_error" : [
+	"option:ai:abort_on_error" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Aborts the render if an error is encountered.
 		""",
-		"label", "Abort On Error",
-		"layout:section", "Error Handling"
+		"label" : "Abort On Error",
+		"layout:section" : "Error Handling"
 
-	],
+	},
 
-	"option:ai:error_color_bad_texture" : [
+	"option:ai:error_color_bad_texture" : {
 
-		"defaultValue", imath.Color3f( 1, 0, 0 ),
-		"description",
+		"defaultValue" : imath.Color3f( 1, 0, 0 ),
+		"description" :
 		"""
 		The colour to display if an attempt is
 		made to use a bad or non-existent texture.
 		""",
-		"label", "Bad Texture",
-		"layout:section", "Error Handling",
+		"label" : "Bad Texture",
+		"layout:section" : "Error Handling",
 
-	],
+	},
 
-	"option:ai:error_color_bad_pixel" : [
+	"option:ai:error_color_bad_pixel" : {
 
-		"defaultValue", imath.Color3f( 0, 0, 1 ),
-		"description",
+		"defaultValue" : imath.Color3f( 0, 0, 1 ),
+		"description" :
 		"""
 		The colour to display for a pixel where
 		a NaN is encountered.
 		""",
-		"label", "Bad Pixel",
-		"layout:section", "Error Handling",
+		"label" : "Bad Pixel",
+		"layout:section" : "Error Handling",
 
-	],
+	},
 
-	"option:ai:error_color_bad_shader" : [
+	"option:ai:error_color_bad_shader" : {
 
-		"defaultValue", imath.Color3f( 1, 0, 1 ),
-		"description",
+		"defaultValue" : imath.Color3f( 1, 0, 1 ),
+		"description" :
 		"""
 		The colour to display if a problem occurs
 		in a shader.
 		""",
 
-		"layout:section", "Error Handling",
-		"label", "Bad Shader",
+		"layout:section" : "Error Handling",
+		"label" : "Bad Shader",
 
-	],
+	},
 
 	# Logging
 
-	"option:ai:log:filename" : [
+	"option:ai:log:filename" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		The name of a log file which Arnold will generate
 		while rendering.
 		""",
-		"label", "File Name",
-		"layout:section", "Logging",
+		"label" : "File Name",
+		"layout:section" : "Logging",
 
-		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-		"path:leaf", True,
-		"fileSystemPath:extensions", "txt log",
-		"fileSystemPath:extensionsLabel", "Show only log files",
+		"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+		"path:leaf" : True,
+		"fileSystemPath:extensions" : "txt log",
+		"fileSystemPath:extensionsLabel" : "Show only log files",
 
-	],
+	},
 
-	"option:ai:log:max_warnings" : [
+	"option:ai:log:max_warnings" : {
 
-		"defaultValue", 100,
-		"description",
+		"defaultValue" : 100,
+		"description" :
 		"""
 		The maximum number of warnings that will be reported.
 		""",
-		"label", "Max Warnings",
-		"layout:section", "Logging",
+		"label" : "Max Warnings",
+		"layout:section" : "Logging",
 
-	],
+	},
 
 } | __loggingOptions | {
 
 	# Statistics
 
-	"option:ai:statisticsFileName" : [
+	"option:ai:statisticsFileName" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		The name of a statistics file where Arnold will store structured
 		JSON statistics.
 		""",
-		"label", "Statistics File",
-		"layout:section", "Statistics",
+		"label" : "Statistics File",
+		"layout:section" : "Statistics",
 
-	],
+	},
 
-	"option:ai:profileFileName" : [
+	"option:ai:profileFileName" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		The name of a profile json file where Arnold will store a
 		detailed node performance graph. Use chrome://tracing to
 		view the profile.
 		""",
-		"label", "Profile File",
-		"layout:section", "Statistics",
+		"label" : "Profile File",
+		"layout:section" : "Statistics",
 
-	],
+	},
 
-	"option:ai:reportFileName" : [
+	"option:ai:reportFileName" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		The name of a an HTML file where Arnold will store a
 		detailed statistics report in an easily browsable form.
 		""",
-		"label", "HTML Report File",
-		"layout:section", "Statistics",
+		"label" : "HTML Report File",
+		"layout:section" : "Statistics",
 
-	],
+	},
 
 	# Licensing
 
-	"option:ai:abort_on_license_fail" : [
+	"option:ai:abort_on_license_fail" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Aborts the render if a license is not available,
 		instead of rendering with a watermark.
 		""",
-		"label", "Abort On License Fail",
-		"layout:section", "Licensing",
+		"label" : "Abort On License Fail",
+		"layout:section" : "Licensing",
 
-	],
+	},
 
-	"option:ai:skip_license_check" : [
+	"option:ai:skip_license_check" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Skips the check for a license, always rendering
 		with a watermark.
 		""",
-		"label", "Skip License Check",
-		"layout:section", "Licensing",
+		"label" : "Skip License Check",
+		"layout:section" : "Licensing",
 
-	],
+	},
 
 	# GPU
 
-	"option:ai:render_device" : [
+	"option:ai:render_device" : {
 
-		"defaultValue", "CPU",
-		"description",
+		"defaultValue" : "CPU",
+		"description" :
 		"""
 		Can be used to put Arnold in GPU rendering mode, using your graphics card instead of CPU.
 
@@ -997,27 +997,27 @@ Gaffer.Metadata.registerValues( {
 		> https://help.autodesk.com/view/ARNOL/ENU/?guid=arnold_user_guide_ac_arnold_gpu_ac_features_limitations_html
 		> for more details.
 		""",
-		"label", "Render Device",
-		"layout:section", "GPU",
+		"label" : "Render Device",
+		"layout:section" : "GPU",
 
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "CPU", "GPU" ] ),
-		"presetValues", IECore.StringVectorData( [ "CPU", "GPU" ] ),
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "CPU", "GPU" ] ),
+		"presetValues" : IECore.StringVectorData( [ "CPU", "GPU" ] ),
 
-	],
+	},
 
-	"option:ai:gpu_max_texture_resolution" : [
+	"option:ai:gpu_max_texture_resolution" : {
 
-		"defaultValue", 0,
-		"description",
+		"defaultValue" : 0,
+		"description" :
 		"""
 		If non-zero, this will omit the high resolution mipmaps when in GPU mode, to avoid running out of GPU memory.
 		""",
 
-		"layout:section", "GPU",
-		"label", "Max Texture Resolution",
+		"layout:section" : "GPU",
+		"label" : "Max Texture Resolution",
 
-	],
+	},
 
 } )
 

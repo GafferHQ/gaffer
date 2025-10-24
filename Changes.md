@@ -27,15 +27,16 @@ Fixes
 - RenderPasses : Fixed drawing of custom widgets registered by `registerRenderPassNameWidget()`.
 - Environment : Gaffer's `LD_PRELOAD` overrides are no longer inherited by subprocesses launched from Gaffer.
 
-Build
------
-
-- Cortex : Updated to version 10.6.1.0.
-
 API
 ---
 
 - PopupWindow : Added `showWarning()` class method.
+- Metadata : The `registerValues()` function now accepts dictionaries containing target metadata. This should be preferred to the previous list-based registrations.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.1.0.
 
 1.6.3.0 (relative to 1.6.2.1)
 =======
