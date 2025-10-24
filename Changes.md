@@ -25,6 +25,7 @@ Fixes
   - Fixed undo after creating a new edit in an EditScope.
   - Fixed "Inspect..." menu item when a property's source can not be determined.
 - RenderPasses : Fixed drawing of custom widgets registered by `registerRenderPassNameWidget()`.
+- Environment : Gaffer's `LD_PRELOAD` overrides are no longer inherited by subprocesses launched from Gaffer.
 
 Build
 -----
