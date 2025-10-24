@@ -3137,6 +3137,50 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( mh.messages ), 1 )
 			self.assertEqual( mh.messages[0].message, 'Ignoring "render:manifestFilePath" during interactive render. The catalogue generates its own manifest files, this option is not needed.' )
 
+	def testOutputMetadata( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["catalogue"] = GafferImage.Catalogue()
+
+		metadata = {
+			"test:int" : IECore.IntData( 1 ),
+			"test:float" : IECore.FloatData( 2.5 ),
+			"test:string" : IECore.StringData( "foo" ),
+		}
+
+		fileName = self.temporaryDirectory() / "test.exr"
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					f"header:{k}" : v
+					for k, v in metadata.items()
+				} | {
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+
+		script["render"] = GafferScene.InteractiveRender()
+		script["render"]["renderer"].setValue( self.renderer )
+		script["render"]["in"].setInput( script["outputs"]["out"] )
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		catalogueMetadata = script["catalogue"]["out"].metadata()
+		for k, v in metadata.items() :
+			self.assertIn( k, catalogueMetadata )
+			self.assertEqual( catalogueMetadata[k], v )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

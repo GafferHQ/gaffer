@@ -244,7 +244,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			/// automatically acquire the session on whatever thread first required it (when the
 			/// Renderer client is doing multi-threaded scene generation). But it seems that Riley
 			/// crashes if not initialised on the main thread [^1], so we require multithreaded clients
-			/// to call `command( "ri:acquireSession" )` before commencing multithreading anyway.
+			/// to call `command( "ri:acquireRiley" )` before commencing multithreading anyway.
 			/// Perhaps one day we can lift that restriction and the mutex will be useful again.
 			///
 			/// [^1]: This might be a simplification. It seems like it might be OK to initialise

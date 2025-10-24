@@ -396,7 +396,7 @@ Session *Globals::acquireSession()
 			IECore::msg(
 				Msg::Error,
 				"RenderMan",
-				"You must call `Renderer::command( \"ri:acquireSession\" )` before commencing "
+				"You must call `Renderer::command( \"ri:acquireRiley\" )` before commencing "
 				"multithreaded geometry output (RenderMan limitation)."
 			);
 		}
