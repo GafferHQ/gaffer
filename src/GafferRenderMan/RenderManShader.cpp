@@ -43,6 +43,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/SplinePlug.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/SearchPath.h"
@@ -284,22 +285,9 @@ Gaffer::Plug *loadParameter( const boost::property_tree::ptree &parameter, Plug 
 	Plug *candidatePlug;
 	if( parameter.get<string>( "<xmlattr>.isDynamicArray", "0" ) == "1" )
 	{
-		if(
-			boost::ends_with( name, "_Knots" ) ||
-			boost::ends_with( name, "_Floats" ) ||
-			boost::ends_with( name, "_Colors" )
-		)
-		{
-			/// \todo Support spline parameters.
-			msg(
-				IECore::Msg::Debug, "RenderManShader::loadShader",
-				fmt::format( "Spline parameter \"{}\" not supported", name )
-			);
-			return nullptr;
-		}
-
-		// There are very few examples of non-spline array parameters
-		// in the standard RenderMan shaders. All seem to be used to
+		// Spline parameters are handled separately in findSplinePlugFromPositionsParameter,
+		// leaving very few examples of non-spline array parameters in the
+		// standard RenderMan shaders. All non-spline arrays seem to be used to
 		// provide an array of connections rather than values - see
 		// `PxrSurface.utilityPattern` for example. So we load as an
 		// ArrayPlug rather than as a VectorDataPlug.
@@ -372,24 +360,297 @@ Gaffer::Plug *loadParameter( const boost::property_tree::ptree &parameter, Plug 
 	return acquiredPlug.get();
 }
 
+SplineDefinitionInterpolation basisFromString( const std::string &basis )
+{
+	if( basis == "bspline" )
+	{
+		return SplineDefinitionInterpolationBSpline;
+	}
+	else if( basis == "linear" )
+	{
+		return SplineDefinitionInterpolationLinear;
+	}
+	else if( basis == "constant" )
+	{
+		return SplineDefinitionInterpolationConstant;
+	}
+	else if( basis == "monotonecubic" )
+	{
+		return SplineDefinitionInterpolationMonotoneCubic;
+	}
+
+	return SplineDefinitionInterpolationCatmullRom;
+}
+
+PlugPtr findSplinePlugFromPositionsParameter(
+	const std::string& positionName, const boost::property_tree::ptree &positionsParameter,
+	const std::map< std::string, const boost::property_tree::ptree* > &parameters, Plug::Direction direction, std::unordered_set<const boost::property_tree::ptree*> &parametersAlreadyProcessed
+)
+{
+	static const std::string positionsSuffix( "_Knots" );
+	static const std::string valuesColorSuffix( "_Colors" );
+	static const std::string valuesFloatSuffix( "_Floats" );
+	static const std::string basisSuffix( "_Interpolation" );
+
+	const std::string positionsName = positionsParameter.get<string>( "<xmlattr>.name" );
+	if( !boost::ends_with( positionsName, positionsSuffix ) )
+	{
+		return nullptr;
+	}
+
+	if( !( positionsParameter.get<string>( "<xmlattr>.type" ) == "float" && positionsParameter.get<string>( "<xmlattr>.isDynamicArray", "0" ) == "1" ) )
+	{
+		throw IECore::Exception( "Spline _Knots not a float vector: " + positionsParameter.get<string>( "<xmlattr>.name" ) );
+	}
+
+	std::string baseName = positionsName.substr( 0, positionsName.size() - positionsSuffix.size() );
+
+	using Tokenizer = boost::tokenizer<boost::char_separator<char>>;
+
+	std::string positionsDefaultText = positionsParameter.get( "<xmlattr>.default", "" );
+	std::vector<float> positionsDefault;
+	for( std::string token : Tokenizer( positionsDefaultText, boost::char_separator<char>(" \t\n" ) ) )
+	{
+		positionsDefault.push_back( boost::lexical_cast<float>( token ) );
+	}
+
+	const std::string basisName = baseName + basisSuffix;
+
+	auto basisIt = parameters.find( basisName );
+	if( basisIt == parameters.end() )
+	{
+		return nullptr;
+	}
+
+	const boost::property_tree::ptree &basisParameter = *basisIt->second;
+
+	if( basisParameter.get<string>( "<xmlattr>.type" ) != "string" )
+	{
+		throw IECore::Exception( "Spline _Interpretation not a string parameter: " + basisName );
+	}
+	SplineDefinitionInterpolation interpolationDefault = basisFromString( basisParameter.get( "<xmlattr>.default", "" ) );
+
+	// In the PRMan spline convention, there is a 4th parameter, which is just an integer matching the
+	// length of the arrays.  In the PRMan OSL shaders, a there is an example where the default
+	// value of the arrays does not match the count, indicating that the arrays should be trimmed to that
+	// length ( this is probably for historical reasons, predating OSL support for variable length arrays ).
+	// In the PRMan C++ shaders, we don't have any examples of them not matching ... if we ever encounter this,
+	// for now we'll just print a warning.
+	std::string countName = baseName;
+	auto countIt = parameters.find( countName );
+	const boost::property_tree::ptree *countParameter = nullptr;
+	if( countIt == parameters.end() )
+	{
+		msg(
+			IECore::Msg::Warning, "RenderManShader::loadShader",
+			fmt::format( "Spline has no parameter matching the base name : \"{}\"", countName )
+		);
+	}
+	else
+	{
+		countParameter = countIt->second;
+		std::string countParamDefaultText = countIt->second->get( "<xmlattr>.default", "" );
+		if( !( countIt->second->get<string>( "<xmlattr>.type" ) == "int" && boost::lexical_cast<unsigned int>( countParamDefaultText ) == positionsDefault.size() ) )
+		{
+			msg(
+				IECore::Msg::Warning, "RenderManShader::loadShader",
+				fmt::format( "Spline base parameter mismatch for \"{}\": expected \"{}\" got \"{}\". If we need to clip this default value, this will require a Gaffer code update.", countName, positionsDefault.size(), countParamDefaultText )
+			);
+		}
+	}
+
+	bool isColor = true;
+
+	std::string valuesName = baseName + valuesColorSuffix;
+	auto valuesIt = parameters.find( valuesName );
+	if( valuesIt == parameters.end() )
+	{
+		isColor = false;
+
+		valuesName = baseName + valuesFloatSuffix;
+		valuesIt = parameters.find( valuesName );
+
+		if( valuesIt == parameters.end() )
+		{
+			return nullptr;
+		}
+
+		if( !( valuesIt->second->get<string>( "<xmlattr>.type" ) == "float" && valuesIt->second->get<string>( "<xmlattr>.isDynamicArray", "0" ) == "1" ) )
+		{
+			throw IECore::Exception( "Spline _Floats not a float vector: " + valuesName );
+		}
+	}
+	else
+	{
+		if( !( valuesIt->second->get<string>( "<xmlattr>.type" ) == "color" && valuesIt->second->get<string>( "<xmlattr>.isDynamicArray", "0" ) == "1" ) )
+		{
+			throw IECore::Exception( "Spline _Colors not a color vector: " + valuesName );
+		}
+	}
+
+	const boost::property_tree::ptree &valuesParameter = *valuesIt->second;
+
+	std::vector<string> valueTokens;
+	std::string valuesDefaultText = valuesParameter.get( "<xmlattr>.default", "" );
+	for( std::string token : Tokenizer( valuesDefaultText, boost::char_separator<char>(" \t\n" ) ) )
+	{
+		valueTokens.push_back( token );
+	}
+
+	unsigned int valuesSize = isColor ? valueTokens.size() / 3 : valueTokens.size();
+
+
+	if( positionsDefault.size() != valuesSize )
+	{
+		throw IECore::Exception(
+			fmt::format( "Sizes of spline knots and values don't match: {}:{} != {}:{}",
+				positionsName, positionsDefault.size(),
+				valuesName, valuesSize
+		) );
+	}
+
+	parametersAlreadyProcessed.insert( &valuesParameter );
+	parametersAlreadyProcessed.insert( &basisParameter );
+
+	if( countParameter )
+	{
+		parametersAlreadyProcessed.insert( countParameter );
+	}
+
+	if( isColor )
+	{
+		if( valueTokens.size() != positionsDefault.size() * 3 )
+		{
+			throw IECore::Exception(
+				fmt::format( "Malformed tokens for color vector default value: {}", valuesName )
+			);
+		}
+
+		SplineDefinitionfColor3f defaultValue;
+		defaultValue.interpolation = interpolationDefault;
+		for( unsigned int i = 0; i < positionsDefault.size(); i++ )
+		{
+			defaultValue.points.insert(
+				std::pair{ positionsDefault[i],
+					Imath::Color3f(
+						boost::lexical_cast<float>( valueTokens[3*i] ),
+						boost::lexical_cast<float>( valueTokens[3*i + 1] ),
+						boost::lexical_cast<float>( valueTokens[3*i + 2 ] )
+					)
+				}
+			);
+		}
+
+		defaultValue.trimEndPoints();
+
+		return new SplinefColor3fPlug( baseName, direction, defaultValue , Plug::Default );
+	}
+	else
+	{
+		SplineDefinitionff defaultValue;
+		defaultValue.interpolation = interpolationDefault;
+
+		for( unsigned int i = 0; i < positionsDefault.size(); i++ )
+		{
+			defaultValue.points.insert(
+				std::pair{ positionsDefault[i], boost::lexical_cast<float>( valueTokens[i] ) }
+			);
+		}
+
+		defaultValue.trimEndPoints();
+
+		return new SplineffPlug( baseName, direction, defaultValue , Plug::Default );
+	}
+}
+
+
 void loadParameters( const boost::property_tree::ptree &tree, Plug *parent, const ParameterSet *omit, std::unordered_set<const Plug *> &validPlugs )
 {
+	// In order to assemble together the parameters needed to build a spline, we need to be able to look up
+	// parameters by name. Build a map of all the parameters that we should be building plugs from
+	std::map<std::string, const boost::property_tree::ptree *> parameters;
+
+	std::unordered_set<const boost::property_tree::ptree*> parametersAlreadyProcessed;
+	std::unordered_map<const boost::property_tree::ptree*, PlugPtr > splinePlugs;
+
 	for( const auto &child : tree )
 	{
 		if( child.first == "param" )
 		{
-			if( omit && omit->count( child.second.get<string>( "<xmlattr>.name" ) ) )
+			const string name = child.second.get<string>( "<xmlattr>.name" );
+			if( omit && omit->count( name ) )
 			{
+				parametersAlreadyProcessed.insert( &child.second );
 				continue;
 			}
+
+			parameters[name] = &child.second;
+		}
+	}
+
+	// Find the splines
+	for( const auto &param : parameters )
+	{
+		PlugPtr spline;
+		try
+		{
+			spline = findSplinePlugFromPositionsParameter( param.first, *param.second, parameters, parent->direction(), parametersAlreadyProcessed );
+		}
+		catch( std::exception &e )
+		{
+			msg(
+				IECore::Msg::Warning, "RenderManShader::loadShader",
+				fmt::format( "Error while parsing spline based on \"{}\" : {}", param.first, e.what() )
+			);
+		}
+
+		if( spline )
+		{
+			splinePlugs[ param.second ] = spline;
+		}
+	}
+
+	// Now loop through all the parameters a final time, actually outputting things
+	for( const auto &child : tree )
+	{
+		// Recurse for sub categories
+		if( child.first == "page" )
+		{
+			loadParameters( child.second, parent, omit, validPlugs );
+			continue;
+		}
+		else if( child.first != "param" )
+		{
+			continue;
+		}
+
+		if( parametersAlreadyProcessed.count( &child.second ) )
+		{
+			continue;
+		}
+
+		auto splineIt = splinePlugs.find( &child.second );
+		if( splineIt != splinePlugs.end() )
+		{
+			parent->addChild( splineIt->second );
+			validPlugs.insert( splineIt->second.get() );
+			continue;
+		}
+
+		try
+		{
 			if( Plug *p = loadParameter( child.second, parent ) )
 			{
 				validPlugs.insert( p );
 			}
 		}
-		else if( child.first == "page" )
+		catch( std::exception &e )
 		{
-			loadParameters( child.second, parent, omit, validPlugs );
+			msg(
+				IECore::Msg::Warning, "RenderManShader::loadShader",
+				fmt::format( "Error while parsing parameter \"{}\" : {}", child.first, e.what() )
+			);
+			continue;
 		}
 	}
 }

@@ -4,7 +4,12 @@
 Improvements
 ------------
 
-- OSLShader : Improved loading of spline parameters with additional duplicate endpoints (including some RenderMan shaders).
+- OSLShader :
+ - Improved loading of spline parameters with additional duplicate endpoints.
+ - Added support for loading splines from RenderMan shaders.
+- RenderManShader :
+ - Added support for loading splines.
+
 
 Fixes
 -----
