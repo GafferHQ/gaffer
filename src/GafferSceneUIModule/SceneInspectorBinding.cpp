@@ -844,13 +844,12 @@ void addShaderInspections( InspectorTree::Inspections &inspections, const vector
 
 	// Add inspections for each shader and all of its parameters.
 
-	vector<InternedString> shaderPath = path;
-	shaderPath.push_back( InternedString() );
-
 	for( const auto shaderHandle : orderedShaderHandles )
 	{
+		vector<InternedString> shaderPath = path;
+		StringAlgo::tokenize( shaderHandle, '/', shaderPath );
+
 		const Shader *shader = shaderNetwork->getShader( shaderHandle );
-		shaderPath.back() = shaderHandle;
 
 		inspections.push_back( {
 
