@@ -556,6 +556,9 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 		const Context *frameContext = Context::current();
 		Context::EditableScope timeContext( frameContext );
 
+		bool actualMovement = false;
+		IECore::MurmurHash actualHash;
+
 		samples.reserve( sampleTimes.size() );
 		for( size_t i = 0; i < sampleTimes.size(); i++ )
 		{
@@ -568,6 +571,15 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 				runTimeCast<const Camera>( object.get() )
 			)
 			{
+				if( i == 0 )
+				{
+					actualHash = object->hash();
+				}
+				else if( !actualMovement )
+				{
+					actualMovement = object->hash() != actualHash;
+				}
+
 				samples.push_back( object.get() );
 			}
 			else if(
@@ -607,6 +619,11 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 				// don't take any samples at all.
 				break;
 			}
+		}
+
+		if( !actualMovement && samples.size() > 1 )
+		{
+			samples.resize( 1 );
 		}
 	}
 

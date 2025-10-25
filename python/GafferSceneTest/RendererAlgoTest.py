@@ -61,6 +61,42 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( [ s.radius() for s in samples ], [ 0.75, 1.25 ] )
 
+	def testObjectSamplesMatchingHash( self ) :
+
+		# If the input object has a hash that doesn't vary with time, then we just get one sample when
+		# we try to sample over time.
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
+			samples = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 0.75, 1.25 ] )
+
+		self.assertEqual( [ s.radius() for s in samples ], [ 1.0 ] )
+
+	def testObjectSamplesMatchingResult( self ) :
+
+		# If the input object has different hashes at different times, but still produces identical objects,
+		# then we should still only output one sample.
+
+		frame = GafferTest.FrameNode()
+
+		# Quick hack to produce a value that doesn't vary, but has a hash that does: feed the frame
+		# through an integer multiply node, which will truncate the value to an integer
+		multiply = GafferTest.MultiplyNode()
+		multiply["op1"].setValue( 1 )
+		multiply["op2"].setInput( frame["output"] )
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+		sphere["radius"].setInput( multiply["product"] )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
+			samples = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.25, 1.75 ] )
+
+		self.assertEqual( [ s.radius() for s in samples ], [ 1.0 ] )
+
 	def testNonInterpolableObjectSamples( self ) :
 
 		frame = GafferTest.FrameNode()
