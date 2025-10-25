@@ -61,6 +61,8 @@ class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::ParameterInspector, ParameterInspectorTypeId, AttributeInspector );
 
+		const IECoreScene::ShaderNetwork::Parameter &parameter() const;
+
 		/// Returns the equivalent `Parameter` given an `object` as returned from `value()` or an
 		/// empty `Parameter` if the input cannot be converted.
 		static IECoreScene::ShaderNetwork::Parameter connectionSource( const IECore::Object *object );
