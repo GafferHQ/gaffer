@@ -100,6 +100,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 					sortValue( sortValue ), foreground( foreground ) {}
 
 			CellData( const CellData &other ) = default;
+			CellData &operator=( const CellData &other ) = default;
 
 			/// The primary value to be displayed in a cell or header.
 			/// Supported types :
