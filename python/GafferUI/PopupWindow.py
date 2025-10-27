@@ -52,7 +52,7 @@ class PopupWindow( GafferUI.Window ) :
 
 		self.__popupParent = None
 
-		self._qtWidget().setWindowFlags( QtCore.Qt.Popup )
+		self._qtWidget().setWindowFlags( QtCore.Qt.Popup | QtCore.Qt.FramelessWindowHint )
 		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
 		self._qtWidget().paintEvent = _paintWindowBackground.__get__( self._qtWidget() )
 
