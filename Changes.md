@@ -24,7 +24,10 @@ Breaking Changes
 Improvements
 ------------
 
-- OSLShader : Improved loading of spline parameters with additional duplicate endpoints (including some RenderMan shaders).
+- RenderMan : Added support for spline parameters (ramps).
+- OSLShader :
+ - Improved loading of spline parameters with additional duplicate endpoints.
+ - Added support for loading splines from RenderMan shaders.
 
 Fixes
 -----
@@ -38,18 +41,22 @@ Fixes
 - VectorDataWidget : Fixed errors showing popup colour choosers.
 - Startup : Fixed UnicodeDecodeError when running in non-UTF8 locales.
 - Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.
-- Scene Editors : Fixed undo after creating a new edit in an EditScope.
+- Scene Editors :
+  - Fixed undo after creating a new edit in an EditScope.
+  - Fixed "Inspect..." menu item when a property's source can not be determined.
 - RenderPasses : Fixed drawing of custom widgets registered by `registerRenderPassNameWidget()`.
-
-Build
------
-
-- Cortex : Updated to version 10.6.1.0.
+- Environment : Gaffer's `LD_PRELOAD` overrides are no longer inherited by subprocesses launched from Gaffer.
 
 API
 ---
 
 - PopupWindow : Added `showWarning()` class method.
+- Metadata : The `registerValues()` function now accepts dictionaries containing target metadata. This should be preferred to the previous list-based registrations.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.1.0.
 
 1.6.3.0 (relative to 1.6.2.1)
 =======

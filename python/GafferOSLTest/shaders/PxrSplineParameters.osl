@@ -1,0 +1,70 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+// The name must start with Pxr in order to trigger using the PRMan convention
+
+shader PxrSplineParameters
+(
+	int simpleParmBefore = 42,
+
+	int floatRamp = 4,
+	float floatRamp_Knots[] = { 0, 0, 1, 1 },
+	float floatRamp_Floats[] = { 0, 0, 1, 1 },
+	string floatRamp_Interpolation = "linear",
+
+	int colorRamp = 4,
+	float colorRamp_Knots[] = { 0, 0, 1, 1 },
+	color colorRamp_Colors[] = { 0, 0, 1, 1 },
+	string colorRamp_Interpolation = "catmull-rom",
+
+	// Matches convention used by PxrStylizedControl. It appears the expectation is that we should trim the default
+	// values to the length given in the first parameter.
+	int mismatchedRamp = 4,
+	float mismatchedRamp_Knots[] = { 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+	color mismatchedRamp_Colors[] = { color( 1, 2, 3 ), color( 1, 2, 3 ), color( 4, 5, 6 ), color( 4, 5, 6 ),
+		7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 },
+	string mismatchedRamp_Interpolation = "catmull-rom",
+
+	string simpleParmAfter = "aParameter",
+
+	output closure color out = 0
+)
+{
+	float t = splineinverse( colorRamp_Interpolation, v, colorRamp_Knots );
+	color c = spline( colorRamp_Interpolation, t, colorRamp_Colors );
+	out = c * emission() + debug( "R", "type", "float", "value", color( c[0] ) );
+	Ci = out;
+}

@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import ast
 import os
 import sys
 import time
@@ -118,6 +119,69 @@ class ApplicationTest( GafferTest.TestCase ) :
 		else :
 			# On Linux, everything actually makes sense.
 			self.assertEqual( childEnvironment["gafferApplicationTestMIXEDcaseA"], "testTEST" )
+
+	def testEnvironmentCleanup( self ) :
+
+		# The `LD_PRELOAD` additions made in `_gaffer.py` should be
+		# removed from the environment so that they are not inherited
+		# by subprocesses launched by Gaffer.
+
+		environments = {
+			"pythonNative" : os.environ,
+			"pythonCasePreserving" : Gaffer.environment(),
+			"subprocess" : ast.literal_eval(
+				subprocess.check_output( [ "python", "-c", "import os; print( dict( os.environ ) )" ], universal_newlines = True )
+			)
+		}
+
+		for source, environment in environments.items() :
+			with self.subTest( source = source ) :
+				self.assertNotIn( "libstdc++", environment.get( "LD_PRELOAD", "" ) )
+				self.assertNotIn( "libjemalloc", environment.get( "LD_PRELOAD", "" ) )
+				self.assertEqual(
+					[ k for k in environment.keys() if k.startswith( "__GAFFER_RESTORE_" ) ],
+					[]
+				)
+
+		# But any `LD_PRELOAD` from the environment Gaffer is called
+		# in should be passed through as normal.
+
+		env = Gaffer.environment()
+		env["LD_PRELOAD"] = "libc.so.6"
+
+		self.assertEqual(
+
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; print( os.environ['LD_PRELOAD'], end = '' )" ],
+				universal_newlines = True, env = env
+			),
+
+			env["LD_PRELOAD"],
+
+		)
+
+		# Even if it's just an empty string.
+
+		env["LD_PRELOAD"] = ""
+		self.assertEqual(
+
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; print( os.environ['LD_PRELOAD'], end = '' )" ],
+				universal_newlines = True, env = env
+			),
+
+			env["LD_PRELOAD"],
+
+		)
+
+		# If `LD_PRELOAD` wasn't set in the launch environment, then it
+		# shouldn't be set for subprocesses either.
+
+		del env["LD_PRELOAD"]
+		subprocess.check_call(
+			[ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; assert( 'LD_PRELOAD' not in os.environ )" ],
+			universal_newlines = True, env = env
+		)
 
 if __name__ == "__main__":
 	unittest.main()

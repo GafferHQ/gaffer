@@ -67,7 +67,14 @@ RenderManMeshLight::RenderManMeshLight( const std::string &name )
 	{
 		auto plug = attributes->attributesPlug()->getChild<NameValuePlug>( attributeName );
 		plug->enabledPlug()->setValue( true );
-		plug->valuePlug<IntPlug>()->setValue( 0 );
+		if( auto p = plug->valuePlug<BoolPlug>() )
+		{
+			p->setValue( false );
+		}
+		else
+		{
+			plug->valuePlug<IntPlug>()->setValue( 0 );
+		}
 	}
 
 	addChild( attributes );
