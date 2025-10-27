@@ -445,9 +445,7 @@ void renderTinyDisk(
 // Now we can use the previous set of low level functions to make a function that handles all aspects of
 // rendering disks to the 3 buffers, with or without anti-aliasing.
 
-#if defined( __clang__ )
-[[clang::noinline]]
-#elif defined ( _MSC_VER )
+#if defined ( _MSC_VER )
 [[msvc::noinline]]
 #else
 [[gnu::noinline]]
