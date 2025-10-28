@@ -23,6 +23,7 @@ Fixes
 - SceneInspector :
   - Fixed handling of nested UsdShadeNodeGraphs loaded from USD files.
   - Fixed `Context has no variable named "scene:path"` error when "Isolate Differences" is on.
+- ShaderQuery, ShaderTweaks : Fixed handling of nested UsdShadeNodeGraphs loaded from USD files.
 - VectorDataWidget : Fixed errors showing popup colour choosers.
 - Startup : Fixed UnicodeDecodeError when running in non-UTF8 locales.
 - Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.
