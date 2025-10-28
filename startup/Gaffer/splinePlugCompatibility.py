@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,79 +35,25 @@
 ##########################################################################
 
 import Gaffer
-
 import IECore
 
-Gaffer.Metadata.registerValues( {
+Gaffer.SplineDefinitionInterpolation = IECore.RampInterpolation
 
-	"camera:parameter:shutter_type" : {
+Gaffer.SplineDefinitionff = IECore.Rampff
+Gaffer.SplineDefinitionfColor3f = IECore.RampfColor3f
+Gaffer.SplineDefinitionfColor4f = IECore.RampfColor4f
 
-		"defaultValue" : "box",
-		"label" : "Shutter Type",
-		"layout:section" : "Arnold",
 
-		"presetNames" : IECore.StringVectorData( [ "Box", "Triangle", "Curve" ] ),
-		"presetValues" : IECore.StringVectorData( [ "box", "triangle", "curve" ] ),
+# There are two main places that may need this compatibility config for Ramp*Plug.
+# The first is the same as most of our compatibility configs: old Gaffer scripts
+# that were saved out with Spline*Plug.
+# The second is more obscure: python/Gaffer/ExtensionAlgo.py uses a __nodeTemplate
+# that adds a constructor to remove the dynamic flag from children of a Ramp*Plug.
+# Any custom nodes that were exported using ExtensionAlgo from Gaffer 1.6 or earlier
+# will have the "Spline*Plug" names baked, and will depend on this config. The long
+# term plan is to fix it so those Dynamic flags would never be set ... we probably
+# shouldn't remove this compatibility until after we sort that out.
 
-	},
-
-	"camera:parameter:shutter_curve" : {
-
-		"defaultValue" : IECore.RampffData(),
-		"label" : "Shutter Curve",
-		"layout:section" : "Arnold",
-
-	},
-
-	"camera:parameter:rolling_shutter" : {
-
-		"defaultValue" : "off",
-		"label" : "Rolling Shutter",
-		"layout:section" : "Arnold",
-
-		"presetNames" : IECore.StringVectorData( [ "Off", "Top", "Bottom", "Left", "Right" ] ),
-		"presetValues" : IECore.StringVectorData( [ "off", "top", "bottom", "left", "right" ] ),
-
-	},
-
-	"camera:parameter:rolling_shutter_duration" : {
-
-		"defaultValue" : 0.0,
-		"minValue" : 0.0,
-		"maxValue" : 1.0,
-		"label" : "Rolling Shutter Duration",
-		"layout:section" : "Arnold",
-
-	},
-
-	"camera:parameter:aperture_blades" : {
-
-		"defaultValue" : 6,
-		"minValue" : 0,
-		"maxValue" : 40,
-		"label" : "Aperture Blades",
-		"layout:section" : "Arnold",
-
-	},
-
-	"camera:parameter:aperture_blade_curvature" : {
-
-		"defaultValue" : 0.0,
-		"minValue" : -20.0,
-		"maxValue" : 20.0,
-		"label" : "Aperture Blade Curvature",
-		"layout:section" : "Arnold",
-
-	},
-
-	"camera:parameter:aperture_rotation" : {
-
-		"defaultValue" : 0.0,
-		"minValue" : 0.0,
-		"maxValue" : 360.0,
-		"label" : "Aperture Rotation",
-		"layout:section" : "Arnold",
-
-	},
-
-} )
+Gaffer.SplineffPlug = Gaffer.RampffPlug
+Gaffer.SplinefColor3fPlug = Gaffer.RampfColor3fPlug
+Gaffer.SplinefColor4fPlug = Gaffer.RampfColor4fPlug

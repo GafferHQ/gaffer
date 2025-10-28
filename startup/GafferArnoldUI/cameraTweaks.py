@@ -51,10 +51,10 @@ def __shutterCurveTweakCreator() :
 
 	tweak = Gaffer.TweakPlug(
 		"shutter_curve",
-		Gaffer.SplineffPlug(
-			defaultValue = Gaffer.SplineDefinitionff(
+		Gaffer.RampffPlug(
+			defaultValue = IECore.Rampff(
 				[ ( 0, 0 ), ( 0.25, 1 ), (0.75, 1 ), ( 1, 0 ) ],
-				Gaffer.SplineDefinitionInterpolation.Linear
+				IECore.RampInterpolation.Linear
 			)
 		),
 		Gaffer.TweakPlug.Mode.Create

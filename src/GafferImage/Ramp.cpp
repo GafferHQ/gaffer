@@ -60,10 +60,10 @@ Ramp::Ramp( const std::string &name )
 	addChild( new FormatPlug( "format" ) );
 	addChild( new V2fPlug( "startPosition", Plug::In ) );
 	addChild( new V2fPlug( "endPosition", Plug::In ) );
-	SplinefColor4fPlug::ValueType rampDefault;
-	rampDefault.points.insert( SplinefColor4fPlug::ValueType::Point( 0.0f, Color4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
-	rampDefault.points.insert( SplinefColor4fPlug::ValueType::Point( 1.0f, Color4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
-	addChild( new SplinefColor4fPlug( "ramp", Plug::In, rampDefault ) );
+	RampfColor4fPlug::ValueType rampDefault;
+	rampDefault.points.insert( RampfColor4fPlug::ValueType::Point( 0.0f, Color4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
+	rampDefault.points.insert( RampfColor4fPlug::ValueType::Point( 1.0f, Color4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
+	addChild( new RampfColor4fPlug( "ramp", Plug::In, rampDefault ) );
 	addChild( new StringPlug( "layer" ) );
 	addChild( new Transform2DPlug( "transform" ) );
 }
@@ -102,14 +102,14 @@ const Gaffer::V2fPlug *Ramp::endPositionPlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::SplinefColor4fPlug *Ramp::rampPlug()
+Gaffer::RampfColor4fPlug *Ramp::rampPlug()
 {
-	return getChild<SplinefColor4fPlug>( g_firstPlugIndex + 3 );
+	return getChild<RampfColor4fPlug>( g_firstPlugIndex + 3 );
 }
 
-const Gaffer::SplinefColor4fPlug *Ramp::rampPlug() const
+const Gaffer::RampfColor4fPlug *Ramp::rampPlug() const
 {
-	return getChild<SplinefColor4fPlug>( g_firstPlugIndex + 3 );
+	return getChild<RampfColor4fPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::StringPlug *Ramp::layerPlug()
@@ -236,7 +236,7 @@ IECore::ConstFloatVectorDataPtr Ramp::computeChannelData( const std::string &cha
 {
 	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
 
-	const IECore::SplinefColor4f ramp = rampPlug()->getValue().spline();
+	const IECore::SplinefColor4f ramp = rampPlug()->getValue().evaluator();
 
 	const M33f inverseTransform = transformPlug()->matrix().inverse();
 	const V2f startPosition = startPositionPlug()->getValue();
