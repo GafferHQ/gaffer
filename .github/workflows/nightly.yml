@@ -71,6 +71,7 @@ jobs:
     uses: ./.github/workflows/main.yml
     with:
       buildType: 'nightly'
+    secrets: inherit
     if: needs.Check.outputs.buildNightly == '1'
 
   Tag:
