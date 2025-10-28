@@ -22,6 +22,8 @@ Breaking Changes
 - SceneEditor : Removed `numInputs` argument to `Settings` constructor.
 - UserPlugs : Removed - use `PlugCreationWidget` instead.
 - CompoundDataPlugValueWidget : Removed. LayoutPlugValueWidget and PlugCreationWidget replace all previous functionality.
+- Gaffer::SplinePlug :
+  - Removed support for loading splines saved with Gaffer version 0.40.0.0 and earlier
 
 1.6.x.x (relative to 1.6.8.0)
 =======
