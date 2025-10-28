@@ -20,6 +20,8 @@ Breaking Changes
 - RenderUI : Removed deprecated `rendererPresetNames()` function.
 - Menu : Removed support for `enter` and `leave` properties on menu items.
 - SceneEditor : Removed `numInputs` argument to `Settings` constructor.
+- Gaffer::SplinePlug :
+  - Removed support for loading splines saved with Gaffer version 0.40.0.0 and earlier
 
 1.6.x.x (relative to 1.6.6.1)
 =======
