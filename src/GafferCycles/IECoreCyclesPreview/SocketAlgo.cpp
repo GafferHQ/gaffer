@@ -521,25 +521,29 @@ void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *va
 	}
 }
 
-void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline )
+void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Rampff &ramp )
 {
-	ccl::array<float> ramp( RAMP_TABLE_SIZE );
+	IECore::Splineff evaluator = ramp.evaluator();
+
+	ccl::array<float> rampTable( RAMP_TABLE_SIZE );
 	for (int i = 0; i < RAMP_TABLE_SIZE; i++)
 	{
-		ramp[i] = spline( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
+		rampTable[i] = evaluator( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
 	}
-	node->set( *socket, ramp );
+	node->set( *socket, rampTable );
 }
 
-void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::SplinefColor3f &spline )
+void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::RampfColor3f &ramp )
 {
-	ccl::array<ccl::float3> ramp( RAMP_TABLE_SIZE );
+	IECore::SplinefColor3f evaluator = ramp.evaluator();
+
+	ccl::array<ccl::float3> rampTable( RAMP_TABLE_SIZE );
 	for (int i = 0; i < RAMP_TABLE_SIZE; i++)
 	{
-		Color3f solve = spline( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
-		ramp[i] = ccl::make_float3( solve.x, solve.y, solve.z );
+		Color3f solve = evaluator( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
+		rampTable[i] = ccl::make_float3( solve.x, solve.y, solve.z );
 	}
-	node->set( *socket, ramp );
+	node->set( *socket, rampTable );
 }
 
 ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore::Data *value )

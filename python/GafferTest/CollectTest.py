@@ -87,7 +87,7 @@ class CollectTest( GafferTest.TestCase ) :
 
 		for unsupportedPlug in [
 			Gaffer.NameValuePlug(),
-			Gaffer.SplineffPlug( defaultValue = Gaffer.SplineDefinitionff() ),
+			Gaffer.RampffPlug( defaultValue = IECore.Rampff() ),
 		] :
 			with self.subTest( inputPlugType = type( unsupportedPlug ) ) :
 				self.assertFalse( node.canAddInput( unsupportedPlug ) )

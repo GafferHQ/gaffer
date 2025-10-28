@@ -45,7 +45,7 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -265,11 +265,11 @@ Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketTyp
 		case ccl::SocketType::FLOAT_ARRAY :
 
 			{
-				IECore::Splineff::PointContainer points;
+				IECore::Rampff::PointContainer points;
 				points.insert( std::pair<float, float>( 0.0f, 0.0f ) );
 				points.insert( std::pair<float, float>( 1.0f, 1.0f ) );
 
-				return setupTypedPlug<SplineffPlug>( socketName, plugParent, direction, SplineDefinitionff( points, SplineDefinitionInterpolationCatmullRom ) );
+				return setupTypedPlug<RampffPlug>( socketName, plugParent, direction, Rampff( points, RampInterpolation::CatmullRom ) );
 			}
 
 		case ccl::SocketType::COLOR_ARRAY :
@@ -277,11 +277,11 @@ Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketTyp
 
 			{
 
-				IECore::SplinefColor3f::PointContainer points;
+				IECore::RampfColor3f::PointContainer points;
 				points.insert( std::pair<float, Color3f>( 0.0f, Color3f( 0.0f ) ) );
 				points.insert( std::pair<float, Color3f>( 1.0f, Color3f( 1.0f ) ) );
 
-				return setupTypedPlug<SplinefColor3fPlug>( socketName, plugParent, direction, SplineDefinitionfColor3f( points, SplineDefinitionInterpolationCatmullRom ) );
+				return setupTypedPlug<RampfColor3fPlug>( socketName, plugParent, direction, RampfColor3f( points, RampInterpolation::CatmullRom ) );
 
 			}
 
@@ -430,15 +430,15 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 		case ccl::SocketType::FLOAT_ARRAY :
 
 			{
-				IECore::Splineff::PointContainer points;
+				IECore::Rampff::PointContainer points;
 				points.insert( std::pair<float, float>( 0.0f, 0.0f ) );
 				points.insert( std::pair<float, float>( 1.0f, 1.0f ) );
-				plug = setupTypedPlug<SplineffPlug>(
+				plug = setupTypedPlug<RampffPlug>(
 					nodeType,
 					socketType,
 					plugParent,
 					direction,
-					SplineDefinitionff( points, SplineDefinitionInterpolationCatmullRom )
+					Rampff( points, RampInterpolation::CatmullRom )
 				);
 			}
 			break;
@@ -447,15 +447,15 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 		case ccl::SocketType::VECTOR_ARRAY :
 
 			{
-				IECore::SplinefColor3f::PointContainer points;
+				IECore::RampfColor3f::PointContainer points;
 				points.insert( std::pair<float, Color3f>( 0.0f, Color3f( 0.0f ) ) );
 				points.insert( std::pair<float, Color3f>( 1.0f, Color3f( 1.0f ) ) );
-				plug = setupTypedPlug<SplinefColor3fPlug>(
+				plug = setupTypedPlug<RampfColor3fPlug>(
 					nodeType,
 					socketType,
 					plugParent,
 					direction,
-					SplineDefinitionfColor3f( points, SplineDefinitionInterpolationCatmullRom )
+					RampfColor3f( points, RampInterpolation::CatmullRom )
 				);
 			}
 			break;

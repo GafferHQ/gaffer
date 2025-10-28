@@ -303,7 +303,7 @@ class TestCase( unittest.TestCase ) :
 			Gaffer.V2fPlug, Gaffer.V3fPlug,
 			Gaffer.V2iPlug, Gaffer.V3iPlug,
 			Gaffer.Color3fPlug, Gaffer.Color4fPlug,
-			Gaffer.SplineffPlug, Gaffer.SplinefColor3fPlug, Gaffer.SplinefColor4fPlug,
+			Gaffer.RampffPlug, Gaffer.RampfColor3fPlug, Gaffer.RampfColor4fPlug,
 			Gaffer.Box2iPlug, Gaffer.Box3iPlug,
 			Gaffer.Box2fPlug, Gaffer.Box3fPlug,
 			Gaffer.TransformPlug, Gaffer.Transform2DPlug,
