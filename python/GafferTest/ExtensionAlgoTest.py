@@ -113,7 +113,7 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 		box["v2i"] = Gaffer.V2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		box["v3i"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		box["color4f"] = Gaffer.Color4fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		box["spline"] = Gaffer.SplinefColor3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["spline"] = Gaffer.RampfColor3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		Gaffer.ExtensionAlgo.exportExtension( "PlugTypesExtension", [ box ], self.temporaryDirectory() )
 		sys.path.append( str( self.temporaryDirectory() / "python" ) )

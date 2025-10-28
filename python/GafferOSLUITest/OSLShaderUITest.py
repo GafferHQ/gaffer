@@ -97,20 +97,20 @@ class OSLShaderUITest( GafferOSLTest.OSLTestCase ) :
 
 		Gaffer.Metadata.registerValue(
 			"osl:shader:Pattern/ColorSpline:spline.interpolation", "userDefault",
-			Gaffer.SplineDefinitionInterpolation.Linear
+			Gaffer.RampInterpolation.Linear
 		)
 
 		s = GafferOSL.OSLShader()
 		s.loadShader( "Pattern/ColorSpline" )
 		Gaffer.NodeAlgo.applyUserDefaults( s )
-		self.assertEqual( s["parameters"]["spline"]["interpolation"].getValue(), Gaffer.SplineDefinitionInterpolation.Linear )
+		self.assertEqual( s["parameters"]["spline"]["interpolation"].getValue(), Gaffer.RampInterpolation.Linear )
 
 		Gaffer.Metadata.registerValue(
 			"osl:shader:Pattern/ColorSpline:spline.interpolation", "userDefault",
-			Gaffer.SplineDefinitionInterpolation.MonotoneCubic
+			Gaffer.RampInterpolation.MonotoneCubic
 		)
 		Gaffer.NodeAlgo.applyUserDefaults( s )
-		self.assertEqual( s["parameters"]["spline"]["interpolation"].getValue(), Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+		self.assertEqual( s["parameters"]["spline"]["interpolation"].getValue(), Gaffer.RampInterpolation.MonotoneCubic )
 
 	def testActivatorMetadata( self ) :
 

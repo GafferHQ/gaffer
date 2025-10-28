@@ -872,7 +872,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		#    directly on a pixel center - if they did, it's comes down solely to floating point
 		#    precision which side we lie on.
 		colorSpline["parameters"]["spline"].setValue(
-			Gaffer.SplineDefinitionfColor3f(
+			IECore.RampfColor3f(
 				(
 					( 0.1580, imath.Color3f( 0.71, 0.21, 0.39 ) ),
 					( 0.2249, imath.Color3f( 0, 0.30, 0 ) ),
@@ -884,7 +884,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 					( 0.4607, imath.Color3f( 0.71, 0.21, 0.39 ) ),
 					( 0.5996, imath.Color3f( 0, 1, 1 ) ),
 					( 0.9235, imath.Color3f( 1, 0.25, 0.25 ) )
-				), Gaffer.SplineDefinitionInterpolation.Constant
+				), IECore.RampInterpolation.Constant
 			)
 		)
 
@@ -893,9 +893,9 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		oslImage["channels"]["channel"]["value"].setInput( colorSpline["out"]["c"] )
 		oslImage["defaultFormat"].setValue( GafferImage.Format( 3000, 64, 1.000 ) )
 
-		for i in Gaffer.SplineDefinitionInterpolation.names.values():
+		for i in IECore.RampInterpolation.names.values():
 			colorSpline["parameters"]["spline"]["interpolation"].setValue( i )
-			cortexSpline = colorSpline["parameters"]["spline"].getValue().spline()
+			cortexSpline = colorSpline["parameters"]["spline"].getValue().evaluator()
 			samplers = [
 				GafferImage.Sampler( oslImage["out"], c, imath.Box2i( imath.V2i( 0 ), imath.V2i( 3000, 1 ) ) )
 				for c in [ "R", "G", "B" ]
@@ -918,7 +918,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		floatSpline = GafferOSL.OSLShader()
 		floatSpline.loadShader( "Pattern/FloatSpline" )
 		floatSpline["parameters"]["x"].setInput( g["out"]["globalV"] )
-		floatSpline['parameters']['spline'].setValue( Gaffer.SplineDefinitionff( ( ( 1/8, 0 ), ( 3/8, 0 ), ( 5/8, 1 ), ( 7/8, 1 )), Gaffer.SplineDefinitionInterpolation.Constant ) )
+		floatSpline['parameters']['spline'].setValue( IECore.Rampff( ( ( 1/8, 0 ), ( 3/8, 0 ), ( 5/8, 1 ), ( 7/8, 1 )), IECore.RampInterpolation.Constant ) )
 		floatSpline["parameters"]["spline"]["p1"]["y"].setInput( invertU["out"]["out"] )
 		floatSpline["parameters"]["spline"]["p2"]["y"].setInput( g["out"]["globalU"] )
 
@@ -936,17 +936,17 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( testEval("R"), [0, 0, 0, 0, 0, 0, 750, 250, 750, 250, 250, 750, 250, 750, 1000, 1000] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.Linear )
 		self.assertEqual( testEval("R"), [0, 0, 188, 62, 562, 188, 625, 375, 375, 625, 438, 812, 812, 938, 1000, 1000] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.CatmullRom )
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.CatmullRom )
 		self.assertEqual( testEval("R"), [0, 0, 232, 54, 648, 170, 684, 363, 316, 637, 352, 830, 768, 946, 1000, 1000] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.BSpline )
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.BSpline )
 		self.assertEqual( testEval("R"), [0, 0, 187, 63, 476, 205, 540, 392, 460, 608, 524, 795, 813, 937, 1000, 1000] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
-		with self.assertRaisesRegex( Exception, "Cannot support monotone cubic interpolation for splines with inputs, for plug OSLShader.parameters.s" ):
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.MonotoneCubic )
+		with self.assertRaisesRegex( Exception, "Cannot connect adaptors to ramp when using monotoneCubic interpolation"):
 			testEval( "R" )
 
 		# Make connections to outermost control points ( this will require duplicating connections to the
@@ -956,17 +956,17 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		floatSpline["parameters"]["spline"]["p2"]["y"].setInput( None )
 		floatSpline["parameters"]["spline"]["p3"]["y"].setInput( g["out"]["globalU"] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Constant )
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.Constant )
 
 		self.assertEqual( testEval("R"), [750, 250, 750, 250, 750, 250, 0, 0, 0, 0, 1000, 1000, 1000, 1000, 250, 750])
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.Linear )
 		self.assertEqual( testEval("R"), [750, 250, 562, 188, 188, 62, 250, 250, 750, 750, 812, 938, 438, 812, 250, 750] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.CatmullRom )
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.CatmullRom )
 		self.assertEqual( testEval("R"), [750, 250, 500, 143, 68, -23, 168, 191, 832, 809, 932, 1023, 500, 857, 250, 750] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.BSpline )
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.BSpline )
 		self.assertEqual( testEval("R"), [750, 250, 563, 188, 309, 149, 368, 335, 632, 665, 691, 851, 437, 812, 250, 750] )
 
 		# Now test color connections
@@ -974,12 +974,12 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		colorSpline.loadShader( "Pattern/ColorSpline" )
 		colorSpline["parameters"]["x"].setInput( g["out"]["globalV"] )
 
-		colorSpline['parameters']['spline'].setValue( Gaffer.SplineDefinitionfColor3f(
+		colorSpline['parameters']['spline'].setValue( IECore.RampfColor3f(
 			(
 				( 1/8, imath.Color3f(0, 1, 0.4) ), ( 3/8, imath.Color3f(0.25, 0.75, 0.5) ),
 				( 5/8, imath.Color3f(0.75, 0.25, 0.6) ), ( 7/8, imath.Color3f(1, 0, 0.7) )
 			),
-			Gaffer.SplineDefinitionInterpolation.CatmullRom
+			IECore.RampInterpolation.CatmullRom
 		) )
 
 		floatToColor = GafferOSL.OSLShader()

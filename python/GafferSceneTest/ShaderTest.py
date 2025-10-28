@@ -187,7 +187,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		# connected shader's output as the correct type
 		self.assertEqual(
 			network.getShader( "n3" ).parameters,
-			IECore.CompoundData( { "i" : IECore.IntData( 0 ), "c" : IECore.Color3fData( imath.Color3f( 0 ) ), "spline" : IECore.SplinefColor3fData() } )
+			IECore.CompoundData( { "i" : IECore.IntData( 0 ), "c" : IECore.Color3fData( imath.Color3f( 0 ) ), "spline" : IECore.RampfColor3fData() } )
 		)
 
 	def testDetectCyclicConnections( self ) :
@@ -637,7 +637,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		network = n1.attributes()["test:surface"]
 
-		self.assertEqual( network.shaders()["n1"].parameters["spline"], IECore.SplinefColor3fData() )
+		self.assertEqual( network.shaders()["n1"].parameters["spline"], IECore.RampfColor3fData() )
 
 		n1["parameters"]["spline"].addPoint()
 		n1["parameters"]["spline"].addPoint()
@@ -650,12 +650,10 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		network = n1.attributes()["test:surface"]
 
-		refSpline = IECore.SplinefColor3f()
-		refSpline[0] = imath.Color3f( 0 )
-		refSpline[0] = imath.Color3f( 0 )
-		refSpline[0.6] = imath.Color3f( 0.4, 0.5, 0.7 )
-		refSpline[1] = imath.Color3f( 1 )
-		refSpline[1] = imath.Color3f( 1 )
+		refSpline = IECore.RampfColor3f(
+			[ ( 0, imath.Color3f( 0 ) ), ( 0.6, imath.Color3f( 0.4, 0.5, 0.7 ) ), ( 1, imath.Color3f( 1 ) ) ],
+			IECore.RampInterpolation.CatmullRom
+		)
 
 		self.assertEqual( network.shaders()["n1"].parameters["spline"].value, refSpline )
 
@@ -683,7 +681,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		n1["parameters"]["spline"]["p1"]["x"].setInput( None )
 
-		n1["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
+		n1["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.Linear )
 
 		network = n1.attributes()["test:surface"]
 		self.assertEqual(
@@ -693,7 +691,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			]
 		)
 
-		n1["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+		n1["parameters"]["spline"]["interpolation"].setValue( IECore.RampInterpolation.MonotoneCubic )
 
 		with self.assertRaisesRegex( RuntimeError, "n1.__outAttributes : Cannot support monotone cubic interpolation for splines with inputs, for plug n1.parameters.spline" ):
 			network = n1.attributes()["test:surface"]

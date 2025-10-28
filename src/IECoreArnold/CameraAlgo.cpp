@@ -42,7 +42,7 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
+#include "IECore/RampData.h"
 
 #include "Imath/ImathFun.h"
 
@@ -75,7 +75,7 @@ const AtString g_focusDistanceArnoldString("focus_distance");
 const AtString g_motionStartArnoldString("motion_start");
 const AtString g_motionEndArnoldString("motion_end");
 
-AtVector2 curvePoint( const Splineff::Point &point )
+AtVector2 curvePoint( const Rampff::Point &point )
 {
 	// Clamping enforces constraints specified in Arnold docs.
 	// Not likely to be an issue in the X-axis, but in Y it's
@@ -88,27 +88,29 @@ AtVector2 curvePoint( const Splineff::Point &point )
 
 void setShutterCurveParameter( AtNode *camera, const IECore::Data *value, const std::string &messageContext )
 {
-	auto *splineData = runTimeCast<const SplineffData>( value );
+	auto *splineData = runTimeCast<const IECore::RampffData>( value );
 	if( !splineData )
 	{
-		msg( Msg::Warning, messageContext, fmt::format( "Unsupported value type \"{}\" (expected SplineffData).", value->typeName() ) );
+		msg( Msg::Warning, messageContext, fmt::format( "Unsupported value type \"{}\" (expected RampffData).", value->typeName() ) );
 		return;
 	}
 
 
 	AtArray *array;
-	const Splineff &spline = splineData->readable();
-	if( spline.basis == CubicBasisf::linear() )
+	const Rampff &ramp = splineData->readable();
+	if( ramp.interpolation == IECore::RampInterpolation::Linear )
 	{
-		array = AiArrayAllocate( spline.points.size(), 1, AI_TYPE_VECTOR2 );
+		array = AiArrayAllocate( ramp.points.size(), 1, AI_TYPE_VECTOR2 );
 		size_t index = 0;
-		for( const auto &p : spline.points )
+		for( const auto &p : ramp.points )
 		{
 			AiArraySetVec2( array, index++, curvePoint( p ) );
 		}
 	}
 	else
 	{
+		IECore::Splineff eval = ramp.evaluator();
+
 		// Cubic curve, but Arnold only supports linear. Just apply a fixed
 		// sampling for now. From SolidAngle support : "Looking at the code, a
 		// larger number of points in the shutter curve should have negligible
@@ -118,7 +120,7 @@ void setShutterCurveParameter( AtNode *camera, const IECore::Data *value, const 
 		for( int i = 0; i < numSamples; ++i )
 		{
 			const float x = (float)i / (float)( numSamples - 1 );
-			const float y = spline( x );
+			const float y = eval( x );
 			AiArraySetVec2( array, i, curvePoint( { x, y } ) );
 		}
 	}

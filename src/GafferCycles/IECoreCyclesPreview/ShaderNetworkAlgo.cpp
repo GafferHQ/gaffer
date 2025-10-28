@@ -47,7 +47,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
+#include "IECore/RampData.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string.hpp"
@@ -189,8 +189,12 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		// "__", revert that change here.
 		string parameterName = boost::replace_first_copy( namedParameter.first.string(), "__", "." );
 
-		if( const SplineffData *splineData = runTimeCast<const SplineffData>( namedParameter.second.get() ) )
+		if( const RampffData *splineData = runTimeCast<const RampffData>( namedParameter.second.get() ) )
 		{
+			// \todo : Feels bad that there are no unit tests for this, but currently we don't even bind
+			// convertGraph() to Python, so I don't really want to go to the work of testing it while
+			// in the middle of reworking how we handle ramps.
+
 			// For OSL, splines are handled by convertToOSLConventions
 			assert( !isOSLShader );
 
@@ -199,7 +203,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 				SocketAlgo::setRampSocket( node, socket, splineData->readable() );
 			}
 		}
-		else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( namedParameter.second.get() ) )
+		else if( const RampfColor3fData *splineData = runTimeCast<const RampfColor3fData>( namedParameter.second.get() ) )
 		{
 			// For OSL, splines are handled by convertToOSLConventions
 			assert( !isOSLShader );

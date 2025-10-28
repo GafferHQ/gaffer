@@ -1,6 +1,7 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,15 +35,120 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUI
 import imath
 import IECore
 
-from Qt import QtCore
-from Qt import QtGui
+import Gaffer
+import GafferUI
 
 class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__splineWidget = GafferUI.RampWidget()
+
+		GafferUI.PlugValueWidget.__init__( self, self.__splineWidget, plug, **kw )
+
+		self.__splineWidget._qtWidget().setFixedHeight( 20 )
+
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+
+		self.__editorWindow = None
+
+		self.setPlug( plug )
+
+	def splineWidget( self ) :
+
+		return self.__splineWidget
+
+	def setPlug( self, plug ) :
+
+		GafferUI.PlugValueWidget.setPlug( self, plug )
+
+		if isinstance( plug, ( Gaffer.RampfColor3fPlug, Gaffer.RampfColor4fPlug ) ) :
+			self.__splineWidget.setDrawMode( GafferUI.RampWidget.DrawMode.Ramp )
+		else :
+			self.__splineWidget.setDrawMode( GafferUI.RampWidget.DrawMode.Splines )
+
+	def setHighlighted( self, highlighted ) :
+
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+
+		self.splineWidget().setHighlighted( highlighted )
+
+	def _updateFromValues( self, values, exception ) :
+
+		if values :
+			assert( len( values ) == 1 )
+			self.__splineWidget.setRamp( values[0] )
+		else :
+			self.__splineWidget.setRamp(
+				IECore.Rampff( [ ( 0, 0.3 ), ( 1, 0.3 ) ], IECore.RampInterpolation.Linear ),
+			)
+
+	def __buttonPress( self, button, event ) :
+
+		if event.buttons & event.Buttons.Left :
+
+			_RampPlugValueDialogue.acquire( self.getPlug() )
+			return True
+
+for plugType in ( Gaffer.RampffPlug, Gaffer.RampfColor3fPlug, Gaffer.RampfColor4fPlug ) :
+
+	GafferUI.PlugValueWidget.registerType( plugType, RampPlugValueWidget )
+	Gaffer.Metadata.registerValue( plugType, "interpolation", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+	for name, value in sorted( IECore.RampInterpolation.names.items() ):
+		Gaffer.Metadata.registerValue( plugType, "interpolation", "preset:" + name, value )
+	Gaffer.Metadata.registerValue( plugType, "p[0-9]*.x", "labelPlugValueWidget:showValueChangedIndicator", False )
+	Gaffer.Metadata.registerValue( plugType, "p[0-9]*.y", "labelPlugValueWidget:showValueChangedIndicator", False )
+
+## \todo See comments for `ColorSwatchPlugValueWidget._ColorPlugValueDialogue`.
+# I think the best approach is probably to move the `acquire()` mechanism to the
+# main layout class when we do an overhaul of that system.
+class _RampPlugValueDialogue( GafferUI.Dialogue ) :
+
+	def __init__( self, plug ) :
+
+		GafferUI.Dialogue.__init__(
+			self,
+			plug.relativeName( plug.ancestor( Gaffer.ScriptNode ) )
+		)
+
+		self.__plug = plug
+		self.setChild( _RampPlugEditValueWidget( plug ) )
+
+		## \todo Perhaps if `acquire()` were to be a shared central
+		# mechanism, this handling should be done in `acquire()`
+		# instead of in each of the individual dialogues? Perhaps
+		# `acquire()` should even be responsible for building the
+		# dialogues, so it's able to build a dialogue around any
+		# PlugValueWidget?
+		plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
+		plug.node().parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
+
+	@classmethod
+	def acquire( cls, plug ) :
+
+		script = plug.node().scriptNode()
+		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+
+		for window in scriptWindow.childWindows() :
+			if isinstance( window, cls ) and window.__plug == plug :
+				window.setVisible( True )
+				return window
+
+		window = cls( plug )
+		scriptWindow.addChildWindow( window, removeOnClose = True )
+		window.setVisible( True )
+
+		return window
+
+	def __destroy( self, *unused ) :
+
+		self.parent().removeChild( self )
+
+# Private widget class that we open in a popup window when we need to edit a ramp.
+class _RampPlugEditValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
@@ -62,8 +168,8 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 				GafferUI.PlugWidget( GafferUI.PlugValueWidget.create( plug["interpolation"] ) )
 
-			self.__splineWidget = GafferUI.SplineWidget()
-			if isinstance( plug, ( Gaffer.SplinefColor3fPlug, Gaffer.SplinefColor4fPlug ) ) :
+			self.__splineWidget = GafferUI.RampWidget()
+			if isinstance( plug, ( Gaffer.RampfColor3fPlug, Gaffer.RampfColor4fPlug ) ) :
 				self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Ramp )
 			else:
 				self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Splines )
@@ -140,7 +246,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return [
 			{
-				"spline" : p.getValue().spline(),
+				"splineDefinition" : p.getValue(),
 				# We can't get these positions from `spline`, because we need
 				# them to have the same order as the point plugs.
 				"positions" : [ p.pointXPlug( i ).getValue() for i in range( 0, p.numPoints() ) ],
@@ -152,7 +258,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		assert( len( values ) < 2 )
 		if len( values ) :
-			self.__splineWidget.setSpline( values[0]["spline"] )
+			self.__splineWidget.setRamp( values[0]["splineDefinition"] )
 			with Gaffer.Signals.BlockedConnection( self.__positionsChangedConnection ) :
 				self.__slider.setValues( values[0]["positions"] )
 
@@ -195,11 +301,11 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# on an empty area of the slider.
 				numPoints = plug.numPoints()
 				assert( len( slider.getValues() ) == numPoints + 1 )
-				spline = plug.getValue().spline()
+				evaluator = plug.getValue().evaluator()
 				position = slider.getValues()[numPoints]
 				plug.addPoint()
 				plug.pointXPlug( numPoints ).setValue( position )
-				plug.pointYPlug( numPoints ).setValue( spline( position ) )
+				plug.pointYPlug( numPoints ).setValue( evaluator( position ) )
 
 	def __indexRemoved( self, slider, index ) :
 
@@ -224,9 +330,3 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__positionLabel.label().setText( "Position" )
 		self.__valueLabel.label().setText( "Value" )
-
-# we don't register this automatically for any plugs, as it takes up a lot of room
-# in the node editor. this means the SplinePlugValueWidget will be used instead, and
-# that will launch a dialogue containing a RampPlugValueWidget when appropriate. for
-# nodes which want a large editor directly in the node editor, the RampPlugValueWidget
-# can be registered directly for specific plugs.

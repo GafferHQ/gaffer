@@ -484,25 +484,26 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 	def testSpline( self ) :
 
 		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "splineParameters.osl" )
-		spline =  IECore.SplinefColor3f(
-			IECore.CubicBasisf.bSpline(),
+		ramp = IECore.RampfColor3f(
 			[
 				( 0, imath.Color3f( 1 ) ),
-				( 0, imath.Color3f( 1 ) ),
+				( 0.25, imath.Color3f( 1 ) ),
+				( 0.75, imath.Color3f( 0 ) ),
 				( 1, imath.Color3f( 0 ) ),
-				( 1, imath.Color3f( 0 ) ),
-			]
+			],
+			IECore.RampInterpolation.BSpline
 		)
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
-				"output" : IECoreScene.Shader( shader, "osl:surface", { "colorSpline" : spline } )
+				"output" : IECoreScene.Shader( shader, "osl:surface", { "colorSpline" : ramp } )
 			},
 			output = "output"
 		) )
 
 		rp = self.rectanglePoints()
 		p = e.shade( rp )
+		spline = ramp.evaluator()
 		for i in range( 0, len( p["Ci"] ) ) :
 			self.assertTrue( p["Ci"][i].equalWithAbsError( spline( rp["v"][i] ), 0.001 ) )
 
