@@ -8,6 +8,7 @@ Improvements
 - OSLShader :
  - Improved loading of spline parameters with additional duplicate endpoints.
  - Added support for loading splines from RenderMan shaders.
+- Rendering : Improved detection of static objects. This fixes messages from Arnold like "discarded X duplicate deformation keys", and may improve performance in some cases.
 
 Fixes
 -----
