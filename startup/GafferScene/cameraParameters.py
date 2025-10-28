@@ -40,179 +40,179 @@ import Gaffer
 
 Gaffer.Metadata.registerValues( {
 
-	"camera:parameter:projection" : [
+	"camera:parameter:projection" : {
 
-		"defaultValue", "orthographic",
-		"label", "Projection",
+		"defaultValue" : "orthographic",
+		"label" : "Projection",
 
-	],
+	},
 
-	"camera:parameter:fieldOfView" : [
+	"camera:parameter:fieldOfView" : {
 
-		"defaultValue", 50.0,
-		"minValue", 0.0,
-		"maxValue", 180.0,
-		"label", "Field Of View",
+		"defaultValue" : 50.0,
+		"minValue" : 0.0,
+		"maxValue" : 180.0,
+		"label" : "Field Of View",
 
-	],
+	},
 
-	"camera:parameter:apertureAspectRatio" : [
+	"camera:parameter:apertureAspectRatio" : {
 
-		"defaultValue", 1.0,
-		"minValue", 0.0,
-		"label", "Aperture Aspect Ratio",
+		"defaultValue" : 1.0,
+		"minValue" : 0.0,
+		"label" : "Aperture Aspect Ratio",
 
-	],
+	},
 
-	"camera:parameter:aperture" : [
+	"camera:parameter:aperture" : {
 
-		"defaultValue", imath.V2f( 2 ),
-		"label", "Aperture",
+		"defaultValue" : imath.V2f( 2 ),
+		"label" : "Aperture",
 
-	],
+	},
 
-	"camera:parameter:focalLength" : [
+	"camera:parameter:focalLength" : {
 
-		"defaultValue", 1.0,
-		"minValue", 0.0,
-		"label", "Focal Length",
+		"defaultValue" : 1.0,
+		"minValue" : 0.0,
+		"label" : "Focal Length",
 
-	],
+	},
 
-	"camera:parameter:apertureOffset" : [
+	"camera:parameter:apertureOffset" : {
 
-		"defaultValue", imath.V2f( 0 ),
-		"label", "Aperture Offset",
+		"defaultValue" : imath.V2f( 0 ),
+		"label" : "Aperture Offset",
 
-	],
+	},
 
-	"camera:parameter:fStop" : [
+	"camera:parameter:fStop" : {
 
-		"defaultValue", 0.0,
-		"minValue", 0.0,
-		"label", "F Stop",
-		"layout:section", "Depth of Field",
+		"defaultValue" : 0.0,
+		"minValue" : 0.0,
+		"label" : "F Stop",
+		"layout:section" : "Depth of Field",
 
-	],
+	},
 
-	"camera:parameter:focalLengthWorldScale" : [
+	"camera:parameter:focalLengthWorldScale" : {
 
-		"defaultValue", 0.1,
-		"minValue", 0.0,
-		"label", "Focal Length World Scale",
-		"layout:section", "Depth of Field",
+		"defaultValue" : 0.1,
+		"minValue" : 0.0,
+		"label" : "Focal Length World Scale",
+		"layout:section" : "Depth of Field",
 
-	],
+	},
 
-	"camera:parameter:focusDistance" : [
+	"camera:parameter:focusDistance" : {
 
-		"defaultValue", 1.0,
-		"label", "Focus Distance",
-		"layout:section", "Depth of Field",
+		"defaultValue" : 1.0,
+		"label" : "Focus Distance",
+		"layout:section" : "Depth of Field",
 
-	],
+	},
 
-	"camera:parameter:clippingPlanes" : [
+	"camera:parameter:clippingPlanes" : {
 
-		"defaultValue", imath.V2f( 0.01, 100000 ),
-		"label", "Clipping Planes",
+		"defaultValue" : imath.V2f( 0.01, 100000 ),
+		"label" : "Clipping Planes",
 
-	],
+	},
 
-	"camera:parameter:filmFit" : [
+	"camera:parameter:filmFit" : {
 
-		"defaultValue", 0,
-		"label", "Film Fit",
-		"layout:section", "Render Overrides",
+		"defaultValue" : 0,
+		"label" : "Film Fit",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:shutter" : [
+	"camera:parameter:shutter" : {
 
-		"defaultValue", imath.V2f( -0.5, 0.5 ),
-		"label", "Shutter",
-		"layout:section", "Render Overrides",
+		"defaultValue" : imath.V2f( -0.5, 0.5 ),
+		"label" : "Shutter",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:resolution" : [
+	"camera:parameter:resolution" : {
 
-		"defaultValue", imath.V2i( 1024 ),
-		"label", "Resolution",
-		"layout:section", "Render Overrides",
+		"defaultValue" : imath.V2i( 1024 ),
+		"label" : "Resolution",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:pixelAspectRatio" : [
+	"camera:parameter:pixelAspectRatio" : {
 
-		"defaultValue", 1.0,
-		"label", "Pixel Aspect Ratio",
-		"layout:section", "Render Overrides",
+		"defaultValue" : 1.0,
+		"label" : "Pixel Aspect Ratio",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:resolutionMultiplier" : [
+	"camera:parameter:resolutionMultiplier" : {
 
-		"defaultValue", 1.0,
-		"label", "Resolution Multiplier",
-		"layout:section", "Render Overrides",
+		"defaultValue" : 1.0,
+		"label" : "Resolution Multiplier",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:overscan" : [
+	"camera:parameter:overscan" : {
 
-		"defaultValue", False,
-		"label", "Overscan",
-		"layout:section", "Render Overrides",
+		"defaultValue" : False,
+		"label" : "Overscan",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:overscanLeft" : [
+	"camera:parameter:overscanLeft" : {
 
-		"defaultValue", 0.0,
-		"label", "Overscan Left",
-		"layout:section", "Render Overrides",
+		"defaultValue" : 0.0,
+		"label" : "Overscan Left",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:overscanRight" : [
+	"camera:parameter:overscanRight" : {
 
-		"defaultValue", 0.0,
-		"label", "Overscan Right",
-		"layout:section", "Render Overrides",
+		"defaultValue" : 0.0,
+		"label" : "Overscan Right",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:overscanTop" : [
+	"camera:parameter:overscanTop" : {
 
-		"defaultValue", 0.0,
-		"label", "Overscan Top",
-		"layout:section", "Render Overrides",
+		"defaultValue" : 0.0,
+		"label" : "Overscan Top",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:overscanBottom" : [
+	"camera:parameter:overscanBottom" : {
 
-		"defaultValue", 0.0,
-		"label", "Overscan Bottom",
-		"layout:section", "Render Overrides",
+		"defaultValue" : 0.0,
+		"label" : "Overscan Bottom",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:cropWindow" : [
+	"camera:parameter:cropWindow" : {
 
-		"defaultValue", imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
-		"label", "Crop Window",
-		"layout:section", "Render Overrides",
+		"defaultValue" : imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
+		"label" : "Crop Window",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
-	"camera:parameter:depthOfField" : [
+	"camera:parameter:depthOfField" : {
 
-		"defaultValue", False,
-		"label", "Depth Of Field",
-		"layout:section", "Render Overrides",
+		"defaultValue" : False,
+		"label" : "Depth Of Field",
+		"layout:section" : "Render Overrides",
 
-	],
+	},
 
 } )

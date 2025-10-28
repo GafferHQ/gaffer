@@ -40,378 +40,378 @@ import Gaffer
 
 Gaffer.Metadata.registerValues( {
 
-	"attribute:cycles:visibility:camera" : [
+	"attribute:cycles:visibility:camera" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to camera
 		rays. To hide an object completely, use the
 		`scene:visible` attribute instead.
 		""",
-		"label", "Camera",
-		"layout:section", "Visibility",
+		"label" : "Camera",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:cycles:visibility:diffuse" : [
+	"attribute:cycles:visibility:diffuse" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to diffuse
 		rays.
 		""",
-		"label", "Diffuse",
-		"layout:section", "Visibility",
+		"label" : "Diffuse",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:cycles:visibility:glossy" : [
+	"attribute:cycles:visibility:glossy" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible in
 		glossy rays.
 		""",
-		"label", "Glossy",
-		"layout:section", "Visibility",
+		"label" : "Glossy",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:cycles:visibility:transmission" : [
+	"attribute:cycles:visibility:transmission" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible in
 		transmission.
 		""",
-		"label", "Transmission",
-		"layout:section", "Visibility",
+		"label" : "Transmission",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:cycles:visibility:shadow" : [
+	"attribute:cycles:visibility:shadow" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to shadow
 		rays - whether it casts shadows or not.
 		""",
-		"label", "Shadow",
-		"layout:section", "Visibility",
+		"label" : "Shadow",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:cycles:visibility:scatter" : [
+	"attribute:cycles:visibility:scatter" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to
 		scatter rays.
 		""",
-		"label", "Scatter",
-		"layout:section", "Visibility",
+		"label" : "Scatter",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:cycles:use_holdout" : [
+	"attribute:cycles:use_holdout" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Turns the object into a holdout matte.
 		This only affects primary (camera) rays.
 		""",
-		"label", "Use Holdout",
-		"layout:section", "Rendering",
+		"label" : "Use Holdout",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"attribute:cycles:is_shadow_catcher" : [
+	"attribute:cycles:is_shadow_catcher" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Turns the object into a shadow catcher.
 		""",
-		"label", "Is Shadow Catcher",
-		"layout:section", "Rendering",
+		"label" : "Is Shadow Catcher",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"attribute:cycles:shadow_terminator_shading_offset" : [
+	"attribute:cycles:shadow_terminator_shading_offset" : {
 
-		"defaultValue", 0.0,
-		"description",
+		"defaultValue" : 0.0,
+		"description" :
 		"""
 		Push the shadow terminator towards the light to hide artifacts on low poly geometry.
 		""",
-		"label", "Terminator Shading Offset",
-		"layout:section", "Rendering",
+		"label" : "Terminator Shading Offset",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"attribute:cycles:shadow_terminator_geometry_offset" : [
+	"attribute:cycles:shadow_terminator_geometry_offset" : {
 
-		"defaultValue", 0.0,
-		"description",
+		"defaultValue" : 0.0,
+		"description" :
 		"""
 		Offset rays from the surface to reduce shadow terminator artifact on low poly geometry. Only affects triangles at grazing angles to light.
 		""",
-		"label", "Terminator Geometry Offset",
-		"layout:section", "Rendering",
+		"label" : "Terminator Geometry Offset",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"attribute:cycles:is_caustics_caster" : [
+	"attribute:cycles:is_caustics_caster" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Cast Shadow Caustics.
 		""",
-		"label", "Is Caustics Caster",
-		"layout:section", "Rendering",
+		"label" : "Is Caustics Caster",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"attribute:cycles:is_caustics_receiver" : [
+	"attribute:cycles:is_caustics_receiver" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Receive Shadow Caustics.
 		""",
-		"label", "Is Caustics Receiver",
-		"layout:section", "Rendering",
+		"label" : "Is Caustics Receiver",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"attribute:cycles:max_level" : [
+	"attribute:cycles:max_level" : {
 
-		"defaultValue", 1,
-		"description",
+		"defaultValue" : 1,
+		"description" :
 		"""
 		The max level of subdivision that can be
 		applied.
 		""",
-		"label", "Max Level",
-		"layout:section", "Subdivision",
+		"label" : "Max Level",
+		"layout:section" : "Subdivision",
 
-	],
+	},
 
-	"attribute:cycles:dicing_rate" : [
+	"attribute:cycles:dicing_rate" : {
 
-		"defaultValue", 1.0,
-		"description",
+		"defaultValue" : 1.0,
+		"description" :
 		"""
 		Multiplier for scene dicing rate.
 		""",
-		"label", "Dicing Scale",
-		"layout:section", "Subdivision",
+		"label" : "Dicing Scale",
+		"layout:section" : "Subdivision",
 
-	],
+	},
 
-	"attribute:cycles:lightgroup" : [
+	"attribute:cycles:lightgroup" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		Set the lightgroup of an object with emission.
 		""",
-		"label", "Lightgroup",
-		"layout:section", "Rendering",
+		"label" : "Lightgroup",
+		"layout:section" : "Rendering",
 
-	],
+	},
 
-	"attribute:cycles:volume_clipping" : [
+	"attribute:cycles:volume_clipping" : {
 
-		"defaultValue", 0.001,
-		"description",
+		"defaultValue" : 0.001,
+		"description" :
 		"""
 		Value under which voxels are considered empty space to
 		optimize rendering.
 		""",
-		"label", "Clipping",
-		"layout:section", "Volume",
+		"label" : "Clipping",
+		"layout:section" : "Volume",
 
-	],
+	},
 
-	"attribute:cycles:volume_step_size" : [
+	"attribute:cycles:volume_step_size" : {
 
-		"defaultValue", 0.0,
-		"description",
+		"defaultValue" : 0.0,
+		"description" :
 		"""
 		Distance between volume samples. When zero it is automatically
 		estimated based on the voxel size.
 		""",
-		"label", "Step Size",
-		"layout:section", "Volume",
+		"label" : "Step Size",
+		"layout:section" : "Volume",
 
-	],
+	},
 
-	"attribute:cycles:volume_object_space" : [
+	"attribute:cycles:volume_object_space" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Specify volume density and step size in object or world space.
 		By default object space is used, so that the volume opacity and
 		detail remains the same regardless of object scale.
 		""",
-		"label", "Object Space",
-		"layout:section", "Volume",
+		"label" : "Object Space",
+		"layout:section" : "Volume",
 
-	],
+	},
 
-	"attribute:cycles:volume_velocity_scale" : [
+	"attribute:cycles:volume_velocity_scale" : {
 
-		"defaultValue", 1.0,
-		"description",
+		"defaultValue" : 1.0,
+		"description" :
 		"""
 		Scales velocity vectors used in motion blur computation.
 		""",
-		"label", "Velocity Scale",
-		"layout:section", "Volume",
+		"label" : "Velocity Scale",
+		"layout:section" : "Volume",
 
-	],
+	},
 
-	"attribute:cycles:volume_precision" : [
+	"attribute:cycles:volume_precision" : {
 
-		"defaultValue", "full",
-		"description",
+		"defaultValue" : "full",
+		"description" :
 		"""
 		Specifies volume data precision, lower values reduce
 		memory consumption at the cost of detail.
 		""",
-		"label", "Precision",
-		"layout:section", "Volume",
+		"label" : "Precision",
+		"layout:section" : "Volume",
 
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "Full", "Half" ] ),
-		"presetValues", IECore.StringVectorData( [ "full", "half" ] ),
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "Full", "Half" ] ),
+		"presetValues" : IECore.StringVectorData( [ "full", "half" ] ),
 
-	],
+	},
 
-	"attribute:cycles:asset_name" : [
+	"attribute:cycles:asset_name" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		Asset name for cryptomatte.
 		""",
-		"label", "Asset Name",
-		"layout:section", "Object",
+		"label" : "Asset Name",
+		"layout:section" : "Object",
 
-	],
+	},
 
-	"attribute:cycles:shader:emission_sampling_method" : [
+	"attribute:cycles:shader:emission_sampling_method" : {
 
-		"defaultValue", "auto",
-		"description",
+		"defaultValue" : "auto",
+		"description" :
 		"""
 		Sampling strategy for emissive surfaces.
 		""",
-		"label", "Emission Sampling Method",
-		"layout:section", "Shader",
+		"label" : "Emission Sampling Method",
+		"layout:section" : "Shader",
 
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "None", "Auto", "Front", "Back", "Front-Back" ] ),
-		"presetValues", IECore.StringVectorData( [ "none", "auto", "front", "back", "front_back" ] ),
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "None", "Auto", "Front", "Back", "Front-Back" ] ),
+		"presetValues" : IECore.StringVectorData( [ "none", "auto", "front", "back", "front_back" ] ),
 
-	],
+	},
 
-	"attribute:cycles:shader:use_transparent_shadow" : [
+	"attribute:cycles:shader:use_transparent_shadow" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Use transparent shadows for this material if it contains a Transparent BSDF,
 		disabling will render faster but not give accurate shadows.
 		""",
-		"label", "Transparent Shadow",
-		"layout:section", "Shader",
+		"label" : "Transparent Shadow",
+		"layout:section" : "Shader",
 
-	],
+	},
 
-	"attribute:cycles:shader:heterogeneous_volume" : [
+	"attribute:cycles:shader:heterogeneous_volume" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Disabling this when using volume rendering, assume volume has the same density
 		everywhere (not using any textures), for faster rendering.
 		""",
-		"label", "Heterogeneous Volume",
-		"layout:section", "Shader",
+		"label" : "Heterogeneous Volume",
+		"layout:section" : "Shader",
 
-	],
+	},
 
-	"attribute:cycles:shader:volume_sampling_method" : [
+	"attribute:cycles:shader:volume_sampling_method" : {
 
-		"defaultValue", "multiple_importance",
-		"description",
+		"defaultValue" : "multiple_importance",
+		"description" :
 		"""
 		Sampling method to use for volumes.
 		""",
-		"label", "Volume Sampling",
-		"layout:section", "Shader",
+		"label" : "Volume Sampling",
+		"layout:section" : "Shader",
 
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "Distance", "Equiangular", "Multiple-Importance" ] ),
-		"presetValues", IECore.StringVectorData( [ "distance", "equiangular", "multiple_importance" ] ),
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "Distance", "Equiangular", "Multiple-Importance" ] ),
+		"presetValues" : IECore.StringVectorData( [ "distance", "equiangular", "multiple_importance" ] ),
 
-	],
+	},
 
-	"attribute:cycles:shader:volume_interpolation_method" : [
+	"attribute:cycles:shader:volume_interpolation_method" : {
 
-		"defaultValue", "linear",
-		"description",
+		"defaultValue" : "linear",
+		"description" :
 		"""
 		Interpolation method to use for volumes.
 		""",
-		"label", "Volume Interpolation",
-		"layout:section", "Shader",
+		"label" : "Volume Interpolation",
+		"layout:section" : "Shader",
 
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "Linear", "Cubic" ] ),
-		"presetValues", IECore.StringVectorData( [ "linear", "cubic" ] ),
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "Linear", "Cubic" ] ),
+		"presetValues" : IECore.StringVectorData( [ "linear", "cubic" ] ),
 
-	],
+	},
 
-	"attribute:cycles:shader:volume_step_rate" : [
+	"attribute:cycles:shader:volume_step_rate" : {
 
-		"defaultValue", 1.0,
-		"description",
+		"defaultValue" : 1.0,
+		"description" :
 		"""
 		Scale the distance between volume shader samples when rendering the volume
 		(lower values give more accurate and detailed results, but also increased render time).
 		""",
-		"label", "Volume Step Rate",
-		"layout:section", "Shader",
+		"label" : "Volume Step Rate",
+		"layout:section" : "Shader",
 
-	],
+	},
 
-	"attribute:cycles:shader:displacement_method" : [
+	"attribute:cycles:shader:displacement_method" : {
 
-		"defaultValue", "bump",
-		"description",
+		"defaultValue" : "bump",
+		"description" :
 		"""
 		Method to use for the displacement.
 		""",
-		"label", "Displacement Method",
-		"layout:section", "Shader",
+		"label" : "Displacement Method",
+		"layout:section" : "Shader",
 
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "Bump", "True", "Both" ] ),
-		"presetValues", IECore.StringVectorData( [ "bump", "true", "both" ] ),
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "Bump", "True", "Both" ] ),
+		"presetValues" : IECore.StringVectorData( [ "bump", "true", "both" ] ),
 
-	],
+	},
 
 } )
 
