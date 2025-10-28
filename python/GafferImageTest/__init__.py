@@ -117,6 +117,7 @@ from .ContactSheetCoreTest import ContactSheetCoreTest
 from .ContactSheetTest import ContactSheetTest
 from .ShuffleImageMetadataTest import ShuffleImageMetadataTest
 from .DiskBlurTest import DiskBlurTest
+from .DataWindowQueryTest import DataWindowQueryTest
 
 if __name__ == "__main__":
 	import unittest

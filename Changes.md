@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.4.0)
 =======
 
+Features
+--------
+
+- DataWindowQuery : Added a new node for querying image data windows (#5637).
+
 Fixes
 -----
 
