@@ -67,6 +67,7 @@ Gaffer.Metadata.registerNode(
 		"attributes.*" : {
 
 			"nameValuePlugPlugValueWidget:ignoreNamePlug" : False,
+			"layout:section" : "",
 
 		},
 
