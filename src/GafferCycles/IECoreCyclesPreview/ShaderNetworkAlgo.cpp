@@ -47,7 +47,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
+#include "IECore/RampData.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string.hpp"
@@ -189,24 +189,24 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		// "__", revert that change here.
 		string parameterName = boost::replace_first_copy( namedParameter.first.string(), "__", "." );
 
-		if( const SplineffData *splineData = runTimeCast<const SplineffData>( namedParameter.second.get() ) )
+		if( const RampffData *rampData = runTimeCast<const RampffData>( namedParameter.second.get() ) )
 		{
-			// For OSL, splines are handled by convertToOSLConventions
+			// For OSL, ramps are handled by convertToOSLConventions
 			assert( !isOSLShader );
 
 			if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
 			{
-				SocketAlgo::setRampSocket( node, socket, splineData->readable() );
+				SocketAlgo::setRampSocket( node, socket, rampData->readable() );
 			}
 		}
-		else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( namedParameter.second.get() ) )
+		else if( const RampfColor3fData *rampData = runTimeCast<const RampfColor3fData>( namedParameter.second.get() ) )
 		{
-			// For OSL, splines are handled by convertToOSLConventions
+			// For OSL, ramps are handled by convertToOSLConventions
 			assert( !isOSLShader );
 
 			if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
 			{
-				SocketAlgo::setRampSocket( node, socket, splineData->readable() );
+				SocketAlgo::setRampSocket( node, socket, rampData->readable() );
 			}
 		}
 		else if( isImageTexture && parameterName == "filename" )

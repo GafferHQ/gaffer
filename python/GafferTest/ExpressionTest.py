@@ -1143,13 +1143,13 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["user"].addChild(
-			Gaffer.SplineffPlug(
-				defaultValue = Gaffer.SplineDefinitionff(
+			Gaffer.RampffPlug(
+				defaultValue = IECore.Rampff(
 					(
 						( 0, 0 ),
 						( 1, 1 ),
 					),
-					Gaffer.SplineDefinitionInterpolation.Linear
+					IECore.RampInterpolation.Linear
 				),
 				flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 			)

@@ -45,7 +45,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
@@ -831,91 +831,43 @@ Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const Interned
 	return plug.get();
 }
 
-void updatePoints( Splineff::PointContainer &points, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, size_t maxSize )
-{
-	const vector<float> &positions = positionsParameter->fdefault;
-	const vector<float> &values = valuesParameter->fdefault;
-
-	for( size_t i = 0; ( i < positions.size() ) && ( i < values.size() ) && i < maxSize; ++i )
-	{
-		points.insert( Splineff::Point( positions[i], values[i] ) );
-	}
-}
-
-void updatePoints( SplinefColor3f::PointContainer &points, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, size_t maxSize )
-{
-	const vector<float> &positions = positionsParameter->fdefault;
-	const vector<float> &values = valuesParameter->fdefault;
-
-	for( size_t i = 0; i < positions.size() && i*3+2 < values.size() && i < maxSize; ++i )
-	{
-		points.insert(
-			SplinefColor3f::Point(
-				positions[i],
-				Color3f(
-					values[i*3],
-					values[i*3+1],
-					values[i*3+2]
-				)
-			)
-		);
-	}
-
-
-}
-
 // From https://gitlab.com/3Delight/3delight-for-houdini/-/blob/master/osl_utilities.cpp
-SplineDefinitionInterpolation basisFrom3DelightInt( int basis )
+std::string basisStringFrom3DelightInt( int basis )
 {
 	switch( basis )
 	{
-		case 0 : return SplineDefinitionInterpolationConstant;
-		case 1 : return SplineDefinitionInterpolationLinear;
-		case 2 : return SplineDefinitionInterpolationMonotoneCubic;
-		default : return SplineDefinitionInterpolationCatmullRom;
+		case 0 : return "constant";
+		case 1 : return "linear";
+		case 2 : return "monotonecubic";
+		default : return "catmullrom";
 	}
 }
 
-SplineDefinitionInterpolation basisFromString( const std::string &basis )
-{
-	if( basis == "bspline" )
-	{
-		return SplineDefinitionInterpolationBSpline;
-	}
-	else if( basis == "linear" )
-	{
-		return SplineDefinitionInterpolationLinear;
-	}
-	else if( basis == "constant" )
-	{
-		return SplineDefinitionInterpolationConstant;
-	}
-	else if( basis == "monotonecubic" )
-	{
-		return SplineDefinitionInterpolationMonotoneCubic;
-	}
-
-	return SplineDefinitionInterpolationCatmullRom;
-}
-
-struct SplinePlugArguments
+struct RampPlugArguments
 {
 	std::string name;
-	std::variant< SplineDefinitionff, SplineDefinitionfColor3f > defaultValue;
+	std::variant< Rampff, RampfColor3f > defaultValue;
 };
 
-template <typename SplineDefinitionType>
-SplineDefinitionType loadSplineDefault( const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, const OSLQuery::Parameter *basisParameter, const OSLQuery::Parameter *countParameter, const std::string &name )
+template <typename RampType>
+RampType loadRampDefault( const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, const OSLQuery::Parameter *basisParameter, const OSLQuery::Parameter *countParameter, const std::string &name )
 {
-	SplineDefinitionType defaultValue;
+	RampType defaultValue;
+
+	std::string basisString;
 	if( basisParameter->type.basetype == TypeDesc::INT )
 	{
-		defaultValue.interpolation = basisFrom3DelightInt( basisParameter->idefault.front() );
+		basisString = basisStringFrom3DelightInt( basisParameter->idefault.front() );
 	}
 	else
 	{
-		defaultValue.interpolation = basisFromString( basisParameter->sdefault.front().string() );
+		basisString = basisParameter->sdefault.front().string();
 	}
+
+	std::vector<typename RampType::XType> positions;
+	std::vector<typename RampType::YType> values;
+	const vector<float> &rawPositions = positionsParameter->fdefault;
+	const vector<float> &rawValues = valuesParameter->fdefault;
 
 	size_t maxSize = std::numeric_limits<size_t>::max();
 	if( countParameter )
@@ -923,12 +875,33 @@ SplineDefinitionType loadSplineDefault( const OSLQuery::Parameter *positionsPara
 		maxSize = countParameter->idefault.front();
 	}
 
-	updatePoints( defaultValue.points, positionsParameter, valuesParameter, maxSize );
+	if constexpr( std::is_same_v< typename RampType::YType, Color3f > )
+	{
+		for( size_t i = 0; i < rawPositions.size() && i*3+2 < rawValues.size() && i < maxSize; ++i )
+		{
+			values.push_back(
+				Color3f(
+					rawValues[i*3],
+					rawValues[i*3+1],
+					rawValues[i*3+2]
+				)
+			);
+		}
+	}
+	else
+	{
+		for( size_t i = 0; i < rawPositions.size() && i < rawValues.size() && i < maxSize; ++i )
+		{
+			values.push_back( rawValues[i] );
+		}
+	}
 
-	// The OSL spline representation includes the need for duplicated end points in order to hit the end.
-	// We need to remove these. We ignore the success or failure of trimming because some renderers have
-	// default values that are already trimmed.
-	defaultValue.trimEndPoints();
+	for( size_t i = 0; i < rawPositions.size() && i < values.size() && i < maxSize; ++i )
+	{
+		positions.push_back( rawPositions[i] );
+	}
+
+	defaultValue.fromOSL( basisString, positions, values, name );
 
 	return defaultValue;
 }
@@ -1066,7 +1039,7 @@ bool findSplineParametersFromPositions( const std::string &shaderName, const OSL
 	return success;
 }
 
-std::optional<SplinePlugArguments> splinePlugArgumentsFromPositions( const std::string &shaderName, const OSLQuery &query, const OSLQuery::Parameter *positionsParameter, const std::string &prefix, std::unordered_set<const OSLQuery::Parameter *> &parametersAlreadyProcessed )
+std::optional<RampPlugArguments> rampPlugArgumentsFromPositions( const std::string &shaderName, const OSLQuery &query, const OSLQuery::Parameter *positionsParameter, const std::string &prefix, std::unordered_set<const OSLQuery::Parameter *> &parametersAlreadyProcessed )
 {
 
 	string nameWithoutSuffix;
@@ -1074,24 +1047,24 @@ std::optional<SplinePlugArguments> splinePlugArgumentsFromPositions( const std::
 	const OSLQuery::Parameter *basisParameter;
 	const OSLQuery::Parameter *countParameter;
 
-	SplinePlugArguments result;
+	RampPlugArguments result;
 
 	if( !findSplineParametersFromPositions( shaderName, query, positionsParameter, nameWithoutSuffix, valuesParameter, basisParameter, countParameter, parametersAlreadyProcessed ) )
 	{
-		return std::optional<SplinePlugArguments>();
+		return std::optional<RampPlugArguments>();
 	}
 
 	result.name = nameWithoutSuffix.substr( prefix.size() );
 	if( valuesParameter->type.vecsemantics == TypeDesc::COLOR )
 	{
-		result.defaultValue = loadSplineDefault<SplineDefinitionfColor3f>( positionsParameter, valuesParameter, basisParameter, countParameter, result.name );
+		result.defaultValue = loadRampDefault<RampfColor3f>( positionsParameter, valuesParameter, basisParameter, countParameter, result.name );
 	}
 	else
 	{
-		result.defaultValue = loadSplineDefault<SplineDefinitionff>( positionsParameter, valuesParameter, basisParameter, countParameter, result.name );
+		result.defaultValue = loadRampDefault<Rampff>( positionsParameter, valuesParameter, basisParameter, countParameter, result.name );
 	}
 
-	return std::make_optional<SplinePlugArguments>( result );
+	return std::make_optional<RampPlugArguments>( result );
 }
 
 // Forward declaration so loadStructParameter() can call it.
@@ -1248,7 +1221,7 @@ Plug *loadShaderParameter( const std::string shaderName, const OSLQuery &query, 
 }
 
 template <typename PlugType>
-Gaffer::Plug *loadSplineParameterFromDefault( const InternedString &name, const typename PlugType::ValueType &defaultValue, Gaffer::Plug *parent )
+Gaffer::Plug *loadRampParameterFromDefault( const InternedString &name, const typename PlugType::ValueType &defaultValue, Gaffer::Plug *parent )
 {
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
 	if( existingPlug && existingPlug->defaultValue() == defaultValue )
@@ -1261,7 +1234,7 @@ Gaffer::Plug *loadSplineParameterFromDefault( const InternedString &name, const 
 	// Other parameters are loaded using replacePlug if existingPlug is non-null, so existing connections
 	// and values are preserved. It might make sense to do that here as well, but there could be
 	// inconsistencies if the length of the default value has changed, and the user has only overridden
-	// a few control points ... we haven't tested how well replacePlug works on splines, so for the moment
+	// a few control points ... we haven't tested how well replacePlug works on ramps, so for the moment
 	// we'll just throw away previous values here ( this currently isn't causing any problems, so we won't
 	// change it ).
 
@@ -1277,16 +1250,16 @@ void loadShaderParameters( const std::string &shaderName, const OSLQuery &query,
 	set<const Plug *> validPlugs;
 
 	// Spline parameters are a nasty special case because multiple shader
-	// parameters become a single plug on the node, so we deal with them
+	// parameters become a single ramp plug on the node, so we deal with them
 	// first, and use this set to record parameters that have already been
-	// processed as part of a spline.
+	// processed as part of a ramp.
 
 	std::unordered_set<const OSLQuery::Parameter *> parametersAlreadyProcessed;
-	std::unordered_map<const OSLQuery::Parameter *, SplinePlugArguments > splinePlugArguments;
+	std::unordered_map<const OSLQuery::Parameter *, RampPlugArguments > rampPlugArguments;
 
 	for( size_t i = 0; i < query.nparams(); ++i )
 	{
-		// We will check whether this parameter fits as the positions parameter of a spline
+		// We will check whether this parameter fits as the positions parameter of a ramp
 		const OSLQuery::Parameter *positionsParameter = query.getparam( i );
 		const Plug::Direction direction = positionsParameter->isoutput ? Plug::Out : Plug::In;
 		if( direction != parent->direction() )
@@ -1306,16 +1279,15 @@ void loadShaderParameters( const std::string &shaderName, const OSLQuery &query,
 			continue;
 		}
 
-		auto splineP = splinePlugArgumentsFromPositions( shaderName, query, positionsParameter, prefix, parametersAlreadyProcessed );
+		auto rampP = rampPlugArgumentsFromPositions( shaderName, query, positionsParameter, prefix, parametersAlreadyProcessed );
 
-		// This is a very weird way of saying "The variant isn't empty", but it seems to be the modern C++ convention )
-		if( splineP )
+		if( rampP )
 		{
-			splinePlugArguments[positionsParameter] = *splineP;
+			rampPlugArguments[positionsParameter] = *rampP;
 		}
 	}
 
-	// Now process all the normal parameters that aren't part of a spline
+	// Now process all the normal parameters that aren't part of a ramp
 	for( size_t i = 0; i < query.nparams(); ++i )
 	{
 		const OSLQuery::Parameter *parameter = query.getparam( i );
@@ -1339,25 +1311,25 @@ void loadShaderParameters( const std::string &shaderName, const OSLQuery &query,
 
 		if( parametersAlreadyProcessed.count( parameter ) )
 		{
-			// Already loaded as part of a spline
+			// Already loaded as part of a ramp
 			continue;
 		}
 
 		Plug *plug = nullptr;
 
-		auto splineIt = splinePlugArguments.find( parameter );
-		if( splineIt != splinePlugArguments.end() )
+		auto rampIt = rampPlugArguments.find( parameter );
+		if( rampIt != rampPlugArguments.end() )
 		{
-			// This is the key parameter for the spline, time to output this spline
-			// ( We need to wait until now to output the spline so it gets interleaved in proper
-			// order with the non-spline parameters )
-			if( std::holds_alternative< SplineDefinitionfColor3f >( splineIt->second.defaultValue ) )
+			// This is the key parameter for the ramp, time to output this ramp
+			// ( We need to wait until now to output the ramp so it gets interleaved in proper
+			// order with the non-ramp parameters )
+			if( std::holds_alternative< RampfColor3f >( rampIt->second.defaultValue ) )
 			{
-				plug = loadSplineParameterFromDefault<SplinefColor3fPlug>( splineIt->second.name, std::get<SplineDefinitionfColor3f>( splineIt->second.defaultValue ), parent );
+				plug = loadRampParameterFromDefault<RampfColor3fPlug>( rampIt->second.name, std::get<RampfColor3f>( rampIt->second.defaultValue ), parent );
 			}
 			else
 			{
-				plug = loadSplineParameterFromDefault<SplineffPlug>( splineIt->second.name, std::get<SplineDefinitionff>( splineIt->second.defaultValue ), parent );
+				plug = loadRampParameterFromDefault<RampffPlug>( rampIt->second.name, std::get<Rampff>( rampIt->second.defaultValue ), parent );
 			}
 		}
 		else
@@ -1588,10 +1560,10 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &shaderNam
 
 	std::unordered_set<const OSLQuery::Parameter *> parametersAlreadyProcessed;
 
-	// First look for splines, where any metadata on component parameters should be registered onto the spline plug
+	// First look for ramps, where any metadata on component parameters should be registered onto the ramp plug
 	for( size_t i = 0; i < query.nparams(); ++i )
 	{
-		// We will check whether this parameter fits as the positions parameter of a spline
+		// We will check whether this parameter fits as the positions parameter of a ramp
 		const OSLQuery::Parameter *positionsParameter = query.getparam( i );
 
 		string nameWithoutSuffix;
@@ -1599,7 +1571,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &shaderNam
 		const OSLQuery::Parameter *basisParameter;
 		const OSLQuery::Parameter *countParameter;
 
-		// If this parameter is part of a spline, register the metadata onto the spline plug
+		// If this parameter is part of a ramp, register the metadata onto the ramp plug
 		if( !findSplineParametersFromPositions( shaderName, query, positionsParameter, nameWithoutSuffix, valuesParameter, basisParameter, countParameter, parametersAlreadyProcessed ) )
 		{
 			continue;

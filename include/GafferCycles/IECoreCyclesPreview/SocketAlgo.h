@@ -39,7 +39,7 @@
 #include "IECore/Export.h"
 
 #include "IECore/CompoundData.h"
-#include "IECore/Spline.h"
+#include "IECore/Ramp.h"
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
@@ -74,9 +74,9 @@ IECORECYCLES_API Imath::M44f getTransform( const ccl::Transform transform );
 IECORECYCLES_API void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value );
 IECORECYCLES_API void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *value );
 
-// Splines
-IECORECYCLES_API void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline );
-IECORECYCLES_API void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::SplinefColor3f &spline );
+// Ramps
+IECORECYCLES_API void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Rampff &ramp );
+IECORECYCLES_API void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::RampfColor3f &ramp );
 
 // ParamValue
 IECORECYCLES_API ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore::Data *value );
