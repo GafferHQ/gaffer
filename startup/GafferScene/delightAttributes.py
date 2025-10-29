@@ -38,110 +38,110 @@ import Gaffer
 
 Gaffer.Metadata.registerValues( {
 
-	"attribute:dl:visibility.camera" : [
+	"attribute:dl:visibility.camera" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to camera
 		rays. To hide an object completely, use the
 		`scene:visible` attribute instead.
 		""",
-		"label", "Camera",
-		"layout:section", "Visibility",
+		"label" : "Camera",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:dl:visibility.diffuse" : [
+	"attribute:dl:visibility.diffuse" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to diffuse
 		rays.
 		""",
-		"label", "Diffuse",
-		"layout:section", "Visibility",
+		"label" : "Diffuse",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:dl:visibility.hair" : [
+	"attribute:dl:visibility.hair" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to
 		hair rays.
 		""",
-		"label", "Hair",
-		"layout:section", "Visibility",
+		"label" : "Hair",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:dl:visibility.reflection" : [
+	"attribute:dl:visibility.reflection" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible in
 		reflections.
 		""",
-		"label", "Reflection",
-		"layout:section", "Visibility",
+		"label" : "Reflection",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:dl:visibility.refraction" : [
+	"attribute:dl:visibility.refraction" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible in
 		refractions.
 		""",
-		"label", "Refraction",
-		"layout:section", "Visibility",
+		"label" : "Refraction",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:dl:visibility.shadow" : [
+	"attribute:dl:visibility.shadow" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to shadow
 		rays - whether it casts shadows or not.
 		""",
-		"label", "Shadow",
-		"layout:section", "Visibility",
+		"label" : "Shadow",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:dl:visibility.specular" : [
+	"attribute:dl:visibility.specular" : {
 
-		"defaultValue", True,
-		"description",
+		"defaultValue" : True,
+		"description" :
 		"""
 		Whether or not the object is visible to
 		specular rays.
 		""",
-		"label", "Specular",
-		"layout:section", "Visibility",
+		"label" : "Specular",
+		"layout:section" : "Visibility",
 
-	],
+	},
 
-	"attribute:dl:matte" : [
+	"attribute:dl:matte" : {
 
-		"defaultValue", False,
-		"description",
+		"defaultValue" : False,
+		"description" :
 		"""
 		Turns the object into a holdout matte.
 		This only affects primary (camera) rays.
 		""",
-		"label", "Matte",
-		"layout:section", "Shading",
+		"label" : "Matte",
+		"layout:section" : "Shading",
 
-	],
+	},
 
 } )
 
