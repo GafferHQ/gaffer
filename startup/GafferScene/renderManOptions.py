@@ -175,17 +175,17 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		Gaffer.Metadata.registerValues( {
 
-			f"option:ri:{name}" : [
+			f"option:ri:{name}" : {
 
-				"defaultValue", defaultValue,
-				"description",
+				"defaultValue" : defaultValue,
+				"description" :
 				f"""
 				Defines the contents of the `{lobe}` custom LPE lobe.
 				""",
-				"label", lobe,
-				"layout:section", "Custom LPE Lobes",
+				"label" : lobe,
+				"layout:section" : "Custom LPE Lobes",
 
-			]
+			}
 
 		} )
 
@@ -193,84 +193,84 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		# Add widgets and presets that are missing from the `.args` file.
 
-		"option:ri:volume:aggregatespace" : [
+		"option:ri:volume:aggregatespace" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetNames", IECore.StringVectorData( [ "World", "Camera" ] ),
-			"presetValues", IECore.StringVectorData( [ "world", "camera" ] ),
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetNames" : IECore.StringVectorData( [ "World", "Camera" ] ),
+			"presetValues" : IECore.StringVectorData( [ "world", "camera" ] ),
 
-		],
+		},
 
 		# Add options used by GafferRenderMan._InteractiveDenoiserAdaptor. These don't mean
 		# anything to RenderMan, but we still use the "ri:" prefix to keep things consistent
 		# for the end user.
 		## \todo Should we use a different prefix?
 
-		"option:ri:interactiveDenoiser:enabled" : [
+		"option:ri:interactiveDenoiser:enabled" : {
 
-			"defaultValue", False,
-			"description",
+			"defaultValue" : False,
+			"description" :
 			"""
 			Enables interactive denoising using RenderMan's `quicklyNoiseless` display driver. When on, all
 			required denoising AOVs are added to the render automatically.
 			""",
-			"label", "Enabled",
-			"layout:section", "Interactive Denoiser",
+			"label" : "Enabled",
+			"layout:section" : "Interactive Denoiser",
 
-		],
+		},
 
-		"option:ri:interactiveDenoiser:cheapPass" : [
+		"option:ri:interactiveDenoiser:cheapPass" : {
 
-			"defaultValue", True,
-			"description",
+			"defaultValue" : True,
+			"description" :
 			"""
 			When on, the first pass will use a cheaper (slightly faster but lower
 			quality) heuristic. This can be useful if rendering something that is
 			converging very quickly and you want to prioritize getting a denoised
 			result faster.
 			""",
-			"label", "Cheap First Pass",
-			"layout:section", "Interactive Denoiser",
+			"label" : "Cheap First Pass",
+			"layout:section" : "Interactive Denoiser",
 
-		],
+		},
 
-		"option:ri:interactiveDenoiser:interval" : [
+		"option:ri:interactiveDenoiser:interval" : {
 
-			"defaultValue", 4.0,
-			"description",
+			"defaultValue" : 4.0,
+			"description" :
 			"""
 			The time interval in between denoise runs (in seconds).
 			""",
-			"label", "Interval",
-			"layout:section", "Interactive Denoiser",
+			"label" : "Interval",
+			"layout:section" : "Interactive Denoiser",
 
-		],
+		},
 
-		"option:ri:interactiveDenoiser:minSamples" : [
+		"option:ri:interactiveDenoiser:minSamples" : {
 
-			"defaultValue", 2,
-			"description",
+			"defaultValue" : 2,
+			"description" :
 			"""
 			The minimum number of average samples per bucket before the interactive denoiser runs for the first time.
 			Changing this preference requires the render to be restarted for this option to be respected.
 			""",
-			"label", "Min Samples",
-			"layout:section", "Interactive Denoiser",
+			"label" : "Min Samples",
+			"layout:section" : "Interactive Denoiser",
 
-		],
+		},
 
 		# Add an option to allow checkpoint recovery - this is handled by `IECoreRenderMan::Session::Session()`
 		# since it is not an official RenderMan option.
 
-		"option:ri:checkpoint:recover" : [
+		"option:ri:checkpoint:recover" : {
 
-			"defaultValue", 0,
-			"description", "Enables recovery from a checkpoint created by a previous render.",
-			"label", "Checkpoint Recover",
-			"layout:section", "Display",
-			"plugValueWidget:type", "GafferUI.BoolPlugValueWidget",
+			"defaultValue" : 0,
+			"description" : "Enables recovery from a checkpoint created by a previous render.",
+			"label" : "Checkpoint Recover",
+			"layout:section" : "Display",
+			"plugValueWidget:type" : "GafferUI.BoolPlugValueWidget",
 
-		],
+		},
 
 	} )
 

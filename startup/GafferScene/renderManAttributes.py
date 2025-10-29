@@ -133,13 +133,13 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	Gaffer.Metadata.registerValues( {
 
-		"attribute:ri:displacementbound:CoordinateSystem" : [
+		"attribute:ri:displacementbound:CoordinateSystem" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetNames", IECore.StringVectorData( [ "Object", "World" ] ),
-			"presetValues", IECore.StringVectorData( [ "object", "world" ] ),
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetNames" : IECore.StringVectorData( [ "Object", "World" ] ),
+			"presetValues" : IECore.StringVectorData( [ "object", "world" ] ),
 
-		],
+		},
 
 	} )
 
