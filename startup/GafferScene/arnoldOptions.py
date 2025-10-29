@@ -60,17 +60,17 @@ for optionPrefix in ( "log", "console" ) :
 		( "color", "Color", "coloured messages", True ),
 	) :
 
-		__loggingOptions[f"option:ai:{optionPrefix}:{suffix}"] = [
+		__loggingOptions[f"option:ai:{optionPrefix}:{suffix}"] = {
 
-			"defaultValue", consoleDefault if optionPrefix == "console" else True,
-			"description",
+			"defaultValue" : consoleDefault if optionPrefix == "console" else True,
+			"description" :
 			"""
 			Whether or not {0} {1} included in the {2} output.
 			""".format( description, "are" if description.endswith( "s" ) else "is", optionPrefix ),
-			"label", label,
-			"layout:section", "Logging." + ( "Console " if optionPrefix == "console" else "" ) + "Verbosity",
+			"label" : label,
+			"layout:section" : "Logging." + ( "Console " if optionPrefix == "console" else "" ) + "Verbosity",
 
-		]
+		}
 
 Gaffer.Metadata.registerValues( {
 
