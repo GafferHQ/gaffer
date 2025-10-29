@@ -110,6 +110,7 @@ M44f preTransform( const Attributes *attributes )
 }
 
 const IECore::InternedString g_lightFilters( "lightFilters" );
+const RtUString g_defaultLightGroup( "defaultLightGroup" );
 const RtUString g_defaultShadowGroup( "defaultShadowGroup" );
 
 } // namespace
@@ -120,6 +121,9 @@ Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attribut
 		m_attributes( attributes ), m_geometryPrototype( geometryPrototype ), m_shadowSubset( g_defaultShadowGroup )
 
 {
+	m_allAttributes.SetString( Loader::strings().k_grouping_membership, g_defaultLightGroup );
+	m_allAttributes.Update( attributes->instanceAttributes() );
+
 	updateLightShader( attributes );
 	if( !m_lightShader || m_lightShader->id() == riley::LightShaderId::InvalidId() )
 	{
@@ -131,7 +135,7 @@ Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attribut
 	const Material *material = attributes->lightMaterial();
 	m_lightInstance = m_session->createLightInstance(
 		m_geometryPrototype ? m_geometryPrototype->id() : riley::GeometryPrototypeId(),
-		material ? material->id() : riley::MaterialId(), m_lightShader->id(), { 0, nullptr }, IdentityTransform(), attributes->instanceAttributes()
+		material ? material->id() : riley::MaterialId(), m_lightShader->id(), { 0, nullptr }, IdentityTransform(), m_allAttributes
 	);
 }
 
@@ -239,12 +243,7 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 		return true;
 	}
 
-	RtParamList allAttributes;
-	if( m_attributes )
-	{
-		allAttributes = renderManAttributes->instanceAttributes();
-	}
-	allAttributes.Update( m_extraAttributes );
+	m_allAttributes.Update( renderManAttributes->instanceAttributes() );
 
 	const Material *material = renderManAttributes->lightMaterial();
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(
@@ -253,7 +252,7 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 		/* light shader = */ &m_lightShader->id(),
 		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
-		&allAttributes
+		&m_allAttributes
 	);
 
 	m_attributes = renderManAttributes;
@@ -354,19 +353,12 @@ void Light::updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &l
 
 void Light::updateLinking( RtUString memberships, RtUString shadowSubset )
 {
-	m_extraAttributes.SetString( Loader::strings().k_grouping_membership, memberships );
+	m_allAttributes.SetString( Loader::strings().k_grouping_membership, memberships );
 
 	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
 	{
 		return;
 	}
-
-	RtParamList allAttributes;
-	if( m_attributes )
-	{
-		allAttributes = m_attributes->instanceAttributes();
-	}
-	allAttributes.Update( m_extraAttributes );
 
 	const riley::LightShaderId *newLightShader = nullptr;
 	if( m_shadowSubset != shadowSubset )
@@ -382,7 +374,7 @@ void Light::updateLinking( RtUString memberships, RtUString shadowSubset )
 		newLightShader,
 		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
-		&allAttributes
+		&m_allAttributes
 	);
 
 	if( result != riley::LightInstanceResult::k_Success )
