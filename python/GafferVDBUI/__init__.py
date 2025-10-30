@@ -36,15 +36,10 @@
 
 from ._GafferVDBUI import *
 
-import os
-import ctypes
-if os.name == "nt" :
-	# Because `_GafferVDBUI.pyd` currently doesn't require any symbols
-	# from `GafferVDBUI.dll`, the Windows linker omits the latter. Load
-	# it explicitly, because it contains a custom visualiser registration
-	# that we need.
-	ctypes.CDLL( "GafferVDBUI.dll" )
-del os, ctypes
+# Because the `_GafferVDBUI` Python module currently doesn't require
+# any symbols from the `GafferVDBUI` library, we need to load it explicitly
+# to get our custom visualiser registered.
+__import__( "Gaffer" ).__loadSharedLibrary( "GafferVDBUI" )
 
 from . import LevelSetToMeshUI
 from . import MeshToLevelSetUI

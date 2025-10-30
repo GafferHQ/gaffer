@@ -518,6 +518,10 @@ if env["PLATFORM"] != "win32" :
 			SHLINKFLAGS = [ "-pthread", "-Wl,--no-undefined" ],
 		)
 
+		# Make the linker behave more like Windows, omitting shared libraries that it didn't resolve
+		# any symbols from.
+		env.Append( LINKFLAGS = "-Wl,--as-needed" )
+
 	# Shared config
 
 	env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )

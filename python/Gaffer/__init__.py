@@ -79,4 +79,16 @@ def executablePath( absolute = True ) :
 
 	return executable
 
+def __loadSharedLibrary( name ) :
+
+	import platform
+	import ctypes
+
+	prefix, suffix = {
+		"Darwin" : ( "lib", ".dylib" ),
+		"Windows" : ( "", ".dll" ),
+	}.get( platform.system(), ( "lib", ".so" ) )
+
+	return ctypes.CDLL( f"{prefix}{name}{suffix}" )
+
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffer" )
