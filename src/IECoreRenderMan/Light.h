@@ -75,7 +75,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 
 	private :
 
-		void updateLightShader( const Attributes *attributes );
+		ConstLightShaderPtr acquireLightShader( const Attributes *attributes ) const;
 
 		MaterialCache *m_materialCache;
 		Session *m_session;
