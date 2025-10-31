@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 
 import GafferUI
 import GafferUITest
@@ -56,6 +57,39 @@ class ShaderUITest( GafferUITest.TestCase ) :
 			n1.transformedBound( None ).center().y,
 			n2.transformedBound( None ).center().y
 		)
+
+	def testShaderPathNestedShaders( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "mySurface" ),
+				"nested/texture" : IECoreScene.Shader( "myTexture" ),
+				"projection" : IECoreScene.Shader( "myProjection" ),
+			},
+			connections = [
+				( ( "projection", "out" ), ( "nested/texture", "uv" ) ),
+				( ( "nested/texture", "out" ), ( "output", "color" ) ),
+			],
+			output = ( "output", "out" )
+		)
+
+		path = GafferSceneUI.ShaderUI._ShaderPath( [ network ], "/" )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/output", "/nested", "/projection" ] )
+
+		path.setFromString( "/nested" )
+		self.assertFalse( path.isLeaf() )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/nested/texture" ] )
+
+		path.setFromString( "/nested/texture" )
+		self.assertFalse( path.isLeaf() )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/nested/texture/uv" ] )
+
+		path.setFromString( "/nested/texture/uv" )
+		self.assertTrue( path.isLeaf() )
+		self.assertEqual( path.property( "shader:inputs" ), { "projection" } )
+
+		path.setFromString( "/output/color" )
+		self.assertEqual( path.property( "shader:inputs" ), { "nested/texture" } )
 
 if __name__ == "__main__":
 	unittest.main()

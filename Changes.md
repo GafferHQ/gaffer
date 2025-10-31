@@ -31,6 +31,7 @@ Improvements
 - Viewer :
   - Moved purpose menu items from the Drawing Mode menu to the Expansion menu, and renamed the Expansion menu to `Visibility`.
   - Added purpose presets for Render (Default + Render purposes), Preview (Default + Proxy) and Preview with Guides (Default + Proxy + Guide).
+- Render : Optimised attribute substitution when it is not required by all shaders in a shader network.
 
 Fixes
 -----
@@ -40,7 +41,10 @@ Fixes
   - Fixed unnecessary updates when editing a plug value.
   - Fixed bug adding rows to VectorData plugs - the newly added rows were being deselected immediately after they appeared.
 - SceneWriter : Fixed identifiers used when writing RenderMan shaders.
-- SceneInspector : Fixed `Context has no variable named "scene:path"` error when "Isolate Differences" is on.
+- SceneInspector :
+  - Fixed handling of nested UsdShadeNodeGraphs loaded from USD files.
+  - Fixed `Context has no variable named "scene:path"` error when "Isolate Differences" is on.
+- ShaderQuery, ShaderTweaks : Fixed handling of nested UsdShadeNodeGraphs loaded from USD files.
 - VectorDataWidget : Fixed errors showing popup colour choosers.
 - Startup : Fixed UnicodeDecodeError when running in non-UTF8 locales.
 - Viewer : Fixed diagnostic shading modes for Arnold's diffuse and specular visibility attributes.
@@ -50,6 +54,8 @@ Fixes
 - RenderPasses : Fixed drawing of custom widgets registered by `registerRenderPassNameWidget()`.
 - Environment : Gaffer's `LD_PRELOAD` overrides are no longer inherited by subprocesses launched from Gaffer.
 - CustomAttributes, CustomOptions : Fixed inconsistent layout sections.
+- Arnold : Fixed inconsistent part ordering in multipart EXR outputs.
+- Render : Fixed translation of string substitutions escaped with backslashes (e.g. "\\<attr:user:texturePath\\>").
 
 API
 ---
@@ -60,7 +66,7 @@ API
 Build
 -----
 
-- Cortex : Updated to version 10.6.1.0.
+- Cortex : Updated to version 10.6.2.0.
 
 1.6.3.0 (relative to 1.6.2.1)
 =======

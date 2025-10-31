@@ -666,19 +666,14 @@ class ArnoldOutput : public IECore::RefCounted
 
 	public :
 
-		ArnoldOutput( const IECore::InternedString &name, const IECoreScene::Output *output, FilterCache &filterCache )
-			:	m_name( name ), m_filterCache( filterCache )
+		ArnoldOutput( const string &name, const IECoreScene::Output *output, FilterCache &filterCache )
 		{
-			if( m_name.string().find( " " ) != std::string::npos )
+			if( name.find( " " ) != std::string::npos )
 			{
-				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", m_name.string() ) );
+				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", name ) );
 			}
-			update( output );
-		}
 
-		void update( const IECoreScene::Output *output )
-		{
-			// Create a driver node, or reuse the existing one if we can.
+			// Set driver parameters.
 
 			std::string driverNodeType( output->getType() );
 			if( AiNodeEntryGetType( AiNodeEntryLookUp( AtString( driverNodeType.c_str() ) ) ) != AI_NODE_DRIVER )
@@ -692,13 +687,10 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 			}
 
-			// Set driver parameters.
-
 			m_driverName = output->getName();
 			m_driverParameters = new IECore::CompoundData();
 			m_driverParameters->writable()[g_driverNodeTypeInternedString] = new IECore::StringData( driverNodeType );
 			m_driverParameters->writable()[g_fileNameInternedString] = new IECore::StringData( output->getName() );
-
 
 			IECore::StringVectorDataPtr customAttributesData;
 			if( const IECore::StringVectorData *d = output->parametersData()->member<IECore::StringVectorData>( g_customAttributesInternedString ) )
@@ -846,7 +838,7 @@ class ArnoldOutput : public IECore::RefCounted
 						// really improve things, it's better to just leave this as-is, in case someone is using
 						// the current LPE names
 
-						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + m_name.string();
+						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + name;
 						m_lpeValue = tokens[1];
 						m_data = m_lpeName;
 						m_type = colorType;
@@ -866,7 +858,7 @@ class ArnoldOutput : public IECore::RefCounted
 						/// to use the standard Cortex formatting instead.
 						IECore::msg(
 							IECore::Msg::Warning, "ArnoldRenderer",
-							fmt::format( "Unknown data type \"{}\" for output \"{}\"", tokens[0], m_name.string() )
+							fmt::format( "Unknown data type \"{}\" for output \"{}\"", tokens[0], name )
 						);
 						m_data = tokens[0];
 						m_type = tokens[1];
@@ -877,7 +869,7 @@ class ArnoldOutput : public IECore::RefCounted
 					/// \todo See above.
 					IECore::msg(
 						IECore::Msg::Warning, "ArnoldRenderer",
-						fmt::format( "Unknown data specification \"{}\" for output \"{}\"", output->getData(), m_name.string() )
+						fmt::format( "Unknown data specification \"{}\" for output \"{}\"", output->getData(), name )
 					);
 					m_data = output->getData();
 					m_type = "";
@@ -901,7 +893,7 @@ class ArnoldOutput : public IECore::RefCounted
 				m_data == "RGBA" || m_data == "RGB"
 			);
 
-			m_filterNode = m_filterCache.acquireFilter( output->parameters() );
+			m_filterNode = filterCache.acquireFilter( output->parameters() );
 		}
 
 		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions, const DriverMap &drivers ) const
@@ -918,7 +910,7 @@ class ArnoldOutput : public IECore::RefCounted
 			}
 		}
 
-		const std::string &cameraOverride()
+		const std::string &cameraOverride() const
 		{
 			return m_cameraOverride;
 		}
@@ -933,24 +925,41 @@ class ArnoldOutput : public IECore::RefCounted
 			return m_data == name;
 		}
 
-		const IECore::InternedString &driverName()
+		const IECore::InternedString &driverName() const
 		{
 			return m_driverName;
 		}
 
-		const IECore::CompoundData* driverParameters()
+		const IECore::CompoundData *driverParameters() const
 		{
 			return m_driverParameters.get();
 		}
 
-	private :
+		// Defines an ordering suitable for use in multipart EXR files, with
+		// RGBA data coming first, and everything ordered alphabetically after
+		// that.
+		bool operator<( const ArnoldOutput &other ) const
+		{
+			bool isRGB = m_data == "RGB" || m_data == "RGBA";
+			bool otherIsRGB = other.m_data == "RGB" || other.m_data == "RGBA";
+			if( isRGB != otherIsRGB )
+			{
+				return isRGB > otherIsRGB;
+			}
 
-		const IECore::InternedString m_name;
+			if( m_layerName != other.m_layerName )
+			{
+				return m_layerName < other.m_layerName;
+			}
+
+			return m_data < other.m_data;
+		}
+
+	private :
 
 		IECore::InternedString m_driverName;
 		IECore::CompoundDataPtr m_driverParameters;
 
-		FilterCache &m_filterCache;
 		SharedAtNodePtr m_filterNode;
 
 		std::string m_data;
@@ -964,7 +973,7 @@ class ArnoldOutput : public IECore::RefCounted
 };
 
 IE_CORE_DECLAREPTR( ArnoldOutput )
-using OutputMap = std::map<IECore::InternedString, ArnoldOutputPtr>;
+using OutputMap = std::map<IECore::InternedString, ConstArnoldOutputPtr>;
 
 } // namespace
 
@@ -3999,15 +4008,7 @@ class ArnoldGlobals
 
 			try
 			{
-				ArnoldOutputPtr &arnoldOutput = m_outputs[name];
-				if( arnoldOutput )
-				{
-					arnoldOutput->update( output );
-				}
-				else
-				{
-					arnoldOutput = new ArnoldOutput( name, output, m_filterCache );
-				}
+				m_outputs[name] = new ArnoldOutput( name, output, m_filterCache );
 			}
 			catch( const std::exception &e )
 			{
@@ -4268,27 +4269,35 @@ class ArnoldGlobals
 		{
 			AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
 
-			// Set the global output list in the options to all outputs matching the current camera
+			// Set the global output list in the options to all outputs matching the current camera.
+
+			vector<const ArnoldOutput *> activeOutputs;
+			for( const auto &[name, output] : m_outputs )
+			{
+				const std::string &outputCamera = output->cameraOverride().size() ? output->cameraOverride() : m_cameraName;
+				if( outputCamera == cameraName )
+				{
+					activeOutputs.push_back( output.get() );
+				}
+			}
+			std::sort(
+				activeOutputs.begin(), activeOutputs.end(),
+				[] ( const ArnoldOutput *a, const ArnoldOutput *b ) {
+					return *a < *b;
+				}
+			);
+
 			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
 			IECore::StringVectorDataPtr lpes = new IECore::StringVectorData;
 			vector<int> interactiveIndices;
-			for( auto & it : m_outputs )
+			for( auto output : activeOutputs )
 			{
-				std::string outputCamera = it.second->cameraOverride();
-				if( outputCamera == "" )
+				// We're relying on updateDrivers being called before updateCamera
+				if( output->updateInteractively() )
 				{
-					outputCamera = m_cameraName;
+					interactiveIndices.push_back( outputs->writable().size() );
 				}
-
-				if( outputCamera == cameraName )
-				{
-					// We're relying on updateDrivers being called before updateCamera
-					if( it.second->updateInteractively() )
-					{
-						interactiveIndices.push_back( outputs->writable().size() );
-					}
-					it.second->append( outputs->writable(), lpes->writable(), m_drivers );
-				}
+				output->append( outputs->writable(), lpes->writable(), m_drivers );
 			}
 
 			AiRenderRemoveAllInteractiveOutputs( m_renderSession.get() );
@@ -4300,6 +4309,8 @@ class ArnoldGlobals
 			{
 				AiRenderAddInteractiveOutput( m_renderSession.get(), i );
 			}
+
+			// Set the camera up.
 
 			const IECoreScene::Camera *cortexCamera;
 			AtNode *arnoldCamera = AiNodeLookUpByName( m_universeBlock->universe(), AtString( cameraName.c_str() ) );
