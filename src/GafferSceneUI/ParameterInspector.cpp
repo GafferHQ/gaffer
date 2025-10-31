@@ -105,6 +105,11 @@ ParameterInspector::ParameterInspector(
 
 }
 
+const IECoreScene::ShaderNetwork::Parameter &ParameterInspector::parameter() const
+{
+	return m_parameter;
+}
+
 ShaderNetwork::Parameter ParameterInspector::connectionSource( const Object *object )
 {
 	if( auto data = runTimeCast<const CompoundData>( object ) )

@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import dataclasses
 import os
 import re
 import string
@@ -436,11 +437,10 @@ class _DuplicateIconColumn ( GafferUI.PathColumn ) :
 
 		if "shader:instances" in path.propertyNames() and path.property( "shader:instances" ) > 1 :
 			data.icon = "duplicate.png"
-			data.toolTip = (
-				("Shader" if len( path ) == 1 else "Parameter" ) +
-				" occurs in multiple " +
-				( "networks." if len( path ) == 1 else "shaders." )
-			)
+			data.toolTip = "Shader occurs in multiple networks."
+		elif len( path.property( "shader:parameterValues" ) ) > 1 :
+			data.icon = "duplicate.png"
+			data.toolTip = "Parameter occurs in multiple shaders."
 
 		return data
 
@@ -474,8 +474,7 @@ class _ShaderInputColumn ( GafferUI.PathColumn ) :
 					for i in inputs :
 						data.toolTip += "- {}\n".format( i )
 				else :
-					data.value = inputs.pop()
-
+					data.value = next( iter( inputs ) )
 					data.toolTip = "Select and scroll to parameter input."
 
 		return data
@@ -487,199 +486,171 @@ class _ShaderInputColumn ( GafferUI.PathColumn ) :
 # A Path pointing to a shader or shader parameter belonging to one or more
 # IECore::ShaderNetworks. Shaders with identical names are merged
 # into a single location.
+#
+# See comments on InspectorTree in SceneInspectorBinding.cpp for the rationale
+# behind the _ShaderTree/_ShaderPath factoring.
+class _ShaderTree :
 
-class _ShaderPath( Gaffer.Path ) :
+	@dataclasses.dataclass
+	class Node :
 
-	def __init__( self, shaderNetworks, path, root = "/", filter = None, connectedParametersOnly = False ) :
+		# Maps from hash to `IECore.Shader`, so we only store unique shaders.
+		shaderInstances : dict = dataclasses.field( default_factory = dict )
+		parameterValues : list = dataclasses.field( default_factory = list )
+		parameterInputs : set = dataclasses.field( default_factory = set )
+		children : dict = dataclasses.field( default_factory = dict )
 
-		Gaffer.Path.__init__( self, path, root, filter )
-
-		self.__connectedParametersOnly = connectedParametersOnly
+	def __init__( self, shaderNetworks, connectedParametersOnly = False ) :
 
 		assert( all( [ isinstance( n, IECoreScene.ShaderNetwork ) for n in shaderNetworks ] ) )
+		self.__root = self.Node()
 
-		self.__shaderNetworks = shaderNetworks
+		# Build an internal tree of Nodes by visiting all shaders, ordered by
+		# depth from the output shader.
 
-	def isValid( self ) :
+		queue = deque(
+			sorted(
+				[ ( n, n.getOutput().shader ) for n in shaderNetworks ],
+				key = lambda k : k[1]
+			)
+		)
+		visited = set()
 
-		if len( self ) > 0 and self.__shaders() is None :
-			return False
+		while queue :
 
-		if len( self ) > 1 and self[1] not in self.__parameters():
-			return False
+			shaderNetwork, shaderHandle = queue.popleft()
 
-		if len( self ) > 2 :
-			return False
+			h = shaderNetwork.hash().append( shaderHandle )
+			if h in visited :
+				continue
 
-		return True
+			visited.add( h )
 
-	def isLeaf( self, canceller = None ) :
+			shaderNode = self.__node( shaderHandle.split( "/" ), createIfMissing = True )
 
-		return self.__isParameter()
+			shader = shaderNetwork.getShader( shaderHandle )
+			shaderHash = shader.hash()
+			if shaderHash not in shaderNode.shaderInstances :
+				shaderNode.shaderInstances[shaderHash] = shader
+				if not connectedParametersOnly :
+					for parameter in sorted( shader.parameters.keys() ) :
+						parameterNode = shaderNode.children.setdefault( parameter, self.Node() )
+						parameterNode.parameterValues.append( shader.parameters[parameter] )
 
-	def propertyNames( self, canceller = None ) :
+			for connection in shaderNetwork.inputConnections( shaderHandle ) :
+				parameterNode = shaderNode.children.setdefault( connection.destination.name.partition( "." )[0], self.Node() )
+				parameterNode.parameterInputs.add( connection.source.shader )
 
-		commonProperties = [
-			"shader:instances"
-		]
-
-		if self.__isParameter() :
-			return Gaffer.Path.propertyNames( self ) + [
-				"shader:value",
-				"shader:inputs",
-			] + commonProperties
-
-		elif self.__isShader() :
-			return Gaffer.Path.propertyNames( self ) + [
-				"shader:type",
-			] + commonProperties
-
-	def property( self, name, canceller = None ) :
-
-		if self.__isParameter() :
-			if name == "shader:instances" :
-				return self.__parameters().count( self[1] )
-
-			if name == "shader:value" :
-				value = sole( self.__parameterValues() )
-				return value if value is not None else "---"
-
-			if name == "shader:inputs" :
-
-				connections = {
-					c.source.shader for n in self.__shaderNetworks if (
-						n.getShader( self[0] ) is not None
-					) for c in n.inputConnections( self[0] ) if (
-						c.destination.name.split( '.' )[0] == self[1]
-					)
-				}
-
-				return connections
-
-		elif self.__isShader() :
-			if name == "shader:instances" :
-				return len( self.__shaders() )
-
-			if name == "shader:type" :
-				shaders = self.__shaders()
-
-				shader = sole( [ s.name for s in self.__shaders() ] )
-
-				return shader if shader is not None else "---"
-
-		return Gaffer.Path.property( self, name )
-
-	def copy( self ) :
-
-		return _ShaderPath( self.__shaderNetworks, self[:], self.root(), self.getFilter(), self.__connectedParametersOnly )
-
-	def _children( self, canceller ) :
-
-		if self.isLeaf() :
-			return []
-
-		result = []
-
-		# Shaders, ordered by depth from the output shader
-		if len( self ) == 0 :
-			shaders = set()
-			visited = set()
-
-			stack = deque(
-				sorted(
-					[ ( n, n.getOutput().shader ) for n in self.__shaderNetworks ],
-					key = lambda k : k[1]
-				)
+			queue.extend(
+				[ ( shaderNetwork, c.source.shader ) for c in shaderNetwork.inputConnections( shaderHandle ) ]
 			)
 
-			while stack :
-				shaderNetwork, shaderHandle = stack.popleft()
+	def _isValid( self, pathNames ) :
 
-				h = shaderNetwork.hash().append( shaderHandle )
+		return self.__node( pathNames ) is not None
 
-				if h not in visited :
-					visited.add( h )
+	def _isLeaf( self, pathNames ) :
 
-					if shaderHandle not in shaders :
-						shaders.add( shaderHandle )
-						result.append(
-							_ShaderPath(
-								self.__shaderNetworks,
-								self[:] + [shaderHandle],
-								self.root(),
-								self.getFilter(),
-								self.__connectedParametersOnly
-							)
-						)
+		node = self.__node( pathNames )
+		return node is not None and not len( node.children )
 
-					stack.extend(
-						[ ( shaderNetwork, i.source.shader ) for i in shaderNetwork.inputConnections( shaderHandle ) ]
-					)
+	def _propertyNames( self, pathNames ) :
 
-		# Parameters
-		elif self.__isShader() :
-			parameterNames = sorted( set( self.__parameters() ) )
-			for p in parameterNames :
-				result.append(
-					_ShaderPath(
-						self.__shaderNetworks,
-						self[:] + [p],
-						self.root(),
-						self.getFilter(),
-						self.__connectedParametersOnly
-					)
-				)
+		node = self.__node( pathNames )
+		if node is None :
+			return []
+
+		result = [ "shader:instances" ]
+		if node.parameterValues :
+			result.append( "shader:value" )
+			result.append( "shader:parameterValues" )
+		if node.parameterInputs :
+			result.append( "shader:inputs" )
+		if node.shaderInstances :
+			result.append( "shader:type" )
 
 		return result
 
-	# Returns a list of all parameters that belong to the path's shaders.
-	# This will mix parameters from different types of shaders into a single list
-	# if multiple shaders in the networks have the same name but different type.
-	def __parameters( self ) :
+	def _property( self, pathNames, propertyName ) :
 
-		if len( self ) == 0 :
-			return []
+		node = self.__node( pathNames )
+		if node is None :
+			return None
 
-		if self.__connectedParametersOnly :
-			connectedParams = set()
-			for n in self.__shaderNetworks :
-				if n.getShader( self[0] ) is not None :
-					for c in n.inputConnections( self[0] ) :
-						connectedParams.add( c.destination.name )
-			return list( connectedParams )
+		match propertyName :
+			case "shader:instances" :
+				return len( node.shaderInstances )
+			case "shader:value" :
+				if node.parameterValues :
+					value = sole( node.parameterValues )
+					return value if value is not None else "---"
+				else :
+					return None
+			case "shader:parameterValues" :
+				return node.parameterValues
+			case "shader:inputs" :
+				return node.parameterInputs
+			case "shader:type" :
+				if node.shaderInstances :
+					return sole( [ s.name for s in node.shaderInstances.values() ] ) or "---"
+				else :
+					return None
 
-		return [ p for s in self.__shaders() for p in s.parameters.keys() ]
+	def _childNames( self, pathNames ) :
 
-	# Returns a list of all shaders with a name matching the path's shader name.
-	def __shaders( self ) :
+		node = self.__node( pathNames )
+		return node.children.keys() if node is not None else []
 
-		if len( self ) > 0 :
+	def __node( self, pathNames, createIfMissing = False ) :
 
-			uniqueShaders = {}
-			for network in self.__shaderNetworks :
-				shader = network.getShader( self[0] )
-				if shader is not None :
-					uniqueShaders[shader.hash()] = shader
+		node = self.__root
+		for name in pathNames :
+			if createIfMissing :
+				node = node.children.setdefault( name, self.Node() )
+			else :
+				node = node.children.get( name )
+				if node is None :
+					return None
 
-			return list( uniqueShaders.values() )
+		return node
 
-		return None
+class _ShaderPath( Gaffer.Path ) :
 
-	def __isShader( self ) :
+	def __init__( self, shaderNetworks, path, root = "/", filter = None ) :
 
-		return len( self ) == 1 and self.isValid()
+		Gaffer.Path.__init__( self, path, root, filter )
+		if isinstance( shaderNetworks, _ShaderTree ) :
+			self.__tree = shaderNetworks
+		else :
+			self.__tree = _ShaderTree( shaderNetworks )
 
-	def __isParameter( self ) :
+	def isValid( self ) :
 
-		return len( self ) == 2 and self.isValid()
+		return self.__tree._isValid( self[:] )
 
-	# Returns a list of values for the path's parameter.
-	def __parameterValues( self ) :
+	def isLeaf( self, canceller = None ) :
 
-		if self.__isParameter() :
-			return [ s.parameters[ self[1] ] for s in self.__shaders() if self[1] in s.parameters ]
+		return self.__tree._isLeaf( self[:] )
 
-		return None
+	def propertyNames( self, canceller = None ) :
+
+		return self.__tree._propertyNames( self[:] )
+
+	def property( self, name, canceller = None ) :
+
+		result = self.__tree._property( self[:], name )
+		return result if result is not None else Gaffer.Path.property( self, name )
+
+	def copy( self ) :
+
+		return _ShaderPath( self.__tree, self[:], self.root(), self.getFilter() )
+
+	def _children( self, canceller ) :
+
+		return [
+			_ShaderPath( self.__tree, self[:] + [ name ], self.root(), self.getFilter() )
+			for name in self.__tree._childNames( self[:] )
+		]
 
 # A path filter that keeps a path if it, any of its ancestors or any of its descendants have a
 # property `propertyName` that matches `patterns`.
@@ -787,11 +758,9 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 		GafferUI.Dialogue.__init__( self, title, **kw )
 
 		self.__selectParameters = selectParameters
-		self.__cancelled = False
 
-		self.__shaderNetworks = shaderNetworks
-
-		self.__path = _ShaderPath( self.__shaderNetworks, path = "/", connectedParametersOnly = not self.__selectParameters )
+		tree = _ShaderTree( shaderNetworks, connectedParametersOnly = not self.__selectParameters )
+		self.__path = _ShaderPath( tree, path = "/" )
 
 		self.__filter = _PathMatcherPathFilter( [ "" ], self.__path.copy() )
 		self.__filter.setEnabled( False )
@@ -876,19 +845,14 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 
 		column = pathListing.columnAt( event.line.p0 )
 		if column == self.__inputNavigateColumn :
-			inputRootPath = path.parent().parent()
+
 			inputs = path.property( "shader:inputs" )
-
-			if inputs is None :
+			if not inputs :
 				return False
 
-			if len( inputs ) == 0 :
-				return False
-
-			inputPaths = [ inputRootPath.copy().append( i ) for i in inputs ]
-
-			if all( [ i.isValid() for i in inputPaths ] ) :
-				self.__pathListingWidget.setSelection( IECore.PathMatcher( [ str( i ) for i in inputPaths ] ) )
+			self.__pathListingWidget.setSelection(
+				IECore.PathMatcher( [ f"/{input}" for input in inputs ] )
+			)
 
 			return True
 
@@ -896,20 +860,26 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 
 	def __result( self ) :
 
-		resultPaths = self.__pathListingWidget.getSelection()
+		selection = self.__pathListingWidget.getSelection()
 
-		if not self.__selectParameters:
-			if not resultPaths.paths() or resultPaths.paths()[0].rfind( "/" ) > 0:
+		if not self.__selectParameters :
+			if selection.isEmpty() :
 				return None
+			assert( selection.size() == 1 )
+			path = self.__pathListingWidget.getPath().copy().setFromString( selection.paths()[0] )
+			if path.property( "shader:instances" ) :
+				return str( path ).strip( "/" )
+			return None
 
-			return resultPaths.paths()[0].strip( "/" )
+		result = []
+		for pathString in selection.paths() :
+			path = self.__pathListingWidget.getPath().copy().setFromString( pathString )
+			if path.property( "shader:value" ) or path.property( "shader:input" ) :
+				result.append(
+					( "/".join( path[:-1] ), path[-1] )
+				)
 
-		resultPaths = [ self.__path.copy().setFromString( x ) for x in resultPaths.paths() ]
-
-		for p in resultPaths :
-			if len( p ) < 2 :
-				return []
-		return [ ( p[0], p[1] ) for p in resultPaths ]
+		return result
 
 	def __updateButtonState( self, *unused ) :
 		self.__confirmButton.setEnabled( bool( self.__result() ) )

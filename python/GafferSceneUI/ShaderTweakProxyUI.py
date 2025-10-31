@@ -154,7 +154,7 @@ def __findConnectedShaderTweaks( startShader ):
 def __createShaderTweakProxy( plug, sourceHandle, sourceType, sourceName ):
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ):
-		result = GafferScene.ShaderTweakProxy( sourceHandle or "Auto" )
+		result = GafferScene.ShaderTweakProxy( sourceHandle.replace( "/", "_" ) or "Auto" )
 		if sourceHandle:
 			sourceTypePrefix = sourceType.split( ":" )[0]
 			result.loadShader( sourceTypePrefix + ":" + sourceName )

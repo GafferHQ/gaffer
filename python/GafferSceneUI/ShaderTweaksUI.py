@@ -329,7 +329,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			plug = Gaffer.TweakPlug( name, plugTypeOrValue() )
 
 		if name :
-			for i in ".:[]" :
+			for i in ".:[]/" :
 				name = name.replace( i, "_" )
 			plug.setName( name )
 
