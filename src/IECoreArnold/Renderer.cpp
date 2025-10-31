@@ -935,7 +935,21 @@ class ArnoldOutput : public IECore::RefCounted
 			return m_driverParameters.get();
 		}
 
+		// Defines an ordering suitable for use in multipart EXR files, with
+		// RGBA data coming first, and everything ordered alphabetically after
+		// that.
+		bool operator<( const ArnoldOutput &other ) const
+		{
+			return lessThanTuple() < other.lessThanTuple();
+		}
+
 	private :
+
+		std::tuple<bool, const std::string &, const std::string &> lessThanTuple() const
+		{
+			bool isRGB = m_data == "RGB" || m_data == "RGBA";
+			return std::make_tuple( !isRGB, m_layerName, m_data );
+		}
 
 		IECore::InternedString m_driverName;
 		IECore::CompoundDataPtr m_driverParameters;
@@ -4249,27 +4263,35 @@ class ArnoldGlobals
 		{
 			AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
 
-			// Set the global output list in the options to all outputs matching the current camera
+			// Set the global output list in the options to all outputs matching the current camera.
+
+			vector<const ArnoldOutput *> activeOutputs;
+			for( const auto &[name, output] : m_outputs )
+			{
+				const std::string &outputCamera = output->cameraOverride().size() ? output->cameraOverride() : m_cameraName;
+				if( outputCamera == cameraName )
+				{
+					activeOutputs.push_back( output.get() );
+				}
+			}
+			std::sort(
+				activeOutputs.begin(), activeOutputs.end(),
+				[] ( const ArnoldOutput *a, const ArnoldOutput *b ) {
+					return *a < *b;
+				}
+			);
+
 			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
 			IECore::StringVectorDataPtr lpes = new IECore::StringVectorData;
 			vector<int> interactiveIndices;
-			for( auto & it : m_outputs )
+			for( auto output : activeOutputs )
 			{
-				std::string outputCamera = it.second->cameraOverride();
-				if( outputCamera == "" )
+				// We're relying on updateDrivers being called before updateCamera
+				if( output->updateInteractively() )
 				{
-					outputCamera = m_cameraName;
+					interactiveIndices.push_back( outputs->writable().size() );
 				}
-
-				if( outputCamera == cameraName )
-				{
-					// We're relying on updateDrivers being called before updateCamera
-					if( it.second->updateInteractively() )
-					{
-						interactiveIndices.push_back( outputs->writable().size() );
-					}
-					it.second->append( outputs->writable(), lpes->writable(), m_drivers );
-				}
+				output->append( outputs->writable(), lpes->writable(), m_drivers );
 			}
 
 			AiRenderRemoveAllInteractiveOutputs( m_renderSession.get() );
@@ -4281,6 +4303,8 @@ class ArnoldGlobals
 			{
 				AiRenderAddInteractiveOutput( m_renderSession.get(), i );
 			}
+
+			// Set the camera up.
 
 			const IECoreScene::Camera *cortexCamera;
 			AtNode *arnoldCamera = AiNodeLookUpByName( m_universeBlock->universe(), AtString( cameraName.c_str() ) );

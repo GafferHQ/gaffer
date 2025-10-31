@@ -38,6 +38,7 @@ import ctypes
 import json
 import os
 import pathlib
+import random
 import struct
 import subprocess
 import sys
@@ -4451,6 +4452,76 @@ class RendererTest( GafferTest.TestCase ) :
 			set( beautyImage.spec().channelnames ),
 			{ "beauty_{}.{}".format( g, c ) for g in lightGroups for c in "RGBA" }
 		)
+
+	@staticmethod
+	def _renderCombinedEXR( fileName ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		if random.choice( [ True, False ] ) :
+			# The bug that motivated this test was that output order was
+			# non-deterministic, being based on InternedString ordering (which
+			# is based on memory location). Randomising the order the strings
+			# are created in increases the probability of that bug being
+			# triggered.
+			IECore.InternedString( "diffuseLPE" )
+
+		r.output(
+			"whatABeauty", IECoreScene.Output(
+				fileName, "exr", "rgba",
+				{
+					"multipart" : True,
+				}
+			)
+		)
+
+		r.output(
+			"diffuseLPE", IECoreScene.Output(
+				fileName, "exr", "lpe C<RD>.*",
+				{
+					"layerName" : "diffuse",
+					"multipart" : True,
+				}
+			)
+		)
+
+		r.output(
+			"albedo", IECoreScene.Output(
+				fileName, "exr", "color albedo",
+				{
+					"multipart" : True,
+				}
+			)
+		)
+
+		r.render()
+
+	def testOutputOrderIsStable( self ) :
+
+		env = os.environ.copy()
+		if sys.platform == "linux" :
+			# See `bin/_gaffer.py`
+			env["LD_PRELOAD"] = "libstdc++.so.6"
+
+		for i in range( 0, 10 ) :
+
+			fileName = str( self.temporaryDirectory() / f"test{i}.exr" )
+			subprocess.check_call(
+				[ "python", "-c", f"import IECoreArnoldTest; IECoreArnoldTest.RendererTest._renderCombinedEXR( '{fileName}' )" ],
+				env = env
+			)
+
+			# We want the RGBA channels first, because some apps will show the
+			# first part of a multipart file by default. After that, we sort
+			# alphabetically.
+			image = OpenImageIO.ImageInput.open( fileName )
+			self.assertEqual(
+				image.spec().channelnames + image.spec( 1 ).channelnames + image.spec( 2 ).channelnames,
+				( "R", "G", "B", "A", "albedo.R", "albedo.G", "albedo.B", "diffuse.R", "diffuse.G", "diffuse.B" )
+			)
 
 	def testNamedOutputParameter( self ) :
 

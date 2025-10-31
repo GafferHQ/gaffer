@@ -27,6 +27,7 @@ Fixes
 - RenderPasses : Fixed drawing of custom widgets registered by `registerRenderPassNameWidget()`.
 - Environment : Gaffer's `LD_PRELOAD` overrides are no longer inherited by subprocesses launched from Gaffer.
 - CustomAttributes, CustomOptions : Fixed inconsistent layout sections.
+- Arnold : Fixed inconsistent part ordering in multipart EXR outputs.
 
 API
 ---
