@@ -326,21 +326,9 @@ def __cmark() :
 	if __cmarkDLL != "" :
 		return __cmarkDLL
 
-	sys = platform.system()
-
-	if sys == "Darwin" :
-		prefix = "lib"
-		suffix = ".dylib"
-	elif sys == "Windows" :
-		prefix = ""
-		suffix = ".dll"
-	else :
-		prefix = "lib"
-		suffix = ".so"
-
 	try :
-		__cmarkDLL = ctypes.CDLL( f"{prefix}cmark-gfm{suffix}" )
-		__cmarkExtensionsDLL = ctypes.CDLL( f"{prefix}cmark-gfm-extensions{suffix}" )
+		__cmarkDLL = Gaffer.__loadSharedLibrary( "cmark-gfm" )
+		__cmarkExtensionsDLL = Gaffer.__loadSharedLibrary( "cmark-gfm-extensions" )
 	except :
 		__cmarkDLL = None
 		return __cmarkDLL
