@@ -666,12 +666,11 @@ class ArnoldOutput : public IECore::RefCounted
 
 	public :
 
-		ArnoldOutput( const IECore::InternedString &name, const IECoreScene::Output *output, FilterCache &filterCache )
-			:	m_name( name )
+		ArnoldOutput( const string &name, const IECoreScene::Output *output, FilterCache &filterCache )
 		{
-			if( m_name.string().find( " " ) != std::string::npos )
+			if( name.find( " " ) != std::string::npos )
 			{
-				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", m_name.string() ) );
+				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", name ) );
 			}
 
 			// Set driver parameters.
@@ -839,7 +838,7 @@ class ArnoldOutput : public IECore::RefCounted
 						// really improve things, it's better to just leave this as-is, in case someone is using
 						// the current LPE names
 
-						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + m_name.string();
+						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + name;
 						m_lpeValue = tokens[1];
 						m_data = m_lpeName;
 						m_type = colorType;
@@ -859,7 +858,7 @@ class ArnoldOutput : public IECore::RefCounted
 						/// to use the standard Cortex formatting instead.
 						IECore::msg(
 							IECore::Msg::Warning, "ArnoldRenderer",
-							fmt::format( "Unknown data type \"{}\" for output \"{}\"", tokens[0], m_name.string() )
+							fmt::format( "Unknown data type \"{}\" for output \"{}\"", tokens[0], name )
 						);
 						m_data = tokens[0];
 						m_type = tokens[1];
@@ -870,7 +869,7 @@ class ArnoldOutput : public IECore::RefCounted
 					/// \todo See above.
 					IECore::msg(
 						IECore::Msg::Warning, "ArnoldRenderer",
-						fmt::format( "Unknown data specification \"{}\" for output \"{}\"", output->getData(), m_name.string() )
+						fmt::format( "Unknown data specification \"{}\" for output \"{}\"", output->getData(), name )
 					);
 					m_data = output->getData();
 					m_type = "";
@@ -937,8 +936,6 @@ class ArnoldOutput : public IECore::RefCounted
 		}
 
 	private :
-
-		const IECore::InternedString m_name;
 
 		IECore::InternedString m_driverName;
 		IECore::CompoundDataPtr m_driverParameters;
