@@ -18,7 +18,12 @@ Breaking Changes
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 
-1.6.x.x (relative to 1.6.3.0)
+1.6.x.x (relative to 1.6.4.0)
+=======
+
+
+
+1.6.4.0 (relative to 1.6.3.0)
 =======
 
 Improvements
@@ -26,8 +31,8 @@ Improvements
 
 - RenderMan : Added support for spline parameters (ramps).
 - OSLShader :
- - Improved loading of spline parameters with additional duplicate endpoints.
- - Added support for loading splines from RenderMan shaders.
+  - Improved loading of spline parameters with additional duplicate endpoints.
+  - Added support for loading splines from RenderMan shaders.
 - Viewer :
   - Moved purpose menu items from the Drawing Mode menu to the Expansion menu, and renamed the Expansion menu to `Visibility`.
   - Added purpose presets for Render (Default + Render purposes), Preview (Default + Proxy) and Preview with Guides (Default + Proxy + Guide).
@@ -412,7 +417,12 @@ Build
 - Qt.py : Updated to version 1.4.6.
 - USD : Updated to version 25.05.01.
 
-1.5.16.x (relative to 1.5.16.3)
+1.5.16.x (relative to 1.5.16.4)
+========
+
+
+
+1.5.16.4 (relative to 1.5.16.3)
 ========
 
 Fixes
