@@ -11,6 +11,7 @@ Improvements
 - Viewer :
   - Moved purpose menu items from the Drawing Mode menu to the Expansion menu, and renamed the Expansion menu to `Visibility`.
   - Added purpose presets for Render (Default + Render purposes), Preview (Default + Proxy) and Preview with Guides (Default + Proxy + Guide).
+- Render : Optimised attribute substitution when it is not required by all shaders in a shader network.
 
 Fixes
 -----
@@ -34,6 +35,7 @@ Fixes
 - Environment : Gaffer's `LD_PRELOAD` overrides are no longer inherited by subprocesses launched from Gaffer.
 - CustomAttributes, CustomOptions : Fixed inconsistent layout sections.
 - Arnold : Fixed inconsistent part ordering in multipart EXR outputs.
+- Render : Fixed translation of string substitutions escaped with backslashes (e.g. "\\<attr:user:texturePath\\>").
 
 API
 ---
@@ -44,7 +46,7 @@ API
 Build
 -----
 
-- Cortex : Updated to version 10.6.1.0.
+- Cortex : Updated to version 10.6.2.0.
 
 1.6.3.0 (relative to 1.6.2.1)
 =======
