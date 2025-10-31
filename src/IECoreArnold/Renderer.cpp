@@ -667,17 +667,13 @@ class ArnoldOutput : public IECore::RefCounted
 	public :
 
 		ArnoldOutput( const IECore::InternedString &name, const IECoreScene::Output *output, FilterCache &filterCache )
-			:	m_name( name ), m_filterCache( filterCache )
+			:	m_name( name )
 		{
 			if( m_name.string().find( " " ) != std::string::npos )
 			{
 				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", m_name.string() ) );
 			}
-			update( output );
-		}
 
-		void update( const IECoreScene::Output *output )
-		{
 			// Set driver parameters.
 
 			std::string driverNodeType( output->getType() );
@@ -898,7 +894,7 @@ class ArnoldOutput : public IECore::RefCounted
 				m_data == "RGBA" || m_data == "RGB"
 			);
 
-			m_filterNode = m_filterCache.acquireFilter( output->parameters() );
+			m_filterNode = filterCache.acquireFilter( output->parameters() );
 		}
 
 		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions, const DriverMap &drivers ) const
@@ -915,7 +911,7 @@ class ArnoldOutput : public IECore::RefCounted
 			}
 		}
 
-		const std::string &cameraOverride()
+		const std::string &cameraOverride() const
 		{
 			return m_cameraOverride;
 		}
@@ -930,12 +926,12 @@ class ArnoldOutput : public IECore::RefCounted
 			return m_data == name;
 		}
 
-		const IECore::InternedString &driverName()
+		const IECore::InternedString &driverName() const
 		{
 			return m_driverName;
 		}
 
-		const IECore::CompoundData* driverParameters()
+		const IECore::CompoundData *driverParameters() const
 		{
 			return m_driverParameters.get();
 		}
@@ -947,7 +943,6 @@ class ArnoldOutput : public IECore::RefCounted
 		IECore::InternedString m_driverName;
 		IECore::CompoundDataPtr m_driverParameters;
 
-		FilterCache &m_filterCache;
 		SharedAtNodePtr m_filterNode;
 
 		std::string m_data;
@@ -961,7 +956,7 @@ class ArnoldOutput : public IECore::RefCounted
 };
 
 IE_CORE_DECLAREPTR( ArnoldOutput )
-using OutputMap = std::map<IECore::InternedString, ArnoldOutputPtr>;
+using OutputMap = std::map<IECore::InternedString, ConstArnoldOutputPtr>;
 
 } // namespace
 
@@ -3996,15 +3991,7 @@ class ArnoldGlobals
 
 			try
 			{
-				ArnoldOutputPtr &arnoldOutput = m_outputs[name];
-				if( arnoldOutput )
-				{
-					arnoldOutput->update( output );
-				}
-				else
-				{
-					arnoldOutput = new ArnoldOutput( name, output, m_filterCache );
-				}
+				m_outputs[name] = new ArnoldOutput( name, output, m_filterCache );
 			}
 			catch( const std::exception &e )
 			{
