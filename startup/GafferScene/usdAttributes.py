@@ -42,10 +42,10 @@ import pxr.Kind
 
 Gaffer.Metadata.registerValues( {
 
-	"attribute:usd:purpose" : [
+	"attribute:usd:purpose" : {
 
-		"defaultValue", "default",
-		"description",
+		"defaultValue" : "default",
+		"description" :
 		"""
 		Specifies the purpose of a location to be
 		`default`, `render`, `proxy` or `guide`. See
@@ -62,17 +62,17 @@ Gaffer.Metadata.registerValues( {
 		> value of a context variable. This has benefits when selecting
 		> and filtering objects.
 		""",
-		"label", "Purpose",
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ),
-		"presetValues", IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ),
+		"label" : "Purpose",
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ),
+		"presetValues" : IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ),
 
-	],
+	},
 
-	"attribute:usd:kind" : [
+	"attribute:usd:kind" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		Specifies the kind of a location to be any
 		of the values from USD's kind registry. See
@@ -81,12 +81,12 @@ Gaffer.Metadata.registerValues( {
 		> Note : Gaffer doesn't assign any intrinsic
 		> meaning to USD's kind.
 		""",
-		"label", "Kind",
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ),
-		"presetValues", IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ),
+		"label" : "Kind",
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ),
+		"presetValues" : IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ),
 
-	],
+	},
 
 } )
 

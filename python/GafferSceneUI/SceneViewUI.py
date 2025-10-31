@@ -400,34 +400,6 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m.append( "/ComponentsDivider", { "divider" : True } )
 
-		includedPurposes = self.getPlug()["includedPurposes"]["value"].getValue()
-		includedPurposesEnabled = self.getPlug()["includedPurposes"]["enabled"].getValue()
-		allPurposes = [ "default", "render", "proxy", "guide" ]
-		for purpose in allPurposes :
-			newPurposes = IECore.StringVectorData( [
-				p for p in allPurposes
-				if
-				( p != purpose and p in includedPurposes ) or ( p == purpose and p not in includedPurposes )
-			] )
-			m.append(
-				"/Purposes/{}".format( purpose.capitalize() ),
-				{
-					"checkBox" : purpose in includedPurposes,
-					"active" : includedPurposesEnabled,
-					"command" : functools.partial( self.getPlug()["includedPurposes"]["value"].setValue, newPurposes ),
-				}
-			)
-			m.append( "/Purposes/SceneDivider", { "divider" : True } )
-			m.append(
-				"/Purposes/From Scene",
-				{
-					"checkBox" : not includedPurposesEnabled,
-					"command" : lambda checked : self.getPlug()["includedPurposes"]["enabled"].setValue( not checked ),
-				}
-			)
-
-		m.append( "/PurposesDivider", { "divider" : True } )
-
 		lightDrawingModePlug = self.getPlug()["light"]["drawingMode"]
 		for mode in ( "wireframe", "color", "texture" ) :
 			m.append(
@@ -639,7 +611,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Expansion" )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title="Visibility" )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "expansion.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -658,20 +630,106 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return cls.__menuSignal
 
+	def getToolTip( self ) :
+
+		result = "# Visibility"
+		result += "\n\nDefines what is visible in the viewport."
+
+		return result
+
 	def __menuDefinition( self ) :
 
 		expandAll = bool( self.getPlug().getValue() )
 
 		m = IECore.MenuDefinition()
+		m.append( "/Expansion", { "divider" : True, "label" : "Expansion" } )
 		m.append( "/Expand Selection", { "command" : self.getPlug().node().expandSelection, "active" : not expandAll, "shortCut" : "Down" } )
 		m.append( "/Expand Selection Fully", { "command" : functools.partial( self.getPlug().node().expandSelection, depth = 999 ), "active" : not expandAll, "shortCut" : "Shift+Down" } )
 		m.append( "/Collapse Selection", { "command" : self.getPlug().node().collapseSelection, "active" : not expandAll, "shortCut" : "Up" } )
 		m.append( "/Expand All Divider", { "divider" : True } )
 		m.append( "/Expand All", { "checkBox" : expandAll, "command" : Gaffer.WeakMethod( self.__toggleMinimumExpansionDepth ) } )
 
+		m.append( "/PurposesDivider", { "divider" : True, "label" : "Purpose" } )
+
+		# \todo Move the `includedPurposes` plug out of `drawingMode` and put it on a new plug that holds (and replaces)
+		# `minimumExpansionDepth`.
+		drawingModePlug = self.getPlug().parent()["drawingMode"]
+		includedPurposes = set( drawingModePlug["includedPurposes"]["value"].getValue() )
+		includedPurposesEnabled = drawingModePlug["includedPurposes"]["enabled"].getValue()
+
+		renderElements = set( [ "default", "render" ] )
+		previewElements = set( [ "default", "proxy" ] )
+		previewWithGuidesElements = set( [ "default", "proxy", "guide" ] )
+		m.append(
+			"/Render",
+			{
+				"checkBox" : includedPurposes == renderElements and includedPurposesEnabled,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__purposeMenuCommand ), drawingModePlug, IECore.StringVectorData( renderElements ), True ),
+				"description" : 'Shows objects with "default" and "render" USD purposes.'
+			}
+		)
+		m.append(
+			"/Preview",
+			{
+				"checkBox" : includedPurposes == previewElements and includedPurposesEnabled,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__purposeMenuCommand ), drawingModePlug, IECore.StringVectorData( previewElements ), True ),
+				"description" : 'Shows objects with "default" and "preview" USD purposes.'
+			}
+		)
+		m.append(
+			"/Preview with Guides",
+			{
+				"checkBox" : includedPurposes == previewWithGuidesElements and includedPurposesEnabled,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__purposeMenuCommand ), drawingModePlug, IECore.StringVectorData( previewWithGuidesElements ), True ),
+				"description" : 'Shows objects with "default", "proxy" and "guide" USD purposes.'
+			}
+		)
+
+		m.append(
+			"/From Scene",
+			{
+				"checkBox" : not includedPurposesEnabled,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__purposeMenuCommand ), drawingModePlug, IECore.StringVectorData( [] ), False ),
+				"description" : "Shows objects with USD purposes that match the global `option:render:includedPurposes` variable which can be set from a StandardOptions node."
+			}
+		)
+
+		if not includedPurposesEnabled :
+			sceneGlobals = drawingModePlug["includedPurposes"].source().node()["in"]["globals"].getValue()
+			includedPurposes = set( sceneGlobals["option:render:includedPurposes"] ) if "option:render:includedPurposes" in sceneGlobals else renderElements
+
+		subMenu = IECore.MenuDefinition()
+		allPurposes = [ "default", "render", "proxy", "guide" ]
+		for purpose in allPurposes :
+			newPurposes = IECore.StringVectorData( [
+				p for p in allPurposes
+				if
+				( p != purpose and p in includedPurposes ) or ( p == purpose and p not in includedPurposes )
+			] )
+			subMenu.append(
+				"/{}".format( purpose.capitalize() ),
+				{
+					"checkBox" : purpose in includedPurposes,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__purposeMenuCommand ), drawingModePlug, newPurposes, True ),
+				}
+			)
+
+		showBreadCrumb = includedPurposesEnabled and (
+			includedPurposes != renderElements and
+			includedPurposes != previewElements and
+			includedPurposes != previewWithGuidesElements
+		)
+		m.append( "/CustomDivider", { "divider" : True } )
+		m.append( "/Custom", { "subMenu" : subMenu, "icon" : "menuBreadCrumb.png" if showBreadCrumb else None } )
+
 		self.menuSignal()( m, self )
 
 		return m
+
+	def __purposeMenuCommand( self, drawingModePlug, newPurposes, purposesEnabled, checked ) :
+
+		drawingModePlug["includedPurposes"]["value"].setValue( newPurposes )
+		drawingModePlug["includedPurposes"]["enabled"].setValue( purposesEnabled )
 
 	def __toggleMinimumExpansionDepth( self, *unused ) :
 

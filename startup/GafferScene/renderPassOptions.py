@@ -38,18 +38,18 @@ import Gaffer
 
 Gaffer.Metadata.registerValues( {
 
-	"option:renderPass:enabled" : [
+	"option:renderPass:enabled" : {
 
-		"defaultValue", True,
-		"description", "Whether the render pass is enabled for rendering.",
-		"label", "Enabled",
+		"defaultValue" : True,
+		"description" : "Whether the render pass is enabled for rendering.",
+		"label" : "Enabled",
 
-	],
+	},
 
-	"option:renderPass:type" : [
+	"option:renderPass:type" : {
 
-		"defaultValue", "",
-		"description",
+		"defaultValue" : "",
+		"description" :
 		"""
 		The type of the render pass. This provides simple setup for renders such as reflection and shadow passes,
 		typically by assigning custom shaders to the objects specified by `Casters` and `Catchers`. Use a RenderPassShaders
@@ -57,8 +57,8 @@ Gaffer.Metadata.registerValues( {
 
 		> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
 		""",
-		"label", "Type",
+		"label" : "Type",
 
-	],
+	},
 
 } )
