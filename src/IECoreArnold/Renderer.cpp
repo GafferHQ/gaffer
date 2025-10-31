@@ -678,7 +678,7 @@ class ArnoldOutput : public IECore::RefCounted
 
 		void update( const IECoreScene::Output *output )
 		{
-			// Create a driver node, or reuse the existing one if we can.
+			// Set driver parameters.
 
 			std::string driverNodeType( output->getType() );
 			if( AiNodeEntryGetType( AiNodeEntryLookUp( AtString( driverNodeType.c_str() ) ) ) != AI_NODE_DRIVER )
@@ -692,13 +692,10 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 			}
 
-			// Set driver parameters.
-
 			m_driverName = output->getName();
 			m_driverParameters = new IECore::CompoundData();
 			m_driverParameters->writable()[g_driverNodeTypeInternedString] = new IECore::StringData( driverNodeType );
 			m_driverParameters->writable()[g_fileNameInternedString] = new IECore::StringData( output->getName() );
-
 
 			IECore::StringVectorDataPtr customAttributesData;
 			if( const IECore::StringVectorData *d = output->parametersData()->member<IECore::StringVectorData>( g_customAttributesInternedString ) )
