@@ -279,8 +279,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 		)
 
 	def _image( self ):
-		# \todo Assuming that we can find an image plug in this specific location
-		# may need updating when we add wipes
+
 		return self.getPlug().node()._getPreprocessor()["_selectView"]["out"]
 
 	def _menuDefinition( self ) :
