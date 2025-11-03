@@ -494,11 +494,6 @@ void Globals::render()
 
 	m_session->updatePortals();
 
-	/// \todo Is it worth avoiding this work when nothing has changed?
-	Session::CameraInfo camera = m_session->cameraInfo( m_cameraOption );
-	m_options.Update( camera.options );
-	m_session->riley->SetOptions( m_options );
-
 	switch( m_session->renderType )
 	{
 		case IECoreScenePreview::Renderer::Batch : {
@@ -558,6 +553,9 @@ void Globals::updateRenderView()
 		}
 		camera.id = m_defaultCamera;
 	}
+
+	m_options.Update( camera.options );
+	m_session->riley->SetOptions( m_options );
 
 	riley::Extent extent = { 640, 480, 0 };
 	if( auto *resolution = camera.options.GetIntegerArray( Loader::strings().k_Ri_FormatResolution, 2 ) )
