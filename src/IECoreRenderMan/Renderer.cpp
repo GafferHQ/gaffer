@@ -90,9 +90,9 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 				throw IECore::Exception( "SceneDescription mode not supported by RenderMan" );
 			}
 
-			bool haveInstance = false;
-			if( !g_haveInstance.compare_exchange_strong( haveInstance, true ) )
+			if( Session::instance() )
 			{
+				// Throw now, because `acquireSession()` will fail later anyway.
 				throw IECore::Exception( "RenderMan doesn't allow multiple active sessions" );
 			}
 
@@ -105,7 +105,6 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			m_geometryPrototypeCache.reset();
 			m_lightLinker.reset();
 			m_globals.reset();
-			g_haveInstance = false;
 		}
 
 		IECore::InternedString name() const override
@@ -276,11 +275,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 		std::unique_ptr<GeometryPrototypeCache> m_geometryPrototypeCache;
 		std::unique_ptr<LightLinker> m_lightLinker;
 
-		static std::atomic_bool g_haveInstance;
-
 };
-
-std::atomic_bool RenderManRenderer::g_haveInstance = false;
 
 struct VariantTypeDescriptions
 {

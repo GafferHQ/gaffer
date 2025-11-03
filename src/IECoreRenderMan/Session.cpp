@@ -94,6 +94,8 @@ RtUString portalName( RtUString colorMap, const RtMatrix4x4 domeTransform, const
 	return RtUString( h.toString().c_str() );
 }
 
+static std::atomic<const Session *> g_sessionInstance = nullptr;
+
 } // namespace
 
 struct Session::ExceptionHandler : public RixXcpt::XcptHandler
@@ -141,6 +143,12 @@ Session::Session( RtUString rileyVariant, const RtParamList &rileyParameters, IE
 		m_riCtl( (RixRiCtl *)Loader::context()->GetRixInterface( k_RixRiCtl ) ),
 		m_portalsDirty( false )
 {
+	const Session *currentInstance = nullptr;
+	if( !g_sessionInstance.compare_exchange_strong( currentInstance, this ) )
+	{
+		throw IECore::Exception( "RenderMan doesn't allow multiple active sessions" );
+	}
+
 	// `argv[0]==""` prevents RenderMan doing its own signal handling.
 	vector<const char *> args = { "" };
 	m_riCtl->PRManSystemBegin( args.size(), args.data() );
@@ -187,6 +195,13 @@ Session::~Session()
 
 	m_riCtl->PRManRenderEnd();
 	m_riCtl->PRManSystemEnd();
+
+	g_sessionInstance = nullptr;
+}
+
+const Session *Session::instance()
+{
+	return g_sessionInstance;
 }
 
 riley::CameraId Session::createCamera( RtUString name, const riley::ShadingNode &projection, const riley::Transform &transform, const RtParamList &properties, const RtParamList &options )

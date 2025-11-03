@@ -71,6 +71,10 @@ struct Session
 	riley::Riley *riley;
 	const IECoreScenePreview::Renderer::RenderType renderType;
 
+	/// RenderMan only supports one renderer instance at a time, so there
+	/// can be only one Session at a time, which this function returns.
+	static const Session *instance();
+
 	/// Riley API Wrappers
 	/// ==================
 	///
