@@ -1006,8 +1006,6 @@ class RendererTest( GafferTest.TestCase ) :
 							IECore.CubicBasisf.linear(),
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
-								( 1, 0.75 ),
 								( 1, 0.75 ),
 							]
 						),
@@ -1024,8 +1022,6 @@ class RendererTest( GafferTest.TestCase ) :
 							IECore.CubicBasisf.linear(),
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
-								( 1, 0.75 ),
 								( 1, 0.75 ),
 							]
 						),
@@ -1093,9 +1089,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "colorSplineValues", shader )
 		self.assertNotIn( "colorSplineBasis", shader )
 
-		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
-		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
-		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1 ] )
 
 		self.assertNotIn( "dualInterpolationSplinePositions", shader )
 		self.assertNotIn( "dualInterpolationSplineValues", shader )
@@ -1111,9 +1107,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "trimmedFloatSplineValues", shader )
 		self.assertNotIn( "trimmedFloatSplineBasis", shader )
 
-		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
-		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
-		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1 ] )
 
 		self.assertNotIn( "mayaSplinePositions", shader )
 		self.assertNotIn( "maysSplineValues", shader )
