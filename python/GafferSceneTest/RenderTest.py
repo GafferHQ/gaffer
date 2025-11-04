@@ -761,6 +761,35 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertEqual( id, expectedID + 1 )
 
+	def testCropWindow( self ) :
+
+		outputPath = self.temporaryDirectory() / "test.exr"
+		outputs = GafferScene.Outputs()
+		outputs.addOutput( "beauty", IECoreScene.Output( outputPath.as_posix(), "exr", "rgba", {} ) )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( outputs["out"] )
+		standardOptions["options"]["render:cropWindow"]["enabled"].setValue( True )
+		standardOptions["options"]["render:cropWindow"]["value"]["min"].setValue( imath.V2f( 0.25, 0.5 ) )
+
+		rendererOptions = self._createOptions()
+		rendererOptions["in"].setInput( standardOptions["out"] )
+
+		render = GafferScene.Render()
+		render["in"].setInput( rendererOptions["out"] )
+		render["renderer"].setValue( self.renderer )
+		render["task"].execute()
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( outputPath )
+		self.assertEqual(
+			imageReader["out"].dataWindow(),
+			imath.Box2i(
+				imath.V2i( 160, 0 ),
+				imath.V2i( 640, 240 )
+			)
+		)
+
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a diffuse surface shader loaded, along
 	# with the plug for the colour parameter and the output plug to be connected
