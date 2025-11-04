@@ -110,6 +110,7 @@ M44f preTransform( const Attributes *attributes )
 }
 
 const IECore::InternedString g_lightFilters( "lightFilters" );
+const RtUString g_defaultLightGroup( "defaultLightGroup" );
 const RtUString g_defaultShadowGroup( "defaultShadowGroup" );
 
 } // namespace
@@ -120,7 +121,10 @@ Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attribut
 		m_attributes( attributes ), m_geometryPrototype( geometryPrototype ), m_shadowSubset( g_defaultShadowGroup )
 
 {
-	updateLightShader( attributes );
+	m_allAttributes.SetString( Loader::strings().k_grouping_membership, g_defaultLightGroup );
+	m_allAttributes.Update( attributes->instanceAttributes() );
+
+	m_lightShader = acquireLightShader( attributes );
 	if( !m_lightShader || m_lightShader->id() == riley::LightShaderId::InvalidId() )
 	{
 		// Riley crashes if we try to edit the transform on a light
@@ -131,7 +135,7 @@ Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attribut
 	const Material *material = attributes->lightMaterial();
 	m_lightInstance = m_session->createLightInstance(
 		m_geometryPrototype ? m_geometryPrototype->id() : riley::GeometryPrototypeId(),
-		material ? material->id() : riley::MaterialId(), m_lightShader->id(), { 0, nullptr }, IdentityTransform(), attributes->instanceAttributes()
+		material ? material->id() : riley::MaterialId(), m_lightShader->id(), { 0, nullptr }, IdentityTransform(), m_allAttributes
 	);
 }
 
@@ -218,8 +222,7 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 		return false;
 	}
 
-	updateLightShader( renderManAttributes );
-
+	ConstLightShaderPtr lightShader = acquireLightShader( renderManAttributes );
 	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
 	{
 		// Occurs when we were created without a valid shader. We can't
@@ -227,36 +230,33 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 		// attributes have a valid shader, because we don't know the
 		// transform. If we now have a shader, then return false to
 		// request that the whole object is sent again from scratch.
-		return !m_lightShader || m_lightShader->id() == riley::LightShaderId::InvalidId();
+		return !lightShader || lightShader->id() == riley::LightShaderId::InvalidId();
 	}
 
-	if( !m_lightShader || m_lightShader->id() == riley::LightShaderId::InvalidId() )
+	if( !lightShader || lightShader->id() == riley::LightShaderId::InvalidId() )
 	{
 		// Riley crashes when a light doesn't have a valid shader, so we delete the light.
 		// If we get a valid shader from a later attribute edit, we'll handle that above.
 		m_session->deleteLightInstance( m_lightInstance );
 		m_lightInstance = riley::LightInstanceId::InvalidId();
+		m_lightShader = lightShader;
 		return true;
 	}
 
-	RtParamList allAttributes;
-	if( m_attributes )
-	{
-		allAttributes = renderManAttributes->instanceAttributes();
-	}
-	allAttributes.Update( m_extraAttributes );
+	m_allAttributes.Update( renderManAttributes->instanceAttributes() );
 
 	const Material *material = renderManAttributes->lightMaterial();
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(
 		m_lightInstance,
 		/* material = */ material ? &material->id() : nullptr,
-		/* light shader = */ &m_lightShader->id(),
+		/* light shader = */ &lightShader->id(),
 		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
-		&allAttributes
+		&m_allAttributes
 	);
 
 	m_attributes = renderManAttributes;
+	m_lightShader = lightShader;
 
 	if( result != riley::LightInstanceResult::k_Success )
 	{
@@ -300,7 +300,7 @@ void Light::link( const IECore::InternedString &type, const IECoreScenePreview::
 	// Update our shader and coordinate systems to include everything
 	// from the filters.
 
-	updateLightShader( m_attributes.get() );
+	ConstLightShaderPtr lightShader = acquireLightShader( m_attributes.get() );
 
 	vector<riley::CoordinateSystemId> coordinateSystems;
 	if( m_linkedFilters )
@@ -316,12 +316,14 @@ void Light::link( const IECore::InternedString &type, const IECoreScenePreview::
 	m_session->modifyLightInstance(
 		m_lightInstance,
 		/* material = */ nullptr,
-		/* light shader = */ &m_lightShader->id(),
+		/* light shader = */ &lightShader->id(),
 		&list,
 		/* transform = */ nullptr,
 		/* attributes = */ nullptr
 
 	);
+
+	m_lightShader = lightShader;
 }
 
 void Light::assignID( uint32_t id )
@@ -340,50 +342,51 @@ void Light::updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &l
 	}
 
 	m_lightFilterShader = lightFilterShader;
-	updateLightShader( m_attributes.get() );
+	ConstLightShaderPtr lightShader = acquireLightShader( m_attributes.get() );
 
 	m_session->modifyLightInstance(
 		m_lightInstance,
 		/* material = */ nullptr,
-		/* light shader = */ &m_lightShader->id(),
+		/* light shader = */ &lightShader->id(),
 		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
 		nullptr
 	);
+
+	m_lightShader = lightShader;
 }
 
 void Light::updateLinking( RtUString memberships, RtUString shadowSubset )
 {
-	m_extraAttributes.SetString( Loader::strings().k_grouping_membership, memberships );
+	m_allAttributes.SetString( Loader::strings().k_grouping_membership, memberships );
 
 	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
 	{
 		return;
 	}
 
-	RtParamList allAttributes;
-	if( m_attributes )
-	{
-		allAttributes = m_attributes->instanceAttributes();
-	}
-	allAttributes.Update( m_extraAttributes );
-
-	const riley::LightShaderId *newLightShader = nullptr;
+	ConstLightShaderPtr lightShader;
+	const riley::LightShaderId *lightShaderId = nullptr;
 	if( m_shadowSubset != shadowSubset )
 	{
 		m_shadowSubset = shadowSubset;
-		updateLightShader( m_attributes.get() );
-		newLightShader = &m_lightShader->id();
+		lightShader = acquireLightShader( m_attributes.get() );
+		lightShaderId = &lightShader->id();
 	}
 
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(
 		m_lightInstance,
 		/* material = */ nullptr,
-		newLightShader,
+		lightShaderId,
 		/* coordinateSystems = */ nullptr,
 		/* xform = */ nullptr,
-		&allAttributes
+		&m_allAttributes
 	);
+
+	if( lightShaderId )
+	{
+		m_lightShader = lightShader;
+	}
 
 	if( result != riley::LightInstanceResult::k_Success )
 	{
@@ -391,14 +394,14 @@ void Light::updateLinking( RtUString memberships, RtUString shadowSubset )
 	}
 }
 
-void Light::updateLightShader( const Attributes *attributes )
+ConstLightShaderPtr Light::acquireLightShader( const Attributes *attributes ) const
 {
 	if( attributes->lightShader() )
 	{
-		m_lightShader = m_materialCache->getLightShader( attributes->lightShader(), m_lightFilterShader.get(), m_shadowSubset );
+		return m_materialCache->getLightShader( attributes->lightShader(), m_lightFilterShader.get(), m_shadowSubset );
 	}
 	else
 	{
-		m_lightShader = nullptr;
+		return nullptr;
 	}
 }
