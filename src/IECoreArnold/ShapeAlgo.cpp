@@ -278,7 +278,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 		msg(
 			Msg::Warning,
 			messageContext,
-			fmt::format( "Unable to create user parameter \"{}\" because primitive variable has unsupported interpolation", name )
+			fmt::format( "Unable to create user parameter \"{}\" because primitive variable has unsupported interpolation", name.c_str() )
 		);
 		return;
 	}
@@ -314,7 +314,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 		msg(
 			Msg::Warning,
 			messageContext,
-			fmt::format( "Unable to create user parameter \"{}\" for primitive variable of type \"{}\"", name, primitiveVariable.data->typeName() )
+			fmt::format( "Unable to create user parameter \"{}\" for primitive variable of type \"{}\"", name.c_str(), primitiveVariable.data->typeName() )
 		);
 		return;
 	}
@@ -371,7 +371,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 	msg(
 		Msg::Warning,
 		messageContext,
-		fmt::format( "Failed to create array for parameter \"{}\" from data of type \"{}\"", name, primitiveVariable.data->typeName() )
+		fmt::format( "Failed to create array for parameter \"{}\" from data of type \"{}\"", name.c_str(), primitiveVariable.data->typeName() )
 	);
 }
 

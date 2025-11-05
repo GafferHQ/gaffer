@@ -181,6 +181,42 @@ struct OpMax
 	static const SingleInputMode onlyB = Operate;
 };
 
+const char *mergeOpToString( Merge::Operation op )
+{
+	switch( op )
+	{
+		case Merge::Add:
+			return "Add";
+		case Merge::Atop:
+			return "Atop";
+		case Merge::Divide:
+			return "Divide";
+		case Merge::In:
+			return "In";
+		case Merge::Out:
+			return "Out";
+		case Merge::Mask:
+			return "Mask";
+		case Merge::Matte:
+			return "Matte";
+		case Merge::Multiply:
+			return "Multiply";
+		case Merge::Over:
+			return "Over";
+		case Merge::Subtract:
+			return "Subtract";
+		case Merge::Difference:
+			return "Difference";
+		case Merge::Under:
+			return "Under";
+		case Merge::Min:
+			return "Min";
+		case Merge::Max:
+			return "Max";
+	}
+	return  "Invalid";
+}
+
 template< class Functor, typename... Args >
 typename Functor::ReturnType dispatchOperation( Merge::Operation op, Functor &&functor, Args&&... args )
 {
@@ -201,7 +237,7 @@ typename Functor::ReturnType dispatchOperation( Merge::Operation op, Functor &&f
 		case Merge::Min : return functor.template operator()<OpMin>( std::forward<Args>( args )... );
 		case Merge::Max : return functor.template operator()<OpMax>( std::forward<Args>( args )... );
 		default:
-			throw InvalidArgumentException( fmt::format( "Invalid Merge Operation : {}", op ) );
+			throw InvalidArgumentException( fmt::format( "Invalid Merge Operation : {}", mergeOpToString( op ) ) );
 	}
 }
 

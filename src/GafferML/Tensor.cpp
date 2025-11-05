@@ -137,7 +137,7 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 			// > implies that we shouldn't know that, let alone depend on it.
 			[[fallthrough]];
 		default :
-			throw IECore::Exception( fmt::format( "Unsupported element type {}", elementType ) );
+			throw IECore::Exception( fmt::format( "Unsupported element type {}", Tensor::elementDataTypeToString( elementType ) ) );
 	}
 }
 
@@ -477,4 +477,58 @@ IECore::ConstDataPtr Tensor::asData() const
 		return m_state->data;
 	}
 	return dataFromValue( m_state->value );
+}
+
+const char *Tensor::elementDataTypeToString( ONNXTensorElementDataType elementDataType )
+{
+	switch( elementDataType )
+	{
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED :
+			return "Undefined";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT :
+			return "Float";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8 :
+			return "Uint8";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT8 :
+			return "Int8";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16 :
+			return "Uint16";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT16 :
+			return "Int16";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32 :
+			return "Int32";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64 :
+			return "int64";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING :
+			return "String";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL :
+			return "Bool";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
+			return "Float16";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE :
+			return "Double";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT32 :
+			return "Uint32";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT64 :
+			return "Uint64";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX64 :
+			return "Complex64";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX128 :
+			return "Complex128";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16 :
+			return "BFloat16";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E4M3FN :
+			return "Float8E4M3FN";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E4M3FNUZ :
+			return "Float8E4M3FNUZ";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E5M2 :
+			return "Float8E5M2";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E5M2FNUZ :
+			return "Float8E5M2FNUZ";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT4 :
+			return "Uint4";
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT4 :
+			return "Int4";
+	}
+	return "Invalid";
 }
