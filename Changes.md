@@ -5,6 +5,7 @@ Features
 --------
 
 - DataWindowQuery : Added a new node for querying image data windows (#5637).
+- Cube : Added `divisions` plug.
 
 Fixes
 -----
