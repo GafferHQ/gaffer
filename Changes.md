@@ -10,6 +10,7 @@ Improvements
 ------------
 
 - RenderMan : Added support for `<attr:>` substitutions in string shader parameters.
+- ImageReader : Improved default `channelInterpretation` mode when loading `id` and `instanceID` channels from multipart EXR files (#6678). The channels are now loaded in the main layer, instead of using the part name as the layer name. This makes multipart Arnold renders compatible with the ImageSelectionTool.
 
 Fixes
 -----

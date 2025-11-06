@@ -247,7 +247,11 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 			// token, and can be removed ( we represent views seperately ).
 			std::string lower = boost::algorithm::to_lower_copy( i);
 			return lower == "main" || lower == "rgb" || lower == "rgba" || lower == "other"
-				|| ( lower == "depth" && baseName == "Z" ) || i == view || lower == "";
+				|| ( lower == "depth" && baseName == "Z" )
+				|| ( lower == "id" && baseName == "id" )
+				|| ( lower == "instanceid" && baseName == "instanceID" )
+				|| i == view || lower == ""
+			;
 		}
 	), layerTokens.end() );
 
