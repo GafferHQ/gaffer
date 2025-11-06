@@ -35,9 +35,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GeometryAlgo.h"
-
 #include "Loader.h"
+#include "Session.h"
 
+#include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/SpherePrimitive.h"
 
 using namespace IECoreScene;
@@ -46,8 +47,19 @@ using namespace IECoreRenderMan;
 namespace
 {
 
+const RtUString g_xpuVariant( "xpu" );
+
 RtUString convertStaticSphere( const IECoreScene::SpherePrimitive *sphere, RtPrimVarList &primVars, const std::string &messageContext )
 {
+	const Session *session = Session::instance();
+	assert( session );
+	if( session->rileyVariant == g_xpuVariant )
+	{
+		// XPU doesn't support sphere primitives, so convert to a mesh.
+		MeshPrimitivePtr mesh = MeshPrimitive::createSphere( sphere->radius(), sphere->zMin(), sphere->zMax(), sphere->thetaMax() );
+		return GeometryAlgo::convert( mesh.get(), primVars, messageContext );
+	}
+
 	primVars.SetDetail(
 		sphere->variableSize( PrimitiveVariable::Uniform ),
 		sphere->variableSize( PrimitiveVariable::Vertex ),

@@ -43,6 +43,7 @@
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
+#include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -68,6 +69,15 @@ const IECore::InternedString g_sampleFilterOption( "ri:samplefilter" );
 const IECore::InternedString g_pixelFilterNameOption( "ri:Ri:PixelFilterName" );
 const IECore::InternedString g_pixelFilterWidthOption( "ri:Ri:PixelFilterWidth" );
 const IECore::InternedString g_pixelVarianceOption( "ri:Ri:PixelVariance" );
+const IECore::InternedString g_xpuCPUConfigOption( "ri:xpuCpuConfig" );
+const IECore::InternedString g_xpuGPUConfigOption( "ri:xpuGpuConfig" );
+
+const RtUString g_xpuCPUConfigParameter( "xpu:cpuconfig" );
+ConstDataPtr g_xpuCPUConfigDefault = new IntData( 1 );
+// We default GPUs to off, on the assumption that most rendering will still occur
+// on CPU farms, and because warnings are issued if the GPU is not available.
+const RtUString g_xpuGPUConfigParameter( "xpu:gpuconfig" );
+ConstDataPtr g_xpuGPUConfigDefault = new IntVectorData();
 
 const RtUString g_defaultPixelFilter = Loader::strings().k_gaussian;
 riley::FilterSize g_defaultPixelFilterSize = { 2, 2 };
@@ -155,8 +165,8 @@ const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene:
 
 } // namespace
 
-Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler )
-	:	m_renderType( renderType ), m_messageHandler( messageHandler ),
+Globals::Globals( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler )
+	:	m_rileyVariant( rileyVariant ), m_renderType( renderType ), m_messageHandler( messageHandler ),
 		m_pixelFilter( g_defaultPixelFilter ), m_pixelFilterSize( g_defaultPixelFilterSize ), m_pixelVariance( g_defaultPixelVariance ),
 		m_expectedSessionCreationThreadId( std::this_thread::get_id() ),
 		m_renderTargetExtent()
@@ -190,6 +200,13 @@ Globals::Globals( IECoreScenePreview::Renderer::RenderType renderType, const IEC
 		// Set up default lobe definitions.
 		m_options.SetString( RtUString( name.c_str() ), RtUString( value.c_str() ) );
 	}
+
+	// Get defaults into `m_rileyParameters` so that we always specify
+	// both parameters. If both are missing then RenderMan uses all devices,
+	// but if only the CPU config is specified, then GPUs are ignored. There's
+	// not a single default value for the GPU config that can encode that.
+	option( g_xpuCPUConfigOption, g_xpuCPUConfigDefault.get() );
+	option( g_xpuGPUConfigOption, g_xpuGPUConfigDefault.get() );
 }
 
 Globals::~Globals()
@@ -314,6 +331,16 @@ void Globals::option( const IECore::InternedString &name, const IECore::Object *
 		m_pixelFilterSize = d ? riley::FilterSize( { d->readable().x, d->readable().y } ) : g_defaultPixelFilterSize;
 		deleteRenderView();
 	}
+	else if( name == g_xpuCPUConfigOption )
+	{
+		auto data = optionCast<const Data>( value, name );
+		ParamListAlgo::convertParameter( g_xpuCPUConfigParameter, data ? data : g_xpuCPUConfigDefault.get(), m_rileyParameters );
+	}
+	else if( name == g_xpuGPUConfigOption )
+	{
+		auto data = optionCast<const Data>( value, name );
+		ParamListAlgo::convertParameter( g_xpuGPUConfigParameter, data ? data : g_xpuGPUConfigDefault.get(), m_rileyParameters );
+	}
 	else if( boost::starts_with( name.c_str(), "ri:lpe:" ) )
 	{
 		const RtUString renderManName( name.c_str() + g_renderManPrefix.size() );
@@ -400,7 +427,7 @@ Session *Globals::acquireSession()
 				"multithreaded geometry output (RenderMan limitation)."
 			);
 		}
-		m_session = std::make_unique<Session>( m_renderType, m_options, m_messageHandler );
+		m_session = std::make_unique<Session>( m_rileyVariant, m_rileyParameters, m_renderType, m_options, m_messageHandler );
 	}
 
 	return m_session.get();
