@@ -6,6 +6,11 @@ Features
 
 - DataWindowQuery : Added a new node for querying image data windows (#5637).
 
+Improvements
+------------
+
+- RenderMan : Added support for `<attr:>` substitutions in string shader parameters.
+
 Fixes
 -----
 
