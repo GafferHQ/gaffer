@@ -43,6 +43,7 @@
 #include "IECore/StringAlgo.h"
 
 #include "onnxruntime_cxx_api.h"
+#include "onnxruntime_run_options_config_keys.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -81,6 +82,12 @@ Ort::Env &acquireEnv()
 	return g_env;
 }
 
+bool useCUDA()
+{
+	const char *c = getenv( "GAFFERML_USE_CUDA" );
+	return c && strcmp( c, "0" ) != 0;
+}
+
 // Constructing a session (loading a model) is relatively expensive,
 // so we only ever create a single session per model. I can't find
 // a reference for this in the docs, but `Session::Run()` is thread-safe
@@ -115,8 +122,7 @@ Ort::Session &acquireSession( const std::string &fileName )
 		sessionOpt.RegisterCustomOpsLibrary( customLibraryPath.c_str() );
 	}
 
-	const char *useCuda = getenv( "GAFFERML_USE_CUDA" );
-	if( useCuda && strcmp( useCuda, "0" ) != 0 )
+	if( useCUDA() )
 	{
 		try
 		{
@@ -376,6 +382,14 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		// to check for cancellation via our AsyncWaiter.
 
 		Ort::RunOptions runOptions;
+		if( useCUDA() )
+		{
+			/// \todo Use `Env::GetEpDevices()` to get the names of all
+			/// available devices, instead of assuming a single `gpu:0` device.
+			/// We need to upgrade the ONNX version before we can do that
+			/// though.
+			runOptions.AddConfigEntry( kOrtRunOptionsConfigEnableMemoryArenaShrinkage, "gpu:0" );
+		}
 		AsyncWaiter waiter( runOptions );
 
 		session.RunAsync(
