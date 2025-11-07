@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import functools
 import imath
 
 import IECore
@@ -48,7 +49,7 @@ def __rendererPresetNames( additionalNames ) :
 	return IECore.StringVectorData(
 		additionalNames + sorted(
 			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
-			if t not in blacklist
+			if t not in blacklist and Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
 		)
 	)
 
@@ -283,8 +284,8 @@ Gaffer.Metadata.registerValues( {
 		"layout:section" : "Renderer",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : __rendererPresetNames( [ "None" ] ),
-		"presetValues" : __rendererPresetNames( [ "" ] ),
+		"presetNames" : functools.partial( __rendererPresetNames, [ "None" ] ),
+		"presetValues" : functools.partial( __rendererPresetNames, [ "" ] ),
 
 	},
 
