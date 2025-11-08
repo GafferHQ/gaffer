@@ -75,7 +75,7 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 
 	private :
 
-		void updateLightShader( const Attributes *attributes );
+		ConstLightShaderPtr acquireLightShader( const Attributes *attributes ) const;
 
 		MaterialCache *m_materialCache;
 		Session *m_session;
@@ -87,7 +87,9 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		ConstAttributesPtr m_attributes;
 		/// Used to keep geometry prototype alive as long as we need it.
 		ConstGeometryPrototypePtr m_geometryPrototype;
-		RtParamList m_extraAttributes;
+		/// Combination of `m_attributes->instanceAttributes()` and
+		/// "grouping:membership" attribute used to implement light linking.
+		RtParamList m_allAttributes;
 		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedFilters;
 		RtUString m_shadowSubset;

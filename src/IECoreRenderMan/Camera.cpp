@@ -56,6 +56,7 @@ namespace
 const RtUString g_projectionHandle( "projection" );
 const RtUString g_pxrCamera( "PxrCamera" );
 const RtUString g_pxrOrthographic( "PxrOrthographic" );
+const RtUString g_xpuVariant( "xpu" );
 
 } // namespace
 
@@ -144,7 +145,11 @@ Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Sess
 
 Camera::~Camera()
 {
-	if( m_session->renderType == IECoreScenePreview::Renderer::Interactive )
+	if(
+		m_session->renderType == IECoreScenePreview::Renderer::Interactive &&
+		// Avoid warning `W00034 Camera deletion is not supported yet`.
+		m_session->rileyVariant != g_xpuVariant
+	)
 	{
 		if( m_cameraId != riley::CameraId::InvalidId() )
 		{

@@ -129,5 +129,10 @@ class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 
 		pass
 
+	@unittest.skip( "Crop window not supported" )
+	def testCropWindow( self ) :
+
+		pass
+
 if __name__ == "__main__":
 	unittest.main()

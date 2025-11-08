@@ -423,6 +423,68 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( widget.updateContexts[5], contextTracker.context( script["contextVariables"] ) )
 		self.assertNotIn( "testVariable", widget.updateContexts[5] )
 
+	def testContextTrackerUpdates( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["add"] = GafferTest.AddNode()
+
+		for i in range( 0, 3 ) :
+
+			name = f"contextVariables{i}"
+			script[name] = Gaffer.ContextVariables()
+			script[name].setup( script["add"]["sum"] )
+			script[name]["in"].setInput( script["add"]["sum"] )
+
+		script["contextVariables0"]["variables"].addChild( Gaffer.NameValuePlug( "test", 1 ) )
+		script["contextVariables1"]["variables"].addChild( Gaffer.NameValuePlug( "test", 1 ) )
+		script["contextVariables2"]["variables"].addChild( Gaffer.NameValuePlug( "test", 2 ) )
+
+		# Should do no updates during construction, because the widget is
+		# not visible yet.
+		with GafferUI.Window() as window :
+			widget = self.UpdateCountPlugValueWidget( script["add"]["sum"] )
+
+		self.assertEqual( widget.updateCount, 0 )
+		self.assertEqual( len( widget.updateContexts ), 0 )
+
+		# First update should occur when we make the widget visible.
+		# Since we're showing a computed plug, we get two updates - one
+		# to indicate the start of the background update and one when
+		# it finishes.
+		window.setVisible( True )
+		self.waitForUpdate( widget )
+		self.assertEqual( widget.updateCount, 2 )
+		self.assertEqual( widget.updateContexts[-1], script.context() )
+
+		# Changing focus should cause an update when the ContextTracker
+		# comes up with a new tracked context.
+
+		contextTracker = GafferUI.ContextTracker.acquireForFocus( script )
+		with GafferUITest.ContextTrackerTest.UpdateHandler() as h :
+			script.setFocus( script["contextVariables0"] )
+		self.waitForUpdate( widget )
+
+		self.assertEqual( widget.updateCount, 4 )
+		self.assertEqual( widget.updateContexts[-1], contextTracker.context( script["add"]["sum"] ) )
+
+		# Changing focus to an equivalent node should not cause an update,
+		# because the same context will be found.
+
+		with GafferUITest.ContextTrackerTest.UpdateHandler() as h :
+			script.setFocus( script["contextVariables1"] )
+		self.waitForIdle()
+		self.assertEqual( widget.updateCount, 4 )
+
+		# But changing focus to a node that yields a different context should
+		# trigger an update.
+
+		with GafferUITest.ContextTrackerTest.UpdateHandler() as h :
+			script.setFocus( script["contextVariables2"] )
+		self.waitForUpdate( widget )
+
+		self.assertEqual( widget.updateCount, 6 )
+		self.assertEqual( widget.updateContexts[-1], contextTracker.context( script["add"]["sum"] ) )
+
 	def tearDown( self ) :
 
 		GafferUITest.TestCase.tearDown( self )

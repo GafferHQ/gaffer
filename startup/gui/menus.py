@@ -430,6 +430,7 @@ nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText 
 nodeMenu.append( "/Scene/Catalogue/Catalogue", GafferScene.Catalogue )
 nodeMenu.append( "/Scene/Catalogue/Catalogue Select", GafferScene.CatalogueSelect )
 nodeMenu.append( "/Image/Utility/FormatQuery", GafferImage.FormatQuery )
+nodeMenu.append( "/Image/Utility/DataWindowQuery", GafferImage.DataWindowQuery )
 nodeMenu.append( "/Image/Utility/OpenColorIO Context", GafferImage.OpenColorIOContext, searchText = "OpenColorIOContext" )
 nodeMenu.append( "/Image/Deep/FlatToDeep", GafferImage.FlatToDeep, searchText = "FlatToDeep" )
 nodeMenu.append( "/Image/Deep/Merge", GafferImage.DeepMerge, searchText = "DeepMerge" )

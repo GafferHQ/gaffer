@@ -62,11 +62,19 @@ struct Session
 	/// Options must be provided at construction time, as Riley requires them to
 	/// be set before any other operations can take place (and indeed, will crash
 	/// if the Riley instance is destroyed without `SetOptions()` being called).
-	Session( IECoreScenePreview::Renderer::RenderType renderType, const RtParamList &options, const IECore::MessageHandlerPtr &messageHandler );
+	Session(
+		RtUString rileyVariant, const RtParamList &rileyParameters, IECoreScenePreview::Renderer::RenderType renderType,
+		const RtParamList &options, const IECore::MessageHandlerPtr &messageHandler
+	);
 	~Session();
 
 	riley::Riley *riley;
+	const RtUString rileyVariant;
 	const IECoreScenePreview::Renderer::RenderType renderType;
+
+	/// RenderMan only supports one renderer instance at a time, so there
+	/// can be only one Session at a time, which this function returns.
+	static const Session *instance();
 
 	/// Riley API Wrappers
 	/// ==================

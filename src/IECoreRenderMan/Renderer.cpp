@@ -80,21 +80,23 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 
 	public :
 
-		RenderManRenderer( RenderType renderType, const std::string &fileName, const MessageHandlerPtr &messageHandler )
-			:	m_messageHandler( messageHandler ), m_session( nullptr )
+		RenderManRenderer( RtUString rileyVariant, RenderType renderType, const std::string &fileName, const MessageHandlerPtr &messageHandler )
+			:	m_messageHandler( messageHandler ),
+				m_name( rileyVariant == RtUString() ? "RenderMan" : "RenderMan XPU" ),
+				m_session( nullptr )
 		{
 			if( renderType == SceneDescription )
 			{
 				throw IECore::Exception( "SceneDescription mode not supported by RenderMan" );
 			}
 
-			bool haveInstance = false;
-			if( !g_haveInstance.compare_exchange_strong( haveInstance, true ) )
+			if( Session::instance() )
 			{
+				// Throw now, because `acquireSession()` will fail later anyway.
 				throw IECore::Exception( "RenderMan doesn't allow multiple active sessions" );
 			}
 
-			m_globals = std::make_unique<Globals>( renderType, messageHandler );
+			m_globals = std::make_unique<Globals>( rileyVariant, renderType, messageHandler );
 		}
 
 		~RenderManRenderer() override
@@ -103,12 +105,11 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			m_geometryPrototypeCache.reset();
 			m_lightLinker.reset();
 			m_globals.reset();
-			g_haveInstance = false;
 		}
 
 		IECore::InternedString name() const override
 		{
-			return "RenderMan";
+			return m_name;
 		}
 
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
@@ -235,6 +236,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 
 		IECore::MessageHandlerPtr m_messageHandler;
 		std::unique_ptr<Globals> m_globals;
+		const InternedString m_name;
 
 		// Used to acquire the Session via `m_globals` at the first point we need it.
 		// Also initialises other members that depend on the session.
@@ -273,12 +275,25 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 		std::unique_ptr<GeometryPrototypeCache> m_geometryPrototypeCache;
 		std::unique_ptr<LightLinker> m_lightLinker;
 
-		static Renderer::TypeDescription<RenderManRenderer> g_typeDescription;
-		static std::atomic_bool g_haveInstance;
+};
+
+struct VariantTypeDescriptions
+{
+	VariantTypeDescriptions()
+	{
+		IECoreScenePreview::Renderer::registerType(
+			"RenderMan",
+			[] ( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler ) {
+				return new RenderManRenderer( RtUString(), renderType, fileName, messageHandler );
+			}
+		);
+
+		/// \todo Register XPU variant, once all the required pieces are in place.
+
+	}
 
 };
 
-IECoreScenePreview::Renderer::TypeDescription<RenderManRenderer> RenderManRenderer::g_typeDescription( "RenderMan" );
-std::atomic_bool RenderManRenderer::g_haveInstance = false;
+VariantTypeDescriptions g_typeDescription;
 
 } // namespace

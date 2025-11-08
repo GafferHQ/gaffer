@@ -59,7 +59,7 @@ class Globals : public boost::noncopyable
 
 	public :
 
-		Globals( IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler );
+		Globals( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler );
 		~Globals();
 
 		void option( const IECore::InternedString &name, const IECore::Object *value );
@@ -82,6 +82,7 @@ class Globals : public boost::noncopyable
 		void updateRenderView();
 		void deleteRenderView();
 
+		const RtUString m_rileyVariant;
 		const IECoreScenePreview::Renderer::RenderType m_renderType;
 		const IECore::MessageHandlerPtr m_messageHandler;
 
@@ -95,6 +96,7 @@ class Globals : public boost::noncopyable
 		/// Perhaps a better approach would be to change the Renderer API so
 		/// that the initial options must be passed to the Renderer constructor?
 
+		RtParamList m_rileyParameters;
 		RtParamList m_options;
 		std::string m_cameraOption;
 		IECoreScene::ConstShaderPtr m_integratorToConvert;

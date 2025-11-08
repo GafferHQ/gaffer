@@ -122,6 +122,7 @@ enum TypeId
 	SaturationTypeId = 121477,
 	DeepSliceTypeId = 121478,
 	DiskBlurTypeId = 121479,
+	DataWindowQueryTypeId = 121480,
 
 	LastTypeId = 121999
 };
