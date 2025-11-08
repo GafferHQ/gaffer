@@ -36,6 +36,7 @@
 
 #include "UtilityNodeBinding.h"
 
+#include "GafferImage/DataWindowQuery.h"
 #include "GafferImage/FormatQuery.h"
 #include "GafferImage/ImageSampler.h"
 #include "GafferImage/ImageStats.h"
@@ -60,5 +61,6 @@ void GafferImageModule::bindUtilityNodes()
 
 	DependencyNodeClass<ImageSampler>();
 	DependencyNodeClass<FormatQuery>();
+	DependencyNodeClass<DataWindowQuery>();
 
 }
