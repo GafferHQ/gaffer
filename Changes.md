@@ -10,6 +10,7 @@ Fixes
 -----
 
 - NodeEditor, Viewer : Fixed bug that could cause unnecessary widget updates. In particular, this fixes flickering in the Viewer toolbar widgets when viewing the output of an InteractiveRender.
+- Viewer : Improved error handling when unable to create the requested renderer.
 
 1.6.4.0 (relative to 1.6.3.0)
 =======

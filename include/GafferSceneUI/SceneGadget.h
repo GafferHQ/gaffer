@@ -225,6 +225,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void bufferChanged();
 		void visibilityChanged();
 		void cancelUpdateAndPauseRenderer();
+		void clearRenderer();
 
 		Gaffer::Signals::Connection m_viewportChangedConnection;
 		Gaffer::Signals::Connection m_viewportCameraChangedConnection;
