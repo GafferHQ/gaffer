@@ -49,7 +49,7 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
@@ -364,7 +364,7 @@ using DisplayTransformCreatorMap = boost::multi_index::multi_index_container<
 	NamedTransform,
 	boost::multi_index::indexed_by<
 		boost::multi_index::ordered_unique<
-			boost::multi_index::member<NamedTransform, std::string, &NamedTransform::first>
+			boost::multi_index::key<&NamedTransform::first>
 		>,
 		boost::multi_index::sequenced<>
 	>

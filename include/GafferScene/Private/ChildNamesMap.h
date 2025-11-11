@@ -41,7 +41,7 @@
 #include "IECore/VectorTypedData.h"
 
 #include "boost/multi_index/hashed_index.hpp"
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index_container.hpp"
 
 #include <vector>
@@ -91,8 +91,8 @@ class ChildNamesMap : public IECore::Data
 		using Map = boost::multi_index::multi_index_container<
 			Child,
 			boost::multi_index::indexed_by<
-				boost::multi_index::hashed_unique<boost::multi_index::member<Child, const IECore::InternedString, &Child::output>>,
-				boost::multi_index::hashed_unique<boost::multi_index::member<Child, const Input, &Child::input>>
+				boost::multi_index::hashed_unique<boost::multi_index::key<&Child::output>>,
+				boost::multi_index::hashed_unique<boost::multi_index::key<&Child::input>>
 			>
 		>;
 

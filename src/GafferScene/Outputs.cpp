@@ -40,7 +40,7 @@
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
 
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
@@ -64,7 +64,7 @@ using OutputMap = multi_index::multi_index_container<
 	NamedOutput,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
-			multi_index::member<NamedOutput, std::string, &NamedOutput::first>
+			multi_index::key<&NamedOutput::first>
 		>,
 		multi_index::sequenced<>
 	>

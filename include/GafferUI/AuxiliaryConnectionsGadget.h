@@ -38,8 +38,8 @@
 
 #include "GafferUI/Gadget.h"
 
-#include "boost/multi_index/member.hpp"
 #include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index_container.hpp"
 
 #include <unordered_map>
@@ -151,21 +151,21 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 				// Primary key is the unique pair of endpoint
 				// gadgets the connection represents.
 				boost::multi_index::hashed_unique<
-					boost::multi_index::member<AuxiliaryConnection, std::pair<const Gadget *, const Gadget *>, &AuxiliaryConnection::endpoints>
+					boost::multi_index::key<&AuxiliaryConnection::endpoints>
 				>,
 				// Access to the range of connections originating
 				// at `srcNodeGadget`. This will include all source
 				// endpoints which are either `srcNodeGadget` itself
 				// or are a nodule belonging to it.
 				boost::multi_index::hashed_non_unique<
-					boost::multi_index::member<AuxiliaryConnection, const NodeGadget *, &AuxiliaryConnection::srcNodeGadget>
+					boost::multi_index::key<&AuxiliaryConnection::srcNodeGadget>
 				>,
 				// Access to the range of connections ending at
 				// `dstNodeGadget`. This will include all destination
 				// endpoints which are either `dstNodeGadget` itself or
 				// are a nodule belonging to it.
 				boost::multi_index::hashed_non_unique<
-					boost::multi_index::member<AuxiliaryConnection, const NodeGadget *, &AuxiliaryConnection::dstNodeGadget>
+					boost::multi_index::key<&AuxiliaryConnection::dstNodeGadget>
 				>
 			>
 		>;

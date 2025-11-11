@@ -39,7 +39,7 @@
 
 #include "Gaffer/Set.h"
 
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/random_access_index.hpp"
 #include "boost/multi_index_container.hpp"
@@ -162,7 +162,7 @@ class GAFFER_API StandardSet : public Gaffer::Set
 		using MemberContainer = boost::multi_index::multi_index_container<
 			SetMember,
 			boost::multi_index::indexed_by<
-				boost::multi_index::ordered_unique<boost::multi_index::member<SetMember, MemberPtr, &SetMember::member>>,
+				boost::multi_index::ordered_unique<boost::multi_index::key<&SetMember::member>>,
 				boost::multi_index::random_access<>
 			>
 		>;
