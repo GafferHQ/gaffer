@@ -1060,5 +1060,19 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertNotIn( "multiView", reader["out"].metadata() )
 
+	def testIDInSeparatePart( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.imagesPath() / "arnoldCombinedID.exr" )
+
+		# When writing RGBA and ID to the same file, Arnold writes a lovely
+		# spec-conforming EXR image with the channel names we want.
+		reader["channelInterpretation"].setValue( reader.ChannelInterpretation.Specification )
+		self.assertEqual( reader["out"].channelNames(), IECore.StringVectorData( [ "R", "G", "B", "A", "id", "instanceID" ] ) )
+
+		# Make sure that our default heuristics don't mess that up.
+		reader["channelInterpretation"].setValue( reader.ChannelInterpretation.Default )
+		self.assertEqual( reader["out"].channelNames(), IECore.StringVectorData( [ "R", "G", "B", "A", "id", "instanceID" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

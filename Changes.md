@@ -18,7 +18,12 @@ Breaking Changes
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 
-1.6.x.x (relative to 1.6.4.0)
+1.6.x.x (relative to 1.6.5.0)
+=======
+
+
+
+1.6.5.0 (relative to 1.6.4.0)
 =======
 
 Features
@@ -26,10 +31,19 @@ Features
 
 - DataWindowQuery : Added a new node for querying image data windows (#5637).
 
+Improvements
+------------
+
+- Cube : Added `divisions` plug.
+- RenderMan : Added support for `<attr:>` substitutions in string shader parameters.
+- ImageReader : Improved default `channelInterpretation` mode when loading `id` and `instanceID` channels from multipart EXR files (#6678). The channels are now loaded in the main layer, instead of using the part name as the layer name. This makes multipart Arnold renders compatible with the ImageSelectionTool.
+
 Fixes
 -----
 
 - NodeEditor, Viewer : Fixed bug that could cause unnecessary widget updates. In particular, this fixes flickering in the Viewer toolbar widgets when viewing the output of an InteractiveRender.
+- Viewer : Improved error handling when unable to create the requested renderer.
+- Inference : GPU device memory is now freed where possible after each computation.
 
 1.6.4.0 (relative to 1.6.3.0)
 =======

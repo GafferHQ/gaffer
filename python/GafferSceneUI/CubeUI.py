@@ -57,6 +57,16 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"divisions" : {
+
+			"description" :
+			"""
+			The number of subdivisions of the cube in the
+			X, Y and Z directions.
+			""",
+
+		},
+
 	}
 
 )
