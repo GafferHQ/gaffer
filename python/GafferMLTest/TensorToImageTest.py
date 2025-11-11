@@ -126,19 +126,27 @@ class TensorToImageTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( tensorToImage["out"], image["out"] )
 
-	def testNonFloatTensor( self ) :
-
-		tensor = GafferML.Tensor(
-			IECore.IntVectorData( [ 1, 2, 3 ] ),
-			[ 1, 1, 3 ]
-		)
+	def testTensorDataTypes( self ) :
 
 		tensorToImage = GafferML.TensorToImage()
-		tensorToImage["tensor"].setValue( tensor )
 		tensorToImage["interleavedChannels"].setValue( True )
 
+		for t in [
+			IECore.FloatVectorData,
+			IECore.HalfVectorData,
+		] :
+			with self.subTest( t = t ) :
+				tensor = GafferML.Tensor( t( [ 1, 2, 3 ] ), [ 1, 1, 3 ] )
+				tensorToImage["tensor"].setValue( tensor )
+				self.assertEqual( tensorToImage["out"].channelData( "R", imath.V2i( 0 ) )[0], 1.0 )
+				self.assertEqual( tensorToImage["out"].channelData( "G", imath.V2i( 0 ) )[0], 2.0 )
+				self.assertEqual( tensorToImage["out"].channelData( "B", imath.V2i( 0 ) )[0], 3.0 )
+
+		tensor = GafferML.Tensor( IECore.IntVectorData( [ 1, 2, 3 ] ), [ 1, 1, 3 ] )
+		tensorToImage["tensor"].setValue( tensor )
 		with self.assertRaisesRegex( RuntimeError, "Unsupported tensor data type" ) :
 			tensorToImage["out"].channelData( "R", imath.V2i( 0 ) )
+
 
 if __name__ == "__main__":
 	unittest.main()

@@ -105,6 +105,23 @@ ImageShape imageShape( const Tensor *tensor, bool interleavedChannels )
 	}
 }
 
+template<typename F>
+void dispatchTensorData( const Ort::Value &value, F &&functor )
+{
+	const auto elementType = value.GetTensorTypeAndShapeInfo().GetElementType();
+	switch( elementType )
+	{
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT :
+			functor( value.GetTensorData<float>() );
+			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
+			functor( reinterpret_cast<const half *>( value.GetTensorData<Ort::Float16_t>() ) );
+			break;
+		default :
+			throw IECore::Exception( fmt::format( "Unsupported tensor data type \"{}\"", elementType ) );
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -291,46 +308,45 @@ IECore::ConstFloatVectorDataPtr TensorToImage::computeChannelData( const std::st
 		throw IECore::Exception( fmt::format( "Channel \"{}\" out of range", channelName ) );
 	}
 
-	const ONNXTensorElementDataType elementType = tensorData->value().GetTensorTypeAndShapeInfo().GetElementType();
-	if( elementType != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT )
-	{
-		/// \todo Support other types by converting to float.
-		throw IECore::Exception( fmt::format( "Unsupported tensor data type \"{}\"", elementType ) );
-	}
+	FloatVectorDataPtr outData;
 
-	FloatVectorDataPtr outData = new FloatVectorData;
-	vector<float> &out = outData->writable();
+	dispatchTensorData(
+		tensorData->value(),
+		[&] ( const auto *sourceData ) {
+			outData = new FloatVectorData;
+			vector<float> &out = outData->writable();
 
-	const Box2i dataWindow = imageShape.dataWindow;
-	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-	const Box2i validTileBound = BufferAlgo::intersection( dataWindow, tileBound );
-	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
+			const Box2i dataWindow = imageShape.dataWindow;
+			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+			const Box2i validTileBound = BufferAlgo::intersection( dataWindow, tileBound );
+			out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
-	const float *sourceData = tensorData->value().GetTensorData<float>();
-	size_t sourceStride;
-	if( interleavedChannels )
-	{
-		sourceData += channelIndex;
-		sourceStride = imageShape.numChannels;
-	}
-	else
-	{
-		sourceData += dataWindow.size().x * dataWindow.size().y * channelIndex;
-		sourceStride = 1;
-	}
-	float *dstData = out.data();
+			size_t sourceStride;
+			if( interleavedChannels )
+			{
+				sourceData += channelIndex;
+				sourceStride = imageShape.numChannels;
+			}
+			else
+			{
+				sourceData += dataWindow.size().x * dataWindow.size().y * channelIndex;
+				sourceStride = 1;
+			}
+			float *dstData = out.data();
 
-	for( V2i p = validTileBound.min; p.y < validTileBound.max.y ; ++p.y )
-	{
-		size_t srcIndex = BufferAlgo::index( V2i( p.x, dataWindow.max.y - p.y - 1 ), dataWindow ) * sourceStride;
-		size_t dstIndex = BufferAlgo::index( p, tileBound );
+			for( V2i p = validTileBound.min; p.y < validTileBound.max.y ; ++p.y )
+			{
+				size_t srcIndex = BufferAlgo::index( V2i( p.x, dataWindow.max.y - p.y - 1 ), dataWindow ) * sourceStride;
+				size_t dstIndex = BufferAlgo::index( p, tileBound );
 
-		for( int x = validTileBound.min.x; x < validTileBound.max.x; ++x )
-		{
-			dstData[dstIndex++] = sourceData[srcIndex];
-			srcIndex += sourceStride;
+				for( int x = validTileBound.min.x; x < validTileBound.max.x; ++x )
+				{
+					dstData[dstIndex++] = static_cast<float>( sourceData[srcIndex] );
+					srcIndex += sourceStride;
+				}
+			}
 		}
-	}
+	);
 
 	return outData;
 }
