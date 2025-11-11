@@ -1,15 +1,20 @@
-1.6.x.x (relative to 1.6.4.0)
+1.6.x.x (relative to 1.6.5.0)
+=======
+
+
+
+1.6.5.0 (relative to 1.6.4.0)
 =======
 
 Features
 --------
 
 - DataWindowQuery : Added a new node for querying image data windows (#5637).
-- Cube : Added `divisions` plug.
 
 Improvements
 ------------
 
+- Cube : Added `divisions` plug.
 - RenderMan : Added support for `<attr:>` substitutions in string shader parameters.
 - ImageReader : Improved default `channelInterpretation` mode when loading `id` and `instanceID` channels from multipart EXR files (#6678). The channels are now loaded in the main layer, instead of using the part name as the layer name. This makes multipart Arnold renders compatible with the ImageSelectionTool.
 
