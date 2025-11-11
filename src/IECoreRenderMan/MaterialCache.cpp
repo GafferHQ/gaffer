@@ -55,12 +55,25 @@ MaterialCache::MaterialCache( Session *session )
 {
 }
 
-ConstMaterialPtr MaterialCache::getMaterial( const IECoreScene::ShaderNetwork *network )
+ConstMaterialPtr MaterialCache::getMaterial( const IECoreScene::ShaderNetwork *network, const IECore::CompoundObject *attributes )
 {
+	IECore::MurmurHash hash = network->Object::hash();
+	IECore::MurmurHash substitutionsHash;
+	network->hashSubstitutions( attributes, substitutionsHash );
+	hash.append( substitutionsHash );
+
 	Cache::accessor a;
-	m_cache.insert( a, network->Object::hash() );
+	m_cache.insert( a, hash );
 	if( !a->second )
 	{
+		IECoreScene::ShaderNetworkPtr substitutedNetwork;
+		if( substitutionsHash != IECore::MurmurHash() )
+		{
+			substitutedNetwork = network->copy();
+			substitutedNetwork->applySubstitutions( attributes );
+			network = substitutedNetwork.get();
+		}
+
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
 		riley::MaterialId id = m_session->riley->CreateMaterial( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() );
 		a->second = new Material( id, m_session );
@@ -68,12 +81,25 @@ ConstMaterialPtr MaterialCache::getMaterial( const IECoreScene::ShaderNetwork *n
 	return a->second;
 }
 
-ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNetwork *network )
+ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNetwork *network, const IECore::CompoundObject *attributes )
 {
+	IECore::MurmurHash hash = network->Object::hash();
+	IECore::MurmurHash substitutionsHash;
+	network->hashSubstitutions( attributes, substitutionsHash );
+	hash.append( substitutionsHash );
+
 	DisplacementCache::accessor a;
-	m_displacementCache.insert( a, network->Object::hash() );
+	m_displacementCache.insert( a, hash );
 	if( !a->second )
 	{
+		IECoreScene::ShaderNetworkPtr substitutedNetwork;
+		if( substitutionsHash != IECore::MurmurHash() )
+		{
+			substitutedNetwork = network->copy();
+			substitutedNetwork->applySubstitutions( attributes );
+			network = substitutedNetwork.get();
+		}
+
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
 		riley::DisplacementId id = m_session->riley->CreateDisplacement( riley::UserId(), { (uint32_t)nodes.size(), nodes.data() }, RtParamList() );
 		a->second = new Displacement( id, m_session );

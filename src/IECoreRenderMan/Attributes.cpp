@@ -219,14 +219,14 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 
 	const ShaderNetwork *surface = attribute<ShaderNetwork>( attributes->members(), g_renderManSurfaceAttributeName );
 	surface = surface ? surface : attribute<ShaderNetwork>( attributes->members(), g_surfaceAttributeName );
-	m_surfaceMaterial = materialCache->getMaterial( surface ? surface : g_facingRatio.get() );
+	m_surfaceMaterial = materialCache->getMaterial( surface ? surface : g_facingRatio.get(), attributes );
 
 	const ShaderNetwork *displacement = attribute<ShaderNetwork>( attributes->members(), g_renderManDisplacementAttributeName );
 	displacement = displacement ? displacement : attribute<ShaderNetwork>( attributes->members(), g_oslDisplacementAttributeName );
 	displacement = displacement ? displacement : attribute<ShaderNetwork>( attributes->members(), g_displacementAttributeName );
 	if( displacement )
 	{
-		m_displacement = materialCache->getDisplacement( displacement );
+		m_displacement = materialCache->getDisplacement( displacement, attributes );
 	}
 
 	m_lightShader = attribute<ShaderNetwork>( attributes->members(), g_renderManLightShaderAttributeName );
@@ -236,7 +236,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 		// Mesh lights default to having a black material so they don't appear
 		// in indirect rays, but the user can override with a surface assignment
 		// if they want further control. Other lights don't have materials.
-		m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get() );
+		m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get(), attributes );
 	}
 
 	if( surface )

@@ -63,8 +63,8 @@ class MaterialCache
 		MaterialCache( Session *session );
 
 		// Can be called concurrently with other calls to `get()`
-		ConstMaterialPtr getMaterial( const IECoreScene::ShaderNetwork *network );
-		ConstDisplacementPtr getDisplacement( const IECoreScene::ShaderNetwork *network );
+		ConstMaterialPtr getMaterial( const IECoreScene::ShaderNetwork *network, const IECore::CompoundObject *attributes );
+		ConstDisplacementPtr getDisplacement( const IECoreScene::ShaderNetwork *network, const IECore::CompoundObject *attributes );
 		ConstLightShaderPtr getLightShader( const IECoreScene::ShaderNetwork *network, const IECoreScene::ShaderNetwork *lightFilter, RtUString shadowSubset );
 
 		// Must not be called concurrently with anything.

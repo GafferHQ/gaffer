@@ -2170,10 +2170,86 @@ class RendererTest( GafferTest.TestCase ) :
 			"identifier:id", [ 1 ]
 		)
 
+	def testShaderSubstitutions( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"RenderMan",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			shader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"surface" : IECoreScene.Shader( "PxrSurface" ),
+					"texture" : IECoreScene.Shader(
+						"PxrTexture", parameters = { "filename" : "<attr:user:textureDir>/diffuse.exr" }
+					),
+				},
+				connections = [ ( ( "texture", "resultRGB" ), ( "surface", "diffuseColor" ) ) ],
+				output = "surface"
+			)
+
+			displacementShader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"displacement" : IECoreScene.Shader( "PxrDisplace" ),
+					"texture" : IECoreScene.Shader(
+						"PxrTexture", parameters = { "filename" : "<attr:user:dispDir>/displacement.exr" }
+					),
+				},
+				connections = [ ( ( "texture", "resultR" ), ( "displacement", "dispScalar" ) ) ],
+				output = "displacement"
+			)
+
+			mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+
+			attributesA = renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:surface" : shader,
+					"ri:displacement" : displacementShader,
+					"user:textureDir" : IECore.StringData( "textureDirA" ),
+					"user:dispDir" : IECore.StringData( "dispDirA" ),
+				} )
+			)
+
+			attributesB = renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:surface" : shader,
+					"ri:displacement" : displacementShader,
+					"user:textureDir" : IECore.StringData( "textureDirB" ),
+					"user:dispDir" : IECore.StringData( "dispDirB" ),
+				} )
+			)
+
+			renderer.object( "meshA1", mesh, attributesA )
+			renderer.object( "meshA2", mesh, attributesA )
+			renderer.object( "meshB1", mesh, attributesB )
+			renderer.object( "meshB2", mesh, attributesB )
+
+			del attributesA, attributesB
+			del renderer
+
+		materials = [ x for x in capture.json if x["method"] == "CreateMaterial" ]
+		self.assertEqual( len( materials ), 2 )
+
+		self.__assertShadingNetworkParameterEqual( materials[0]["material"], "texture.filename", [ "textureDirA/diffuse.exr" ] )
+		self.__assertShadingNetworkParameterEqual( materials[1]["material"], "texture.filename", [ "textureDirB/diffuse.exr" ] )
+
+		displacements = [ x for x in capture.json if x["method"] == "CreateDisplacement" ]
+		self.assertEqual( len( displacements ), 2 )
+
+		self.__assertShadingNetworkParameterEqual( displacements[0]["displacement"], "texture.filename", [ "dispDirA/displacement.exr" ] )
+		self.__assertShadingNetworkParameterEqual( displacements[1]["displacement"], "texture.filename", [ "dispDirB/displacement.exr" ] )
+
 	def __assertParameterEqual( self, paramList, name, data ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
 		self.assertEqual( p["data"], data )
+
+	def __assertShadingNetworkParameterEqual( self, shadingNetwork, parameter, data ) :
+
+		node = next( node for node in shadingNetwork["nodes"] if node["handle"] == parameter.partition( "." )[0] )
+		self.__assertParameterEqual( node["params"]["params"], parameter.partition( "." )[2], data )
 
 	def __assertNotInParameters( self, paramList, name ) :
 
