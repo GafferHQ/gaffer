@@ -28,6 +28,7 @@ API
 - Signals : Added CatchingCombiner Python class, equivalent to the C++ template class.
 - FileSystemPath : Implemented Python's `os.PathLike` interface, to allow FileSystemPath objects to be passed directly to Python's standard filesystem functions.
 - PlugCreationWidget : Added standard metadata-driven widget to allow users to add plugs to nodes.
+- UserPlugs : Deprecated. Use PlugCreationWidget instead.
 
 Build
 -----
