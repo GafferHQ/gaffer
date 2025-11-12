@@ -101,6 +101,9 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT :
 			functor( value.GetTensorData<float>() );
 			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
+			functor( reinterpret_cast<const half *>( value.GetTensorData<Ort::Float16_t>() ) );
+			break;
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE :
 			functor( value.GetTensorData<double>() );
 			break;
@@ -211,7 +214,11 @@ Tensor::Tensor( const IECore::ConstDataPtr &data, std::vector<int64_t> shape )
 		[&] ( auto typedData ) -> void {
 
 			using DataType = remove_const_t<remove_pointer_t<decltype( typedData )>>;
-			using BaseType = typename DataType::BaseType;
+			using BaseType = typename std::conditional_t<
+				std::is_same_v<DataType, HalfVectorData>,
+				Ort::Float16_t,
+				typename DataType::BaseType
+			>;
 
 			if( !shape.size() )
 			{
@@ -263,7 +270,7 @@ Tensor::Tensor( const IECore::ConstDataPtr &data, std::vector<int64_t> shape )
 						memoryInfo.GetConst(),
 						// `const_cast()` is OK because we only provide const access to the
 						// `Ort::Value` after construction.
-						const_cast<DataType *>( typedData )->baseWritable(), typedData->baseSize(),
+						reinterpret_cast<BaseType *>( const_cast<DataType *>( typedData )->baseWritable() ), typedData->baseSize(),
 						shape.data(), shape.size()
 					),
 					data

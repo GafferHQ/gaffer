@@ -116,11 +116,11 @@ std::string tensorRepr( const Tensor &tensor )
 	}
 }
 
-template<typename T>
+template<typename T, typename FinalT = T>
 object tensorGetItemTyped( const Tensor &tensor, const std::vector<int64_t> &location )
 {
 	return object(
-		const_cast<Ort::Value &>( tensor.value() ).At<T>( location )
+		static_cast<FinalT>( const_cast<Ort::Value &>( tensor.value() ).At<T>( location ) )
 	);
 }
 
@@ -133,6 +133,8 @@ object tensorGetItem( const Tensor &tensor, const std::vector<int64_t> &location
 	{
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT :
 			return tensorGetItemTyped<float>( tensor, location );
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
+			return tensorGetItemTyped<Ort::Float16_t, float>( tensor, location );
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE :
 			return tensorGetItemTyped<double>( tensor, location );
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL :
