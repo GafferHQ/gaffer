@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferML
 
@@ -100,6 +102,18 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"noduleLayout:visible" : False,
+
+		},
+
+		"tensorDataType" : {
+
+			"description" :
+			"""
+			The data type to use for the output tensor.
+			""",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Float" : "float",
+			"preset:Float16" : "float16",
 
 		},
 
