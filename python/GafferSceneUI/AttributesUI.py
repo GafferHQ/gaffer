@@ -100,7 +100,7 @@ Gaffer.Metadata.registerNode(
 			interface, or using the CompoundDataPlug API via python.
 			""",
 
-			"compoundDataPlugValueWidget:editable" : False,
+			"layout:customWidget:addButton:visibilityActivator" : False,
 
 		},
 

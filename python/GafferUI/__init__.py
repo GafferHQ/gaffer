@@ -241,7 +241,7 @@ from .PresetsPlugValueWidget import PresetsPlugValueWidget
 from .GraphComponentBrowserMode import GraphComponentBrowserMode
 from .ToolPlugValueWidget import ToolPlugValueWidget
 from .LabelPlugValueWidget import LabelPlugValueWidget
-from .CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
+from . import CompoundDataPlugUI
 from .LayoutPlugValueWidget import LayoutPlugValueWidget
 from . import ScriptNodeUI
 from .RefreshPlugValueWidget import RefreshPlugValueWidget
