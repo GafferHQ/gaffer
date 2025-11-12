@@ -62,6 +62,8 @@
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECore/AngleConversion.h"
+#include "IECore/DataAlgo.h"
+#include "IECore/TypeTraits.h"
 
 #include "Imath/ImathMatrixAlgo.h"
 
@@ -1225,6 +1227,29 @@ ConstStringDataPtr primitiveVariableType( const std::string &name, const ObjectP
 	return new StringData( variable->data->typeName() );
 }
 
+const boost::container::flat_map<IECore::GeometricData::Interpretation, IECore::ConstStringDataPtr> g_geometricInterpretations = {
+	{ GeometricData::None, new IECore::StringData( "None" ) },
+	{ GeometricData::Point, new IECore::StringData( "Point" ) },
+	{ GeometricData::Normal, new IECore::StringData( "Normal" ) },
+	{ GeometricData::Vector, new IECore::StringData( "Vector" ) },
+	{ GeometricData::Color, new IECore::StringData( "Color" ) },
+	{ GeometricData::UV, new IECore::StringData( "UV" ) },
+	{ GeometricData::Rational, new IECore::StringData( "Rational" ) }
+};
+
+ConstStringDataPtr primitiveVariableInterpretation( const std::string &name, const ObjectPlug *objectPlug )
+{
+	ConstObjectPtr object = objectPlug->getValue();
+	auto variable = primitiveVariable( object.get(), name );
+	if( !variable || !variable->data )
+	{
+		return nullptr;
+	}
+
+	auto it = g_geometricInterpretations.find( IECore::getGeometricInterpretation( variable->data.get() ) );
+	return it != g_geometricInterpretations.end() ? it->second : nullptr;
+}
+
 ConstDataPtr primitiveVariableData( const std::string &name, const ObjectPlug *objectPlug )
 {
 	ConstObjectPtr object = objectPlug->getValue();
@@ -1280,6 +1305,21 @@ InspectorTree::Inspections primitiveVariablesInspectionProvider( ScenePlug *scen
 				}
 			)
 		} );
+
+		const Data *data = primitive->variables.find( name )->second.data.get();
+		if( data && IECore::trait<IECore::TypeTraits::IsGeometricTypedData>( data ) )
+		{
+			result.push_back( {
+				{ name, "Interpretation" },
+				new GafferSceneUI::Private::BasicInspector(
+					scene->objectPlug(), editScope,
+					[ name = name ] ( const ObjectPlug *objectPlug ) {
+						return primitiveVariableInterpretation( name, objectPlug );
+					}
+				)
+			} );
+		}
+
 		result.push_back( {
 			{ name, "Data" },
 			new GafferSceneUI::Private::BasicInspector(

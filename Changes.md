@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.5.0)
 =======
 
+Improvements
+------------
 
+- SceneInspector : Added Interpretation row for primitive variables, with values of "Point", "Vector", "Normal" or "UV".
 
 1.6.5.0 (relative to 1.6.4.0)
 =======
