@@ -53,6 +53,87 @@ using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferML;
 
+namespace
+{
+
+template<typename T>
+ConstTensorPtr typedImageTensor(
+	const ImagePlug *imagePlug,
+	const std::vector<std::string> &channels,
+	const bool interleaveChannels,
+	const Canceller *canceller
+)
+{
+	const Box2i dataWindow = imagePlug->dataWindow();
+	const size_t numPixels = dataWindow.size().x * dataWindow.size().y;
+
+	typename TypedData<std::vector<T>>::Ptr bufferData = new TypedData<std::vector<T>>();
+	vector<T> &buffer = bufferData->writable();
+	buffer.resize( numPixels * channels.size() );
+
+	boost::container::flat_map<std::string, size_t> channelIndices;
+	for( size_t i = 0; i < channels.size(); ++i )
+	{
+		channelIndices[channels[i]] = i;
+	}
+
+	ImageAlgo::parallelProcessTiles(
+		imagePlug,
+		channels,
+		[&] ( const ImagePlug *image, const string &channelName, const Imath::V2i &tileOrigin )
+		{
+			IECore::Canceller::check( canceller );
+
+			ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue();
+			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+			const Box2i validTileBound = BufferAlgo::intersection( tileBound, dataWindow );
+
+			const size_t channelIndex = channelIndices[channelName];
+			T *dstData = buffer.data();
+			size_t dstStride;
+			if( interleaveChannels )
+			{
+				dstData += channelIndex;
+				dstStride = channels.size();
+			}
+			else
+			{
+				dstData += numPixels * channelIndex;
+				dstStride = 1;
+			}
+
+			const float *sourceData = channelData->readable().data();
+
+			for( V2i p = validTileBound.min; p.y < validTileBound.max.y; ++p.y )
+			{
+				size_t dstIndex = BufferAlgo::index( V2i( p.x, dataWindow.max.y - p.y - 1 ), dataWindow ) * dstStride;
+				size_t srcIndex = BufferAlgo::index( p, tileBound );
+				for( int x = validTileBound.min.x; x < validTileBound.max.x; ++x )
+				{
+					dstData[dstIndex] = T{ sourceData[srcIndex++] };
+					dstIndex += dstStride;
+				}
+			}
+		}
+	);
+
+	vector<int64_t> shape;
+	if( interleaveChannels )
+	{
+		shape = { 1, dataWindow.size().y, dataWindow.size().x, (int64_t)channels.size() };
+	}
+	else
+	{
+		shape = { 1, (int64_t)channels.size(), dataWindow.size().y, dataWindow.size().x };
+	}
+
+	ConstTensorPtr tensor = new Tensor( bufferData, shape );
+
+	return tensor;
+}
+
+}  // namespace
+
 GAFFER_NODE_DEFINE_TYPE( ImageToTensor );
 
 size_t ImageToTensor::g_firstPlugIndex = 0;
@@ -65,6 +146,7 @@ ImageToTensor::ImageToTensor( const std::string &name )
 	addChild( new StringPlug( "view", Plug::In, "default" ) );
 	addChild( new StringVectorDataPlug( "channels", Plug::In, new StringVectorData( { "R", "G", "B" } ) ) );
 	addChild( new BoolPlug( "interleaveChannels" ) );
+	addChild( new IntPlug( "tensorElementType", Plug::In, (int)Tensor::ElementType::Float ) );
 	addChild( new TensorPlug( "tensor", Plug::Out ) );
 }
 
@@ -112,14 +194,24 @@ const Gaffer::BoolPlug *ImageToTensor::interleaveChannelsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::IntPlug *ImageToTensor::tensorElementTypePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::IntPlug *ImageToTensor::tensorElementTypePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
 TensorPlug *ImageToTensor::tensorPlug()
 {
-	return getChild<TensorPlug>( g_firstPlugIndex + 4 );
+	return getChild<TensorPlug>( g_firstPlugIndex + 5 );
 }
 
 const TensorPlug *ImageToTensor::tensorPlug() const
 {
-	return getChild<TensorPlug>( g_firstPlugIndex + 4 );
+	return getChild<TensorPlug>( g_firstPlugIndex + 5 );
 }
 
 void ImageToTensor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -133,7 +225,8 @@ void ImageToTensor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 		input == imagePlug()->channelDataPlug() ||
 		input == viewPlug() ||
 		input == channelsPlug() ||
-		input == interleaveChannelsPlug()
+		input == interleaveChannelsPlug() ||
+		input == tensorElementTypePlug()
 	)
 	{
 		outputs.push_back( tensorPlug() );
@@ -148,6 +241,7 @@ void ImageToTensor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 
 		ConstStringVectorDataPtr channels = channelsPlug()->getValue();
 		interleaveChannelsPlug()->hash( h );
+		tensorElementTypePlug()->hash( h );
 
 		ImagePlug::ViewScope viewScope( context );
 		const std::string view = viewPlug()->getValue();
@@ -211,70 +305,22 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 			}
 		}
 
-		const Box2i dataWindow = imagePlug()->dataWindow();
-		const size_t numPixels = dataWindow.size().x * dataWindow.size().y;
+		const int tensorElementType = tensorElementTypePlug()->getValue();
 
-		FloatVectorDataPtr bufferData = new FloatVectorData;
-		vector<float> &buffer = bufferData->writable();
-		buffer.resize( numPixels * channels.size() );
-
-		boost::container::flat_map<std::string, size_t> channelIndices;
-		for( size_t i = 0; i < channels.size(); ++i )
+		ConstTensorPtr tensor;
+		if( tensorElementType == (int)Tensor::ElementType::Float )
 		{
-			channelIndices[channels[i]] = i;
+			tensor = typedImageTensor<float>( imagePlug(), channels, interleaveChannels, context->canceller() );
 		}
-
-		ImageAlgo::parallelProcessTiles(
-			imagePlug(),
-			channels,
-			[&] ( const ImagePlug *image, const string &channelName, const Imath::V2i &tileOrigin )
-			{
-				IECore::Canceller::check( context->canceller() );
-
-				ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue();
-				const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-				const Box2i validTileBound = BufferAlgo::intersection( tileBound, dataWindow );
-
-				const size_t channelIndex = channelIndices[channelName];
-				float *dstData = buffer.data();
-				size_t dstStride;
-				if( interleaveChannels )
-				{
-					dstData += channelIndex;
-					dstStride = channels.size();
-				}
-				else
-				{
-					dstData += numPixels * channelIndex;
-					dstStride = 1;
-				}
-
-				const float *sourceData = channelData->readable().data();
-
-				for( V2i p = validTileBound.min; p.y < validTileBound.max.y; ++p.y )
-				{
-					size_t dstIndex = BufferAlgo::index( V2i( p.x, dataWindow.max.y - p.y - 1 ), dataWindow ) * dstStride;
-					size_t srcIndex = BufferAlgo::index( p, tileBound );
-					for( int x = validTileBound.min.x; x < validTileBound.max.x; ++x )
-					{
-						dstData[dstIndex] = sourceData[srcIndex++];
-						dstIndex += dstStride;
-					}
-				}
-			}
-		);
-
-		vector<int64_t> shape;
-		if( interleaveChannels )
+		else if( tensorElementType == (int)Tensor::ElementType::Float16 )
 		{
-			shape = { 1, dataWindow.size().y, dataWindow.size().x, (int64_t)channels.size() };
+			tensor = typedImageTensor<half>( imagePlug(), channels, interleaveChannels, context->canceller() );
 		}
 		else
 		{
-			shape = { 1, (int64_t)channels.size(), dataWindow.size().y, dataWindow.size().x };
+			throw IECore::Exception( "Invalid output data type." );
 		}
 
-		ConstTensorPtr tensor = new Tensor( bufferData, shape );
 		static_cast<TensorPlug *>( output )->setValue( tensor );
 	}
 	else

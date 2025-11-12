@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferML
 
@@ -100,6 +102,19 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"noduleLayout:visible" : False,
+
+		},
+
+		"tensorElementType" : {
+
+			"description" :
+			"""
+			The type to use for the output tensor elements. Should be chosen to
+			match the requirements of the model used in the Inference node.
+			""",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Float" : GafferML.Tensor.ElementType.Float,
+			"preset:Float16" : GafferML.Tensor.ElementType.Float16,
 
 		},
 

@@ -10,6 +10,7 @@ Improvements
 ------------
 
 - SceneInspector : Added Interpretation row for primitive variables, with values of "Point", "Vector", "Normal" or "UV".
+- ImageToTensor : Added `tensorElementType` plug to choose between `Float` and `Float16`.
 
 Fixes
 -----

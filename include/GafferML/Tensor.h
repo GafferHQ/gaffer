@@ -55,6 +55,25 @@ class GAFFERML_API Tensor : public IECore::Object
 
 	public :
 
+		/// Enum to be used in `IntPlug` values when a node requires a tensor type to be specified.
+		/// Values currently match one-to-one with `ONNXTensorElementDataType`, but have Python
+		/// bindings and are guaranteed to remain stable for serialisation in .gfr files.
+		enum class ElementType
+		{
+			Undefined = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED,
+			Float = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT,
+			Float16 = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16,
+			Double = ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE,
+			Bool = ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL,
+			UInt16 = ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16,
+			Int16 = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT16,
+			UInt32 = ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT32,
+			Int32 = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32,
+			UInt64 = ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT64,
+			Int64 = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64,
+			String = ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING
+		};
+
 		Tensor();
 		Tensor( Ort::Value &&value );
 
