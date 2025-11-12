@@ -200,7 +200,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section" : "Visualisation",
-			"compoundDataPlugValueWidget:editable" : False,
+			"layout:customWidget:addButton:visibilityActivator" : False,
 
 			"layout:activator:lookThroughApertureVisibility" : lambda parentPlug : __lightTypeMatches( parentPlug.node(), ["distant"] ),
 			"layout:activator:lookThroughClippingPlanesVisibility" : lambda parentPlug : __lightTypeMatches( parentPlug.node(), ["distant", "spot"] ),

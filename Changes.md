@@ -21,6 +21,7 @@ Breaking Changes
 - Menu : Removed support for `enter` and `leave` properties on menu items.
 - SceneEditor : Removed `numInputs` argument to `Settings` constructor.
 - UserPlugs : Removed - use `PlugCreationWidget` instead.
+- CompoundDataPlugValueWidget : Removed. LayoutPlugValueWidget and PlugCreationWidget replace all previous functionality.
 
 1.6.x.x (relative to 1.6.7.0)
 =======

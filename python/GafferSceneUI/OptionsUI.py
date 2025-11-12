@@ -98,7 +98,7 @@ Gaffer.Metadata.registerNode(
 			python.
 			""",
 
-			"compoundDataPlugValueWidget:editable" : False,
+			"layout:customWidget:addButton:visibilityActivator" : False,
 
 		},
 
