@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.5.0)
 =======
 
+API
+---
 
+- GridContainer : Added `nextRow()` context manager, to simplify the process of arranging child widgets in rows.
 
 1.6.5.0 (relative to 1.6.4.0)
 =======
