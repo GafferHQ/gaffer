@@ -591,6 +591,8 @@ void Globals::updateRenderView()
 		extent.y = resolution[1];
 	}
 
+	m_session->riley->SetDefaultDicingCamera( camera.id );
+
 	// Update Filters if necessary.
 
 	updateDisplayFilter();

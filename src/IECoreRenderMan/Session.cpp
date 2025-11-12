@@ -62,6 +62,7 @@ const RtUString g_portalToDomeUStr( "portalToDome" );
 const RtUString g_pxrDomeLightUStr( "PxrDomeLight" );
 const RtUString g_pxrPortalLightUStr( "PxrPortalLight" );
 const RtUString g_tintUStr( "tint" );
+const RtUString g_xpuVariant( "xpu" );
 
 // Returns a unique portal name based on a color map and rotation, to
 // satisfy these requirements from the RenderMan docs :
@@ -206,14 +207,43 @@ const Session *Session::instance()
 
 riley::CameraId Session::createCamera( RtUString name, const riley::ShadingNode &projection, const riley::Transform &transform, const RtParamList &properties, const RtParamList &options )
 {
-	riley::CameraId result = riley->CreateCamera( riley::UserId(), name, projection, transform, properties );
 	std::lock_guard lock( m_camerasMutex );
-	m_cameras.insert( { name.CStr(), result, options } );
-	return result;
+	auto &nameIndex = m_cameras.get<1>();
+	auto it = nameIndex.find( name.CStr() );
+	if( it != nameIndex.end() )
+	{
+		// Neither our Renderer API nor Riley allow cameras with duplicate
+		// names, so logically we should never get here. But XPU doesn't allow
+		// us to delete cameras (see `deleteCamera()` below) so we can end up
+		// here when a camera is "deleted" and recreated. In this case we modify
+		// the existing camera instead of making a new one.
+		auto status = riley->ModifyCamera( it->id, &projection, &transform, &properties );
+		if( status == riley::CameraResult::k_Success )
+		{
+			nameIndex.replace( it, { name.CStr(), it->id, options } );
+		}
+		else
+		{
+			IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::Renderer", fmt::format( "Failed to modify camera \"{}\"", name.CStr() ) );
+		}
+		return it->id;
+	}
+	else
+	{
+		riley::CameraId result = riley->CreateCamera( riley::UserId(), name, projection, transform, properties );
+		m_cameras.insert( { name.CStr(), result, options } );
+		return result;
+	}
 }
 
 void Session::deleteCamera( riley::CameraId cameraId )
 {
+	if( rileyVariant == g_xpuVariant )
+	{
+		// Avoid warning `W00034 Camera deletion is not supported yet`.
+		return;
+	}
+
 	riley->DeleteCamera( cameraId );
 	std::lock_guard lock( m_camerasMutex );
 	m_cameras.erase( cameraId );
