@@ -45,7 +45,7 @@
 #include "IECore/StringAlgo.h"
 
 #include "boost/bind/bind.hpp"
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
@@ -244,7 +244,7 @@ using Values = multi_index::multi_index_container<
 	NamedValue,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
-			multi_index::member<NamedValue, InternedString, &NamedValue::first>
+			multi_index::key<&NamedValue::first>
 		>,
 		multi_index::sequenced<>
 	>
@@ -256,7 +256,7 @@ using MetadataMap = multi_index::multi_index_container<
 	NamedValues,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
-			multi_index::member<NamedValues, InternedString, &NamedValues::first>
+			multi_index::key<&NamedValues::first>
 		>,
 		multi_index::sequenced<>
 	>
@@ -289,7 +289,7 @@ struct GraphComponentMetadata
 		NamedValue,
 		multi_index::indexed_by<
 			multi_index::ordered_unique<
-				multi_index::member<NamedValue, InternedString, &NamedValue::first>
+				multi_index::key<&NamedValue::first>
 			>,
 			multi_index::sequenced<>
 		>
@@ -299,7 +299,7 @@ struct GraphComponentMetadata
 		NamedPlugValue,
 		multi_index::indexed_by<
 			multi_index::ordered_unique<
-				multi_index::member<NamedPlugValue, InternedString, &NamedPlugValue::first>
+				multi_index::key<&NamedPlugValue::first>
 			>,
 			multi_index::sequenced<>
 		>
@@ -339,7 +339,7 @@ using InstanceValues = multi_index::multi_index_container<
 	NamedInstanceValue,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
-			multi_index::member<NamedInstanceValue, InternedString, &NamedInstanceValue::name>
+			multi_index::key<&NamedInstanceValue::name>
 		>,
 		multi_index::sequenced<>
 	>

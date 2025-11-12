@@ -41,7 +41,7 @@
 #include "Riley.h"
 #include "RixRiCtl.h"
 
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index_container.hpp"
 
@@ -145,10 +145,10 @@ struct Session
 			CameraInfo,
 			boost::multi_index::indexed_by<
 				boost::multi_index::ordered_unique<
-					boost::multi_index::member<CameraInfo, riley::CameraId, &CameraInfo::id>
+					boost::multi_index::key<&CameraInfo::id>
 				>,
 				boost::multi_index::ordered_unique<
-					boost::multi_index::member<CameraInfo, std::string, &CameraInfo::name>
+					boost::multi_index::key<&CameraInfo::name>
 				>
 			>
 		>;

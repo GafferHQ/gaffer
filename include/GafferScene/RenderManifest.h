@@ -40,7 +40,7 @@
 
 #include "GafferScene/ScenePlug.h"
 
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index_container.hpp"
 #include "boost/noncopyable.hpp"
@@ -107,10 +107,10 @@ class GAFFERSCENE_API RenderManifest : boost::noncopyable
 			PathAndID,
 			boost::multi_index::indexed_by<
 				boost::multi_index::ordered_unique<
-					boost::multi_index::member<PathAndID, ScenePlug::ScenePath, &PathAndID::first>
+					boost::multi_index::key<&PathAndID::first>
 				>,
 				boost::multi_index::ordered_unique<
-					boost::multi_index::member<PathAndID, uint32_t, &PathAndID::second>
+					boost::multi_index::key<&PathAndID::second>
 				>
 			>
 		>;

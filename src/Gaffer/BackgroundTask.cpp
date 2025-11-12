@@ -42,8 +42,8 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "boost/multi_index/member.hpp"
 #include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index_container.hpp"
 
 #include "tbb/task_arena.h"
@@ -136,10 +136,10 @@ using ActiveTasks = boost::multi_index::multi_index_container<
 	ActiveTask,
 	boost::multi_index::indexed_by<
 		boost::multi_index::hashed_unique<
-			boost::multi_index::member<ActiveTask, BackgroundTask *, &ActiveTask::task>
+			boost::multi_index::key<&ActiveTask::task>
 		>,
 		boost::multi_index::hashed_non_unique<
-			boost::multi_index::member<ActiveTask, ConstScriptNodePtr, &ActiveTask::subject>
+			boost::multi_index::key<&ActiveTask::subject>
 		>
 	>
 >;

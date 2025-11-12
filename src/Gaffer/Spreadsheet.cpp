@@ -45,8 +45,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/container/small_vector.hpp"
 #include "boost/lexical_cast.hpp"
-#include "boost/multi_index/member.hpp"
 #include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index_container.hpp"
 
 #include "fmt/format.h"
@@ -588,10 +588,10 @@ class Spreadsheet::RowsPlug::RowNameMap
 			Row,
 			multi_index::indexed_by<
 				multi_index::hashed_unique<
-					multi_index::member<Row, RowPlug *, &Row::plug>
+					multi_index::key<&Row::plug>
 				>,
 				multi_index::hashed_non_unique<
-					multi_index::member<Row, string, &Row::name>
+					multi_index::key<&Row::name>
 				>
 			>
 		>;

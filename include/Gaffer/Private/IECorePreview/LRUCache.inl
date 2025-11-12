@@ -41,7 +41,7 @@
 #include "IECore/Exception.h"
 
 #include "boost/multi_index/hashed_index.hpp"
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
 #include "boost/unordered_map.hpp"
@@ -119,7 +119,7 @@ class Serial
 				// First index is equivalent to std::unordered_map,
 				// using Item::key as the key.
 				boost::multi_index::hashed_unique<
-					boost::multi_index::member<Item, Key, &Item::key>
+					boost::multi_index::key<&Item::key>
 				>,
 				// Second index is equivalent to std::list.
 				boost::multi_index::sequenced<>
@@ -336,7 +336,7 @@ class Parallel
 				//   prehashed key prior to taking a Bin lock, although
 				//   this is not implemented here yet.
 				boost::multi_index::hashed_unique<
-					boost::multi_index::member<Item, Key, &Item::key>
+					boost::multi_index::key<&Item::key>
 				>
 			>
 		>;
@@ -682,7 +682,7 @@ class TaskParallel
 				//   prehashed key prior to taking a Bin lock, although
 				//   this is not implemented here yet.
 				boost::multi_index::hashed_unique<
-					boost::multi_index::member<Item, Key, &Item::key>
+					boost::multi_index::key<&Item::key>
 				>
 			>
 		>;
