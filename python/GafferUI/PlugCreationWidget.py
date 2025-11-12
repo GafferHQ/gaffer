@@ -42,6 +42,10 @@ import IECore
 import Gaffer
 import GafferUI
 
+## Supports the following metadata registered to the parent node or plug :
+#
+# - `plugCreationWidget:useGeometricInterpretation` : Provides specific
+#   Point/Vector/Normal options when making vector plugs.
 class PlugCreationWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugParent, **kw ) :
@@ -86,15 +90,32 @@ class PlugCreationWidget( GafferUI.Widget ) :
 		result.append( "/String", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.StringPlug ) } )
 		result.append( "/StringDivider", { "divider" : True } )
 
-		result.append( "/V2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2iPlug ) } )
-		result.append( "/V3i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3iPlug ) } )
-		result.append( "/V2f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2fPlug ) } )
-		result.append( "/V3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3fPlug  ) } )
+		for plugType in [ Gaffer.V2iPlug, Gaffer.V3iPlug, Gaffer.V2fPlug, Gaffer.V3fPlug ] :
+			menuPath = "/{}".format( plugType.__name__.replace( "Plug", "" ) )
+			if Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:useGeometricInterpretation" ) :
+				for interpretation in [ "Point", "Vector", "Normal" ] :
+					result.append(
+						f"{menuPath}/{interpretation}",
+						{
+							"command" : functools.partial(
+								Gaffer.WeakMethod( self.__addPlug ), plugType, { "interpretation" : getattr( IECore.GeometricData.Interpretation, interpretation ) }
+							)
+						}
+					)
+			else :
+				result.append( menuPath, { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), plugType ) } )
+
 		result.append( "/VectorDivider", { "divider" : True } )
 
 		result.append( "/Color3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color3fPlug ) } )
 		result.append( "/Color4f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color4fPlug ) } )
 		result.append( "/ColorDivider", { "divider" : True } )
+
+		result.append( "/Box2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Box2iPlug, { "defaultValue" : imath.Box2i( imath.V2i( 0 ), imath.V2i( 0 ) ) } ) } )
+		result.append( "/Box2f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Box2fPlug, { "defaultValue" : imath.Box2f( imath.V2f( 0 ), imath.V2f( 0 ) ) } ) } )
+		result.append( "/Box3i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Box3iPlug, { "defaultValue" : imath.Box3i( imath.V3i( 0 ), imath.V3i( 0 ) ) } ) } )
+		result.append( "/Box3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Box3fPlug, { "defaultValue" : imath.Box3f( imath.V3f( 0 ), imath.V3f( 0 ) ) } ) } )
+		result.append( "/BoxDivider", { "divider" : True } )
 
 		# Arrays
 
@@ -118,10 +139,12 @@ class PlugCreationWidget( GafferUI.Widget ) :
 
 		return result
 
-	def __addPlug( self, plugCreator ) :
+	def __addPlug( self, plugType, plugKW = {} ) :
 
 		with Gaffer.UndoScope( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
-			plug = plugCreator( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			plug = plugType( **plugKW, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			if isinstance( self.__plugParent, Gaffer.CompoundDataPlug ) :
+				plug = Gaffer.NameValuePlug( "", plug, True, "member0", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			if isinstance( self.__plugParent, Gaffer.Box ) :
 				## \todo Could this be made the default via a metadata registration in SubGraphUI.py?
 				Gaffer.Metadata.registerValue( plug, "nodule:type", "" )

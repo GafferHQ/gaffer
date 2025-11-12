@@ -6,6 +6,7 @@ Improvements
 
 - Timeline : Added scrubbing outside the playback range, enabled by holding <kbd>Shift</kbd>.
 - RenderMan : Added depth of field support (#6713).
+- NodeEditor : Added BoxPlug items to the plug creation menus.
 
 Fixes
 -----
@@ -29,6 +30,7 @@ API
 - FileSystemPath : Implemented Python's `os.PathLike` interface, to allow FileSystemPath objects to be passed directly to Python's standard filesystem functions.
 - PlugCreationWidget : Added standard metadata-driven widget to allow users to add plugs to nodes.
 - UserPlugs : Deprecated. Use PlugCreationWidget instead.
+- CompoundDataPlugValueWidget : Deprecated. Use LayoutPlugValueWidget and PlugCreationWidget instead.
 
 Build
 -----
