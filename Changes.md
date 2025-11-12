@@ -20,6 +20,7 @@ Breaking Changes
 - RenderUI : Removed deprecated `rendererPresetNames()` function.
 - Menu : Removed support for `enter` and `leave` properties on menu items.
 - SceneEditor : Removed `numInputs` argument to `Settings` constructor.
+- UserPlugs : Removed - use `PlugCreationWidget` instead.
 
 1.6.x.x (relative to 1.6.7.0)
 =======
