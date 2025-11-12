@@ -19,6 +19,7 @@ API
 
 - MenuButton : Added `set/getImmediate()` methods. These allow the button to execute a menu item immediately instead of showing the menu, if the menu has only a single item.
 - Signals : Added CatchingCombiner Python class, equivalent to the C++ template class.
+- PlugCreationWidget : Added standard metadata-driven widget to allow users to add plugs to nodes.
 
 1.6.6.1 (relative to 1.6.6.0)
 =======
@@ -33,6 +34,9 @@ Fixes
 - Reference : Fixed "Duplicate as Box" order of operations, so the new Box is fully initialised before being parented and selected.
 
 1.6.6.0 (relative to 1.6.5.1)
+=======
+
+1.6.x.x (relative to 1.6.5.1)
 =======
 
 Features

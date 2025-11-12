@@ -64,7 +64,7 @@ Gaffer.Metadata.registerNode(
 	"graphEditor:childrenViewable", True,
 
 	# Add a + button for creating new plugs in the Settings tab.
-	"layout:customWidget:addButton:widgetType", "GafferUI.UserPlugs.plugCreationWidget",
+	"layout:customWidget:addButton:widgetType", "GafferUI.PlugCreationWidget",
 	"layout:customWidget:addButton:section", "Settings",
 	"layout:customWidget:addButton:index", -2,
 
