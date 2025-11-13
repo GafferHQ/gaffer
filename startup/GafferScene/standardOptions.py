@@ -45,11 +45,10 @@ import GafferScene
 
 def __rendererPresetNames( additionalNames ) :
 
-	blacklist = { "Capturing" }
 	return IECore.StringVectorData(
 		additionalNames + sorted(
 			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
-			if t not in blacklist and Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
+			if Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
 		)
 	)
 

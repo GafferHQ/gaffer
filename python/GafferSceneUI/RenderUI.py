@@ -44,11 +44,10 @@ from GafferUI.PlugValueWidget import sole
 
 def rendererPresetNames( plug = None ) :
 
-	blacklist = { "Capturing" }
 	return IECore.StringVectorData(
 		sorted(
 			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
-			if t not in blacklist and Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
+			if Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
 		)
 	)
 
