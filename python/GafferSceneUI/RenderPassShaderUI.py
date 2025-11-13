@@ -63,7 +63,10 @@ def __rendererNames( plug ) :
 def __rendererPresetNames( plug ) :
 
 	return IECore.StringVectorData(
-		[ "All" ] + __rendererNames( plug )
+		[ "All" ] + [
+			Gaffer.Metadata.value( f"renderer:{n}", "label" ) or n
+			for n in __rendererNames( plug )
+		]
 	)
 
 def __rendererPresetValues( plug ) :

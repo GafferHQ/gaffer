@@ -142,8 +142,11 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"layout:label" : "",
-			"presetNames" : lambda plug : IECore.StringVectorData( GafferSceneUI.SceneView.registeredRenderers() ),
-			"presetValues" : lambda plug : IECore.StringVectorData( GafferSceneUI.SceneView.registeredRenderers() ),
+			"presetNames" : lambda plug : IECore.StringVectorData( [
+				Gaffer.Metadata.value( f"renderer:{n}", "label" ) or n
+				for n in sorted( GafferSceneUI.SceneView.registeredRenderers() )
+			] ),
+			"presetValues" : lambda plug : IECore.StringVectorData( sorted( GafferSceneUI.SceneView.registeredRenderers() ) ),
 
 		},
 
