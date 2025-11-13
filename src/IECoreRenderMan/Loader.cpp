@@ -82,7 +82,7 @@ RixContext *IECoreRenderMan::Loader::context()
 #else
 
 		libPath.replace_extension( ".so" );
-		void *handle = dlopen( libPath.c_str(), RTLD_NOW );
+		void *handle = dlopen( libPath.c_str(), RTLD_NOW | RTLD_GLOBAL );
 		if( !handle )
 		{
 			if( char *e = dlerror() )

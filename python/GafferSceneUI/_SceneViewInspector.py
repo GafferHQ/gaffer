@@ -57,17 +57,13 @@ from Qt import QtWidgets
 # LightEditor. We also intend to move many of the components into GafferUI, so
 # that they can be used in the development of an ImageInspector too.
 
-# \todo Create a central renderer/attribute registry that we can
-# query for this information, this is also duplicated in EditScopeAlgo.cpp
 _rendererAttributePrefixes = {
-	"ai" : "Arnold",
-	"dl" : "Delight",
-	"gl" : "OpenGL",
 	"osl" : "OSL",
-	"cycles" : "Cycles",
-	"ri" : "RenderMan",
 	"" : "USD",
-};
+}
+
+for t in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "attributePrefix" ) :
+	_rendererAttributePrefixes.setdefault( Gaffer.Metadata.value( t, "attributePrefix" ).rstrip( ":" ), t[9:] )
 
 __registeredShaderParameters = OrderedDict()
 

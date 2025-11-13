@@ -48,7 +48,7 @@ def rendererPresetNames( plug = None ) :
 	return IECore.StringVectorData(
 		sorted(
 			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
-			if t not in blacklist
+			if t not in blacklist and Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
 		)
 	)
 
