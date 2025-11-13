@@ -105,8 +105,6 @@ ImageShape imageShape( const Tensor *tensor, bool interleavedChannels )
 	}
 }
 
-/// \todo Would this be better off in `Tensor` as a method that can take any
-/// ONNX data type and convert to any IECore data type?
 template<typename F>
 void dispatchTensorData( const Ort::Value &value, F &&functor )
 {
