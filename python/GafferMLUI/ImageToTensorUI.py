@@ -112,8 +112,8 @@ Gaffer.Metadata.registerNode(
 			The data type to use for the output tensor.
 			""",
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-			"preset:Float" : "float",
-			"preset:Float16" : "float16",
+			"preset:Float" : GafferML.Tensor.DataType.Float,
+			"preset:Float16" : GafferML.Tensor.DataType.Float16,
 
 		},
 

@@ -56,10 +56,6 @@ using namespace GafferML;
 namespace
 {
 
-const InternedString g_floatTypeName( "float" );
-const InternedString g_float16TypeName( "float16" );
-const InternedString g_halfTypeName( "half" );
-
 template<typename T>
 ConstTensorPtr typedImageTensor(
 	const ImagePlug *imagePlug,
@@ -150,7 +146,7 @@ ImageToTensor::ImageToTensor( const std::string &name )
 	addChild( new StringPlug( "view", Plug::In, "default" ) );
 	addChild( new StringVectorDataPlug( "channels", Plug::In, new StringVectorData( { "R", "G", "B" } ) ) );
 	addChild( new BoolPlug( "interleaveChannels" ) );
-	addChild( new StringPlug( "tensorDataType", Plug::In, g_floatTypeName ) );
+	addChild( new IntPlug( "tensorDataType", Plug::In, (int)Tensor::DataType::Float ) );
 	addChild( new TensorPlug( "tensor", Plug::Out ) );
 }
 
@@ -198,14 +194,14 @@ const Gaffer::BoolPlug *ImageToTensor::interleaveChannelsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
-Gaffer::StringPlug *ImageToTensor::tensorDataTypePlug()
+Gaffer::IntPlug *ImageToTensor::tensorDataTypePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
-const Gaffer::StringPlug *ImageToTensor::tensorDataTypePlug() const
+const Gaffer::IntPlug *ImageToTensor::tensorDataTypePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
 TensorPlug *ImageToTensor::tensorPlug()
@@ -309,14 +305,14 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 			}
 		}
 
-		const InternedString tensorDataType = tensorDataTypePlug()->getValue();
+		const int tensorDataType = tensorDataTypePlug()->getValue();
 
 		ConstTensorPtr tensor;
-		if( tensorDataType == g_floatTypeName )
+		if( tensorDataType == (int)Tensor::DataType::Float )
 		{
 			tensor = typedImageTensor<float>( imagePlug(), channels, interleaveChannels, context->canceller() );
 		}
-		else if( tensorDataType == g_float16TypeName || tensorDataType == g_halfTypeName )
+		else if( tensorDataType == (int)Tensor::DataType::Float16 )
 		{
 			tensor = typedImageTensor<half>( imagePlug(), channels, interleaveChannels, context->canceller() );
 		}
