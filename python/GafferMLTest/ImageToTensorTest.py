@@ -132,7 +132,6 @@ class ImageToTensorTest( GafferTest.TestCase ) :
 		imageToTensor = GafferML.ImageToTensor()
 		imageToTensor["image"].setInput( constant["out"] )
 
-		imageToTensor["tensorDataType"].setValue( "float" )
 		self.assertIsInstance( imageToTensor["tensor"].getValue().asData(), IECore.FloatVectorData )
 
 		imageToTensor["tensorDataType"].setValue( "float16" )
