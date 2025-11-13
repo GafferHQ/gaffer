@@ -42,6 +42,8 @@ import GafferScene
 
 from GafferUI.PlugValueWidget import sole
 
+## \deprecated
+## \todo Remove in next major version.
 def rendererPresetNames( plug = None ) :
 
 	return IECore.StringVectorData(
@@ -89,9 +91,11 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type" : "GafferSceneUI.RenderUI.RendererPlugValueWidget",
 
-			"preset:Default" : "",
-			"presetNames" : rendererPresetNames,
-			"presetValues" : rendererPresetNames,
+			"presetNames" : lambda plug : IECore.StringVectorData( [
+				"Default" if n == "None" else n
+				for n in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetNames" )
+			] ),
+			"presetValues" : lambda plug : Gaffer.Metadata.value( "option:render:defaultRenderer", "presetValues" ),
 
 		},
 

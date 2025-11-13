@@ -43,14 +43,28 @@ import IECore
 
 def __rendererNames( plug ) :
 
-	return [
-		x for x in GafferSceneUI.RenderUI.rendererPresetNames( plug )
-		if x not in ( "OpenGL", "3Delight Cloud" )
-	]
+	prefixes = set()
+	result = []
+	for renderer in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetValues" ) :
+
+		if renderer in ( "", "OpenGL" ) :
+			continue
+
+		# Only use primary variant if two variants of a renderer use the same prefix.
+		prefix = Gaffer.Metadata.value( f"renderer:{renderer}", "optionPrefix" )
+		if prefix in prefixes :
+			continue
+
+		result.append( renderer)
+		prefixes.add( prefix )
+
+	return result
 
 def __rendererPresetNames( plug ) :
 
-	return IECore.StringVectorData( [ "All" ] + __rendererNames( plug ) )
+	return IECore.StringVectorData(
+		[ "All" ] + __rendererNames( plug )
+	)
 
 def __rendererPresetValues( plug ) :
 
