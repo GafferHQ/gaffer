@@ -6,6 +6,11 @@ Improvements
 
 - SceneInspector : Added Interpretation row for primitive variables, with values of "Point", "Vector", "Normal" or "UV".
 
+Fixes
+-----
+
+- Render, InteractiveRender, StandardOptions : Fixed bugs allowing Cycles and 3Delight to appear as available renderers even when hidden from the UI or not configured.
+
 1.6.5.0 (relative to 1.6.4.0)
 =======
 
