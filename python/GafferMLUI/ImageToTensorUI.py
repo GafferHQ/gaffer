@@ -109,7 +109,8 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			The data type to use for the output tensor.
+			The data type to use for the output tensor. Should be chosen to
+			match the requirements of the model used in the Inference node.
 			""",
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Float" : GafferML.Tensor.DataType.Float,
