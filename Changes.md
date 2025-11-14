@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.8.0)
 =======
 
+Features
+--------
 
+- FileList : Added node for listing matching files.
 
 1.6.8.0 (relative to 1.6.7.0)
 =======

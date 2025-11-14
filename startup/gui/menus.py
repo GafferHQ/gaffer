@@ -615,6 +615,7 @@ nodeMenu.append( "/Utility/Spreadsheet", Gaffer.Spreadsheet )
 nodeMenu.append( "/Utility/Context Query", Gaffer.ContextQuery, searchText = "ContextQuery" )
 nodeMenu.append( "/Utility/Collect", Gaffer.Collect )
 nodeMenu.append( "/Utility/Pattern Match", Gaffer.PatternMatch, searchText = "PatternMatch" )
+nodeMenu.append( "/Utility/File List", GafferDispatch.FileList, searchText = "FileList" )
 
 ## Miscellaneous UI
 ###########################################################################

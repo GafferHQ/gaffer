@@ -58,6 +58,7 @@ from .FrameMaskTest import FrameMaskTest
 from .DispatchApplicationTest import DispatchApplicationTest
 from .ModuleTest import ModuleTest
 from .StatsApplicationTest import StatsApplicationTest
+from .FileListTest import FileListTest
 
 if __name__ == "__main__":
 	import unittest
