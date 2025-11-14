@@ -1092,6 +1092,7 @@ Gaffer.Metadata.registerValue( __children["ContactSheet"]["tileNames"], 'layout:
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["tileNames"], 'layout:index', 5 )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["tileNames"], 'layout:visibilityActivator', 'modeIsCollect' )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["tileNames"], 'description', 'The values to use for the `tileNameVariable` when in `Collect` mode. Each value defines a tile in the contact sheet. Use the tile variables in upstream nodes to vary the source images.' )
+Gaffer.Metadata.registerValue( __children["ContactSheet"]["tileNames"], 'ui:acceptsFileList', True )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["tileNameVariable"], 'nodule:type', '' )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["tileNameVariable"], 'layout:section', 'Settings' )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["tileNameVariable"], 'layout:index', 6 )
