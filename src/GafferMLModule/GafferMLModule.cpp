@@ -116,11 +116,11 @@ std::string tensorRepr( const Tensor &tensor )
 	}
 }
 
-template<typename T>
+template<typename T, typename FinalT = T>
 object tensorGetItemTyped( const Tensor &tensor, const std::vector<int64_t> &location )
 {
 	return object(
-		const_cast<Ort::Value &>( tensor.value() ).At<T>( location )
+		static_cast<FinalT>( const_cast<Ort::Value &>( tensor.value() ).At<T>( location ) )
 	);
 }
 
@@ -133,6 +133,8 @@ object tensorGetItem( const Tensor &tensor, const std::vector<int64_t> &location
 	{
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT :
 			return tensorGetItemTyped<float>( tensor, location );
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
+			return tensorGetItemTyped<Ort::Float16_t, float>( tensor, location );
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE :
 			return tensorGetItemTyped<double>( tensor, location );
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL :
@@ -224,15 +226,32 @@ void loadModelWrapper( Inference &inference )
 BOOST_PYTHON_MODULE( _GafferML )
 {
 
-	IECorePython::RunTimeTypedClass<GafferML::Tensor>()
-		.def( init<>() )
-		.def( "__init__", make_constructor( tensorConstructorWrapper, default_call_policies(), ( arg( "data" ), arg( "shape" ) = object() ) ) )
-		.def( "asData", (IECore::DataPtr (Tensor::*)())&Tensor::asData )
-		.def( "shape", &tensorShapeWrapper )
-		.def( "__repr__", &tensorRepr )
-		.def( "__getitem__", &tensorGetItem1D )
-		.def( "__getitem__", &tensorGetItemND )
-	;
+	{
+		scope s = IECorePython::RunTimeTypedClass<GafferML::Tensor>()
+			.def( init<>() )
+			.def( "__init__", make_constructor( tensorConstructorWrapper, default_call_policies(), ( arg( "data" ), arg( "shape" ) = object() ) ) )
+			.def( "asData", (IECore::DataPtr (Tensor::*)())&Tensor::asData )
+			.def( "shape", &tensorShapeWrapper )
+			.def( "__repr__", &tensorRepr )
+			.def( "__getitem__", &tensorGetItem1D )
+			.def( "__getitem__", &tensorGetItemND )
+		;
+		enum_<Tensor::DataType>( "DataType" )
+			.value( "Undefined", Tensor::DataType::Undefined )
+			.value( "Float", Tensor::DataType::Float )
+			.value( "Float16", Tensor::DataType::Float16 )
+			.value( "BFloat16", Tensor::DataType::BFloat16 )
+			.value( "Double", Tensor::DataType::Double )
+			.value( "Bool", Tensor::DataType::Bool )
+			.value( "UInt16", Tensor::DataType::UInt16 )
+			.value( "Int16", Tensor::DataType::Int16 )
+			.value( "UInt32", Tensor::DataType::UInt32 )
+			.value( "Int32", Tensor::DataType::Int32 )
+			.value( "UInt64", Tensor::DataType::UInt64 )
+			.value( "Int64", Tensor::DataType::Int64 )
+			.value( "String", Tensor::DataType::String )
+		;
+	}
 
 	GafferBindings::TypedObjectPlugClass<GafferML::TensorPlug>();
 

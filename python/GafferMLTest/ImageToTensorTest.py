@@ -124,5 +124,22 @@ class ImageToTensorTest( GafferTest.TestCase ) :
 		self.assertNotEqual( imageToTensor["tensor"].hash(), h )
 		self.assertNotEqual( imageToTensor["tensor"].getValue(), tensor )
 
+	def testTensorDataType( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 1, 1 ) )
+
+		imageToTensor = GafferML.ImageToTensor()
+		imageToTensor["image"].setInput( constant["out"] )
+
+		self.assertIsInstance( imageToTensor["tensor"].getValue().asData(), IECore.FloatVectorData )
+
+		imageToTensor["tensorDataType"].setValue( GafferML.Tensor.DataType.Float16 )
+		self.assertIsInstance( imageToTensor["tensor"].getValue().asData(), IECore.HalfVectorData )
+
+		imageToTensor["tensorDataType"].setValue( GafferML.Tensor.DataType.BFloat16 )
+		self.assertIsInstance( imageToTensor["tensor"].getValue().asData(), IECore.FloatVectorData )
+
+
 if __name__ == "__main__":
 	unittest.main()

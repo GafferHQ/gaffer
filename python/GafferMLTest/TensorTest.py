@@ -54,7 +54,8 @@ class TensorTest( GafferTest.TestCase ) :
 			IECore.DoubleVectorData( [ 1, 2, 3 ] ),
 			IECore.IntVectorData( [ 1, 2, 3 ] ),
 			IECore.UInt64VectorData( [ 1, 2, 3 ] ),
-			IECore.StringVectorData( [ "person", "light", "water" ] )
+			IECore.StringVectorData( [ "person", "light", "water" ] ),
+			IECore.HalfVectorData( [ 1, 2, 3 ] ),
 		] :
 
 			tensor = GafferML.Tensor( data, [ 1, 3 ] )
@@ -197,6 +198,15 @@ class TensorTest( GafferTest.TestCase ) :
 				*[ range( 0, d ) for d in shape ]
 			) :
 				self.assertEqual( stringTensor[index], str( intTensor[index] ) )
+
+	def testHalfGetItem( self ) :
+
+		data = IECore.HalfVectorData( [ 1, 2, 3 ] )
+		tensor = GafferML.Tensor( data, [ 1, 3 ] )
+
+		for i in range( 0, 3 ) :
+			self.assertEqual( tensor[0, i], data[i] )
+			self.assertIsInstance( tensor[0, i], float )
 
 	def testGetItemOutOfRange( self ) :
 
