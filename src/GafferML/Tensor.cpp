@@ -104,6 +104,9 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
 			functor( value.GetTensorData<Ort::Float16_t>() );
 			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16 :
+			functor( value.GetTensorData<Ort::BFloat16_t>() );
+			break;
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE :
 			functor( value.GetTensorData<double>() );
 			break;
@@ -176,6 +179,14 @@ DataPtr dataFromValue( const Ort::Value &value )
 
 					result = d;
 				}
+				else if constexpr( std::is_same_v<ElementType, Ort::BFloat16_t> )
+				{
+					FloatVectorDataPtr d = new FloatVectorData();
+					std::vector<float> &v = d->writable();
+					v.reserve( count );
+					std::transform( data, data + count, std::back_inserter( v ), []( const Ort::BFloat16_t &e ) { return float( e ); } );
+					result = d;
+				}
 				else
 				{
 					using DataType = TypedData<vector<ElementType>>;
@@ -200,6 +211,12 @@ namespace IECore
 inline void murmurHashAppend( MurmurHash &h, const Ort::Float16_t *data, size_t numElements )
 {
 	static_assert( sizeof( Ort::Float16_t ) == sizeof( unsigned short ), "Unexpected size for Ort::Float16_t" );
+	h.append( reinterpret_cast<const unsigned short *>( data ), numElements );
+}
+
+inline void murmurHashAppend( MurmurHash &h, const Ort::BFloat16_t *data, size_t numElements )
+{
+	static_assert( sizeof( Ort::BFloat16_t ) == sizeof( unsigned short ), "Unexpected size for Ort::BFloat16_t" );
 	h.append( reinterpret_cast<const unsigned short *>( data ), numElements );
 }
 

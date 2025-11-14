@@ -115,6 +115,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Float" : GafferML.Tensor.ElementType.Float,
 			"preset:Float16" : GafferML.Tensor.ElementType.Float16,
+			"preset:BFloat16" : GafferML.Tensor.ElementType.BFloat16,
 
 		},
 

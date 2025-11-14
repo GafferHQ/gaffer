@@ -128,14 +128,25 @@ class ImageToTensorTest( GafferTest.TestCase ) :
 
 		constant = GafferImage.Constant()
 		constant["format"].setValue( GafferImage.Format( 1, 1 ) )
+		color = imath.Color4f( 0.1, 0.5, 0.9, 1.0 )
+		constant["color"].setValue( color )
 
 		imageToTensor = GafferML.ImageToTensor()
 		imageToTensor["image"].setInput( constant["out"] )
 
 		self.assertIsInstance( imageToTensor["tensor"].getValue().asData(), IECore.FloatVectorData )
+		for i in range( 0, 3 ) :
+			self.assertAlmostEqual( imageToTensor["tensor"].getValue().asData()[i], color[i] )
 
 		imageToTensor["tensorElementType"].setValue( GafferML.Tensor.ElementType.Float16 )
 		self.assertIsInstance( imageToTensor["tensor"].getValue().asData(), IECore.HalfVectorData )
+		for i in range( 0, 3 ) :
+			self.assertAlmostEqual( imageToTensor["tensor"].getValue().asData()[i], color[i], delta = 5e-4 )
+
+		imageToTensor["tensorElementType"].setValue( GafferML.Tensor.ElementType.BFloat16 )
+		self.assertIsInstance( imageToTensor["tensor"].getValue().asData(), IECore.FloatVectorData )
+		for i in range( 0, 3 ) :
+			self.assertAlmostEqual( imageToTensor["tensor"].getValue().asData()[i], color[i], delta = 0.005 )
 
 
 if __name__ == "__main__":

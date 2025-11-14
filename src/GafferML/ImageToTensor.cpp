@@ -46,6 +46,8 @@
 
 #include "onnxruntime_cxx_api.h"
 
+#include <variant>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -67,9 +69,34 @@ ConstTensorPtr typedImageTensor(
 	const Box2i dataWindow = imagePlug->dataWindow();
 	const size_t numPixels = dataWindow.size().x * dataWindow.size().y;
 
-	typename TypedData<std::vector<T>>::Ptr bufferData = new TypedData<std::vector<T>>();
-	vector<T> &buffer = bufferData->writable();
-	buffer.resize( numPixels * channels.size() );
+	vector<int64_t> shape;
+	if( interleaveChannels )
+	{
+		shape = { 1, dataWindow.size().y, dataWindow.size().x, (int64_t)channels.size() };
+	}
+	else
+	{
+		shape = { 1, (int64_t)channels.size(), dataWindow.size().y, dataWindow.size().x };
+	}
+
+	std::variant<std::monostate, std::vector<T>, Ort::Value> bufferHolder;
+	T *dstBegin;
+	if constexpr( std::is_same_v<T, Ort::BFloat16_t> )
+	{
+		// There is no `IECore::BFloat16Data` type. Create a `Ort::Value` directly and pass
+		// it to `Tensor` after filling the tensor array.
+		Ort::AllocatorWithDefaultOptions allocator;
+		bufferHolder = Ort::Value::CreateTensor(
+			allocator, shape.data(), shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16
+		);
+		dstBegin = std::get<Ort::Value>( bufferHolder ).template GetTensorMutableData<Ort::BFloat16_t>();
+	}
+	else
+	{
+		bufferHolder = std::vector<T>();
+		std::get<std::vector<T>>( bufferHolder ).resize( numPixels * channels.size() );
+		dstBegin = std::get<std::vector<T>>( bufferHolder ).data();
+	}
 
 	boost::container::flat_map<std::string, size_t> channelIndices;
 	for( size_t i = 0; i < channels.size(); ++i )
@@ -89,7 +116,7 @@ ConstTensorPtr typedImageTensor(
 			const Box2i validTileBound = BufferAlgo::intersection( tileBound, dataWindow );
 
 			const size_t channelIndex = channelIndices[channelName];
-			T *dstData = buffer.data();
+			T *dstData = dstBegin;
 			size_t dstStride;
 			if( interleaveChannels )
 			{
@@ -117,17 +144,19 @@ ConstTensorPtr typedImageTensor(
 		}
 	);
 
-	vector<int64_t> shape;
-	if( interleaveChannels )
+	ConstTensorPtr tensor;
+	if constexpr( std::is_same_v<T, Ort::BFloat16_t> )
 	{
-		shape = { 1, dataWindow.size().y, dataWindow.size().x, (int64_t)channels.size() };
+		tensor = new Tensor( std::move( std::get<Ort::Value>( bufferHolder ) ) );
 	}
 	else
 	{
-		shape = { 1, (int64_t)channels.size(), dataWindow.size().y, dataWindow.size().x };
+		// Create and pass the data to `Tensor` so it can hold that pointer for its own uses.
+		typename TypedData<std::vector<T>>::Ptr bufferData = new TypedData<std::vector<T>>(
+			std::move( std::get<std::vector<T>>( bufferHolder ) )
+		);
+		tensor = new Tensor( bufferData, shape );
 	}
-
-	ConstTensorPtr tensor = new Tensor( bufferData, shape );
 
 	return tensor;
 }
@@ -315,6 +344,10 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 		else if( tensorElementType == (int)Tensor::ElementType::Float16 )
 		{
 			tensor = typedImageTensor<half>( imagePlug(), channels, interleaveChannels, context->canceller() );
+		}
+		else if( tensorElementType == (int)Tensor::ElementType::BFloat16 )
+		{
+			tensor = typedImageTensor<Ort::BFloat16_t>( imagePlug(), channels, interleaveChannels, context->canceller() );
 		}
 		else
 		{
