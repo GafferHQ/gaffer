@@ -189,7 +189,8 @@ class RendererPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 			resolvedRenderer = sole( v["resolvedRenderer"] for v in values )
 			self.menuButton().setText(
 				"Default ({})".format(
-					resolvedRenderer if resolvedRenderer else
+					Gaffer.Metadata.value( f"renderer:{resolvedRenderer}", "label" ) or resolvedRenderer
+					if resolvedRenderer else
 					( "None" if resolvedRenderer == "" else "---" )
 				)
 			)
