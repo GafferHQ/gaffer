@@ -402,7 +402,7 @@ PtDspyError DspyImageClose( PtDspyImageHandle image )
 // Implementation of new driver API, as used by XPU
 // ================================================
 
-#if DISPLAY_INTERFACE_VERSION >= 2
+#if DISPLAY_INTERFACE_VERSION >= 3
 
 namespace
 {
@@ -492,7 +492,8 @@ struct IEDisplay : public display::Display
 		const void *srfaddr, const size_t srfsizebytes,
 		const size_t *offsets,
 		const size_t *sampleoffsets,
-		const display::RenderOutput *outputs, const size_t noutputs
+		const display::RenderOutput *outputs, const size_t noutputs,
+		const pxrcore::ParamList &params
 	) override
 	{
 		// Create an `IECoreImage::DisplayDriver` with the appropriate number of channels,
@@ -658,4 +659,4 @@ DISPLAYEXPORT void DestroyDisplay( const display::Display *d )
 
 } // extern "C"
 
-#endif // DISPLAY_INTERFACE_VERSION >= 2
+#endif // DISPLAY_INTERFACE_VERSION >= 3
