@@ -6,6 +6,7 @@ Features
 
 - FlamencoDispatcher : Added a new node for sending tasks to Blender's [Flamenco](https://flamenco.blender.org) render farm manager.
 - PrimitiveQuery : Added a new node for querying a primitive's type and variable sizes.
+- FileList : Added node for listing matching files.
 
 Fixes
 -----
