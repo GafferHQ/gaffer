@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import functools
 import imath
 
 import IECore
@@ -42,16 +41,6 @@ import IECoreScene
 
 import Gaffer
 import GafferScene
-
-def __rendererPresetNames( additionalNames ) :
-
-	blacklist = { "Capturing" }
-	return IECore.StringVectorData(
-		additionalNames + sorted(
-			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
-			if t not in blacklist and Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
-		)
-	)
 
 Gaffer.Metadata.registerValues( {
 
@@ -284,8 +273,19 @@ Gaffer.Metadata.registerValues( {
 		"layout:section" : "Renderer",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : functools.partial( __rendererPresetNames, [ "None" ] ),
-		"presetValues" : functools.partial( __rendererPresetNames, [ "" ] ),
+		"presetNames" : lambda : IECore.StringVectorData(
+			[ "None" ] + sorted(
+				Gaffer.Metadata.value( f"renderer:{t}", "label" ) or t
+				for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
+				if Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
+			)
+		),
+		"presetValues" : lambda : IECore.StringVectorData(
+			[ "" ] + sorted(
+				t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
+				if Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
+			)
+		),
 
 	},
 

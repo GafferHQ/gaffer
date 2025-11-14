@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,88 +35,15 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
-import GafferScene
-import GafferSceneUI
 
-import IECore
+Gaffer.Metadata.registerValues( {
 
-def __rendererNames( plug ) :
+	"renderer:Capturing" : {
 
-	prefixes = set()
-	result = []
-	for renderer in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetValues" ) :
+		# The renderer only exists for usage in unit tests,
+		# so should never be exposed in the UI.
+		"ui:enabled" : False,
 
-		if renderer in ( "", "OpenGL" ) :
-			continue
+	},
 
-		# Only use primary variant if two variants of a renderer use the same prefix.
-		prefix = Gaffer.Metadata.value( f"renderer:{renderer}", "optionPrefix" )
-		if prefix in prefixes :
-			continue
-
-		result.append( renderer)
-		prefixes.add( prefix )
-
-	return result
-
-def __rendererPresetNames( plug ) :
-
-	return IECore.StringVectorData(
-		[ "All" ] + [
-			Gaffer.Metadata.value( f"renderer:{n}", "label" ) or n
-			for n in __rendererNames( plug )
-		]
-	)
-
-def __rendererPresetValues( plug ) :
-
-	return IECore.StringVectorData( [ "*" ] + __rendererNames( plug ) )
-
-Gaffer.Metadata.registerNode(
-
-	GafferScene.RenderPassShader,
-
-	"description",
-	"""
-	Sets up a global shader in the options to replace a shader used by a render pass type.
-	""",
-
-	plugs = {
-
-		"renderer" : {
-
-			"description" :
-			"""
-			The renderer the shader should affect. Shaders assigned to a specific
-			renderer will take precedence over shaders assigned to "All" when
-			rendering with that renderer.
-			""",
-
-			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-
-			"presetNames" : __rendererPresetNames,
-			"presetValues" : __rendererPresetValues,
-
-		},
-
-		"usage" : {
-
-			"description" :
-			"""
-			How the shader is to be used.
-			""",
-
-			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-
-		},
-
-		"shader" : {
-
-			"layout:index" : -1,
-
-		},
-
-	}
-
-)
+} )
