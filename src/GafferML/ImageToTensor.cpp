@@ -67,8 +67,7 @@ ConstTensorPtr typedImageTensor(
 	const Box2i dataWindow = imagePlug->dataWindow();
 	const size_t numPixels = dataWindow.size().x * dataWindow.size().y;
 
-	typename TypedData<std::vector<T>>::Ptr bufferData = new TypedData<std::vector<T>>();
-	vector<T> &buffer = bufferData->writable();
+	vector<T> buffer;
 	buffer.resize( numPixels * channels.size() );
 
 	boost::container::flat_map<std::string, size_t> channelIndices;
@@ -127,7 +126,24 @@ ConstTensorPtr typedImageTensor(
 		shape = { 1, (int64_t)channels.size(), dataWindow.size().y, dataWindow.size().x };
 	}
 
-	ConstTensorPtr tensor = new Tensor( bufferData, shape );
+	ConstTensorPtr tensor;
+	if constexpr( std::is_same_v<T, Ort::BFloat16_t> )
+	{
+		// There is no `IECore::BFloat16Data` type. Create a `Ort::Value` directly and pass
+		// it to `Tensor`.
+		Ort::AllocatorWithDefaultOptions allocator;
+		Ort::Value value = Ort::Value::CreateTensor(
+			allocator, shape.data(), shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16
+		);
+		std::copy( buffer.begin(), buffer.end(), value.GetTensorMutableData<Ort::BFloat16_t>() );
+		tensor = new Tensor( std::move( value ) );
+	}
+	else
+	{
+		// Create and pass the data to `Tensor` so it can hold that pointer for its own uses.
+		typename TypedData<std::vector<T>>::Ptr bufferData = new TypedData<std::vector<T>>( buffer );
+		tensor = new Tensor( bufferData, shape );
+	}
 
 	return tensor;
 }
@@ -315,6 +331,10 @@ void ImageToTensor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 		else if( tensorDataType == (int)Tensor::DataType::Float16 )
 		{
 			tensor = typedImageTensor<half>( imagePlug(), channels, interleaveChannels, context->canceller() );
+		}
+		else if( tensorDataType == (int)Tensor::DataType::BFloat16 )
+		{
+			tensor = typedImageTensor<Ort::BFloat16_t>( imagePlug(), channels, interleaveChannels, context->canceller() );
 		}
 		else
 		{
