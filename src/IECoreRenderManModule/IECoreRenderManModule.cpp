@@ -38,11 +38,25 @@
 
 #include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
+#include "prmanapi.h"
+
 using namespace boost::python;
 using namespace IECoreRenderMan;
 
+namespace
+{
+
+int renderManMajorVersion()
+{
+	return _PRMANAPI_VERSION_MAJOR_;
+}
+
+} // namespace
+
 BOOST_PYTHON_MODULE( _IECoreRenderMan )
 {
+
+	def( "renderManMajorVersion", renderManMajorVersion );
 
 	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "IECoreRenderMan.ShaderNetworkAlgo" ) ) );
 	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
@@ -50,4 +64,5 @@ BOOST_PYTHON_MODULE( _IECoreRenderMan )
 
 	def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
 	def( "usdLightTransform", &ShaderNetworkAlgo::usdLightTransform );
+
 }

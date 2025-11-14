@@ -47,7 +47,7 @@ class RenderManAttributesTest( GafferSceneTest.SceneTestCase ) :
 	def testAttributeMetadata( self ) :
 
 		# Check a few of the registrations we expect from `startup/GafferScene/renderManAttributes.py`.
-		self.assertEqual( Gaffer.Metadata.value( "option:ri:hider:bakebboxmin", "label" ), "Baking bbox min" )
+		self.assertEqual( Gaffer.Metadata.value( "attribute:ri:shade:minsamples", "label" ), "Min Samples" )
 		# Yes, the double-namespacing of `ri:Ri` is absurd, but that's the logical consequence of adhering to the
 		# RenderMan naming, and matches the `PxrAttributesAPI` USD schema.
 		self.assertEqual( Gaffer.Metadata.value( "attribute:ri:Ri:Matte", "label" ), "Matte" )

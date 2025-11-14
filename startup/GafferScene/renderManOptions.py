@@ -267,7 +267,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 			"defaultValue" : 0,
 			"description" : "Enables recovery from a checkpoint created by a previous render.",
 			"label" : "Checkpoint Recover",
-			"layout:section" : "Display",
+			"layout:section" : Gaffer.Metadata.value( "option:ri:checkpoint:interval", "layout:section" ),
 			"plugValueWidget:type" : "GafferUI.BoolPlugValueWidget",
 
 		},
