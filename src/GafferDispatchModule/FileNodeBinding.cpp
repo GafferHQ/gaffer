@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,18 +36,31 @@
 
 #include "boost/python.hpp"
 
-#include "DispatcherBinding.h"
 #include "FileNodeBinding.h"
-#include "TaskNodeBinding.h"
 
-using namespace boost::python;
-using namespace GafferDispatchModule;
+#include "GafferDispatch/DeleteFiles.h"
+#include "GafferDispatch/FileList.h"
 
-BOOST_PYTHON_MODULE( _GafferDispatch )
+#include "GafferDispatchBindings/TaskNodeBinding.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
+
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferDispatch;
+using namespace GafferDispatchBindings;
+
+void GafferDispatchModule::bindFileNodes()
 {
+	{
+		boost::python::scope s = DependencyNodeClass<FileList>();
 
-	bindTaskNode();
-	bindDispatcher();
-	bindFileNodes();
+		boost::python::enum_<FileList::SequenceMode>( "SequenceMode" )
+			.value( "Files", FileList::SequenceMode::Files )
+			.value( "Sequences", FileList::SequenceMode::Sequences )
+			.value( "FilesAndSequences", FileList::SequenceMode::FilesAndSequences )
+		;
+	}
 
+	TaskNodeClass<DeleteFiles>();
 }
