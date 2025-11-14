@@ -1,7 +1,10 @@
-1.6.x.x (relative to 1.6.5.0)
+1.6.5.x (relative to 1.6.5.0)
 =======
 
+Fixes
+-----
 
+- ImageWriter : Fixed file corruption or crashes caused by `openexr:lineOrder` being set in image metadata.
 
 1.6.5.0 (relative to 1.6.4.0)
 =======
