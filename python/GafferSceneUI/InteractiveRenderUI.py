@@ -375,13 +375,6 @@ class _MessagesPlugValueWidget( GafferUI.PlugValueWidget ) :
 # Metadata for InteractiveRender node.
 ##########################################################################
 
-def __rendererPresetNames( plug ) :
-
-	return IECore.StringVectorData( [
-		x for x in GafferSceneUI.RenderUI.rendererPresetNames( plug )
-		if x != "OpenGL"
-	] )
-
 Gaffer.Metadata.registerNode(
 
 	GafferScene.InteractiveRender,
@@ -427,9 +420,15 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type" : "GafferSceneUI.RenderUI.RendererPlugValueWidget",
 
-			"preset:Default" : "",
-			"presetNames" : __rendererPresetNames,
-			"presetValues" : __rendererPresetNames,
+			"presetNames" : lambda plug : IECore.StringVectorData( [
+				"Default" if n == "None" else n
+				for n in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetNames" )
+				if n != "OpenGL"
+			] ),
+			"presetValues" : lambda plug : IECore.StringVectorData( [
+				n for n in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetValues" )
+				if n != "OpenGL"
+			] ),
 
 		},
 

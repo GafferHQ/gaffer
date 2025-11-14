@@ -1972,6 +1972,8 @@ struct CloudTypeDescription
 	CloudTypeDescription()
 	{
 		IECoreScenePreview::Renderer::registerType(
+			/// \todo Remove space from name, use label metadata to add it back
+			/// in the UI, and make `registerType()` refuse to accept spaces.
 			"3Delight Cloud",
 			[] ( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler ) {
 				return new DelightRenderer( renderType, fileName, messageHandler, /* cloud = */ true );
