@@ -123,14 +123,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
 
-			self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__pathListingDragEnter ) )
-			# We connect at front to ensure we can disable the header highlight when moving from the
-			# header to a column cell.
-			## \todo Should this instead be handled by PathColumn considering the header in its drag handling?
-			self.__pathListing.dragMoveSignal().connectFront( Gaffer.WeakMethod( self.__pathListingDragMove ) )
-			self.__pathListing.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__pathListingDragLeave ) )
-			self.__pathListing.dropSignal().connect( Gaffer.WeakMethod( self.__pathListingDrop ) )
-
 			## \todo Provide public API for this in PathListingWidget, we currently use a different approach
 			# for header-only context menus in CatalogueUI.
 			self.__pathListing._qtWidget().header().setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
@@ -207,13 +199,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			toolTip
 		)
 
-	def __columnAtHeaderPosition( self, position ) :
-
-		if position.y <= self.__pathListing._qtWidget().header().height() :
-			return self.__pathListing.columnAt( position )
-
-		return None
-
 	def __dropData( self, event ) :
 
 		optionNames = [
@@ -223,12 +208,14 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		return optionNames if len( optionNames ) > 0 else None
 
-	def __pathListingDragEnter( self, widget, event ) :
+	def __columnHeaderDragEnter( self, column, path, pathListing, event ) :
+
+		if not path.isEmpty() :
+			return False
 
 		if not self.__currentSectionEditable() :
 			return False
 
-		column = self.__columnAtHeaderPosition( event.line.p0 )
 		if column is not None and self.__dropData( event ) is not None :
 			self.__pathListing._qtWidget().header().setHighlightedSectionDivider( max( len( self.__commonColumns ), self.__pathListing.getColumns().index( column ) ) )
 			self.__dragEnterPointer = GafferUI.Pointer.getCurrent()
@@ -237,12 +224,14 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		return False
 
-	def __pathListingDragMove( self, widget, event ) :
+	def __columnHeaderDragMove( self, column, path, pathListing, event ) :
+
+		if not path.isEmpty() :
+			return False
 
 		if not self.__currentSectionEditable() :
 			return False
 
-		column = self.__columnAtHeaderPosition( event.line.p0 )
 		if column is not None and self.__dropData( event ) is not None :
 			self.__pathListing._qtWidget().header().setHighlightedSectionDivider( max( len( self.__commonColumns ), self.__pathListing.getColumns().index( column ) ) )
 			GafferUI.Pointer.setCurrent( "plus" )
@@ -250,12 +239,12 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing._qtWidget().header().setHighlightedSectionDivider( None )
 			GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
 
-		# We always return False to give cells the opportunity to respond when a drag is moved from
-		# a column cell to a header.
-		## \todo Should this instead be handled by PathColumn considering the header in its drag handling?
-		return False
+		return True
 
-	def __pathListingDragLeave( self, widget, event ) :
+	def __columnHeaderDragLeave( self, column, path, pathListing, event ) :
+
+		if not path.isEmpty() :
+			return False
 
 		if self.__currentSectionEditable() :
 			self.__pathListing._qtWidget().header().setHighlightedSectionDivider( None )
@@ -263,7 +252,10 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		return True
 
-	def __pathListingDrop( self, widget, event ) :
+	def __columnHeaderDrop( self, column, path, pathListing, event ) :
+
+		if not path.isEmpty() :
+			return
 
 		if not self.__currentSectionEditable() :
 			return
@@ -275,7 +267,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if optionNames is None :
 			return
 
-		columnIndex = self.__pathListing.getColumns().index( self.__pathListing.columnAt( event.line.p0 ) ) - len( self.__commonColumns ) if len( self.settings()["favouriteColumns"].getValue() ) > 0 else 0
+		columnIndex = self.__pathListing.getColumns().index( column ) - len( self.__commonColumns ) if len( self.settings()["favouriteColumns"].getValue() ) > 0 else 0
 		for name in reversed( optionNames ) :
 			self.__favourite( "option:" + name, index = max( 0, columnIndex ) )
 
@@ -433,6 +425,12 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
 			self.__columnCache[ ( columnKey, section ) ] = column
+
+			if section == "Favourites" :
+				column.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__columnHeaderDragEnter ) )
+				column.dragMoveSignal().connectFront( Gaffer.WeakMethod( self.__columnHeaderDragMove ) )
+				column.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__columnHeaderDragLeave ) )
+				column.dropSignal().connectFront( Gaffer.WeakMethod( self.__columnHeaderDrop ) )
 
 		return column
 
