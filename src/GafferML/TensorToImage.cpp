@@ -115,7 +115,10 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 			functor( value.GetTensorData<float>() );
 			break;
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
-			functor( reinterpret_cast<const half *>( value.GetTensorData<Ort::Float16_t>() ) );
+			functor( value.GetTensorData<Ort::Float16_t>() );
+			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16 :
+			functor( value.GetTensorData<Ort::BFloat16_t>() );
 			break;
 		default :
 			throw IECore::Exception( fmt::format( "Unsupported tensor data type \"{}\"", elementType ) );

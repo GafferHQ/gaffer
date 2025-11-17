@@ -147,6 +147,29 @@ class TensorToImageTest( GafferImageTest.ImageTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, "Unsupported tensor data type" ) :
 			tensorToImage["out"].channelData( "R", imath.V2i( 0 ) )
 
+	def testNonIECoreElementTypes( self ) :
+
+		image = GafferImage.Checkerboard()
+
+		imageToTensor = GafferML.ImageToTensor()
+		imageToTensor["image"].setInput( image["out"] )
+		imageToTensor["channels"].setInput( image["out"]["channelNames"])
+
+		tensorToImage = GafferML.TensorToImage()
+		tensorToImage["tensor"].setInput( imageToTensor["tensor"] )
+		tensorToImage["channels"].setInput( image["out"]["channelNames"])
+
+		self.assertImagesEqual( tensorToImage["out"], image["out"] )
+
+		imageToTensor["interleaveChannels"].setValue( True )
+		tensorToImage["interleavedChannels"].setValue( True )
+
+		for t in [
+			GafferML.Tensor.ElementType.BFloat16
+		] :
+			imageToTensor["tensorElementType"].setValue( t )
+			self.assertImagesEqual( tensorToImage["out"], image["out"], maxDifference = 5e-4 )
+
 
 if __name__ == "__main__":
 	unittest.main()
