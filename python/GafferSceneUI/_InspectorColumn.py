@@ -502,7 +502,7 @@ def __dragEnter( column, path, pathListing, event ) :
 	if __originalDragPointer is None :
 		__originalDragPointer = GafferUI.Pointer.getCurrent()
 
-	if path is None :
+	if path is None or path.isEmpty() :
 		return False
 
 	if not isinstance( event.data, IECore.Object ) or isinstance( event.data, IECore.NullObject ) :
@@ -528,7 +528,7 @@ def __dragLeave( column, path, pathListing, event ) :
 
 def __dragMove( column, path, pathListing, event ) :
 
-	if path is None :
+	if path is None or path.isEmpty() :
 		return False
 
 	inspection = column.inspect( path )
@@ -581,7 +581,7 @@ def __updatable( inspection ) :
 
 def __drop( column, path, pathListing, event ) :
 
-	if path is None :
+	if path is None or path.isEmpty() :
 		return False
 
 	global __originalDragPointer

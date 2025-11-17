@@ -166,7 +166,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
 		self.__dragPointer = "paths"
 		self.__dragBeginIndex = None
-		self.__currentDragIndex = None
+		self.__currentDragColumn = None
+		self.__currentDragPath = None
 		self.__path = None
 
 		self.setDisplayMode( displayMode )
@@ -790,55 +791,55 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		GafferUI.Pointer.setCurrent( None )
 		self.__dragBeginIndex = None
-		self.__currentDragIndex = None
+		self.__currentDragColumn = None
+		self.__currentDragPath = None
 
 	def __dragEnter( self, widget, event ) :
 
-		index = self.__indexAt( event.line.p0 )
-		if index is None :
+		column = self.columnAt( event.line.p0 )
+		if column is None :
 			return False
 
-		if self.getColumns()[index.column()].dragEnterSignal()(
-			self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
-		) :
-			self.__currentDragIndex = QtCore.QPersistentModelIndex( index )
-			self.__setHighlightedIndex( index )
+		# The header is represented in drag events as an empty Path. \todo Should this be handled by `pathAt()`?
+		path = self.pathAt( event.line.p0 ) if event.line.p0.y > self._qtWidget().header().height() else Gaffer.Path()
+		if path is None :
+			return False
+
+		if column.dragEnterSignal()( column, path, self, event ) :
+			self.__currentDragColumn = column
+			self.__currentDragPath = path
+			self.__setHighlightedIndex( self.__indexAt( event.line.p0 ) )
 			return True
 
 	def __dragMove( self, widget, event ) :
 
-		assert( isinstance( self.__currentDragIndex, ( type( None ), QtCore.QPersistentModelIndex ) ) )
-		if self.__currentDragIndex is not None and self.__currentDragIndex.isValid() :
-			previousIndex = QtCore.QModelIndex( self.__currentDragIndex )
-		else :
-			previousIndex = None
-
-		index = self.__indexAt( event.line.p0 )
-
-		# We've moved out of the previous index
-		if previousIndex is not None and previousIndex != index :
-			self.__currentDragIndex = None
+		column = self.columnAt( event.line.p0 )
+		path = self.pathAt( event.line.p0 ) if event.line.p0.y > self._qtWidget().header().height() else Gaffer.Path()
+		columnOrPathChanged = ( column, path ) != ( self.__currentDragColumn, self.__currentDragPath )
+		if columnOrPathChanged and self.__currentDragColumn is not None and self.__currentDragPath is not None :
 			self.__setHighlightedIndex( None )
-			self.getColumns()[previousIndex.column()].dragLeaveSignal()(
-				self.getColumns()[previousIndex.column()], self.__pathForIndex( previousIndex ), self, event
-			)
+			self.__currentDragColumn.dragLeaveSignal()( self.__currentDragColumn, self.__currentDragPath, self, event )
+			self.__currentDragColumn = None
+			self.__currentDragPath = None
 
-		if index is None or index == self.__dragBeginIndex :
+		if column is None or path is None :
 			return False
 
-		# We've moved into a new index
-		if previousIndex is None or previousIndex != index :
-			if self.getColumns()[index.column()].dragEnterSignal()(
-				self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
-			) :
-				self.__currentDragIndex = QtCore.QPersistentModelIndex( index )
-				self.__setHighlightedIndex( index )
+		index = self.__indexAt( event.line.p0 )
+		# Prevent moving back to the same index the drag began from
+		if index is not None and index == self.__dragBeginIndex :
+			return False
+
+		if columnOrPathChanged :
+			if column.dragEnterSignal()( column, path, self, event ) :
+				if index is not None :
+					self.__setHighlightedIndex( index )
+				self.__currentDragColumn = column
+				self.__currentDragPath = path
 				return True
-		elif previousIndex == index :
-			# We've moved within the same index
-			return self.getColumns()[index.column()].dragMoveSignal()(
-				self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
-			)
+		else :
+			# We've moved within the same column and path
+			return column.dragMoveSignal()( column, path, self, event )
 
 		return False
 
@@ -846,13 +847,8 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self.__setHighlightedIndex( None )
 
-		assert( isinstance( self.__currentDragIndex, ( type( None ), QtCore.QPersistentModelIndex ) ) )
-		if self.__currentDragIndex is not None and self.__currentDragIndex.isValid() :
-			index = QtCore.QModelIndex( self.__currentDragIndex )
-
-			return self.getColumns()[index.column()].dragLeaveSignal()(
-				self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
-			)
+		if self.__currentDragColumn is not None and self.__currentDragPath is not None :
+			return self.__currentDragColumn.dragLeaveSignal()( self.__currentDragColumn, self.__currentDragPath, self, event )
 
 		return False
 
@@ -860,13 +856,15 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self.__setHighlightedIndex( None )
 
-		index = self.__indexAt( event.line.p0 )
-		if index is None or index != self.__currentDragIndex :
+		column = self.columnAt( event.line.p0 )
+		if column is None :
 			return False
 
-		return self.getColumns()[index.column()].dropSignal()(
-			self.getColumns()[index.column()], self.__pathForIndex( index ), self, event
-		)
+		path = self.pathAt( event.line.p0 ) if event.line.p0.y > self._qtWidget().header().height() else Gaffer.Path()
+		if path is None :
+			return False
+
+		return column.dropSignal()( column, path, self, event )
 
 	def __contextMenu( self, widget ) :
 
