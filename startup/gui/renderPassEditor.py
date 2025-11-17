@@ -41,6 +41,16 @@ import Gaffer
 import GafferUI
 import GafferSceneUI
 
+## \todo We intend to move away from these manual `registerOption()` registrations and
+# instead rely on metadata. This would require introducing additional `option:` metadata
+# to configure which section each option belongs, and whether the column for that option
+# should be visible by default. This configuration could also be expanded to support
+# global attributes for renderers that require them, such as RenderMan.
+# We also plan to introduce a user-controlled visibility mask that allows overriding the
+# default visibility of columns within a particular section. This would allow interactive
+# configuration of the columns visible within a section, but not allow columns to be
+# reordered within their section, or moved between sections.
+
 GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:enabled" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:type" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:inclusions" )
