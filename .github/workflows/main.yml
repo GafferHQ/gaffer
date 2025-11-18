@@ -92,8 +92,9 @@ jobs:
         # We preload `libSegFault.so` to get more information from any crashes
         # which might occur during CI.
         LD_PRELOAD: libSegFault.so
-      # This MAC address is required by our RenderMan license.
-      options: --mac-address a4:bb:6d:cf:40:7a
+      # The MAC address is required by our RenderMan license. The `--privileged`
+      # option is needed to run docker containers inside the main docker container.
+      options: --mac-address a4:bb:6d:cf:40:7a --privileged
 
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
@@ -168,15 +169,6 @@ jobs:
         ./.github/workflows/main/installONNX.py
         echo ONNX_ROOT=$GITHUB_WORKSPACE/onnxruntime >> $GITHUB_ENV
       shell: bash
-
-    - name: Install RenderMan
-      run: ./.github/workflows/main/installRenderMan.py --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
-      shell: bash
-      env:
-        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
-        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
-        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
-      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
 
     - name: Install Mesa (Windows)
       # Installed after dependencies to avoid errors from python related to existing directory `bin`.
@@ -259,6 +251,55 @@ jobs:
       # GafferArnold for pull requests by pushing a branch to the main repo and
       # making a pull request from there.
       if: ${{ env.ARNOLD_DOWNLOAD_USER != '' }}
+
+    - name: Install RenderMan 26.3
+      run: ./.github/workflows/main/installRenderMan.py --version 26.3 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+
+    - name: Build and test against RenderMan 26.3
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
+        ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }} IECoreRenderManTest GafferRenderManTest GafferRenderManUITest
+        echo "::remove-matcher owner=unittest::"
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Install RenderMan 27.0
+      run: |
+        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
+        ./.github/workflows/main/installRenderMan.py --version 27.0 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+
+    - name: Build against RenderMan 27.0
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Test against RenderMan 27.0
+      # RenderMan 27 claims to be compatible with VFXPlatform 2024, but requires a
+      # glibc version higher than the allowed maximum of 2.28. This means we
+      # can't run RenderMan in our Rocky 8 build container, which was carefully
+      # chosen to provide a conforming glibc version. So, to test RenderMan 27,
+      # we must run in a Rocky 9 container.
+      run: |
+        dnf install -y podman
+        podman run -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
+        df -H
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' && matrix.name != 'linux-gcc11-platform23' }}
 
     - name: Build Docs and Package
       # Docs builds should be relatively quick. If there is a problem, this
