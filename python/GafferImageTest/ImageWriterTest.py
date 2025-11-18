@@ -1975,5 +1975,26 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		imageReader["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		self.assertNotIn( "fileValid", imageReader["out"].metadata() )
 
+	def testNoLineOrderCorruption( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__largeFilePath )
+
+		im = GafferImage.ImageMetadata()
+		im["metadata"].addChild( Gaffer.NameValuePlug( "openexr:lineOrder", "decreasingY" ) )
+		im["in"].setInput( r["out"] )
+
+		testFile = self.__testFile( "badLineOrder", "RGBA", "exr" )
+
+		w = GafferImage.ImageWriter()
+		w['fileName'].setValue( testFile )
+		w['in'].setInput( im['out'] )
+		w["task"].execute()
+
+		reRead = GafferImage.ImageReader()
+		reRead["fileName"].setValue( testFile )
+
+		self.assertImagesEqual( r["out"], reRead["out"], ignoreMetadata = True )
+
 if __name__ == "__main__":
 	unittest.main()
