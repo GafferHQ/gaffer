@@ -1,4 +1,4 @@
-1.6.5.x (relative to 1.6.5.0)
+1.6.5.1 (relative to 1.6.5.0)
 =======
 
 Fixes
