@@ -88,3 +88,9 @@ if format == "tgz" :
 elif format == "zip":
     with zipfile.ZipFile( archiveFile ) as f :
         f.extractall( path = installDir )
+
+# Free up disk space by removing the archive and deleting bits of the
+# install that aren't needed.
+
+os.remove( archiveFile )
+shutil.rmtree( installDir / "license" / "installer" )

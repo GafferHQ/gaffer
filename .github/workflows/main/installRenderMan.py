@@ -133,7 +133,10 @@ else :
 # pushes us to the edge of available space on the GitHub runners. We could
 # probably be more aggressive if we needed, but this alone clears over 1G.
 
+os.remove( fileName )
+
 for path in [
+	installLocation / "lib" / "3rdparty" / "Qt-6.5.3",
 	installLocation / "lib" / "RenderManAssetLibrary",
 	installLocation / "lib" / "python2.7",
 	installLocation / "lib" / "python3.7",
