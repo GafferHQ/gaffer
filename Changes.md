@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.5.0)
 =======
 
+Features
+--------
+
+- RenderMan : Added support for RenderMan 27.0, in addition to the existing support for RenderMan 26.3.
+
 Improvements
 ------------
 

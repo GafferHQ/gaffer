@@ -44,6 +44,12 @@ import requests
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
+	"--version",
+	help = "The version of RenderMan to install.",
+	default = "26.3",
+	choices = [ "26.3", "27.0" ],
+)
+parser.add_argument(
 	"--outputFormat",
 	help = "A format string that specifies the output printed "
 		"by this script. May contain an {rmanTree} token that "
@@ -73,9 +79,15 @@ if "rmanprofile" not in cookies :
 # with a link that takes you to _another_ page which has the file ids
 # for the download for each platform. At some point we should scrape that
 # to figure out the files given the RenderMan version we want, but for now
-# we just hardcode the ids for RenderMan 26.3.
+# we just hardcode the ids for the versions we care about.
 
-fileId = "12544" if os.name == "nt" else "12545"
+fileId, distId = {
+	"26.3-posix" : ( "12545", "4483"),
+	"26.3-nt" : ( "12544", "4483"),
+	"27.0-posix" : ( "12607", "4492"),
+	"27.0-nt" : ( "12604", "4492"),
+}[f"{args.version}-{os.name}"]
+
 fileName = "RenderMan.msi" if os.name == "nt" else "RenderMan.rpm"
 
 # Now we can download our file.
@@ -84,7 +96,7 @@ download = requests.get(
 	"https://renderman.pixar.com/forum/download/release",
 	{
 		"fileid" : fileId,
-		"distid" : "4483",
+		"distid" : distId,
 		"action" : "dodownload",
 	},
 	cookies = cookies,
@@ -107,7 +119,7 @@ if os.name == "nt" :
 		],
 	)
 
-	installLocation = pathlib.Path( "c:\Program Files\Pixar\RenderManProServer-26.3" )
+	installLocation = pathlib.Path( f"c:\Program Files\Pixar\RenderManProServer-{args.version}" )
 
 else :
 
@@ -115,24 +127,30 @@ else :
 		[ "rpm", "-i", fileName ]
 	)
 
-	installLocation = pathlib.Path( "/opt/pixar/RenderManProServer-26.3" )
+	installLocation = pathlib.Path( f"/opt/pixar/RenderManProServer-{args.version}" )
 
 # Remove unnecessary bits. The default installation is a whopping 2.9G, and
 # pushes us to the edge of available space on the GitHub runners. We could
 # probably be more aggressive if we needed, but this alone clears over 1G.
 
-shutil.rmtree( installLocation / "lib" / "RenderManAssetLibrary" )
-shutil.rmtree( installLocation / "lib" / "python2.7" )
-shutil.rmtree( installLocation / "lib" / "python3.7" )
-shutil.rmtree( installLocation / "lib" / "python3.9" )
-shutil.rmtree( installLocation / "lib" / "python3.11" )
-shutil.rmtree( installLocation / "lib" / "textures" )
+os.remove( fileName )
+
+for path in [
+	installLocation / "lib" / "3rdparty" / "Qt-6.5.3",
+	installLocation / "lib" / "RenderManAssetLibrary",
+	installLocation / "lib" / "python2.7",
+	installLocation / "lib" / "python3.7",
+	installLocation / "lib" / "python3.9",
+	installLocation / "lib" / "python3.11",
+	installLocation / "lib" / "textures",
+] :
+	if path.exists() :
+		shutil.rmtree( path )
 
 # Install the license file. Details of how we store this securely are
 # documented here :
 #
 #  https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#storing-large-secrets
-
 
 subprocess.check_call( [
 	"gpg", "--quiet", "--batch", "--yes", "--decrypt",
