@@ -487,7 +487,7 @@ class InspectorTree : public IECore::RefCounted
 			// Note : This is not as bad as it sounds, because the more
 			// expensive calls to `TreeItem::inspector` _are_ deferred.
 
-			m_rootItem = std::make_shared<TreeItem>();
+			auto newRootItem = std::make_shared<TreeItem>();
 			const IECore::StringAlgo::MatchPatternPath filterPath = IECore::StringAlgo::matchPatternPath( m_filter );
 
 			for( const auto &context : m_contexts )
@@ -527,7 +527,7 @@ class InspectorTree : public IECore::RefCounted
 							continue;
 						}
 
-						TreeItem *inspectorItem = m_rootItem->insertDescendant( fullPath );
+						TreeItem *inspectorItem = newRootItem->insertDescendant( fullPath );
 						inspectorItem->inspector = inspector;
 					}
 				}
@@ -535,9 +535,10 @@ class InspectorTree : public IECore::RefCounted
 
 			if( m_isolateDifferences )
 			{
-				isolateDifferencesWalk( m_rootItem.get(), Path::Names(), canceller );
+				isolateDifferencesWalk( newRootItem.get(), Path::Names(), canceller );
 			}
 
+			m_rootItem = newRootItem;
 			return m_rootItem;
 		}
 

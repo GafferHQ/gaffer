@@ -526,5 +526,26 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		# `scene:path` being missing from the context.
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/Location" ] )
 
+	def testCancellationRecovery( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		context = Gaffer.Context()
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/sphere" )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( sphere["out"], [ context, context ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/" )
+
+		# Do an evaluation which is cancelled immediately.
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+		with self.assertRaises( IECore.Cancelled ) :
+			path.children( canceller )
+
+		# That shouldn't prevent a subsequent evaluation from working.
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/Location" ] )
+
 if __name__ == "__main__":
 	unittest.main()
