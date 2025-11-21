@@ -2331,6 +2331,21 @@ class XPURendererTest( RendererTest ) :
 
 		pass
 
+	@unittest.skipIf( GafferTest.inCI(), "XPU segfault on CI" )
+	def testIntegratorEdit( self ):
+
+		RendererTest.testIntegratorEdit( self )
+
+	@unittest.skipIf( GafferTest.inCI(), "XPU segfault on CI" )
+	def testMeshLight( self ):
+
+		RendererTest.testMeshLight( self )
+
+	@unittest.skipIf( GafferTest.inCI(), "intermittent XPU segfault on CI" )
+	def testPortalLight( self ) :
+
+		RendererTest.testPortalLight( self )
+
 	def testNoDeviceSelection( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
