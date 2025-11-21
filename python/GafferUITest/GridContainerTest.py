@@ -360,5 +360,43 @@ class GridContainerTest( GafferUITest.TestCase ) :
 		self.assertTrue( g[1,2] is b )
 		self.assertTrue( g[0,0] is t )
 
+	def testNextRow( self ) :
+
+		grid = GafferUI.GridContainer()
+
+		with grid.nextRow() :
+
+			GafferUI.TextWidget( "Row 0 Column 0" )
+			GafferUI.TextWidget( "Row 0 Column 1" )
+
+		with grid.nextRow() :
+
+			GafferUI.TextWidget( "Row 1 Column 1", parenting = { "index" : 1 } )
+
+		with grid.nextRow( index = 3 ) :
+
+			GafferUI.TextWidget( "Row 3 Column 0" )
+
+		with grid.nextRow() :
+
+			GafferUI.TextWidget( "Row 4 Column 0-1", parenting = { "index" : slice( 0, 2 ) } )
+
+		self.assertEqual( grid.gridSize(), imath.V2i( 2, 5 ) )
+
+		self.assertEqual( grid[0,0].getText(), "Row 0 Column 0" )
+		self.assertEqual( grid[1,0].getText(), "Row 0 Column 1" )
+
+		self.assertIsNone( grid[0,1] )
+		self.assertEqual( grid[1,1].getText(), "Row 1 Column 1" )
+
+		self.assertIsNone( grid[0,2] )
+		self.assertIsNone( grid[1,2] )
+
+		self.assertEqual( grid[0,3].getText(), "Row 3 Column 0" )
+		self.assertIsNone( grid[1,3] )
+
+		self.assertEqual( grid[0,4].getText(), "Row 4 Column 0-1" )
+		self.assertEqual( grid[1,4].getText(), "Row 4 Column 0-1" )
+
 if __name__ == "__main__":
 	unittest.main()
