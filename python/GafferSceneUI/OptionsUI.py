@@ -34,16 +34,49 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferScene
 
-def __optionMetadata( plug, key ) :
+# The following functions are protected rather than private so that
+# they can be shared by OptionTweaksUI.
 
-	if not isinstance( plug, Gaffer.NameValuePlug ) :
+def _optionMetadata( plug, name ) :
+
+	if not isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
 		plug = plug.parent()
 
-	target = "option:" + plug["name"].getValue()
-	return Gaffer.Metadata.value( target, key )
+	source = "option:" + plug["name"].getValue()
+	return Gaffer.Metadata.value( source, name )
+
+def _optionPresetNames( plug ) :
+
+	names = list( __optionPresets( plug ).keys() )
+	return IECore.StringVectorData( names ) if names else None
+
+def _optionPresetValues( plug ) :
+
+	values = list( __optionPresets( plug ).values() )
+	return IECore.DataTraits.dataFromElement( values ) if values else None
+
+def __optionPresets( plug ) :
+
+	result = {}
+	option = plug.parent()["name"].getValue()
+	source = "option:{}".format( option )
+
+	for n in Gaffer.Metadata.registeredValues( source ) :
+		if n.startswith( "preset:" ) :
+			result[n[7:]] = Gaffer.Metadata.value( source, n )
+
+	presetNames = Gaffer.Metadata.value( source, "presetNames" )
+	presetValues = Gaffer.Metadata.value( source, "presetValues" )
+	if presetNames and presetValues :
+		for presetName, presetValue in zip( presetNames, presetValues ) :
+			result.setdefault( presetName, presetValue )
+
+	return result
 
 Gaffer.Metadata.registerNode(
 
@@ -73,24 +106,24 @@ Gaffer.Metadata.registerNode(
 
 			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-			"description" : lambda plug : __optionMetadata( plug, "description" ),
-			"label" : lambda plug : __optionMetadata( plug, "label" ),
-			"layout:section" : lambda plug : __optionMetadata( plug, "layout:section" ),
+			"description" : lambda plug : _optionMetadata( plug, "description" ),
+			"label" : lambda plug : _optionMetadata( plug, "label" ),
+			"layout:section" : lambda plug : _optionMetadata( plug, "layout:section" ),
 
 		},
 
 		"options.*.value" : {
 
-			"plugValueWidget:type" : lambda plug : __optionMetadata( plug, "plugValueWidget:type" ),
-			"presetNames" : lambda plug : __optionMetadata( plug, "presetNames" ),
-			"presetValues" : lambda plug : __optionMetadata( plug, "presetValues" ),
-			"presetsPlugValueWidget:allowCustom" : lambda plug : __optionMetadata( plug, "presetsPlugValueWidget:allowCustom" ),
-			"path:leaf" : lambda plug : __optionMetadata( plug, "path:leaf" ),
-			"path:valid" : lambda plug : __optionMetadata( plug, "path:valid" ),
-			"fileSystemPath:extensions" : lambda plug : __optionMetadata( plug, "fileSystemPath:extensions" ),
-			"fileSystemPath:extensionsLabel" : lambda plug : __optionMetadata( plug, "fileSystemPath:extensionsLabel" ),
-			"scenePathPlugValueWidget:setNames" : lambda plug : __optionMetadata( plug, "scenePathPlugValueWidget:setNames" ),
-			"scenePathPlugValueWidget:setsLabel" : lambda plug : __optionMetadata( plug, "scenePathPlugValueWidget:setsLabel" ),
+			"plugValueWidget:type" : lambda plug : _optionMetadata( plug, "plugValueWidget:type" ),
+			"presetNames" : _optionPresetNames,
+			"presetValues" : _optionPresetValues,
+			"presetsPlugValueWidget:allowCustom" : lambda plug : _optionMetadata( plug, "presetsPlugValueWidget:allowCustom" ),
+			"path:leaf" : lambda plug : _optionMetadata( plug, "path:leaf" ),
+			"path:valid" : lambda plug : _optionMetadata( plug, "path:valid" ),
+			"fileSystemPath:extensions" : lambda plug : _optionMetadata( plug, "fileSystemPath:extensions" ),
+			"fileSystemPath:extensionsLabel" : lambda plug : _optionMetadata( plug, "fileSystemPath:extensionsLabel" ),
+			"scenePathPlugValueWidget:setNames" : lambda plug : _optionMetadata( plug, "scenePathPlugValueWidget:setNames" ),
+			"scenePathPlugValueWidget:setsLabel" : lambda plug : _optionMetadata( plug, "scenePathPlugValueWidget:setsLabel" ),
 
 		},
 
