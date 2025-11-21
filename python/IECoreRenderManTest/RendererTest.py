@@ -2337,5 +2337,33 @@ class XPURendererTest( RendererTest ) :
 
 		pass
 
+	def testNoDeviceSelection( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				( self.temporaryDirectory() / "beauty.exr" ).as_posix(),
+				"exr",
+				"rgba",
+				{
+				}
+			)
+		)
+
+		renderer.option( "ri:xpuCpuConfig", IECore.BoolData( False ) )
+		renderer.option( "ri:xpuGpuConfig", IECore.IntVectorData() )
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.render()
+		del renderer
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, "No XPU device selected. Defaulting to CPU." )
+
 if __name__ == "__main__":
 	unittest.main()

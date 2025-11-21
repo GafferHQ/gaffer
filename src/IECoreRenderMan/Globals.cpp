@@ -427,6 +427,18 @@ Session *Globals::acquireSession()
 				"multithreaded geometry output (RenderMan limitation)."
 			);
 		}
+
+		int32_t cpuEnabled = 1;
+		m_rileyParameters.GetInteger( g_xpuCPUConfigParameter, cpuEnabled );
+		uint32_t numEnabledGPUs = 0;
+		m_rileyParameters.GetIntegerDynamicArray( g_xpuGPUConfigParameter, numEnabledGPUs );
+
+		if( !cpuEnabled && !numEnabledGPUs )
+		{
+			IECore::msg( Msg::Warning, "RenderMan", "No XPU device selected. Defaulting to CPU." );
+			m_rileyParameters.SetInteger( g_xpuCPUConfigParameter, 1 );
+		}
+
 		m_session = std::make_unique<Session>( m_rileyVariant, m_rileyParameters, m_renderType, m_options, m_messageHandler );
 	}
 
