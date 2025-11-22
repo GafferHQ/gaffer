@@ -42,11 +42,11 @@ from urllib.request import urlretrieve
 version = "1.19.2"
 
 if sys.platform == "linux" :
-	url = f"https://github.com/microsoft/onnxruntime/releases/download/v{version}/onnxruntime-linux-x64-gpu-{version}.tgz"
+	url = f"https://github.com/microsoft/onnxruntime/releases/download/v{version}/onnxruntime-linux-x64-{version}.tgz"
 elif sys.platform == "darwin" :
 	url = f"https://github.com/microsoft/onnxruntime/releases/download/v{version}/onnxruntime-osx-arm64-{version}.tgz"
 elif sys.platform == "win32" :
-	url = f"https://github.com/microsoft/onnxruntime/releases/download/v{version}/onnxruntime-win-x64-gpu-{version}.zip"
+	url = f"https://github.com/microsoft/onnxruntime/releases/download/v{version}/onnxruntime-win-x64-{version}.zip"
 
 print( "Downloading ONNX \"{}\"".format( url ) )
 archiveFileName, headers = urlretrieve( url )
