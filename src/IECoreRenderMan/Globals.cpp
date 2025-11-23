@@ -79,7 +79,6 @@ ConstDataPtr g_xpuCPUConfigDefault = new IntData( 1 );
 const RtUString g_xpuGPUConfigParameter( "xpu:gpuconfig" );
 ConstDataPtr g_xpuGPUConfigDefault = new IntVectorData();
 
-const RtUString g_defaultPixelFilter = Loader::strings().k_gaussian;
 riley::FilterSize g_defaultPixelFilterSize = { 2, 2 };
 float g_defaultPixelVariance = 0.015;
 
@@ -167,7 +166,7 @@ const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene:
 
 Globals::Globals( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler )
 	:	m_rileyVariant( rileyVariant ), m_renderType( renderType ), m_messageHandler( messageHandler ),
-		m_pixelFilter( g_defaultPixelFilter ), m_pixelFilterSize( g_defaultPixelFilterSize ), m_pixelVariance( g_defaultPixelVariance ),
+		m_pixelFilter( Loader::strings().k_gaussian ), m_pixelFilterSize( g_defaultPixelFilterSize ), m_pixelVariance( g_defaultPixelVariance ),
 		m_expectedSessionCreationThreadId( std::this_thread::get_id() ),
 		m_renderTargetExtent()
 {
@@ -321,7 +320,7 @@ void Globals::option( const IECore::InternedString &name, const IECore::Object *
 		// of our outputs. Hopefully at some point the Riley API will be
 		// simplified to avoid all this ambiguity.
 		auto *d = optionCast<const StringData>( value, name );
-		m_pixelFilter = d ? RtUString( d->readable().c_str() ) : g_defaultPixelFilter;
+		m_pixelFilter = d ? RtUString( d->readable().c_str() ) : Loader::strings().k_gaussian;
 		deleteRenderView();
 	}
 	else if( name == g_pixelFilterWidthOption )

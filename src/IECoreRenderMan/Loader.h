@@ -41,6 +41,13 @@
 namespace IECoreRenderMan::Loader
 {
 
+/// Caution : On Linux, these functions load `libprman.so` and associated
+/// libraries dynamically using `RTLD_GLOBAL`. This makes our own code
+/// vulnerable to picking up bad symbols "leaked" from the PRMan libraries,
+/// which can lead to crashes. To limit the likelihood of this happening,
+/// we must call these functions as late as possible, only when the first
+/// Renderer instance is created.
+
 /// Loads `libprman` and returns the RixContext from which the rest of
 /// the RenderMan API can be accessed.
 RixContext *context();
