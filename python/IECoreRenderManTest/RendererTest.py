@@ -57,12 +57,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 	renderer = "RenderMan"
 
-	def setUp( self ) :
-
-		GafferTest.TestCase.setUp( self )
-		# Get "RenderMan" Renderer registered.
-		import IECoreRenderMan
-
 	def testFactory( self ) :
 
 		self.assertTrue( self.renderer in GafferScene.Private.IECoreScenePreview.Renderer.types() )
