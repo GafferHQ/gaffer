@@ -49,12 +49,25 @@ if "RMANTREE" in os.environ and IECore.SearchPath( sys.path ).find( "IECoreRende
 		GafferScene.Private.IECoreScenePreview.Renderer.registerType(
 			"RenderMan", lambda *args : __import__( "IECoreRenderMan" ) and GafferScene.Private.IECoreScenePreview.Renderer.create( "RenderMan", *args )
 		)
+		GafferScene.Private.IECoreScenePreview.Renderer.registerType(
+			"RenderManXPU", lambda *args : __import__( "IECoreRenderMan" ) and GafferScene.Private.IECoreScenePreview.Renderer.create( "RenderManXPU", *args )
+		)
 
 	Gaffer.Metadata.registerValue( "renderer:RenderMan", "ui:enabled", os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" )
+	Gaffer.Metadata.registerValue( "renderer:RenderManXPU", "ui:enabled", os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" )
 
 Gaffer.Metadata.registerValues( {
 
 	"renderer:RenderMan" : {
+
+		"optionPrefix" : "ri:",
+		"attributePrefix" : "ri:",
+
+	},
+
+	"renderer:RenderManXPU" : {
+
+		"label" : "RenderMan XPU",
 
 		"optionPrefix" : "ri:",
 		"attributePrefix" : "ri:",
