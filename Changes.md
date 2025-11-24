@@ -19,6 +19,7 @@ Fixes
 - SceneInspector : Fixed sporadic incomplete updates, particularly when an interactive render was running.
 - Render, InteractiveRender, StandardOptions : Fixed bugs allowing Cycles and 3Delight to appear as available renderers even when hidden from the UI or not configured.
 - ImageWriter : Fixed file corruption or crashes caused by `openexr:lineOrder` being set in image metadata.
+- Options, Attributes : Fixed missing presets.
 
 API
 ---
