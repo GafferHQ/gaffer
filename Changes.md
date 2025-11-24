@@ -18,6 +18,7 @@ Improvements
 - ImageToTensor : Added `tensorElementType` plug to choose between `Float`, `Float16` and `BFloat16`.
 - TensorToImage : Added conversion from `Float16` and `BFloat16` tensor elements in addition to the existing `Float` support.
 - RenderManOptions : Added XPU device configuration options.
+- `gaffer dispatch` : Removed restrictions that prevented nodes such as Switch and ContextVariables from being dispatched.
 
 Fixes
 -----
