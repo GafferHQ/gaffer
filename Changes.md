@@ -1,4 +1,4 @@
-1.6.x.x (relative to 1.6.5.0)
+1.6.x.x (relative to 1.6.5.1)
 =======
 
 Features
@@ -24,13 +24,20 @@ Fixes
 
 - SceneInspector : Fixed sporadic incomplete updates, particularly when an interactive render was running.
 - Render, InteractiveRender, StandardOptions : Fixed bugs allowing Cycles and 3Delight to appear as available renderers even when hidden from the UI or not configured.
-- ImageWriter : Fixed file corruption or crashes caused by `openexr:lineOrder` being set in image metadata.
 - Options, Attributes : Fixed missing presets.
 
 API
 ---
 
 - GridContainer : Added `nextRow()` context manager, to simplify the process of arranging child widgets in rows.
+
+1.6.5.1 (relative to 1.6.5.0)
+=======
+
+Fixes
+-----
+
+- ImageWriter : Fixed file corruption or crashes caused by `openexr:lineOrder` being set in image metadata.
 
 1.6.5.0 (relative to 1.6.4.0)
 =======
