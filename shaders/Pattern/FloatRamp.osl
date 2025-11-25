@@ -36,32 +36,31 @@
 
 #include "GafferOSL/Spline.h"
 
-// Now deprecated in favour of FloatRamp
-shader FloatSpline
+shader FloatRamp
 (
 
-	float splinePositions[] = { 0, 0, 1, 1 },
-	float splineValues[] = { 0, 0, 1, 1 },
-	string splineBasis = "catmull-rom",
+	float rampPositions[] = { 0, 0, 1, 1 },
+	float rampValues[] = { 0, 0, 1, 1 },
+	string rampBasis = "catmull-rom",
 
-	string direction = "custom" [[
-		string help = "Which direction the spline is applied in. U or V use the UVs, Diagonal or Radial use the UVs together with a start and end position. Custom uses the `x` input, which may be hooked up to any shader returning a float. When using UVs, the overrideUV plug maybe be connected in order to use custom UVs.",
+	string direction = "v" [[
+		string help = "Which direction the ramp is applied in. U or V use the UVs, Diagonal or Radial use the UVs together with a start and end position. Custom uses the `x` input, which may be hooked up to any shader returning a float. When using UVs, the overrideUV plug maybe be connected in order to use custom UVs.",
 		string widget = "popup",
 		string options = "Custom:custom|U:u|V:v|Diagonal:diagonal|Radial:radial",
 		int connectable = 0,
 	]],
 
 	float x = 0 [[
-		string help = "The spline coordinate to use when direction is set to Custom.",
+		string help = "The ramp coordinate to use when direction is set to Custom.",
 		string visibleExpression = "direction == \"custom\"",
 	]],
 	point startPosition = 0 [[
-		string help = "Determines the start of a Diagonal spline, or the center of a Radial spline.",
+		string help = "Determines the start of a Diagonal ramp, or the center of a Radial ramp.",
 		int gafferNoduleLayoutVisible = 0,
 		string visibleExpression = "direction == \"diagonal\" || direction == \"radial\"",
 	]],
 	point endPosition = point( 1, 1, 0 ) [[
-		string help = "Determines the end of a Diagonal spline.",
+		string help = "Determines the end of a Diagonal ramp.",
 		int gafferNoduleLayoutVisible = 0,
 		string visibleExpression = "direction == \"diagonal\"",
 	]],
@@ -85,29 +84,29 @@ shader FloatSpline
 		uv = overrideUV;
 	}
 
-	float splineCoord;
+	float rampCoord;
 	if( direction == "custom" )
 	{
-		splineCoord = x;
+		rampCoord = x;
 	}
 	else if( direction == "u" )
 	{
-		splineCoord = uv.x;
+		rampCoord = uv.x;
 	}
 	else if( direction == "v" )
 	{
-		splineCoord = uv.y;
+		rampCoord = uv.y;
 	}
 	else if( direction == "diagonal" )
 	{
 		vector disp = endPosition - startPosition;
-		splineCoord = dot( uv - startPosition, disp ) / dot( disp, disp );
+		rampCoord = dot( uv - startPosition, disp ) / dot( disp, disp );
 	}
 	else if( direction == "radial" )
 	{
 		vector disp = endPosition - startPosition;
-		splineCoord = length( uv - startPosition ) / radius;
+		rampCoord = length( uv - startPosition ) / radius;
 	}
 
-	c = floatSpline( splinePositions, splineValues, splineBasis, splineCoord );
+	c = floatSpline( rampPositions, rampValues, rampBasis, rampCoord );
 }

@@ -24,6 +24,7 @@ Breaking Changes
 - CompoundDataPlugValueWidget : Removed. LayoutPlugValueWidget and PlugCreationWidget replace all previous functionality.
 - Gaffer::SplinePlug :
   - Removed support for loading splines saved with Gaffer version 0.40.0.0 and earlier
+- OSL Shaders : Pattern/FloatSpline and Pattern/ColorSpline have been replaced by Pattern/FloatRamp and Pattern/ColorRamp. Old Gaffer scripts will automatically be updated on load, files exported from Gaffer will contain the new shaders. ( The .osl files for the old shaders are still included, so that old USD files can render ).
 
 1.6.x.x (relative to 1.6.8.0)
 =======
