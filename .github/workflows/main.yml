@@ -40,7 +40,7 @@ jobs:
             os: ubuntu-24.04
             buildType: RELEASE
             publish: true
-            containerImage: ghcr.io/gafferhq/build/build:3.2.0
+            containerImage: ghcr.io/gafferhq/build/build:3.4.0
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -53,7 +53,7 @@ jobs:
             os: ubuntu-24.04
             buildType: DEBUG
             publish: false
-            containerImage: ghcr.io/gafferhq/build/build:3.2.0
+            containerImage: ghcr.io/gafferhq/build/build:3.4.0
             testRunner: sudo -E -u testUser
             testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
@@ -65,7 +65,7 @@ jobs:
             os: ubuntu-24.04
             buildType: RELEASE
             publish: false
-            containerImage: ghcr.io/gafferhq/build/build:3.2.0
+            containerImage: ghcr.io/gafferhq/build/build:3.4.0
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -296,7 +296,6 @@ jobs:
       # chosen to provide a conforming glibc version. So, to test RenderMan 27,
       # we must run in a Rocky 9 container.
       run: |
-        dnf install -y podman
         podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
         df -H
       if: ${{ env.RMANTREE != '' && runner.os != 'Windows' && matrix.name != 'linux-gcc11-platform23' }}
