@@ -95,6 +95,22 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( n.testFloat, 2.5 )
 		self.assertEqual( n.testColor, imath.Color3f( 1, 2, 3 ) )
 
+	def testDisabledVariables( self ) :
+
+		n = GafferDispatch.PythonCommand()
+		n["variables"].addChild( Gaffer.NameValuePlug( "testEnabled", 1, defaultEnabled = True ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testDisabled", 1, defaultEnabled = False ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "", 1 ) )
+		n["command"].setValue( inspect.cleandoc(
+			"""
+			assert( "testEnabled" in variables )
+			assert( "testDisabled" not in variables )
+			assert( "" not in variables )
+			"""
+		) )
+
+		n["task"].execute()
+
 	def testContextAccess( self ) :
 
 		n = GafferDispatch.PythonCommand()

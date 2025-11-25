@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.6.0)
 =======
 
+Fixes
+-----
 
+- PythonCommand : Fixed invalid results from evaluating `"name" in variables`.
 
 1.6.6.0 (relative to 1.6.5.1)
 =======

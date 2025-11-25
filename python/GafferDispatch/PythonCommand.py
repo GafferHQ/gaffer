@@ -160,6 +160,11 @@ class _VariablesDict( dict ) :
 		self.__update()
 		return dict.items( self )
 
+	def __contains__( self, key ) :
+
+		self.__update()
+		return dict.__contains__( self, key )
+
 	def __getitem__( self, key ) :
 
 		self.__update()
