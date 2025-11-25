@@ -100,6 +100,9 @@ class dispatch( Gaffer.Application ) :
 					defaultValue = False,
 				),
 
+				## \todo This should take the names of TaskPlugs to dispatch, with some
+				# backwards-compatibility/convenience behaviour of taking the first output
+				# if a Node is named instead.
 				IECore.StringVectorParameter(
 					name = "tasks",
 					description = "The names of the task nodes to dispatch. Note if a script is supplied, the tasks must "

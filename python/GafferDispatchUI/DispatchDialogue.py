@@ -61,6 +61,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 	__dispatchDialogueMenuDefinition = None
 
+	## \todo `tasks` should be a list of TaskPlugs instead of a list of nodes.
 	def __init__( self, tasks, dispatchers, nodesToShow, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )

@@ -330,5 +330,23 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		with open( self.__outputTextFile.with_suffix( ".2" ), "r", encoding = "utf-8" ) as f :
 			self.assertEqual( f.readlines(), [ "its a 2nd test" ] )
 
+	def testSwitch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["textWriter"] = GafferDispatchTest.TextWriter( "test" )
+		script["textWriter"]["text"].setValue( "dispatched via switch" )
+		script["textWriter"]["fileName"].setValue( self.__outputTextFile )
+
+		script["switch"] = Gaffer.NameSwitch()
+		script["switch"].setup( script["textWriter"]["task"] )
+		script["switch"]["in"][0]["value"].setInput( script["textWriter"]["task"] )
+
+		script["fileName"].setValue( self.__scriptFileName )
+		script.save()
+
+		self.waitForCommand( f"gaffer dispatch -script {self.__scriptFileName} -tasks switch" )
+		self.assertTrue( self.__outputTextFile.exists() )
+
 if __name__ == "__main__":
 	unittest.main()
