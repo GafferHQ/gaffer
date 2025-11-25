@@ -740,6 +740,7 @@ IECore::DataPtr TweakPlug::createVectorDataFromElement( const IECore::Data *elem
 				// A bunch of things we're not allowed to make vectors of
 				!IECore::TypeTraits::IsTransformationMatrix< ValueType >::value &&
 				!IECore::TypeTraits::IsSpline< ValueType >::value &&
+				!IECore::TypeTraits::IsRamp< ValueType >::value &&
 				!std::is_same_v< ValueType, IECore::PathMatcher > &&
 				!std::is_same_v< ValueType, boost::posix_time::ptime >
 			)
