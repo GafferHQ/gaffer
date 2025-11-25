@@ -47,27 +47,18 @@ import GafferSceneUI
 class SceneEditor( GafferUI.NodeSetEditor ) :
 
 	## Provides an `in` ScenePlug which defines the scene to be
-	#  displayed and/or edited. Pass `numInputs > 1` to the constructor to
-	#  instead provide an `in` ArrayPlug to provide multiple scenes.
-	## \todo Remove `numInputs` argument. It is no longer used - the
-	# SceneInspector demonstrates a superior approach for multiple
-	# scene inputs.
+	#  displayed and/or edited.
 	class Settings( GafferUI.Editor.Settings ) :
 
 		# Pass `withHierarchyFilter = True` to set up a standard filter directed
 		# to a `__filteredIn` input plug.
-		def __init__( self, numInputs = 1, withHierarchyFilter = False ) :
+		def __init__( self, withHierarchyFilter = False ) :
 
 			GafferUI.Editor.Settings.__init__( self )
 
-			if numInputs == 1 :
-				self["in"] = GafferScene.ScenePlug()
-			else :
-				self["in"] = Gaffer.ArrayPlug( elementPrototype = GafferScene.ScenePlug(), minSize = numInputs, maxSize = numInputs )
+			self["in"] = GafferScene.ScenePlug()
 
 			if withHierarchyFilter :
-
-				assert( numInputs == 1 )
 
 				self["__filteredIn"] = GafferScene.ScenePlug()
 				self["__hierarchyFilter"] = _HierarchyFilter()
@@ -99,27 +90,30 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 	def _updateFromSet( self ) :
 
-		# Find ScenePlugs and connect them to `settings()["in"]`.
+		# Find a ScenePlug and connect it to `settings()["in"]`.
 
 		updatedParentingConnections = {}
-		inputsToFill = [ self.settings()["in"] ] if isinstance( self.settings()["in"], GafferScene.ScenePlug ) else list( self.settings()["in"].children() )
 
 		with Gaffer.DirtyPropagationScope() :
 
-			for node in self.getNodeSet()[-len(inputsToFill):] :
-
+			node = self.getNodeSet()[-1] if self.getNodeSet() else None
+			outputScenePlug = None
+			if node is not None :
 				outputScenePlug = next(
 					( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
 					None
 				)
-				if outputScenePlug is not None :
-					inputsToFill.pop( 0 ).setInput( outputScenePlug )
-					plugConnection = self.__parentingConnections.get( outputScenePlug )
-					if plugConnection is None :
-						plugConnection = outputScenePlug.parentChangedSignal().connect(
-							Gaffer.WeakMethod( self.__scenePlugParentChanged ), scoped = True
-						)
-					updatedParentingConnections[outputScenePlug] = plugConnection
+
+			self.settings()["in"].setInput( outputScenePlug )
+
+			if outputScenePlug is not None :
+
+				plugConnection = self.__parentingConnections.get( outputScenePlug )
+				if plugConnection is None :
+					plugConnection = outputScenePlug.parentChangedSignal().connect(
+						Gaffer.WeakMethod( self.__scenePlugParentChanged ), scoped = True
+					)
+				updatedParentingConnections[outputScenePlug] = plugConnection
 
 				nodeConnections = self.__parentingConnections.get( node )
 				if nodeConnections is None :
@@ -128,9 +122,6 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 						node.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True ),
 					]
 				updatedParentingConnections[node] = nodeConnections
-
-			for unfilledInput in inputsToFill :
-				unfilledInput.setInput( None )
 
 		# Note : We reuse existing connections where we can to avoid getting
 		# into infinite loops. We are called from the very signals we are
@@ -144,14 +135,9 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 	def _titleFormat( self ) :
 
-		if isinstance( self.settings()["in"], GafferScene.ScenePlug ) :
-			numInputs = 1 if self.settings()["in"].getInput() is not None else 0
-		else :
-			numInputs = sum( 1 for p in self.settings()["in"] if p.getInput() is not None )
-
 		return GafferUI.NodeSetEditor._titleFormat(
 			self,
-			_maxNodes = numInputs,
+			_maxNodes = 1 if self.settings()["in"].getInput() is not None else 0,
 			_reverseNodes = True,
 			_ellipsis = False
 		)
