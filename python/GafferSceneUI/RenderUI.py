@@ -42,17 +42,6 @@ import GafferScene
 
 from GafferUI.PlugValueWidget import sole
 
-## \deprecated
-## \todo Remove in next major version.
-def rendererPresetNames( plug = None ) :
-
-	return IECore.StringVectorData(
-		sorted(
-			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
-			if Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
-		)
-	)
-
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Render,
