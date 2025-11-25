@@ -7,6 +7,7 @@ Fixes
 - PythonCommand :
   - Fixed invalid results from evaluating `"name" in variables`.
   - Fixed handling of CompoundObjectPlugs, ObjectPlugs and ObjectVectorPlugs in `variables` plug.
+- Dispatcher : Fixed omission that prevented values from CompoundObjectPlugs, ObjectPlugs and ObjectVectorPlugs with inputs from being saved in a dispatch with `isolated` enabled.
 
 1.6.6.0 (relative to 1.6.5.1)
 =======
