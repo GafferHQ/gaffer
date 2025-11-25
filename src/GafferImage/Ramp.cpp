@@ -42,7 +42,6 @@
 
 using namespace std;
 using namespace Imath;
-using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
 
@@ -205,7 +204,7 @@ IECore::ConstStringVectorDataPtr Ramp::computeChannelNames( const Gaffer::Contex
 		channelNamePrefix += ".";
 	}
 
-	StringVectorDataPtr resultData = new StringVectorData();
+	IECore::StringVectorDataPtr resultData = new IECore::StringVectorData();
 	vector<string> &result = resultData->writable();
 
 	result.push_back( channelNamePrefix + "R" );
@@ -237,7 +236,7 @@ IECore::ConstFloatVectorDataPtr Ramp::computeChannelData( const std::string &cha
 {
 	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
 
-	const SplinefColor4f ramp = rampPlug()->getValue().spline();
+	const IECore::SplinefColor4f ramp = rampPlug()->getValue().spline();
 
 	const M33f inverseTransform = transformPlug()->matrix().inverse();
 	const V2f startPosition = startPositionPlug()->getValue();
@@ -246,9 +245,9 @@ IECore::ConstFloatVectorDataPtr Ramp::computeChannelData( const std::string &cha
 	V3f startPosition3f( startPosition.x, startPosition.y, 0 );
 	V3f endPosition3f( endPosition.x, endPosition.y, 0 );
 
-	const LineSegment3f line( startPosition3f, endPosition3f );
+	const IECore::LineSegment3f line( startPosition3f, endPosition3f );
 
-	FloatVectorDataPtr resultData = new FloatVectorData;
+	IECore::FloatVectorDataPtr resultData = new IECore::FloatVectorData;
 	vector<float> &result = resultData->writable();
 	result.reserve( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
