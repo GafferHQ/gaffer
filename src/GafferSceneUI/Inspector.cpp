@@ -118,6 +118,14 @@ Gaffer::Plug *spreadsheetAwareSource( Gaffer::Plug *plug )
 
 std::string nonEditableReason( const ValuePlug *plug )
 {
+	if( plug->direction() == Plug::Out )
+	{
+		return fmt::format(
+			"{} is not editable.",
+			plug->relativeName( plug->ancestor<ScriptNode>() )
+		);
+	}
+
 	const ValuePlug *sourcePlug = ( plug && Animation::isAnimated( plug ) ) ? plug->source<ValuePlug>() : plug;
 
 	const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( sourcePlug );

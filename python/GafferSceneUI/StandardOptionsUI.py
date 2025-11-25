@@ -81,7 +81,9 @@ def __cameraSummary( plug ) :
 def __rendererSummary( plug ) :
 
 	if plug["render:defaultRenderer"]["enabled"].getValue() :
-		return plug["render:defaultRenderer"]["value"].getValue()
+		renderer = plug["render:defaultRenderer"]["value"].getValue()
+		if renderer :
+			return Gaffer.Metadata.value( f"renderer:{renderer}", "label" ) or renderer
 
 	return ""
 

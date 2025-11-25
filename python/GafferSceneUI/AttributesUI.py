@@ -34,16 +34,49 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferScene
 
-def __attributeMetadata( plug, key ) :
+# The following functions are protected rather than private so that
+# they can be shared by AttributeTweaksUI.
 
-	if not isinstance( plug, Gaffer.NameValuePlug ) :
+def _attributeMetadata( plug, name ) :
+
+	if not isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
 		plug = plug.parent()
 
-	target = "attribute:" + plug["name"].getValue()
-	return Gaffer.Metadata.value( target, key )
+	source = "attribute:" + plug["name"].getValue()
+	return Gaffer.Metadata.value( source, name )
+
+def _attributePresetNames( plug ) :
+
+	names = list( __attributePresets( plug ).keys() )
+	return IECore.StringVectorData( names ) if names else None
+
+def _attributePresetValues( plug ) :
+
+	values = list( __attributePresets( plug ).values() )
+	return IECore.DataTraits.dataFromElement( values ) if values else None
+
+def __attributePresets( plug ) :
+
+	result = {}
+	option = plug.parent()["name"].getValue()
+	source = "attribute:{}".format( option )
+
+	for n in Gaffer.Metadata.registeredValues( source ) :
+		if n.startswith( "preset:" ) :
+			result[n[7:]] = Gaffer.Metadata.value( source, n )
+
+	presetNames = Gaffer.Metadata.value( source, "presetNames" )
+	presetValues = Gaffer.Metadata.value( source, "presetValues" )
+	if presetNames and presetValues :
+		for presetName, presetValue in zip( presetNames, presetValues ) :
+			result.setdefault( presetName, presetValue )
+
+	return result
 
 Gaffer.Metadata.registerNode(
 
@@ -75,17 +108,17 @@ Gaffer.Metadata.registerNode(
 
 			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-			"description" : lambda plug : __attributeMetadata( plug, "description" ),
-			"label" : lambda plug : __attributeMetadata( plug, "label" ),
-			"layout:section" : lambda plug : __attributeMetadata( plug, "layout:section" ),
+			"description" : lambda plug : _attributeMetadata( plug, "description" ),
+			"label" : lambda plug : _attributeMetadata( plug, "label" ),
+			"layout:section" : lambda plug : _attributeMetadata( plug, "layout:section" ),
 
 		},
 
 		"attributes.*.value" : {
 
-			"plugValueWidget:type" : lambda plug : __attributeMetadata( plug, "plugValueWidget:type" ),
-			"presetNames" : lambda plug : __attributeMetadata( plug, "presetNames" ),
-			"presetValues" : lambda plug : __attributeMetadata( plug, "presetValues" ),
+			"plugValueWidget:type" : lambda plug : _attributeMetadata( plug, "plugValueWidget:type" ),
+			"presetNames" : _attributePresetNames,
+			"presetValues" : _attributePresetValues,
 
 		},
 

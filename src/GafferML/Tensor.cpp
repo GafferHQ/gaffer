@@ -101,6 +101,12 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT :
 			functor( value.GetTensorData<float>() );
 			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
+			functor( value.GetTensorData<Ort::Float16_t>() );
+			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16 :
+			functor( value.GetTensorData<Ort::BFloat16_t>() );
+			break;
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE :
 			functor( value.GetTensorData<double>() );
 			break;
@@ -163,13 +169,33 @@ DataPtr dataFromValue( const Ort::Value &value )
 			[&] ( const auto *data ) {
 
 				using ElementType = remove_const_t<remove_pointer_t<decltype( data )>>;
-				using DataType = TypedData<vector<ElementType>>;
-				using PtrType = typename DataType::Ptr;
-
-				PtrType d = new DataType;
 				const size_t count = value.GetTensorTypeAndShapeInfo().GetElementCount();
-				d->writable().insert( d->writable().end(), data, data + count );
-				result = d;
+
+				if constexpr( std::is_same_v<ElementType, Ort::Float16_t> )
+				{
+					HalfVectorDataPtr d = new HalfVectorData();
+					auto halfData = reinterpret_cast<const half *>( data );
+					d->writable().insert( d->writable().end(), halfData, halfData + count );
+
+					result = d;
+				}
+				else if constexpr( std::is_same_v<ElementType, Ort::BFloat16_t> )
+				{
+					FloatVectorDataPtr d = new FloatVectorData();
+					std::vector<float> &v = d->writable();
+					v.reserve( count );
+					std::transform( data, data + count, std::back_inserter( v ), []( const Ort::BFloat16_t &e ) { return float( e ); } );
+					result = d;
+				}
+				else
+				{
+					using DataType = TypedData<vector<ElementType>>;
+					using PtrType = typename DataType::Ptr;
+
+					PtrType d = new DataType;
+					d->writable().insert( d->writable().end(), data, data + count );
+					result = d;
+				}
 
 			}
 		);
@@ -178,6 +204,23 @@ DataPtr dataFromValue( const Ort::Value &value )
 }
 
 } // namespace
+
+namespace IECore
+{
+
+inline void murmurHashAppend( MurmurHash &h, const Ort::Float16_t *data, size_t numElements )
+{
+	static_assert( sizeof( Ort::Float16_t ) == sizeof( unsigned short ), "Unexpected size for Ort::Float16_t" );
+	h.append( reinterpret_cast<const unsigned short *>( data ), numElements );
+}
+
+inline void murmurHashAppend( MurmurHash &h, const Ort::BFloat16_t *data, size_t numElements )
+{
+	static_assert( sizeof( Ort::BFloat16_t ) == sizeof( unsigned short ), "Unexpected size for Ort::BFloat16_t" );
+	h.append( reinterpret_cast<const unsigned short *>( data ), numElements );
+}
+
+}  // namespace IECore
 
 IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( Tensor );
 
@@ -211,7 +254,11 @@ Tensor::Tensor( const IECore::ConstDataPtr &data, std::vector<int64_t> shape )
 		[&] ( auto typedData ) -> void {
 
 			using DataType = remove_const_t<remove_pointer_t<decltype( typedData )>>;
-			using BaseType = typename DataType::BaseType;
+			using BaseType = typename std::conditional_t<
+				std::is_same_v<DataType, HalfVectorData>,
+				Ort::Float16_t,
+				typename DataType::BaseType
+			>;
 
 			if( !shape.size() )
 			{
@@ -263,7 +310,7 @@ Tensor::Tensor( const IECore::ConstDataPtr &data, std::vector<int64_t> shape )
 						memoryInfo.GetConst(),
 						// `const_cast()` is OK because we only provide const access to the
 						// `Ort::Value` after construction.
-						const_cast<DataType *>( typedData )->baseWritable(), typedData->baseSize(),
+						reinterpret_cast<BaseType *>( const_cast<DataType *>( typedData )->baseWritable() ), typedData->baseSize(),
 						shape.data(), shape.size()
 					),
 					data

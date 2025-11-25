@@ -18,18 +18,46 @@ Breaking Changes
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 
-1.6.x.x (relative to 1.6.5.0)
+1.6.x.x (relative to 1.6.5.1)
 =======
+
+Features
+--------
+
+- RenderMan :
+  - Added support for RenderMan 27.0, in addition to the existing support for RenderMan 26.3.
+  - Added support for RenderMan XPU (27.0 only).
 
 Improvements
 ------------
 
-- SceneInspector : Added Interpretation row for primitive variables, with values of "Point", "Vector", "Normal" or "UV".
+- SceneInspector :
+  - Added Interpretation row for primitive variables, with values of "Point", "Vector", "Normal" or "UV".
+  - Added editing capabilities to the Local Transform properties.
+- LightEditor : Added Transform section, with columns displaying the light's transform.
+- ImageToTensor : Added `tensorElementType` plug to choose between `Float`, `Float16` and `BFloat16`.
+- TensorToImage : Added conversion from `Float16` and `BFloat16` tensor elements in addition to the existing `Float` support.
+- RenderManOptions : Added XPU device configuration options.
 
 Fixes
 -----
 
+- SceneInspector : Fixed sporadic incomplete updates, particularly when an interactive render was running.
 - Render, InteractiveRender, StandardOptions : Fixed bugs allowing Cycles and 3Delight to appear as available renderers even when hidden from the UI or not configured.
+- Options, Attributes : Fixed missing presets.
+
+API
+---
+
+- GridContainer : Added `nextRow()` context manager, to simplify the process of arranging child widgets in rows.
+
+1.6.5.1 (relative to 1.6.5.0)
+=======
+
+Fixes
+-----
+
+- ImageWriter : Fixed file corruption or crashes caused by `openexr:lineOrder` being set in image metadata.
 
 1.6.5.0 (relative to 1.6.4.0)
 =======

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, John Haddon. All rights reserved.
+#  Copyright (c) 2019, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,31 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .RenderManAttributesTest import RenderManAttributesTest
-from .RenderManOptionsTest import RenderManOptionsTest
-from .RenderManShaderTest import RenderManShaderTest
-from .RenderManLightTest import RenderManLightTest
-from .RenderManMeshLightTest import RenderManMeshLightTest
-from .RenderManIntegratorTest import RenderManIntegratorTest
-from .RenderManDisplayFilterTest import RenderManDisplayFilterTest
-from .RenderManSampleFilterTest import RenderManSampleFilterTest
-from .RenderManRenderTest import RenderManRenderTest, RenderManXPURenderTest
-from .InteractiveRenderManRenderTest import InteractiveRenderManRenderTest, InteractiveRenderManXPURenderTest
-from .RenderPassAdaptorTest import RenderPassAdaptorTest
-from .RenderManLightFilterTest import RenderManLightFilterTest
-from .StylizedAOVAdaptorTest import StylizedAOVAdaptorTest
+import subprocess
+import unittest
+
+import Gaffer
+import GafferTest
+
+class ConfigTest( GafferTest.TestCase ) :
+
+	def testCanLoadGUIConfigsWithoutRenderMan( self ) :
+
+		# Start a subprocess without RMANTREE set, and without the side-effects
+		# of it having been set when our wrapper ran earlier. And in that subprocess,
+		# check that we can still load the GUI configs cleanly.
+
+		env = Gaffer.environment()
+		for var in ( "RMANTREE", "PYTHONPATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "GAFFER_STARTUP_PATHS", "GAFFER_EXTENSION_PATHS" ) :
+			env.pop( var, None )
+
+		try :
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "test", "GafferUITest.TestCase.assertCanLoadGUIConfigs" ],
+				env = env, stderr = subprocess.STDOUT
+			)
+		except subprocess.CalledProcessError as e :
+			self.fail( e.output )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

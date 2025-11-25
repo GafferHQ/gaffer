@@ -1279,6 +1279,11 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	metadata->writable().erase( "fileValid" );
 	metadata->writable().erase( "dataType" );
 
+	// It's crucial to get rid of this particular metadata, because it affects OpenEXR during writing.
+	// If it's set to something that contradicts how we're writing the file, it can cause file corruption
+	// or crashes.
+	metadata->writable().erase( "openexr:lineOrder" );
+
 	// Also erase multiView metadata - if you want to create multi-view images, use CreateViews
 	// instead of just setting metadata.
 	metadata->writable().erase( "view" );

@@ -40,6 +40,7 @@ import imath
 
 import IECore
 import IECoreScene
+import IECoreRenderMan
 
 import Gaffer
 import GafferTest
@@ -143,6 +144,18 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 
 	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our RenderMan backend" )
 	def testInstanceIDOutput( self ) :
+
+		pass
+
+@unittest.skipIf( IECoreRenderMan.renderManMajorVersion() < 27, "XPU only supported for RenderMan 27+" )
+class RenderManXPURenderTest( RenderManRenderTest ) :
+
+	renderer = "RenderManXPU"
+
+	## \todo Either find a way of getting float outputs in the style of RIS,
+	# or update OpenImageIOReader to load integer IDs via `reinterpret_cast`.
+	@unittest.skip( "XPU only renders integer ID outputs, but we want floats" )
+	def testIDOutput( self ) :
 
 		pass
 

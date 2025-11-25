@@ -36,48 +36,13 @@
 
 import imath
 import functools
-import collections
 
 import IECore
 
 import Gaffer
 import GafferUI
 import GafferScene
-
-def __optionMetadata( plug, name ) :
-
-	option = plug.ancestor( Gaffer.TweakPlug )["name"].getValue()
-	return Gaffer.Metadata.value( "option:{}".format( option ), name )
-
-def __optionMetadataPresets( plug ) :
-
-	result = collections.OrderedDict()
-	option = plug.ancestor( Gaffer.TweakPlug )["name"].getValue()
-	source = "option:{}".format( option )
-
-	for n in Gaffer.Metadata.registeredValues( source ) :
-		if n.startswith( "preset:" ) :
-			result[n[7:]] = Gaffer.Metadata.value( source, n )
-
-	presetNames = Gaffer.Metadata.value( source, "presetNames" )
-	presetValues = Gaffer.Metadata.value( source, "presetValues" )
-	if presetNames and presetValues :
-		for presetName, presetValue in zip( presetNames, presetValues ) :
-			result.setdefault( presetName, presetValue )
-
-	return result
-
-def __optionMetadataPresetNames( plug ) :
-
-	names = list( __optionMetadataPresets( plug ).keys() )
-
-	return IECore.StringVectorData( names ) if names else None
-
-def __optionMetadataPresetValues( plug ) :
-
-	values = list( __optionMetadataPresets( plug ).values() )
-
-	return IECore.DataTraits.dataFromElement( values ) if values else None
+import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
@@ -128,13 +93,13 @@ Gaffer.Metadata.registerNode(
 
 		"tweaks.*.value" : {
 
-			"description" : functools.partial( __optionMetadata, name = "description" ),
-			"plugValueWidget:type" : functools.partial( __optionMetadata, name = "plugValueWidget:type" ),
-			"presetsPlugValueWidget:allowCustom" : functools.partial( __optionMetadata, name = "presetsPlugValueWidget:allowCustom" ),
-			"ui:scene:acceptsSetExpression" : functools.partial( __optionMetadata, name = "ui:scene:acceptsSetExpression" ),
+			"description" : functools.partial( GafferSceneUI.OptionsUI._optionMetadata, name = "description" ),
+			"plugValueWidget:type" : functools.partial( GafferSceneUI.OptionsUI._optionMetadata, name = "plugValueWidget:type" ),
+			"presetsPlugValueWidget:allowCustom" : functools.partial( GafferSceneUI.OptionsUI._optionMetadata, name = "presetsPlugValueWidget:allowCustom" ),
+			"ui:scene:acceptsSetExpression" : functools.partial( GafferSceneUI.OptionsUI._optionMetadata, name = "ui:scene:acceptsSetExpression" ),
 
-			"presetNames" : __optionMetadataPresetNames,
-			"presetValues" : __optionMetadataPresetValues,
+			"presetNames" : GafferSceneUI.OptionsUI._optionPresetNames,
+			"presetValues" : GafferSceneUI.OptionsUI._optionPresetValues,
 
 		},
 

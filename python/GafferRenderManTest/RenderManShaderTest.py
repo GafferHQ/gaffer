@@ -38,6 +38,8 @@ import unittest
 
 import imath
 
+import IECoreRenderMan
+
 import Gaffer
 import GafferScene
 import GafferSceneTest
@@ -294,29 +296,34 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader = GafferRenderMan.RenderManShader()
 		shader.loadShader( "LamaIridescence" )
 
-		self.assertEqual( shader['parameters'].keys(), [
-			'targetHue',
-			'incidentAngle',
-			'roughness',
-			'colorPreservation',
-			'tailMix',
-			'tailLength',
-			'anisotropy',
-			'anisotropyDirection',
-			'anisotropyRotation',
-			'relativeFilmThickness',
-			'minFilmThickness',
-			'maxFilmThickness',
-			'filmIOR',
-			'passIridescence',
-			'overrideExteriorIOR',
-			'exteriorIOR',
-			'energyCompensation',
-			'surfaceMollification',
-			'motionMollification',
-			'lobeName',
-			'matte',
-		] )
+		self.assertEqual(
+			shader["parameters"].keys(),
+			[
+				'targetHue',
+				'incidentAngle',
+				'roughness',
+			] + ( [ "iridescenceNormal" ] if IECoreRenderMan.renderManMajorVersion() >= 27 else [] ) +
+			[
+				"colorPreservation",
+				"tailMix",
+				"tailLength",
+				"anisotropy",
+				"anisotropyDirection",
+				"anisotropyRotation",
+				"relativeFilmThickness",
+				"minFilmThickness",
+				"maxFilmThickness",
+				"filmIOR",
+				"passIridescence",
+				"overrideExteriorIOR",
+				"exteriorIOR",
+				"energyCompensation",
+				"surfaceMollification",
+				"motionMollification",
+				"lobeName",
+				"matte",
+			]
+		)
 
 		self.assertEqual( shader['parameters']['targetHue'].getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( shader['parameters']['targetHue'].direction(), Gaffer.Plug.Direction.In )

@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreRenderMan
 
 import Gaffer
 import GafferSceneTest
@@ -97,11 +98,15 @@ class RenderManLightTest( GafferSceneTest.SceneTestCase ) :
 
 	def testPortalLight( self ) :
 
+		expectedParameters = { "intensityMult", "tint" }
+		if IECoreRenderMan.renderManMajorVersion() >= 27 :
+			expectedParameters.update( [ "emissionFocus", "emissionFocusNormalize", "emissionFocusTint"] )
+
 		light = GafferRenderMan.RenderManLight()
 		light.loadShader( "PxrPortalLight" )
 		self.assertEqual(
 			set( light["out"].attributes( "/light" )["ri:light"].outputShader().parameters.keys() ),
-			{ "intensityMult", "tint" }
+			expectedParameters
 		)
 
 	def testCameraVisibility( self ) :

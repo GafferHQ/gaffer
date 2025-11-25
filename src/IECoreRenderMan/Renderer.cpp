@@ -82,7 +82,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 
 		RenderManRenderer( RtUString rileyVariant, RenderType renderType, const std::string &fileName, const MessageHandlerPtr &messageHandler )
 			:	m_messageHandler( messageHandler ),
-				m_name( rileyVariant == RtUString() ? "RenderMan" : "RenderMan XPU" ),
+				m_name( rileyVariant == RtUString() ? "RenderMan" : "RenderManXPU" ),
 				m_session( nullptr )
 		{
 			if( renderType == SceneDescription )
@@ -288,7 +288,16 @@ struct VariantTypeDescriptions
 			}
 		);
 
-		/// \todo Register XPU variant, once all the required pieces are in place.
+		IECoreScenePreview::Renderer::registerType(
+			"RenderManXPU",
+			[] ( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler ) -> IECoreScenePreview::RendererPtr {
+#if _PRMANAPI_VERSION_MAJOR_ >= 27
+				return new RenderManRenderer( RtUString( "xpu" ), renderType, fileName, messageHandler );
+#else
+				throw IECore::Exception( "RenderMan XPU is only supported for RenderMan 27 and above." );
+#endif
+			}
+		);
 
 	}
 

@@ -931,9 +931,9 @@ class _ComparePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, row, plug )
 
-		def createLabel( text, index ) :
+		def createLabel( text ) :
 
-			label = GafferUI.Label( text, horizontalAlignment = GafferUI.HorizontalAlignment.Right, parenting = { "index" : index } )
+			label = GafferUI.Label( text, horizontalAlignment = GafferUI.HorizontalAlignment.Right )
 			label._qtWidget().setFixedWidth( 65 ) # So layout doesn't jump when hiding wider labels.
 			label._qtWidget().setFixedHeight( 20 ) # To get consistent row heights, regardless of value widget height.
 			return label
@@ -942,31 +942,35 @@ class _ComparePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			with GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None_, borderWidth = 4 ) as aFrame :
 
-				with GafferUI.GridContainer( spacing = 4 ) as self.__aGrid :
+				self.__aGrid = GafferUI.GridContainer( spacing = 4 )
+				with self.__aGrid.nextRow()  :
+					createLabel( "Location" )
+					_LocationPlugValueWidget( plug.parent()["location"] )
 
-					createLabel( "Location", ( 0, 0 ) )
-					_LocationPlugValueWidget( plug.parent()["location"], parenting = { "index" : ( 1, 0 ) } )
+				with self.__aGrid.nextRow()  :
+					createLabel( "Node" )
+					self.__inputLabelWidget = _InputLabelWidget()
 
-					createLabel( "Node", ( 0, 1 ) )
-					self.__inputLabelWidget = _InputLabelWidget( parenting = { "index" : ( 1, 1 ) } )
-
-					createLabel( "Render Pass", ( 0, 2 ) )
-					_CurrentRenderPassWidget( plug["renderPass"]["value"], parenting = { "index" : ( 1, 2 ) } )
+				with self.__aGrid.nextRow()  :
+					createLabel( "Render Pass" )
+					_CurrentRenderPassWidget( plug["renderPass"]["value"] )
 
 				aFrame._qtWidget().setProperty( "gafferDiff", "A" )
 
 			with GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None_, borderWidth = 4 ) as bFrame :
 
-				with GafferUI.GridContainer( spacing = 4 ) as self.__bGrid :
+				self.__bGrid = GafferUI.GridContainer( spacing = 4 )
+				with self.__bGrid.nextRow()  :
+					createLabel( "Location" )
+					_LocationPlugValueWidget( plug["location"]["value"] )
 
-					createLabel( "Location", ( 0, 0 ) )
-					_LocationPlugValueWidget( plug["location"]["value"], parenting = { "index" : ( 1, 0 ) } )
+				with self.__bGrid.nextRow()  :
+					createLabel( "Node" )
+					_CompareScenePlugValueWidget( plug["scene"]["value"] )
 
-					createLabel( "Node", ( 0, 1 ) )
-					_CompareScenePlugValueWidget( plug["scene"]["value"], parenting = { "index" : ( 1, 1 ) } )
-
-					createLabel( "Render Pass", ( 0, 2 ) )
-					GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget( plug["renderPass"]["value"], parenting = { "index" : ( 1, 2 ) } )
+				with self.__bGrid.nextRow()  :
+					createLabel( "Render Pass" )
+					GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget( plug["renderPass"]["value"] )
 
 				bFrame._qtWidget().setProperty( "gafferDiff", "B" )
 

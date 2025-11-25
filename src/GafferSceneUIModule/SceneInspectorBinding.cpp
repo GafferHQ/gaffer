@@ -43,6 +43,7 @@
 #include "GafferSceneUI/Private/InspectorColumn.h"
 #include "GafferSceneUI/Private/OptionInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
+#include "GafferSceneUI/Private/TransformInspector.h"
 #include "GafferSceneUI/TypeIds.h"
 
 #include "GafferBindings/PathBinding.h"
@@ -61,11 +62,8 @@
 #include "IECoreScene/ShaderNetwork.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
-#include "IECore/AngleConversion.h"
 #include "IECore/DataAlgo.h"
 #include "IECore/TypeTraits.h"
-
-#include "Imath/ImathMatrixAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/multi_index/key.hpp"
@@ -88,6 +86,7 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 using namespace GafferSceneUI;
+using namespace GafferSceneUI::Private;
 
 namespace
 {
@@ -487,7 +486,7 @@ class InspectorTree : public IECore::RefCounted
 			// Note : This is not as bad as it sounds, because the more
 			// expensive calls to `TreeItem::inspector` _are_ deferred.
 
-			m_rootItem = std::make_shared<TreeItem>();
+			auto newRootItem = std::make_shared<TreeItem>();
 			const IECore::StringAlgo::MatchPatternPath filterPath = IECore::StringAlgo::matchPatternPath( m_filter );
 
 			for( const auto &context : m_contexts )
@@ -527,7 +526,7 @@ class InspectorTree : public IECore::RefCounted
 							continue;
 						}
 
-						TreeItem *inspectorItem = m_rootItem->insertDescendant( fullPath );
+						TreeItem *inspectorItem = newRootItem->insertDescendant( fullPath );
 						inspectorItem->inspector = inspector;
 					}
 				}
@@ -535,9 +534,10 @@ class InspectorTree : public IECore::RefCounted
 
 			if( m_isolateDifferences )
 			{
-				isolateDifferencesWalk( m_rootItem.get(), Path::Names(), canceller );
+				isolateDifferencesWalk( newRootItem.get(), Path::Names(), canceller );
 			}
 
+			m_rootItem = newRootItem;
 			return m_rootItem;
 		}
 
@@ -724,45 +724,17 @@ IE_CORE_DEFINERUNTIMETYPED( InspectorPath );
 InspectorTree::Inspections transformInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
 {
 	InspectorTree::Inspections result;
-	for( auto full : { false, true } )
+	for( auto space : { TransformInspector::Space::Local, TransformInspector::Space::World } )
 	{
-		vector<InternedString> path = { full ? "World" : "Local", "" };
-		for( auto component : { 'm', 't', 'r', 's', 'h' } )
+		vector<InternedString> path = { TransformInspector::toString( space ), "" };
+		using C = TransformInspector::Component;
+		for( auto component : { C::Matrix, C::Translate, C::Rotate, C::Scale, C::Shear } )
 		{
-			switch( component )
-			{
-				case 'm' : path[1] = "Matrix"; break;
-				case 't' : path[1] = "Translate"; break;
-				case 'r' : path[1] = "Rotate"; break;
-				case 's' : path[1] = "Scale"; break;
-				case 'h' : path[1] = "Shear"; break;
-			}
+			path[1] = TransformInspector::toString( component );
 			result.push_back( {
 				path,
-				new GafferSceneUI::Private::BasicInspector(
-					scene->transformPlug(), editScope,
-					[full, component] ( const M44fPlug *transformPlug ) -> ConstDataPtr {
-						const M44f matrix =
-							full ?
-								transformPlug->parent<ScenePlug>()->fullTransform( Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
-							:
-								transformPlug->getValue()
-						;
-						if( component == 'm' )
-						{
-							return new M44fData( matrix );
-						}
-
-						V3f s, h, r, t;
-						extractSHRT( matrix, s, h, r, t );
-						switch( component )
-						{
-							case 't' : return new V3fData( t );
-							case 'r' : return new V3fData( IECore::radiansToDegrees( r ) );
-							case 's' : return new V3fData( s );
-							default : return new V3fData( h );
-						}
-					}
+				new GafferSceneUI::Private::TransformInspector(
+					scene, editScope, space, component
 				)
 			} );
 		}
