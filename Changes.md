@@ -4,7 +4,9 @@
 Fixes
 -----
 
-- PythonCommand : Fixed invalid results from evaluating `"name" in variables`.
+- PythonCommand :
+  - Fixed invalid results from evaluating `"name" in variables`.
+  - Fixed handling of CompoundObjectPlugs, ObjectPlugs and ObjectVectorPlugs in `variables` plug.
 
 1.6.6.0 (relative to 1.6.5.1)
 =======

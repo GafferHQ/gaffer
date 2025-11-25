@@ -191,11 +191,23 @@ class _VariablesDict( dict ) :
 
 		self.clear()
 		for plug in self.__variables.children() :
-			value, name = self.__variables.memberDataAndName( plug )
-			if value is None :
+
+			if "enabled" in plug and not plug["enabled"].getValue() :
 				continue
-			with IECore.IgnoredExceptions( Exception ) :
-				value = value.value
+			name = plug["name"].getValue()
+			if not name :
+				continue
+
+			if isinstance( plug["value"], ( Gaffer.ObjectPlug, Gaffer.ObjectVectorPlug, Gaffer.CompoundObjectPlug ) ) :
+				value = plug["value"].getValue()
+			else :
+				## \todo If `getValueAsData()` was actually `getValueAsObject()`
+				# then we could deal with CompoundObjectPlug here too. Alternatively,
+				# a simple `plug["value"].getValue()` would be sufficient were it not
+				# for a few edge cases like TransformPlug.
+				value = Gaffer.PlugAlgo.getValueAsData( plug["value"] )
+				with IECore.IgnoredExceptions( Exception ) :
+					value = value.value
 
 			self[name] = value
 
