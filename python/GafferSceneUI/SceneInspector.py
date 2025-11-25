@@ -226,6 +226,47 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 		return "GafferSceneUI.SceneInspector( scriptNode )"
 
+	@staticmethod
+	def draggedAttributes( dragDropEvent ) :
+
+		return SceneInspector.__draggedInspections( dragDropEvent, GafferSceneUI.Private.AttributeInspector )
+
+	@staticmethod
+	def draggedOptions( dragDropEvent ) :
+
+		return SceneInspector.__draggedInspections( dragDropEvent, GafferSceneUI.Private.OptionInspector )
+
+	@staticmethod
+	def draggedParameters( dragDropEvent ) :
+
+		return SceneInspector.__draggedInspections( dragDropEvent, GafferSceneUI.Private.ParameterInspector )
+
+	@staticmethod
+	def __draggedInspections( dragDropEvent, inspectorType ) :
+
+		pathListing = dragDropEvent.sourceWidget
+		if not isinstance( pathListing, GafferUI.PathListingWidget ) :
+			return None
+
+		if pathListing.ancestor( GafferSceneUI.SceneInspector ) is None :
+			return None
+
+		selection = IECore.PathMatcher()
+		for s in pathListing.getSelection() :
+			selection.addPaths( s )
+
+		result = {}
+		valueColumn = pathListing.getColumns()[1]
+		path = pathListing.getPath().copy()
+		for p in pathListing.visualOrder( selection ) :
+			path.setFromString( p )
+			inspector = valueColumn.inspector( path )
+			if isinstance( inspector, inspectorType ) :
+				value = valueColumn.inspect( path )
+				result[ path[-1] ] = value.value() if value is not None else None
+
+		return result
+
 	def _updateFromContext( self, modifiedItems ) :
 
 		self.__lazyUpdateFromContexts()
