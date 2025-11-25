@@ -48,6 +48,8 @@ __nameMapping = {
 	"Maths/FloatMultiply" : "Maths/MultiplyFloat",
 	"Maths/VectorAdd" : "Maths/AddVector",
 	"Maths/VectorMultiply" : "Maths/ScaleVector",
+	"Pattern/FloatSpline" : "Pattern/FloatRamp",
+	"Pattern/ColorSpline" : "Pattern/ColorRamp",
 	# A whole bunch of MaterialX shaders were renamed from `mx_<op>_<type>`
 	# to `mx_<op>_<type>_<type>` here :
 	#
