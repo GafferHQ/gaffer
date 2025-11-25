@@ -172,6 +172,7 @@ Gaffer.Metadata.registerValues( {
 		square of this number.
 		""",
 		"label" : "Diffuse Samples",
+		"columnLayout:label" : "Diffuse",
 		"layout:section" : "Sampling",
 
 	},
@@ -186,6 +187,7 @@ Gaffer.Metadata.registerValues( {
 		specular rays traced is the square of this number.
 		""",
 		"label" : "Specular Samples",
+		"columnLayout:label" : "Specular",
 		"layout:section" : "Sampling",
 
 	},
@@ -200,6 +202,7 @@ Gaffer.Metadata.registerValues( {
 		transmitted specular rays traced is the square of this number.
 		""",
 		"label" : "Transmission Samples",
+		"columnLayout:label" : "Transmission",
 		"layout:section" : "Sampling",
 
 	},
@@ -214,6 +217,7 @@ Gaffer.Metadata.registerValues( {
 		subsurface rays traced is the square of this number.
 		""",
 		"label" : "SSS Samples",
+		"columnLayout:label" : "SSS",
 		"layout:section" : "Sampling",
 
 	},
@@ -231,6 +235,7 @@ Gaffer.Metadata.registerValues( {
 		value of 0 before this setting is of use.
 		""",
 		"label" : "Volume Samples",
+		"columnLayout:label" : "Volume",
 		"layout:section" : "Sampling",
 
 	},
@@ -255,6 +260,7 @@ Gaffer.Metadata.registerValues( {
 		> for more details.
 		""",
 		"label" : "Light Samples",
+		"columnLayout:label" : "Light",
 		"layout:section" : "Sampling",
 
 	},
@@ -345,6 +351,7 @@ Gaffer.Metadata.registerValues( {
 		gets lower than the `ai:AA_adaptive_threshold` option.
 		""",
 		"label" : "Enable Adaptive Sampling",
+		"columnLayout:label" : "Adaptive Sampling",
 		"layout:section" : "Adaptive Sampling",
 
 	},
@@ -375,6 +382,7 @@ Gaffer.Metadata.registerValues( {
 		longer to achieve smaller amounts of noise.
 		""",
 		"label" : "AA Adaptive Threshold",
+		"columnLayout:label" : "Adaptive Threshold",
 		"layout:section" : "Adaptive Sampling",
 
 	},
@@ -422,6 +430,7 @@ Gaffer.Metadata.registerValues( {
 		Transmission + Volume).
 		""",
 		"label" : "Total Depth",
+		"columnLayout:label" : "Total",
 		"layout:section" : "Ray Depth",
 
 	},
@@ -435,6 +444,7 @@ Gaffer.Metadata.registerValues( {
 		computing indirect illumination ("bounce light").
 		""",
 		"label" : "Diffuse Depth",
+		"columnLayout:label" : "Diffuse",
 		"layout:section" : "Ray Depth",
 
 	},
@@ -448,6 +458,7 @@ Gaffer.Metadata.registerValues( {
 		computing specular reflections.
 		""",
 		"label" : "Specular Depth",
+		"columnLayout:label" : "Specular",
 		"layout:section" : "Ray Depth",
 
 	},
@@ -461,6 +472,7 @@ Gaffer.Metadata.registerValues( {
 		computing specular refractions.
 		""",
 		"label" : "Transmission Depth",
+		"columnLayout:label" : "Transmission",
 		"layout:section" : "Ray Depth",
 
 	},
@@ -474,6 +486,7 @@ Gaffer.Metadata.registerValues( {
 		computing indirect lighting on volumes.
 		""",
 		"label" : "Volume Depth",
+		"columnLayout:label" : "Volume",
 		"layout:section" : "Ray Depth",
 
 	},
@@ -487,6 +500,7 @@ Gaffer.Metadata.registerValues( {
 		this the last object will be treated as opaque.
 		""",
 		"label" : "Transparency Depth",
+		"columnLayout:label" : "Transparency",
 		"layout:section" : "Ray Depth",
 
 	},
