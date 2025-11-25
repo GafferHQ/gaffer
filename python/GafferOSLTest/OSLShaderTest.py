@@ -38,6 +38,7 @@ import os
 import pathlib
 import unittest
 import imath
+import inspect
 import random
 import shutil
 
@@ -1411,6 +1412,69 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( node["parameters"]["size4Initialisers1"].defaultValue(), IECore.StringVectorData( [ "a", "", "", "" ] ) )
 		self.assertEqual( node["parameters"]["size4Initialisers4"].defaultValue(), IECore.StringVectorData( [ "a", "b", "c", "d" ] ) )
+
+	def testDeprecatedSplineDeserialize( self ) :
+
+
+
+		deprecatedSplineTemplate = inspect.cleandoc( """
+			import Gaffer
+			import GafferOSL
+			import imath
+
+			__children = {{}}
+
+			__children["ColorSpline"] = GafferOSL.OSLShader( "ColorSpline" )
+			parent.addChild( __children["ColorSpline"] )
+			__children["ColorSpline"].loadShader( "Pattern/ColorSpline" )
+			__children["ColorSpline"]["parameters"]["spline"].clearPoints()
+			__children["ColorSpline"]["parameters"]["spline"].addChild( Gaffer.ValuePlug( "p0", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p0"].addChild( Gaffer.FloatPlug( "x", defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p0"].addChild( Gaffer.Color3fPlug( "y", defaultValue = imath.Color3f( 0, 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"].addChild( Gaffer.ValuePlug( "p1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p1"].addChild( Gaffer.FloatPlug( "x", defaultValue = 1.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p1"].addChild( Gaffer.Color3fPlug( "y", defaultValue = imath.Color3f( 1, 1, 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"].addChild( Gaffer.ValuePlug( "p2", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p2"].addChild( Gaffer.FloatPlug( "x", defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p2"].addChild( Gaffer.Color3fPlug( "y", defaultValue = imath.Color3f( 0, 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["interpolation"].setValue( 2 )
+			__children["ColorSpline"]["parameters"]["spline"]["p0"]["x"].setValue( 0.1 )
+			__children["ColorSpline"]["parameters"]["spline"]["p0"]["y"].setValue( imath.Color3f( 0.1, 0.2, 0.3 ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p1"]["x"].setValue( 0.9 )
+			__children["ColorSpline"]["parameters"]["spline"]["p1"]["y"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p2"]["x"].setValue( 0.5 )
+			__children["ColorSpline"]["parameters"]["spline"]["p2"]["y"].setValue( imath.Color3f( 0.3, 0.4, 0.5 ) )
+			{}
+			__children["ColorSpline"]["__uiPosition"].setValue( imath.V2f( 17.8000011, -12.8500004 ) )
+
+
+			del __children
+		""" )
+
+		for direction in [ "custom", "u", "v" ]:
+			if direction != "custom":
+				deprecatedSpline = deprecatedSplineTemplate.format(
+					'__children["ColorSpline"]["parameters"]["direction"].setValue("{}")'.format( direction )
+				)
+			else:
+				# In ColorSpline, the default value for "direction" was "custom", so there would be no
+				# explicit setValue
+				deprecatedSpline = deprecatedSplineTemplate.format( "" )
+
+			script = Gaffer.ScriptNode()
+			script.execute( deprecatedSpline )
+
+			self.assertEqual( script["ColorSpline"]["name"].getValue(), "Pattern/ColorRamp" )
+			self.assertEqual( script["ColorSpline"]["parameters"]["direction"].getValue(), direction )
+
+			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["interpolation"].getValue(), int( IECore.RampInterpolation.BSpline ) )
+			self.assertAlmostEqual( script["ColorSpline"]["parameters"]["ramp"]["p0"]["x"].getValue(), 0.1 )
+			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["p0"]["y"].getValue(), imath.Color3f( 0.1, 0.2, 0.3 ) )
+			self.assertAlmostEqual( script["ColorSpline"]["parameters"]["ramp"]["p1"]["x"].getValue(), 0.9 )
+			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["p1"]["y"].getValue(), imath.Color3f( 0.7, 0.8, 0.9 ) )
+			self.assertAlmostEqual( script["ColorSpline"]["parameters"]["ramp"]["p2"]["x"].getValue(), 0.5 )
+			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["p2"]["y"].getValue(), imath.Color3f( 0.3, 0.4, 0.5 ) )
 
 if __name__ == "__main__":
 	unittest.main()
