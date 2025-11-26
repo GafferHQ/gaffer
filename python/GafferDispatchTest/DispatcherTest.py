@@ -42,6 +42,7 @@ import functools
 import itertools
 import time
 import warnings
+import inspect
 
 import IECore
 
@@ -2872,6 +2873,108 @@ class DispatcherTest( GafferTest.TestCase ) :
 			for f in range( 1, 3 ) :
 				c.setFrame( f )
 				self.assertEqual( newScript["b"]["n"]["user"]["floatPlug"].getValue(), [ 1, 2 ][f - 1] )
+
+	def testIsolatedObjectPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["text"].setValue( "####" )
+
+		s["n"]["user"]["compoundObjectPlug"] = Gaffer.CompoundObjectPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["objectPlug"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["objectVectorPlug"] = Gaffer.ObjectVectorPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			parent["n"]["user"]["compoundObjectPlug"] = IECore.CompoundObject( { "test" : IECore.FloatData( 2.0 ) } )
+			parent["n"]["user"]["objectPlug"] = IECore.BlindDataHolder( { "test" : IECore.FloatData( 9.0 ) } )
+			parent["n"]["user"]["objectVectorPlug"] = IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( 4.0 ) ] )
+			"""
+		), "python" )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual(
+			newScript["n"]["user"]["compoundObjectPlug"].getValue(),
+			IECore.CompoundObject( { "test" : IECore.FloatData( 2.0 ) } )
+		)
+		self.assertEqual(
+			newScript["n"]["user"]["objectPlug"].getValue(),
+			IECore.BlindDataHolder( { "test" : IECore.FloatData( 9.0 ) } )
+		)
+		self.assertEqual(
+			newScript["n"]["user"]["objectVectorPlug"].getValue(),
+			IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( 4.0 ) ] )
+		)
+
+	def testIsolatedAnimatedObjectPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["dispatcher"]["batchSize"].setValue( 5 )
+		s["n"]["text"].setValue( "####" )
+
+		s["n"]["user"]["compoundObjectPlug"] = Gaffer.CompoundObjectPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["objectPlug"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["objectVectorPlug"] = Gaffer.ObjectVectorPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			parent["n"]["user"]["compoundObjectPlug"] = IECore.CompoundObject( { "test" : IECore.FloatData( context.getFrame() ) } )
+			parent["n"]["user"]["objectPlug"] = IECore.BlindDataHolder( { "test" : IECore.FloatData( context.getFrame() ) } )
+			parent["n"]["user"]["objectVectorPlug"] = IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( context.getFrame() ) ] )
+			"""
+		), "python" )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-5" )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		with s.context() :
+			s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1-5" / "untitled.gfr" )
+		newScript.load()
+
+		with newScript.context() as c :
+			for f in range( 1, 6 ) :
+				with self.subTest( f = f ) :
+					c.setFrame( f )
+
+					self.assertEqual(
+						newScript["n"]["user"]["compoundObjectPlug"].getValue(),
+						IECore.CompoundObject( { "test" : IECore.FloatData( f ) } )
+					)
+					self.assertEqual(
+						newScript["n"]["user"]["objectPlug"].getValue(),
+						IECore.BlindDataHolder( { "test" : IECore.FloatData( f ) } )
+					)
+					self.assertEqual(
+						newScript["n"]["user"]["objectVectorPlug"].getValue(),
+						IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( f ) ] )
+					)
 
 
 if __name__ == "__main__":
