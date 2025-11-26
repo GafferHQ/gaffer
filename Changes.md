@@ -5,6 +5,7 @@ Fixes
 -----
 
 - RenderPassEditor, Spreadsheet : Conformed menu buttons to match the rest of Gaffer by showing menu on button press, not release.
+- NodeEditor : Added missing widget for Color4fVectorDataPlug.
 
 API
 ---
