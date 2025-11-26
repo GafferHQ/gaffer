@@ -351,7 +351,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 				name = plug.getName() if plug.direction() == Gaffer.Plug.Direction.In else ""
 				return name, plug
 		elif isinstance( event.data, IECore.Data ) :
-				return "", event.data
+			return "", event.data
 		elif isinstance( event.data, IECore.ObjectMatrix ) :
 			matrix = event.data
 			if (
