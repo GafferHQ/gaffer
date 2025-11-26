@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.6.1)
 =======
 
+API
+---
 
+- MenuButton : Added `set/getImmediate()` methods. These allow the button to execute a menu item immediately instead of showing the menu, if the menu has only a single item.
 
 1.6.6.1 (relative to 1.6.6.0)
 =======
