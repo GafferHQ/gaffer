@@ -338,7 +338,9 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 	def __dropData( self, event ) :
 
-		if isinstance( event.data, Gaffer.ValuePlug ) :
+		if event.sourceWidget.ancestor( GafferSceneUI.SceneInspector ) is not None :
+			return "", GafferSceneUI.SceneInspector.draggedParameters( event )
+		elif isinstance( event.data, Gaffer.ValuePlug ) :
 			plug = event.data
 			if (
 				Gaffer.PlugAlgo.canSetValueFromData( plug ) or
@@ -381,6 +383,25 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		name, plugOrData = self.__dropData( event )
 		assert( plugOrData is not None )
 
+		warning = ""
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			if name == "" and isinstance( plugOrData, dict ) :
+				for tweakName, tweakValue in plugOrData.items() :
+					w = self.__createTweakFromPlugOrData( tweakName, tweakValue )
+					if w != "" :
+						if warning != "" :
+							warning += "<br>"
+						warning += f"{tweakName} : {w}"
+			else :
+				warning = self.__createTweakFromPlugOrData( name, plugOrData )
+
+		if warning != "" :
+			GafferUI.PopupWindow.showWarning( warning, parent = self )
+
+		return True
+
+	def __createTweakFromPlugOrData( self, name, plugOrData ) :
+
 		inputPlug = None
 		if isinstance( plugOrData, Gaffer.Plug ) :
 			valuePlug = plugOrData.createCounterpart( "value", Gaffer.Plug.Direction.In )
@@ -390,8 +411,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			try :
 				valuePlug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, plugOrData )
 			except :
-				GafferUI.PopupWindow.showWarning( "Unsupported data type", parent = self )
-				return True
+				return "Unsupported data type"
 
 		tweakPlug = Gaffer.TweakPlug(
 			name, valuePlug.createCounterpart( "value", Gaffer.Plug.Direction.In ),
@@ -404,14 +424,13 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			# default to `Create` mode.
 			tweakPlug["mode"].setValue( tweakPlug.Mode.Create )
 
-		with Gaffer.UndoScope( self.scriptNode() ) :
-			self.getPlug().addChild( tweakPlug )
-			if inputPlug is not None :
-				tweakPlug["value"].setInput( inputPlug )
-				if not isinstance( tweakPlug["value"], GafferScene.ClosurePlug ) :
-					Gaffer.Metadata.registerValue( tweakPlug, "noduleLayout:visible", True )
+		self.getPlug().addChild( tweakPlug )
+		if inputPlug is not None :
+			tweakPlug["value"].setInput( inputPlug )
+			if not isinstance( tweakPlug["value"], GafferScene.ClosurePlug ) :
+				Gaffer.Metadata.registerValue( tweakPlug, "noduleLayout:visible", True )
 
-		return True
+		return ""
 
 class _ShaderTweakPlugValueWidget( GafferUI.TweakPlugValueWidget ) :
 
