@@ -304,7 +304,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 	def addRenderPassButtonMenuSignal( cls ) :
 
 		if cls.__addRenderPassButtonMenuSignal is None :
-			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
+			cls.__addRenderPassButtonMenuSignal = Gaffer.Signals.Signal2(
+				Gaffer.Signals.CatchingCombiner( "RenderPassEditor Add Button menu" )
+			)
 
 		return cls.__addRenderPassButtonMenuSignal
 
@@ -1336,31 +1338,6 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton.setEnabled( unique and name != "" )
 		self.__confirmButton.setImage( None if unique else "warningSmall.png" )
 		self.__confirmButton.setToolTip( "" if unique else "A render pass named '{}' already exists.".format( name ) )
-
-# Signal with custom result combiner to prevent bad
-# slots blocking the execution of others.
-class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
-
-	def __init__( self ) :
-
-		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
-
-	@staticmethod
-	def __combiner( results ) :
-
-		while True :
-			try :
-				next( results )
-			except StopIteration :
-				return
-			except Exception as e :
-				# Print message but continue to execute other slots
-				IECore.msg(
-					IECore.Msg.Level.Error,
-					"RenderPassEditor Add Button menu", traceback.format_exc()
-				)
-				# Remove circular references that would keep the widget in limbo.
-				e.__traceback__ = None
 
 class RenderPassChooserWidget( GafferUI.Widget ) :
 

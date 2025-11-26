@@ -254,7 +254,9 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def addRowButtonMenuSignal( cls ) :
 
 		if cls.__addRowButtonMenuSignal is None :
-			cls.__addRowButtonMenuSignal = _AddButtonMenuSignal()
+			cls.__addRowButtonMenuSignal = Gaffer.Signals.Signal2(
+				Gaffer.Signals.CatchingCombiner( "Spreadsheet Add Row menu" )
+			)
 
 		return cls.__addRowButtonMenuSignal
 
@@ -263,7 +265,9 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def addColumnButtonMenuSignal( cls ) :
 
 		if cls.__addColumnButtonMenuSignal is None :
-			cls.__addColumnButtonMenuSignal = _AddButtonMenuSignal()
+			cls.__addColumnButtonMenuSignal = Gaffer.Signals.Signal2(
+				Gaffer.Signals.CatchingCombiner( "Spreadsheet Add Column menu" )
+			)
 
 		return cls.__addColumnButtonMenuSignal
 
@@ -498,28 +502,3 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__cellsTable.setRowFilter( pattern )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.RowsPlug, _RowsPlugValueWidget )
-
-# Signal with custom result combiner to prevent bad
-# slots blocking the execution of others.
-class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
-
-	def __init__( self ) :
-
-		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
-
-	@staticmethod
-	def __combiner( results ) :
-
-		while True :
-			try :
-				next( results )
-			except StopIteration :
-				return
-			except Exception as e :
-				# Print message but continue to execute other slots
-				IECore.msg(
-					IECore.Msg.Level.Error,
-					"Spreadsheet Add Button menu", traceback.format_exc()
-				)
-				# Remove circular references that would keep the widget in limbo.
-				e.__traceback__ = None

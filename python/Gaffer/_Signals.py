@@ -35,6 +35,9 @@
 #
 ##########################################################################
 
+import traceback
+
+import IECore
 import Gaffer
 
 # This isn't a direct binding of the C++ class because
@@ -69,3 +72,32 @@ class BlockedConnection( object ) :
 		self.__previouslyBlocked = None
 
 Gaffer.Signals.BlockedConnection = BlockedConnection
+
+# Reimplementation of C++ template class in Python, since
+# it doesn't make sense to bind loads of permutations of
+# template instantiations in this case.
+class CatchingCombiner :
+
+	def __init__( self, messagePrefix = "Emitting signal" ) :
+
+		self.__messagePrefix = messagePrefix
+
+	def __call__( self, results ) :
+
+		while True :
+			try :
+				next( results )
+			except StopIteration :
+				return
+			except Exception as e :
+				# Print message but continue to execute other slots
+				IECore.msg(
+					IECore.Msg.Level.Error,
+					self.__messagePrefix, traceback.format_exc()
+				)
+				# Remove circular references that would keep objects
+				# in limbo - this would be particularly problematic
+				# for GafferUI Widgets.
+				e.__traceback__ = None
+
+Gaffer.Signals.CatchingCombiner = CatchingCombiner
