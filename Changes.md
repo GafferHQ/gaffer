@@ -8,6 +8,7 @@ Fixes
   - Fixed invalid results from evaluating `"name" in variables`.
   - Fixed handling of CompoundObjectPlugs, ObjectPlugs and ObjectVectorPlugs in `variables` plug.
 - Dispatcher : Fixed omission that prevented values from CompoundObjectPlugs, ObjectPlugs and ObjectVectorPlugs with inputs from being saved in a dispatch with `isolated` enabled.
+- Reference : Fixed "Duplicate as Box" order of operations, so the new Box is fully initialised before being parented and selected.
 
 1.6.6.0 (relative to 1.6.5.1)
 =======
