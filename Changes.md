@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.6.1)
 =======
 
+Fixes
+-----
+
+- RenderPassEditor, Spreadsheet : Conformed menu buttons to match the rest of Gaffer by showing menu on button press, not release.
+
 API
 ---
 
