@@ -251,15 +251,26 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 		if pathListing.ancestor( GafferSceneUI.SceneInspector ) is None :
 			return None
 
+		columnSelection = {
+			column : selection for column, selection in zip( pathListing.getColumns(), pathListing.getSelection() )
+			if isinstance( column, GafferSceneUI.Private.InspectorColumn )
+		}
+		firstInspectorColumn = next( iter( columnSelection ), None )
+		if firstInspectorColumn is None :
+			return None
+
 		selection = IECore.PathMatcher()
 		for s in pathListing.getSelection() :
 			selection.addPaths( s )
 
 		result = {}
-		valueColumn = pathListing.getColumns()[1]
 		path = pathListing.getPath().copy()
 		for p in pathListing.visualOrder( selection ) :
 			path.setFromString( p )
+			valueColumn = next(
+				( column for column, selection in columnSelection.items() if selection.match( p ) & IECore.PathMatcher.Result.ExactMatch ),
+				firstInspectorColumn
+			)
 			inspector = valueColumn.inspector( path )
 			if isinstance( inspector, inspectorType ) :
 				value = valueColumn.inspect( path )
