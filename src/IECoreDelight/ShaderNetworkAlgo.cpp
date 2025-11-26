@@ -1014,11 +1014,16 @@ ShaderNetworkPtr preprocessedNetwork( const ShaderNetwork *shaderNetwork )
 {
 	ShaderNetworkPtr result = shaderNetwork->copy();
 
-	IECoreScene::ShaderNetworkAlgo::expandSplines( result.get() );
+	// Technically, this should be the OSL version used by 3Delight, rather than currently being the
+	// OSL version we are compiled with. However, currently the only test on OSL version is whether it
+	// is newer than 1.10, which should currently always be true, so this doesn't really matter. If a
+	// future OSL version introduces a new feature we want to take advantage of in this function, we
+	// may need to put some extra work into getting 3delight's OSL version here.
+	IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( result.get(), OSL_VERSION );
 
 	// IECoreScene::ShaderNetworkAlgo tries to expand splines according to the correct naming convention
 	// ... but 3delight doesn't have a consistent naming convention, and we have to do shader queries of
-	// the original OSL shaders to try and figure out what names to use. expandSplines doesn't do that,
+	// the original OSL shaders to try and figure out what names to use. convertToOSLConventions doesn't do that,
 	// so it just uses the Gaffer naming convention, and we rename the parameters if we're able to find
 	// the correct naming convention.
 	renameSplineParameters( result.get() );
