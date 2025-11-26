@@ -9,6 +9,11 @@ Improvements
 - ArnoldShader : Moved Arnold 7.4.4.0's new `standard_hair.scattering_mode` parameter to the "Specular" section of the UI.
 - ArnoldImager : Added activators for Arnold 7.4.4.0's new `lens_effects` imager parameters.
 
+Fixes
+-----
+
+- SceneInspector : Fixed `draggedParameters()` method to include the shader handle where necessary.
+
 1.6.7.0 (relative to 1.6.6.1)
 =======
 

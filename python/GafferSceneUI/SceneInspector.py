@@ -40,6 +40,7 @@ import functools
 import imath
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -248,7 +249,8 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 		if not isinstance( pathListing, GafferUI.PathListingWidget ) :
 			return None
 
-		if pathListing.ancestor( GafferSceneUI.SceneInspector ) is None :
+		sceneInspector = pathListing.ancestor( GafferSceneUI.SceneInspector )
+		if sceneInspector is None :
 			return None
 
 		columnSelection = {
@@ -272,11 +274,41 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 				firstInspectorColumn
 			)
 			inspector = valueColumn.inspector( path )
-			if isinstance( inspector, inspectorType ) :
-				value = valueColumn.inspect( path )
-				result[ path[-1] ] = value.value() if value is not None else None
+			if not isinstance( inspector, inspectorType ) :
+				continue
+
+			if inspectorType == GafferSceneUI.Private.ParameterInspector :
+				name = SceneInspector.__shaderParameterName( inspector.parameter(), sceneInspector.settings()["in"], valueColumn, path )
+			else :
+				name = path[-1]
+
+			value = valueColumn.inspect( path )
+			result[name] = value.value() if value is not None else None
 
 		return result
+
+	@staticmethod
+	def __shaderParameterName( parameter, scene, column, path ) :
+
+		name = parameter.name
+		context = column.inspectorContext( path )
+		if "scene:path" not in context :
+			return name
+
+		parentPath = path.parent()
+		while parentPath is not None :
+			if isinstance( column.inspector( parentPath ), GafferSceneUI.Private.AttributeInspector ) :
+				# The name of the first AttributeInspector ancestor of the parameter is the shader attribute
+				## \todo Could we instead query this from the ParameterInspector?
+				with context :
+					network = scene.fullAttributes( context["scene:path"] ).get( parentPath[-1], None )
+					if isinstance( network, IECoreScene.ShaderNetwork ) and network.getOutput().shader != parameter.shader :
+						name = f"{parameter.shader}.{parameter.name}"
+				break
+
+			parentPath = parentPath.parent()
+
+		return name
 
 	def _updateFromContext( self, modifiedItems ) :
 
