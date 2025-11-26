@@ -161,10 +161,19 @@ class PlugCreationWidget( GafferUI.Widget ) :
 		# Arrays
 
 		appendDivider( "/ArrayDivider" )
+		appendItem( "/Array/Bool", Gaffer.BoolVectorDataPlug )
 		appendItem( "/Array/Float", Gaffer.FloatVectorDataPlug )
 		appendItem( "/Array/Int", Gaffer.IntVectorDataPlug )
 		appendDivider( "/Array/StringDivider" )
 		appendItem( "/Array/String", Gaffer.StringVectorDataPlug )
+		appendDivider( "/Array/VectorDivider" )
+		appendItem( "/Array/V2i", Gaffer.V2iVectorDataPlug )
+		appendItem( "/Array/V3i", Gaffer.V3iVectorDataPlug )
+		appendItem( "/Array/V2f", Gaffer.V2fVectorDataPlug )
+		appendItem( "/Array/V3f", Gaffer.V3fVectorDataPlug )
+		appendDivider( "/Array/ColorDivider" )
+		appendItem( "/Array/Color3f", Gaffer.Color3fVectorDataPlug )
+		appendItem( "/Array/Color4f", Gaffer.Color4fVectorDataPlug )
 
 		if not result.size() :
 			result.append( "/All Types Excluded", { "active" : False } )
