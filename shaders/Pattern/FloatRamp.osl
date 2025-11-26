@@ -43,7 +43,7 @@ shader FloatRamp
 	float splineValues[] = { 0, 0, 1, 1 },
 	string splineBasis = "catmull-rom",
 
-	string direction = "custom" [[
+	string direction = "v" [[
 		string help = "Which direction the spline is applied in. U or V use the UVs, Diagonal or Radial use the UVs together with a start and end position. Custom uses the `x` input, which may be hooked up to any shader returning a float. When using UVs, the overrideUV plug maybe be connected in order to use custom UVs.",
 		string widget = "popup",
 		string options = "Custom:custom|U:u|V:v|Diagonal:diagonal|Radial:radial",

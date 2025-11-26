@@ -151,7 +151,10 @@ def __loadShaderWrapper( originalLoadShader ) :
 
 	def loadRenamedShader( self, shaderName, **kwargs ) :
 		renamed = __nameMapping.get( shaderName, shaderName )
-		return originalLoadShader( self, renamed, **kwargs )
+		result = originalLoadShader( self, renamed, **kwargs )
+		if shaderName in [ "Pattern/FloatSpline", "Pattern/ColorSpline" ]:
+			self["parameters"]["direction"].setValue( "custom" )
+		return result
 
 	return loadRenamedShader
 
