@@ -18,6 +18,7 @@ Breaking Changes
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 - RenderUI : Removed deprecated `rendererPresetNames()` function.
+- Menu : Removed support for `enter` and `leave` properties on menu items.
 
 1.6.x.x (relative to 1.6.6.0)
 =======

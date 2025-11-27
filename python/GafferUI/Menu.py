@@ -59,9 +59,6 @@ class Menu( GafferUI.Widget ) :
 	# Along with the standard IECore.MenuItemDefinition fields, the Gaffer Menu
 	# implementation also supports:
 	#
-	#  - 'enter' and 'leave', to optionally provide callables to be invoked
-	#    when the mouse enters and leaves an item's on-screen representation.
-	#
 	# - 'label' in conjunction with 'divider' = True, displays a textual
 	#   divider as opposed to a simple line.
 	#
@@ -81,12 +78,9 @@ class Menu( GafferUI.Widget ) :
 
 		self._qtWidget().__definition = definition
 		self._qtWidget().aboutToShow.connect( Gaffer.WeakMethod( self.__show ) )
-		self._qtWidget().aboutToHide.connect( Gaffer.WeakMethod( self.__hide ) )
-		self._qtWidget().hovered.connect( Gaffer.WeakMethod( self.__actionHovered ) )
-
-		self.__lastHoverAction = None
 
 		if searchable :
+			self._qtWidget().aboutToHide.connect( Gaffer.WeakMethod( self.__hide ) )
 			self.__lastAction = None
 
 		self._setStyleSheet()
@@ -96,7 +90,6 @@ class Menu( GafferUI.Widget ) :
 
 		self.__previousSearchText = ''
 		self.__cachedSearchStructureKeys = []
-
 
 	## Displays the menu at the specified position, and attached to
 	# an optional parent. If position is not specified then it
@@ -177,7 +170,7 @@ class Menu( GafferUI.Widget ) :
 	def __actionTriggered( self, qtActionWeakRef, toggled ) :
 
 		qtAction = qtActionWeakRef()
-		item = qtAction.item
+		item = qtAction.__item
 
 		if not self.__evaluateItemValue( item.active ) :
 			# Because an item's active status can change
@@ -255,9 +248,6 @@ class Menu( GafferUI.Widget ) :
 		if self.__searchable and self.__searchMenu :
 			self.__searchLine.clearFocus()
 			self.__searchMenu.hide()
-
-		self.__doActionUnhover()
-		self.__lastHoverAction = None
 
 	# May be called to fully build the menu /now/, rather than only do it lazily
 	# when it's shown. This is used by the MenuBar. forShortCuts should be set
@@ -384,7 +374,8 @@ class Menu( GafferUI.Widget ) :
 		if item.divider :
 			qtAction = _DividerAction( item, parent )
 		else :
-			qtAction = _Action( item, label, parent )
+			qtAction = QtWidgets.QAction( label, parent )
+			qtAction.__item = item
 
 		if item.checkBox is not None :
 			qtAction.setCheckable( True )
@@ -689,50 +680,13 @@ class Menu( GafferUI.Widget ) :
 		# Store the last triggered action as a new action built from the original.
 		# We do this as the triggered action will often be parented to a submenu
 		# that will be deleted the next time we build the menu.
-		self.__lastAction = self.__buildAction( action.item, action.text(), self._qtWidget() ) if action.objectName() != "GafferUI.Menu.__searchWidget" else None
+		self.__lastAction = self.__buildAction( action.__item, action.text(), self._qtWidget() ) if action.objectName() != "GafferUI.Menu.__searchWidget" else None
 
 		self._qtWidget().hide()
-
-	def __actionHovered( self, action ) :
-
-		# Hovered is called every time the mouse moves
-		if action == self.__lastHoverAction :
-			return
-
-		self.__doActionUnhover()
-
-		self.__lastHoverAction = action
-
-		# Sub-menus are normal QActions
-		if isinstance( action, _Action ) and hasattr( action.item, "enter" ) :
-			action.item.enter()
-
-	def __doActionUnhover( self ) :
-
-		if self.__lastHoverAction is None :
-			return
-
-		# Sub-menus are normal QActions
-		if isinstance( self.__lastHoverAction, _Action ) and hasattr( self.__lastHoverAction.item, "leave" ) :
-			self.__lastHoverAction.item.leave()
-
-		self.__lastHoverAction = None
-
-# When we stuck arbitrary attributes on QAction (eg. __item) these would get
-# lost when the action was returned by Qt via a signal (eg: menu.hovered).
-# Creating a subclass seemed to resolve this. Never got to the bottom of why,
-# as the addresses of the python objects _seemed_ to be the same.
-class _Action( QtWidgets.QAction ) :
-
-	def __init__( self, item, *args, **kwarg ) :
-		self.item = item
-		QtWidgets.QAction.__init__( self, *args, **kwarg )
 
 class _DividerAction( QtWidgets.QWidgetAction ) :
 
 	def __init__( self, item, *args, **kwarg ) :
-
-		self.item = item
 
 		QtWidgets.QWidgetAction.__init__( self, *args, **kwarg )
 
@@ -811,4 +765,3 @@ class _Menu( QtWidgets.QMenu ) :
 					return
 
 		QtWidgets.QMenu.keyPressEvent( self, qEvent )
-
