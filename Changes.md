@@ -9,6 +9,7 @@ Improvements
 - NodeEditor :
   - Added BoxPlug items to the plug creation menus.
   - Added more Array items to the plug creation menus.
+- AttributeTweaks : Added "Attributes" submenu to `name` plugs, matching the menu from CustomAttributes.
 - CustomAttributes : Added "From Selected" and "From Affected" submenus to the plug creation menu.
 - CustomOptions : Added "From Scene" submenu to the plug creation menu.
 
