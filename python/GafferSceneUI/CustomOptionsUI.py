@@ -34,6 +34,10 @@
 #
 ##########################################################################
 
+import functools
+
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -64,6 +68,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"compoundDataPlugValueWidget:editable" : True,
+			"ui:scene:acceptsOptions" : True,
 
 		},
 
@@ -96,3 +101,61 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# PlugCreationWidget extensions
+##########################################################################
+
+def __addFromGlobalsMenuDefinition( menu ) :
+
+	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
+	node = plugCreationWidget.plugParent().node()
+	assert( isinstance( node, GafferScene.SceneNode ) )
+
+	result = IECore.MenuDefinition()
+
+	options = node["in"]["globals"].getValue()
+	existingNames = { plug["name"].getValue() for plug in plugCreationWidget.plugParent() }
+
+	prefix = "option:"
+
+	for name, value in [ ( k[len(prefix):], v ) for k, v in options.items() if k.startswith( prefix ) ] :
+		result.append(
+			"/{}".format( name ),
+			{
+				"command" : functools.partial( __createPlug, name = name, value = value ),
+				"active" : name not in existingNames
+			}
+		)
+
+	if not len( result.items() ) :
+		result.append(
+			"/No Options Found", { "active" : False }
+		)
+		return result
+
+	return result
+
+def __createPlug( menu, name, value ) :
+
+	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
+	plugCreationWidget.createPlug(
+		Gaffer.PlugAlgo.createPlugFromData( "plug0", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, value ),
+		name = name
+	)
+
+def __plugCreationMenu( menuDefinition, widget ) :
+
+	if not Gaffer.Metadata.value( widget.plugParent(), "ui:scene:acceptsOptions" ) :
+		return
+
+	menuDefinition.prepend( "/FromSceneDivider", { "divider" : True } )
+
+	menuDefinition.prepend(
+		"/From Scene",
+		{
+			"subMenu" : __addFromGlobalsMenuDefinition
+		}
+	)
+
+GafferUI.PlugCreationWidget.plugCreationMenuSignal().connect( __plugCreationMenu )

@@ -34,13 +34,9 @@
 #
 ##########################################################################
 
-import imath
 import functools
 
-import IECore
-
 import Gaffer
-import GafferUI
 import GafferScene
 import GafferSceneUI
 
@@ -78,10 +74,11 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section" : "Settings.Tweaks",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType" : "GafferSceneUI.OptionTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index" : -1,
+			"layout:customWidget:addButton:widgetType" : "GafferUI.PlugCreationWidget",
+			"layout:customWidget:addButton:index" : -1,
 
 			"nodule:type" : "",
+			"ui:scene:acceptsOptions" : True,
 
 		},
 
@@ -105,121 +102,3 @@ Gaffer.Metadata.registerNode(
 
 	}
 )
-
-##########################################################################
-# _TweaksFooter
-##########################################################################
-
-class _TweaksFooter( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug ) :
-
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
-
-		with row :
-
-				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-				self.__button = GafferUI.MenuButton(
-					image = "plus.png",
-					hasFrame = False,
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-				)
-
-				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
-
-	def _updateFromEditable( self ) :
-
-		# Not using `_editable()` as it considers the whole plug to be non-editable if
-		# any child has an input connection, but that shouldn't prevent us adding a new
-		# tweak.
-		self.__button.setEnabled( self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
-
-	def __menuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		result.append(
-			"/From Scene",
-			{
-				"subMenu" : Gaffer.WeakMethod( self.__addFromGlobalsMenuDefinition )
-			}
-		)
-
-		result.append( "/FromPathsDivider", { "divider" : True } )
-
-		# TODO - would be nice to share these default options with other users of TweakPlug
-		for item in [
-			Gaffer.BoolPlug,
-			Gaffer.FloatPlug,
-			Gaffer.IntPlug,
-			"NumericDivider",
-			Gaffer.StringPlug,
-			"StringDivider",
-			Gaffer.V2iPlug,
-			Gaffer.V3iPlug,
-			Gaffer.V2fPlug,
-			Gaffer.V3fPlug,
-			"VectorDivider",
-			Gaffer.Color3fPlug,
-			Gaffer.Color4fPlug
-		] :
-
-			if isinstance( item, str ) :
-				result.append( "/" + item, { "divider" : True } )
-			else :
-				result.append(
-					"/" + item.__name__.replace( "Plug", "" ),
-					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), "", item ),
-					}
-				)
-
-		return result
-
-	def __addFromGlobalsMenuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		node = self.getPlug().node()
-		assert( isinstance( node, GafferScene.OptionTweaks ) )
-
-		with self.context() :
-			options = node["out"]["globals"].getValue()
-			existingTweaks = { tweak["name"].getValue() for tweak in node["tweaks"] }
-
-		prefix = "option:"
-
-		for name, value in [ ( k[len(prefix):], v ) for k, v in options.items() if k.startswith( prefix ) ] :
-			result.append(
-				"/{}".format( name ),
-				{
-					"command" : functools.partial(
-						Gaffer.WeakMethod( self.__addTweak ),
-						name, value
-					),
-					"active" : name not in existingTweaks
-				}
-			)
-
-		if not len( result.items() ) :
-			result.append(
-				"/No Options Found", { "active" : False }
-			)
-			return result
-
-		return result
-
-	def __addTweak( self, optionName, plugTypeOrValue ) :
-
-		if isinstance( plugTypeOrValue, IECore.Data ) :
-			plug = Gaffer.TweakPlug( optionName, plugTypeOrValue )
-		else :
-			plug = Gaffer.TweakPlug( optionName, plugTypeOrValue() )
-
-		plug.setName( "tweak0" )
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().addChild( plug )
