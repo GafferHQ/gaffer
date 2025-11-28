@@ -10,6 +10,7 @@ Improvements
   - Added BoxPlug items to the plug creation menus.
   - Added more Array items to the plug creation menus.
 - CustomAttributes : Added "From Selected" and "From Affected" submenus to the plug creation menu.
+- CustomOptions : Added "From Scene" submenu to the plug creation menu.
 
 Fixes
 -----
