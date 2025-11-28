@@ -34,33 +34,80 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "FileNodeBinding.h"
-
 #include "GafferDispatch/DeleteFiles.h"
-#include "GafferDispatch/FileList.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "Gaffer/Context.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include <filesystem>
 
+using namespace std;
+using namespace IECore;
 using namespace Gaffer;
-using namespace GafferBindings;
 using namespace GafferDispatch;
-using namespace GafferDispatchBindings;
 
-void GafferDispatchModule::bindFileNodes()
+GAFFER_NODE_DEFINE_TYPE( DeleteFiles );
+
+size_t DeleteFiles::g_firstPlugIndex = 0;
+
+DeleteFiles::DeleteFiles( const std::string &name )
+	:	TaskNode( name )
 {
-	{
-		boost::python::scope s = DependencyNodeClass<FileList>();
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringVectorDataPlug( "files" ) );
+	addChild( new BoolPlug( "deleteDirectories" ) );
+}
 
-		boost::python::enum_<FileList::SequenceMode>( "SequenceMode" )
-			.value( "Files", FileList::SequenceMode::Files )
-			.value( "Sequences", FileList::SequenceMode::Sequences )
-			.value( "FilesAndSequences", FileList::SequenceMode::FilesAndSequences )
-		;
+DeleteFiles::~DeleteFiles()
+{
+}
+
+Gaffer::StringVectorDataPlug *DeleteFiles::filesPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringVectorDataPlug *DeleteFiles::filesPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex );
+}
+
+Gaffer::BoolPlug *DeleteFiles::deleteDirectoriesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *DeleteFiles::deleteDirectoriesPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+IECore::MurmurHash DeleteFiles::hash( const Gaffer::Context *context ) const
+{
+	ConstStringVectorDataPtr filesData = filesPlug()->getValue();
+	if( filesData->readable().empty() )
+	{
+		return IECore::MurmurHash();
 	}
 
-	TaskNodeClass<DeleteFiles>();
+	IECore::MurmurHash h = TaskNode::hash( context );
+	filesData->hash( h );
+	deleteDirectoriesPlug()->hash( h );
+	return h;
+}
+
+void DeleteFiles::execute() const
+{
+	const bool deleteDirectories = deleteDirectoriesPlug()->getValue();
+	ConstStringVectorDataPtr filesData = filesPlug()->getValue();
+	for( const auto &file : filesData->readable() )
+	{
+		if( deleteDirectories )
+		{
+			filesystem::remove_all( filesystem::path( file ) );
+		}
+		else
+		{
+			filesystem::remove( filesystem::path( file ) );
+		}
+	}
 }

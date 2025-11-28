@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,33 +34,42 @@
 #
 ##########################################################################
 
-# Utility classes
+import Gaffer
+import GafferDispatch
 
-from .TextWriter import TextWriter
-from .LoggingTaskNode import LoggingTaskNode
-from .DebugDispatcher import DebugDispatcher
-from .ErroringTaskNode import ErroringTaskNode
+Gaffer.Metadata.registerNode(
 
-# Test cases
+	GafferDispatch.DeleteFiles,
 
-from .DispatcherTest import DispatcherTest
-from .LocalDispatcherTest import LocalDispatcherTest
-from .TaskNodeTest import TaskNodeTest
-from .TaskSwitchTest import TaskSwitchTest
-from .PythonCommandTest import PythonCommandTest
-from .SystemCommandTest import SystemCommandTest
-from .TaskListTest import TaskListTest
-from .WedgeTest import WedgeTest
-from .TaskContextVariablesTest import TaskContextVariablesTest
-from .ExecuteApplicationTest import ExecuteApplicationTest
-from .TaskPlugTest import TaskPlugTest
-from .FrameMaskTest import FrameMaskTest
-from .DispatchApplicationTest import DispatchApplicationTest
-from .ModuleTest import ModuleTest
-from .StatsApplicationTest import StatsApplicationTest
-from .FileListTest import FileListTest
-from .DeleteFilesTest import DeleteFilesTest
+	"description",
+	"""
+	Deletes files from the filesystem.
+	""",
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+	plugs = {
+
+		"files" : {
+
+			"description" :
+			"""
+			The files to be deleted. It is common for this to be driven
+			by a FileList node.
+			""",
+
+			"ui:acceptsFileList" : True,
+
+		},
+
+		"deleteDirectories" : {
+
+			"description" :
+			"""
+			Enables deletion of non-empty directories. Defaults off, as a
+			safeguard against accidental deletion of large amounts of data.
+			""",
+
+		},
+
+	},
+
+)

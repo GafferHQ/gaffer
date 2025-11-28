@@ -34,33 +34,43 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "FileNodeBinding.h"
+#include "GafferDispatch/TaskNode.h"
 
-#include "GafferDispatch/DeleteFiles.h"
-#include "GafferDispatch/FileList.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferDispatch;
-using namespace GafferDispatchBindings;
-
-void GafferDispatchModule::bindFileNodes()
+namespace GafferDispatch
 {
-	{
-		boost::python::scope s = DependencyNodeClass<FileList>();
 
-		boost::python::enum_<FileList::SequenceMode>( "SequenceMode" )
-			.value( "Files", FileList::SequenceMode::Files )
-			.value( "Sequences", FileList::SequenceMode::Sequences )
-			.value( "FilesAndSequences", FileList::SequenceMode::FilesAndSequences )
-		;
-	}
+class GAFFERDISPATCH_API DeleteFiles : public TaskNode
+{
 
-	TaskNodeClass<DeleteFiles>();
-}
+	public :
+
+		explicit DeleteFiles( const std::string &name=defaultName<DeleteFiles>() );
+		~DeleteFiles() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::DeleteFiles, DeleteFilesTypeId, TaskNode );
+
+		Gaffer::StringVectorDataPlug *filesPlug();
+		const Gaffer::StringVectorDataPlug *filesPlug() const;
+
+		Gaffer::BoolPlug *deleteDirectoriesPlug();
+		const Gaffer::BoolPlug *deleteDirectoriesPlug() const;
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
+
+};
+
+} // namespace GafferDispatch
