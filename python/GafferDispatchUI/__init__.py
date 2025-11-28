@@ -50,5 +50,6 @@ from . import PythonCommandUI
 from . import FrameMaskUI
 from .LocalJobs import LocalJobs
 from . import FileListUI
+from . import DeleteFilesUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )

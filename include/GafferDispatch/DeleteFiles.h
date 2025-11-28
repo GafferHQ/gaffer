@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,21 +36,40 @@
 
 #pragma once
 
+#include "GafferDispatch/TaskNode.h"
+
+#include "Gaffer/TypedObjectPlug.h"
+
 namespace GafferDispatch
 {
 
-enum TypeId
+class GAFFERDISPATCH_API DeleteFiles : public TaskNode
 {
 
-	TaskNodeTypeId = 118800,
-	TaskNodeTaskPlugTypeId = 118801,
-	DispatcherTypeId = 118802,
-	TaskListTypeId = 118803,
-	FrameMaskTypeId = 118804,
-	FileListTypeId = 118805,
-	DeleteFilesTypeId = 118806,
+	public :
 
-	LastTypeId = 118999
+		explicit DeleteFiles( const std::string &name=defaultName<DeleteFiles>() );
+		~DeleteFiles() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::DeleteFiles, DeleteFilesTypeId, TaskNode );
+
+		Gaffer::StringVectorDataPlug *filesPlug();
+		const Gaffer::StringVectorDataPlug *filesPlug() const;
+
+		Gaffer::BoolPlug *deleteDirectoriesPlug();
+		const Gaffer::BoolPlug *deleteDirectoriesPlug() const;
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
 
 };
 

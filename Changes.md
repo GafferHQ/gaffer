@@ -5,6 +5,7 @@ Features
 --------
 
 - FileList : Added node for listing matching files.
+- DeleteFiles : Added node for deleting files.
 
 1.6.8.0 (relative to 1.6.7.0)
 =======
