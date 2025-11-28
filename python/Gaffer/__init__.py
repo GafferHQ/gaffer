@@ -45,7 +45,7 @@ from .import _Range
 from .About import About
 from .Application import Application
 from .WeakMethod import WeakMethod
-from . import _BlockedConnection
+from . import _Signals
 from .FileNamePathFilter import FileNamePathFilter
 from .UndoScope import UndoScope
 from .Context import Context

@@ -178,14 +178,16 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# otherwise large status labels can force cells off the screen.
 				self.__statusLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
-			self.__addRowButton = GafferUI.Button(
-				image="plus.png", hasFrame=False, toolTip = "Click to add row, or drop new row names",
+			self.__addRowButton = GafferUI.MenuButton(
+				image = "plus.png", hasFrame = False,
+				toolTip = "Click to add row, or drop new row names",
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addRowMenuDefinition ) ),
+				immediate = True,
 				parenting = {
 					"index" : ( 0, 3 ),
 					"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Top ),
 				}
 			)
-			self.__addRowButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRowButtonClicked ) )
 			self.__addRowButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragEnter ) )
 			self.__addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ) )
 			self.__addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ) )
@@ -252,7 +254,9 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def addRowButtonMenuSignal( cls ) :
 
 		if cls.__addRowButtonMenuSignal is None :
-			cls.__addRowButtonMenuSignal = _AddButtonMenuSignal()
+			cls.__addRowButtonMenuSignal = Gaffer.Signals.Signal2(
+				Gaffer.Signals.CatchingCombiner( "Spreadsheet Add Row menu" )
+			)
 
 		return cls.__addRowButtonMenuSignal
 
@@ -261,7 +265,9 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def addColumnButtonMenuSignal( cls ) :
 
 		if cls.__addColumnButtonMenuSignal is None :
-			cls.__addColumnButtonMenuSignal = _AddButtonMenuSignal()
+			cls.__addColumnButtonMenuSignal = Gaffer.Signals.Signal2(
+				Gaffer.Signals.CatchingCombiner( "Spreadsheet Add Column menu" )
+			)
 
 		return cls.__addColumnButtonMenuSignal
 
@@ -274,23 +280,23 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__addRowButton.setEnabled( editable )
 		self.__addColumnButton.setEnabled( editable )
 
-	def __addRowButtonClicked( self, *unused ) :
+	def __addRow( self ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			row = self.getPlug().addRow()
+
+		# Select new row for editing. Have to do this on idle as otherwise it doesn't scroll
+		# right to the bottom.
+		GafferUI.EventLoop.addIdleCallback( functools.partial( self.__rowNamesTable.editPlugs, [ row["name"] ] ) )
+
+	def __addRowMenuDefinition( self ) :
 
 		menuDefinition = IECore.MenuDefinition()
+		menuDefinition.append(
+			"Add Row", { "command" : Gaffer.WeakMethod( self.__addRow ) }
+		)
 		self.addRowButtonMenuSignal()( menuDefinition, self )
-
-		if menuDefinition.size() == 0 :
-			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-				row = self.getPlug().addRow()
-			# Select new row for editing. Have to do this on idle as otherwise it doesn't scroll
-			# right to the bottom.
-			GafferUI.EventLoop.addIdleCallback( functools.partial( self.__rowNamesTable.editPlugs, [ row["name"] ] ) )
-		elif menuDefinition.size() == 1 :
-			_, item = menuDefinition.items()[0]
-			item.command()
-		else :
-			self.__popupMenu = GafferUI.Menu( menuDefinition )
-			self.__popupMenu.popup( parent = self )
+		return menuDefinition
 
 	def __addRowButtonDragEnter( self, addButton, event ) :
 
@@ -496,28 +502,3 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__cellsTable.setRowFilter( pattern )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.RowsPlug, _RowsPlugValueWidget )
-
-# Signal with custom result combiner to prevent bad
-# slots blocking the execution of others.
-class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
-
-	def __init__( self ) :
-
-		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
-
-	@staticmethod
-	def __combiner( results ) :
-
-		while True :
-			try :
-				next( results )
-			except StopIteration :
-				return
-			except Exception as e :
-				# Print message but continue to execute other slots
-				IECore.msg(
-					IECore.Msg.Level.Error,
-					"Spreadsheet Add Button menu", traceback.format_exc()
-				)
-				# Remove circular references that would keep the widget in limbo.
-				e.__traceback__ = None
