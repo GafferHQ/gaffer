@@ -100,6 +100,12 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"tweaks.*.name" : {
+
+			"ui:scene:acceptsAttributeName" : True,
+
+		},
+
 		"tweaks.*.value" : {
 
 			"description" : functools.partial( GafferSceneUI.AttributesUI._attributeMetadata, name = "description" ),
