@@ -1527,19 +1527,19 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( script["reference"]["rows"][1]["cells"]["c1"]["value"]["y"].getValue(), 3 )
 		self.assertEqual( script["reference"]["rows"][1]["cells"]["c1"]["value"]["z"].getValue(), 4 )
 
-	def testSplinePlug( self ) :
+	def testRampPlug( self ) :
 
 		splines = [
-			Gaffer.SplineDefinitionff(
+			IECore.Rampff(
 				(
 					( 0, 0 ),
 					( 0.2, 0.3 ),
 					( 0.4, 0.9 ),
 					( 1, 1 ),
 				),
-				Gaffer.SplineDefinitionInterpolation.CatmullRom
+				IECore.RampInterpolation.CatmullRom
 			),
-			Gaffer.SplineDefinitionff(
+			IECore.Rampff(
 				(
 					( 1, 1 ),
 					( 1, 1 ),
@@ -1548,7 +1548,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 					( 0, 0 ),
 					( 0, 0 ),
 				),
-				Gaffer.SplineDefinitionInterpolation.Linear
+				IECore.RampInterpolation.Linear
 			)
 		]
 
@@ -1561,16 +1561,16 @@ class ReferenceTest( GafferTest.TestCase ) :
 				# On one iteration `defaultValue` has more points,
 				# and on the other iteration `otherValue` has more
 				# points. This is useful for catching bugs because
-				# SplinePlugs must add plugs to represent points.
+				# RampPlugs must add plugs to represent points.
 				defaultValue = splines[i]
 				otherValue = splines[(i+1)%2]
 
 				script = Gaffer.ScriptNode()
 
-				# Create Box with SplinePlug
+				# Create Box with RampPlug
 
 				script["box"] = Gaffer.Box()
-				script["box"]["spline"] = Gaffer.SplineffPlug( defaultValue = defaultValue, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+				script["box"]["spline"] = Gaffer.RampffPlug( defaultValue = defaultValue, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 				if nonDefaultAtExport :
 					script["box"]["spline"].setValue( otherValue )
 				script["box"].exportForReference( fileName )
@@ -1619,21 +1619,21 @@ class ReferenceTest( GafferTest.TestCase ) :
 				self.assertEqual( script["reference"]["spline"].defaultValue(), otherValue )
 				self.assertTrue( script["reference"]["spline"].isSetToDefault() )
 
-	def testSplinePlugUpgradeDefault( self ) :
+	def testRampPlugUpgradeDefault( self ) :
 
 		script = Gaffer.ScriptNode()
 
-		defaultOne = Gaffer.SplineDefinitionff(
+		defaultOne = IECore.Rampff(
 			(
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
 			),
-			Gaffer.SplineDefinitionInterpolation.CatmullRom
+			IECore.RampInterpolation.CatmullRom
 		)
 
-		defaultTwo = Gaffer.SplineDefinitionff(
+		defaultTwo = IECore.Rampff(
 			(
 				( 1, 1 ),
 				( 1, 1 ),
@@ -1642,7 +1642,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 				( 0, 0 ),
 				( 0, 0 ),
 			),
-			Gaffer.SplineDefinitionInterpolation.Linear
+			IECore.RampInterpolation.Linear
 		)
 
 		fileName = self.temporaryDirectory() / "test.grf"
@@ -1651,7 +1651,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# Export a box with a spline on it
 
 		script["box"] = Gaffer.Box()
-		script["box"]["spline"] = Gaffer.SplineffPlug( defaultValue = defaultOne, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["spline"] = Gaffer.RampffPlug( defaultValue = defaultOne, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		script["box"].exportForReference( fileName )
 
 		# Make reference1 at default spline value, reference2 with modified spline value

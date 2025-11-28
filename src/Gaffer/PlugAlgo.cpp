@@ -47,7 +47,7 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/Spreadsheet.h"
 #include "Gaffer/Switch.h"
 #include "Gaffer/TransformPlug.h"
@@ -55,7 +55,7 @@
 #include "Gaffer/ValuePlug.h"
 
 #include "IECore/DataAlgo.h"
-#include "IECore/SplineData.h"
+#include "IECore/RampData.h"
 
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/join.hpp"
@@ -584,10 +584,10 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			return static_cast<const M33fVectorDataPlug *>( plug )->getValue()->copy();
 		case Box2fVectorDataPlugTypeId :
 			return static_cast<const Box2fVectorDataPlug *>( plug )->getValue()->copy();
-		case SplineffPlugTypeId :
-			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue().spline() );
-		case SplinefColor3fPlugTypeId :
-			return new SplinefColor3fData( static_cast<const SplinefColor3fPlug *>( plug )->getValue().spline() );
+		case RampffPlugTypeId :
+			return new RampffData( static_cast<const RampffPlug *>( plug )->getValue() );
+		case RampfColor3fPlugTypeId :
+			return new RampfColor3fData( static_cast<const RampfColor3fPlug *>( plug )->getValue() );
 		case TransformPlugTypeId :
 			return new M44fData( static_cast<const TransformPlug *>( plug )->matrix() );
 		case M44fPlugTypeId :

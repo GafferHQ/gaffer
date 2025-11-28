@@ -104,6 +104,9 @@ constexpr bool supportsVectorTypedData()
 		std::is_same_v< T, IECore::SplinefColor3f > ||
 		std::is_same_v< T, IECore::SplinefColor4f > ||
 		std::is_same_v< T, IECore::Splinedd > ||
+		std::is_same_v< T, IECore::Rampff > ||
+		std::is_same_v< T, IECore::RampfColor3f > ||
+		std::is_same_v< T, IECore::RampfColor4f > ||
 		std::is_same_v< T, IECore::PathMatcher > ||
 		std::is_same_v< T, boost::posix_time::ptime>
 	);

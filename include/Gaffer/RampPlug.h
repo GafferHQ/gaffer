@@ -41,98 +41,22 @@
 #include "Gaffer/PlugType.h"
 #include "Gaffer/TypedPlug.h"
 
-#include "IECore/Spline.h"
+#include "IECore/Ramp.h"
 
 namespace Gaffer
 {
 
-// This lives outside the class because we don't want multiple incompatible templated versions of
-// the same enum floating around
-enum SplineDefinitionInterpolation
-{
-	SplineDefinitionInterpolationLinear,
-	SplineDefinitionInterpolationCatmullRom,
-	SplineDefinitionInterpolationBSpline,
-	SplineDefinitionInterpolationMonotoneCubic,
-	SplineDefinitionInterpolationConstant,
-};
-
-// Represents a spline in a way closely aligned with how a user interacts with a spline in the UI.
-// The significant differences from IECore::Spline are that end points are not duplicated, and the
-// MonotoneCubic interpolation is supported.
-//
-// This class takes care of converting to IECore::Spline, and helps with converting back from it.
-//
-// In the future, we aim to move this to Cortex, and use it for all setup of splines, and replace
-// IECore::Spline with IECore::SplineEvaluator, which would store things in the right
-// format for fast evaluation, but would be totally opaque otherwise - the only way to set up an
-// evaluator would be using setting up a SplineDefinition and calling SplineDefinition::evaluator().
-
-template<typename T>
-struct GAFFER_API SplineDefinition
-{
-	using XType = typename T::XType;
-	using YType = typename T::YType;
-	using PointContainer = typename T::PointContainer;
-	using Point = typename PointContainer::value_type;
-
-	SplineDefinition() : interpolation( SplineDefinitionInterpolationCatmullRom )
-	{
-	}
-
-	SplineDefinition( const PointContainer &p, SplineDefinitionInterpolation i )
-		: points( p ), interpolation( i )
-	{
-	}
-
-	PointContainer points;
-	SplineDefinitionInterpolation interpolation;
-
-
-	// Convert to Cortex Spline
-	// In the future, IECore::Spline may be replaced with IECore::SplineEvaluator, and this
-	// function would be the only way to setup one.
-	T spline() const;
-
-	// Removes start and end points with duplicated X values.
-	//
-	// Sources of spline data may or may not contain duplicated end points for a variety of reasons
-	// ( such as IECore::Splineff having duplicated end points so that spline evaluation will reach
-	// the final value, or OSL have duplicated end points even for constant and linear splines ).
-	//
-	// The spline UI's that Gaffer uses to interact with splines don't support duplicated end
-	// points well, so regardless of why they are there, this function will remove them.
-	bool trimEndPoints();
-
-	bool operator==( const SplineDefinition<T> &rhs ) const
-	{
-		return interpolation == rhs.interpolation && points == rhs.points;
-	}
-
-	bool operator!=( const SplineDefinition<T> &rhs ) const
-	{
-		return interpolation != rhs.interpolation || points != rhs.points;
-	}
-
-private:
-	int endPointMultiplicity() const;
-};
-
-/// The SplinePlug allows the user to manipulate splines that can be
-/// converted to IECore::Splines. It's value is a very simple and easy to edit
-/// spline representation named SplineDefinition - just a list of control points
-/// with one of the interpolations above.
+/// The RampPlug allows the user to manipulate an IECore::Ramp, which is
+/// a simple curve representation with a list of control points and an
+/// interpolations.
 //
 /// Rather than storing the value atomically, the
 /// points and interpolation are represented as individual plugs,
 /// allowing the positions of individual points to have input
 /// connections from other nodes.
-///
-/// The value stored should be a clean, user editable value.  Underlying technical
-/// details such as adding repeated endpoint values are added when converting to
-/// IECore::Spline.
+
 template<typename T>
-class GAFFER_API SplinePlug : public ValuePlug
+class GAFFER_API RampPlug : public ValuePlug
 {
 
 	public :
@@ -141,15 +65,15 @@ class GAFFER_API SplinePlug : public ValuePlug
 		using XPlugType = typename PlugType<typename T::XType>::Type;
 		using YPlugType = typename PlugType<typename T::YType>::Type;
 
-		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( SplinePlug<T>, ValuePlug );
+		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( RampPlug<T>, ValuePlug );
 
-		explicit SplinePlug(
-			const std::string &name = defaultName<SplinePlug>(),
+		explicit RampPlug(
+			const std::string &name = defaultName<RampPlug>(),
 			Direction direction=In,
 			const T &defaultValue = T(),
 			unsigned flags = Default
 		);
-		~SplinePlug() override;
+		~RampPlug() override;
 
 		/// Implemented to only accept children which are suitable for use as points
 		/// in the spline.
@@ -195,16 +119,12 @@ class GAFFER_API SplinePlug : public ValuePlug
 		T m_defaultValue;
 };
 
-using SplineDefinitionff = SplineDefinition<IECore::Splineff>;
-using SplineDefinitionfColor3f = SplineDefinition<IECore::SplinefColor3f>;
-using SplineDefinitionfColor4f = SplineDefinition<IECore::SplinefColor4f>;
+using RampffPlug = RampPlug<IECore::Rampff>;
+using RampfColor3fPlug = RampPlug<IECore::RampfColor3f>;
+using RampfColor4fPlug = RampPlug<IECore::RampfColor4f>;
 
-using SplineffPlug = SplinePlug<SplineDefinitionff>;
-using SplinefColor3fPlug = SplinePlug<SplineDefinitionfColor3f>;
-using SplinefColor4fPlug = SplinePlug<SplineDefinitionfColor4f>;
-
-IE_CORE_DECLAREPTR( SplineffPlug );
-IE_CORE_DECLAREPTR( SplinefColor3fPlug );
-IE_CORE_DECLAREPTR( SplinefColor4fPlug );
+IE_CORE_DECLAREPTR( RampffPlug );
+IE_CORE_DECLAREPTR( RampfColor3fPlug );
+IE_CORE_DECLAREPTR( RampfColor4fPlug );
 
 } // namespace Gaffer

@@ -982,63 +982,49 @@ class RendererTest( GafferTest.TestCase ) :
 					s,
 					"osl:shader",
 					{
-						"floatSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"floatSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
 								( 0, 0.25 ),
 								( 1, 0.75 ),
 								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"colorSpline" : IECore.SplinefColor3f(
-							IECore.CubicBasisf.bSpline(),
+						"colorSpline" : IECore.RampfColor3f(
 							[
 								( 0, imath.Color3f( 0.25 ) ),
-								( 0, imath.Color3f( 0.25 ) ),
-								( 0, imath.Color3f( 0.25 ) ),
 								( 1, imath.Color3f( 0.75 ) ),
-								( 1, imath.Color3f( 0.75 ) ),
-								( 1, imath.Color3f( 0.75 ) ),
-							]
+							],
+							IECore.RampInterpolation.BSpline
 						),
-						"dualInterpolationSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"dualInterpolationSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"trimmedFloatSpline" : IECore.Splineff(
-							IECore.CubicBasisf.catmullRom(),
+						"trimmedFloatSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.CatmullRom
 						),
-						"mayaSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"mayaSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"inconsistentNameSpline": IECore.Splineff(
-							IECore.CubicBasisf.bSpline(),
+						"inconsistentNameSpline": IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.BSpline
 						),
 					}
 				),
@@ -1093,9 +1079,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "colorSplineValues", shader )
 		self.assertNotIn( "colorSplineBasis", shader )
 
-		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
-		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
-		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1 ] )
 
 		self.assertNotIn( "dualInterpolationSplinePositions", shader )
 		self.assertNotIn( "dualInterpolationSplineValues", shader )
@@ -1111,9 +1097,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "trimmedFloatSplineValues", shader )
 		self.assertNotIn( "trimmedFloatSplineBasis", shader )
 
-		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
-		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
-		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1 ] )
 
 		self.assertNotIn( "mayaSplinePositions", shader )
 		self.assertNotIn( "maysSplineValues", shader )
@@ -1141,14 +1127,14 @@ class RendererTest( GafferTest.TestCase ) :
 					"Pattern/ColorSpline",
 					"osl:shader",
 					{
-						"spline" : IECore.SplinefColor3f(
-							IECore.CubicBasisf.linear(),
+						"spline" : IECore.RampfColor3f(
 							[
 								( 0, imath.Color3f( 1, 0, 0 ) ),
 								( 0, imath.Color3f( 1, 0, 0 ) ),
 								( 1, imath.Color3f( 0, 0, 1 ) ),
 								( 1, imath.Color3f( 0, 0, 1 ) ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
 					}
 				),

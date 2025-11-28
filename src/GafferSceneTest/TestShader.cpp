@@ -43,7 +43,7 @@
 #include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 
 #include "IECore/Spline.h"
 
@@ -162,7 +162,7 @@ void TestShader::loadShader( const std::string &shaderName, bool keepExistingVal
 	{
 		setupTypedPlug<IntPlug>( "i", parametersPlug, 0 );
 		setupTypedPlug<Color3fPlug>( "c", parametersPlug, Imath::Color3f( 0.f ) );
-		setupTypedPlug<SplinefColor3fPlug>( "spline", parametersPlug, SplineDefinitionfColor3f() );
+		setupTypedPlug<RampfColor3fPlug>( "spline", parametersPlug, RampfColor3f() );
 		setupOptionalValuePlug<StringPlug>( "optionalString", parametersPlug, new StringPlug() );
 		setupTypedPlug<Color3fPlug>( "c", outPlug, Imath::Color3f( 0.0f ) );
 	}

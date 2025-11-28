@@ -73,13 +73,13 @@ class Wedge( GafferDispatch.TaskContextProcessor ) :
 
 		# color range
 
-		self["ramp"] = Gaffer.SplinefColor3fPlug(
-			defaultValue = Gaffer.SplineDefinitionfColor3f(
+		self["ramp"] = Gaffer.RampfColor3fPlug(
+			defaultValue = IECore.RampfColor3f(
 				(
 					( 0, imath.Color3f( 0 ) ),
 					( 1, imath.Color3f( 1 ) ),
 				),
-				Gaffer.SplineDefinitionInterpolation.CatmullRom
+				IECore.RampInterpolation.CatmullRom
 			)
 		)
 

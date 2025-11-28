@@ -1095,7 +1095,7 @@ void ValuePlug::parentChanged( Gaffer::GraphComponent *oldParent )
 
 	// Addition or removal of a child is considered to change a plug's value,
 	// so we emit the appropriate signal. This is mostly of use for the
-	// SplinePlug and CompoundDataPlug, where points and data members
+	// RampPlug and CompoundDataPlug, where points and data members
 	// are added and removed by adding and removing plugs.
 	if( auto p = IECore::runTimeCast<ValuePlug>( oldParent ) )
 	{
