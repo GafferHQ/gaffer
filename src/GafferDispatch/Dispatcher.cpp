@@ -139,9 +139,75 @@ ValuePlug *acquireCellValuePlug( Spreadsheet *spreadsheet, const InternedString 
 	return newRow->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName )->valuePlug();
 }
 
+/// \todo Move these to `PlugAlgo`
+bool canSetValueFromObject( const ValuePlug *plug, const Object *value = nullptr )
+{
+	return
+		PlugAlgo::canSetValueFromData( plug ) ||
+		plug->typeId() == CompoundObjectPlug::staticTypeId() ||
+		plug->typeId() == ObjectPlug::staticTypeId() ||
+		plug->typeId() == ObjectVectorPlug::staticTypeId()
+	;
+}
+
+ObjectPtr getValueAsObject( const ValuePlug *plug )
+{
+	if( auto coPlug = runTimeCast<const CompoundObjectPlug>( plug ) )
+	{
+		return coPlug->getValue()->copy();
+	}
+	else if( auto oPlug = runTimeCast<const ObjectPlug>( plug ) )
+	{
+		return oPlug->getValue()->copy();
+	}
+	else if( auto ovPlug = runTimeCast<const ObjectVectorPlug>( plug ) )
+	{
+		return ovPlug->getValue()->copy();
+	}
+
+	return PlugAlgo::getValueAsData( plug );
+}
+
+bool setValueFromObject( ValuePlug *plug, const Object *value )
+{
+	if( auto data = runTimeCast<const Data>( value ) )
+	{
+		return PlugAlgo::setValueFromData( plug, data );
+	}
+	else if( auto coPlug = runTimeCast<CompoundObjectPlug>( plug ) )
+	{
+		if( auto compoundObject = runTimeCast<const CompoundObject>( value ) )
+		{
+			coPlug->setValue( compoundObject );
+			return true;
+		}
+		return false;
+	}
+	else if( auto oPlug = runTimeCast<ObjectPlug>( plug ) )
+	{
+		if( auto object = runTimeCast<const Object>( value ) )
+		{
+			oPlug->setValue( object );
+			return true;
+		}
+		return false;
+	}
+	else if( auto ovPlug = runTimeCast<ObjectVectorPlug>( plug ) )
+	{
+		if( auto objectVector = runTimeCast<const ObjectVector>( value ) )
+		{
+			ovPlug->setValue( objectVector );
+			return true;
+		}
+		return false;
+	}
+
+	return false;
+}
+
 void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, const std::vector<float> &frames )
 {
-	if( !PlugAlgo::canSetValueFromData( destinationPlug ) )
+	if( !canSetValueFromObject( destinationPlug ) )
 	{
 		return;
 	}
@@ -152,8 +218,8 @@ void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, con
 	Context::EditableScope frameContext( Context::current() );
 	frameContext.setFrame( frames.front() );
 
-	const DataPtr originalValue = PlugAlgo::getValueAsData( sourcePlug );
-	PlugAlgo::setValueFromData( destinationPlug, originalValue.get() );
+	const ObjectPtr originalValue = getValueAsObject( sourcePlug );
+	setValueFromObject( destinationPlug, originalValue.get() );
 
 	const MurmurHash originalHash = sourcePlug->hash();
 
@@ -189,9 +255,9 @@ void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, con
 				for( std::vector<float>::const_iterator pIt = frames.begin(); pIt != it; ++pIt )
 				{
 					frameContext.setFrame( *pIt );
-					const DataPtr previousValue = PlugAlgo::getValueAsData( sourcePlug );
+					const ObjectPtr previousValue = getValueAsObject( sourcePlug );
 					ValuePlug *cellValuePlug = acquireCellValuePlug( animationSpreadsheet, columnName, *pIt );
-					PlugAlgo::setValueFromData( cellValuePlug, previousValue.get() );
+					setValueFromObject( cellValuePlug, previousValue.get() );
 				}
 
 				frameContext.setFrame( *it );
@@ -201,8 +267,8 @@ void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, con
 		if( animating )
 		{
 			ValuePlug *cellValuePlug = acquireCellValuePlug( animationSpreadsheet, columnName, *it );
-			const DataPtr frameValue = PlugAlgo::getValueAsData( sourcePlug );
-			PlugAlgo::setValueFromData( cellValuePlug, frameValue.get() );
+			const ObjectPtr frameValue = getValueAsObject( sourcePlug );
+			setValueFromObject( cellValuePlug, frameValue.get() );
 		}
 	}
 }

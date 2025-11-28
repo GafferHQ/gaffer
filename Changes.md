@@ -20,10 +20,22 @@ Breaking Changes
 - RenderUI : Removed deprecated `rendererPresetNames()` function.
 - Menu : Removed support for `enter` and `leave` properties on menu items.
 
-1.6.x.x (relative to 1.6.6.0)
+1.6.x.x (relative to 1.6.6.1)
 =======
 
 
+
+1.6.6.1 (relative to 1.6.6.0)
+=======
+
+Fixes
+-----
+
+- PythonCommand :
+  - Fixed invalid results from evaluating `"name" in variables`.
+  - Fixed handling of CompoundObjectPlugs, ObjectPlugs and ObjectVectorPlugs in `variables` plug.
+- Dispatcher : Fixed omission that prevented values from CompoundObjectPlugs, ObjectPlugs and ObjectVectorPlugs with inputs from being saved in a dispatch with `isolated` enabled.
+- Reference : Fixed "Duplicate as Box" order of operations, so the new Box is fully initialised before being parented and selected.
 
 1.6.6.0 (relative to 1.6.5.1)
 =======

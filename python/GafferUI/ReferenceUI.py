@@ -176,6 +176,21 @@ def __duplicateAsBox( graphEditor, node ) :
 	with Gaffer.UndoScope( script ) :
 
 		box = Gaffer.Box( node.getName() + "Copy" )
+		# We don't want to parent the box to `script` until it is
+		# fully loaded (we don't want to emit signals in an intermediate
+		# state). But we need a ScriptNode to be able to perform the loading,
+		# so we use a temporary script for that.
+		temporaryScript = Gaffer.ScriptNode()
+		temporaryScript.addChild( box )
+
+		with GafferUI.ErrorDialogue.ErrorHandler(
+			title = "Errors Occurred During Loading",
+			closeLabel = "Oy vey",
+			parentWindow = graphEditor.ancestor( GafferUI.Window ),
+		) :
+			sp = IECore.SearchPath( os.environ.get( "GAFFER_REFERENCE_PATHS", "" ) )
+			temporaryScript.executeFile( sp.find( str( node.fileName() ) ), parent = box, continueOnError = True )
+
 		node.parent().addChild( box )
 
 		graphGadget = graphEditor.graphGadget()
@@ -185,14 +200,6 @@ def __duplicateAsBox( graphEditor, node ) :
 
 		script.selection().clear()
 		script.selection().add( box )
-
-		with GafferUI.ErrorDialogue.ErrorHandler(
-			title = "Errors Occurred During Loading",
-			closeLabel = "Oy vey",
-			parentWindow = graphEditor.ancestor( GafferUI.Window ),
-		) :
-			sp = IECore.SearchPath( os.environ.get( "GAFFER_REFERENCE_PATHS", "" ) )
-			script.executeFile( sp.find( str( node.fileName() ) ), parent = box, continueOnError = True )
 
 def __graphEditorNodeContextMenu( graphEditor, node, menuDefinition ) :
 

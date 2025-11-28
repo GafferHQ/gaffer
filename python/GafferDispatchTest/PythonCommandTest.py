@@ -81,11 +81,19 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		n["variables"].addChild( Gaffer.NameValuePlug( "testInt", 1 ) )
 		n["variables"].addChild( Gaffer.NameValuePlug( "testFloat", 2.5 ) )
 		n["variables"].addChild( Gaffer.NameValuePlug( "testColor", imath.Color3f( 1, 2, 3 ) ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testFloatVector", IECore.FloatVectorData( [ 6, 7 ] ) ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testCompoundObject", Gaffer.CompoundObjectPlug() ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testObject", Gaffer.ObjectPlug( defaultValue = IECore.NullObject() ) ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testObjectVector", Gaffer.ObjectVectorPlug() ) )
 		n["command"].setValue( inspect.cleandoc(
 			"""
 			self.testInt = variables["testInt"]
 			self.testFloat = variables["testFloat"]
 			self.testColor = variables["testColor"]
+			self.testFloatVector = variables["testFloatVector"]
+			self.testCompoundObject = variables["testCompoundObject"]
+			self.testObject = variables["testObject"]
+			self.testObjectVector = variables["testObjectVector"]
 			"""
 		) )
 
@@ -94,6 +102,26 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( n.testInt, 1 )
 		self.assertEqual( n.testFloat, 2.5 )
 		self.assertEqual( n.testColor, imath.Color3f( 1, 2, 3 ) )
+		self.assertEqual( n.testFloatVector, IECore.FloatVectorData( [ 6, 7 ] ) )
+		self.assertEqual( n.testCompoundObject, IECore.CompoundObject() )
+		self.assertEqual( n.testObject, IECore.NullObject() )
+		self.assertEqual( n.testObjectVector, IECore.ObjectVector() )
+
+	def testDisabledVariables( self ) :
+
+		n = GafferDispatch.PythonCommand()
+		n["variables"].addChild( Gaffer.NameValuePlug( "testEnabled", 1, defaultEnabled = True ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testDisabled", 1, defaultEnabled = False ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "", 1 ) )
+		n["command"].setValue( inspect.cleandoc(
+			"""
+			assert( "testEnabled" in variables )
+			assert( "testDisabled" not in variables )
+			assert( "" not in variables )
+			"""
+		) )
+
+		n["task"].execute()
 
 	def testContextAccess( self ) :
 
