@@ -579,6 +579,7 @@ nodeMenu.append( "/Dispatch/Wedge", GafferDispatch.Wedge )
 nodeMenu.append( "/Dispatch/Frame Mask", GafferDispatch.FrameMask, searchText = "FrameMask" )
 nodeMenu.append( "/Dispatch/Local Dispatcher", GafferDispatch.LocalDispatcher, searchText = "LocalDispatcher" )
 nodeMenu.append( "/Dispatch/Delete Files", GafferDispatch.DeleteFiles, searchText = "DeleteFiles" )
+nodeMenu.append( "/Dispatch/Copy Files", GafferDispatch.CopyFiles, searchText = "CopyFiles" )
 
 # ML nodes
 

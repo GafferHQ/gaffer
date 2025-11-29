@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,22 +36,47 @@
 
 #pragma once
 
+#include "GafferDispatch/TaskNode.h"
+
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
+
 namespace GafferDispatch
 {
 
-enum TypeId
+class GAFFERDISPATCH_API CopyFiles : public TaskNode
 {
 
-	TaskNodeTypeId = 118800,
-	TaskNodeTaskPlugTypeId = 118801,
-	DispatcherTypeId = 118802,
-	TaskListTypeId = 118803,
-	FrameMaskTypeId = 118804,
-	FileListTypeId = 118805,
-	DeleteFilesTypeId = 118806,
-	CopyFilesTypeId = 118807,
+	public :
 
-	LastTypeId = 118999
+		explicit CopyFiles( const std::string &name=defaultName<CopyFiles>() );
+		~CopyFiles() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::CopyFiles, CopyFilesTypeId, TaskNode );
+
+		Gaffer::StringVectorDataPlug *filesPlug();
+		const Gaffer::StringVectorDataPlug *filesPlug() const;
+
+		Gaffer::StringPlug *destinationPlug();
+		const Gaffer::StringPlug *destinationPlug() const;
+
+		Gaffer::BoolPlug *overwritePlug();
+		const Gaffer::BoolPlug *overwritePlug() const;
+
+		Gaffer::BoolPlug *deleteSourcePlug();
+		const Gaffer::BoolPlug *deleteSourcePlug() const;
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
 
 };
 

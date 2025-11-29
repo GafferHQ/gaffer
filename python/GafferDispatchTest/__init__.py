@@ -60,6 +60,7 @@ from .ModuleTest import ModuleTest
 from .StatsApplicationTest import StatsApplicationTest
 from .FileListTest import FileListTest
 from .DeleteFilesTest import DeleteFilesTest
+from .CopyFilesTest import CopyFilesTest
 
 if __name__ == "__main__":
 	import unittest
