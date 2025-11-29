@@ -8,6 +8,7 @@ Features
 - PrimitiveQuery : Added a new node for querying a primitive's type and variable sizes.
 - FileList : Added node for listing matching files.
 - DeleteFiles : Added node for deleting files.
+- CopyFiles : Added node for copying files.
 
 Fixes
 -----

@@ -38,6 +38,7 @@
 
 #include "FileNodeBinding.h"
 
+#include "GafferDispatch/CopyFiles.h"
 #include "GafferDispatch/DeleteFiles.h"
 #include "GafferDispatch/FileList.h"
 
@@ -63,4 +64,5 @@ void GafferDispatchModule::bindFileNodes()
 	}
 
 	TaskNodeClass<DeleteFiles>();
+	TaskNodeClass<CopyFiles>();
 }
