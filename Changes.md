@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.6.1)
 =======
 
+Features
+--------
+
+- RenderMan : Added support for depth of field.
+
 Fixes
 -----
 
