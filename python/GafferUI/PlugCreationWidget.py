@@ -35,6 +35,8 @@
 ##########################################################################
 
 import functools
+import traceback
+
 import imath
 
 import IECore
@@ -74,6 +76,11 @@ class PlugCreationWidget( GafferUI.Widget ) :
 		self.__plugParent = plugParent
 		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( plugParent )
 
+		self.__currentDropHandler = None
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+
 		Gaffer.Metadata.nodeValueChangedSignal().connect(
 			Gaffer.WeakMethod( self.__nodeMetadataChanged )
 		)
@@ -100,6 +107,21 @@ class PlugCreationWidget( GafferUI.Widget ) :
 
 		return PlugCreationWidget.__plugCreationMenuSignal
 
+	## Signal emitted to allow customisation of the drag & drop behaviour.
+	# The signature for slots is `( plugCreationWidget, dragDropEvent )` and
+	# they should return a callable which will be called with the same
+	# arguments on drop.
+	@staticmethod
+	def plugCreationDragEnterSignal() :
+
+		try :
+			return PlugCreationWidget.__plugCreationDragEnterSignal
+		except AttributeError :
+			PlugCreationWidget.__plugCreationDragEnterSignal = Gaffer.Signals.Signal2(
+				PlugCreationWidget.__dragEnterSignalCombiner
+			)
+			return PlugCreationWidget.__plugCreationDragEnterSignal
+
 	## Creates a plug on `plugParent()`. Expected to be called from menu items
 	# created by `plugCreationMenuSignal()`. The optional `name` argument is
 	# used only when wrapping the created plug in a NameValuePlug or TweakPlug.
@@ -124,20 +146,10 @@ class PlugCreationWidget( GafferUI.Widget ) :
 
 		result = IECore.MenuDefinition()
 
-		includedTypes = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:includedTypes" ) or "*"
-		excludedTypes = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:excludedTypes" ) or ""
-		includedTypes = includedTypes.replace( ".", "::" )
-		excludedTypes = excludedTypes.replace( ".", "::" )
-
 		pendingDivider = None
 		def appendItem( menuPath, plugType, plugKW = {} ) :
 
-			typeName = plugType.staticTypeName()
-
-			if IECore.StringAlgo.matchMultiple( typeName, excludedTypes ) :
-				return
-
-			if not IECore.StringAlgo.matchMultiple( typeName, includedTypes ) :
+			if not self.__plugTypeIncluded( plugType ) :
 				return
 
 			nonlocal pendingDivider
@@ -237,3 +249,94 @@ class PlugCreationWidget( GafferUI.Widget ) :
 
 		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plugParent, plug, key ) :
 			self.__updateReadOnly()
+
+	def __plugTypeIncluded( self, plugType ) :
+
+		includedTypes = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:includedTypes" ) or "*"
+		excludedTypes = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:excludedTypes" ) or ""
+		includedTypes = includedTypes.replace( ".", "::" )
+		excludedTypes = excludedTypes.replace( ".", "::" )
+
+		typeName = plugType.staticTypeName()
+
+		if IECore.StringAlgo.matchMultiple( typeName, excludedTypes ) :
+			return False
+
+		return IECore.StringAlgo.matchMultiple( typeName, includedTypes )
+
+	@staticmethod
+	def __dragEnterSignalCombiner( results ) :
+
+		while True :
+			try :
+				result = next( results )
+				if result is not None :
+					return result
+			except StopIteration :
+				return None
+			except Exception as e :
+				# Print message but continue to execute other slots
+				IECore.msg( IECore.Msg.Level.Error, "PlugCreationWidget", traceback.format_exc() )
+				# Remove circular references that would keep widget in limbo.
+				e.__traceback__ = None
+
+	@staticmethod
+	def __dataDropHandler( plugCreationWidget, dragDropEvent ) :
+
+		plug = None
+		with IECore.IgnoredExceptions( Exception ) :
+			plug = Gaffer.PlugAlgo.createPlugFromData( "plug", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, dragDropEvent.data )
+			plug.setName( plug.typeName().rpartition( ":" )[2] )
+
+		if plug is None or not plugCreationWidget.__plugTypeIncluded( type( plug ) ) :
+			GafferUI.PopupWindow.showWarning( "Unsupported data type", parent = plugCreationWidget )
+			return
+
+		plugCreationWidget.createPlug( plug )
+
+	@staticmethod
+	def __plugDropHandler( plugCreationWidget, dragDropEvent ) :
+
+		name = ""
+		plug = dragDropEvent.data
+		if isinstance( plug, ( Gaffer.NameValuePlug, Gaffer.TweakPlug ) ) :
+			with IECore.IgnoredExceptions( Exception ) :
+				name = plug["name"].getValue()
+			plug = plug["value"]
+
+		if not plugCreationWidget.__plugTypeIncluded( type( plug ) ) :
+			GafferUI.PopupWindow.showWarning( "Unsupported type", parent = plugCreationWidget )
+			return
+
+		plugCreationWidget.createPlug( plug.createCounterpart( dragDropEvent.data.getName(), Gaffer.Plug.Direction.In ), name = name )
+
+	def __dragEnter( self, widget, event ) :
+
+		with self.__contextTracker.context( self.__plugParent ) :
+			self.__currentDropHandler = PlugCreationWidget.plugCreationDragEnterSignal()( self, event )
+
+		if self.__currentDropHandler is None :
+			if isinstance( event.data, IECore.Data ) :
+				self.__currentDropHandler = PlugCreationWidget.__dataDropHandler
+			elif isinstance( event.data, Gaffer.ValuePlug ) :
+				self.__currentDropHandler = PlugCreationWidget.__plugDropHandler
+
+		if self.__currentDropHandler is not None :
+			self.__button.setHighlighted( True )
+			return True
+
+		return False
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__button.setHighlighted( False )
+		self.__currentDropHandler = None
+
+	def __drop( self, widget, event ) :
+
+		self.__button.setHighlighted( False )
+
+		with self.__contextTracker.context( self.__plugParent ) :
+			self.__currentDropHandler( self, event )
+
+		self.__currentDropHandler = None
