@@ -41,6 +41,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
@@ -103,7 +104,7 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# PlugCreationWidget extensions
+# PlugCreationWidget menu extension
 ##########################################################################
 
 def __addFromGlobalsMenuDefinition( menu ) :
@@ -159,3 +160,42 @@ def __plugCreationMenu( menuDefinition, widget ) :
 	)
 
 GafferUI.PlugCreationWidget.plugCreationMenuSignal().connect( __plugCreationMenu )
+
+##########################################################################
+# PlugCreationWidget drag & drop extension
+##########################################################################
+
+def __filteredOptions( widget, dragDropEvent ) :
+
+	options = GafferSceneUI.SceneInspector.draggedOptions( dragDropEvent )
+	if not options :
+		return None
+
+	existingNames = { plug["name"].getValue() for plug in widget.plugParent() }
+	return {
+		k : v for k, v in options.items()
+		if k not in existingNames
+	}
+
+def __optionsDropHandler( widget, dragDropEvent ) :
+
+	options = __filteredOptions( widget, dragDropEvent )
+	if not options :
+		GafferUI.PopupWindow.showWarning( "Options added already", parent = widget )
+
+	with Gaffer.UndoScope( widget.plugParent().ancestor( Gaffer.ScriptNode ) ) :
+		for name, value in options.items() :
+			plug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, value )
+			widget.createPlug( plug, name = name )
+
+def __plugCreationDragEnter( widget, dragDropEvent ) :
+
+	if not Gaffer.Metadata.value( widget.plugParent(), "ui:scene:acceptsOptions" ) :
+		return
+
+	if __filteredOptions( widget, dragDropEvent ) is not None :
+		return __optionsDropHandler
+
+	return None
+
+GafferUI.PlugCreationWidget.plugCreationDragEnterSignal().connect( __plugCreationDragEnter )
