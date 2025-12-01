@@ -161,7 +161,7 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __attributePopupMenu )
 
 ##########################################################################
-# PlugCreationWidget extensions
+# PlugCreationWidget menu extensions
 ##########################################################################
 
 def __addFromAffectedMenuDefinition( menu ) :
@@ -247,3 +247,42 @@ def __plugCreationMenu( menuDefinition, widget ) :
 	)
 
 GafferUI.PlugCreationWidget.plugCreationMenuSignal().connect( __plugCreationMenu )
+
+##########################################################################
+# PlugCreationWidget drag & drop extension
+##########################################################################
+
+def __filteredAttributes( widget, dragDropEvent ) :
+
+	attributes = GafferSceneUI.SceneInspector.draggedAttributes( dragDropEvent )
+	if not attributes :
+		return None
+
+	existingNames = { plug["name"].getValue() for plug in widget.plugParent() }
+	return {
+		k : v for k, v in attributes.items()
+		if k not in existingNames
+	}
+
+def __attributesDropHandler( widget, dragDropEvent ) :
+
+	attributes = __filteredAttributes( widget, dragDropEvent )
+	if not attributes :
+		GafferUI.PopupWindow.showWarning( "Attributes added already", parent = widget )
+
+	with Gaffer.UndoScope( widget.plugParent().ancestor( Gaffer.ScriptNode ) ) :
+		for name, value in attributes.items() :
+			plug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, value )
+			widget.createPlug( plug, name = name )
+
+def __plugCreationDragEnter( widget, dragDropEvent ) :
+
+	if not Gaffer.Metadata.value( widget.plugParent(), "ui:scene:acceptsAttributes" ) :
+		return
+
+	if __filteredAttributes( widget, dragDropEvent ) is not None :
+		return __attributesDropHandler
+
+	return None
+
+GafferUI.PlugCreationWidget.plugCreationDragEnterSignal().connect( __plugCreationDragEnter )

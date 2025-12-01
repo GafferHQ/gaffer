@@ -12,6 +12,7 @@ Improvements
   - Added drag & drop creation of plugs by dropping a plug or value onto the `+` icon.
 - AttributeTweaks : Added "Attributes" submenu to `name` plugs, matching the menu from CustomAttributes.
 - CustomAttributes : Added "From Selected" and "From Affected" submenus to the plug creation menu.
+- AttributeTweaks, CustomAttributes : Added drag & drop population of plugs by dragging from the Scene Inspector.
 - CustomOptions : Added "From Scene" submenu to the plug creation menu.
 
 Fixes
