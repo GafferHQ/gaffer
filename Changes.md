@@ -16,6 +16,14 @@ API
 1.6.6.1 (relative to 1.6.6.0)
 =======
 
+Improvements
+------------
+
+- ShaderTweaks : Improved support for creating tweaks via drag & drop from the SceneInspector to the `+` button.
+  - Dragging a parameter name or value now creates a tweak containing both the parameter name and value.
+  - Multiple parameter names and/or values can be dragged to create multiple tweaks.
+  - Parameters dragged from non-output shaders create tweaks that include the shader name to correctly identify the parameter.
+
 Fixes
 -----
 
