@@ -52,6 +52,12 @@ import GafferUI
 #   can be created.
 # - `plugCreationWidget:useGeometricInterpretation` : Provides specific
 #   Point/Vector/Normal options when making vector plugs.
+# - `plugCreationWidget:action` : Specifies one of the following actions
+#   used to create plugs :
+#       - "addPlug" : Adds plugs as children of the parent.
+#       - "addNameValuePlug" : As above, but wrapping in a NameValuePlug.
+#       - "addTweakPlug" : As above, but wrapping in a NameValuePlug.
+#       - "setup" : Calls `setup()` on the parent.
 class PlugCreationWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugParent, **kw ) :
@@ -129,18 +135,32 @@ class PlugCreationWidget( GafferUI.Widget ) :
 
 		plug = prototypePlug.createCounterpart( prototypePlug.getName(), Gaffer.Plug.Direction.In )
 
+		action = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:action" ) or "addPlug"
+
+		if action == "addPlug" and isinstance( self.__plugParent, Gaffer.CompoundDataPlug ) :
+			action = "addNameValuePlug"
+		elif action == "addPlug" and isinstance( self.__plugParent, Gaffer.TweaksPlug ) :
+			action = "addTweakPlug"
+
 		with Gaffer.UndoScope( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
-			if isinstance( self.__plugParent, Gaffer.CompoundDataPlug ) :
-				plug = Gaffer.NameValuePlug( "", plug, True, "member0" )
-				plug["name"].setValue( name )
-			elif isinstance( self.__plugParent, Gaffer.TweaksPlug ) :
-				plug = Gaffer.TweakPlug( "tweak0", valuePlug = plug )
-				plug["name"].setValue( name )
-			if isinstance( self.__plugParent, Gaffer.Box ) :
-				## \todo Could this be made the default via a metadata registration in SubGraphUI.py?
-				Gaffer.Metadata.registerValue( plug, "nodule:type", "" )
-			plug.setFlags( Gaffer.Plug.Flags.Dynamic, True )
-			self.__plugParent.addChild( plug )
+
+			match action :
+				case "addPlug" :
+					if isinstance( self.__plugParent, Gaffer.Box ) :
+						## \todo Could this be made the default via a metadata registration in SubGraphUI.py?
+						Gaffer.Metadata.registerValue( plug, "nodule:type", "" )
+					plug.setFlags( Gaffer.Plug.Flags.Dynamic, True )
+					self.__plugParent.addChild( plug )
+				case "addNameValuePlug" :
+					plug = Gaffer.NameValuePlug( "", plug, True, "member0", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+					plug["name"].setValue( name )
+					self.__plugParent.addChild( plug )
+				case "addTweakPlug" :
+					plug = Gaffer.TweakPlug( "tweak0", valuePlug = plug, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+					plug["name"].setValue( name )
+					self.__plugParent.addChild( plug )
+				case "setup" :
+					self.__plugParent.setup( plug )
 
 	def __menuDefinition( self ) :
 
