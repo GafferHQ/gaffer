@@ -27,6 +27,7 @@ Improvements
 ------------
 
 - Timeline : Added scrubbing outside the playback range, enabled by holding <kbd>Shift</kbd>.
+- RenderMan : Added depth of field support (#6713).
 
 Fixes
 -----
