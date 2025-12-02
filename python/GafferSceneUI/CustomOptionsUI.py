@@ -112,11 +112,11 @@ def __addFromGlobalsMenuDefinition( menu ) :
 
 	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
 	node = plugCreationWidget.plugParent().node()
-	assert( isinstance( node, GafferScene.SceneNode ) )
 
 	result = IECore.MenuDefinition()
 
-	options = node["in"]["globals"].getValue()
+	scene = next( GafferScene.ScenePlug.RecursiveInputRange( node ) )
+	options = scene["globals"].getValue()
 	existingNames = { plug["name"].getValue() for plug in plugCreationWidget.plugParent() }
 
 	prefix = "option:"
