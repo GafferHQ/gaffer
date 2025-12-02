@@ -227,6 +227,9 @@ class PlugCreationWidget( GafferUI.Widget ) :
 		appendItem( "/Box3i", Gaffer.Box3iPlug, { "defaultValue" : imath.Box3i( imath.V3i( 0 ), imath.V3i( 0 ) ) } )
 		appendItem( "/Box3f", Gaffer.Box3fPlug, { "defaultValue" : imath.Box3f( imath.V3f( 0 ), imath.V3f( 0 ) ) } )
 
+		appendDivider( "/ObjectDivider" )
+		appendItem( "/Object", Gaffer.ObjectPlug, { "defaultValue" : IECore.NullObject.defaultNullObject() } )
+
 		# Arrays
 
 		appendDivider( "/ArrayDivider" )

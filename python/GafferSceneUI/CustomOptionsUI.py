@@ -68,6 +68,7 @@ Gaffer.Metadata.registerNode(
 			python.
 			""",
 
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 			"compoundDataPlugValueWidget:editable" : True,
 			"ui:scene:acceptsOptions" : True,
 
