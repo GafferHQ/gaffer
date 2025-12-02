@@ -207,6 +207,8 @@ def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
 # _TweaksFooter
 ##########################################################################
 
+## \todo Replace with PlugCreationWidget. Use `ui:scene:acceptsShaderParameters`
+# metadata to add custom submenus and drag and drop from the SceneInspector.
 class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :

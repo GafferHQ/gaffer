@@ -325,9 +325,8 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		menuDefinition = IECore.MenuDefinition()
 
-		## \todo Centralise a standard mechanism for building plug
-		# creation menus. We have similar code in UserPlugs, CompoundDataPlugValueWidget,
-		# UIEditor, ShaderTweaksUI etc.
+		## \todo Use PlugCreationWidget. Consider how this relates
+		# to `addColumnButtonMenuSignal()`.
 		for label, plugType in [
 			( "Bool", Gaffer.BoolPlug ),
 			( "Int", Gaffer.IntPlug ),
