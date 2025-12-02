@@ -88,6 +88,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget:addButton:widgetType" : "GafferUI.PlugCreationWidget",
 			"layout:customWidget:addButton:index" : -1,
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 
 			"nodule:type" : "",
 			"ui:scene:acceptsAttributes" : True,
