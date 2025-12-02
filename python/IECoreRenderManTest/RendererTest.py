@@ -2250,10 +2250,88 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertShadingNetworkParameterEqual( displacements[0]["displacement"], "texture.filename", [ "dispDirA/displacement.exr" ] )
 		self.__assertShadingNetworkParameterEqual( displacements[1]["displacement"], "texture.filename", [ "dispDirB/displacement.exr" ] )
 
-	def __assertParameterEqual( self, paramList, name, data ) :
+	def testCamera( self ) :
+
+		for ( proj, nearClip, farClip, focalLength, aperture, translate, dof, fStop, flWorldScale, focusDist ) in [
+			( "orthographic", 0.7, 1000, 1, imath.V2f( 0.5, 0.125 ), imath.V3f( 1, 2, 3 ), False, 0.5, 1, 10 ),
+			( "orthographic", 0.8, 2000, 2, imath.V2f( 3, 0.125 ), imath.V3f( 4, 5, 6 ), True, 0.5, 1, 10 ),
+			( "perspective", 0.9, 3000, 3, imath.V2f( 4 ), imath.V3f( 7, 8, 9 ), True, 0.5, 1, 10 ),
+			( "perspective", 0.1, 4000, 4, imath.V2f( 5 ), imath.V3f( 0, 1, 2 ), False, 0.5, 1, 11 ),
+			( "perspective", 0.2, 5000, 5, imath.V2f( 6 ), imath.V3f( 3, 4, 5 ), True, 0.5, 0.1, 12 ),
+		]:
+			with self.subTest(
+				proj = proj, nearClip = nearClip, farClip = farClip, focalLength = focalLength,
+				aperture = aperture, translate = translate, dof = dof, fStop = fStop, flWorldScale = flWorldScale,
+				focusDist = focusDist
+			):
+				m = imath.M44f()
+				m.translate( translate )
+
+				camera = IECoreScene.Camera()
+				camera.setProjection( proj )
+				camera.setClippingPlanes( imath.V2f( nearClip, farClip ) )
+				camera.setFocalLength( focalLength )
+				camera.setAperture( aperture )
+				camera.setFStop( fStop )
+				camera.setFocalLengthWorldScale( flWorldScale )
+				camera.setFocusDistance( focusDist )
+				## \todo Replace with camera.setDepthOfField( True ) once Cortex supports it
+				camera.parameters()["depthOfField"] = dof
+
+				with IECoreRenderManTest.RileyCapture() as capture :
+
+					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+						"RenderMan",
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+					)
+
+					renderCam = renderer.camera(
+						"camera", camera, renderer.attributes( IECore.CompoundObject() )
+					)
+
+					renderCam.transform( m )
+					del renderCam, renderer
+
+				cam = next(
+					x for x in capture.json if x["method"] == "CreateCamera"
+				)
+				camModify = next(
+					x for x in capture.json if x["method"] == "ModifyCamera"
+				)
+
+				self.__assertParameterEqual( cam['properties']['params'], 'nearClip', [nearClip], tolerance = 1e-7 )
+				self.__assertParameterEqual( cam['properties']['params'], 'farClip', [farClip] )
+
+				# We apply a Z-flip in order to match the camera direction to what we expect
+				m.scale( imath.V3f( 1, 1, -1 ) )
+				self.assertEqual( camModify['xform']['matrix'][0], [ m[i][j] for i in range(4) for j in range(4) ] )
+
+				f = camera.frustum()
+				self.__assertParameterEqual( cam['properties']['params'], 'Ri:ScreenWindow', [ f.min().x, f.max().x, f.min().y, f.max().y ] )
+				if proj != "perspective":
+					self.assertEqual( cam['projection']['name'], "PxrOrthographic" )
+					self.assertIsNone( cam['projection']['params'] )
+				else:
+					self.assertEqual( cam['projection']['name'], "PxrCamera" )
+					if not dof:
+						self.assertIsNone( cam['projection']['params'] )
+					else:
+						self.__assertParameterEqual( cam['projection']['params']['params'], "focalDistance", [focusDist] )
+						self.__assertParameterEqual( cam['projection']['params']['params'], "fStop", [fStop] )
+						self.__assertParameterEqual(
+							cam['projection']['params']['params'], "focalLength", [focalLength  * flWorldScale],
+							tolerance = 1e-7
+						)
+
+	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
-		self.assertEqual( p["data"], data )
+		if tolerance:
+			self.assertEqual( len( p["data"] ), len( data ) )
+			for c in zip( p["data"], data ):
+				self.assertAlmostEqual( c[0], c[1], delta = tolerance )
+		else:
+			self.assertEqual( p["data"], data )
 
 	def __assertShadingNetworkParameterEqual( self, shadingNetwork, parameter, data ) :
 

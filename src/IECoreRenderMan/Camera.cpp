@@ -40,6 +40,8 @@
 #include "Loader.h"
 #include "Transform.h"
 
+#include "IECore/SimpleTypedData.h"
+
 #include "boost/algorithm/string/predicate.hpp"
 
 #include "fmt/format.h"
@@ -77,9 +79,18 @@ Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Sess
 
 	const string projection = camera->getProjection();
 	RtUString projectionShaderName = g_pxrCamera;
+	RtParamList projectionParamList;
 	if( projection == "perspective" )
 	{
 		projectionShaderName = g_pxrCamera;
+
+		const IECore::BoolData *d = camera->parametersData()->member<IECore::BoolData>( "depthOfField" );
+		if( d && d->readable() )
+		{
+			projectionParamList.SetFloat( Loader::strings().k_focalDistance, camera->getFocusDistance() );
+			projectionParamList.SetFloat( Loader::strings().k_fStop, camera->getFStop() );
+			projectionParamList.SetFloat( Loader::strings().k_focalLength, camera->getFocalLength() * camera->getFocalLengthWorldScale() );
+		}
 	}
 	else if( projection == "orthographic" )
 	{
@@ -94,7 +105,6 @@ Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Sess
 		IECore::msg( IECore::Msg::Warning, "Camera", fmt::format( "Unknown projection \"{}\"", projection ) );
 	}
 
-	RtParamList projectionParamList;
 	for( const auto &[parameterName, parameterValue] : camera->parameters() )
 	{
 		if( boost::starts_with( name.c_str(), "ri:" ) )
