@@ -36,6 +36,7 @@
 ##########################################################################
 
 import functools
+import sys
 
 import Gaffer
 import GafferUI
@@ -78,6 +79,7 @@ class Timeline( GafferUI.Editor ) :
 				value = self.__playback.context().getFrame(),
 				min = float( scriptNode["frameRange"]["start"].getValue() ),
 				max = float( scriptNode["frameRange"]["end"].getValue() ),
+				hardMin = -sys.float_info.max, hardMax = sys.float_info.max,
 				parenting = { "expand" : True },
 			)
 			self.__slider.setIncrement( 0 ) # disable so the slider doesn't mask our global frame increment shortcut
@@ -167,21 +169,12 @@ class Timeline( GafferUI.Editor ) :
 
 		assert( widget is self.__slider or widget is self.__frame )
 
-		frame = widget.getValue()
-		frame = float( max( frame, self.scriptNode()["frameRange"]["start"].getValue() ) )
-		frame = float( min( frame, self.scriptNode()["frameRange"]["end"].getValue() ) )
-
 		if reason == reason.DragBegin :
 			self.__playback.setState( self.__playback.State.Scrubbing )
 		elif reason == reason.DragEnd :
 			self.__playback.setState( self.__playback.State.Stopped )
 
-		if widget is self.__frame :
-			# if frame was set outside the range, the actual value in the context
-			# may not change, so we need to update the value in the frame field manually
-			self.__frame.setValue( frame )
-
-		self.__playback.context().setFrame( frame )
+		self.__playback.context().setFrame( widget.getValue() )
 
 	def __scriptNodePlugSet( self, plug ) :
 
@@ -253,7 +246,7 @@ class Timeline( GafferUI.Editor ) :
 		minValue, maxValue = playback.getFrameRange()
 
 		with Gaffer.Signals.BlockedConnection( ( self.__sliderRangeStartChangedConnection, self.__sliderRangeEndChangedConnection ) ) :
-			self.__slider.setRange( minValue, maxValue )
+			self.__slider.setRange( minValue, maxValue, hardMin = -sys.float_info.max, hardMax = sys.float_info.max, )
 			self.__sliderRangeStart.setValue( minValue )
 			self.__sliderRangeEnd.setValue( maxValue )
 
@@ -283,12 +276,39 @@ class _TimelineSlider( GafferUI.Slider ) :
 		color = QtGui.QColor( 120, 120, 120 ) if state == state.DisabledState else QtGui.QColor( 240, 220, 40 )
 		painter.setPen( color )
 
-		# Draw vertical line at position ensuring we don't clip it
-		# at the edges of the widget.
+		# Draw vertical line at position if it is inside the
+		# widget, otherwise draw a triangle pointing to where
+		# it would be.
 
-		lineWidth = 2
-		position = max( min( int( position ) - ( lineWidth / 2 ), size.x - lineWidth ), 0 )
-		painter.fillRect( position, 0, lineWidth, size.y, color )
+		if position < 0 :
+			painter.drawPolygon(
+				QtGui.QPolygonF(
+					[
+						QtCore.QPointF( 8, 4 ),
+						QtCore.QPointF( 8, size.y - 4 ),
+						QtCore.QPointF( 2, size.y / 2 ),
+					]
+				)
+			)
+			# Adjust position for use drawing text
+			position = 8
+		elif position > size.x :
+			painter.drawPolygon(
+				QtGui.QPolygonF(
+					[
+						QtCore.QPointF( size.x - 8, 4 ),
+						QtCore.QPointF( size.x - 8, size.y - 4 ),
+						QtCore.QPointF( size.x - 2, size.y / 2 ),
+					]
+				)
+			)
+			# Adjust position for use drawing text
+			position = size.x - 8
+		else :
+			lineWidth = 2
+			# Make sure we don't clip the line.
+			position = max( min( int( position ) - ( lineWidth / 2 ), size.x - lineWidth ), 0 )
+			painter.fillRect( position, 0, lineWidth, size.y, color )
 
 		# Draw frame number to the left of the playhead (unless we'd go off the
 		# edge). Most cursors are pointing to the left so this makes it easier

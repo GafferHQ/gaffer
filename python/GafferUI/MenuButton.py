@@ -43,14 +43,16 @@ import GafferUI
 
 class MenuButton( GafferUI.Button ) :
 
-	def __init__( self, text="", image=None, hasFrame=True, menu=None, **kw ) :
+	def __init__( self, text="", image=None, hasFrame=True, menu=None, immediate=False, **kw ) :
 
 		GafferUI.Button.__init__( self, text, image, hasFrame, **kw )
 
 		self.__menu = None
 		self.setMenu( menu )
+		self.setImmediate( immediate )
 
-		self._qtWidget().pressed.connect( Gaffer.WeakMethod( self.__pressed ) )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 	def setMenu( self, menu ) :
 
@@ -94,6 +96,17 @@ class MenuButton( GafferUI.Button ) :
 			self._qtWidget().setProperty( "gafferMenuIndicator", wantMenuIndicator )
 			self._repolish()
 
+	## If the button is immediate and the menu contains only a single
+	# item, then that item will be executed directly when the button is pressed,
+	# instead of showing the menu.
+	def setImmediate( self, immediate ) :
+
+		self.__immediate = immediate
+
+	def getImmediate( self ) :
+
+		return self.__immediate
+
 	def setErrored( self, errored ) :
 
 		if errored == self.getErrored() :
@@ -106,16 +119,43 @@ class MenuButton( GafferUI.Button ) :
 
 		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferError" ) ) or False
 
-	def __pressed( self ) :
+	def __buttonPress( self, widget, event ) :
 
-		if self.__menu is None :
-			return
+		# We show the menu on `buttonPress` rather than `clicked` as it
+		# allows the user to keep the button held, move over an item and
+		# then release to trigger it - see #742.
+
+		if event.button != event.Buttons.Left or self.__menu is None :
+			return False
+
+		if self.getImmediate() :
+			# Build the top level menu so we can query its contents.
+			# We don't call `Menu._buildFully()` as that also builds
+			# submenus, which can be costly.
+			self.__menu._qtWidget().aboutToShow.emit()
+			if len( self.__menu._qtWidget().actions() ) == 1 :
+				# Only one item. Do nothing now, so we can trigger
+				# it directly in `__clicked()` (like a regular button
+				# press, which is enacted on release).
+				return False
 
 		b = self.bound()
 		self.__menu.popup(
 			parent = self,
 			position = imath.V2i( b.min().x, b.max().y ),
 		)
+
+		return True
+
+	def __clicked( self, widget ) :
+
+		if self.getImmediate() :
+			actions = self.__menu._qtWidget().actions()
+			if len( actions ) == 1 :
+				actions[0].trigger()
+				return True
+
+		return False
 
 	def __menuVisibilityChanged( self, menu ) :
 

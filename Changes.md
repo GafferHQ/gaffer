@@ -23,7 +23,23 @@ Breaking Changes
 1.6.x.x (relative to 1.6.6.1)
 =======
 
+Improvements
+------------
 
+- Timeline : Added scrubbing outside the playback range, enabled by holding <kbd>Shift</kbd>.
+
+Fixes
+-----
+
+- RenderPassEditor, Spreadsheet : Conformed menu buttons to match the rest of Gaffer by showing menu on button press, not release.
+- NodeEditor : Added missing widget for Color4fVectorDataPlug.
+- Timeline : Fixed bug that meant the wrong frame number was drawn when the current frame was outside the playback range.
+
+API
+---
+
+- MenuButton : Added `set/getImmediate()` methods. These allow the button to execute a menu item immediately instead of showing the menu, if the menu has only a single item.
+- Signals : Added CatchingCombiner Python class, equivalent to the C++ template class.
 
 1.6.6.1 (relative to 1.6.6.0)
 =======

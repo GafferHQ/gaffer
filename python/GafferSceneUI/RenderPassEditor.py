@@ -133,9 +133,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-				self.__addButton = GafferUI.Button(
+				self.__addButton = GafferUI.MenuButton(
 					image = "plus.png",
-					hasFrame = False
+					hasFrame = False,
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addButtonMenuDefinition ) ),
+					immediate = True
 				)
 
 				self.__removeButton = GafferUI.Button(
@@ -145,7 +147,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
 			self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeButtonClicked ) )
 			Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
 
@@ -303,7 +304,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 	def addRenderPassButtonMenuSignal( cls ) :
 
 		if cls.__addRenderPassButtonMenuSignal is None :
-			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
+			cls.__addRenderPassButtonMenuSignal = Gaffer.Signals.Signal2(
+				Gaffer.Signals.CatchingCombiner( "RenderPassEditor Add Button menu" )
+			)
 
 		return cls.__addRenderPassButtonMenuSignal
 
@@ -959,25 +962,17 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if renderPassName :
 			self.__addRenderPass( renderPassName, editScope )
 
-	def __addButtonClicked( self, button ) :
+	def __addButtonMenuDefinition( self ) :
 
 		menuDefinition = IECore.MenuDefinition()
+		menuDefinition.append(
+			"Add...",
+			{
+				"command" : Gaffer.WeakMethod( self.__renderPassCreationDialogue )
+			}
+		)
 		self.addRenderPassButtonMenuSignal()( menuDefinition, self )
-
-		if menuDefinition.size() == 0 :
-			self.__renderPassCreationDialogue()
-		elif menuDefinition.size() == 1 :
-			_, item = menuDefinition.items()[0]
-			item.command()
-		else :
-			menuDefinition.prepend(
-				"Add...",
-				{
-					"command" : Gaffer.WeakMethod( self.__renderPassCreationDialogue )
-				}
-			)
-			self.__popupMenu = GafferUI.Menu( menuDefinition )
-			self.__popupMenu.popup( parent = self )
+		return menuDefinition
 
 	def __removeButtonClicked( self, button ) :
 
@@ -1343,31 +1338,6 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton.setEnabled( unique and name != "" )
 		self.__confirmButton.setImage( None if unique else "warningSmall.png" )
 		self.__confirmButton.setToolTip( "" if unique else "A render pass named '{}' already exists.".format( name ) )
-
-# Signal with custom result combiner to prevent bad
-# slots blocking the execution of others.
-class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
-
-	def __init__( self ) :
-
-		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
-
-	@staticmethod
-	def __combiner( results ) :
-
-		while True :
-			try :
-				next( results )
-			except StopIteration :
-				return
-			except Exception as e :
-				# Print message but continue to execute other slots
-				IECore.msg(
-					IECore.Msg.Level.Error,
-					"RenderPassEditor Add Button menu", traceback.format_exc()
-				)
-				# Remove circular references that would keep the widget in limbo.
-				e.__traceback__ = None
 
 class RenderPassChooserWidget( GafferUI.Widget ) :
 
