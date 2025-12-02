@@ -34,17 +34,11 @@
 #
 ##########################################################################
 
-import imath
 import functools
-import collections
-
-import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
 
 ##########################################################################
 # Internal utilities
@@ -189,6 +183,9 @@ Gaffer.Metadata.registerNode(
 
 			"layout:customWidget:footer:widgetType" : "GafferSceneUI.OptionQueryUI._OptionQueryFooter",
 			"layout:customWidget:footer:index" : -1,
+			"layout:customWidget:addButton:index" : -1,
+			"plugCreationWidget:action" : "addQuery",
+			"ui:scene:acceptsOptions" : True,
 
 			"nodule:type" : "",
 
@@ -288,124 +285,17 @@ Gaffer.Metadata.registerNode(
 # _OutputQueryFooter
 ##########################################################################
 
-class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
+## \todo Maybe we can move the metadata signalling elsewhere and
+# remove this widget?
+class _OptionQueryFooter( GafferUI.PlugCreationWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, queriesPlug, **kw ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		GafferUI.PlugCreationWidget.__init__( self, queriesPlug, **kw )
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
-
-		with row :
-
-			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-			self.__menuButton = GafferUI.MenuButton(
-				image = "plus.png",
-				hasFrame = False,
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-			)
-
-			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand": True } )
-
-		plug.node().plugSetSignal().connect(
+		queriesPlug.node().plugSetSignal().connect(
 			Gaffer.WeakMethod( self.__updateQueryMetadata )
 		)
-
-	def _updateFromEditable( self ) :
-
-		self.__menuButton.setEnabled( self._editable() )
-
-	def __menuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		result.append(
-			"/From Scene",
-			{
-				"subMenu" : Gaffer.WeakMethod( self.__addFromGlobalsMenuDefinition )
-			}
-		)
-
-		result.append( "/FromPathsDivider", { "divider" : True } )
-
-		for label, plugCreator in [
-			( "Bool", Gaffer.BoolPlug ),
-			( "Float", Gaffer.FloatPlug ),
-			( "Int", Gaffer.IntPlug ),
-			( "NumericDivider", None ),
-			( "String", Gaffer.StringPlug ),
-			( "StringDivider", None ),
-			( "V2i", Gaffer.V2iPlug ),
-			( "V3i", Gaffer.V3iPlug ),
-			( "V2f", Gaffer.V2fPlug ),
-			( "V3f", Gaffer.V3fPlug ),
-			( "VectorDivider", None ),
-			( "Color3f", Gaffer.Color3fPlug ),
-			( "Color4f", Gaffer.Color4fPlug ),
-			( "ObjectDivider", None ),
-			( "Object", functools.partial( Gaffer.ObjectPlug, defaultValue = IECore.NullObject.defaultNullObject() ) ),
-		] :
-			if plugCreator is None :
-				result.append( f"/{label}", { "divider": True } )
-			else :
-				result.append(
-					f"/{label}",
-					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", plugCreator ),
-					}
-				)
-
-		return result
-
-	def __addFromGlobalsMenuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		node = self.getPlug().node()
-		assert( isinstance( node, GafferScene.OptionQuery ) )
-
-		with self.context() :
-			options = node["scene"]["globals"].getValue()
-			existingQueries = { query["name"].getValue() for query in node["queries"] }
-
-		prefix = "option:"
-
-		for name, value in [ ( k[len( prefix ):], v ) for k, v in options.items() if k.startswith( prefix ) ] :
-			result.append(
-				"/{}".format( name ),
-				{
-					"command" : functools.partial(
-						Gaffer.WeakMethod( self.__addQuery ), name, value
-					),
-					"active" : name not in existingQueries
-				}
-			)
-
-		if not len( result.items() ) :
-			result.append(
-				"/No Options Found", { "active" : False }
-			)
-			return result
-
-		return result
-
-	def __addQuery( self, optionName, plugCreatorOrValue ) :
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-
-			node = self.getPlug().node()
-
-			if isinstance( plugCreatorOrValue, IECore.Data ) :
-				prototypePlug = Gaffer.PlugAlgo.createPlugFromData(
-					"valuePrototype",
-					Gaffer.Plug.Direction.In,
-					Gaffer.Plug.Flags.Default,
-					plugCreatorOrValue
-				)
-				node.addQuery( prototypePlug, optionName )
-			else:
-				node.addQuery( plugCreatorOrValue(), optionName )
 
 	def __updateQueryMetadata( self, plug ) :
 

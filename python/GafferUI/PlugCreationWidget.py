@@ -58,6 +58,7 @@ import GafferUI
 #       - "addNameValuePlug" : As above, but wrapping in a NameValuePlug.
 #       - "addTweakPlug" : As above, but wrapping in a NameValuePlug.
 #       - "setup" : Calls `setup()` on the parent.
+#       - "addQuery" : Calls `addQuery()` on the parent node.
 class PlugCreationWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugParent, **kw ) :
@@ -161,6 +162,8 @@ class PlugCreationWidget( GafferUI.Widget ) :
 					self.__plugParent.addChild( plug )
 				case "setup" :
 					self.__plugParent.setup( plug )
+				case "addQuery" :
+					self.__plugParent.node().addQuery( plug, name )
 
 	def __menuDefinition( self ) :
 
