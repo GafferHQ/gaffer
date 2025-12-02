@@ -44,6 +44,10 @@ import GafferUI
 
 ## Supports the following metadata registered to the parent node or plug :
 #
+# - `plugCreationWidget:includedTypes` : Filters the types of plugs which
+#   can be created.
+# - `plugCreationWidget:excludedTypes` : Filters the types of plugs which
+#   can be created.
 # - `plugCreationWidget:useGeometricInterpretation` : Provides specific
 #   Point/Vector/Normal options when making vector plugs.
 class PlugCreationWidget( GafferUI.Widget ) :
@@ -61,7 +65,8 @@ class PlugCreationWidget( GafferUI.Widget ) :
 				image = "plus.png",
 				hasFrame = False,
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
-				toolTip = "Click to add plugs"
+				toolTip = "Click to add plugs",
+				immediate = True,
 			)
 
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
@@ -82,60 +87,87 @@ class PlugCreationWidget( GafferUI.Widget ) :
 
 		result = IECore.MenuDefinition()
 
-		result.append( "/Bool", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.BoolPlug ) } )
-		result.append( "/Float", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.FloatPlug ) } )
-		result.append( "/Int", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.IntPlug ) } )
-		result.append( "/NumericDivider", { "divider" : True } )
+		includedTypes = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:includedTypes" ) or "*"
+		excludedTypes = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:excludedTypes" ) or ""
+		includedTypes = includedTypes.replace( ".", "::" )
+		excludedTypes = excludedTypes.replace( ".", "::" )
 
-		result.append( "/String", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.StringPlug ) } )
-		result.append( "/StringDivider", { "divider" : True } )
+		pendingDivider = None
+		def appendItem( menuPath, plugType, plugKW = {} ) :
+
+			typeName = plugType.staticTypeName()
+
+			if IECore.StringAlgo.matchMultiple( typeName, excludedTypes ) :
+				return
+
+			if not IECore.StringAlgo.matchMultiple( typeName, includedTypes ) :
+				return
+
+			nonlocal pendingDivider
+			if pendingDivider :
+				if result.size() :
+					result.append( pendingDivider, { "divider" : True } )
+				pendingDivider = None
+
+			result.append(
+				menuPath,
+				{ "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), plugType, plugKW ) }
+			)
+
+		def appendDivider( menuPath ) :
+
+			# Don't append a divider immediately, because the following
+			# items might get omitted by the `includedTypes` filter. Instead
+			# mark as pending and add as necessary in `appendItem()`.
+			#
+			# If we already have a pending divider, then don't replace it,
+			# otherwise we omit dividers in front of submenus (this doesn't
+			# mean we lose a divider inside the submenu, because we don't
+			# need one until after we have our first item in the submenu).
+			nonlocal pendingDivider
+			if pendingDivider is None :
+				pendingDivider = menuPath
+
+		appendItem( "/Bool", Gaffer.BoolPlug )
+		appendItem( "/Float", Gaffer.FloatPlug )
+		appendItem( "/Int", Gaffer.IntPlug )
+
+		appendDivider( "/StringDivider" )
+		appendItem( "/String", Gaffer.StringPlug )
+
+		appendDivider( "/VectorDivider" )
 
 		for plugType in [ Gaffer.V2iPlug, Gaffer.V3iPlug, Gaffer.V2fPlug, Gaffer.V3fPlug ] :
 			menuPath = "/{}".format( plugType.__name__.replace( "Plug", "" ) )
 			if Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:useGeometricInterpretation" ) :
 				for interpretation in [ "Point", "Vector", "Normal" ] :
-					result.append(
-						f"{menuPath}/{interpretation}",
-						{
-							"command" : functools.partial(
-								Gaffer.WeakMethod( self.__addPlug ), plugType, { "interpretation" : getattr( IECore.GeometricData.Interpretation, interpretation ) }
-							)
-						}
+					appendItem(
+						f"{menuPath}/{interpretation}", plugType,
+						{ "interpretation" : getattr( IECore.GeometricData.Interpretation, interpretation ) },
 					)
 			else :
-				result.append( menuPath, { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), plugType ) } )
+				appendItem( menuPath, plugType )
 
-		result.append( "/VectorDivider", { "divider" : True } )
+		appendDivider( "/ColorDivider" )
+		appendItem( "/Color3f", Gaffer.Color3fPlug )
+		appendItem( "/Color4f", Gaffer.Color4fPlug )
 
-		result.append( "/Color3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color3fPlug ) } )
-		result.append( "/Color4f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color4fPlug ) } )
-		result.append( "/ColorDivider", { "divider" : True } )
-
-		result.append( "/Box2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Box2iPlug, { "defaultValue" : imath.Box2i( imath.V2i( 0 ), imath.V2i( 0 ) ) } ) } )
-		result.append( "/Box2f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Box2fPlug, { "defaultValue" : imath.Box2f( imath.V2f( 0 ), imath.V2f( 0 ) ) } ) } )
-		result.append( "/Box3i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Box3iPlug, { "defaultValue" : imath.Box3i( imath.V3i( 0 ), imath.V3i( 0 ) ) } ) } )
-		result.append( "/Box3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Box3fPlug, { "defaultValue" : imath.Box3f( imath.V3f( 0 ), imath.V3f( 0 ) ) } ) } )
-		result.append( "/BoxDivider", { "divider" : True } )
+		appendDivider( "/BoxDivider" )
+		appendItem( "/Box2i", Gaffer.Box2iPlug, { "defaultValue" : imath.Box2i( imath.V2i( 0 ), imath.V2i( 0 ) ) } )
+		appendItem( "/Box2f", Gaffer.Box2fPlug, { "defaultValue" : imath.Box2f( imath.V2f( 0 ), imath.V2f( 0 ) ) } )
+		appendItem( "/Box3i", Gaffer.Box3iPlug, { "defaultValue" : imath.Box3i( imath.V3i( 0 ), imath.V3i( 0 ) ) } )
+		appendItem( "/Box3f", Gaffer.Box3fPlug, { "defaultValue" : imath.Box3f( imath.V3f( 0 ), imath.V3f( 0 ) ) } )
 
 		# Arrays
 
-		for label, plugType in [
-			( "Float", Gaffer.FloatVectorDataPlug ),
-			( "Int", Gaffer.IntVectorDataPlug ),
-			( "NumericDivider", None ),
-			( "String", Gaffer.StringVectorDataPlug ),
-		] :
-			if plugType is not None :
-				result.append(
-					"/Array/" + label,
-					{
-						"command" : functools.partial(
-							Gaffer.WeakMethod( self.__addPlug ), plugType
-						),
-					}
-				)
-			else :
-				result.append( "/Array/" + label, { "divider" : True } )
+		appendDivider( "/ArrayDivider" )
+		appendItem( "/Array/Float", Gaffer.FloatVectorDataPlug )
+		appendItem( "/Array/Int", Gaffer.IntVectorDataPlug )
+		appendDivider( "/Array/StringDivider" )
+		appendItem( "/Array/String", Gaffer.StringVectorDataPlug )
+
+		if not result.size() :
+			result.append( "/All Types Excluded", { "active" : False } )
 
 		return result
 
