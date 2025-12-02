@@ -334,6 +334,8 @@ Gaffer.Metadata.registerNode(
 # _CameraQueryFooter
 ##########################################################################
 
+## \todo Replace with PlugCreationWidget. Introduce `ui:scene:acceptsCameraParameters`
+# metadata to trigger the creation of menu items for all registered parameters.
 class _CameraQueryFooter( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
