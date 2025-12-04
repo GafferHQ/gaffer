@@ -38,6 +38,7 @@
 import collections
 import enum
 import math
+import os
 import warnings
 
 import imath
@@ -55,6 +56,30 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
+class _FileSizeColumn( GafferUI.PathColumn ) :
+
+	def cellData( self, path, canceller ) :
+
+		size = path.property( "fileSystem:size", canceller )
+		isFile = os.path.isfile( path.fileSequence().fileNames()[0] if path.isFileSequence() else str( path ) )
+
+		return GafferUI.PathColumn.CellData(
+			value = _FileSizeColumn.__formattedSize( size ) if isFile else "",
+			sortValue = IECore.UInt64Data( min( size + 1, 2 ** 64 - 1 ) if isFile else 0 )
+		)
+
+	def headerData( self, canceller ) :
+
+		return GafferUI.PathColumn.CellData( value = "Size" )
+
+	@staticmethod
+	def __formattedSize( size ) :
+
+		for unit in ( "bytes", "KB", "MB", "GB", "TB", "PB" ) :
+			if abs( size ) < 1024.0 or unit == "PB" :
+				return f"{size:.1f} {unit}" if unit != "bytes" else f"{size:d} {unit}"
+			size /= 1024.0
+
 ## The PathListingWidget displays the contents of a Path, updating the Path to represent the
 # current directory as the user navigates around. It supports both a list and a tree view,
 # allows customisable column listings, and supports both single and multiple selection.
@@ -69,12 +94,14 @@ class PathListingWidget( GafferUI.Widget ) :
 	defaultFileSystemOwnerColumn = StandardColumn( "Owner", "fileSystem:owner" )
 	defaultFileSystemModificationTimeColumn = StandardColumn( "Modified", "fileSystem:modificationTime" )
 	defaultFileSystemIconColumn = GafferUI.FileIconPathColumn()
+	defaultFileSystemFormattedSizeColumn = _FileSizeColumn()
 
 	defaultFileSystemColumns = (
 		defaultNameColumn,
 		defaultFileSystemOwnerColumn,
 		defaultFileSystemModificationTimeColumn,
 		defaultFileSystemIconColumn,
+		defaultFileSystemFormattedSizeColumn
 	)
 
 	## A collection of handy column definitions for IndexedIOPaths
