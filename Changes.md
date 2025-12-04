@@ -13,6 +13,8 @@ Fixes
 - RenderPassEditor, Spreadsheet : Conformed menu buttons to match the rest of Gaffer by showing menu on button press, not release.
 - NodeEditor : Added missing widget for Color4fVectorDataPlug.
 - Timeline : Fixed bug that meant the wrong frame number was drawn when the current frame was outside the playback range.
+- SetEditor : Fixed RunTimeTyped registration of `SetEditor.Settings`.
+- HierarchyView, AttributeEditor : Fixed search filter tooltip.
 
 API
 ---
