@@ -45,11 +45,10 @@ import GafferImage
 # sets the area for the node to cover the entire format.
 def postCreate( node, menu ) :
 
-	with node.scriptNode().context() :
-		if node["in"].getInput() :
-			cropFormat = node["in"]["format"].getValue()
-		else:
-			cropFormat = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
+	if node["in"].getInput() :
+		cropFormat = node["in"]["format"].getValue()
+	else:
+		cropFormat = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
 
 	node['area'].setValue( cropFormat.getDisplayWindow() )
 

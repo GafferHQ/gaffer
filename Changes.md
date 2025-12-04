@@ -15,6 +15,7 @@ Fixes
 - Timeline : Fixed bug that meant the wrong frame number was drawn when the current frame was outside the playback range.
 - SetEditor : Fixed RunTimeTyped registration of `SetEditor.Settings`.
 - HierarchyView, AttributeEditor : Fixed search filter tooltip.
+- NodeMenu : The script's context is now scoped before calling a node's `postCreator`.
 
 API
 ---

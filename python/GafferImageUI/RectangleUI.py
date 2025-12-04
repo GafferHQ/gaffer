@@ -45,11 +45,10 @@ import GafferImage
 # sets the rectangle area relative to the input format.
 def postCreate( node, menu ) :
 
-	with node.scriptNode().context() :
-		if node["in"].getInput() :
-			format = node["in"]["format"].getValue()
-		else:
-			format = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
+	if node["in"].getInput() :
+		format = node["in"]["format"].getValue()
+	else:
+		format = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
 
 	node["area"].setValue(
 		imath.Box2f(

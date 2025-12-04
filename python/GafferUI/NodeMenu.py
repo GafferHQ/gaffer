@@ -145,6 +145,7 @@ class NodeMenu( object ) :
 			graphEditor.frame( [ node ], extend = True )
 
 			if postCreator is not None :
-				postCreator( node, menu )
+				with script.context():
+					postCreator( node, menu )
 
 		return f
