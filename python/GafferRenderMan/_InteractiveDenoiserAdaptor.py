@@ -122,8 +122,9 @@ class _InteractiveDenoiserAdaptor( GafferScene.SceneProcessor ) :
 		# Set the driver up with all the required outputs.
 
 		requiredOutputs = [
-			( "beauty", "rgba", "filter" ),
-			( "mse", "rgb", "mse" ),
+			( "Ci", "color Ci", "filter" ),
+			( "a", "float a", "filter" ),
+			( "mse", "color Ci", "mse" ),
 			( "albedo", "lpe nothruput;noinfinitecheck;noclamp;unoccluded;overwrite;C<.S'passthru'>*((U2L)|O)", "filter" ),
 			( "albedo_mse", "lpe nothruput;noinfinitecheck;noclamp;unoccluded;overwrite;C<.S'passthru'>*((U2L)|O)", "mse" ),
 			( "diffuse", "lpe C(D[DS]*[LO])|[LO]", "filter" ),

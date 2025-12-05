@@ -16,6 +16,7 @@ Fixes
 - SetEditor : Fixed RunTimeTyped registration of `SetEditor.Settings`.
 - HierarchyView, AttributeEditor : Fixed search filter tooltip.
 - NodeMenu : The script's context is now scoped before calling a node's `postCreator`.
+- Updated AOVs required by RenderMan's ML denoiser.
 
 API
 ---
