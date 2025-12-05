@@ -162,7 +162,7 @@ void RenderOptions::outputOptions( IECoreScenePreview::Renderer *renderer, const
 
 	renderer->option( g_frameOptionName, new IntData( (int)round( Context::current()->getFrame() ) ) );
 
-	if( renderer->name().string() == "RenderMan" )
+	if( boost::starts_with( renderer->name().string(), "RenderMan" ) )
 	{
 		// Work around RenderMan limitations. Riley needs the `Ri:Shutter`
 		// option to be set on creation, but we would normally only pass it
