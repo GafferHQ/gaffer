@@ -58,6 +58,8 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			self["hideEmptySets"] = Gaffer.BoolPlug()
 			self["hideEmptySelection"] = Gaffer.BoolPlug()
 
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::SetEditor::Settings" )
+
 	def __init__( self, scriptNode, **kw ) :
 
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
