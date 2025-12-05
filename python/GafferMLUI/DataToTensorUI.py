@@ -171,6 +171,9 @@ class _SetupGadget( GafferUI.PlugAdder ) :
 
 GafferUI.NoduleLayout.registerCustomGadget( "GafferMLUI.DataToTensorUI._SetupGadget", _SetupGadget )
 
+## \todo Replace with PlugCreationWidget. We can use `plugCreationWidget:includedTypes` to
+# limit to just array types, but we need to make PlugCreationWidget smart enough that they
+# don't end up in a redundant submenu.
 class _SetupWidget( GafferUI.Widget ) :
 
 	def __init__( self, node ) :

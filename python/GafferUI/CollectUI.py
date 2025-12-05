@@ -188,6 +188,7 @@ Gaffer.Metadata.registerNode(
 # _InputFooter
 ##########################################################################
 
+## \todo Replace with PlugCreationWidget.
 class _InputFooter( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :

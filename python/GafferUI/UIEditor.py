@@ -946,6 +946,8 @@ class _PlugListing( GafferUI.Widget ) :
 
 		return False
 
+	## \todo Can we replace this with PlugCreationWidget? The main obstacle is the additional
+	# work we're doing in `__addPlug`.
 	def __addMenuDefinition( self ) :
 
 		m = IECore.MenuDefinition()

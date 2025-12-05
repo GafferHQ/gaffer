@@ -34,14 +34,9 @@
 #
 ##########################################################################
 
-import imath
 import functools
-import collections
-
-import IECore
 
 import Gaffer
-import GafferUI
 import GafferScene
 import GafferSceneUI
 
@@ -91,16 +86,24 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section" : "Settings.Tweaks",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType" : "GafferSceneUI.AttributeTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index" : -1,
+			"layout:customWidget:addButton:widgetType" : "GafferUI.PlugCreationWidget",
+			"layout:customWidget:addButton:index" : -1,
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 
 			"nodule:type" : "",
+			"ui:scene:acceptsAttributes" : True,
 
 		},
 
 		"tweaks.*" : {
 
 			"tweakPlugValueWidget:propertyType" : "attribute",
+
+		},
+
+		"tweaks.*.name" : {
+
+			"ui:scene:acceptsAttributeName" : True,
 
 		},
 
@@ -118,150 +121,3 @@ Gaffer.Metadata.registerNode(
 
 	}
 )
-
-##########################################################################
-# _TweaksFooter
-##########################################################################
-
-class _TweaksFooter( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug ) :
-
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
-
-		with row :
-
-				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-				self.__button = GafferUI.MenuButton(
-					image = "plus.png",
-					hasFrame = False,
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-				)
-
-				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
-
-	def _updateFromEditable( self ) :
-
-		# Not using `_editable()` as it considers the whole plug to be non-editable if
-		# any child has an input connection, but that shouldn't prevent us adding a new
-		# tweak.
-		self.__button.setEnabled( self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
-
-	def __menuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		result.append(
-			"/From Affected",
-			{
-				"subMenu" : Gaffer.WeakMethod( self.__addFromAffectedMenuDefinition )
-			}
-		)
-
-		result.append(
-			"/From Selection",
-			{
-				"subMenu" : Gaffer.WeakMethod( self.__addFromSelectedMenuDefinition )
-			}
-		)
-
-		result.append( "/FromPathsDivider", { "divider" : True } )
-
-		# TODO - would be nice to share these default options with other users of TweakPlug
-		for item in [
-			Gaffer.BoolPlug,
-			Gaffer.FloatPlug,
-			Gaffer.IntPlug,
-			"NumericDivider",
-			Gaffer.StringPlug,
-			"StringDivider",
-			Gaffer.V2iPlug,
-			Gaffer.V3iPlug,
-			Gaffer.V2fPlug,
-			Gaffer.V3fPlug,
-			"VectorDivider",
-			Gaffer.Color3fPlug,
-			Gaffer.Color4fPlug
-		] :
-
-			if isinstance( item, str ) :
-				result.append( "/" + item, { "divider" : True } )
-			else :
-				result.append(
-					"/" + item.__name__.replace( "Plug", "" ),
-					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), "", item ),
-					}
-				)
-
-		return result
-
-	def __addFromAffectedMenuDefinition( self ) :
-
-		node = self.getPlug().node()
-		assert( isinstance( node, GafferScene.AttributeTweaks ) )
-
-		pathMatcher = IECore.PathMatcher()
-		with self.context() :
-			GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
-
-		return self.__addFromPathsMenuDefinition( pathMatcher.paths() )
-
-	def __addFromSelectedMenuDefinition( self ) :
-
-		return self.__addFromPathsMenuDefinition(
-			GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() ).paths()
-		)
-
-	def __addFromPathsMenuDefinition( self, paths ) :
-
-		result = IECore.MenuDefinition()
-
-		node = self.getPlug().node()
-		assert( isinstance( node, GafferScene.AttributeTweaks ) )
-
-		attributes = {}
-		with self.context() :
-			useFullAttr = node["localise"].getValue()
-			for path in paths :
-				attr = node["in"].fullAttributes( path, withGlobalAttributes = True ) if useFullAttr else node["in"].attributes( path )
-				attributes.update( attr )
-			existingTweaks = { tweak["name"].getValue() for tweak in node["tweaks"] }
-
-		attributes = collections.OrderedDict( sorted( attributes.items() ) )
-
-		for key, value in attributes.items() :
-			result.append(
-				"/" + key,
-				{
-					"command" : functools.partial(
-						Gaffer.WeakMethod( self.__addTweak ),
-						key,
-						value
-					),
-					"active" : key not in existingTweaks
-				}
-			)
-
-		if not len( result.items() ) :
-			result.append(
-				"/No Attributes Found", { "active" : False }
-			)
-			return result
-
-		return result
-
-	def __addTweak( self, name, plugTypeOrValue ) :
-
-		if isinstance( plugTypeOrValue, IECore.Data ) :
-			plug = Gaffer.TweakPlug( name, plugTypeOrValue )
-		else :
-			plug = Gaffer.TweakPlug( name, plugTypeOrValue() )
-
-		plug.setName( "tweak0" )
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().addChild( plug )

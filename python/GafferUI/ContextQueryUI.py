@@ -184,6 +184,8 @@ Gaffer.Metadata.registerNode(
 
 			"layout:customWidget:footer:widgetType" : "GafferUI.ContextQueryUI._ContextQueryFooter",
 			"layout:customWidget:footer:index" : -1,
+			"plugCreationWidget:action" : "addQuery",
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 
 			"nodule:type" : "",
 
@@ -283,86 +285,18 @@ Gaffer.Metadata.registerNode(
 # _ContextQueryFooter
 ##########################################################################
 
-class _ContextQueryFooter( GafferUI.PlugValueWidget ) :
+## \todo If we put query plugs on the same row as output widgets,
+# then we won't need the funky `label` metadata, and will be able
+# to use PlugCreationWidget directly.
+class _ContextQueryFooter( GafferUI.PlugCreationWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
-
-		with row :
-
-			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-			self.__menuButton = GafferUI.MenuButton(
-				image = "plus.png",
-				hasFrame = False,
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-			)
-
-			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand": True } )
+		GafferUI.PlugCreationWidget.__init__( self, plug, **kw )
 
 		plug.node().plugSetSignal().connect(
 			Gaffer.WeakMethod( self.__updateQueryMetadata )
 		)
-
-	def _updateFromEditable( self ) :
-
-		self.__menuButton.setEnabled( self._editable() )
-
-	def __menuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		for item in [
-			Gaffer.BoolPlug(),
-			Gaffer.FloatPlug(),
-			Gaffer.IntPlug(),
-			"NumericDivider",
-			Gaffer.StringPlug(),
-			"StringDivider",
-			Gaffer.V2iPlug(),
-			Gaffer.V3iPlug(),
-			Gaffer.V2fPlug(),
-			Gaffer.V3fPlug(),
-			"VectorDivider",
-			Gaffer.Color3fPlug(),
-			Gaffer.Color4fPlug(),
-			"ColorDivider",
-			Gaffer.Box2iPlug(),
-			Gaffer.Box2fPlug(),
-			Gaffer.Box3iPlug(),
-			Gaffer.Box3fPlug(),
-			"BoxDivider",
-			Gaffer.FloatVectorDataPlug( defaultValue = IECore.FloatVectorData() ),
-			Gaffer.IntVectorDataPlug( defaultValue = IECore.IntVectorData() ),
-			Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() )
-		] :
-			if isinstance( item, str ) :
-				result.append( "/" + item, { "divider": True } )
-			else :
-				name = type( item ).__name__.replace( "Plug", "" )
-				if name == "StringVectorData":
-					result.append( "/Array/NumericDivider", { "divider": True } )
-				if "Vector" in name:
-					name = "Array/" + name.split( "Vector" )[0]
-				result.append(
-					"/" + name,
-					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", item ),
-					}
-				)
-
-		return result
-
-	def __addQuery( self, name, templatePlug ) :
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-
-			node = self.getPlug().node()
-
-			node.addQuery( templatePlug, name )
 
 	def __updateQueryMetadata( self, plug ) :
 

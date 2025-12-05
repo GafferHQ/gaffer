@@ -105,8 +105,9 @@ Gaffer.Metadata.registerNode(
 			"layout:section" : "Settings.Color Overrides",
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType" : "GafferSceneUI.SetVisualiserUI._OverridesFooter",
-			"layout:customWidget:footer:index" : -1
+			"layout:customWidget:addButton:widgetType" : "GafferUI.PlugCreationWidget",
+			"layout:customWidget:addButton:index" : -1,
+			"plugCreationWidget:includedTypes" : "Gaffer.Color3fPlug",
 
 		},
 
@@ -192,35 +193,6 @@ class _OutSetsPlugValueWidget( GafferUI.Widget ) :
 
 	def getToolTip( self ) :
 		return None
-
-# A simple 'Add' button that doesn't show all the data types listed in the
-# CompoundDataPlugValueWidget's Add MenuButton.
-# @TODO: Support type constraints in CompoundDataPlugValueWidget.
-class _OverridesFooter( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug ) :
-
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
-
-		with row :
-
-			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
-			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addOverride ) )
-
-			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
-
-	def _updateFromEditable( self ) :
-
-		self.__addButton.setEnabled( self._editable() )
-
-	def __addOverride( self, _ ) :
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().addChild( Gaffer.NameValuePlug( "", imath.Color3f( 1.0 ), True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 # A single-row that holds a Color swatch and a text label
 class _SetColorLedgendRowWidget( GafferUI.ListContainer ) :

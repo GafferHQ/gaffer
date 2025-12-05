@@ -77,7 +77,9 @@ Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "openColorIO.displayTransform"
 
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:section", "Variables" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget" )
-Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:customWidget:footer:widgetType", "GafferImageUI.OpenColorIOContextUI._VariablesFooter" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:customWidget:footer:widgetType", "GafferUI.PlugCreationWidget" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "plugCreationWidget:includedTypes", "Gaffer.StringPlug" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "plugCreationWidget:action", "addNameValuePlug" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:customWidget:footer:index", -1 )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables.*", "deletable", True )
 

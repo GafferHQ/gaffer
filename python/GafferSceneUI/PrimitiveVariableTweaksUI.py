@@ -228,6 +228,8 @@ Gaffer.Metadata.registerNode(
 # _TweaksFooter
 ##########################################################################
 
+## \todo Replace with PlugCreationWidget. Use `ui:scene:acceptsPrimitiveVariables`
+# metadata to add custom submenus and drag and drop from the SceneInspector.
 class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
