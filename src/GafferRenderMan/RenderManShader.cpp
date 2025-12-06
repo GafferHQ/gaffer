@@ -43,7 +43,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/SearchPath.h"
@@ -285,8 +285,8 @@ Gaffer::Plug *loadParameter( const boost::property_tree::ptree &parameter, Plug 
 	Plug *candidatePlug;
 	if( parameter.get<string>( "<xmlattr>.isDynamicArray", "0" ) == "1" )
 	{
-		// Spline parameters are handled separately in findSplinePlugFromPositionsParameter,
-		// leaving very few examples of non-spline array parameters in the
+		// Ramp parameters are handled separately in findRampPlugFromPositionsParameter,
+		// leaving very few examples of non-ramp array parameters in the
 		// standard RenderMan shaders. All non-spline arrays seem to be used to
 		// provide an array of connections rather than values - see
 		// `PxrSurface.utilityPattern` for example. So we load as an
@@ -360,29 +360,7 @@ Gaffer::Plug *loadParameter( const boost::property_tree::ptree &parameter, Plug 
 	return acquiredPlug.get();
 }
 
-SplineDefinitionInterpolation basisFromString( const std::string &basis )
-{
-	if( basis == "bspline" )
-	{
-		return SplineDefinitionInterpolationBSpline;
-	}
-	else if( basis == "linear" )
-	{
-		return SplineDefinitionInterpolationLinear;
-	}
-	else if( basis == "constant" )
-	{
-		return SplineDefinitionInterpolationConstant;
-	}
-	else if( basis == "monotonecubic" )
-	{
-		return SplineDefinitionInterpolationMonotoneCubic;
-	}
-
-	return SplineDefinitionInterpolationCatmullRom;
-}
-
-PlugPtr findSplinePlugFromPositionsParameter(
+PlugPtr findRampPlugFromPositionsParameter(
 	const std::string& positionName, const boost::property_tree::ptree &positionsParameter,
 	const std::map< std::string, const boost::property_tree::ptree* > &parameters, Plug::Direction direction, std::unordered_set<const boost::property_tree::ptree*> &parametersAlreadyProcessed
 )
@@ -428,7 +406,7 @@ PlugPtr findSplinePlugFromPositionsParameter(
 	{
 		throw IECore::Exception( "Spline _Interpretation not a string parameter: " + basisName );
 	}
-	SplineDefinitionInterpolation interpolationDefault = basisFromString( basisParameter.get( "<xmlattr>.default", "" ) );
+	std::string interpolationString = basisParameter.get( "<xmlattr>.default", "" );
 
 	// In the PRMan spline convention, there is a 4th parameter, which is just an integer matching the
 	// length of the arrays.  In the PRMan OSL shaders, a there is an example where the default
@@ -526,52 +504,46 @@ PlugPtr findSplinePlugFromPositionsParameter(
 			);
 		}
 
-		SplineDefinitionfColor3f defaultValue;
-		defaultValue.interpolation = interpolationDefault;
-		for( unsigned int i = 0; i < positionsDefault.size(); i++ )
+		std::vector< Imath::Color3f > values;
+		for( unsigned int i = 0; i < valueTokens.size() / 3; i++ )
 		{
-			defaultValue.points.insert(
-				std::pair{ positionsDefault[i],
-					Imath::Color3f(
-						boost::lexical_cast<float>( valueTokens[3*i] ),
-						boost::lexical_cast<float>( valueTokens[3*i + 1] ),
-						boost::lexical_cast<float>( valueTokens[3*i + 2 ] )
-					)
-				}
+			values.push_back(
+				Imath::Color3f(
+					boost::lexical_cast<float>( valueTokens[3*i] ),
+					boost::lexical_cast<float>( valueTokens[3*i + 1] ),
+					boost::lexical_cast<float>( valueTokens[3*i + 2 ] )
+				)
 			);
 		}
 
-		defaultValue.trimEndPoints();
-
-		return new SplinefColor3fPlug( baseName, direction, defaultValue , Plug::Default );
+		RampfColor3f defaultValue;
+		defaultValue.fromOSL( interpolationString, positionsDefault, values, baseName );
+		return new RampfColor3fPlug( baseName, direction, defaultValue , Plug::Default );
 	}
 	else
 	{
-		SplineDefinitionff defaultValue;
-		defaultValue.interpolation = interpolationDefault;
-
-		for( unsigned int i = 0; i < positionsDefault.size(); i++ )
+		std::vector< float > values;
+		for( unsigned int i = 0; i < valueTokens.size(); i++ )
 		{
-			defaultValue.points.insert(
-				std::pair{ positionsDefault[i], boost::lexical_cast<float>( valueTokens[i] ) }
-			);
+			values.push_back( boost::lexical_cast<float>( valueTokens[i] ) );
 		}
 
-		defaultValue.trimEndPoints();
+		Rampff defaultValue;
+		defaultValue.fromOSL( interpolationString, positionsDefault, values, baseName );
 
-		return new SplineffPlug( baseName, direction, defaultValue , Plug::Default );
+		return new RampffPlug( baseName, direction, defaultValue , Plug::Default );
 	}
 }
 
 
 void loadParameters( const boost::property_tree::ptree &tree, Plug *parent, const ParameterSet *omit, std::unordered_set<const Plug *> &validPlugs )
 {
-	// In order to assemble together the parameters needed to build a spline, we need to be able to look up
+	// In order to assemble together the parameters needed to build a ramp, we need to be able to look up
 	// parameters by name. Build a map of all the parameters that we should be building plugs from
 	std::map<std::string, const boost::property_tree::ptree *> parameters;
 
 	std::unordered_set<const boost::property_tree::ptree*> parametersAlreadyProcessed;
-	std::unordered_map<const boost::property_tree::ptree*, PlugPtr > splinePlugs;
+	std::unordered_map<const boost::property_tree::ptree*, PlugPtr > rampPlugs;
 
 	for( const auto &child : tree )
 	{
@@ -588,25 +560,25 @@ void loadParameters( const boost::property_tree::ptree &tree, Plug *parent, cons
 		}
 	}
 
-	// Find the splines
+	// Find the ramps
 	for( const auto &param : parameters )
 	{
-		PlugPtr spline;
+		PlugPtr ramp;
 		try
 		{
-			spline = findSplinePlugFromPositionsParameter( param.first, *param.second, parameters, parent->direction(), parametersAlreadyProcessed );
+			ramp = findRampPlugFromPositionsParameter( param.first, *param.second, parameters, parent->direction(), parametersAlreadyProcessed );
 		}
 		catch( std::exception &e )
 		{
 			msg(
 				IECore::Msg::Warning, "RenderManShader::loadShader",
-				fmt::format( "Error while parsing spline based on \"{}\" : {}", param.first, e.what() )
+				fmt::format( "Error while parsing ramp based on \"{}\" : {}", param.first, e.what() )
 			);
 		}
 
-		if( spline )
+		if( ramp )
 		{
-			splinePlugs[ param.second ] = spline;
+			rampPlugs[ param.second ] = ramp;
 		}
 	}
 
@@ -629,11 +601,11 @@ void loadParameters( const boost::property_tree::ptree &tree, Plug *parent, cons
 			continue;
 		}
 
-		auto splineIt = splinePlugs.find( &child.second );
-		if( splineIt != splinePlugs.end() )
+		auto rampIt = rampPlugs.find( &child.second );
+		if( rampIt != rampPlugs.end() )
 		{
-			parent->addChild( splineIt->second );
-			validPlugs.insert( splineIt->second.get() );
+			parent->addChild( rampIt->second );
+			validPlugs.insert( rampIt->second.get() );
 			continue;
 		}
 

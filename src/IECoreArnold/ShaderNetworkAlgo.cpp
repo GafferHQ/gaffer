@@ -46,7 +46,7 @@
 #include "IECore/AngleConversion.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/Spline.h"
+#include "IECore/Ramp.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -136,11 +136,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	// Set the shader parameters
 
-	IECore::ConstCompoundDataPtr expandedParameters = IECoreScene::ShaderNetworkAlgo::expandSplineParameters(
-		shader->parametersData()
-	);
-
-	for( const auto &namedParameter : expandedParameters->readable() )
+	for( const auto &namedParameter : shader->parametersData()->readable() )
 	{
 		string parameterName;
 		if( isOSLShader )

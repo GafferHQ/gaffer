@@ -177,7 +177,7 @@ from .PopupWindow import PopupWindow
 from .ConfirmationDialogue import ConfirmationDialogue
 from .Divider import Divider
 from . import _Pointer
-from .SplineWidget import SplineWidget
+from .RampWidget import RampWidget
 from .Bookmarks import Bookmarks
 from . import WidgetAlgo
 from .CodeWidget import CodeWidget
@@ -247,7 +247,6 @@ from .LayoutPlugValueWidget import LayoutPlugValueWidget
 from . import ScriptNodeUI
 from .RefreshPlugValueWidget import RefreshPlugValueWidget
 from . import PreferencesUI
-from .SplinePlugValueWidget import SplinePlugValueWidget
 from .RampPlugValueWidget import RampPlugValueWidget
 from .NodeFinderDialogue import NodeFinderDialogue
 from .ConnectionPlugValueWidget import ConnectionPlugValueWidget

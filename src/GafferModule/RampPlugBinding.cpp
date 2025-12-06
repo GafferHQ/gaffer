@@ -37,13 +37,13 @@
 
 #include "boost/python.hpp"
 
-#include "SplinePlugBinding.h"
+#include "RampPlugBinding.h"
 
 #include "GafferBindings/PlugBinding.h"
 #include "GafferBindings/ValuePlugBinding.h"
 
 #include "Gaffer/Node.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/TypedPlug.h"
 
 #include "IECorePython/IECoreBinding.h"
@@ -56,86 +56,10 @@ using namespace Gaffer;
 namespace
 {
 
-template<typename T>
-std::string splineDefinitionRepr( object x )
-{
-	std::stringstream s;
-	const std::string name = extract<std::string>( x.attr( "__class__").attr( "__name__" ) );
-	s << "Gaffer." << name << "( ";
-	const T splineDefinition = extract<T>( x );
-	s << "(";
-	int i = 0;
-	int l = splineDefinition.points.size();
-	typename T::PointContainer::const_iterator it;
-	for( it=splineDefinition.points.begin(); it!=splineDefinition.points.end(); it++, i++ )
-	{
-		// TODO - without this const_cast I get a link error because the const version of repr<Color3f>
-		// hasn't been defined
-		s << " ( " << it->first << ", " << IECorePython::repr( const_cast<typename T::YType&>( it->second ) ) << " )";
-		if( i!=l-1 )
-		{
-			s << ",";
-		}
-	}
-	s << "), ";
-	s << "Gaffer.SplineDefinitionInterpolation( " << splineDefinition.interpolation << " )";
-	s << ")";
-	return s.str();
-}
-
-template<typename T>
-T *splineDefinitionConstruct( object o, const SplineDefinitionInterpolation &interpolation )
-{
-	typename T::PointContainer points;
-	int s = extract<int>( o.attr( "__len__" )() );
-	for( int i=0; i<s; i++ )
-	{
-		object e = o[i];
-		int es = extract<int>( e.attr( "__len__" )() );
-		if( es!=2 )
-		{
-			throw IECore::Exception( "Each entry in the point sequence must contain two values." );
-		}
-		object xo = e[0];
-		object yo = e[1];
-		float x = extract<float>( xo );
-		typename T::YType y = extract<typename T::YType>( yo );
-		points.insert( typename T::PointContainer::value_type( x, y ) );
-	}
-	return new T( points, interpolation );
-}
-
-template<typename T>
-boost::python::tuple splineDefinitionPoints( const T &s )
-{
-	boost::python::list p;
-	typename T::PointContainer::const_iterator it;
-	for( it=s.points.begin(); it!=s.points.end(); it++ )
-	{
-		p.append( make_tuple( it->first, it->second ) );
-	}
-	return boost::python::tuple( p );
-}
-
-template<typename T>
-void bindSplineDefinition( const char *name)
-{
-	class_<T>( name )
-		.def( "__init__", make_constructor( &splineDefinitionConstruct<T> ) )
-		.def( "__repr__", &splineDefinitionRepr<T> )
-		.def( "points", &splineDefinitionPoints<T>, "Read only access to the control points as a tuple of tuples of ( x, y ) pairs." )
-		.def_readwrite("interpolation", &T::interpolation)
-		.def( self==self )
-		.def( self!=self )
-		.def( "spline", &T::spline )
-		.def( "trimEndPoints", &T::trimEndPoints )
-	;
-}
-
 const IECore::InternedString g_interpolation( "interpolation" );
 const IECore::InternedString g_omitParentNodePlugValues( "valuePlugSerialiser:omitParentNodePlugValues" );
 
-class SplinePlugSerialiser : public ValuePlugSerialiser
+class RampPlugSerialiser : public ValuePlugSerialiser
 {
 
 	public :
@@ -145,7 +69,7 @@ class SplinePlugSerialiser : public ValuePlugSerialiser
 			std::string result = ValuePlugSerialiser::postConstructor( plug, identifier, serialisation );
 			if( !omitValue( plug, serialisation ) )
 			{
-				// This isn't ideal, but the newly constructed spline plug will already have child plugs representing the points for the
+				// This isn't ideal, but the newly constructed ramp plug will already have child plugs representing the points for the
 				// default value. So we get rid of those so the real value can be loaded appropriately by serialising plug constructors
 				// (see below).
 				result += identifier + ".clearPoints()\n";
@@ -256,26 +180,15 @@ void bind()
 		.def( "pointYPlug", &pointYPlug<T> )
 	;
 
-	Serialisation::registerSerialiser( T::staticTypeId(), new SplinePlugSerialiser );
+	Serialisation::registerSerialiser( T::staticTypeId(), new RampPlugSerialiser );
 
 }
 
 } // namespace
 
-void GafferModule::bindSplinePlug()
+void GafferModule::bindRampPlug()
 {
-	enum_<SplineDefinitionInterpolation>( "SplineDefinitionInterpolation" )
-		.value( "Linear", SplineDefinitionInterpolationLinear )
-		.value( "CatmullRom", SplineDefinitionInterpolationCatmullRom )
-		.value( "BSpline", SplineDefinitionInterpolationBSpline )
-		.value( "MonotoneCubic", SplineDefinitionInterpolationMonotoneCubic )
-		.value( "Constant", SplineDefinitionInterpolationConstant )
-	;
-
-	bindSplineDefinition<SplineDefinitionff >( "SplineDefinitionff" );
-	bindSplineDefinition<SplineDefinitionfColor3f >( "SplineDefinitionfColor3f" );
-	bindSplineDefinition<SplineDefinitionfColor4f >( "SplineDefinitionfColor4f" );
-	bind<SplineffPlug>();
-	bind<SplinefColor3fPlug>();
-	bind<SplinefColor4fPlug>();
+	bind<RampffPlug>();
+	bind<RampfColor3fPlug>();
+	bind<RampfColor4fPlug>();
 }

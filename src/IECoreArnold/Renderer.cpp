@@ -1075,16 +1075,25 @@ class ShaderCache : public IECore::RefCounted
 			Cache::accessor writeAccessor;
 			if( m_cache.insert( writeAccessor, h ) )
 			{
-				const std::string nameFormat = "shader:{shaderHandle}:" + writeAccessor->first.toString();
-				if( hSubst != IECore::MurmurHash() )
+				try
 				{
-					IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
-					ShaderNetworkAlgo::applySubstitutions( substitutedShader.get(), attributeName, attributes );
-					writeAccessor->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, m_universe, nameFormat, m_parentNode );
+					const std::string nameFormat = "shader:{shaderHandle}:" + writeAccessor->first.toString();
+					if( hSubst != IECore::MurmurHash() )
+					{
+						IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
+						ShaderNetworkAlgo::applySubstitutions( substitutedShader.get(), attributeName, attributes );
+						writeAccessor->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, m_universe, nameFormat, m_parentNode );
+					}
+					else
+					{
+						writeAccessor->second = new ArnoldShader( shader, m_nodeDeleter, m_universe, nameFormat, m_parentNode );
+					}
 				}
-				else
+				catch( ... )
 				{
-					writeAccessor->second = new ArnoldShader( shader, m_nodeDeleter, m_universe, nameFormat, m_parentNode );
+					// Make sure we don't leave empty entries in the cache
+					m_cache.erase( writeAccessor );
+					throw;
 				}
 			}
 			return writeAccessor->second;

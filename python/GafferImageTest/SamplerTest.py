@@ -259,7 +259,7 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 				ramp["format"].setValue( GafferImage.Format( width, height, 1.000 ) )
 				rampScale = ( width * height - 1 ) / ( width * width + 1 )
 				ramp["endPosition"].setValue( imath.V2f( 0.5 + 1 * rampScale, 0.5 + width * rampScale ) )
-				ramp['ramp'].setValue( Gaffer.SplineDefinitionfColor4f( ( ( 0, imath.Color4f( 0 ) ), ( 1, imath.Color4f( width * height - 1 ) )), Gaffer.SplineDefinitionInterpolation.Linear ) )
+				ramp['ramp'].setValue( IECore.RampfColor4f( ( ( 0, imath.Color4f( 0 ) ), ( 1, imath.Color4f( width * height - 1 ) )), IECore.RampInterpolation.Linear ) )
 
 				center = imath.V2i( width // 2, height // 2 )
 

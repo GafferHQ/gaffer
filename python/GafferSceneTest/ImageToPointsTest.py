@@ -134,11 +134,11 @@ class ImageToPointsTest( GafferSceneTest.SceneTestCase ) :
 		rampStart = imath.Color4f( 1, 0.5, 0, 1 )
 		rampEnd =  imath.Color4f( 0, 0.5, 1, 1 )
 		ramp["ramp"].setValue(
-			Gaffer.SplineDefinitionfColor4f(
+			IECore.RampfColor4f(
 				(
 					( 0, rampStart ),
 					( 1, rampEnd ),
-				), Gaffer.SplineDefinitionInterpolation.Constant
+				), IECore.RampInterpolation.Constant
 			)
 		)
 
@@ -235,11 +235,11 @@ class ImageToPointsTest( GafferSceneTest.SceneTestCase ) :
 		rampStart = imath.Color4f( 1, 0.5, 0, 0 )
 		rampEnd =  imath.Color4f( 0, 0.5, 1, 1 )
 		ramp["ramp"].setValue(
-			Gaffer.SplineDefinitionfColor4f(
+			IECore.RampfColor4f(
 				(
 					( 0, rampStart ),
 					( 1, rampEnd ),
-				), Gaffer.SplineDefinitionInterpolation.Constant
+				), IECore.RampInterpolation.Constant
 			)
 		)
 
