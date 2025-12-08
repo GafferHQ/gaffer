@@ -37,7 +37,6 @@
 import Gaffer
 import GafferSceneUI
 
-Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "compatibility:childAlias:baseState", "drawingMode" )
 # Provides backwards compatibility by allowing access to "camera.lookThroughEnabled" plug using its old name
 # of "lookThrough.enabled", and "camera.lookThroughCamera" using its old name of "lookThrough.camera".
 Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "compatibility:childAlias:lookThrough", "camera" )
