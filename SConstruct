@@ -1994,6 +1994,14 @@ for libraryName, libraryDef in libraries.items() :
 env.Alias( "build", "buildCore" )
 
 #########################################################################################################
+# Executable
+#########################################################################################################
+
+exeEnv = baseLibEnv.Clone()
+gafferExecutable = exeEnv.Program( "$BUILD_DIR/bin/gafferExecutable", "src/bin/gaffer.cpp")
+env.Alias( "buildCore", gafferExecutable )
+
+#########################################################################################################
 # Python nodes authored as Boxes and exported by ExtensionAlgo
 #########################################################################################################
 
