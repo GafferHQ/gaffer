@@ -39,7 +39,9 @@ Fixes
 - SetEditor : Fixed RunTimeTyped registration of `SetEditor.Settings`.
 - HierarchyView, AttributeEditor : Fixed search filter tooltip.
 - NodeMenu : The script's context is now scoped before calling a node's `postCreator`.
-- RenderMan : Fixed incorrect motion blur when rendering with RenderMan XPU.
+- RenderMan :
+  - Fixed incorrect motion blur when rendering with RenderMan XPU.
+  - Fixed interactive denoiser when rendering with RenderMan XPU.
 
 API
 ---

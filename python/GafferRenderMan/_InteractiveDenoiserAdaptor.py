@@ -149,4 +149,4 @@ class _InteractiveDenoiserAdaptor( GafferScene.SceneProcessor ) :
 
 IECore.registerRunTimeTyped( _InteractiveDenoiserAdaptor, typeName = "GafferRenderMan::_InteractiveDenoiserAdaptor" )
 
-GafferScene.SceneAlgo.registerRenderAdaptor( "InteractiveRenderManDenoiserAdaptor", _InteractiveDenoiserAdaptor, "InteractiveRender", "RenderMan" )
+GafferScene.SceneAlgo.registerRenderAdaptor( "InteractiveRenderManDenoiserAdaptor", _InteractiveDenoiserAdaptor, "InteractiveRender", "RenderMan*" )
