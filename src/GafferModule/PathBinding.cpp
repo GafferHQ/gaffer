@@ -632,6 +632,7 @@ void GafferModule::bindPath()
 		.def( "nativeString", &FileSystemPath::nativeString )
 		.def( "standardPath", &FileSystemPath::standardPath )
 		.staticmethod( "createStandardFilter" )
+		.def( "__fspath__", &FileSystemPath::nativeString )
 	;
 
 	StdPathFromPathlibPath();
