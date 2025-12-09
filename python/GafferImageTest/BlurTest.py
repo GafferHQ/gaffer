@@ -178,7 +178,7 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 
 		deleteChannels = GafferImage.DeleteChannels()
 		deleteChannels["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
-		deleteChannels["channels"].setValue( IECore.StringVectorData( [ 'R' ] ) )
+		deleteChannels["channels"].setValue( 'R' )
 		deleteChannels["in"].setInput( imageLoop["out"] )
 
 		finalCrop = GafferImage.Crop()

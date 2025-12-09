@@ -230,7 +230,7 @@ class DeepMergeTest( GafferImageTest.ImageTestCase ) :
 		ad = GafferImage.DeleteChannels()
 		ad["in"].setInput( addDepthA["out"] )
 		ad["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
-		ad["channels"].setValue( IECore.StringVectorData( [ "G", "Z", "ZBack" ] ) )
+		ad["channels"].setValue( "G Z ZBack" )
 
 		b = GafferImage.Constant()
 		b["color"].setValue( imath.Color4f( 0.5, 0.6, 0.7, 0.8 ) )
@@ -244,7 +244,7 @@ class DeepMergeTest( GafferImageTest.ImageTestCase ) :
 		bd = GafferImage.DeleteChannels()
 		bd["in"].setInput( addDepthB["out"] )
 		bd["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
-		bd["channels"].setValue( IECore.StringVectorData( [ "R", "A" ] ) )
+		bd["channels"].setValue( "R A" )
 
 		merge = GafferImage.DeepMerge()
 		merge["in"][0].setInput( ad["out"] )

@@ -201,13 +201,13 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		g["offset"].setValue( imath.Color4f( 3, 3, 3, 3 ) )
 		self.assertEqual( sample( 25, 25 ), [ 3.125, 3.25, 3.5, 0.75, 1.0 ] )
 
-		g["channels"].setValue( IECore.StringVectorData( [ "A" ] ) )
+		g["channels"].setValue( "A" )
 		self.assertEqual( sample( 25, 25 ), [ 0.125, 0.25, 0.5, 3.75, 1.0 ] )
 
-		g["channels"].setValue( IECore.StringVectorData( [ "customChannel" ] ) )
+		g["channels"].setValue( "customChannel" )
 		self.assertEqual( sample( 25, 25 ), [ 0.125, 0.25, 0.5, 0.75, 4.0 ] )
 
-		g["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A", "customChannel" ] ) )
+		g["channels"].setValue( "R G B A customChannel" )
 		self.assertEqual( sample( 25, 25 ), [ 3.125, 3.25, 3.5, 3.75, 4.0 ] )
 
 	def testPerLayerExpression( self ) :
