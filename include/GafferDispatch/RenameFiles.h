@@ -34,37 +34,74 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "FileNodeBinding.h"
+#include "GafferDispatch/TaskNode.h"
 
-#include "GafferDispatch/CopyFiles.h"
-#include "GafferDispatch/DeleteFiles.h"
-#include "GafferDispatch/FileList.h"
-#include "GafferDispatch/RenameFiles.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferDispatch;
-using namespace GafferDispatchBindings;
-
-void GafferDispatchModule::bindFileNodes()
+namespace GafferDispatch
 {
-	{
-		boost::python::scope s = DependencyNodeClass<FileList>();
 
-		boost::python::enum_<FileList::SequenceMode>( "SequenceMode" )
-			.value( "Files", FileList::SequenceMode::Files )
-			.value( "Sequences", FileList::SequenceMode::Sequences )
-			.value( "FilesAndSequences", FileList::SequenceMode::FilesAndSequences )
-		;
-	}
+class GAFFERDISPATCH_API RenameFiles : public TaskNode
+{
 
-	TaskNodeClass<DeleteFiles>();
-	TaskNodeClass<CopyFiles>();
-	TaskNodeClass<RenameFiles>();
-}
+	public :
+
+		explicit RenameFiles( const std::string &name=defaultName<RenameFiles>() );
+		~RenameFiles() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::RenameFiles, RenameFilesTypeId, TaskNode );
+
+		Gaffer::StringVectorDataPlug *filesPlug();
+		const Gaffer::StringVectorDataPlug *filesPlug() const;
+
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+
+		Gaffer::StringPlug *deletePrefixPlug();
+		const Gaffer::StringPlug *deletePrefixPlug() const;
+
+		Gaffer::StringPlug *deleteSuffixPlug();
+		const Gaffer::StringPlug *deleteSuffixPlug() const;
+
+		Gaffer::StringPlug *findPlug();
+		const Gaffer::StringPlug *findPlug() const;
+
+		Gaffer::StringPlug *replacePlug();
+		const Gaffer::StringPlug *replacePlug() const;
+
+		Gaffer::BoolPlug *useRegularExpressionsPlug();
+		const Gaffer::BoolPlug *useRegularExpressionsPlug() const;
+
+		Gaffer::StringPlug *addPrefixPlug();
+		const Gaffer::StringPlug *addPrefixPlug() const;
+
+		Gaffer::StringPlug *addSuffixPlug();
+		const Gaffer::StringPlug *addSuffixPlug() const;
+
+		Gaffer::BoolPlug *replaceExtensionPlug();
+		const Gaffer::BoolPlug *replaceExtensionPlug() const;
+
+		Gaffer::StringPlug *extensionPlug();
+		const Gaffer::StringPlug *extensionPlug() const;
+
+		Gaffer::BoolPlug *overwritePlug();
+		const Gaffer::BoolPlug *overwritePlug() const;
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
+
+};
+
+} // namespace GafferDispatch
