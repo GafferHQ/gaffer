@@ -827,7 +827,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		script["sphere"]["sets"].setValue( "A" )
 
 		script["setFilter"] = GafferScene.SetFilter()
-		script["setFilter"]["set"].setValue( "A" )
+		script["setFilter"]["setExpression"].setValue( "A" )
 
 		script["transform"] = GafferScene.Transform()
 		script["transform"]["in"].setInput( script["sphere"]["out"] )
