@@ -52,5 +52,6 @@ from .LocalJobs import LocalJobs
 from . import FileListUI
 from . import DeleteFilesUI
 from . import CopyFilesUI
+from . import RenameFilesUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )
