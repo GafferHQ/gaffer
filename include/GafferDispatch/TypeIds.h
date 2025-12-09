@@ -50,6 +50,7 @@ enum TypeId
 	FileListTypeId = 118805,
 	DeleteFilesTypeId = 118806,
 	CopyFilesTypeId = 118807,
+	RenameFilesTypeId = 118808,
 
 	LastTypeId = 118999
 

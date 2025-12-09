@@ -7,6 +7,7 @@ Features
 - FileList : Added node for listing matching files.
 - DeleteFiles : Added node for deleting files.
 - CopyFiles : Added node for copying files.
+- RenameFiles : Added node for renaming files.
 
 1.6.8.0 (relative to 1.6.7.0)
 =======
