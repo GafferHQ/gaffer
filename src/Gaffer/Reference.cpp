@@ -41,7 +41,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/Spreadsheet.h"
 #include "Gaffer/StringPlug.h"
 
@@ -81,7 +81,7 @@ bool descendantHasInput( const Plug *plug )
 	return false;
 }
 
-bool conformSplinePlugs( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ignoreDefaultValues )
+bool conformRampPlugs( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ignoreDefaultValues )
 {
 	auto conform = [=] ( auto typedSrc, Gaffer::Plug *dst ) {
 
@@ -110,12 +110,12 @@ bool conformSplinePlugs( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, boo
 
 	switch( (Gaffer::TypeId)srcPlug->typeId() )
 	{
-		case SplineffPlugTypeId :
-			return conform( static_cast<const SplineffPlug *>( srcPlug ), dstPlug );
-		case SplinefColor3fPlugTypeId :
-			return conform( static_cast<const SplinefColor3fPlug *>( srcPlug ), dstPlug );
-		case SplinefColor4fPlugTypeId :
-			return conform( static_cast<const SplinefColor4fPlug *>( srcPlug ), dstPlug );
+		case RampffPlugTypeId :
+			return conform( static_cast<const RampffPlug *>( srcPlug ), dstPlug );
+		case RampfColor3fPlugTypeId :
+			return conform( static_cast<const RampfColor3fPlug *>( srcPlug ), dstPlug );
+		case RampfColor4fPlugTypeId :
+			return conform( static_cast<const RampfColor4fPlug *>( srcPlug ), dstPlug );
 		default :
 			return false;
 	}
@@ -125,13 +125,13 @@ bool conformSplinePlugs( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, boo
 void copyInputsAndValues( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ignoreDefaultValues )
 {
 
-	// From a user's perspective, we consider SplinePlugs to have a single
+	// From a user's perspective, we consider RampPlugs to have a single
 	// atomic value. So _any_ edit to _any_ child plug should cause the entire
 	// value to be matched. To do that, we first need to conform the destination
 	// so that it has the same number of points as the source, and then we need
 	// to set values for all plugs.
 
-	if( conformSplinePlugs( srcPlug, dstPlug, ignoreDefaultValues ) )
+	if( conformRampPlugs( srcPlug, dstPlug, ignoreDefaultValues ) )
 	{
 		ignoreDefaultValues = false;
 	}
@@ -643,14 +643,14 @@ void Reference::loadInternal( const std::filesystem::path &fileName )
 			plug->setFlags( Plug::Dynamic, false );
 
 			if(
-				runTimeCast<const SplineffPlug>( plug ) ||
-				runTimeCast<const SplinefColor3fPlug>( plug ) ||
-				runTimeCast<const SplinefColor4fPlug>( plug )
+				runTimeCast<const RampffPlug>( plug ) ||
+				runTimeCast<const RampfColor3fPlug>( plug ) ||
+				runTimeCast<const RampfColor4fPlug>( plug )
 			)
 			{
 				// Avoid recursion as it makes it impossible to serialise
-				// the `x/y` children of spline points. See SplinePlugSerialiser
-				// for further details of spline serialisation.
+				// the `x/y` children of ramp points. See RampPlugSerialiser
+				// for further details of ramp serialisation.
 				continue;
 			}
 

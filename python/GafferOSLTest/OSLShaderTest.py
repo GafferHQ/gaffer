@@ -38,6 +38,7 @@ import os
 import pathlib
 import unittest
 import imath
+import inspect
 import random
 import shutil
 
@@ -450,7 +451,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n = GafferOSL.OSLShader()
 		n.loadShader( s )
 
-		# If the components of the spline all match, the metadata is registered to the spline plug
+		# If the components of the spline all match, the metadata is registered to the ramp plug
 		self.assertEqual( n.parameterMetadata( n["parameters"]["correctSpline"], "a" ), 1 )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["correctSpline"], "b" ), 2 )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["correctSpline"], "c" ), 3 )
@@ -697,9 +698,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline", "checkLinearSpline", "constDefault" ] )
 
-		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["floatSpline"].getValue().spline(),
+			n["parameters"]["floatSpline"].getValue().evaluator(),
 			IECore.Splineff(
 				IECore.CubicBasisf.catmullRom(),
 				[
@@ -711,9 +712,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.RampfColor3fPlug ) )
 		self.assertEqual(
-			n["parameters"]["colorSpline"].getValue().spline(),
+			n["parameters"]["colorSpline"].getValue().evaluator(),
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.bSpline(),
 				[
@@ -727,9 +728,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["checkLinearSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["checkLinearSpline"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["checkLinearSpline"].getValue().spline(),
+			n["parameters"]["checkLinearSpline"].getValue().evaluator(),
 			IECore.Splineff(
 				IECore.CubicBasisf.linear(),
 				[
@@ -739,9 +740,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["constDefault"], Gaffer.SplinefColor3fPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["constDefault"], Gaffer.RampfColor3fPlug ) )
 		self.assertEqual(
-			n["parameters"]["constDefault"].getValue().spline(),
+			n["parameters"]["constDefault"].getValue().evaluator(),
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.constant(),
 				[
@@ -754,29 +755,23 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual(
 			shader.parameters["floatSpline"].value,
-			IECore.Splineff(
-				IECore.CubicBasisf.catmullRom(),
+			IECore.Rampff(
 				[
 					( 0, 0 ),
-					( 0, 0 ),
 					( 1, 1 ),
-					( 1, 1 ),
-				]
+				],
+				IECore.RampInterpolation.CatmullRom
 			)
 		)
 
 		self.assertEqual(
 			shader.parameters["colorSpline"].value,
-			IECore.SplinefColor3f(
-				IECore.CubicBasisf.bSpline(),
+			IECore.RampfColor3f(
 				[
 					( 0, imath.Color3f( 0 ) ),
-					( 0, imath.Color3f( 0 ) ),
-					( 0, imath.Color3f( 0 ) ),
 					( 1, imath.Color3f( 1 ) ),
-					( 1, imath.Color3f( 1 ) ),
-					( 1, imath.Color3f( 1 ) ),
-				]
+				],
+				IECore.RampInterpolation.BSpline
 			)
 		)
 
@@ -791,9 +786,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( n["parameters"].keys(), [ "colorSpline" ] )
 
-		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.RampfColor3fPlug ) )
 		self.assertEqual(
-			n["parameters"]["colorSpline"].getValue().spline(),
+			n["parameters"]["colorSpline"].getValue().evaluator(),
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.linear(),
 				[
@@ -827,9 +822,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			]
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["floatSpline"].getValue().spline(),
+			n["parameters"]["floatSpline"].getValue().evaluator(),
 			IECore.Splineff(
 				IECore.CubicBasisf.linear(),
 				[
@@ -839,9 +834,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.RampfColor3fPlug ) )
 		self.assertEqual(
-			n["parameters"]["colorSpline"].getValue().spline(),
+			n["parameters"]["colorSpline"].getValue().evaluator(),
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.catmullRom(),
 				[
@@ -853,9 +848,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["dualInterpolationSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["dualInterpolationSpline"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["dualInterpolationSpline"].getValue().spline(),
+			n["parameters"]["dualInterpolationSpline"].getValue().evaluator(),
 			IECore.Splineff(
 				IECore.CubicBasisf.linear(),
 				[
@@ -872,9 +867,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			IECore.IntVectorData( [ -1 ] )
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["trimmedFloatSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["trimmedFloatSpline"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["trimmedFloatSpline"].getValue().spline(),
+			n["parameters"]["trimmedFloatSpline"].getValue().evaluator(),
 			IECore.Splineff(
 				IECore.CubicBasisf.catmullRom(),
 				[
@@ -886,9 +881,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["mayaSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["mayaSpline"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["mayaSpline"].getValue().spline(),
+			n["parameters"]["mayaSpline"].getValue().evaluator(),
 			IECore.Splineff(
 				IECore.CubicBasisf.linear(),
 				[
@@ -898,22 +893,22 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["inconsistentNameSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["inconsistentNameSpline"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["inconsistentNameSpline"].getValue().spline(),
-			Gaffer.SplineDefinitionff(
+			n["parameters"]["inconsistentNameSpline"].getValue(),
+			IECore.Rampff(
 				((0,0), (1,1)),
-				Gaffer.SplineDefinitionInterpolation.MonotoneCubic
-			).spline()
+				IECore.RampInterpolation.MonotoneCubic
+			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["inconsistentNameOtherSpline"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["inconsistentNameOtherSpline"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["inconsistentNameSpline"].getValue().spline(),
-			Gaffer.SplineDefinitionff(
+			n["parameters"]["inconsistentNameSpline"].getValue().evaluator(),
+			IECore.Rampff(
 				((0, 0), (1,1)),
-				Gaffer.SplineDefinitionInterpolation.MonotoneCubic
-			).spline()
+				IECore.RampInterpolation.MonotoneCubic
+			).evaluator()
 		)
 
 	def testRmanSplineParameters( self ) :
@@ -942,9 +937,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			]
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["floatRamp"], Gaffer.SplineffPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["floatRamp"], Gaffer.RampffPlug ) )
 		self.assertEqual(
-			n["parameters"]["floatRamp"].getValue().spline(),
+			n["parameters"]["floatRamp"].getValue().evaluator(),
 			IECore.Splineff(
 				IECore.CubicBasisf.linear(),
 				[
@@ -954,9 +949,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["colorRamp"], Gaffer.SplinefColor3fPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["colorRamp"], Gaffer.RampfColor3fPlug ) )
 		self.assertEqual(
-			n["parameters"]["colorRamp"].getValue().spline(),
+			n["parameters"]["colorRamp"].getValue().evaluator(),
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.catmullRom(),
 				[
@@ -968,17 +963,17 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
-		self.assertTrue( isinstance( n["parameters"]["mismatchedRamp"], Gaffer.SplinefColor3fPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["mismatchedRamp"], Gaffer.RampfColor3fPlug ) )
 		self.assertEqual(
-			n["parameters"]["mismatchedRamp"].getValue().spline(),
-			IECore.SplinefColor3f(
-				IECore.CubicBasisf.catmullRom(),
+			n["parameters"]["mismatchedRamp"].getValue(),
+			IECore.RampfColor3f(
 				[
 					( 0, imath.Color3f( 1, 2, 3 ) ),
-					( 0, imath.Color3f( 1, 2, 3 ) ),
+					( 0.25, imath.Color3f( 1, 2, 3 ) ),
+					( 0.75, imath.Color3f( 4, 5, 6 ) ),
 					( 1, imath.Color3f( 4, 5, 6 ) ),
-					( 1, imath.Color3f( 4, 5, 6 ) ),
-				]
+				],
+				IECore.RampInterpolation.CatmullRom
 			)
 		)
 
@@ -1008,17 +1003,17 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		image["shader"].setInput( n["out"]["out"] )
 
 		for interpolation in [
-			Gaffer.SplineDefinitionInterpolation.Linear,
-			Gaffer.SplineDefinitionInterpolation.CatmullRom,
-			Gaffer.SplineDefinitionInterpolation.BSpline,
-			Gaffer.SplineDefinitionInterpolation.MonotoneCubic
+			IECore.RampInterpolation.Linear,
+			IECore.RampInterpolation.CatmullRom,
+			IECore.RampInterpolation.BSpline,
+			IECore.RampInterpolation.MonotoneCubic
 			]:
 
-			n["parameters"]["colorSpline"].setValue( Gaffer.SplineDefinitionfColor3f( points, interpolation ) )
+			n["parameters"]["colorSpline"].setValue( IECore.RampfColor3f( points, interpolation ) )
 
 			oslSamples = list( reversed( GafferImage.ImageAlgo.image( image['out'] )["R"] ) )
 
-			s = n['parameters']['colorSpline'].getValue().spline()
+			s = n['parameters']['colorSpline'].getValue().evaluator()
 			cortexSamples = [ s( ( i + 0.5 ) / numSamples )[0] for i in range( numSamples ) ]
 
 			for a, b in zip( oslSamples, cortexSamples ):
@@ -1217,9 +1212,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		s['n'] = GafferOSL.OSLShader()
 		s['n'].loadShader( shad )
 
-		splineValue = Gaffer.SplineDefinitionfColor3f( [ ( random.random(), imath.Color3f( random.random(), random.random(), random.random() ) ) for i in range( 10 ) ], Gaffer.SplineDefinitionInterpolation.Linear )
+		rampValue = IECore.RampfColor3f( [ ( random.random(), imath.Color3f( random.random(), random.random(), random.random() ) ) for i in range( 10 ) ], IECore.RampInterpolation.Linear )
 
-		s['n']["parameters"]["colorSpline"].setValue( splineValue )
+		s['n']["parameters"]["colorSpline"].setValue( rampValue )
 
 		serialised = s.serialise()
 
@@ -1233,7 +1228,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( serialised )
-		self.assertEqual( s2['n']["parameters"]["colorSpline"].getValue(), splineValue )
+		self.assertEqual( s2['n']["parameters"]["colorSpline"].getValue(), rampValue )
 
 	def testComponentToComponentConnections( self ) :
 
@@ -1411,6 +1406,69 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( node["parameters"]["size4Initialisers1"].defaultValue(), IECore.StringVectorData( [ "a", "", "", "" ] ) )
 		self.assertEqual( node["parameters"]["size4Initialisers4"].defaultValue(), IECore.StringVectorData( [ "a", "b", "c", "d" ] ) )
+
+	def testDeprecatedSplineDeserialize( self ) :
+
+
+
+		deprecatedSplineTemplate = inspect.cleandoc( """
+			import Gaffer
+			import GafferOSL
+			import imath
+
+			__children = {{}}
+
+			__children["ColorSpline"] = GafferOSL.OSLShader( "ColorSpline" )
+			parent.addChild( __children["ColorSpline"] )
+			__children["ColorSpline"].loadShader( "Pattern/ColorSpline" )
+			__children["ColorSpline"]["parameters"]["spline"].clearPoints()
+			__children["ColorSpline"]["parameters"]["spline"].addChild( Gaffer.ValuePlug( "p0", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p0"].addChild( Gaffer.FloatPlug( "x", defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p0"].addChild( Gaffer.Color3fPlug( "y", defaultValue = imath.Color3f( 0, 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"].addChild( Gaffer.ValuePlug( "p1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p1"].addChild( Gaffer.FloatPlug( "x", defaultValue = 1.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p1"].addChild( Gaffer.Color3fPlug( "y", defaultValue = imath.Color3f( 1, 1, 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"].addChild( Gaffer.ValuePlug( "p2", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p2"].addChild( Gaffer.FloatPlug( "x", defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p2"].addChild( Gaffer.Color3fPlug( "y", defaultValue = imath.Color3f( 0, 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+			__children["ColorSpline"]["parameters"]["spline"]["interpolation"].setValue( 2 )
+			__children["ColorSpline"]["parameters"]["spline"]["p0"]["x"].setValue( 0.1 )
+			__children["ColorSpline"]["parameters"]["spline"]["p0"]["y"].setValue( imath.Color3f( 0.1, 0.2, 0.3 ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p1"]["x"].setValue( 0.9 )
+			__children["ColorSpline"]["parameters"]["spline"]["p1"]["y"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
+			__children["ColorSpline"]["parameters"]["spline"]["p2"]["x"].setValue( 0.5 )
+			__children["ColorSpline"]["parameters"]["spline"]["p2"]["y"].setValue( imath.Color3f( 0.3, 0.4, 0.5 ) )
+			{}
+			__children["ColorSpline"]["__uiPosition"].setValue( imath.V2f( 17.8000011, -12.8500004 ) )
+
+
+			del __children
+		""" )
+
+		for direction in [ "custom", "u", "v" ]:
+			if direction != "custom":
+				deprecatedSpline = deprecatedSplineTemplate.format(
+					'__children["ColorSpline"]["parameters"]["direction"].setValue("{}")'.format( direction )
+				)
+			else:
+				# In ColorSpline, the default value for "direction" was "custom", so there would be no
+				# explicit setValue
+				deprecatedSpline = deprecatedSplineTemplate.format( "" )
+
+			script = Gaffer.ScriptNode()
+			script.execute( deprecatedSpline )
+
+			self.assertEqual( script["ColorSpline"]["name"].getValue(), "Pattern/ColorRamp" )
+			self.assertEqual( script["ColorSpline"]["parameters"]["direction"].getValue(), direction )
+
+			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["interpolation"].getValue(), int( IECore.RampInterpolation.BSpline ) )
+			self.assertAlmostEqual( script["ColorSpline"]["parameters"]["ramp"]["p0"]["x"].getValue(), 0.1 )
+			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["p0"]["y"].getValue(), imath.Color3f( 0.1, 0.2, 0.3 ) )
+			self.assertAlmostEqual( script["ColorSpline"]["parameters"]["ramp"]["p1"]["x"].getValue(), 0.9 )
+			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["p1"]["y"].getValue(), imath.Color3f( 0.7, 0.8, 0.9 ) )
+			self.assertAlmostEqual( script["ColorSpline"]["parameters"]["ramp"]["p2"]["x"].getValue(), 0.5 )
+			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["p2"]["y"].getValue(), imath.Color3f( 0.3, 0.4, 0.5 ) )
 
 if __name__ == "__main__":
 	unittest.main()

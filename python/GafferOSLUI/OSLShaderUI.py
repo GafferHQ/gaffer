@@ -142,7 +142,7 @@ def __plugWidgetType( plug ) :
 
 def __plugNoduleType( plug ) :
 
-	if isinstance( plug, ( Gaffer.SplinefColor3fPlug, Gaffer.SplineffPlug ) ) :
+	if isinstance( plug, ( Gaffer.RampfColor3fPlug, Gaffer.RampffPlug ) ) :
 		return ""
 	elif plug.node().parameterMetadata( plug, "connectable" ) == 0 :
 		return ""

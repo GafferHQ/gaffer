@@ -704,16 +704,16 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		)
 		n.addChild( Gaffer.FloatVectorDataPlug( "floatVectorPlug", defaultValue = IECore.FloatVectorData( [ 1.0, 2.0, 3.0 ] ) ) )
 		n.addChild( Gaffer.Box2iPlug( "box2iPlug", defaultValue = imath.Box2i( imath.V2i( 1.0 ), imath.V2i( 2.0 ) ) ) )
-		s = Gaffer.SplineDefinitionff(
+		s = IECore.Rampff(
 			(
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
 			),
-			Gaffer.SplineDefinitionInterpolation.CatmullRom
+			IECore.RampInterpolation.CatmullRom
 		)
-		n.addChild( Gaffer.SplineffPlug( "splinePlug", defaultValue = s ) )
+		n.addChild( Gaffer.RampffPlug( "rampPlug", defaultValue = s ) )
 		n.addChild( Gaffer.PathMatcherDataPlug( "pathMatcherPlug", defaultValue = IECore.PathMatcherData( IECore.PathMatcher( [ "/test/path", "/test/path2" ] ) ) ) )
 
 		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["floatPlug"] ), IECore.FloatData( 2.0 ) )
@@ -723,7 +723,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		)
 		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["floatVectorPlug"] ), IECore.FloatVectorData( [ 1.0, 2.0, 3.0 ] ) )
 		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["box2iPlug"] ), IECore.Box2iData( imath.Box2i( imath.V2i( 1.0 ), imath.V2i( 2.0 ) ) ) )
-		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["splinePlug"] ), IECore.SplineffData( s.spline() ) )
+		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["rampPlug"] ), IECore.RampffData( s ) )
 		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["pathMatcherPlug"] ), IECore.PathMatcherData( IECore.PathMatcher( [ "/test/path", "/test/path2" ] ) ) )
 
 

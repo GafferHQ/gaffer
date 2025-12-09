@@ -443,11 +443,11 @@ _styleSheet = string.Template(
 		margin-right: 4px;
 	}
 
-	QWidget[gafferClass="GafferUI.SplineWidget"] {
+	QWidget[gafferClass="GafferUI.RampWidget"] {
 		border: 1px solid $backgroundDark;
 	}
 
-	QWidget[gafferClass="GafferUI.SplineWidget"][gafferHighlighted="true"] {
+	QWidget[gafferClass="GafferUI.RampWidget"][gafferHighlighted="true"] {
 		border: 1px solid $brightColor;
 	}
 

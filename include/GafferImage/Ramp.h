@@ -40,7 +40,7 @@
 #include "GafferImage/FormatPlug.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/StringPlug.h"
 
 namespace Gaffer
@@ -66,8 +66,8 @@ class GAFFERIMAGE_API Ramp : public FlatImageSource
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;
 
-		Gaffer::SplinefColor4fPlug *rampPlug();
-		const Gaffer::SplinefColor4fPlug *rampPlug() const;
+		Gaffer::RampfColor4fPlug *rampPlug();
+		const Gaffer::RampfColor4fPlug *rampPlug() const;
 
 		Gaffer::V2fPlug *startPositionPlug();
 		const Gaffer::V2fPlug *startPositionPlug() const;

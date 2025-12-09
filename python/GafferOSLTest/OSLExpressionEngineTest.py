@@ -454,7 +454,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["user"]["i"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n"]["user"]["o"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n"]["user"]["s"] = Gaffer.SplineffPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["s"] = Gaffer.RampffPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "", "OSL" )
