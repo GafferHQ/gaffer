@@ -57,14 +57,14 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		# Create a grade node and save the hash of a tile from each channel.
 		grade = GafferImage.Grade()
 		grade["in"].setInput(i["out"])
-		grade["gain"].setValue( imath.Color3f( 2., 2., 2. ) )
+		grade["gain"].setValue( imath.Color4f( 2., 2., 2., 1. ) )
 		hashRed = grade["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		hashGreen = grade["out"].channelData( "G", imath.V2i( 0 ) ).hash()
 		hashBlue = grade["out"].channelData( "B", imath.V2i( 0 ) ).hash()
 
 		# Now we set the gamma on the green channel to 0 which should disable it's output.
 		# The red and blue channels should still be graded as before.
-		grade["gamma"].setValue( imath.Color3f( 1., 0., 1. ) )
+		grade["gamma"].setValue( imath.Color4f( 1., 0., 1., 1. ) )
 		hashRed2 = grade["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		hashGreen2 = grade["out"].channelData( "G", imath.V2i( 0 ) ).hash()
 		hashBlue2 = grade["out"].channelData( "B", imath.V2i( 0 ) ).hash()
@@ -80,7 +80,7 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 
 		grade = GafferImage.Grade()
 		grade["in"].setInput(i["out"])
-		grade["gain"].setValue( imath.Color3f( 2., 2., 2. ) )
+		grade["gain"].setValue( imath.Color4f( 2., 2., 2., 1. ) )
 
 		h1 = grade["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		h2 = grade["out"].channelData( "R", imath.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
@@ -108,7 +108,7 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 
 		g = GafferImage.Grade()
 		g["in"].setInput( i["out"] )
-		g["gain"].setValue( imath.Color3f( 2., 2., 2. ) )
+		g["gain"].setValue( imath.Color4f( 2., 2., 2., 1. ) )
 
 		self.assertEqual( i["out"]["format"].hash(), g["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), g["out"]["dataWindow"].hash() )
@@ -201,13 +201,13 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		g["offset"].setValue( imath.Color4f( 3, 3, 3, 3 ) )
 		self.assertEqual( sample( 25, 25 ), [ 3.125, 3.25, 3.5, 0.75, 1.0 ] )
 
-		g["channels"].setValue( IECore.StringVectorData( [ "A" ] ) )
+		g["channels"].setValue( "A" )
 		self.assertEqual( sample( 25, 25 ), [ 0.125, 0.25, 0.5, 3.75, 1.0 ] )
 
-		g["channels"].setValue( IECore.StringVectorData( [ "customChannel" ] ) )
+		g["channels"].setValue( "customChannel" )
 		self.assertEqual( sample( 25, 25 ), [ 0.125, 0.25, 0.5, 0.75, 4.0 ] )
 
-		g["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A", "customChannel" ] ) )
+		g["channels"].setValue( "R G B A customChannel" )
 		self.assertEqual( sample( 25, 25 ), [ 3.125, 3.25, 3.5, 3.75, 4.0 ] )
 
 	def testPerLayerExpression( self ) :

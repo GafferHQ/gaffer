@@ -144,7 +144,7 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
 			deleteChannels = GafferImage.DeleteChannels()
 			deleteChannels["mode"].setValue( 1 )
-			deleteChannels["channels"].setValue( IECore.StringVectorData( [ 'R' ] ) )
+			deleteChannels["channels"].setValue( 'R' )
 			deleteChannels["in"].setInput( reader["out"] )
 
 

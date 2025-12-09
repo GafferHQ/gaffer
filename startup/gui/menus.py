@@ -111,6 +111,9 @@ nodeMenu = GafferUI.NodeMenu.acquire( application )
 
 GafferSceneUI.ShaderUI.hideShaders( IECore.PathMatcher( [ ".../__*" ] ) )
 
+# Hide deprecated shaders
+GafferSceneUI.ShaderUI.hideShaders( IECore.PathMatcher( [ "Pattern/ColorSpline.oso", "Pattern/FloatSpline.oso" ] ) )
+
 # Arnold nodes
 
 if moduleSearchPath.find( "arnold" ) :

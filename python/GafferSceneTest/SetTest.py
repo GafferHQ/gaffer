@@ -470,7 +470,7 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		sphere["sets"].setValue( "testSource" )
 
 		setFilter = GafferScene.SetFilter()
-		setFilter["set"].setValue( "${setVariable}Source" )
+		setFilter["setExpression"].setValue( "${setVariable}Source" )
 
 		setNode = GafferScene.Set()
 		setNode["in"].setInput( sphere["out"] )

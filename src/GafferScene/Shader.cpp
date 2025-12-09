@@ -46,7 +46,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/TypedPlug.h"
 
 #include "IECoreScene/ShaderNetwork.h"
@@ -612,22 +612,22 @@ class Shader::NetworkBuilder
 					}
 				}
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplineffPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampffPlugTypeId )
 			{
-				hashSplineParameterComponentConnections< SplineffPlug >( (const SplineffPlug*)parameter, h );
+				hashRampParameterComponentConnections< RampffPlug >( (const RampffPlug*)parameter, h );
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor3fPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampfColor3fPlugTypeId )
 			{
-				hashSplineParameterComponentConnections< SplinefColor3fPlug >( (const SplinefColor3fPlug*)parameter, h );
+				hashRampParameterComponentConnections< RampfColor3fPlug >( (const RampfColor3fPlug*)parameter, h );
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor4fPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampfColor4fPlugTypeId )
 			{
-				hashSplineParameterComponentConnections< SplinefColor4fPlug >( (const SplinefColor4fPlug*)parameter, h );
+				hashRampParameterComponentConnections< RampfColor4fPlug >( (const RampfColor4fPlug*)parameter, h );
 			}
 		}
 
 		template< typename T >
-		void hashSplineParameterComponentConnections( const T *parameter, IECore::MurmurHash &h )
+		void hashRampParameterComponentConnections( const T *parameter, IECore::MurmurHash &h )
 		{
 			checkNoShaderInput( parameter->interpolationPlug() );
 
@@ -691,22 +691,22 @@ class Shader::NetworkBuilder
 					}
 				}
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplineffPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampffPlugTypeId )
 			{
-				addSplineParameterComponentConnections< SplineffPlug >( (const SplineffPlug*) parameter, parameterName, connections );
+				addRampParameterComponentConnections< RampffPlug >( (const RampffPlug*) parameter, parameterName, connections );
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor3fPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampfColor3fPlugTypeId )
 			{
-				addSplineParameterComponentConnections< SplinefColor3fPlug >( (const SplinefColor3fPlug*)parameter, parameterName, connections );
+				addRampParameterComponentConnections< RampfColor3fPlug >( (const RampfColor3fPlug*)parameter, parameterName, connections );
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor4fPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampfColor4fPlugTypeId )
 			{
-				addSplineParameterComponentConnections< SplinefColor4fPlug >( (const SplinefColor4fPlug*)parameter, parameterName, connections );
+				addRampParameterComponentConnections< RampfColor4fPlug >( (const RampfColor4fPlug*)parameter, parameterName, connections );
 			}
 		}
 
 		template< typename T >
-		void addSplineParameterComponentConnections( const T *parameter, const IECore::InternedString &parameterName, vector<IECoreScene::ShaderNetwork::Connection> &connections )
+		void addRampParameterComponentConnections( const T *parameter, const IECore::InternedString &parameterName, vector<IECoreScene::ShaderNetwork::Connection> &connections )
 		{
 			const int n = parameter->numPoints();
 			std::vector< std::tuple<int, std::string, IECoreScene::ShaderNetwork::Parameter> > inputs;
@@ -756,58 +756,18 @@ class Shader::NetworkBuilder
 				}
 			}
 
-			SplineDefinitionInterpolation interp = (SplineDefinitionInterpolation)parameter->interpolationPlug()->getValue();
-			int endPointDupes = 0;
-			// \todo : Need to duplicate the logic from SplineDefinition::endPointMultiplicity
-			// John requested an explicit notice that we are displeased by this duplication.
-			// Possible alternatives to this would be storing SplineDefinitionData instead of SplineData
-			// in the ShaderNetwork, or moving the handling of endpoint multiplicity inside Splineff
-			if( interp == SplineDefinitionInterpolationCatmullRom )
-			{
-				endPointDupes = 1;
-			}
-			else if( interp == SplineDefinitionInterpolationBSpline )
-			{
-				endPointDupes = 2;
-			}
-			else if( interp == SplineDefinitionInterpolationMonotoneCubic )
-			{
-				throw IECore::Exception(
-					"Cannot support monotone cubic interpolation for splines with inputs, for plug " + parameter->fullName()
-				);
-			}
-
-
 			for( const auto &[ origIndex, componentSuffix, sourceParameter ] : inputs )
 			{
 				int index = applySort[ origIndex ];
-				int outIndexMin, outIndexMax;
-				if( index == 0 )
-				{
-					outIndexMin = 0;
-					outIndexMax = endPointDupes;
-				}
-				else if( index == n - 1 )
-				{
-					outIndexMin = endPointDupes + n - 1;
-					outIndexMax = endPointDupes + n - 1 + endPointDupes;
-				}
-				else
-				{
-					outIndexMin = outIndexMax = index + endPointDupes;
-				}
 
-				for( int i = outIndexMin; i <= outIndexMax; i++ )
-				{
-					IECore::InternedString inputName = fmt::format(
-						FMT_COMPILE( "{}[{}].y{}" ),
-						parameterName.string(), i, componentSuffix
-					);
-					connections.push_back( {
-						sourceParameter,
-						{ IECore::InternedString(), inputName }
-					} );
-				}
+				IECore::InternedString inputName = fmt::format(
+					FMT_COMPILE( "{}[{}].y{}" ),
+					parameterName.string(), index, componentSuffix
+				);
+				connections.push_back( {
+					sourceParameter,
+					{ IECore::InternedString(), inputName }
+				} );
 			}
 		}
 

@@ -747,7 +747,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		camera["sets"].setValue( "A" )
 
 		setFilter = GafferScene.SetFilter()
-		setFilter["set"].setValue( "A" )
+		setFilter["setExpression"].setValue( "A" )
 
 		cameraTweaks = GafferScene.CameraTweaks()
 		cameraTweaks["in"].setInput( camera["out"] )
@@ -768,7 +768,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		planeShaderAssignment["shader"].setInput( shader["out"] )
 
 		setFilter = GafferScene.SetFilter()
-		setFilter["set"].setValue( "A" )
+		setFilter["setExpression"].setValue( "A" )
 
 		planeTweaks = GafferScene.ShaderTweaks()
 		planeTweaks["in"].setInput( planeShaderAssignment["out"] )

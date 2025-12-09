@@ -57,7 +57,7 @@ class ImageLoopTest( GafferImageTest.ImageTestCase ) :
 		script["loop"]["in"].setInput( script["c"]["out"] )
 
 		script["grade"] = GafferImage.Grade()
-		script["grade"]["offset"].setValue( imath.Color3f( .1 ) )
+		script["grade"]["offset"].setValue( imath.Color4f( .1 ) )
 		script["grade"]["in"].setInput( script["loop"]["previous"] )
 		script["loop"]["next"].setInput( script["grade"]["out"] )
 
@@ -94,7 +94,7 @@ class ImageLoopTest( GafferImageTest.ImageTestCase ) :
 		script["loop"]["in"].setInput( script["c"]["out"] )
 
 		script["grade"] = GafferImage.Grade()
-		script["grade"]["offset"].setValue( imath.Color3f( .1 ) )
+		script["grade"]["offset"].setValue( imath.Color4f( .1 ) )
 		script["grade"]["in"].setInput( script["loop"]["previous"] )
 		script["loop"]["next"].setInput( script["grade"]["out"] )
 

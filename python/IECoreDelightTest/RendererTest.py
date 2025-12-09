@@ -963,7 +963,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def test3DelightSplineParameters( self ) :
 
-		# Converting from OSL parameters to Gaffer spline parameters is
+		# Converting from OSL parameters to Gaffer ramp parameters is
 		# tested in GafferOSLTest.OSLShaderTest
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -982,63 +982,49 @@ class RendererTest( GafferTest.TestCase ) :
 					s,
 					"osl:shader",
 					{
-						"floatSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"floatSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
 								( 0, 0.25 ),
 								( 1, 0.75 ),
 								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"colorSpline" : IECore.SplinefColor3f(
-							IECore.CubicBasisf.bSpline(),
+						"colorSpline" : IECore.RampfColor3f(
 							[
 								( 0, imath.Color3f( 0.25 ) ),
-								( 0, imath.Color3f( 0.25 ) ),
-								( 0, imath.Color3f( 0.25 ) ),
 								( 1, imath.Color3f( 0.75 ) ),
-								( 1, imath.Color3f( 0.75 ) ),
-								( 1, imath.Color3f( 0.75 ) ),
-							]
+							],
+							IECore.RampInterpolation.BSpline
 						),
-						"dualInterpolationSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"dualInterpolationSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"trimmedFloatSpline" : IECore.Splineff(
-							IECore.CubicBasisf.catmullRom(),
+						"trimmedFloatSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.CatmullRom
 						),
-						"mayaSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"mayaSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"inconsistentNameSpline": IECore.Splineff(
-							IECore.CubicBasisf.bSpline(),
+						"inconsistentNameSpline": IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.BSpline
 						),
 					}
 				),
@@ -1093,9 +1079,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "colorSplineValues", shader )
 		self.assertNotIn( "colorSplineBasis", shader )
 
-		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
-		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
-		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1 ] )
 
 		self.assertNotIn( "dualInterpolationSplinePositions", shader )
 		self.assertNotIn( "dualInterpolationSplineValues", shader )
@@ -1111,9 +1097,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "trimmedFloatSplineValues", shader )
 		self.assertNotIn( "trimmedFloatSplineBasis", shader )
 
-		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
-		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
-		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1 ] )
 
 		self.assertNotIn( "mayaSplinePositions", shader )
 		self.assertNotIn( "maysSplineValues", shader )
@@ -1127,7 +1113,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "inconsistentNameSplineValues", shader )
 		self.assertNotIn( "inconsistentNameSplineBasis", shader )
 
-	def testGafferSplineParameters( self ) :
+	def testGafferRampParameters( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
@@ -1137,27 +1123,27 @@ class RendererTest( GafferTest.TestCase ) :
 
 		network = IECoreScene.ShaderNetwork(
 			shaders = {
-				"splineHandle" : IECoreScene.Shader(
-					"Pattern/ColorSpline",
+				"rampHandle" : IECoreScene.Shader(
+					"Pattern/ColorRamp",
 					"osl:shader",
 					{
-						"spline" : IECore.SplinefColor3f(
-							IECore.CubicBasisf.linear(),
+						"ramp" : IECore.RampfColor3f(
 							[
 								( 0, imath.Color3f( 1, 0, 0 ) ),
 								( 0, imath.Color3f( 1, 0, 0 ) ),
 								( 1, imath.Color3f( 0, 0, 1 ) ),
 								( 1, imath.Color3f( 0, 0, 1 ) ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
 					}
 				),
 				"constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:surface", {} )
 			},
 			connections = [
-				( ( "splineHandle", "" ), ( "constHandle", "Cs" ) ),
+				( ( "rampHandle", "" ), ( "constHandle", "Cs" ) ),
 			],
-			output = "splineHandle"
+			output = "rampHandle"
 		)
 
 		o = r.object(
@@ -1176,9 +1162,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( shaders ), 1 )
 		shader = shaders[next( iter( shaders ) )]
 
-		self.assertEqual( shader["splinePositions"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["rampPositions"], [ 0, 0, 0, 1, 1, 1 ] )
 		self.assertEqual(
-			shader["splineValues"],
+			shader["rampValues"],
 			[
 				imath.Color3f( 1, 0, 0 ),
 				imath.Color3f( 1, 0, 0 ),
@@ -1188,7 +1174,7 @@ class RendererTest( GafferTest.TestCase ) :
 				imath.Color3f( 0, 0, 1 )
 			]
 		)
-		self.assertEqual( shader["splineBasis"], "linear" )
+		self.assertEqual( shader["rampBasis"], "linear" )
 
 	def testUVCoordShaderInserted( self ) :
 
