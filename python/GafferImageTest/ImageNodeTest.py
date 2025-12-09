@@ -54,7 +54,7 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 		c["format"].setValue( GafferImage.Format( 200, 200, 1.0 ) )
 		g = GafferImage.Grade()
 		g["in"].setInput( c["out"] )
-		g["multiply"].setValue( imath.Color3f( 0.4, 0.5, 0.6 ) )
+		g["multiply"].setValue( imath.Color4f( 0.4, 0.5, 0.6, 1.0 ) )
 
 		gradedImage = GafferImage.ImageAlgo.image( g["out"] )
 
