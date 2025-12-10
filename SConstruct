@@ -1998,6 +1998,13 @@ env.Alias( "build", "buildCore" )
 #########################################################################################################
 
 exeEnv = baseLibEnv.Clone()
+exeEnv.Append(
+
+	LIBS = [
+		"python$PYTHON_ABI_VERSION",
+	],
+
+)
 gafferExecutable = exeEnv.Program( "$BUILD_DIR/bin/gafferExecutable", "src/bin/gaffer.cpp")
 env.Alias( "buildCore", gafferExecutable )
 
