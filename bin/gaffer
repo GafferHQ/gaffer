@@ -117,8 +117,7 @@ if [[ -n $GAFFER_DEBUG ]] ; then
 			export GAFFER_DEBUGGER="lldb -- "
 		fi
 	fi
-	# Using `which` because lldb doesn't seem to respect $PATH
-	exec $GAFFER_DEBUGGER `which python` "$rootDir/bin/_gaffer.py" "$@"
+	exec $GAFFER_DEBUGGER $rootDir/bin/__private/gaffer "$rootDir/bin/__private/_gaffer.py" "$@"
 else
-	exec python "$rootDir/bin/_gaffer.py" "$@"
+	exec $rootDir/bin/__private/gaffer "$rootDir/bin/__private/_gaffer.py" "$@"
 fi

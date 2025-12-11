@@ -74,7 +74,7 @@ def prependToPath( pathToPrepend, envVar ) :
 
 	os.environ[envVar] = os.pathsep.join( path )
 
-gafferRoot = pathlib.Path( __file__ ).resolve().parents[1]
+gafferRoot = pathlib.Path( __file__ ).resolve().parents[2]
 
 # Clean environment setup
 # =======================
@@ -135,6 +135,7 @@ if sys.platform == "darwin" :
 	prependToPath( gafferRoot / "lib", "DYLD_FRAMEWORK_PATH" )
 elif sys.platform == "win32" :
 	appendToPath( gafferRoot / "lib", "IECORE_DLL_DIRECTORIES" )
+	appendToPath( gafferRoot / "bin", "IECORE_DLL_DIRECTORIES" )
 
 # OSL Setup
 # =========
