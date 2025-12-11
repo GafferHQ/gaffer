@@ -4522,7 +4522,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		env = os.environ.copy()
 		if sys.platform == "linux" :
-			# See `bin/_gaffer.py`
+			# See `bin/__private/_gaffer.py`
 			env["LD_PRELOAD"] = "libstdc++.so.6"
 
 		for i in range( 0, 10 ) :
