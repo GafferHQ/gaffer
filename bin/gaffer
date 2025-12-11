@@ -95,6 +95,7 @@ function prependToPath {
 }
 
 prependToPath "$rootDir/bin" PATH
+prependToPath "$rootDir/bin/__private" PATH
 
 if [[ `uname` = "Linux" ]] ; then
 	prependToPath "$rootDir/lib" LD_LIBRARY_PATH
@@ -118,7 +119,7 @@ if [[ -n $GAFFER_DEBUG ]] ; then
 		fi
 	fi
 	# Using `which` because lldb doesn't seem to respect $PATH
-	exec $GAFFER_DEBUGGER `which python` "$rootDir/bin/_gaffer.py" "$@"
+	exec $GAFFER_DEBUGGER `which gafferPython` "$rootDir/bin/__private/_gaffer.py" "$@"
 else
-	exec python "$rootDir/bin/_gaffer.py" "$@"
+	exec gafferPython "$rootDir/bin/__private/_gaffer.py" "$@"
 fi
