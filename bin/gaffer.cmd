@@ -11,9 +11,9 @@ set "HOME=%USERPROFILE:\=/%"
 set PYTHONHOME=%~dp0%..
 
 if "%GAFFER_DEBUG%" NEQ "" (
-	%GAFFER_DEBUGGER% "%PYTHONHOME%"\bin\python.exe "%PYTHONHOME%"/bin/_gaffer.py %*
+	%GAFFER_DEBUGGER% "%PYTHONHOME%"\bin\__private\gafferPython.exe "%PYTHONHOME%"/bin/__private/_gaffer.py %*
 ) else (
-	"%PYTHONHOME%"\bin\python.exe "%PYTHONHOME%"/bin/_gaffer.py %*
+	"%PYTHONHOME%"\bin\__private\gafferPython.exe "%PYTHONHOME%"/bin/__private/_gaffer.py %*
 )
 
 endlocal

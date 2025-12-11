@@ -1549,7 +1549,7 @@ libraries = {
 	},
 
 	"scripts" : {
-		"additionalFiles" : [ "bin/_gaffer.py", "bin/__gaffer.py" ],
+		"additionalFiles" : [ "bin/__private/_gaffer.py", "bin/__private/__gaffer.py" ],
 	},
 
 	"misc" : {
@@ -1992,6 +1992,21 @@ for libraryName, libraryDef in libraries.items() :
 		commandEnv.Alias( "buildCore", generatedSchema )
 
 env.Alias( "build", "buildCore" )
+
+#########################################################################################################
+# Executable
+#########################################################################################################
+
+exeEnv = baseLibEnv.Clone()
+exeEnv.Append(
+
+	LIBS = [
+		"python$PYTHON_ABI_VERSION",
+	],
+
+)
+gafferExecutable = exeEnv.Program( "$BUILD_DIR/bin/__private/gafferPython", "bin/__private/gafferPython.cpp")
+env.Alias( "buildCore", gafferExecutable )
 
 #########################################################################################################
 # Python nodes authored as Boxes and exported by ExtensionAlgo
