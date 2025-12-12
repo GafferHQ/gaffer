@@ -3564,6 +3564,22 @@
 
 	primaryInput STRING "input"
 
+	gaffer.layout.activator.bloomModeIsAperture STRING "parameters['bloom_mode'].getValue() == 'aperture'"
+	gaffer.layout.activator.bloomModeIsShapeFile STRING "parameters['bloom_mode'].getValue() == 'shape_file'"
+	gaffer.layout.activator.bloomModeIsNotSimple STRING "parameters['bloom_mode'].getValue() != 'simple'"
+
+	[attr bloom_shape_filename]
+		gaffer.layout.activator STRING "bloomModeIsShapeFile"
+
+	[attr bloom_shape_rotation]
+		gaffer.layout.activator STRING "bloomModeIsNotSimple"
+
+	[attr aperture_blades]
+		gaffer.layout.activator STRING "bloomModeIsAperture"
+
+	[attr aperture_blade_curvature]
+		gaffer.layout.activator STRING "bloomModeIsAperture"
+
 [node imager_light_mixer]
 
 	primaryInput STRING "input"
