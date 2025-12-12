@@ -246,6 +246,10 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["plane"] = GafferScene.Plane()
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["plane"]["out"] )
+		script["editScope"]["in"].setInput( script["plane"]["out"] )
+
 		script["sphere"] = GafferScene.Sphere()
 		script.setFocus( script["plane"] )
 
@@ -259,6 +263,12 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		# Changes to main input should always dirty the path.
 		script["plane"]["transform"]["translate"]["x"].setValue( 1 )
 		self.assertEqual( len( pathChanges ), 1 )
+
+		# Changes to the edit scope should always dirty the path.
+		sceneInspector.settings()["editScope"].setInput( script["editScope"]["enabled"] )
+		self.assertEqual( len( pathChanges ), 2 )
+		sceneInspector.settings()["editScope"].setInput( None )
+		self.assertEqual( len( pathChanges ), 3 )
 
 		# Changes to the comparison scene should only dirty the
 		# path when comparison is enabled.
