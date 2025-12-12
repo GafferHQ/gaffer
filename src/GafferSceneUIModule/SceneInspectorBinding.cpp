@@ -136,6 +136,10 @@ class InspectorTree : public IECore::RefCounted
 		{
 			setContexts( contexts );
 			scene->node()->plugDirtiedSignal().connect( boost::bind( &InspectorTree::plugDirtied, this, ::_1 ) );
+			if( editScope && ( editScope->node() != scene->node() ) )
+			{
+				editScope->node()->plugDirtiedSignal().connect( boost::bind( &InspectorTree::plugDirtied, this, ::_1 ) );
+			}
 		}
 
 		void setContexts( const Contexts &contexts )
@@ -429,7 +433,7 @@ class InspectorTree : public IECore::RefCounted
 
 		void plugDirtied( const Plug *plug )
 		{
-			if( plug == m_scene.get() )
+			if( plug == m_scene.get() || plug == m_editScope.get() )
 			{
 				{
 					std::scoped_lock lock( m_mutex );
