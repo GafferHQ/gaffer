@@ -19,6 +19,7 @@ Fixes
 - RenderMan :
   - Fixed incorrect motion blur when rendering with RenderMan XPU.
   - Fixed interactive denoiser when rendering with RenderMan XPU.
+- SceneReader : Fixed reading of animated material and light parameters from USD files.
 
 API
 ---
@@ -26,6 +27,11 @@ API
 - MenuButton : Added `set/getImmediate()` methods. These allow the button to execute a menu item immediately instead of showing the menu, if the menu has only a single item.
 - Signals : Added CatchingCombiner Python class, equivalent to the C++ template class.
 - FileSystemPath : Implemented Python's `os.PathLike` interface, to allow FileSystemPath objects to be passed directly to Python's standard filesystem functions.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.2.1.
 
 1.6.6.1 (relative to 1.6.6.0)
 =======
