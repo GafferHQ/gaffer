@@ -19,6 +19,7 @@ Fixes
 - RenderMan :
   - Fixed incorrect motion blur when rendering with RenderMan XPU.
   - Fixed interactive denoiser when rendering with RenderMan XPU.
+- SceneInspector : Fixed cell background colour updates when changing EditScope.
 
 API
 ---
