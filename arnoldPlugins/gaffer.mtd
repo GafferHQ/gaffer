@@ -2837,6 +2837,8 @@
 		page STRING "Specular"
 	[attr roughness_anisotropic]
 		page STRING "Specular"
+	[attr scattering_mode]
+		page STRING "Specular"
 
 	[attr specular_tint]
 		page STRING "Tint"
