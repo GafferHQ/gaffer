@@ -165,8 +165,10 @@ Gaffer.Metadata.registerNode(
 			"layout:section" : "Settings.Variables",
 			"nodule:type" : "",
 
-			"layout:customWidget:footer:widgetType" : "GafferImageUI.OpenColorIOContextUI._VariablesFooter",
-			"layout:customWidget:footer:index" : -1,
+			"layout:customWidget:addButton:widgetType" : "GafferUI.PlugCreationWidget",
+			"layout:customWidget:addButton:index" : -1,
+			"plugCreationWidget:includedTypes" : "Gaffer.StringPlug",
+			"plugCreationWidget:action" : "addNameValuePlug",
 
 		},
 
@@ -215,34 +217,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-class _VariablesFooter( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug ) :
-
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
-
-		with row :
-
-			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
-			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addVariable ) )
-
-			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand": True } )
-
-	def _updateFromEditable( self ) :
-
-		self.__addButton.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
-
-	def __addVariable( self, *unused ) :
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().addChild(
-				Gaffer.NameValuePlug(
-					name = "variable0", nameDefault = "", defaultEnabled = True, valueDefault = "",
-					flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
-				)
-			)

@@ -63,10 +63,12 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:isSetup", lambda node : "out" in node,
 	"layout:activator:isNotSetup", lambda node : "out" not in node,
 
-	"layout:customWidget:setupButton:widgetType", "GafferUI.RandomChoiceUI._SetupButton",
+	"layout:customWidget:setupButton:widgetType", "GafferUI.PlugCreationWidget",
 	"layout:customWidget:setupButton:section", "Settings",
 	"layout:customWidget:setupButton:index", -1,
 	"layout:customWidget:setupButton:visibilityActivator", "isNotSetup",
+	"plugCreationWidget:action", "setup",
+	"plugCreationWidget:includedTypes", "Gaffer.BoolPlug Gaffer.FloatPlug Gaffer.IntPlug Gaffer.StringPlug Gaffer.V2iPlug Gaffer.V3fPlug Gaffer.Color3fPlug",
 
 	plugs = {
 
@@ -158,63 +160,6 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-# _SetupButton
-# ============
-
-class _SetupButton( GafferUI.Widget ) :
-
-	def __init__( self, node ) :
-
-		self.__node = node
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-
-		GafferUI.Widget.__init__( self, self.__row )
-
-		with self.__row :
-
-				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-				GafferUI.MenuButton(
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title = "Add Output" ),
-					image = "plus.png", hasFrame = False
-				)
-
-				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
-
-	def __menuDefinition( self, menu ) :
-
-		result = IECore.MenuDefinition()
-
-		def setup( node, plugType ) :
-
-			with Gaffer.UndoScope( node.scriptNode() ) :
-				node.setup( plugType() )
-
-		for plugType in (
-			Gaffer.BoolPlug,
-			Gaffer.FloatPlug,
-			Gaffer.IntPlug,
-			None,
-			Gaffer.StringPlug,
-			None,
-			Gaffer.V2iPlug,
-			Gaffer.V3fPlug,
-			None,
-			Gaffer.Color3fPlug
-		) :
-			if plugType is None :
-				result.append( "/Divider{}".format( result.size() ), { "divider" : True } )
-			else :
-				result.append(
-					plugType.__name__.replace( "Plug", "" ),
-					{
-						"command" : functools.partial( setup, self.__node, plugType ),
-						"active" : not Gaffer.MetadataAlgo.readOnly( self.__node ),
-					}
-				)
-
-		return result
 
 # PlugValueWidget popup menu
 # ==========================

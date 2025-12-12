@@ -41,6 +41,10 @@ import imath
 
 from GafferSceneUI._GafferSceneUI import __showSetupMenu as showSetupMenu
 
+## \todo Replace with PlugCreationWidget, figuring out how that relates to
+# the menu on the PlugAdder used in the GraphEditor. Do we want to have menus
+# on all PlugAdders? Should PlugAdder and PlugCreationWidget be driven by
+# the same metadata?
 class _SetupButton( GafferUI.Widget ) :
 
 	def __init__( self, node ) :

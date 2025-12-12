@@ -36,6 +36,8 @@
 
 import functools
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -60,7 +62,9 @@ Gaffer.Metadata.registerNode(
 
 		"attributes" : {
 
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 			"compoundDataPlugValueWidget:editable" : True,
+			"ui:scene:acceptsAttributes" : True,
 
 		},
 
@@ -156,3 +160,130 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 		)
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __attributePopupMenu )
+
+##########################################################################
+# PlugCreationWidget menu extensions
+##########################################################################
+
+def __addFromAffectedMenuDefinition( menu ) :
+
+	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
+	node = plugCreationWidget.plugParent().node()
+	assert( isinstance( node, GafferScene.FilteredSceneProcessor ) )
+
+	pathMatcher = IECore.PathMatcher()
+	GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
+
+	return __addFromPathsMenuDefinition( menu, pathMatcher.paths() )
+
+def __addFromSelectedMenuDefinition( menu ) :
+
+	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
+
+	return __addFromPathsMenuDefinition(
+		menu,
+		GafferSceneUI.ScriptNodeAlgo.getSelectedPaths(
+			plugCreationWidget.plugParent().ancestor( Gaffer.ScriptNode )
+		).paths()
+	)
+
+def __addFromPathsMenuDefinition( menu, paths ) :
+
+	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
+	node = plugCreationWidget.plugParent().node()
+
+	attributes = {}
+	for path in paths :
+		attr = node["in"].fullAttributes( path, withGlobalAttributes = True )
+		attributes.update( attr )
+	existingNames = { plug["name"].getValue() for plug in plugCreationWidget.plugParent() }
+
+	attributes = dict( sorted( attributes.items() ) )
+
+	result = IECore.MenuDefinition()
+	for key, value in attributes.items() :
+		result.append(
+			"/" + key,
+			{
+				"command" : functools.partial( __createPlug, name = key, value = value ),
+				"active" : key not in existingNames
+			}
+		)
+
+	if not len( result.items() ) :
+		result.append(
+			"/No Attributes Found", { "active" : False }
+		)
+		return result
+
+	return result
+
+def __createPlug( menu, name, value ) :
+
+	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
+	plugCreationWidget.createPlug(
+		Gaffer.PlugAlgo.createPlugFromData( "plug0", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, value ),
+		name = name
+	)
+
+def __plugCreationMenu( menuDefinition, widget ) :
+
+	if not Gaffer.Metadata.value( widget.plugParent(), "ui:scene:acceptsAttributes" ) :
+		return
+
+	menuDefinition.prepend( "/FromPathsDivider", { "divider" : True } )
+
+	menuDefinition.prepend(
+		"/From Selection",
+		{
+			"subMenu" : __addFromSelectedMenuDefinition
+		}
+	)
+
+	menuDefinition.prepend(
+		"/From Affected",
+		{
+			"subMenu" : __addFromAffectedMenuDefinition
+		}
+	)
+
+GafferUI.PlugCreationWidget.plugCreationMenuSignal().connect( __plugCreationMenu )
+
+##########################################################################
+# PlugCreationWidget drag & drop extension
+##########################################################################
+
+def __filteredAttributes( widget, dragDropEvent ) :
+
+	attributes = GafferSceneUI.SceneInspector.draggedAttributes( dragDropEvent )
+	if not attributes :
+		return None
+
+	existingNames = { plug["name"].getValue() for plug in widget.plugParent() }
+	return {
+		k : v for k, v in attributes.items()
+		if k not in existingNames
+	}
+
+def __attributesDropHandler( widget, dragDropEvent ) :
+
+	attributes = __filteredAttributes( widget, dragDropEvent )
+	if not attributes :
+		GafferUI.PopupWindow.showWarning( "Attributes added already", parent = widget )
+
+	with Gaffer.UndoScope( widget.plugParent().ancestor( Gaffer.ScriptNode ) ) :
+		for name, value in attributes.items() :
+			plug = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, value )
+			widget.createPlug( plug, name = name )
+
+def __plugCreationDragEnter( widget, dragDropEvent ) :
+
+	if not Gaffer.Metadata.value( widget.plugParent(), "ui:scene:acceptsAttributes" ) :
+		return
+
+	if __filteredAttributes( widget, dragDropEvent ) is not None :
+		return __attributesDropHandler
+
+	return None
+
+GafferUI.PlugCreationWidget.plugCreationDragEnterSignal().connect( __plugCreationDragEnter )

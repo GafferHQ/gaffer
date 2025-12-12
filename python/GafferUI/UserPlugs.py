@@ -35,6 +35,8 @@
 ##########################################################################
 
 import functools
+import warnings
+
 import imath
 
 import IECore
@@ -42,8 +44,10 @@ import IECore
 import Gaffer
 import GafferUI
 
-## Appends menu items for the creation of user plugs on the specified parent.
+## \deprecated. Remove in version 1.7.
 def appendPlugCreationMenuDefinitions( plugParent, menuDefinition, prefix = "" ) :
+
+	warnings.warn( "GafferUI.UserPlugs is deprecated, use PlugCreationWidget instead.", DeprecationWarning, 2 )
 
 	active = not Gaffer.MetadataAlgo.readOnly( plugParent )
 
@@ -87,10 +91,10 @@ def appendPlugCreationMenuDefinitions( plugParent, menuDefinition, prefix = "" )
 		else :
 			menuDefinition.append( prefix + "/Array/" + label, { "divider" : True } )
 
-## Returns a widget that allows the user to add plugs to a particular parent.
-# Intended for use within a PlugLayout.
+## \deprecated. Remove in version 1.7.
 def plugCreationWidget( plugParent ) :
 
+	warnings.warn( "GafferUI.UserPlugs is deprecated, use PlugCreationWidget instead.", DeprecationWarning, 2 )
 	return __PlugCreationWidget( plugParent )
 
 def __addPlug( plugParent, plugCreator, **kw ) :

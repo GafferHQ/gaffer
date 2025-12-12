@@ -77,7 +77,7 @@ Gaffer.Metadata.registerNode(
 			"nodule:type" : "",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:addButton:widgetType" : "GafferUI.UserPlugs.plugCreationWidget",
+			"layout:customWidget:addButton:widgetType" : "GafferUI.PlugCreationWidget",
 			"layout:customWidget:addButton:index" : -1, # Last
 
 		},
