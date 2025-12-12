@@ -65,38 +65,40 @@
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 7
-
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 8
 	[attr cast_shadows]
 		page STRING "Shadows"
-		gaffer.layout.index INT 8
-	[attr cast_volumetric_shadows]
-		page STRING "Shadows"
 		gaffer.layout.index INT 9
-		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_density]
+	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 10
 		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_color]
+	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "shadowsEnabled"
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 12
 		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
-		gaffer.layout.index INT 12
+		gaffer.layout.index INT 13
 	[attr transmission]
 		page STRING "Contribution"
-		gaffer.layout.index INT 13
+		gaffer.layout.index INT 14
 	[attr diffuse]
 		page STRING "Contribution"
-		gaffer.layout.index INT 14
+		gaffer.layout.index INT 15
 	[attr specular]
 		page STRING "Contribution"
-		gaffer.layout.index INT 15
+		gaffer.layout.index INT 16
 	[attr sss]
 		page STRING "Contribution"
-		gaffer.layout.index INT 16
+		gaffer.layout.index INT 17
 	[attr indirect]
 		page STRING "Contribution"
 		gaffer.layout.index INT 19
@@ -149,38 +151,41 @@
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 7
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 8
 
 	[attr cast_shadows]
 		page STRING "Shadows"
-		gaffer.layout.index INT 8
-	[attr cast_volumetric_shadows]
-		page STRING "Shadows"
 		gaffer.layout.index INT 9
-		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_density]
+	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 10
 		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_color]
+	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "shadowsEnabled"
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 12
 		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
-		gaffer.layout.index INT 12
+		gaffer.layout.index INT 13
 	[attr transmission]
 		page STRING "Contribution"
-		gaffer.layout.index INT 13
+		gaffer.layout.index INT 14
 	[attr diffuse]
 		page STRING "Contribution"
-		gaffer.layout.index INT 14
+		gaffer.layout.index INT 15
 	[attr specular]
 		page STRING "Contribution"
-		gaffer.layout.index INT 15
+		gaffer.layout.index INT 16
 	[attr sss]
 		page STRING "Contribution"
-		gaffer.layout.index INT 16
+		gaffer.layout.index INT 17
 	[attr indirect]
 		page STRING "Contribution"
 		gaffer.layout.index INT 19
@@ -258,58 +263,61 @@
 		page STRING "Sampling"
 		gaffer.layout.index INT 11
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 12
 
 	[attr cast_shadows]
 		page STRING "Shadows"
-		gaffer.layout.index INT 12
-		gaffer.layout.visibilityActivator STRING "modeIsPortal"
-	[attr cast_volumetric_shadows]
-		page STRING "Shadows"
 		gaffer.layout.index INT 13
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
-		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_density]
+	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 14
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_color]
+	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 15
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
+		gaffer.layout.activator STRING "shadowsEnabled"
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 16
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
-		gaffer.layout.index INT 16
+		gaffer.layout.index INT 17
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr transmission]
 		page STRING "Contribution"
-		gaffer.layout.index INT 17
+		gaffer.layout.index INT 18
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr diffuse]
 		page STRING "Contribution"
-		gaffer.layout.index INT 18
+		gaffer.layout.index INT 19
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr specular]
 		page STRING "Contribution"
-		gaffer.layout.index INT 19
+		gaffer.layout.index INT 20
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr sss]
 		page STRING "Contribution"
-		gaffer.layout.index INT 20
+		gaffer.layout.index INT 21
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr indirect]
 		page STRING "Contribution"
-		gaffer.layout.index INT 21
+		gaffer.layout.index INT 22
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr volume]
 		page STRING "Contribution"
-		gaffer.layout.index INT 22
+		gaffer.layout.index INT 23
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr max_bounces]
 		page STRING "Contribution"
-		gaffer.layout.index INT 23
+		gaffer.layout.index INT 24
 		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 
 	[attr vertices]
@@ -372,38 +380,41 @@
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 13
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 14
 
 	[attr cast_shadows]
 		page STRING "Shadows"
-		gaffer.layout.index INT 14
-	[attr cast_volumetric_shadows]
-		page STRING "Shadows"
 		gaffer.layout.index INT 15
-		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_density]
+	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 16
 		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_color]
+	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 17
+		gaffer.layout.activator STRING "shadowsEnabled"
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 18
 		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
-		gaffer.layout.index INT 18
+		gaffer.layout.index INT 19
 	[attr transmission]
 		page STRING "Contribution"
-		gaffer.layout.index INT 19
+		gaffer.layout.index INT 20
 	[attr diffuse]
 		page STRING "Contribution"
-		gaffer.layout.index INT 20
+		gaffer.layout.index INT 21
 	[attr specular]
 		page STRING "Contribution"
-		gaffer.layout.index INT 21
+		gaffer.layout.index INT 22
 	[attr sss]
 		page STRING "Contribution"
-		gaffer.layout.index INT 22
+		gaffer.layout.index INT 23
 	[attr indirect]
 		page STRING "Contribution"
 		gaffer.layout.index INT 25
@@ -471,47 +482,50 @@
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 11
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 12
 
 	[attr cast_shadows]
 		page STRING "Shadows"
-		gaffer.layout.index INT 12
-	[attr cast_volumetric_shadows]
-		page STRING "Shadows"
 		gaffer.layout.index INT 13
-		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_density]
+	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 14
 		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_color]
+	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 15
+		gaffer.layout.activator STRING "shadowsEnabled"
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 16
 		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
-		gaffer.layout.index INT 16
+		gaffer.layout.index INT 17
 	[attr transmission]
 		page STRING "Contribution"
-		gaffer.layout.index INT 17
+		gaffer.layout.index INT 18
 	[attr diffuse]
 		page STRING "Contribution"
-		gaffer.layout.index INT 18
+		gaffer.layout.index INT 19
 	[attr specular]
 		page STRING "Contribution"
-		gaffer.layout.index INT 19
+		gaffer.layout.index INT 20
 	[attr sss]
 		page STRING "Contribution"
-		gaffer.layout.index INT 20
+		gaffer.layout.index INT 21
 	[attr indirect]
 		page STRING "Contribution"
-		gaffer.layout.index INT 21
+		gaffer.layout.index INT 22
 	[attr volume]
 		page STRING "Contribution"
-		gaffer.layout.index INT 22
+		gaffer.layout.index INT 23
 	[attr max_bounces]
 		page STRING "Contribution"
-		gaffer.layout.index INT 23
+		gaffer.layout.index INT 24
 
 	[attr matrix]
 		gaffer.plugType STRING ""
@@ -553,47 +567,50 @@
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 7
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 8
 
 	[attr cast_shadows]
 		page STRING "Shadows"
-		gaffer.layout.index INT 8
-	[attr cast_volumetric_shadows]
-		page STRING "Shadows"
 		gaffer.layout.index INT 9
-		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_density]
+	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 10
 		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_color]
+	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "shadowsEnabled"
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 12
 		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
-		gaffer.layout.index INT 12
+		gaffer.layout.index INT 13
 	[attr transmission]
 		page STRING "Contribution"
-		gaffer.layout.index INT 13
+		gaffer.layout.index INT 14
 	[attr diffuse]
 		page STRING "Contribution"
-		gaffer.layout.index INT 14
+		gaffer.layout.index INT 15
 	[attr specular]
 		page STRING "Contribution"
-		gaffer.layout.index INT 15
+		gaffer.layout.index INT 16
 	[attr sss]
 		page STRING "Contribution"
-		gaffer.layout.index INT 16
+		gaffer.layout.index INT 17
 	[attr indirect]
 		page STRING "Contribution"
-		gaffer.layout.index INT 17
+		gaffer.layout.index INT 18
 	[attr volume]
 		page STRING "Contribution"
-		gaffer.layout.index INT 18
+		gaffer.layout.index INT 19
 	[attr max_bounces]
 		page STRING "Contribution"
-		gaffer.layout.index INT 19
+		gaffer.layout.index INT 20
 
 	[attr bottom]
 		gaffer.plugType STRING ""
@@ -642,38 +659,41 @@
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 8
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 9
 
 	[attr cast_shadows]
 		page STRING "Shadows"
-		gaffer.layout.index INT 9
-	[attr cast_volumetric_shadows]
-		page STRING "Shadows"
 		gaffer.layout.index INT 10
-		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_density]
+	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
 		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_color]
+	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 12
+		gaffer.layout.activator STRING "shadowsEnabled"
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 13
 		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
-		gaffer.layout.index INT 13
+		gaffer.layout.index INT 14
 	[attr transmission]
 		page STRING "Contribution"
-		gaffer.layout.index INT 14
+		gaffer.layout.index INT 15
 	[attr diffuse]
 		page STRING "Contribution"
-		gaffer.layout.index INT 15
+		gaffer.layout.index INT 16
 	[attr specular]
 		page STRING "Contribution"
-		gaffer.layout.index INT 16
+		gaffer.layout.index INT 17
 	[attr sss]
 		page STRING "Contribution"
-		gaffer.layout.index INT 17
+		gaffer.layout.index INT 18
 	[attr indirect]
 		page STRING "Contribution"
 		gaffer.layout.index INT 20
@@ -724,6 +744,9 @@
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 6
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 7
 
 	[attr cast_shadows]
 		page STRING "Shadows"
@@ -816,38 +839,41 @@
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 8
+	[attr sampling_mode]
+		page STRING "Sampling"
+		gaffer.layout.index INT 9
 
 	[attr cast_shadows]
 		page STRING "Shadows"
-		gaffer.layout.index INT 9
-	[attr cast_volumetric_shadows]
-		page STRING "Shadows"
 		gaffer.layout.index INT 10
-		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_density]
+	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
 		gaffer.layout.activator STRING "shadowsEnabled"
-	[attr shadow_color]
+	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 12
+		gaffer.layout.activator STRING "shadowsEnabled"
+	[attr shadow_color]
+		page STRING "Shadows"
+		gaffer.layout.index INT 13
 		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
-		gaffer.layout.index INT 13
+		gaffer.layout.index INT 14
 	[attr transmission]
 		page STRING "Contribution"
-		gaffer.layout.index INT 14
+		gaffer.layout.index INT 15
 	[attr diffuse]
 		page STRING "Contribution"
-		gaffer.layout.index INT 15
+		gaffer.layout.index INT 16
 	[attr specular]
 		page STRING "Contribution"
-		gaffer.layout.index INT 16
+		gaffer.layout.index INT 17
 	[attr sss]
 		page STRING "Contribution"
-		gaffer.layout.index INT 17
+		gaffer.layout.index INT 18
 	[attr indirect]
 		page STRING "Contribution"
 		gaffer.layout.index INT 20
@@ -2811,6 +2837,8 @@
 		page STRING "Specular"
 	[attr roughness_anisotropic]
 		page STRING "Specular"
+	[attr scattering_mode]
+		page STRING "Specular"
 
 	[attr specular_tint]
 		page STRING "Tint"
@@ -3535,6 +3563,22 @@
 [node imager_lens_effects]
 
 	primaryInput STRING "input"
+
+	gaffer.layout.activator.bloomModeIsAperture STRING "parameters['bloom_mode'].getValue() == 'aperture'"
+	gaffer.layout.activator.bloomModeIsShapeFile STRING "parameters['bloom_mode'].getValue() == 'shape_file'"
+	gaffer.layout.activator.bloomModeIsNotSimple STRING "parameters['bloom_mode'].getValue() != 'simple'"
+
+	[attr bloom_shape_filename]
+		gaffer.layout.activator STRING "bloomModeIsShapeFile"
+
+	[attr bloom_shape_rotation]
+		gaffer.layout.activator STRING "bloomModeIsNotSimple"
+
+	[attr aperture_blades]
+		gaffer.layout.activator STRING "bloomModeIsAperture"
+
+	[attr aperture_blade_curvature]
+		gaffer.layout.activator STRING "bloomModeIsAperture"
 
 [node imager_light_mixer]
 
