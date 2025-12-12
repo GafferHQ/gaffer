@@ -69,6 +69,7 @@ Gaffer.Metadata.registerNode(
 			CompoundDataPlug API.
 			""",
 
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 			"nodule:type" : "",
 
 		},

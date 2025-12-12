@@ -40,7 +40,7 @@ originalInit = Gaffer.TweakPlug.__init__
 
 def initSupportingOldSerialisation( self, *args, **kwargs ) :
 
-	if len( args ) == 1 and isinstance( args[0], str ) :
+	if len( args ) == 1 and isinstance( args[0], str ) and "valuePlug" not in kwargs :
 
 		# Constructor calls that provide only a name but no value plug or
 		# data need to be rerouted. These calls occur when deserialising
