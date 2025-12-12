@@ -31,12 +31,7 @@ def __delay( delay ) :
 		GafferUI.EventLoop.waitForIdle( 1 )
 
 mainWindow = GafferUI.ScriptWindow.acquire( script )
-viewer = mainWindow.getLayout().editors( GafferUI.Viewer )[0]
 graphEditor = mainWindow.getLayout().editors( GafferUI.GraphEditor )[0]
-nodeEditor = mainWindow.getLayout().editors( GafferUI.NodeEditor )[0]
-sceneInspector = mainWindow.getLayout().editors( GafferSceneUI.SceneInspector )[0]
-hierarchyView = mainWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
-pythonEditor = mainWindow.getLayout().editors( GafferUI.PythonEditor )[0]
 
 # Concept: Reading a Context Variable
 textNode = GafferScene.Text()
