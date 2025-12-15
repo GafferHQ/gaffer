@@ -1,7 +1,13 @@
 1.6.x.x (relative to 1.6.7.0)
 =======
 
+Improvements
+------------
 
+- ArnoldLight : Moved Arnold 7.4.4.0's new `sampling_mode` parameter to the "Sampling" section of the UI.
+- LightEditor : Added column for Arnold 7.4.4.0's new `sampling_mode` parameter.
+- ArnoldShader : Moved Arnold 7.4.4.0's new `standard_hair.scattering_mode` parameter to the "Specular" section of the UI.
+- ArnoldImager : Added activators for Arnold 7.4.4.0's new `lens_effects` imager parameters.
 
 1.6.7.0 (relative to 1.6.6.1)
 =======
