@@ -28,6 +28,7 @@ Fixes
 
 - SceneInspector : Fixed cell background colour updates when changing EditScope.
 - AttributeEditor, SceneInspector : Fixed bug preventing edits from being created in an EditScope for attributes with `.` characters in their name.
+- RenderMan : Fixed crop window bugs when rendering with XPU (#6727).
 
 1.6.7.0 (relative to 1.6.6.1)
 =======

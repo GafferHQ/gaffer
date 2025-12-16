@@ -50,14 +50,19 @@ class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "RenderMan"
 
-	@unittest.skip( "Crop window doesn't change data window" )
 	def testEditCropWindow( self ) :
 
-		# RenderMan doesn't reopen the display drivers when the crop
-		# window decreases in size, only when it increases. This will
-		# cause the base class test to fail, even though we are passing
-		# edits and RenderMan is only re-rendering the requested area.
-		pass
+		if self.renderer == "RenderMan" :
+			# RIS doesn't reopen the display drivers when the crop
+			# window decreases in size, only when it increases. This will
+			# cause the base class test to fail, even though we are passing
+			# edits and RenderMan is only re-rendering the requested area.
+			## \todo Perhaps we can deal with this ourself by recreating
+			# the RenderView to force reopening? Or modifying a single camera
+			# instead of making a new one when the crop changes?
+			self.skipTest( "Crop window doesn't change data window" )
+		else :
+			GafferSceneTest.InteractiveRenderTest.testEditCropWindow( self )
 
 	def _createConstantShader( self ) :
 
