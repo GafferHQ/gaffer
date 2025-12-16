@@ -138,6 +138,16 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"tweaks.*.mode" : {
+
+			# `Replace` is not a good default for closure parameters - they
+			# don't have values in the shader parameter list, so ShaderTweaks
+			# thinks they don't exist and errors. Until this is resolved,
+			# default to `Create` mode.
+			"userDefault" : lambda plug : Gaffer.TweakPlug.Mode.Create if isinstance( plug.parent()["value"], GafferScene.ClosurePlug ) else Gaffer.TweakPlug.Mode.Replace,
+
+		},
+
 	}
 
 )

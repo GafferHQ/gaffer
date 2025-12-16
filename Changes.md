@@ -14,6 +14,7 @@ Improvements
     - Multiple parameter names and/or values can be dragged to create multiple tweaks.
     - Parameters dragged from non-terminal shaders create tweaks that include the shader name to correctly identify the parameter.
   - Added array parameter types to the tweak creation menu.
+- PlugCreationWidget : User defaults are now applied to newly created `TweakPlug.mode` plugs.
 
 Fixes
 -----
