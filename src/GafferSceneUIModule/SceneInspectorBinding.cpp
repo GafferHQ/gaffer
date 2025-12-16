@@ -121,7 +121,7 @@ const IECore::InternedString g_globalsPathName( "Globals" );
 // mean that Path is no longer subclassable, and instead a single Path type can
 // be used with any Tree type, by passing the tree to the Path constructor. Baby
 // steps though - for now we are just trying the idea out via InspectorPath.
-class InspectorTree : public IECore::RefCounted
+class InspectorTree : public IECore::RefCounted, public Gaffer::Signals::Trackable
 {
 
 	public :
@@ -136,6 +136,10 @@ class InspectorTree : public IECore::RefCounted
 		{
 			setContexts( contexts );
 			scene->node()->plugDirtiedSignal().connect( boost::bind( &InspectorTree::plugDirtied, this, ::_1 ) );
+			if( editScope && editScope->node() )
+			{
+				editScope->node()->plugInputChangedSignal().connect( boost::bind( &InspectorTree::editScopeInputChanged, this, ::_1 ) );
+			}
 		}
 
 		void setContexts( const Contexts &contexts )
@@ -430,6 +434,18 @@ class InspectorTree : public IECore::RefCounted
 		void plugDirtied( const Plug *plug )
 		{
 			if( plug == m_scene.get() )
+			{
+				{
+					std::scoped_lock lock( m_mutex );
+					m_rootItem.reset();
+				}
+				m_dirtiedSignal();
+			}
+		}
+
+		void editScopeInputChanged( const Plug *plug )
+		{
+			if( plug == m_editScope.get() )
 			{
 				{
 					std::scoped_lock lock( m_mutex );
