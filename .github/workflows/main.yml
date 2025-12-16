@@ -34,7 +34,6 @@ jobs:
         name: [
           linux-gcc11,
           linux-debug-gcc11,
-          linux-gcc11-platform23,
           windows,
         ]
 
@@ -64,20 +63,6 @@ jobs:
             # limit. In practice this compresses down to 4-500Mb.
             sconsCacheMegabytes: 2500
             jobs: 4
-
-          - name: linux-gcc11-platform23
-            os: ubuntu-24.04
-            buildType: RELEASE
-            publish: false
-            containerImage: ghcr.io/gafferhq/build/build:3.4.0
-            # GitHub container builds run as root. This causes failures for tests that
-            # assert that filesystem permissions are respected, because root doesn't
-            # respect permissions. So we run the final test suite as a dedicated
-            # test user rather than as root.
-            testRunner: sudo -E -u testUser
-            sconsCacheMegabytes: 400
-            jobs: 4
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.5.15.3/cortex-10.5.15.3-linux-gcc11.tar.gz
 
           - name: windows
             os: windows-2022
@@ -313,7 +298,7 @@ jobs:
       run: |
         podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
         df -H
-      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' && matrix.name != 'linux-gcc11-platform23' }}
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' }}
 
     - name: Install RenderMan 27.1
       run: |
@@ -337,7 +322,7 @@ jobs:
       run: |
         podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
         df -H
-      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' && matrix.name != 'linux-gcc11-platform23' }}
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' }}
 
     - name: Build Docs and Package
       # Docs builds should be relatively quick. If there is a problem, this
