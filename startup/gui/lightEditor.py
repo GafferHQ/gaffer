@@ -147,6 +147,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 with IECore.IgnoredExceptions( ImportError ) :
 
+	import arnold
 	import GafferArnold
 
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Arnold", "ai:light" )
@@ -218,6 +219,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "samples", "Sampling" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "volume_samples", "Sampling" )
+	if [ int( x ) for x in arnold.AiGetVersion()[:3] ] >= [ 7, 4, 4 ] :
+		GafferSceneUI.LightEditor.registerParameter( "ai:light", "sampling_mode", "Sampling" )
 
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cast_shadows", "Shadows" )
 	GafferSceneUI.LightEditor.registerParameter( "ai:light", "cast_volumetric_shadows", "Shadows" )
