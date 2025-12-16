@@ -124,17 +124,15 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 		nodes = [ node ]
 
 	attributeNames = set()
-	with plugValueWidget.context() :
+	if acceptsAttributeNames :
+		currentNames = set( plug.getValue().split() )
+	else :
+		currentNames = set( [ plug.getValue() ] )
 
-		if acceptsAttributeNames :
-			currentNames = set( plug.getValue().split() )
-		else :
-			currentNames = set( [ plug.getValue() ] )
-
-		for node in nodes :
-			for path in selectedPaths :
-				attributes = node["in"].attributes( path, _copy=False )
-				attributeNames.update( attributes.keys() )
+	for node in nodes :
+		for path in selectedPaths :
+			attributes = node["in"].attributes( path, _copy=False )
+			attributeNames.update( attributes.keys() )
 
 	if not attributeNames :
 		return

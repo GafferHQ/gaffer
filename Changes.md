@@ -13,6 +13,7 @@ Fixes
 -----
 
 - SceneInspector : Fixed `draggedParameters()` method to include the shader handle where necessary.
+- PlugValueWidget : The widget's context is now scoped before emitting `popupMenuSignal()`.
 
 1.6.7.0 (relative to 1.6.6.1)
 =======

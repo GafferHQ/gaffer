@@ -109,10 +109,9 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 	if not acceptsRenderPassName and not acceptsRenderPassNames :
 		return
 
-	with plugValueWidget.context() :
-		globals = plug.node()["in"]["globals"].getValue()
-		currentText = plug.getValue()
-		currentNames = set( currentText.split() )
+	globals = plug.node()["in"]["globals"].getValue()
+	currentText = plug.getValue()
+	currentNames = set( currentText.split() )
 
 	menuDefinition.prepend( "/RenderPassesDivider", { "divider" : True } )
 

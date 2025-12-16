@@ -528,7 +528,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 			}
 		)
 
-		self.popupMenuSignal()( menuDefinition, self )
+		with self.context() :
+			self.popupMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
 
