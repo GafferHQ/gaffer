@@ -1035,6 +1035,24 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNotNone( GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/sphere", "test:bogus" ) )
 		self.assertNotEqual( editScope.keys(), emptyKeys )
 
+	def testAttributeEditNameSanitisation( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["in"].setInput( sphere["out"] )
+		customAttributes["attributes"].addMember( "test:fancy.attribute", 123 )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( customAttributes["out"] )
+		editScope["in"].setInput( customAttributes["out"] )
+
+		edit = GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/sphere", "test:fancy.attribute" )
+		self.assertIsInstance( edit, Gaffer.TweakPlug )
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 456 )
+		self.assertEqual( editScope["out"].attributes( "/sphere" )["test:fancy.attribute"].value, 456 )
+
 	def testProcessorNames( self ) :
 
 		plane = GafferScene.Plane()
