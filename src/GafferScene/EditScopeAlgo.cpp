@@ -804,7 +804,8 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireAttributeEdit( Gaffer::EditScope *
 
 	// Find cell for attribute
 
-	std::string columnName = boost::replace_all_copy( attribute, ":", "_" );
+	std::string columnName;
+	boost::replace_copy_if( attribute, std::back_inserter( columnName ), boost::is_any_of( ".:" ), '_' );
 	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
 	{
 		return cell->valuePlug<TweakPlug>();
@@ -867,7 +868,8 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::attributeEditReadOnlyR
 		return reason;
 	}
 
-	std::string columnName = boost::replace_all_copy( attribute, ":", "_" );
+	std::string columnName;
+	boost::replace_copy_if( attribute, std::back_inserter( columnName ), boost::is_any_of( ".:" ), '_' );
 	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
 	{
 		if( MetadataAlgo::getReadOnly( cell ) )
