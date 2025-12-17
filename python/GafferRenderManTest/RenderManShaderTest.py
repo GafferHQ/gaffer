@@ -38,6 +38,7 @@ import unittest
 
 import imath
 
+import IECore
 import IECoreRenderMan
 
 import Gaffer
@@ -328,7 +329,7 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( shader['parameters']['targetHue'].getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( shader['parameters']['targetHue'].direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( shader['parameters']['targetHue'].defaultValue(),
-			Gaffer.SplineDefinitionfColor3f(
+			IECore.RampfColor3f(
 				(
 					( 0, imath.Color3f( 1, 0.25, 0.25 ) ),
 					( 0.166, imath.Color3f( 1, 1, 0.25 ) ),
@@ -338,19 +339,19 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 					( 0.833, imath.Color3f( 1, 0.25, 1 ) ),
 					( 1, imath.Color3f( 1, 0.25, 0.25 ) ),
 				),
-				Gaffer.SplineDefinitionInterpolation.CatmullRom
+				IECore.RampInterpolation.CatmullRom
 			)
 		)
 
 		self.assertEqual( shader['parameters']['incidentAngle'].getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( shader['parameters']['incidentAngle'].direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( shader['parameters']['incidentAngle'].defaultValue(),
-			Gaffer.SplineDefinitionff(
+			IECore.Rampff(
 				(
 					( 0, 0 ),
 					( 1, 1 ),
 				),
-				Gaffer.SplineDefinitionInterpolation.Linear
+				IECore.RampInterpolation.Linear
 			)
 		)
 
@@ -379,12 +380,12 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( shader['parameters']['ramp'].getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( shader['parameters']['ramp'].direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( shader['parameters']['ramp'].defaultValue(),
-			Gaffer.SplineDefinitionff(
+			IECore.Rampff(
 				(
 					( 0, 0 ),
 					( 1, 1 ),
 				),
-				Gaffer.SplineDefinitionInterpolation.Linear
+				IECore.RampInterpolation.Linear
 			)
 		)
 

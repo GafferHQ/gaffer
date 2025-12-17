@@ -96,7 +96,7 @@ Gaffer.Metadata.registerNode(
 			- M44fPlug (`matrix`)
 			- StringPlug (`string`)
 			- ClosurePlug (`closure color`)
-			- SplinefColor3f ( triplet of `float [], color [], string` )
+			- RampfColor3fPlug ( triplet of `float [], color [], string` )
 			""",
 
 			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLCodeUI._ParametersFooter",
@@ -121,7 +121,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The outputs from the shader. Any number of outputs may be created
 			by adding child plugs. Supported plug types are as for the input
-			parameters, with the exception of SplinefColor3f, which cannot be
+			parameters, with the exception of RampfColor3fPlug, which cannot be
 			used as an output.
 			""",
 
@@ -212,17 +212,15 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 
 			labelsAndConstructors.insert(
 				-1,
-				( "Color Spline",
+				( "Color Ramp",
 					functools.partial(
-						Gaffer.SplinefColor3fPlug,
-						defaultValue = IECore.SplinefColor3f(
-							IECore.CubicBasisf.catmullRom(),
+						Gaffer.RampfColor3fPlug,
+						defaultValue = IECore.RampfColor3f(
 							(
 								( 0, imath.Color3f( 0 ) ),
-								( 0, imath.Color3f( 0 ) ),
 								( 1, imath.Color3f( 1 ) ),
-								( 1, imath.Color3f( 1 ) ),
-							)
+							),
+							IECore.RampInterpolation.CatmullRom
 						)
 					)
 				)
@@ -305,7 +303,7 @@ class _CodePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if plug.parent() not in ( node["parameters"], node["out"] ) :
 			return None
 
-		if isinstance( plug, Gaffer.SplinefColor3fPlug ) :
+		if isinstance( plug, Gaffer.RampfColor3fPlug ) :
 			return "colorSpline( {0}Positions, {0}Values, {0}Basis, u )".format( plug.getName() )
 
 		return plug.getName()

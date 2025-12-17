@@ -66,10 +66,10 @@ AttributeVisualiser::AttributeVisualiser( const std::string &name )
 	addChild( new FloatPlug( "min", Plug::In, 0.0f ) );
 	addChild( new FloatPlug( "max", Plug::In, 1.0f ) );
 
-	SplinefColor3fPlug::ValueType rampDefault;
-	rampDefault.points.insert( SplinefColor3fPlug::ValueType::Point( 1.0f, Color3f( 0.0f, 1.0f, 0.0f ) ) );
-	rampDefault.points.insert( SplinefColor3fPlug::ValueType::Point( 0.0f, Color3f( 1.0f, 0.0f, 0.0f ) ) );
-	addChild( new SplinefColor3fPlug( "ramp", Plug::In, rampDefault ) );
+	RampfColor3fPlug::ValueType rampDefault;
+	rampDefault.points.insert( RampfColor3fPlug::ValueType::Point( 1.0f, Color3f( 0.0f, 1.0f, 0.0f ) ) );
+	rampDefault.points.insert( RampfColor3fPlug::ValueType::Point( 0.0f, Color3f( 1.0f, 0.0f, 0.0f ) ) );
+	addChild( new RampfColor3fPlug( "ramp", Plug::In, rampDefault ) );
 
 	addChild( new StringPlug( "shaderType", Plug::In, "gl:surface" ) );
 	addChild( new StringPlug( "shaderName", Plug::In, "Constant" ) );
@@ -120,14 +120,14 @@ const Gaffer::FloatPlug *AttributeVisualiser::maxPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
 }
 
-Gaffer::SplinefColor3fPlug *AttributeVisualiser::rampPlug()
+Gaffer::RampfColor3fPlug *AttributeVisualiser::rampPlug()
 {
-	return getChild<SplinefColor3fPlug>( g_firstPlugIndex + 4 );
+	return getChild<RampfColor3fPlug>( g_firstPlugIndex + 4 );
 }
 
-const Gaffer::SplinefColor3fPlug *AttributeVisualiser::rampPlug() const
+const Gaffer::RampfColor3fPlug *AttributeVisualiser::rampPlug() const
 {
-	return getChild<SplinefColor3fPlug>( g_firstPlugIndex + 4 );
+	return getChild<RampfColor3fPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::StringPlug *AttributeVisualiser::shaderTypePlug()
@@ -309,8 +309,8 @@ IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( 
 		color = ( color - min ) / ( max - min );
 		if( mode == FalseColor )
 		{
-			const SplinefColor3f ramp = rampPlug()->getValue().spline();
-			color = ramp( color[0] );
+			const SplinefColor3f rampEval = rampPlug()->getValue().evaluator();
+			color = rampEval( color[0] );
 		}
 	}
 

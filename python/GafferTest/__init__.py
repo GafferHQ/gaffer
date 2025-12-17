@@ -83,7 +83,7 @@ from .CompoundNumericPlugTest import CompoundNumericPlugTest
 from .CompoundNumericNode import CompoundNumericNode
 from .CompoundPlugNode import CompoundPlugNode
 from .TypedObjectPlugTest import TypedObjectPlugTest
-from .SplinePlugTest import SplinePlugTest
+from .RampPlugTest import RampPlugTest
 from .AboutTest import AboutTest
 from .ChildSetTest import ChildSetTest
 from .PythonApplicationTest import PythonApplicationTest

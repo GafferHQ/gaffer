@@ -134,7 +134,7 @@ def _colorFromPlugs( plugs ) :
 
 ## \todo Perhaps we could make this a part of the public API? Perhaps we could also make a
 # PlugValueDialogue base class to share some of the work with the dialogue made by the
-# SplinePlugValueWidget. Or perhaps the `acquire()` here and `NodeSetEditor.acquire()` should
+# RampPlugValueWidget. Or perhaps the `acquire()` here and `NodeSetEditor.acquire()` should
 # actually be functionality of CompoundEditor?
 class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 

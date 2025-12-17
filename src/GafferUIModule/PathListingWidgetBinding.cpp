@@ -58,7 +58,7 @@
 #include "IECore/PathMatcher.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
+#include "IECore/RampData.h"
 #include "IECore/TypeTraits.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -474,8 +474,8 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 			time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
 			return QVariant( QDateTime::fromSecsSinceEpoch( t ) );
 		}
-		case IECore::SplineffDataTypeId :
-		case IECore::SplinefColor3fDataTypeId :
+		case IECore::RampffDataTypeId :
+		case IECore::RampfColor3fDataTypeId :
 		{
 			// Pass through directly for use in PathListingWidgetItemDelegate.
 			QVariant v;
@@ -2251,8 +2251,8 @@ struct DisplayColorCache : public IECorePreview::LRUCache<QColor, QIcon, IECoreP
 struct DisplayGradientCacheGetterKey
 {
 
-	DisplayGradientCacheGetterKey( const IECore::Data *splineData = nullptr )
-		:	splineData( splineData ), hash( splineData ?  splineData->Object::hash() : IECore::MurmurHash() )
+	DisplayGradientCacheGetterKey( const IECore::Data *rampData = nullptr )
+		:	rampData( rampData ), hash( rampData ?  rampData->Object::hash() : IECore::MurmurHash() )
 	{
 	}
 
@@ -2261,7 +2261,7 @@ struct DisplayGradientCacheGetterKey
 		return hash;
 	}
 
-	const IECore::Data *splineData;
+	const IECore::Data *rampData;
 	const IECore::MurmurHash hash;
 
 };
@@ -2273,7 +2273,7 @@ struct DisplayGradientCache : public IECorePreview::LRUCache<IECore::MurmurHash,
 		:	IECorePreview::LRUCache<IECore::MurmurHash, QBrush, IECorePreview::LRUCachePolicy::Serial, DisplayGradientCacheGetterKey>(
 				[displayTransform] ( const DisplayGradientCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller ) {
 					cost = 1;
-					return convert( key.splineData, displayTransform );
+					return convert( key.rampData, displayTransform );
 				},
 				maxGradients
 			)
@@ -2286,26 +2286,27 @@ struct DisplayGradientCache : public IECorePreview::LRUCache<IECore::MurmurHash,
 		{
 			switch( data->typeId() )
 			{
-				case IECore::SplineffDataTypeId :
-					return convertTyped( static_cast<const IECore::SplineffData *>( data )->readable(), displayTransform );
-				case IECore::SplinefColor3fDataTypeId :
-					return convertTyped( static_cast<const IECore::SplinefColor3fData *>( data )->readable(), displayTransform );
+				case IECore::RampffDataTypeId :
+					return convertTyped( static_cast<const IECore::RampffData *>( data )->readable(), displayTransform );
+				case IECore::RampfColor3fDataTypeId :
+					return convertTyped( static_cast<const IECore::RampfColor3fData *>( data )->readable(), displayTransform );
 				default :
 					return QBrush();
 			}
 		}
 
-		template<typename SplineType>
-		static QBrush convertTyped( const SplineType &spline, const DisplayTransform &displayTransform )
+		template<typename RampType>
+		static QBrush convertTyped( const RampType &ramp, const DisplayTransform &displayTransform )
 		{
 			QLinearGradient gradient( QPoint( 0, 0 ), QPoint( 1, 0 ) );
 			gradient.setCoordinateMode( QGradient::ObjectMode );
 
+			auto evaluator = ramp.evaluator();
 			const int numStops = 100;
 			for( int i = 0; i < numStops; ++i )
 			{
 				float x = (float)i / (float)(numStops - 1);
-				Imath::Color3f c( spline( x ) );
+				Imath::Color3f c( evaluator( x ) );
 				if( displayTransform )
 				{
 					c = displayTransform( c );
@@ -2344,7 +2345,7 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 			const QVariant displayData = index.data( Qt::DisplayRole );
 			if( auto data = displayData.value<IECore::ConstDataPtr>() )
 			{
-				// When we want to render splines, we just pass the data
+				// When we want to render ramps, we just pass the data
 				// through directly and convert it here.
 				QBrush brush = m_displayGradientCache->get( data.get() );
 				if( brush.style() != Qt::NoBrush )
