@@ -69,7 +69,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
-			"compoundDataPlugValueWidget:editable" : True,
+			"layout:customWidget:addButton:visibilityActivator" : True,
 			"ui:scene:acceptsOptions" : True,
 
 		},
