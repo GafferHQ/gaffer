@@ -160,6 +160,7 @@ class PlugCreationWidget( GafferUI.Widget ) :
 					plug = Gaffer.TweakPlug( "tweak0", valuePlug = plug, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 					plug["name"].setValue( name )
 					self.__plugParent.addChild( plug )
+					Gaffer.NodeAlgo.applyUserDefault( plug["mode"] )
 				case "setup" :
 					self.__plugParent.setup( plug )
 				case "addQuery" :
