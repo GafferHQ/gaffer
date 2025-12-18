@@ -38,6 +38,7 @@ import math
 import os
 import time
 import unittest
+import random
 
 import imath
 
@@ -2322,6 +2323,104 @@ class RendererTest( GafferTest.TestCase ) :
 							cam['projection']['params']['params'], "focalLength", [focalLength  * flWorldScale],
 							tolerance = 1e-7
 						)
+
+	def runOverscanTest( self, res, pixelsTop, pixelsBottom, pixelsLeft, pixelsRight ) :
+
+		with self.subTest(
+				res = res,
+				pixelsTop = pixelsTop, pixelsBottom = pixelsBottom,
+				pixelsLeft = pixelsLeft, pixelsRight = pixelsRight
+		) :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			camera = IECoreScene.Camera()
+			camera.setResolution( res )
+			camera.setOverscan( True )
+
+			# We've got our own rounding in how renderRegion() is computed - to ensure we
+			# get the exact pixel amounts of overscan we're requesting, we offset by
+			# a quarter pixel.
+			camera.setOverscanTop( ( pixelsTop + 0.25 ) / res[1] )
+			camera.setOverscanBottom( ( pixelsBottom + 0.25 ) / res[1] )
+			camera.setOverscanLeft( ( pixelsLeft + 0.25 ) / res[0] )
+			camera.setOverscanRight( ( pixelsRight + 0.25 ) / res[0] )
+
+			self.assertEqual(
+				camera.renderRegion(),
+				imath.Box2i(
+					imath.V2i( -pixelsLeft,	-pixelsBottom ),
+					res + imath.V2i( pixelsRight, pixelsTop )
+				)
+			)
+
+			renderCam = renderer.camera(
+				"camera", camera, renderer.attributes( IECore.CompoundObject() )
+			)
+
+			renderer.option( "camera", IECore.StringData( "camera" ) )
+
+			renderer.output(
+				f"test",
+				IECoreScene.Output(
+					str( self.temporaryDirectory() / f"test.exr" ),
+					"exr",
+					"rgb",
+					{}
+				)
+			)
+
+			renderer.render()
+			del renderer
+
+			image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / f"test.exr" ) )
+
+			self.assertEqual( image.spec().width, res[0] + pixelsLeft + pixelsRight )
+			self.assertEqual( image.spec().height, res[1] + pixelsTop + pixelsBottom )
+			self.assertEqual( image.spec().x, -pixelsLeft )
+			self.assertEqual( image.spec().y, -pixelsTop )
+
+			self.assertEqual( image.spec().full_width, res[0] )
+			self.assertEqual( image.spec().full_height, res[1] )
+			self.assertEqual( image.spec().full_x, 0 )
+			self.assertEqual( image.spec().full_y, 0 )
+
+	@unittest.skipIf( True, "Fuzzing the overscan values is too expensive to run regularly" )
+	def testFuzzOverscan( self ):
+		random.seed( 42 )
+		for i in range( 40 ):
+			self.runOverscanTest(
+				imath.V2i( random.randint( 100, 1000 ), random.randint( 100, 1000 ) ),
+				random.randint( 0, 500 ), random.randint( 0, 500 ),
+				random.randint( 0, 500 ), random.randint( 0, 500 )
+			)
+
+		# We can more efficiently check the rounding behaviours for much larger images by
+		# using test images that are one pixel tall or one pixel wide
+		for i in range( 1000 ):
+			self.runOverscanTest(
+				imath.V2i( random.randint( 100, 16000 ), 1 ),
+				0, 0,
+				random.randint( 0, 1000 ), random.randint( 0, 1000 )
+			)
+
+		for i in range( 1000 ):
+			self.runOverscanTest(
+				imath.V2i( 1, random.randint( 100, 16000 ) ),
+				random.randint( 0, 1000 ), random.randint( 0, 1000 ),
+				0, 0
+			)
+
+	def testOverscan( self ):
+		# Test some simple overscan values, and some that were specifically chosen to
+		# fail if a naive division without rounding compensation is used.
+		self.runOverscanTest( imath.V2i( 100, 100 ), 1, 2, 3, 4 )
+		self.runOverscanTest( imath.V2i( 200, 200 ), 14, 13, 12, 11 )
+		self.runOverscanTest( imath.V2i( 750, 750 ), 249, 249, 249, 249 )
+		self.runOverscanTest( imath.V2i( 162, 512 ), 745, 347, 819, 882 )
 
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 

@@ -59,9 +59,31 @@ const RtUString g_projectionHandle( "projection" );
 const RtUString g_pxrCamera( "PxrCamera" );
 const RtUString g_pxrOrthographic( "PxrOrthographic" );
 
+float divRoundDown( int a, int b )
+{
+	// PRMan is going to perform a ceil rather than a round on these values when it converts to
+	// integers, so we need to make sure we return a value less than the precise value. There
+	// are two sources of imprecision here:
+	// * converting integers to floats
+	// * performing the division
+	// If the arguments are less than 16 million, the first is not an issue, since those integers
+	// are exactly representable. We don't expect images to be that big, so we ignore the first issue.
+	//
+	// This just leaves any imprecision created by the division itself. The floating point result
+	// should be the closest representable float, so a single call to nextafterf to pick the next
+	// lowest float should ensure that we are always less than the true value, and PRMan's ceil
+	// should pick the correct integer. ( This is probably also reliant on the fact that when
+	// PRMan performs the multiplication by resolution, the resolution is also an integer less
+	// than 16 million. )
+
+	return nextafterf(
+		float( a ) / float( b ),
+		-std::numeric_limits<float>::infinity()
+	);
+}
+
 } // namespace
 
-/// \todo Overscan, depth of field
 Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Session *session )
 	:	m_session( session )
 {
@@ -130,14 +152,13 @@ Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Sess
 	options.SetIntegerArray( Loader::strings().k_Ri_FormatResolution, resolution.getValue(), 2 );
 	options.SetFloat( Loader::strings().k_Ri_FormatPixelAspectRatio, camera->getPixelAspectRatio() );
 
-	Box2f cropWindow = camera->getCropWindow();
-	if( cropWindow.isEmpty() )
-	{
-		/// \todo Would be better if IECoreScene::Camera defaulted to this rather
-		/// than empty box.
-		cropWindow = Box2f( V2f( 0 ), V2f( 1 ) );
-	}
-	float renderManCropWindow[4] = { cropWindow.min.x, cropWindow.max.x, cropWindow.min.y, cropWindow.max.y };
+	Imath::Box2i renderRegion = camera->renderRegion();
+	float renderManCropWindow[4] = {
+		divRoundDown( renderRegion.min.x, resolution.x ),
+		divRoundDown( renderRegion.max.x, resolution.x ),
+		divRoundDown( resolution.y - renderRegion.min.y, resolution.y ),
+		divRoundDown( resolution.y - renderRegion.max.y, resolution.y )
+	};
 	options.SetFloatArray( Loader::strings().k_Ri_CropWindow, renderManCropWindow, 4 );
 
 	// Camera
