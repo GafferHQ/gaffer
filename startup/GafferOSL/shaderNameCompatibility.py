@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import Gaffer
+
 import GafferOSL
 
 __nameMapping = {
@@ -48,6 +50,8 @@ __nameMapping = {
 	"Maths/FloatMultiply" : "Maths/MultiplyFloat",
 	"Maths/VectorAdd" : "Maths/AddVector",
 	"Maths/VectorMultiply" : "Maths/ScaleVector",
+	"Pattern/FloatRamp" : "Pattern/FloatSpline",
+	"Pattern/ColorRamp" : "Pattern/ColorSpline",
 	# A whole bunch of MaterialX shaders were renamed from `mx_<op>_<type>`
 	# to `mx_<op>_<type>_<type>` here :
 	#
@@ -149,8 +153,20 @@ def __loadShaderWrapper( originalLoadShader ) :
 
 	def loadRenamedShader( self, shaderName, **kwargs ) :
 		renamed = __nameMapping.get( shaderName, shaderName )
-		return originalLoadShader( self, renamed, **kwargs )
+		result = originalLoadShader( self, renamed, **kwargs )
+		if shaderName in [ "Pattern/FloatRamp", "Pattern/ColorRamp" ]:
+			self["parameters"]["direction"].setValue( "v" )
+		return result
 
 	return loadRenamedShader
 
 GafferOSL.OSLShader.loadShader = __loadShaderWrapper( GafferOSL.OSLShader.loadShader )
+
+def __rampAliasForSplines( plug ) :
+
+	if plug.node()["name"].getValue() in [ "Pattern/ColorSpline", "Pattern/FloatSpline" ]:
+		return "spline"
+
+	return None
+
+Gaffer.Metadata.registerValue( GafferOSL.OSLShader, "parameters", "compatibility:childAlias:ramp", __rampAliasForSplines )
