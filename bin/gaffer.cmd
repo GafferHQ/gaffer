@@ -13,7 +13,7 @@ set PYTHONHOME=%~dp0%..
 if "%GAFFER_DEBUG%" NEQ "" (
 	%GAFFER_DEBUGGER% "%PYTHONHOME%"\bin\python.exe "%PYTHONHOME%"/bin/_gaffer.py %*
 ) else (
-	"%PYTHONHOME%"\bin\python.exe "%PYTHONHOME%"/bin/_gaffer.py %*
+	"%PYTHONHOME%"\bin\gafferExecutable.exe "%PYTHONHOME%"/bin/_gaffer.py %*
 )
 
 endlocal
