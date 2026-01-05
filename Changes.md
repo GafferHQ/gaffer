@@ -8,6 +8,19 @@ Improvements
 - LightEditor : Added column for Arnold 7.4.4.0's new `sampling_mode` parameter.
 - ArnoldShader : Moved Arnold 7.4.4.0's new `standard_hair.scattering_mode` parameter to the "Specular" section of the UI.
 - ArnoldImager : Added activators for Arnold 7.4.4.0's new `lens_effects` imager parameters.
+- ShaderTweaks :
+  - Improved SceneInspector integration :
+    - Dragging a parameter name or value from the SceneInspector now creates a tweak containing both the parameter name and value.
+    - Multiple parameter names and/or values can be dragged to create multiple tweaks.
+    - Parameters dragged from non-terminal shaders create tweaks that include the shader name to correctly identify the parameter.
+  - Added array parameter types to the tweak creation menu.
+- PlugCreationWidget : User defaults are now applied to newly created `TweakPlug.mode` plugs.
+
+Fixes
+-----
+
+- SceneInspector : Fixed `draggedParameters()` method to include the shader handle where necessary.
+- PlugValueWidget : The widget's context is now scoped before emitting `popupMenuSignal()`.
 
 Fixes
 -----
