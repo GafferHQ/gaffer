@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- RenderMan : Added support for RenderMan 27.1.
 - ArnoldLight : Moved Arnold 7.4.4.0's new `sampling_mode` parameter to the "Sampling" section of the UI.
 - LightEditor : Added column for Arnold 7.4.4.0's new `sampling_mode` parameter.
 - ArnoldShader : Moved Arnold 7.4.4.0's new `standard_hair.scattering_mode` parameter to the "Specular" section of the UI.
