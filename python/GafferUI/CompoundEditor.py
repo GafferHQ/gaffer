@@ -175,7 +175,7 @@ class CompoundEditor( GafferUI.Editor ) :
 	def _createDetachedPanel( self, *args, **kwargs ) :
 
 		panel = _DetachedPanel( self,  *args, **kwargs )
-		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.parent()._removeDetachedPanel( w ), scoped = True )
+		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.compoundEditor()._removeDetachedPanel( w ), scoped = True )
 		panel.keyPressSignal().connect( CompoundEditor.__keyPress )
 
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
@@ -185,6 +185,7 @@ class CompoundEditor( GafferUI.Editor ) :
 			panel.__titleChangedConnection = scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ), scoped = True )
 			# It's not directly in the qt hierarchy so shortcut events don't make it to the MenuBar
 			scriptWindow.menuBar().addShortcutTarget( panel )
+			scriptWindow.addChildWindow( panel, removeOnClose = True )
 
 		self.__detachedPanels.append( panel )
 		return panel
@@ -194,9 +195,8 @@ class CompoundEditor( GafferUI.Editor ) :
 		self.__detachedPanels.remove( panel )
 		panel.__removeOnCloseConnection = None
 		panel.__titleChangedConnection = None
-		panel._applyVisibility()
+		panel.close()
 
-		assert( not panel.visible() )
 		GafferUI.WidgetAlgo.keepUntilIdle( panel )
 
 	def __visibilityChanged(self, widget) :
@@ -212,6 +212,7 @@ class CompoundEditor( GafferUI.Editor ) :
 		if scriptWindow is not None :
 			for panel in self._detachedPanels() :
 				scriptWindow.menuBar().addShortcutTarget( panel )
+				scriptWindow.addChildWindow( panel, removeOnClose = True )
 
 	def __repr__( self ) :
 
@@ -434,6 +435,22 @@ class CompoundEditor( GafferUI.Editor ) :
 # > base classes but instead using a has-a relationship. We could also move
 # > the keypress handling out of CompoundEditor.
 
+# Utility to find the owning CompoundEditor for any widget. This is complicated
+# slightly by the fact that _DetachedPanels are parented to the ScriptWindow
+# rather than the CompoundEditor.
+## \todo Perhaps it makes sense for all of CompoundEditor to be subsumed into
+# ScriptWindow, so they are one and the same?
+def _owningCompoundEditor( widget ) :
+
+	while widget is not None :
+		if isinstance( widget, CompoundEditor ) :
+			return widget
+		elif isinstance( widget, _DetachedPanel ) :
+			return widget.compoundEditor()
+		widget = widget.parent()
+
+	return None
+
 # The internal class used to allow hierarchical splitting of the layout.
 class _SplitContainer( GafferUI.SplitContainer ) :
 
@@ -598,7 +615,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	def addEditor( self, nameOrEditor ) :
 
 		if isinstance( nameOrEditor, str ) :
-			editor = GafferUI.Editor.create( nameOrEditor, self.ancestor( CompoundEditor ).scriptNode() )
+			editor = GafferUI.Editor.create( nameOrEditor, _owningCompoundEditor( self ).scriptNode() )
 		else :
 			editor = nameOrEditor
 
@@ -677,7 +694,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		m = IECore.MenuDefinition()
 
-		layouts = GafferUI.Layouts.acquire( self.ancestor( CompoundEditor ).scriptNode().applicationRoot() )
+		layouts = GafferUI.Layouts.acquire( _owningCompoundEditor( self ).scriptNode().applicationRoot() )
 		for c in sorted( layouts.registeredEditors() ) :
 			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : functools.partial( Gaffer.WeakMethod( self.addEditor ), c ) } )
 
@@ -819,7 +836,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		editor = self.getCurrent() if index is None else self[ index ]
 
-		window = self.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
+		window = _owningCompoundEditor( self )._createDetachedPanel()
 		self.__matchWindowToWidget( window, editor, 10 )
 
 		self.removeEditor( editor )
@@ -833,7 +850,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		# collapsed our old parent split container and won't be able to find them
 		splitContainer = self.ancestor( _SplitContainer )
 
-		window = self.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
+		window = _owningCompoundEditor( self )._createDetachedPanel()
 		self.__matchWindowToWidget( window, splitContainer, 10 )
 
 		# We must join the parent or we end up with nested split containers in the hierarchy
@@ -879,7 +896,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 # configuration is exposed.
 class _DetachedPanel( GafferUI.Window ) :
 
-	def __init__( self, parentEditor, children = None, windowState = None ) :
+	def __init__( self, compoundEditor, children = None, windowState = None ) :
 
 		GafferUI.Window.__init__( self )
 
@@ -887,22 +904,16 @@ class _DetachedPanel( GafferUI.Window ) :
 		self.__splitContainer.append( _TabbedContainer() )
 		self.setChild( self.__splitContainer )
 
-		# @see parent() As we can't be moved between CompoundEditors
-		# (scriptNode references in editors will be wrong), we don't need
-		# accessors for this.
-		self.__parentEditor = weakref.ref( parentEditor )
+		self.__compoundEditor = weakref.ref( compoundEditor )
 
 		self.__splitContainer.restoreChildren( children )
 
 		self.__windowState = windowState or {}
 
-	## As were technically not in the Qt hierarchy, but do want to be logically
-	# owned by a CompoundEditor, we re-implement this to re-direct ancestor
-	# calls to which ever editor we were added to (CompoundEditor fills this
-	# in for us when we're constructed).
-	def parent( self ) :
+	# The CompoundEditor this panel belongs to.
+	def compoundEditor( self ) :
 
-		return self.__parentEditor() if self.__parentEditor else None
+		return self.__compoundEditor()
 
 	def editors( self, type = GafferUI.Editor ) :
 
@@ -1133,7 +1144,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 				oldSize = self.__draggedTab._qtWidget().rect()
 
-				window = sourceContainer.ancestor( GafferUI.CompoundEditor )._createDetachedPanel()
+				window = _owningCompoundEditor( sourceContainer )._createDetachedPanel()
 
 				# We have to add the editor early so we can work out the center of
 				# the tab header widget otherwise it has no parent so no tab bar...
@@ -1355,8 +1366,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 	def __removeDetachedPanelIfEmpty( detachedPanel ) :
 
 		if detachedPanel and detachedPanel.isEmpty() :
-			parentEditor = detachedPanel.ancestor( CompoundEditor )
-			parentEditor._removeDetachedPanel( detachedPanel )
+			_owningCompoundEditor( detachedPanel )._removeDetachedPanel( detachedPanel )
 
 	@staticmethod
 	def __tryToRaiseWindow( qWindow ) :

@@ -103,6 +103,42 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( wp(), None )
 
+	def testDetachedPanelInheritsDisplayTransform( self ) :
+
+		class CapturingEditor( GafferUI.Editor ) :
+
+			def __init__( self, scriptNode, **kw ) :
+
+				GafferUI.Editor.__init__( self, GafferUI.Label(), scriptNode, **kw )
+				self.displayTransformChanges = []
+
+			def _displayTransformChanged( self ) :
+
+				GafferUI.Editor._displayTransformChanged( self )
+				self.displayTransformChanges.append( self.displayTransform() )
+
+		displayTransform1 = lambda x : x * 1
+		displayTransform2 = lambda x : x * 2
+
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.CompoundEditor( script )
+		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+		scriptWindow.setDisplayTransform( displayTransform1 )
+		scriptWindow.setLayout( editor )
+		self.assertIs( editor.displayTransform(), displayTransform1 )
+
+		panel = editor._createDetachedPanel()
+		capturingEditor = CapturingEditor( script )
+		panel.addEditor( capturingEditor )
+		self.assertIs( panel.displayTransform(), displayTransform1 )
+		self.assertIs( capturingEditor.displayTransform(), displayTransform1 )
+
+		scriptWindow.setDisplayTransform( displayTransform2 )
+		self.assertIs( editor.displayTransform(), displayTransform2 )
+		self.assertIs( panel.displayTransform(), displayTransform2 )
+		self.assertIs( capturingEditor.displayTransform(), displayTransform2 )
+		self.assertEqual( capturingEditor.displayTransformChanges, [ displayTransform2 ] )
+
 	def testReprLifetime( self ) :
 
 		s = Gaffer.ScriptNode()
