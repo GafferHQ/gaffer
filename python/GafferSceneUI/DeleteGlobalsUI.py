@@ -107,9 +107,8 @@ def __namesPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug != node["names"] :
 		return
 
-	with plugValueWidget.context() :
-		globals = node["in"]["globals"].getValue()
-		currentNames = set( node["names"].getValue().split() )
+	globals = node["in"]["globals"].getValue()
+	currentNames = set( node["names"].getValue().split() )
 
 	prefix = node._namePrefix()
 	names = [ n for n in globals.keys() if n.startswith( prefix ) ]

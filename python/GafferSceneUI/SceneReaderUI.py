@@ -154,8 +154,7 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 		return
 	sceneTags = sorted( [ str( tag ) for tag in sceneTags ] )
 
-	with plugValueWidget.context() :
-		currentTags = plug.getValue().split()
+	currentTags = plug.getValue().split()
 
 	menuDefinition.prepend( "/TagsDivider", { "divider" : True } )
 

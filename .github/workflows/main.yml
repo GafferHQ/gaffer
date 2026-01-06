@@ -99,6 +99,10 @@ jobs:
       # The MAC address is required by our RenderMan license. The `--privileged`
       # option is needed to run docker containers inside the main docker container.
       options: --mac-address a4:bb:6d:cf:40:7a --privileged
+      volumes:
+        # Mount the `/usr` directory from the host so we can clean it up
+        # in "Install toolchain (Linux)".
+        - /usr:/hostVolume/usr
 
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
@@ -134,8 +138,12 @@ jobs:
 
     - name: Install toolchain (Linux)
       run: |
+        # Clear space on runner by deleting stuff we don't need from the host VM.
+        rm -rf /hostVolume/usr/lib/jvm /hostVolume/usr/local/lib/android
+        # Set up an X server and window manager.
         Xvfb :99 -screen 0 1280x1024x24 &
         metacity --display :99.0 &
+        # Create user used for running tests.
         useradd -m testUser
         # The Docker container configures bash shells such that they enable the
         # software collections we want. If we could set GitHub's
@@ -302,6 +310,30 @@ jobs:
       # can't run RenderMan in our Rocky 8 build container, which was carefully
       # chosen to provide a conforming glibc version. So, to test RenderMan 27,
       # we must run in a Rocky 9 container.
+      run: |
+        podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
+        df -H
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' && matrix.name != 'linux-gcc11-platform23' }}
+
+    - name: Install RenderMan 27.1
+      run: |
+        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
+        ./.github/workflows/main/installRenderMan.py --version 27.1 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+
+    - name: Build against RenderMan 27.1
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Test against RenderMan 27.1
       run: |
         podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
         df -H

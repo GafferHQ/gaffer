@@ -23,21 +23,42 @@ Breaking Changes
 - UserPlugs : Removed - use `PlugCreationWidget` instead.
 - CompoundDataPlugValueWidget : Removed. LayoutPlugValueWidget and PlugCreationWidget replace all previous functionality.
 
-1.6.x.x (relative to 1.6.7.0)
+1.6.x.x (relative to 1.6.8.0)
+=======
+
+
+
+1.6.8.0 (relative to 1.6.7.0)
 =======
 
 Improvements
 ------------
 
+- RenderMan :
+  - Added support for RenderMan 27.1.
+  - Added overscan support.
 - ArnoldLight : Moved Arnold 7.4.4.0's new `sampling_mode` parameter to the "Sampling" section of the UI.
 - LightEditor : Added column for Arnold 7.4.4.0's new `sampling_mode` parameter.
 - ArnoldShader : Moved Arnold 7.4.4.0's new `standard_hair.scattering_mode` parameter to the "Specular" section of the UI.
 - ArnoldImager : Added activators for Arnold 7.4.4.0's new `lens_effects` imager parameters.
+- ShaderTweaks :
+  - Improved SceneInspector integration :
+    - Dragging a parameter name or value from the SceneInspector now creates a tweak containing both the parameter name and value.
+    - Multiple parameter names and/or values can be dragged to create multiple tweaks.
+    - Parameters dragged from non-terminal shaders create tweaks that include the shader name to correctly identify the parameter.
+  - Added array parameter types to the tweak creation menu.
+- PlugCreationWidget : User defaults are now applied to newly created `TweakPlug.mode` plugs.
+- OSLShader : Added forward compatibility for spline parameters saved from Gaffer 1.7.
 
 Fixes
 -----
 
-- SceneInspector : Fixed cell background colour updates when changing EditScope.
+- SceneInspector :
+  - Fixed `draggedParameters()` method to include the shader handle where necessary.
+  - Fixed cell background colour updates when changing EditScope.
+- PlugValueWidget : The widget's context is now scoped before emitting `popupMenuSignal()`.
+- AttributeEditor, SceneInspector : Fixed bug preventing edits from being created in an EditScope for attributes with `.` characters in their name.
+- RenderMan : Fixed crop window bugs when rendering with XPU (#6727).
 
 1.6.7.0 (relative to 1.6.6.1)
 =======

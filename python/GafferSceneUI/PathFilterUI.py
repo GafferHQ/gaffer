@@ -202,24 +202,23 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	scenes = []
 	pathMatcher = None
-	with plugValueWidget.context() :
-		pathFilter = _destinationPathFilter( plug )
+	pathFilter = _destinationPathFilter( plug )
+	if pathFilter is not None :
+		pathMatcher = IECore.PathMatcher( plug.getValue() )
+		scenes = _filteredScenes( pathFilter )
+	elif plug == rowPlug["name"] and spreadsheet["selector"].getValue() == "${scene:path}" :
+		pathMatcher = IECore.PathMatcher( [ plug.getValue() ] )
+		pathFilter = _destinationPathFilter( spreadsheet["enabledRowNames"] )
 		if pathFilter is not None :
-			pathMatcher = IECore.PathMatcher( plug.getValue() )
 			scenes = _filteredScenes( pathFilter )
-		elif plug == rowPlug["name"] and spreadsheet["selector"].getValue() == "${scene:path}" :
-			pathMatcher = IECore.PathMatcher( [ plug.getValue() ] )
-			pathFilter = _destinationPathFilter( spreadsheet["enabledRowNames"] )
-			if pathFilter is not None :
-				scenes = _filteredScenes( pathFilter )
-			else :
-				for output in spreadsheet["out"] :
-					scene = Gaffer.PlugAlgo.findDestination(
-						output,
-						lambda plug : plug.node()["out"] if isinstance( plug.node(), GafferScene.SceneNode ) else None
-					)
-					if scene is not None :
-						scenes = [ scene ]
+		else :
+			for output in spreadsheet["out"] :
+				scene = Gaffer.PlugAlgo.findDestination(
+					output,
+					lambda plug : plug.node()["out"] if isinstance( plug.node(), GafferScene.SceneNode ) else None
+				)
+				if scene is not None :
+					scenes = [ scene ]
 
 	if pathMatcher is None or len( scenes ) == 0 :
 		return
