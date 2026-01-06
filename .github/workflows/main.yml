@@ -300,6 +300,30 @@ jobs:
         df -H
       if: ${{ env.RMANTREE != '' && runner.os != 'Windows' && matrix.name != 'linux-gcc11-platform23' }}
 
+    - name: Install RenderMan 27.1
+      run: |
+        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
+        ./.github/workflows/main/installRenderMan.py --version 27.1 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+
+    - name: Build against RenderMan 27.1
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Test against RenderMan 27.1
+      run: |
+        podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
+        df -H
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' && matrix.name != 'linux-gcc11-platform23' }}
+
     - name: Build Docs and Package
       # Docs builds should be relatively quick. If there is a problem, this
       # aborts them in a more timely fashion than the default 6hr timeout.

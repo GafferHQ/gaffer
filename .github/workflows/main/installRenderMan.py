@@ -47,7 +47,7 @@ parser.add_argument(
 	"--version",
 	help = "The version of RenderMan to install.",
 	default = "26.3",
-	choices = [ "26.3", "27.0" ],
+	choices = [ "26.3", "27.0", "27.1" ],
 )
 parser.add_argument(
 	"--outputFormat",
@@ -86,6 +86,8 @@ fileId, distId = {
 	"26.3-nt" : ( "12544", "4483"),
 	"27.0-posix" : ( "12607", "4492"),
 	"27.0-nt" : ( "12604", "4492"),
+	"27.1-posix" : ( "12718", "4518"),
+	"27.1-nt" : ( "12716", "4518"),
 }[f"{args.version}-{os.name}"]
 
 fileName = "RenderMan.msi" if os.name == "nt" else "RenderMan.rpm"
@@ -123,8 +125,12 @@ if os.name == "nt" :
 
 else :
 
+	# The `--force` flag is necessary because RenderMan 27.1 contains files in
+	# `/usr/lib/.build-id` that conflict with RenderMan 27.0. These files are
+	# outside RMANTREE though so we can safely ignore the conflict as it doesn't
+	# impact our builds.
 	subprocess.check_call(
-		[ "rpm", "-i", fileName ]
+		[ "rpm", "-i", "--force", fileName ]
 	)
 
 	installLocation = pathlib.Path( f"/opt/pixar/RenderManProServer-{args.version}" )
