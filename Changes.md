@@ -16,6 +16,7 @@ Improvements
     - Parameters dragged from non-terminal shaders create tweaks that include the shader name to correctly identify the parameter.
   - Added array parameter types to the tweak creation menu.
 - PlugCreationWidget : User defaults are now applied to newly created `TweakPlug.mode` plugs.
+- OSLShader : Added forward compatibility for spline parameters saved from Gaffer 1.7.
 
 Fixes
 -----
