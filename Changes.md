@@ -4,12 +4,13 @@
 Improvements
 ------------
 
-- RenderMan : Added support for RenderMan 27.1.
+- RenderMan :
+  - Added support for RenderMan 27.1.
+  - Added overscan support.
 - ArnoldLight : Moved Arnold 7.4.4.0's new `sampling_mode` parameter to the "Sampling" section of the UI.
 - LightEditor : Added column for Arnold 7.4.4.0's new `sampling_mode` parameter.
 - ArnoldShader : Moved Arnold 7.4.4.0's new `standard_hair.scattering_mode` parameter to the "Specular" section of the UI.
 - ArnoldImager : Added activators for Arnold 7.4.4.0's new `lens_effects` imager parameters.
-- RenderMan : Added overscan support.
 - ShaderTweaks :
   - Improved SceneInspector integration :
     - Dragging a parameter name or value from the SceneInspector now creates a tweak containing both the parameter name and value.
@@ -22,13 +23,10 @@ Improvements
 Fixes
 -----
 
-- SceneInspector : Fixed `draggedParameters()` method to include the shader handle where necessary.
+- SceneInspector :
+  - Fixed `draggedParameters()` method to include the shader handle where necessary.
+  - Fixed cell background colour updates when changing EditScope.
 - PlugValueWidget : The widget's context is now scoped before emitting `popupMenuSignal()`.
-
-Fixes
------
-
-- SceneInspector : Fixed cell background colour updates when changing EditScope.
 - AttributeEditor, SceneInspector : Fixed bug preventing edits from being created in an EditScope for attributes with `.` characters in their name.
 - RenderMan : Fixed crop window bugs when rendering with XPU (#6727).
 
