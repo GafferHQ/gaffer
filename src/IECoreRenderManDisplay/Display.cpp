@@ -449,7 +449,7 @@ struct IEDisplay : public display::Display
 {
 
 	IEDisplay( const pxrcore::ParamList &paramList, const pxrcore::ParamList &metadata )
-		:	m_parameters( new CompoundData() )
+		:	m_parameters( new CompoundData() ), m_driverOutOfDate( true )
 	{
 		// Convert parameter list into the form needed by `IECoreImage::DisplayDriver::create()`.
 		pxrcore::ParamList::ParamInfo paramInfo;
@@ -496,78 +496,58 @@ struct IEDisplay : public display::Display
 		const pxrcore::ParamList &params
 	) override
 	{
-		// Create an `IECoreImage::DisplayDriver` with the appropriate number of channels,
-		// and fill `m_channelPointers` with the source data to copy each channel from in
-		// `Notify()`.
-		try
+		// Store the channel names, channel pointers, and buffer width, so that we will know how intepret
+		// the data when we receive a buffer update.
+		m_bufferWidth = width;
+
+		m_channelNames.clear();
+		m_channelPointers.clear();
+
+		m_driverOutOfDate = true;
+
+		for( size_t outputIndex = 0; outputIndex < noutputs; ++outputIndex )
 		{
-			m_channelPointers.clear();
-
-			if( m_driver )
+			const display::RenderOutput &output = outputs[outputIndex];
+			if( output.nelems == 1 )
 			{
-				m_driver->imageClose();
+				std::string baseName = output.displayName.CStr();
+				if( baseName == "a" ) baseName = "A";
+				else if( baseName == "z" ) baseName = "Z";
+				m_channelNames.push_back( baseName );
 			}
-
-			std::vector<std::string> channelNames;
-			for( size_t outputIndex = 0; outputIndex < noutputs; ++outputIndex )
+			else
 			{
-				const display::RenderOutput &output = outputs[outputIndex];
-				if( output.nelems == 1 )
+				string layerName = output.displayName.CStr();
+				if( layerName == "Ci" )
 				{
-					std::string baseName = output.displayName.CStr();
-					if( baseName == "a" ) baseName = "A";
-					else if( baseName == "z" ) baseName = "Z";
-					channelNames.push_back( baseName );
+					layerName = "";
 				}
-				else
+				for( uint8_t elementIndex = 0; elementIndex < output.nelems; elementIndex++ )
 				{
-					string layerName = output.displayName.CStr();
-					if( layerName == "Ci" )
-					{
-						layerName = "";
-					}
-					for( uint8_t elementIndex = 0; elementIndex < output.nelems; elementIndex++ )
-					{
-						std::string baseName = output.displaySuffix[elementIndex].CStr();
-						if( baseName == "r" ) baseName = "R";
-						else if( baseName == "g" ) baseName = "G";
-						else if( baseName == "b" ) baseName = "B";
+					std::string baseName = output.displaySuffix[elementIndex].CStr();
+					if( baseName == "r" ) baseName = "R";
+					else if( baseName == "g" ) baseName = "G";
+					else if( baseName == "b" ) baseName = "B";
 
-						if( layerName.empty() )
-						{
-							channelNames.push_back( baseName );
-						}
-						else
-						{
-							channelNames.push_back( layerName + "." + baseName );
-						}
+					if( layerName.empty() )
+					{
+						m_channelNames.push_back( baseName );
+					}
+					else
+					{
+						m_channelNames.push_back( layerName + "." + baseName );
 					}
 				}
-
-				const float *channelPointer = reinterpret_cast<const float *>( static_cast<const std::byte *>( srfaddr ) + offsets[outputIndex] );
-				for( size_t element = 0; element < output.nelems; ++element )
-				{
-					m_channelPointers.push_back( channelPointer );
-					channelPointer += width * height;
-				}
 			}
 
-			m_displayWindow = Box2i( V2i( 0 ), V2i( width - 1, height - 1 ) );
-			m_dataWindow = m_displayWindow;
-			if( const auto cropWindow = m_parameters->member<IntVectorData>( "CropWindow" ) )
+			const float *channelPointer = reinterpret_cast<const float *>( static_cast<const std::byte *>( srfaddr ) + offsets[outputIndex] );
+			for( size_t element = 0; element < output.nelems; ++element )
 			{
-				m_dataWindow.min = V2i( cropWindow->readable()[0], cropWindow->readable()[1] );
-				m_dataWindow.max = V2i( cropWindow->readable()[2], cropWindow->readable()[3] );
+				m_channelPointers.push_back( channelPointer );
+				channelPointer += width * height;
 			}
+		}
 
-			const StringData *driverType = m_parameters->member<StringData>( "driverType", /* throwIfMissing = */ true );
-			m_driver = IECoreImage::DisplayDriver::create( driverType->readable(), m_displayWindow, m_dataWindow, channelNames, m_parameters );
-		}
-		catch( const std::exception &e )
-		{
-			IECore::msg( IECore::Msg::Error, "IEDisplay", e.what() );
-			return false;
-		}
 		return true;
 	}
 
@@ -583,12 +563,54 @@ struct IEDisplay : public display::Display
 				return;
 			}
 
-			const size_t width = m_dataWindow.size().x + 1;
-			const size_t height = m_dataWindow.size().y + 1 ;
+			static const pxrcore::UString originalSizeName( "OriginalSize" );
+			static const pxrcore::UString originName( "origin" );
+			static const pxrcore::UString cropWindowName( "CropWindow" );
+
+			const int *origSize = metadata.GetIntegerArray( originalSizeName, 2 );
+			const int *origin = metadata.GetIntegerArray( originName, 2 );
+			const int *cropWindow = metadata.GetIntegerArray( cropWindowName, 4 );
+
+			if( !( origSize && origin && cropWindow ) )
+			{
+				IECore::msg( IECore::Msg::Error, "IEDisplay", "A built-in RenderMan param was not provided to IEDisplay - this suggests the RenderMan API has changed, and IEDisplay needs updating" );
+				return;
+			}
+
+			Box2i displayWindow = Box2i( V2i( 0 ), V2i( origSize[0] - 1, origSize[1] - 1 ) );
+			Box2i newDataWindow( V2i( cropWindow[0], cropWindow[1] ), V2i( cropWindow[2], cropWindow[3] ) );
+
+			if( newDataWindow != m_dataWindow )
+			{
+				m_driverOutOfDate = true;
+				m_dataWindow = newDataWindow;
+			}
+
+			if( m_driverOutOfDate || !m_driver )
+			{
+				// We hold the old driver until after creating the new driver, which allows
+				// the catalogue to recognize that the driver matches, and should still be writing to the same
+				// catalogue image.
+				IECoreImage::DisplayDriverPtr oldDriver = m_driver;
+
+				const StringData *driverType = m_parameters->member<StringData>( "driverType", /* throwIfMissing = */ true );
+
+				m_driver = IECoreImage::DisplayDriver::create( driverType->readable(), displayWindow, m_dataWindow, m_channelNames, m_parameters );
+
+				if( oldDriver )
+				{
+					oldDriver->imageClose();
+				}
+
+				m_driverOutOfDate = false;
+			}
+
+			const size_t dataWidth = m_dataWindow.size().x + 1;
+			const size_t dataHeight = m_dataWindow.size().y + 1 ;
 			const size_t numChannels = m_channelPointers.size();
-			const size_t bufferSize = width * height *numChannels;
-			const size_t offset = m_dataWindow.min.y * ( m_displayWindow.size().x + 1 ) + m_dataWindow.min.x;
-			const size_t stride = m_displayWindow.size().x - m_dataWindow.size().x;
+			const size_t bufferSize = dataWidth * dataHeight * numChannels;
+			const size_t offset = ( m_dataWindow.min.y - origin[1] ) * m_bufferWidth + m_dataWindow.min.x - origin[0];
+			const size_t skippedElementsPerScanline = m_bufferWidth - dataWidth;
 
 			std::unique_ptr<float[]> buffer( new float[bufferSize] );
 
@@ -596,14 +618,14 @@ struct IEDisplay : public display::Display
 			{
 				float *out = buffer.get() + channelIndex;
 				const float *in = m_channelPointers[channelIndex] + offset;
-				for( size_t y = 0; y < height; ++y )
+				for( size_t y = 0; y < dataHeight; ++y )
 				{
-					for( size_t x = 0; x < width; ++x )
+					for( size_t x = 0; x < dataWidth; ++x )
 					{
 						*out = *in++;
 						out += numChannels;
 					}
-					in += stride;
+					in += skippedElementsPerScanline;
 				}
 			}
 
@@ -619,7 +641,11 @@ struct IEDisplay : public display::Display
 	{
 		try
 		{
-			m_driver->imageClose();
+			// \todo - seems odd that the destructor of DisplayDriver doesn't take care of calling imageClose()?
+			if( m_driver )
+			{
+				m_driver->imageClose();
+			}
 			m_driver = nullptr;
 		}
 		catch( const std::exception &e )
@@ -631,9 +657,11 @@ struct IEDisplay : public display::Display
 	private :
 
 		CompoundDataPtr m_parameters;
-		Box2i m_displayWindow;
 		Box2i m_dataWindow;
+		size_t m_bufferWidth;
+		bool m_driverOutOfDate;
 		IECoreImage::DisplayDriverPtr m_driver;
+		vector<std::string> m_channelNames;
 		vector<const float *> m_channelPointers;
 
 };
