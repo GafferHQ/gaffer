@@ -221,7 +221,6 @@ from .NodeMenu import NodeMenu
 from . import FileMenu
 from . import LayoutMenu
 from . import EditMenu
-from . import UserPlugs
 from .Frame import Frame
 from .CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from .BoxPlugValueWidget import BoxPlugValueWidget
@@ -242,7 +241,7 @@ from .PresetsPlugValueWidget import PresetsPlugValueWidget
 from .GraphComponentBrowserMode import GraphComponentBrowserMode
 from .ToolPlugValueWidget import ToolPlugValueWidget
 from .LabelPlugValueWidget import LabelPlugValueWidget
-from .CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
+from . import CompoundDataPlugUI
 from .LayoutPlugValueWidget import LayoutPlugValueWidget
 from . import ScriptNodeUI
 from .RefreshPlugValueWidget import RefreshPlugValueWidget

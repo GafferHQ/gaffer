@@ -84,6 +84,12 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"outputs.*.parameters" : {
+
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
+
+		},
+
 		"outputs.*.parameters.quantize.value" : {
 
 			"description" :
@@ -261,7 +267,7 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.PlugWidget( self.getPlug()["fileName"] )
 				GafferUI.PlugWidget( self.getPlug()["type"] )
 				GafferUI.PlugWidget( self.getPlug()["data"] )
-				GafferUI.CompoundDataPlugValueWidget( self.getPlug()["parameters"] )
+				GafferUI.PlugValueWidget.create( self.getPlug()["parameters"] )
 				GafferUI.Divider( GafferUI.Divider.Orientation.Horizontal )
 
 		self.__detailsColumn.setVisible( visible )
