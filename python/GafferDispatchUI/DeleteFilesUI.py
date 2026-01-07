@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,24 +34,42 @@
 #
 ##########################################################################
 
-__import__( "GafferUI" )
+import Gaffer
+import GafferDispatch
 
-from . import DispatcherUI
-from .DispatchDialogue import DispatchDialogue
-from . import LocalDispatcherUI
-from . import TaskNodeUI
-from . import SystemCommandUI
-from . import TaskListUI
-from . import TaskContextProcessorUI
-from . import WedgeUI
-from . import TaskContextVariablesUI
-from . import TaskSwitchUI
-from . import PythonCommandUI
-from . import FrameMaskUI
-from .LocalJobs import LocalJobs
-from . import FileListUI
-from . import DeleteFilesUI
-from . import CopyFilesUI
-from . import RenameFilesUI
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )
+	GafferDispatch.DeleteFiles,
+
+	"description",
+	"""
+	Deletes files from the filesystem.
+	""",
+
+	plugs = {
+
+		"files" : {
+
+			"description" :
+			"""
+			The files to be deleted. It is common for this to be driven
+			by a FileList node.
+			""",
+
+			"ui:acceptsFileList" : True,
+
+		},
+
+		"deleteDirectories" : {
+
+			"description" :
+			"""
+			Enables deletion of non-empty directories. Defaults off, as a
+			safeguard against accidental deletion of large amounts of data.
+			""",
+
+		},
+
+	},
+
+)
