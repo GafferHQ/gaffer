@@ -132,12 +132,13 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		panel.addEditor( capturingEditor )
 		self.assertIs( panel.displayTransform(), displayTransform1 )
 		self.assertIs( capturingEditor.displayTransform(), displayTransform1 )
+		self.assertEqual( capturingEditor.displayTransformChanges, [ displayTransform1 ] )
 
 		scriptWindow.setDisplayTransform( displayTransform2 )
 		self.assertIs( editor.displayTransform(), displayTransform2 )
 		self.assertIs( panel.displayTransform(), displayTransform2 )
 		self.assertIs( capturingEditor.displayTransform(), displayTransform2 )
-		self.assertEqual( capturingEditor.displayTransformChanges, [ displayTransform2 ] )
+		self.assertEqual( capturingEditor.displayTransformChanges, [ displayTransform1, displayTransform2 ] )
 
 	def testReprLifetime( self ) :
 
