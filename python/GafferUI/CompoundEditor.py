@@ -526,17 +526,14 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 
 		container[0].addEditor( editor )
 
-	def serialiseChildren( self, scriptNode = None ) :
-
-		if not scriptNode :
-			scriptNode = self.ancestor( GafferUI.CompoundEditor ).scriptNode()
+	def serialiseChildren( self ) :
 
 		if self.isSplit() :
 			sizes = self.getSizes()
 			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
 			return "( GafferUI.SplitContainer.{}, {}, ( {}, {} ) )".format(
 				str( self.getOrientation() ), splitPosition,
-				self[0].serialiseChildren( scriptNode ), self[1].serialiseChildren( scriptNode )
+				self[0].serialiseChildren(), self[1].serialiseChildren()
 			)
 		else :
 			# not split - a tabbed container full of editors
