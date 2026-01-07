@@ -7,6 +7,7 @@ Fixes
 - Layouts (#4197) :
   - Stopped detached panels appearing separately in window manager task bars and tab switchers.
   - Detached panels now minimise and raise as a group with the main window.
+  - Fixed window title for detached panels. It is now always synchronised with the title of the main window.
 - OpenColorIO : Fixed display transform used by editors in detached panels. This problem was particularly noticeable in the LightEditor.
 
 1.6.8.0 (relative to 1.6.7.0)

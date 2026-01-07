@@ -180,11 +180,6 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow :
-			panel.setTitle( scriptWindow.getTitle() )
-			weakSetTitle = Gaffer.WeakMethod( panel.setTitle )
-			panel.__titleChangedConnection = scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ), scoped = True )
-			# It's not directly in the qt hierarchy so shortcut events don't make it to the MenuBar
-			scriptWindow.menuBar().addShortcutTarget( panel )
 			scriptWindow.addChildWindow( panel, removeOnClose = True )
 
 		self.__detachedPanels.append( panel )
@@ -194,7 +189,6 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		self.__detachedPanels.remove( panel )
 		panel.__removeOnCloseConnection = None
-		panel.__titleChangedConnection = None
 		panel.close()
 
 		GafferUI.WidgetAlgo.keepUntilIdle( panel )
@@ -207,11 +201,11 @@ class CompoundEditor( GafferUI.Editor ) :
 
 	def __parentChanged( self, widget ) :
 
-		# Make sure we have the correct keyboard shortcut listeners
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow is not None :
+			# If we created any detached panels before we were
+			# in a ScriptWindow, add them to the ScriptWindow now.
 			for panel in self._detachedPanels() :
-				scriptWindow.menuBar().addShortcutTarget( panel )
 				scriptWindow.addChildWindow( panel, removeOnClose = True )
 
 	def __repr__( self ) :
@@ -907,6 +901,8 @@ class _DetachedPanel( GafferUI.Window ) :
 
 		self.__windowState = windowState or {}
 
+		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+
 	# The CompoundEditor this panel belongs to.
 	def compoundEditor( self ) :
 
@@ -952,6 +948,21 @@ class _DetachedPanel( GafferUI.Window ) :
 	# Required for editor path introspection
 	def _splitContainer( self ) :
 		return self.__splitContainer
+
+	def __parentChanged( self, widget ) :
+
+		if self.parent() is None :
+			return
+
+		assert( isinstance( self.parent(), GafferUI.ScriptWindow ) )
+		self.setTitle( self.parent().getTitle() )
+		self.parent().titleChangedSignal().connect( Gaffer.WeakMethod( self.__scriptWindowTitleChanged ) )
+		self.parent().menuBar().addShortcutTarget( self )
+
+	def __scriptWindowTitleChanged( self, window, title ) :
+
+		# Mirror the ScriptWindow's title onto our own.
+		self.setTitle( title )
 
 ## An internal eventFilter class managing all tab drag-drop events and logic.
 # Tab dragging is an exception and is implemented entirely using mouse-move
