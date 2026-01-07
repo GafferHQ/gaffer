@@ -1300,25 +1300,26 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __parentChange( self, qObject, qEvent ) :
 
+		widget = Widget._owner( qObject )
+		if isinstance( widget, ( GafferUI.Window, GafferUI.Editor ) ) :
+			# Strictly speaking, the reparenting of _any_ widget might require
+			# us to propagate display transform changes. But in practice we
+			# don't currently need that, and don't want to incur the expense
+			# either. So we just propagate changes when windows and editors
+			# are reparented.
+			parent = widget.parent()
+			if widget.getDisplayTransform() is None and parent is not None and parent.displayTransform() is not None :
+				widget._Widget__propagateDisplayTransformChange()
+
 		## \todo It might be nice to investigate having the
 		# the signature for this signal match that of
 		# GraphComponent::parentChangedSignal(), which takes
 		# an additional argument for the previous parent. We
 		# may be able to get the value for that from a
 		# ParentAboutToChange event.
-		widget = Widget._owner( qObject )
 		if widget._parentChangedSignal is not None :
 			widget._parentChangedSignal( widget )
 			return True
-
-		if isinstance( widget, GafferUI.Window ) :
-			# Strictly speaking, the reparenting of _any_ widget might require
-			# use to propagate display transform changes. But in practice we
-			# don't currently need that, and don't want to incure the expense
-			# either. So we just propagate changes when windows are reparented.
-			parent = widget.parent()
-			if widget.getDisplayTransform() is None and parent is not None and parent.displayTransform() is not None :
-				widget._Widget__propagateDisplayTransformChange()
 
 		return False
 
