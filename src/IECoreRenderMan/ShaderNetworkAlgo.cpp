@@ -69,83 +69,98 @@ using namespace IECoreRenderMan;
 namespace
 {
 
+struct ParameterInfo
+{
+	pxrcore::DataType type;
+};
+
 struct ShaderInfo
 {
 	riley::ShadingNode::Type type = riley::ShadingNode::Type::k_Invalid;
-	using ParameterTypeMap = std::unordered_map<RtUString, pxrcore::DataType>;
-	ParameterTypeMap parameterTypes;
+	using ParameterMap = std::unordered_map<InternedString, ParameterInfo>;
+	ParameterMap parameters;
+
+	const ParameterInfo *parameterInfo( InternedString parameterName ) const
+	{
+		auto it = parameters.find( parameterName );
+		return it != parameters.end() ? &it->second : nullptr;
+	}
 };
 
 using ConstShaderInfoPtr = std::shared_ptr<const ShaderInfo>;
 
-void loadParameterTypes( const boost::property_tree::ptree &tree, ShaderInfo::ParameterTypeMap &typeMap )
+void loadParameters( const boost::property_tree::ptree &tree, ShaderInfo::ParameterMap &parameterMap )
 {
 	for( const auto &child : tree )
 	{
 		if( child.first == "param" )
 		{
-			const RtUString name( child.second.get<string>( "<xmlattr>.name" ).c_str() );
+			const string name = child.second.get<string>( "<xmlattr>.name" );
 			const string type = child.second.get<string>( "<xmlattr>.type" );
+			ParameterInfo parameterInfo;
 			if( type == "int" )
 			{
-				typeMap[name] = pxrcore::DataType::k_integer;
+				parameterInfo.type = pxrcore::DataType::k_integer;
 			}
 			else if( type == "float" )
 			{
-				typeMap[name] = pxrcore::DataType::k_float;
+				parameterInfo.type = pxrcore::DataType::k_float;
 			}
 			else if( type == "color" )
 			{
-				typeMap[name] = pxrcore::DataType::k_color;
+				parameterInfo.type = pxrcore::DataType::k_color;
 			}
 			else if( type == "point" )
 			{
-				typeMap[name] = pxrcore::DataType::k_point;
+				parameterInfo.type = pxrcore::DataType::k_point;
 			}
 			else if( type == "vector" )
 			{
-				typeMap[name] = pxrcore::DataType::k_vector;
+				parameterInfo.type = pxrcore::DataType::k_vector;
 			}
 			else if( type == "normal" )
 			{
-				typeMap[name] = pxrcore::DataType::k_normal;
+				parameterInfo.type = pxrcore::DataType::k_normal;
 			}
 			else if( type == "matrix" )
 			{
-				typeMap[name] = pxrcore::DataType::k_matrix;
+				parameterInfo.type = pxrcore::DataType::k_matrix;
 			}
 			else if( type == "string" )
 			{
-				typeMap[name] = pxrcore::DataType::k_string;
+				parameterInfo.type = pxrcore::DataType::k_string;
 			}
 			else if( type == "bxdf" )
 			{
-				typeMap[name] = pxrcore::DataType::k_bxdf;
+				parameterInfo.type = pxrcore::DataType::k_bxdf;
 			}
 			else if( type == "lightfilter" )
 			{
-				typeMap[name] = pxrcore::DataType::k_lightfilter;
+				parameterInfo.type = pxrcore::DataType::k_lightfilter;
 			}
 			else if( type == "samplefilter" )
 			{
-				typeMap[name] = pxrcore::DataType::k_samplefilter;
+				parameterInfo.type = pxrcore::DataType::k_samplefilter;
 			}
 			else if( type == "displayfilter" )
 			{
-				typeMap[name] = pxrcore::DataType::k_displayfilter;
+				parameterInfo.type = pxrcore::DataType::k_displayfilter;
 			}
 			else if( type == "struct" )
 			{
-				typeMap[name] = pxrcore::DataType::k_struct;
+				parameterInfo.type = pxrcore::DataType::k_struct;
 			}
 			else
 			{
-				IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "Unknown type `{}` for parameter \"{}\".", type, name.CStr() ) );
+				IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "Unknown type `{}` for parameter \"{}\".", type, name ) );
+				continue;
 			}
+
+			parameterMap[name] = parameterInfo;
 		}
 		else if( child.first == "page" )
 		{
-			loadParameterTypes( child.second, typeMap );
+			loadParameters( child.second, parameterMap );
 		}
 	}
 }
@@ -201,7 +216,7 @@ ConstShaderInfoPtr shaderInfoFromArgsFile( const boost::filesystem::path file )
 
 	// Load parameters
 
-	loadParameterTypes( tree.get_child( "args" ), result->parameterTypes );
+	loadParameters( tree.get_child( "args" ), result->parameters );
 
 	return result;
 }
@@ -213,44 +228,45 @@ ConstShaderInfoPtr shaderInfoFromOSLQuery( OSL::OSLQuery &query )
 
 	for( const auto &parameter : query )
 	{
-		const RtUString name( parameter.name.c_str() );
 		OIIO::TypeDesc type = parameter.type;
 		type.unarray();
+
+		ParameterInfo parameterInfo;
 		if( type == OIIO::TypeInt )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_integer;
+			parameterInfo.type = pxrcore::DataType::k_integer;
 		}
 		else if( type == OIIO::TypeFloat )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_float;
+			parameterInfo.type = pxrcore::DataType::k_float;
 		}
 		else if( type == OIIO::TypeColor )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_color;
+			parameterInfo.type = pxrcore::DataType::k_color;
 		}
 		else if( type == OIIO::TypePoint )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_point;
+			parameterInfo.type = pxrcore::DataType::k_point;
 		}
 		else if( type == OIIO::TypeVector )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_vector;
+			parameterInfo.type = pxrcore::DataType::k_vector;
 		}
 		else if( type == OIIO::TypeNormal )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_normal;
+			parameterInfo.type = pxrcore::DataType::k_normal;
 		}
 		else if( type == OIIO::TypeMatrix44 )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_matrix;
+			parameterInfo.type = pxrcore::DataType::k_matrix;
 		}
 		else if( type == OIIO::TypeString )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_string;
+			parameterInfo.type = pxrcore::DataType::k_string;
 		}
 		else if( parameter.isstruct )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_struct;
+			parameterInfo.type = pxrcore::DataType::k_struct;
 		}
 		else
 		{
@@ -261,7 +277,10 @@ ConstShaderInfoPtr shaderInfoFromOSLQuery( OSL::OSLQuery &query )
 					parameter.type, parameter.name, query.shadername()
 				)
 			);
+			continue;
 		}
+
+		result->parameters[parameter.name.c_str()] = parameterInfo;
 	}
 
 	return result;
@@ -307,27 +326,27 @@ ShaderInfoCache g_shaderInfoCache(
 namespace
 {
 
-using ArrayConnections = std::unordered_map<RtUString, vector<RtUString>>;
+using ArrayConnections = std::unordered_map<InternedString, vector<RtUString>>;
 const std::regex g_arrayIndexRegex( R"((\w+)\[([0-9]+)\])" );
 
 void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection, const ShaderInfo *shaderInfo, RtParamList &paramList, ArrayConnections &arrayConnections )
 {
-	RtUString destination;
+	InternedString destination;
 	std::optional<size_t> destinationIndex;
 
 	std::smatch arrayIndexMatch;
 	if( std::regex_match( connection.destination.name.string(), arrayIndexMatch, g_arrayIndexRegex ) )
 	{
-		destination = RtUString( arrayIndexMatch.str( 1 ).c_str() );
+		destination = arrayIndexMatch.str( 1 ).c_str();
 		destinationIndex = std::stoi( arrayIndexMatch.str( 2 ) );
 	}
 	else
 	{
-		destination = RtUString( connection.destination.name.c_str() );
+		destination = connection.destination.name;
 	}
 
-	auto typeIt = shaderInfo->parameterTypes.find( destination );
-	if( typeIt == shaderInfo->parameterTypes.end() )
+	auto parameterInfo = shaderInfo->parameterInfo( destination );
+	if( !parameterInfo )
 	{
 		IECore::msg(
 			IECore::Msg::Warning, "IECoreRenderMan",
@@ -344,10 +363,10 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 		connection.source.name.string().size() &&
 		// Several node types don't have named outputs, and
 		// connections will silently fail if we include a name.
-		typeIt->second != pxrcore::DataType::k_displayfilter &&
-		typeIt->second != pxrcore::DataType::k_samplefilter &&
-		typeIt->second != pxrcore::DataType::k_bxdf &&
-		typeIt->second != pxrcore::DataType::k_lightfilter
+		parameterInfo->type != pxrcore::DataType::k_displayfilter &&
+		parameterInfo->type != pxrcore::DataType::k_samplefilter &&
+		parameterInfo->type != pxrcore::DataType::k_bxdf &&
+		parameterInfo->type != pxrcore::DataType::k_lightfilter
 	)
 	{
 		reference += ":" + connection.source.name.string();
@@ -357,8 +376,8 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 	if( !destinationIndex )
 	{
 		RtParamList::ParamInfo const info = {
-			destination,
-			typeIt->second,
+			RtUString( destination.c_str() ),
+			parameterInfo->type,
 			pxrcore::DetailType::k_reference,
 			1,
 			false,
@@ -427,8 +446,8 @@ void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, 
 	for( const auto &[destination, references] : arrayConnections )
 	{
 		RtParamList::ParamInfo const info = {
-			destination,
-			shaderInfo->parameterTypes.at( destination ),
+			RtUString( destination.c_str() ),
+			shaderInfo->parameters.at( destination ).type,
 			pxrcore::DetailType::k_reference,
 			(uint32_t)references.size(),
 			true,
