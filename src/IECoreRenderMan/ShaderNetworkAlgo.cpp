@@ -63,7 +63,7 @@ using namespace IECoreScene;
 using namespace IECoreRenderMan;
 
 //////////////////////////////////////////////////////////////////////////
-// Internal utilities
+// Internal ShaderInfo cache
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -298,6 +298,15 @@ ShaderInfoCache g_shaderInfoCache(
 
 );
 
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::convert()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
 using ArrayConnections = std::unordered_map<RtUString, vector<RtUString>>;
 const std::regex g_arrayIndexRegex( R"((\w+)\[([0-9]+)\])" );
 
@@ -433,9 +442,8 @@ void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, 
 	shadingNodes.push_back( node );
 }
 
-//////////////////////////////////////////////////////////////////////////
-// USD conversion code
-//////////////////////////////////////////////////////////////////////////
+const InternedString g_sunDirectionParameter( "sunDirection" );
+
 
 template<typename T>
 T parameterValue( const Shader *shader, InternedString parameterName, const T &defaultValue )
@@ -483,6 +491,106 @@ T parameterValue( const Shader *shader, InternedString parameterName, const T &d
 
 	return defaultValue;
 }
+
+void correctParameters( ShaderNetwork *network )
+{
+	const Shader *shader = network->outputShader();
+	if( shader && shader->getName() == "PxrEnvDayLight" )
+	{
+		ShaderPtr newShader = shader->copy();
+
+		// The incoming object-space coordinates of `sunDirection` is in our Y-up coordinate system.
+		// But RenderMan's orientation is Z-up, so we transform from our coordinate system to RenderMan's
+		// so the parameter is intuitive to work with and the appearance of the shader matches expectations.
+		const V3f direction = parameterValue( newShader.get(), g_sunDirectionParameter, V3f( 0.f, 1.f, 0.f ) );
+		newShader->parameters()[g_sunDirectionParameter] = new V3fData( V3f( direction.x, -direction.z, direction.y ) );
+
+		network->setShader( network->getOutput().shader, std::move( newShader ) );
+	}
+}
+
+ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	ShaderNetworkPtr result = shaderNetwork->copy();
+
+	correctParameters( result.get() );
+
+	IECoreScene::ShaderNetworkAlgo::expandSplines( result.get() );
+
+	IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( result.get() );
+
+	return result;
+}
+
+} // namespace
+
+std::vector<riley::ShadingNode> IECoreRenderMan::ShaderNetworkAlgo::convert( const IECoreScene::ShaderNetwork *network )
+{
+	ConstShaderNetworkPtr preprocessedNetwork = ::preprocessedNetwork( network );
+	vector<riley::ShadingNode> result;
+	result.reserve( preprocessedNetwork->size() );
+
+	HandleSet visited;
+	convertShaderNetworkWalk( preprocessedNetwork->getOutput(), preprocessedNetwork.get(), result, visited );
+
+	return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::combineLightFilters()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+IECoreScene::ConstShaderNetworkPtr IECoreRenderMan::ShaderNetworkAlgo::combineLightFilters( const std::vector<const IECoreScene::ShaderNetwork *> networks )
+{
+	if( networks.empty() )
+	{
+		return nullptr;
+	}
+
+	if( networks.size() == 1 )
+	{
+		return networks[0];
+	}
+
+	unordered_map<string, size_t> numConnections;
+
+	ShaderNetworkPtr combinedNetwork = new ShaderNetwork;
+	auto combinerHandle = combinedNetwork->addShader(
+		"combiner", new Shader( "PxrCombinerLightFilter", "lightFilter" )
+	);
+	combinedNetwork->setOutput( { combinerHandle, "out" } );
+
+	for( auto network : networks )
+	{
+		const Shader *outputShader = network->outputShader();
+		if( !outputShader )
+		{
+			continue;
+		}
+
+		string combineMode = "mult";
+		if( auto combineModeData = outputShader->parametersData()->member<StringData>( "combineMode" ) )
+		{
+			combineMode = combineModeData->readable();
+		}
+
+		ShaderNetwork::Parameter filterHandle = IECoreScene::ShaderNetworkAlgo::addShaders( combinedNetwork.get(), network );
+
+		const size_t connectionIndex = numConnections[combineMode]++;
+		combinedNetwork->addConnection(
+			ShaderNetwork::Connection( filterHandle, { combinerHandle, fmt::format( "{}[{}]", combineMode, connectionIndex ) } )
+		);
+	}
+
+	return combinedNetwork;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::convertUSDShaders()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 // Traits class to handle the GeometricTypedData fiasco.
 template<typename T>
@@ -595,7 +703,6 @@ const InternedString g_specularFaceColorParameter( "specularFaceColor" );
 const InternedString g_specularIorParameter( "specularIor" );
 const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
-const InternedString g_sunDirectionParameter( "sunDirection" );
 const InternedString g_temperatureParameter( "temperature" );
 const InternedString g_textureFileParameter( "texture:file" );
 const InternedString g_textureFormatParameter( "texture:format" );
@@ -733,103 +840,9 @@ void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr 
 	}
 }
 
-void correctParameters( ShaderNetwork *network )
-{
-	const Shader *shader = network->outputShader();
-	if( shader && shader->getName() == "PxrEnvDayLight" )
-	{
-		ShaderPtr newShader = shader->copy();
-
-		// The incoming object-space coordinates of `sunDirection` is in our Y-up coordinate system.
-		// But RenderMan's orientation is Z-up, so we transform from our coordinate system to RenderMan's
-		// so the parameter is intuitive to work with and the appearance of the shader matches expectations.
-		const V3f direction = parameterValue( newShader.get(), g_sunDirectionParameter, V3f( 0.f, 1.f, 0.f ) );
-		newShader->parameters()[g_sunDirectionParameter] = new V3fData( V3f( direction.x, -direction.z, direction.y ) );
-
-		network->setShader( network->getOutput().shader, std::move( newShader ) );
-	}
-}
-
-ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
-{
-	ShaderNetworkPtr result = shaderNetwork->copy();
-
-	correctParameters( result.get() );
-
-	IECoreScene::ShaderNetworkAlgo::expandSplines( result.get() );
-
-	IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( result.get() );
-
-	return result;
-}
-
 } // namespace
 
-//////////////////////////////////////////////////////////////////////////
-// External API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreRenderMan::ShaderNetworkAlgo
-{
-
-std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *network )
-{
-	ConstShaderNetworkPtr preprocessedNetwork = ::preprocessedNetwork( network );
-	vector<riley::ShadingNode> result;
-	result.reserve( preprocessedNetwork->size() );
-
-	HandleSet visited;
-	convertShaderNetworkWalk( preprocessedNetwork->getOutput(), preprocessedNetwork.get(), result, visited );
-
-	return result;
-}
-
-IECoreScene::ConstShaderNetworkPtr combineLightFilters( const std::vector<const IECoreScene::ShaderNetwork *> networks )
-{
-	if( networks.empty() )
-	{
-		return nullptr;
-	}
-
-	if( networks.size() == 1 )
-	{
-		return networks[0];
-	}
-
-	unordered_map<string, size_t> numConnections;
-
-	ShaderNetworkPtr combinedNetwork = new ShaderNetwork;
-	auto combinerHandle = combinedNetwork->addShader(
-		"combiner", new Shader( "PxrCombinerLightFilter", "lightFilter" )
-	);
-	combinedNetwork->setOutput( { combinerHandle, "out" } );
-
-	for( auto network : networks )
-	{
-		const Shader *outputShader = network->outputShader();
-		if( !outputShader )
-		{
-			continue;
-		}
-
-		string combineMode = "mult";
-		if( auto combineModeData = outputShader->parametersData()->member<StringData>( "combineMode" ) )
-		{
-			combineMode = combineModeData->readable();
-		}
-
-		ShaderNetwork::Parameter filterHandle = IECoreScene::ShaderNetworkAlgo::addShaders( combinedNetwork.get(), network );
-
-		const size_t connectionIndex = numConnections[combineMode]++;
-		combinedNetwork->addConnection(
-			ShaderNetwork::Connection( filterHandle, { combinerHandle, fmt::format( "{}[{}]", combineMode, connectionIndex ) } )
-		);
-	}
-
-	return combinedNetwork;
-}
-
-void convertUSDShaders( ShaderNetwork *shaderNetwork )
+void IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNetwork )
 {
 	for( const auto &[handle, shader] : shaderNetwork->shaders() )
 	{
@@ -962,7 +975,11 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
 }
 
-M44f usdLightTransform( const Shader *lightShader )
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::usdLightTransform()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+M44f IECoreRenderMan::ShaderNetworkAlgo::usdLightTransform( const Shader *lightShader )
 {
 	assert( lightShader );
 
@@ -998,5 +1015,3 @@ M44f usdLightTransform( const Shader *lightShader )
 
 	return M44f();
 }
-
-} // namespace IECoreRenderMan::ShaderNetworkAlgo
