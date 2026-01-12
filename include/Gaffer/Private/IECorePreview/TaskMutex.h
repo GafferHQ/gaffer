@@ -40,6 +40,12 @@
 #include "boost/container/flat_set.hpp"
 #include "boost/noncopyable.hpp"
 
+#if __has_include( "tbb/version.h" )
+#include "tbb/version.h"
+#else
+#include "tbb/tbb_stddef.h"
+#endif
+
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
 
@@ -141,7 +147,11 @@ class TaskMutex : boost::noncopyable
 				/// work on behalf of `execute()` while waiting.
 				void acquire( TaskMutex &mutex, bool write = true, bool acceptWork = true )
 				{
+#if TBB_VERSION_MAJOR < 2021
 					tbb::internal::atomic_backoff backoff;
+#else
+					tbb::detail::atomic_backoff backoff;
+#endif
 					while( !acquireOr( mutex, write, [acceptWork]( bool workAvailable ){ return acceptWork; } ) )
 					{
 						backoff.pause();
