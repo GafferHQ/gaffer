@@ -285,14 +285,14 @@ class CameraAlgoTest( unittest.TestCase ) :
 
 			camera = IECoreScene.Camera()
 			camera.setProjection( "perspective" )
-			camera.parameters()["shutter_curve"] = IECore.Splineff(
-				IECore.CubicBasisf.linear(),
+			camera.parameters()["shutter_curve"] = IECore.Rampff(
 				[
 					( 0, -0.1 ),
 					( 0.25, 1 ),
 					( 0.75, 1.1 ),
 					( 1.1, 0 ),
 				],
+				IECore.RampInterpolation.Linear
 			)
 
 			node = IECoreArnold.NodeAlgo.convert( camera, universe, "camera" )
@@ -303,8 +303,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetVec2( curve, 2 ), arnold.AtVector2( 0.75, 1 ) )
 			self.assertEqual( arnold.AiArrayGetVec2( curve, 3 ), arnold.AtVector2( 1, 0 ) )
 
-			camera.parameters()["shutter_curve"] = IECore.Splineff(
-				IECore.CubicBasisf.catmullRom(),
+			camera.parameters()["shutter_curve"] = IECore.Rampff(
 				[
 					( 0, 0 ),
 					( 0, 0 ),
@@ -313,6 +312,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 					( 1, 0 ),
 					( 1, 0 ),
 				],
+				IECore.RampInterpolation.CatmullRom
 			)
 
 			node = IECoreArnold.NodeAlgo.convert( camera, universe, "camera" )
@@ -321,7 +321,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 			for i in range( 0, 25 ) :
 				point = arnold.AiArrayGetVec2( curve, i )
 				self.assertAlmostEqual(
-					min( camera.parameters()["shutter_curve"].value( point.x ), 1 ),
+					min( camera.parameters()["shutter_curve"].value.evaluator()( point.x ), 1 ),
 					point.y,
 					delta = 0.0001
 				)

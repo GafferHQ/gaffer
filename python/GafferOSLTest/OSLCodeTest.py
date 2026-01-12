@@ -179,18 +179,16 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		oslCode["out"]["out"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		self.__assertNoError( oslCode, oslCode["code"].setValue, 'out = inChannel( "R", 0 );' )
 
-	def testColorSpline( self ) :
+	def testColorRamp( self ) :
 
 		oslCode = GafferOSL.OSLCode()
-		oslCode["parameters"]["sp"] = Gaffer.SplinefColor3fPlug(
-			defaultValue = IECore.SplinefColor3f(
-				IECore.CubicBasisf.catmullRom(),
+		oslCode["parameters"]["sp"] = Gaffer.RampfColor3fPlug(
+			defaultValue = IECore.RampfColor3f(
 				(
 					( 0, imath.Color3f( 0 ) ),
-					( 0, imath.Color3f( 0 ) ),
 					( 1, imath.Color3f( 1 ) ),
-					( 1, imath.Color3f( 1 ) ),
-				)
+				),
+				IECore.RampInterpolation.CatmullRom
 			),
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 		)

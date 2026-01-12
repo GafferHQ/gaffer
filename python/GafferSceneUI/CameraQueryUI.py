@@ -388,8 +388,8 @@ class _CameraQueryFooter( GafferUI.PlugValueWidget ) :
 				dataType = IECore.FloatData
 			else :
 				dataType = IECore.DataTraits.dataTypeFromElementType( valueType )
-			## \todo Support Splineff in PlugAlgo::createPlugFromData()
-			if isinstance( value, IECore.Splineff ) :
+			## \todo Support Rampff in PlugAlgo::createPlugFromData()
+			if isinstance( value, IECore.Rampff ) :
 				plugCreator = functools.partial( Gaffer.ObjectPlug, defaultValue = IECore.NullObject.defaultNullObject() )
 			else :
 				plugCreator = functools.partial(

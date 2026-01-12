@@ -39,6 +39,6 @@
 namespace GafferModule
 {
 
-void bindSplinePlug();
+void bindRampPlug();
 
 } // namespace GafferModule

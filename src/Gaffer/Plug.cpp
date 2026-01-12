@@ -866,7 +866,7 @@ class Plug::DirtyPlugs
 				}
 				else
 				{
-					// We can end up here when constructing a SplinePlug,
+					// We can end up here when constructing a RampPlug,
 					// because it calls setValue() in its constructor.
 					// We don't want to increment the reference count on
 					// an in-construction plug, because then we'll destroy

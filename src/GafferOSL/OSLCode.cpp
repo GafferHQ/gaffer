@@ -40,7 +40,7 @@
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Process.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Exception.h"
@@ -69,7 +69,7 @@ using namespace GafferOSL;
 namespace
 {
 
-string colorSplineParameter( const SplinefColor3fPlug *plug )
+string colorSplineParameter( const RampfColor3fPlug *plug )
 {
 	string result;
 	result += "\tfloat " + plug->getName().string() + "Positions[] = { 0, 0, 1, 1 },\n";
@@ -81,9 +81,9 @@ string colorSplineParameter( const SplinefColor3fPlug *plug )
 string parameter( const Plug *plug )
 {
 	const Gaffer::TypeId plugType = (Gaffer::TypeId)plug->typeId();
-	if( plugType == SplinefColor3fPlugTypeId )
+	if( plugType == RampfColor3fPlugTypeId )
 	{
-		return colorSplineParameter( static_cast<const SplinefColor3fPlug *>( plug ) );
+		return colorSplineParameter( static_cast<const RampfColor3fPlug *>( plug ) );
 	}
 
 	string type;

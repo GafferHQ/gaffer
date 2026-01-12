@@ -98,7 +98,7 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Used in the Color and False Color modes to define the value which is mapped
-			to black or the left end of the spline respectively.
+			to black or the left end of the ramp respectively.
 			""",
 
 			"layout:activator" : "modeIsColorOrFalseColor",
@@ -110,7 +110,7 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Used in the Color and False Color modes to define the value which is mapped
-			to white or the right end of the spline respectively.
+			to white or the right end of the ramp respectively.
 			""",
 
 			"layout:activator" : "modeIsColorOrFalseColor",

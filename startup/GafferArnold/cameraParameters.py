@@ -53,7 +53,7 @@ Gaffer.Metadata.registerValues( {
 
 	"camera:parameter:shutter_curve" : {
 
-		"defaultValue" : IECore.SplineffData(),
+		"defaultValue" : IECore.RampffData(),
 		"label" : "Shutter Curve",
 		"layout:section" : "Arnold",
 

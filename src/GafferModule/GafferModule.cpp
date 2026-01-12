@@ -68,7 +68,7 @@
 #include "SerialisationBinding.h"
 #include "SetBinding.h"
 #include "SignalsBinding.h"
-#include "SplinePlugBinding.h"
+#include "RampPlugBinding.h"
 #include "SpreadsheetBinding.h"
 #include "StringPlugBinding.h"
 #include "SubGraphBinding.h"
@@ -269,7 +269,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindDirtyPropagationScope();
 	bindUndoScope();
 	bindCompoundNumericPlug();
-	bindSplinePlug();
+	bindRampPlug();
 	bindBoxPlug();
 	bindExpression();
 	bindTransformPlug();

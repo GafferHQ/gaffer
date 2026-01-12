@@ -94,7 +94,7 @@ class ImageScatterTest( GafferSceneTest.SceneTestCase ) :
 		ramp["startPosition"].setValue( imath.V2f( 0.5, 0 ) )
 		ramp["endPosition"].setValue( imath.V2f( 2.5, 0 ) )
 		ramp["ramp"]["p0"]["y"]["a"].setValue( 1 ) # Solid alpha
-		ramp["ramp"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
+		ramp["ramp"]["interpolation"].setValue( IECore.RampInterpolation.Linear )
 
 		scatter = GafferScene.ImageScatter()
 		scatter["image"].setInput( ramp["out"] )
@@ -122,7 +122,7 @@ class ImageScatterTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( len( points["width"].data ), len( points["P"].data ) )
 
 				for i, c in enumerate( points["Cs"].data ) :
-					# Expected spline value
+					# Expected ramp value
 					x = points["P"].data[i].x / pixelAspect
 					x = (x - 0.5) / 2.0
 					x = max( 0, min( x, 1 ) )
