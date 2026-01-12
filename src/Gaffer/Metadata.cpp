@@ -51,8 +51,8 @@
 #include "boost/multi_index_container.hpp"
 
 #include "tbb/concurrent_hash_map.h"
-#include "tbb/recursive_mutex.h"
 
+#include <mutex>
 #include <unordered_map>
 
 using namespace std;
@@ -120,7 +120,7 @@ struct NodeSignals
 };
 
 using SignalsMap = std::unordered_map<Node *, unique_ptr<NodeSignals>>;
-using SignalsMapLock = tbb::recursive_mutex::scoped_lock;
+using SignalsMapLock = std::unique_lock<std::recursive_mutex>;
 
 // Access to the signals requires the passing of a scoped_lock that
 // will be locked for you automatically, and must remain locked while
@@ -128,8 +128,8 @@ using SignalsMapLock = tbb::recursive_mutex::scoped_lock;
 SignalsMap &signalsMap( SignalsMapLock &lock )
 {
 	static SignalsMap *g_signalsMap = new SignalsMap;
-	static tbb::recursive_mutex g_signalsMapMutex;
-	lock.acquire( g_signalsMapMutex );
+	static std::recursive_mutex g_signalsMapMutex;
+	lock = SignalsMapLock( g_signalsMapMutex );
 	return *g_signalsMap;
 }
 
