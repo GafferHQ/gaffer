@@ -68,10 +68,10 @@ struct PythonValueFunction
 	{
 	}
 
-	ConstDataPtr operator()()
+	ConstDataPtr operator()( InternedString target )
 	{
 		IECorePython::ScopedGILLock gilLock;
-		ConstDataPtr result = extract<ConstDataPtr>( m_fn() );
+		ConstDataPtr result = extract<ConstDataPtr>( m_fn( target.c_str() ) );
 		return result;
 	}
 
@@ -146,7 +146,7 @@ Metadata::ValueFunction objectToValueFunction( InternedString name, object o )
 	if( dataExtractor.check() )
 	{
 		ConstDataPtr data = dedent( name, dataExtractor() );
-		return [data]{ return data; };
+		return [data] ( InternedString target ) { return data; };
 	}
 	else
 	{

@@ -136,9 +136,9 @@ def registerMetadata( argsFile, parametersToIgnore = set() ) :
 
 			# Using `partial()` to defer processing of description until it is queried,
 			# since it relatively expensive.
-			description = functools.partial( __cleanDescription, currentParameterTarget, element )
+			description = functools.partial( __cleanDescription, parameterTarget = currentParameterTarget, element = element )
 			if currentParameterTarget is not None :
-				Gaffer.Metadata.registerValue( currentParameterTarget or target, "description", description )
+				Gaffer.Metadata.registerValue( currentParameterTarget, "description", description )
 			else :
 				# We may not have the `target` yet, because a couple of files don't
 				# specify `shaderType` first. Store it and register at the end.
@@ -285,7 +285,7 @@ def __parseConditionalVisibility( source, parameterTarget ) :
 					if suffix in [ "Left", "Right" ] :
 						prefixes.append( value )
 
-def __cleanDescription( parameterTarget, element ) :
+def __cleanDescription( target, parameterTarget, element ) :
 
 	description = ElementTree.tostring( element, encoding = "unicode", method = "html" ).strip()
 	description = description.removeprefix( "<help>" )

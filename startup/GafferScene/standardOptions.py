@@ -274,14 +274,14 @@ Gaffer.Metadata.registerValues( {
 		"layout:section" : "Renderer",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : lambda : IECore.StringVectorData(
+		"presetNames" : lambda target : IECore.StringVectorData(
 			[ "None" ] + sorted(
 				Gaffer.Metadata.value( f"renderer:{t}", "label" ) or t
 				for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
 				if Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False
 			)
 		),
-		"presetValues" : lambda : IECore.StringVectorData(
+		"presetValues" : lambda target : IECore.StringVectorData(
 			[ "" ] + sorted(
 				t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
 				if Gaffer.Metadata.value( f"renderer:{t}", "ui:enabled" ) is not False

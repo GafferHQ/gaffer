@@ -12,6 +12,11 @@ Fixes
 
 - RenderController : Fixed bug where repeatedly setting the same VisibleSet could cause unnecessary updates.
 
+API
+---
+
+- Metadata : `ValueFunctions` now receive a `target` parameter. This is particularly useful when registering a function against a wildcard pattern.
+
 Breaking Changes
 ----------------
 
@@ -27,6 +32,7 @@ Breaking Changes
   - Renamed to Gaffer::RampPlug. Removed SplineDefinition ( use IECore::Ramp instead ).
 - OSL Shaders : Pattern/FloatSpline and Pattern/ColorSpline have been replaced by Pattern/FloatRamp and Pattern/ColorRamp. Old Gaffer scripts will automatically be updated on load, files exported from Gaffer will contain the new shaders. ( The .osl files for the old shaders are still included, so that old USD files can render ).
 - GafferUI : Renamed SplineWidget to RampWidget. Renamed SplinePlugValueWidget to RampPlugValueWidget. The old RampPlugValueWidget is no longer exposed, since it was only used internally.
+- Metadata : Added `target` argument to `ValueFunction` signature.
 
 1.6.x.x (relative to 1.6.8.0)
 =======

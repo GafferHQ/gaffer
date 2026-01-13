@@ -1061,8 +1061,8 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( len( cs ), 2 )
 		self.assertEqual( cs[1], ( "testTarget", "testIntVectorData" ) )
 
-		Gaffer.Metadata.registerValue( "testTarget", "testDynamicValue", lambda : 20 )
-		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testDynamicValue" ), 20 )
+		Gaffer.Metadata.registerValue( "testTarget", "testDynamicValue", lambda target : f"{target}:foo" )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testDynamicValue" ), "testTarget:foo" )
 
 		self.assertEqual( len( cs ), 3 )
 		self.assertEqual( cs[2], ( "testTarget", "testDynamicValue" ) )

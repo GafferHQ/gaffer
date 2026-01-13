@@ -61,7 +61,7 @@ class GAFFER_API Metadata
 
 	public :
 
-		using ValueFunction = std::function<IECore::ConstDataPtr ()>;
+		using ValueFunction = std::function<IECore::ConstDataPtr ( IECore::InternedString )>;
 		using GraphComponentValueFunction = std::function<IECore::ConstDataPtr ( const GraphComponent * )>;
 		using PlugValueFunction = std::function<IECore::ConstDataPtr ( const Plug * )>;
 
