@@ -418,5 +418,18 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "diffuseGain", shader["parameters"] )
 		self.assertIn( "diffuseColor", shader["parameters"] )
 
+	def testOSLVStructMembers( self ) :
+
+		# PxrLayerMixer has a bunch of vstruct members that shouldn't
+		# be exposed to users - instead they are set/connected conditionally
+		# based on the connections to their vstruct "parents".
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "PxrLayerMixer" )
+
+		self.assertIn( "baselayer", shader["parameters"] )
+		self.assertNotIn( "baselayer_diffuseGain", shader["parameters"] )
+		self.assertEqual( shader["out"].keys(), [ "pxrMaterialOut" ] )
+
 if __name__ == "__main__":
 	unittest.main()
