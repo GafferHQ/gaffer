@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.8.0)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed interactive denoising when rendering via the `it` display driver.
 
 1.6.8.0 (relative to 1.6.7.0)
 =======
