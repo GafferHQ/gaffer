@@ -129,21 +129,6 @@ const unordered_map<string, ParameterSet> g_omittedParameters = {
 namespace
 {
 
-bool isVStruct( const boost::property_tree::ptree &parameter )
-{
-	if( auto tags = parameter.get_child_optional( "tags" ) )
-	{
-		for( const auto &tag : *tags )
-		{
-			if( tag.second.get<string>( "<xmlattr>.value" ) == "vstruct" )
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
 template<typename PlugType>
 PlugPtr acquireNumericParameter( const boost::property_tree::ptree &parameter, IECore::InternedString name, Plug::Direction direction, Plug *candidatePlug )
 {
@@ -267,16 +252,18 @@ Gaffer::Plug *loadParameter( const boost::property_tree::ptree &parameter, Plug 
 		return nullptr;
 	}
 
-	if( isVStruct( parameter ) )
+	if( parameter.get_optional<string>( "<xmlattr>.vstructmember" ) )
 	{
-		// PxrSurface and PxrLayerSurface have funky `inputMaterial` float
-		// parameters that represent "virtual structs". These require the host
-		// to implement a bunch of extra logic to make a whole bunch of concrete
-		// connections dictated by connections to the virtual parameter and some
-		// additional metadata. It's not pretty, and the Lama shaders use a
-		// completely different mechanism for layering - hopefully we can just
-		// deal with the latter.
-		return nullptr;
+		// Confusingly, the vstruct members on PxrSurface are intended for
+		// direct editing by the user _until_ the `inputMaterial` is connected,
+		// at which point they get clobbered by the vstruct connections.
+		// PxrLayerSurface is more logical, with the vstruct members never
+		// being user-editable, so we don't even load them. We use `widget ==
+		// null` as a heuristic to detect the difference between the two.
+		if( parameter.get<string>( "<xmlattr>.widget", "" ) == "null" )
+		{
+			return nullptr;
+		}
 	}
 
 	const string name = parameter.get<string>( "<xmlattr>.name" );

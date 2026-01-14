@@ -388,5 +388,35 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
+	def testVStructMembers( self ) :
+
+		# For PxrLayerSurface, we only want to expose parameters that
+		# are intended for editing by users.
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrLayerSurface" )
+		self.assertIn( "inputMaterial", shader["parameters"] )
+		self.assertIn( "diffuseDoubleSided", shader["parameters"] )
+
+		# And we don't want to expose the vstruct members that will
+		# receive values/connections based on `inputMaterial`. Although
+		# these are hidden in the UI, we would still be including them
+		# in the scene data, which is misleading. They should only
+		# ever receive values or connections from vstructs, and that
+		# should only be evaluated at render time.
+
+		self.assertNotIn( "diffuseGain", shader["parameters"] )
+		self.assertNotIn( "diffuseColor", shader["parameters"] )
+
+		# But PxrSurface is a bit different. It has vstruct members that
+		# also double as primary parameters for the non-layerd case. So we
+		# want to make sure that we _do_ load those.
+
+		shader.loadShader( "PxrSurface" )
+		self.assertIn( "inputMaterial", shader["parameters"] )
+		self.assertIn( "diffuseDoubleSided", shader["parameters"] )
+		self.assertIn( "diffuseGain", shader["parameters"] )
+		self.assertIn( "diffuseColor", shader["parameters"] )
+
 if __name__ == "__main__":
 	unittest.main()
