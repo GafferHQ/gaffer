@@ -282,6 +282,9 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
 
 		editScope = self.__editScope()
+		if editScope is None :
+			return
+
 		if (
 			Gaffer.MetadataAlgo.readOnlyAffectedByChange( editScope, nodeTypeId, key, node ) or
 			node == editScope and key == "nodeGadget:color"
