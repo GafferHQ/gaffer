@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.8.0)
 =======
 
+Improvements
+------------
+
+- RenderMan : Added support for PxrLayer, PxrLayerMixer and PxrLayerSurface shaders (by implementing support for vstruct conditionals).
+
 Fixes
 -----
 
