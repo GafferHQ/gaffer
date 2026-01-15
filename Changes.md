@@ -1,7 +1,10 @@
 1.5.16.x (relative to 1.5.16.4)
 ========
 
+Fixes
+-----
 
+- EditScopeUI : Fixed crash if `childNodesAreReadOnly` metadata was edited while no EditScope was selected.
 
 1.5.16.4 (relative to 1.5.16.3)
 ========
