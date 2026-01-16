@@ -42,6 +42,8 @@
 
 #include "Riley.h"
 
+#include <functional>
+
 namespace IECoreRenderMan::ShaderNetworkAlgo
 {
 
@@ -54,11 +56,32 @@ std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *netwo
 IECoreScene::ConstShaderNetworkPtr combineLightFilters( const std::vector<const IECoreScene::ShaderNetwork *> networks );
 
 /// Converts any UsdPreviewSurface and UsdLux shaders into native RenderMan shaders. This conversion
-/// is performed automatically by `preprocessedNetwork()` and is mainly just exposed for the unit
-/// tests.
+/// is performed automatically by `convert()` and is mainly just exposed for the unit tests.
 IECORERENDERMAN_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
 
 /// Returns the matrix needed to transform a Pxr*Light to match a UsdLux shader.
 IECORERENDERMAN_API Imath::M44f usdLightTransform( const IECoreScene::Shader *lightShader );
+
+struct VStructAction
+{
+	enum class Type { None, Connect, Set };
+	Type type = Type::None;
+	double value = 0;
+};
+
+/// A function which returns the value of a shader parameter.
+using ParameterValueFunction = std::function<IECore::ConstDataPtr ( IECore::InternedString )>;
+/// A function which returns true if a shader parameter has an input connection.
+using ParameterIsConnectedFunction = std::function<bool ( IECore::InternedString )>;
+
+/// Evaluates a vstruct expression, returning the action that should be taken.
+/// `valueFunction` and `isConnectedFunction` abstract away access to the
+/// ShaderNetwork that would typically back these queries - primarily to
+/// simplify testing.
+IECORERENDERMAN_API VStructAction evaluateVStructConditional( const std::string &expression, const ParameterValueFunction &valueFunction, const ParameterIsConnectedFunction &isConnectedFunction );
+
+/// Resolves connections and values for vstruct members. Exposed primarily for testing,
+/// as `convert()` resolves vstructs internally anyway.
+IECORERENDERMAN_API void resolveVStructs( IECoreScene::ShaderNetwork *shaderNetwork );
 
 } // namespace IECoreRenderMan::ShaderNetworkAlgo

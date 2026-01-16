@@ -1134,6 +1134,13 @@ Plug *loadStructParameter( const std::string &shaderName, const OSLQuery &query,
 Plug *loadShaderParameter( const std::string shaderName, const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
 	Plug *result = nullptr;
+	if( metadata && metadata->member( "vstructmember" ) )
+	{
+		// RenderMan "virtual struct" member. This isn't for authoring
+		// by users. Instead it will receive a connection or value in the
+		// RenderMan backend at render time.
+		return result;
+	}
 
 	if( parameter->isstruct )
 	{
@@ -1482,7 +1489,10 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 // Metadata loading code
 //////////////////////////////////////////////////////////////////////////
 
-static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
+namespace
+{
+
+IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 {
 	if( metadata.type == TypeDesc::FLOAT )
 	{
@@ -1551,7 +1561,7 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 	return nullptr;
 }
 
-static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Parameter> &metadata )
+IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Parameter> &metadata )
 {
 	CompoundDataPtr result = new CompoundData;
 	for( std::vector<OSLQuery::Parameter>::const_iterator it = metadata.begin(), eIt = metadata.end(); it != eIt; ++it )
@@ -1565,7 +1575,7 @@ static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Para
 	return result;
 }
 
-static IECore::ConstCompoundDataPtr metadataGetter( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller )
+IECore::ConstCompoundDataPtr metadataGetter( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = 1;
 	if( !shaderName.size() )
@@ -1660,6 +1670,8 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &shaderNam
 
 using MetadataCache = IECorePreview::LRUCache<std::string, IECore::ConstCompoundDataPtr>;
 MetadataCache g_metadataCache( metadataGetter, 10000 );
+
+} // namespace
 
 const IECore::CompoundData *OSLShader::metadata() const
 {

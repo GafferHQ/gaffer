@@ -41,6 +41,7 @@
 #include "prmanapi.h"
 
 using namespace boost::python;
+using namespace IECore;
 using namespace IECoreRenderMan;
 
 namespace
@@ -49,6 +50,19 @@ namespace
 int renderManMajorVersion()
 {
 	return _PRMANAPI_VERSION_MAJOR_;
+}
+
+ShaderNetworkAlgo::VStructAction evaluateVStructConditionalWrapper( const std::string &expression, object valueFunction, object isConnectedFunction )
+{
+	return ShaderNetworkAlgo::evaluateVStructConditional(
+		expression,
+		[&valueFunction] ( InternedString parameterName ) {
+			return extract<ConstDataPtr>( valueFunction( parameterName.string() ) );
+		},
+		[&isConnectedFunction] ( InternedString parameterName ) {
+			return extract<bool>( isConnectedFunction( parameterName.string() ) );
+		}
+	);
 }
 
 } // namespace
@@ -64,5 +78,21 @@ BOOST_PYTHON_MODULE( _IECoreRenderMan )
 
 	def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
 	def( "usdLightTransform", &ShaderNetworkAlgo::usdLightTransform );
+
+	{
+		scope s = class_<ShaderNetworkAlgo::VStructAction>( "VStructAction" )
+			.def_readonly( "type", &ShaderNetworkAlgo::VStructAction::type )
+			.def_readonly( "value", &ShaderNetworkAlgo::VStructAction::value )
+		;
+
+		enum_<ShaderNetworkAlgo::VStructAction::Type>( "Type" )
+			.value( "None_", ShaderNetworkAlgo::VStructAction::Type::None )
+			.value( "Connect", ShaderNetworkAlgo::VStructAction::Type::Connect )
+			.value( "Set", ShaderNetworkAlgo::VStructAction::Type::Set )
+		;
+	}
+
+	def( "evaluateVStructConditional", &evaluateVStructConditionalWrapper );
+	def( "resolveVStructs", &ShaderNetworkAlgo::resolveVStructs );
 
 }

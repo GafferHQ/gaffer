@@ -161,11 +161,42 @@ shaderMetadata = {
 
 	},
 
+	"osl:shader:PxrLayer" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "diffuseGain", "diffuseColor", "specularFaceColor", "specularEdgeColor", "specularRoughness", "subsurfaceColor", "bumpNormal", "pxrMaterialOut" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrLayerMixer" : {
+
+		"parameters" : {
+
+			k : { "plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget" }
+			for k in [ "baselayer", "layer1", "layer2", "layer3", "layer4" ]
+
+		},
+
+	},
+
 	"ri:surface:PxrLayerSurface" : {
 
 		"noduleLayout:defaultVisibility" : False,
 
 		"parameters" : {
+
+			"inputMaterial" : {
+
+				"noduleLayout:visible" : True,
+				"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
+
+			},
 
 			"utilityPattern" : {
 
@@ -203,6 +234,12 @@ shaderMetadata = {
 			for k in [ "diffuseGain", "diffuseColor", "specularFaceColor", "specularEdgeColor", "specularRoughness", "subsurfaceColor", "bumpNormal" ]
 
 		} | {
+
+			"inputMaterial" : {
+
+				"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
+
+			},
 
 			"utilityPattern" : {
 
