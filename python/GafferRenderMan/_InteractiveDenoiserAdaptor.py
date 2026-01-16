@@ -80,7 +80,7 @@ class _InteractiveDenoiserAdaptor( GafferScene.SceneProcessor ) :
 		for key, value in inputGlobals.items() :
 			if not key.startswith( "output:" ) :
 				continue
-			if value.getType() not in ( "ieDisplay", "socket" ) :
+			if value.getType() not in ( "ieDisplay", "socket", "it" ) :
 				continue
 			if value.getData() in { "rgb", "rgba" } :
 				templateOutput = value.copy()
