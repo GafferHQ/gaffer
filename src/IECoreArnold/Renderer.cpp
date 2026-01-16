@@ -49,6 +49,7 @@
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/PointsPrimitive.h"
 #include "IECoreScene/Shader.h"
+#include "IECoreScene/ShaderNetworkAlgo.h"
 #include "IECoreScene/SpherePrimitive.h"
 
 #include "IECoreVDB/VDBObject.h"
@@ -1059,11 +1060,11 @@ class ShaderCache : public IECore::RefCounted
 		ArnoldShaderPtr get( const IECoreScene::ShaderNetwork *shader, IECore::InternedString attributeName, const IECore::CompoundObject *attributes )
 		{
 			IECore::MurmurHash h = shader->Object::hash();
-			IECore::MurmurHash hSubst;
+			IECore::MurmurHash hAdapted;
 			if( attributes )
 			{
-				ShaderNetworkAlgo::hashSubstitutions( shader, attributeName, attributes, hSubst );
-				h.append( hSubst );
+				IECoreScene::ShaderNetworkAlgo::hashRenderAdaptors( shader, attributeName, attributes, hAdapted );
+				h.append( hAdapted );
 			}
 
 			Cache::const_accessor readAccessor;
@@ -1076,11 +1077,11 @@ class ShaderCache : public IECore::RefCounted
 			if( m_cache.insert( writeAccessor, h ) )
 			{
 				const std::string nameFormat = "shader:{shaderHandle}:" + writeAccessor->first.toString();
-				if( hSubst != IECore::MurmurHash() )
+				if( hAdapted != IECore::MurmurHash() )
 				{
-					IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
-					ShaderNetworkAlgo::applySubstitutions( substitutedShader.get(), attributeName, attributes );
-					writeAccessor->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, m_universe, nameFormat, m_parentNode );
+					IECoreScene::ShaderNetworkPtr adaptedShader = shader->copy();
+					IECoreScene::ShaderNetworkAlgo::applyRenderAdaptors( adaptedShader.get(), attributeName, attributes );
+					writeAccessor->second = new ArnoldShader( adaptedShader.get(), m_nodeDeleter, m_universe, nameFormat, m_parentNode );
 				}
 				else
 				{
