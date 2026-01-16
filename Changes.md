@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- RenderMan : Added support for PxrLayer, PxrLayerMixer and PxrLayerSurface shaders (by implementing support for vstruct conditionals).
+- RenderMan :
+  - Added support for PxrLayer, PxrLayerMixer and PxrLayerSurface shaders (by implementing support for vstruct conditionals).
+  - Added support for `IECoreScene::ShaderNetworkAlgo` render adaptor API.
 
 Fixes
 -----

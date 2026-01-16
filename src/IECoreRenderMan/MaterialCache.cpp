@@ -36,6 +36,8 @@
 
 #include "MaterialCache.h"
 
+#include "IECoreScene/ShaderNetworkAlgo.h"
+
 #include "IECoreRenderMan/ShaderNetworkAlgo.h"
 
 using namespace std;
@@ -55,23 +57,23 @@ MaterialCache::MaterialCache( Session *session )
 {
 }
 
-ConstMaterialPtr MaterialCache::getMaterial( const IECoreScene::ShaderNetwork *network, const IECore::CompoundObject *attributes )
+ConstMaterialPtr MaterialCache::getMaterial( const IECoreScene::ShaderNetwork *network, IECore::InternedString attributeName, const IECore::CompoundObject *attributes )
 {
 	IECore::MurmurHash hash = network->Object::hash();
-	IECore::MurmurHash substitutionsHash;
-	network->hashSubstitutions( attributes, substitutionsHash );
-	hash.append( substitutionsHash );
+	IECore::MurmurHash adaptorHash;
+	IECoreScene::ShaderNetworkAlgo::hashRenderAdaptors( network, attributeName, attributes, adaptorHash );
+	hash.append( adaptorHash );
 
 	Cache::accessor a;
 	m_cache.insert( a, hash );
 	if( !a->second )
 	{
-		IECoreScene::ShaderNetworkPtr substitutedNetwork;
-		if( substitutionsHash != IECore::MurmurHash() )
+		IECoreScene::ShaderNetworkPtr adaptedNetwork;
+		if( adaptorHash != IECore::MurmurHash() )
 		{
-			substitutedNetwork = network->copy();
-			substitutedNetwork->applySubstitutions( attributes );
-			network = substitutedNetwork.get();
+			adaptedNetwork = network->copy();
+			IECoreScene::ShaderNetworkAlgo::applyRenderAdaptors( adaptedNetwork.get(), attributeName, attributes );
+			network = adaptedNetwork.get();
 		}
 
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
@@ -81,23 +83,23 @@ ConstMaterialPtr MaterialCache::getMaterial( const IECoreScene::ShaderNetwork *n
 	return a->second;
 }
 
-ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNetwork *network, const IECore::CompoundObject *attributes )
+ConstDisplacementPtr MaterialCache::getDisplacement( const IECoreScene::ShaderNetwork *network, IECore::InternedString attributeName, const IECore::CompoundObject *attributes )
 {
 	IECore::MurmurHash hash = network->Object::hash();
-	IECore::MurmurHash substitutionsHash;
-	network->hashSubstitutions( attributes, substitutionsHash );
-	hash.append( substitutionsHash );
+	IECore::MurmurHash adaptorHash;
+	IECoreScene::ShaderNetworkAlgo::hashRenderAdaptors( network, attributeName, attributes, adaptorHash );
+	hash.append( adaptorHash );
 
 	DisplacementCache::accessor a;
 	m_displacementCache.insert( a, hash );
 	if( !a->second )
 	{
-		IECoreScene::ShaderNetworkPtr substitutedNetwork;
-		if( substitutionsHash != IECore::MurmurHash() )
+		IECoreScene::ShaderNetworkPtr adaptedNetwork;
+		if( adaptorHash != IECore::MurmurHash() )
 		{
-			substitutedNetwork = network->copy();
-			substitutedNetwork->applySubstitutions( attributes );
-			network = substitutedNetwork.get();
+			adaptedNetwork = network->copy();
+			IECoreScene::ShaderNetworkAlgo::applyRenderAdaptors( adaptedNetwork.get(), attributeName, attributes );
+			network = adaptedNetwork.get();
 		}
 
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
