@@ -19,6 +19,11 @@ API
 
 - Arnold ShaderNetworkAlgo : Deprecated substitutions API. Use IECoreScene's render adaptor API instead. For backwards compatibility until it is removed, the substitutions API forwards to the render adaptor API.
 
+Build
+-----
+
+- Cortex : Updated to version 10.6.3.0.
+
 1.6.8.0 (relative to 1.6.7.0)
 =======
 
