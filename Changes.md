@@ -31,7 +31,16 @@ Breaking Changes
 1.6.x.x (relative to 1.6.8.0)
 =======
 
+Improvements
+------------
 
+- RenderMan : Added support for PxrLayer, PxrLayerMixer and PxrLayerSurface shaders (by implementing support for vstruct conditionals).
+
+Fixes
+-----
+
+- RenderMan : Fixed interactive denoising when rendering via the `it` display driver.
+- EditScopeUI : Fixed crash if `childNodesAreReadOnly` metadata was edited while no EditScope was selected.
 
 1.6.8.0 (relative to 1.6.7.0)
 =======
@@ -591,7 +600,10 @@ Build
 1.5.16.x (relative to 1.5.16.4)
 ========
 
+Fixes
+-----
 
+- EditScopeUI : Fixed crash if `childNodesAreReadOnly` metadata was edited while no EditScope was selected.
 
 1.5.16.4 (relative to 1.5.16.3)
 ========

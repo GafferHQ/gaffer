@@ -136,9 +136,17 @@ __widgetTypes = {
 
 def __plugWidgetType( plug ) :
 
-	return __widgetTypes.get(
+	result = __widgetTypes.get(
 		plug.node().parameterMetadata( plug, "widget" )
 	)
+
+	if result is not None :
+		return result
+
+	# See comments in `__plugNoduleVisibility()`.
+	node = plug.node()
+	parameterKey = node["type"].getValue() + ":" + node["name"].getValue() + ":" + plug.getName()
+	return Gaffer.Metadata.value( parameterKey, "plugValueWidget:type" )
 
 def __plugNoduleType( plug ) :
 
@@ -161,6 +169,30 @@ def __plugNoduleVisibility( plug ) :
 	visible = node.parameterMetadata( plug, "gafferNoduleLayoutVisible" )
 	if visible is None :
 		visible = node.shaderMetadata( "gafferNoduleLayoutDefaultVisibility" )
+
+	# Manual fallback to the lookups that the base ShaderUI would do for
+	# us if we hadn't made our own registrations.
+	## \todo Ditch all our metadata overrides for plugs, and instead register
+	# dynamic metadata loaders against the "osl:*:*:*" string target. This
+	# will have several benefits :
+	#
+	# - We'll be able to query shader metadata without access to a node. This
+	#   could allow us to improve presentation in other areas of the UI, like
+	#   the SceneInspector.
+	# - Users will be able to override the metadata easily, without needing to
+	#   modify the OSL source code itself.
+	# - We'll be matching the method used for RenderMan shader metadata. If we
+	#   move Arnold and Cycles over too then we'll have standardised metadata
+	#   for all options/attributes/shaders.
+	#
+	# Before we can do this, we need to modify `Metadata::ValueFunction` so that
+	# it is passed a `target` argument.
+	if visible is None :
+		shaderKey = node["type"].getValue() + ":" + node["name"].getValue()
+		parameterKey = shaderKey + ":" + plug.getName()
+		visible = Gaffer.Metadata.value( parameterKey, "noduleLayout:visible" )
+		if visible is None :
+			visible = Gaffer.Metadata.value( shaderKey, "noduleLayout:defaultVisibility" )
 
 	return bool( visible ) if visible is not None else True
 

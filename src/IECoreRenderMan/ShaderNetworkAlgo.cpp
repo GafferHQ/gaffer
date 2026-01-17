@@ -44,11 +44,13 @@
 #include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"
+#include "IECore/StringAlgo.h"
 
 #include "OSL/oslquery.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/container/flat_map.hpp"
+#include "boost/core/span.hpp"
 #include "boost/property_tree/xml_parser.hpp"
 
 #include "fmt/format.h"
@@ -63,89 +65,402 @@ using namespace IECoreScene;
 using namespace IECoreRenderMan;
 
 //////////////////////////////////////////////////////////////////////////
-// Internal utilities
+// VStructConditionalExpression
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
+// Bare-bones implementation of vstruct conditionals, just sufficient to support
+// all syntax currently used by `Pxr*` shaders. Uses a hand-written parser for
+// now because the `boost::spirit` documentation makes my head hurt, no matter
+// how many times it claims to be simple.
+struct VStructConditionalExpression
+{
+
+	VStructConditionalExpression( const std::string &expression )
+	{
+		// We store the expression in tokenised form to simplify
+		// later evaluation.
+		const std::regex tokenRe( "(if|else|[(]|[)]|==|or|and|[a-zA-Z0-9_]+)" );
+		auto b = std::sregex_iterator( expression.begin(), expression.end(), tokenRe );
+		auto e = std::sregex_iterator();
+		for( auto i = b; i != e; ++i )
+		{
+			m_tokens.push_back( i->str() );
+		}
+	}
+
+	using Action = IECoreRenderMan::ShaderNetworkAlgo::VStructAction;
+	using ParameterValueFunction = IECoreRenderMan::ShaderNetworkAlgo::ParameterValueFunction;
+	using ParameterIsConnectedFunction = IECoreRenderMan::ShaderNetworkAlgo::ParameterIsConnectedFunction;
+
+	Action evaluate( const ParameterValueFunction &valueFunction, const ParameterIsConnectedFunction &isConnectedFunction ) const
+	{
+		// The expression language is simple enough that we don't really need to build
+		// an AST to evaluate it. So we simply evaluate the result while "parsing".
+		// This is done using a simple recursive parser which consumes tokens from
+		// a span.
+		TokenSpan tokens( m_tokens );
+		const Action result = evaluateAction( tokens, valueFunction, isConnectedFunction );
+		if( tokens.size() )
+		{
+			throw runtime_error( fmt::format( "{} Unexpected tokens at end of vstruct expression", tokens.size() ) );
+		}
+		return result;
+	}
+
+	private :
+
+		vector<InternedString> m_tokens;
+
+		using TokenSpan = boost::span<const InternedString>;
+
+		static Action evaluateAction( TokenSpan &tokens, const ParameterValueFunction &valueFunction, const ParameterIsConnectedFunction &isConnectedFunction )
+		{
+			Action result;
+			if( tokens.empty() )
+			{
+				result.type = Action::Type::Connect;
+				return result;
+			}
+
+			const InternedString t = takeToken( tokens );
+			if( t == g_connectToken )
+			{
+				result.type = Action::Type::Connect;
+			}
+			else if( t == g_setToken )
+			{
+				result.type = IECoreRenderMan::ShaderNetworkAlgo::VStructAction::Type::Set;
+				result.value = evaluateValue( tokens );
+			}
+			else
+			{
+				throw std::runtime_error( "Expected `connect` or `set`" );
+			}
+
+			if( !tokens.size() )
+			{
+				return result;
+			}
+
+			takeExpectedToken( tokens, g_ifToken );
+
+			const bool b = evaluateBooleanExpression( tokens, valueFunction, isConnectedFunction );
+			Action elseAction;
+			if( tokens.size() )
+			{
+				takeExpectedToken( tokens, g_elseToken );
+				elseAction = evaluateAction( tokens, valueFunction, isConnectedFunction );
+			}
+
+			return b ? result : elseAction;
+		}
+
+		// Note : this doesn't currently give any thought to operator precedence, but
+		// is still sufficient to deal with all expressions in `Pxr*` shaders.
+		static bool evaluateBooleanExpression( TokenSpan &tokens, const ParameterValueFunction &valueFunction, const ParameterIsConnectedFunction &isConnectedFunction )
+		{
+			bool operand1;
+			if( tokens.size() && tokens[0] == g_openParenthesisToken )
+			{
+				int balance = 0;
+				size_t i = 0;
+				while( true )
+				{
+					if( tokens[i] == g_openParenthesisToken )
+					{
+						balance++;
+					}
+					else if( tokens[i] == g_closeParenthesisToken )
+					{
+						balance--;
+					}
+					if( balance == 0 )
+					{
+						break;
+					}
+					i++;
+					if( i >= tokens.size() )
+					{
+						throw runtime_error( "Unbalanced parentheses" );
+					}
+				}
+				TokenSpan parenthesisedTokens = tokens.subspan( 1, i - 1 );
+				tokens = tokens.subspan( i + 1 );
+				operand1 = evaluateBooleanExpression( parenthesisedTokens, valueFunction, isConnectedFunction );
+			}
+			else
+			{
+				operand1 = evaluateParameterComparison( tokens, valueFunction, isConnectedFunction );
+			}
+
+			if( !tokens.size() || ( tokens[0] != g_orToken && tokens[0] != g_andToken ) )
+			{
+				return operand1;
+			}
+
+			const InternedString op = takeToken( tokens );
+			const bool operand2 = evaluateBooleanExpression( tokens, valueFunction, isConnectedFunction );
+
+			if( op == g_orToken )
+			{
+				return operand1 || operand2;
+			}
+			else
+			{
+				return operand1 && operand2;
+			}
+		}
+
+		static bool evaluateParameterComparison( TokenSpan &tokens, const ParameterValueFunction &valueFunction, const ParameterIsConnectedFunction &isConnectedFunction )
+		{
+			const InternedString parameter = takeToken( tokens );
+			const InternedString op = takeToken( tokens );
+
+			if( op == g_isToken )
+			{
+				takeExpectedToken( tokens, g_connectedToken );
+				return isConnectedFunction( parameter );
+			}
+
+			if( op == g_equalToken )
+			{
+				const double v1 = evaluateValue( tokens );
+				double v2 = toDouble( valueFunction( parameter ).get() );
+				return v1 == v2;
+			}
+			else
+			{
+				throw std::runtime_error( fmt::format( "Expected operator, not {}", op ) );
+			}
+		}
+
+		// We use doubles to represent values, although for the expressions we
+		// actually care about I think even a bool would be sufficient.
+		static double evaluateValue( TokenSpan &tokens )
+		{
+			const InternedString t = takeToken( tokens );
+			size_t s;
+			try
+			{
+				const double result = std::stod( t.string(), &s );
+				if( s == t.string().size() )
+				{
+					return result;
+				}
+			}
+			catch( ... )
+			{
+				// Fall through
+			}
+			throw runtime_error( fmt::format( "Bad value \"{}\"", t.string() ) );
+		}
+
+		static double toDouble( const IECore::Data *data )
+		{
+			if( !data )
+			{
+				return 0;
+			}
+
+			switch( data->typeId() )
+			{
+				case BoolDataTypeId :
+					return static_cast<const BoolData *>( data )->readable();
+				case IntDataTypeId :
+					return static_cast<const IntData *>( data )->readable();
+				case FloatDataTypeId :
+					return static_cast<const FloatData *>( data )->readable();
+				default :
+					IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "VStruct expression referenced unsupported value type \"{}\"", data->typeName() ) );
+					return 0;
+			}
+		}
+
+		static InternedString takeToken( TokenSpan &tokens )
+		{
+			if( tokens.empty() )
+			{
+				throw runtime_error( "Expression ended unexpectedly" );
+			}
+
+			InternedString r = tokens[0];
+			tokens = tokens.subspan( 1 );
+			return r;
+		}
+
+		static InternedString takeExpectedToken( TokenSpan &tokens, InternedString expectedToken )
+		{
+			if( tokens.empty() || takeToken( tokens ) != expectedToken )
+			{
+				throw runtime_error( fmt::format( "Expected \"{}\"", expectedToken.string() ) );
+			}
+			return expectedToken;
+		}
+
+		static const InternedString g_andToken;
+		static const InternedString g_orToken;
+		static const InternedString g_equalToken;
+		static const InternedString g_ifToken;
+		static const InternedString g_elseToken;
+		static const InternedString g_openParenthesisToken;
+		static const InternedString g_closeParenthesisToken;
+		static const InternedString g_connectToken;
+		static const InternedString g_setToken;
+		static const InternedString g_isToken;
+		static const InternedString g_connectedToken;
+
+};
+
+const InternedString VStructConditionalExpression::g_andToken( "and" );
+const InternedString VStructConditionalExpression::g_orToken( "or" );
+const InternedString VStructConditionalExpression::g_equalToken( "==" );
+const InternedString VStructConditionalExpression::g_ifToken( "if" );
+const InternedString VStructConditionalExpression::g_elseToken( "else" );
+const InternedString VStructConditionalExpression::g_openParenthesisToken( "(" );
+const InternedString VStructConditionalExpression::g_closeParenthesisToken( ")" );
+const InternedString VStructConditionalExpression::g_connectToken( "connect" );
+const InternedString VStructConditionalExpression::g_setToken( "set" );
+const InternedString VStructConditionalExpression::g_isToken( "is" );
+const InternedString VStructConditionalExpression::g_connectedToken( "connected" );
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Internal ShaderInfo cache
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct VStructMember
+{
+	InternedString parameterName;
+	// Only valid for outputs.
+	VStructConditionalExpression conditionalExpression;
+};
+
+struct ParameterInfo
+{
+	pxrcore::DataType type;
+	DataPtr defaultValue;
+	unordered_map<InternedString, VStructMember> vStructMembers;
+};
+
 struct ShaderInfo
 {
 	riley::ShadingNode::Type type = riley::ShadingNode::Type::k_Invalid;
-	using ParameterTypeMap = std::unordered_map<RtUString, pxrcore::DataType>;
-	ParameterTypeMap parameterTypes;
+	using ParameterMap = std::unordered_map<InternedString, ParameterInfo>;
+	ParameterMap parameters;
+
+	const ParameterInfo *parameterInfo( InternedString parameterName ) const
+	{
+		auto it = parameters.find( parameterName );
+		return it != parameters.end() ? &it->second : nullptr;
+	}
 };
 
 using ConstShaderInfoPtr = std::shared_ptr<const ShaderInfo>;
 
-void loadParameterTypes( const boost::property_tree::ptree &tree, ShaderInfo::ParameterTypeMap &typeMap )
+void loadVStructMember( ShaderInfo::ParameterMap &parameters, InternedString parameter, const std::string &vStructMember, const std::string &conditionalExpression )
+{
+	vector<InternedString> tokens;
+	StringAlgo::tokenize( vStructMember, '.', tokens );
+	if( tokens.size() != 2 )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "IECoreRenderMan",
+			fmt::format( "Parameter \"{}\" has invalid vstructmember specification \"{}\"", parameter.string(), vStructMember )
+		);
+		return;
+	}
+
+	ParameterInfo &parameterInfo = parameters[tokens[0]];
+	parameterInfo.vStructMembers.insert( { tokens[1], { parameter, conditionalExpression } } );
+}
+
+void loadParameters( const boost::property_tree::ptree &tree, ShaderInfo::ParameterMap &parameterMap )
 {
 	for( const auto &child : tree )
 	{
 		if( child.first == "param" )
 		{
-			const RtUString name( child.second.get<string>( "<xmlattr>.name" ).c_str() );
+			const string name = child.second.get<string>( "<xmlattr>.name" );
 			const string type = child.second.get<string>( "<xmlattr>.type" );
+			ParameterInfo parameterInfo;
 			if( type == "int" )
 			{
-				typeMap[name] = pxrcore::DataType::k_integer;
+				parameterInfo.type = pxrcore::DataType::k_integer;
 			}
 			else if( type == "float" )
 			{
-				typeMap[name] = pxrcore::DataType::k_float;
+				parameterInfo.type = pxrcore::DataType::k_float;
 			}
 			else if( type == "color" )
 			{
-				typeMap[name] = pxrcore::DataType::k_color;
+				parameterInfo.type = pxrcore::DataType::k_color;
 			}
 			else if( type == "point" )
 			{
-				typeMap[name] = pxrcore::DataType::k_point;
+				parameterInfo.type = pxrcore::DataType::k_point;
 			}
 			else if( type == "vector" )
 			{
-				typeMap[name] = pxrcore::DataType::k_vector;
+				parameterInfo.type = pxrcore::DataType::k_vector;
 			}
 			else if( type == "normal" )
 			{
-				typeMap[name] = pxrcore::DataType::k_normal;
+				parameterInfo.type = pxrcore::DataType::k_normal;
 			}
 			else if( type == "matrix" )
 			{
-				typeMap[name] = pxrcore::DataType::k_matrix;
+				parameterInfo.type = pxrcore::DataType::k_matrix;
 			}
 			else if( type == "string" )
 			{
-				typeMap[name] = pxrcore::DataType::k_string;
+				parameterInfo.type = pxrcore::DataType::k_string;
 			}
 			else if( type == "bxdf" )
 			{
-				typeMap[name] = pxrcore::DataType::k_bxdf;
+				parameterInfo.type = pxrcore::DataType::k_bxdf;
 			}
 			else if( type == "lightfilter" )
 			{
-				typeMap[name] = pxrcore::DataType::k_lightfilter;
+				parameterInfo.type = pxrcore::DataType::k_lightfilter;
 			}
 			else if( type == "samplefilter" )
 			{
-				typeMap[name] = pxrcore::DataType::k_samplefilter;
+				parameterInfo.type = pxrcore::DataType::k_samplefilter;
 			}
 			else if( type == "displayfilter" )
 			{
-				typeMap[name] = pxrcore::DataType::k_displayfilter;
+				parameterInfo.type = pxrcore::DataType::k_displayfilter;
 			}
 			else if( type == "struct" )
 			{
-				typeMap[name] = pxrcore::DataType::k_struct;
+				parameterInfo.type = pxrcore::DataType::k_struct;
 			}
 			else
 			{
-				IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "Unknown type `{}` for parameter \"{}\".", type, name.CStr() ) );
+				IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "Unknown type `{}` for parameter \"{}\".", type, name ) );
+				continue;
+			}
+
+			parameterMap[name] = parameterInfo;
+
+			const string vStructMember = child.second.get<string>( "<xmlattr>.vstructmember", "" );
+			if( vStructMember.size() )
+			{
+				// Note : Not loading a conditional expression here, as none of the
+				// current C++ plugins use one.
+				loadVStructMember( parameterMap, name, vStructMember, "" );
 			}
 		}
 		else if( child.first == "page" )
 		{
-			loadParameterTypes( child.second, typeMap );
+			loadParameters( child.second, parameterMap );
 		}
 	}
 }
@@ -201,7 +516,7 @@ ConstShaderInfoPtr shaderInfoFromArgsFile( const boost::filesystem::path file )
 
 	// Load parameters
 
-	loadParameterTypes( tree.get_child( "args" ), result->parameterTypes );
+	loadParameters( tree.get_child( "args" ), result->parameters );
 
 	return result;
 }
@@ -213,44 +528,47 @@ ConstShaderInfoPtr shaderInfoFromOSLQuery( OSL::OSLQuery &query )
 
 	for( const auto &parameter : query )
 	{
-		const RtUString name( parameter.name.c_str() );
 		OIIO::TypeDesc type = parameter.type;
 		type.unarray();
+
+		ParameterInfo parameterInfo;
 		if( type == OIIO::TypeInt )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_integer;
+			parameterInfo.type = pxrcore::DataType::k_integer;
+			// Currently, integer parameters are the only ones we need default values for.
+			parameterInfo.defaultValue = new IntData( parameter.idefault[0] );
 		}
 		else if( type == OIIO::TypeFloat )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_float;
+			parameterInfo.type = pxrcore::DataType::k_float;
 		}
 		else if( type == OIIO::TypeColor )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_color;
+			parameterInfo.type = pxrcore::DataType::k_color;
 		}
 		else if( type == OIIO::TypePoint )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_point;
+			parameterInfo.type = pxrcore::DataType::k_point;
 		}
 		else if( type == OIIO::TypeVector )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_vector;
+			parameterInfo.type = pxrcore::DataType::k_vector;
 		}
 		else if( type == OIIO::TypeNormal )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_normal;
+			parameterInfo.type = pxrcore::DataType::k_normal;
 		}
 		else if( type == OIIO::TypeMatrix44 )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_matrix;
+			parameterInfo.type = pxrcore::DataType::k_matrix;
 		}
 		else if( type == OIIO::TypeString )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_string;
+			parameterInfo.type = pxrcore::DataType::k_string;
 		}
 		else if( parameter.isstruct )
 		{
-			result->parameterTypes[name] = pxrcore::DataType::k_struct;
+			parameterInfo.type = pxrcore::DataType::k_struct;
 		}
 		else
 		{
@@ -261,6 +579,27 @@ ConstShaderInfoPtr shaderInfoFromOSLQuery( OSL::OSLQuery &query )
 					parameter.type, parameter.name, query.shadername()
 				)
 			);
+			continue;
+		}
+
+		result->parameters[parameter.name.c_str()] = parameterInfo;
+
+		string vStructMember;
+		string vStructConditionalExpression;
+		for( const auto &metadata : parameter.metadata )
+		{
+			if( metadata.name == "vstructmember" && metadata.sdefault.size() == 1 )
+			{
+				vStructMember = metadata.sdefault[0].string();
+			}
+			else if( metadata.name == "vstructConditionalExpr" && metadata.sdefault.size() == 1 )
+			{
+				vStructConditionalExpression = metadata.sdefault[0].string();
+			}
+		}
+		if( !vStructMember.empty() )
+		{
+			loadVStructMember( result->parameters, parameter.name.c_str(), vStructMember, vStructConditionalExpression );
 		}
 	}
 
@@ -298,27 +637,36 @@ ShaderInfoCache g_shaderInfoCache(
 
 );
 
-using ArrayConnections = std::unordered_map<RtUString, vector<RtUString>>;
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::convert()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+using ArrayConnections = std::unordered_map<InternedString, vector<RtUString>>;
 const std::regex g_arrayIndexRegex( R"((\w+)\[([0-9]+)\])" );
 
 void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection, const ShaderInfo *shaderInfo, RtParamList &paramList, ArrayConnections &arrayConnections )
 {
-	RtUString destination;
+	InternedString destination;
 	std::optional<size_t> destinationIndex;
 
 	std::smatch arrayIndexMatch;
 	if( std::regex_match( connection.destination.name.string(), arrayIndexMatch, g_arrayIndexRegex ) )
 	{
-		destination = RtUString( arrayIndexMatch.str( 1 ).c_str() );
+		destination = arrayIndexMatch.str( 1 ).c_str();
 		destinationIndex = std::stoi( arrayIndexMatch.str( 2 ) );
 	}
 	else
 	{
-		destination = RtUString( connection.destination.name.c_str() );
+		destination = connection.destination.name;
 	}
 
-	auto typeIt = shaderInfo->parameterTypes.find( destination );
-	if( typeIt == shaderInfo->parameterTypes.end() )
+	auto parameterInfo = shaderInfo->parameterInfo( destination );
+	if( !parameterInfo )
 	{
 		IECore::msg(
 			IECore::Msg::Warning, "IECoreRenderMan",
@@ -335,10 +683,10 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 		connection.source.name.string().size() &&
 		// Several node types don't have named outputs, and
 		// connections will silently fail if we include a name.
-		typeIt->second != pxrcore::DataType::k_displayfilter &&
-		typeIt->second != pxrcore::DataType::k_samplefilter &&
-		typeIt->second != pxrcore::DataType::k_bxdf &&
-		typeIt->second != pxrcore::DataType::k_lightfilter
+		parameterInfo->type != pxrcore::DataType::k_displayfilter &&
+		parameterInfo->type != pxrcore::DataType::k_samplefilter &&
+		parameterInfo->type != pxrcore::DataType::k_bxdf &&
+		parameterInfo->type != pxrcore::DataType::k_lightfilter
 	)
 	{
 		reference += ":" + connection.source.name.string();
@@ -348,8 +696,8 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 	if( !destinationIndex )
 	{
 		RtParamList::ParamInfo const info = {
-			destination,
-			typeIt->second,
+			RtUString( destination.c_str() ),
+			parameterInfo->type,
 			pxrcore::DetailType::k_reference,
 			1,
 			false,
@@ -418,8 +766,8 @@ void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, 
 	for( const auto &[destination, references] : arrayConnections )
 	{
 		RtParamList::ParamInfo const info = {
-			destination,
-			shaderInfo->parameterTypes.at( destination ),
+			RtUString( destination.c_str() ),
+			shaderInfo->parameters.at( destination ).type,
 			pxrcore::DetailType::k_reference,
 			(uint32_t)references.size(),
 			true,
@@ -433,9 +781,8 @@ void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, 
 	shadingNodes.push_back( node );
 }
 
-//////////////////////////////////////////////////////////////////////////
-// USD conversion code
-//////////////////////////////////////////////////////////////////////////
+const InternedString g_sunDirectionParameter( "sunDirection" );
+
 
 template<typename T>
 T parameterValue( const Shader *shader, InternedString parameterName, const T &defaultValue )
@@ -483,6 +830,105 @@ T parameterValue( const Shader *shader, InternedString parameterName, const T &d
 
 	return defaultValue;
 }
+
+void correctParameters( ShaderNetwork *network )
+{
+	const Shader *shader = network->outputShader();
+	if( shader && shader->getName() == "PxrEnvDayLight" )
+	{
+		ShaderPtr newShader = shader->copy();
+
+		// The incoming object-space coordinates of `sunDirection` is in our Y-up coordinate system.
+		// But RenderMan's orientation is Z-up, so we transform from our coordinate system to RenderMan's
+		// so the parameter is intuitive to work with and the appearance of the shader matches expectations.
+		const V3f direction = parameterValue( newShader.get(), g_sunDirectionParameter, V3f( 0.f, 1.f, 0.f ) );
+		newShader->parameters()[g_sunDirectionParameter] = new V3fData( V3f( direction.x, -direction.z, direction.y ) );
+
+		network->setShader( network->getOutput().shader, std::move( newShader ) );
+	}
+}
+
+ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	ShaderNetworkPtr result = shaderNetwork->copy();
+
+	correctParameters( result.get() );
+	IECoreScene::ShaderNetworkAlgo::expandRamps( result.get() );
+	IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( result.get() );
+	IECoreRenderMan::ShaderNetworkAlgo::resolveVStructs( result.get() );
+
+	return result;
+}
+
+} // namespace
+
+std::vector<riley::ShadingNode> IECoreRenderMan::ShaderNetworkAlgo::convert( const IECoreScene::ShaderNetwork *network )
+{
+	ConstShaderNetworkPtr preprocessedNetwork = ::preprocessedNetwork( network );
+	vector<riley::ShadingNode> result;
+	result.reserve( preprocessedNetwork->size() );
+
+	HandleSet visited;
+	convertShaderNetworkWalk( preprocessedNetwork->getOutput(), preprocessedNetwork.get(), result, visited );
+
+	return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::combineLightFilters()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+IECoreScene::ConstShaderNetworkPtr IECoreRenderMan::ShaderNetworkAlgo::combineLightFilters( const std::vector<const IECoreScene::ShaderNetwork *> networks )
+{
+	if( networks.empty() )
+	{
+		return nullptr;
+	}
+
+	if( networks.size() == 1 )
+	{
+		return networks[0];
+	}
+
+	unordered_map<string, size_t> numConnections;
+
+	ShaderNetworkPtr combinedNetwork = new ShaderNetwork;
+	auto combinerHandle = combinedNetwork->addShader(
+		"combiner", new Shader( "PxrCombinerLightFilter", "lightFilter" )
+	);
+	combinedNetwork->setOutput( { combinerHandle, "out" } );
+
+	for( auto network : networks )
+	{
+		const Shader *outputShader = network->outputShader();
+		if( !outputShader )
+		{
+			continue;
+		}
+
+		string combineMode = "mult";
+		if( auto combineModeData = outputShader->parametersData()->member<StringData>( "combineMode" ) )
+		{
+			combineMode = combineModeData->readable();
+		}
+
+		ShaderNetwork::Parameter filterHandle = IECoreScene::ShaderNetworkAlgo::addShaders( combinedNetwork.get(), network );
+
+		const size_t connectionIndex = numConnections[combineMode]++;
+		combinedNetwork->addConnection(
+			ShaderNetwork::Connection( filterHandle, { combinerHandle, fmt::format( "{}[{}]", combineMode, connectionIndex ) } )
+		);
+	}
+
+	return combinedNetwork;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::convertUSDShaders()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 // Traits class to handle the GeometricTypedData fiasco.
 template<typename T>
@@ -595,7 +1041,6 @@ const InternedString g_specularFaceColorParameter( "specularFaceColor" );
 const InternedString g_specularIorParameter( "specularIor" );
 const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
-const InternedString g_sunDirectionParameter( "sunDirection" );
 const InternedString g_temperatureParameter( "temperature" );
 const InternedString g_textureFileParameter( "texture:file" );
 const InternedString g_textureFormatParameter( "texture:format" );
@@ -733,103 +1178,9 @@ void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr 
 	}
 }
 
-void correctParameters( ShaderNetwork *network )
-{
-	const Shader *shader = network->outputShader();
-	if( shader && shader->getName() == "PxrEnvDayLight" )
-	{
-		ShaderPtr newShader = shader->copy();
-
-		// The incoming object-space coordinates of `sunDirection` is in our Y-up coordinate system.
-		// But RenderMan's orientation is Z-up, so we transform from our coordinate system to RenderMan's
-		// so the parameter is intuitive to work with and the appearance of the shader matches expectations.
-		const V3f direction = parameterValue( newShader.get(), g_sunDirectionParameter, V3f( 0.f, 1.f, 0.f ) );
-		newShader->parameters()[g_sunDirectionParameter] = new V3fData( V3f( direction.x, -direction.z, direction.y ) );
-
-		network->setShader( network->getOutput().shader, std::move( newShader ) );
-	}
-}
-
-ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
-{
-	ShaderNetworkPtr result = shaderNetwork->copy();
-
-	correctParameters( result.get() );
-
-	IECoreScene::ShaderNetworkAlgo::expandRamps( result.get() );
-
-	IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( result.get() );
-
-	return result;
-}
-
 } // namespace
 
-//////////////////////////////////////////////////////////////////////////
-// External API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreRenderMan::ShaderNetworkAlgo
-{
-
-std::vector<riley::ShadingNode> convert( const IECoreScene::ShaderNetwork *network )
-{
-	ConstShaderNetworkPtr preprocessedNetwork = ::preprocessedNetwork( network );
-	vector<riley::ShadingNode> result;
-	result.reserve( preprocessedNetwork->size() );
-
-	HandleSet visited;
-	convertShaderNetworkWalk( preprocessedNetwork->getOutput(), preprocessedNetwork.get(), result, visited );
-
-	return result;
-}
-
-IECoreScene::ConstShaderNetworkPtr combineLightFilters( const std::vector<const IECoreScene::ShaderNetwork *> networks )
-{
-	if( networks.empty() )
-	{
-		return nullptr;
-	}
-
-	if( networks.size() == 1 )
-	{
-		return networks[0];
-	}
-
-	unordered_map<string, size_t> numConnections;
-
-	ShaderNetworkPtr combinedNetwork = new ShaderNetwork;
-	auto combinerHandle = combinedNetwork->addShader(
-		"combiner", new Shader( "PxrCombinerLightFilter", "lightFilter" )
-	);
-	combinedNetwork->setOutput( { combinerHandle, "out" } );
-
-	for( auto network : networks )
-	{
-		const Shader *outputShader = network->outputShader();
-		if( !outputShader )
-		{
-			continue;
-		}
-
-		string combineMode = "mult";
-		if( auto combineModeData = outputShader->parametersData()->member<StringData>( "combineMode" ) )
-		{
-			combineMode = combineModeData->readable();
-		}
-
-		ShaderNetwork::Parameter filterHandle = IECoreScene::ShaderNetworkAlgo::addShaders( combinedNetwork.get(), network );
-
-		const size_t connectionIndex = numConnections[combineMode]++;
-		combinedNetwork->addConnection(
-			ShaderNetwork::Connection( filterHandle, { combinerHandle, fmt::format( "{}[{}]", combineMode, connectionIndex ) } )
-		);
-	}
-
-	return combinedNetwork;
-}
-
-void convertUSDShaders( ShaderNetwork *shaderNetwork )
+void IECoreRenderMan::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNetwork )
 {
 	for( const auto &[handle, shader] : shaderNetwork->shaders() )
 	{
@@ -962,7 +1313,11 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
 }
 
-M44f usdLightTransform( const Shader *lightShader )
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::usdLightTransform()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+M44f IECoreRenderMan::ShaderNetworkAlgo::usdLightTransform( const Shader *lightShader )
 {
 	assert( lightShader );
 
@@ -999,4 +1354,163 @@ M44f usdLightTransform( const Shader *lightShader )
 	return M44f();
 }
 
-} // namespace IECoreRenderMan::ShaderNetworkAlgo
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::evaluateVStructConditional()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+IECoreRenderMan::ShaderNetworkAlgo::VStructAction IECoreRenderMan::ShaderNetworkAlgo::evaluateVStructConditional( const std::string &expression, const ShaderNetworkAlgo::ParameterValueFunction &valueFunction, const ShaderNetworkAlgo::ParameterIsConnectedFunction &isConnectedFunction )
+{
+	VStructConditionalExpression evaluator( expression );
+	return evaluator.evaluate( valueFunction, isConnectedFunction );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// `ShaderNetworkAlgo::resolveVStructs()` implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+void resolveVStructsWalk( IECoreScene::ShaderNetwork *shaderNetwork, InternedString shaderHandle, unordered_set<InternedString> &visited )
+{
+	if( !visited.insert( shaderHandle ).second )
+	{
+		return;
+	}
+
+	// Resolve vstruct connections to the input shaders first. Conditionals for
+	// vstructs on this shader might depend on them.
+	for( const auto &connection : shaderNetwork->inputConnections( shaderHandle ) )
+	{
+		resolveVStructsWalk( shaderNetwork, connection.source.shader, visited );
+	}
+
+	// Now deal with vstructs on this shader.
+
+	const IECoreScene::Shader *shader = shaderNetwork->getShader( shaderHandle );
+	ConstShaderInfoPtr shaderInfo = g_shaderInfoCache.get( shader->getName() );
+	if( !shaderInfo )
+	{
+		return;
+	}
+
+	// Iterating over copy of connections, because we'll mutate the range while iterating.
+
+	ShaderPtr modifiedShader;
+	const ShaderNetwork::ConnectionRange range = shaderNetwork->inputConnections( shaderHandle );
+	const vector<ShaderNetwork::Connection> inputConnections( range.begin(), range.end() );
+	for( const auto &connection : inputConnections )
+	{
+		auto destinationParameterInfo = shaderInfo->parameterInfo( connection.destination.name );
+		if( !destinationParameterInfo || destinationParameterInfo->vStructMembers.empty() )
+		{
+			continue;
+		}
+
+		const Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
+		ConstShaderInfoPtr sourceShaderInfo = g_shaderInfoCache.get( sourceShader->getName() );
+		if( !sourceShaderInfo )
+		{
+			continue;
+		}
+
+		auto sourceParameterInfo = sourceShaderInfo->parameterInfo( connection.source.name );
+		if( !sourceParameterInfo || sourceParameterInfo->vStructMembers.empty() )
+		{
+			continue;
+		}
+
+		for( const auto &[memberName, vStructMember] : destinationParameterInfo->vStructMembers )
+		{
+			const auto sourceMemberIt = sourceParameterInfo->vStructMembers.find( memberName );
+			if( sourceMemberIt == sourceParameterInfo->vStructMembers.end() )
+			{
+				continue;
+			}
+
+			const IECoreRenderMan::ShaderNetworkAlgo::VStructAction action = sourceMemberIt->second.conditionalExpression.evaluate(
+				// ParameterValueFunction
+				[&] ( InternedString parameterName ) -> ConstDataPtr {
+					if( auto d = sourceShader->parametersData()->member( parameterName ) )
+					{
+						return d;
+					}
+					// Fall back to default value.
+					if( auto parameterInfo = sourceShaderInfo->parameterInfo( parameterName ) )
+					{
+						if( parameterInfo->defaultValue )
+						{
+							return parameterInfo->defaultValue;
+						}
+					}
+					IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "Couldn't find default value for \"{}.{}\"", sourceShader->getName(), parameterName ) );
+					return nullptr;
+				},
+				// IsConnectedFunction
+				[&] ( InternedString parameterName ) -> bool {
+					return shaderNetwork->input( { connection.source.shader, parameterName } );
+				}
+			);
+
+			if( action.type == IECoreRenderMan::ShaderNetworkAlgo::VStructAction::Type::Connect )
+			{
+				shaderNetwork->addConnection(
+					{ { connection.source.shader, sourceMemberIt->second.parameterName }, { shaderHandle, vStructMember.parameterName } }
+				);
+			}
+			else if( action.type == IECoreRenderMan::ShaderNetworkAlgo::VStructAction::Type::Set )
+			{
+				auto destinationParameterInfo = shaderInfo->parameterInfo( vStructMember.parameterName );
+				if( !destinationParameterInfo )
+				{
+					continue;
+				}
+
+				if( !modifiedShader )
+				{
+					modifiedShader = shader->copy();
+				}
+				switch( destinationParameterInfo->type )
+				{
+					case pxrcore::DataType::k_integer :
+						modifiedShader->parameters()[vStructMember.parameterName] = new IntData( action.value );
+						break;
+					default :
+						IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", fmt::format( "Vstruct member \"{}.{}\" has unsupported value type", shader->getName(), vStructMember.parameterName.string() ) );
+				}
+			}
+		}
+
+		// Remove virtual connection and parameter value. The only
+		// parameters that matter are the vstruct members.
+
+		shaderNetwork->removeConnection( connection );
+		if( !modifiedShader )
+		{
+			modifiedShader = shader->copy();
+		}
+		modifiedShader->parameters().erase( connection.destination.name );
+	}
+
+	if( modifiedShader )
+	{
+		shaderNetwork->setShader( shaderHandle, std::move( modifiedShader ) );
+	}
+
+}
+
+} // namespace
+
+void IECoreRenderMan::ShaderNetworkAlgo::resolveVStructs( IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	unordered_set<InternedString> visited;
+	try
+	{
+		resolveVStructsWalk( shaderNetwork, shaderNetwork->getOutput().shader, visited );
+	}
+	catch( const std::exception &e )
+	{
+		IECore::msg( IECore::Msg::Warning, "IECoreRenderMan", e.what() );
+	}
+
+}

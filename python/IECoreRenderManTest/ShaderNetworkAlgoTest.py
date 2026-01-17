@@ -582,6 +582,176 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				"Unsupported value \"latlong\" for DomeLight.format. Only \"automatic\" is supported. Format will be read from texture file."
 			)
 
+	def testVStructConditionalParameterComparison( self ) :
+
+		Type = IECoreRenderMan.ShaderNetworkAlgo.VStructAction.Type
+
+		for expression, parameters, expectedType in [
+			( "connect if enableRoughSpecular == 1", {}, False ),
+			( "connect if enableRoughSpecular == 1", { "enableRoughSpecular" : False }, Type.None_ ),
+			( "connect if enableRoughSpecular == 1", { "enableRoughSpecular" : True }, Type.Connect ),
+			( "connect if enableRoughSpecular==1", { "enableRoughSpecular" : True }, Type.Connect ),
+			( "connect if enableRoughSpecular == 1 else set 0", {}, Type.Set ),
+			( "connect if enableRoughSpecular == 1 else connect", {}, Type.Connect ),
+		] :
+
+			with self.subTest( expression = expression, parameters = parameters ) :
+
+				action = IECoreRenderMan.ShaderNetworkAlgo.evaluateVStructConditional(
+					expression, parameters.get, lambda parameterName : False
+				)
+				self.assertEqual( action.type, expectedType )
+
+	def testVStructConditionalIsConnected( self ) :
+
+		for expression, connections, expectConnection in [
+			( "connect if bumpNormal is connected", [], False ),
+			( "connect if bumpNormal is connected", [ "bumpNormal" ], True ),
+			( "connect if bumpNormal is connected", [ "otherThing" ], False ),
+		] :
+
+			with self.subTest( expression = expression, connections = connections ) :
+
+				action = IECoreRenderMan.ShaderNetworkAlgo.evaluateVStructConditional(
+					expression, lambda parameterName : None, lambda parameterName : parameterName in connections
+				)
+				self.assertEqual(
+					action.type,
+					IECoreRenderMan.ShaderNetworkAlgo.VStructAction.Type.Connect if expectConnection else IECoreRenderMan.ShaderNetworkAlgo.VStructAction.Type.None_
+				)
+
+	def testVStructConditionalSetIf( self ) :
+
+		for expression, connections, expectedValue in [
+			( "set 1 if ( bumpNormal is connected ) else set 0", [], 0 ),
+			( "set 1 if bumpNormal is connected else set 0", [ "bumpNormal" ], 1 ),
+			( "set 1 if bumpNormal is connected", [], None ),
+		] :
+
+			with self.subTest( expression = expression, connections = connections ) :
+
+				action = IECoreRenderMan.ShaderNetworkAlgo.evaluateVStructConditional(
+					expression, lambda parameterName : None, lambda parameterName : parameterName in connections
+				)
+				if expectedValue is not None :
+					self.assertEqual( action.type, IECoreRenderMan.ShaderNetworkAlgo.VStructAction.Type.Set )
+					self.assertEqual( action.value, expectedValue )
+				else :
+					self.assertEqual( action.type, IECoreRenderMan.ShaderNetworkAlgo.VStructAction.Type.None_ )
+
+	def testVStructConditionalBooleanExpression( self ) :
+
+		for expression, connections, parameters, expectConnection in [
+			( "connect if foo is connected or bar == 1", [], {}, False ),
+			( "connect if foo is connected or bar == 1", [ "foo" ], {}, True ),
+			( "connect if foo is connected or bar == 1", [ "foo" ], { "bar" : True }, True ),
+			( "connect if foo is connected or bar == 1", [], { "bar" : True }, True ),
+			( "connect if foo is connected and bar == 1", [], {}, False ),
+			( "connect if foo is connected and bar == 1", [ "foo" ], {}, False ),
+			( "connect if foo is connected and bar == 1", [ "foo" ], { "bar" : True }, True ),
+			( "connect if foo is connected and bar == 1", [], { "bar" : True }, False ),
+		] :
+
+			with self.subTest( expression = expression, parameters = parameters, connections = connections ) :
+
+				action = IECoreRenderMan.ShaderNetworkAlgo.evaluateVStructConditional(
+					expression, parameters.get, lambda parameterName : parameterName in connections
+				)
+
+	def testVStructConditionalParentheses( self ) :
+
+		for expression, parameters, expectConnection in [
+			( "connect if (enableRoughSpecular == 1)", { "enableRoughSpecular" : False }, False ),
+			( "connect if (enableRoughSpecular == 1)", { "enableRoughSpecular" : True }, True ),
+			( "connect if ( enableRoughSpecular == 1 )", { "enableRoughSpecular" : False }, False ),
+			( "connect if ( enableRoughSpecular == 1 )", { "enableRoughSpecular" : True }, True ),
+			( "connect if ( x == 1 and y == 1 ) or z == 1", { "x" : True, "y" : True }, True ),
+			( "connect if ( x == 1 and y == 1 ) or z == 1", { "x" : True }, False ),
+			( "connect if x == 1 and ( y == 1 or z == 1 )", { "x" : True, "z" : True }, True ),
+			( "connect if x == 1 and ( y == 1 or z == 1 )", { "z" : True }, False ),
+		] :
+
+			with self.subTest( expression = expression, parameters = parameters ) :
+
+				action = IECoreRenderMan.ShaderNetworkAlgo.evaluateVStructConditional(
+					expression, parameters.get, lambda parameterName : False
+				)
+				self.assertEqual(
+					action.type,
+					IECoreRenderMan.ShaderNetworkAlgo.VStructAction.Type.Connect if expectConnection else IECoreRenderMan.ShaderNetworkAlgo.VStructAction.Type.None_
+				)
+
+	def testVStructConditionalUnbalancedParentheses( self ) :
+
+		for expression in [
+			"connect if (enableRoughSpecular == 1",
+			"connect if ((enableRoughSpecular == 1)",
+		] :
+			with self.subTest( expression = expression ) :
+
+				with self.assertRaisesRegex( RuntimeError, "Unbalanced parentheses" ) :
+
+					IECoreRenderMan.ShaderNetworkAlgo.evaluateVStructConditional(
+						"connect if (enableRoughSpecular == 1", lambda parameterName : None, lambda parameterName : False
+					)
+
+	def testVStructConditionalBadValue( self ) :
+
+		for expression in [
+			"set 1a",
+			"set b",
+			"set b",
+		] :
+			with self.assertRaises( RuntimeError ) :
+				IECoreRenderMan.ShaderNetworkAlgo.evaluateVStructConditional(
+					expression, lambda parameterName : None, lambda parameterName : False
+				)
+
+	def testResolveVStructs( self ) :
+
+		for enableDiffuse in ( True, False, None ) :
+
+			with self.subTest( enableDiffuse = enableDiffuse ) :
+
+				shaderNetwork = IECoreScene.ShaderNetwork(
+
+					shaders = {
+						"layer" : IECoreScene.Shader(
+							"PxrLayer", "osl:shader",
+							{ "enableDiffuse" : enableDiffuse } if enableDiffuse is not None else {}
+						),
+						"layerMixer" : IECoreScene.Shader(
+							"PxrLayerMixer", "osl:shader",
+							{
+							}
+						),
+						"surface" : IECoreScene.Shader(
+							"PxrSurface", "ri:surface",
+							{
+							}
+						),
+					},
+
+					connections = [
+
+						( ( "layer", "pxrMaterialOut" ), ( "layerMixer", "baselayer" ) ),
+						( ( "layerMixer", "pxrMaterialOut" ), ( "surface", "inputMaterial" ) ),
+
+					],
+
+					output = "surface",
+
+				)
+
+				IECoreRenderMan.ShaderNetworkAlgo.resolveVStructs( shaderNetwork )
+
+				if enableDiffuse in ( True, None ) : # `None` should fall back to default value, which is `True`.
+					self.assertEqual( shaderNetwork.input( ( "layerMixer", "baselayer_diffuseGain" ) ), ( "layer", "pxrMaterialOut_diffuseGain" ) )
+					self.assertEqual( shaderNetwork.getShader( "layerMixer" ).parameters["baselayer_enableDiffuse"].value, True )
+				else :
+					self.assertFalse( shaderNetwork.input( ( "layerMixer", "baselayer_diffuseGain" ) ) )
+					self.assertEqual( shaderNetwork.getShader( "layerMixer" ).parameters["baselayer_enableDiffuse"].value, False )
+
 	def __assertShadersEqual( self, shader1, shader2, message = None ) :
 
 		self.assertEqual( shader1.name, shader2.name, message )
@@ -591,7 +761,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				shader1.parameters[k], shader2.parameters[k],
 				"{}(Parameter = {})".format( message or "", k )
 			)
-
 
 if __name__ == "__main__" :
 	unittest.main()
