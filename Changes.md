@@ -1,4 +1,9 @@
-1.6.x.x (relative to 1.6.8.0)
+1.6.x.x (relative to 1.6.9.0)
+=======
+
+
+
+1.6.9.0 (relative to 1.6.8.0)
 =======
 
 Improvements
