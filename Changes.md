@@ -11,6 +11,8 @@ Fixes
 
 - RenderMan : Fixed interactive denoising when rendering via the `it` display driver.
 - EditScopeUI : Fixed crash if `childNodesAreReadOnly` metadata was edited while no EditScope was selected.
+- Layouts : Fixed window title for detached panels. It is now always synchronised with the title of the main window.
+- OpenColorIO : Fixed display transform used by editors in detached panels. This problem was particularly noticeable in the LightEditor.
 
 1.6.8.0 (relative to 1.6.7.0)
 =======
