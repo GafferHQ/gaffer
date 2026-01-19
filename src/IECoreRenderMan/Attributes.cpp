@@ -110,17 +110,14 @@ boost::container::flat_map<InternedString, RtUString> g_prototypeAttributes = {
 
 const string g_renderManPrefix( "ri:" );
 const IECore::InternedString g_automaticInstancingAttributeName( "gaffer:automaticInstancing" );
-const InternedString g_displacementAttributeName( "displacement" );
 const InternedString g_doubleSidedAttributeName( "doubleSided" );
 const InternedString g_lightMuteAttributeName( "light:mute" );
-const InternedString g_lightShaderAttributeName( "light" );
-const InternedString g_oslDisplacementAttributeName( "osl:displacement" );
-const InternedString g_renderManDisplacementAttributeName( "ri:displacement" );
-const InternedString g_renderManLightShaderAttributeName( "ri:light" );
-const InternedString g_renderManSurfaceAttributeName( "ri:surface" );
 const InternedString g_renderManLightFilterAttributeName( "ri:lightFilter" );
-const InternedString g_surfaceAttributeName( "surface" );
 const RtUString g_userMaterialId( "user:__materialid" );
+
+const vector<InternedString> g_displacementAttributeNames = { "ri:displacement", "osl:displacement", "displacement" };
+const vector<InternedString> g_lightAttributeNames = { "ri:light", "light" };
+const vector<InternedString> g_surfaceAttributeNames = { "ri:surface", "surface" };
 
 template<typename T>
 T *attributeCast( const IECore::RunTimeTyped *v, const IECore::InternedString &name )
@@ -166,6 +163,18 @@ T attributeValue( const CompoundObject::ObjectMap &attributes, IECore::InternedS
 	using DataType = IECore::TypedData<T>;
 	const DataType *data = attribute<DataType>( attributes, name );
 	return data ? data->readable() : defaultValue;
+}
+
+pair<InternedString, const ShaderNetwork *> shaderNetworkAttribute( const CompoundObject::ObjectMap &attributes, const vector<InternedString> &attributeNames )
+{
+	for( const auto &name : attributeNames )
+	{
+		if( const auto *shaderNetwork = attribute<ShaderNetwork>( attributes, name ) )
+		{
+			return { name, shaderNetwork };
+		}
+	}
+	return { InternedString(), nullptr };
 }
 
 bool isMeshLight( const IECoreScene::ShaderNetwork *lightShader )
@@ -217,26 +226,22 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 {
 	// Convert shaders.
 
-	const ShaderNetwork *surface = attribute<ShaderNetwork>( attributes->members(), g_renderManSurfaceAttributeName );
-	surface = surface ? surface : attribute<ShaderNetwork>( attributes->members(), g_surfaceAttributeName );
-	m_surfaceMaterial = materialCache->getMaterial( surface ? surface : g_facingRatio.get(), attributes );
+	const auto [surfaceName, surface] = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames );
+	m_surfaceMaterial = materialCache->getMaterial( surface ? surface : g_facingRatio.get(), surface ? surfaceName : InternedString(), attributes );
 
-	const ShaderNetwork *displacement = attribute<ShaderNetwork>( attributes->members(), g_renderManDisplacementAttributeName );
-	displacement = displacement ? displacement : attribute<ShaderNetwork>( attributes->members(), g_oslDisplacementAttributeName );
-	displacement = displacement ? displacement : attribute<ShaderNetwork>( attributes->members(), g_displacementAttributeName );
+	const auto [displacementName, displacement] = shaderNetworkAttribute( attributes->members(), g_displacementAttributeNames );
 	if( displacement )
 	{
-		m_displacement = materialCache->getDisplacement( displacement, attributes );
+		m_displacement = materialCache->getDisplacement( displacement, displacementName, attributes );
 	}
 
-	m_lightShader = attribute<ShaderNetwork>( attributes->members(), g_renderManLightShaderAttributeName );
-	m_lightShader = m_lightShader ? m_lightShader : attribute<ShaderNetwork>( attributes->members(), g_lightShaderAttributeName );
+	m_lightShader = shaderNetworkAttribute( attributes->members(), g_lightAttributeNames ).second;
 	if( m_lightShader && isMeshLight( m_lightShader.get() ) )
 	{
 		// Mesh lights default to having a black material so they don't appear
 		// in indirect rays, but the user can override with a surface assignment
 		// if they want further control. Other lights don't have materials.
-		m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get(), attributes );
+		m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get(), surface ? surfaceName : InternedString(), attributes );
 	}
 
 	if( surface )
