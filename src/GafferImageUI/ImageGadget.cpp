@@ -1690,7 +1690,7 @@ void ImageGadget::renderTiles( bool ids ) const
 				for( int i = 0; i < 4; ++i )
 				{
 					const InternedString channelName = ( m_soloChannel < 0 || i == 3 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
-					Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
+					Tiles::iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
 					if( it != m_tiles.end() )
 					{
 						channelTextures[i] = it->second.texture( active );
@@ -1705,7 +1705,7 @@ void ImageGadget::renderTiles( bool ids ) const
 			else
 			{
 				IECoreGL::ConstTexturePtr idTexture;
-				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, g_idChannelInternalName ) );
+				Tiles::iterator it = m_tiles.find( TileIndex( tileOrigin, g_idChannelInternalName ) );
 				if( it != m_tiles.end() )
 				{
 					bool unusedActive = false; // We don't have activity indicators for the id AOV
