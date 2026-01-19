@@ -47,11 +47,11 @@ import GafferTest
 
 class ApplicationTest( GafferTest.TestCase ) :
 
-	def testTaskSchedulerInitDoesntSuppressExceptions( self ) :
+	def testTBBGlobalControlDoesntSuppressExceptions( self ) :
 
 		def f() :
 
-			with IECore.tbb_task_scheduler_init( IECore.tbb_task_scheduler_init.automatic ) :
+			with IECore.tbb_global_control( IECore.tbb_global_control.parameter.max_allowed_parallelism, IECore.hardwareConcurrency() ) :
 				raise Exception( "Woops!")
 
 		self.assertRaises( Exception, f )
