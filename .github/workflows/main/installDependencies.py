@@ -49,7 +49,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a1/cortex-10.7.0.0a1-{platform}{buildEnvironment}.{extension}"
+defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a3/cortex-10.7.0.0a3-{platform}{buildEnvironment}.{extension}"
 
 # Parse command line arguments.
 

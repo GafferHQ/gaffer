@@ -28,6 +28,11 @@ Breaking Changes
 - OSL Shaders : Pattern/FloatSpline and Pattern/ColorSpline have been replaced by Pattern/FloatRamp and Pattern/ColorRamp. Old Gaffer scripts will automatically be updated on load, files exported from Gaffer will contain the new shaders. ( The .osl files for the old shaders are still included, so that old USD files can render ).
 - GafferUI : Renamed SplineWidget to RampWidget. Renamed SplinePlugValueWidget to RampPlugValueWidget. The old RampPlugValueWidget is no longer exposed, since it was only used internally.
 
+Build
+-----
+
+- Cortex : Updated to version 10.7.0.0a3.
+
 1.6.x.x (relative to 1.6.8.0)
 =======
 
