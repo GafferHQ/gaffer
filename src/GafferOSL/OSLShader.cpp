@@ -1107,7 +1107,7 @@ Plug *loadStructParameter( const std::string &shaderName, const OSLQuery &query,
 Plug *loadShaderParameter( const std::string shaderName, const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
 	Plug *result = nullptr;
-	if( metadata && metadata->member( "vstructmember" ) )
+	if( metadata && metadata->member( "vstructmember" ) && shaderName != "PxrDisplace" )
 	{
 		// RenderMan "virtual struct" member. This isn't for authoring
 		// by users. Instead it will receive a connection or value in the

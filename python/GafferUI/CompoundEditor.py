@@ -180,11 +180,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow :
-			panel.setTitle( scriptWindow.getTitle() )
-			weakSetTitle = Gaffer.WeakMethod( panel.setTitle )
-			panel.__titleChangedConnection = scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ), scoped = True )
-			# It's not directly in the qt hierarchy so shortcut events don't make it to the MenuBar
-			scriptWindow.menuBar().addShortcutTarget( panel )
+			panel.connectToScriptWindow( scriptWindow )
 
 		self.__detachedPanels.append( panel )
 		return panel
@@ -199,6 +195,16 @@ class CompoundEditor( GafferUI.Editor ) :
 		assert( not panel.visible() )
 		GafferUI.WidgetAlgo.keepUntilIdle( panel )
 
+	def _displayTransformChanged( self ) :
+
+		GafferUI.Editor._displayTransformChanged( self )
+
+		# Propagate display transform to detached panels. This would
+		# happen naturally if they were parented to the main ScriptWindow,
+		# but they're not.
+		for panel in self.__detachedPanels :
+			panel.setDisplayTransform( self.displayTransform() )
+
 	def __visibilityChanged(self, widget) :
 
 		v = self.visible()
@@ -207,11 +213,12 @@ class CompoundEditor( GafferUI.Editor ) :
 
 	def __parentChanged( self, widget ) :
 
-		# Make sure we have the correct keyboard shortcut listeners
+		# If we created any detached panels before we were
+		# in a ScriptWindow, connect them to the ScriptWindow now.
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow is not None :
 			for panel in self._detachedPanels() :
-				scriptWindow.menuBar().addShortcutTarget( panel )
+				panel.connectToScriptWindow( scriptWindow )
 
 	def __repr__( self ) :
 
@@ -509,17 +516,14 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 
 		container[0].addEditor( editor )
 
-	def serialiseChildren( self, scriptNode = None ) :
-
-		if not scriptNode :
-			scriptNode = self.ancestor( GafferUI.CompoundEditor ).scriptNode()
+	def serialiseChildren( self ) :
 
 		if self.isSplit() :
 			sizes = self.getSizes()
 			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
 			return "( GafferUI.SplitContainer.{}, {}, ( {}, {} ) )".format(
 				str( self.getOrientation() ), splitPosition,
-				self[0].serialiseChildren( scriptNode ), self[1].serialiseChildren( scriptNode )
+				self[0].serialiseChildren(), self[1].serialiseChildren()
 			)
 		else :
 			# not split - a tabbed container full of editors
@@ -922,6 +926,13 @@ class _DetachedPanel( GafferUI.Window ) :
 		if self.__windowState :
 			_restoreWindowState( self, self.__windowState )
 
+	def connectToScriptWindow( self, scriptWindow ) :
+
+		scriptWindow.menuBar().addShortcutTarget( self )
+		self.setTitle( scriptWindow.getTitle() )
+		scriptWindow.titleChangedSignal().connect( Gaffer.WeakMethod( self.__scriptWindowTitleChanged ) )
+		self.setDisplayTransform( scriptWindow.displayTransform() )
+
 	# A detached panel is considered empty if it has a single split with no editors.
 	def isEmpty( self ) :
 
@@ -944,6 +955,10 @@ class _DetachedPanel( GafferUI.Window ) :
 	# Required for editor path introspection
 	def _splitContainer( self ) :
 		return self.__splitContainer
+
+	def __scriptWindowTitleChanged( self, window, title ) :
+
+		self.setTitle( title )
 
 ## An internal eventFilter class managing all tab drag-drop events and logic.
 # Tab dragging is an exception and is implemented entirely using mouse-move

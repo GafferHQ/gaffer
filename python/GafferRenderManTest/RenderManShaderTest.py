@@ -170,6 +170,14 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader.loadShader( "PxrDisplace" )
 		self.assertEqual( shader["type"].getValue(), "osl:displacement" )
 
+	def testPxrDisplaceOSLParameters( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "PxrDisplace" )
+
+		for parameter in [ "dispAmount", "dispScalar", "dispVector" ] :
+			self.assertIn( parameter, shader["parameters"] )
+
 	def testPatternShaderType( self ) :
 
 		shader = GafferRenderMan.RenderManShader()
