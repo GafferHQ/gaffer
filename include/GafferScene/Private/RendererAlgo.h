@@ -90,6 +90,8 @@ struct GAFFERSCENE_API RenderOptions
 /// Creates the directories necessary to receive the outputs defined in globals.
 GAFFERSCENE_API void createOutputDirectories( const IECore::CompoundObject *globals );
 
+// Returns the "gaffer:renderID" parameter added to outputs for the provided renderer.
+GAFFERSCENE_API std::string renderID( const IECoreScenePreview::Renderer *renderer );
 
 // Returns whether the globals contain an Output that references the data `float id`
 GAFFERSCENE_API bool hasIDOutput( const IECore::CompoundObject *globals );
@@ -99,7 +101,6 @@ GAFFERSCENE_API bool hasInstanceIDOutput( const IECore::CompoundObject *globals 
 
 // Returns a manifest file path if it's set in the globals, otherwise empty string
 GAFFERSCENE_API std::string renderManifestFilePath( const IECore::CompoundObject *globals );
-
 
 /// Sets `times` to a list of times to sample the transform or deformation of a
 /// location at, based on the render options and location attributes. Returns `true`

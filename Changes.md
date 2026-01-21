@@ -18,6 +18,12 @@ Fixes
 - RenderMan :
   - Fixed `R10043 {WARNING} inputMaterial, unknown or mismatched input parameter of PxrSurface`.
   - Fixed offset when reducing crop window size in RIS (#6727).
+  - Fixed unwanted creation of new Catalogue images from InteractiveRenders in the following situations :
+    - Changing camera.
+    - Changing pixel filter or filter width.
+    - Enlarging the crop region when rendering with RIS.
+    - Changing the resolution.
+    - Adding or removing outputs.
 
 API
 ---

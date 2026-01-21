@@ -417,6 +417,14 @@ class Catalogue::InternalImage : public ImageNode
 				}
 			}
 
+			if( InteractiveRender::renderIsActive( m_renderID ) )
+			{
+				// Render is still active. Assume drivers were just closed
+				// in preparation for creating new drivers (with a new
+				// data window or header data for example).
+				return;
+			}
+
 			// All our drivers have been closed, so the render has completed.
 			// Save the image to disk. We do this in the background because
 			// saving large images with many AOVs takes several seconds.

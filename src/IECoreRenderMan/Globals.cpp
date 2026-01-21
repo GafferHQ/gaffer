@@ -275,10 +275,7 @@ void Globals::option( const IECore::InternedString &name, const IECore::Object *
 				// camera in our existing render view, which we try to do by
 				// calling `ModifyRenderView()` in `updateRenderView()`. But that
 				// doesn't work, so for now we delete the render view so that it'll
-				// get recreated from scratch instead. The downside of this is
-				// that display drivers are re-opened, which when rendering to a
-				// Catalogue creates a new image. But that's better than not
-				// changing camera at all.
+				// get recreated from scratch instead.
 				deleteRenderView();
 			}
 		}

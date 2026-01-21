@@ -844,8 +844,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
 
-		# Modify the output to render to file instead of the catalogue, and check
-		# the catalogue image is closed and the file is created.
+		# Modify the output to render to file instead of the catalogue. This isn't
+		# particularly likely in practice, and would most likely indicate user error
+		# of some sort. We expect the Catalogue to keep the image open.
 
 		with Gaffer.DirtyPropagationScope() :
 
@@ -855,8 +856,29 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.uiThreadCallHandler.waitFor( 1 )
 
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
 		self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).is_file() )
+
+		# Switch back to rendering to the Catalogue, as if the user has fixed their error.
+
+		with Gaffer.DirtyPropagationScope() :
+
+			script["outputs"]["outputs"][0]["fileName"].setValue( "test" )
+			script["outputs"]["outputs"][0]["type"].setValue( "ieDisplay" )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+		self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).is_file() )
+
+		# Stop the render, and check the image is closed.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
 
 	## \todo Promote to InteractiveRenderTest and check it works for other renderer backends.
 	def testEditOutputFilterType( self ) :
