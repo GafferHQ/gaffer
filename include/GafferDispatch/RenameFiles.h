@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,23 +36,71 @@
 
 #pragma once
 
+#include "GafferDispatch/TaskNode.h"
+
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
+
 namespace GafferDispatch
 {
 
-enum TypeId
+class GAFFERDISPATCH_API RenameFiles : public TaskNode
 {
 
-	TaskNodeTypeId = 118800,
-	TaskNodeTaskPlugTypeId = 118801,
-	DispatcherTypeId = 118802,
-	TaskListTypeId = 118803,
-	FrameMaskTypeId = 118804,
-	FileListTypeId = 118805,
-	DeleteFilesTypeId = 118806,
-	CopyFilesTypeId = 118807,
-	RenameFilesTypeId = 118808,
+	public :
 
-	LastTypeId = 118999
+		explicit RenameFiles( const std::string &name=defaultName<RenameFiles>() );
+		~RenameFiles() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::RenameFiles, RenameFilesTypeId, TaskNode );
+
+		Gaffer::StringVectorDataPlug *filesPlug();
+		const Gaffer::StringVectorDataPlug *filesPlug() const;
+
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+
+		Gaffer::StringPlug *deletePrefixPlug();
+		const Gaffer::StringPlug *deletePrefixPlug() const;
+
+		Gaffer::StringPlug *deleteSuffixPlug();
+		const Gaffer::StringPlug *deleteSuffixPlug() const;
+
+		Gaffer::StringPlug *findPlug();
+		const Gaffer::StringPlug *findPlug() const;
+
+		Gaffer::StringPlug *replacePlug();
+		const Gaffer::StringPlug *replacePlug() const;
+
+		Gaffer::BoolPlug *useRegularExpressionsPlug();
+		const Gaffer::BoolPlug *useRegularExpressionsPlug() const;
+
+		Gaffer::StringPlug *addPrefixPlug();
+		const Gaffer::StringPlug *addPrefixPlug() const;
+
+		Gaffer::StringPlug *addSuffixPlug();
+		const Gaffer::StringPlug *addSuffixPlug() const;
+
+		Gaffer::BoolPlug *replaceExtensionPlug();
+		const Gaffer::BoolPlug *replaceExtensionPlug() const;
+
+		Gaffer::StringPlug *extensionPlug();
+		const Gaffer::StringPlug *extensionPlug() const;
+
+		Gaffer::BoolPlug *overwritePlug();
+		const Gaffer::BoolPlug *overwritePlug() const;
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
 
 };
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,20 +34,50 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "DispatcherBinding.h"
-#include "FileNodeBinding.h"
-#include "TaskNodeBinding.h"
+#include "GafferDispatch/TaskNode.h"
 
-using namespace boost::python;
-using namespace GafferDispatchModule;
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-BOOST_PYTHON_MODULE( _GafferDispatch )
+namespace GafferDispatch
 {
 
-	bindTaskNode();
-	bindDispatcher();
-	bindFileNodes();
+class GAFFERDISPATCH_API CopyFiles : public TaskNode
+{
 
-}
+	public :
+
+		explicit CopyFiles( const std::string &name=defaultName<CopyFiles>() );
+		~CopyFiles() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::CopyFiles, CopyFilesTypeId, TaskNode );
+
+		Gaffer::StringVectorDataPlug *filesPlug();
+		const Gaffer::StringVectorDataPlug *filesPlug() const;
+
+		Gaffer::StringPlug *destinationPlug();
+		const Gaffer::StringPlug *destinationPlug() const;
+
+		Gaffer::BoolPlug *overwritePlug();
+		const Gaffer::BoolPlug *overwritePlug() const;
+
+		Gaffer::BoolPlug *deleteSourcePlug();
+		const Gaffer::BoolPlug *deleteSourcePlug() const;
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
+
+};
+
+} // namespace GafferDispatch
