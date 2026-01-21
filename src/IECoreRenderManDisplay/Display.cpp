@@ -63,9 +63,17 @@ using namespace IECore;
 extern "C"
 {
 
-PtDspyError DspyImageOpen( PtDspyImageHandle *image, const char *driverName, const char *fileName, int width, int height, int paramcount, const UserParameter *parameters, int formatCount, PtDspyDevFormat *format, PtFlagStuff *flags )
+struct Image
 {
-	*image = nullptr;
+	IECore::CompoundDataPtr parameters;
+	IECoreImage::DisplayDriverPtr driver;
+	// The origin that the arguments to DspyImageData are provided relative to.
+	V2i imageDataOrigin;
+};
+
+PtDspyError DspyImageOpen( PtDspyImageHandle *imageHandle, const char *driverName, const char *fileName, int width, int height, int paramcount, const UserParameter *parameters, int formatCount, PtDspyDevFormat *format, PtFlagStuff *flags )
+{
+	*imageHandle = nullptr;
 
 	// Get channel names.
 
@@ -140,7 +148,8 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *image, const char *driverName, con
 	V2i originalSize( width, height );
 	V2i origin( 0 );
 
-	CompoundDataPtr convertedParameters = new CompoundData;
+	auto image = make_unique<Image>();
+	image->parameters = new CompoundData;
 
 	for( int p = 0; p < paramcount; p++ )
 	{
@@ -227,12 +236,12 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *image, const char *driverName, con
 			}
 			if( newParam )
 			{
-				convertedParameters->writable()[ parameters[p].name ] = newParam;
+				image->parameters->writable()[ parameters[p].name ] = newParam;
 			}
 		}
 	}
 
-	convertedParameters->writable()[ "fileName" ] = new StringData( fileName );
+	image->parameters->writable()[ "fileName" ] = new StringData( fileName );
 
 	// Calculate display and data windows
 
@@ -248,11 +257,11 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *image, const char *driverName, con
 
 	// Create the display driver
 
-	IECoreImage::DisplayDriverPtr dd = nullptr;
 	try
 	{
-		const StringData *driverType = convertedParameters->member<StringData>( "driverType", true /* throw if missing */ );
-		dd = IECoreImage::DisplayDriver::create( driverType->readable(), displayWindow, dataWindow, channels, convertedParameters );
+		const StringData *driverType = image->parameters->member<StringData>( "driverType", true /* throw if missing */ );
+		image->driver = IECoreImage::DisplayDriver::create( driverType->readable(), displayWindow, dataWindow, channels, image->parameters );
+		image->imageDataOrigin = dataWindow.min;
 	}
 	catch( std::exception &e )
 	{
@@ -260,7 +269,7 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *image, const char *driverName, con
 		return PkDspyErrorUnsupported;
 	}
 
-	if( !dd )
+	if( !image->driver )
 	{
 		msg( Msg::Error, "Dspy::imageOpen", "DisplayDriver::create returned 0." );
 		return PkDspyErrorUnsupported;
@@ -268,25 +277,23 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *image, const char *driverName, con
 
 	// Update flags and return
 
-	if( dd->scanLineOrderOnly() )
+	if( image->driver->scanLineOrderOnly() )
 	{
 		flags->flags |= PkDspyFlagsWantsScanLineOrder;
 	}
 
-	dd->addRef(); // This will be removed in imageClose()
-	*image = (PtDspyImageHandle)dd.get();
+	*imageHandle = (PtDspyImageHandle)image.release();
 	return PkDspyErrorNone;
 
 }
 
-
-PtDspyError DspyImageQuery( PtDspyImageHandle image, PtDspyQueryType type, int size, void *data )
+PtDspyError DspyImageQuery( PtDspyImageHandle imageHandle, PtDspyQueryType type, int size, void *data )
 {
-	IECoreImage::DisplayDriver *dd = static_cast<IECoreImage::DisplayDriver *>( image );
+	const Image *image = static_cast<const Image *>( imageHandle );
 
 	if( type == PkRedrawQuery )
 	{
-		if( (!dd->scanLineOrderOnly()) && dd->acceptsRepeatedData() )
+		if( (!image->driver->scanLineOrderOnly()) && image->driver->acceptsRepeatedData() )
 		{
 			((PtDspyRedrawInfo *)data)->redraw = 1;
 		}
@@ -300,14 +307,43 @@ PtDspyError DspyImageQuery( PtDspyImageHandle image, PtDspyQueryType type, int s
 	return PkDspyErrorUnsupported;
 }
 
-PtDspyError DspyImageData( PtDspyImageHandle image, int xMin, int xMaxPlusOne, int yMin, int yMaxPlusOne, int entrySize, const unsigned char *data )
+PtDspyError DspyImageActiveRegion( PtDspyImageHandle imageHandle, int xMin, int xMaxPlusOne, int yMin, int yMaxPlusOne )
 {
-	IECoreImage::DisplayDriver *dd = static_cast<IECoreImage::DisplayDriver *>( image );
-	Box2i dataWindow = dd->dataWindow();
+	Image *image = static_cast<Image *>( imageHandle );
+	// I have no idea why, but before `DspyImageActiveRegion*()` has been called, the arguments
+	// to DspyImageData are given relative to the data window origin. And afterwards, they
+	// are given relative to the global origin;
+	image->imageDataOrigin = V2i( 0 );
+
+	// Replace driver with one with the new data window.
+	try
+	{
+		IECoreImage::DisplayDriverPtr oldDriver = image->driver;
+		const Box2i newDataWindow( V2i( xMin, yMin ), V2i( xMaxPlusOne - 1, yMaxPlusOne - 1 ) );
+		image->driver = IECoreImage::DisplayDriver::create(
+			image->parameters->member<StringData>( "driverType" )->readable(),
+			oldDriver->displayWindow(), newDataWindow, oldDriver->channelNames(), image->parameters
+		);
+
+		// Close old driver. We do this after creating the new one so that Gaffer's Catalogue
+		// doesn't save the image prematurely.
+		oldDriver->imageClose();
+		return PkDspyErrorNone;
+	}
+	catch( const std::exception &e )
+	{
+		msg( Msg::Error, "DspyImageActiveRegion", e.what() );
+		return PkDspyErrorUndefined;
+	}
+}
+
+PtDspyError DspyImageData( PtDspyImageHandle imageHandle, int xMin, int xMaxPlusOne, int yMin, int yMaxPlusOne, int entrySize, const unsigned char *data )
+{
+	const Image *image = static_cast<Image *>( imageHandle );
 
 	// Convert coordinates from cropped image to original image coordinates.
-	Box2i box( V2i( xMin + dataWindow.min.x, yMin + dataWindow.min.y ), V2i( xMaxPlusOne - 1 + dataWindow.min.x, yMaxPlusOne - 1 + dataWindow.min.y ) );
-	int channels = dd->channelNames().size();
+	Box2i box( image->imageDataOrigin + V2i( xMin, yMin ), image->imageDataOrigin + V2i( xMaxPlusOne - 1, yMaxPlusOne - 1 ) );
+	int channels = image->driver->channelNames().size();
 	int blockSize = (xMaxPlusOne - xMin) * (yMaxPlusOne - yMin);
 	int bufferSize = channels * blockSize;
 
@@ -348,7 +384,7 @@ PtDspyError DspyImageData( PtDspyImageHandle image, int xMin, int xMaxPlusOne, i
 
 	try
 	{
-		dd->imageData( box, buffer, bufferSize );
+		image->driver->imageData( box, buffer, bufferSize );
 	}
 	catch( std::exception &e )
 	{
@@ -367,17 +403,17 @@ PtDspyError DspyImageData( PtDspyImageHandle image, int xMin, int xMaxPlusOne, i
 	return PkDspyErrorNone;
 }
 
-PtDspyError DspyImageClose( PtDspyImageHandle image )
+PtDspyError DspyImageClose( PtDspyImageHandle imageHandle )
 {
-	if ( !image )
+	if( !imageHandle )
 	{
 		return PkDspyErrorNone;
 	}
 
-	IECoreImage::DisplayDriver *dd = static_cast<IECoreImage::DisplayDriver*>( image );
+	const Image *image = static_cast<const Image *>( imageHandle );
 	try
 	{
-		dd->imageClose();
+		image->driver->imageClose();
 	}
 	catch( std::exception &e )
 	{
@@ -386,7 +422,7 @@ PtDspyError DspyImageClose( PtDspyImageHandle image )
 
 	try
 	{
-		dd->removeRef();
+		delete image;
 	}
 	catch( std::exception &e )
 	{

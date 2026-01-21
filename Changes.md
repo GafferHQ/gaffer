@@ -14,8 +14,10 @@ Fixes
 
 - NodeEditor : Fixed "Revert to Defaults" to handle ganged plugs, and other plugs where a subset of children have input connections. In this case, the subset without inputs now revert correctly to their default values.
 - ShaderTweaks : Fixed context handling in "From Affected" and "From Selected" menu items.
-- RenderMan : Fixed `R10043 {WARNING} inputMaterial, unknown or mismatched input parameter of PxrSurface`.
 - SceneTestCase, ImageTestCase : Sanitisers are no longer installed when testing performance, since they add additional overhead.
+- RenderMan :
+  - Fixed `R10043 {WARNING} inputMaterial, unknown or mismatched input parameter of PxrSurface`.
+  - Fixed offset when reducing crop window size in RIS (#6727).
 
 API
 ---
