@@ -194,6 +194,7 @@ from .DisplayTest import DisplayTest
 from .CatalogueTest import CatalogueTest
 from .CatalogueSelectTest import CatalogueSelectTest
 from .CameraQueryTest import CameraQueryTest
+from .GlobalsSanitiserTest import GlobalsSanitiserTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

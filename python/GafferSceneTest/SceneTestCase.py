@@ -62,6 +62,10 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 			sanitiser.__enter__()
 			self.addCleanup( sanitiser.__exit__, None, None, None )
 
+			globalsSanitiser = GafferSceneTest.GlobalsSanitiser()
+			globalsSanitiser.__enter__()
+			self.addCleanup( globalsSanitiser.__exit__, None, None, None )
+
 	def tearDown( self ) :
 
 		IECoreScene.SharedSceneInterfaces.clear()

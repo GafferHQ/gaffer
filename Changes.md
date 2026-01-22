@@ -7,6 +7,7 @@ Improvements
 - RenderPassEditor :
   - Added RenderMan XPU support for Gaffer's inbuilt render pass types.
   - Improved performance of render adaptors when computing the scene globals.
+- SceneTestCase : Added GlobalsSanitiser.
 
 Fixes
 -----
@@ -21,6 +22,7 @@ API
 
 - PlugCreationWidget : Added `context()` method.
 - TestRunner : Added `PerformanceTestMethod.isDecorated()` for detection of performance test methods.
+- GlobalsSanitiser : Added monitor for detecting `ScenePlug.globals` computations depending on other aspects of the scene.
 
 1.6.9.1 (relative to 1.6.9.0)
 =======

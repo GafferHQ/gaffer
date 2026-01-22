@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,53 +34,54 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "GafferSceneTest/ContextSanitiser.h"
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/GlobalsSanitiser.h"
-#include "GafferSceneTest/ScenePlugTest.h"
-#include "GafferSceneTest/TestLight.h"
-#include "GafferSceneTest/TestLightFilter.h"
-#include "GafferSceneTest/TestShader.h"
-#include "GafferSceneTest/TraverseScene.h"
+#include "GafferSceneTest/Export.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/Monitor.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "tbb/concurrent_unordered_set.h"
+#include "tbb/concurrent_unordered_map.h"
 
-using namespace boost::python;
-using namespace GafferSceneTest;
-
-static void traverseSceneWrapper( const GafferScene::ScenePlug *scenePlug )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	traverseScene( scenePlug );
-}
-
-BOOST_PYTHON_MODULE( _GafferSceneTest )
+namespace GafferSceneTest
 {
 
-	IECorePython::RefCountedClass<ContextSanitiser, Gaffer::Monitor>( "ContextSanitiser" )
-		.def( init<>() )
-	;
+/// A monitor which warns if the scene globals depend on some other
+/// aspect of the scene. Our rule is that the globals must be fast to
+/// compute, so should not depend on the rest of the scene, because that
+/// could be arbitrarily complex.
+class GAFFERSCENETEST_API GlobalsSanitiser : public Gaffer::Monitor
+{
 
-	IECorePython::RefCountedClass<GlobalsSanitiser, Gaffer::Monitor>( "GlobalsSanitiser" )
-		.def( init<>() )
-	;
+	public :
 
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
-	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>()
-		.def( "loadShader", &TestLight::loadShader )
-	;
-	GafferBindings::NodeClass<TestLightFilter>();
+		GlobalsSanitiser();
 
-	def( "traverseScene", &traverseSceneWrapper );
-	def( "connectTraverseSceneToPlugDirtiedSignal", &connectTraverseSceneToPlugDirtiedSignal );
-	def( "connectTraverseSceneToContextChangedSignal", &connectTraverseSceneToContextChangedSignal );
-	def( "connectTraverseSceneToPreDispatchSignal", &connectTraverseSceneToPreDispatchSignal );
+		IE_CORE_DECLAREMEMBERPTR( GlobalsSanitiser )
 
-	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
+	protected :
 
-}
+		void processStarted( const Gaffer::Process *process ) override;
+		void processFinished( const Gaffer::Process *process ) override;
+
+	private :
+
+		// Maps from a process to the closest `ScenePlug.globals` that depends on it.
+		using DependentGlobalsMap = tbb::concurrent_unordered_map<const Gaffer::Process *, const Gaffer::CompoundObjectPlug *>;
+		DependentGlobalsMap m_dependentGlobalsMap;
+
+		// First is the upstream plug where the problem was detected. Second
+		// is the downstream globals plug which depended on it.
+		using Warning = std::pair<Gaffer::ConstPlugPtr, Gaffer::ConstCompoundObjectPlugPtr>;
+		using WarningSet = tbb::concurrent_unordered_set<Warning>;
+		// Used to avoid outputting duplicate warnings.
+		WarningSet m_warningsEmitted;
+
+		void warn( const Gaffer::Process &process, const Gaffer::CompoundObjectPlug *dependentGlobals );
+
+};
+
+IE_CORE_DECLAREPTR( GlobalsSanitiser )
+
+} // namespace GafferSceneTest
