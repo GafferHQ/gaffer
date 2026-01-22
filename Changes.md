@@ -38,7 +38,18 @@ Breaking Changes
 Build
 -----
 
+- Boost : Updated to version 1.85.0.
 - Cortex : Updated to version 10.7.0.0a3.
+- Imath : Updated to version 3.1.12.
+- Jemalloc : Removed when building on macOS.
+- LLVM : Updated to version 17.0.6.
+- OpenColorIO : Updated to version 2.4.2.
+- OpenEXR : Updated to version 3.3.6.
+- OpenShadingLanguage : Updated to version 1.14.8.0.
+- PySide : Updated to version 6.5.8.
+- Python : Updated to version 3.11.14.
+- Qt : Updated to version 6.5.8.
+- TBB : Updated to version 2021.13.0.
 
 1.6.x.x (relative to 1.6.10.0)
 =======
