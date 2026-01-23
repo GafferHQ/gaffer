@@ -163,7 +163,6 @@ from .ThreadMonitorTest import ThreadMonitorTest
 from .CollectTest import CollectTest
 from .ProcessTest import ProcessTest
 from .PatternMatchTest import PatternMatchTest
-from .GafferPythonTest import GafferPythonTest
 
 from .IECorePreviewTest import *
 
