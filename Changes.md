@@ -5,6 +5,7 @@ Fixes
 -----
 
 - ShaderTweaks : Fixed context handling in "From Affected" and "From Selected" menu items.
+- RenderMan : Fixed `R10043 {WARNING} inputMaterial, unknown or mismatched input parameter of PxrSurface`.
 
 API
 ---
