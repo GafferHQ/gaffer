@@ -54,9 +54,13 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 
 		GafferImageTest.ImageTestCase.setUp( self )
 
-		sanitiser = GafferSceneTest.ContextSanitiser()
-		sanitiser.__enter__()
-		self.addCleanup( sanitiser.__exit__, None, None, None )
+		# Only install sanitisers when we're not testing performance, as they do
+		# have some overhead.
+		if not GafferTest.TestRunner.PerformanceTestMethod.isDecorated( getattr( self, self._testMethodName ) ) :
+
+			sanitiser = GafferSceneTest.ContextSanitiser()
+			sanitiser.__enter__()
+			self.addCleanup( sanitiser.__exit__, None, None, None )
 
 	def tearDown( self ) :
 
