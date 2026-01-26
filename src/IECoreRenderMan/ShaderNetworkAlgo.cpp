@@ -1481,15 +1481,27 @@ void resolveVStructsWalk( IECoreScene::ShaderNetwork *shaderNetwork, InternedStr
 			}
 		}
 
-		// Remove virtual connection and parameter value. The only
-		// parameters that matter are the vstruct members.
-
+		// Remove virtual connection.
 		shaderNetwork->removeConnection( connection );
-		if( !modifiedShader )
+	}
+
+	// Remove parameter values for vstructs, whether they are connected or not.
+	// Keeping them would trigger warnings when we try to pass them to RenderMan,
+	// because the virtual parameters don't actually exist.
+
+	for( const auto &[parameterName, parameterValue] : shader->parameters() )
+	{
+		if( auto parameterInfo = shaderInfo->parameterInfo( parameterName ) )
 		{
-			modifiedShader = shader->copy();
+			if( parameterInfo->vStructMembers.size() )
+			{
+				if( !modifiedShader )
+				{
+					modifiedShader = shader->copy();
+				}
+				modifiedShader->parameters().erase( parameterName );
+			}
 		}
-		modifiedShader->parameters().erase( connection.destination.name );
 	}
 
 	if( modifiedShader )

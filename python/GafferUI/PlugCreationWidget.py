@@ -103,6 +103,11 @@ class PlugCreationWidget( GafferUI.Widget ) :
 
 		return self.__plugParent
 
+	## Returns the tracked context for `plugParent()`.
+	def context( self ) :
+
+		return self.__contextTracker.context( self.__plugParent )
+
 	__plugCreationMenuSignal = Gaffer.Signals.Signal2(
 		Gaffer.Signals.CatchingCombiner( "PlugCreationWidget.plugCreationMenuSignal" )
 	)

@@ -217,12 +217,14 @@ def _shaderAttributes( plug, paths, affectedOnly ) :
 def __browseAffectedShaders( menu ) :
 
 	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
-	__browseShaders( plugCreationWidget, _pathsFromAffected( plugCreationWidget.plugParent() ), "Affected Shaders" )
+	with plugCreationWidget.context() :
+		__browseShaders( plugCreationWidget, _pathsFromAffected( plugCreationWidget.plugParent() ), "Affected Shaders" )
 
 def __browseSelectedShaders( menu ) :
 
 	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
-	__browseShaders( plugCreationWidget, _pathsFromSelection( plugCreationWidget.plugParent() ), "Selected Shaders" )
+	with plugCreationWidget.context() :
+		__browseShaders( plugCreationWidget, _pathsFromSelection( plugCreationWidget.plugParent() ), "Selected Shaders" )
 
 def __browseShaders( plugCreationWidget, paths, title ) :
 

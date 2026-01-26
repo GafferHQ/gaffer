@@ -42,7 +42,16 @@ Build
 1.6.x.x (relative to 1.6.9.1)
 =======
 
+Fixes
+-----
 
+- ShaderTweaks : Fixed context handling in "From Affected" and "From Selected" menu items.
+- RenderMan : Fixed `R10043 {WARNING} inputMaterial, unknown or mismatched input parameter of PxrSurface`.
+
+API
+---
+
+- PlugCreationWidget : Added `context()` method.
 
 1.6.9.1 (relative to 1.6.9.0)
 =======
