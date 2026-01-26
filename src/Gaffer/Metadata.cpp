@@ -527,7 +527,7 @@ unsigned registrationTypes( bool instanceOnly, bool persistentOnly = false )
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, IECore::ConstDataPtr value )
 {
-	registerValue( target, key, [value]{ return value; } );
+	registerValue( target, key, [value] ( InternedString key ) { return value; } );
 }
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
@@ -637,7 +637,7 @@ IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IEC
 		Values::const_iterator vIt = it->second.find( key );
 		if( vIt != it->second.end() )
 		{
-			return vIt->second();
+			return vIt->second( target );
 		}
 	}
 
@@ -651,7 +651,7 @@ IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IEC
 		Values::const_iterator vIt = values.find( key );
 		if( vIt != values.end() )
 		{
-			return vIt->second();
+			return vIt->second( target );
 		}
 	}
 
