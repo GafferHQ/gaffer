@@ -329,6 +329,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			( "3Delight", "osl:surface", "dl:visibility.shadow" ),
 			( "3Delight Cloud", "osl:surface", "dl:visibility.shadow" ),
 			( "RenderMan", "ri:surface", "ri:visibility:transmission" ),
+			( "RenderMan XPU", "ri:surface", "ri:visibility:transmission" ),
 		) :
 			with self.subTest( renderer = renderer, shaderAttribute = shaderAttribute, visibilityAttribute = visibilityAttribute ) :
 				# Everything is a shadow catcher by default
@@ -551,6 +552,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			( "3Delight", "osl:surface", "dl:visibility.reflection" ),
 			( "3Delight Cloud", "osl:surface", "dl:visibility.reflection" ),
 			( "RenderMan", "ri:surface", "ri:visibility:indirect" ),
+			( "RenderMan XPU", "ri:surface", "ri:visibility:indirect" ),
 		) :
 			with self.subTest( renderer = renderer, shaderAttribute = shaderAttribute, visibilityAttribute = visibilityAttribute ) :
 				# Everything is a reflection catcher by default
@@ -802,6 +804,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			( "3Delight", "osl:surface" ),
 			( "3Delight Cloud", "osl:surface" ),
 			( "RenderMan", "ri:surface" ),
+			( "RenderMan XPU", "ri:surface" ),
 		) :
 			with self.subTest( renderer = renderer, shaderAttribute = shaderAttribute ) :
 				# Nothing is a reflection caster by default

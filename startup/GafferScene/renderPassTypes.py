@@ -127,7 +127,7 @@ def __renderPassShaderAssignment( usage ):
 			elif renderer.startswith( "3Delight" ) :
 				shader = validShaderNetwork( parent["defaultDelightShader"], shader )
 				shaderType = "osl:surface"
-			elif renderer == "RenderMan" :
+			elif renderer.startswith( "RenderMan" ) :
 				shader = validShaderNetwork( parent["defaultRenderManShader"], shader )
 				shaderType = "ri:surface"
 
@@ -212,7 +212,7 @@ def __shadowCatcherProcessor() :
 		( "Arnold", "ai:visibility:shadow" ),
 		( "Cycles", "cycles:visibility:shadow" ),
 		( "3Delight*", "dl:visibility.shadow" ),
-		( "RenderMan", "ri:visibility:transmission" )
+		( "RenderMan*", "ri:visibility:transmission" )
 	) :
 		row = processor["__attributeSpreadsheet"]["rows"].addRow()
 		row["name"].setValue( renderer )
@@ -365,7 +365,7 @@ def __shadowCatcherProcessor() :
 	processor["__rendererSwitch"]["in"]["in2"]["name"].setValue( "3Delight*" )
 	processor["__rendererSwitch"]["in"]["in2"]["value"].setInput( processor["__lightShadowVisibility"]["out"] )
 
-	processor["__rendererSwitch"]["in"]["in3"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in3"]["name"].setValue( "RenderMan*" )
 	processor["__rendererSwitch"]["in"]["in3"]["value"].setInput( processor["__renderManCasterAttributes"]["out"] )
 
 	processor["out"].setInput( processor["__rendererSwitch"]["out"]["value"] )
@@ -385,7 +385,7 @@ def __reflectionCatcherProcessor() :
 		( "Arnold", "ai:visibility:specular_reflect" ),
 		( "Cycles", "cycles:visibility:glossy" ),
 		( "3Delight*", "dl:visibility.reflection" ),
-		( "RenderMan", "ri:visibility:indirect" )
+		( "RenderMan*", "ri:visibility:indirect" )
 	) :
 		row = processor["__attributeSpreadsheet"]["rows"].addRow()
 		row["name"].setValue( renderer )
@@ -671,7 +671,7 @@ def __renderManShadowDisplayFilterProcessor() :
 	processor["__rendererSwitch"]["selector"].setInput( processor["renderer"] )
 	processor["__rendererSwitch"]["in"]["in0"]["value"].setInput( processor["in"] )
 
-	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan*" )
 	processor["__rendererSwitch"]["in"]["in1"]["value"].setInput( processor["__shadowDisplayFilter"]["out"] )
 
 	processor["out"].setInput( processor["__rendererSwitch"]["out"]["value"] )
@@ -689,7 +689,7 @@ def __redirectRenderManShadowOutputProcessor() :
 	processor["__rendererSwitch"]["selector"].setInput( processor["renderer"] )
 	processor["__rendererSwitch"]["in"]["in0"]["value"].setInput( processor["in"] )
 
-	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan*" )
 	processor["__rendererSwitch"]["in"]["in1"]["value"].setInput( processor["in"] )
 
 	# Redirect the RenderMan "shadow" AOV to beauty to more closely match

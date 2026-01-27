@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.9.1)
 =======
 
+Improvements
+------------
+
+- RenderPassEditor : Added RenderMan XPU support for Gaffer's inbuilt render pass types.
+
 Fixes
 -----
 

@@ -78,5 +78,10 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 		options["options"]["ri:hider:maxsamples"]["value"].setValue( 16 )
 		return options
 
+@unittest.skipIf( IECoreRenderMan.renderManMajorVersion() < 27, "XPU only supported for RenderMan 27+" )
+class XPURenderPassAdaptorTest( RenderPassAdaptorTest ) :
+
+	renderer = "RenderManXPU"
+
 if __name__ == "__main__":
 	unittest.main()
