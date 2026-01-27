@@ -50,6 +50,21 @@ class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "RenderMan"
 
+	def testEditCropWindowWithInteractiveDenoiser( self ) :
+
+		# See `_createOptions()`, where we use the test name to
+		# enable the interactive denoiser.
+		self.testEditCropWindow()
+
+	def _createOptions( self ) :
+
+		options = GafferRenderMan.RenderManOptions()
+		if "WithInteractiveDenoiser" in self.id() :
+			options["options"]["ri:interactiveDenoiser:enabled"]["enabled"].setValue( True )
+			options["options"]["ri:interactiveDenoiser:enabled"]["value"].setValue( True )
+
+		return options
+
 	def _createConstantShader( self ) :
 
 		shader = GafferRenderMan.RenderManShader()

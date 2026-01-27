@@ -145,8 +145,9 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *imageHandle, const char *driverNam
 	// the display and data windows, and the others we convert ready to passed to
 	// `DisplayDriver::create()`.
 
-	V2i originalSize( width, height );
-	V2i origin( 0 );
+	Box2i displayWindow( V2i( 0 ), V2i( width - 1, height - 1 ) );
+	Box2i dataWindow = displayWindow;
+	V2i imageDataOrigin = V2i( 0 );
 
 	auto image = make_unique<Image>();
 	image->parameters = new CompoundData;
@@ -155,13 +156,26 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *imageHandle, const char *driverNam
 	{
 		if ( !strcmp( parameters[p].name, "OriginalSize" ) && parameters[p].vtype == (char)'i' && parameters[p].vcount == (char)2 && parameters[p].nbytes == (int) (parameters[p].vcount * sizeof(int)) )
 		{
-			originalSize.x = static_cast<const int *>(parameters[p].value)[0];
-			originalSize.y = static_cast<const int *>(parameters[p].value)[1];
+			const auto originalSize = static_cast<const int *>( parameters[p].value );
+			displayWindow.max = V2i( originalSize[0] - 1, originalSize[1] - 1 );
 		}
 		else if ( !strcmp( parameters[p].name, "origin" ) && parameters[p].vtype == (char)'i' && parameters[p].vcount == (char)2 && parameters[p].nbytes == (int)(parameters[p].vcount * sizeof(int)) )
 		{
-			origin.x = static_cast<const int *>(parameters[p].value)[0];
-			origin.y = static_cast<const int *>(parameters[p].value)[1];
+			const auto origin = static_cast<const int *>( parameters[p].value );
+			dataWindow.min += V2i( origin[0], origin[1] );
+			dataWindow.max += V2i( origin[0], origin[1] );
+			imageDataOrigin = dataWindow.min;
+		}
+		else if( !strcmp( parameters[p].name, "CropWindow" ) && parameters[p].vtype == (char)'i' && parameters[p].vcount == (char)4 && parameters[p].nbytes == (int) (parameters[p].vcount * sizeof(int)) )
+		{
+			// RIS specifies crop windows via `OriginalSize` and `origin` as handled above.
+			// But the XPU version of the `quicklyNoiseless` driver sends `CropWindow` instead.
+			const auto cropWindow = static_cast<const int *>( parameters[p].value );
+			dataWindow = Box2i(
+				V2i( cropWindow[0], cropWindow[1] ),
+				V2i( cropWindow[2], cropWindow[3] )
+			);
+			imageDataOrigin = V2i( 0 );
 		}
 		else
 		{
@@ -243,25 +257,13 @@ PtDspyError DspyImageOpen( PtDspyImageHandle *imageHandle, const char *driverNam
 
 	image->parameters->writable()[ "fileName" ] = new StringData( fileName );
 
-	// Calculate display and data windows
-
-	Box2i displayWindow(
-		V2i( 0 ),
-		originalSize - V2i( 1 )
-	);
-
-	Box2i dataWindow(
-		origin,
-		origin + V2i( width - 1, height - 1)
-	);
-
 	// Create the display driver
 
 	try
 	{
 		const StringData *driverType = image->parameters->member<StringData>( "driverType", true /* throw if missing */ );
 		image->driver = IECoreImage::DisplayDriver::create( driverType->readable(), displayWindow, dataWindow, channels, image->parameters );
-		image->imageDataOrigin = dataWindow.min;
+		image->imageDataOrigin = imageDataOrigin;
 	}
 	catch( std::exception &e )
 	{

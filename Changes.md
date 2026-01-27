@@ -24,6 +24,9 @@ Fixes
     - Enlarging the crop region when rendering with RIS.
     - Changing the resolution.
     - Adding or removing outputs.
+  - Added workaround for RenderMan interactive denoiser bugs :
+    - Data window not updating when the crop window is edited.
+    - Crashes when the crop window is edited.
 
 API
 ---
