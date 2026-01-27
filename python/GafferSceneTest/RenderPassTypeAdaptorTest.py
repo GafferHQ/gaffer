@@ -397,6 +397,19 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 					{ "/group/groupA/cube" }, { "/group/groupA/sphere" }, catchers = "/group/groupA", casters = "/group/groupA/sphere"
 				)
 
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupB/cube",
+						"/group/groupB/sphere"
+					},
+					{
+						"/group/groupA/cube",
+						"/group/groupA/sphere",
+					},
+					catchers = "/", casters = "/group/groupA"
+				)
+
 				# Descendants of casters can be overridden as a shadow catcher
 				assertShadowCatcher(
 					renderer, shaderAttribute, visibilityAttribute,
@@ -634,6 +647,19 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 						"/group/groupB/sphere"
 					},
 					catchers = "/group/groupA", casters = "/"
+				)
+
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupB/cube",
+						"/group/groupB/sphere",
+					},
+					{
+						"/group/groupA/cube",
+						"/group/groupA/sphere",
+					},
+					catchers = "/", casters = "/group/groupA"
 				)
 
 				assertReflectionCatcher(
