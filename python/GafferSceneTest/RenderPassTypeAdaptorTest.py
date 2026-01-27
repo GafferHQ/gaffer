@@ -246,6 +246,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 					"ai:surface" : originalShader,
 					"cycles:surface" : originalShader,
 					"osl:surface" : originalShader,
+					"ri:surface" : originalShader,
 				}
 			)
 		)
@@ -303,6 +304,9 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 					if rendererName == "Cycles" :
 						self.assertTrue( "cycles:is_shadow_catcher" in capturedObject.capturedAttributes().attributes() )
 						self.assertTrue( capturedObject.capturedAttributes().attributes()["cycles:is_shadow_catcher"].value )
+					elif rendererName.startswith( "RenderMan" ) :
+						self.assertTrue( "ri:trace:holdout" in capturedObject.capturedAttributes().attributes() )
+						self.assertTrue( capturedObject.capturedAttributes().attributes()["ri:trace:holdout"].value )
 					# Catchers should also be invisible to shadow rays to avoid self-shadowing.
 					self.assertTrue( visibilityAttribute in capturedObject.capturedAttributes().attributes() )
 					self.assertFalse( capturedObject.capturedAttributes().attributes()[visibilityAttribute].value )
@@ -313,6 +317,8 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 					# `cycles:is_shadow_catcher` should not be true on non-shadow catching locations
 					if rendererName == "Cycles" and "cycles:is_shadow_catcher" in capturedObject.capturedAttributes().attributes() :
 						self.assertFalse( capturedObject.capturedAttributes().attributes()["cycles:is_shadow_catcher"].value )
+					elif rendererName.startswith( "RenderMan" ) and "ri:trace:holdout" in capturedObject.capturedAttributes().attributes() :
+						self.assertFalse( capturedObject.capturedAttributes().attributes()["ri:trace:holdout"].value )
 					# Only casters should be visible to shadow rays
 					if visibilityAttribute in capturedObject.capturedAttributes().attributes() :
 						self.assertEqual( path in casterPaths, capturedObject.capturedAttributes().attributes()[visibilityAttribute].value )
@@ -321,99 +327,100 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			( "Arnold", "ai:surface", "ai:visibility:shadow" ),
 			( "Cycles", "cycles:surface", "cycles:visibility:shadow" ),
 			( "3Delight", "osl:surface", "dl:visibility.shadow" ),
-			( "3Delight Cloud", "osl:surface", "dl:visibility.shadow" )
+			( "3Delight Cloud", "osl:surface", "dl:visibility.shadow" ),
+			( "RenderMan", "ri:surface", "ri:visibility:transmission" ),
 		) :
+			with self.subTest( renderer = renderer, shaderAttribute = shaderAttribute, visibilityAttribute = visibilityAttribute ) :
+				# Everything is a shadow catcher by default
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupA/cube",
+						"/group/groupA/sphere",
+						"/group/groupB/cube",
+						"/group/groupB/sphere"
+					},
+					{},
+				)
 
-			# Everything is a shadow catcher by default
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{
-					"/group/groupA/cube",
-					"/group/groupA/sphere",
-					"/group/groupB/cube",
-					"/group/groupB/sphere"
-				},
-				{},
-			)
+				# Setting catchers to empty string results in no catchers
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{}, {}, catchers = "", casters = ""
+				)
 
-			# Setting catchers to empty string results in no catchers
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{}, {}, catchers = "", casters = ""
-			)
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{}, { "/group/groupA/cube" }, catchers = "", casters = "/group/groupA/cube"
+				)
 
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{}, { "/group/groupA/cube" }, catchers = "", casters = "/group/groupA/cube"
-			)
+				# Test defining catchers and casters with direct paths
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{ "/group/groupA/cube" }, {}, catchers = "/group/groupA/cube"
+				)
 
-			# Test defining catchers and casters with direct paths
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{ "/group/groupA/cube" }, {}, catchers = "/group/groupA/cube"
-			)
+				# If catchers aren't specified, then everything that isn't a caster is a catcher
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupA/sphere",
+						"/group/groupB/cube",
+						"/group/groupB/sphere"
+					},
+					{ "/group/groupA/cube" },
+					casters = "/group/groupA/cube"
+				)
 
-			# If catchers aren't specified, then everything that isn't a caster is a catcher
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{
-					"/group/groupA/sphere",
-					"/group/groupB/cube",
-					"/group/groupB/sphere"
-				},
-				{ "/group/groupA/cube" },
-				casters = "/group/groupA/cube"
-			)
+				# Assigning a group should result in its descendants being treated as catchers
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{ "/group/groupA/cube", "/group/groupA/sphere" }, {}, catchers = "/group/groupA"
+				)
 
-			# Assigning a group should result in its descendants being treated as catchers
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{ "/group/groupA/cube", "/group/groupA/sphere" }, {}, catchers = "/group/groupA"
-			)
+				# Non-matching siblings shouldn't be affected
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{ "/group/groupA/cube", "/group/groupB/cube" }, {}, catchers = "CUBE"
+				)
 
-			# Non-matching siblings shouldn't be affected
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{ "/group/groupA/cube", "/group/groupB/cube" }, {}, catchers = "CUBE"
-			)
+				# Catchers are overridden by casters
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{}, { "/group/groupA/cube", "/group/groupA/sphere" }, catchers = "/group/groupA", casters = "/group/groupA"
+				)
 
-			# Catchers are overridden by casters
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{}, { "/group/groupA/cube", "/group/groupA/sphere" }, catchers = "/group/groupA", casters = "/group/groupA"
-			)
+				# Descendants of catchers can be overridden as a shadow caster
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{ "/group/groupA/cube" }, { "/group/groupA/sphere" }, catchers = "/group/groupA", casters = "/group/groupA/sphere"
+				)
 
-			# Descendants of catchers can be overridden as a shadow caster
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{ "/group/groupA/cube" }, { "/group/groupA/sphere" }, catchers = "/group/groupA", casters = "/group/groupA/sphere"
-			)
+				# Descendants of casters can be overridden as a shadow catcher
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupA/cube",
+						"/group/groupA/sphere",
+					},
+					{
+						"/group/groupB/cube",
+						"/group/groupB/sphere"
+					},
+					catchers = "/group/groupA", casters = "/"
+				)
 
-			# Descendants of casters can be overridden as a shadow catcher
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{
-					"/group/groupA/cube",
-					"/group/groupA/sphere",
-				},
-				{
-					"/group/groupB/cube",
-					"/group/groupB/sphere"
-				},
-				catchers = "/group/groupA", casters = "/"
-			)
-
-			assertShadowCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{
-					"/group/groupA/sphere",
-					"/group/groupB/sphere"
-				},
-				{
-					"/group/groupA/cube",
-				},
-				catchers = "SPHERE", casters = "/group/groupA"
-			)
+				assertShadowCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupA/sphere",
+						"/group/groupB/sphere"
+					},
+					{
+						"/group/groupA/cube",
+					},
+					catchers = "SPHERE", casters = "/group/groupA"
+				)
 
 	def testReflectionCatcherProcessor( self ) :
 
@@ -466,6 +473,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 					"ai:surface" : originalShader,
 					"cycles:surface" : originalShader,
 					"osl:surface" : originalShader,
+					"ri:surface" : originalShader,
 					"linkedLights" : IECore.StringData( "/light1" ),
 				}
 			)
@@ -541,101 +549,102 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			( "Arnold", "ai:surface", "ai:visibility:specular_reflect" ),
 			( "Cycles", "cycles:surface", "cycles:visibility:glossy" ),
 			( "3Delight", "osl:surface", "dl:visibility.reflection" ),
-			( "3Delight Cloud", "osl:surface", "dl:visibility.reflection" )
+			( "3Delight Cloud", "osl:surface", "dl:visibility.reflection" ),
+			( "RenderMan", "ri:surface", "ri:visibility:indirect" ),
 		) :
+			with self.subTest( renderer = renderer, shaderAttribute = shaderAttribute, visibilityAttribute = visibilityAttribute ) :
+				# Everything is a reflection catcher by default
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupA/cube",
+						"/group/groupA/sphere",
+						"/group/groupB/cube",
+						"/group/groupB/sphere"
+					},
+					{},
+				)
 
-			# Everything is a reflection catcher by default
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{
-					"/group/groupA/cube",
-					"/group/groupA/sphere",
-					"/group/groupB/cube",
-					"/group/groupB/sphere"
-				},
-				{},
-			)
+				# Setting catchers to empty string results in no catchers
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{}, {}, catchers = "", casters = ""
+				)
 
-			# Setting catchers to empty string results in no catchers
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{}, {}, catchers = "", casters = ""
-			)
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{}, { "/group/groupA/cube" }, catchers = "", casters = "/group/groupA/cube"
+				)
 
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{}, { "/group/groupA/cube" }, catchers = "", casters = "/group/groupA/cube"
-			)
+				# Test defining catchers and casters with direct paths
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{ "/group/groupA/cube" }, {}, catchers = "/group/groupA/cube"
+				)
 
-			# Test defining catchers and casters with direct paths
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{ "/group/groupA/cube" }, {}, catchers = "/group/groupA/cube"
-			)
+				# If catchers aren't specified, then everything that isn't a caster is a catcher
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupA/sphere",
+						"/group/groupB/cube",
+						"/group/groupB/sphere"
+					},
+					{ "/group/groupA/cube" },
+					casters = "/group/groupA/cube"
+				)
 
-			# If catchers aren't specified, then everything that isn't a caster is a catcher
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{
-					"/group/groupA/sphere",
-					"/group/groupB/cube",
-					"/group/groupB/sphere"
-				},
-				{ "/group/groupA/cube" },
-				casters = "/group/groupA/cube"
-			)
+				# Assigning a group should result in its descendants being treated as catchers
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{ "/group/groupA/cube", "/group/groupA/sphere" }, {}, catchers = "/group/groupA"
+				)
 
-			# Assigning a group should result in its descendants being treated as catchers
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{ "/group/groupA/cube", "/group/groupA/sphere" }, {}, catchers = "/group/groupA"
-			)
+				# Non-matching siblings shouldn't be affected
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{ "/group/groupA/cube", "/group/groupB/cube" }, {}, catchers = "CUBE"
+				)
 
-			# Non-matching siblings shouldn't be affected
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{ "/group/groupA/cube", "/group/groupB/cube" }, {}, catchers = "CUBE"
-			)
+				# Catchers are overridden by casters
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{}, { "/group/groupA/cube", "/group/groupA/sphere" },
+					catchers = "/group/groupA", casters = "/group/groupA"
+				)
 
-			# Catchers are overridden by casters
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{}, { "/group/groupA/cube", "/group/groupA/sphere" },
-				catchers = "/group/groupA", casters = "/group/groupA"
-			)
+				# Descendants of catchers can be overridden as a reflection caster
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{ "/group/groupA/cube" }, { "/group/groupA/sphere" },
+					catchers = "/group/groupA", casters = "/group/groupA/sphere"
+				)
 
-			# Descendants of catchers can be overridden as a reflection caster
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{ "/group/groupA/cube" }, { "/group/groupA/sphere" },
-				catchers = "/group/groupA", casters = "/group/groupA/sphere"
-			)
+				# Descendants of casters can be overridden as a reflection catcher
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupA/cube",
+						"/group/groupA/sphere",
+					},
+					{
+						"/group/groupB/cube",
+						"/group/groupB/sphere"
+					},
+					catchers = "/group/groupA", casters = "/"
+				)
 
-			# Descendants of casters can be overridden as a reflection catcher
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{
-					"/group/groupA/cube",
-					"/group/groupA/sphere",
-				},
-				{
-					"/group/groupB/cube",
-					"/group/groupB/sphere"
-				},
-				catchers = "/group/groupA", casters = "/"
-			)
-
-			assertReflectionCatcher(
-				renderer, shaderAttribute, visibilityAttribute,
-				{
-					"/group/groupA/sphere",
-					"/group/groupB/sphere"
-				},
-				{
-					"/group/groupA/cube",
-				},
-				catchers = "SPHERE", casters = "/group/groupA"
-			)
+				assertReflectionCatcher(
+					renderer, shaderAttribute, visibilityAttribute,
+					{
+						"/group/groupA/sphere",
+						"/group/groupB/sphere"
+					},
+					{
+						"/group/groupA/cube",
+					},
+					catchers = "SPHERE", casters = "/group/groupA"
+				)
 
 	def testReflectionAlphaCasterProcessorPrunesLights( self ) :
 
@@ -736,6 +745,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 					"ai:surface" : originalShader,
 					"cycles:surface" : originalShader,
 					"osl:surface" : originalShader,
+					"ri:surface" : originalShader,
 				}
 			)
 		)
@@ -791,15 +801,16 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			( "Cycles", "cycles:surface" ),
 			( "3Delight", "osl:surface" ),
 			( "3Delight Cloud", "osl:surface" ),
+			( "RenderMan", "ri:surface" ),
 		) :
+			with self.subTest( renderer = renderer, shaderAttribute = shaderAttribute ) :
+				# Nothing is a reflection caster by default
+				assertReflectionCaster( renderer, shaderAttribute, {}, casters = "" )
 
-			# Nothing is a reflection caster by default
-			assertReflectionCaster( renderer, shaderAttribute, {}, casters = "" )
-
-			# Reflection casters
-			assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube" }, casters = "/group/groupA/cube" )
-			assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube", "/group/groupA/sphere" }, casters = "/group/groupA" )
-			assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube", "/group/groupB/cube" }, casters = "CUBE" )
+				# Reflection casters
+				assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube" }, casters = "/group/groupA/cube" )
+				assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube", "/group/groupA/sphere" }, casters = "/group/groupA" )
+				assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube", "/group/groupB/cube" }, casters = "CUBE" )
 
 if __name__ == "__main__":
 	unittest.main()
