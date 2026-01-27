@@ -36,6 +36,8 @@
 
 import inspect
 
+import IECore
+
 import Gaffer
 import GafferScene
 
@@ -71,17 +73,8 @@ def __matteAdaptor() :
 	processor["__filterQuery"]["filter"].setInput( processor["__matteInclusionsFilter"]["out"] )
 	processor["__filterQuery"]["location"].setValue( "/" )
 
-	processor["__allMatte"] = GafferScene.CustomAttributes()
-	processor["__allMatte"]["in"].setInput( processor["in"] )
-	for attribute in __matteAttributes :
-		processor["__allMatte"]["attributes"].addChild( Gaffer.NameValuePlug( attribute, Gaffer.BoolPlug( defaultValue = True ) ) )
-
-	processor["__allMatte"]["global"].setValue( True )
-	# all locations are matte if `render:matteInclusions` matches the root of the scene
-	processor["__allMatte"]["enabled"].setInput( processor["__filterQuery"]["exactMatch"] )
-
 	processor["__matteInclusions"] = GafferScene.AttributeTweaks()
-	processor["__matteInclusions"]["in"].setInput( processor["__allMatte"]["out"] )
+	processor["__matteInclusions"]["in"].setInput( processor["in"] )
 	for attribute in __matteAttributes :
 		processor["__matteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attribute, Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 
@@ -104,7 +97,21 @@ def __matteAdaptor() :
 	# __matteExclusions is only required when `render:matteExclusions` exists
 	processor["__matteExclusions"]["enabled"].setInput( processor["__optionQuery"]["out"][1]["exists"] )
 
-	processor["out"].setInput( processor["__matteExclusions"]["out"] )
+	processor["__rootPaths"] = GafferScene.PathFilter()
+	processor["__rootPaths"]["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+	processor["__rootMatteInclusions"] = GafferScene.AttributeTweaks()
+	processor["__rootMatteInclusions"]["in"].setInput( processor["__matteExclusions"]["out"] )
+	for attribute in __matteAttributes :
+		processor["__rootMatteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attribute, Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+
+	processor["__rootMatteInclusions"]["filter"].setInput( processor["__rootPaths"]["out"] )
+	# All children of / are matte if `render:matteInclusions` matches the root of the scene.
+	# This is done via a `CreateIfMissing` tweak so we don't clobber matte attributes
+	# previously authored on locations in `render:matteExclusions`.
+	processor["__rootMatteInclusions"]["enabled"].setInput( processor["__filterQuery"]["exactMatch"] )
+
+	processor["out"].setInput( processor["__rootMatteInclusions"]["out"] )
 
 	return processor
 

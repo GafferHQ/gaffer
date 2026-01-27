@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- RenderPassEditor : Added RenderMan XPU support for Gaffer's inbuilt render pass types.
+- RenderPassEditor :
+  - Added RenderMan XPU support for Gaffer's inbuilt render pass types.
+  - Improved performance of render adaptors when computing the scene globals.
 
 Fixes
 -----
