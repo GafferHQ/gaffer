@@ -2324,6 +2324,42 @@ class RendererTest( GafferTest.TestCase ) :
 							tolerance = 1e-7
 						)
 
+	def testCustomCameraParameters( self ) :
+
+		camera = IECoreScene.Camera()
+		camera.setProjection( "perspective" )
+		camera.parameters()["ri:radial1"] = 1.0
+		camera.parameters()["ri:apertureAngle"] = 45.0
+		camera.parameters()["ri:apertureDensity"] = 5.0
+		camera.parameters()["ri:apertureNSides"] = 3
+		camera.parameters()["ri:apertureRoundness"] = 0.0
+		camera.parameters()["ri:dofaspect"] = 1.0
+		camera.parameters()["ai:ignoreMe"] = 1.0
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"RenderMan",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			renderer.camera(
+				"camera", camera, renderer.attributes( IECore.CompoundObject() )
+			)
+
+			del renderer
+
+		camera = next( x for x in capture.json if x["method"] == "CreateCamera" )
+		self.__assertParameterEqual( camera["projection"]["params"]["params"], "radial1", [ 1.0 ] )
+		self.__assertParameterEqual( camera["properties"]["params"], "apertureAngle", [ 45.0 ] )
+		self.__assertParameterEqual( camera["properties"]["params"], "apertureDensity", [ 5.0 ] )
+		self.__assertParameterEqual( camera["properties"]["params"], "apertureNSides", [ 3 ] )
+		self.__assertParameterEqual( camera["properties"]["params"], "apertureRoundness", [ 0.0 ] )
+		self.__assertParameterEqual( camera["properties"]["params"], "dofaspect", [ 1.0 ] )
+		for parameterList in ( camera["properties"]["params"], camera["projection"]["params"]["params"] ) :
+			self.__assertNotInParameters( parameterList, "ai:ignoreMe" )
+			self.__assertNotInParameters( parameterList, "ignoreMe" )
+
 	def runOverscanTest( self, res, pixelsTop, pixelsBottom, pixelsLeft, pixelsRight ) :
 
 		with self.subTest(

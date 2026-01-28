@@ -1,7 +1,7 @@
 1.6.x.x (relative to 1.6.10.0)
 =======
 
-
+- RenderMan : Fixed handling of custom camera parameters prefixed with `ri:` (#6775).
 
 1.6.10.0 (relative to 1.6.9.1)
 ========

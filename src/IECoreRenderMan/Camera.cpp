@@ -129,9 +129,32 @@ Camera::Camera( const std::string &name, const IECoreScene::Camera *camera, Sess
 
 	for( const auto &[parameterName, parameterValue] : camera->parameters() )
 	{
-		if( boost::starts_with( name.c_str(), "ri:" ) )
+		if( boost::starts_with( parameterName.c_str(), "ri:" ) )
 		{
-			ParamListAlgo::convertParameter( RtUString( parameterName.c_str() + 3 ), parameterValue.get(), projectionParamList );
+			const RtUString parameterNameU( parameterName.c_str() + 3 );
+			if(
+				parameterNameU == Loader::strings().k_apertureAngle ||
+				parameterNameU == Loader::strings().k_apertureDensity ||
+				parameterNameU == Loader::strings().k_apertureNSides ||
+				parameterNameU == Loader::strings().k_apertureRoundness ||
+				parameterNameU == Loader::strings().k_dofaspect ||
+				parameterNameU == Loader::strings().k_shutterCloseTime ||
+				parameterNameU == Loader::strings().k_shutterOpenTime ||
+				parameterNameU == Loader::strings().k_shutteropening ||
+				parameterNameU == Loader::strings().k_stereoplanedepths ||
+				parameterNameU == Loader::strings().k_stereoplaneoffsets
+			)
+			{
+				// Presumably for the usual historical reasons, some parameters
+				// are considered to be features of the camera. We derived this
+				// list from `$RMANTREE/lib/defaults/PRManCamera.args`.
+				ParamListAlgo::convertParameter( RtUString( parameterName.c_str() + 3 ), parameterValue.get(), cameraParamList );
+			}
+			else
+			{
+				// And some are considered to be features of the projection plugin.
+				ParamListAlgo::convertParameter( RtUString( parameterName.c_str() + 3 ), parameterValue.get(), projectionParamList );
+			}
 		}
 	}
 
