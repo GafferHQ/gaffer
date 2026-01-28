@@ -69,17 +69,9 @@ with IECore.IgnoredExceptions( ImportError ) :
 			# Things that we probably want to expose, but which will require
 			# additional plumbing before they will be useful.
 			"lightfilter:subset",
+			# Things used internally to implement light linking.
 			"lighting:excludesubset",
 			"lighting:subset",
-			"trace:reflectexcludesubset",
-			"trace:reflectsubset",
-			"trace:shadowexcludesubset",
-			"trace:shadowsubset",
-			"trace:transmitexcludesubset",
-			"trace:transmitsubset",
-			# Might it be better if we populate this automatically based on set
-			# memberships and/or light links? Don't expose it until we know.
-			"grouping:membership",
 		}
 	)
 

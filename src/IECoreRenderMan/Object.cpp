@@ -50,6 +50,38 @@ const IECore::InternedString g_lights( "lights" );
 const IECore::InternedString g_shadowedLights( "shadowedLights" );
 const RtUString g_defaultShadowGroup( "defaultShadowGroup" );
 
+RtParamList mergedAttributes( const RtParamList &attributes, const RtParamList &extraAttributes )
+{
+	RtParamList result = attributes;
+	result.Update( extraAttributes );
+
+	RtUString membership;
+	if( attributes.GetString( Loader::strings().k_grouping_membership, membership ) && membership.Length() )
+	{
+		RtUString extraMembership;
+		if( extraAttributes.GetString( Loader::strings().k_grouping_membership, extraMembership ) )
+		{
+			RtUString mergedMembership;
+			if( extraMembership.Length() )
+			{
+				std::string s;
+				s.reserve( extraMembership.Length() + 1 + membership.Length() );
+				s.append( extraMembership.CStr(), extraMembership.Length() );
+				s.append( " " );
+				s.append( membership.CStr(), membership.Length() );
+				mergedMembership = RtUString( s.c_str() );
+			}
+			else
+			{
+				mergedMembership = membership;
+			}
+			result.SetString( Loader::strings().k_grouping_membership, mergedMembership );
+		}
+	}
+
+	return result;
+}
+
 } // namespace
 
 Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, LightLinker *lightLinker, const Session *session )
@@ -58,9 +90,6 @@ Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geomet
 	m_extraAttributes.SetString( Loader::strings().k_identifier_name, RtUString( name.c_str() ) );
 	m_extraAttributes.SetString( Loader::strings().k_grouping_membership, g_defaultShadowGroup );
 
-	RtParamList allAttributes = m_attributes->instanceAttributes();
-	allAttributes.Update( m_extraAttributes );
-
 	m_geometryInstance = m_session->riley->CreateGeometryInstance(
 		riley::UserId(),
 		/* group = */ riley::GeometryPrototypeId::InvalidId(),
@@ -68,7 +97,7 @@ Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geomet
 		m_attributes->surfaceMaterial()->id(),
 		g_emptyCoordinateSystems,
 		IdentityTransform(),
-		allAttributes
+		mergedAttributes( m_attributes->instanceAttributes(), m_extraAttributes )
 	);
 }
 
@@ -135,8 +164,7 @@ bool Object::attributes( const IECoreScenePreview::Renderer::AttributesInterface
 		return false;
 	}
 
-	RtParamList allAttributes = typedAttributes->instanceAttributes();
-	allAttributes.Update( m_extraAttributes );
+	RtParamList allAttributes = mergedAttributes( typedAttributes->instanceAttributes(), m_extraAttributes );
 
 	const riley::GeometryInstanceResult result = m_session->riley->ModifyGeometryInstance(
 		/* group = */ riley::GeometryPrototypeId::InvalidId(),
