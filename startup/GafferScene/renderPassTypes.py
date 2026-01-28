@@ -91,13 +91,16 @@ def __renderPassShaderAssignment( usage ):
 	processor["__filterQuery"]["filter"].setInput( processor["filter"] )
 	processor["__filterQuery"]["location"].setValue( "/" )
 
-	# Convert shader assignments matching "/" to a global attribute as attributes
+	processor["__rootPaths"] = GafferScene.PathFilter()
+	processor["__rootPaths"]["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+	# Convert shader assignments matching "/" to "/*" as attributes
 	# are not directly assignable to "/".
-	processor["__globalShaderAttributes"] = GafferScene.CustomAttributes()
-	processor["__globalShaderAttributes"]["in"].setInput( processor["__shaderAttributes"]["out"] )
-	processor["__globalShaderAttributes"]["extraAttributes"].setInput( processor["__shaderAttributes"]["extraAttributes"] )
-	processor["__globalShaderAttributes"]["global"].setValue( True )
-	processor["__globalShaderAttributes"]["enabled"].setInput( processor["__filterQuery"]["exactMatch"] )
+	processor["__rootShaderAttributes"] = GafferScene.CustomAttributes()
+	processor["__rootShaderAttributes"]["in"].setInput( processor["__shaderAttributes"]["out"] )
+	processor["__rootShaderAttributes"]["extraAttributes"].setInput( processor["__shaderAttributes"]["extraAttributes"] )
+	processor["__rootShaderAttributes"]["enabled"].setInput( processor["__filterQuery"]["exactMatch"] )
+	processor["__rootShaderAttributes"]["filter"].setInput( processor["__rootPaths"]["out"] )
 
 	processor["__descendants"] = GafferScene.PathFilter()
 	processor["__descendants"]["roots"].setInput( processor["filter"] )
@@ -127,7 +130,7 @@ def __renderPassShaderAssignment( usage ):
 			elif renderer.startswith( "3Delight" ) :
 				shader = validShaderNetwork( parent["defaultDelightShader"], shader )
 				shaderType = "osl:surface"
-			elif renderer == "RenderMan" :
+			elif renderer.startswith( "RenderMan" ) :
 				shader = validShaderNetwork( parent["defaultRenderManShader"], shader )
 				shaderType = "ri:surface"
 
@@ -147,7 +150,7 @@ def __renderPassShaderAssignment( usage ):
 		)
 	)
 
-	processor["out"].setInput( processor["__globalShaderAttributes"]["out"] )
+	processor["out"].setInput( processor["__rootShaderAttributes"]["out"] )
 
 	return processor
 
@@ -212,7 +215,7 @@ def __shadowCatcherProcessor() :
 		( "Arnold", "ai:visibility:shadow" ),
 		( "Cycles", "cycles:visibility:shadow" ),
 		( "3Delight*", "dl:visibility.shadow" ),
-		( "RenderMan", "ri:visibility:transmission" )
+		( "RenderMan*", "ri:visibility:transmission" )
 	) :
 		row = processor["__attributeSpreadsheet"]["rows"].addRow()
 		row["name"].setValue( renderer )
@@ -221,20 +224,8 @@ def __shadowCatcherProcessor() :
 	processor["__catcherAndCasterFilter"] = __catcherAndCasterFilter()
 	processor["__catcherAndCasterFilter"]["in"].setInput( processor["in"] )
 
-	processor["__allShadowExcluded"] = GafferScene.CustomAttributes()
-	processor["__allShadowExcluded"]["in"].setInput( processor["in"] )
-	processor["__allShadowExcluded"]["attributes"].addChild( Gaffer.NameValuePlug( "", Gaffer.BoolPlug() ) )
-	processor["__allShadowExcluded"]["attributes"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
-	processor["__allShadowExcluded"]["global"].setValue( True )
-
-	# __allShadowExcluded is only required when shadow casters do not include the root of the scene.
-	processor["__allShadowExcludedExpression"] = Gaffer.Expression()
-	processor["__allShadowExcludedExpression"].setExpression(
-		"""parent["__allShadowExcluded"]["enabled"] = not parent["__catcherAndCasterFilter"]["globalCasters"]"""
-	)
-
 	processor["__shadowInclusions"] = GafferScene.AttributeTweaks()
-	processor["__shadowInclusions"]["in"].setInput( processor["__allShadowExcluded"]["out"] )
+	processor["__shadowInclusions"]["in"].setInput( processor["in"] )
 	processor["__shadowInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 	processor["__shadowInclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
 	processor["__shadowInclusions"]["filter"].setInput( processor["__catcherAndCasterFilter"]["casters"] )
@@ -245,9 +236,24 @@ def __shadowCatcherProcessor() :
 	processor["__shadowExclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
 	processor["__shadowExclusions"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
 
+	processor["__rootPaths"] = GafferScene.PathFilter()
+	processor["__rootPaths"]["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+	processor["__rootShadowExclusions"] = GafferScene.AttributeTweaks()
+	processor["__rootShadowExclusions"]["in"].setInput( processor["__shadowExclusions"]["out"] )
+	processor["__rootShadowExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "", Gaffer.BoolPlug( defaultValue = False ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	processor["__rootShadowExclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
+	processor["__rootShadowExclusions"]["filter"].setInput( processor["__rootPaths"]["out"] )
+
+	# __rootShadowExclusions is only required when shadow casters do not include the root of the scene.
+	processor["__rootShadowExclusionsExpression"] = Gaffer.Expression()
+	processor["__rootShadowExclusionsExpression"].setExpression(
+		"""parent["__rootShadowExclusions"]["enabled"] = not parent["__catcherAndCasterFilter"]["globalCasters"]"""
+	)
+
 	processor["__shaderAssignment"] = __renderPassShaderAssignment( "shadowCatcher" )
 	processor["__shaderAssignment"]["renderer"].setInput( processor["renderer"] )
-	processor["__shaderAssignment"]["in"].setInput( processor["__shadowExclusions"]["out"] )
+	processor["__shaderAssignment"]["in"].setInput( processor["__rootShadowExclusions"]["out"] )
 	processor["__shaderAssignment"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
 
 	processor["__shaderAssignment"]["defaultArnoldShader"].setValue(
@@ -309,16 +315,16 @@ def __shadowCatcherProcessor() :
 	processor["__cyclesCatcherAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "cycles:is_shadow_catcher", Gaffer.BoolPlug( defaultValue = True ) ) )
 	processor["__cyclesCatcherAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
 
-	processor["__globalCyclesCatcherAttributes"] = GafferScene.CustomAttributes()
-	processor["__globalCyclesCatcherAttributes"]["in"].setInput( processor["__cyclesCatcherAttributes"]["out"] )
-	processor["__globalCyclesCatcherAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "cycles:is_shadow_catcher", Gaffer.BoolPlug( defaultValue = True ) ) )
-	processor["__globalCyclesCatcherAttributes"]["global"].setValue( True )
-	processor["__globalCyclesCatcherAttributes"]["enabled"].setInput( processor["__catcherAndCasterFilter"]["globalCatchers"] )
+	processor["__rootCyclesCatcherAttributes"] = GafferScene.AttributeTweaks()
+	processor["__rootCyclesCatcherAttributes"]["in"].setInput( processor["__cyclesCatcherAttributes"]["out"] )
+	processor["__rootCyclesCatcherAttributes"]["tweaks"].addChild( Gaffer.TweakPlug( "cycles:is_shadow_catcher", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	processor["__rootCyclesCatcherAttributes"]["enabled"].setInput( processor["__catcherAndCasterFilter"]["globalCatchers"] )
+	processor["__rootCyclesCatcherAttributes"]["filter"].setInput( processor["__rootPaths"]["out"] )
 
 	# On shadow casters we override `cycles:is_shadow_catcher` off to ensure
 	# casters that are descendants of catchers do not inherit the attribute.
 	processor["__cyclesCasterAttributes"] = GafferScene.CustomAttributes()
-	processor["__cyclesCasterAttributes"]["in"].setInput( processor["__globalCyclesCatcherAttributes"]["out"] )
+	processor["__cyclesCasterAttributes"]["in"].setInput( processor["__rootCyclesCatcherAttributes"]["out"] )
 	processor["__cyclesCasterAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "cycles:is_shadow_catcher", Gaffer.BoolPlug( defaultValue = False ) ) )
 	processor["__cyclesCasterAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["casters"] )
 
@@ -326,10 +332,10 @@ def __shadowCatcherProcessor() :
 	processor["__lightsSet"]["setExpression"].setValue( "__lights" )
 
 	# Disabling shadow visibility on lights in 3Delight cause them to not cast shadows, so we must override
-	# the `__allShadowExcluded` global shadow visibility attribute if it is enabled.
+	# the shadow visibility attribute created by `__rootShadowExclusions`if the node is enabled.
 	processor["__lightShadowVisibility"] = GafferScene.AttributeTweaks()
 	processor["__lightShadowVisibility"]["in"].setInput( processor["__copyAttributes"]["out"] )
-	processor["__lightShadowVisibility"]["enabled"].setInput( processor["__allShadowExcluded"]["enabled"] )
+	processor["__lightShadowVisibility"]["enabled"].setInput( processor["__rootShadowExclusions"]["enabled"] )
 	processor["__lightShadowVisibility"]["tweaks"].addChild( Gaffer.TweakPlug( "", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 	processor["__lightShadowVisibility"]["tweaks"][0]["name"].setValue( "dl:visibility.shadow" )
 	processor["__lightShadowVisibility"]["filter"].setInput( processor["__lightsSet"]["out"] )
@@ -340,16 +346,16 @@ def __shadowCatcherProcessor() :
 	processor["__renderManCatcherAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "ri:trace:holdout", Gaffer.IntPlug( defaultValue = 1 ) ) )
 	processor["__renderManCatcherAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
 
-	processor["__globalRenderManCatcherAttributes"] = GafferScene.CustomAttributes()
-	processor["__globalRenderManCatcherAttributes"]["in"].setInput( processor["__renderManCatcherAttributes"]["out"] )
-	processor["__globalRenderManCatcherAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "ri:trace:holdout", Gaffer.IntPlug( defaultValue = 1 ) ) )
-	processor["__globalRenderManCatcherAttributes"]["global"].setValue( True )
-	processor["__globalRenderManCatcherAttributes"]["enabled"].setInput( processor["__catcherAndCasterFilter"]["globalCatchers"] )
+	processor["__rootRenderManCatcherAttributes"] = GafferScene.AttributeTweaks()
+	processor["__rootRenderManCatcherAttributes"]["in"].setInput( processor["__renderManCatcherAttributes"]["out"] )
+	processor["__rootRenderManCatcherAttributes"]["tweaks"].addChild( Gaffer.TweakPlug( "ri:trace:holdout", Gaffer.IntPlug( defaultValue = 1 ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	processor["__rootRenderManCatcherAttributes"]["enabled"].setInput( processor["__catcherAndCasterFilter"]["globalCatchers"] )
+	processor["__rootRenderManCatcherAttributes"]["filter"].setInput( processor["__rootPaths"]["out"] )
 
 	# On shadow casters we override `ri:trace:holdout` off to ensure
 	# casters that are descendants of catchers do not inherit the attribute.
 	processor["__renderManCasterAttributes"] = GafferScene.CustomAttributes()
-	processor["__renderManCasterAttributes"]["in"].setInput( processor["__globalRenderManCatcherAttributes"]["out"] )
+	processor["__renderManCasterAttributes"]["in"].setInput( processor["__rootRenderManCatcherAttributes"]["out"] )
 	processor["__renderManCasterAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "ri:trace:holdout", Gaffer.IntPlug( defaultValue = 0 ) ) )
 	processor["__renderManCasterAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["casters"] )
 
@@ -365,7 +371,7 @@ def __shadowCatcherProcessor() :
 	processor["__rendererSwitch"]["in"]["in2"]["name"].setValue( "3Delight*" )
 	processor["__rendererSwitch"]["in"]["in2"]["value"].setInput( processor["__lightShadowVisibility"]["out"] )
 
-	processor["__rendererSwitch"]["in"]["in3"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in3"]["name"].setValue( "RenderMan*" )
 	processor["__rendererSwitch"]["in"]["in3"]["value"].setInput( processor["__renderManCasterAttributes"]["out"] )
 
 	processor["out"].setInput( processor["__rendererSwitch"]["out"]["value"] )
@@ -385,7 +391,7 @@ def __reflectionCatcherProcessor() :
 		( "Arnold", "ai:visibility:specular_reflect" ),
 		( "Cycles", "cycles:visibility:glossy" ),
 		( "3Delight*", "dl:visibility.reflection" ),
-		( "RenderMan", "ri:visibility:indirect" )
+		( "RenderMan*", "ri:visibility:indirect" )
 	) :
 		row = processor["__attributeSpreadsheet"]["rows"].addRow()
 		row["name"].setValue( renderer )
@@ -394,20 +400,9 @@ def __reflectionCatcherProcessor() :
 	processor["__catcherAndCasterFilter"] = __catcherAndCasterFilter()
 	processor["__catcherAndCasterFilter"]["in"].setInput( processor["in"] )
 
-	processor["__allReflectionExcluded"] = GafferScene.CustomAttributes()
-	processor["__allReflectionExcluded"]["in"].setInput( processor["in"] )
-	processor["__allReflectionExcluded"]["attributes"].addChild( Gaffer.NameValuePlug( "", Gaffer.BoolPlug() ) )
-	processor["__allReflectionExcluded"]["attributes"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
-	processor["__allReflectionExcluded"]["global"].setValue( True )
-
-	# __allReflectionExcluded is only required when reflection casters do not include the root of the scene.
-	processor["__allReflectionExcludedExpression"] = Gaffer.Expression()
-	processor["__allReflectionExcludedExpression"].setExpression(
-		"""parent["__allReflectionExcluded"]["enabled"] = not parent["__catcherAndCasterFilter"]["globalCasters"]"""
-	)
 
 	processor["__reflectionInclusions"] = GafferScene.AttributeTweaks()
-	processor["__reflectionInclusions"]["in"].setInput( processor["__allReflectionExcluded"]["out"] )
+	processor["__reflectionInclusions"]["in"].setInput( processor["in"] )
 	processor["__reflectionInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 	processor["__reflectionInclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
 	processor["__reflectionInclusions"]["filter"].setInput( processor["__catcherAndCasterFilter"]["casters"] )
@@ -418,9 +413,24 @@ def __reflectionCatcherProcessor() :
 	processor["__reflectionExclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
 	processor["__reflectionExclusions"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
 
+	processor["__rootPaths"] = GafferScene.PathFilter()
+	processor["__rootPaths"]["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+	processor["__rootReflectionExclusions"] = GafferScene.AttributeTweaks()
+	processor["__rootReflectionExclusions"]["in"].setInput( processor["__reflectionExclusions"]["out"] )
+	processor["__rootReflectionExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "", Gaffer.BoolPlug( defaultValue = False ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	processor["__rootReflectionExclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
+	processor["__rootReflectionExclusions"]["filter"].setInput( processor["__rootPaths"]["out"] )
+
+	# __rootReflectionExclusions is only required when reflection casters do not include the root of the scene.
+	processor["__rootReflectionExclusionsExpression"] = Gaffer.Expression()
+	processor["__rootReflectionExclusionsExpression"].setExpression(
+		"""parent["__rootReflectionExclusions"]["enabled"] = not parent["__catcherAndCasterFilter"]["globalCasters"]"""
+	)
+
 	processor["__shaderAssignment"] = __renderPassShaderAssignment( "reflectionCatcher" )
 	processor["__shaderAssignment"]["renderer"].setInput( processor["renderer"] )
-	processor["__shaderAssignment"]["in"].setInput( processor["__reflectionExclusions"]["out"] )
+	processor["__shaderAssignment"]["in"].setInput( processor["__rootReflectionExclusions"]["out"] )
 	processor["__shaderAssignment"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
 
 	processor["__shaderAssignment"]["defaultShader"].setValue(
@@ -462,12 +472,11 @@ def __reflectionCatcherProcessor() :
 	processor["__standardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "" )
 	processor["__standardAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["catchers"] )
 
-	processor["__globalAttributes"] = GafferScene.StandardAttributes()
-	processor["__globalAttributes"]["in"].setInput( processor["__standardAttributes"]["out"] )
-	processor["__globalAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
-	processor["__globalAttributes"]["attributes"]["linkedLights"]["value"].setValue( "" )
-	processor["__globalAttributes"]["global"].setValue( True )
-	processor["__globalAttributes"]["enabled"].setInput( processor["__catcherAndCasterFilter"]["globalCatchers"] )
+	processor["__rootAttributes"] = GafferScene.AttributeTweaks()
+	processor["__rootAttributes"]["in"].setInput( processor["__standardAttributes"]["out"] )
+	processor["__rootAttributes"]["tweaks"].addChild( Gaffer.TweakPlug( "linkedLights", Gaffer.StringPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	processor["__rootAttributes"]["enabled"].setInput( processor["__catcherAndCasterFilter"]["globalCatchers"] )
+	processor["__rootAttributes"]["filter"].setInput( processor["__rootPaths"]["out"] )
 
 	processor["__localiseAttributes"] = GafferScene.LocaliseAttributes()
 	processor["__localiseAttributes"]["in"].setInput( processor["in"] )
@@ -483,7 +492,7 @@ def __reflectionCatcherProcessor() :
 
 	processor["__copyAttributes"] = GafferScene.CopyAttributes()
 	processor["__copyAttributes"]["source"].setInput( processor["__linkedLightsFallback"]["out"] )
-	processor["__copyAttributes"]["in"].setInput( processor["__globalAttributes"]["out"] )
+	processor["__copyAttributes"]["in"].setInput( processor["__rootAttributes"]["out"] )
 	processor["__copyAttributes"]["filter"].setInput( processor["__catcherAndCasterFilter"]["casters"] )
 	processor["__copyAttributes"]["attributes"].setValue( "*:surface surface linkedLights" )
 
@@ -671,7 +680,7 @@ def __renderManShadowDisplayFilterProcessor() :
 	processor["__rendererSwitch"]["selector"].setInput( processor["renderer"] )
 	processor["__rendererSwitch"]["in"]["in0"]["value"].setInput( processor["in"] )
 
-	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan*" )
 	processor["__rendererSwitch"]["in"]["in1"]["value"].setInput( processor["__shadowDisplayFilter"]["out"] )
 
 	processor["out"].setInput( processor["__rendererSwitch"]["out"]["value"] )
@@ -689,7 +698,7 @@ def __redirectRenderManShadowOutputProcessor() :
 	processor["__rendererSwitch"]["selector"].setInput( processor["renderer"] )
 	processor["__rendererSwitch"]["in"]["in0"]["value"].setInput( processor["in"] )
 
-	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan" )
+	processor["__rendererSwitch"]["in"]["in1"]["name"].setValue( "RenderMan*" )
 	processor["__rendererSwitch"]["in"]["in1"]["value"].setInput( processor["in"] )
 
 	# Redirect the RenderMan "shadow" AOV to beauty to more closely match

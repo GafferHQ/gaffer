@@ -551,8 +551,11 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "A", exclusionOverrides = "/groupA/cube" )
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "A", exclusionOverrides = "/groupA" )
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "CUBE", inclusionOverrides = "/groupA/sphere" )
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "CUBE", inclusionOverrides = "/groupA" )
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "", inclusionOverrides = "A" )
 		assertCameraVisibleObjects( {}, cameraInclusions = "/", exclusionOverrides = "A" )
+		assertCameraVisibleObjects( {}, cameraInclusions = "/", cameraExclusions = "/" )
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "/", cameraExclusions = "/", inclusionOverrides = "/groupA", exclusionOverrides = "/groupA/cube"  )
 
 	def testMatteAdaptor( self ) :
 
@@ -677,7 +680,10 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		assertMatte( { "/groupA/sphere" }, matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
 		assertMatte( { "/groupA/sphere" }, matteExclusions = "/groupA", inclusionOverrides = "/groupA/sphere" )
 		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "/groupA", matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
+		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteExclusions = "/groupA", inclusionOverrides = "/groupA" )
 
 		assertMatte( {}, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA/sphere" )
 		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA" )
 		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA", exclusionOverrides = "/groupA/cube" )
+		assertMatte( {}, matteInclusions = "/", exclusionOverrides = "/groupA" )
+		assertMatte( { "/groupA/cube" }, matteInclusions = "/", exclusionOverrides = "/groupA", inclusionOverrides = "/groupA/cube" )
