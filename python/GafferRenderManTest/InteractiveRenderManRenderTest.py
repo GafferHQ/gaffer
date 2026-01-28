@@ -50,19 +50,20 @@ class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "RenderMan"
 
-	def testEditCropWindow( self ) :
+	def testEditCropWindowWithInteractiveDenoiser( self ) :
 
-		if self.renderer == "RenderMan" :
-			# RIS doesn't reopen the display drivers when the crop
-			# window decreases in size, only when it increases. This will
-			# cause the base class test to fail, even though we are passing
-			# edits and RenderMan is only re-rendering the requested area.
-			## \todo Perhaps we can deal with this ourself by recreating
-			# the RenderView to force reopening? Or modifying a single camera
-			# instead of making a new one when the crop changes?
-			self.skipTest( "Crop window doesn't change data window" )
-		else :
-			GafferSceneTest.InteractiveRenderTest.testEditCropWindow( self )
+		# See `_createOptions()`, where we use the test name to
+		# enable the interactive denoiser.
+		self.testEditCropWindow()
+
+	def _createOptions( self ) :
+
+		options = GafferRenderMan.RenderManOptions()
+		if "WithInteractiveDenoiser" in self.id() :
+			options["options"]["ri:interactiveDenoiser:enabled"]["enabled"].setValue( True )
+			options["options"]["ri:interactiveDenoiser:enabled"]["value"].setValue( True )
+
+		return options
 
 	def _createConstantShader( self ) :
 

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,54 +34,46 @@
 #
 ##########################################################################
 
-import os
-import unittest
+import IECore
 
-import imath
-
-import IECoreRenderMan
-import GafferTest
+import Gaffer
+import GafferScene
 import GafferSceneTest
-import GafferRenderMan
 
-@unittest.skipIf( GafferTest.inCI() and os.name == "nt", "RenderMan cannot get license on Windows.")
-class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
+class GlobalsSanitiserTest( GafferSceneTest.SceneTestCase ) :
 
-	renderer = "RenderMan"
+	def test( self ) :
 
-	shadowColor = imath.Color4f( 1, 1, 1, 0 )
-	litColor = imath.Color4f( 0 )
+		plane = GafferScene.Plane()
 
-	def _createDistantLight( self ) :
+		attributeQuery = GafferScene.AttributeQuery()
+		attributeQuery.setup( Gaffer.BoolPlug() )
+		attributeQuery["scene"].setInput( plane["out"] )
+		attributeQuery["location"].setValue( "/plane" )
+		attributeQuery["attribute"].setValue( "test" )
 
-		light = GafferRenderMan.RenderManLight()
-		light.loadShader( "PxrDistantLight" )
-		light["parameters"]["exposure"].setValue( 2.0 )
-		return light, light["parameters"]["lightColor"]
+		options1 = GafferScene.StandardOptions( "options1" )
+		options1["options"]["render:camera"]["enabled"].setInput( attributeQuery["value"] )
 
-	def _createStandardShader( self ) :
+		options2 = GafferScene.StandardOptions( "options2" )
+		options2["in"].setInput( options1["out"] )
 
-		shader = GafferRenderMan.RenderManShader()
-		shader.loadShader( "PxrSurface" )
-		return shader, shader["parameters"]["diffuseColor"]
+		# A GlobalsSanitiser is automatically hooked up by SceneTestCase.setUp, so
+		# we don't need to explicitly set one up
+		with IECore.CapturingMessageHandler() as mh :
+			options2["out"].globals()
 
-	def _createFlatShader( self ) :
+		for message in mh.messages :
+			self.assertEqual( message.level, mh.Level.Warning )
+			self.assertEqual( message.context, "GlobalsSanitiser" )
 
-		shader = GafferRenderMan.RenderManShader()
-		shader.loadShader( "PxrConstant" )
-		return shader, shader["parameters"]["emitColor"]
-
-	def _createOptions( self ) :
-
-		options = GafferRenderMan.RenderManOptions()
-		options["options"]["ri:hider:maxsamples"]["enabled"].setValue( True )
-		options["options"]["ri:hider:maxsamples"]["value"].setValue( 16 )
-		return options
-
-@unittest.skipIf( IECoreRenderMan.renderManMajorVersion() < 27, "XPU only supported for RenderMan 27+" )
-class XPURenderPassAdaptorTest( RenderPassAdaptorTest ) :
-
-	renderer = "RenderManXPU"
+		self.assertEqual(
+			[ m.message for m in mh.messages ],
+			[
+				"Globals options1.out.globals depends on Plane.out.exists",
+				"Globals options1.out.globals depends on Plane.out.attributes",
+			]
+		)
 
 if __name__ == "__main__":
 	unittest.main()

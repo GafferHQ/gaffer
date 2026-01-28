@@ -39,19 +39,47 @@ Build
 
 - Cortex : Updated to version 10.7.0.0a3.
 
-1.6.x.x (relative to 1.6.9.1)
+1.6.x.x (relative to 1.6.10.0)
 =======
+
+
+
+1.6.10.0 (relative to 1.6.9.1)
+========
+
+Improvements
+------------
+
+- SceneTestCase : Added GlobalsSanitiser.
 
 Fixes
 -----
 
+- NodeEditor : Fixed "Revert to Defaults" to handle ganged plugs, and other plugs where a subset of children have input connections. In this case, the subset without inputs now revert correctly to their default values.
 - ShaderTweaks : Fixed context handling in "From Affected" and "From Selected" menu items.
-- RenderMan : Fixed `R10043 {WARNING} inputMaterial, unknown or mismatched input parameter of PxrSurface`.
+- SceneTestCase, ImageTestCase : Sanitisers are no longer installed when testing performance, since they add additional overhead.
+- RenderMan :
+  - Fixed `R10043 {WARNING} inputMaterial, unknown or mismatched input parameter of PxrSurface`.
+  - Fixed offset when reducing crop window size in RIS (#6727).
+  - Fixed unwanted creation of new Catalogue images from InteractiveRenders in the following situations :
+    - Changing camera.
+    - Changing pixel filter or filter width.
+    - Enlarging the crop region when rendering with RIS.
+    - Changing the resolution.
+    - Adding or removing outputs.
+  - Added workaround for RenderMan interactive denoiser bugs :
+    - Data window not updating when the crop window is edited.
+    - Crashes when the crop window is edited.
+- RenderPassEditor :
+  - Added RenderMan XPU support for Gaffer's inbuilt render pass types.
+  - Improved performance of render adaptors when computing the scene globals.
 
 API
 ---
 
 - PlugCreationWidget : Added `context()` method.
+- TestRunner : Added `PerformanceTestMethod.isDecorated()` for detection of performance test methods.
+- GlobalsSanitiser : Added monitor for detecting `ScenePlug.globals` computations depending on other aspects of the scene.
 
 1.6.9.1 (relative to 1.6.9.0)
 =======

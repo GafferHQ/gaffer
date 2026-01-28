@@ -251,6 +251,11 @@ namespace Private
 namespace RendererAlgo
 {
 
+std::string renderID( const IECoreScenePreview::Renderer *renderer )
+{
+	return fmt::format( "{}:{}", getpid(), reinterpret_cast<uintptr_t>( renderer ) );
+}
+
 void createOutputDirectories( const IECore::CompoundObject *globals )
 {
 	for( const auto &m : globals->members() )
@@ -1730,7 +1735,7 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 	// doing instead of replacing it - this facilitates "netrender" style workflows.
 	if( !param->member<StringData>( "gaffer:renderID" ) )
 	{
-		param->writable()["gaffer:renderID"] = new StringData( fmt::format( "{}:{}", getpid(), reinterpret_cast<uintptr_t>( renderer ) ) );
+		param->writable()["gaffer:renderID"] = new StringData( Private::RendererAlgo::renderID( renderer ) );
 	}
 	param->writable()["gaffer:outputID"] = new StringData( outputID );
 

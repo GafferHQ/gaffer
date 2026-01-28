@@ -90,6 +90,12 @@ const InternedString g_renderCameraOptionName( "option:render:camera" );
 const InternedString g_visibleSetName( "ui:scene:visibleSet" );
 const VisibleSet g_defaultVisibleSet = VisibleSet();
 
+unordered_set<string> &activeRenderIds()
+{
+	static unordered_set<string> g_activeRenderIds;
+	return g_activeRenderIds;
+}
+
 } // anon namespace
 
 // A thread-safe message handler for render messaging
@@ -378,6 +384,7 @@ void InteractiveRender::update()
 			"",
 			m_messageHandler.get()
 		);
+		activeRenderIds().insert( Private::RendererAlgo::renderID( m_renderer.get() ) );
 
 		m_controller.reset(
 			new RenderController( adaptedInPlug(), effectiveContext(), m_renderer )
@@ -452,6 +459,11 @@ Gaffer::ConstContextPtr InteractiveRender::effectiveContext()
 	}
 }
 
+bool InteractiveRender::renderIsActive( const std::string &renderId )
+{
+	return activeRenderIds().count( renderId );
+}
+
 void InteractiveRender::stop()
 {
 	// A Catalogue may need to access the render manifest as part of saving out the images from this
@@ -463,6 +475,8 @@ void InteractiveRender::stop()
 	{
 		m_lastRenderManifest = m_controller->renderManifest();
 	}
+
+	activeRenderIds().erase( Private::RendererAlgo::renderID( m_renderer.get() ) );
 
 	m_scriptMetadataChangedConnection.disconnect();
 	m_controller.reset();

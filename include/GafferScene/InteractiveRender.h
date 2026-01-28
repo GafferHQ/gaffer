@@ -151,6 +151,9 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		IE_CORE_FORWARDDECLARE( RenderMessageHandler )
 		RenderMessageHandlerPtr  m_messageHandler;
 
+		friend class Catalogue;
+		static bool renderIsActive( const std::string &renderId );
+
 		static size_t g_firstPlugIndex;
 
 };
