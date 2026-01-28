@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - RenderManAttributes : Added trace set support via `grouping:membership` and `trace:*subset` attributes.
+- aiQuadLight : Added viewport visualisation of the `roundness` parameter.
 
 Fixes
 -----

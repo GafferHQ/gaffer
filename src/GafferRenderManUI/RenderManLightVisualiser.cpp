@@ -349,7 +349,7 @@ IECoreGL::ConstRenderablePtr spotLightSquare( const float angle, const float hei
 
 	IECoreGL::GroupPtr frustumBaseGroup = new IECoreGL::Group();
 	frustumBaseGroup->addChild(
-		boost::const_pointer_cast<IECoreGL::Renderable>( quadWireframe( V2f( halfWidth * 2.f ), lineWidthScale, muted ) )
+		boost::const_pointer_cast<IECoreGL::Renderable>( roundedQuadWireframe( V2f( halfWidth * 2.f ), V2f( 0.f ), lineWidthScale, muted ) )
 	);
 	frustumBaseGroup->setTransform( M44f().translate( V3f( 0.f, 0.f, -baseDistance ) ) );
 
@@ -726,7 +726,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 			result.push_back(
 				Visualisation::createGeometry(
-					quadSurface( V2f( 1.f ), textureData, color, saturation, gamma, maxTextureResolution, Color3f( 1.f ), M33f().scale( V2f( -1.f, -1.f ) ) ),
+					roundedQuadSurface( V2f( 1.f ), V2f( 0.f ), textureData, color, saturation, gamma, maxTextureResolution, Color3f( 1.f ), M33f().scale( V2f( -1.f, -1.f ) ) ),
 					Visualisation::ColorSpace::Scene
 				)
 			);
@@ -737,7 +737,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 				Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound */ true, Visualisation::ColorSpace::Scene )
 			);
 		}
-		result.push_back( Visualisation::createGeometry( quadWireframe( V2f( 1.f ), 1.f, muted ) ) );
+		result.push_back( Visualisation::createGeometry( roundedQuadWireframe( V2f( 1.f ), V2f( 0.f ), 1.f, muted ) ) );
 
 		const float focus = parameterOrDefault( lightParameters, g_emissionFocusParameter, 0.f );
 		addAreaSpread( pow( 0.707f, focus ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );

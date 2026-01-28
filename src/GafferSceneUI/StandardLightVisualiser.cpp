@@ -113,6 +113,7 @@ const InternedString g_portalParameterString( "portalParameter" );
 const InternedString g_spreadParameterString( "spreadParameter" );
 const InternedString g_lengthParameterString( "lengthParameter" );
 const InternedString g_visualiserOrientationString( "visualiserOrientation" );
+const InternedString g_roundnessParameterString( "roundnessParameter" );
 
 } // namespace
 
@@ -234,12 +235,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			parameter<float>( metadataTarget, shaderParameters, g_widthParameterString, 2.0f ),
 			parameter<float>( metadataTarget, shaderParameters, g_heightParameterString, 2.0f )
 		);
+		const float roundness = std::clamp( parameter<float>( metadataTarget, shaderParameters, g_roundnessParameterString, 0.f ), 0.f, 1.f );
+		const V2f radii( roundness * size * 0.5f );
 
 		if( drawShaded )
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createGeometry(
-				quadSurface( size, textureData, tint, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ),
+				roundedQuadSurface( size, radii, textureData, tint, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ),
 				Visualisation::ColorSpace::Scene
 			) );
 		}
@@ -247,7 +250,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene ) );
 		}
-		result.push_back( Visualisation::createGeometry( quadWireframe( size, 1.f, muted ) ) );
+		result.push_back( Visualisation::createGeometry( roundedQuadWireframe( size, radii, 1.f, muted ) ) );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, g_spreadParameterString, -1 );
 		if( spread >= 0.0f )
