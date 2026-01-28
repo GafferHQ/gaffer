@@ -9,9 +9,6 @@
 Improvements
 ------------
 
-- RenderPassEditor :
-  - Added RenderMan XPU support for Gaffer's inbuilt render pass types.
-  - Improved performance of render adaptors when computing the scene globals.
 - SceneTestCase : Added GlobalsSanitiser.
 
 Fixes
@@ -32,6 +29,9 @@ Fixes
   - Added workaround for RenderMan interactive denoiser bugs :
     - Data window not updating when the crop window is edited.
     - Crashes when the crop window is edited.
+- RenderPassEditor :
+  - Added RenderMan XPU support for Gaffer's inbuilt render pass types.
+  - Improved performance of render adaptors when computing the scene globals.
 
 API
 ---
