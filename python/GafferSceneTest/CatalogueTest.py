@@ -1071,6 +1071,36 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			# made.
 			handler.assertDone()
 
+	def testUnfinishedRender( self ) :
+
+		# Send an image to a catalogue and "forget" to close the driver.
+		# The most likely cause of this would be all outputs accidentally being
+		# removed from an InteractiveRender. The image remains open (unsaved)
+		# in anticipation of the error being fixed.
+
+		script = Gaffer.ScriptNode()
+
+		script["catalogue"] = GafferScene.Catalogue()
+
+		script["constant"] = GafferImage.Constant()
+		script["constant"]["format"].setValue( GafferImage.Format( 100, 100 ) )
+		script["constant"]["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
+
+		driver = self.sendImage( script["constant"]["out"], script["catalogue"], waitForSave = False, close = False )
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"]["metadata"].getValue()[ self.__catalogueIsRenderingMetadataKey ].value, True )
+
+		# Save and load while the image is still unsaved. We expect the image
+		# to not be loaded, because it isn't backed by an image on disk.
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertEqual( len( script2["catalogue"]["images"] ), 0 )
+
+		# Clean up.
+
+		driver.close()
+
 	def testReorder( self ) :
 
 		for newOrder in [

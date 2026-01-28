@@ -753,6 +753,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# `camera1` places the sphere in the centre of the image.
 
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 1, delta = 0.01 )
 		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.99, 0.5 ) ).a, 0, delta = 0.01 )
 
@@ -761,6 +762,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["options"]["options"]["render:camera"]["value"].setValue( "/group/camera2" )
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.99, 0.5 ) ).a, 1, delta = 0.01 )
 		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 0, delta = 0.01 )
 
