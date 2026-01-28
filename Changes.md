@@ -7,6 +7,7 @@ Improvements
 - RenderPassEditor :
   - Added RenderMan XPU support for Gaffer's inbuilt render pass types.
   - Improved performance of render adaptors when computing the scene globals.
+- SceneTestCase : Added GlobalsSanitiser.
 
 Fixes
 -----
@@ -14,11 +15,14 @@ Fixes
 - NodeEditor : Fixed "Revert to Defaults" to handle ganged plugs, and other plugs where a subset of children have input connections. In this case, the subset without inputs now revert correctly to their default values.
 - ShaderTweaks : Fixed context handling in "From Affected" and "From Selected" menu items.
 - RenderMan : Fixed `R10043 {WARNING} inputMaterial, unknown or mismatched input parameter of PxrSurface`.
+- SceneTestCase, ImageTestCase : Sanitisers are no longer installed when testing performance, since they add additional overhead.
 
 API
 ---
 
 - PlugCreationWidget : Added `context()` method.
+- TestRunner : Added `PerformanceTestMethod.isDecorated()` for detection of performance test methods.
+- GlobalsSanitiser : Added monitor for detecting `ScenePlug.globals` computations depending on other aspects of the scene.
 
 1.6.9.1 (relative to 1.6.9.0)
 =======
