@@ -145,17 +145,21 @@ class Application( IECore.Parameterised ) :
 			IECore.tbb_global_control.parameter.max_allowed_parallelism,
 			threads
 		) :
+			with IECore.tbb_global_control(
+				IECore.tbb_global_control.parameter.thread_stack_size,
+				8 * 1024 * 1024
+			) :
 
-			self._executeStartupFiles( self.root().getName() )
+				self._executeStartupFiles( self.root().getName() )
 
-			# Append DEBUG message with process information to all messages
-			defaultMessageHandler = IECore.MessageHandler.getDefaultHandler()
-			if not isinstance( defaultMessageHandler, Gaffer.ProcessMessageHandler ) :
-				IECore.MessageHandler.setDefaultHandler(
-					Gaffer.ProcessMessageHandler( defaultMessageHandler )
-				)
+				# Append DEBUG message with process information to all messages
+				defaultMessageHandler = IECore.MessageHandler.getDefaultHandler()
+				if not isinstance( defaultMessageHandler, Gaffer.ProcessMessageHandler ) :
+					IECore.MessageHandler.setDefaultHandler(
+						Gaffer.ProcessMessageHandler( defaultMessageHandler )
+					)
 
-			return self._run( self.parameters().getValidatedValue() )
+				return self._run( self.parameters().getValidatedValue() )
 
 	def __formatHelp( self ) :
 

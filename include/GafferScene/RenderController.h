@@ -140,7 +140,6 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		void cancelBackgroundTask();
 
 		class SceneGraph;
-		class SceneGraphUpdateTask;
 
 		ConstScenePlugPtr m_scene;
 		Gaffer::ConstContextPtr m_context;

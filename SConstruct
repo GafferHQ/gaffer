@@ -1118,6 +1118,7 @@ libraries = {
 
 	"GafferScene" : {
 		"envAppends" : {
+			"CPPPATH" : [ "$BUILD_DIR/include/OpenEXR" ],
 			"LIBS" : [ "Gaffer", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "osdCPU", "OpenEXR" ],
 		},
 		"pythonEnvAppends" : {
