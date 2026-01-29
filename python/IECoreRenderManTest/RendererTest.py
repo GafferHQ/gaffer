@@ -2180,6 +2180,69 @@ class RendererTest( GafferTest.TestCase ) :
 			"identifier:id", [ 1 ]
 		)
 
+	def testGroupingMembership( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			renderer.object(
+				"/sphere", IECoreScene.SpherePrimitive( 1 ),
+				renderer.attributes( IECore.CompoundObject( {
+					"ri:grouping:membership" : IECore.StringData( "groupA groupB" )
+				} ) )
+			)
+
+			del renderer
+
+		# Memberships specified by the user should have been combined with those
+		# generated automatically for light linking.
+		self.__assertParameterEqual(
+			next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"],
+			"grouping:membership", [ "defaultShadowGroup groupA groupB" ]
+		)
+
+	def testGroupingMembershipMergedWithShadowLinking( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			lightAttributes = renderer.attributes(
+				IECore.CompoundObject( {
+					"ri:light" : IECoreScene.ShaderNetwork(
+						shaders = { "output" : IECoreScene.Shader( "PxrDomeLight", "ri:light" ) },
+						output = "output",
+					),
+				} )
+			)
+
+			light = renderer.light( "light", None, lightAttributes )
+
+			object = renderer.object(
+				"/sphere", IECoreScene.SpherePrimitive( 1 ),
+				renderer.attributes( IECore.CompoundObject( {
+					"ri:grouping:membership" : IECore.StringData( "groupA groupB" )
+				} ) )
+			)
+
+			object.link( "shadowedLights", { light } )
+
+			del renderer
+
+		# Memberships specified by the user should have been combined with those
+		# generated automatically for shadow linking.
+		self.__assertParameterEqual(
+			next( x for x in capture.json if x["method"] == "ModifyGeometryInstance" )["attributes"]["params"],
+			"grouping:membership", [ "shadowGroup0 groupA groupB" ]
+		)
+
 	def testShaderSubstitutions( self ) :
 
 		with IECoreRenderManTest.RileyCapture() as capture :
