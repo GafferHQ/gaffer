@@ -42,7 +42,15 @@ Build
 1.6.x.x (relative to 1.6.10.0)
 =======
 
+Improvements
+------------
 
+- RenderManAttributes : Added trace set support via `grouping:membership` and `trace:*subset` attributes.
+
+Fixes
+-----
+
+- RenderMan : Fixed handling of custom camera parameters prefixed with `ri:` (#6775).
 
 1.6.10.0 (relative to 1.6.9.1)
 ========
