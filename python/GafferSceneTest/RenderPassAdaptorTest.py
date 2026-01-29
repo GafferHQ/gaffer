@@ -499,6 +499,21 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		iy = int( uv.y * ( dimensions.y - 1 ) )
 		i = iy * dimensions.x + ix
 
+		## \todo This workaround has been added to avoid failures in CI.
+		# Bafflingly, what seems to be happening is that after a certain
+		# number of renders, RenderMan's EXR driver generates bogus channel
+		# names for a single render and then recovers. For CI to pass, we
+		# resort to looking for either set of channel names. We've reported
+		# this upstream, so hopefully we can revert to the standard channel
+		# names one day.
+		if self.renderer.startswith( "RenderMan" ) :
+			return imath.Color4f(
+				image["R"][i],
+				image["G" if "G" in image.keys() else "Ci.g"][i],
+				image["B" if "B" in image.keys() else "Ci.b"][i],
+				image["A" if "A" in image.keys() else "a"][i] if "A" in image.keys() or "a" in image.keys() else 0.0
+			)
+
 		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] if "A" in image.keys() else 0.0 )
 
 if __name__ == "__main__":
