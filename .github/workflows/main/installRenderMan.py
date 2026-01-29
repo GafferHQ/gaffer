@@ -34,8 +34,10 @@
 ##########################################################################
 
 import argparse
+import bs4
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -47,7 +49,12 @@ parser.add_argument(
 	"--version",
 	help = "The version of RenderMan to install.",
 	default = "26.3",
-	choices = [ "26.3", "27.0", "27.1" ],
+	choices = [ "26.3", "26.4", "27.0", "27.1" ],
+)
+parser.add_argument(
+	"--dailyBuildDate",
+	help = "The date of the daily build in YYYY-MM-DD format.",
+	default = "",
 )
 parser.add_argument(
 	"--outputFormat",
@@ -75,37 +82,85 @@ if "rmanprofile" not in cookies :
 	sys.stderr.write( "Error : Login failed\n" )
 	sys.exit( 1 )
 
-# The various versions of RenderMan are listed on a download page, each
-# with a link that takes you to _another_ page which has the file ids
-# for the download for each platform. At some point we should scrape that
-# to figure out the files given the RenderMan version we want, but for now
-# we just hardcode the ids for the versions we care about.
+# Figure out the download URL and request data.
 
-fileId, distId = {
-	"26.3-posix" : ( "12545", "4483"),
-	"26.3-nt" : ( "12544", "4483"),
-	"27.0-posix" : ( "12607", "4492"),
-	"27.0-nt" : ( "12604", "4492"),
-	"27.1-posix" : ( "12718", "4518"),
-	"27.1-nt" : ( "12716", "4518"),
-}[f"{args.version}-{os.name}"]
+if args.dailyBuildDate :
 
-fileName = "RenderMan.msi" if os.name == "nt" else "RenderMan.rpm"
+	# Download the web page that lists the daily builds for the chosen
+	# date.
 
-# Now we can download our file.
+	dailyBuilds = requests.get(
+		"https://renderman.pixar.com/forum/daily_builds",
+		{
+			"action" : "showbuilds",
+			"datepicker" : args.dailyBuildDate
+		},
+		cookies = cookies,
+	)
 
-download = requests.get(
-	"https://renderman.pixar.com/forum/download/release",
-	{
+	soup = bs4.BeautifulSoup( dailyBuilds.text, "html.parser" )
+
+	# The page contains a series of forms, each for downloading a particular
+	# version and platform. Search for one containing the version and platform
+	# we care about. We identify this by an input within the form that specifies
+	# the filename.
+
+	platformSuffix = "-linuxRHEL7_gcc93icx232.x86_64.rpm" if os.name != "nt" else "-windows11_vc143icx232.x86_64.msi"
+	fileNameRegex = re.compile( f"RenderManProServer-{args.version}_[0-9]+{platformSuffix}" )
+
+	input = soup.find( "input", attrs = { "name" : "filename", "value" : fileNameRegex } )
+	if input is None :
+		sys.stderr.write( f'No download found matching "{fileNameRegex.pattern}"\n' )
+		sys.exit( 1 )
+
+	form = input.parent
+
+	# The inputs to this form contain all the parameter we need to make a download
+	# request. So grab those.
+
+	downloadParameters = {
+		input["name"] : input["value"]
+		for input in form.find_all( "input" )
+		if input.has_attr( "value" )
+	}
+	downloadParameters["action"] = "dodownload"
+	downloadURL = "https://renderman.pixar.com/forum/daily_builds_download"
+
+else :
+
+	# The release versions of RenderMan are listed on a download page, each
+	# with a link that takes you to _another_ page which has the file ids
+	# for the download for each platform. At some point we should scrape that
+	# to figure out the files given the RenderMan version we want, but for now
+	# we just hardcode the ids for the versions we care about.
+
+	fileId, distId = {
+		"26.3-posix" : ( "12545", "4483"),
+		"26.3-nt" : ( "12544", "4483"),
+		"27.0-posix" : ( "12607", "4492"),
+		"27.0-nt" : ( "12604", "4492"),
+		"27.1-posix" : ( "12718", "4518"),
+		"27.1-nt" : ( "12716", "4518"),
+	}[f"{args.version}-{os.name}"]
+
+	downloadURL = "https://renderman.pixar.com/forum/download/release"
+	downloadParameters = {
 		"fileid" : fileId,
 		"distid" : distId,
 		"action" : "dodownload",
-	},
+	}
+
+# Download.
+
+download = requests.get(
+	downloadURL,
+	downloadParameters,
 	cookies = cookies,
 	allow_redirects = True,
 	stream = True,
 )
 
+fileName = "RenderMan.msi" if os.name == "nt" else "RenderMan.rpm"
 with open( fileName, "wb" ) as outFile :
 	shutil.copyfileobj( download.raw, outFile )
 

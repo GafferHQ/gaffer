@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- RenderMan : Added support for RenderMan 26.4.
 - RenderManAttributes : Added trace set support via `grouping:membership` and `trace:*subset` attributes.
 - ArnoldLight : Added viewport visualisation of the `quad_light.roundness` parameter.
 - USDLight : Added viewport visualisation of Arnold parameters `lens_radius`, `spread` and `roundness`.
