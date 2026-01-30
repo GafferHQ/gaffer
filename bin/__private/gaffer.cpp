@@ -52,8 +52,23 @@
 // to link to the appropriate libraries.
 #include "tbb/tbbmalloc_proxy.h"
 
+#include <iostream>
+
 int wmain( int argc, wchar_t **argv )
 {
+	// Verify that the TBB allocator has been registered.
+	char **replacementLog;
+	int replacementStatus = TBB_malloc_replacement_log( &replacementLog );
+
+	if( replacementStatus != 0 )
+	{
+		std::cerr << "gaffer.exe : Failed to install TBB memory allocator. Performance may be degraded.\n";
+		for( char **logEntry = replacementLog; *logEntry != 0; logEntry++ )
+		{
+			std::cerr << "gaffer.exe : " << *logEntry << "\n";
+		}
+	}
+
 	return Py_Main( argc, argv );
 }
 #else

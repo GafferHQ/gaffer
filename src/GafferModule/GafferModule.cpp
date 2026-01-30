@@ -198,25 +198,6 @@ void nameProcess()
 #endif
 }
 
-#ifdef _MSC_VER
-void verifyAllocator()
-{
-
-	char **replacementLog;
-	int replacementStatus = TBB_malloc_replacement_log( &replacementLog );
-
-	if( replacementStatus != 0 )
-	{
-		IECore::msg( IECore::Msg::Warning, "Gaffer", "Failed to install TBB memory allocator. Performance may be degraded." );
-		for( char **logEntry = replacementLog; *logEntry != 0; logEntry++ )
-		{
-			IECore::msg( IECore::Msg::Warning, "Gaffer", *logEntry );
-		}
-	}
-
-}
-#endif
-
 // Used as a replacement for `os.environ.copy()`, because
 // `os.environ` doesn't preserve case on Windows.
 boost::python::dict environment()
@@ -308,8 +289,5 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	def( "environment", &environment );
 
 	def( "_nameProcess", &nameProcess );
-#ifdef _MSC_VER
-	def( "_verifyAllocator", &verifyAllocator );
-#endif
 
 }
