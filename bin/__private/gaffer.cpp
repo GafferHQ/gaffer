@@ -35,6 +35,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 // Reproduce Python's main executable found in `Programs/python.c` of CPython.
+// Conceptually, Gaffer is just a Python process, and in an ideal world would
+// run using a vanilla Python executable. But in practice we use our own
+// derivative which provides the following benefits :
+//   - A readily identifiable process name (gaffer rather than python).
+//   - Control over what libraries the main executable links to, for example
+//     libstdc++ and custom allocators.
 
 #include "Python.h"
 
