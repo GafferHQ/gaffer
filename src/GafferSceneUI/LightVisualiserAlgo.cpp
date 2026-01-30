@@ -47,6 +47,8 @@
 #include "IECore/CompoundObject.h"
 #include "IECore/VectorTypedData.h"
 
+#include <array>
+
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
@@ -138,6 +140,30 @@ void addCone( float angle, float startRadius, std::vector<int> &vertsPerCurve, s
 		p.push_back( V3f( -startRadius, 0, 0 ) );
 		p.push_back( V3f( -baseRadius - startRadius, 0, -baseDistance ) );
 		vertsPerCurve.push_back( 2 );
+	}
+}
+
+void addRoundedRectangle( const V2f &size, const V2f &radii, std::vector<V3f> &p )
+{
+	const int numDivisions = 100;
+	const V3f radii3( radii.x, radii.y, 0.f );
+	const V3f halfSize( size.x * 0.5f - radii.x, size.y * 0.5f - radii.y, 0.f );
+
+	for(
+		const auto &[startIndex, quadrantMult] : std::array<std::tuple<int, V3f>, 4> {
+			std::tuple<int, V3f>{ 0, V3f( 1.f, 1.f, 0.f ) },  // Top-right
+			std::tuple<int, V3f>{ numDivisions / 4, V3f( -1.f, 1.f, 0.f ) },  // Top-left
+			std::tuple<int, V3f>{ numDivisions / 2, V3f( -1.f, -1.f, 0.f ) },  // Bottom-left
+			std::tuple<int, V3f>{ ( numDivisions * 3 ) / 4, V3f( 1.f, -1.f, 0.f ) }  // Bottom-right
+		}
+	)
+	{
+		for( int i = startIndex, eI = startIndex + ( numDivisions / 4 ); i <= eI; ++i )
+		{
+			const float angle = 2.f * M_PI * (float)i / (float)numDivisions;
+			const V3f delta( cos( angle ), sin( angle ), 0.f );
+			p.push_back( ( delta * radii3 ) + ( halfSize * quadrantMult ) );
+		}
 	}
 }
 
@@ -477,7 +503,7 @@ IECoreGL::ConstRenderablePtr pointSurface( float radius, const Color3f &color )
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr quadWireframe( const V2f &size, const float lineWidthScale, const bool muted )
+IECoreGL::ConstRenderablePtr roundedQuadWireframe( const V2f &size, const V2f &radii, const float lineWidthScale, const bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get(), lineWidthScale );
@@ -489,11 +515,19 @@ IECoreGL::ConstRenderablePtr quadWireframe( const V2f &size, const float lineWid
 	std::vector<int> &vertsPerCurve = vertsPerCurveData->writable();
 	std::vector<V3f> &p = pData->writable();
 
-	vertsPerCurve.push_back( 4 );
-	p.push_back( V3f( -size.x/2, -size.y/2, 0  ) );
-	p.push_back( V3f( size.x/2, -size.y/2, 0  ) );
-	p.push_back( V3f( size.x/2, size.y/2, 0  ) );
-	p.push_back( V3f( -size.x/2, size.y/2, 0  ) );
+	if( radii == V2f( 0.f ) )
+	{
+		p.push_back( V3f( -size.x/2, -size.y/2, 0  ) );
+		p.push_back( V3f( size.x/2, -size.y/2, 0  ) );
+		p.push_back( V3f( size.x/2, size.y/2, 0  ) );
+		p.push_back( V3f( -size.x/2, size.y/2, 0  ) );
+	}
+	else
+	{
+		addRoundedRectangle( size, radii, p );
+	}
+
+	vertsPerCurve.push_back( p.size() );
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, pData ) );
@@ -504,8 +538,8 @@ IECoreGL::ConstRenderablePtr quadWireframe( const V2f &size, const float lineWid
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr quadSurface(
-	const V2f &size, ConstDataPtr textureData, const Color3f &tint, const float saturation,
+IECoreGL::ConstRenderablePtr roundedQuadSurface(
+	const V2f &size, const V2f &radii, ConstDataPtr textureData, const Color3f &tint, const float saturation,
 	const Color3f &gamma, int maxTextureResolution, const Color3f &fallbackColor, const M33f &uvOrientation
 )
 {
@@ -519,9 +553,120 @@ IECoreGL::ConstRenderablePtr quadSurface(
 		addConstantShader( group.get(), tint );
 	}
 
-	UVOrientedQuadPrimitivePtr textureQuad = new UVOrientedQuadPrimitive( size.x, size.y, uvOrientation );
-	textureQuad->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( fallbackColor ) ) );
-	group->addChild( textureQuad );
+	if( radii == V2f( 0.f ) )
+	{
+		UVOrientedQuadPrimitivePtr textureQuad = new UVOrientedQuadPrimitive( size.x, size.y, uvOrientation );
+		textureQuad->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( fallbackColor ) ) );
+		group->addChild( textureQuad );
+	}
+	else
+	{
+		V3fVectorDataPtr pData = new V3fVectorData;
+		IntVectorDataPtr vertIdsData = new IntVectorData;
+
+		std::vector<V3f> &p = pData->writable();
+		std::vector<int> &vertIds = vertIdsData->writable();
+
+		// Add inner corner points for the center of the corner radii
+		const V2f halfSize = size * 0.5f;
+		p.push_back( V3f( halfSize.x - radii.x, halfSize.y - radii.y, 0.f ) );  // Top-right
+		p.push_back( V3f( -halfSize.x + radii.x, halfSize.y - radii.y, 0.f ) );  // Top-left
+		p.push_back( V3f( -halfSize.x + radii.x, -halfSize.y + radii.y, 0.f ) );  // Bottom-left
+		p.push_back( V3f( halfSize.x - radii.x, -halfSize.y + radii.y, 0.f ) );  // Bottom-right
+
+		// Add the radii points
+		addRoundedRectangle( size, radii, p );
+
+		// Subtract 4 for inner corner point count
+		const int numCornerRadiusPoints = p.size() - 4;
+		// And another 4 for the repeated points between each corner arc and the next arc.
+		const int numCornerTriangles = numCornerRadiusPoints - 4;
+
+		bool isCircle = radii.x == 0 && radii.y == 0;
+
+		// Triangles for each corner radius fan, plus 2 per each of 4 sides, plus 2 for the center rectangle
+		IntVectorDataPtr vertsPerPolyData = new IntVectorData( std::vector<int>( numCornerTriangles + ( 10 * (int)(!isCircle) ), 3 ));
+
+		using CornerIndices = std::tuple<int, int, int, int>;
+		for(
+			const auto &[startIndex, innerCornerId, nextInnerCornerId, nextOuterRadiusId] : std::array<CornerIndices, 4> {
+				CornerIndices{ 4,                                     0, 1, 4 + ( numCornerRadiusPoints / 4 ) },  // Top-right
+				CornerIndices{ 4 + ( numCornerRadiusPoints / 4 ),     1, 2, 4 + ( numCornerRadiusPoints / 2 ) },  // Top-left
+				CornerIndices{ 4 + ( numCornerRadiusPoints / 2 ),     2, 3, 4 + ( numCornerRadiusPoints * 3 / 4 ) },  // Bottom-left
+				CornerIndices{ 4 + ( numCornerRadiusPoints * 3 / 4 ), 3, 0, 4 }  // Bottom-right
+			}
+		)
+		{
+			// Using the top-right as an example :
+			// To simplify, take `p.size() = 16`
+			// `numCornerTriangles = 8`
+			// `numCornerRadiusPoints = 12`
+			// r0 = startIndex
+			// r2 = `startIndex + ( numCornerTriangles / 4 )`
+			// A = innerCornerId
+			// B = nextOuterRadiusId
+			// C = nextInnerCornerId
+			//      B--------*r2
+			//   *             *r1
+			// *    C        A   *r0
+			// |                 |
+			// |                 |
+			// *                 *
+			//   *             *
+			//      *--------*
+
+			// Create a triangle fan from the inner corner point to each radius point.
+			for( int i = startIndex, eI = startIndex + ( numCornerTriangles / 4 ); i < eI; ++i )
+			{
+				vertIds.push_back( innerCornerId );
+				vertIds.push_back( i );
+				vertIds.push_back( i + 1 );
+			}
+
+			if( !isCircle )
+			{
+				// Create the straight edge segment to the next corner
+				vertIds.push_back( innerCornerId );
+				vertIds.push_back( startIndex + ( numCornerTriangles / 4) );
+				vertIds.push_back( nextOuterRadiusId );
+
+				vertIds.push_back( innerCornerId );
+				vertIds.push_back( nextOuterRadiusId );
+				vertIds.push_back( nextInnerCornerId );
+			}
+		}
+
+		if( !isCircle )
+		{
+			// Finally, fill in the center
+			vertIds.push_back( 0 );
+			vertIds.push_back( 1 );
+			vertIds.push_back( 2 );
+
+			vertIds.push_back( 0 );
+			vertIds.push_back( 2 );
+			vertIds.push_back( 3 );
+		}
+
+		V2fVectorDataPtr uvData = new V2fVectorData;
+		std::vector<V2f> &uv = uvData->writable();
+		uv.resize( p.size() );
+		std::transform(
+			p.begin(), p.end(),
+			uv.begin(),
+			[&halfSize, &size, &uvOrientation]( const V3f &p )
+			{
+				return V2f( ( p.x + halfSize.x ) / size.x, ( p.y + halfSize.y ) / size.y ) * uvOrientation;
+			}
+		);
+
+		MeshPrimitivePtr mesh = new MeshPrimitive( vertsPerPolyData, vertIdsData, "linear", pData );
+		mesh->variables["Cs"] = PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( fallbackColor ) );
+		mesh->variables["N"] = PrimitiveVariable( PrimitiveVariable::Constant, new V3fData( V3f( 0.f, 0.f, -1.f ) ) );
+		mesh->variables["uv"] = PrimitiveVariable( PrimitiveVariable::Vertex, uvData );
+		IECoreGL::ToGLMeshConverterPtr meshConverter = new IECoreGL::ToGLMeshConverter( mesh );
+		group->addChild( runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
+	}
 
 	M44f m;
 	m.rotate( V3f( M_PI, 0, 0 ) );

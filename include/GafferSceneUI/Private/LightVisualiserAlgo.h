@@ -61,12 +61,12 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr pointShape( float radius, bool mu
 /// Returns an OpenGL renderable solid point
 GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr pointSurface( float radius, const Imath::Color3f &color );
 
-/// Returns an OpenGL renderable wireframe rectangle with color according to the `mute` state.
-GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &size, float lineWidthScale, bool muted = false );
+/// Returns an OpenGL renderable wireframe rectangle with rounded corners and color according to the `mute` state.
+GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr roundedQuadWireframe( const Imath::V2f &size, const Imath::V2f &radii, float lineWidthScale, bool muted = false );
 
-/// Returns an OpenGL renderable solid rectangle with optional texture map. If `textureData` is `nullptr`,
-/// a solid color of `fallbackColor` will be used. `tint`, is applied to both the texture map and fallback
-/// color. `saturation` and `gamma` are only applied to the texture map, if present. The texture
+/// Returns an OpenGL renderable solid rectangle with optional rounded corners and texture map. If `textureData`
+/// is `nullptr`, a solid color of `fallbackColor` will be used. `tint`, is applied to both the texture map and
+/// fallback color. `saturation` and `gamma` are only applied to the texture map, if present. The texture
 /// coordinates of the quad are transformed by `uvOrientation`.
 /// `textureData` should be as per return type of `StandardLightVisualiser::surfaceTexture()`.
 
@@ -74,8 +74,8 @@ GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &
 /// primitive. Display of texture maps, especially modifications such as color adjustments, could easily be
 /// renderer-specific, so it should be the job of the visualiser implementations to decide how to shade lights.
 /// This applies to the other `*Surface` methods as well.
-GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr quadSurface(
-	const Imath::V2f &size, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
+GAFFERSCENEUI_API IECoreGL::ConstRenderablePtr roundedQuadSurface(
+	const Imath::V2f &size, const Imath::V2f &radii, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation,
 	const Imath::Color3f &gamma, int textureMaxResolution, const Imath::Color3f &fallbackColor, const Imath::M33f &uvOrientation
 );
 

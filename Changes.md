@@ -5,6 +5,8 @@ Improvements
 ------------
 
 - RenderManAttributes : Added trace set support via `grouping:membership` and `trace:*subset` attributes.
+- aiQuadLight : Added viewport visualisation of the `roundness` parameter.
+- USDLight : Added viewport visualisation of Arnold parameters `lens_radius`, `spread` and `roundness`.
 
 Fixes
 -----
