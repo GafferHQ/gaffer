@@ -2032,7 +2032,7 @@ else :
 
 	)
 
-gafferExecutable = exeEnv.Program( "$BUILD_DIR/bin/__private/gafferPython", "bin/__private/gafferPython.cpp")
+gafferExecutable = exeEnv.Program( "$BUILD_DIR/bin/__private/gaffer", "bin/__private/gaffer.cpp")
 env.Alias( "buildCore", gafferExecutable )
 
 #########################################################################################################
