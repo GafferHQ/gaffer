@@ -2016,14 +2016,11 @@ exeEnv.Append(
 
 )
 
-if exeEnv["PLATFORM"] == "win32" :
-	pass
-else :
+if exeEnv["PLATFORM"] != "win32" :
 	exeEnv["LINKFLAGS"].remove( "-Wl,--as-needed" )
 	exeEnv.Append(
 
-		CXXFLAGS = [ "-fPIC" ],
-		LINKFLAGS = [ "-pthread", "-Xlinker", "-export-dynamic", "-Wl,--no-as-needed" ],
+		LINKFLAGS = [ "-pthread", "-Wl,-export-dynamic", "-Wl,--no-as-needed" ],
 		LIBS = [
 			"dl",
 			"pthread",
