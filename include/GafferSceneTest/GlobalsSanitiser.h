@@ -41,6 +41,8 @@
 #include "Gaffer/Monitor.h"
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "boost/functional/hash.hpp"
+
 #include "tbb/concurrent_unordered_set.h"
 #include "tbb/concurrent_unordered_map.h"
 
@@ -74,7 +76,7 @@ class GAFFERSCENETEST_API GlobalsSanitiser : public Gaffer::Monitor
 		// First is the upstream plug where the problem was detected. Second
 		// is the downstream globals plug which depended on it.
 		using Warning = std::pair<Gaffer::ConstPlugPtr, Gaffer::ConstCompoundObjectPlugPtr>;
-		using WarningSet = tbb::concurrent_unordered_set<Warning>;
+		using WarningSet = tbb::concurrent_unordered_set<Warning, boost::hash<Warning>>;
 		// Used to avoid outputting duplicate warnings.
 		WarningSet m_warningsEmitted;
 

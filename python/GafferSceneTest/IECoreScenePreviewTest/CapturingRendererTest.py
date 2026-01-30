@@ -482,7 +482,7 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 
 		lA = rendererA.object( "/l", sphere1, rendererA.attributes( attrs ) )
 
-		with self.assertRaisesRegex( AssertionError, r"Objects do not match : \['/o', '/l'\] != \['/o'\]" ):
+		with self.assertRaisesRegex( AssertionError, r"Objects do not match : \['/[ol]', '/[lo]'\] != \['/o'\]" ):
 			CapturingRendererTest.assertRendersMatch( rendererA, rendererB )
 
 		lB = rendererB.object( "/l", sphere1, rendererB.attributes( attrs ) )

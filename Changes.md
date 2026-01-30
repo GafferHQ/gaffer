@@ -6,6 +6,7 @@ Improvements
 
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`. This matches volume assignments imported from USD, and means that Gaffer now exports materials to USD using the same convention.
 - InteractiveRender : Added `useVisibleSet` plug. When on, only the scene locations contained in the Visible Set will be rendered.
+- Application : Matched TBB worker thread stack limit to the limit for the main thread. On Linux, this can be configured with `ulimit -s`.
 
 Fixes
 -----
@@ -38,7 +39,18 @@ Breaking Changes
 Build
 -----
 
+- Boost : Updated to version 1.85.0.
 - Cortex : Updated to version 10.7.0.0a3.
+- Imath : Updated to version 3.1.12.
+- Jemalloc : Removed when building on macOS.
+- LLVM : Updated to version 17.0.6.
+- OpenColorIO : Updated to version 2.4.2.
+- OpenEXR : Updated to version 3.3.6.
+- OpenShadingLanguage : Updated to version 1.14.8.0.
+- PySide : Updated to version 6.5.8.
+- Python : Updated to version 3.11.14.
+- Qt : Updated to version 6.5.8.
+- TBB : Updated to version 2021.13.0.
 
 1.6.x.x (relative to 1.6.10.0)
 =======

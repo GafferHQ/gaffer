@@ -141,9 +141,23 @@ class Application( IECore.Parameterised ) :
 			IECore.msg( IECore.Msg.Level.Warning, "Application", f"Clamping to `-threads {maxThreads}` to avoid oversubscription" )
 			threads = maxThreads
 
-		with IECore.tbb_global_control(
-			IECore.tbb_global_control.parameter.max_allowed_parallelism,
-			threads
+		# We default to a minimum of a 4MB TBB thread stack size, though we
+		# increase this to match the stack limit of the main thread on platforms
+		# that support configuring a stack limit.
+		threadStackSize = 4 * 1024 * 1024
+		if os.name != "nt" :
+			import resource
+			threadStackSize = max( resource.getrlimit( resource.RLIMIT_STACK )[0], threadStackSize )
+
+		with (
+			IECore.tbb_global_control(
+				IECore.tbb_global_control.parameter.max_allowed_parallelism,
+				threads
+			),
+			IECore.tbb_global_control(
+				IECore.tbb_global_control.parameter.thread_stack_size,
+				threadStackSize
+			)
 		) :
 
 			self._executeStartupFiles( self.root().getName() )

@@ -176,6 +176,22 @@ ValuePlug::HashCacheMode defaultHashCacheMode()
 
 } // namespace
 
+namespace std
+{
+
+// With oneTBB 2021 `std::hash<HashCacheKey>` is a requirement of `Process::acquireCollaborativeResult()`,
+// which uses `tbb::concurrent_hash_map` internally to manage collaborations.
+template<>
+struct hash<HashCacheKey>
+{
+	size_t operator()( const HashCacheKey &k ) const noexcept
+	{
+		return tbb_hasher( k );
+	}
+};
+
+} // namespace std
+
 class ValuePlug::HashProcess : public Process
 {
 

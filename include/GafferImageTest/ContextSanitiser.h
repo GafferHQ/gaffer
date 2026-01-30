@@ -41,6 +41,8 @@
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Plug.h"
 
+#include "boost/functional/hash.hpp"
+
 #include "tbb/concurrent_unordered_set.h"
 
 namespace GafferImageTest
@@ -70,7 +72,19 @@ class GAFFERIMAGETEST_API ContextSanitiser : public Gaffer::Monitor
 
 		void warn( const Gaffer::Process &process, const IECore::InternedString &contextVariable );
 
-		using WarningSet = tbb::concurrent_unordered_set<Warning>;
+		struct WarningHash
+		{
+			size_t operator()( const Warning &warning ) const
+			{
+				size_t result = 0;
+				boost::hash_combine( result, warning.first.first );
+				boost::hash_combine( result, warning.first.second );
+				boost::hash_combine( result, warning.second.c_str() );
+				return result;
+			}
+		};
+
+		using WarningSet = tbb::concurrent_unordered_set<Warning, WarningHash>;
 		WarningSet m_warningsEmitted;
 
 };

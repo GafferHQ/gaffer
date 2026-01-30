@@ -55,7 +55,7 @@
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index_container.hpp"
 
-#include "tbb/task.h"
+#include "tbb/parallel_for.h"
 
 #include "fmt/format.h"
 
@@ -239,8 +239,8 @@ struct ObjectInterfaceHandle : public boost::noncopyable
 // scene contains only a flat list of objects, whereas the SceneGraph
 // maintains the original hierarchy, providing the means of flattening
 // attribute and transform state for passing to the renderer. Calls
-// to update() are made from a threaded scene traversal performed by
-// SceneGraphUpdateTask.
+// to updateLocation() are made from a threaded scene traversal performed by
+// update().
 class RenderController::SceneGraph
 {
 
@@ -307,9 +307,152 @@ class RenderController::SceneGraph
 			}
 		}
 
-		// Called by SceneGraphUpdateTask to update this location. Returns true if
+		void update(
+			RenderController *controller,
+			SceneGraph::Type sceneGraphType,
+			unsigned changedGlobalComponents,
+			const ThreadState &threadState,
+			const ScenePlug::ScenePath &scenePath,
+			const ProgressCallback &callback,
+			const PathMatcher *pathsToUpdate,
+			tbb::task_group_context &taskGroupContext
+		)
+		{
+
+			const unsigned pathsToUpdateMatch = pathsToUpdate ? pathsToUpdate->match( scenePath ) : (unsigned)PathMatcher::EveryMatch;
+			if( !pathsToUpdateMatch )
+			{
+				return;
+			}
+
+			// Figure out if this location belongs in the type
+			// of scene graph we're constructing. If it doesn't
+			// belong, and neither do any of its descendants,
+			// we can just early out.
+
+			const unsigned sceneGraphMatch = this->sceneGraphMatch( controller, sceneGraphType, scenePath );
+			if( !( sceneGraphMatch & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::DescendantMatch ) ) )
+			{
+				clear();
+				return;
+			}
+
+			// Set up a context to compute the scene at the right
+			// location.
+
+			ScenePlug::PathScope pathScope( threadState, &scenePath );
+
+			// Update the scene graph at this location.
+
+			const bool changesMade = updateLocation(
+				scenePath,
+				changedGlobalComponents,
+				sceneGraphMatch & IECore::PathMatcher::ExactMatch ? sceneGraphType : SceneGraph::NoType,
+				controller
+			);
+
+			if( changesMade && callback )
+			{
+				callback( BackgroundTask::Running );
+			}
+
+			// Apply updates to each child.
+
+			if( this->expanded() && m_children.size() )
+			{
+				if( m_children.size() > 1 )
+				{
+					tbb::parallel_for(
+						tbb::blocked_range<size_t>( 0, m_children.size() ),
+						[&]( const tbb::blocked_range<size_t> &r )
+						{
+							ScenePlug::ScenePath childPath = scenePath;
+							childPath.push_back( IECore::InternedString() ); // space for the child name
+							for( size_t i = r.begin(); i != r.end(); ++i )
+							{
+								childPath.back() = m_children[i]->name();
+								m_children[i].get()->update( controller, sceneGraphType, changedGlobalComponents, threadState, childPath, callback, pathsToUpdate, taskGroupContext );
+							}
+						},
+						taskGroupContext
+					);
+				}
+				else
+				{
+					// Serial execution
+					ScenePlug::ScenePath childPath = scenePath;
+					childPath.push_back( m_children[0]->name() );
+					m_children[0].get()->update( controller, sceneGraphType, changedGlobalComponents, threadState, childPath, callback, pathsToUpdate, taskGroupContext );
+				}
+
+			}
+			else
+			{
+				for( auto &child : m_children )
+				{
+					child->clear();
+				}
+			}
+
+			if( pathsToUpdateMatch & ( PathMatcher::AncestorMatch | PathMatcher::ExactMatch ) )
+			{
+				allChildrenUpdated();
+			}
+		}
+
+		bool expanded() const
+		{
+			return m_descendantsVisible;
+		}
+
+		const std::vector<std::unique_ptr<SceneGraph>> &children()
+		{
+			return m_children;
+		}
+
+		void allChildrenUpdated()
+		{
+			m_changedComponents = NoComponent;
+		}
+
+		// Invalidates this location, removing any resources it
+		// holds in the renderer, and clearing all children. This is
+		// used to "remove" a location without having to delete it
+		// from the children() of its parent. We avoid the latter
+		// because it would involve some unwanted locking - we
+		// process children in parallel, and therefore want to avoid
+		// child updates having to write to the parent.
+		void clear()
+		{
+			m_children.clear();
+			clearObject();
+			m_attributesHash = m_lightLinksHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
+			m_cleared = true;
+			m_descendantsVisible = false;
+			m_drawMode = VisibleSet::Visibility::None;
+			m_boundInterface = nullptr;
+			m_dirtyComponents = AllComponents;
+		}
+
+		// Returns true if the location has not been finalised
+		// since the last call to clear() - ie that it is not
+		// in a valid state.
+		bool cleared()
+		{
+			return m_cleared;
+		}
+
+	private :
+
+		SceneGraph( const InternedString &name, const SceneGraph *parent )
+			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject ), m_purposeIncluded( true )
+		{
+			clear();
+		}
+
+		// Called by update to update this location. Returns true if
 		// anything changed.
-		bool update( const ScenePlug::ScenePath &path, unsigned changedGlobals, Type type, RenderController *controller )
+		bool updateLocation( const ScenePlug::ScenePath &path, unsigned changedGlobals, Type type, RenderController *controller )
 		{
 			const unsigned originalChangedComponents = m_changedComponents;
 
@@ -577,56 +720,6 @@ class RenderController::SceneGraph
 			assert( m_dirtyComponents == NoComponent );
 
 			return originalChangedComponents != m_changedComponents;
-		}
-
-		bool expanded() const
-		{
-			return m_descendantsVisible;
-		}
-
-		const std::vector<std::unique_ptr<SceneGraph>> &children()
-		{
-			return m_children;
-		}
-
-		void allChildrenUpdated()
-		{
-			m_changedComponents = NoComponent;
-		}
-
-		// Invalidates this location, removing any resources it
-		// holds in the renderer, and clearing all children. This is
-		// used to "remove" a location without having to delete it
-		// from the children() of its parent. We avoid the latter
-		// because it would involve some unwanted locking - we
-		// process children in parallel, and therefore want to avoid
-		// child updates having to write to the parent.
-		void clear()
-		{
-			m_children.clear();
-			clearObject();
-			m_attributesHash = m_lightLinksHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
-			m_cleared = true;
-			m_descendantsVisible = false;
-			m_drawMode = VisibleSet::Visibility::None;
-			m_boundInterface = nullptr;
-			m_dirtyComponents = AllComponents;
-		}
-
-		// Returns true if the location has not been finalised
-		// since the last call to clear() - ie that it is not
-		// in a valid state.
-		bool cleared()
-		{
-			return m_cleared;
-		}
-
-	private :
-
-		SceneGraph( const InternedString &name, const SceneGraph *parent )
-			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject ), m_purposeIncluded( true )
-		{
-			clear();
 		}
 
 		// Returns true if the attributes changed.
@@ -967,7 +1060,7 @@ class RenderController::SceneGraph
 
 		// Ensures that children() contains a child for every name specified
 		// by childNamesPlug(). This just ensures that the children exist - they
-		// will subsequently be updated in parallel by the SceneGraphUpdateTask.
+		// will subsequently be updated in parallel by update().
 		bool updateChildren( const InternedStringVectorDataPlug *childNamesPlug )
 		{
 			const IECore::MurmurHash childNamesHash = childNamesPlug->hash();
@@ -1074,6 +1167,35 @@ class RenderController::SceneGraph
 			}
 		}
 
+		/// \todo Fast path for when sets were not dirtied.
+		static unsigned sceneGraphMatch( RenderController *controller, SceneGraph::Type sceneGraphType, const ScenePlug::ScenePath &scenePath )
+		{
+			switch( sceneGraphType )
+			{
+				case SceneGraph::CameraType :
+					return controller->m_renderSets.camerasSet().match( scenePath );
+				case SceneGraph::LightType :
+					return controller->m_renderSets.lightsSet().match( scenePath );
+				case SceneGraph::LightFilterType :
+					return controller->m_renderSets.lightFiltersSet().match( scenePath );
+				case SceneGraph::ObjectType :
+				{
+					unsigned m = controller->m_renderSets.lightsSet().match( scenePath ) |
+								 controller->m_renderSets.camerasSet().match( scenePath );
+					if( m & IECore::PathMatcher::ExactMatch )
+					{
+						return IECore::PathMatcher::AncestorMatch | IECore::PathMatcher::DescendantMatch;
+					}
+					else
+					{
+						return IECore::PathMatcher::EveryMatch;
+					}
+				}
+				default :
+					return IECore::PathMatcher::NoMatch;
+			}
+		}
+
 		IECore::InternedString m_name;
 
 		const SceneGraph *m_parent;
@@ -1127,154 +1249,6 @@ class RenderController::SceneGraph
 		unsigned m_changedComponents;
 
 		bool m_cleared;
-
-};
-
-// TBB task used to perform multithreaded updates on our SceneGraph.
-class RenderController::SceneGraphUpdateTask : public tbb::task
-{
-
-	public :
-
-		SceneGraphUpdateTask(
-			RenderController *controller,
-			SceneGraph *sceneGraph,
-			SceneGraph::Type sceneGraphType,
-			unsigned changedGlobalComponents,
-			const ThreadState &threadState,
-			const ScenePlug::ScenePath &scenePath,
-			const ProgressCallback &callback,
-			const PathMatcher *pathsToUpdate
-		)
-			:	m_controller( controller ),
-				m_sceneGraph( sceneGraph ),
-				m_sceneGraphType( sceneGraphType ),
-				m_changedGlobalComponents( changedGlobalComponents ),
-				m_threadState( threadState ),
-				m_scenePath( scenePath ),
-				m_callback( callback ),
-				m_pathsToUpdate( pathsToUpdate )
-		{
-		}
-
-		task *execute() override
-		{
-
-			const unsigned pathsToUpdateMatch = m_pathsToUpdate ? m_pathsToUpdate->match( m_scenePath ) : (unsigned)PathMatcher::EveryMatch;
-			if( !pathsToUpdateMatch )
-			{
-				return nullptr;
-			}
-
-			// Figure out if this location belongs in the type
-			// of scene graph we're constructing. If it doesn't
-			// belong, and neither do any of its descendants,
-			// we can just early out.
-
-			const unsigned sceneGraphMatch = this->sceneGraphMatch();
-			if( !( sceneGraphMatch & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::DescendantMatch ) ) )
-			{
-				m_sceneGraph->clear();
-				return nullptr;
-			}
-
-			// Set up a context to compute the scene at the right
-			// location.
-
-			ScenePlug::PathScope pathScope( m_threadState, &m_scenePath );
-
-			// Update the scene graph at this location.
-
-			const bool changesMade = m_sceneGraph->update(
-				m_scenePath,
-				m_changedGlobalComponents,
-				sceneGraphMatch & IECore::PathMatcher::ExactMatch ? m_sceneGraphType : SceneGraph::NoType,
-				m_controller
-			);
-
-			if( changesMade && m_callback )
-			{
-				m_callback( BackgroundTask::Running );
-			}
-
-			// Spawn subtasks to apply updates to each child.
-
-			const auto &children = m_sceneGraph->children();
-			if( m_sceneGraph->expanded() && children.size() )
-			{
-				set_ref_count( 1 + children.size() );
-
-				ScenePlug::ScenePath childPath = m_scenePath;
-				childPath.push_back( IECore::InternedString() ); // space for the child name
-				for( const auto &child : children )
-				{
-					childPath.back() = child->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_controller, child.get(), m_sceneGraphType, m_changedGlobalComponents, m_threadState, childPath, m_callback, m_pathsToUpdate );
-					spawn( *t );
-				}
-
-				wait_for_all();
-			}
-			else
-			{
-				for( auto &child : children )
-				{
-					child->clear();
-				}
-			}
-
-			if( pathsToUpdateMatch & ( PathMatcher::AncestorMatch | PathMatcher::ExactMatch ) )
-			{
-				m_sceneGraph->allChildrenUpdated();
-			}
-
-			return nullptr;
-		}
-
-	private :
-
-		const ScenePlug *scene()
-		{
-			return m_controller->m_scene.get();
-		}
-
-		/// \todo Fast path for when sets were not dirtied.
-		unsigned sceneGraphMatch() const
-		{
-			switch( m_sceneGraphType )
-			{
-				case SceneGraph::CameraType :
-					return m_controller->m_renderSets.camerasSet().match( m_scenePath );
-				case SceneGraph::LightType :
-					return m_controller->m_renderSets.lightsSet().match( m_scenePath );
-				case SceneGraph::LightFilterType :
-					return m_controller->m_renderSets.lightFiltersSet().match( m_scenePath );
-				case SceneGraph::ObjectType :
-				{
-					unsigned m = m_controller->m_renderSets.lightsSet().match( m_scenePath ) |
-					             m_controller->m_renderSets.camerasSet().match( m_scenePath );
-					if( m & IECore::PathMatcher::ExactMatch )
-					{
-						return IECore::PathMatcher::AncestorMatch | IECore::PathMatcher::DescendantMatch;
-					}
-					else
-					{
-						return IECore::PathMatcher::EveryMatch;
-					}
-				}
-				default :
-					return IECore::PathMatcher::NoMatch;
-			}
-		}
-
-		RenderController *m_controller;
-		SceneGraph *m_sceneGraph;
-		SceneGraph::Type m_sceneGraphType;
-		unsigned m_changedGlobalComponents;
-		const ThreadState &m_threadState;
-		ScenePlug::ScenePath m_scenePath;
-		const ProgressCallback &m_callback;
-		const PathMatcher *m_pathsToUpdate;
 
 };
 
@@ -1736,10 +1710,9 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			}
 
 			tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-			SceneGraphUpdateTask *task = new( tbb::task::allocate_root( taskGroupContext ) ) SceneGraphUpdateTask(
-				this, sceneGraph, (SceneGraph::Type)i, m_changedGlobalComponents, ThreadState::current(), ScenePlug::ScenePath(), callback, pathsToUpdate
+			sceneGraph->update(
+				this, (SceneGraph::Type)i, m_changedGlobalComponents, ThreadState::current(), ScenePlug::ScenePath(), callback, pathsToUpdate, taskGroupContext
 			);
-			tbb::task::spawn_root_and_wait( *task );
 
 			if( i == SceneGraph::LightFilterType && m_lightLinks && m_lightLinks->lightFilterLinksDirty() )
 			{
