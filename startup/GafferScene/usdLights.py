@@ -56,14 +56,21 @@ for light in [ "RectLight", "SphereLight", "DiskLight", "CylinderLight", "Distan
 	Gaffer.Metadata.registerValue( metadataTarget, "coneAngleParameter", "shaping:cone:angle" )
 	Gaffer.Metadata.registerValue( metadataTarget, "coneAngleType", "half" )
 
+for light in [ "SphereLight", "DiskLight", "CylinderLight", "DistantLight" ] :
+	metadataTarget = "light:{}".format( light )
+	Gaffer.Metadata.registerValue( metadataTarget, "lensRadiusParameter", "arnold:lens_radius" )
+
 Gaffer.Metadata.registerValue( "light:SphereLight", "radiusParameter", "radius" )
 
 Gaffer.Metadata.registerValue( "light:DiskLight", "radiusParameter", "radius" )
+Gaffer.Metadata.registerValue( "light:DiskLight", "spreadParameter", "arnold:spread" )
 
 Gaffer.Metadata.registerValue( "light:RectLight", "widthParameter", "width" )
 Gaffer.Metadata.registerValue( "light:RectLight", "heightParameter", "height" )
 Gaffer.Metadata.registerValue( "light:RectLight", "textureNameParameter", "texture:file" )
 Gaffer.Metadata.registerValue( "light:RectLight", "visualiserOrientation", imath.M44f().rotate( imath.V3f( math.pi, math.pi , 0 ) ) )
+Gaffer.Metadata.registerValue( "light:RectLight", "roundnessParameter", "arnold:roundness" )
+Gaffer.Metadata.registerValue( "light:RectLight", "spreadParameter", "arnold:spread" )
 
 Gaffer.Metadata.registerValue( "light:CylinderLight", "radiusParameter", "radius" )
 Gaffer.Metadata.registerValue( "light:CylinderLight", "lengthParameter", "length" )

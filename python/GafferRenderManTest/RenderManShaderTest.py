@@ -311,8 +311,11 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 				'targetHue',
 				'incidentAngle',
 				'roughness',
-			] + ( [ "iridescenceNormal" ] if IECoreRenderMan.renderManMajorVersion() >= 27 else [] ) +
-			[
+			] + (
+				[ "iridescenceNormal" ]
+				if ( IECoreRenderMan.renderManMajorVersion(), IECoreRenderMan.renderManMinorVersion() ) >= ( 26, 4 )
+				else []
+			) + [
 				"colorPreservation",
 				"tailMix",
 				"tailLength",
