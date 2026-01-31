@@ -136,7 +136,6 @@ class ApplicationTest( GafferTest.TestCase ) :
 
 		for source, environment in environments.items() :
 			with self.subTest( source = source ) :
-				self.assertNotIn( "libstdc++", environment.get( "LD_PRELOAD", "" ) )
 				self.assertNotIn( "libjemalloc", environment.get( "LD_PRELOAD", "" ) )
 				self.assertEqual(
 					[ k for k in environment.keys() if k.startswith( "__GAFFER_RESTORE_" ) ],

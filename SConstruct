@@ -520,7 +520,7 @@ if env["PLATFORM"] != "win32" :
 
 		# Make the linker behave more like Windows, omitting shared libraries that it didn't resolve
 		# any symbols from.
-		env.Append( LINKFLAGS = "-Wl,--as-needed" )
+		env.Append( LINKFLAGS = [ "-Wl,--as-needed" ] )
 
 	# Shared config
 
@@ -1550,7 +1550,7 @@ libraries = {
 	},
 
 	"scripts" : {
-		"additionalFiles" : [ "bin/_gaffer.py", "bin/__gaffer.py" ],
+		"additionalFiles" : [ "bin/__private/_gaffer.py", "bin/__private/__gaffer.py" ],
 	},
 
 	"misc" : {
@@ -1993,6 +1993,44 @@ for libraryName, libraryDef in libraries.items() :
 		commandEnv.Alias( "buildCore", generatedSchema )
 
 env.Alias( "build", "buildCore" )
+
+#########################################################################################################
+# Executable
+#########################################################################################################
+
+# Start with `env` because `baseLibEnv` includes a lot of libraries
+# we don't want.
+exeEnv = env.Clone()
+
+# Piggy-back on some of `baseLibEnv` variables.
+exeEnv["PYTHON_ABI_VERSION"] = baseLibEnv["PYTHON_ABI_VERSION"]
+
+exeEnv.Append(
+
+	LIBS = [
+		"python$PYTHON_ABI_VERSION",
+	],
+
+	CPPPATH = baseLibEnv["CPPPATH"],
+	LIBPATH = baseLibEnv["LIBPATH"],
+
+)
+
+if exeEnv["PLATFORM"] != "win32" :
+	exeEnv["LINKFLAGS"].remove( "-Wl,--as-needed" )
+	exeEnv.Append(
+
+		LINKFLAGS = [ "-pthread", "-Wl,-export-dynamic", "-Wl,--no-as-needed" ],
+		LIBS = [
+			"dl",
+			"pthread",
+			"libutil",
+		],
+
+	)
+
+gafferExecutable = exeEnv.Program( "$BUILD_DIR/bin/__private/gaffer", "bin/__private/gaffer.cpp")
+env.Alias( "buildCore", gafferExecutable )
 
 #########################################################################################################
 # Python nodes authored as Boxes and exported by ExtensionAlgo
