@@ -52,6 +52,11 @@ int renderManMajorVersion()
 	return _PRMANAPI_VERSION_MAJOR_;
 }
 
+int renderManMinorVersion()
+{
+	return _PRMANAPI_VERSION_MINOR_;
+}
+
 ShaderNetworkAlgo::VStructAction evaluateVStructConditionalWrapper( const std::string &expression, object valueFunction, object isConnectedFunction )
 {
 	return ShaderNetworkAlgo::evaluateVStructConditional(
@@ -71,6 +76,7 @@ BOOST_PYTHON_MODULE( _IECoreRenderMan )
 {
 
 	def( "renderManMajorVersion", renderManMajorVersion );
+	def( "renderManMinorVersion", renderManMinorVersion );
 
 	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "IECoreRenderMan.ShaderNetworkAlgo" ) ) );
 	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;

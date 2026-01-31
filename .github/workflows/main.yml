@@ -155,7 +155,7 @@ jobs:
     - name: 'Install Python Modules'
       run: |
         python --version
-        pip install PyJWT==1.7.1 PyGitHub==1.45
+        pip install PyJWT==1.7.1 PyGitHub==1.45 beautifulsoup4
 
     - name: Set Custom Variables
       run: |
@@ -270,6 +270,27 @@ jobs:
       if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
 
     - name: Build and test against RenderMan 26.3
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
+        ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }} IECoreRenderManTest GafferRenderManTest GafferRenderManUITest
+        echo "::remove-matcher owner=unittest::"
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Install RenderMan 26.4
+      run: |
+        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
+        ./.github/workflows/main/installRenderMan.py --version 26.4 --dailyBuildDate 2026-01-26 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+
+    - name: Build and test against RenderMan 26.4
       run: |
         scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
