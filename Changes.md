@@ -13,6 +13,7 @@ API
 
 - Widget : Added `currentButtons()` static method. This returns the state of the mouse buttons during the last UI event to be processed.
 - LazyMethod : Added `deferUntilButtonRelease` option.
+- PlugLayout : Added `setFilter()` and `getFilter()` methods for setting / getting a method to use for filtering visible plugs in addition to the existing metadata-based plug visibility activators.
 
 1.6.12.0 (relative to 1.6.11.1)
 ========
