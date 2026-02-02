@@ -38,6 +38,7 @@ import functools
 import string
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -392,6 +393,42 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 				self.assertEqual( parameterInput, GafferSceneUI.Private.ParameterInspector.connectionSource( inspectedValue ) )
 				if not parameterInput :
 					self.assertEqual( inspectedValue, shaderNetwork.getShader( shaderName ).parameters[parameterName] )
+
+	def testShaderParameterWithConnectionButNotValue( self ) :
+
+		plane = GafferScene.Plane()
+
+		shaderAssignment = GafferScene.CustomAttributes()
+		shaderAssignment["in"].setInput( plane["out"] )
+		shaderAssignment["extraAttributes"].setValue( {
+
+			"surface" : IECoreScene.ShaderNetwork(
+				shaders = {
+					"file" : IECoreScene.Shader( "texture" ),
+					"lambert" : IECoreScene.Shader( "lambert" ),
+				},
+				connections = [
+					( ( "file", "out" ), ( "lambert", "albedo" ) ),
+				],
+				output = ( "lambert", "out" ),
+			)
+
+		} )
+
+		context = Gaffer.Context()
+		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/plane" )
+
+		tree = _GafferSceneUI._SceneInspector.InspectorTree( shaderAssignment["out"], [ context, context ], None )
+		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Attributes/Standard/surface/lambert" )
+
+		parameterPaths = path.children()
+		self.assertEqual( len( parameterPaths ), 1 )
+		self.assertEqual( parameterPaths[0][-1], "albedo" )
+
+		inspector = parameterPaths[0].property( "inspector:inspector" )
+		with parameterPaths[0].contextProperty( "inspector:context" ) :
+			value = inspector.inspect().value()
+			self.assertEqual( GafferSceneUI.Private.ParameterInspector.connectionSource( value ), ( "file", "out" ) )
 
 	def testCustomInspectors( self ) :
 
