@@ -861,9 +861,28 @@ void addShaderInspections( InspectorTree::Inspections &inspections, const vector
 
 		} );
 
+		// Since shader parameters can be provided sparsely, they might
+		// be identified by either a value or a connection.
+
+		vector<InternedString> parameterNames;
+		parameterNames.reserve( shader->parameters().size() );
+		for( const auto &[name, value] : shader->parameters() )
+		{
+			parameterNames.push_back( name );
+		}
+		for( const auto &connection : shaderNetwork->inputConnections( shaderHandle ) )
+		{
+			parameterNames.push_back( connection.destination.name );
+		}
+		std::sort(
+			parameterNames.begin(), parameterNames.end(),
+			[] ( InternedString a, InternedString b ) { return a.string() < b.string(); }
+		);
+		parameterNames.erase( std::unique( parameterNames.begin(), parameterNames.end() ), parameterNames.end() );
+
 		vector<InternedString> parameterPath = shaderPath;
 		parameterPath.push_back( InternedString() );
-		for( const auto parameterName : alphabeticallySortedKeys( shader->parameters() ) )
+		for( const auto parameterName : parameterNames )
 		{
 			parameterPath.back() = parameterName;
 			inspections.push_back( {
