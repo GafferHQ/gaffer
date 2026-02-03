@@ -15,6 +15,12 @@ Fixes
 - SceneInspector : Fixed display of shader parameters with an input connection but no value. Common examples included
   Arnold's `LayerShader` closure inputs and RenderMan's `LamaSurface` material inputs.
 - RenderMan : Fixed handling of custom camera parameters prefixed with `ri:` (#6775).
+- SceneReader : Fixed reading of USD materials containing connections involving UsdShadeNodeGraph interface parameters.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.3.1.
 
 1.6.10.0 (relative to 1.6.9.1)
 ========
