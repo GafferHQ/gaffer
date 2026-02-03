@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.11.1)
 =======
 
+Improvements
+------------
 
+- SceneInspector : Added inspection of shader networks in options and global attributes. Examples include RenderMan display filters and Arnold background shaders.
 
 1.6.11.1 (relative to 1.6.11.0)
 ========
