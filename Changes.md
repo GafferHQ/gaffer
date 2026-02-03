@@ -7,6 +7,7 @@ Improvements
 - Crop : Added `Auto` mode for `areaSource`, automatically cropping to show only non-empty pixels.
 - GraphEditor : Improved responsiveness of select-drag, by deferring NodeEditor update until the drag ends.
 - RenderManOptions : Added `ri:progress` option to control logging of render progress.
+- USDLight : Added filters to control which plugs are visible. Renderer-based filters show or hide renderer-specific parameters. A second, general purpose text filter provides additional filtering based on the plug name.
 
 API
 ---

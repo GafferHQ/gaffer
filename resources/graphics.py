@@ -530,7 +530,22 @@
 				"searchOn",
 			],
 
-		}
+		},
+		
+		"nodeEditor" : {
+			
+			"options" : {
+				"validatePixelAlignment" : True,
+			},
+			
+			"ids" : [
+				"rendererArnoldOnIcon",
+				"rendererArnoldOffIcon",
+				"rendererCyclesOnIcon",
+				"rendererCyclesOffIcon",
+			],
+
+		},
 
 	},
 
