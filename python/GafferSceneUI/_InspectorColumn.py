@@ -359,8 +359,8 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	menuDefinition.append(
 		f"Copy {valueLabel}{pluralSuffix}",
 		{
-			"command" : functools.partial( _copySelectedValues, pathListing ),
-			"active" : functools.partial( _canCopySelectedValues, pathListing ),
+			"command" : lambda menu : _copySelectedValues( menu.ancestor( GafferUI.PathListingWidget ) ),
+			"active" : _canCopySelectedValues( pathListing ),
 			"shortCut" : "Ctrl+C",
 		}
 	)
@@ -373,8 +373,8 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	menuDefinition.append(
 		f"Paste Value{pluralSuffix}",
 		{
-			"command" : functools.partial( _pasteValues, pathListing ),
-			"active" : functools.partial( _canPasteValues, pathListing ),
+			"command" : lambda menu : _pasteValues( menu.ancestor( GafferUI.PathListingWidget ) ),
+			"active" : _canPasteValues( pathListing ),
 			"shortCut" : "Ctrl+V",
 		}
 	)
@@ -387,7 +387,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	menuDefinition.append(
 		"Inspect...",
 		{
-			"command" : functools.partial( __inspect, pathListing, *inspectionSelection ),
+			"command" : lambda menu : __inspect( menu.ancestor( GafferUI.PathListingWidget ), *inspectionSelection ),
 			"active" : inspectionSelection[0] is not None,
 			"shortCut" : "I",
 		}
@@ -396,7 +396,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	menuDefinition.append(
 		"Show History...",
 		{
-			"command" : functools.partial( __showHistory, pathListing ),
+			"command" : lambda menu : __showHistory( menu.ancestor( GafferUI.PathListingWidget ) ),
 			"shortCut" : "H",
 		}
 	)
@@ -409,7 +409,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	menuDefinition.append(
 		"Toggle" if toggleOnly else "Edit...",
 		{
-			"command" : functools.partial( __editSelectedCells, pathListing, toggleOnly ),
+			"command" : lambda menu : __editSelectedCells( menu.ancestor( GafferUI.PathListingWidget ), toggleOnly ),
 			"shortCut" : "Return, Enter",
 		}
 	)
@@ -417,7 +417,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 	menuDefinition.append(
 		"{} Edit{}".format( "Disable" if disable else "Reenable", "s" if len( inspections ) > 1 else "" ),
 		{
-			"command" : functools.partial( __toggleEditEnabled, pathListing ),
+			"command" : lambda menu : __toggleEditEnabled( menu.ancestor( GafferUI.PathListingWidget ) ),
 			"active" : len( inspections ) > 0 and nonEditableReason == "",
 			"shortCut" : "D",
 			"description" : nonEditableReason,
@@ -428,7 +428,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		menuDefinition.append(
 			"Remove Attribute",
 			{
-				"command" : functools.partial( __removeAttributes, pathListing ),
+				"command" : lambda menu : __removeAttributes( menu.ancestor( GafferUI.PathListingWidget ) ),
 				"shortCut" : "Backspace, Delete",
 			}
 		)
@@ -440,7 +440,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		menuDefinition.append(
 			"Select Affected Objects",
 			{
-				"command" : functools.partial( __selectAffected, pathListing ),
+				"command" : lambda menu : __selectAffected( menu.ancestor( GafferUI.PathListingWidget ) ),
 			}
 		)
 

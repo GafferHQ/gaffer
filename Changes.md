@@ -52,8 +52,21 @@ Build
 - Qt : Updated to version 6.5.8.
 - TBB : Updated to version 2021.13.0.
 
-1.6.x.x (relative to 1.6.10.0)
+1.6.x.x (relative to 1.6.11.1)
 =======
+
+
+
+1.6.11.1 (relative to 1.6.11.0)
+========
+
+Fixes
+-----
+
+- Scene Editors : Fixed bug which could cause crashes at shutdown.
+
+1.6.11.0 (relative to 1.6.10.0)
+========
 
 Improvements
 ------------
@@ -66,7 +79,15 @@ Improvements
 Fixes
 -----
 
+- SceneInspector : Fixed display of shader parameters with an input connection but no value. Common examples included
+  Arnold's `LayerShader` closure inputs and RenderMan's `LamaSurface` material inputs.
 - RenderMan : Fixed handling of custom camera parameters prefixed with `ri:` (#6775).
+- SceneReader : Fixed reading of USD materials containing connections involving UsdShadeNodeGraph interface parameters.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.3.1.
 
 1.6.10.0 (relative to 1.6.9.1)
 ========
