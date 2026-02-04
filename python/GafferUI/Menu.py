@@ -313,6 +313,8 @@ class Menu( GafferUI.Widget ) :
 
 				else :
 
+					self.__checkForCycles( path, item )
+
 					if item.subMenu is not None :
 
 						# Skip any subMenus that declare they have no short cuts.
@@ -717,6 +719,42 @@ class Menu( GafferUI.Widget ) :
 			self.__lastHoverAction.item.leave()
 
 		self.__lastHoverAction = None
+
+	# Creating reference cycles by referencing the menu's parent
+	# in a `command` is too easy, and can have dire consequences
+	# (see c2a7fd7bfbe3d251cb62fd688b0cab5688141bde). Warn if we
+	# fall into the trap.
+	def __checkForCycles( self, path, item ) :
+
+		def checkCaptures( self, attribute, o, visited ) :
+
+			if id( o ) in visited :
+				return
+			else :
+				visited.add( id( o ) )
+
+			if isinstance( o, GafferUI.Widget ) and ( o is self or o.isAncestorOf( self ) ) :
+				IECore.msg(
+					IECore.Msg.Level.Warning, path,
+					f"Captured variable for `{attribute}` creates cyclic reference back to Menu."
+				)
+			elif isinstance( o, functools.partial ) :
+				checkCaptures( self, attribute, o.func, visited )
+				for a in o.args :
+					checkCaptures( self, attribute, a, visited )
+				for a in o.keywords.values() :
+					checkCaptures( self, attribute, a, visited )
+			elif inspect.isfunction( o ) :
+				closureVars = inspect.getclosurevars( o )
+				for a in closureVars.nonlocals.values() :
+					checkCaptures( self, attribute, a, visited )
+				for a in closureVars.globals.values() :
+					checkCaptures( self, attribute, a, visited )
+			elif inspect.ismethod( o ) :
+				checkCaptures( self, attribute, o.__self__, visited )
+
+		for k, v in item.__dict__.items() :
+			checkCaptures( self, k, v, set() )
 
 # When we stuck arbitrary attributes on QAction (eg. __item) these would get
 # lost when the action was returned by Qt via a signal (eg: menu.hovered).
