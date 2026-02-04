@@ -11,7 +11,9 @@ Improvements
 Fixes
 -----
 
-- RenderManDisplayFilter, RenderManSampleFilter : Fixed handling of dedicated XPU filters implemented in OSL.
+- RenderManDisplayFilter, RenderManSampleFilter :
+  - Fixed handling of dedicated XPU filters implemented in OSL.
+  - Fixed missing `NPRnormals` AOV required by PxrStylizedLines.
 
 API
 ---

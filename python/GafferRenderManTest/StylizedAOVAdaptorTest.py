@@ -79,7 +79,7 @@ class StylizedAOVAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"color NPRoutline", "color NPRtoonOut", "color NPRcurvature",
 				"color NPRNtriplanar", "color NPRlineAlbedo", "color NPRlineCamdist", "color NPRPtriplanar",
 				"color NPRmask", "color NPRdistort", "lpe shadows;C[DS]+<L.>", "color NPRsections",
-				"float sampleCount", "lpe C(D[DS]*[LO])|[LO]", "lpe C<RS>[<L.>O]",
+				"float sampleCount", "lpe C(D[DS]*[LO])|[LO]", "lpe C<RS>[<L.>O]", "color NPRnormals",
 			}
 		)
 
