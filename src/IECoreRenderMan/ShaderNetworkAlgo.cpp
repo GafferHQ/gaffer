@@ -536,7 +536,23 @@ const std::string stringMetadata( const std::string &name, const vector<OSL::OSL
 ConstShaderInfoPtr shaderInfoFromOSLQuery( OSL::OSLQuery &query )
 {
 	auto result = std::make_shared<ShaderInfo>();
-	result->type = riley::ShadingNode::Type::k_Pattern;
+
+	// This metadata seems to be the most reliable way of detecting
+	// the minority of OSL shaders that are intended for use as display
+	// or sample filters rather than patterns.
+	const std::string schemaBase = stringMetadata( "usdSchemaDef_schemaBase", query.metadata() );
+	if( schemaBase == "PxrDisplayFilterPluginBase" )
+	{
+		result->type = riley::ShadingNode::Type::k_DisplayFilter;
+	}
+	else if( schemaBase == "PxrSampleFilterPluginBase" )
+	{
+		result->type = riley::ShadingNode::Type::k_SampleFilter;
+	}
+	else
+	{
+		result->type = riley::ShadingNode::Type::k_Pattern;
+	}
 
 	for( const auto &parameter : query )
 	{
