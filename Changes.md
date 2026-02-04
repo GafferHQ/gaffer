@@ -8,6 +8,11 @@ Improvements
 - SceneInspector : Added inspection of shader networks in options and global attributes. Examples include RenderMan display filters and Arnold background shaders.
 - Menu : Added checks for reference cycles, emitting warnings if any are found.
 
+Fixes
+-----
+
+- RenderManDisplayFilter, RenderManSampleFilter : Fixed handling of dedicated XPU filters implemented in OSL.
+
 API
 ---
 
