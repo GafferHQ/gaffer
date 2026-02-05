@@ -74,7 +74,7 @@ def prependToPath( pathToPrepend, envVar ) :
 
 	os.environ[envVar] = os.pathsep.join( path )
 
-gafferRoot = pathlib.Path( __file__ ).resolve().parents[1]
+gafferRoot = pathlib.Path( __file__ ).resolve().parents[2]
 
 # Clean environment setup
 # =======================
@@ -135,6 +135,7 @@ if sys.platform == "darwin" :
 	prependToPath( gafferRoot / "lib", "DYLD_FRAMEWORK_PATH" )
 elif sys.platform == "win32" :
 	appendToPath( gafferRoot / "lib", "IECORE_DLL_DIRECTORIES" )
+	appendToPath( gafferRoot / "bin", "IECORE_DLL_DIRECTORIES" )
 
 # OSL Setup
 # =========
@@ -234,15 +235,6 @@ def setUpArnold() :
 	# by setting `ARNOLD_ADP_OPTIN` or `ARNOLD_ADP_DISABLE`.
 	if "ARNOLD_ADP_OPTIN" not in os.environ and "ARNOLD_ADP_DISABLE" not in os.environ :
 		os.environ["ARNOLD_ADP_DISABLE"] = "1"
-
-	if sys.platform == "linux" :
-		# Preload `libstdc++` before `libai`. Otherwise Arnold plugins can resolve
-		# symbols for `operator delete` and `operator new` from `libai`, which has
-		# its own internal allocator and exports the symbols from it. If plugins
-		# resolve the Arnold symbols then mismatches may occur where they allocate
-		# something with the standard allocator and then try to delete it with the
-		# Arnold one.
-		appendToPath( "libstdc++.so.6", "LD_PRELOAD" )
 
 setUpArnold()
 

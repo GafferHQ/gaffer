@@ -67,9 +67,6 @@ Gaffer._Gaffer._nameProcess()
 
 import IECore
 
-if os.name == "nt" :
-	Gaffer._Gaffer._verifyAllocator()
-
 # Increase the soft limit for file handles as high as we can - we need everything we can get for
 # opening models, textures etc.
 if os.name != "nt" :

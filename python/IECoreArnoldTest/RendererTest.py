@@ -4522,7 +4522,12 @@ class RendererTest( GafferTest.TestCase ) :
 
 		env = os.environ.copy()
 		if sys.platform == "linux" :
-			# See `bin/_gaffer.py`
+			# Preload `libstdc++` before `libai`. Otherwise Arnold plugins can resolve
+			# symbols for `operator delete` and `operator new` from `libai`, which has
+			# its own internal allocator and exports the symbols from it. If plugins
+			# resolve the Arnold symbols then mismatches may occur where they allocate
+			# something with the standard allocator and then try to delete it with the
+			# Arnold one.
 			env["LD_PRELOAD"] = "libstdc++.so.6"
 
 		for i in range( 0, 10 ) :
