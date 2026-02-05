@@ -62,8 +62,8 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
-static InternedString g_shaderConnectionShader( "shaderConnection:shader" );
-static  InternedString g_shaderConnectionParameter( "shaderConnection:parameter" );
+const InternedString g_shaderConnectionShader( "shaderConnection:shader" );
+const InternedString g_shaderConnectionParameter( "shaderConnection:parameter" );
 
 IECore::ConstObjectPtr parameterData( const Object *attribute, const ShaderNetwork::Parameter &parameter )
 {
