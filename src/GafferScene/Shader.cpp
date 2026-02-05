@@ -195,6 +195,7 @@ const IECore::InternedString g_outPlugName( "out" );
 const IECore::InternedString g_label( "label" );
 const IECore::InternedString g_gafferNodeName( "gaffer:nodeName" );
 const IECore::InternedString g_gafferNodeColor( "gaffer:nodeColor" );
+const IECore::InternedString g_nodeColorMetadataName( "nodeGadget:color" );
 
 struct OptionalScopedContext
 {
@@ -833,8 +834,6 @@ class Shader::NetworkBuilder
 //////////////////////////////////////////////////////////////////////////
 // Shader implementation
 //////////////////////////////////////////////////////////////////////////
-
-static IECore::InternedString g_nodeColorMetadataName( "nodeGadget:color" );
 
 GAFFER_NODE_DEFINE_TYPE( Shader );
 
