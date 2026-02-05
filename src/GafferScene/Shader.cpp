@@ -196,6 +196,7 @@ const IECore::InternedString g_label( "label" );
 const IECore::InternedString g_gafferNodeName( "gaffer:nodeName" );
 const IECore::InternedString g_gafferNodeColor( "gaffer:nodeColor" );
 const IECore::InternedString g_nodeColorMetadataName( "nodeGadget:color" );
+const IECore::InternedString g_correspondingInputMetadataName( "correspondingInput" );
 
 struct OptionalScopedContext
 {
@@ -1040,6 +1041,39 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 			}
 		}
 	}
+}
+
+Gaffer::Plug *Shader::correspondingInput( const Gaffer::Plug *output )
+{
+	// Better to do a few harmless casts than manage a duplicate implementation.
+	return const_cast<Gaffer::Plug *>(
+		const_cast<const Shader *>( this )->correspondingInput( output )
+	);
+}
+
+const Gaffer::Plug *Shader::correspondingInput( const Gaffer::Plug *output ) const
+{
+	if( auto *out = outPlug() )
+	{
+		if( out->isAncestorOf( output ) )
+		{
+			const string metadataTarget = fmt::format(
+				"{}:{}:{}", typePlug()->getValue(), namePlug()->getValue(), output->relativeName( out )
+			);
+			IECore::ConstStringDataPtr metadata = Metadata::value<const IECore::StringData>( metadataTarget, g_correspondingInputMetadataName );
+			if( metadata )
+			{
+				const Plug *result = parametersPlug()->getChild<Plug>( metadata->readable() );
+				if( !result )
+				{
+					IECore::msg( IECore::Msg::Error, "Shader::correspondingInput", fmt::format( "Parameter \"{}\" does not exist", metadata->readable() ) );
+				}
+				return result;
+			}
+		}
+	}
+
+	return ComputeNode::correspondingInput( output );
 }
 
 void Shader::loadShader( const std::string &shaderName, bool keepExistingValues )
