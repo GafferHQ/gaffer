@@ -16,6 +16,7 @@ Fixes
 - RenderManDisplayFilter, RenderManSampleFilter :
   - Fixed handling of dedicated XPU filters implemented in OSL.
   - Fixed missing `NPRnormals` AOV required by PxrStylizedLines.
+- PythonEditor : Fixed reference cycle in "Execute" menu item.
 
 API
 ---
