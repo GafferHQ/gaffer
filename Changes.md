@@ -6,10 +6,9 @@ Improvements
 
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`. This matches volume assignments imported from USD, and means that Gaffer now exports materials to USD using the same convention.
 - InteractiveRender : Added `useVisibleSet` plug. When on, only the scene locations contained in the Visible Set will be rendered.
-- Application : Matched TBB worker thread stack limit to the limit for the main thread. On Linux, this can be configured with `ulimit -s`.
-- bin :
-  - Moved  `_gaffer.py` and `__gaffer.py` to a new `__private` subdirectory within `bin`.
-  - Added a dedicated `gaffer` executable to `bin/__private` to be used instead of `python`. This causes the root process to be called `gaffer` on all platforms. The `bin/gaffer` and `bin/gaffer.cmd` launch scripts should still be used as before (#6654).
+- Application :
+  - Applications now run using a dedicated `gaffer` executable instead of `python`. This means the root process is now called `gaffer` on all platforms. The `bin/gaffer` (Linux) and `bin/gaffer.cmd` (Windows) launch scripts should still be used as before (#6654).
+  - Matched TBB worker thread stack limit to the limit for the main thread. On Linux, this can be configured with `ulimit -s`.
 
 Fixes
 -----
