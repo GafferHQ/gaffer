@@ -54,13 +54,20 @@ Build
 - Qt : Updated to version 6.5.8.
 - TBB : Updated to version 2021.13.0.
 
-1.6.x.x (relative to 1.6.11.1)
+1.6.x.x (relative to 1.6.12.0)
 =======
+
+
+
+1.6.12.0 (relative to 1.6.11.1)
+========
 
 Improvements
 ------------
 
-- RenderManShader : Defined pass-through behaviour for LamaAdd, LamaLayer and LamaMix. When disabled, these now pass through the `material1` input (`materialBase` for LamaLayer). Note that this will change the rendered look of shading networks where such shaders were previously disabled.
+- RenderManShader :
+  - Defined pass-through behaviour for LamaAdd, LamaLayer and LamaMix. When disabled, these now pass through the `material1` input (`materialBase` for LamaLayer). Note that this will change the rendered look of shading networks where such shaders were previously disabled.
+  - Improved default visibility of shader parameters in the Graph Editor, showing only the most commonly used parameters for the most common shaders.
 - SceneInspector : Added inspection of shader networks in options and global attributes. Examples include RenderMan display filters and Arnold background shaders.
 - Menu : Added checks for reference cycles, emitting warnings if any are found.
 
@@ -70,6 +77,7 @@ Fixes
 - RenderManDisplayFilter, RenderManSampleFilter :
   - Fixed handling of dedicated XPU filters implemented in OSL.
   - Fixed missing `NPRnormals` AOV required by PxrStylizedLines.
+- PythonEditor : Fixed reference cycle in "Execute" menu item.
 
 API
 ---
