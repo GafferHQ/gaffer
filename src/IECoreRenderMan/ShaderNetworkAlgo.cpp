@@ -521,10 +521,38 @@ ConstShaderInfoPtr shaderInfoFromArgsFile( const boost::filesystem::path file )
 	return result;
 }
 
+const std::string stringMetadata( const std::string &name, const vector<OSL::OSLQuery::Parameter> &metadata, const std::string &defaultValue = "" )
+{
+	for( const auto &m : metadata )
+	{
+		if( m.name == name && m.sdefault.size() == 1 )
+		{
+			return m.sdefault[0].string();
+		}
+	}
+	return defaultValue;
+}
+
 ConstShaderInfoPtr shaderInfoFromOSLQuery( OSL::OSLQuery &query )
 {
 	auto result = std::make_shared<ShaderInfo>();
-	result->type = riley::ShadingNode::Type::k_Pattern;
+
+	// This metadata seems to be the most reliable way of detecting
+	// the minority of OSL shaders that are intended for use as display
+	// or sample filters rather than patterns.
+	const std::string schemaBase = stringMetadata( "usdSchemaDef_schemaBase", query.metadata() );
+	if( schemaBase == "PxrDisplayFilterPluginBase" )
+	{
+		result->type = riley::ShadingNode::Type::k_DisplayFilter;
+	}
+	else if( schemaBase == "PxrSampleFilterPluginBase" )
+	{
+		result->type = riley::ShadingNode::Type::k_SampleFilter;
+	}
+	else
+	{
+		result->type = riley::ShadingNode::Type::k_Pattern;
+	}
 
 	for( const auto &parameter : query )
 	{
@@ -584,22 +612,13 @@ ConstShaderInfoPtr shaderInfoFromOSLQuery( OSL::OSLQuery &query )
 
 		result->parameters[parameter.name.c_str()] = parameterInfo;
 
-		string vStructMember;
-		string vStructConditionalExpression;
-		for( const auto &metadata : parameter.metadata )
-		{
-			if( metadata.name == "vstructmember" && metadata.sdefault.size() == 1 )
-			{
-				vStructMember = metadata.sdefault[0].string();
-			}
-			else if( metadata.name == "vstructConditionalExpr" && metadata.sdefault.size() == 1 )
-			{
-				vStructConditionalExpression = metadata.sdefault[0].string();
-			}
-		}
+		const string vStructMember = stringMetadata( "vstructmember", parameter.metadata );
 		if( !vStructMember.empty() )
 		{
-			loadVStructMember( result->parameters, parameter.name.c_str(), vStructMember, vStructConditionalExpression );
+			loadVStructMember(
+				result->parameters, parameter.name.c_str(), vStructMember,
+				stringMetadata( "vstructConditionalExpr", parameter.metadata )
+			);
 		}
 	}
 

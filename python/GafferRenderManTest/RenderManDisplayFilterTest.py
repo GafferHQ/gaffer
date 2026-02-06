@@ -39,6 +39,9 @@ import unittest
 
 import imath
 
+import IECoreRenderMan
+
+import GafferOSL
 import GafferSceneTest
 import GafferRenderMan
 
@@ -75,6 +78,24 @@ class RenderManDisplayFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		node = GafferRenderMan.RenderManDisplayFilter()
 		self.assertFalse( node["displayFilter"].acceptsInput( shader["out"] ) )
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "PxrChecker" )
+		self.assertFalse( node["displayFilter"].acceptsInput( shader["out"] ) )
+
+	@unittest.skipIf( IECoreRenderMan.renderManMajorVersion() < 27, "OSL filters not available" )
+	def testAcceptsOSLFilterInputs( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "PxrStylizedLinesXPU" )
+
+		node = GafferRenderMan.RenderManDisplayFilter()
+		node["displayFilter"].setInput( shader["out"] )
+
+		self.assertEqual(
+			node["out"].globals()["option:ri:displayfilter"],
+			shader.attributes()["osl:shader"]
+		)
 
 	def testModes( self ) :
 

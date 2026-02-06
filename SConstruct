@@ -1453,7 +1453,8 @@ libraries = {
 			# can continue to compile with warnings as errors.
 			"CPPDEFINES" : [ "RMAN_RIX_NO_WARN_DEPRECATED" ],
 			"LIBS" : [
-				"Iex$OPENEXR_LIB_SUFFIX", "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX",
+				"Iex$OPENEXR_LIB_SUFFIX", "Gaffer", "GafferDispatch", "GafferScene", "GafferOSL",
+				"IECoreScene$CORTEX_LIB_SUFFIX",
 			],
 			"LIBPATH" : [ "$RENDERMAN_ROOT/lib" ],
 		},
