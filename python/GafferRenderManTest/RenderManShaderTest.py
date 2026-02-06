@@ -442,5 +442,17 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotIn( "baselayer_diffuseGain", shader["parameters"] )
 		self.assertEqual( shader["out"].keys(), [ "pxrMaterialOut" ] )
 
+	def testCorrespondingInput( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "LamaAdd" )
+		self.assertTrue( shader.correspondingInput( shader["out"]["bxdf_out"] ).isSame( shader["parameters"]["material1"] ) )
+
+		shader.loadShader( "LamaMix" )
+		self.assertTrue( shader.correspondingInput( shader["out"]["bxdf_out"] ).isSame( shader["parameters"]["material1"] ) )
+
+		shader.loadShader( "LamaLayer" )
+		self.assertTrue( shader.correspondingInput( shader["out"]["bxdf_out"] ).isSame( shader["parameters"]["materialBase"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
