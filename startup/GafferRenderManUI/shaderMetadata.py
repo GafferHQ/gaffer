@@ -161,6 +161,70 @@ shaderMetadata = {
 
 	},
 
+	"osl:shader:PxrArithmetic" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "input1", "input2", "resultRGB", "resultR", "resultG", "resultB" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrBumpManifold2D" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "result" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrColorCorrect" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "inputRGB", "resultRGB", "resultR", "resultG", "resultB" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrColorGrade" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "inputColor", "resultRGB" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrHexTileManifold" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			"resultMulti" : { "noduleLayout:visible" : True },
+
+		},
+
+	},
+
 	"osl:shader:PxrLayer" : {
 
 		"noduleLayout:defaultVisibility" : False,
@@ -224,6 +288,71 @@ shaderMetadata = {
 
 	},
 
+	"osl:shader:PxrManifold2D" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "result" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrManifold3D" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "result" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrMultiTexture" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "manifoldMulti", "resultRGB", "resultR", "resultG", "resultB", "resultA" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrRandomTextureManifold" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "resultMulti", "resultMask" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrRemap" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "inputRGB", "resultRGB", "resultR", "resultG", "resultB", "resultA" ]
+
+		},
+
+	},
+
 	"ri:surface:PxrSurface" : {
 
 		"noduleLayout:defaultVisibility" : False,
@@ -246,6 +375,45 @@ shaderMetadata = {
 				"layout:section" : "Globals",
 
 			},
+
+		},
+
+	},
+
+	"osl:shader:PxrTexture" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "manifold", "resultRGB", "resultR", "resultG", "resultB", "resultA" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrTileManifold" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "resultMulti", "resultMask" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrVary" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "inputRGB", "resultRGB", "resultR", "resultG", "resultB" ]
 
 		},
 

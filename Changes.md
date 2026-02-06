@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- RenderManShader : Defined pass-through behaviour for LamaAdd, LamaLayer and LamaMix. When disabled, these now pass through the `material1` input (`materialBase` for LamaLayer). Note that this will change the rendered look of shading networks where such shaders were previously disabled.
+- RenderManShader :
+  - Defined pass-through behaviour for LamaAdd, LamaLayer and LamaMix. When disabled, these now pass through the `material1` input (`materialBase` for LamaLayer). Note that this will change the rendered look of shading networks where such shaders were previously disabled.
+  - Improved default visibility of shader parameters in the Graph Editor, showing only the most commonly used parameters for the most common shaders.
 - SceneInspector : Added inspection of shader networks in options and global attributes. Examples include RenderMan display filters and Arnold background shaders.
 - Menu : Added checks for reference cycles, emitting warnings if any are found.
 
