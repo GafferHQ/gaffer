@@ -495,6 +495,14 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 			);
 			return valuePlug;
 		}
+		case RampffDataTypeId :
+		{
+			return new RampffPlug( name, direction, static_cast<const RampffData *>( value )->readable(), flags );
+		}
+		case RampfColor3fDataTypeId :
+		{
+			return new RampfColor3fPlug( name, direction, static_cast<const RampfColor3fData *>( value )->readable(), flags );
+		}
 		default :
 			throw IECore::Exception(
 				fmt::format( "Data for \"{}\" has unsupported value data type \"{}\"", name, value->typeName() )

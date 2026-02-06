@@ -9,6 +9,7 @@ Improvements
 - Application :
   - Applications now run using a dedicated `gaffer` executable instead of `python`. This means the root process is now called `gaffer` on all platforms. The `bin/gaffer` (Linux) and `bin/gaffer.cmd` (Windows) launch scripts should still be used as before (#6654).
   - Matched TBB worker thread stack limit to the limit for the main thread. On Linux, this can be configured with `ulimit -s`.
+- ShaderTweaks : Added support for tweaking ramp parameters.
 
 Fixes
 -----
@@ -19,6 +20,7 @@ API
 ---
 
 - Metadata : `ValueFunctions` now receive a `target` parameter. This is particularly useful when registering a function against a wildcard pattern.
+- PlugAlgo : Added `RampffData` and `RampfColor3fData` support to `createPlugFromData()`.
 
 Breaking Changes
 ----------------
