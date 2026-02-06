@@ -246,7 +246,7 @@ class PythonEditor( GafferUI.Editor ) :
 			definition.append(
 				"/Execute Selection" if widget.selectedText() else "/Execute",
 				{
-					"command" : self.execute,
+					"command" : Gaffer.WeakMethod( self.execute ),
 					"shortCut" : "Enter",
 				}
 			)
