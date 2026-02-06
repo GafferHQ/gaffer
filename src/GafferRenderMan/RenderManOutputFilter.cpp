@@ -37,6 +37,8 @@
 
 #include "GafferRenderMan/RenderManOutputFilter.h"
 
+#include "GafferOSL/OSLShader.h"
+
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderPlug.h"
 
@@ -60,10 +62,13 @@ namespace
 const std::array<std::string, 2> g_shaderPlugNames = { "displayFilter", "sampleFilter" };
 const std::array<InternedString, 2> g_options = { "option:ri:displayfilter", "option:ri:samplefilter" };
 const std::array<InternedString, 2> g_shaderTypes = { "ri:displayfilter", "ri:samplefilter" };
+const std::array<std::string, 2> g_schemaBases = { "PxrDisplayFilterPluginBase", "PxrSampleFilterPluginBase" };
 const std::array<std::string, 2> g_combinerShaders = { "PxrDisplayFilterCombiner", "PxrSampleFilterCombiner" };
 
+const InternedString g_oslShader( "osl:shader" );
 const InternedString g_out( "out" );
 const InternedString g_filter0( "filter[0]" );
+const InternedString g_usdSchemaDef_schemaBase( "usdSchemaDef_schemaBase" );
 
 const std::regex g_filterIndexRegex( R"(filter\[([0-9]+)\])" );
 int connectionIndex( const ShaderNetwork::Connection &connection )
@@ -149,7 +154,24 @@ bool RenderManOutputFilter::acceptsInput( const Gaffer::Plug *plug, const Gaffer
 		return true;
 	}
 
-	return sourceShader->typePlug()->getValue() == g_shaderTypes[(int)m_filterType].string();
+	const std::string shaderType = sourceShader->typePlug()->getValue();
+	if( shaderType == g_shaderTypes[(int)m_filterType].string() )
+	{
+		// RenderMan shader of the correct type.
+		return true;
+	}
+	else if( shaderType == "osl:shader" )
+	{
+		if( const auto oslShader = runTimeCast<const GafferOSL::OSLShader>( sourceShader ) )
+		{
+			if( const auto schemaType = runTimeCast<const StringData>( oslShader->shaderMetadata( g_usdSchemaDef_schemaBase ) ) )
+			{
+				return schemaType->readable() == g_schemaBases[(int)m_filterType];
+			}
+		}
+	}
+
+	return false;
 }
 
 void RenderManOutputFilter::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -178,6 +200,10 @@ IECore::ConstCompoundObjectPtr RenderManOutputFilter::computeProcessedGlobals( c
 
 	const InternedString shaderType = g_shaderTypes[(int)m_filterType];
 	const IECoreScene::ShaderNetwork *network = attributes->member<IECoreScene::ShaderNetwork>( shaderType );
+	if( !network )
+	{
+		network = attributes->member<IECoreScene::ShaderNetwork>( g_oslShader );
+	}
 	if( !network )
 	{
 		throw IECore::Exception( fmt::format( "Shader of type \"{}\" not found", shaderType.string() ) );

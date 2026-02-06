@@ -88,7 +88,7 @@ class _StylizedAOVAdaptor( GafferScene.SceneProcessor ) :
 		for name in [
 			"NPRNtriplanar", "NPRPtriplanar", "NPRalbedo", "NPRcurvature",
 			"NPRdistort", "NPRhatchOut", "NPRlineAlbedo", "NPRlineCamdist", "NPRmask", "NPRlineNZ",
-			"NPRlineOut", "NPRlineOutAlpha", "NPRlineWidth", "NPRoutline", "NPRsections",
+			"NPRlineOut", "NPRlineOutAlpha", "NPRlineWidth", "NPRnormals", "NPRoutline", "NPRsections",
 			"NPRtextureCoords", "NPRtoonOut", "Nn",
 		]
 

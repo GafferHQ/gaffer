@@ -58,7 +58,24 @@ Build
 1.6.x.x (relative to 1.6.11.1)
 =======
 
+Improvements
+------------
 
+- RenderManShader : Defined pass-through behaviour for LamaAdd, LamaLayer and LamaMix. When disabled, these now pass through the `material1` input (`materialBase` for LamaLayer). Note that this will change the rendered look of shading networks where such shaders were previously disabled.
+- SceneInspector : Added inspection of shader networks in options and global attributes. Examples include RenderMan display filters and Arnold background shaders.
+- Menu : Added checks for reference cycles, emitting warnings if any are found.
+
+Fixes
+-----
+
+- RenderManDisplayFilter, RenderManSampleFilter :
+  - Fixed handling of dedicated XPU filters implemented in OSL.
+  - Fixed missing `NPRnormals` AOV required by PxrStylizedLines.
+
+API
+---
+
+- Shader : Pass-throughs may now be defined by registering `correspondingInput` metadata against a `{shaderType}:{shaderName}:{outputName}` target.
 
 1.6.11.1 (relative to 1.6.11.0)
 ========

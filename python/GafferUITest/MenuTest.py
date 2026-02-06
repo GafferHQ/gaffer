@@ -259,5 +259,35 @@ class MenuTest( GafferUITest.TestCase ) :
 		self.assertEqual( [ a.text() for a in ma[6].menu().actions()[0].menu().actions() ], [] )
 		self.assertEqual( callCounts, { "subMenuA" : 2, "subMenuB" : 1, "subMenuC" : 2, "subMenuD" : 2, "subMenuDSubMenu" : 2, "subMenuE" : 2, "subMenuESubMenu" : 1, "subMenuF" : 1, "subMenuFSubMenu" : 1, "subMenuI" : 1 } )
 
+	def testCycleCheck( self ) :
+
+		label = GafferUI.Label()
+
+		def active( label ) :
+
+			return label.getEnabled()
+
+		def definition() :
+
+			result = IECore.MenuDefinition()
+			result.append( "/Test1", { "command" : lambda : label.setEnabled( True ) } )
+			result.append( "/Test2", { "active" : functools.partial( active, label = label ) } )
+			result.append( "/Test3", { "active" : functools.partial( active, label ) } )
+			result.append( "/Test4", { "command" : functools.partial( label.setEnabled, True ) } )
+			result.append( "/Test5", { "command" : label.setEnabled } )
+
+			return result
+
+		label.menu = GafferUI.Menu( definition )
+		with IECore.CapturingMessageHandler() as mh :
+			label.menu.popup( label )
+
+		self.assertEqual( len( mh.messages ), 5 )
+		for message in mh.messages :
+			self.assertEqual( message.level, IECore.Msg.Level.Warning )
+			self.assertRegex( message.message, "Captured variable .* creates cyclic reference back to Menu." )
+
+		label.menu = None # Break cycles
+
 if __name__ == "__main__":
 	unittest.main()

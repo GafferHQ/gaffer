@@ -346,53 +346,62 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		shaderAssignment["in"].setInput( plane["out"] )
 		shaderAssignment["shader"].setInput( surface["out"] )
 
-		context = Gaffer.Context()
-		context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/plane" )
+		shaderNetwork = surface.attributes()["surface"]
 
-		tree = _GafferSceneUI._SceneInspector.InspectorTree( shaderAssignment["out"], [ context, context ], None )
-		path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/Location/Attributes/Standard/surface" )
+		globalShaderAssignment = GafferScene.CustomAttributes()
+		globalShaderAssignment["in"].setInput( shaderAssignment["out"] )
+		globalShaderAssignment["global"].setValue( True )
+		globalShaderAssignment["extraAttributes"].setValue( { "surface" : shaderNetwork } )
 
-		# The value should contain the entire shader network. This can't be shown in a single
-		# cell, but allows the diff column to show gross differences using the background
-		# colour.
+		for asGlobalAttribute in ( True, False ) :
 
-		with context :
-			shaderNetwork = shaderAssignment["out"]["attributes"].getValue()["surface"]
+			with self.subTest( asGlobalAttribute = asGlobalAttribute ) :
 
-		def inspectPath( path ) :
+				context = Gaffer.Context()
+				if not asGlobalAttribute :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/plane" )
 
-			inspector = path.property( "inspector:inspector" )
-			context = path.contextProperty( "inspector:context" )
-			with context :
-				return inspector.inspect().value()
+				tree = _GafferSceneUI._SceneInspector.InspectorTree( globalShaderAssignment["out"], [ context, context ], None )
+				path = _GafferSceneUI._SceneInspector.InspectorPath( tree, "/{}/Attributes/Standard/surface".format( "Globals" if asGlobalAttribute else "Location" ) )
 
-		self.assertEqual( inspectPath( path ), shaderNetwork )
+				# The value should contain the entire shader network. This can't be shown in a single
+				# cell, but allows the diff column to show gross differences using the background
+				# colour.
 
-		# We want the children ordered according to the network topology,
-		# closest to the output first.
-		childNames = [ c[-1] for c in path.children() ]
-		self.assertEqual( childNames[:2], [ "Surface", "Mix" ] )
-		self.assertEqual( set( childNames[2:] ), { "TextureA", "TextureB" } )
-		self.assertEqual( set( childNames ), set( shaderNetwork.shaders().keys() ) )
+				def inspectPath( path ) :
 
-		# And each child should have a value containing the shader, and then
-		# children for the shader parameters, ordered alphabetically.
+					inspector = path.property( "inspector:inspector" )
+					context = path.contextProperty( "inspector:context" )
+					with context :
+						return inspector.inspect().value()
 
-		for shaderPath in path.children() :
-			self.assertEqual( inspectPath( shaderPath ), shaderNetwork.getShader( shaderPath[-1] ) )
-			parameterPaths = shaderPath.children()
-			parameterNames = [ c[-1] for c in parameterPaths ]
-			self.assertEqual( set( parameterNames ), set( shaderNetwork.getShader( shaderPath[-1] ).parameters.keys() ) )
-			self.assertEqual( parameterNames, sorted( parameterNames ) )
-			for parameterPath in parameterPaths :
-				shaderName = shaderPath[-1]
-				parameterName = parameterPath[-1]
-				parameterInput = shaderNetwork.input( ( shaderName, parameterName ) )
-				inspectedValue = inspectPath( parameterPath )
+				self.assertEqual( inspectPath( path ), shaderNetwork )
 
-				self.assertEqual( parameterInput, GafferSceneUI.Private.ParameterInspector.connectionSource( inspectedValue ) )
-				if not parameterInput :
-					self.assertEqual( inspectedValue, shaderNetwork.getShader( shaderName ).parameters[parameterName] )
+				# We want the children ordered according to the network topology,
+				# closest to the output first.
+				childNames = [ c[-1] for c in path.children() ]
+				self.assertEqual( childNames[:2], [ "Surface", "Mix" ] )
+				self.assertEqual( set( childNames[2:] ), { "TextureA", "TextureB" } )
+				self.assertEqual( set( childNames ), set( shaderNetwork.shaders().keys() ) )
+
+				# And each child should have a value containing the shader, and then
+				# children for the shader parameters, ordered alphabetically.
+
+				for shaderPath in path.children() :
+					self.assertEqual( inspectPath( shaderPath ), shaderNetwork.getShader( shaderPath[-1] ) )
+					parameterPaths = shaderPath.children()
+					parameterNames = [ c[-1] for c in parameterPaths ]
+					self.assertEqual( set( parameterNames ), set( shaderNetwork.getShader( shaderPath[-1] ).parameters.keys() ) )
+					self.assertEqual( parameterNames, sorted( parameterNames ) )
+					for parameterPath in parameterPaths :
+						shaderName = shaderPath[-1]
+						parameterName = parameterPath[-1]
+						parameterInput = shaderNetwork.input( ( shaderName, parameterName ) )
+						inspectedValue = inspectPath( parameterPath )
+
+						self.assertEqual( parameterInput, GafferSceneUI.Private.ParameterInspector.connectionSource( inspectedValue ) )
+						if not parameterInput :
+							self.assertEqual( inspectedValue, shaderNetwork.getShader( shaderName ).parameters[parameterName] )
 
 	def testShaderParameterWithConnectionButNotValue( self ) :
 
