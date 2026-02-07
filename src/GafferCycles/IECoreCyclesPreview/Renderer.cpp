@@ -490,11 +490,7 @@ class CyclesShader : public IECore::RefCounted
 		{
 			std::unique_ptr<ccl::ShaderGraph> graph = ShaderNetworkAlgo::convertGraph(
 				surfaceShader, displacementShader, volumeShader,
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
 				scene->shader_manager.get(),
-#else
-				scene->shader_manager,
-#endif
 				name
 			);
 			if( surfaceShader && singleSided )
@@ -506,11 +502,7 @@ class CyclesShader : public IECore::RefCounted
 			{
 				ShaderNetworkAlgo::convertAOV(
 					aovShader, graph.get(),
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
 					scene->shader_manager.get(),
-#else
-					scene->shader_manager,
-#endif
 					name
 				);
 			}
@@ -527,11 +519,7 @@ class CyclesShader : public IECore::RefCounted
 				m_shader->name = ccl::ustring( shaderName.c_str() );
 			}
 			m_shader->set_displacement_method( displacementMethod );
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
 			m_shader->set_graph( std::move( graph ) );
-#else
-			m_shader->set_graph( graph.release() );
-#endif
 
 			SceneAlgo::tagUpdateWithLock( m_shader, scene );
 		}
@@ -2881,11 +2869,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_session = std::make_unique<ccl::Session>( sessionParams, sceneParams );
 			m_session->progress.set_update_callback( std::bind( &CyclesRenderer::progress, this ) );
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
 			m_scene = m_session->scene.get();
-#else
-			m_scene = m_session->scene;
-#endif
 
 			/// \todo Determine why this is here, or remove it.
 			m_scene->camera->need_flags_update = true;

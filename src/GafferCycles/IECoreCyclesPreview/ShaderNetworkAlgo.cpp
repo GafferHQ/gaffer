@@ -158,12 +158,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	{
 		if( nodeType->type == ccl::NodeType::SHADER && nodeType->create )
 		{
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
 			node = shaderGraph->create_node( nodeType );
-#else
-			node = static_cast<ccl::ShaderNode *>( nodeType->create( nodeType ) );
-			node->set_owner( shaderGraph );
-#endif
 		}
 	}
 
@@ -174,10 +169,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	}
 
 	node->name = ccl::ustring( namePrefix + outputParameter.shader.string() );
-
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) < 404
-	shaderGraph->add( node );
-#endif
 
 	// Set the shader parameters
 
@@ -500,12 +491,6 @@ void setSingleSided( ccl::ShaderGraph *graph )
 	ccl::ShaderNode *mixClosure = graph->create_node<ccl::MixClosureNode>();
 	ccl::ShaderNode *transparentBSDF = graph->create_node<ccl::TransparentBsdfNode>();
 	ccl::ShaderNode *geometry = graph->create_node<ccl::GeometryNode>();
-
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) < 404
-	graph->add( mixClosure );
-	graph->add( transparentBSDF );
-	graph->add( geometry );
-#endif
 
 	if( ccl::ShaderOutput *shaderOutput = ShaderNetworkAlgo::output( geometry, "backfacing" ) )
 		if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( mixClosure, "fac" ) )

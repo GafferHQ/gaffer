@@ -497,11 +497,7 @@ void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volu
 		params.frame = 0.0f;
 
 		std::scoped_lock lock( scene->mutex );
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
 		attr->data_voxel() = scene->image_manager->add_image( std::move( loader ), params, false );
-#else
-		attr->data_voxel() = scene->image_manager->add_image( loader.release(), params, false );
-#endif
 	}
 }
 
