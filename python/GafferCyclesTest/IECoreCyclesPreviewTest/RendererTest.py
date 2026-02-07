@@ -1213,24 +1213,6 @@ class RendererTest( GafferTest.TestCase ) :
 					maxDifference = 0.01
 				)
 
-	def testUniformMeshNormal( self ) :
-
-		plane = IECoreScene.MeshPrimitive.createPlane(
-			imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ),
-			imath.V2i( 1 )
-		)
-		plane["N"] = IECoreScene.PrimitiveVariable(
-			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-			# Note : not the true geometric normal - actually a tangent.
-			# This way we can be sure our data is making it through and
-			# not being clobbered by a default normal.
-			IECore.V3fVectorData( [ imath.V3f( 1, 0, 0 ) ], IECore.GeometricData.Interpretation.Normal ),
-		)
-
-		self.__testPrimitiveVariableInterpolation(
-			plane, "N", { imath.V2f( 0.6 ) : plane["N"].data[0] }, attributeName = "Ng"
-		)
-
 	def testPointsPrimitiveVariableInterpolation( self ) :
 
 		# 3 points diagonally

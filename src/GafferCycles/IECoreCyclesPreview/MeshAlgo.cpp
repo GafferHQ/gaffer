@@ -63,19 +63,17 @@ namespace
 
 // Notes on Cycles normals :
 //
-// - Cycles meshes store two sets of normals as attributes :
-//    - A vertex normal ("N", ATTR_STD_VERTEX_NORMAL)
-//    - A face normal ("Ng", ATTR_STD_FACE_NORMAL)
-// - If we don't specify these attributes, they are computed for us
+// - Cycles meshes store vertex normals as ("N", ATTR_STD_VERTEX_NORMAL)
+// - If we don't specify vertex normals, they are computed for us
 //   and added to the mesh by Cycles itself by `Mesh::add_vertex_normals()`
-//   and `Mesh::add_face_normals()` respectively.
+// - Face normals are computed on demand in the Cycles kernel.
 // - Which normal is actually used for shading is determined on a
 //  triangle-by-triangle basis using the `smooth` flag passed
 //  to `Mesh::add_triangle()`.
 // - Cycles does not support facevarying normals.
 //
-// Also see `convertPrimitiveVariable()` where we handle the tagging
-// of normal attributes with ATTR_STD_VERTEX_NORMAL and ATTR_STD_FACE_NORMAL.
+// Also see `GeometryAlgo::convertPrimitiveVariable()` where we handle the
+// tagging of normal attributes with ATTR_STD_VERTEX_NORMAL.
 bool hasSmoothNormals( const IECoreScene::MeshPrimitive *mesh )
 {
 	auto it = mesh->variables.find( "N" );

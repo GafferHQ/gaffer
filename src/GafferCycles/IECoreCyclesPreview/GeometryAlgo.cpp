@@ -375,11 +375,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	{
 		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
 	}
-	else if( name == "N" && attr->element == ccl::ATTR_ELEMENT_FACE && attr->type == ccl::TypeNormal )
-	{
-		attr->std = ccl::ATTR_STD_FACE_NORMAL;
-		attr->name = ccl::Attribute::standard_name( attr->std ); // Cycles calls this `Ng`.
-	}
 	else if( name == "uv" && attr->type == ccl::TypeFloat2 )
 	{
 		attr->std = ccl::ATTR_STD_UV;
