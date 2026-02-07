@@ -134,14 +134,12 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *sc
 		}
 
 		const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
-		size_t ngons = 0;
 		size_t ncorners = 0;
 		for( size_t i = 0; i < vertsPerFace.size(); i++ )
 		{
-			ngons += ( vertsPerFace[i] == 4 ) ? 0 : 1;
 			ncorners += vertsPerFace[i];
 		}
-		cmesh->reserve_subd_faces(numFaces, ngons, ncorners);
+		cmesh->reserve_subd_faces( numFaces, ncorners );
 
 		int indexOffset = 0;
 		for( size_t i = 0; i < vertsPerFace.size(); i++ )

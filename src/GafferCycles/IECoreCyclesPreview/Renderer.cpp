@@ -1039,7 +1039,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				if( object->get_geometry()->is_mesh() )
 				{
 					auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
-					if( mesh->get_subd_params() )
+					if( mesh->get_num_subd_faces() )
 					{
 						if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
 						{
@@ -1075,7 +1075,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( object->get_geometry()->is_mesh() )
 			{
 				auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
-				if( mesh->get_subd_params() )
+				if( mesh->get_num_subd_faces() )
 				{
 					mesh->set_subd_dicing_rate( m_dicingRate );
 					mesh->set_subd_max_level( m_maxLevel );
@@ -1765,7 +1765,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( m_object->get_geometry()->is_mesh() )
 			{
 				auto mesh = static_cast<ccl::Mesh *>( m_object->get_geometry() );
-				if( mesh->get_subd_params() )
+				if( mesh->get_num_subd_faces() )
 				{
 					mesh->set_subd_objecttoworld( m_object->get_tfm() );
 				}
@@ -1898,7 +1898,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( geo->is_mesh() )
 			{
 				auto mesh = static_cast<ccl::Mesh *>( geo );
-				if( mesh->get_subd_params() )
+				if( mesh->get_num_subd_faces() )
 				{
 					mesh->set_subd_objecttoworld( m_object->get_tfm() );
 				}
