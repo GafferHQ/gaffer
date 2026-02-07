@@ -1061,26 +1061,14 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.width", "la
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_smooth", "layout:index", 9 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.height", "layout:index", 9 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spread", "layout:index", 10 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.lightgroup", "layout:index", 11 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.max_bounces", "layout:index", 12 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.max_bounces", "layout:index", 11 )
 
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.cast_shadow", "layout:index", 13 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_mis", "layout:index", 14 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_caustics", "layout:index", 15 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.is_sphere", "layout:index", 16 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_camera", "layout:index", 17 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_diffuse", "layout:index", 18 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_glossy", "layout:index", 19 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_transmission", "layout:index", 20 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_scatter", "layout:index", 21 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.cast_shadow", "layout:index", 12 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_mis", "layout:index", 13 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_caustics", "layout:index", 14 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.is_sphere", "layout:index", 15 )
 
 ### universal sections ###
-
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_camera", "layout:section", "Ray Visibility" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_diffuse", "layout:section", "Ray Visibility" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_glossy", "layout:section", "Ray Visibility" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_transmission", "layout:section", "Ray Visibility" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_scatter", "layout:section", "Ray Visibility" )
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_angle", "layout:section", "Beam Shape" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_smooth", "layout:section", "Beam Shape" )
@@ -1089,11 +1077,6 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spread", "l
 ### universal labels ###
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_mis", "label", "Multiple Importance" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_camera", "label", "Camera" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_diffuse", "label", "Diffuse" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_glossy", "label", "Glossy" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_transmission", "label", "Transmission" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_scatter", "label", "Volume Scatter" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_angle", "label", "Spot Size" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_smooth", "label", "Blend" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.size", "label", "Radius" )

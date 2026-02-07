@@ -241,7 +241,7 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue" : "",
 		"description" :
 		"""
-		Set the lightgroup of an object with emission.
+		Lightgroup membership of lights or objects with emission.
 		""",
 		"label" : "Lightgroup",
 		"layout:section" : "Rendering",

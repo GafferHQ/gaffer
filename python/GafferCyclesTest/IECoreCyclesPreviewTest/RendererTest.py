@@ -2704,10 +2704,11 @@ class RendererTest( GafferTest.TestCase ) :
 			return renderer.attributes( IECore.CompoundObject ( {
 				"cycles:light" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 0, 1, 0 ), "lightgroup" : lightgroup } ),
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 0, 1, 0 ) } ),
 					},
 					output = "output",
 				),
+				"cycles:lightgroup" : IECore.StringData( lightgroup ),
 			} ) )
 
 		# Render with a background light in the "env" lightgroup.

@@ -11,6 +11,7 @@ Improvements
   - Matched TBB worker thread stack limit to the limit for the main thread. On Linux, this can be configured with `ulimit -s`.
 - ShaderTweaks : Added support for tweaking ramp parameters.
 - CyclesAttributes : Added `cycles:adaptive_space` attribute.
+- LightEditor : Added column for `cycles:visibility:camera` attribute.
 
 Fixes
 -----
@@ -48,6 +49,7 @@ Breaking Changes
 - Widget : The `toolTip`, `parenting` and `displayTransform` constructor arguments are no longer positional.
 - ValuePlug : Removed deprecated cache policies. Use `TaskCollaboration` instead of `TaskIsolation`. Use `Default` instead of `Legacy`. Instead of `Standard`, use `TaskCollaboration` for `computeCachePolicy()` and `Default` for `hashCachePolicy()`.
 - Box : Removed deprecated plug promotion methods. Use `PlugAlgo` instead.
+- CyclesLight : Removed `use_camera`, `use_diffuse`, `use_glossy`, `use_transmission`, `use_scatter`, and `lightgroup` parameter plugs as Cycles no longer considers these to be light parameters. Ray visibility and light group membership is now set via the `cycles:visibility:*` and `cycles:lightgroup` attributes on a CyclesAttributes node.
 
 Build
 -----

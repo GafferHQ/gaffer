@@ -62,8 +62,6 @@ Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.arnold:aspect_rat
 
 # Change Cycles ordering.
 for i, parameter in enumerate( [
-	"lightgroup",
-	"use_mis", "use_camera", "use_diffuse", "use_glossy", "use_transmission", "use_scatter", "use_caustics",
-	"spread", "map_resolution", "max_bounces"
+	"use_mis", "use_caustics", "spread", "map_resolution", "max_bounces"
 ] ) :
 	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.cycles:{parameter}", "layout:index", 2000 + i )

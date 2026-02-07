@@ -249,7 +249,6 @@ struct NodeDeleter
 
 	};
 
-	using LightDeleter = Deleter<ccl::Light>;
 	using GeometryDeleter = Deleter<ccl::Geometry>;
 	using ObjectDeleter = Deleter<ccl::Object>;
 
@@ -258,11 +257,6 @@ struct NodeDeleter
 		std::lock_guard lock( m_mutex );
 		std::lock_guard sceneLock( m_scene->mutex );
 
-		if( m_pendingLightDeletions.size() )
-		{
-			m_scene->delete_nodes( m_pendingLightDeletions );
-			m_pendingLightDeletions.clear();
-		}
 		if( m_pendingObjectDeletions.size() )
 		{
 			m_scene->delete_nodes( m_pendingObjectDeletions );
@@ -276,12 +270,6 @@ struct NodeDeleter
 	}
 
 	private :
-
-		void scheduleDeletion( ccl::Light *light )
-		{
-			std::lock_guard lock( m_mutex );
-			m_pendingLightDeletions.insert( light );
-		}
 
 		void scheduleDeletion( ccl::Object *object )
 		{
@@ -298,7 +286,6 @@ struct NodeDeleter
 		ccl::Scene *m_scene;
 
 		std::mutex m_mutex;
-		std::set<ccl::Light *> m_pendingLightDeletions;
 		std::set<ccl::Object *> m_pendingObjectDeletions;
 		std::set<ccl::Geometry *> m_pendingGeometryDeletions;
 
@@ -565,11 +552,6 @@ class ShaderCache
 		{
 		}
 
-		void update()
-		{
-			updateShaders();
-		}
-
 		CyclesShaderPtr get( const IECoreScene::ShaderNetwork *surfaceShader )
 		{
 			IECore::MurmurHash h = IECore::MurmurHash();
@@ -727,40 +709,6 @@ class ShaderCache
 
 	private :
 
-		void updateShaders()
-		{
-			std::lock_guard sceneLock( m_scene->mutex );
-			/// \todo There are several problems here :
-			///
-			/// - We're clobbering the `tex_mapping.rotation` parameter, which is exposed to users
-			///   but now has no effect for them. This also prevents us getting the orientation of USD
-			///   DomeLights correct - see ShaderNetworkAlgo.
-			/// - We're iterating through all N lights just to find the background light, and we're
-			///   doing it even when the transform hasn't changed. Can't we just do this in `CyclesLight::transform()`?
-			/// - The light shader was created via `ShaderCache::get()`, and could therefore be shared
-			///   between several lights, so we're not at liberty to clobber the shader anyway.
-			for( ccl::Light *light : m_scene->lights )
-			{
-				if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
-				{
-					// Set environment map rotation
-					Imath::M44f transform =  SocketAlgo::getTransform( light->get_tfm() );
-					Imath::Eulerf euler( transform, Imath::Eulerf::Order::XZY );
-
-					for( ccl::ShaderNode *node : light->get_shader()->graph->nodes )
-					{
-						if ( node->type == ccl::EnvironmentTextureNode::node_type )
-						{
-							ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
-							env->tex_mapping.rotation = ccl::make_float3( -euler.x, -euler.y, -euler.z );
-							light->get_shader()->tag_update( m_scene );
-							break;
-						}
-					}
-				}
-			}
-		}
-
 		ccl::Scene *m_scene;
 		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, CyclesShaderPtr>;
 		Cache m_cache;
@@ -825,6 +773,7 @@ IECore::InternedString g_glossyVisibilityAttributeName( "cycles:visibility:gloss
 IECore::InternedString g_transmissionVisibilityAttributeName( "cycles:visibility:transmission" );
 IECore::InternedString g_shadowVisibilityAttributeName( "cycles:visibility:shadow" );
 IECore::InternedString g_scatterVisibilityAttributeName( "cycles:visibility:scatter" );
+IECore::InternedString g_USDRayVisibilityBlindDataKey( "__USDRayVisibility" );
 // Caustics
 IECore::InternedString g_isCausticsCasterAttributeName( "cycles:is_caustics_caster" );
 IECore::InternedString g_isCausticsReceiverAttributeName( "cycles:is_caustics_receiver" );
@@ -975,6 +924,18 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				ShaderNetworkPtr lightShader = ShaderNetworkAlgo::convertLightShader( m_lightAttribute.get() );
 				IECore::MurmurHash h;
 				m_lightShader = shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
+
+				// Cycles requires lights to be set as shadow catchers in order to contribute shadows to the
+				// shadow pass, so we disregard the attribute and override lights to always be shadow catchers.
+				m_isShadowCatcher = true;
+
+				if( auto rayVisibility = m_lightAttribute->outputShader()->blindData()->member<IECore::IntData>( g_USDRayVisibilityBlindDataKey ) )
+				{
+					// If the light has been converted from a USD light, we override diffuse and glossy visibility
+					// based on the USD light's diffuse and specular parameters. See ShaderNetworkAlgo::transferUSDLightParameters()
+					constexpr int rayMask = (int)( ccl::PATH_RAY_DIFFUSE | ccl::PATH_RAY_GLOSSY );
+					m_visibility = ( m_visibility & ~rayMask ) | ( rayVisibility->readable() & rayMask );
+				}
 			}
 
 			// Custom attributes
@@ -1094,6 +1055,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->set_asset_name( ccl::ustring( m_assetName.c_str() ) );
 			object->set_is_caustics_caster( m_isCausticsCaster );
 			object->set_is_caustics_receiver( m_isCausticsReceiver );
+			object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
 
 			if( object->get_geometry()->is_mesh() )
 			{
@@ -1104,6 +1066,40 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					mesh->set_subd_max_level( m_maxLevel );
 					mesh->set_subd_adaptive_space( nameToAdaptiveSpaceEnum( m_adaptiveSpace ) );
 				}
+			}
+			else if( object->get_geometry()->is_light() )
+			{
+				auto light = static_cast<ccl::Light *>( object->get_geometry() );
+				if( m_lightAttribute )
+				{
+					ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
+					ccl::array<ccl::Node *> shaders;
+					shaders.push_back_slow( m_lightShader->shader() );
+					{
+						// We need the scene lock for `set_used_shaders()`, to protect
+						// the non-atomic increment made in `ccl::Node::reference()`.
+						std::scoped_lock sceneLock( scene->mutex );
+						light->set_used_shaders( shaders );
+					}
+
+					light->set_is_enabled( !m_muteLight );
+				}
+				else
+				{
+					// No `cycles:light` shader assignment. Most likely a light
+					// intended for another renderer, so we turn off the Cycles
+					// light.
+					light->set_is_enabled( false );
+				}
+
+				if( !light->get_is_enabled() )
+				{
+					// Alas, `ccl::LightManager::test_enabled_lights()` will
+					// re-enable the light unless we also set its strength to zero.
+					light->set_strength( ccl::zero_float3() );
+				}
+
+				return true;
 			}
 
 			if( !previousAttributes || m_shader != previousAttributes->m_shader )
@@ -1149,46 +1145,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			m_volume.apply( object );
 
-			object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
-
 			// Custom attributes.
 			object->attributes = m_custom;
 
 			SceneAlgo::tagUpdateWithLock( object, scene );
-
-			return true;
-		}
-
-		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes, ccl::Scene *scene ) const
-		{
-			if( m_lightAttribute )
-			{
-				ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
-				{
-					// We need the scene lock because `tag_used()` will modify the
-					// scene.
-					std::scoped_lock sceneLock( scene->mutex );
-					m_lightShader->shader()->tag_used( scene );
-					// But we also use the lock for `set_shader()`, to protect the
-					// non-atomic increment made in `ccl::Node::reference()`.
-					light->set_shader( m_lightShader->shader() );
-				}
-				light->set_is_enabled( !m_muteLight );
-			}
-			else
-			{
-				// No `cycles:light` shader assignment. Most likely a light
-				// intended for another renderer, so we turn off the Cycles
-				// light.
-				light->set_is_enabled( false );
-			}
-
-			if( !light->get_is_enabled() )
-			{
-				// Alas, `ccl::LightManager::test_enabled_lights()` will
-				// re-enable the light unless we also set its strength to zero.
-				light->set_strength( ccl::zero_float3() );
-			}
 
 			return true;
 		}
@@ -1983,16 +1943,19 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesLight( ccl::Scene *scene, ccl::ustring name, NodeDeleter *nodeDeleter )
-			:	m_scene( scene ), m_light( SceneAlgo::createNodeWithLock<ccl::Light>( scene ), NodeDeleter::LightDeleter( nodeDeleter ) )
+		CyclesLight( ccl::Scene *scene, const std::string &name, NodeDeleter *nodeDeleter )
+			:	m_scene( scene ), m_light( SceneAlgo::createNodeWithLock<ccl::Light>( scene ), NodeDeleter::GeometryDeleter( nodeDeleter ) ), m_object( SceneAlgo::createNodeWithLock<ccl::Object>( scene ), NodeDeleter::ObjectDeleter( nodeDeleter ) )
 		{
-			m_light->name = name;
+			m_object->set_geometry( m_light.get() );
+			m_object->set_random_id( std::hash<string>()( name ) );
+			m_object->name = ccl::ustring( name );
+			m_light->name = ccl::ustring( name );
 			// All lights are always in the first set, which we use for objects
 			// which don't have any linking applied. But we only add lights to
 			// other sets as they are created by the LightLinker in response to
 			// calls to `CyclesObject::link()`.
-			m_light->set_light_set_membership( 1 );
-			m_light->set_shadow_set_membership( 1 );
+			m_object->set_light_set_membership( 1 );
+			m_object->set_shadow_set_membership( 1 );
 		}
 
 		~CyclesLight() override
@@ -2005,8 +1968,32 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const Imath::M44f &transform ) override
 		{
-			m_light->set_tfm( SocketAlgo::setTransform( transform ) );
-			SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
+			// Set environment map rotation
+			/// \todo There are a few problems here :
+			///
+			/// - We're clobbering the `tex_mapping.rotation` parameter, which is exposed to users
+			///   but now has no effect for them. This also prevents us getting the orientation of USD
+			///   DomeLights correct - see ShaderNetworkAlgo.
+			/// - The light shader was created via `ShaderCache::get()`, and could therefore be shared
+			///   between several lights, so we're not at liberty to clobber the shader anyway.
+			if( m_light->get_light_type() == ccl::LIGHT_BACKGROUND && m_light->get_used_shaders().size() != 0 )
+			{
+				ccl::Shader *shader = (ccl::Shader*)m_light->get_used_shaders()[0];
+				for( ccl::ShaderNode *node : shader->graph->nodes )
+				{
+					if( node->type == ccl::EnvironmentTextureNode::get_node_type() )
+					{
+						ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
+						Imath::Eulerf euler( transform, Imath::Eulerf::Order::XZY );
+						env->tex_mapping.rotation = ccl::make_float3( -euler.x, -euler.y, -euler.z );
+						shader->tag_update( m_scene );
+						break;
+					}
+				}
+			}
+
+			m_object->set_tfm( SocketAlgo::setTransform( transform ) );
+			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -2018,10 +2005,11 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-			if( cyclesAttributes->applyLight( m_light.get(), m_attributes.get(), m_scene ) )
+			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
 				SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
+				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 				return true;
 			}
 
@@ -2042,28 +2030,30 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 		uint64_t getLightSetMembership( LightLinker::SetType setType ) const
 		{
-			return setType == LightLinker::SetType::Light ? m_light->get_light_set_membership() : m_light->get_shadow_set_membership();
+			return setType == LightLinker::SetType::Light ? m_object->get_light_set_membership() : m_object->get_shadow_set_membership();
 		}
 
 		void setLightSetMembership( LightLinker::SetType setType, uint64_t membership )
 		{
 			if( setType == LightLinker::SetType::Light )
 			{
-				m_light->set_light_set_membership( membership );
+				m_object->set_light_set_membership( membership );
 			}
 			else
 			{
-				m_light->set_shadow_set_membership( membership );
+				m_object->set_shadow_set_membership( membership );
 			}
 
-			SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
+			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
 	private :
 
 		ccl::Scene *m_scene;
-		using UniqueLightPtr = std::unique_ptr<ccl::Light, NodeDeleter::LightDeleter>;
+		using UniqueLightPtr = std::unique_ptr<ccl::Light, NodeDeleter::GeometryDeleter>;
 		UniqueLightPtr m_light;
+		using UniqueObjectPtr = std::unique_ptr<ccl::Object, NodeDeleter::ObjectDeleter>;
+		UniqueObjectPtr m_object;
 		ConstCyclesAttributesPtr m_attributes;
 
 };
@@ -2652,7 +2642,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
-			CyclesLightPtr result = new CyclesLight( m_scene, ccl::ustring( name.c_str() ), m_nodeDeleter.get() );
+			ObjectInterfacePtr result = new CyclesLight( m_scene, name, m_nodeDeleter.get() );
 			result->attributes( attributes );
 			return result;
 		}
@@ -2723,7 +2713,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			updateOptions();
-			updateSceneObjects();
 			updateBackground();
 
 			{
@@ -2921,11 +2910,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_attributesCache->clearUnused();
 		}
 
-		void updateSceneObjects()
-		{
-			m_shaderCache->update();
-		}
-
 		void updateOptions()
 		{
 			if( !m_optionsChanged )
@@ -3074,17 +3058,25 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				/// every render. This might be much easier if attribute edits
 				/// were performed by a renderer method instead of an ObjectInterface
 				/// method. Or can we use `scene->light_manager->need_update()`?
-				ccl::Light *backgroundLight = nullptr;
-				for( ccl::Light *light : m_scene->lights )
+				ccl::Shader *backgroundShader = nullptr;
+				ccl::ustring lightgroup( "" );
+				/// \todo Avoid iterating over `m_scene->objects` to find the background light.
+				for( auto object : m_scene->objects )
 				{
-					if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
+					if( !object->get_geometry()->is_light() )
 					{
-						backgroundLight = light;
+						continue;
+					}
+					auto light = static_cast<ccl::Light *>( object->get_geometry() );
+					if( light->get_light_type() == ccl::LIGHT_BACKGROUND && light->get_used_shaders().size() != 0 )
+					{
+						backgroundShader = (ccl::Shader*)light->get_used_shaders()[0];
+						lightgroup = object->get_lightgroup();
 						break;
 					}
 				}
-				m_scene->background->set_shader( backgroundLight ? backgroundLight->get_shader() : m_scene->default_background );
-				m_scene->background->set_lightgroup( backgroundLight ? backgroundLight->get_lightgroup() : ccl::ustring( "" ) );
+				m_scene->background->set_shader( backgroundShader ? backgroundShader : m_scene->default_background );
+				m_scene->background->set_lightgroup( lightgroup );
 			}
 
 			// Note : this is also responsible for tagging any changes

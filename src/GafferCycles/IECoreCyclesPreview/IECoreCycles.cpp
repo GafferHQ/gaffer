@@ -358,16 +358,10 @@ IECore::CompoundDataPtr lightData()
 
 			in["size"] = _in["size"]->copy();
 			in["cast_shadow"] = _in["cast_shadow"]->copy();
-			in["use_camera"] = _in["use_camera"]->copy();
 			in["use_mis"] = _in["use_mis"]->copy();
-			in["use_diffuse"] = _in["use_diffuse"]->copy();
-			in["use_glossy"] = _in["use_glossy"]->copy();
-			in["use_transmission"] = _in["use_transmission"]->copy();
-			in["use_scatter"] = _in["use_scatter"]->copy();
 			in["use_caustics"] = _in["use_caustics"]->copy();
 			in["max_bounces"] = _in["max_bounces"]->copy();
 			in["strength"] = _in["strength"]->copy();
-			in["lightgroup"] = _in["lightgroup"]->copy();
 
 			if( type == "background_light" )
 			{

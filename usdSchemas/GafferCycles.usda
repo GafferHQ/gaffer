@@ -31,39 +31,9 @@ class "GafferCyclesLightAPI" (
 )
 {
 
-	string inputs:cycles:lightgroup = "" (
-		displayGroup = "Basic"
-		displayName = "Light Group (Cycles)"
-	)
-
 	bool inputs:cycles:use_mis = true (
 		displayGroup = "Refine"
 		displayName = "MIS (Cycles)"
-	)
-
-	bool inputs:cycles:use_camera = true (
-		displayGroup = "Refine"
-		displayName = "Camera (Cycles)"
-	)
-
-	bool inputs:cycles:use_diffuse = true (
-		displayGroup = "Refine"
-		displayName = "Diffuse (Cycles)"
-	)
-
-	bool inputs:cycles:use_glossy = true (
-		displayGroup = "Refine"
-		displayName = "Glossy (Cycles)"
-	)
-
-	bool inputs:cycles:use_transmission = true (
-		displayGroup = "Refine"
-		displayName = "Transmission (Cycles)"
-	)
-
-	bool inputs:cycles:use_scatter = true (
-		displayGroup = "Refine"
-		displayName = "Volume Scatter (Cycles)"
 	)
 
 	bool inputs:cycles:use_caustics = false (
