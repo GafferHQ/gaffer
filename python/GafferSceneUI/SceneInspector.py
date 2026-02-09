@@ -163,11 +163,12 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 				rootSection = "TopRow",
 			)
 
-			GafferUI.PlugLayout(
+			compareRow = GafferUI.PlugLayout(
 				self.settings(),
 				orientation = GafferUI.ListContainer.Orientation.Horizontal,
 				rootSection = "CompareRow",
 			)
+			compareRow.plugValueWidget( self.settings()["compare"] ).connect( self )
 
 			with GafferUI.TabbedContainer() :
 
@@ -1060,7 +1061,14 @@ class _ComparePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.WidgetAlgo.joinEdges( row )
 
-		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+	# We don't have access to the parent SceneInspector when we're constructed,
+	# so we have to rely on it calling this method to allow us to connect our
+	# input label to follow the node set.
+	## \todo Perhaps Editor should be a node with the settings plugs parented
+	#  directly to it, in which case we'd have direct access.
+	def connect( self, sceneInspector ) :
+
+		self.__inputLabelWidget.connectToNodeSetWidget( sceneInspector )
 
 	def hasLabel( self ) :
 
@@ -1078,13 +1086,6 @@ class _ComparePlugValueWidget( GafferUI.PlugValueWidget ) :
 			for grid in ( self.__aGrid, self.__bGrid ) :
 				for x in range( 0, 2 ) :
 					grid[x,y].setVisible( enabled )
-
-	def __parentChanged( self, unused ) :
-
-		# We can't get access to the parent SceneInspector until we get parented,
-		# so we have to connect our input label to follow the node set in this
-		# awkward delayed fashion.
-		self.__inputLabelWidget.connectToNodeSetWidget( self.ancestor( GafferUI.NodeSetEditor ) )
 
 SceneInspector._ComparePlugValueWidget = _ComparePlugValueWidget
 
