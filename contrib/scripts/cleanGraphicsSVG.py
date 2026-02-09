@@ -2,7 +2,7 @@
 
 import re
 
-inText = open( "resources/graphics.svg" ).read()
+inText = open( "resources/graphics.svg", encoding = "UTF-8" ).read()
 
 constantGradients = set()
 swatchSubstitutions = {}
@@ -56,4 +56,4 @@ outText = re.sub( findGradient, processGradient, outText )
 outText = re.sub( findHref, processRef, outText )
 outText = re.sub( findUrl, processRef, outText )
 
-open( "resources/graphics.svg", "w" ).write( outText )
+open( "resources/graphics.svg", "w", encoding = "UTF-8" ).write( outText )
