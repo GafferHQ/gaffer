@@ -21,6 +21,7 @@ API
 
 - Metadata : `ValueFunctions` now receive a `target` parameter. This is particularly useful when registering a function against a wildcard pattern.
 - PlugAlgo : Added `RampffData` and `RampfColor3fData` support to `createPlugFromData()`.
+- Widget : Improved automatic parenting via the `with parent` syntax. Children are now guaranteed to be fully constructed before they are parented.
 
 Breaking Changes
 ----------------

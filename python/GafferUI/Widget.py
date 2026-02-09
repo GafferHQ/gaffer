@@ -55,10 +55,34 @@ class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 
 	def __call__( cls, *args, **kw ) :
 
+		cls.pushParent( None ) # Disable auto-parenting of private widgets created in constructor.
 		instance = type.__call__( cls, *args, **kw )
 		instance._postConstructor()
+		cls.popParent()
+
+		if len( cls.__parentStack ) and cls.__parentStack[-1] is not None :
+			# Perform automatic parenting if necessary. We don't want to do this
+			# for menus, because they don't have the same parenting semantics.
+			# If other types end up with similar requirements then we should
+			# probably just have a mechanism for them to say they don't want to
+			# participate rather than hardcoding stuff here.
+			if not isinstance( instance, GafferUI.Menu )  :
+				parenting = kw.get( "parenting", {} )
+				cls.__parentStack[-1].addChild( instance, **parenting )
 
 		return instance
+
+	__parentStack = []
+
+	@classmethod
+	def pushParent( cls, parent ) :
+
+		cls.__parentStack.append( parent )
+
+	@classmethod
+	def popParent( cls ) :
+
+		return cls.__parentStack.pop()
 
 ## The Widget class provides a base class for all widgets in GafferUI.
 #
@@ -183,17 +207,6 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		self.__visible = not isinstance( self, GafferUI.Window )
 		self.__displayTransform = displayTransform
-
-		# perform automatic parenting if necessary. we don't want to do this
-		# for menus, because they don't have the same parenting semantics. if other
-		# types end up with similar requirements then we should probably just have
-		# a mechanism for them to say they don't want to participate rather than
-		# hardcoding stuff here.
-		if len( self.__parentStack ) and not isinstance( self, GafferUI.Menu ) :
-			if self.__initNesting() == self.__parentStack[-1][1] + 1 :
-				if self.__parentStack[-1][0] is not None :
-					parenting = parenting or {}
-					self.__parentStack[-1][0].addChild( self, **parenting )
 
 		self.__eventFilterInstalled = False
 		# if a class has overridden getToolTip, then the tooltips
@@ -768,31 +781,12 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		assert( isinstance( container, ( GafferUI.ContainerWidget, type( None ) ) ) )
 
-		cls.__parentStack.append( ( container, cls.__initNesting() ) )
+		cls.__class__.pushParent( container )
 
 	@classmethod
 	def _popParent( cls ) :
 
-		return cls.__parentStack.pop()[0]
-
-	# Returns how many Widgets are currently in construction
-	# on the call stack. We use this to avoid automatically
-	# parenting Widgets that are being created inside a constructor.
-	@staticmethod
-	def __initNesting() :
-
-		widgetsInInit = set()
-		frame = inspect.currentframe()
-		while frame :
-			if frame.f_code.co_name=="__init__" :
-				frameSelf = frame.f_locals[frame.f_code.co_varnames[0]]
-				if isinstance( frameSelf, Widget ) :
-					widgetsInInit.add( frameSelf )
-			frame = frame.f_back
-
-		return len( widgetsInInit )
-
-	__parentStack = []
+		return cls.__class__.popParent()
 
 	## Converts a Qt key code into a string
 	@classmethod
