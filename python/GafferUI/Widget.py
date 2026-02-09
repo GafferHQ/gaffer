@@ -147,7 +147,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	# If a current parent has been defined using the `with` syntax described above,
 	# the parenting argument may be passed as a dictionay of optional keywords for the
 	# automatic `parent.addChild()` call.
-	def __init__( self, topLevelWidget, toolTip="", parenting = None, displayTransform = None ) :
+	def __init__( self, topLevelWidget, *, toolTip="", parenting = None, displayTransform = None ) :
 
 		Gaffer.Signals.Trackable.__init__( self )
 
