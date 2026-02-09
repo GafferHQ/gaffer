@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.12.0)
 =======
 
+API
+---
 
+- Widget : Added `currentButtons()` static method. This returns the state of the mouse buttons during the last UI event to be processed.
 
 1.6.12.0 (relative to 1.6.11.1)
 ========
