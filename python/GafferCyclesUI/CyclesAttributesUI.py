@@ -82,7 +82,7 @@ def __renderingSummary( plug ) :
 
 def __subdivisionSummary( plug ) :
 
-	return ", ".join( __attributeSummary( plug, [ "max_level", "dicing_rate" ] ) )
+	return ", ".join( __attributeSummary( plug, [ "max_level", "dicing_rate", "adaptive_space" ] ) )
 
 def __volumeSummary( plug ) :
 

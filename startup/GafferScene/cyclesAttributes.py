@@ -217,6 +217,25 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"attribute:cycles:adaptive_space" : {
+
+		"defaultValue" : "pixel",
+		"description" :
+		"""
+		How to adaptively subdivide the mesh.
+
+		- Pixel : Subdivide polygons to reach a specified pixel size on screen.
+		- Object : Subdivide to reach a specified edge length in object space.
+		""",
+		"label" : "Adaptive Space",
+		"layout:section" : "Subdivision",
+
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "Pixel", "Object" ] ),
+		"presetValues" : IECore.StringVectorData( [ "pixel", "object" ] ),
+
+	},
+
 	"attribute:cycles:lightgroup" : {
 
 		"defaultValue" : "",

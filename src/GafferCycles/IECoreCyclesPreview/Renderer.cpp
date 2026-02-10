@@ -793,6 +793,23 @@ IECore::InternedString g_shadowTerminatorShadingOffsetAttributeName( "cycles:sha
 IECore::InternedString g_shadowTerminatorGeometryOffsetAttributeName( "cycles:shadow_terminator_geometry_offset" );
 IECore::InternedString g_maxLevelAttributeName( "cycles:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "cycles:dicing_rate" );
+IECore::InternedString g_adaptiveSpaceAttributeName( "cycles:adaptive_space" );
+
+std::array<IECore::InternedString, 2> g_adaptiveSpaceEnumNames = { {
+	"pixel",
+	"object",
+} };
+
+ccl::Mesh::SubdivisionAdaptiveSpace nameToAdaptiveSpaceEnum( const IECore::InternedString &name )
+{
+#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
+	MAP_NAME(g_adaptiveSpaceEnumNames[0], ccl::Mesh::SubdivisionAdaptiveSpace::SUBDIVISION_ADAPTIVE_SPACE_PIXEL);
+	MAP_NAME(g_adaptiveSpaceEnumNames[1], ccl::Mesh::SubdivisionAdaptiveSpace::SUBDIVISION_ADAPTIVE_SPACE_OBJECT);
+#undef MAP_NAME
+
+	return ccl::Mesh::SubdivisionAdaptiveSpace::SUBDIVISION_ADAPTIVE_SPACE_PIXEL;
+}
+
 // Cycles Light
 IECore::InternedString g_cyclesLightAttributeName( "cycles:light" );
 // Shader Assignment
@@ -895,6 +912,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_shadowTerminatorGeometryOffset( 0.0f ),
 				m_maxLevel( 1 ),
 				m_dicingRate( 1.0f ),
+				m_adaptiveSpace( "pixel" ),
 				m_color( Color3f( 1.0f ) ),
 				m_volume( attributes ),
 				m_shaderAttributes( attributes ),
@@ -916,6 +934,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_shadowTerminatorGeometryOffset = attributeValue<float>( g_shadowTerminatorGeometryOffsetAttributeName, attributes, m_shadowTerminatorGeometryOffset );
 			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
 			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
+			m_adaptiveSpace = attributeValue<std::string>( g_adaptiveSpaceAttributeName, attributes, m_adaptiveSpace );
 			m_color = attributeValue<Color3f>( g_displayColorAttributeName, attributes, m_color );
 			m_lightGroup = attributeValue<std::string>( g_lightGroupAttributeName, attributes, m_lightGroup );
 			m_assetName = attributeValue<std::string>( g_cryptomatteAssetAttributeName, attributes, m_assetName );
@@ -1041,7 +1060,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
 					if( mesh->get_num_subd_faces() )
 					{
-						if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
+						if(
+							previousAttributes->m_maxLevel != m_maxLevel ||
+							previousAttributes->m_dicingRate != m_dicingRate ||
+							previousAttributes->m_adaptiveSpace != m_adaptiveSpace
+						)
 						{
 							// Get a new mesh
 							return false;
@@ -1079,6 +1102,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					mesh->set_subd_dicing_rate( m_dicingRate );
 					mesh->set_subd_max_level( m_maxLevel );
+					mesh->set_subd_adaptive_space( nameToAdaptiveSpaceEnum( m_adaptiveSpace ) );
 				}
 			}
 
@@ -1186,6 +1210,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					{
 						h.append( m_dicingRate );
 						h.append( m_maxLevel );
+						h.append( m_adaptiveSpace );
 					}
 					break;
 				case IECoreVDB::VDBObjectTypeId :
@@ -1209,8 +1234,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				if( mesh->interpolation() == "catmullClark" )
 				{
-					// For now we treat all subdiv surfaces as unique because they are all treated as adaptive.
-					return false;
+					return m_adaptiveSpace == "object";
 				}
 				else
 				{
@@ -1378,6 +1402,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		float m_shadowTerminatorGeometryOffset;
 		int m_maxLevel;
 		float m_dicingRate;
+		string m_adaptiveSpace;
 		Color3f m_color;
 		Volume m_volume;
 		ShaderAttributes m_shaderAttributes;
