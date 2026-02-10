@@ -60,7 +60,8 @@ class GAFFERIMAGE_API Crop : public ImageProcessor
 			Area = 0,
 			DataWindow = 1,
 			DisplayWindow = 2,
-			Format = 3
+			Format = 3,
+			Auto = 4
 		};
 
 		Gaffer::IntPlug *areaSourcePlug();
@@ -95,6 +96,9 @@ class GAFFERIMAGE_API Crop : public ImageProcessor
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
 	private :
 
 		Gaffer::AtomicBox2iPlug *cropWindowPlug();
@@ -105,6 +109,20 @@ class GAFFERIMAGE_API Crop : public ImageProcessor
 
 		Gaffer::V2iPlug *offsetPlug();
 		const Gaffer::V2iPlug *offsetPlug() const;
+
+		Gaffer::AtomicBox2iPlug *tileAutoAreaPlug();
+		const Gaffer::AtomicBox2iPlug *tileAutoAreaPlug() const;
+
+		Gaffer::AtomicBox2iPlug *autoAreaPlug();
+		const Gaffer::AtomicBox2iPlug *autoAreaPlug() const;
+
+		bool affectsTileAutoArea( const Gaffer::Plug *input ) const;
+		void hashTileAutoArea( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		Imath::Box2i computeTileAutoArea( const Gaffer::Context *context ) const;
+
+		bool affectsAutoArea( const Gaffer::Plug *input ) const;
+		void hashAutoArea( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		Imath::Box2i computeAutoArea( const Gaffer::Context *context ) const;
 
 		static size_t g_firstPlugIndex;
 };
