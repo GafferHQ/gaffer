@@ -37,6 +37,7 @@
 import IECore
 
 import Gaffer
+import GafferDispatch
 import GafferUI
 import GafferImage
 
@@ -289,6 +290,11 @@ Gaffer.Metadata.registerNode(
 
 	}
 
+)
+
+Gaffer.Metadata.registerValue(
+	GafferDispatch.FileList, "extensions", "preset:Image Files",
+	" ".join( GafferImage.ImageReader.supportedExtensions() )
 )
 
 # Augments PresetsPlugValueWidget label with the computed colour space

@@ -578,6 +578,9 @@ nodeMenu.append( "/Dispatch/Task List", GafferDispatch.TaskList, searchText = "T
 nodeMenu.append( "/Dispatch/Wedge", GafferDispatch.Wedge )
 nodeMenu.append( "/Dispatch/Frame Mask", GafferDispatch.FrameMask, searchText = "FrameMask" )
 nodeMenu.append( "/Dispatch/Local Dispatcher", GafferDispatch.LocalDispatcher, searchText = "LocalDispatcher" )
+nodeMenu.append( "/Dispatch/Delete Files", GafferDispatch.DeleteFiles, searchText = "DeleteFiles" )
+nodeMenu.append( "/Dispatch/Copy Files", GafferDispatch.CopyFiles, searchText = "CopyFiles" )
+nodeMenu.append( "/Dispatch/Rename Files", GafferDispatch.RenameFiles, searchText = "RenameFiles" )
 
 # ML nodes
 
@@ -615,6 +618,7 @@ nodeMenu.append( "/Utility/Spreadsheet", Gaffer.Spreadsheet )
 nodeMenu.append( "/Utility/Context Query", Gaffer.ContextQuery, searchText = "ContextQuery" )
 nodeMenu.append( "/Utility/Collect", Gaffer.Collect )
 nodeMenu.append( "/Utility/Pattern Match", Gaffer.PatternMatch, searchText = "PatternMatch" )
+nodeMenu.append( "/Utility/File List", GafferDispatch.FileList, searchText = "FileList" )
 
 ## Miscellaneous UI
 ###########################################################################

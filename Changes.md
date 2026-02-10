@@ -1,7 +1,13 @@
 1.6.x.x (relative to 1.6.12.0)
 =======
 
+Features
+--------
 
+- FileList : Added node for listing matching files.
+- DeleteFiles : Added node for deleting files.
+- CopyFiles : Added node for copying files.
+- RenameFiles : Added node for renaming files.
 
 1.6.12.0 (relative to 1.6.11.1)
 ========

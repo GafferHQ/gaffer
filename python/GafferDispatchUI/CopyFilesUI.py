@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,24 +34,64 @@
 #
 ##########################################################################
 
-__import__( "GafferUI" )
+import Gaffer
+import GafferDispatch
 
-from . import DispatcherUI
-from .DispatchDialogue import DispatchDialogue
-from . import LocalDispatcherUI
-from . import TaskNodeUI
-from . import SystemCommandUI
-from . import TaskListUI
-from . import TaskContextProcessorUI
-from . import WedgeUI
-from . import TaskContextVariablesUI
-from . import TaskSwitchUI
-from . import PythonCommandUI
-from . import FrameMaskUI
-from .LocalJobs import LocalJobs
-from . import FileListUI
-from . import DeleteFilesUI
-from . import CopyFilesUI
-from . import RenameFilesUI
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )
+	GafferDispatch.CopyFiles,
+
+	"description",
+	"""
+	Copies or moves files into a destination directory.
+	""",
+
+	plugs = {
+
+		"files" : {
+
+			"description" :
+			"""
+			The files to be copied.
+			""",
+
+			"ui:acceptsFileList" : True,
+
+		},
+
+		"destination" : {
+
+			"description" :
+			"""
+			The destination directory to copy the files to. If
+			this does not exist yet, it will be created automatically.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+
+		},
+
+		"overwrite" : {
+
+			"description" :
+			"""
+			If a file already exists at the destination, then overwrites
+			it rather than erroring. Defaults to off, to reduce the chance
+			of accidental data loss.
+			""",
+
+		},
+
+		"deleteSource" : {
+
+			"description" :
+			"""
+			Turns the operation into a move/rename by deleting the source files
+			after they are copied to the destination.
+			""",
+
+		},
+
+	},
+
+)

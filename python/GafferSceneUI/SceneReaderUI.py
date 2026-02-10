@@ -39,6 +39,7 @@ import functools
 import IECoreScene
 
 import Gaffer
+import GafferDispatch
 import GafferUI
 import GafferScene
 
@@ -116,6 +117,11 @@ Gaffer.Metadata.registerNode(
 
 	}
 
+)
+
+Gaffer.Metadata.registerValue(
+	GafferDispatch.FileList, "extensions", "preset:Scene Files",
+	" ".join( GafferScene.SceneReader.supportedExtensions() )
 )
 
 ##########################################################################
