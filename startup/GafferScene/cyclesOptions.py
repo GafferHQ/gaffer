@@ -271,15 +271,16 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue" : "ribbon",
 		"description" :
 		"""
-		Round Ribbons - Render hair as flat ribbon with rounded normals, for fast rendering.
-		3D Curves - Render hair as 3D curve, for accurate results when viewing hair close up.
+		Round Ribbons - Render curves as flat ribbon with rounded normals, for fast rendering.
+		3D Curves - Render curves as cylindrical 3D geometry, for accurate results when viewing hair close up.
+		Linear 3D Curves - Render curves as cylindrical 3D geometry with linear interpolation.
 		""",
 		"label" : "Hair Shape",
 		"layout:section" : "Scene",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : IECore.StringVectorData( [ "Round Ribbons", "3D Curves" ] ),
-		"presetValues" : IECore.StringVectorData( [ "ribbon", "thick" ] ),
+		"presetNames" : IECore.StringVectorData( [ "Round Ribbons", "3D Curves", "Linear 3D Curves" ] ),
+		"presetValues" : IECore.StringVectorData( [ "ribbon", "thick", "thick-linear" ] ),
 
 	},
 

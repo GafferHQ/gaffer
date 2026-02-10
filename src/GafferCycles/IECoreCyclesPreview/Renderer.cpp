@@ -2325,9 +2325,10 @@ ccl::BVHLayout nameToBvhLayoutEnum( const IECore::InternedString &name )
 	return ccl::BVHLayout::BVH_LAYOUT_AUTO;
 }
 
-std::array<IECore::InternedString, 2> g_curveShapeTypeEnumNames = { {
+std::array<IECore::InternedString, 3> g_curveShapeTypeEnumNames = { {
 	"ribbon",
-	"thick"
+	"thick",
+	"thick-linear"
 } };
 
 ccl::CurveShapeType nameToCurveShapeTypeEnum( const IECore::InternedString &name )
@@ -2335,6 +2336,7 @@ ccl::CurveShapeType nameToCurveShapeTypeEnum( const IECore::InternedString &name
 #define MAP_NAME(enumName, enum) if(name == enumName) return enum;
 	MAP_NAME(g_curveShapeTypeEnumNames[0], ccl::CurveShapeType::CURVE_RIBBON);
 	MAP_NAME(g_curveShapeTypeEnumNames[1], ccl::CurveShapeType::CURVE_THICK);
+	MAP_NAME(g_curveShapeTypeEnumNames[2], ccl::CurveShapeType::CURVE_THICK_LINEAR);
 #undef MAP_NAME
 
 	return ccl::CurveShapeType::CURVE_THICK;
