@@ -35,10 +35,13 @@
 #
 ##########################################################################
 
+import gc
 import unittest
 
 import GafferUI
 import GafferUITest
+
+from Qt import QtWidgets
 
 class TabbedContainerTest( GafferUITest.TestCase ) :
 
@@ -318,6 +321,21 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 
 		for tab in t2, t3 :
 			self.assertTrue( container.getTabVisible( tab ) )
+
+	def testWithSplitContainerParent( self ) :
+
+		# This exposes a problem whereby a TabbedContainer parented to
+		# a SplitContainer would create a zombie `QTabBar` instance in
+		# Python.
+		with GafferUI.SplitContainer() as splitContainer :
+			with GafferUI.TabbedContainer() :
+				GafferUI.Label( "Test" )
+
+		# There should be only one QTabBar in existence, and it should
+		# be valid.
+		qtTabBars = [ o for o in gc.get_objects() if isinstance( o, QtWidgets.QTabBar ) ]
+		self.assertEqual( len( qtTabBars ), 1 )
+		self.assertTrue( GafferUI._qtObjectIsValid( qtTabBars[0] ) )
 
 	def tearDown( self ) :
 

@@ -137,5 +137,24 @@ class ContainerWidgetTest( GafferUITest.TestCase ) :
 		self.assertIsInstance( w.getChild()[0], GafferUI.TextWidget )
 		self.assertIsInstance( w.getChild()[1], GafferUI.Button )
 
+	def testChildFullyConstructedBeforeParenting( self ) :
+
+		class TestWidget( GafferUI.Label ) :
+
+			def __init__( self, **kw ) :
+
+				GafferUI.Label.__init__( self, **kw )
+
+				assert( self.parent() is None )
+
+			def _postConstructor( self ) :
+
+				assert( self.parent() is None )
+
+		with GafferUI.ListContainer() as container:
+			widget = TestWidget()
+
+		self.assertIs( widget.parent(), container )
+
 if __name__ == "__main__":
 	unittest.main()
