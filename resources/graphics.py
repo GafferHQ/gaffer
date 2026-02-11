@@ -543,6 +543,8 @@
 				"rendererArnoldOffIcon",
 				"rendererCyclesOnIcon",
 				"rendererCyclesOffIcon",
+				"rendererRenderManOnIcon",
+				"rendererRenderManOffIcon",
 			],
 
 		},
