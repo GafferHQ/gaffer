@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.13.0)
 =======
 
+API
+---
 
+- MetadataAlgo : Added `firstViewableAncestor()` and `firstViewableNode()` functions.
 
 1.6.13.0 (relative to 1.6.12.0)
 ========

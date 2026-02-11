@@ -226,6 +226,19 @@ ValuePlugPtr createPlugFromMetadataWrapper( const std::string &name, Plug::Direc
 	return MetadataAlgo::createPlugFromMetadata( name, direction, flags, target );
 }
 
+/// Viewability
+/// ===========
+
+GraphComponentPtr firstViewableAncestorWrapper( GraphComponent &g, IECore::TypeId t )
+{
+	return firstViewableAncestor( &g, t );
+}
+
+NodePtr firstViewableNodeWrapper( GraphComponent &g )
+{
+	return firstViewableNode( &g );
+}
+
 } // namespace
 
 void GafferModule::bindMetadataAlgo()
@@ -362,5 +375,11 @@ void GafferModule::bindMetadataAlgo()
 	// =============
 
 	def( "createPlugFromMetadata", &createPlugFromMetadataWrapper );
+
+	// Viewability
+	// ===========
+
+	def( "firstViewableAncestor", &firstViewableAncestorWrapper );
+	def( "firstViewableNode", &firstViewableNodeWrapper );
 
 }

@@ -117,6 +117,120 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			Gaffer.MetadataAlgo.readOnlyReason( None )
 
+	def testFirstViewableAncestor( self ) :
+
+		b = Gaffer.Box()
+		b["b"] = Gaffer.Box()
+
+		n = GafferTest.AddNode()
+		b["b"]["n"] = n
+
+		# start with no childrenViewable metadata on either Box
+		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", None )
+		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", None )
+
+		# b has no parent, so is considered viewable
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Node ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Box ), b )
+		# With no childrenViewable metadata registered, only b is viewable
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b["b"], Gaffer.Box ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Box ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Node ), b )
+
+		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Node ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Box ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b["b"], Gaffer.Box ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Box ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Node ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Plug ), None )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Node ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Box ), b["b"] )
+
+		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Box ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Node ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b["b"], Gaffer.Box ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Box ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Node ), n )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Plug ), n["op1"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Node ), n )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Box ), b["b"] )
+
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.EditScope ) )
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableAncestor( b["b"], Gaffer.EditScope ) )
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.EditScope ) )
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.EditScope ) )
+
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
+			Gaffer.MetadataAlgo.firstViewableAncestor( None, None )
+			Gaffer.MetadataAlgo.firstViewableAncestor( b, None )
+			Gaffer.MetadataAlgo.firstViewableAncestor( None, Gaffer.Box )
+
+	def testFirstViewableNode( self ) :
+
+		b = Gaffer.Box()
+		b["b"] = Gaffer.Box()
+
+		n = GafferTest.AddNode()
+		b["b"]["n"] = n
+
+		# start with no childrenViewable metadata on either Box
+		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", None )
+		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", None )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+		# With no childrenViewable metadata registered, only b is viewable
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
+
+		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", True )
+		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), n )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), n )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", False )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), b["b"] )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", False )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), b )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", True )
+		# Although `b["b"]` now has viewable children, its parent `b` does not
+		# and is still the first viewable.
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), b )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), n )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), n )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
+			Gaffer.MetadataAlgo.firstViewableNode( None )
+
 	def testChildNodesAreReadOnly( self ) :
 
 		b = Gaffer.Box()

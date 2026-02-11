@@ -66,6 +66,18 @@ void copyIf( const GraphComponent *from, GraphComponent *to, Predicate &&predica
 	}
 }
 
+template<typename T>
+T *firstViewableAncestor( GraphComponent *graphComponent )
+{
+	return static_cast<T *>( firstViewableAncestor( graphComponent, T::staticTypeId() ) );
+}
+
+template<typename T>
+const T *firstViewableAncestor( const GraphComponent *graphComponent )
+{
+	return static_cast<const T *>( firstViewableAncestor( graphComponent, T::staticTypeId() ) );
+}
+
 } // namespace MetadataAlgo
 
 } // namespace Gaffer

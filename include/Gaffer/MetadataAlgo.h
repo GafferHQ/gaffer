@@ -251,6 +251,23 @@ GAFFER_API void deregisterRedundantValues( GraphComponent *graphComponent );
 /// `target` will be used to define the min and max values of the plug.
 GAFFER_API ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction direction, unsigned flags, const std::string &target );
 
+/// Viewability
+/// ===========
+
+/// Returns the first T that is considered user viewable, starting from graphComponent before
+/// testing all ancestors. Nodes can mark their children as viewable by registering "graphEditor:childrenViewable"
+/// metadata.
+template<typename T=GraphComponent>
+T *firstViewableAncestor( GraphComponent *graphComponent );
+template<typename T=GraphComponent>
+const T *firstViewableAncestor( const GraphComponent *graphComponent );
+/// As above, but taking a TypeId to specify type - this is mainly provided for the binding.
+GAFFER_API GraphComponent *firstViewableAncestor( GraphComponent *graphComponent, IECore::TypeId ancestorType );
+GAFFER_API const GraphComponent *firstViewableAncestor( const GraphComponent *graphComponent, IECore::TypeId ancestorType );
+/// Convenience form of the above that always returns a Node - mainly provided for use in Python.
+GAFFER_API Node *firstViewableNode( GraphComponent *graphComponent );
+GAFFER_API const Node *firstViewableNode( const GraphComponent *graphComponent );
+
 } // namespace MetadataAlgo
 
 } // namespace Gaffer

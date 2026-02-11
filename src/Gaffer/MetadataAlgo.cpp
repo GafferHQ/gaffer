@@ -71,6 +71,7 @@ const InternedString g_spreadsheetColumnLabel( "spreadsheet:columnLabel" );
 const InternedString g_defaultValue( "defaultValue" );
 const InternedString g_minValue( "minValue" );
 const InternedString g_maxValue( "maxValue" );
+const InternedString g_childrenViewable( "graphEditor:childrenViewable" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
 {
@@ -995,6 +996,71 @@ ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction di
 			}
 			return PlugAlgo::createPlugFromData( name, direction, flags, defaultValue.get() );
 	}
+}
+
+/// Viewability
+/// ===========
+
+GraphComponent *firstViewableAncestor( Gaffer::GraphComponent *graphComponent, IECore::TypeId type )
+{
+	Gaffer::GraphComponent *result = nullptr;
+
+	while( graphComponent )
+	{
+		Gaffer::GraphComponent *nodeParent = nullptr;
+		if( auto p = runTimeCast<Gaffer::Plug>( graphComponent ) )
+		{
+			nodeParent = p->node()->ancestor<Gaffer::Node>();
+		}
+		else
+		{
+			nodeParent = graphComponent->ancestor<Gaffer::Node>();
+		}
+
+		bool viewable = false;
+		if( nodeParent )
+		{
+			if( ConstBoolDataPtr d = Metadata::value<BoolData>( nodeParent, g_childrenViewable ) )
+			{
+				viewable = d->readable();
+			}
+		}
+		else
+		{
+			viewable = true;
+		}
+
+		if( viewable )
+		{
+			if( !result && graphComponent->isInstanceOf( type ) )
+			{
+				result = graphComponent;
+			}
+		}
+		else
+		{
+			result = nullptr;
+		}
+
+		graphComponent = graphComponent->parent();
+	}
+
+	return result;
+}
+
+const GraphComponent *firstViewableAncestor( const Gaffer::GraphComponent *graphComponent, IECore::TypeId type )
+{
+	return firstViewableAncestor( const_cast<GraphComponent *>( graphComponent ), type );
+}
+
+Node *firstViewableNode( Gaffer::GraphComponent *graphComponent )
+{
+	return firstViewableAncestor<Node>( graphComponent );
+}
+
+const Node *firstViewableNode( const Gaffer::GraphComponent *graphComponent )
+{
+	return firstViewableAncestor<Node>( graphComponent );
 }
 
 } // namespace MetadataAlgo
