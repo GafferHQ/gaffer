@@ -251,6 +251,13 @@ GAFFER_API void deregisterRedundantValues( GraphComponent *graphComponent );
 /// `target` will be used to define the min and max values of the plug.
 GAFFER_API ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction direction, unsigned flags, const std::string &target );
 
+/// Viewability
+/// ===========
+
+/// Returns the first ancestor node of graphComponent that is considered user viewable. Nodes
+/// can mark their children as non-viewable by registering "graphEditor:childrenViewable" metadata.
+GAFFER_API const Node *firstViewableAncestor( const GraphComponent *graphComponent );
+
 } // namespace MetadataAlgo
 
 } // namespace Gaffer
