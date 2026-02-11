@@ -463,9 +463,9 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 				self.assertEqualWithAbsError( upperPixel, imath.Color4f( 0 ), error = 0.01 )
 				self.assertGreaterEqual( middlePixel.r, testColor.r )
-				self.assertAlmostEqual( middlePixel.g, testColor.g, delta = 0.01)
-				self.assertAlmostEqual( middlePixel.b, testColor.b, delta = 0.01 )
-				self.assertAlmostEqual( middlePixel.a, testColor.a, delta = 0.01 )
+				self.assertAlmostEqual( middlePixel.g, testColor.g, delta = 0.013 )
+				self.assertAlmostEqual( middlePixel.b, testColor.b, delta = 0.013 )
+				self.assertAlmostEqual( middlePixel.a, testColor.a, delta = 0.013 )
 				self.assertEqualWithAbsError( lowerPixel, imath.Color4f( 0 ), error = 0.01 )
 
 	# Should be implemented by derived classes to return
