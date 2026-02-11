@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.13.0)
 =======
 
+Improvements
+------------
+
+- Transform Tools : Simplified display of the target node receiving transform edits. Plugs and non-viewable nodes are no longer included in the target path.
+
 API
 ---
 
