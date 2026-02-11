@@ -78,6 +78,7 @@ jobs:
             sconsCacheMegabytes: 400
             jobs: 4
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a6/cortex-10.7.0.0a6-linux-platform24.tar.gz
+            extraBuildArguments: CYCLES_ROOT=""
 
           - name: windows
             os: windows-2022
@@ -207,7 +208,7 @@ jobs:
 
     - name: Build Gaffer
       run: |
-       scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+       scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
       env:
         PYTHONUTF8: 1
 
@@ -242,7 +243,7 @@ jobs:
             ]
           )
           #Build Arnold extension
-          subprocess.check_call( "scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
+          subprocess.check_call( "scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}", shell = True )
 
           # Test Arnold extension
           print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
@@ -280,7 +281,7 @@ jobs:
 
     - name: Build and test against RenderMan 26.3
       run: |
-        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
         ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }} IECoreRenderManTest GafferRenderManTest GafferRenderManUITest
         echo "::remove-matcher owner=unittest::"
@@ -301,7 +302,7 @@ jobs:
 
     - name: Build and test against RenderMan 26.4
       run: |
-        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
         ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }} IECoreRenderManTest GafferRenderManTest GafferRenderManUITest
         echo "::remove-matcher owner=unittest::"
@@ -322,7 +323,7 @@ jobs:
 
     - name: Build against RenderMan 27.1
       run: |
-        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
       env:
         PYTHONUTF8: 1
       if: ${{ env.RMANTREE != '' }}
@@ -351,7 +352,7 @@ jobs:
 
     - name: Build against RenderMan 27.2
       run: |
-        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
       env:
         PYTHONUTF8: 1
       if: ${{ env.RMANTREE != '' }}
