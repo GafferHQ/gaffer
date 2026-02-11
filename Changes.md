@@ -14,6 +14,11 @@ API
 - Widget : Added `currentButtons()` static method. This returns the state of the mouse buttons during the last UI event to be processed.
 - LazyMethod : Added `deferUntilButtonRelease` option.
 
+Fixes
+-----
+
+- RenderManShader : Fixed default visibility of LamaDielectric's `dielectricNormal` parameter, which is now visible by default (and `normal` is now hidden).
+
 1.6.12.0 (relative to 1.6.11.1)
 ========
 
