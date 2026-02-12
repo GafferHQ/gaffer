@@ -668,6 +668,11 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		return p
 
 	@staticmethod
+	def currentButtons() :
+
+		return _eventFilter.currentButtons()
+
+	@staticmethod
 	def currentModifiers() :
 
 		return Widget._modifiers( QtWidgets.QApplication.queryKeyboardModifiers() )
@@ -975,6 +980,7 @@ class _EventFilter( QtCore.QObject ) :
 		QtCore.QObject.__init__( self )
 
 		# variables used in the implementation of drag and drop.
+		self.__virtualButton = GafferUI.ButtonEvent.Buttons.None_
 		self.__lastButtonPressWidget = None
 		self.__lastButtonPressEvent = None
 		self.__dragDropEvent = None
@@ -1007,6 +1013,10 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.DragLeave,
 			QtCore.QEvent.Drop,
 		) )
+
+	def currentButtons( self ) :
+
+		return self.__virtualButtons( QtWidgets.QApplication.mouseButtons() )
 
 	def eventFilter( self, qObject, qEvent ) :
 
@@ -1150,27 +1160,23 @@ class _EventFilter( QtCore.QObject ) :
 
 		return False
 
-	def __virtualButtons( self, qtButtons ):
-		result = Widget._buttons( qtButtons )
-		if self.__dragDropEvent is not None and self.__dragDropEvent.__startedByKeyPress :
-			result |= GafferUI.ButtonEvent.Buttons.Left
-		return GafferUI.ButtonEvent.Buttons( result )
+	def __virtualButtons( self, qtButtons ) :
+
+		return GafferUI.ButtonEvent.Buttons( self.__virtualButton | Widget._buttons( qtButtons ) )
 
 	def __mouseButtonPress( self, qObject, qEvent ) :
 
-		if (
-			self.__dragDropEvent is not None and self.__dragDropEvent.__startedByKeyPress
-			and ( Widget._buttons( qEvent.button() ) & GafferUI.ButtonEvent.Buttons.Left )
-		) :
-			# We are doing a virtual drag based on a keypress, but once the actual mouse button gets pressed,
-			# we replace it with an actual drag.
-			self.__dragDropEvent.__startedByKeyPress = False
+		pressedButton = Widget._buttons( qEvent.button() )
+		if self.__dragDropEvent is not None and pressedButton == self.__virtualButton :
+			# We were doing a drag based on a virtual button press, but now the actual mouse button has been pressed,
+			# so we can replace it.
+			self.__virtualButton = GafferUI.ButtonEvent.Buttons.None_
 			return True
 
 		widget = Widget._owner( qObject )
 		if widget._buttonPressSignal is not None :
 			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.button() ),
+				pressedButton,
 				self.__virtualButtons( qEvent.buttons() ),
 				self.__widgetSpaceLine( qEvent, widget ),
 				0.0,
@@ -1343,7 +1349,7 @@ class _EventFilter( QtCore.QObject ) :
 
 		return False
 
-	def __startDrag( self, qObject, qEvent, forKeyPress = False ) :
+	def __startDrag( self, qObject, qEvent, threshold = 3 ) :
 
 		if self.__lastButtonPressWidget is None :
 			return False
@@ -1363,7 +1369,6 @@ class _EventFilter( QtCore.QObject ) :
 			# the widget died
 			return False
 
-		threshold = 3 if not forKeyPress else 0
 		if ( self.__lastButtonPressEvent.line.p0 - self.__widgetSpaceLine( qEvent, sourceWidget ).p0 ).length() < threshold :
 			return False
 
@@ -1378,7 +1383,6 @@ class _EventFilter( QtCore.QObject ) :
 		)
 		dragDropEvent.sourceWidget = sourceWidget
 		dragDropEvent.destinationWidget = None
-		dragDropEvent.__startedByKeyPress = forKeyPress
 
 		dragData = sourceWidget._dragBeginSignal( sourceWidget, dragDropEvent )
 		if dragData is not None :
@@ -1525,9 +1529,12 @@ class _EventFilter( QtCore.QObject ) :
 				qKeyEvent.modifiers()
 			)
 
+			self.__virtualButton = GafferUI.ButtonEvent.Buttons.Left
 			if self.__mouseButtonPress( qWidget, qEvent ) :
-				self.__startDrag( qWidget, qEvent, forKeyPress = True )
+				self.__startDrag( qWidget, qEvent, threshold = 0 )
 				return True
+			else :
+				self.__virtualButton = GafferUI.ButtonEvent.Buttons.None_
 
 		else :
 
@@ -1545,6 +1552,7 @@ class _EventFilter( QtCore.QObject ) :
 				qKeyEvent.modifiers()
 			)
 
+			self.__virtualButton = GafferUI.ButtonEvent.Buttons.None_
 			self.__endDrag( self.__dragDropEvent.sourceWidget._qtWidget(), qEvent )
 			return True
 

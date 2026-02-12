@@ -276,7 +276,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		self.__lazyUpdate()
 
-	@GafferUI.LazyMethod()
+	@GafferUI.LazyMethod( deferUntilButtonRelease = True )
 	def __lazyUpdate( self ) :
 
 		self._updateFromSet()

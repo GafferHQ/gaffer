@@ -1,7 +1,16 @@
 1.6.x.x (relative to 1.6.12.0)
 =======
 
+Improvements
+------------
 
+- GraphEditor : Improved responsiveness of select-drag, by deferring NodeEditor update until the drag ends.
+
+API
+---
+
+- Widget : Added `currentButtons()` static method. This returns the state of the mouse buttons during the last UI event to be processed.
+- LazyMethod : Added `deferUntilButtonRelease` option.
 
 1.6.12.0 (relative to 1.6.11.1)
 ========
