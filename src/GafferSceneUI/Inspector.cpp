@@ -930,7 +930,7 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 
 		if( name == g_nodePropertyName )
 		{
-			return h->scene->node();
+			return MetadataAlgo::firstViewableAncestor( h->scene->node() );
 		}
 
 		Context::EditableScope scope( h->context.get() );

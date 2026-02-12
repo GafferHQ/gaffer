@@ -269,7 +269,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[1].property( "history:editWarning" ), "" )
 
 		self.assertEqual( c[2].property( "name" ), str( c[2][-1] ) )
-		self.assertEqual( c[2].property( "history:node" ), s["editScope"]["LightEdits"]["ShaderTweaks"] )
+		self.assertEqual( c[2].property( "history:node" ), s["editScope"]["LightEdits"] )
 		self.assertEqual( c[2].property( "history:value" ), 3.0 )
 		self.assertEqual( c[2].property( "history:fallbackValue" ), None )
 		self.assertEqual( c[2].property( "history:operation" ), Gaffer.TweakPlug.Mode.Replace )

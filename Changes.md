@@ -7,7 +7,7 @@ Improvements
 - Crop : Added `Auto` mode for `areaSource`, automatically cropping to show only non-empty pixels.
 - GraphEditor : Improved responsiveness of select-drag, by deferring NodeEditor update until the drag ends.
 - Transform Tools : Simplified display of the target node receiving transform edits. Plugs and non-viewable nodes are no longer included in the target path.
-- Scene Editors : Simplified display of edit source in column tooltips and the inspect popup. Plugs and non-viewable nodes are no longer included in the source path.
+- Scene Editors : Simplified display of edit source in column tooltips, the inspect popup, and history window. Plugs and non-viewable nodes are no longer included in the source path.
 
 API
 ---
