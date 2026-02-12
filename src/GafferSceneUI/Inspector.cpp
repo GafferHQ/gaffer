@@ -767,33 +767,45 @@ struct Inspector::HistoryPath::HistoryProvider
 				contextVariables.insert( currentContextVariables.begin(), currentContextVariables.end() );
 
 				ConstObjectPtr currentValue = inspector->value( current );
-				if( successor && !endsWith( m_historyVector, successor ) )
-				{
-					// The result of `inspector->source()` was null on the
-					// previous (`successor`) iteration. But there may still
-					// have been a value change at that point, in which case the
-					// `successor` belongs in our history.
-					if(
-						(bool)currentValue != (bool)successorValue ||
-						( currentValue && currentValue->isNotEqualTo( successorValue.get() ) )
-					)
-					{
-						m_historyVector.push_back( successor );
-					}
-				}
 
-				if( successor && *successor->context != *current->context )
+				const bool currentViewableAncestorInHistory = m_historyVector.size() && MetadataAlgo::firstViewableNode( m_historyVector.back()->scene.get() ) == MetadataAlgo::firstViewableNode( current->scene.get() );
+				if( !currentViewableAncestorInHistory )
 				{
-					addVaryingContextVariables( successor->context.get(), current->context.get(), varyingContextVariables );
-					if( !endsWith( m_historyVector, successor ) )
+					if( successor && !endsWith( m_historyVector, successor ) )
 					{
-						m_historyVector.push_back( successor );
-					}
-				}
+						// The result of `inspector->source()` was null on the
+						// previous (`successor`) iteration. But there may still
+						// have been a value change at that point, in which case the
+						// `successor` belongs in our history.
+						if(
+							(bool)currentValue != (bool)successorValue ||
+							( currentValue && currentValue->isNotEqualTo( successorValue.get() ) )
+						)
+						{
+							m_historyVector.push_back( successor );
+						}
 
-				if( inspector->source( current, editWarning ) )
-				{
-					m_historyVector.push_back( current );
+						if( *successor->context != *current->context )
+						{
+							addVaryingContextVariables( successor->context.get(), current->context.get(), varyingContextVariables );
+							if( !endsWith( m_historyVector, successor ) )
+							{
+								m_historyVector.push_back( successor );
+							}
+						}
+					}
+
+					if( inspector->source( current, editWarning ) )
+					{
+						m_historyVector.push_back( current );
+					}
+					else if( current->predecessors.empty() )
+					{
+						// Make sure we include the tip of the history whether or not
+						// there is an edit there. Among other things this allows us to
+						// show where a value is loaded from a SceneReader.
+						m_historyVector.push_back( current );
+					}
 				}
 
 				if( current->predecessors.size() > 1 )
@@ -808,13 +820,6 @@ struct Inspector::HistoryPath::HistoryProvider
 				successor = current;
 				successorValue = currentValue;
 				current = current->predecessors.size() ? current->predecessors[0].get() : nullptr;
-				if( !current && !endsWith( m_historyVector, successor ) )
-				{
-					// Make sure we include the tip of the history whether or not
-					// there is an edit there. Among other things this allows us to
-					// show where a value is loaded from a SceneReader.
-					m_historyVector.push_back( successor );
-				}
 			}
 
 			std::reverse( m_historyVector.begin(), m_historyVector.end() );
@@ -930,7 +935,7 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 
 		if( name == g_nodePropertyName )
 		{
-			return MetadataAlgo::firstViewableAncestor( h->scene->node() );
+			return MetadataAlgo::firstViewableNode( h->scene->node() );
 		}
 
 		Context::EditableScope scope( h->context.get() );

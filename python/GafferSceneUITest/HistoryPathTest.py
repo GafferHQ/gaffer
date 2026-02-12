@@ -663,5 +663,192 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( children[1].contextProperty( "history:context" ), Gaffer.Context )
 		self.assertEqual( children[1].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
 
+	def testHistoryConsolidatesNonViewableInternals( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["lightFilter"] = GafferScene.PathFilter()
+		s["b"]["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["b"]["tweaks1"] = GafferScene.ShaderTweaks()
+		s["b"]["tweaks1"]["filter"].setInput( s["b"]["lightFilter"]["out"] )
+		s["b"]["tweaks1"]["shader"].setValue( "light" )
+
+		exposureTweak1 = Gaffer.TweakPlug( "exposure", 2.0 )
+		exposureTweak1["mode"].setValue( Gaffer.TweakPlug.Mode.Replace )
+		s["b"]["tweaks1"]["tweaks"].addChild( exposureTweak1 )
+
+		s["b"]["tweaks2"] = GafferScene.ShaderTweaks()
+		s["b"]["tweaks2"]["filter"].setInput( s["b"]["lightFilter"]["out"] )
+		s["b"]["tweaks2"]["in"].setInput( s["b"]["tweaks1"]["out"] )
+		s["b"]["tweaks2"]["shader"].setValue( "light" )
+
+		exposureTweak2 = Gaffer.TweakPlug( "exposure", 1.0 )
+		exposureTweak2["mode"].setValue( Gaffer.TweakPlug.Mode.Add )
+		s["b"]["tweaks2"]["tweaks"].addChild( exposureTweak2 )
+
+		Gaffer.PlugAlgo.promote( s["b"]["tweaks1"]["in"] )
+		Gaffer.PlugAlgo.promote( s["b"]["tweaks2"]["out"] )
+		s["b"]["in"].setInput( s["light"]["out"] )
+
+		inspector = self.__inspector( s["b"]["out"], "exposure" )
+
+		for childrenViewable in ( True, False ) :
+
+			with self.subTest( childrenViewable = childrenViewable ) :
+
+				Gaffer.Metadata.registerValue( s["b"], "graphEditor:childrenViewable", childrenViewable )
+
+				with Gaffer.Context() as context :
+					context["scene:path"] = IECore.InternedStringVectorData( [ "light" ] )
+					historyPath = inspector.historyPath()
+
+				c = historyPath.children()
+
+				self.assertEqual( len( c ), 3 if childrenViewable else 2 )
+
+				self.assertEqual( c[0].property( "name" ), str( c[0][-1] ) )
+				self.assertEqual( c[0].property( "history:node" ), s["light"] )
+				self.assertEqual( c[0].property( "history:value" ), 0 )
+				self.assertEqual( c[0].property( "history:fallbackValue" ), None )
+				self.assertEqual( c[0].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
+				self.assertEqual( c[0].property( "history:source" ), s["light"]["parameters"]["exposure"] )
+				self.assertEqual( c[0].property( "history:editWarning" ), "" )
+
+				if childrenViewable :
+
+					self.assertEqual( c[1].property( "name" ), str( c[1][-1] ) )
+					self.assertEqual( c[1].property( "history:node" ), s["b"]["tweaks1"] )
+					self.assertEqual( c[1].property( "history:value" ), 2 )
+					self.assertEqual( c[1].property( "history:fallbackValue" ), None )
+					self.assertEqual( c[1].property( "history:operation" ), Gaffer.TweakPlug.Mode.Replace )
+					self.assertEqual( c[1].property( "history:source" ), exposureTweak1 )
+					self.assertEqual( c[1].property( "history:editWarning" ), "" )
+
+					self.assertEqual( c[2].property( "name" ), str( c[2][-1] ) )
+					self.assertEqual( c[2].property( "history:node" ), s["b"]["tweaks2"] )
+					self.assertEqual( c[2].property( "history:value" ), 3 )
+					self.assertEqual( c[2].property( "history:fallbackValue" ), None )
+					self.assertEqual( c[2].property( "history:operation" ), Gaffer.TweakPlug.Mode.Add )
+					self.assertEqual( c[2].property( "history:source" ), exposureTweak2 )
+					self.assertEqual( c[2].property( "history:editWarning" ), "" )
+
+				else :
+
+					# As both tweaks within `s["b"]` are now non-viewable, we should now only see the result
+					# of the second tweak in the history. This tweak will be attributed to `s["b"]` so as not
+					# to expose the non-viewable internals to the user.
+					self.assertEqual( c[1].property( "name" ), str( c[1][-1] ) )
+					self.assertEqual( c[1].property( "history:node" ), s["b"] )
+					self.assertEqual( c[1].property( "history:value" ), 3 )
+					self.assertEqual( c[1].property( "history:fallbackValue" ), None )
+					self.assertEqual( c[1].property( "history:operation" ), Gaffer.TweakPlug.Mode.Add )
+					self.assertEqual( c[1].property( "history:source" ), exposureTweak2 )
+					self.assertEqual( c[1].property( "history:editWarning" ), "" )
+
+	def testNonViewableInternalsWithVaryingContextVariables( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["light"]["out"] )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["lightFilter"] = GafferScene.PathFilter()
+		s["b"]["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
+
+		s["b"]["tweaks1"] = GafferScene.ShaderTweaks()
+		s["b"]["tweaks1"]["filter"].setInput( s["b"]["lightFilter"]["out"] )
+		s["b"]["tweaks1"]["shader"].setValue( "light" )
+
+		s["b"]["contextVariables1"] = Gaffer.ContextVariables()
+		s["b"]["contextVariables1"].setup( GafferScene.ScenePlug() )
+		s["b"]["contextVariables1"]["variables"].addChild( Gaffer.NameValuePlug( "test", Gaffer.StringPlug( "value", defaultValue = "hello" ), True, "member0" ) )
+		s["b"]["contextVariables1"]["in"].setInput( s["b"]["tweaks1"]["out"] )
+
+		exposureTweak1 = Gaffer.TweakPlug( "exposure", 2.0 )
+		exposureTweak1["mode"].setValue( Gaffer.TweakPlug.Mode.Replace )
+		s["b"]["tweaks1"]["tweaks"].addChild( exposureTweak1 )
+
+		s["b"]["tweaks2"] = GafferScene.ShaderTweaks()
+		s["b"]["tweaks2"]["filter"].setInput( s["b"]["lightFilter"]["out"] )
+		s["b"]["tweaks2"]["in"].setInput( s["b"]["contextVariables1"]["out"] )
+		s["b"]["tweaks2"]["shader"].setValue( "light" )
+
+		exposureTweak2 = Gaffer.TweakPlug( "exposure", 1.0 )
+		exposureTweak2["mode"].setValue( Gaffer.TweakPlug.Mode.Add )
+		s["b"]["tweaks2"]["tweaks"].addChild( exposureTweak2 )
+
+		Gaffer.PlugAlgo.promote( s["b"]["tweaks1"]["in"] )
+		Gaffer.PlugAlgo.promote( s["b"]["tweaks2"]["out"] )
+		s["b"]["in"].setInput( s["group"]["out"] )
+
+		for childrenViewable in ( True, False ) :
+
+			with self.subTest( childrenViewable = childrenViewable ) :
+
+				# Set the box children as non-viewable.
+				Gaffer.Metadata.registerValue( s["b"], "graphEditor:childrenViewable", childrenViewable )
+
+				inspector = self.__inspector( s["b"]["out"], "exposure" )
+				with Gaffer.Context() as context :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/group/light" )
+					historyPath = inspector.historyPath()
+
+				self.assertNotIn( "history:context", historyPath.propertyNames() )
+				self.assertIsNone( historyPath.property( "history:context" ), None )
+				self.assertIn( "history:contextVariables", historyPath.propertyNames() )
+				self.assertIsInstance( historyPath.property( "history:contextVariables" ), IECore.StringVectorData )
+				self.assertEqual( set( historyPath.property( "history:contextVariables" ) ), { "frame", "framesPerSecond", "scene:path", "test" } )
+				self.assertIn( "history:varyingContextVariables", historyPath.propertyNames() )
+				self.assertEqual( set( historyPath.property( "history:varyingContextVariables" ) ), { "scene:path", "test" } if childrenViewable else { "scene:path" } )
+
+				children = historyPath.children()
+				self.assertEqual( len( children ), 5 if childrenViewable else 3 )
+
+				self.assertEqual( children[0].property( "history:node" ), s["light"] )
+				self.assertIn( "history:context", children[0].propertyNames() )
+				self.assertIsInstance( children[0].contextProperty( "history:context" ), Gaffer.Context )
+				self.assertEqual( children[0].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "light" ] ) )
+				self.assertEqual( children[0].contextProperty( "history:context" )["test"], "hello" )
+
+				self.assertEqual( children[1].property( "history:node" ), s["group"] )
+				self.assertIn( "history:context", children[1].propertyNames() )
+				self.assertIsInstance( children[1].contextProperty( "history:context" ), Gaffer.Context )
+				self.assertEqual( children[1].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
+				self.assertEqual( children[1].contextProperty( "history:context" )["test"], "hello" )
+
+				if childrenViewable :
+
+					self.assertEqual( children[2].property( "history:node" ), s["b"]["tweaks1"] )
+					self.assertIn( "history:context", children[2].propertyNames() )
+					self.assertIsInstance( children[2].contextProperty( "history:context" ), Gaffer.Context )
+					self.assertEqual( children[2].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
+					self.assertEqual( children[2].contextProperty( "history:context" )["test"], "hello" )
+
+					self.assertEqual( children[3].property( "history:node" ), s["b"]["contextVariables1"] )
+					self.assertIn( "history:context", children[3].propertyNames() )
+					self.assertIsInstance( children[3].contextProperty( "history:context" ), Gaffer.Context )
+					self.assertEqual( children[3].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
+					self.assertNotIn( "test", children[3].contextProperty( "history:context" ) )
+
+					self.assertEqual( children[4].property( "history:node" ), s["b"]["tweaks2"] )
+					self.assertIn( "history:context", children[4].propertyNames() )
+					self.assertIsInstance( children[4].contextProperty( "history:context" ), Gaffer.Context )
+					self.assertEqual( children[4].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
+					self.assertNotIn( "test", children[4].contextProperty( "history:context" ) )
+
+				else :
+
+					self.assertEqual( children[2].property( "history:node" ), s["b"] )
+					self.assertIn( "history:context", children[2].propertyNames() )
+					self.assertIsInstance( children[2].contextProperty( "history:context" ), Gaffer.Context )
+					self.assertEqual( children[2].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
+					self.assertNotIn( "test", children[2].contextProperty( "history:context" ) )
+
 if __name__ == "__main__":
 	unittest.main()
