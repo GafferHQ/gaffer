@@ -36,7 +36,7 @@
 ##########################################################################
 
 import unittest
-import os
+import random
 import imath
 
 import IECore
@@ -303,6 +303,122 @@ class CropTest( GafferImageTest.ImageTestCase ) :
 		crop = GafferImage.Crop()
 		cs = GafferTest.CapturingSlot( crop.plugDirtiedSignal() )
 		crop["format"].setValue( GafferImage.Format( 100, 200 ) )
+		self.assertIn( crop["out"]["dataWindow"], { x[0] for x in cs } )
+
+	def testAutoArea( self ) :
+
+		# Rectangle will have a data window fitted perfectly to
+		# the rectangle it draws.
+		rectangle = GafferImage.Rectangle()
+
+		# Merging over a constant (even with zero alpha) will
+		# destroy that data window.
+		constant = GafferImage.Constant()
+		constant["color"]["a"].setValue( 0 )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( constant["out"] )
+		merge["in"][1].setInput( rectangle["out"] )
+
+		# But we can restore it using a crop with `AreaSource.Auto`.
+		crop = GafferImage.Crop()
+		crop["in"].setInput( merge["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Auto )
+		crop["affectDisplayWindow"].setValue( False )
+		rectangle["lineWidth"].setValue( 0.5 )
+
+		random.seed( 100 )
+		for i in range( 0, 10 ) :
+
+			area = imath.Box2f()
+			for p in range( 0, 2 ) :
+				area.extendBy( imath.V2f( random.uniform( 0, 1000 ), random.uniform( 0, 1000 ) ) )
+
+			with self.subTest( area = area ) :
+
+				rectangle["area"].setValue( area )
+				self.assertEqual( crop["out"].dataWindow(), rectangle["out"].dataWindow() )
+
+		rectangle["color"].setValue( imath.Color4f( 0 ) )
+		self.assertTrue( crop["out"].dataWindow().isEmpty() )
+
+	def testEmptyAutoArea( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"]["a"].setValue( 0 )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Auto )
+		crop["affectDisplayWindow"].setValue( False )
+
+		self.assertTrue( crop["out"].dataWindow().isEmpty() )
+
+	def testAutoAreaReusesTileResults( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 1 ) )
+		constant["format"].setValue(
+			GafferImage.Format( int( GafferImage.ImagePlug.tileSize() * 2.5 ), int( GafferImage.ImagePlug.tileSize() * 3.5 ) )
+		)
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Auto )
+
+		# Limit to one thread to avoid concurrent computes of the same thing.
+		with IECore.tbb_global_control(
+			IECore.tbb_global_control.parameter.max_allowed_parallelism, 1
+		) :
+			# Compute the entire image.
+			with Gaffer.PerformanceMonitor() as monitor :
+				self.assertImagesEqual( crop["out"], crop["in"] )
+
+		# All tiles of the constant are the same, so there is only one compute.
+		self.assertEqual( monitor.plugStatistics( constant["out"]["channelData"] ).computeCount, 1 )
+		# The tile auto-areas can be shared for all tiles with the same local
+		# crop window. Which gives us 4 unique results even though there are
+		# 12 tiles.
+		self.assertEqual( monitor.plugStatistics( crop["__tileAutoArea"] ).computeCount, 4 )
+
+	def testDeepAutoArea( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.imagesPath() / "representativeDeepImage.exr" )
+
+		slice = GafferImage.DeepSlice()
+		slice["in"].setInput( reader["out"] )
+		slice["nearClip"]["enabled"].setValue( True )
+		slice["nearClip"]["value"].setValue( 2.86 )
+		slice["farClip"]["enabled"].setValue( True )
+		slice["farClip"]["value"].setValue( 3.6 )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( slice["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Auto )
+		crop["affectDisplayWindow"].setValue( False )
+
+		self.assertEqual(
+			crop["out"].dataWindow(),
+			imath.Box2i(
+				imath.V2i( 14, 3 ),
+				imath.V2i( 93, 56 )
+			)
+		)
+
+	def testChannelDataOnlyAffectsDataWindowForAutoArea( self ) :
+
+		constant = GafferImage.Constant()
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+
+		cs = GafferTest.CapturingSlot( crop.plugDirtiedSignal() )
+		constant["color"]["r"].setValue( 0.1 )
+		self.assertNotIn( crop["out"]["dataWindow"], { x[0] for x in cs } )
+
+		crop["areaSource"].setValue( crop.AreaSource.Auto )
+		del cs[:]
+		constant["color"]["r"].setValue( 0.2 )
 		self.assertIn( crop["out"]["dataWindow"], { x[0] for x in cs } )
 
 if __name__ == "__main__":

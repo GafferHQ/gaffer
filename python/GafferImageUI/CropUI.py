@@ -74,17 +74,23 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			Where to source the actual area to use. If this is
-			set to DataWindow, it will use the input's Data Window,
-			if it is set to DisplayWindow, it will use the input's
-			Display Window, and if it is set to Area, it will use
-			the Area plug.
+			The source of the area to crop to.
+
+			- Area : A user-defined area specified by the `area` plug.
+			- Format : A user-defined area specified by the `format` plug.
+			- DataWindow : The data window of the input image.
+			- DisplayWindow : The display window of the input image.
+			- Auto : The minimal area that contains all the non-empty pixels
+			  of the input image. For flat images, this means pixels
+			  with a non-zero value in at least one channel, and for deep images
+			  it means pixels with at least one sample.
 			""",
 
 			"preset:Area" : GafferImage.Crop.AreaSource.Area,
 			"preset:Format" : GafferImage.Crop.AreaSource.Format,
 			"preset:DataWindow" : GafferImage.Crop.AreaSource.DataWindow,
 			"preset:DisplayWindow" : GafferImage.Crop.AreaSource.DisplayWindow,
+			"preset:Auto" : GafferImage.Crop.AreaSource.Auto,
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
