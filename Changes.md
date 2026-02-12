@@ -6,6 +6,12 @@ Improvements
 
 - GraphEditor : Improved responsiveness of select-drag, by deferring NodeEditor update until the drag ends.
 
+Fixes
+-----
+
+- Anaglyph, ArnoldProcedural, ContactSheet, FocalBlur, MetadataOverlay, PromotePointInstances : Fixed bug that allowed the internal nodes to be edited.
+- ExtensionAlgo : Exported extensions now have `childNodesAreReadOnly` metadata applied correctly.
+
 API
 ---
 
