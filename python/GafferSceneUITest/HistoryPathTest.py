@@ -805,7 +805,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 				self.assertIsInstance( historyPath.property( "history:contextVariables" ), IECore.StringVectorData )
 				self.assertEqual( set( historyPath.property( "history:contextVariables" ) ), { "frame", "framesPerSecond", "scene:path", "test" } )
 				self.assertIn( "history:varyingContextVariables", historyPath.propertyNames() )
-				self.assertEqual( historyPath.property( "history:varyingContextVariables" ), IECore.StringVectorData( [ "scene:path", "test" ] ) )
+				self.assertEqual( set( historyPath.property( "history:varyingContextVariables" ) ), { "scene:path", "test" } )
 
 				children = historyPath.children()
 				self.assertEqual( len( children ), 5 if childrenViewable else 3 )
