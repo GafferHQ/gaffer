@@ -259,8 +259,9 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		},
 
-		# Add an option to allow checkpoint recovery - this is handled by `IECoreRenderMan::Session::Session()`
-		# since it is not an official RenderMan option.
+		# Add options to allow checkpoint recovery and progress logging - these
+		# are not official RenderMan options so have special handling in
+		# IECoreRenderMan.
 
 		"option:ri:checkpoint:recover" : {
 
@@ -268,6 +269,23 @@ with IECore.IgnoredExceptions( ImportError ) :
 			"description" : "Enables recovery from a checkpoint created by a previous render.",
 			"label" : "Checkpoint Recover",
 			"layout:section" : Gaffer.Metadata.value( "option:ri:checkpoint:interval", "layout:section" ),
+			"plugValueWidget:type" : "GafferUI.BoolPlugValueWidget",
+
+		},
+
+		"option:ri:progressMode" : {
+
+			"defaultValue" : 0,
+			"description" : "Reports render progress percentage.",
+			"label" : "Report Progress",
+			# The statistics section isn't ideal for this, but of the available
+			# sections it's the one that makes most sense. It seems daft to make
+			# a new section for this one thing.
+			"layout:section" : Gaffer.Metadata.value( "option:ri:statistics:jsonFilename", "layout:section" ),
+			# In theory RenderMan accepts values of 0, 1 and 2, but the
+			# distinction (whether or not a linefeed is used) is lost by the
+			# time it is passed through our MessageHandlers. So just present as
+			# a simple boolean option.
 			"plugValueWidget:type" : "GafferUI.BoolPlugValueWidget",
 
 		},

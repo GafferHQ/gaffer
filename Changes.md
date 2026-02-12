@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - GraphEditor : Improved responsiveness of select-drag, by deferring NodeEditor update until the drag ends.
+- RenderManOptions : Added `ri:progress` option to control logging of render progress.
 
 API
 ---

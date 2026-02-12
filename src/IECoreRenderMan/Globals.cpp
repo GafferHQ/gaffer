@@ -69,9 +69,11 @@ const IECore::InternedString g_sampleFilterOption( "ri:samplefilter" );
 const IECore::InternedString g_pixelFilterNameOption( "ri:Ri:PixelFilterName" );
 const IECore::InternedString g_pixelFilterWidthOption( "ri:Ri:PixelFilterWidth" );
 const IECore::InternedString g_pixelVarianceOption( "ri:Ri:PixelVariance" );
+const IECore::InternedString g_progressModeOption( "ri:progressMode" );
 const IECore::InternedString g_xpuCPUConfigOption( "ri:xpuCpuConfig" );
 const IECore::InternedString g_xpuGPUConfigOption( "ri:xpuGpuConfig" );
 
+const RtUString g_progressModeParameter( "progressMode" );
 const RtUString g_xpuCPUConfigParameter( "xpu:cpuconfig" );
 ConstDataPtr g_xpuCPUConfigDefault = new IntData( 1 );
 // We default GPUs to off, on the assumption that most rendering will still occur
@@ -193,6 +195,11 @@ Globals::Globals( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderTy
 		m_options.SetInteger( Loader::strings().k_hider_incremental, 1 );
 		m_options.SetString( Loader::strings().k_bucket_order, RtUString( "circle" ) );
 	}
+
+	m_renderParameters.SetString(
+		RtUString( "renderMode" ),
+		renderType == IECoreScenePreview::Renderer::RenderType::Interactive ? RtUString( "interactive" ) : RtUString( "batch" )
+	);
 
 	for( const auto &[name, value] : g_lpeLobeDefaults )
 	{
@@ -336,6 +343,25 @@ void Globals::option( const IECore::InternedString &name, const IECore::Object *
 	{
 		auto data = optionCast<const Data>( value, name );
 		ParamListAlgo::convertParameter( g_xpuGPUConfigParameter, data ? data : g_xpuGPUConfigDefault.get(), m_rileyParameters );
+	}
+	else if( name == g_progressModeOption )
+	{
+		if( auto *d = optionCast<const IntData>( value, name ) )
+		{
+			// This is the XPU way of requesting progress reporting - an undocumented
+			// parameter passed to the `Riley::Render()` call.
+			m_renderParameters.SetInteger( RtUString( "progressMode" ), d->readable() );
+			// But RIS wants progress specified as a "command line argument" to
+			// `PRManRenderBegin()` instead, so we smuggle the value into `Session.cpp`
+			// via `m_options` as well.
+			/// \todo Remove when RIS is no longer.
+			m_options.SetInteger( RtUString( "progressMode" ), d->readable() );
+		}
+		else
+		{
+			m_renderParameters.Remove( RtUString( "progressMode" ) );
+			m_options.Remove( RtUString( "progressMode" ) );
+		}
 	}
 	else if( boost::starts_with( name.c_str(), "ri:lpe:" ) )
 	{
@@ -532,18 +558,14 @@ void Globals::render()
 	switch( m_session->renderType )
 	{
 		case IECoreScenePreview::Renderer::Batch : {
-			RtParamList renderOptions;
-			renderOptions.SetString( RtUString( "renderMode" ), RtUString( "batch" ) );
-			m_session->riley->Render( { 1, &m_renderView }, renderOptions );
+			m_session->riley->Render( { 1, &m_renderView }, m_renderParameters );
 			break;
 		}
 		case IECoreScenePreview::Renderer::Interactive :
 			/// \todo Would it reduce latency if we reused the same thread?
 			m_interactiveRenderThread = std::thread(
 				[this] {
-					RtParamList renderOptions;
-					renderOptions.SetString( RtUString( "renderMode" ), RtUString( "interactive" ) );
-					m_session->riley->Render( { 1, &m_renderView }, renderOptions );
+					m_session->riley->Render( { 1, &m_renderView }, m_renderParameters );
 				}
 			);
 			break;
