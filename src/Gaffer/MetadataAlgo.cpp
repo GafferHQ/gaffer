@@ -71,6 +71,7 @@ const InternedString g_spreadsheetColumnLabel( "spreadsheet:columnLabel" );
 const InternedString g_defaultValue( "defaultValue" );
 const InternedString g_minValue( "minValue" );
 const InternedString g_maxValue( "maxValue" );
+const InternedString g_childrenViewable( "graphEditor:childrenViewable" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
 {
@@ -995,6 +996,39 @@ ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction di
 			}
 			return PlugAlgo::createPlugFromData( name, direction, flags, defaultValue.get() );
 	}
+}
+
+/// Viewability
+/// ===========
+
+const Gaffer::Node *firstViewableAncestor( const Gaffer::GraphComponent *graphComponent )
+{
+	while( graphComponent )
+	{
+		const Gaffer::Node *node = runTimeCast<const Gaffer::Node>( graphComponent );
+		graphComponent = graphComponent->parent();
+
+		if( !node )
+		{
+			continue;
+		}
+
+		const Gaffer::GraphComponent *parent = node->parent();
+		if( !parent || runTimeCast<const Gaffer::ScriptNode>( parent ) )
+		{
+			return node;
+		}
+
+		if( ConstBoolDataPtr d = Metadata::value<BoolData>( parent, g_childrenViewable ) )
+		{
+			if( d->readable() )
+			{
+				return node;
+			}
+		}
+	}
+
+	return nullptr;
 }
 
 } // namespace MetadataAlgo
