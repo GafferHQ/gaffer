@@ -384,6 +384,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 			"mist",
 			"denoising_normal",
 			"denoising_albedo",
+			"render_time",
 
 			"shadow_catcher",
 			"shadow_catcher_sample_count",
