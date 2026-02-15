@@ -2888,6 +2888,22 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertGreater( testPixel.g, 0 )
 		self.assertGreater( testPixel.b, 0 )
 
+		for rayMarching in ( True, False ) :
+
+			renderer.pause()
+			renderer.option( "cycles:integrator:volume_ray_marching", IECore.BoolData( rayMarching ) )
+
+			renderer.render()
+			time.sleep( 1 )
+
+			image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
+			self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+			testPixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+			self.assertGreater( testPixel.r, 0 )
+			self.assertGreater( testPixel.g, 0 )
+			self.assertGreater( testPixel.b, 0 )
+
 		del camera
 		del volume
 		del vdb
