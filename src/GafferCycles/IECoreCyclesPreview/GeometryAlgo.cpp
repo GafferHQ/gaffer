@@ -197,8 +197,8 @@ class VolumeLoader : public ccl::VDBImageLoader
 {
 	public :
 
-		VolumeLoader( openvdb::GridBase::ConstPtr grid, const string &gridName, int precision_ )
-			:	VDBImageLoader( grid, gridName )
+		VolumeLoader( openvdb::GridBase::ConstPtr grid, const string &gridName, int precision_, float clipping )
+			:	VDBImageLoader( grid, gridName, clipping )
 		{
 			precision = precision_;
 		}
@@ -389,7 +389,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 }
 
-void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, int precision )
+void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, int precision, float clipping )
 {
 	for( const std::string& gridName : vdbObject->gridNames() )
 	{
@@ -487,7 +487,7 @@ void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volu
 			volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL )
 		;
 
-		auto loader = std::make_unique<VolumeLoader>( grid, gridName, precision );
+		auto loader = std::make_unique<VolumeLoader>( grid, gridName, precision, clipping );
 		ccl::ImageParams params;
 		params.frame = 0.0f;
 

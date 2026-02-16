@@ -1210,6 +1210,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_volume.precision ? nameToVolumePrecisionEnum( m_volume.precision.value() ) : 0;
 		}
 
+		float getVolumeClipping() const
+		{
+			return m_volume.clipping ? m_volume.clipping.value() : 0.001f;
+		}
+
 	private :
 
 		void updateVisibility( const IECore::InternedString &name, int rayType, const IECore::CompoundObject *attributes )
@@ -1276,10 +1281,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 
 				auto volume = static_cast<ccl::Volume *>( object->get_geometry() );
-				if( clipping )
-				{
-					volume->set_clipping( clipping.value() );
-				}
 				if( stepSize )
 				{
 					volume->set_step_size( stepSize.value() );
@@ -1568,7 +1569,7 @@ class GeometryCache
 				// the precision is provided by the attributes, and we don't want to pass attributes
 				// to `GeometryAlgo`.
 				assert( geometry->is_volume() );
-				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision() );
+				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision(), attributes->getVolumeClipping() );
 			}
 
 			return geometry;
@@ -1587,7 +1588,7 @@ class GeometryCache
 			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ) )
 			{
 				assert( geometry->is_volume() );
-				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision() );
+				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision(), attributes->getVolumeClipping() );
 			}
 
 			return geometry;

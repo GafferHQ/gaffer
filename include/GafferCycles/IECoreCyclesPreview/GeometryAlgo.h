@@ -67,7 +67,7 @@ IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object 
 IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement );
 
 /// Converts voxel grids from a VDB object.
-IECORECYCLES_API void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *geometry, ccl::Scene *scene, int precision );
+IECORECYCLES_API void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *geometry, ccl::Scene *scene, int precision, float clipping );
 
 /// Signature of a function which can convert to `ccl:Geometry`.
 /// \todo There's really no need to pass the node name here, because it's not a unique handle that
