@@ -157,11 +157,8 @@ void GafferModule::bindValuePlug()
 
 	enum_<ValuePlug::CachePolicy>( "CachePolicy" )
 		.value( "Uncached", ValuePlug::CachePolicy::Uncached )
-		.value( "Standard", ValuePlug::CachePolicy::Standard )
 		.value( "TaskCollaboration", ValuePlug::CachePolicy::TaskCollaboration )
-		.value( "TaskIsolation", ValuePlug::CachePolicy::TaskIsolation )
 		.value( "Default", ValuePlug::CachePolicy::Default )
-		.value( "Legacy", ValuePlug::CachePolicy::Legacy )
 	;
 
 	Serialisation::registerSerialiser( Gaffer::ValuePlug::staticTypeId(), new ValuePlugSerialiser );

@@ -938,7 +938,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		class InfiniteLoop( Gaffer.ComputeNode ) :
 
-			def __init__( self, name = "InfiniteLoop", cachePolicy = Gaffer.ValuePlug.CachePolicy.Standard ) :
+			def __init__( self, name = "InfiniteLoop", cachePolicy = Gaffer.ValuePlug.CachePolicy.TaskCollaboration ) :
 
 				Gaffer.ComputeNode.__init__( self, name )
 

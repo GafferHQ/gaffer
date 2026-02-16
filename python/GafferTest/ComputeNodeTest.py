@@ -608,7 +608,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		def __init__( self, name="ThrowingNode" ) :
 
 			self.hashFail = False
-			self.cachePolicy = Gaffer.ValuePlug.CachePolicy.Standard
+			self.cachePolicy = Gaffer.ValuePlug.CachePolicy.Default
 
 			Gaffer.ComputeNode.__init__( self, name )
 

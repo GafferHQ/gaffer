@@ -121,25 +121,15 @@ class GAFFER_API ValuePlug : public Plug
 			/// Also useful to avoid double-counting of cache memory when a
 			/// compute always returns a sub-object of another cache entry.
 			Uncached,
-			/// Deprecated synonym for TaskCollaboration (for
-			/// `computeCachePolicy()`) and Default (for `hashCachePolicy()`).
-			/// Will be removed in a future release.
-			Standard,
 			/// Must be used for processes that spawn TBB tasks. Results are
 			/// stored in a global cache, and threads waiting for the same
 			/// result will collaborate to perform tasks together until the work
 			/// is complete.
 			TaskCollaboration,
-			/// Deprecated synonym for TaskCollaboration. Will be removed in a
-			/// future release.
-			TaskIsolation,
 			/// Suitable for relatively lightweight processes that could benefit
 			/// from caching, but do not spawn TBB tasks, and are unlikely to be
 			/// required from multiple threads concurrently.
-			Default,
-			/// Deprecated synonym for Default. Will be removed in a future
-			/// release.
-			Legacy = Default
+			Default
 		};
 
 		/// @name Cache management

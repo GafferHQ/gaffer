@@ -43,6 +43,7 @@ Breaking Changes
 - GafferUI : Renamed SplineWidget to RampWidget. Renamed SplinePlugValueWidget to RampPlugValueWidget. The old RampPlugValueWidget is no longer exposed, since it was only used internally.
 - Metadata : Added `target` argument to `ValueFunction` signature.
 - Widget : The `toolTip`, `parenting` and `displayTransform` constructor arguments are no longer positional.
+- ValuePlug : Removed deprecated cache policies. Use `TaskCollaboration` instead of `TaskIsolation`. Use `Default` instead of `Legacy`. Instead of `Standard`, use `TaskCollaboration` for `computeCachePolicy()` and `Default` for `hashCachePolicy()`.
 
 Build
 -----
