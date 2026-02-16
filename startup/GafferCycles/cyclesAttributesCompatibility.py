@@ -61,7 +61,6 @@ __aliases = {
 	"assetName" : "cycles:asset_name",
 	"emissionSamplingMethod" : "cycles:shader:emission_sampling_method",
 	"useTransparentShadow" : "cycles:shader:use_transparent_shadow",
-	"heterogeneousVolume" : "cycles:shader:heterogeneous_volume",
 	"volumeSamplingMethod" : "cycles:shader:volume_sampling_method",
 	"volumeInterpolationMethod" : "cycles:shader:volume_interpolation_method",
 	"volumeStepRate" : "cycles:shader:volume_step_rate",

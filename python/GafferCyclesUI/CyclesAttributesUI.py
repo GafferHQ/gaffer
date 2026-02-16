@@ -105,7 +105,6 @@ def __shaderSummary( plug ) :
 	attributes = [
 		"shader:emission_sampling_method",
 		"shader:use_transparent_shadow",
-		"shader:heterogeneous_volume",
 		"shader:volume_sampling_method",
 		"shader:volume_interpolation_method",
 		"shader:volume_step_rate",

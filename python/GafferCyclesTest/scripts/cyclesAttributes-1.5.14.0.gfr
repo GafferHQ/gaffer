@@ -74,8 +74,6 @@ __children["CyclesAttributes"]["attributes"]["emissionSamplingMethod"]["value"].
 __children["CyclesAttributes"]["attributes"]["emissionSamplingMethod"]["enabled"].setValue( True )
 __children["CyclesAttributes"]["attributes"]["useTransparentShadow"]["value"].setValue( False )
 __children["CyclesAttributes"]["attributes"]["useTransparentShadow"]["enabled"].setValue( True )
-__children["CyclesAttributes"]["attributes"]["heterogeneousVolume"]["value"].setValue( False )
-__children["CyclesAttributes"]["attributes"]["heterogeneousVolume"]["enabled"].setValue( True )
 __children["CyclesAttributes"]["attributes"]["volumeSamplingMethod"]["value"].setValue( 'equiangular' )
 __children["CyclesAttributes"]["attributes"]["volumeSamplingMethod"]["enabled"].setValue( True )
 __children["CyclesAttributes"]["attributes"]["volumeInterpolationMethod"]["value"].setValue( 'cubic' )

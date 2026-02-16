@@ -358,19 +358,6 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
-	"attribute:cycles:shader:heterogeneous_volume" : {
-
-		"defaultValue" : True,
-		"description" :
-		"""
-		Disabling this when using volume rendering, assume volume has the same density
-		everywhere (not using any textures), for faster rendering.
-		""",
-		"label" : "Heterogeneous Volume",
-		"layout:section" : "Shader",
-
-	},
-
 	"attribute:cycles:shader:volume_sampling_method" : {
 
 		"defaultValue" : "multiple_importance",

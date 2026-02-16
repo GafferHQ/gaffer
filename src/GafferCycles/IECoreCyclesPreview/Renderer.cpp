@@ -450,7 +450,6 @@ ccl::DisplacementMethod displacementMethodFromString( const string &name )
 IECore::InternedString g_shaderEmissionSamplingMethodAttributeName( "cycles:shader:emission_sampling_method" );
 IECore::ConstStringDataPtr g_shaderEmissionSamplingMethodAttributeDefault = new StringData( "auto" );
 IECore::InternedString g_shaderUseTransparentShadowAttributeName( "cycles:shader:use_transparent_shadow" );
-IECore::InternedString g_shaderHeterogeneousVolumeAttributeName( "cycles:shader:heterogeneous_volume" );
 IECore::InternedString g_shaderVolumeSamplingMethodAttributeName( "cycles:shader:volume_sampling_method" );
 IECore::ConstStringDataPtr g_shaderVolumeSamplingMethodAttributeDefault = new StringData( "multiple_importance" );
 IECore::InternedString g_shaderVolumeInterpolationMethodAttributeName( "cycles:shader:volume_interpolation_method" );
@@ -1309,7 +1308,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				emissionSamplingMethod = attribute<StringData>( g_shaderEmissionSamplingMethodAttributeName, attributes, g_shaderEmissionSamplingMethodAttributeDefault.get() );
 				useTransparentShadow = optionalAttribute<bool>( g_shaderUseTransparentShadowAttributeName, attributes );
-				heterogeneousVolume = optionalAttribute<bool>( g_shaderHeterogeneousVolumeAttributeName, attributes );
 				volumeSamplingMethod = attribute<StringData>( g_shaderVolumeSamplingMethodAttributeName, attributes, g_shaderVolumeSamplingMethodAttributeDefault.get() );
 				volumeInterpolationMethod = attribute<StringData>( g_shaderVolumeInterpolationMethodAttributeName, attributes, g_shaderVolumeInterpolationMethodAttributeDefault.get() );
 				volumeStepRate = optionalAttribute<float>( g_shaderVolumeStepRateAttributeName, attributes );
@@ -1317,7 +1315,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			ConstDataPtr emissionSamplingMethod;
 			std::optional<bool> useTransparentShadow;
-			std::optional<bool> heterogeneousVolume;
 			ConstDataPtr volumeSamplingMethod;
 			ConstDataPtr volumeInterpolationMethod;
 			std::optional<float> volumeStepRate;
@@ -1330,8 +1327,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				auto it = attributes->members().find( g_cyclesVolumeShaderAttributeName );
 				if( it != attributes->members().end() )
 				{
-					if( heterogeneousVolume && !heterogeneousVolume.value() )
-						h.append( "homogeneous_volume" );
 					volumeSamplingMethod->hash( h );
 					volumeInterpolationMethod->hash( h );
 					if( volumeStepRate && volumeStepRate.value() != 1.0f )
@@ -1343,7 +1338,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				SocketAlgo::setSocket( shader, shader->get_emission_sampling_method_socket(), emissionSamplingMethod.get() );
 				shader->set_use_transparent_shadow( useTransparentShadow ? useTransparentShadow.value() : true );
-				shader->set_heterogeneous_volume( heterogeneousVolume ? heterogeneousVolume.value() : true );
 				SocketAlgo::setSocket( shader, shader->get_volume_sampling_method_socket(), volumeSamplingMethod.get() );
 				SocketAlgo::setSocket( shader, shader->get_volume_interpolation_method_socket(), volumeInterpolationMethod.get() );
 				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.value() : 1.0f );
