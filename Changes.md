@@ -6,6 +6,7 @@ Improvements
 
 - Crop : Added `Auto` mode for `areaSource`, automatically cropping to show only non-empty pixels.
 - GraphEditor : Improved responsiveness of select-drag, by deferring NodeEditor update until the drag ends.
+- RenderManOptions : Added `ri:progress` option to control logging of render progress.
 
 API
 ---
