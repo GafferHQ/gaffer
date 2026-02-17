@@ -40,6 +40,8 @@ import sys
 import functools
 import collections
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -144,6 +146,97 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# Build the layout
 		self.__update()
+
+	# A widget for filtering child plugs of a layout by the label of the plug. If the
+	# `updateFilterDelegate` argument is given, it must be a function that accepts a
+	# function which does the filtering for `PlugFilter`.
+	#
+	# Per-widget metadata support :
+	#	- "layout:filterEnabled" controls whether or not the filter will be applied
+	#	- "layout:filter" controls the string used for filtering plugs
+	class PlugFilter( GafferUI.Widget ) :
+
+		def __init__( self, parent, updateFilterDelegate = None, **kw ) :
+
+			self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+			GafferUI.Widget.__init__( self, self.__listContainer, **kw )
+
+			self.__parentComponent = parent
+			self.__updateFilterDelegate = updateFilterDelegate
+
+			self.__filterEnabled = Gaffer.Metadata.value( self.__parentComponent, "layout:filterEnabled" ) or False
+
+			with self.__listContainer :
+				GafferUI.Spacer( imath.V2i( 0, 18 ), maximumSize = imath.V2i( 0, 18 ) )
+
+				self.__filterButton = GafferUI.Button( "", "search.png", hasFrame = False )
+				if "toolTip" in kw :
+					self.__filterButton.setToolTip( kw["toolTip"] )
+				self.__filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__filterButtonClicked ) )
+
+				filterValue = Gaffer.Metadata.value( self.__parentComponent, "layout:filter" ) or "*"
+				self.__filterText = GafferUI.TextWidget( filterValue, placeholderText = "Filter..." )
+				self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ) )
+				self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ) )
+
+			self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+
+			self.__updateWidgets()
+
+		def __parentChanged( self, widget ) :
+
+			self.__updateFilter()
+
+		def __plugFilter( self, filter, plug ) :
+
+			label = Gaffer.Metadata.value( plug, "label" ).lower()
+			return IECore.StringAlgo.matchMultiple( label, filter )
+
+		def __plugLayout( self ) :
+
+			return self.ancestor( GafferUI.PlugLayout )
+
+		def __updateFilter( self ) :
+
+			assert( self.__plugLayout() is not None )
+
+			if self.__filterEnabled :
+				filterValue = self.__filterText.getText().lower()
+				filterValue = filterValue if IECore.StringAlgo.hasWildcards( filterValue ) else ( "*" + filterValue + "*" )
+			else :
+				filterValue = "*"
+
+			filterFunction = functools.partial( Gaffer.WeakMethod( self.__plugFilter ), filterValue )
+			if self.__updateFilterDelegate is not None :
+				self.__updateFilterDelegate( filterFunction )
+			else :
+				self.__plugLayout().setFilter( filterFunction )
+
+		def __filterButtonClicked( self, button ) :
+
+			self.__filterEnabled = not self.__filterEnabled
+			Gaffer.Metadata.registerValue( self.__parentComponent, "layout:filterEnabled", self.__filterEnabled, persistent = False )
+
+			if self.__filterEnabled :
+				self.__filterText.setSelection( 0, None )  # All
+				self.__filterText.grabFocus()
+
+			self.__updateFilter()
+			self.__updateWidgets()
+
+		def __filterTextChanged( self, textWidget ) :
+
+			self.__updateFilter()
+
+		def __filterEditingFinished( self, textWidget ) :
+
+			Gaffer.Metadata.registerValue( self.__parentComponent, "layout:filter", textWidget.getText(), persistent = False )
+
+		def __updateWidgets( self ) :
+
+			self.__filterButton.setImage( "searchOn.png" if self.__filterEnabled else "search.png" )
+			self.__filterText.setVisible( self.__filterEnabled )
 
 	def context( self ) :
 

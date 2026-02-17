@@ -81,8 +81,6 @@ class _ParameterFilter( GafferUI.Widget ) :
 
 		self.__parametersPlug = plug
 
-		self.__customFilterActive = Gaffer.Metadata.value( self.__parametersPlug, "layout:filterEnabled" ) or False
-
 		visible = Gaffer.Metadata.value( self.__parametersPlug, "layout:visibleRenderers" )
 		self.__rendererVisibility = {}
 
@@ -121,14 +119,8 @@ class _ParameterFilter( GafferUI.Widget ) :
 				self.__rendererIcons[r] = GafferUI.Button( "", hasFrame = False, toolTip = "Include {} parameters".format( r ) )
 				self.__rendererIcons[r].clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__rendererIconClicked ), r ) )
 
-			self.__customFilterButton = GafferUI.Button( "", "search.png", hasFrame = False )
-			self.__customFilterButton.setToolTip( "Toggles filtering of the visible plugs by the filter text.")
-			self.__customFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__customFilterButtonClicked ) )
-
-			customFilterValue = Gaffer.Metadata.value( self.__parametersPlug, "layout:filter" ) or "*"
-			self.__customFilterText = GafferUI.TextWidget( customFilterValue, placeholderText = "Filter..." )
-			self.__customFilterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__customFilterTextChanged )  )
-			self.__customFilterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__customFilterEditingFinished ) )
+			self.__labelFilterFunction = None
+			GafferUI.PlugLayout.PlugFilter( self.__parametersPlug, Gaffer.WeakMethod( self.__updateLabelFilter ) )
 
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
@@ -137,10 +129,9 @@ class _ParameterFilter( GafferUI.Widget ) :
 		self.__updateFilter()
 		self.__updateWidgets()
 
-	def __plugFilter( self, customFilter, rendererPrefixes, plug ) :
+	def __plugFilter( self, labelFilterFunction, rendererPrefixes, plug ) :
 
-		label = Gaffer.Metadata.value( plug, "label" ).lower()
-		if not IECore.StringAlgo.matchMultiple( label, customFilter.lower() ) :
+		if labelFilterFunction is not None and not labelFilterFunction( plug ) :
 			return False
 
 		prefix = plug.getName().partition( ":" )[0] + ":"
@@ -154,40 +145,17 @@ class _ParameterFilter( GafferUI.Widget ) :
 
 		assert( self.__plugLayout is not None )
 
-		if self.__customFilterActive :
-			customFilterValue = self.__customFilterText.getText().lower()
-			customFilterValue = customFilterValue if IECore.StringAlgo.hasWildcards( customFilterValue ) else ( "*" + customFilterValue + "*" )
-		else :
-			customFilterValue = "*"
-
 		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
 		prefixes = { ( "arnold:" if k == "Arnold" else Gaffer.Metadata.value( "renderer:" + k, "optionPrefix" ) ) : v for k, v in self.__rendererVisibility.items() }
-		self.__plugLayout().setFilter( functools.partial( Gaffer.WeakMethod( self.__plugFilter ), customFilterValue, prefixes ) )
+		self.__plugLayout().setFilter( functools.partial( Gaffer.WeakMethod( self.__plugFilter ), self.__labelFilterFunction, prefixes ) )
 
-	def __customFilterButtonClicked( self, button ) :
+	def __updateLabelFilter( self, labelFilterFunction ) :
 
-		self.__customFilterActive = not self.__customFilterActive
-		Gaffer.Metadata.registerValue( self.__parametersPlug, "layout:filterEnabled", self.__customFilterActive, persistent = False )
-
-		if self.__customFilterActive :
-			self.__customFilterText.setSelection( 0, None )  # All
-			self.__customFilterText.grabFocus()
+		self.__labelFilterFunction = labelFilterFunction
 
 		self.__updateFilter()
-		self.__updateWidgets()
-
-	def __customFilterTextChanged( self, textWidget ) :
-
-		self.__updateFilter()
-
-	def __customFilterEditingFinished( self, textWidget ) :
-
-		Gaffer.Metadata.registerValue( self.__parametersPlug, "layout:filter", textWidget.getText(), persistent = False )
 
 	def __updateWidgets( self ) :
-
-		self.__customFilterButton.setImage( "searchOn.png" if self.__customFilterActive else "search.png" )
-		self.__customFilterText.setVisible( self.__customFilterActive )
 
 		for renderer, button in self.__rendererIcons.items() :
 			button.setImage( "renderer" + renderer + ( "On" if self.__rendererVisibility[renderer] else "Off" ) + "Icon.png" )

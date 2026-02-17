@@ -48,4 +48,15 @@ Gaffer.Metadata.registerNode(
 	Applies RenderMan attributes to objects in the scene.
 	""",
 
+	plugs = {
+
+		"attributes" : {
+
+			"layout:customWidget:parameterFilter:widgetType" : "GafferUI.PlugLayout.PlugFilter",
+			"layout:customWidget:parameterFilter:index" : 0,
+
+		},
+
+	}
+
 )
