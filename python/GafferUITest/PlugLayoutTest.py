@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -348,6 +350,7 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		n = Gaffer.Node()
 
 		n["i"] = Gaffer.IntPlug()
+		n["i2"] = Gaffer.IntPlug()
 		n["f"] = Gaffer.FloatPlug()
 		Gaffer.Metadata.registerValue( n, "layout:customWidget:test:widgetType", "GafferUITest.PlugLayoutTest.CustomWidget" )
 
@@ -357,20 +360,56 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		w.setVisible( True )
 
 		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
 		self.assertTrue( l.plugValueWidget( n["f"] ).visible() )
 		self.assertTrue( l.customWidget( "test" ).visible() )
 
-		def filterFunction( plug ) :
+		def intFilterFunction( plug ) :
 			self.assertIsInstance( plug, Gaffer.Plug )
 			return plug.typeId() == Gaffer.IntPlug.staticTypeId()
 
-		l.setFilter( filterFunction )
-		self.assertEqual( l.getFilter(), filterFunction )
+		l.setFilter( "a", intFilterFunction )
+		self.assertEqual( l.getFilter( "a" ), intFilterFunction )
 
 		self.waitForIdle( 1000 )
 
 		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
 		self.assertFalse( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+		def iNameFilterFunction( plug ) :
+			self.assertIsInstance( plug, Gaffer.Plug )
+			return plug.getName() == "i"
+
+		l.setFilter( "b", iNameFilterFunction )
+		self.assertEqual( l.getFilter( "b" ), iNameFilterFunction )
+
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertFalse( l.plugValueWidget( n["i2"] ).visible() )
+		self.assertFalse( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+		l.removeFilter( "b" )
+		self.assertIsNone( l.getFilter( "b" ) )
+
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
+		self.assertFalse( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+		l.removeFilter( "a" )
+		self.assertIsNone( l.getFilter( "a" ) )
+
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["f"] ).visible() )
 		self.assertTrue( l.customWidget( "test" ).visible() )
 
 

@@ -40,6 +40,8 @@ import sys
 import functools
 import collections
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -140,7 +142,7 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( parent )
 		self.__contextTracker.changedSignal( parent ).connect( Gaffer.WeakMethod( self.__contextChanged ) )
 
-		self.__filterFunction = None
+		self.__filterFunctions = {}
 
 		# Build the layout
 		self.__update()
@@ -226,23 +228,32 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return items
 
-	# Sets the function used to determine which plugs are visible. `filterFunction` is
-	# a function that accepts a `Gaffer.Plug` and returns `True` if the Plug should be
-	# visible and `False` otherwise. This filtering is in addition to metadata-defined
-	# visibility activators. Passing `None` to `filterFunction` disables filtering.
-	def setFilter( self, filterFunction ) :
+	# Adds a function identified by `name` to be used to determine plug visibility.
+	# `filterFunction` is a function that accepts a `Gaffer.Plug` and returns `True`
+	# if the Plug should be visible and `False` otherwise. A plug's visibility is
+	# determined by the intersection of all plug filter functions. This filtering is
+	# in addition to metadata-defined visibility activators.
+	def setFilter( self, name, filterFunction ) :
 
-		if self.__filterFunction == filterFunction :
+		if self.getFilter( name ) == filterFunction :
 			return
-		self.__filterFunction = filterFunction
+		self.__filterFunctions[name] = filterFunction
 		self.__activationsDirty = True
 		self.__updateLazily()
 
 
-	# Returns the function used to determine which plugs are visible.
-	def getFilter( self ) :
+	# Returns the function used to determine plug visibility for a named filter.
+	def getFilter( self, name ) :
 
-		return self.__filterFunction
+		return self.__filterFunctions.get( name, None )
+
+	# Removes a named filter function.
+	def removeFilter( self, name ) :
+
+		if name in self.__filterFunctions :
+			del self.__filterFunctions[name]
+			self.__activationsDirty = True
+			self.__updateLazily()
 
 	@GafferUI.LazyMethod()
 	def __updateLazily( self ) :
@@ -266,7 +277,15 @@ class PlugLayout( GafferUI.Widget ) :
 		# delegate to our layout class to create a concrete
 		# layout from the section definitions.
 
-		self.__layout.update( self.__rootSection )
+		self.__layout.update(
+			self.__rootSection,
+			# When filters are active, automatically reveal all visible plugs
+			# if we've whittled it down to less than 6.
+			revealChildren = len( self.__filterFunctions ) and len( [
+				widget for item, widget in self.__widgets.items()
+				if isinstance( item, Gaffer.Plug ) and widget is not None and widget.getVisible()
+			] ) < 6,
+		)
 
 	def __updateLayout( self ) :
 
@@ -365,8 +384,8 @@ class PlugLayout( GafferUI.Widget ) :
 			if widget is not None :
 				with self.context() :
 					widget.setEnabled( active( self.__itemMetadataValue( item, "activator" ) ) )
-					visibleByFilter = self.__filterFunction( item ) if ( self.__filterFunction is not None and isinstance( item, Gaffer.Plug ) ) else True
-					widget.setVisible( visibleByFilter and active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
+					visibleByFilters = all( f( item ) for f in self.__filterFunctions.values() if isinstance( item, Gaffer.Plug ) )
+					widget.setVisible( visibleByFilters and active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
 
 	def __updateSummariesWalk( self, section ) :
 
@@ -571,6 +590,109 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__summariesDirty = True
 		self.__updateLazily()
 
+# A widget for filtering child plugs of a layout by the label of the plug.
+#
+# Per-widget metadata support :
+#	<layoutName> corresponds to `PlugLayout.__layoutName` for the ancestor `PlugLayout`.
+#	Common layout names include `layout` and `toolbarLayout`.
+#	- "<layoutName>:filterEnabled" controls whether or not the filter will be applied
+#	- "<layoutName>:filter" controls the string used for filtering plugs
+class StandardFilterWidget( GafferUI.Widget ) :
+
+	def __init__( self, parent, **kw ) :
+
+		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		GafferUI.Widget.__init__( self, self.__listContainer, **kw )
+
+		self.__parentComponent = parent
+
+		self.__filterEnabled = False
+
+		with self.__listContainer :
+
+			self.__filterButton = GafferUI.Button( "", "search.png", hasFrame = False )
+			if "toolTip" in kw :
+				self.__filterButton.setToolTip( kw["toolTip"] )
+			self.__filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__filterButtonClicked ) )
+
+			self.__filterText = GafferUI.TextWidget( "", placeholderText = "Filter..." )
+			self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ) )
+			self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ) )
+
+		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+
+		self.__filterEnabled = Gaffer.Metadata.value( self.__parentComponent, "standardFilterWidget:filterEnabled" ) or False
+		self.__filterText.setText( Gaffer.Metadata.value( self.__parentComponent, "standardFilterWidget:filter" ) or "" )
+
+	def __parentChanged( self, widget ) :
+
+		if self.__plugLayout() is None :
+			p = widget.parent()
+			while p.parent() is not None :
+				p = p.parent()
+			p.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+
+		self.__updateWidgets()
+		self.__updateFilter()
+
+	def __plugFilter( self, filter, plug ) :
+
+		label = Gaffer.Metadata.value( plug, "label" ).lower()
+		return IECore.StringAlgo.matchMultiple( label, filter )
+
+	def __plugLayout( self ) :
+
+		return self.ancestor( GafferUI.PlugLayout )
+
+	def __updateFilter( self ) :
+
+		if self.__plugLayout() is None :
+			return
+
+		if self.__filterEnabled :
+			filterValue = self.__filterText.getText().lower()
+			filterValue = filterValue if IECore.StringAlgo.hasWildcards( filterValue ) else ( "*" + filterValue + "*" )
+			self.__plugLayout().setFilter( "standard", functools.partial( Gaffer.WeakMethod( self.__plugFilter ), filterValue ) )
+		else :
+			self.__plugLayout().removeFilter( "standard" )
+
+	def __filterButtonClicked( self, button ) :
+
+		self.__filterEnabled = not self.__filterEnabled
+		Gaffer.Metadata.registerValue( self.__parentComponent, "standardFilterWidget:filterEnabled", self.__filterEnabled, persistent = False )
+
+		if self.__filterEnabled :
+			self.__filterText.setSelection( 0, None )  # All
+			self.__filterText.grabFocus()
+
+		self.__updateFilter()
+		self.__updateWidgets()
+
+	def __filterTextChanged( self, textWidget ) :
+
+		self.__updateFilter()
+
+	def __filterEditingFinished( self, textWidget ) :
+
+		Gaffer.Metadata.registerValue( self.__parentComponent, "standardFilterWidget:filter", textWidget.getText(), persistent = False )
+
+	def __updateWidgets( self ) :
+
+		self.__filterButton.setImage( "searchOn.png" if self.__filterEnabled else "search.png" )
+		self.__filterText.setVisible( self.__filterEnabled )
+
+
+PlugLayout.StandardFilterWidget = StandardFilterWidget
+
+class PlugLabelSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, parent, **kw ) :
+
+		s = imath.V2i( GafferUI.PlugWidget.labelWidth() + 9, 18 )
+		GafferUI.Spacer.__init__( self, s, maximumSize = s )
+
+PlugLayout.StandardFilterWidget.PlugLabelSpacer = PlugLabelSpacer
 
 class _AccessoryRow( GafferUI.ListContainer ) :
 
@@ -642,7 +764,7 @@ class _Layout( GafferUI.Widget ) :
 
 	# Returns `True` if the layout contains any visible widgets,
 	# `False` otherwise.
-	def update( self, section ) :
+	def update( self, section, revealChildren ) :
 
 		raise NotImplementedError
 
@@ -670,7 +792,11 @@ class _TabLayout( _Layout ) :
 			Gaffer.WeakMethod( self.__currentTabChanged )
 		)
 
-	def update( self, section ) :
+	# Note : We don't need to do anything for `revealChildren` because we can't
+	# show more than one tab, and we hide empty tabs anyway. When searching, the
+	# user wants to search the current tab first and only switch tabs if it becomes
+	# empty, which is what will happen naturally.
+	def update( self, section, revealChildren ) :
 
 		self.__section = section
 		self.__widgetsColumn[:] = section.widgets
@@ -695,7 +821,7 @@ class _TabLayout( _Layout ) :
 						tab.setVerticalMode( GafferUI.ScrollMode.Never )
 
 				tab.setChild( _CollapsibleLayout( self.orientation() ) )
-			updatedTabVisibilities.append( tab.getChild().update( subsection ) )
+			updatedTabVisibilities.append( tab.getChild().update( subsection, revealChildren ) )
 			updatedTabs[name] = tab
 
 		if existingTabs.keys() != updatedTabs.keys() :
@@ -735,8 +861,9 @@ class _CollapsibleLayout( _Layout ) :
 		_Layout.__init__( self, self.__column, orientation, **kw )
 
 		self.__collapsibles = {} # Indexed by section name
+		self.__collapsibleStateChangedSignals = {}
 
-	def update( self, section ) :
+	def update( self, section, revealChildren ) :
 
 		widgets = list( section.widgets )
 
@@ -759,17 +886,18 @@ class _CollapsibleLayout( _Layout ) :
 				# way of controlling size behaviours for all widgets in the public API.
 				collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
-				if subsection.restoreState( "collapsed" ) is False :
-					collapsible.setCollapsed( False )
-
-				collapsible.stateChangedSignal().connect(
-					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection )
+				self.__collapsibleStateChangedSignals[name] = collapsible.stateChangedSignal().connect(
+					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection ),
+					scoped = True
 				)
 
 				self.__collapsibles[name] = collapsible
 
+			with Gaffer.Signals.BlockedConnection( self.__collapsibleStateChangedSignals[name] ) :
+				collapsible.setCollapsed( not revealChildren and not subsection.restoreState( "collapsed" ) is False )
+
 			collapsible.setVisible(
-				collapsible.getChild().update( subsection )
+				collapsible.getChild().update( subsection, revealChildren )
 			)
 
 			collapsible.getCornerWidget().setText(

@@ -179,6 +179,13 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Network Cache:summary" : __networkCacheSummary,
 			"layout:section:Licensing:summary" : __licensingSummary,
 
+			"layout:customWidget:labelSpacer:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget.PlugLabelSpacer",
+			"layout:customWidget:labelSpacer:index" : 0,
+
+			"layout:customWidget:optionFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:optionFilter:index" : 1,
+			"layout:customWidget:optionFilter:accessory" : True,
+
 		},
 
 	}
