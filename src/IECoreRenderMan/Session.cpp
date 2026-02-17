@@ -59,6 +59,7 @@ const RtUString g_lightColorUStr( "lightColor" );
 const RtUString g_lightColorMapUStr( "lightColorMap" );
 const RtUString g_portalNameUStr( "portalName" );
 const RtUString g_portalToDomeUStr( "portalToDome" );
+const RtUString g_progressModeUStr( "progressMode" );
 const RtUString g_pxrDomeLightUStr( "PxrDomeLight" );
 const RtUString g_pxrPortalLightUStr( "PxrPortalLight" );
 const RtUString g_tintUStr( "tint" );
@@ -167,7 +168,14 @@ Session::Session( RtUString rileyVariant, const RtParamList &rileyParameters, IE
 		args.push_back( "-recover" );
 		args.push_back( "1" );
 	}
-
+	int32_t progressMode = 0;
+	if( options.GetInteger( g_progressModeUStr, progressMode ) && progressMode )
+	{
+		// This is needed for RIS, but doesn't do anything for XPU. For XPU
+		// we have to pass `progressMode` to the `Riley::Render()` call - see
+		// `Globals.cpp`.
+		args.push_back( progressMode == 1 ? "-Progress" : "-progress" );
+	}
 	m_riCtl->PRManRenderBegin( args.size(), args.data() );
 
 	if( messageHandler )

@@ -167,6 +167,31 @@ class RendererTest( GafferTest.TestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertEqual( max( image["A"] ), 1 )
 
+	def testProgress( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		renderer.output(
+			"beauty",
+			IECoreScene.Output(
+				( self.temporaryDirectory() / "beauty.exr" ).as_posix(),
+				"exr",
+				"rgba",
+				{
+				}
+			)
+		)
+
+		renderer.option( "ri:progressMode", IECore.IntData( 2 ) )
+		renderer.render()
+
+		self.assertRegex( "".join( [ m.message for m in messageHandler.messages ] ), "R90000.*%" )
+
 	def testMissingLightShader( self ) :
 
 		messageHandler = IECore.CapturingMessageHandler()

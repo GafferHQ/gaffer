@@ -98,6 +98,7 @@ class Globals : public boost::noncopyable
 
 		RtParamList m_rileyParameters;
 		RtParamList m_options;
+		RtParamList m_renderParameters;
 		std::string m_cameraOption;
 		IECoreScene::ConstShaderPtr m_integratorToConvert;
 		IECoreScene::ConstShaderNetworkPtr m_displayFilterToConvert;
