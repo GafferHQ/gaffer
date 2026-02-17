@@ -92,9 +92,7 @@ class PathFilterWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						{
 							pythonPaths.append( *it );
 						}
-						// Beware! We are relying on `canceller` living longer than the Python object
-						// created by `ptr()`.
-						pythonPaths = extract<list>( f( pythonPaths, boost::python::ptr( canceller ) ) );
+						pythonPaths = extract<list>( f( pythonPaths, IECore::Canceller::Ptr( const_cast<IECore::Canceller *>( canceller ) ) ) );
 						paths.clear();
 						boost::python::container_utils::extend_container( paths, pythonPaths );
 						return;
