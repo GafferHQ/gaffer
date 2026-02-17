@@ -249,6 +249,8 @@ class GAFFER_API Process::Collaboration : public IECore::RefCounted
 		// Collaborations depending directly on this one.
 		Set dependents;
 
+		IECore::CancellerPtr canceller;
+
 		// Returns true if this collaboration depends on `collaboration`, either
 		// directly or indirectly via other collaborations it depends on.
 		// The caller of this function must hold `g_dependentsMutex`.
@@ -339,7 +341,7 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 			// on us. This requires traversing all dependents of
 			// `currentCollaboration` while holding `g_dependentsMutex` (so they
 			// can't be modified while we read).
-			tbb::spin_mutex::scoped_lock dependentsLock( Collaboration::g_dependentsMutex );
+			tbb::spin_mutex::scoped_lock dependentsLock( Collaboration::g_dependentsMutex ); // TODO : DON'T SPIN?
 			if( !candidate->dependsOn( currentCollaboration ) )
 			{
 				// We're safe to collaborate. Add ourself as a dependent before
@@ -367,6 +369,19 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 		//  not access them!
 
 		CollaborationTypePtr collaboration = candidate;
+
+		std::optional<IECore::Canceller::ScopedChild> cancellationScope;
+		if( auto currentCanceller = threadState.context()->canceller() )
+		{
+			if( collaboration->canceller && collaboration->canceller != currentCanceller )
+			{
+				// Collaboration has a different canceller than ours. Forward
+				// cancellation requests from our canceller, so that our clients
+				// can cancel execution too.
+				cancellationScope.emplace( const_cast<IECore::Canceller *>( currentCanceller ), collaboration->canceller );
+			}
+		}
+
 		accessor.release();
 
 		collaboration->arena.execute(
@@ -386,6 +401,7 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 	}
 
 	CollaborationTypePtr collaboration = new CollaborationType;
+	collaboration->canceller = const_cast<IECore::Canceller *>( threadState.context()->canceller() );
 	if( currentCollaboration )
 	{
 		// No need to hold `m_dependentsMutex` here because other threads can't
