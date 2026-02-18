@@ -231,6 +231,11 @@ Build
 1.6.6.1 (relative to 1.6.6.0)
 =======
 
+Improvements
+------------
+
+- File Browser : Added column displaying the size of files and sequences (#6698).
+
 Fixes
 -----
 
