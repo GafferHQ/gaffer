@@ -335,6 +335,7 @@ def setUpRenderMan() :
 	appendToPath( rmanTree / "lib" / "plugins", "RMAN_RIXPLUGINPATH" )
 	appendToPath( rmanTree / "lib" / "shaders", "OSL_SHADER_PATHS" )
 	appendToPath( pluginRoot / "plugins", "RMAN_DISPLAYS_PATH" )
+	prependToPath( rmanTree / "lib" / "usd_plugins" / "usdRiPxr" / "Resources", "PXR_PLUGINPATH_NAME" )
 
 	if sys.platform == "win32" :
 		appendToPath( rmanTree / "bin", "IECORE_DLL_DIRECTORIES" )

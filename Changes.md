@@ -7,12 +7,16 @@ Improvements
 - Crop : Added `Auto` mode for `areaSource`, automatically cropping to show only non-empty pixels.
 - GraphEditor : Improved responsiveness of select-drag, by deferring NodeEditor update until the drag ends.
 - RenderManOptions : Added `ri:progress` option to control logging of render progress.
+- USDLight :
+  - Added filters to control which plugs are visible. Renderer-based filters show or hide renderer-specific parameters. A second, general purpose text filter provides additional filtering based on the plug name.
+  - Added RenderMan-specific light parameters.
 
 API
 ---
 
 - Widget : Added `currentButtons()` static method. This returns the state of the mouse buttons during the last UI event to be processed.
 - LazyMethod : Added `deferUntilButtonRelease` option.
+- PlugLayout : Added `setFilter()` and `getFilter()` methods for setting / getting a method to use for filtering visible plugs in addition to the existing metadata-based plug visibility activators.
 
 1.6.12.0 (relative to 1.6.11.1)
 ========

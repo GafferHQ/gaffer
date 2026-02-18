@@ -343,5 +343,36 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( l.plugValueWidget( n["p1"] ) is None )
 		self.assertTrue( l.plugValueWidget( n["p2"] ) is not None )
 
+	def testFilterFunction( self ) :
+
+		n = Gaffer.Node()
+
+		n["i"] = Gaffer.IntPlug()
+		n["f"] = Gaffer.FloatPlug()
+		Gaffer.Metadata.registerValue( n, "layout:customWidget:test:widgetType", "GafferUITest.PlugLayoutTest.CustomWidget" )
+
+		with GafferUI.Window() as w :
+			l = GafferUI.PlugLayout( n )
+
+		w.setVisible( True )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+		def filterFunction( plug ) :
+			self.assertIsInstance( plug, Gaffer.Plug )
+			return plug.typeId() == Gaffer.IntPlug.staticTypeId()
+
+		l.setFilter( filterFunction )
+		self.assertEqual( l.getFilter(), filterFunction )
+
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertFalse( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+
 if __name__ == "__main__":
 	unittest.main()
