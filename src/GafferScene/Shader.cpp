@@ -509,12 +509,7 @@ class Shader::NetworkBuilder
 			}
 			else if( const Gaffer::ArrayPlug *array = IECore::runTimeCast<const Gaffer::ArrayPlug>( parameter ) )
 			{
-				int i = 0;
-				for( Plug::InputIterator it( array ); !it.done(); ++it, ++i )
-				{
-					IECore::InternedString childParameterName = parameterName.string() + "[" + std::to_string( i ) + "]";
-					addParameter( it->get(), childParameterName, shader, connections );
-				}
+				addParameter( parameter, parameterName, shader, connections );
 			}
 			else
 			{
@@ -701,6 +696,29 @@ class Shader::NetworkBuilder
 			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor4fPlugTypeId )
 			{
 				addSplineParameterComponentConnections< SplinefColor4fPlug >( (const SplinefColor4fPlug*)parameter, parameterName, connections );
+			}
+			else if ( (Gaffer::TypeId)parameter->typeId() == ArrayPlugTypeId )
+			{
+				int i = 0; 
+				for ( Plug::InputIterator it( parameter ); !it.done(); ++it, ++i )
+				{
+					IECore::InternedString inputName = parameterName.string() + "[" + std::to_string( i ) + "]";
+					addParameterComponentConnections( it->get(), inputName, connections );
+				}
+			}
+			else
+			{
+				OptionalScopedContext parameterContext;
+				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter, parameterContext );
+				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				{
+					IECore::InternedString inputName = parameterName.string();
+
+					connections.push_back( {
+						outputParameterForPlug( effectiveParameter ),
+						{ IECore::InternedString(), inputName }
+					} );
+				}
 			}
 		}
 
@@ -1152,6 +1170,10 @@ IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug ) cons
 	else if( auto valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
 	{
 		return Gaffer::PlugAlgo::getValueAsData( valuePlug );
+	}
+	else if( auto arrayPlug = IECore::runTimeCast<const Gaffer::ArrayPlug>( parameterPlug ) )
+	{
+		return Gaffer::PlugAlgo::getArrayAsVectorData( arrayPlug );
 	}
 
 	return nullptr;
