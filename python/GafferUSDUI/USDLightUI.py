@@ -120,11 +120,17 @@ class _ParameterFilter( GafferUI.Widget ) :
 				self.__rendererIcons[r].clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__rendererIconClicked ), r ) )
 
 			self.__labelFilterFunction = None
-			GafferUI.PlugLayout.PlugFilter( self.__parametersPlug, Gaffer.WeakMethod( self.__updateLabelFilter ) )
+			self.__plugFilterWidget = GafferUI.PlugLayout.PlugFilter( self.__parametersPlug, Gaffer.WeakMethod( self.__updateLabelFilter ) )
 
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
 	def __parentChanged( self, widget ) :
+
+		# We could add the `PlugLayout.PlugFilter` widget in the constructor by appending it explicitly
+		# to our container. But that would trigger the `parentChangedSignal` before we have an ancestor
+		# `PlugLayout`, preventing us from picking up the right metadata when the widget is created.
+		# Instead we pass along our own `parentChangedSignal` and it updates at the right time.
+		self.__plugFilterWidget.parentChangedSignal()( widget )
 
 		self.__updateFilter()
 		self.__updateWidgets()
@@ -143,7 +149,8 @@ class _ParameterFilter( GafferUI.Widget ) :
 
 	def __updateFilter( self ) :
 
-		assert( self.__plugLayout is not None )
+		if self.__plugLayout() is None :
+			return
 
 		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
 		prefixes = { ( "arnold:" if k == "Arnold" else Gaffer.Metadata.value( "renderer:" + k, "optionPrefix" ) ) : v for k, v in self.__rendererVisibility.items() }

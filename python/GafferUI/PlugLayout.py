@@ -152,8 +152,10 @@ class PlugLayout( GafferUI.Widget ) :
 	# function which does the filtering for `PlugFilter`.
 	#
 	# Per-widget metadata support :
-	#	- "layout:filterEnabled" controls whether or not the filter will be applied
-	#	- "layout:filter" controls the string used for filtering plugs
+	#	<layoutName> corresponds to `PlugLayout.__layoutName` for the ancestor `PlugLayout`.
+	#	Common layout names include `layout` and `toolbarLayout`.
+	#	- "<layoutName>:filterEnabled" controls whether or not the filter will be applied
+	#	- "<layoutName>:filter" controls the string used for filtering plugs
 	class PlugFilter( GafferUI.Widget ) :
 
 		def __init__( self, parent, updateFilterDelegate = None, **kw ) :
@@ -165,7 +167,7 @@ class PlugLayout( GafferUI.Widget ) :
 			self.__parentComponent = parent
 			self.__updateFilterDelegate = updateFilterDelegate
 
-			self.__filterEnabled = Gaffer.Metadata.value( self.__parentComponent, "layout:filterEnabled" ) or False
+			self.__filterEnabled = False
 
 			with self.__listContainer :
 				GafferUI.Spacer( imath.V2i( 0, 18 ), maximumSize = imath.V2i( 0, 18 ) )
@@ -175,17 +177,29 @@ class PlugLayout( GafferUI.Widget ) :
 					self.__filterButton.setToolTip( kw["toolTip"] )
 				self.__filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__filterButtonClicked ) )
 
-				filterValue = Gaffer.Metadata.value( self.__parentComponent, "layout:filter" ) or "*"
-				self.__filterText = GafferUI.TextWidget( filterValue, placeholderText = "Filter..." )
+				self.__filterText = GafferUI.TextWidget( "*", placeholderText = "Filter..." )
 				self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ) )
 				self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ) )
 
 			self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
-			self.__updateWidgets()
+		def __metadataPrefix( self ) :
+
+			if self.__plugLayout() is None :
+				return
+
+			return self.__plugLayout()._PlugLayout__layoutName + ":"
 
 		def __parentChanged( self, widget ) :
 
+			if self.__plugLayout() is None :
+				return
+
+			self.__filterEnabled = Gaffer.Metadata.value( self.__parentComponent, self.__metadataPrefix() + "filterEnabled" ) or False
+			filterValue = Gaffer.Metadata.value( self.__parentComponent, self.__metadataPrefix() + "filter" ) or "*"
+			self.__filterText.setText( filterValue )
+
+			self.__updateWidgets()
 			self.__updateFilter()
 
 		def __plugFilter( self, filter, plug ) :
@@ -199,7 +213,8 @@ class PlugLayout( GafferUI.Widget ) :
 
 		def __updateFilter( self ) :
 
-			assert( self.__plugLayout() is not None )
+			if self.__plugLayout() is None :
+				return
 
 			if self.__filterEnabled :
 				filterValue = self.__filterText.getText().lower()
@@ -216,7 +231,7 @@ class PlugLayout( GafferUI.Widget ) :
 		def __filterButtonClicked( self, button ) :
 
 			self.__filterEnabled = not self.__filterEnabled
-			Gaffer.Metadata.registerValue( self.__parentComponent, "layout:filterEnabled", self.__filterEnabled, persistent = False )
+			Gaffer.Metadata.registerValue( self.__parentComponent, self.__metadataPrefix() + "filterEnabled", self.__filterEnabled, persistent = False )
 
 			if self.__filterEnabled :
 				self.__filterText.setSelection( 0, None )  # All
@@ -231,7 +246,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		def __filterEditingFinished( self, textWidget ) :
 
-			Gaffer.Metadata.registerValue( self.__parentComponent, "layout:filter", textWidget.getText(), persistent = False )
+			Gaffer.Metadata.registerValue( self.__parentComponent, self.__metadataPrefix() + "filter", textWidget.getText(), persistent = False )
 
 		def __updateWidgets( self ) :
 
