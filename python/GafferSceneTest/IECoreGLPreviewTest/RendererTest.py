@@ -35,7 +35,9 @@
 ##########################################################################
 
 import unittest
+
 import imath
+import OpenImageIO
 
 import IECore
 import IECoreScene
@@ -139,22 +141,19 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
-		image = IECore.Reader.create( str( self.temporaryDirectory() / "testPrimVars.exr" ) ).read()
-		dimensions = image.dataWindow.size() + imath.V2i( 1 )
-		index = dimensions.x * int( dimensions.y * 0.5 )
-		self.assertEqual( image["R"][index], 0 )
-		self.assertEqual( image["G"][index], 1 )
-		self.assertEqual( image["B"][index], 0 )
-
-		index = dimensions.x * int(dimensions.y * 0.5) + int( dimensions.x * 0.5 )
-		self.assertEqual( image["R"][index], 1 )
-		self.assertEqual( image["G"][index], 0 )
-		self.assertEqual( image["B"][index], 0 )
-
-		index = dimensions.x * int(dimensions.y * 0.5) + int( dimensions.x * 1 ) - 1
-		self.assertEqual( image["R"][index], 0 )
-		self.assertEqual( image["G"][index], 0 )
-		self.assertEqual( image["B"][index], 1 )
+		image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "testPrimVars.exr" ) )
+		self.assertEqual(
+			self.__colorAtUV( image, imath.V2f( 0, 0.5 ) ),
+			imath.Color4f( 0, 1, 0, 1 )
+		)
+		self.assertEqual(
+			self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) ),
+			imath.Color4f( 1, 0, 0, 1 )
+		)
+		self.assertEqual(
+			self.__colorAtUV( image, imath.V2f( 1.0, 0.5 ) ),
+			imath.Color4f( 0, 0, 1, 1 )
+		)
 
 	def testShaderParameters( self ) :
 
@@ -244,6 +243,11 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		renderer.render()
+
+	def __colorAtUV( self, image, uv ) :
+
+		pixel = image.getpixel( int( uv.x * (image.spec().width - 1) ), int( uv.y * (image.spec().height - 1) ) )
+		return imath.Color4f( *pixel )
 
 if __name__ == "__main__":
 	unittest.main()
