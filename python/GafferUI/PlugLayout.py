@@ -142,7 +142,7 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( parent )
 		self.__contextTracker.changedSignal( parent ).connect( Gaffer.WeakMethod( self.__contextChanged ) )
 
-		self.__filterFunction = None
+		self.__filterFunctions = {}
 
 		# Build the layout
 		self.__update()
@@ -228,23 +228,32 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return items
 
-	# Sets the function used to determine which plugs are visible. `filterFunction` is
-	# a function that accepts a `Gaffer.Plug` and returns `True` if the Plug should be
-	# visible and `False` otherwise. This filtering is in addition to metadata-defined
-	# visibility activators. Passing `None` to `filterFunction` disables filtering.
-	def setFilter( self, filterFunction ) :
+	# Adds a function identified by `name` to be used to determine plug visibility.
+	# `filterFunction` is a function that accepts a `Gaffer.Plug` and returns `True`
+	# if the Plug should be visible and `False` otherwise. A plug's visibility is
+	# determined by the intersection of all plug filter functions. This filtering is
+	# in addition to metadata-defined visibility activators.
+	def setFilter( self, name, filterFunction ) :
 
-		if self.__filterFunction == filterFunction :
+		if self.getFilter( name ) == filterFunction :
 			return
-		self.__filterFunction = filterFunction
+		self.__filterFunctions[name] = filterFunction
 		self.__activationsDirty = True
 		self.__updateLazily()
 
 
-	# Returns the function used to determine which plugs are visible.
-	def getFilter( self ) :
+	# Returns the function used to determine plug visibility for a named filter.
+	def getFilter( self, name ) :
 
-		return self.__filterFunction
+		return self.__filterFunctions.get( name, None )
+
+	# Removes a named filter function.
+	def removeFilter( self, name ) :
+
+		if name in self.__filterFunctions :
+			del self.__filterFunctions[name]
+			self.__activationsDirty = True
+			self.__updateLazily()
 
 	@GafferUI.LazyMethod()
 	def __updateLazily( self ) :
@@ -367,8 +376,8 @@ class PlugLayout( GafferUI.Widget ) :
 			if widget is not None :
 				with self.context() :
 					widget.setEnabled( active( self.__itemMetadataValue( item, "activator" ) ) )
-					visibleByFilter = self.__filterFunction( item ) if ( self.__filterFunction is not None and isinstance( item, Gaffer.Plug ) ) else True
-					widget.setVisible( visibleByFilter and active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
+					visibleByFilters = all( f( item ) for f in self.__filterFunctions.values() if isinstance( item, Gaffer.Plug ) )
+					widget.setVisible( visibleByFilters and active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
 
 	def __updateSummariesWalk( self, section ) :
 
