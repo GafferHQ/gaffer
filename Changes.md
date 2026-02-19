@@ -18,6 +18,11 @@ API
 - LazyMethod : Added `deferUntilButtonRelease` option.
 - PlugLayout : Added `setFilter()` and `getFilter()` methods for setting / getting a method to use for filtering visible plugs in addition to the existing metadata-based plug visibility activators.
 
+Fixes
+-----
+
+- RenderManShader : Fixed default visibility of LamaDielectric's `dielectricNormal` parameter, which is now visible by default (and `normal` is now hidden).
+
 1.6.12.0 (relative to 1.6.11.1)
 ========
 

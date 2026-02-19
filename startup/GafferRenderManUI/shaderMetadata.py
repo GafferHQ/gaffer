@@ -91,7 +91,7 @@ shaderMetadata = {
 		"parameters" : {
 
 			k : { "noduleLayout:visible" : True }
-			for k in [ "reflectionTint", "transmissionTint", "roughness", "normal" ]
+			for k in [ "reflectionTint", "transmissionTint", "roughness", "dielectricNormal" ]
 
 		},
 
