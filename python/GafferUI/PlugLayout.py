@@ -596,7 +596,6 @@ class StandardFilterWidget( GafferUI.Widget ) :
 		self.__filterEnabled = False
 
 		with self.__listContainer :
-			GafferUI.Spacer( imath.V2i( 0, 18 ), maximumSize = imath.V2i( 0, 18 ) )
 
 			self.__filterButton = GafferUI.Button( "", "search.png", hasFrame = False )
 			if "toolTip" in kw :
@@ -681,6 +680,15 @@ class StandardFilterWidget( GafferUI.Widget ) :
 
 
 PlugLayout.StandardFilterWidget = StandardFilterWidget
+
+class PlugLabelSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, parent, **kw ) :
+
+		s = imath.V2i( GafferUI.PlugWidget.labelWidth() + 9, 18 )
+		GafferUI.Spacer.__init__( self, s, maximumSize = s )
+
+PlugLayout.StandardFilterWidget.PlugLabelSpacer = PlugLabelSpacer
 
 class _AccessoryRow( GafferUI.ListContainer ) :
 
