@@ -38,6 +38,8 @@
 
 #include "GafferImage/ImageProcessor.h"
 
+#include "GafferImage/Sampler.h"
+
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Object.h"
@@ -52,6 +54,16 @@ namespace GafferImage
 class GAFFERIMAGE_API DiskBlur : public ImageProcessor
 {
 	public :
+
+		// This is similar to Sampler::BoundingMode, but Mirror isn't yet supported by the
+		// sampler
+		enum class BoundingMode
+		{
+			/// Returns 0 outside the data window
+			Black = Sampler::BoundingMode::Black,
+			/// Flips the source
+			Mirror = 2
+		};
 
 		explicit DiskBlur( const std::string &name=defaultName<DiskBlur>() );
 		~DiskBlur() override;
@@ -69,6 +81,9 @@ class GAFFERIMAGE_API DiskBlur : public ImageProcessor
 
 		Gaffer::IntPlug *maxRadiusPlug();
 		const Gaffer::IntPlug *maxRadiusPlug() const;
+
+		Gaffer::IntPlug *boundingModePlug();
+		const Gaffer::IntPlug *boundingModePlug() const;
 
 		Gaffer::FloatVectorDataPlug *layerBoundariesPlug();
 		const Gaffer::FloatVectorDataPlug *layerBoundariesPlug() const;
