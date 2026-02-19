@@ -52,7 +52,7 @@ Gaffer.Metadata.registerNode(
 
 		"attributes" : {
 
-			"layout:customWidget:parameterFilter:widgetType" : "GafferUI.PlugLayout.PlugFilter",
+			"layout:customWidget:parameterFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
 			"layout:customWidget:parameterFilter:index" : 0,
 
 		},

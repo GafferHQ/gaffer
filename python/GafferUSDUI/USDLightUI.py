@@ -120,7 +120,7 @@ class _ParameterFilter( GafferUI.Widget ) :
 				self.__rendererIcons[r].clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__rendererIconClicked ), r ) )
 
 			self.__labelFilterFunction = None
-			self.__plugFilterWidget = GafferUI.PlugLayout.PlugFilter( self.__parametersPlug, Gaffer.WeakMethod( self.__updateLabelFilter ) )
+			self.__plugFilterWidget = GafferUI.PlugLayout.StandardFilterWidget( self.__parametersPlug, Gaffer.WeakMethod( self.__updateLabelFilter ) )
 
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
