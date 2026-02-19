@@ -11,6 +11,12 @@ Improvements
   - Added filters to control which plugs are visible. Renderer-based filters show or hide renderer-specific parameters. A second, general purpose text filter provides additional filtering based on the plug name.
   - Added RenderMan-specific light parameters.
 
+Fixes
+-----
+
+- Anaglyph, ArnoldProcedural, ContactSheet, FocalBlur, MetadataOverlay, PromotePointInstances : Fixed bug that allowed the internal nodes to be edited.
+- ExtensionAlgo : Exported extensions now have `childNodesAreReadOnly` metadata applied correctly.
+
 API
 ---
 
