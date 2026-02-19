@@ -1571,11 +1571,11 @@ Gaffer::ValuePlug::CachePolicy MergeObjects::hashCachePolicy( const Gaffer::Valu
 {
 	if( output == outPlug()->setPlug() )
 	{
-		// Technically we do not _need_ TaskIsolation because we have not yet
+		// Technically we do not _need_ TaskCollaboration because we have not yet
 		// multithreaded `hashSet()`. But we still benefit from requesting it
 		// because it means the hash is stored in the global cache, where it is
 		// shared between all threads and is almost guaranteed not to be evicted.
-		return ValuePlug::CachePolicy::TaskIsolation;
+		return ValuePlug::CachePolicy::TaskCollaboration;
 	}
 	else if( output == treePlug() )
 	{

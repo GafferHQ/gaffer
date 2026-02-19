@@ -862,7 +862,7 @@ Gaffer::ValuePlug::CachePolicy Cryptomatte::computeCachePolicy( const Gaffer::Va
 		output == manifestPathDataPlug() )
 	{
 		// Request blocking compute to avoid concurrent threads computing the manifest redundantly.
-		return ValuePlug::CachePolicy::Standard;
+		return ValuePlug::CachePolicy::TaskCollaboration;
 	}
 
 	return ImageNode::computeCachePolicy( output );

@@ -282,7 +282,7 @@ class ValuePlug::HashProcess : public Process
 				// No value in local cache, so either compute it directly or get it via
 				// the global cache if it's expensive enough to warrant collaboration.
 				IECore::MurmurHash result;
-				if( cachePolicy == CachePolicy::Default || cachePolicy == CachePolicy::Standard )
+				if( cachePolicy == CachePolicy::Default )
 				{
 					result = HashProcess( p, plug, computeNode ).run();
 				}

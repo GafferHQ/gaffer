@@ -111,35 +111,26 @@ ValuePlug::CachePolicy defaultExecuteCachePolicy()
 	// which makes it very bad to allow parallel evaluations of the same plug, since they will
 	// all compete over the same GIL.
 
-	// In the long term, we can probably lock this to Standard, but in the short term, overriding
-	// to Legacy or TaskIsolation using an env var could provide a workaround if facilities have
-	// Gaffer nodes that do their own tbb calls without properly isolating them, which could
-	// cause hangs when using the Standard policy
+	// In the long term, we can probably lock this to TaskCollaboration, but in the short term, overriding
+	// to Default could provide a workaround if facilities have Gaffer nodes that do their own TBB calls
+	// without properly isolating them, which could cause hangs when using the TaskCollaboration policy.
 	if( const char *cp = getenv( "GAFFER_PYTHONEXPRESSION_CACHEPOLICY" ) )
 	{
-		if( !strcmp( cp, "Standard" ) )
-		{
-			return ValuePlug::CachePolicy::Standard;
-		}
-		else if( !strcmp( cp, "TaskCollaboration" ) )
+		if( !strcmp( cp, "TaskCollaboration" ) )
 		{
 			return ValuePlug::CachePolicy::TaskCollaboration;
 		}
-		else if( !strcmp( cp, "TaskIsolation" ) )
-		{
-			return ValuePlug::CachePolicy::TaskIsolation;
-		}
-		else if( !strcmp( cp, "Legacy" ) || !strcmp( cp, "Default" ) )
+		else if( !strcmp( cp, "Default" ) )
 		{
 			return ValuePlug::CachePolicy::Default;
 		}
 		else
 		{
-			IECore::msg( IECore::Msg::Warning, "Expression", "Invalid value for GAFFER_PYTHONEXPRESSION_CACHEPOLICY. Must be Standard, TaskCollaboration, TaskIsolation or Legacy." );
+			IECore::msg( IECore::Msg::Warning, "Expression", "Invalid value for GAFFER_PYTHONEXPRESSION_CACHEPOLICY. Must be TaskCollaboration or Default." );
 		}
 	}
 
-	return  ValuePlug::CachePolicy::Standard;
+	return ValuePlug::CachePolicy::TaskCollaboration;
 }
 
 
