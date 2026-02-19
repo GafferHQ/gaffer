@@ -4,7 +4,7 @@
 Features
 --------
 
-- DiskBlur : Added `boundingMode` plug with `Mirror` option.
+- DiskBlur, FocalBlur : Added `boundingMode` plug with `Mirror` option.
 
 Improvements
 ------------
