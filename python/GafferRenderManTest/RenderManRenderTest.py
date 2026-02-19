@@ -36,16 +36,16 @@
 
 import os
 import unittest
-import imath
 
-import IECore
+import imath
+import OpenImageIO
+
 import IECoreScene
 import IECoreRenderMan
 
 import Gaffer
 import GafferTest
 import GafferScene
-
 import GafferRenderMan
 import GafferSceneTest
 
@@ -95,7 +95,7 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 
 			s["render"]["task"].execute()
 
-			image = IECore.Reader.create( str( self.temporaryDirectory() / "test.exr" ) ).read()
+			image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "test.exr" ) )
 
 			upperPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.05 ) )
 			middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
@@ -134,13 +134,8 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 
 	def __colorAtUV( self, image, uv ) :
 
-		dimensions = image.dataWindow.size() + imath.V2i( 1 )
-
-		ix = int( uv.x * ( dimensions.x - 1 ) )
-		iy = int( uv.y * ( dimensions.y - 1 ) )
-		i = iy * dimensions.x + ix
-
-		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] if "A" in image.keys() else 0.0 )
+		pixel = image.getpixel( int( uv.x * (image.spec().width - 1) ), int( uv.y * (image.spec().height - 1) ) )
+		return imath.Color4f( *pixel )
 
 	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our RenderMan backend" )
 	def testInstanceIDOutput( self ) :

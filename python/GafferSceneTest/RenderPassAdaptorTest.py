@@ -37,6 +37,7 @@
 import unittest
 
 import imath
+import OpenImageIO
 
 import IECore
 import IECoreScene
@@ -145,7 +146,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 				s["render"]["task"].execute()
 
-				image = IECore.Reader.create( str( self.temporaryDirectory() / "shadow.exr" ) ).read()
+				image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "shadow.exr" ) )
 
 				upperPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.05 ) )
 				middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
@@ -253,7 +254,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 					s["render"]["task"].execute()
 
-					image = IECore.Reader.create( str( self.temporaryDirectory() / "reflection.exr" ) ).read()
+					image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "reflection.exr" ) )
 
 					upperPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.05 ) )
 					middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
@@ -350,7 +351,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 					s["render"]["task"].execute()
 
-					image = IECore.Reader.create( str( self.temporaryDirectory() / "reflectionAlpha.exr" ) ).read()
+					image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "reflectionAlpha.exr" ) )
 
 					upperPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.05 ) )
 					middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
@@ -454,7 +455,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 				s["render"]["task"].execute()
 
-				image = IECore.Reader.create( str( self.temporaryDirectory() / "lightLinking.exr" ) ).read()
+				image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "lightLinking.exr" ) )
 
 				upperPixel = self.__colorAtUV( image, imath.V2f( 0.5, 0.05 ) )
 				middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
@@ -493,11 +494,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 
 	def __colorAtUV( self, image, uv ) :
 
-		dimensions = image.dataWindow.size() + imath.V2i( 1 )
-
-		ix = int( uv.x * ( dimensions.x - 1 ) )
-		iy = int( uv.y * ( dimensions.y - 1 ) )
-		i = iy * dimensions.x + ix
+		pixel = image.getpixel( int( uv.x * (image.spec().width - 1) ), int( uv.y * (image.spec().height - 1) ) )
 
 		## \todo This workaround has been added to avoid failures in CI.
 		# Bafflingly, what seems to be happening is that after a certain
@@ -507,14 +504,21 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		# this upstream, so hopefully we can revert to the standard channel
 		# names one day.
 		if self.renderer.startswith( "RenderMan" ) :
-			return imath.Color4f(
-				image["R"][i],
-				image["G" if "G" in image.keys() else "Ci.g"][i],
-				image["B" if "B" in image.keys() else "Ci.b"][i],
-				image["A" if "A" in image.keys() else "a"][i] if "A" in image.keys() or "a" in image.keys() else 0.0
-			)
+			channelNames = [
+				( "R", "Ci.r" ),
+				( "G", "Ci.g" ),
+				( "B", "Ci.b" ),
+				( "A", "a" ),
+			]
+			result = imath.Color4f( 0 )
+			for index, names in enumerate( channelNames ) :
+				for name in names :
+					if name in image.spec().channelnames :
+						result[index] = pixel[image.spec().channelnames.index(name)]
 
-		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] if "A" in image.keys() else 0.0 )
+			return result
+		else :
+			return imath.Color4f( *pixel ) if len( pixel ) == 4 else imath.Color4f( *pixel, 0.0 )
 
 if __name__ == "__main__":
 	unittest.main()

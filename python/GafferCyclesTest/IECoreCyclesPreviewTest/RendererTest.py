@@ -40,6 +40,7 @@ import time
 import unittest
 
 import imath
+import OpenImageIO
 
 import IECore
 import IECoreScene
@@ -421,7 +422,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Check that we have a pure red image.
 
-		image = IECore.Reader.create( str( fileName ) ).read()
+		image = OpenImageIO.ImageBuf( str( fileName ) )
 
 		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
 		self.assertGreater( middlePixel.r, 0 )
@@ -1068,7 +1069,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Check we got what we expected
 
-		image = IECore.Reader.create( str( fileName ) ).read()
+		image = OpenImageIO.ImageBuf( str( fileName ) )
 
 		for uv, expectedColor in expectedPixels.items() :
 
@@ -1531,24 +1532,31 @@ class RendererTest( GafferTest.TestCase ) :
 			cyclesPlane.transform( imath.M44f().translate( imath.V3f( translateX, 0, -1 ) ) )
 
 		renderer.render()
-		image = IECore.Reader.create( str( fileName ) ).read()
 
+		image = OpenImageIO.ImageBuf( str( fileName ) )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.48, 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.52, 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ) )
 
 	def __colorAtUV( self, image, uv, channelName = "" ) :
 
-		dimensions = image.dataWindow.size() + imath.V2i( 1 )
+		if isinstance( image, OpenImageIO.ImageBuf ) :
 
-		ix = int( uv.x * ( dimensions.x - 1 ) )
-		iy = int( uv.y * ( dimensions.y - 1 ) )
-		i = iy * dimensions.x + ix
+			pixel = image.getpixel( int( uv.x * (image.spec().width - 1) ), int( uv.y * (image.spec().height - 1) ) )
+			return imath.Color4f( *pixel )
 
-		c = channelName
-		if c != "":
-			c = "%s." % channelName
+		else :
 
-		return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], image[c+"A"][i] if c+"A" in image.keys() else 0.0 )
+			dimensions = image.dataWindow.size() + imath.V2i( 1 )
+
+			ix = int( uv.x * ( dimensions.x - 1 ) )
+			iy = int( uv.y * ( dimensions.y - 1 ) )
+			i = iy * dimensions.x + ix
+
+			c = channelName
+			if c != "":
+				c = "%s." % channelName
+
+			return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], image[c+"A"][i] if c+"A" in image.keys() else 0.0 )
 
 	def __testCustomAttributeType( self, primitive, prefix, customAttribute, outputPlug, data, expectedResult, maxDifference = 0.0 ) :
 
@@ -1601,8 +1609,8 @@ class RendererTest( GafferTest.TestCase ) :
 		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
-		image = IECore.Reader.create( str( fileName ) ).read()
 
+		image = OpenImageIO.ImageBuf( str( fileName ) )
 		self.assertEqualWithAbsError( self.__colorAtUV( image, imath.V2f( 0.55 ) ), expectedResult, maxDifference )
 
 	def testCustomAttributes( self ) :
@@ -1977,10 +1985,10 @@ class RendererTest( GafferTest.TestCase ) :
 		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
-		image = IECore.Reader.create( str( fileName ) ).read()
 
 		# Check we got what we expected.
 
+		image = OpenImageIO.ImageBuf( str( fileName ) )
 		for uv, expectedResult in expectedResults :
 			self.assertEqualWithAbsError( self.__colorAtUV( image, uv ), expectedResult, maxDifference )
 
