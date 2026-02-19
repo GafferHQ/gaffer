@@ -215,6 +215,9 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Volume:summary" : __volumeSummary,
 			"layout:section:Toon:summary" : __toonSummary,
 
+			"layout:customWidget:attributeFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:attributeFilter:index" : 0,
+
 		},
 
 	}

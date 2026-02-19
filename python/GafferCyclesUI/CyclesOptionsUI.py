@@ -347,6 +347,9 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Background:summary" : __backgroundSummary,
 			"layout:section:Log:summary" : __logSummary,
 
+			"layout:customWidget:optionFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:optionFilter:index" : 0,
+
 		},
 
 	}

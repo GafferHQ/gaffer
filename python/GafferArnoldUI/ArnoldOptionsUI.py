@@ -263,6 +263,9 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Licensing:summary" : __licensingSummary,
 			"layout:section:GPU:summary" : __gpuSummary,
 
+			"layout:customWidget:optionFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:optionFilter:index" : 0,
+
 		},
 
 	}

@@ -60,8 +60,8 @@ Gaffer.Metadata.registerNode(
 
 		"options" : {
 
-			"layout:customWidget:parameterFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
-			"layout:customWidget:parameterFilter:index" : 0,
+			"layout:customWidget:optionFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:optionFilter:index" : 0,
 
 		},
 
