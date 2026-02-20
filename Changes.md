@@ -10,6 +10,7 @@ Improvements
 - USDLight :
   - Added filters to control which plugs are visible. Renderer-based filters show or hide renderer-specific parameters. A second, general purpose text filter provides additional filtering based on the plug name.
   - Added RenderMan-specific light parameters.
+- FocalBlur : Improved performance and quality of infilling. This does change the results of existing focal blur setups, so it's technically a compatibility break, but since it's a clear improvement, we're rolling it out in a minor version. Uses internal node SATBlur, which is also available now available for technical users who want to do fast variable radius blurs.
 
 Fixes
 -----

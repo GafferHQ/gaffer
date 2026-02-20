@@ -127,5 +127,6 @@ from . import ShuffleImageMetadataUI
 from . import ColorInspectorToolUI
 from . import DiskBlurUI
 from . import DataWindowQueryUI
+from . import SATBlurUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

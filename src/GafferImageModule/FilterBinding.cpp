@@ -42,6 +42,7 @@
 #include "GafferImage/Erode.h"
 #include "GafferImage/Median.h"
 #include "GafferImage/RankFilter.h"
+#include "GafferImage/SATBlur.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -58,4 +59,12 @@ void GafferImageModule::bindFilters()
 	DependencyNodeClass<Erode>();
 
 	DependencyNodeClass<DiskBlur>();
+
+	{
+		scope s = DependencyNodeClass<SATBlur>();
+		enum_<SATBlur::BoundingMode>( "BoundingMode" )
+			.value( "Black", SATBlur::BoundingMode::Black )
+			.value( "Normalize", SATBlur::BoundingMode::Normalize )
+		;
+	}
 }

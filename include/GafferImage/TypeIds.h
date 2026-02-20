@@ -123,6 +123,7 @@ enum TypeId
 	DeepSliceTypeId = 121478,
 	DiskBlurTypeId = 121479,
 	DataWindowQueryTypeId = 121480,
+	SATBlurTypeId = 121481,
 
 	LastTypeId = 121999
 };
