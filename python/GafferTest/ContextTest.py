@@ -647,14 +647,13 @@ class ContextTest( GafferTest.TestCase ) :
 	def testCancellerLifetime( self ) :
 
 		canceller = IECore.Canceller()
-		context = Gaffer.Context( Gaffer.Context(), canceller )
-		cancellerWeakRef = weakref.ref( canceller )
+		self.assertEqual( canceller.refCount(), 1 )
 
-		del canceller
-		self.assertIsNotNone( cancellerWeakRef() )
+		context = Gaffer.Context( Gaffer.Context(), canceller )
+		self.assertEqual( canceller.refCount(), 2 )
 
 		del context
-		self.assertIsNone( cancellerWeakRef() )
+		self.assertEqual( canceller.refCount(), 1 )
 
 	def testOmitCanceller( self ) :
 

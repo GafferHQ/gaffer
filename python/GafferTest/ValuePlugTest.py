@@ -964,31 +964,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		IECore.registerRunTimeTyped( InfiniteLoop )
 
-		for cachePolicy in (
-			Gaffer.ValuePlug.CachePolicy.Default,
-			# Omitting TaskCollaboration, because if our second compute joins as
-			# a worker, there is currently no way we can recall it. This is not
-			# ideal as it means the UI stalls if one UI element is waiting to
-			# cancel an operation, but its tasks have been "captured" by
-			# collaboration on a compute started by another UI element (which
-			# hasn't requested cancellation).
-			#
-			## \todo Improve this situation. Possibilities include :
-			#
-			# 1. Only collaborating on work if our canceller matches the one used
-			#    by the original caller. This would cause redundant computes in
-			#    the UI though.
-			# 2. Finding a way to join the cancellers so that cancellation on the
-			#    second one triggers cancellation on the first.
-			# 3. Finding a way for the second canceller to trigger a call to
-			#   `task_group::cancel()`.
-			# 4. Getting the two UI elements to use the same canceller in the first
-			#    place. Perhaps this is the most promising avenue? Making their
-			#    combined fates explicit in the API might not be a bad thing, and if
-			#    we combined this with #1, a third UI element would have the option
-			#    of doing its own compute with its own canceller, making it safe
-			#    from combined cancellation.
-		) :
+		for cachePolicy in Gaffer.ValuePlug.CachePolicy.names.values() :
 
 			script = Gaffer.ScriptNode()
 			script["node"] = InfiniteLoop( cachePolicy = cachePolicy )
@@ -1006,6 +982,10 @@ class ValuePlugTest( GafferTest.TestCase ) :
 			startedCondition = threading.Condition()
 
 			def getValueExpectingCancellation() :
+
+				# Get hash first so it is cached already, so cancellation
+				# applies only to compute and not hash.
+				script["node"]["out"].hash()
 
 				with startedCondition :
 					startedCondition.notify()

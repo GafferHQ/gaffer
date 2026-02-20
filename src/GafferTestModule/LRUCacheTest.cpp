@@ -220,15 +220,14 @@ struct TestLRUCacheContentionForOneItem
 			100
 		);
 
-		IECore::Canceller canceller;
-		const IECore::Canceller *cancellerOrNull = m_withCanceller ? &canceller : nullptr;
+		IECore::CancellerPtr canceller = m_withCanceller ? new IECore::Canceller : nullptr;
 
 		tbb::parallel_for(
 			tbb::blocked_range<size_t>( 0, 10000000 ),
 			[&]( const tbb::blocked_range<size_t> &r ) {
 				for( size_t i = r.begin(); i < r.end(); ++i )
 				{
-					GAFFERTEST_ASSERTEQUAL( cache.get( 1, cancellerOrNull ), 1 );
+					GAFFERTEST_ASSERTEQUAL( cache.get( 1, canceller.get() ), 1 );
 				}
 			}
 		);
@@ -505,7 +504,7 @@ struct TestLRUCacheCancellation
 	{
 		std::vector<int> calls;
 
-		IECore::Canceller canceller;
+		IECore::CancellerPtr canceller = new IECore::Canceller;
 
 		using Cache = IECorePreview::LRUCache<int, int, Policy>;
 		Cache cache(
@@ -519,8 +518,8 @@ struct TestLRUCacheCancellation
 
 		// Check normal operation
 
-		GAFFERTEST_ASSERTEQUAL( cache.get( 1, &canceller ), 1 );
-		GAFFERTEST_ASSERTEQUAL( cache.get( 2, &canceller ), 2 );
+		GAFFERTEST_ASSERTEQUAL( cache.get( 1, canceller.get() ), 1 );
+		GAFFERTEST_ASSERTEQUAL( cache.get( 2, canceller.get() ), 2 );
 
 		GAFFERTEST_ASSERTEQUAL( calls.size(), 2 );
 		GAFFERTEST_ASSERTEQUAL( calls[0], 1 );
@@ -530,13 +529,13 @@ struct TestLRUCacheCancellation
 		// exception, and will simply get the value again for subsequent
 		// lookups.
 
-		canceller.cancel();
+		canceller->cancel();
 
 		bool caughtCancel = false;
 		int val = -1;
 		try
 		{
-			val = cache.get( 3, &canceller );
+			val = cache.get( 3, canceller.get() );
 		}
 		catch( IECore::Cancelled const & )
 		{
@@ -551,9 +550,9 @@ struct TestLRUCacheCancellation
 
 		// Use a fresh canceller and check that we get called again.
 
-		IECore::Canceller canceller2;
+		IECore::CancellerPtr canceller2 = new IECore::Canceller;
 
-		val = cache.get( 3, &canceller2 );
+		val = cache.get( 3, canceller2.get() );
 
 		GAFFERTEST_ASSERTEQUAL( val, 3 );
 		GAFFERTEST_ASSERTEQUAL( calls.size(), 4 );
@@ -597,12 +596,12 @@ struct TestLRUCacheCancellationOfSecondGet
 		// This will never return unless we can cancel it via
 		// `firstCanceller`.
 
-		IECore::Canceller firstCanceller;
+		IECore::CancellerPtr firstCanceller = new IECore::Canceller;
 		tbb::task_group taskGroup;
 
 		taskGroup.run(
 			[&cache, &firstCanceller] {
-				cache.get( 1, &firstCanceller );
+				cache.get( 1, firstCanceller.get() );
 			}
 		);
 
@@ -616,18 +615,18 @@ struct TestLRUCacheCancellationOfSecondGet
 		// able to cancel this even though it would otherwise
 		// have to wait for the first call to complete.
 
-		IECore::Canceller secondCanceller;
-		secondCanceller.cancel();
+		IECore::CancellerPtr secondCanceller = new IECore::Canceller;
+		secondCanceller->cancel();
 		try
 		{
-			cache.get( 1, &secondCanceller );
+			cache.get( 1, secondCanceller.get() );
 		}
 		catch( const IECore::Cancelled & )
 		{
-			firstCanceller.cancel();
+			firstCanceller->cancel();
 		}
 
-		GAFFERTEST_ASSERT( firstCanceller.cancelled() );
+		GAFFERTEST_ASSERT( firstCanceller->cancelled() );
 
 		// Now wait for the first task and check that it
 		// was the only one to actually run the getter.

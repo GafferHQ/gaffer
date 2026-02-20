@@ -266,8 +266,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 					if( f )
 					{
 						return extract<CellData>(
-							// See note of caution about `ptr( canceller )` in PathWrapper.
-							f( PathPtr( const_cast<Path *>( &path ) ), boost::python::ptr( canceller ) )
+							f( PathPtr( const_cast<Path *>( &path ) ), CancellerPtr( const_cast<IECore::Canceller *>( canceller ) ) )
 						);
 					}
 				}
@@ -291,7 +290,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 					if( f )
 					{
 						return extract<CellData>(
-							f( boost::python::ptr( canceller ) )
+							f( CancellerPtr( const_cast<IECore::Canceller *>( canceller ) ) )
 						);
 					}
 				}
