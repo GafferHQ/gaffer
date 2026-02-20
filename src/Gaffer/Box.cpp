@@ -102,43 +102,6 @@ Box::~Box()
 {
 }
 
-bool Box::canPromotePlug( const Plug *descendantPlug ) const
-{
-	const Node *descendantNode = descendantPlug->node();
-	if( !descendantNode || descendantNode->parent<Node>() != this )
-	{
-		return false;
-	}
-
-	return PlugAlgo::canPromote( descendantPlug );
-}
-
-Plug *Box::promotePlug( Plug *descendantPlug )
-{
-	const Node *descendantNode = descendantPlug->node();
-	if( !descendantNode || descendantNode->parent<Node>() != this )
-	{
-		throw IECore::Exception(
-			fmt::format(
-				"Cannot promote plug \"{}\" as its node is not a child of \"{}\".",
-				descendantPlug->fullName(), fullName()
-			)
-		);
-	}
-
-	return PlugAlgo::promote( descendantPlug );
-}
-
-bool Box::plugIsPromoted( const Plug *descendantPlug ) const
-{
-	return PlugAlgo::isPromoted( descendantPlug );
-}
-
-void Box::unpromotePlug( Plug *promotedDescendantPlug )
-{
-	return PlugAlgo::unpromote( promotedDescendantPlug );
-}
-
 void Box::exportForReference( const std::filesystem::path &fileName ) const
 {
 	const ScriptNode *script = scriptNode();
