@@ -191,7 +191,9 @@ Gaffer.Metadata.registerNode(
 
 	{moduleName}.{name},
 
+	"childNodesAreReadOnly", True,
 {metadata}
+
 {plugMetadata}
 
 )

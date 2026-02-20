@@ -95,6 +95,8 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 			self.assertEqual( Gaffer.Metadata.value( node["out"], "description" ), "The output" )
 			self.assertEqual( Gaffer.Metadata.value( node["in"], "test" ), 1 )
 
+			self.assertTrue( Gaffer.MetadataAlgo.readOnly( node["__add"] ) )
+
 		assertExpectedMetadata( script["node"] )
 
 		# Copy/paste and test

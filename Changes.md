@@ -73,6 +73,13 @@ Improvements
 - USDLight :
   - Added filters to control which plugs are visible. Renderer-based filters show or hide renderer-specific parameters. A second, general purpose text filter provides additional filtering based on the plug name.
   - Added RenderMan-specific light parameters.
+- FocalBlur : Improved performance and quality of infilling.
+
+Fixes
+-----
+
+- Anaglyph, ArnoldProcedural, ContactSheet, FocalBlur, MetadataOverlay, PromotePointInstances : Fixed bug that allowed the internal nodes to be edited.
+- ExtensionAlgo : Exported extensions now have `childNodesAreReadOnly` metadata applied correctly.
 
 API
 ---
@@ -80,6 +87,12 @@ API
 - Widget : Added `currentButtons()` static method. This returns the state of the mouse buttons during the last UI event to be processed.
 - LazyMethod : Added `deferUntilButtonRelease` option.
 - PlugLayout : Added `setFilter()` and `getFilter()` methods for setting / getting a method to use for filtering visible plugs in addition to the existing metadata-based plug visibility activators.
+- SATBlur : Added new node for performing fast variable-radius blurs using summed area tables.
+
+Fixes
+-----
+
+- RenderManShader : Fixed default visibility of LamaDielectric's `dielectricNormal` parameter, which is now visible by default (and `normal` is now hidden).
 
 1.6.12.0 (relative to 1.6.11.1)
 ========
