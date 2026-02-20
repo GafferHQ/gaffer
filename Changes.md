@@ -26,6 +26,9 @@ API
 - LazyMethod : Added `deferUntilButtonRelease` option.
 - PlugLayout : Added `setFilter()` and `getFilter()` methods for setting / getting a method to use for filtering visible plugs in addition to the existing metadata-based plug visibility activators.
 - SATBlur : Added new node for performing fast variable-radius blurs using summed area tables.
+- PlugLayout :
+  - Added `setFilter()`, `getFilter()` and `removeFilter()` methods for filtering visible plugs in addition to the existing metadata-based plug visibility activators.
+  - Added `PlugLayout.StandardFilterWidget` which adds a child plug filter UI when added as a custom widget to a plug.
 
 Fixes
 -----
