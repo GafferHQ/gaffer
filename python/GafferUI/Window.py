@@ -40,6 +40,8 @@ import sys
 import warnings
 import imath
 
+import IECore
+
 import GafferUI
 import Gaffer
 
@@ -299,22 +301,29 @@ class Window( GafferUI.ContainerWidget ) :
 		windowRect = self._qtWidget().frameGeometry()
 		windowRect.moveTo( position )
 
-		# Determine the offset and which direction to move to stay on screen,
-		# based on this size difference and which co-ordinate changed in the
-		# intersected frame
+		if windowRect.intersects( screenRect ) :
 
-		intersection = windowRect.intersected( screenRect )
-		difference = windowRect.size() - intersection.size()
+			# Determine the offset and which direction to move to stay on screen,
+			# based on this size difference and which co-ordinate changed in the
+			# intersected frame
 
-		signX = -1 if intersection.left() == windowRect.left() else 1
-		signY = -1 if intersection.top() == windowRect.top() else 1
+			intersection = windowRect.intersected( screenRect )
+			difference = windowRect.size() - intersection.size()
 
-		offset = QtCore.QPoint(
-			signX * difference.width(),
-			signY * difference.height()
-		)
+			signX = -1 if intersection.left() == windowRect.left() else 1
+			signY = -1 if intersection.top() == windowRect.top() else 1
 
-		newPosition = position + offset
+			offset = QtCore.QPoint(
+				signX * difference.width(),
+				signY * difference.height()
+			)
+
+			newPosition = position + offset
+
+		else :
+
+			IECore.msg( IECore.Msg.Level.Warning, "Window.__constrainToScreen", "Window is outside screen's available geometry. screen: {} screenRect: {} windowRect: {}".format( screen.name(), screenRect, windowRect ) )
+			newPosition = position
 
 		# Bottom-right corrections may have moved us off to the top-left,
 		# constrain to the screen origin.
