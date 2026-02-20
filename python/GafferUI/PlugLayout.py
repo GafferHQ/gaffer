@@ -614,21 +614,10 @@ class StandardFilterWidget( GafferUI.Widget ) :
 
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
-	def __metadataPrefix( self ) :
-
-		if self.__plugLayout() is None :
-			return
-
-		return self.__plugLayout()._PlugLayout__layoutName + ":"
+		self.__filterEnabled = Gaffer.Metadata.value( self.__parentComponent, "standardFilterWidget:filterEnabled" ) or False
+		self.__filterText.setText( Gaffer.Metadata.value( self.__parentComponent, "standardFilterWidget:filter" ) or "" )
 
 	def __parentChanged( self, widget ) :
-
-		if self.__plugLayout() is None :
-			return
-
-		self.__filterEnabled = Gaffer.Metadata.value( self.__parentComponent, self.__metadataPrefix() + "filterEnabled" ) or False
-		filterValue = Gaffer.Metadata.value( self.__parentComponent, self.__metadataPrefix() + "filter" ) or ""
-		self.__filterText.setText( filterValue )
 
 		self.__updateWidgets()
 		self.__updateFilter()
@@ -657,7 +646,7 @@ class StandardFilterWidget( GafferUI.Widget ) :
 	def __filterButtonClicked( self, button ) :
 
 		self.__filterEnabled = not self.__filterEnabled
-		Gaffer.Metadata.registerValue( self.__parentComponent, self.__metadataPrefix() + "filterEnabled", self.__filterEnabled, persistent = False )
+		Gaffer.Metadata.registerValue( self.__parentComponent, "standardFilterWidget:filterEnabled", self.__filterEnabled, persistent = False )
 
 		if self.__filterEnabled :
 			self.__filterText.setSelection( 0, None )  # All
@@ -672,7 +661,7 @@ class StandardFilterWidget( GafferUI.Widget ) :
 
 	def __filterEditingFinished( self, textWidget ) :
 
-		Gaffer.Metadata.registerValue( self.__parentComponent, self.__metadataPrefix() + "filter", textWidget.getText(), persistent = False )
+		Gaffer.Metadata.registerValue( self.__parentComponent, "standardFilterWidget:filter", textWidget.getText(), persistent = False )
 
 	def __updateWidgets( self ) :
 

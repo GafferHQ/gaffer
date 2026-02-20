@@ -53,8 +53,12 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section:Basic:collapsed" : False,
 
-			"layout:customWidget:parameterFilter:widgetType" : "GafferUSDUI.USDLightUI._ParameterFilter",
-			"layout:customWidget:parameterFilter:index" : 0,
+			"layout:customWidget:rendererFilter:widgetType" : "GafferUSDUI.USDLightUI._RendererFilter",
+			"layout:customWidget:rendererFilter:index" : 0,
+
+			"layout:customWidget:standardFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:standardFilter:index" : 1,
+			"layout:customWidget:standardFilter:accessory" : True,
 
 		},
 
@@ -71,7 +75,7 @@ Gaffer.Metadata.registerNode(
 	}
 )
 
-class _ParameterFilter( GafferUI.Widget ) :
+class _RendererFilter( GafferUI.Widget ) :
 
 	def __init__( self, plug, **kw ) :
 
@@ -119,26 +123,14 @@ class _ParameterFilter( GafferUI.Widget ) :
 				self.__rendererIcons[r] = GafferUI.Button( "", hasFrame = False, toolTip = "Include {} parameters".format( r ) )
 				self.__rendererIcons[r].clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__rendererIconClicked ), r ) )
 
-			self.__labelFilterFunction = None
-			self.__plugFilterWidget = GafferUI.PlugLayout.StandardFilterWidget( self.__parametersPlug )
-
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
 	def __parentChanged( self, widget ) :
 
-		# We could add the `PlugLayout.PlugFilter` widget in the constructor by appending it explicitly
-		# to our container. But that would trigger the `parentChangedSignal` before we have an ancestor
-		# `PlugLayout`, preventing us from picking up the right metadata when the widget is created.
-		# Instead we pass along our own `parentChangedSignal` and it updates at the right time.
-		self.__plugFilterWidget.parentChangedSignal()( widget )
-
 		self.__updateFilter()
 		self.__updateWidgets()
 
-	def __plugFilter( self, labelFilterFunction, rendererPrefixes, plug ) :
-
-		if labelFilterFunction is not None and not labelFilterFunction( plug ) :
-			return False
+	def __plugFilter( self, rendererPrefixes, plug ) :
 
 		prefix = plug.getName().partition( ":" )[0] + ":"
 		return rendererPrefixes.get( prefix, True )
@@ -154,7 +146,7 @@ class _ParameterFilter( GafferUI.Widget ) :
 
 		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
 		prefixes = { ( "arnold:" if k == "Arnold" else Gaffer.Metadata.value( "renderer:" + k, "optionPrefix" ) ) : v for k, v in self.__rendererVisibility.items() }
-		self.__plugLayout().setFilter( "renderers", functools.partial( Gaffer.WeakMethod( self.__plugFilter ), self.__labelFilterFunction, prefixes ) )
+		self.__plugLayout().setFilter( "renderers", functools.partial( Gaffer.WeakMethod( self.__plugFilter ), prefixes ) )
 
 	def __updateWidgets( self ) :
 
