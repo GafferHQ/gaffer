@@ -120,7 +120,7 @@ class _ParameterFilter( GafferUI.Widget ) :
 				self.__rendererIcons[r].clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__rendererIconClicked ), r ) )
 
 			self.__labelFilterFunction = None
-			self.__plugFilterWidget = GafferUI.PlugLayout.StandardFilterWidget( self.__parametersPlug, Gaffer.WeakMethod( self.__updateLabelFilter ) )
+			self.__plugFilterWidget = GafferUI.PlugLayout.StandardFilterWidget( self.__parametersPlug )
 
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
@@ -154,13 +154,7 @@ class _ParameterFilter( GafferUI.Widget ) :
 
 		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
 		prefixes = { ( "arnold:" if k == "Arnold" else Gaffer.Metadata.value( "renderer:" + k, "optionPrefix" ) ) : v for k, v in self.__rendererVisibility.items() }
-		self.__plugLayout().setFilter( functools.partial( Gaffer.WeakMethod( self.__plugFilter ), self.__labelFilterFunction, prefixes ) )
-
-	def __updateLabelFilter( self, labelFilterFunction ) :
-
-		self.__labelFilterFunction = labelFilterFunction
-
-		self.__updateFilter()
+		self.__plugLayout().setFilter( "renderers", functools.partial( Gaffer.WeakMethod( self.__plugFilter ), self.__labelFilterFunction, prefixes ) )
 
 	def __updateWidgets( self ) :
 
