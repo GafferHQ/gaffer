@@ -11,7 +11,7 @@ Improvements
   - Added filters to control which plugs are visible. Renderer-based filters show or hide renderer-specific parameters. A second, general purpose text filter provides additional filtering based on the plug name.
   - Added RenderMan-specific light parameters.
 - FocalBlur : Improved performance and quality of infilling.
-- RenderManAttributes, RenderManOptions : Added plug filter.
+- Renderer Attributes and Options : Added plug filter widget.
 - PlugLayout : Added support for `<layoutName>:autoexpandThreshold` to control the maximum number of visible plugs that will cause sections to be automatically expanded. Defaults to 0, which disables autoexpansion.
 
 Fixes
