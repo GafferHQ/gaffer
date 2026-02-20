@@ -67,6 +67,8 @@ Gaffer.Metadata.registerNode(
 			"layout:customWidget:optionFilter:index" : 1,
 			"layout:customWidget:optionFilter:accessory" : True,
 
+			"layout:autoexpandThreshold" : 10,
+
 		},
 
 	}

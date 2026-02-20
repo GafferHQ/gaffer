@@ -12,6 +12,7 @@ Improvements
   - Added RenderMan-specific light parameters.
 - FocalBlur : Improved performance and quality of infilling.
 - RenderManAttributes, RenderManOptions : Added plug filter.
+- PlugLayout : Added support for `<layoutName>:autoexpandThreshold` to control the maximum number of visible plugs that will cause sections to be automatically expanded. Defaults to 0, which disables autoexpansion.
 
 Fixes
 -----
