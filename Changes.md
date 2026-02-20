@@ -44,6 +44,7 @@ Breaking Changes
 - Metadata : Added `target` argument to `ValueFunction` signature.
 - Widget : The `toolTip`, `parenting` and `displayTransform` constructor arguments are no longer positional.
 - ValuePlug : Removed deprecated cache policies. Use `TaskCollaboration` instead of `TaskIsolation`. Use `Default` instead of `Legacy`. Instead of `Standard`, use `TaskCollaboration` for `computeCachePolicy()` and `Default` for `hashCachePolicy()`.
+- Box : Removed deprecated plug promotion methods. Use `PlugAlgo` instead.
 
 Build
 -----

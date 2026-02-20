@@ -308,10 +308,6 @@ void GafferModule::bindSubGraph()
 	using BoxWrapper = DependencyNodeWrapper<Box>;
 
 	DependencyNodeClass<Box, BoxWrapper>()
-		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ) ) )
-		.def( "promotePlug", &Box::promotePlug, ( arg( "descendantPlug" ) ), return_value_policy<CastToIntrusivePtr>() )
-		.def( "plugIsPromoted", &Box::plugIsPromoted )
-		.def( "unpromotePlug", &Box::unpromotePlug )
 		.def( "exportForReference", &Box::exportForReference )
 		.def( "create", &Box::create )
 		.staticmethod( "create" )
