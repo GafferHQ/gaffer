@@ -215,6 +215,15 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Volume:summary" : __volumeSummary,
 			"layout:section:Toon:summary" : __toonSummary,
 
+			"layout:customWidget:labelSpacer:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget.PlugLabelSpacer",
+			"layout:customWidget:labelSpacer:index" : 0,
+
+			"layout:customWidget:attributeFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:attributeFilter:index" : 1,
+			"layout:customWidget:attributeFilter:accessory" : True,
+
+			"layout:autoexpandThreshold" : 10,
+
 		},
 
 	}

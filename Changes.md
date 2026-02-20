@@ -11,6 +11,8 @@ Improvements
   - Added filters to control which plugs are visible. Renderer-based filters show or hide renderer-specific parameters. A second, general purpose text filter provides additional filtering based on the plug name.
   - Added RenderMan-specific light parameters.
 - FocalBlur : Improved performance and quality of infilling.
+- Renderer Attributes and Options : Added plug filter widget.
+- PlugLayout : Added support for `<layoutName>:autoexpandThreshold` to control the maximum number of visible plugs that will cause sections to be automatically expanded. Defaults to 0, which disables autoexpansion.
 
 Fixes
 -----
@@ -25,6 +27,9 @@ API
 - LazyMethod : Added `deferUntilButtonRelease` option.
 - PlugLayout : Added `setFilter()` and `getFilter()` methods for setting / getting a method to use for filtering visible plugs in addition to the existing metadata-based plug visibility activators.
 - SATBlur : Added new node for performing fast variable-radius blurs using summed area tables.
+- PlugLayout :
+  - Added `setFilter()`, `getFilter()` and `removeFilter()` methods for filtering visible plugs in addition to the existing metadata-based plug visibility activators.
+  - Added `PlugLayout.StandardFilterWidget` which adds a child plug filter UI when added as a custom widget to a plug.
 
 Fixes
 -----
