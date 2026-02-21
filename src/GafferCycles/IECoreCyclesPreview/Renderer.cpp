@@ -2387,7 +2387,6 @@ IECore::CompoundDataPtr sessionParamsAsData( const ccl::SessionParams params )
 	result->writable()["device"] = new StringData( params.device.id );
 	result->writable()["headless"] = new BoolData( params.headless );
 	result->writable()["background"] = new BoolData( params.background );
-	result->writable()["experimental"] = new BoolData( params.experimental );
 	result->writable()["samples"] = new BoolData( params.samples );
 	result->writable()["threads"] = new IntData( params.threads );
 	return result;
@@ -2479,7 +2478,6 @@ IECore::InternedString g_squareSamplesOptionName( "cycles:square_samples" );
 IECore::InternedString g_logLevelOptionName( "cycles:log_level" );
 IECore::InternedString g_progressLevelOptionName( "cycles:progress_level" );
 // Session
-IECore::InternedString g_experimentalOptionName( "cycles:session:experimental" );
 IECore::InternedString g_samplesOptionName( "cycles:session:samples" );
 IECore::InternedString g_pixelSizeOptionName( "cycles:session:pixel_size" );
 IECore::InternedString g_threadsOptionName( "cycles:session:threads" );
@@ -2819,7 +2817,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			ccl::SessionParams params = defaultSessionParams( m_renderType );
 
-			params.experimental = optionValue( g_experimentalOptionName, params.experimental, modified );
 			params.samples = optionValue<int>( g_samplesOptionName, params.samples, modified );
 			params.pixel_size = optionValue<int>( g_pixelSizeOptionName, params.pixel_size, modified );
 			params.time_limit = optionValue<float>( g_timeLimitOptionName, params.time_limit, modified );
