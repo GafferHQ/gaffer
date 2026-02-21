@@ -1068,7 +1068,7 @@ Resample::Resample( const std::string &name )
 	addChild( new M33fPlug( "matrix" ) );
 	addChild( new StringPlug( "filter" ) );
 	addChild( new V2fPlug( "filterScale", Plug::In, V2f( 1 ), V2f( 0 ) ) );
-	addChild( new IntPlug( "boundingMode", Plug::In, Sampler::Black, Sampler::Black, Sampler::Clamp ) );
+	addChild( new IntPlug( "boundingMode", Plug::In, Sampler::Black, Sampler::Black, Sampler::Mirror ) );
 	addChild( new BoolPlug( "expandDataWindow" ) );
 	addChild( new IntPlug( "debug", Plug::In, Off, Off, SinglePass ) );
 	addChild( new BoolPlug( "filterDeep" ) );

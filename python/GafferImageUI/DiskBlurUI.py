@@ -97,6 +97,21 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"boundingMode" : {
+
+			"description" :
+			"""
+			The method used for handling the boundaries of the input data window. Matches the behaviour
+			of `boundingMode` on `Blur`.
+			""",
+
+			"preset:Black" : GafferImage.DiskBlur.BoundingMode.Black,
+			"preset:Mirror" : GafferImage.DiskBlur.BoundingMode.Mirror,
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+
+		},
+
 		"layerBoundaries" : {
 
 			"description" :

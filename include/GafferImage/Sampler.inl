@@ -63,9 +63,18 @@ inline float Sampler::sample( int x, int y )
 				return 0.0f;
 			}
 		}
-		else
+		else if( m_boundingMode == Clamp )
 		{
 			p = BufferAlgo::clamp( p, m_dataWindow );
+		}
+		else
+		{
+			bool unused1;
+			int unused2;
+			p = Imath::V2i(
+				mirror( p.x, m_dataWindow.min.x, m_dataWindow.max.x, unused1, unused2 ),
+				mirror( p.y, m_dataWindow.min.y, m_dataWindow.max.y, unused1, unused2 )
+			);
 		}
 	}
 
@@ -100,7 +109,7 @@ inline float Sampler::sample( float x, float y )
 		);
 	}
 	// Note that if we care about performance in the case of accessing outside the data window, we
-	// could add more special cases here. If boundingMode isn't clamped, this is trivial: check
+	// could add more special cases here. If boundingMode is Black, this is trivial: check
 	// if fully outside bound, return 0.0 without even computing xf and yf. Clamped is trickier -
 	// above or below you need just xf, to the left or right you just need yf, and in the corners
 	// you need neither
@@ -136,18 +145,25 @@ inline void Sampler::visitPixels( const Imath::Box2i &region, F &&visitor )
 			// will be treated as 0 unless we set one of the values.
 
 			int count;
+			bool backwards = false;
 			const float *valuePointer = nullptr;
 			float constantValue = 0.0f;
 
 			// If we are clamping, then we will always treat x as if it is within the nearest edge of the data
 			// window.
-			int clampedX = x;
+			int xBoundApplied = x;
 			if( m_boundingMode == Clamp )
 			{
-				clampedX = std::clamp( x, m_dataWindow.min.x, m_dataWindow.max.x - 1 );
+				xBoundApplied = std::clamp( x, m_dataWindow.min.x, m_dataWindow.max.x - 1 );
+			}
+			else if( m_boundingMode == Mirror )
+			{
+				bool unused1;
+				int unused2;
+				xBoundApplied = mirror( x, m_dataWindow.min.x, m_dataWindow.max.x, unused1, unused2 );
 			}
 
-			if( clampedX < m_dataWindow.min.x || clampedX >= m_dataWindow.max.x )
+			if( xBoundApplied < m_dataWindow.min.x || xBoundApplied >= m_dataWindow.max.x )
 			{
 				// If we're outside, and haven't been clamped, then just use the default constantValue of 0.
 				count = region.max.y - y;
@@ -155,26 +171,48 @@ inline void Sampler::visitPixels( const Imath::Box2i &region, F &&visitor )
 			else if( y < m_dataWindow.min.y )
 			{
 				// Everything before the dataWindow gets the first value in the data window, or 0 if not clamped
+				count = std::min( region.max.y, m_dataWindow.min.y ) - y;
 				if( m_boundingMode == Clamp )
 				{
 					const float *tileData;
 					int tilePixelIndex;
-					cachedData( Imath::V2i( clampedX, m_dataWindow.min.y ), tileData, tilePixelIndex );
+					cachedData( Imath::V2i( xBoundApplied, m_dataWindow.min.y ), tileData, tilePixelIndex );
 					constantValue = tileData[ tilePixelIndex ];
 				}
-				count = std::min( region.max.y, m_dataWindow.min.y ) - y;
+				else if( m_boundingMode == Mirror )
+				{
+					const float *tileData;
+					int tilePixelIndex;
+					int nextFlip;
+					int yBoundApplied = mirror( y, m_dataWindow.min.y, m_dataWindow.max.y, backwards, nextFlip );
+					cachedData( Imath::V2i( xBoundApplied, yBoundApplied ), tileData, tilePixelIndex );
+					int pixelY = tilePixelIndex >> ImagePlug::tileSizeLog2();
+					count = std::min( std::min( count, nextFlip ), ImagePlug::tileSize() - pixelY );
+					valuePointer = &tileData[ tilePixelIndex ];
+				}
 			}
 			else if( y >= m_dataWindow.max.y )
 			{
 				// Everything after the dataWindow gets the last value in the data window, or 0 if not clamped
+				count = region.max.y - y;
 				if( m_boundingMode == Clamp )
 				{
 					const float *tileData;
 					int tilePixelIndex;
-					cachedData( Imath::V2i( clampedX, m_dataWindow.max.y - 1 ), tileData, tilePixelIndex );
+					cachedData( Imath::V2i( xBoundApplied, m_dataWindow.max.y - 1 ), tileData, tilePixelIndex );
 					constantValue = tileData[ tilePixelIndex ];
 				}
-				count = region.max.y - y;
+				else if( m_boundingMode == Mirror )
+				{
+					const float *tileData;
+					int tilePixelIndex;
+					int nextFlip;
+					int yBoundApplied = mirror( y, m_dataWindow.min.y, m_dataWindow.max.y, backwards, nextFlip );
+					cachedData( Imath::V2i( xBoundApplied, yBoundApplied ), tileData, tilePixelIndex );
+					int pixelY = tilePixelIndex >> ImagePlug::tileSizeLog2();
+					count = std::min( std::min( count, nextFlip ), ImagePlug::tileSize() - pixelY );
+					valuePointer = &tileData[ tilePixelIndex ];
+				}
 			}
 			else
 			{
@@ -182,7 +220,7 @@ inline void Sampler::visitPixels( const Imath::Box2i &region, F &&visitor )
 				// set valuePointer
 				const float *tileData;
 				int tilePixelIndex;
-				cachedData( Imath::V2i( clampedX, y ), tileData, tilePixelIndex );
+				cachedData( Imath::V2i( xBoundApplied, y ), tileData, tilePixelIndex );
 				int pixelY = tilePixelIndex >> ImagePlug::tileSizeLog2();
 				count = std::min( std::min( m_dataWindow.max.y, region.max.y ) - y, ImagePlug::tileSize() - pixelY );
 				valuePointer = &tileData[ tilePixelIndex ];
@@ -190,11 +228,18 @@ inline void Sampler::visitPixels( const Imath::Box2i &region, F &&visitor )
 
 			// Now we can do the nice tight inner loop where we call visitor repeatedly with valuePointer, or
 			// constantValue
-			if( valuePointer )
+			if( valuePointer && !backwards )
 			{
 				for( int i = 0; i < count; i++ )
 				{
 					visitor( valuePointer[i << ImagePlug::tileSizeLog2()], x, y + i );
+				}
+			}
+			else if( valuePointer )
+			{
+				for( int i = 0; i < count; i++ )
+				{
+					visitor( valuePointer[-(i << ImagePlug::tileSizeLog2())], x, y + i );
 				}
 			}
 			else
@@ -219,19 +264,26 @@ inline void Sampler::visitPixels( const Imath::Box2i &region, F &&visitor )
 		// The default is that valuePointer is null, and constantValue is 0, meaning that visited pixels
 		// will be treated as 0 unless we set one of the values.
 		int count;
+		bool backwards = false;
 		const float *valuePointer = nullptr;
 		float constantValue = 0.0f;
 
 		// If we are clamping, then we will always treat y as if it is within the nearest edge of the data
 		// window ( reading a scanline below the data window yields the same result as reading a scanline
 		// of the bottom edge of the data window )
-		int clampedY = y;
+		int yBoundApplied = y;
 		if( m_boundingMode == Clamp )
 		{
-			clampedY = std::clamp( y, m_dataWindow.min.y, m_dataWindow.max.y - 1 );
+			yBoundApplied = std::clamp( y, m_dataWindow.min.y, m_dataWindow.max.y - 1 );
+		}
+		else if( m_boundingMode == Mirror )
+		{
+			bool unused1;
+			int unused2;
+			yBoundApplied = mirror( y, m_dataWindow.min.y, m_dataWindow.max.y, unused1, unused2 );
 		}
 
-		if( clampedY < m_dataWindow.min.y ||  clampedY >= m_dataWindow.max.y )
+		if( yBoundApplied < m_dataWindow.min.y || yBoundApplied >= m_dataWindow.max.y )
 		{
 			// If we're outside, and haven't been clamped, then just use the default constantValue of 0.
 			count = region.max.x - x;
@@ -239,26 +291,48 @@ inline void Sampler::visitPixels( const Imath::Box2i &region, F &&visitor )
 		else if( x < m_dataWindow.min.x )
 		{
 			// Everything left of the dataWindow gets the first value in the data window on this row, or 0 if not clamped
+			count = std::min( region.max.x, m_dataWindow.min.x ) - x;
 			if( m_boundingMode == Clamp )
 			{
 				const float *tileData;
 				int tilePixelIndex;
-				cachedData( Imath::V2i( m_dataWindow.min.x, clampedY ), tileData, tilePixelIndex );
+				cachedData( Imath::V2i( m_dataWindow.min.x, yBoundApplied ), tileData, tilePixelIndex );
 				constantValue = tileData[ tilePixelIndex ];
 			}
-			count = std::min( region.max.x, m_dataWindow.min.x ) - x;
+			else if( m_boundingMode == Mirror )
+			{
+				const float *tileData;
+				int tilePixelIndex;
+				int nextFlip;
+				int xBoundApplied = mirror( x, m_dataWindow.min.x, m_dataWindow.max.x, backwards, nextFlip );
+				cachedData( Imath::V2i( xBoundApplied, yBoundApplied ), tileData, tilePixelIndex );
+				int tileX = tilePixelIndex & ( ImagePlug::tileSize() - 1 );
+				count = std::min( std::min( count, nextFlip ), ImagePlug::tileSize() - tileX );
+				valuePointer = &tileData[ tilePixelIndex ];
+			}
 		}
 		else if( x >= m_dataWindow.max.x )
 		{
 			// Everything right of the dataWindow gets the last value in the data window on this row, or 0 if not clamped
+			count = region.max.x - x;
 			if( m_boundingMode == Clamp )
 			{
 				const float *tileData;
 				int tilePixelIndex;
-				cachedData( Imath::V2i( m_dataWindow.max.x - 1, clampedY ), tileData, tilePixelIndex );
+				cachedData( Imath::V2i( m_dataWindow.max.x - 1, yBoundApplied ), tileData, tilePixelIndex );
 				constantValue = tileData[ tilePixelIndex ];
 			}
-			count = region.max.x - x;
+			else if( m_boundingMode == Mirror )
+			{
+				const float *tileData;
+				int tilePixelIndex;
+				int nextFlip;
+				int xBoundApplied = mirror( x, m_dataWindow.min.x, m_dataWindow.max.x, backwards, nextFlip );
+				cachedData( Imath::V2i( xBoundApplied, yBoundApplied ), tileData, tilePixelIndex );
+				int tileX = tilePixelIndex & ( ImagePlug::tileSize() - 1 );
+				count = std::min( std::min( count, nextFlip ), ImagePlug::tileSize() - tileX );
+				valuePointer = &tileData[ tilePixelIndex ];
+			}
 		}
 		else
 		{
@@ -266,7 +340,7 @@ inline void Sampler::visitPixels( const Imath::Box2i &region, F &&visitor )
 			// set valuePointer
 			const float *tileData;
 			int tilePixelIndex;
-			cachedData( Imath::V2i( x, clampedY ), tileData, tilePixelIndex );
+			cachedData( Imath::V2i( x, yBoundApplied ), tileData, tilePixelIndex );
 			int tileX = tilePixelIndex & ( ImagePlug::tileSize() - 1 );
 			count = std::min( std::min( m_dataWindow.max.x, region.max.x ) - x, ImagePlug::tileSize() - tileX );
 			valuePointer = &tileData[ tilePixelIndex ];
@@ -274,11 +348,18 @@ inline void Sampler::visitPixels( const Imath::Box2i &region, F &&visitor )
 
 		// Now we can do the nice tight inner loop where we call visitor repeatedly with valuePointer, or
 		// constantValue
-		if( valuePointer )
+		if( valuePointer && !backwards )
 		{
 			for( int i = 0; i < count; i++ )
 			{
 				visitor( valuePointer[i], x + i, y );
+			}
+		}
+		else if( valuePointer )
+		{
+			for( int i = 0; i < count; i++ )
+			{
+				visitor( valuePointer[-i], x + i, y );
 			}
 		}
 		else
@@ -321,6 +402,25 @@ inline void Sampler::cachedData( Imath::V2i p, const float *& tileData, int &til
 	}
 
 	tileData = cacheTileRawPtr;
+}
+
+ 
+inline int Sampler::mirror( int p, int boxMin, int boxMax, bool &backwards, int &nextFlip )
+{
+	int size = boxMax - boxMin;
+	// Note stupid hack to get a proper modulo instead of the weird C++ one that can be negative
+	int wrapped = ( ( ( p - boxMin ) % ( 2 * size ) ) + ( 2 * size ) ) % ( 2 * size );
+	nextFlip = size - ( ( ( ( p - boxMin ) % size ) + size ) % size );
+	if( wrapped >= size )
+	{
+		backwards = true;
+		return boxMin + ( 2 * size - 1 - wrapped );
+	}
+	else
+	{
+		backwards = false;
+		return boxMin + wrapped;
+	}
 }
 
 }; // namespace GafferImage

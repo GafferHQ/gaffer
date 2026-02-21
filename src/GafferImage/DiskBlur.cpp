@@ -789,6 +789,94 @@ void loadSurroundingTiles(
 // while still being useful as an acceleration structure in images with rapidly varying radii.
 constexpr int g_chunkSize = 8;
 
+// For the given point p, dataWindow, and radius, render any disks that form reflections of where the central
+// disk passes outside the dataWindow.
+// Aside from the first 3 arguments, all arguments are just forwarded to renderDisk
+void renderMirroredDisks(
+	const V2i &p, Box2i dataWindow, float radius,
+	const float v, const float at,
+	const std::vector<uint16_t> &lss, const std::vector<float> &ln,
+	const std::vector<V2f> &aaa, const std::vector<int> &aaar,
+	std::vector<float> &ab, std::vector<double> &vab, std::vector<float> &r
+)
+{
+	int intRadius = ceilf( radius );
+
+	bool outXMax = p.x + intRadius > dataWindow.max.x - 1;
+	bool outXMin = p.x - intRadius < dataWindow.min.x;
+	bool outYMax = p.y + intRadius > dataWindow.max.y - 1;
+	bool outYMin = p.y - intRadius < dataWindow.min.y;
+
+	if( outXMax || outXMin || outYMax || outYMin )
+	{
+		if( outXMax )
+		{
+			int mirrorX = 2 * dataWindow.max.x - 1 - p.x;
+			renderDisk(
+				V2i( mirrorX, p.y ),
+				radius, v, at, lss, ln, aaa, aaar, ab, vab, r
+			);
+
+			if( outYMax )
+			{
+				renderDisk(
+					V2i( mirrorX, 2 * dataWindow.max.y - 1 - p.y ),
+					radius, v, at, lss, ln, aaa, aaar, ab, vab, r
+				);
+			}
+
+			if( outYMin )
+			{
+				renderDisk(
+					V2i( mirrorX, 2 * dataWindow.min.y - 1 - p.y ),
+					radius, v, at, lss, ln, aaa, aaar, ab, vab, r
+				);
+			}
+		}
+
+		if( outXMin )
+		{
+			int mirrorX = 2 * dataWindow.min.x - 1 - p.x;
+			renderDisk(
+				V2i( mirrorX, p.y ),
+				radius, v, at, lss, ln, aaa, aaar, ab, vab, r
+			);
+
+			if( outYMax )
+			{
+				renderDisk(
+					V2i( mirrorX, 2 * dataWindow.max.y - 1 - p.y ),
+					radius, v, at, lss, ln, aaa, aaar, ab, vab, r
+				);
+			}
+
+			if( outYMin )
+			{
+				renderDisk(
+					V2i( mirrorX, 2 * dataWindow.min.y - 1 - p.y ),
+					radius, v, at, lss, ln, aaa, aaar, ab, vab, r
+				);
+			}
+		}
+
+		if( outYMax )
+		{
+			renderDisk(
+				V2i( p.x, 2 * dataWindow.max.y - 1 - p.y ),
+				radius, v, at, lss, ln, aaa, aaar, ab, vab, r
+			);
+		}
+
+		if( outYMin )
+		{
+			renderDisk(
+				V2i( p.x, 2 * dataWindow.min.y - 1 - p.y ),
+				radius, v, at, lss, ln, aaa, aaar, ab, vab, r
+			);
+		}
+	}
+}
+
 // ----------------------------------------------------------------------------
 // renderTile() calls renderDisk() for every pixel that contributes to the tile,
 // and then combines the accumulation buffers.
@@ -810,6 +898,7 @@ void renderTile(
 	const std::vector< ConstObjectVectorPtr > &tileBounds,
 
 	int maxRadius,
+	DiskBlur::BoundingMode boundingMode,
 	const ObjectVector *scanlinesLUT,
 	bool useRefImpl,
 	float approximationThreshold,
@@ -922,6 +1011,8 @@ void renderTile(
 	const std::vector<V2f> &aaAreas = IECore::runTimeCast<IECore::V2fVectorData>( scanlinesLUT->members()[2] )->readable();
 	const std::vector<int> &aaAreaRanges = IECore::runTimeCast<IECore::IntVectorData>( scanlinesLUT->members()[3] )->readable();
 
+	const Box2i outputRelativeDataWindow( dataWindow.min - tileOrigin, dataWindow.max - tileOrigin );
+
 	// Loop over all tiles that contribute to this tile
 	V2i inTileOrigin;
 	for( inTileOrigin.y = contributingTilesBound.min.y; inTileOrigin.y < contributingTilesBound.max.y; inTileOrigin.y += ImagePlug::tileSize() )
@@ -1007,14 +1098,25 @@ void renderTile(
 
 							float pixelRadius = std::min( fabsf( signedRadius ), float( maxRadius ) );
 
+							const V2i relP = p - tileOffset;
 							// If we've gotten past all the early rejections, the disk is valid.
 							// Actually render it to the 3 buffers where we accumulate results.
 							renderDisk(
-								p - tileOffset, pixelRadius, value, approximationThreshold,
+								relP, pixelRadius, value, approximationThreshold,
 								scanlineSizesLUT, normalizationsLUT,
 								aaAreas, aaAreaRanges,
 								accumBuffer, vertAccumBuffer, result
 							);
+
+							if( boundingMode == DiskBlur::BoundingMode::Mirror )
+							{
+								renderMirroredDisks(
+									relP, outputRelativeDataWindow, pixelRadius, value, approximationThreshold,
+									scanlineSizesLUT, normalizationsLUT,
+									aaAreas, aaAreaRanges,
+									accumBuffer, vertAccumBuffer, result
+								);
+							}
 						}
 					}
 
@@ -1084,6 +1186,7 @@ DiskBlur::DiskBlur( const std::string &name )
 	addChild( new StringPlug( "radiusChannel" ) );
 	addChild( new FloatPlug( "approximationThreshold", Plug::In, 0.001f, 0.0f ) );
 	addChild( new IntPlug( "maxRadius", Plug::In, 512, 1 ) );
+	addChild( new IntPlug( "boundingMode", Plug::In, (int)DiskBlur::BoundingMode::Black ) );
 	addChild( new FloatVectorDataPlug( "layerBoundaries", Plug::In ) );
 
 	addChild( new ObjectVectorPlug( "__tileBound", Plug::Out ) );
@@ -1145,54 +1248,64 @@ const Gaffer::IntPlug *DiskBlur::maxRadiusPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::IntPlug *DiskBlur::boundingModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::IntPlug *DiskBlur::boundingModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::FloatVectorDataPlug *DiskBlur::layerBoundariesPlug()
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::FloatVectorDataPlug *DiskBlur::layerBoundariesPlug() const
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::ObjectVectorPlug *DiskBlur::tileBoundPlug()
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::ObjectVectorPlug *DiskBlur::tileBoundPlug() const
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::ObjectVectorPlug *DiskBlur::scanlinesLUTPlug()
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 6 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::ObjectVectorPlug *DiskBlur::scanlinesLUTPlug() const
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 6 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::BoolPlug *DiskBlur::useReferenceImplementationPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 7 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::BoolPlug *DiskBlur::useReferenceImplementationPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 7 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 8 );
 }
 
 Gaffer::ObjectVectorPlug *DiskBlur::layerWeightsPlug()
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 8 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 9 );
 }
 
 const Gaffer::ObjectVectorPlug *DiskBlur::layerWeightsPlug() const
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 8 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 9 );
 }
 
 void DiskBlur::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -1225,6 +1338,7 @@ void DiskBlur::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		input == inPlug()->channelNamesPlug() ||
 		input == useReferenceImplementationPlug() ||
 		input == maxRadiusPlug() ||
+		input == boundingModePlug() ||
 		input == layerBoundariesPlug() ||
 		input == tileBoundPlug()
 	)
@@ -1243,6 +1357,7 @@ void DiskBlur::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		input == inPlug()->channelNamesPlug() ||
 		input == useReferenceImplementationPlug() ||
 		input == maxRadiusPlug() ||
+		input == boundingModePlug() ||
 		input == layerBoundariesPlug() ||
 		input == layerWeightsPlug() ||
 		input == tileBoundPlug()
@@ -1633,6 +1748,7 @@ void DiskBlur::hashLayerWeights( const Gaffer::Context *context, IECore::MurmurH
 		radiusChannel = radiusChannelPlug()->getValue();
 		dataWindow = inPlug()->dataWindow();
 		maxRadius = maxRadiusPlug()->getValue();
+		boundingModePlug()->hash( h );
 	}
 
 	// Note that we're not including the scanlines plug here - it only depends on maxRadius, so we
@@ -1683,6 +1799,7 @@ IECore::ConstObjectVectorPtr DiskBlur::computeLayerWeights( const Imath::V2i &ti
 	bool useRefImpl;
 	float approximationThreshold;
 	int maxRadius;
+	BoundingMode boundingMode;
 
 	{
 		ImagePlug::GlobalScope c( context );
@@ -1706,6 +1823,7 @@ IECore::ConstObjectVectorPtr DiskBlur::computeLayerWeights( const Imath::V2i &ti
 		useRefImpl = useReferenceImplementationPlug()->getValue();
 		approximationThreshold = approximationThresholdPlug()->getValue();
 		maxRadius = maxRadiusPlug()->getValue();
+		boundingMode = (BoundingMode)boundingModePlug()->getValue();
 
 		int maxRadiusQuantized = intNextPowerOfTwo( maxRadius );
 		c.set<int>( g_quantizedMaxRadiusContextName, &maxRadiusQuantized );
@@ -1756,7 +1874,7 @@ IECore::ConstObjectVectorPtr DiskBlur::computeLayerWeights( const Imath::V2i &ti
 			layerID >= 1 ? layerBoundaries[ layerID - 1 ] : -std::numeric_limits<float>::infinity(),
 			layerID < layerBoundaries.size() ? layerBoundaries[ layerID ] : std::numeric_limits<float>::infinity(),
 			inTileBound, channelTiles, radius, radiusTiles, tileBounds,
-			maxRadius, scanlinesLUT.get(), useRefImpl, approximationThreshold, context->canceller()
+			maxRadius, boundingMode, scanlinesLUT.get(), useRefImpl, approximationThreshold, context->canceller()
 		);
 
 		std::fill( accumBuffer.begin(), accumBuffer.end(), 0.0f );
@@ -1899,6 +2017,7 @@ void DiskBlur::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 		radiusChannel = radiusChannelPlug()->getValue();
 		dataWindow = inPlug()->dataWindow();
 		maxRadius = maxRadiusPlug()->getValue();
+		boundingModePlug()->hash( h );
 	}
 
 	{
@@ -1954,6 +2073,7 @@ IECore::ConstFloatVectorDataPtr DiskBlur::computeChannelData( const std::string 
 	bool useRefImpl;
 	float approximationThreshold;
 	int maxRadius;
+	BoundingMode boundingMode;
 	ConstFloatVectorDataPtr layerBoundariesData;
 
 	{
@@ -1966,6 +2086,7 @@ IECore::ConstFloatVectorDataPtr DiskBlur::computeChannelData( const std::string 
 		approximationThreshold = approximationThresholdPlug()->getValue();
 
 		maxRadius = maxRadiusPlug()->getValue();
+		boundingMode = (BoundingMode)boundingModePlug()->getValue();
 
 		layerBoundariesData = layerBoundariesPlug()->getValue();
 
@@ -2029,7 +2150,7 @@ IECore::ConstFloatVectorDataPtr DiskBlur::computeChannelData( const std::string 
 			tileOrigin, dataWindow,
 			-std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
 			inTileBound, channelTiles, radius, radiusTiles, tileBounds,
-			maxRadius, scanlinesLUT.get(), useRefImpl, approximationThreshold, context->canceller()
+			maxRadius, boundingMode, scanlinesLUT.get(), useRefImpl, approximationThreshold, context->canceller()
 		);
 	}
 	else
@@ -2047,7 +2168,7 @@ IECore::ConstFloatVectorDataPtr DiskBlur::computeChannelData( const std::string 
 				layerID >= 1 ? layerBoundaries[ layerID - 1 ] : -std::numeric_limits<float>::infinity(),
 				layerID < layerBoundaries.size() ? layerBoundaries[ layerID ] : std::numeric_limits<float>::infinity(),
 				inTileBound, channelTiles, radius, radiusTiles, tileBounds,
-				maxRadius, scanlinesLUT.get(), useRefImpl, approximationThreshold, context->canceller()
+				maxRadius, boundingMode, scanlinesLUT.get(), useRefImpl, approximationThreshold, context->canceller()
 			);
 
 

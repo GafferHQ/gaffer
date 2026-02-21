@@ -58,7 +58,13 @@ void GafferImageModule::bindFilters()
 	DependencyNodeClass<Dilate>();
 	DependencyNodeClass<Erode>();
 
-	DependencyNodeClass<DiskBlur>();
+	{
+		scope s = DependencyNodeClass<DiskBlur>();
+		enum_<DiskBlur::BoundingMode>( "BoundingMode" )
+			.value( "Black", DiskBlur::BoundingMode::Black )
+			.value( "Mirror", DiskBlur::BoundingMode::Mirror )
+		;
+	}
 
 	{
 		scope s = DependencyNodeClass<SATBlur>();

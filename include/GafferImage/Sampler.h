@@ -73,7 +73,11 @@ class GAFFERIMAGE_API Sampler
 			Black = 0,
 			/// Returns the value of the closest pixel
 			/// inside the data window.
-			Clamp = 1
+			Clamp = 1,
+			/// Returns the value of the pixel corresponding
+			/// to this position mirrored across the data
+			/// window boundary
+			Mirror = 2,
 		};
 
 		/// Sampler Constructor
@@ -130,6 +134,8 @@ class GAFFERIMAGE_API Sampler
 		/// @param tileData Is set to the tile's channel data.
 		/// @param tilePixelIndex Is set to the index used to access the colour value of point 'p' from tileData.
 		void cachedData( Imath::V2i p, const float *& tileData, int &tilePixelIndex );
+
+		static int mirror( int p, int boxMin, int boxMax, bool &backwards, int &nextFlip );
 
 		const ImagePlug *m_plug;
 		const std::string m_channelName;
