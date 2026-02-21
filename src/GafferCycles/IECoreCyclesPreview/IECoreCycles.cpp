@@ -481,11 +481,9 @@ bool init()
 
 	ccl::path_init( cyclesRootValue );
 
-	// This is a global thing for logging
-	const char* argv[] = { "-", "v", "1" };
-	ccl::util_logging_init( argv[0] );
-	ccl::util_logging_start();
-	ccl::util_logging_verbosity_set( 0 );
+	/// \todo Register MessageHandler via `ccl::log_init( const LogFunction )`
+	ccl::log_init( nullptr );
+	ccl::log_level_set( ccl::LOG_LEVEL_ERROR );
 
 	// Store data for binding
 	g_deviceData = deviceData();

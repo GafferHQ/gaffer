@@ -43,6 +43,8 @@ Gaffer.Metadata.registerValues( {
 	"option:cycles:log_level" : {
 
 		"defaultValue" : 0,
+		"minValue" : 0,
+		"maxValue" : 2,
 		"description" :
 		"""
 		Internal Cycles debugging log-level.
@@ -51,7 +53,7 @@ Gaffer.Metadata.registerValues( {
 		"layout:section" : "Log",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : IECore.StringVectorData( [ "Off", "On", "Debug" ] ),
+		"presetNames" : IECore.StringVectorData( [ "Error", "Warning", "Info" ] ),
 		"presetValues" : IECore.IntVectorData( [ 0, 1, 2 ] ),
 
 	},

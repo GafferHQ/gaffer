@@ -2511,6 +2511,12 @@ const boost::container::flat_map<std::string, ccl::PathRayFlag> g_rayTypes = {
 	{ "scatter", ccl::PATH_RAY_VOLUME_SCATTER }
 };
 
+const boost::container::flat_map<int, ccl::LogLevel> g_logLevels = {
+	{ 0, ccl::LOG_LEVEL_ERROR },
+	{ 1, ccl::LOG_LEVEL_WARNING },
+	{ 2, ccl::LOG_LEVEL_INFO }
+};
+
 // Dicing camera
 IECore::InternedString g_dicingCameraOptionName( "cycles:dicing_camera" );
 
@@ -3010,7 +3016,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// Misc
 
-			ccl::util_logging_verbosity_set( optionValue<int>( g_logLevelOptionName, 0 ) );
+			ccl::log_level_set( g_logLevels.at( optionValue<int>( g_logLevelOptionName, 0 ) ) );
 			optionValue<int>( g_cryptomatteDepthOptionName, 0, &m_outputsChanged );
 
 			m_optionsChanged = false;
