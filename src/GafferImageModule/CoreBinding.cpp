@@ -452,6 +452,7 @@ void GafferImageModule::bindCore()
 		enum_<Sampler::BoundingMode>( "BoundingMode" )
 			.value( "Black", Sampler::Black )
 			.value( "Clamp", Sampler::Clamp )
+			.value( "Mirror", Sampler::Mirror )
 		;
 	}
 

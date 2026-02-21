@@ -116,6 +116,7 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Black" : GafferImage.Sampler.BoundingMode.Black,
 			"preset:Clamp" : GafferImage.Sampler.BoundingMode.Clamp,
+			"preset:Mirror" : GafferImage.Sampler.BoundingMode.Mirror,
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 

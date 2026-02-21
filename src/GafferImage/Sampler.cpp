@@ -97,6 +97,11 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 		m_cacheWindow.extendBy( BufferAlgo::clamp( V2i( m_sampleWindow.max.x, m_sampleWindow.min.y ), m_dataWindow ) );
 		m_cacheWindow.max += V2i( 1 ); // max is exclusive.
 	}
+	if( m_boundingMode == Mirror )
+	{
+		// TODO TODO TODO - actually calculate this
+		m_cacheWindow = m_dataWindow;
+	}
 
 	// Our cache is composed of tiles, so the window for
 	// the cache contents needs expanding to the nearest

@@ -138,6 +138,40 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( s.sample( dw.max().x, dw.min().y ), br )
 		self.assertEqual( s.sample( dw.max().x-1, dw.min().y-1 ), br )
 
+	def testOutOfBoundsSampleModeMirror( self ) :
+
+		source = GafferImage.Ramp()
+		source["format"].setValue( GafferImage.Format( 8, 8, 1.000 ) )
+		source["endPosition"].setValue( imath.V2f( 9, 1 ) )
+
+		offset = GafferImage.Offset()
+		offset["in"].setInput( source["out"] )
+
+		for ( ox, oy ) in ( ( 0, 0 ), ( 13, 17 ), ( -13, -17 ) ):
+			offset["offset"].setValue( imath.V2i( ox, oy ) )
+
+			with self.subTest( offset = offset["offset"].getValue() ):
+				dw = offset["out"]["dataWindow"].getValue()
+				s = GafferImage.Sampler( offset["out"], "R", dw, GafferImage.Sampler.BoundingMode.Mirror )
+
+				# Sample out of bounds and assert that the same value as the mirrored pixel is returned.
+				self.assertEqual( s.sample( -1 + ox, 0 + oy ), s.sample( 0 + ox, 0 + oy ) )
+				self.assertEqual( s.sample( -2 + ox, 0 + oy ), s.sample( 1 + ox, 0 + oy ) )
+				self.assertEqual( s.sample( 8 + ox, 0 + oy ), s.sample( 7 + ox, 0 + oy ) )
+				self.assertEqual( s.sample( 9 + ox, 0 + oy ), s.sample( 6 + ox, 0 + oy ) )
+				self.assertEqual( s.sample( 0 + ox, -1 + oy ), s.sample( 0 + ox, 0 + oy ) )
+				self.assertEqual( s.sample( 0 + ox, -2 + oy ), s.sample( 0 + ox, 1 + oy ) )
+				self.assertEqual( s.sample( 0 + ox, 8 + oy ), s.sample( 0 + ox, 7 + oy ) )
+				self.assertEqual( s.sample( 0 + ox, 9 + oy ), s.sample( 0 + ox, 6 + oy ) )
+				self.assertEqual( s.sample( -3 + ox, -3 + oy ), s.sample( 2 + ox, 2 + oy ) )
+				self.assertEqual( s.sample( 10 + ox, 10 + oy ), s.sample( 5 + ox, 5 + oy ) )
+
+				# We can even sample so far out of bounds that things mirror twice
+				self.assertEqual( s.sample( 16 + ox, 17 + oy ), s.sample( 0 + ox, 1 + oy ) )
+				self.assertEqual( s.sample( 17 + ox, 18 + oy ), s.sample( 1 + ox, 2 + oy ) )
+				self.assertEqual( s.sample( -9 + ox, -10 + oy ), s.sample( 7 + ox, 6 + oy ) )
+				self.assertEqual( s.sample( -10 + ox, -11 + oy ), s.sample( 6 + ox, 5 + oy ) )
+
 	def test2x2Checker( self ) :
 
 		reader = GafferImage.ImageReader()
@@ -269,7 +303,7 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 					offset["offset"].setValue( dataAlignment )
 					dataWindow = offset["out"].dataWindow()
 
-					for bm in [ GafferImage.Sampler.BoundingMode.Black, GafferImage.Sampler.BoundingMode.Clamp ]:
+					for bm in [ GafferImage.Sampler.BoundingMode.Black, GafferImage.Sampler.BoundingMode.Clamp, GafferImage.Sampler.BoundingMode.Mirror ]:
 
 						# Make one big sampler that can handle all our queries. Making this larger than the
 						# data window doesn't actually have an impact on the current implementation, but it
