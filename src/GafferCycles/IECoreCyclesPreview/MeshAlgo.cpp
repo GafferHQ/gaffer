@@ -129,7 +129,9 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *sc
 
 		cmesh->reserve_mesh( numVerts, numFaces );
 		for( size_t i = 0; i < numVerts; i++ )
+		{
 			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
+		}
 
 		const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 		size_t ngons = 0;
@@ -196,14 +198,18 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *sc
 		cmesh->reserve_mesh( numVerts, numFaces );
 
 		for( size_t i = 0; i < numVerts; i++ )
+		{
 			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
+		}
 
 		const bool smooth = hasSmoothNormals( mesh );
 		for( size_t i = 0; i < vertexIds.size(); i+= 3 )
+		{
 			cmesh->add_triangle(
 				vertexIds[i], vertexIds[i+1], vertexIds[i+2],
 				/* shader = */ 0, /* smooth = */ smooth
 			);
+		}
 	}
 
 	// Convert primitive variables.
@@ -273,7 +279,9 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 		for( int i = 0; i < numSamples; ++i )
 		{
 			if( i == frameIdx )
+			{
 				continue;
+			}
 			samples.push_back( meshes[i] );
 		}
 	}
@@ -285,7 +293,9 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 		for( int i = 0; i < numSamples; ++i )
 		{
 			if( i == _frameIdx )
+			{
 				continue;
+			}
 			samples.push_back( meshes[i] );
 		}
 	}
@@ -331,7 +341,9 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 					size_t numVerts = p->readable().size();
 
 					for( size_t j = 0; j < numVerts; ++j, ++mP )
+					{
 						*mP = ccl::make_float3( points[j].x, points[j].y, points[j].z );
+					}
 				}
 				else
 				{
