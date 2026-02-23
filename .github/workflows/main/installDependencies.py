@@ -49,7 +49,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/11.0.0a2/gafferDependencies-11.0.0a2-{platform}{buildEnvironment}.{extension}"
+defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a6/cortex-10.7.0.0a6-{platform}-{vfxPlatform}.{extension}"
 
 # Parse command line arguments.
 
@@ -62,10 +62,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-	"--buildEnvironment",
-	help = "The build environment of the dependencies archive to download.",
-	choices = [ "gcc11", "arm64" ],
-	default = os.environ.get( "GAFFER_BUILD_ENVIRONMENT", { "linux" : "gcc11", "darwin" : "arm64" }.get( sys.platform, "" ) ),
+	"--vfxPlatform",
+	help = "The VFX platform of the dependencies archive to download.",
+	choices = [ "platform24", "platform25" ],
+	default = "platform25",
 )
 
 parser.add_argument(
@@ -86,7 +86,7 @@ args = parser.parse_args()
 
 archiveURL = args.archiveURL.format(
 	platform = { "darwin" : "macos", "win32" : "windows" }.get( sys.platform, "linux" ),
-	buildEnvironment = "-{}".format( args.buildEnvironment ) if args.buildEnvironment else "",
+	vfxPlatform = args.vfxPlatform,
 	extension = "tar.gz" if sys.platform != "win32" else "zip"
 )
 

@@ -51,7 +51,7 @@ Build
 -----
 
 - Boost : Updated to version 1.85.0.
-- Cortex : Updated to version 10.7.0.0a3.
+- Cortex : Updated to version 10.7.0.0a6.
 - Imath : Updated to version 3.1.12.
 - Jemalloc : Removed when building on macOS.
 - LLVM : Updated to version 17.0.6.

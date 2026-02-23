@@ -32,15 +32,15 @@ jobs:
         # and then use `include` to define their settings.
 
         name: [
-          linux-gcc11,
-          linux-debug-gcc11,
-          linux-gcc11-platform24,
+          linux,
+          linux-debug,
+          linux-platform24,
           windows,
         ]
 
         include:
 
-          - name: linux-gcc11
+          - name: linux
             os: ubuntu-24.04
             buildType: RELEASE
             publish: true
@@ -53,7 +53,7 @@ jobs:
             sconsCacheMegabytes: 400
             jobs: 4
 
-          - name: linux-debug-gcc11
+          - name: linux-debug
             os: ubuntu-24.04
             buildType: DEBUG
             publish: false
@@ -65,7 +65,7 @@ jobs:
             sconsCacheMegabytes: 2500
             jobs: 4
 
-          - name: linux-gcc11-platform24
+          - name: linux-platform24
             os: ubuntu-24.04
             buildType: RELEASE
             publish: false
@@ -77,7 +77,7 @@ jobs:
             testRunner: sudo -E -u testUser
             sconsCacheMegabytes: 400
             jobs: 4
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a3/cortex-10.7.0.0a3-linux-gcc11.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a6/cortex-10.7.0.0a6-linux-platform24.tar.gz
 
           - name: windows
             os: windows-2022
