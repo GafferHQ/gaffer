@@ -417,10 +417,7 @@ if "PYTHONNOUSERSITE" not in os.environ :
 # Exec `__gaffer.py`
 # ==================
 
-args = [
-	sys.executable,
-	str( pathlib.Path( sys.argv[0] ).with_name( "__gaffer.py" ) )
-] + sys.argv[1:]
+args = [ sys.executable ] + sys.argv[1:]
 
 if sys.platform != "win32" :
 	os.execv( sys.executable, args )

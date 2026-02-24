@@ -44,6 +44,10 @@
 
 #include "Python.h"
 
+#include <filesystem>
+#include <functional>
+#include <vector>
+
 #ifdef MS_WINDOWS
 
 // Replace the standard Windows allocators with TBB allocators
@@ -53,6 +57,39 @@
 #include "tbb/tbbmalloc_proxy.h"
 
 #include <iostream>
+
+#endif
+
+namespace
+{
+
+template<typename T>
+int launchGaffer( int argc, T** argv, std::function<int( int, T** )> pyMain )
+{
+	// Windows does not support process renaming or replacing a parent process with its child.
+	// We want all of our processes to be called `gaffer` (`gaffer.exe` on Windows) so we run
+	// this executable with `_gaffer.py` bootstrap script. We execute that script as-is and
+	// all other cases get `__gaffer.py` inserted into the argument list.
+	if( argc > 1 && std::filesystem::path( argv[1] ).filename() == std::filesystem::path( "_gaffer.py" ) )
+	{
+		return pyMain( argc, argv );
+	}
+
+	std::vector<T *> modifiedArgv( argv, argv + argc );
+
+	std::filesystem::path exePath( argv[0] );
+	std::filesystem::path launchScriptPath = exePath.parent_path() / "__gaffer.py";
+	std::basic_string<T> genericLaunchScriptPath = launchScriptPath.generic_string<T>();
+	T *script = genericLaunchScriptPath.data();
+	modifiedArgv.insert( modifiedArgv.begin() + 1, script );
+
+	return pyMain( modifiedArgv.size(), modifiedArgv.data() );
+
+}
+
+}  // namespace
+
+#ifdef MS_WINDOWS
 
 int wmain( int argc, wchar_t **argv )
 {
@@ -69,11 +106,12 @@ int wmain( int argc, wchar_t **argv )
 		}
 	}
 
-	return Py_Main( argc, argv );
+	return launchGaffer<wchar_t>( argc, argv, Py_Main );
+	
 }
 #else
 int main( int argc, char **argv )
 {
-	return Py_BytesMain( argc, argv );
+	return launchGaffer<char>( argc, argv, Py_BytesMain );
 }
 #endif
