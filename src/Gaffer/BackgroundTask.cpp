@@ -159,12 +159,12 @@ ActiveTasks &activeTasks()
 struct BackgroundTask::TaskData : public boost::noncopyable
 {
 	TaskData( Function *function )
-		:	function( function ), status( Pending )
+		:	function( function ), canceller( new Canceller ), status( Pending )
 	{
 	}
 
 	Function *function;
-	IECore::Canceller canceller;
+	IECore::CancellerPtr canceller;
 	std::mutex mutex; // Protects `conditionVariable`, `status` and `threadID`
 	std::condition_variable conditionVariable;
 	Status status;
@@ -208,7 +208,7 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 			Status status;
 			try
 			{
-				(*taskData->function)( taskData->canceller );
+				(*taskData->function)( *taskData->canceller );
 				status = Completed;
 			}
 			catch( const std::exception &e )
@@ -255,7 +255,7 @@ void BackgroundTask::cancel()
 	{
 		m_taskData->status = Cancelled;
 	}
-	m_taskData->canceller.cancel();
+	m_taskData->canceller->cancel();
 }
 
 void BackgroundTask::wait()

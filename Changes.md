@@ -15,6 +15,8 @@ Fixes
 -----
 
 - RenderController : Fixed bug where repeatedly setting the same VisibleSet could cause unnecessary updates.
+- UI : Fixed failure to cancel background computations when more than one UI element was waiting for the same result. This could result in the UI becoming unresponsive until the computation was complete.
+- BackgroundMethod : Fixed bug that allowed unwanted background computations to continue when a widget was hidden.
 
 API
 ---
@@ -50,7 +52,7 @@ Build
 -----
 
 - Boost : Updated to version 1.85.0.
-- Cortex : Updated to version 10.7.0.0a3.
+- Cortex : Updated to version 10.7.0.0a6.
 - Imath : Updated to version 3.1.12.
 - Jemalloc : Removed when building on macOS.
 - LLVM : Updated to version 17.0.6.

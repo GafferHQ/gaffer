@@ -74,9 +74,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		/// Copy constructor
 		Context( const Context &other );
 		/// Copy constructor for creating a cancellable context.
-		/// The canceller is referenced, not copied, and must remain
-		/// alive for as long as the context is in use.
-		Context( const Context &other, const IECore::Canceller &canceller );
+		Context( const Context &other, const IECore::ConstCancellerPtr &canceller );
 		/// Copy constructor which can optionally omit an existing canceller
 		/// if `omitCanceller = true` is passed.
 		Context( const Context &other, bool omitCanceller );
@@ -375,6 +373,8 @@ class GAFFER_API Context : public IECore::RefCounted
 		// EditableScope could overwrite a variable without updating m_allocMap )
 		using AllocMap = boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr>;
 		AllocMap m_allocMap;
+		// As `m_allocMap` is to `m_map`, `m_cancellerOwner` is to `m_canceller`.
+		IECore::ConstCancellerPtr m_cancellerOwner;
 
 };
 
