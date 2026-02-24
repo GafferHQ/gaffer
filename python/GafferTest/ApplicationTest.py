@@ -62,23 +62,45 @@ class ApplicationTest( GafferTest.TestCase ) :
 			value = subprocess.check_output( [ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; print(os.environ['{}'])".format( v ) ], universal_newlines = True )
 			self.assertEqual( value.strip(), os.environ[v] )
 
-	@unittest.skipIf( os.name == "nt", "Process name is not controllable on Windows.")
+	@unittest.skipIf( GafferTest.inCI() and os.name == "nt", "Finding the Gaffer process is mysteriously failing in CI.")
 	def testProcessName( self ) :
 
-		process = subprocess.Popen( [ str( Gaffer.executablePath() ), "env", "sleep", "100" ] )
+		gafferExe = ( "gaffer" + ( ".exe" if os.name == "nt" else "" ) )
+		gaffer = str( Gaffer.executablePath( True ).parent / "__private" / gafferExe )
+		sleepCommand = "timeout" if os.name == "nt" else "sleep"
+		process = subprocess.Popen( [ str( Gaffer.executablePath() ), "env", sleepCommand, "100" ] )
 		try :
 			startTime = time.time()
 			while True :
 				time.sleep( 0.1 )
-				command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
-				name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
+				if os.name != "nt" :
+					command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
+					name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
+				else :
+					# On Windows, `process` is the shell process (`cmd.exe`) that runs our `gaffer.exe _gaffer.py` process which finally runs
+					# `gaffer __gaffer.py`.
+					def childPid( pid ) :
+						return subprocess.check_output(
+							[ "powershell", "-c", f"Get-CIMInstance -ClassName win32_process -filter ParentProcessID={pid} | Select -ExpandProperty ProcessId" ],
+							universal_newlines = True
+						).strip()
+					gafferPid = childPid( childPid( process.pid ) )
+
+					command = subprocess.check_output(
+						[ "powershell", "-c", f"Get-WmiObject -query \'SELECT CommandLine FROM Win32_Process WHERE ProcessID={gafferPid}\' | Select -ExpandProperty CommandLine" ],
+						universal_newlines = True
+					).strip()
+					name = subprocess.check_output(
+						[ "powershell", "-c", f"Get-WmiObject -query \'SELECT Name FROM Win32_Process WHERE ProcessID={gafferPid}\' | Select -ExpandProperty Name" ],
+						universal_newlines = True
+					).strip()
 				try :
-					self.assertEqual( command, "gaffer env sleep 100" )
-					self.assertEqual( name, "gaffer" )
+					self.assertEqual( command, gaffer + f" env {sleepCommand} 100" )
+					self.assertEqual( name, gafferExe )
 
 				except self.failureException :
-					# It can take some time for gaffer to change its own process name, which varies
-					# based on the host's performance.
+					# It can take some time for the bootstrap `execv` call to replace the
+					# original process. That time depends on the host's performance.
 					# For that reason, we check until 3 seconds have passed before giving up.
 					if time.time() - startTime > 3.0 :
 						raise
