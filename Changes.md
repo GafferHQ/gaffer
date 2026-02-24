@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.6.x.x)
 =======
 
+Features
+--------
+
+- Cycles : Updated to version 5.0.0.
+
 Improvements
 ------------
 
@@ -20,6 +25,7 @@ Fixes
 - RenderController : Fixed bug where repeatedly setting the same VisibleSet could cause unnecessary updates.
 - UI : Fixed failure to cancel background computations when more than one UI element was waiting for the same result. This could result in the UI becoming unresponsive until the computation was complete.
 - BackgroundMethod : Fixed bug that allowed unwanted background computations to continue when a widget was hidden.
+- MeshTessellate : Fixed crashes caused by non-manifold geometry.
 
 API
 ---
@@ -59,12 +65,15 @@ Build
 
 - Boost : Updated to version 1.85.0.
 - Cortex : Updated to version 10.7.0.0a6.
+- Cycles : Updated to version 5.0.0.
+- Embree : Updated to version 4.4.0.
 - Imath : Updated to version 3.1.12.
 - Jemalloc : Removed when building on macOS.
 - LLVM : Updated to version 17.0.6.
 - OpenColorIO : Updated to version 2.4.2.
 - OpenEXR : Updated to version 3.3.6.
 - OpenShadingLanguage : Updated to version 1.14.8.0.
+- OpenSubdiv : Updated to version 3.6.1.
 - PySide : Updated to version 6.5.8.
 - Python : Updated to version 3.11.14.
 - Qt : Updated to version 6.5.8.
