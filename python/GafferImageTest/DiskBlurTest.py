@@ -280,6 +280,43 @@ class DiskBlurTest( GafferImageTest.ImageTestCase ) :
 
 				self.assertImagesEqual( diskBlur["out"], refCrop["out"], maxDifference = 5e-7 )
 
+	def testBoundingMode( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( '${GAFFER_ROOT}/resources/images/macaw.exr' )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( imageReader["out"] )
+		crop["area"].setValue( imath.Box2i( imath.V2i( 1090, 1100 ), imath.V2i( 1190, 1200 ) ) )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( crop["out"] )
+		resample["filter"].setValue( 'disk' )
+		resample["filterScale"].setValue( imath.V2f( 10, 10 ) )
+
+		diskBlur = GafferImage.DiskBlur()
+		diskBlur["in"].setInput( crop["out"] )
+		diskBlur["radius"].setValue( 4.0 )
+		diskBlur["approximationThreshold"].setValue( 1000.0 )
+
+		self.assertImagesEqual( diskBlur["out"], resample["out"], maxDifference = 1e-6 )
+
+
+		diskBlur["boundingMode"].setValue( GafferImage.DiskBlur.BoundingMode.Mirror )
+
+		# We don't currently support a "Mirror" bounding mode on Resample, so this
+		# reference image was created with a prototype version of Resample that does
+		# support Mirror. Using this image validates that the behaviour of the Mirror
+		# bounding mode for a scattering blur has an identical result to a Mirror
+		# bounding mode for a gathering blur. If we eventually support Mirror mode
+		# on Resample, we can just compare to that live, and get rid of this image
+		# from the repo ( and also lower the high tolerance, which is currently
+		# due to saving the ref image as half float ).
+		refImageReader = GafferImage.ImageReader()
+		refImageReader["fileName"].setValue( '${GAFFER_ROOT}/python/GafferImageTest/images/diskBlurMirrorRef.exr' )
+
+		self.assertImagesEqual( diskBlur["out"], refImageReader["out"], ignoreMetadata = True, maxDifference = 0.0003 )
+
 	def testNormalization( self ):
 
 		constant = GafferImage.Constant()

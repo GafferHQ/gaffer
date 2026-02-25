@@ -97,6 +97,24 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"boundingMode" : {
+
+			"description" :
+			"""
+			The method used at the boundaries of the input data window, to compensate for the lack of
+			information outside it :
+
+			- Black : Treats the input as black outside the data window, causing darkening at the edges of the image.
+			- Mirror : Treats the input as mirrored across the data window boundary.
+			""",
+
+			"preset:Black" : GafferImage.DiskBlur.BoundingMode.Black,
+			"preset:Mirror" : GafferImage.DiskBlur.BoundingMode.Mirror,
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+
+		},
+
 		"layerBoundaries" : {
 
 			"description" :
