@@ -126,7 +126,9 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		b["b"]["n"] = n
 
 		# start with no childrenViewable metadata on either Box
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", None )
 		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", None )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", None )
 		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", None )
 
 		# b has no parent, so is considered viewable
@@ -137,7 +139,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Box ), b )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Node ), b )
 
-		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", True )
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", True )
 
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Node ), b )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Box ), b )
@@ -148,7 +150,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Node ), b["b"] )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Box ), b["b"] )
 
-		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", True )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", True )
 
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Box ), b )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Node ), b )
@@ -178,7 +180,9 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		b["b"]["n"] = n
 
 		# start with no childrenViewable metadata on either Box
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", None )
 		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", None )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", None )
 		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", None )
 
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
@@ -186,8 +190,8 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
 
-		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", True )
-		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", True )
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", True )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", True )
 
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), n )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), n )
@@ -195,7 +199,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b["b"] )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
 
-		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", False )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", False )
 
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b["b"] )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), b["b"] )
@@ -203,7 +207,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b["b"] )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
 
-		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", False )
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", False )
 
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), b )
@@ -211,7 +215,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
 
-		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", True )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", True )
 		# Although `b["b"]` now has viewable children, its parent `b` does not
 		# and is still the first viewable.
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
@@ -220,7 +224,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
 
-		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", True )
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", True )
 
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), n )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), n )

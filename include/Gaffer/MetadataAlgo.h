@@ -255,7 +255,7 @@ GAFFER_API ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::D
 /// ===========
 
 /// Returns the first T that is considered user viewable, starting from graphComponent before
-/// testing all ancestors. Nodes can mark their children as viewable by registering "graphEditor:childrenViewable"
+/// testing all ancestors. Nodes can mark their children as viewable by registering "ui:childNodesAreViewable"
 /// metadata.
 template<typename T=GraphComponent>
 T *firstViewableAncestor( GraphComponent *graphComponent );

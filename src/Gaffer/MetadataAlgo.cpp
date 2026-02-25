@@ -71,6 +71,7 @@ const InternedString g_spreadsheetColumnLabel( "spreadsheet:columnLabel" );
 const InternedString g_defaultValue( "defaultValue" );
 const InternedString g_minValue( "minValue" );
 const InternedString g_maxValue( "maxValue" );
+const InternedString g_childNodesAreViewable( "ui:childNodesAreViewable" );
 const InternedString g_childrenViewable( "graphEditor:childrenViewable" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
@@ -1020,7 +1021,12 @@ GraphComponent *firstViewableAncestor( Gaffer::GraphComponent *graphComponent, I
 		bool viewable = false;
 		if( nodeParent )
 		{
-			if( ConstBoolDataPtr d = Metadata::value<BoolData>( nodeParent, g_childrenViewable ) )
+			if( ConstBoolDataPtr d = Metadata::value<BoolData>( nodeParent, g_childNodesAreViewable ) )
+			{
+				viewable = d->readable();
+			}
+			/// \todo Remove when we remove legacy "graphEditor:childrenViewable" metadata.
+			else if( ConstBoolDataPtr d = Metadata::value<BoolData>( nodeParent, g_childrenViewable ) )
 			{
 				viewable = d->readable();
 			}
