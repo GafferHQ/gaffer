@@ -532,7 +532,7 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
-			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+			self.__menuButton.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ) )
 			self.__menuButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 
 			self.__shadingModeToggle = Gaffer.Metadata.value( plug, "shadingModePlugValueWidget:defaultShadingModeToggle" )

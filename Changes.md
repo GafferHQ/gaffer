@@ -18,6 +18,7 @@ Fixes
 - Anaglyph, ArnoldProcedural, ContactSheet, FocalBlur, MetadataOverlay, PromotePointInstances : Fixed bug that allowed the internal nodes to be edited.
 - ExtensionAlgo : Exported extensions now have `childNodesAreReadOnly` metadata applied correctly.
 - RenderManShader : Fixed default visibility of LamaDielectric's `dielectricNormal` parameter, which is now visible by default (and `normal` is now hidden).
+- Viewer : Fixed bug that displayed the shading menu when <kbd>Ctrl</kbd> + clicking the shading mode menu button instead of toggling between default shading and the last selected shading mode.
 
 API
 ---
