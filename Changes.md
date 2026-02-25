@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.12.0)
 =======
 
+Features
+--------
+
+- DiskBlur, FocalBlur : Added `boundingMode` plug with `Mirror` option.
+
 Improvements
 ------------
 
