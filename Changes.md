@@ -64,8 +64,13 @@ Build
 - Qt : Updated to version 6.5.8.
 - TBB : Updated to version 2021.13.0.
 
-1.6.x.x (relative to 1.6.12.0)
+1.6.x.x (relative to 1.6.13.0)
 =======
+
+
+
+1.6.13.0 (relative to 1.6.12.0)
+========
 
 Features
 --------
