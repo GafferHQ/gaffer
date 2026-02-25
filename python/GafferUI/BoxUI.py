@@ -61,6 +61,8 @@ Gaffer.Metadata.registerNode(
 
 	"icon", "boxNode.png",
 
+	"ui:childNodesAreViewable", True,
+	## \todo Deprecate and remove in favour of `ui:childNodesAreViewable`.
 	"graphEditor:childrenViewable", True,
 
 	# Add a + button for creating new plugs in the Settings tab.
