@@ -347,12 +347,8 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Background:summary" : __backgroundSummary,
 			"layout:section:Log:summary" : __logSummary,
 
-			"layout:customWidget:labelSpacer:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget.PlugLabelSpacer",
-			"layout:customWidget:labelSpacer:index" : 0,
-
 			"layout:customWidget:optionFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
-			"layout:customWidget:optionFilter:index" : 1,
-			"layout:customWidget:optionFilter:accessory" : True,
+			"layout:customWidget:optionFilter:index" : 0,
 
 		},
 

@@ -601,7 +601,7 @@ class StandardFilterWidget( GafferUI.Widget ) :
 
 	def __init__( self, parent, **kw ) :
 
-		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 
 		GafferUI.Widget.__init__( self, self.__listContainer, **kw )
 
@@ -615,6 +615,8 @@ class StandardFilterWidget( GafferUI.Widget ) :
 			if "toolTip" in kw :
 				self.__filterButton.setToolTip( kw["toolTip"] )
 			self.__filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__filterButtonClicked ) )
+
+			GafferUI.Spacer( size = imath.V2i( 4, 18 ), maximumSize = imath.V2i( 4, 18 ) )
 
 			self.__filterText = GafferUI.TextWidget( "", placeholderText = "Filter..." )
 			self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ) )
@@ -684,15 +686,6 @@ class StandardFilterWidget( GafferUI.Widget ) :
 
 
 PlugLayout.StandardFilterWidget = StandardFilterWidget
-
-class PlugLabelSpacer( GafferUI.Spacer ) :
-
-	def __init__( self, parent, **kw ) :
-
-		s = imath.V2i( GafferUI.PlugWidget.labelWidth() + 9, 18 )
-		GafferUI.Spacer.__init__( self, s, maximumSize = s )
-
-PlugLayout.StandardFilterWidget.PlugLabelSpacer = PlugLabelSpacer
 
 class _AccessoryRow( GafferUI.ListContainer ) :
 
