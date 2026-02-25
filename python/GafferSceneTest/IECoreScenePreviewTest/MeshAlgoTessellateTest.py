@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import os
 import pathlib
 
 import IECore
@@ -497,11 +498,15 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		)
 		nonManifold = nonManifoldFile.child( "object" ).readObject( 0.0 )
 
-		referenceFile = IECoreScene.SceneInterface.create(
-			str( self.usdFileDir / "nonManifoldTessellated.usd" ), IECore.IndexedIO.OpenMode.Read
-		)
-		reference = referenceFile.child( "object" ).readObject( 0.0 )
-		self.assertEqual( MeshAlgo.tessellateMesh( nonManifold, 2, calculateNormals = True ), reference )
+		# On CI we test builds using OpenSubdiv 3.6.0 and 3.6.1. Each version provides
+		# different results from our non-manifold mesh, so we skip this comparison on
+		# the legacy platform as it would fail.
+		if not GafferTest.inCI() or not "platform24" in os.environ["GAFFER_BUILD_VARIANT"] :
+			referenceFile = IECoreScene.SceneInterface.create(
+				str( self.usdFileDir / "nonManifoldTessellated.usd" ), IECore.IndexedIO.OpenMode.Read
+			)
+			reference = referenceFile.child( "object" ).readObject( 0.0 )
+			self.assertEqual( MeshAlgo.tessellateMesh( nonManifold, 2, calculateNormals = True ), reference )
 
 		# Hard to define correct results on this weird data without using reference data, but we can
 		# at least run a couple higher tessellations to make sure we don't crash or something.

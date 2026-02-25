@@ -220,6 +220,8 @@ jobs:
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
         ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }}
         echo "::remove-matcher owner=unittest::"
+      env:
+        GAFFER_BUILD_VARIANT: ${{ matrix.name }}
 
     - name: Build and test Arnold extension
       run: |
