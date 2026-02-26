@@ -246,7 +246,7 @@ const Gaffer::Plug *OSLShader::correspondingInput( const Gaffer::Plug *output ) 
 	const StringData *input = IECore::runTimeCast<const StringData>( OSLShader::parameterMetadata( output, "correspondingInput" ) );
 	if( !input )
 	{
-		return nullptr;
+		return Shader::correspondingInput( output );
 	}
 
 	const Plug *result = parametersPlug()->getChild<Plug>( input->readable() );
