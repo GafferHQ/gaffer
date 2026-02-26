@@ -191,24 +191,29 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		script["node"] = GafferTest.AddNode()
 		script["node2"] = GafferTest.AddNode()
 
-		AnnotationsGadgetTest.expressionStartedCondition = threading.Condition()
-		AnnotationsGadgetTest.expressionContinueCondition = threading.Condition()
+		AnnotationsGadgetTest.expressionStartedEvent = threading.Event()
+		AnnotationsGadgetTest.expressionContinueEvent = threading.Event()
+
+		def waitAndClear( event, timeout = None ) :
+
+			result = event.wait( timeout )
+			event.clear()
+			return result
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( inspect.cleandoc(
 			"""
 			# Let the test know the expression has started running.
 			import GafferUITest
-			with GafferUITest.AnnotationsGadgetTest.expressionStartedCondition :
-				GafferUITest.AnnotationsGadgetTest.expressionStartedCondition.notify()
+			GafferUITest.AnnotationsGadgetTest.expressionStartedEvent.set()
 
 			# And loop checking for cancellation until the test
 			# allows us to continue.
 			while True :
 				IECore.Canceller.check( context.canceller() )
-				with GafferUITest.AnnotationsGadgetTest.expressionContinueCondition :
-					if GafferUITest.AnnotationsGadgetTest.expressionContinueCondition.wait( timeout = 0.1 ) :
-						break
+				if GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.wait( timeout = 0.1 ) :
+					GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.clear()
+					break
 
 			parent["node"]["op1"] = parent["node"]["op2"]
 			"""
@@ -227,9 +232,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
 			# Wait for compute to start, and make a graph edit to cancel it.
-			with AnnotationsGadgetTest.expressionStartedCondition :
-				AnnotationsGadgetTest.expressionStartedCondition.wait()
-
+			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
 			script["node"]["op2"].setValue( 2 )
 
 			# We expect a call on the UI thread to re-dirty the annotation.
@@ -242,11 +245,8 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 			# A new background task should have been launched to compute the
 			# text again. If we let the expression run to completion then we
 			# should get the final text.
-			with AnnotationsGadgetTest.expressionStartedCondition :
-				AnnotationsGadgetTest.expressionStartedCondition.wait()
-
-			with GafferUITest.AnnotationsGadgetTest.expressionContinueCondition :
-				GafferUITest.AnnotationsGadgetTest.expressionContinueCondition.notify()
+			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
+			GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.set()
 
 			callHandler.assertCalled()
 			self.assertEqual( gadget.annotationText( script["node"] ), "4" )
@@ -256,8 +256,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 
 			script["node"]["op2"].setValue( 3 )
 			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
-			with AnnotationsGadgetTest.expressionStartedCondition :
-				AnnotationsGadgetTest.expressionStartedCondition.wait()
+			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
 
 			script["node2"]["op1"].setValue( 1 ) # Cancels
 
@@ -266,11 +265,8 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 			self.assertEqual( len( renderRequests ), 1 )
 			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			with AnnotationsGadgetTest.expressionStartedCondition :
-				AnnotationsGadgetTest.expressionStartedCondition.wait()
-
-			with GafferUITest.AnnotationsGadgetTest.expressionContinueCondition :
-				GafferUITest.AnnotationsGadgetTest.expressionContinueCondition.notify()
+			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
+			GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.set()
 
 			callHandler.assertCalled()
 			self.assertEqual( gadget.annotationText( script["node"] ), "6" )
