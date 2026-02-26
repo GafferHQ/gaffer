@@ -62,9 +62,10 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.DisplayTransform()
 		o["in"].setInput( n["out"] )
 
-		o["inputColorSpace"].setValue( "scene_linear" )
-		o["display"].setValue( "sRGB - Display" )
-		o["view"].setValue( "ACES 1.0 - SDR Video" )
+		config = GafferImage.OpenColorIOAlgo.currentConfig()
+		o["inputColorSpace"].setValue( PyOpenColorIO.ROLE_SCENE_LINEAR )
+		o["display"].setValue( config.getDefaultDisplay() )
+		o["view"].setValue( config.getDefaultView( config.getDefaultDisplay() ) )
 
 		transform1 = GafferImage.ImageAlgo.image( o["out"] )
 		self.assertNotEqual( orig, transform1 )
@@ -88,14 +89,14 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.DisplayTransform()
 		o["in"].setInput( n["out"] )
 
-		o["display"].setValue( "sRGB - Display" )
+		config = GafferImage.OpenColorIOAlgo.currentConfig()
+		o["display"].setValue( config.getDefaultDisplay() )
 		o["view"].setValue( "Raw" ) # No-op view
 
 		self.assertImageHashesEqual( n["out"], o["out"] )
 		self.assertImagesEqual( n["out"], o["out"] )
 
-		o["display"].setValue( "sRGB - Display" )
-		o["view"].setValue( "ACES 1.0 - SDR Video" )
+		o["view"].setValue( config.getDefaultView( config.getDefaultDisplay() ) )
 
 		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
 
@@ -219,8 +220,10 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		displayTransform = GafferImage.DisplayTransform()
 		displayTransform["in"].setInput( checker["out"] )
-		displayTransform["display"].setValue( "sRGB - Display" )
-		displayTransform["view"].setValue( "ACES 1.0 - SDR Video" )
+
+		config = GafferImage.OpenColorIOAlgo.currentConfig()
+		displayTransform["display"].setValue( config.getDefaultDisplay() )
+		displayTransform["view"].setValue( config.getDefaultView( config.getDefaultDisplay() ) )
 
 		with Gaffer.Context() as context :
 

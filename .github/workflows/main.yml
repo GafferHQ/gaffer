@@ -79,6 +79,8 @@ jobs:
             jobs: 4
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a6/cortex-10.7.0.0a6-linux-platform24.tar.gz
             extraBuildArguments: CYCLES_ROOT=""
+            # Platform 24 doesn't provide ACES 2, so use ACES 1.3.
+            ocio: ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1
 
           - name: windows
             os: windows-2022
@@ -111,6 +113,7 @@ jobs:
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
       GAFFER_NIGHTLY: ${{ inputs.buildType == 'nightly' && '1' || '0' }}
+      OCIO: ${{ matrix.ocio }}
 
     steps:
 

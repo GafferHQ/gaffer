@@ -167,11 +167,11 @@ class ArnoldColorManagerTest( GafferSceneTest.SceneTestCase ) :
 
 			GafferImage.OpenColorIOAlgo.setConfig( context, "testConfig.ocio" )
 			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "testWorkingSpace" )
-			assertColorManager( adaptor["out"], "testConfig.ocio", "testWorkingSpace", "matte_paint" )
+			assertColorManager( adaptor["out"], "testConfig.ocio", "testWorkingSpace", "srgb_texture" )
 
 			GafferImage.OpenColorIOAlgo.setConfig( context, "testConfig2.ocio" )
 			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "testWorkingSpace2" )
-			assertColorManager( adaptor["out"], "testConfig2.ocio", "testWorkingSpace2", "matte_paint" )
+			assertColorManager( adaptor["out"], "testConfig2.ocio", "testWorkingSpace2", "srgb_texture" )
 
 			# Color manager defined explicitly in the scene, so adaptor should do nothing.
 
