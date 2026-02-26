@@ -888,20 +888,6 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
-	"option:cycles:background:volume_step_size" : {
-
-		"defaultValue" : 0.1,
-		"description" :
-		"""
-		Distance between volume shader samples when rendering the volume
-		(lower values give more accurate and detailed results, but also
-		increases render time).
-		""",
-		"label" : "Volume Step Size",
-		"layout:section" : "Volumes",
-
-	},
-
 	"option:cycles:film:exposure" : {
 
 		"defaultValue" : 1.0,

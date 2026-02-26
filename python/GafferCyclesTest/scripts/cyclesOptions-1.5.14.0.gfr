@@ -152,8 +152,6 @@ __children["CyclesOptions"]["options"]["bgTransparentGlass"]["value"].setValue( 
 __children["CyclesOptions"]["options"]["bgTransparentGlass"]["enabled"].setValue( True )
 __children["CyclesOptions"]["options"]["bgTransparentRoughnessThreshold"]["value"].setValue( 1.0 )
 __children["CyclesOptions"]["options"]["bgTransparentRoughnessThreshold"]["enabled"].setValue( True )
-__children["CyclesOptions"]["options"]["volumeStepSize"]["value"].setValue( 0.0 )
-__children["CyclesOptions"]["options"]["volumeStepSize"]["enabled"].setValue( True )
 __children["CyclesOptions"]["options"]["exposure"]["enabled"].setValue( True )
 __children["CyclesOptions"]["options"]["passAlphaThreshold"]["enabled"].setValue( True )
 __children["CyclesOptions"]["options"]["displayPass"]["value"].setValue( 'ao' )

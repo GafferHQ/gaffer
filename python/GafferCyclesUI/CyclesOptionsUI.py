@@ -152,7 +152,6 @@ def __rayDepthSummary( plug ) :
 def __volumesSummary( plug ) :
 
 	options = [
-		"background:volume_step_size",
 		"integrator:volume_max_steps",
 		"integrator:volume_step_rate",
 	]
