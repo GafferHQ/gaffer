@@ -101,7 +101,7 @@ Gaffer.Metadata.registerNode(
 			to hide the shape from the camera.
 			""",
 
-			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:addButton:visibilityActivator" : False,
 
 		},
 
