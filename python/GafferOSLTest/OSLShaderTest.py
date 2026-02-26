@@ -1412,5 +1412,21 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( node["parameters"]["size4Initialisers1"].defaultValue(), IECore.StringVectorData( [ "a", "", "", "" ] ) )
 		self.assertEqual( node["parameters"]["size4Initialisers4"].defaultValue(), IECore.StringVectorData( [ "a", "b", "c", "d" ] ) )
 
+	def testCorrespondingInput( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "add.osl" ) )
+		# The `add.osl` shader has `correspondingInput` metadata in the shader itself.
+		self.assertEqual( shader.correspondingInput( shader["out"]["out"] ), shader["parameters"]["a"] )
+
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "outputTypes.osl" )
+		shader.loadShader( s )
+		self.assertIsNone( shader.correspondingInput( shader["out"]["f"] ) )
+
+		# We can also register `correspondingInput` metadata as a fallback.
+		Gaffer.Metadata.registerValue( f"osl:shader:{s}:f", "correspondingInput", "input" )
+		self.assertEqual( shader.correspondingInput( shader["out"]["f"] ), shader["parameters"]["input"] )
+
+
 if __name__ == "__main__":
 	unittest.main()

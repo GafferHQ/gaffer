@@ -35,6 +35,8 @@
 ##########################################################################
 
 import unittest
+import os
+import pathlib
 
 import imath
 
@@ -453,6 +455,19 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		shader.loadShader( "LamaLayer" )
 		self.assertTrue( shader.correspondingInput( shader["out"]["bxdf_out"] ).isSame( shader["parameters"]["materialBase"] ) )
+
+	def testValidCorrespondingInput( self ) :
+
+		shader = GafferOSL.OSLShader()
+		for shaderPath in ( pathlib.Path( os.environ["RMANTREE"] ) / "lib" / "shaders" ).glob( "*.oso" ) :
+			shader.loadShader( shaderPath.stem )
+
+			for o in Gaffer.Plug.Range( shader["out"] ) :
+				with self.subTest( o = o ) :
+					# This will raise an unexpected error, which is treated as a test failure,
+					# if the `correspondingInput` metadata returns a plug that does not exist.
+					shader.correspondingInput( o )
+
 
 if __name__ == "__main__":
 	unittest.main()
