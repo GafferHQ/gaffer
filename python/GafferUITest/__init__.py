@@ -135,6 +135,7 @@ from .AnnotationsGadgetTest import AnnotationsGadgetTest
 from .PopupWindowTest import PopupWindowTest
 from .ColorChooserTest import ColorChooserTest
 from .ContextTrackerTest import ContextTrackerTest
+from .MetadataAlgoTest import MetadataAlgoTest
 
 if __name__ == "__main__":
 	unittest.main()

@@ -671,7 +671,7 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 				if inspection.fallbackDescription() :
 					GafferUI.Label( inspection.fallbackDescription() )
 				elif inspection.source() is not None :
-					node = inspection.source().node()
+					node = Gaffer.MetadataAlgo.firstViewableNode( inspection.source() )
 					nameLabel = GafferUI.NameLabel(
 						node,
 						numComponents = node.relativeName( node.scriptNode() ).count( "." ) + 1,

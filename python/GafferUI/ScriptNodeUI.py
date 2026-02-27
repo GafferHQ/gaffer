@@ -48,6 +48,8 @@ Gaffer.Metadata.registerNode(
 	saved to disk as a ".gfr" file and reloaded.
 	""",
 
+	"ui:childNodesAreViewable", True,
+
 	"layout:activator:hidden", lambda node : False,
 
 	plugs = {

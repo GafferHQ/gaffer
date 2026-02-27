@@ -774,11 +774,16 @@ class GraphEditor( GafferUI.Editor ) :
 	@staticmethod
 	def __childrenViewable( node ) :
 
+		viewable = Gaffer.Metadata.value( node, "ui:childNodesAreViewable" )
+		if viewable is not None :
+			return viewable
+
+		## \todo: Remove graphEditor fallback when all client code has been updated
 		viewable = Gaffer.Metadata.value( node, "graphEditor:childrenViewable" )
 		if viewable is not None :
 			return viewable
 
-		## \todo: Remove nodeGraph fallback when all client code has been updated
+		## \todo: Remove nodeGraph fallback for Gaffer 1.7
 		return Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" )
 
 	@staticmethod

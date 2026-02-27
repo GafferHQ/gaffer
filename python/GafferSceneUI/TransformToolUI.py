@@ -188,7 +188,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 			elif len( editTargets ) == 1 :
 				self.__infoRow.setVisible( True )
 				self.__infoLabel.setText( "Editing " )
-				editTarget = next( iter( editTargets ) )
+				editTarget = Gaffer.MetadataAlgo.firstViewableNode( next( iter( editTargets ) ) )
 				numComponents = _distance(
 					editTarget.commonAncestor( toolSelection[0].scene() ),
 					editTarget,
@@ -227,4 +227,4 @@ class _SelectionWidget( GafferUI.Frame ) :
 		if widget.getGraphComponent() is None :
 			return False
 
-		GafferUI.NodeEditor.acquire( widget.getGraphComponent().node(), floating = True )
+		GafferUI.NodeEditor.acquire( widget.getGraphComponent(), floating = True )

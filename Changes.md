@@ -1,7 +1,17 @@
 1.6.x.x (relative to 1.6.13.0)
 =======
 
+Improvements
+------------
 
+- Transform Tools : Simplified display of the target node receiving transform edits. Plugs and non-viewable nodes are no longer included in the target path.
+- Scene Editors : Simplified display of edit source in column tooltips, the inspect and edit popups, and history window. Plugs and non-viewable nodes are no longer included in the source path.
+- PlugPopup : Improved default popup title. Plugs and non-viewable nodes are no longer included in the title.
+
+API
+---
+
+- MetadataAlgo : Added `firstViewableAncestor()` and `firstViewableNode()` functions.
 
 1.6.13.0 (relative to 1.6.12.0)
 ========
