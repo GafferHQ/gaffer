@@ -228,6 +228,8 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		IECore::LineSegment3f rasterToWorldSpace( const Imath::V2f &rasterPosition ) const;
 		Imath::V2f worldToRasterSpace( const Imath::V3f &worldPosition ) const;
 
+		Imath::M44f worldToRasterMatrix() const;
+
 		/// Rendering
 		/// =========
 
