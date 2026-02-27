@@ -35,7 +35,6 @@
 ##########################################################################
 
 import os
-import stat
 import subprocess
 import unittest
 import functools
@@ -2976,6 +2975,92 @@ class DispatcherTest( GafferTest.TestCase ) :
 						IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( f ) ] )
 					)
 
+	def testOmitEmptyTasks( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello ${wedge:value}" )
+
+		script["emptyCommand"] = GafferDispatch.SystemCommand()
+
+		script["taskList"] = GafferDispatch.TaskList()
+		script["taskList"]["preTasks"][0].setInput( script["command"]["task"] )
+		script["taskList"]["preTasks"][1].setInput( script["emptyCommand"]["task"] )
+
+		script["wedge"] = GafferDispatch.Wedge()
+		script["wedge"]["preTasks"][0].setInput( script["taskList"]["task"] )
+		script["wedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "World", "You" ] ) )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		envVar = "GAFFERDISPATCH_OMIT_EMPTY_TASKS"
+		if envVar in os.environ :
+			self.addCleanup( os.environ.__setitem__, envVar, os.environ["envVar"] )
+		else :
+			self.addCleanup( os.environ.__delitem__, envVar )
+
+		for omit in ( None, False, True ) :
+
+			with self.subTest( omit = omit ) :
+
+				if omit is None :
+					if envVar in os.environ :
+						del os.environ[envVar]
+				else :
+					os.environ[envVar] = str( int( omit ) )
+
+				script["dispatcher"]["task"].execute()
+				rootBatch = script["dispatcher"].lastDispatch
+				self.assertIsNone( rootBatch.plug() )
+
+				if omit is not False :
+
+					# We expect to have omitted the batch for the Wedge, because
+					# it does no work of its own. But we don't omit the TaskList
+					# (even though it too does no work) because the explicit purpose
+					# of the TaskList is to build structure into the graph. If you
+					# wanted to omit it, you'd just connect things directly.
+
+					self.assertEqual( len( rootBatch.preTasks() ), 2 )
+					for index, preTask in enumerate( rootBatch.preTasks() ) :
+
+						self.assertEqual( preTask.plug(), script["taskList"]["task"] )
+						self.assertEqual( preTask.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+						# We expect the empty command to have been omitted, leaving us
+						# with just the one command.
+
+						self.assertEqual( len( preTask.preTasks() ), 1 )
+						self.assertEqual( preTask.preTasks()[0].plug(), script["command"]["task"] )
+						self.assertEqual( preTask.preTasks()[0].context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+				else :
+
+					# We expect task batches for every node, even if the node
+					# itself does no work of its own. Starting with the Wedge.
+
+					self.assertEqual( len( rootBatch.preTasks() ), 1 )
+					wedgeBatch = rootBatch.preTasks()[0]
+					self.assertEqual( wedgeBatch.plug(), script["wedge"]["task"] )
+					self.assertEqual( len( wedgeBatch.preTasks() ), 2 )
+
+					# Now the TaskList.
+
+					for index, taskListBatch in enumerate( wedgeBatch.preTasks() ) :
+
+						self.assertEqual( taskListBatch.plug(), script["taskList"]["task"] )
+						self.assertEqual( taskListBatch.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+						self.assertEqual( len( taskListBatch.preTasks() ), 2 )
+						self.assertEqual( taskListBatch.preTasks()[0].plug(), script["command"]["task"] )
+						self.assertEqual( taskListBatch.preTasks()[1].plug(), script["emptyCommand"]["task"] )
+
+						for commandBatch in taskListBatch.preTasks() :
+							self.assertEqual( commandBatch.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
 
 if __name__ == "__main__":
 	unittest.main()

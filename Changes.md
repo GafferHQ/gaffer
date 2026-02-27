@@ -9,6 +9,8 @@ Improvements
 - Scene Editors : Simplified display of edit source in column tooltips, the inspect and edit popups, and history window. Plugs and non-viewable nodes are no longer included in the source path.
 - PlugPopup : Improved default popup title. Plugs and non-viewable nodes are no longer included in the title.
 - Viewer : Added <kbd>D</kbd> hotkey for toggling between denoised and undenoised layers.
+- Dispatcher : Simplified jobs by removing tasks for nodes - such as Wedge - that do no work of their own. This is particularly noticeable in TractorDispatcher, resulting in simpler job graphs in the Tractor dashboard. This behaviour is enabled
+by default but can be temporarily disabled by setting the `GAFFERDISPATCH_OMIT_EMPTY_TASKS` environment variable to a value of `0`. In future, the environment variable will be removed.
 
 Fixes
 -----
