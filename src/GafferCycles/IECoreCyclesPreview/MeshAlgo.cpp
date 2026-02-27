@@ -223,7 +223,9 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *sc
 		switch( variable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_MESH );
+				// Constant primitive variables always go on `Mesh::attributes` rather than `Mesh::subd_attributes`,
+				// because they do not require subdivision.
+				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_MESH );
 				break;
 			case PrimitiveVariable::Uniform :
 				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_FACE );
