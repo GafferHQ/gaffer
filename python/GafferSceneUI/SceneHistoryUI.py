@@ -122,8 +122,7 @@ def __editSourceNode( context, scene, path, nodeEditor = None ) :
 	if source is None :
 		return
 
-	node = source.node()
-	node = __ancestorWithNonViewableChildNodes( node ) or node
+	node = Gaffer.MetadataAlgo.firstViewableNode( source )
 	if nodeEditor is not None :
 		nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
 	else :
@@ -153,21 +152,11 @@ def __editTweaksNode( context, scene, path, nodeEditor = None ) :
 	if tweaks is None :
 		return
 
-	node = __ancestorWithNonViewableChildNodes( tweaks ) or tweaks
+	node = Gaffer.MetadataAlgo.firstViewableNode( tweaks )
 	if nodeEditor is not None :
 		nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
 	else :
 		GafferUI.NodeEditor.acquire( node, floating = True )
-
-def __ancestorWithNonViewableChildNodes( node ) :
-
-	result = None
-	while isinstance( node, Gaffer.Node ) :
-		if Gaffer.Metadata.value( node, "graphEditor:childrenViewable" ) == False :
-			result = node
-		node = node.parent()
-
-	return result
 
 __editSourceKeyPress = GafferUI.KeyEvent( "E", GafferUI.KeyEvent.Modifiers.Alt )
 __editTweaksKeyPress = GafferUI.KeyEvent(

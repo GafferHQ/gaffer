@@ -61,6 +61,8 @@ Gaffer.Metadata.registerNode(
 
 	"icon", "editScopeNode.png",
 
+	"ui:childNodesAreViewable", True,
+	## \todo Deprecate and remove in favour of `ui:childNodesAreViewable`.
 	"graphEditor:childrenViewable", True,
 
 	# Add + buttons for setting up via the GraphEditor

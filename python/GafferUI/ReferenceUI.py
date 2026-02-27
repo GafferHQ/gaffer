@@ -58,6 +58,8 @@ Gaffer.Metadata.registerNode(
 
 	"icon", "referenceNode.png",
 
+	"ui:childNodesAreViewable", True,
+	## \todo Deprecate and remove in favour of `ui:childNodesAreViewable`.
 	"graphEditor:childrenViewable", True,
 
 	"layout:customWidget:fileName:widgetType", "GafferUI.ReferenceUI._FileNameWidget"

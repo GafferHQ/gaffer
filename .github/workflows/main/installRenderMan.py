@@ -49,7 +49,7 @@ parser.add_argument(
 	"--version",
 	help = "The version of RenderMan to install.",
 	default = "26.3",
-	choices = [ "26.3", "26.4", "27.0", "27.1" ],
+	choices = [ "26.3", "26.4", "27.0", "27.1", "27.2" ],
 )
 parser.add_argument(
 	"--dailyBuildDate",
@@ -141,6 +141,8 @@ else :
 		"27.0-nt" : ( "12604", "4492"),
 		"27.1-posix" : ( "12718", "4518"),
 		"27.1-nt" : ( "12716", "4518"),
+		"27.2-posix" : ( "12773", "4545"),
+		"27.2-nt" : ( "12771", "4545"),
 	}[f"{args.version}-{os.name}"]
 
 	downloadURL = "https://renderman.pixar.com/forum/download/release"

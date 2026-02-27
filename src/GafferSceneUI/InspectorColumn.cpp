@@ -39,6 +39,7 @@
 
 #include "GafferUI/PathColumn.h"
 
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECoreScene/ShaderNetwork.h"
@@ -245,7 +246,7 @@ PathColumn::CellData InspectorColumn::cellDataFromInspection( const GafferSceneU
 		toolTip = "Source : " + inspection->fallbackDescription();
 		result.foreground = g_fallbackValueForegroundColor;
 	}
-	else if( const auto source = inspection->source() )
+	else if( const auto source = MetadataAlgo::firstViewableNode( inspection->source() ) )
 	{
 		toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
 	}
