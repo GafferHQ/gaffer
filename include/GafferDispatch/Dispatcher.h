@@ -254,7 +254,7 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 				// But we also need to perform quick membership
 				// queries, for which we use a secondary set.
 				std::unordered_set<const TaskBatch *> m_preTasksSet;
-				// Flags used by `executeAndPruneImmediateBatches()`.
+				// Flags used by `preprocessBatches()`.
 				bool m_immediate;
 				bool m_visited;
 				bool m_executed;
