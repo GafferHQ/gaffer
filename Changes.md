@@ -12,6 +12,11 @@ Improvements
 - OSLShader : Added support for `$shaderType:$shaderName:$parameterName` style metadata keys for `correspondingInput` metadata.
 - RenderMan shaders : Added `correspondingInput` metadata to allow automatic node connections when inserting a shader between an existing connection and pass-through connections when a shader is disabled.
 
+Fixes
+-----
+
+- Wedge : Fixed value preview widget's context handling. The widget now correctly updates when the context changes, and uses the correct context with respect to the focus node.
+
 API
 ---
 
