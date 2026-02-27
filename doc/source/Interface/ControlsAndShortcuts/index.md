@@ -314,6 +314,7 @@ View luminance of RGB                | {kbd}`L`
 Previous layer                       | {kbd}`PgUp`
 Next layer                           | {kbd}`PgDn`
 First layer (RGBA)                   | {kbd}`Ctrl` + {kbd}`PgUp`
+Toggle to denoised/undenoised layer  | {kbd}`D`
 Previous view                        | {kbd}`[`
 Next view                            | {kbd}`]`
 Center image at 1:1 scale            | {kbd}`Home`

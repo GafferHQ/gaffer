@@ -36,6 +36,7 @@
 
 import functools
 import math
+import re
 import imath
 
 import IECore
@@ -286,12 +287,29 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 
 		result = GafferImageUI.RGBAChannelsPlugValueWidget._menuDefinition( self )
 
-		result.append( "/__PreviousNextDivider__", { "divider" : True } )
-
 		try :
 			currentValue = self.getPlug().getValue()
 		except Gaffer.ProcessException :
 			currentValue = None
+
+		result.append( "/__DenoisedDivider__", { "divider" : True } )
+
+		denoiseLabel = "Denoised"
+		if denoiseValue := self.__denoisedValue( denoised = False ) :
+			denoiseLabel = "Undenoised"
+		else :
+			denoiseValue = self.__denoisedValue( denoised = True )
+
+		result.append(
+			f"/{denoiseLabel}",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = denoiseValue ),
+				"shortCut" : "D",
+				"active" : denoiseValue is not None and denoiseValue != currentValue,
+			}
+		)
+
+		result.append( "/__PreviousNextDivider__", { "divider" : True } )
 
 		previousValue = self.__incrementedValue( -1 )
 		result.append(
@@ -326,6 +344,14 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 		return result
 
 	def __keyPress( self, gadget, event ) :
+
+		if event.key == "D" and not event.modifiers :
+			value = self.__denoisedValue( denoised = True )
+			if value is None:
+				value = self.__denoisedValue( denoised = False )
+			if value is not None :
+				self.__setValue( value )
+			return True
 
 		if event.key in ( "PageUp", "PageDown" ) :
 			if event.key == "PageDown" :
@@ -363,6 +389,39 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 
 		index = max( 0, min( index, len( values ) - 1 ) )
 		return values[index]
+
+	def __denoisedValue( self, denoised ) :
+
+		try :
+			currentValue = self.getPlug().getValue()
+		except Gaffer.ProcessException :
+			return None
+
+		suffixes = [ "Denoised", "denoised", "_denoised" ]
+
+		layerName = sole( GafferImage.ImageAlgo.layerName( c ) for c in currentValue )
+		if layerName is None :
+			return None
+
+		if denoised :
+			potentialLayerNames = [ f"{layerName}{suffix}" for suffix in suffixes ]
+			if not layerName :
+				potentialLayerNames.extend( [ f"RGBA{suffix}" for suffix in suffixes ] )
+		else :
+			potentialLayerName = re.sub( "(" + "|".join( suffixes ) + ")$", "", layerName )
+			potentialLayerNames = [ potentialLayerName ] if potentialLayerName != layerName else []
+			if potentialLayerNames and potentialLayerName == "RGBA" :
+				potentialLayerNames.insert( 0, "" )
+
+		for layerName in potentialLayerNames :
+			potentialValue = IECore.StringVectorData( [
+				GafferImage.ImageAlgo.channelName( layerName, GafferImage.ImageAlgo.baseName( c ) )
+				for c in currentValue
+			] )
+			if potentialValue in self._rgbaChannels().values() :
+				return potentialValue
+
+		return None
 
 ##########################################################################
 # _StateWidget
