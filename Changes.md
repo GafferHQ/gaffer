@@ -10,6 +10,11 @@ Improvements
 - PlugPopup : Improved default popup title. Plugs and non-viewable nodes are no longer included in the title.
 - Viewer : Added <kbd>D</kbd> hotkey for toggling between denoised and undenoised layers.
 
+Fixes
+-----
+
+- Wedge : Fixed value preview widget's context handling. The widget now correctly updates when the context changes, and uses the correct context with respect to the focus node.
+
 API
 ---
 
