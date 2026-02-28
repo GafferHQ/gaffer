@@ -401,7 +401,7 @@ elif sys.platform == "darwin" :
 # ==========
 
 if not os.environ.get( "OCIO" ) :
-	os.environ["OCIO"] = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+	os.environ["OCIO"] = str( gafferRoot / "openColorIO" / "studio-config-v3.0.0_aces-v2.0_ocio-v2.4.ocio" )
 
 # Python Setup
 # ============
