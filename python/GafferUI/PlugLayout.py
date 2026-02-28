@@ -338,6 +338,12 @@ class PlugLayout( GafferUI.Widget ) :
 					row.append( widget )
 					section.widgets[-1] = row
 			else :
+				parent = widget.parent()
+				if isinstance( parent, _AccessoryRow ) :
+					# Widget is no longer an accessory or no longer has an accessory, reparent to
+					# grandparent to prevent the widget from being deleted with the old _AccessoryRow.
+					parent.parent().addChild( widget )
+
 				section.widgets.append( widget )
 
 			if self.__itemMetadataValue( item, "divider" ) :
