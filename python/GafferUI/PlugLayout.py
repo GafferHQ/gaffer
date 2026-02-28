@@ -330,13 +330,19 @@ class PlugLayout( GafferUI.Widget ) :
 				section = section.subsection( sectionName )
 
 			if len( section.widgets ) and self.__itemMetadataValue( item, "accessory" ) :
-				if isinstance( section.widgets[-1], _AccessoryRow ) :
-					section.widgets[-1].append( widget )
+				primaryIndex = -1
+				for i in range( len( section.widgets ) - 1, -1, -1 ) :
+					if not isinstance( section.widgets[i], GafferUI.Divider ) :
+						primaryIndex = i
+						break
+
+				if isinstance( section.widgets[primaryIndex], _AccessoryRow ) :
+					section.widgets[primaryIndex].append( widget )
 				else :
 					row = _AccessoryRow()
-					row.append( section.widgets[-1] )
+					row.append( section.widgets[primaryIndex] )
 					row.append( widget )
-					section.widgets[-1] = row
+					section.widgets[primaryIndex] = row
 			else :
 				parent = widget.parent()
 				if isinstance( parent, _AccessoryRow ) :

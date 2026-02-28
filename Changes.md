@@ -13,7 +13,9 @@ Improvements
 Fixes
 -----
 
-- PlugLayout : Fixed `Internal C++ object already deleted` errors when removing "layout:accessory" metadata from plugs currently visible in the Node Editor.
+- PlugLayout :
+  - Fixed `Internal C++ object already deleted` errors when removing "layout:accessory" metadata from plugs currently visible in the Node Editor.
+  - Fixed layout issues when combining "layout:divider" and "layout:accessory" metadata.
 
 API
 ---
