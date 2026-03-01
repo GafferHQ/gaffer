@@ -11,6 +11,7 @@ Improvements
 - Viewer : Added <kbd>D</kbd> hotkey for toggling between denoised and undenoised layers.
 - Dispatcher : Simplified jobs by removing tasks for nodes - such as Wedge - that do no work of their own. This is particularly noticeable in TractorDispatcher, resulting in simpler job graphs in the Tractor dashboard. This behaviour is enabled
 by default but can be temporarily disabled by setting the `GAFFERDISPATCH_OMIT_EMPTY_TASKS` environment variable to a value of `0`. In future, the environment variable will be removed.
+- TractorDispatcher : Added `startPaused` plug.
 
 Fixes
 -----

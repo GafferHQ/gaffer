@@ -50,6 +50,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 		self["service"] = Gaffer.StringPlug( defaultValue = '"*"' )
 		self["envKey"] = Gaffer.StringPlug()
+		self["startPaused"] = Gaffer.BoolPlug()
 
 	## Decribes the Gaffer task associated with a particular Tractor task.
 	@dataclasses.dataclass
@@ -109,6 +110,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 			title = self["jobName"].getValue() or "untitled",
 			service = self["service"].getValue(),
 			envkey = self["envKey"].getValue().split(),
+			paused = self["startPaused"].getValue(),
 		)
 
 		# Populate the job with tasks from the batch tree
