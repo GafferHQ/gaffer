@@ -61,13 +61,17 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve, ccl::Scene 
 {
 	assert( curve->typeId() == IECoreScene::CurvesPrimitive::staticTypeId() );
 	ccl::Hair *hair = SceneAlgo::createNodeWithLock<ccl::Hair>( scene );
+	/// \todo Support per-object `curve_shape` configured via an attribute.
+	hair->curve_shape = scene->params.hair_shape;
 
 	size_t numCurves = curve->numCurves();
 	size_t numKeys = 0;
 
 	const vector<int> &verticesPerCurve = curve->verticesPerCurve()->readable();
 	for( size_t i = 0; i < verticesPerCurve.size(); ++i )
+	{
 		numKeys += verticesPerCurve[i];
+	}
 
 	hair->reserve_curves( numCurves, numKeys );
 
@@ -83,7 +87,9 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve, ccl::Scene 
 		{
 			size_t firstKey = key;
 			for( int j = 0; j < verticesPerCurve[i]; ++j, ++key )
+			{
 				hair->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), width[key] / 2.0f );
+			}
 
 			hair->add_curve( firstKey, 0 );
 		}
@@ -102,7 +108,9 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve, ccl::Scene 
 		{
 			size_t firstKey = key;
 			for( int j = 0; j < verticesPerCurve[i]; ++j, ++key )
+			{
 				hair->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), constantWidth / 2.0f );
+			}
 
 			hair->add_curve( firstKey, 0 );
 		}
@@ -171,7 +179,9 @@ ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curv
 		for( int i = 0; i < numSamples; ++i )
 		{
 			if( i == frameIdx )
+			{
 				continue;
+			}
 			samples.push_back( curves[i] );
 		}
 	}
@@ -183,7 +193,9 @@ ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curv
 		for( int i = 0; i < numSamples; ++i )
 		{
 			if( i == _frameIdx )
+			{
 				continue;
+			}
 			samples.push_back( curves[i] );
 		}
 	}
@@ -229,7 +241,9 @@ ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curv
 					size_t numVerts = p->readable().size();
 
 					for( size_t j = 0; j < numVerts; ++j, ++mP )
+					{
 						*mP = ccl::make_float3( points[j].x, points[j].y, points[j].z );
+					}
 				}
 				else
 				{

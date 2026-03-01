@@ -48,7 +48,7 @@ import IECoreScene
 
 for c in "rgb" :
 	IECoreScene.ShaderNetworkAlgo.registerSplitAdapter(
-		"cycles", c, IECoreScene.Shader( "separate_rgb", "cycles:shader" ), "color", c
+		"cycles", c, IECoreScene.Shader( "separate_color", "cycles:shader" ), "color", c
 	)
 
 for c in "xyz" :
@@ -57,7 +57,7 @@ for c in "xyz" :
 	)
 
 IECoreScene.ShaderNetworkAlgo.registerJoinAdapter(
-	"cycles", IECore.Color3fData, IECoreScene.Shader( "combine_rgb", "cycles:shader" ), ( "r", "g", "b" ), "image"
+	"cycles", IECore.Color3fData, IECoreScene.Shader( "combine_color", "cycles:shader" ), ( "r", "g", "b" ), "color"
 )
 
 IECoreScene.ShaderNetworkAlgo.registerJoinAdapter(

@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.6.x.x)
 =======
 
+Features
+--------
+
+- Cycles : Updated to version 5.0.0.
+
 Improvements
 ------------
 
@@ -10,6 +15,9 @@ Improvements
   - Applications now run using a dedicated `gaffer` executable instead of `python`. This means the root process is now called `gaffer` on all platforms. The `bin/gaffer` (Linux) and `bin/gaffer.cmd` (Windows) launch scripts should still be used as before (#6654).
   - Matched TBB worker thread stack limit to the limit for the main thread. On Linux, this can be configured with `ulimit -s`.
 - ShaderTweaks : Added support for tweaking ramp parameters.
+- CyclesAttributes : Added `cycles:adaptive_space` attribute.
+- CyclesOptions : Added `cycles:integrator:volume_ray_marching` option.
+- LightEditor : Added column for `cycles:visibility:camera` attribute.
 
 Fixes
 -----
@@ -17,6 +25,7 @@ Fixes
 - RenderController : Fixed bug where repeatedly setting the same VisibleSet could cause unnecessary updates.
 - UI : Fixed failure to cancel background computations when more than one UI element was waiting for the same result. This could result in the UI becoming unresponsive until the computation was complete.
 - BackgroundMethod : Fixed bug that allowed unwanted background computations to continue when a widget was hidden.
+- MeshTessellate : Fixed crashes caused by non-manifold geometry.
 
 API
 ---
@@ -47,18 +56,24 @@ Breaking Changes
 - Widget : The `toolTip`, `parenting` and `displayTransform` constructor arguments are no longer positional.
 - ValuePlug : Removed deprecated cache policies. Use `TaskCollaboration` instead of `TaskIsolation`. Use `Default` instead of `Legacy`. Instead of `Standard`, use `TaskCollaboration` for `computeCachePolicy()` and `Default` for `hashCachePolicy()`.
 - Box : Removed deprecated plug promotion methods. Use `PlugAlgo` instead.
+- CyclesLight : Removed `use_camera`, `use_diffuse`, `use_glossy`, `use_transmission`, `use_scatter`, and `lightgroup` parameter plugs as Cycles no longer considers these to be light parameters. Ray visibility and light group membership is now set via the `cycles:visibility:*` and `cycles:lightgroup` attributes on a CyclesAttributes node.
+- CyclesAttributes : Removed `cycles:shader:heterogeneous_volume` attribute as it is no longer used by Cycles.
+- CyclesOptions : Removed `cycles:background:volume_step_size` option as it is no longer used by Cycles.
 
 Build
 -----
 
 - Boost : Updated to version 1.85.0.
 - Cortex : Updated to version 10.7.0.0a6.
+- Cycles : Updated to version 5.0.0.
+- Embree : Updated to version 4.4.0.
 - Imath : Updated to version 3.1.12.
 - Jemalloc : Removed when building on macOS.
 - LLVM : Updated to version 17.0.6.
 - OpenColorIO : Updated to version 2.4.2.
 - OpenEXR : Updated to version 3.3.6.
 - OpenShadingLanguage : Updated to version 1.14.8.0.
+- OpenSubdiv : Updated to version 3.6.1.
 - PySide : Updated to version 6.5.8.
 - Python : Updated to version 3.11.14.
 - Qt : Updated to version 6.5.8.

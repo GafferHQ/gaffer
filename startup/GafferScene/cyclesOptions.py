@@ -43,6 +43,8 @@ Gaffer.Metadata.registerValues( {
 	"option:cycles:log_level" : {
 
 		"defaultValue" : 0,
+		"minValue" : 0,
+		"maxValue" : 2,
 		"description" :
 		"""
 		Internal Cycles debugging log-level.
@@ -51,7 +53,7 @@ Gaffer.Metadata.registerValues( {
 		"layout:section" : "Log",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : IECore.StringVectorData( [ "Off", "On", "Debug" ] ),
+		"presetNames" : IECore.StringVectorData( [ "Error", "Warning", "Info" ] ),
 		"presetValues" : IECore.IntVectorData( [ 0, 1, 2 ] ),
 
 	},
@@ -269,15 +271,16 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue" : "ribbon",
 		"description" :
 		"""
-		Round Ribbons - Render hair as flat ribbon with rounded normals, for fast rendering.
-		3D Curves - Render hair as 3D curve, for accurate results when viewing hair close up.
+		Round Ribbons - Render curves as flat ribbon with rounded normals, for fast rendering.
+		3D Curves - Render curves as cylindrical 3D geometry, for accurate results when viewing hair close up.
+		Linear 3D Curves - Render curves as cylindrical 3D geometry with linear interpolation.
 		""",
 		"label" : "Hair Shape",
 		"layout:section" : "Scene",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : IECore.StringVectorData( [ "Round Ribbons", "3D Curves" ] ),
-		"presetValues" : IECore.StringVectorData( [ "ribbon", "thick" ] ),
+		"presetNames" : IECore.StringVectorData( [ "Round Ribbons", "3D Curves", "Linear 3D Curves" ] ),
+		"presetValues" : IECore.StringVectorData( [ "ribbon", "thick", "thick-linear" ] ),
 
 	},
 
@@ -431,14 +434,32 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"option:cycles:integrator:volume_ray_marching" : {
+
+		"defaultValue" : False,
+		"description" :
+		"""
+		Render volumes using the biased volume ray marching approach from
+		Cycles 4.5 and earlier. Cycles 5.0 defaults to unbiased volume sampling,
+		which produces fewer artifacts but could result in more noise.
+
+		> Tip : When ray marching is enabled the `volume_step_rate` and
+		> `volume_max_steps` options control the step size and max steps.
+		""",
+		"label" : "Volume Ray Marching",
+		"layout:section" : "Volumes",
+
+	},
+
 	"option:cycles:integrator:volume_max_steps" : {
 
 		"defaultValue" : 1024,
 		"description" :
 		"""
-		Maximum number of steps through the volume before giving up,
-		to avoid extremely long render times with big objects or small step
-		sizes.
+		The maximum number of steps taken through a volume. Reduce this to
+		avoid long render times with large volumes or small step sizes.
+
+		> Info : Only used when the legacy `volume_ray_marching` option is enabled.
 		""",
 		"label" : "Volume Max Steps",
 		"layout:section" : "Volumes",
@@ -450,8 +471,10 @@ Gaffer.Metadata.registerValues( {
 		"defaultValue" : 0.1,
 		"description" :
 		"""
-		Globally adjust detail for volume rendering, on top of automatically estimated step size.
-		Higher values reduce render time, lower values render with more detail.
+		Globally adjust detail for volumes. Higher values reduce render time,
+		lower values render with more detail.
+
+		> Info : Only used when the legacy `volume_ray_marching` option is enabled.
 		""",
 		"label" : "Volume Step Rate",
 		"layout:section" : "Volumes",
@@ -882,20 +905,6 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label" : "Roughness Threshold",
 		"layout:section" : "Background",
-
-	},
-
-	"option:cycles:background:volume_step_size" : {
-
-		"defaultValue" : 0.1,
-		"description" :
-		"""
-		Distance between volume shader samples when rendering the volume
-		(lower values give more accurate and detailed results, but also
-		increases render time).
-		""",
-		"label" : "Volume Step Size",
-		"layout:section" : "Volumes",
 
 	},
 

@@ -86,13 +86,14 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "color" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "intensity" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "exposure" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "lightgroup" )
+	GafferSceneUI.LightEditor.registerAttribute( "cycles:light", "cycles:lightgroup" )
 
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "cast_shadow", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_diffuse", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_glossy", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_transmission", "Contribution" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "use_scatter", "Contribution" )
+	GafferSceneUI.LightEditor.registerAttribute( "cycles:light", "cycles:visibility:camera", "Contribution" )
+	GafferSceneUI.LightEditor.registerAttribute( "cycles:light", "cycles:visibility:diffuse", "Contribution" )
+	GafferSceneUI.LightEditor.registerAttribute( "cycles:light", "cycles:visibility:glossy", "Contribution" )
+	GafferSceneUI.LightEditor.registerAttribute( "cycles:light", "cycles:visibility:transmission", "Contribution" )
+	GafferSceneUI.LightEditor.registerAttribute( "cycles:light", "cycles:visibility:scatter", "Contribution" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "max_bounces", "Contribution" )
 
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "size", "Shape" )
@@ -106,9 +107,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 
 	# Register Cycles-specific parameters for USD lights.
 	for parameter in [
-		"lightgroup",
-		"use_mis", "use_camera", "use_diffuse", "use_glossy", "use_transmission", "use_scatter", "use_caustics",
-		"spread", "map_resolution", "max_bounces"
+		"use_mis", "use_caustics", "spread", "map_resolution", "max_bounces"
 	] :
 		GafferSceneUI.LightEditor.registerParameter(
 			"light", f"cycles:{parameter}", "Cycles",

@@ -57,7 +57,9 @@
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
+#include "kernel/types.h"
 #include "scene/shader_nodes.h"
+#include "scene/object.h"
 #include "scene/osl.h"
 #include "util/path.h"
 #include "util/version.h"
@@ -111,7 +113,7 @@ ccl::SocketType::Type getSocketType( const std::string &name )
 
 using ShaderMap = boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *>;
 
-ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
+ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::Scene *scene, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
 	// Reuse previously created node if we can.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
@@ -127,10 +129,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	if( isOSLShader )
 	{
-		if( shaderManager->use_osl() )
+		if( scene->shader_manager->use_osl() )
 		{
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
-			node = ccl::OSLShaderManager::osl_node( shaderGraph, shaderManager, shaderFileName.c_str() );
+			node = ccl::OSLShaderManager::osl_node( shaderGraph, scene, shaderFileName.c_str() );
 		}
 		else
 		{
@@ -158,12 +160,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	{
 		if( nodeType->type == ccl::NodeType::SHADER && nodeType->create )
 		{
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
 			node = shaderGraph->create_node( nodeType );
-#else
-			node = static_cast<ccl::ShaderNode *>( nodeType->create( nodeType ) );
-			node->set_owner( shaderGraph );
-#endif
 		}
 	}
 
@@ -174,10 +171,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	}
 
 	node->name = ccl::ustring( namePrefix + outputParameter.shader.string() );
-
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) < 404
-	shaderGraph->add( node );
-#endif
 
 	// Set the shader parameters
 
@@ -255,7 +248,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
-		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, shaderGraph, converted );
+		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, scene, shaderGraph, converted );
 		if( !sourceNode )
 		{
 			continue;
@@ -442,7 +435,7 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 std::unique_ptr<ccl::ShaderGraph> convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 								const IECoreScene::ShaderNetwork *displacementShader,
 								const IECoreScene::ShaderNetwork *volumeShader,
-								ccl::ShaderManager *shaderManager,
+								ccl::Scene *scene,
 								const std::string &namePrefix )
 {
 	std::unique_ptr<ccl::ShaderGraph> graph = std::make_unique<ccl::ShaderGraph>();
@@ -470,7 +463,7 @@ std::unique_ptr<ccl::ShaderGraph> convertGraph( const IECoreScene::ShaderNetwork
 		IECoreScene::ShaderNetworkAlgo::addComponentConnectionAdapters( toConvert.get() );
 		IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( toConvert.get() );
 		ShaderMap converted;
-		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph.get(), converted );
+		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, scene, graph.get(), converted );
 
 		if( node )
 		{
@@ -486,10 +479,10 @@ std::unique_ptr<ccl::ShaderGraph> convertGraph( const IECoreScene::ShaderNetwork
 	return graph;
 }
 
-void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix )
+void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::Scene *scene, const std::string &namePrefix )
 {
 	ShaderMap converted;
-	convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, graph, converted );
+	convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, scene, graph, converted );
 }
 
 void setSingleSided( ccl::ShaderGraph *graph )
@@ -500,12 +493,6 @@ void setSingleSided( ccl::ShaderGraph *graph )
 	ccl::ShaderNode *mixClosure = graph->create_node<ccl::MixClosureNode>();
 	ccl::ShaderNode *transparentBSDF = graph->create_node<ccl::TransparentBsdfNode>();
 	ccl::ShaderNode *geometry = graph->create_node<ccl::GeometryNode>();
-
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) < 404
-	graph->add( mixClosure );
-	graph->add( transparentBSDF );
-	graph->add( geometry );
-#endif
 
 	if( ccl::ShaderOutput *shaderOutput = ShaderNetworkAlgo::output( geometry, "backfacing" ) )
 		if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( mixClosure, "fac" ) )
@@ -599,7 +586,8 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		{
 			continue;
 		}
-		// Convert angle-based parameters, where we use degress and Cycles uses radians.
+
+		// Convert angle-based parameters, where we use degrees and Cycles uses radians.
 		else if( name == "angle" )
 		{
 			cyclesLight->set_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 0.0f ) ) );
@@ -906,8 +894,6 @@ const InternedString g_texMappingYMappingParameter( "tex_mapping__y_mapping" );
 const InternedString g_texMappingZMappingParameter( "tex_mapping__z_mapping" );
 const InternedString g_translationParameter( "translation" );
 const InternedString g_treatAsPointParameter( "treatAsPoint" );
-const InternedString g_useDiffuseParameter( "use_diffuse" );
-const InternedString g_useGlossyParameter( "use_glossy" );
 const InternedString g_useMISParameter( "use_mis" );
 const InternedString g_useSpecularWorkflowParameter( "useSpecularWorkflow" );
 const InternedString g_UVParameter( "UV" );
@@ -926,6 +912,7 @@ const InternedString g_vector3Parameter( "vector3" );
 const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
+const InternedString g_USDRayVisibilityBlindDataKey( "__USDRayVisibility" );
 
 const string g_cyclesNamespace( "cycles:" );
 
@@ -943,11 +930,16 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 	transferUSDParameter( network, shaderHandle, usdShader, g_normalizeParameter, shader, g_normalizeParameter, false );
 	transferUSDParameter( network, shaderHandle, usdShader, g_shadowEnableParameter, shader, g_castShadowParameter, true );
 
-	const float diffuse = parameterValue( usdShader, g_diffuseParameter, 1.0f );
-	shader->parameters()[g_useDiffuseParameter] = new BoolData( diffuse > 0.0f );
-
-	const float specular = parameterValue( usdShader, g_specularParameter, 1.0f );
-	shader->parameters()[g_useGlossyParameter] = new BoolData( specular > 0.0f );
+	int visibility = (int)ccl::PATH_RAY_ALL_VISIBILITY;
+	if( parameterValue( usdShader, g_diffuseParameter, 1.0f ) == 0.0f )
+	{
+		visibility &= ~(int)ccl::PATH_RAY_DIFFUSE;
+	}
+	if( parameterValue( usdShader, g_specularParameter, 1.0f ) == 0.0f )
+	{
+		visibility &= ~(int)ccl::PATH_RAY_GLOSSY;
+	}
+	shader->blindData()->writable()[g_USDRayVisibilityBlindDataKey] = new IntData( visibility );
 
 	shader->parameters()[g_useMISParameter] = new BoolData( true );
 

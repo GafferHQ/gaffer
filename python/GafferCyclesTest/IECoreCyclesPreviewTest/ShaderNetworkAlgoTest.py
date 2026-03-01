@@ -59,8 +59,6 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				"normalize" : False,
 				"cast_shadow" : True,
 				"use_mis" : True,
-				"use_diffuse" : True,
-				"use_glossy" : True,
 			}
 			result.update( parameters )
 			return result
@@ -256,9 +254,10 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					expectedLightParameters( {
 						"width" : 1.0,
 						"height" : 1.0,
-						"use_diffuse" : False,
 					} )
 				),
+
+				IECore.CompoundData( { "__USDRayVisibility" : IECore.IntData( 2039 ) } )
 
 			],
 
@@ -278,9 +277,10 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					expectedLightParameters( {
 						"width" : 1.0,
 						"height" : 1.0,
-						"use_glossy" : False,
 					} )
 				),
+
+				IECore.CompoundData( { "__USDRayVisibility" : IECore.IntData( 2031 ) } )
 
 			],
 
@@ -297,7 +297,10 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 				IECoreCycles.ShaderNetworkAlgo.convertUSDShaders( network )
 
-				self.__assertShadersEqual( network.getShader( "light" ), shaders[1] )
+				comparisonShader = shaders[1]
+				comparisonShader.blindData().update( shaders[2] if len( shaders ) == 3 else { "__USDRayVisibility" : IECore.IntData( 2047 ) } )
+
+				self.__assertShadersEqual( network.getShader( "light" ), comparisonShader )
 
 	def testConvertUSDRectLightTexture( self ) :
 
@@ -869,6 +872,12 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual(
 				shader1.parameters[k], shader2.parameters[k],
 				"{}(Parameter = {})".format( message or "", k )
+			)
+		self.assertEqual( shader1.blindData().keys(), shader2.blindData().keys(), message )
+		for k in shader1.blindData().keys() :
+			self.assertEqual(
+				shader1.blindData()[k], shader2.blindData()[k],
+				"{}(Blind Data = {})".format( message or "", k )
 			)
 
 if __name__ == "__main__":

@@ -100,7 +100,6 @@ __aliases = {
 	"bgTransparent" : "cycles:background:transparent",
 	"bgTransparentGlass" : "cycles:background:transparent_glass",
 	"bgTransparentRoughnessThreshold" : "cycles:background:transparent_roughness_threshold",
-	"volumeStepSize" : "cycles:background:volume_step_size",
 	"exposure" : "cycles:film:exposure",
 	"passAlphaThreshold" : "cycles:film:pass_alpha_threshold",
 	"displayPass" : "cycles:film:display_pass",

@@ -217,12 +217,31 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"attribute:cycles:adaptive_space" : {
+
+		"defaultValue" : "pixel",
+		"description" :
+		"""
+		How to adaptively subdivide the mesh.
+
+		- Pixel : Subdivide polygons to reach a specified pixel size on screen.
+		- Object : Subdivide to reach a specified edge length in object space.
+		""",
+		"label" : "Adaptive Space",
+		"layout:section" : "Subdivision",
+
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "Pixel", "Object" ] ),
+		"presetValues" : IECore.StringVectorData( [ "pixel", "object" ] ),
+
+	},
+
 	"attribute:cycles:lightgroup" : {
 
 		"defaultValue" : "",
 		"description" :
 		"""
-		Set the lightgroup of an object with emission.
+		Lightgroup membership of lights or objects with emission.
 		""",
 		"label" : "Lightgroup",
 		"layout:section" : "Rendering",
@@ -335,19 +354,6 @@ Gaffer.Metadata.registerValues( {
 		disabling will render faster but not give accurate shadows.
 		""",
 		"label" : "Transparent Shadow",
-		"layout:section" : "Shader",
-
-	},
-
-	"attribute:cycles:shader:heterogeneous_volume" : {
-
-		"defaultValue" : True,
-		"description" :
-		"""
-		Disabling this when using volume rendering, assume volume has the same density
-		everywhere (not using any textures), for faster rendering.
-		""",
-		"label" : "Heterogeneous Volume",
 		"layout:section" : "Shader",
 
 	},

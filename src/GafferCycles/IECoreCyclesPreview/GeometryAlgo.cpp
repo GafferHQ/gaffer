@@ -197,8 +197,8 @@ class VolumeLoader : public ccl::VDBImageLoader
 {
 	public :
 
-		VolumeLoader( openvdb::GridBase::ConstPtr grid, const string &gridName, int precision_ )
-			:	VDBImageLoader( grid, gridName )
+		VolumeLoader( openvdb::GridBase::ConstPtr grid, const string &gridName, int precision_, float clipping )
+			:	VDBImageLoader( grid, gridName, clipping )
 		{
 			precision = precision_;
 		}
@@ -375,11 +375,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	{
 		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
 	}
-	else if( name == "N" && attr->element == ccl::ATTR_ELEMENT_FACE && attr->type == ccl::TypeNormal )
-	{
-		attr->std = ccl::ATTR_STD_FACE_NORMAL;
-		attr->name = ccl::Attribute::standard_name( attr->std ); // Cycles calls this `Ng`.
-	}
 	else if( name == "uv" && attr->type == ccl::TypeFloat2 )
 	{
 		attr->std = ccl::ATTR_STD_UV;
@@ -394,7 +389,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 }
 
-void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, int precision )
+void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volume, ccl::Scene *scene, int precision, float clipping )
 {
 	for( const std::string& gridName : vdbObject->gridNames() )
 	{
@@ -492,16 +487,12 @@ void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *volu
 			volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL )
 		;
 
-		auto loader = std::make_unique<VolumeLoader>( grid, gridName, precision );
+		auto loader = std::make_unique<VolumeLoader>( grid, gridName, precision, clipping );
 		ccl::ImageParams params;
 		params.frame = 0.0f;
 
 		std::scoped_lock lock( scene->mutex );
-#if ( CYCLES_VERSION_MAJOR * 100 + CYCLES_VERSION_MINOR ) >= 404
 		attr->data_voxel() = scene->image_manager->add_image( std::move( loader ), params, false );
-#else
-		attr->data_voxel() = scene->image_manager->add_image( loader.release(), params, false );
-#endif
 	}
 }
 

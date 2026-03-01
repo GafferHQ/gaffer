@@ -66,6 +66,11 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.__extraOptions = { "cycles:shadingsystem" : "SVM" }
 		GafferSceneTest.InteractiveRenderTest.testBasicLightLinking( self )
 
+	def testShadowLinking( self ) :
+
+		self.__extraOptions = { "cycles:integrator:max_bounce" : 0 }
+		GafferSceneTest.InteractiveRenderTest.testShadowLinking( self )
+
 	@unittest.skip( "Resolution edits not supported yet" )
 	def testEditResolution( self ) :
 
