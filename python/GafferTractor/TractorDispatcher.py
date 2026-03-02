@@ -50,6 +50,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 		self["service"] = Gaffer.StringPlug( defaultValue = '"*"' )
 		self["envKey"] = Gaffer.StringPlug()
+		self["startPaused"] = Gaffer.BoolPlug()
 
 	## Decribes the Gaffer task associated with a particular Tractor task.
 	@dataclasses.dataclass
@@ -109,6 +110,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 			title = self["jobName"].getValue() or "untitled",
 			service = self["service"].getValue(),
 			envkey = self["envKey"].getValue().split(),
+			paused = self["startPaused"].getValue(),
 		)
 
 		# Populate the job with tasks from the batch tree
@@ -144,6 +146,14 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 		task = self.__acquireTask( batch, dispatchData )
 		tractorParent.addChild( task )
+		if isinstance( tractorParent.subtasks[-1], GafferTractor.tractorAPI().Instance ) :
+			# The `author` API automatically creates `Instance` objects when the
+			# same task appears as a subtask of multiple tasks. But it uses the
+			# task `title` to reference the task, and that might not be unique.
+			# An apparently undocumented feature of Tractor Engine helps us out
+			# by looking up by `id` before `title` when resolving instances. So
+			# we update the Instance to reference by `id` instead.
+			tractorParent.subtasks[-1].title = task.id
 
 		if batch.blindData().get( "tractorDispatcher:visited" ) :
 			return
@@ -167,7 +177,14 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		# Make a task.
 
 		nodeName = batch.node().relativeName( dispatchData["scriptNode"] )
-		task = GafferTractor.tractorAPI().Task( title = nodeName )
+		task = GafferTractor.tractorAPI().Task(
+			title = nodeName,
+			# We need `id` to be unique so that we can reference it
+			# from `Instance` objects. TaskBatch is RefCounted, which
+			# uses the object address for `__hash__()`, giving us the
+			# uniqueness we require.
+			id = str( batch.__hash__() )
+		)
 
 		if batch.frames() :
 

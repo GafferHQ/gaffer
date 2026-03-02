@@ -82,6 +82,18 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"startPaused" : {
+
+			"description" :
+			"""
+			Submits the job in a paused state, so that it doesn't
+			pick up Tractor blades until it is unpaused via the
+			Tractor dashboard.
+			""",
+
+
+		},
+
 	}
 
 )

@@ -321,14 +321,15 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( job.subtasks[0].subtasks[1].title, "i2 1" )
 
 		self.assertEqual( len( job.subtasks[0].subtasks[0].subtasks ), 1 )
-		self.assertEqual( len( job.subtasks[0].subtasks[1].subtasks ), 1 )
+		self.assertIsInstance( job.subtasks[0].subtasks[0].subtasks[0], GafferTractor.tractorAPI().Task )
 		self.assertEqual( job.subtasks[0].subtasks[0].subtasks[0].title, "n1 1" )
-		self.assertEqual( job.subtasks[0].subtasks[1].subtasks[0].title, "n1 1" )
 
+		self.assertEqual( len( job.subtasks[0].subtasks[1].subtasks ), 1 )
 		self.assertIsInstance(
 			job.subtasks[0].subtasks[1].subtasks[0],
 			GafferTractor.tractorAPI().Instance
 		)
+		self.assertEqual( job.subtasks[0].subtasks[1].subtasks[0].title, job.subtasks[0].subtasks[0].subtasks[0].id )
 
 	def testTaskPlugs( self ) :
 
@@ -393,7 +394,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		s["v"]["preTasks"][0].setInput( s["t"]["task"] )
 
 		job = self.__job( [ s["v" ] ] )
-		task = job.subtasks[0].subtasks[0]
+		task = job.subtasks[0]
 		self.assertIn(
 			"imath.Color3f( 0, 1, 2 )",
 			task.cmds[0].argv
@@ -403,6 +404,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["pythonCommand"] = GafferDispatch.PythonCommand()
+		script["pythonCommand"]["command"].setValue( "print( 10 )" )
 
 		script["dispatcher"] = self.__dispatcher()
 		script["dispatcher"]["tasks"][0].setInput( script["pythonCommand"]["task"] )

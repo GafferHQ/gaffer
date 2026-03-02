@@ -294,6 +294,18 @@ void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *source
 	}
 }
 
+/// \todo Remove, so that we always omit empty tasks. We're just providing the option
+/// as a courtesy for the 1.6 release, since the change could theoretically affect
+/// subclasses, or processing done via `TractorDispatcher.preSpoolSignal()`.
+bool omitEmptyBatches()
+{
+	if( const char *v = getenv( "GAFFERDISPATCH_OMIT_EMPTY_TASKS" ) )
+	{
+		return strcmp( v, "0" ) != 0;
+	}
+	return true;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -1086,7 +1098,7 @@ void Dispatcher::execute() const
 		}
 	}
 
-	preprocessBatches( batcher.rootBatch() );
+	preprocessBatches( batcher.rootBatch(), omitEmptyBatches(), /* immediate = */ false );
 
 	// Save the script. If we're in a nested dispatch, this may have been done already by
 	// the outer dispatch, hence the call to `exists()`. Performing the saving here is
@@ -1119,7 +1131,7 @@ void Dispatcher::execute() const
 	}
 }
 
-void Dispatcher::preprocessBatches( TaskBatch *batch, bool immediate ) const
+void Dispatcher::preprocessBatches( TaskBatch *batch, bool omitEmpty, bool immediate ) const
 {
 	if( batch->m_visited )
 	{
@@ -1128,20 +1140,28 @@ void Dispatcher::preprocessBatches( TaskBatch *batch, bool immediate ) const
 
 	immediate = immediate || batch->m_immediate;
 
-	TaskBatches &preTasks = batch->m_preTasks;
-	for( TaskBatches::iterator it = preTasks.begin(); it != preTasks.end(); )
+	TaskBatches processedPreTasks;
+	processedPreTasks.reserve( batch->preTasks().size() );
+	for( const auto &preTask : batch->preTasks()  )
 	{
-		preprocessBatches( it->get(), immediate );
-		if( (*it)->m_executed )
+		preprocessBatches( preTask.get(), omitEmpty, immediate );
+		if( preTask->m_executed )
 		{
-			batch->m_preTasksSet.erase( it->get() );
-			it = preTasks.erase( it );
+			continue;
+		}
+		else if( omitEmpty && preTask->frames().empty() && !preTask->node()->isInstanceOf( "GafferDispatch::TaskList" ) )
+		{
+			for( const auto &prePreTask : preTask->preTasks() )
+			{
+				processedPreTasks.push_back( prePreTask );
+			}
 		}
 		else
 		{
-			++it;
+			processedPreTasks.push_back( preTask );
 		}
 	}
+	batch->m_preTasks.swap( processedPreTasks );
 
 	if( immediate )
 	{
