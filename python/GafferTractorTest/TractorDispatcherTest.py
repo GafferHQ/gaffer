@@ -321,14 +321,15 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( job.subtasks[0].subtasks[1].title, "i2 1" )
 
 		self.assertEqual( len( job.subtasks[0].subtasks[0].subtasks ), 1 )
-		self.assertEqual( len( job.subtasks[0].subtasks[1].subtasks ), 1 )
+		self.assertIsInstance( job.subtasks[0].subtasks[0].subtasks[0], GafferTractor.tractorAPI().Task )
 		self.assertEqual( job.subtasks[0].subtasks[0].subtasks[0].title, "n1 1" )
-		self.assertEqual( job.subtasks[0].subtasks[1].subtasks[0].title, "n1 1" )
 
+		self.assertEqual( len( job.subtasks[0].subtasks[1].subtasks ), 1 )
 		self.assertIsInstance(
 			job.subtasks[0].subtasks[1].subtasks[0],
 			GafferTractor.tractorAPI().Instance
 		)
+		self.assertEqual( job.subtasks[0].subtasks[1].subtasks[0].title, job.subtasks[0].subtasks[0].subtasks[0].id )
 
 	def testTaskPlugs( self ) :
 

@@ -16,6 +16,7 @@ by default but can be temporarily disabled by setting the `GAFFERDISPATCH_OMIT_E
 Fixes
 -----
 
+- TractorDispatcher : Fixed bug handling tasks which were dependend on by more than one downstream task.
 - Wedge : Fixed value preview widget's context handling. The widget now correctly updates when the context changes, and uses the correct context with respect to the focus node.
 
 API
