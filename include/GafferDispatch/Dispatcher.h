@@ -237,7 +237,12 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 				TaskBatch();
 				TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
 
+				void addPreTask( const TaskBatchPtr &preTask, bool forPostTask = false );
+				void preprocess( bool immediate = false );
+				void isolate();
+
 				friend class Dispatcher;
+				friend class Batcher;
 
 				TaskNode::ConstTaskPlugPtr m_plug;
 				Gaffer::ConstContextPtr m_context;
@@ -281,9 +286,6 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 
 		void createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const;
 		mutable std::filesystem::path m_jobDirectory;
-
-		void preprocessBatches( TaskBatch *batch, bool immediate = false ) const;
-		void isolateBatch( TaskBatch *batch ) const;
 
 		using CreatorMap = std::map<std::string, std::pair<Creator, SetupPlugsFn>>;
 		static CreatorMap &creators();
