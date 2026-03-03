@@ -294,6 +294,18 @@ void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *source
 	}
 }
 
+/// \todo Remove, so that we always omit empty tasks. We're just providing the option
+/// as a courtesy for the 1.6 release, since the change could theoretically affect
+/// subclasses, or processing done via `TractorDispatcher.preSpoolSignal()`.
+bool omitEmptyBatches()
+{
+	if( const char *v = getenv( "GAFFERDISPATCH_OMIT_EMPTY_TASKS" ) )
+	{
+		return strcmp( v, "0" ) != 0;
+	}
+	return true;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -651,7 +663,7 @@ void Dispatcher::TaskBatch::addPreTask( const TaskBatchPtr &preTask, bool forPos
 	}
 }
 
-void Dispatcher::TaskBatch::preprocess( bool immediate )
+void Dispatcher::TaskBatch::preprocess( bool omitEmpty, bool immediate )
 {
 	if( m_visited )
 	{
@@ -660,19 +672,41 @@ void Dispatcher::TaskBatch::preprocess( bool immediate )
 
 	immediate = immediate || m_immediate;
 
-	for( TaskBatches::iterator it = m_preTasks.begin(); it != m_preTasks.end(); )
+	// Process our `preTasks`. When they are executed in immediate mode we need
+	// to remove them, and when they are empty we need to replace them with
+	// _their_ `preTasks`. The latter can create duplicates, so the easiest
+	// approach is to clear `m_preTasks` and use `addTask()` to rebuild, since
+	// that deduplicates for us.
+
+	TaskBatches originalPreTasks;
+	originalPreTasks.swap( m_preTasks );
+	// We don't worry about maintaining this, as it is unused from now on.
+	m_postTaskIndex = 0;
+	m_preTasksSet.clear();
+
+	m_preTasks.reserve( originalPreTasks.size() );
+	for( const auto &preTask : originalPreTasks )
 	{
-		(*it)->preprocess( immediate );
-		if( (*it)->m_executed )
+		preTask->preprocess( omitEmpty, immediate );
+		if( preTask->m_executed )
 		{
-			m_preTasksSet.erase( it->get() );
-			it = m_preTasks.erase( it );
+			continue;
+		}
+
+		if( omitEmpty && preTask->frames().empty() && !preTask->node()->isInstanceOf( "GafferDispatch::TaskList" ) )
+		{
+			for( const auto &prePreTask : preTask->preTasks() )
+			{
+				addPreTask( prePreTask );
+			}
 		}
 		else
 		{
-			++it;
+			addPreTask( preTask );
 		}
 	}
+
+	// Execute or isolate this batch if required.
 
 	if( immediate )
 	{
@@ -1210,7 +1244,7 @@ void Dispatcher::execute() const
 		}
 	}
 
-	batcher.rootBatch()->preprocess();
+	batcher.rootBatch()->preprocess( omitEmptyBatches() );
 
 	// Save the script. If we're in a nested dispatch, this may have been done already by
 	// the outer dispatch, hence the call to `exists()`. Performing the saving here is

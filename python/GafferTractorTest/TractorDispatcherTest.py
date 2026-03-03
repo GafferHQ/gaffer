@@ -393,7 +393,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		s["v"]["preTasks"][0].setInput( s["t"]["task"] )
 
 		job = self.__job( [ s["v" ] ] )
-		task = job.subtasks[0].subtasks[0]
+		task = job.subtasks[0]
 		self.assertIn(
 			"imath.Color3f( 0, 1, 2 )",
 			task.cmds[0].argv
@@ -403,6 +403,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["pythonCommand"] = GafferDispatch.PythonCommand()
+		script["pythonCommand"]["command"].setValue( "print( 10 )" )
 
 		script["dispatcher"] = self.__dispatcher()
 		script["dispatcher"]["tasks"][0].setInput( script["pythonCommand"]["task"] )

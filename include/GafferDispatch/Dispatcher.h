@@ -238,7 +238,7 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 				TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
 
 				void addPreTask( const TaskBatchPtr &preTask, bool forPostTask = false );
-				void preprocess( bool immediate = false );
+				void preprocess( bool omitEmpty, bool immediate = false );
 				void isolate();
 
 				friend class Dispatcher;
