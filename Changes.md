@@ -19,7 +19,9 @@ Fixes
 -----
 
 - TractorDispatcher : Fixed bug handling tasks which were dependend on by more than one downstream task.
-- Wedge : Fixed value preview widget's context handling. The widget now correctly updates when the context changes, and uses the correct context with respect to the focus node.
+- Wedge :
+  - Fixed value preview widget's context handling. The widget now correctly updates when the context changes, and uses the correct context with respect to the focus node.
+  - Fixed creation of context variables named "" if either the `variable` or `indexVariable` plugs had empty values.
 
 API
 ---
