@@ -10,6 +10,13 @@ Improvements
 - PlugPopup : Improved default popup title. Plugs and non-viewable nodes are no longer included in the title.
 - Viewer : Added <kbd>D</kbd> hotkey for toggling between denoised and undenoised layers.
 
+Fixes
+-----
+
+- PlugLayout :
+  - Fixed `Internal C++ object already deleted` errors when removing "layout:accessory" metadata from plugs currently visible in the Node Editor.
+  - Fixed layout issues when combining "layout:divider" and "layout:accessory" metadata.
+
 API
 ---
 
