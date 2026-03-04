@@ -9,6 +9,8 @@ Improvements
 - Scene Editors : Simplified display of edit source in column tooltips, the inspect and edit popups, and history window. Plugs and non-viewable nodes are no longer included in the source path.
 - PlugPopup : Improved default popup title. Plugs and non-viewable nodes are no longer included in the title.
 - Viewer : Added <kbd>D</kbd> hotkey for toggling between denoised and undenoised layers.
+- OSLShader : Added support for `$shaderType:$shaderName:$parameterName` style metadata keys for `correspondingInput` metadata.
+- RenderMan shaders : Added `correspondingInput` metadata to allow automatic node connections when inserting a shader between an existing connection and pass-through connections when a shader is disabled.
 
 API
 ---
