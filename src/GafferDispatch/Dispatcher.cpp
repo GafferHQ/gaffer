@@ -48,6 +48,7 @@
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Switch.h"
 
+#include "IECore/DataAlgo.h"
 #include "IECore/FileSequenceFunctions.h"
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
@@ -74,6 +75,7 @@ namespace
 const InternedString g_frame( "frame" );
 const InternedString g_isolatedBlindDataKey( "isolated" );
 const InternedString g_isolatedAnimationNodeName( "isolatedAnimation" );
+const InternedString g_nameBlindDataKey( "name" );
 const BoolDataPtr g_trueData = new BoolData( true );
 
 // TaskBatch contexts are identical to the contexts of their corresponding
@@ -549,6 +551,130 @@ FrameListPtr Dispatcher::frameRange() const
 	}
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+// TaskBatch::Namer class. This is an internal utility class for constructing
+// the DAG of TaskBatches to be dispatched. It is a separate class so
+// that it can track the necessary temporary state as member data.
+//////////////////////////////////////////////////////////////////////////
+
+class Dispatcher::TaskBatch::Namer
+{
+
+	public :
+
+		Namer( const Context &baseContext )
+			:	m_baseContext( baseContext )
+		{
+		}
+
+		string name( const TaskBatch *batch )
+		{
+			if( !batch->plug() )
+			{
+				return "";
+			}
+
+			string result = nodeLabel( batch->node() );
+			if( !batch->frames().empty() )
+			{
+				result += fmt::format( " {}", framesLabel( batch->frames() ) );
+			}
+
+			const string c = contextLabel( batch->context() );
+			{
+				if( !c.empty() )
+				{
+					result += fmt::format( " ({})", c );
+				}
+			}
+
+			return result;
+		}
+
+	private :
+
+		const string &nodeLabel( const Node *node )
+		{
+			string &result = m_nodeLabels[node];
+			if( !result.empty() )
+			{
+				return result;
+			}
+
+			result = node->relativeName( node->scriptNode() );
+			return result;
+		}
+
+		string framesLabel( const std::vector<float> &frames )
+		{
+			if( frames.size() == 1 )
+			{
+				// Fast path for common case.
+				return fmt::format( "{}", frames[0] );
+			}
+
+			vector<FrameList::Frame> intFrames( frames.begin(), frames.end() );
+			ConstFrameListPtr frameList = IECore::frameListFromList( intFrames );
+			return frameList->asString();
+		}
+
+		const string &contextLabel( const Context *context )
+		{
+			// Because the contexts we work will all have been uniquefied by
+			// ContextPool, their address is sufficient as our cache key.
+			string &result = m_contextLabels[context];
+			if( !result.empty() )
+			{
+				return result;
+			}
+
+			vector<InternedString> names;
+			context->names( names );
+			std::sort(
+				names.begin(), names.end(),
+				[] ( InternedString a, InternedString b ) {
+					return a.string() < b.string();
+				}
+			);
+
+			for( const auto &name : names )
+			{
+				if( context->variableHash( name ) == m_baseContext.variableHash( name ) )
+				{
+					continue;
+				}
+
+				DataPtr data = context->getAsData( name );
+				IECore::dispatch(
+					data.get(),
+					[&] ( const auto *data ) -> void {
+						using DataType = remove_pointer_t<decltype( data )>;
+						using ValueType = typename DataType::ValueType;
+						if constexpr( fmt::is_formattable<ValueType>::value )
+						{
+							if( result.size() )
+							{
+								result += ", ";
+							}
+							result += fmt::format( "{}={}", name.string(), data->readable() );
+						}
+						/// \todo Register formatters for Imath types, and anything
+						/// else that might end up in a context variable.
+					}
+				);
+			}
+
+			return result;
+		}
+
+		const Context &m_baseContext;
+
+		unordered_map<const Node *, string> m_nodeLabels;
+		unordered_map<const Context *, string> m_contextLabels;
+
+};
+
 //////////////////////////////////////////////////////////////////////////
 // TaskBatch implementation
 //////////////////////////////////////////////////////////////////////////
@@ -598,6 +724,11 @@ const std::vector<float> &Dispatcher::TaskBatch::frames() const
 const std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::preTasks() const
 {
 	return m_preTasks;
+}
+
+const std::string &Dispatcher::TaskBatch::name() const
+{
+	return m_blindData->member<StringData>( g_nameBlindDataKey, /* throwExceptions = */ true )->readable();
 }
 
 CompoundData *Dispatcher::TaskBatch::blindData()
@@ -663,7 +794,7 @@ void Dispatcher::TaskBatch::addPreTask( const TaskBatchPtr &preTask, bool forPos
 	}
 }
 
-void Dispatcher::TaskBatch::preprocess( bool omitEmpty, bool immediate )
+void Dispatcher::TaskBatch::preprocess( bool omitEmpty, Namer &namer, bool immediate )
 {
 	if( m_visited )
 	{
@@ -687,7 +818,7 @@ void Dispatcher::TaskBatch::preprocess( bool omitEmpty, bool immediate )
 	m_preTasks.reserve( originalPreTasks.size() );
 	for( const auto &preTask : originalPreTasks )
 	{
-		preTask->preprocess( omitEmpty, immediate );
+		preTask->preprocess( omitEmpty, namer, immediate );
 		if( preTask->m_executed )
 		{
 			continue;
@@ -717,6 +848,9 @@ void Dispatcher::TaskBatch::preprocess( bool omitEmpty, bool immediate )
 	{
 		isolate();
 	}
+
+	/// \todo Use member data rather than blind data.
+	blindData()->writable()[g_nameBlindDataKey] = new StringData( namer.name( this ) );
 
 	m_visited = true;
 
@@ -1244,7 +1378,8 @@ void Dispatcher::execute() const
 		}
 	}
 
-	batcher.rootBatch()->preprocess( omitEmptyBatches() );
+	TaskBatch::Namer namer( *jobContext );
+	batcher.rootBatch()->preprocess( omitEmptyBatches(), namer );
 
 	// Save the script. If we're in a nested dispatch, this may have been done already by
 	// the outer dispatch, hence the call to `exists()`. Performing the saving here is

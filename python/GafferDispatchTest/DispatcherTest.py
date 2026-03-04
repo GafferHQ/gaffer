@@ -3161,5 +3161,33 @@ class DispatcherTest( GafferTest.TestCase ) :
 			self.assertEqual( renderTask.plug(), script["render"]["task"] )
 			self.assertEqual( renderTask.frames(), [ i ] )
 
+	def testBatchNames( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello ${wedge:value}" )
+
+		script["wedge"] = GafferDispatch.Wedge()
+		script["wedge"]["preTasks"][0].setInput( script["command"]["task"] )
+		script["wedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "foo", "bar" ] ) )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+		rootBatch = script["dispatcher"].lastDispatch
+
+		for index, task in enumerate( rootBatch.preTasks() ) :
+
+			self.assertEqual(
+				task.blindData()["name"].value,
+				"command 1 (wedge:index={}, wedge:value={})".format(
+					index,
+					script["wedge"]["strings"].getValue()[index]
+				)
+			)
+
 if __name__ == "__main__":
 	unittest.main()

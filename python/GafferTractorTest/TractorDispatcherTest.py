@@ -261,7 +261,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( job.subtasks ), 10 )
 
 		task = job.subtasks[0].subtasks[0]
-		self.assertEqual( task.title, "n 1-10" )
+		self.assertEqual( task.title, "n 1-10 (myTagContext2=myTag2, service=myService)" )
 
 		self.assertEqual( len( task.cmds ), 1 )
 		command = task.cmds[0]

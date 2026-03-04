@@ -178,7 +178,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 		nodeName = batch.node().relativeName( dispatchData["scriptNode"] )
 		task = GafferTractor.tractorAPI().Task(
-			title = nodeName,
+			title = batch.name(),
 			# We need `id` to be unique so that we can reference it
 			# from `Instance` objects. TaskBatch is RefCounted, which
 			# uses the object address for `__hash__()`, giving us the
@@ -192,7 +192,6 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 			# executing all the frames in the batch.
 
 			frames = str( IECore.frameListFromList( [ int( x ) for x in batch.frames() ] ) )
-			task.title += " " + frames
 
 			args = [
 				"gaffer", "execute",

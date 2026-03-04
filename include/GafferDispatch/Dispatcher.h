@@ -229,6 +229,9 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 				const std::vector<float> &frames() const;
 				const TaskBatches &preTasks() const;
 
+				/// Name suitable for displaying to a user.
+				const std::string &name() const;
+
 				IECore::CompoundData *blindData();
 				const IECore::CompoundData *blindData() const;
 
@@ -237,8 +240,10 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 				TaskBatch();
 				TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
 
+				class Namer;
+
 				void addPreTask( const TaskBatchPtr &preTask, bool forPostTask = false );
-				void preprocess( bool omitEmpty, bool immediate = false );
+				void preprocess( bool omitEmpty, Namer &namer, bool immediate = false );
 				void isolate();
 
 				friend class Dispatcher;
