@@ -956,12 +956,13 @@ InspectorTree::Inspections objectTypeInspectionProvider( ScenePlug *scene, const
 
 const InspectorTree::Registration g_objectTypeInspectionRegistration( { "Location", "Object" }, objectTypeInspectionProvider );
 
-const vector<pair<PrimitiveVariable::Interpolation, const char *>> g_primitiveVariableInterpolations = {
-	{ PrimitiveVariable::Constant, "Constant" },
-	{ PrimitiveVariable::Uniform, "Uniform" },
-	{ PrimitiveVariable::Vertex, "Vertex" },
-	{ PrimitiveVariable::Varying, "Varying" },
-	{ PrimitiveVariable::FaceVarying, "FaceVarying" }
+const boost::container::flat_map<PrimitiveVariable::Interpolation, ConstStringDataPtr> g_primitiveVariableInterpolations = {
+	{ PrimitiveVariable::Invalid, new StringData( "Invalid" ) },
+	{ PrimitiveVariable::Constant, new StringData( "Constant" ) },
+	{ PrimitiveVariable::Uniform, new StringData( "Uniform" ) },
+	{ PrimitiveVariable::Vertex, new StringData( "Vertex" ) },
+	{ PrimitiveVariable::Varying, new StringData( "Varying" ) },
+	{ PrimitiveVariable::FaceVarying, new StringData( "FaceVarying" ) }
 };
 
 InspectorTree::Inspections primitiveTopologyInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
@@ -973,8 +974,12 @@ InspectorTree::Inspections primitiveTopologyInspectionProvider( ScenePlug *scene
 	{
 		for( const auto &[interpolation, interpolationName] : g_primitiveVariableInterpolations )
 		{
+			if( interpolation == PrimitiveVariable::Invalid )
+			{
+				continue;
+			}
 			result.push_back( {
-				{ interpolationName },
+				{ interpolationName->readable() },
 				new GafferSceneUI::Private::BasicInspector(
 					scene->objectPlug(), editScope,
 					[ interpolation = interpolation ] ( const ObjectPlug *objectPlug ) -> ConstDataPtr {
@@ -1059,6 +1064,15 @@ InspectorTree::Inspections meshTopologyInspectionProvider( ScenePlug *scene, con
 
 const InspectorTree::Registration g_meshTopologyInspectionRegistration( { "Location", "Object", "Mesh Topology" }, meshTopologyInspectionProvider );
 
+const boost::container::flat_map<StandardCubicBasis, ConstStringDataPtr> g_curveBases = {
+	{ StandardCubicBasis::Unknown, new StringData( "Unknown" ) },
+	{ StandardCubicBasis::Linear, new StringData( "Linear" ) },
+	{ StandardCubicBasis::Bezier, new StringData( "Bezier" ) },
+	{ StandardCubicBasis::BSpline, new StringData( "BSpline" ) },
+	{ StandardCubicBasis::CatmullRom, new StringData( "CatmullRom" ) },
+	{ StandardCubicBasis::Constant, new StringData( "Constant" ) },
+};
+
 InspectorTree::Inspections curvesTopologyInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
 {
 	InspectorTree::Inspections result;
@@ -1125,15 +1139,7 @@ InspectorTree::Inspections curvesTopologyInspectionProvider( ScenePlug *scene, c
 				[] ( const ObjectPlug *objectPlug ) -> ConstDataPtr {
 					if( auto curves = runTimeCast<const CurvesPrimitive>( objectPlug->getValue() ) )
 					{
-						switch( curves->basis().standardBasis() )
-						{
-							case StandardCubicBasis::Linear : return new StringData( "Linear" );
-							case StandardCubicBasis::Bezier : return new StringData( "Bezier" );
-							case StandardCubicBasis::BSpline : return new StringData( "BSpline" );
-							case StandardCubicBasis::CatmullRom : return new StringData( "CatmullRom" );
-							case StandardCubicBasis::Constant : return new StringData( "Constant" );
-							default : return nullptr;
-						}
+						return g_curveBases.at( curves->basis().standardBasis() );
 					}
 					return nullptr;
 				}
@@ -1189,13 +1195,6 @@ InspectorTree::Inspections objectParametersInspectionProvider( ScenePlug *scene,
 
 const InspectorTree::Registration g_objectParametersInspectionRegistration( { "Location", "Object", "Parameters" }, objectParametersInspectionProvider );
 
-ConstStringDataPtr g_invalidStringData = new StringData( "Invalid" );
-ConstStringDataPtr g_constantStringData = new StringData( "Constant" );
-ConstStringDataPtr g_uniformStringData = new StringData( "Uniform" );
-ConstStringDataPtr g_vertexStringData = new StringData( "Vertex" );
-ConstStringDataPtr g_varyingStringData = new StringData( "Varying" );
-ConstStringDataPtr g_faceVaryingStringData = new StringData( "FaceVarying" );
-
 const PrimitiveVariable *primitiveVariable( const Object *object, const std::string &name )
 {
 	auto primitive = runTimeCast<const Primitive>( object );
@@ -1217,16 +1216,7 @@ ConstStringDataPtr primitiveVariableInterpolation( const std::string &name, cons
 		return nullptr;
 	}
 
-	switch( variable->interpolation )
-	{
-		case PrimitiveVariable::Invalid : return g_invalidStringData;
-		case PrimitiveVariable::Constant : return g_constantStringData;
-		case PrimitiveVariable::Uniform : return g_uniformStringData;
-		case PrimitiveVariable::Vertex : return g_vertexStringData;
-		case PrimitiveVariable::Varying : return g_varyingStringData;
-		case PrimitiveVariable::FaceVarying : return g_faceVaryingStringData;
-		default : return nullptr;
-	}
+	return g_primitiveVariableInterpolations.at( variable->interpolation );
 }
 
 ConstStringDataPtr primitiveVariableType( const std::string &name, const ObjectPlug *objectPlug )
