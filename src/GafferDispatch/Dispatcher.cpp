@@ -553,9 +553,9 @@ FrameListPtr Dispatcher::frameRange() const
 
 
 //////////////////////////////////////////////////////////////////////////
-// TaskBatch::Namer class. This is an internal utility class for constructing
-// the DAG of TaskBatches to be dispatched. It is a separate class so
-// that it can track the necessary temporary state as member data.
+// TaskBatch::Namer class. This maintains a cache of formatted labels
+// for nodes and contexts, to speed up the process of generating names
+// for TaskBatches.
 //////////////////////////////////////////////////////////////////////////
 
 class Dispatcher::TaskBatch::Namer
@@ -582,11 +582,9 @@ class Dispatcher::TaskBatch::Namer
 			}
 
 			const string c = contextLabel( batch->context() );
+			if( !c.empty() )
 			{
-				if( !c.empty() )
-				{
-					result += fmt::format( " ({})", c );
-				}
+				result += fmt::format( " ({})", c );
 			}
 
 			return result;
