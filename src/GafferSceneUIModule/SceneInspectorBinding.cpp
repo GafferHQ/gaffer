@@ -1073,6 +1073,12 @@ const boost::container::flat_map<StandardCubicBasis, ConstStringDataPtr> g_curve
 	{ StandardCubicBasis::Constant, new StringData( "Constant" ) },
 };
 
+const boost::container::flat_map<CurvesPrimitive::Wrap, ConstStringDataPtr> g_curveWraps = {
+	{ CurvesPrimitive::Wrap::NonPeriodic, new StringData( "NonPeriodic" ) },
+	{ CurvesPrimitive::Wrap::Periodic, new StringData( "Periodic" ) },
+	{ CurvesPrimitive::Wrap::Pinned, new StringData( "Pinned" ) }
+};
+
 InspectorTree::Inspections curvesTopologyInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
 {
 	InspectorTree::Inspections result;
@@ -1120,13 +1126,13 @@ InspectorTree::Inspections curvesTopologyInspectionProvider( ScenePlug *scene, c
 			)
 		} );
 		result.push_back( {
-			{ "Periodic" },
+			{ "Wrap" },
 			new GafferSceneUI::Private::BasicInspector(
 				scene->objectPlug(), editScope,
 				[] ( const ObjectPlug *objectPlug ) -> ConstDataPtr {
 					if( auto curves = runTimeCast<const CurvesPrimitive>( objectPlug->getValue() ) )
 					{
-						return new BoolData( curves->periodic() );
+						return g_curveWraps.at( curves->wrap() );
 					}
 					return nullptr;
 				}
