@@ -2602,6 +2602,49 @@ class RendererTest( GafferTest.TestCase ) :
 				for i in range( 0, arnold.AiArrayGetNumElements( a.contents ) ) :
 					self.assertEqual( arnold.AiArrayGetStr( a, i ), sets[i] )
 
+	def testCurvesWrap( self ) :
+
+		Wrap = IECoreScene.CurvesPrimitive.Wrap
+		for basis, wrap, expectedWrap, expectedWarning in [
+			( IECore.CubicBasisf.catmullRom(), Wrap.Pinned, "pinned", None ),
+			( IECore.CubicBasisf.bSpline(), Wrap.Pinned, "pinned", None ),
+			( IECore.CubicBasisf.linear(), Wrap.Pinned, "nonperiodic", None ),
+			( IECore.CubicBasisf.linear(), Wrap.Periodic, "nonperiodic", "Arnold does not implement periodic wrap. Using nonperiodic instead." ),
+			( IECore.CubicBasisf.linear(), Wrap.NonPeriodic, "nonperiodic", None ),
+		] :
+
+			with self.subTest( basis = basis, wrap = wrap ) :
+
+				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"Arnold",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+					str( self.temporaryDirectory() / "test.ass" )
+				)
+
+				curves = IECoreScene.CurvesPrimitive(
+					IECore.IntVectorData( [ 4 ] ), basis, wrap, IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 4 ) ] )
+				)
+
+				with IECore.CapturingMessageHandler() as messageHandler :
+					renderer.object( "curves", curves, renderer.attributes( IECore.CompoundObject() ) )
+
+				renderer.render()
+				del renderer
+
+				with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+					arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+					curves = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "curves" ), "node" )
+					self.assertEqual( arnold.AiNodeGetStr( curves, "wrap_mode" ), expectedWrap )
+
+					if expectedWarning is not None :
+						self.assertEqual( len( messageHandler.messages ), 1 )
+						self.assertEqual( messageHandler.messages[0].level, IECore.Msg.Level.Warning )
+						self.assertEqual( messageHandler.messages[0].message, expectedWarning )
+					else :
+						self.assertEqual( len( messageHandler.messages ), 0 )
+
 	def testCurvesAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
