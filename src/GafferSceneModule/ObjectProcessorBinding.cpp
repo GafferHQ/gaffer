@@ -39,6 +39,7 @@
 #include "ObjectProcessorBinding.h"
 
 #include "GafferScene/CopyPrimitiveVariables.h"
+#include "GafferScene/CurvesInterpolation.h"
 #include "GafferScene/Deformer.h"
 #include "GafferScene/DeleteCurves.h"
 #include "GafferScene/DeleteFaces.h"
@@ -110,6 +111,7 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<MergeMeshes>();
 	GafferBindings::DependencyNodeClass<MergePoints>();
 	GafferBindings::DependencyNodeClass<MergeCurves>();
+	GafferBindings::DependencyNodeClass<CurvesInterpolation>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();

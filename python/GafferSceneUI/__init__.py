@@ -213,6 +213,7 @@ from . import CatalogueSelectUI
 from . import ImageSelectionToolUI
 from . import CameraQueryUI
 from . import ReflectionConstraintUI
+from . import CurvesInterpolationUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
