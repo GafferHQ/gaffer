@@ -148,6 +148,12 @@ class Application( IECore.Parameterised ) :
 		if os.name != "nt" :
 			import resource
 			threadStackSize = max( resource.getrlimit( resource.RLIMIT_STACK )[0], threadStackSize )
+		else :
+			import ctypes
+			maxStackAddress = ctypes.c_ulonglong()
+			minStackAddress = ctypes.c_ulonglong()
+			ctypes.windll.kernel32.GetCurrentThreadStackLimits( ctypes.byref( minStackAddress ), ctypes.byref( maxStackAddress ) )
+			threadStackSize = max( maxStackAddress.value - minStackAddress.value, threadStackSize )
 
 		with (
 			IECore.tbb_global_control(
