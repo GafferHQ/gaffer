@@ -51,23 +51,26 @@ namespace
 
 const char *g_catmullRom = "catmull-rom";
 const char *g_bSpline = "b-spline";
+const char *g_linear = "linear";
 
 void staticParameters( const IECoreScene::CurvesPrimitive *object, ParameterList &parameters )
 {
 	parameters.add( "nvertices", object->verticesPerCurve(), false );
 
 	const char **basis = nullptr;
-	if( object->basis() == CubicBasisf::catmullRom() )
+	switch( object->basis().standardBasis() )
 	{
-		basis = &g_catmullRom;
-	}
-	else if( object->basis() == CubicBasisf::bSpline() )
-	{
-		basis = &g_bSpline;
-	}
-	else
-	{
-		IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Unsupported curves basis" );
+		case StandardCubicBasis::CatmullRom :
+			basis = &g_catmullRom;
+			break;
+		case StandardCubicBasis::BSpline :
+			basis = &g_bSpline;
+			break;
+		case StandardCubicBasis::Linear :
+			basis = &g_linear;
+			break;
+		default :
+			IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Unsupported curves basis" );
 	}
 
 	if( basis )

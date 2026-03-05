@@ -29,6 +29,7 @@ Fixes
 - UI : Fixed failure to cancel background computations when more than one UI element was waiting for the same result. This could result in the UI becoming unresponsive until the computation was complete.
 - BackgroundMethod : Fixed bug that allowed unwanted background computations to continue when a widget was hidden.
 - MeshTessellate : Fixed crashes caused by non-manifold geometry.
+- 3Delight : Fixed rendering of linear curves.
 
 API
 ---
