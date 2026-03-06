@@ -132,11 +132,9 @@ class Globals : public boost::noncopyable
 		riley::Extent m_renderTargetExtent;
 		riley::RenderViewId m_renderView;
 
-		std::thread m_interactiveRenderThread;
+		struct InteractiveRenderThread;
+		std::unique_ptr<InteractiveRenderThread> m_interactiveRenderThread;
 
 };
-
-
-
 
 } // namespace IECoreRenderMan
