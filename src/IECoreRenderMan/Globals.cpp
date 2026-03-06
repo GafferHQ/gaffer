@@ -50,6 +50,8 @@
 
 #include "fmt/format.h"
 
+#include <condition_variable>
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;
@@ -166,6 +168,90 @@ const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene:
 
 } // namespace
 
+//////////////////////////////////////////////////////////////////////////
+// InteractiveRenderThread
+//////////////////////////////////////////////////////////////////////////
+
+struct Globals::InteractiveRenderThread
+{
+
+	InteractiveRenderThread( Globals *globals )
+		:	m_globals( globals ), m_thread( &InteractiveRenderThread::threadFunction, this ),
+			m_state( State::Stopped ), m_requestedState( State::Waiting )
+	{
+	}
+
+	~InteractiveRenderThread()
+	{
+		pause();
+		std::unique_lock lock( m_stateMutex );
+		m_requestedState = State::Stopped;
+		lock.unlock();
+		m_stateCondition.notify_one();
+		m_thread.join();
+	}
+
+	void render()
+	{
+		std::unique_lock lock( m_stateMutex );
+		m_requestedState = State::Rendering;
+		lock.unlock();
+		m_stateCondition.notify_one();
+	}
+
+	void pause()
+	{
+		m_globals->m_session->riley->Stop();
+		std::unique_lock lock( m_stateMutex );
+		m_stateCondition.wait( lock, [this] { return m_state == State::Waiting; } );
+	}
+
+	private :
+
+		void threadFunction()
+		{
+			while( true )
+			{
+				{
+					unique_lock lock( m_stateMutex );
+					m_stateCondition.wait(
+						lock, [this] {
+							return m_requestedState != m_state;
+						}
+					);
+					m_state = m_requestedState;
+				}
+
+				if( m_state == State::Stopped )
+				{
+					return;
+				}
+				else if( m_state == State::Rendering )
+				{
+					m_globals->m_session->riley->Render( { 1, &m_globals->m_renderView }, m_globals->m_renderParameters );
+					{
+						unique_lock lock( m_stateMutex );
+						m_state = m_requestedState = State::Waiting;
+					}
+					m_stateCondition.notify_one();
+				}
+			}
+		}
+
+		Globals *m_globals;
+		std::thread m_thread;
+		std::mutex m_stateMutex;
+		std::condition_variable m_stateCondition;
+		enum class State { Stopped, Waiting, Rendering };
+		State m_state;
+		State m_requestedState;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// Globals
+//////////////////////////////////////////////////////////////////////////
+
 Globals::Globals( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderType renderType, const IECore::MessageHandlerPtr &messageHandler )
 	:	m_rileyVariant( rileyVariant ), m_renderType( renderType ), m_messageHandler( messageHandler ),
 		m_pixelFilter( Loader::strings().k_gaussian ), m_pixelFilterSize( g_defaultPixelFilterSize ), m_pixelVariance( g_defaultPixelVariance ),
@@ -217,7 +303,6 @@ Globals::Globals( RtUString rileyVariant, IECoreScenePreview::Renderer::RenderTy
 
 Globals::~Globals()
 {
-	pause();
 }
 
 void Globals::option( const IECore::InternedString &name, const IECore::Object *value )
@@ -562,12 +647,11 @@ void Globals::render()
 			break;
 		}
 		case IECoreScenePreview::Renderer::Interactive :
-			/// \todo Would it reduce latency if we reused the same thread?
-			m_interactiveRenderThread = std::thread(
-				[this] {
-					m_session->riley->Render( { 1, &m_renderView }, m_renderParameters );
-				}
-			);
+			if( !m_interactiveRenderThread )
+			{
+				m_interactiveRenderThread = std::make_unique<InteractiveRenderThread>( this );
+			}
+			m_interactiveRenderThread->render();
 			break;
 		case IECoreScenePreview::Renderer::SceneDescription :
 			// Protected against in RenderManRenderer constructor
@@ -577,11 +661,11 @@ void Globals::render()
 
 void Globals::pause()
 {
-	if( m_interactiveRenderThread.joinable() )
+	if( !m_interactiveRenderThread )
 	{
-		m_session->riley->Stop();
-		m_interactiveRenderThread.join();
+		return;
 	}
+	m_interactiveRenderThread->pause();
 }
 
 void Globals::updateRenderView()
