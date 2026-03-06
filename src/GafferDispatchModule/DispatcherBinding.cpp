@@ -183,6 +183,11 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			return result;
 		}
 
+		static const char *taskBatchName( Dispatcher::TaskBatch &batch )
+		{
+			return batch.name().c_str();
+		}
+
 		static CompoundDataPtr taskBatchGetBlindData( Dispatcher::TaskBatch &batch )
 		{
 			return batch.blindData();
@@ -338,6 +343,7 @@ void GafferDispatchModule::bindDispatcher()
 		.def( "context", &DispatcherWrapper::taskBatchGetContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "frames", &DispatcherWrapper::taskBatchGetFrames )
 		.def( "preTasks", &DispatcherWrapper::taskBatchGetPreTasks )
+		.def( "name", &DispatcherWrapper::taskBatchName )
 		.def( "blindData", &DispatcherWrapper::taskBatchGetBlindData )
 	;
 

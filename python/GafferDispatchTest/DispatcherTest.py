@@ -35,7 +35,6 @@
 ##########################################################################
 
 import os
-import stat
 import subprocess
 import unittest
 import functools
@@ -114,6 +113,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		GafferDispatch.Dispatcher.registerDispatcher( "testDispatcher", functools.partial( create, self.temporaryDirectory() ) )
 
+		self.__emptyTasksOmitted = os.environ.get( "GAFFERDISPATCH_OMIT_EMPTY_TASKS" )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
@@ -122,6 +123,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcherWithCustomPlugs" )
 
 		Gaffer.Metadata.deregisterValue( GafferDispatch.TaskList, "dispatcher:allowIsolation" )
+
+		if self.__emptyTasksOmitted is not None :
+			os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = self.__emptyTasksOmitted
+		elif "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+			del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
 
 	def testBadJobDirectory( self ) :
 
@@ -2976,6 +2982,212 @@ class DispatcherTest( GafferTest.TestCase ) :
 						IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( f ) ] )
 					)
 
+	def testOmitEmptyTasks( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello ${wedge:value}" )
+
+		script["emptyCommand"] = GafferDispatch.SystemCommand()
+
+		script["taskList"] = GafferDispatch.TaskList()
+		script["taskList"]["preTasks"][0].setInput( script["command"]["task"] )
+		script["taskList"]["preTasks"][1].setInput( script["emptyCommand"]["task"] )
+
+		script["wedge"] = GafferDispatch.Wedge()
+		script["wedge"]["preTasks"][0].setInput( script["taskList"]["task"] )
+		script["wedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "World", "You" ] ) )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		for omit in ( None, False, True ) :
+
+			with self.subTest( omit = omit ) :
+
+				if omit is None :
+					if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+						del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+				else :
+					os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = str( int( omit ) )
+
+				script["dispatcher"]["task"].execute()
+				rootBatch = script["dispatcher"].lastDispatch
+				self.assertIsNone( rootBatch.plug() )
+
+				if omit is not False :
+
+					# We expect to have omitted the batch for the Wedge, because
+					# it does no work of its own. But we don't omit the TaskList
+					# (even though it too does no work) because the explicit purpose
+					# of the TaskList is to build structure into the graph. If you
+					# wanted to omit it, you'd just connect things directly.
+
+					self.assertEqual( len( rootBatch.preTasks() ), 2 )
+					for index, preTask in enumerate( rootBatch.preTasks() ) :
+
+						self.assertEqual( preTask.plug(), script["taskList"]["task"] )
+						self.assertEqual( preTask.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+						# We expect the empty command to have been omitted, leaving us
+						# with just the one command.
+
+						self.assertEqual( len( preTask.preTasks() ), 1 )
+						self.assertEqual( preTask.preTasks()[0].plug(), script["command"]["task"] )
+						self.assertEqual( preTask.preTasks()[0].context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+				else :
+
+					# We expect task batches for every node, even if the node
+					# itself does no work of its own. Starting with the Wedge.
+
+					self.assertEqual( len( rootBatch.preTasks() ), 1 )
+					wedgeBatch = rootBatch.preTasks()[0]
+					self.assertEqual( wedgeBatch.plug(), script["wedge"]["task"] )
+					self.assertEqual( len( wedgeBatch.preTasks() ), 2 )
+
+					# Now the TaskList.
+
+					for index, taskListBatch in enumerate( wedgeBatch.preTasks() ) :
+
+						self.assertEqual( taskListBatch.plug(), script["taskList"]["task"] )
+						self.assertEqual( taskListBatch.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+						self.assertEqual( len( taskListBatch.preTasks() ), 2 )
+						self.assertEqual( taskListBatch.preTasks()[0].plug(), script["command"]["task"] )
+						self.assertEqual( taskListBatch.preTasks()[1].plug(), script["emptyCommand"]["task"] )
+
+						for commandBatch in taskListBatch.preTasks() :
+							self.assertEqual( commandBatch.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+	def testOmitConsecutiveEmptyTasks( self ) :
+
+		if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+			del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo ${greeting} ${greetee}" )
+
+		script["greetingWedge"] = GafferDispatch.Wedge()
+		script["greetingWedge"]["preTasks"][0].setInput( script["command"]["task"] )
+		script["greetingWedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["greetingWedge"]["variable"].setValue( "greeting" )
+		script["greetingWedge"]["strings"].setValue( IECore.StringVectorData( [ "hello", "wotcha" ] ) )
+
+		script["greeteeWedge"] = GafferDispatch.Wedge()
+		script["greeteeWedge"]["preTasks"][0].setInput( script["greetingWedge"]["task"] )
+		script["greeteeWedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["greeteeWedge"]["variable"].setValue( "greetee" )
+		script["greeteeWedge"]["strings"].setValue( IECore.StringVectorData( [ "world", "fella" ] ) )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["greeteeWedge"]["task"] )
+		script["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+
+		rootBatch = script["dispatcher"].lastDispatch
+		self.assertIsNone( rootBatch.plug() )
+		self.assertEqual( len( rootBatch.preTasks() ), 4 )
+
+		index = 0
+		for greetee in script["greeteeWedge"]["strings"].getValue() :
+			for greeting in script["greetingWedge"]["strings"].getValue() :
+				commandBatch = rootBatch.preTasks()[index]
+				self.assertEqual( commandBatch.plug(), script["command"]["task"] )
+				self.assertEqual( commandBatch.context()["greetee"], greetee )
+				self.assertEqual( commandBatch.context()["greeting"], greeting )
+				self.assertEqual( len( commandBatch.preTasks() ), 0 )
+				index += 1
+
+	def testDuplicatePreTasksViaEmptyTask( self ) :
+
+		if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+			del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+
+		# A toy example of a cross-frame denoiser using a Wedge
+		# to depend on multiple frames of an upstream render.
+
+		script = Gaffer.ScriptNode()
+
+		script["render"] = GafferDispatch.SystemCommand()
+		script["render"]["command"].setValue( "Render ####" )
+
+		script["frameWedge"] = GafferDispatch.Wedge()
+		script["frameWedge"]["preTasks"][0].setInput( script["render"]["task"] )
+		script["frameWedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.FloatList )
+		script["frameWedge"]["variable"].setValue( "frame" )
+		script["frameWedge"]["indexVariable"].setValue( "" )
+
+		script["frameWedgeExpression"] = Gaffer.Expression()
+		script["frameWedgeExpression"].setExpression( inspect.cleandoc(
+			"""
+			frame = context.getFrame()
+			parent["frameWedge"]["floats"] = IECore.FloatVectorData( [ frame - 1, frame, frame + 1 ] )
+			"""
+		) )
+
+		script["denoise"] = GafferDispatch.SystemCommand()
+		script["denoise"]["command"].setValue( "Denoise ####" )
+		script["denoise"]["preTasks"][0].setInput( script["frameWedge"]["task"] )
+		script["denoise"]["dispatcher"]["batchSize"].setValue( 2 )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["denoise"]["task"] )
+		script["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		script["dispatcher"]["frameRange"].setValue( "1-2" )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+
+		rootBatch = script["dispatcher"].lastDispatch
+		self.assertIsNone( rootBatch.plug() )
+
+		# Should just be one batch for `denoise` node, because the two
+		# frames are batched together.
+		self.assertEqual( len( rootBatch.preTasks() ), 1 )
+		denoiseBatch = rootBatch.preTasks()[0]
+		self.assertEqual( denoiseBatch.plug(), script["denoise"]["task"] )
+		self.assertEqual( denoiseBatch.frames(), [ 1, 2 ] )
+
+		# Should be a total of 4 renders in `denoise` pretasks. 3 for
+		# each frame, but with an overlap of 2.
+		self.assertEqual( len( denoiseBatch.preTasks() ), 4 )
+		for i, renderTask in enumerate( denoiseBatch.preTasks() ) :
+			self.assertEqual( renderTask.plug(), script["render"]["task"] )
+			self.assertEqual( renderTask.frames(), [ i ] )
+
+	def testBatchNames( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello ${wedge:value}" )
+
+		script["wedge"] = GafferDispatch.Wedge()
+		script["wedge"]["preTasks"][0].setInput( script["command"]["task"] )
+		script["wedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "foo", "bar" ] ) )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+		rootBatch = script["dispatcher"].lastDispatch
+
+		for index, task in enumerate( rootBatch.preTasks() ) :
+
+			self.assertEqual(
+				task.blindData()["name"].value,
+				"command 1 (wedge:index={}, wedge:value={})".format(
+					index,
+					script["wedge"]["strings"].getValue()[index]
+				)
+			)
 
 if __name__ == "__main__":
 	unittest.main()
