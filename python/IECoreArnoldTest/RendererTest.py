@@ -1264,6 +1264,41 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( imageSpec.getattribute( "color3f" ), "(1 2 3)" )
 		self.assertEqual( imageSpec.getattribute( "color4f" ), "(1 2 3 4)" )
 
+	def testExrMetadataMergedWithExplicitCustomAttributes( self ) :
+
+		# Write an output with custom header metadata of various types.
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		r.output(
+			"exrDataTest",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "beauty.exr" ),
+				"exr",
+				"rgba",
+				{
+					"header:foo" : IECore.StringData( "bar" ),
+					"header:vec3i" : IECore.V3iData( imath.V3i( 1, 2, 3 ) ),
+					"custom_attributes" : IECore.StringVectorData( [ "string 'fromCustom' 'blah'", "int 'fromCust' 7" ] ),
+				}
+			)
+		)
+
+		r.render()
+
+		# Check that we can read the metadata using OpenImageIO.
+
+		imageFile = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) )
+		imageSpec = imageFile.spec()
+		imageFile.close()
+		self.assertEqual( imageSpec.getattribute( "fromCustom" ), "blah" )
+		self.assertEqual( imageSpec.getattribute( "fromCust" ), 7 )
+		self.assertEqual( imageSpec.getattribute( "foo" ), "bar" )
+		self.assertEqual( imageSpec.getattribute( "vec3i" ), "(1 2 3)" )
+
 	def testInstancing( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

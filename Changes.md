@@ -23,6 +23,7 @@ Fixes
 - Wedge :
   - Fixed value preview widget's context handling. The widget now correctly updates when the context changes, and uses the correct context with respect to the focus node.
   - Fixed creation of context variables named "" if either the `variable` or `indexVariable` plugs had empty values.
+- Arnold : Fixed handling of `custom_attributes` output parameter. This is now merged with `header:*` parameters rather than overwriting them.
 
 API
 ---
