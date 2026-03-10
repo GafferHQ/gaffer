@@ -694,7 +694,7 @@ class ArnoldOutput : public IECore::RefCounted
 			m_driverParameters->writable()[g_fileNameInternedString] = new IECore::StringData( output->getName() );
 
 			IECore::StringVectorDataPtr customAttributesData;
-			if( const IECore::StringVectorData *d = output->parametersData()->member<IECore::StringVectorData>( g_customAttributesInternedString ) )
+			if( const IECore::StringVectorData *d = output->parametersData()->member<IECore::StringVectorData>( g_customAttributesArnoldString.c_str() ) )
 			{
 				customAttributesData = d->copy();
 			}
@@ -737,6 +737,13 @@ class ArnoldOutput : public IECore::RefCounted
 				)
 				{
 					// Layer names, light groups and updateInteractively are handled by the output, not the driver
+					continue;
+				}
+
+				if( it->first.string() == g_customAttributesArnoldString.c_str() )
+				{
+					// Merged into "customAttributes" parameter, needs to be removed so it doesn't
+					// overwrite our "header:" attributes
 					continue;
 				}
 
