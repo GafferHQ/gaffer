@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.13.0)
 =======
 
+Features
+--------
+
+- MergeMeshes, MergeCurves, MergePoints : Added `sortKey`, `sortPrimitiveVariable` and `sortOrder` plugs, to allow additional control of what order the merging happens in.
+
 Improvements
 ------------
 

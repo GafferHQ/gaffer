@@ -69,6 +69,17 @@ class GAFFERSCENE_API MergeObjects : public FilteredSceneProcessor
 {
 
 	public :
+		enum class SortKey
+		{
+			LocationName,
+			PrimitiveVariable
+		};
+
+		enum class SortOrder
+		{
+			Ascending,
+			Descending
+		};
 
 		~MergeObjects() override;
 
@@ -79,6 +90,15 @@ class GAFFERSCENE_API MergeObjects : public FilteredSceneProcessor
 
 		Gaffer::StringPlug *destinationPlug();
 		const Gaffer::StringPlug *destinationPlug() const;
+
+		Gaffer::IntPlug *sortKeyPlug();
+		const Gaffer::IntPlug *sortKeyPlug() const;
+
+		Gaffer::StringPlug *sortPrimitiveVariablePlug();
+		const Gaffer::StringPlug *sortPrimitiveVariablePlug() const;
+
+		Gaffer::IntPlug *sortOrderPlug();
+		const Gaffer::IntPlug *sortOrderPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
