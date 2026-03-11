@@ -126,15 +126,15 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		checkDirtiness( channelsDirtied + [
 				"channels", "__shader", "__shading",
-				"__affectedChannels", "out.channelNames", "out.channelData", "out"
+				"out.channelData", "__affectedChannels", "out.channelNames", "out"
 		] )
 
 		inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
 
 		with Gaffer.ContextMonitor( image["__shading"] ) as monitor :
 			self.assertEqual( image["out"].channelNames(), IECore.StringVectorData( [ "A", "B", "G", "R", "unchangedR" ] ) )
-			# Evaluating channel names only requires evaluating the shading plug if we have a closure
-			self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 1 if useClosure else 0 )
+			# Evaluating channel names does a special shader evaluate that doesn't evaluate the shading plug
+			self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 0 )
 
 			# Channels we don't touch should be passed through unaltered
 			for channel, changed in [('B',True), ('G',True), ('R',True), ('A',False), ('unchangedR',False) ]:
@@ -160,13 +160,13 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		getGreen["parameters"]["channelName"].setValue( "R" )
 		checkDirtiness( channelsDirtied + [
 				"channels", "__shader", "__shading",
-				"__affectedChannels", "out.channelNames", "out.channelData", "out"
+				"out.channelData", "__affectedChannels", "out.channelNames", "out"
 		] )
 
 		floatToColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
 		checkDirtiness( channelsDirtied + [
 				"channels", "__shader", "__shading",
-				"__affectedChannels", "out.channelNames", "out.channelData", "out"
+				"out.channelData", "__affectedChannels", "out.channelNames", "out"
 		] )
 
 
@@ -182,15 +182,17 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		image["in"].setInput( None )
 		checkDirtiness( [
 				'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-				'out.viewNames', '__shading', '__affectedChannels',
-				'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
-		] )
+				'out.viewNames', '__shading',
+				'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets',
+				'__affectedChannels', 'out.channelNames',
+				'out'
+		])
 
 		image["defaultFormat"]["displayWindow"]["max"]["x"].setValue( 200 )
 		checkDirtiness( [
 				'defaultFormat.displayWindow.max.x', 'defaultFormat.displayWindow.max', 'defaultFormat.displayWindow', 'defaultFormat',
-				'__defaultIn.format', '__defaultIn.dataWindow', '__defaultIn', '__shading', '__affectedChannels',
-				'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out'
+				'__defaultIn.format', '__defaultIn.dataWindow', '__defaultIn', '__shading',
+				'out.channelData', 'out.format', 'out.dataWindow', 'out'
 		] )
 
 		constant = GafferImage.Constant()
@@ -198,8 +200,9 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		checkDirtiness( [
 				'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-				'out.viewNames', '__shading', '__affectedChannels',
-				'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
+				'out.viewNames', '__shading',
+				'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets',
+				'__affectedChannels', 'out.channelNames', 'out'
 		] )
 
 		image["in"].setInput( shuffle["out"] )
@@ -228,16 +231,9 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		image["in"].setInput( crop["out"] )
 
-		if useClosure:
-			# When using closures, we can't find out about the new channels being added if the datawindow is
-			# empty
-			self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
-				[ "A", "B", "G", "R", "unchangedR" ]
-			) )
-		else:
-			self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
-				[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
-			) )
+		self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
+			[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
+		) )
 
 	def testAcceptsShaderSwitch( self ) :
 
