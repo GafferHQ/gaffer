@@ -60,14 +60,7 @@ RtUString convertStaticSphere( const IECoreScene::SpherePrimitive *sphere, RtPri
 		return GeometryAlgo::convert( mesh.get(), primVars, messageContext );
 	}
 
-	primVars.SetDetail(
-		sphere->variableSize( PrimitiveVariable::Uniform ),
-		sphere->variableSize( PrimitiveVariable::Vertex ),
-		sphere->variableSize( PrimitiveVariable::Varying ),
-		sphere->variableSize( PrimitiveVariable::FaceVarying )
-	);
-
-	GeometryAlgo::convertPrimitiveVariables( sphere, primVars );
+	GeometryAlgo::convertPrimitive( sphere, primVars, messageContext );
 
 	const float radius = sphere->radius();
 	const float zMin = sphere->zMin();

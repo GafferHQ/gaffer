@@ -45,27 +45,15 @@ using namespace IECoreRenderMan;
 namespace
 {
 
-void convertPointsTopology( const IECoreScene::PointsPrimitive *points, RtPrimVarList &primVars )
-{
-	primVars.SetDetail(
-		points->variableSize( PrimitiveVariable::Uniform ),
-		points->variableSize( PrimitiveVariable::Vertex ),
-		points->variableSize( PrimitiveVariable::Varying ),
-		points->variableSize( PrimitiveVariable::FaceVarying )
-	);
-}
-
 RtUString convertStaticPoints( const IECoreScene::PointsPrimitive *points, RtPrimVarList &primVars, const std::string &messageContext )
 {
-	convertPointsTopology( points, primVars );
-	GeometryAlgo::convertPrimitiveVariables( points, primVars, messageContext );
+	GeometryAlgo::convertPrimitive( points, primVars, messageContext );
 	return Loader::strings().k_Ri_Points;
 }
 
 RtUString convertAnimatedPoints( const std::vector<const IECoreScene::PointsPrimitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
-	convertPointsTopology( samples[0], primVars );
-	GeometryAlgo::convertPrimitiveVariables( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
+	GeometryAlgo::convertPrimitive( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
 	return Loader::strings().k_Ri_Points;
 }
 

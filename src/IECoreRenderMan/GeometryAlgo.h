@@ -90,10 +90,11 @@ class ConverterDescription
 
 };
 
-/// PrimitiveVariable conversion
+/// Primitive conversion helpers
 /// ============================
 
-void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext = "GeometryAlgo::convertPrimitiveVariables" );
-void convertPrimitiveVariables( const std::vector<const IECoreScene::Primitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext = "GeometryAlgo::convertPrimitiveVariables" );
+/// Primitive converters should call this function before doing their own type-specific conversion.
+void convertPrimitive( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext );
+void convertPrimitive( const std::vector<const IECoreScene::Primitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext );
 
 } // namespace IECoreRenderMan::GeometryAlgo

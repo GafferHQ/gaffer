@@ -1594,6 +1594,62 @@ class RendererTest( GafferTest.TestCase ) :
 		del object
 		del renderer
 
+	def testDeformationOnlyIncludesPosition( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			renderer.option( "ri:Ri:Shutter", IECore.V2fData( imath.V2f( 0, 1 ) ) )
+
+			staticMesh = IECoreScene.MeshPrimitive.createSphere( 1 )
+			meshes = []
+			for x in [ 0, 1 ] :
+				mesh = staticMesh.copy()
+				for i in range( len( mesh["P"].data ) ) :
+					mesh["P"].data[i] += imath.V3f( x, 0, 0 )
+				mesh["staticPoint"] = staticMesh["P"]
+				mesh["animatedPoint"] = mesh["P"]
+				mesh["staticFloat"] = IECoreScene.PrimitiveVariable(
+					IECoreScene.PrimitiveVariable.Interpolation.Constant,
+					IECore.FloatData( 1 )
+				)
+				mesh["animatedFloat"] = IECoreScene.PrimitiveVariable(
+					IECoreScene.PrimitiveVariable.Interpolation.Constant,
+					IECore.FloatData( x )
+				)
+				meshes.append( mesh )
+
+			object = renderer.object(
+				"sphere", meshes, [ 0, 1 ],
+				renderer.attributes( IECore.CompoundObject() )
+			)
+
+			del object
+			del renderer
+
+		prototype = next(
+			x for x in capture.json if x["method"] == "CreateGeometryPrototype"
+		)
+		primVars = prototype["primvars"]
+		self.assertEqual( primVars["times"], [ 0, 1 ] )
+
+		for name, expectedMotion in {
+			"P" : True,
+			"staticPoint" : False,
+			"animatedPoint" : False,
+			"staticFloat" : False,
+			"animatedFloat" : False,
+		}.items() :
+
+			with self.subTest( name = name ) :
+
+				param = next( x for x in primVars["params"] if x["info"]["name"] == name )
+				self.assertEqual( param["info"]["motion"], expectedMotion )
+
 	def testUnknownCommands( self ) :
 
 		messageHandler = IECore.CapturingMessageHandler()
