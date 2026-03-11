@@ -1543,6 +1543,57 @@ class RendererTest( GafferTest.TestCase ) :
 		del object
 		del renderer
 
+	def testDeformationMotionBlur( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		# RenderMan needs the shutter upfront when the Riley object is created,
+		# so until we can come up with something, the renderer client is responsible
+		# for passing the shutter separately from the camera.
+		renderer.option( "ri:Ri:Shutter", IECore.V2fData( imath.V2f( 0, 1 ) ) )
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "deformationMotion",
+				}
+			)
+		)
+
+		staticMesh = IECoreScene.MeshPrimitive.createSphere( 1 )
+		meshes = []
+		for x in [ -3, 3 ] :
+			mesh = staticMesh.copy()
+			for i in range( len( mesh["P"].data ) ) :
+				mesh["P"].data[i] += imath.V3f( x, 0, -3 )
+			meshes.append( mesh )
+
+		object = renderer.object(
+			"sphere", meshes, [ 0, 1 ],
+			renderer.attributes( IECore.CompoundObject() )
+		)
+
+		renderer.render()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "deformationMotion" )
+
+		for i in range( 0, 10 ) :
+			u = i / 9.0
+			self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.1 ) ).a, 0 )
+			self.assertGreaterEqual( self.__colorAtUV( image, imath.V2f( u, 0.5 ) ).a, 0.1 )
+			self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.9 ) ).a, 0 )
+
+		del object
+		del renderer
+
 	def testUnknownCommands( self ) :
 
 		messageHandler = IECore.CapturingMessageHandler()
