@@ -63,7 +63,6 @@ for name, value in list( os.environ.items() ) :
 		del os.environ[name]
 
 import Gaffer
-Gaffer._Gaffer._nameProcess()
 
 import IECore
 
