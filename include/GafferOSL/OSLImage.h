@@ -108,6 +108,13 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 		void hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstCompoundDataPtr computeShading( const Gaffer::Context *context ) const;
 
+		// When computing the channel names, we do a special shading evaluation of a single pixel
+		// with no actual channel data. This allows a shader using a closure connection to create
+		// output channel names based on the input channels, but the channel names shouldn't depend
+		// on the actual pixel data.
+		void hashShadingWithoutChannelData( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		IECore::ConstCompoundDataPtr computeShadingWithoutChannelData( const Gaffer::Context *context ) const;
+
 		GafferOSL::OSLCode *oslCode();
 		const GafferOSL::OSLCode *oslCode() const;
 

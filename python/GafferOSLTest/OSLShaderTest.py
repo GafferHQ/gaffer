@@ -1409,8 +1409,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 	def testDeprecatedSplineDeserialize( self ) :
 
-
-
 		deprecatedSplineTemplate = inspect.cleandoc( """
 			import Gaffer
 			import GafferOSL
@@ -1469,6 +1467,21 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["p1"]["y"].getValue(), imath.Color3f( 0.7, 0.8, 0.9 ) )
 			self.assertAlmostEqual( script["ColorSpline"]["parameters"]["ramp"]["p2"]["x"].getValue(), 0.5 )
 			self.assertEqual( script["ColorSpline"]["parameters"]["ramp"]["p2"]["y"].getValue(), imath.Color3f( 0.3, 0.4, 0.5 ) )
+
+	def testCorrespondingInput( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "add.osl" ) )
+		# The `add.osl` shader has `correspondingInput` metadata in the shader itself.
+		self.assertEqual( shader.correspondingInput( shader["out"]["out"] ), shader["parameters"]["a"] )
+
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "outputTypes.osl" )
+		shader.loadShader( s )
+		self.assertIsNone( shader.correspondingInput( shader["out"]["f"] ) )
+
+		# We can also register `correspondingInput` metadata as a fallback.
+		Gaffer.Metadata.registerValue( f"osl:shader:{s}:f", "correspondingInput", "input" )
+		self.assertEqual( shader.correspondingInput( shader["out"]["f"] ), shader["parameters"]["input"] )
 
 if __name__ == "__main__":
 	unittest.main()

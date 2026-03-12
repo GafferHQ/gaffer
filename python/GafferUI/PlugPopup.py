@@ -86,7 +86,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 					" ({})".format( plugSummary ) if plugSummary != "" and target != "" else plugSummary
 				)
 
-			else :
+			elif title :
 				title = "<h4>{}</h4>".format( title )
 
 			if title :

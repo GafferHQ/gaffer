@@ -384,5 +384,32 @@ class WedgeTest( GafferTest.TestCase ) :
 		# the wedge variable at all.
 		self.assertEqual( len( script["constant"].log ), 1 )
 
+	def testEmptyVariableNames( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue(
+			"""assert( context.get( "" ) is None )"""
+		)
+
+		script["wedge"] = GafferDispatch.Wedge()
+		script["wedge"]["preTasks"][0].setInput( script["command"]["task"] )
+
+		for withIndex, withValue in [
+			( False, False ),
+			( False, True ),
+			( True, False ),
+			( True, True ),
+		] :
+			with self.subTest( withIndex = withIndex, withValue = withValue ) :
+
+				script["wedge"]["indexVariable"].setValue( "wedge:index" if withIndex else "" )
+				script["wedge"]["variable"].setValue( "wedge:value" if withValue else "" )
+
+				script["dispatcher"] = self.__dispatcher()
+				script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+				script["dispatcher"]["task"].execute()
+
 if __name__ == "__main__":
 	unittest.main()

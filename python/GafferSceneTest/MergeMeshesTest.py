@@ -822,6 +822,196 @@ class MergeMeshesTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertBoundingBoxesValid( mergeMeshes["out"] )
 
+	def testSortKey( self ) :
+
+		cube = GafferScene.Cube()
+
+		pathFilterCube = GafferScene.PathFilter()
+		pathFilterCube["paths"].setValue( IECore.StringVectorData( [ '/cube' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( cube["out"] )
+		duplicate["filter"].setInput( pathFilterCube["out"] )
+		duplicate["copies"].setValue( 4 )
+		duplicate["transform"]["translate"].setValue( imath.V3f( 2, 0, 0 ) )
+
+		pathFilterDupes = GafferScene.PathFilter()
+		pathFilterDupes["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["rows"].addColumn( Gaffer.BoolPlug( "floatEnabled", defaultValue = False, ) )
+		spreadsheet["rows"].addColumn( Gaffer.FloatPlug( "floatValue", defaultValue = 0.0, ) )
+		spreadsheet["rows"].addColumn( Gaffer.BoolPlug( "intEnabled", defaultValue = False, ) )
+		spreadsheet["rows"].addColumn( Gaffer.IntPlug( "intValue", defaultValue = 0, ) )
+		spreadsheet["rows"].addColumn( Gaffer.BoolPlug( "stringEnabled", defaultValue = False, ) )
+		spreadsheet["rows"].addColumn( Gaffer.StringPlug( "stringValue", defaultValue = '', ) )
+		spreadsheet["rows"].addColumn( Gaffer.BoolPlug( "colorEnabled", defaultValue = False, ) )
+		spreadsheet["rows"].addColumn( Gaffer.Color3fPlug( "colorValue" ) )
+		spreadsheet["rows"].addRows( 5 )
+		spreadsheet["selector"].setValue( '${scene:path}' )
+		spreadsheet["rows"][1]["name"].setValue( '/cube' )
+		spreadsheet["rows"][2]["name"].setValue( '/cube1' )
+		spreadsheet["rows"][3]["name"].setValue( '/cube2' )
+		spreadsheet["rows"][4]["name"].setValue( '/cube3' )
+		spreadsheet["rows"][5]["name"].setValue( '/cube4' )
+
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "", Gaffer.IntPlug( "test", defaultValue = 0, ), True, "member0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "", Gaffer.FloatPlug( "test", defaultValue = 0.0, ), True, "member1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "", Gaffer.StringPlug( "test", defaultValue = '', ), True, "member2", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "test", defaultValue = imath.Color3f( 0, 0, 0 ), ), True, "member3", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		primitiveVariables["in"].setInput( duplicate["out"] )
+		primitiveVariables["filter"].setInput( pathFilterDupes["out"] )
+		primitiveVariables["primitiveVariables"]["member0"]["name"].setValue( 'test' )
+		primitiveVariables["primitiveVariables"]["member1"]["name"].setValue( 'test' )
+		primitiveVariables["primitiveVariables"]["member2"]["name"].setValue( 'test' )
+		primitiveVariables["primitiveVariables"]["member3"]["name"].setValue( 'test' )
+		primitiveVariables["primitiveVariables"]["member0"]["enabled"].setInput( spreadsheet["out"]["intEnabled"] )
+		primitiveVariables["primitiveVariables"]["member0"]["value"].setInput( spreadsheet["out"]["intValue"] )
+		primitiveVariables["primitiveVariables"]["member1"]["enabled"].setInput( spreadsheet["out"]["floatEnabled"] )
+		primitiveVariables["primitiveVariables"]["member1"]["value"].setInput( spreadsheet["out"]["floatValue"] )
+		primitiveVariables["primitiveVariables"]["member2"]["enabled"].setInput( spreadsheet["out"]["stringEnabled"] )
+		primitiveVariables["primitiveVariables"]["member2"]["value"].setInput( spreadsheet["out"]["stringValue"] )
+		primitiveVariables["primitiveVariables"]["member3"]["enabled"].setInput( spreadsheet["out"]["colorEnabled"] )
+		primitiveVariables["primitiveVariables"]["member3"]["value"].setInput( spreadsheet["out"]["colorValue"] )
+
+		mergeMeshes = GafferScene.MergeMeshes()
+		mergeMeshes["in"].setInput( primitiveVariables["out"] )
+		mergeMeshes["filter"].setInput( pathFilterDupes["out"] )
+
+		def getMeshOrder():
+			mmd = mergeMeshes["out"].object( "/mergedMesh" )["P"].data
+			return [ ( mmd[i].x + 0.5 ) * 0.5 for i in range( 0, len( mmd ), 8 ) ]
+
+		self.assertEqual( getMeshOrder(), [ 0.0, 1.0, 2.0, 3.0, 4.0 ] )
+
+		mergeMeshes["sortOrder"].setValue( GafferScene.MergeMeshes.SortOrder.Descending )
+
+		self.assertEqual( getMeshOrder(), [ 4.0, 3.0, 2.0, 1.0, 0.0 ] )
+
+		mergeMeshes["sortOrder"].setValue( GafferScene.MergeMeshes.SortOrder.Ascending )
+
+		mergeMeshes["sortKey"].setValue( GafferScene.MergeMeshes.SortKey.PrimitiveVariable )
+
+		# Setting sortKey has no effect until we set sortPrimitiveVariable
+		self.assertEqual( getMeshOrder(), [ 0.0, 1.0, 2.0, 3.0, 4.0 ] )
+
+		mergeMeshes["sortPrimitiveVariable"].setValue( 'test' )
+
+		with self.assertRaisesRegex( RuntimeError, 'Missing key primitive variable "test" with Constant interpolation while merging for location /mergedMesh.' ):
+			getMeshOrder()
+
+		spreadsheet["rows"][1]["cells"]["intEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][1]["cells"]["intValue"]["value"].setValue( 1 )
+		spreadsheet["rows"][2]["cells"]["intEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][2]["cells"]["intValue"]["value"].setValue( 2 )
+		spreadsheet["rows"][3]["cells"]["intEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][3]["cells"]["intValue"]["value"].setValue( 3 )
+		spreadsheet["rows"][4]["cells"]["intEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][4]["cells"]["intValue"]["value"].setValue( 4 )
+		spreadsheet["rows"][5]["cells"]["intEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][5]["cells"]["intValue"]["value"].setValue( 5 )
+
+		self.assertEqual( getMeshOrder(), [ 0.0, 1.0, 2.0, 3.0, 4.0 ] )
+
+		spreadsheet["rows"][3]["cells"]["intValue"]["value"].setValue( 10 )
+
+		self.assertEqual( getMeshOrder(), [ 0.0, 1.0, 3.0, 4.0, 2.0 ] )
+
+		spreadsheet["rows"][3]["cells"]["intValue"]["value"].setValue( -1 )
+
+		self.assertEqual( getMeshOrder(), [ 2.0, 0.0, 1.0, 3.0, 4.0 ] )
+
+		mergeMeshes["sortOrder"].setValue( GafferScene.MergeMeshes.SortOrder.Descending )
+
+		self.assertEqual( getMeshOrder(), [ 4.0, 3.0, 1.0, 0.0, 2.0 ] )
+
+		mergeMeshes["sortOrder"].setValue( GafferScene.MergeMeshes.SortOrder.Ascending )
+
+		spreadsheet["rows"][1]["cells"]["floatEnabled"]["value"].setValue( True )
+
+		with self.assertRaisesRegex( RuntimeError, 'Mismatched types for key primitive variable "test", FloatData vs IntData.' ):
+			getMeshOrder()
+
+		spreadsheet["rows"][1]["cells"]["floatValue"]["value"].setValue( 5.0 )
+		spreadsheet["rows"][2]["cells"]["floatEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][2]["cells"]["floatValue"]["value"].setValue( 4.0 )
+		spreadsheet["rows"][3]["cells"]["floatEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][3]["cells"]["floatValue"]["value"].setValue( 3.0 )
+		spreadsheet["rows"][4]["cells"]["floatEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][4]["cells"]["floatValue"]["value"].setValue( 2.0 )
+		spreadsheet["rows"][5]["cells"]["floatEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][5]["cells"]["floatValue"]["value"].setValue( 1.0 )
+
+		self.assertEqual( getMeshOrder(), [ 4.0, 3.0, 2.0, 1.0, 0.0 ] )
+
+		spreadsheet["rows"][4]["cells"]["floatValue"]["value"].setValue( 10.0 )
+
+		self.assertEqual( getMeshOrder(), [ 4.0, 2.0, 1.0, 0.0, 3.0 ] )
+
+		spreadsheet["rows"][4]["cells"]["floatValue"]["value"].setValue( -10.0 )
+
+		self.assertEqual( getMeshOrder(), [ 3.0, 4.0, 2.0, 1.0, 0.0 ] )
+
+		spreadsheet["rows"][1]["cells"]["stringEnabled"]["value"].setValue( True )
+
+		with self.assertRaisesRegex( RuntimeError, 'Mismatched types for key primitive variable "test", StringData vs FloatData.' ):
+			getMeshOrder()
+
+		spreadsheet["rows"][1]["cells"]["stringValue"]["value"].setValue( "c" )
+		spreadsheet["rows"][2]["cells"]["stringEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][2]["cells"]["stringValue"]["value"].setValue( "d" )
+		spreadsheet["rows"][3]["cells"]["stringEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][3]["cells"]["stringValue"]["value"].setValue( "e" )
+		spreadsheet["rows"][4]["cells"]["stringEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][4]["cells"]["stringValue"]["value"].setValue( "f" )
+		spreadsheet["rows"][5]["cells"]["stringEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][5]["cells"]["stringValue"]["value"].setValue( "g" )
+
+		self.assertEqual( getMeshOrder(), [ 0.0, 1.0, 2.0, 3.0, 4.0 ] )
+
+		spreadsheet["rows"][3]["cells"]["stringValue"]["value"].setValue( "a" )
+
+		self.assertEqual( getMeshOrder(), [ 2.0, 0.0, 1.0, 3.0, 4.0 ] )
+
+		spreadsheet["rows"][3]["cells"]["stringValue"]["value"].setValue( "cc" )
+
+		self.assertEqual( getMeshOrder(), [ 0.0, 2.0, 1.0, 3.0, 4.0 ] )
+
+		spreadsheet["rows"][1]["cells"]["colorEnabled"]["value"].setValue( True )
+
+		with self.assertRaisesRegex( RuntimeError, 'Mismatched types for key primitive variable "test", Color3fData vs StringData.' ):
+			getMeshOrder()
+
+		spreadsheet["rows"][2]["cells"]["colorEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][3]["cells"]["colorEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][4]["cells"]["colorEnabled"]["value"].setValue( True )
+		spreadsheet["rows"][5]["cells"]["colorEnabled"]["value"].setValue( True )
+
+		with self.assertRaisesRegex( RuntimeError, 'Sort key primitive variable "test", unsupported type Color3fData.' ):
+			getMeshOrder()
+
+		spreadsheet["rows"][1]["cells"]["colorEnabled"]["value"].setValue( False )
+		spreadsheet["rows"][2]["cells"]["colorEnabled"]["value"].setValue( False )
+		spreadsheet["rows"][4]["cells"]["colorEnabled"]["value"].setValue( False )
+		spreadsheet["rows"][5]["cells"]["colorEnabled"]["value"].setValue( False )
+
+		spreadsheet["rows"][3]["cells"]["stringValue"]["value"].setValue( "e" )
+
+		# If we have a location without a primitive at it, it should be silently ignored during the sort
+		pathFilterCube2 = GafferScene.PathFilter()
+		pathFilterCube2["paths"].setValue( IECore.StringVectorData( [ '/cube2' ] ) )
+
+		deleteObject = GafferScene.DeleteObject()
+		deleteObject["in"].setInput( primitiveVariables["out"] )
+		deleteObject["filter"].setInput( pathFilterCube2["out"] )
+
+		mergeMeshes["in"].setInput( deleteObject["out"] )
+
+		self.assertEqual( getMeshOrder(), [ 0.0, 1.0, 3.0, 4.0 ] )
+
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testPerformance( self ) :
 		sphere = GafferScene.Sphere()

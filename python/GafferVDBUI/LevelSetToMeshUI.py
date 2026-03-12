@@ -85,6 +85,15 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		# The inputs to LevelSetToMesh don't have primitive variables, so we can't sort by that.
+		# It doesn't really make sense to order the inputs to LevelSetToMesh anyway, since everything
+		# gets merged into a grid first anyway, the input order doesn't really affect the result.
+		# ( The default alphabetical sort is good enough to ensure a deterministic result for the sake
+		# of floating point precision ).
+		"sortKey" : { "plugValueWidget:type" : "" },
+		"sortPrimitiveVariable" : { "plugValueWidget:type" : "" },
+		"sortOrder" : { "plugValueWidget:type" : "" },
+
 		"grid" : {
 
 			"description" :

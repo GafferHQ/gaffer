@@ -79,22 +79,49 @@ Build
 - Qt : Updated to version 6.5.8.
 - TBB : Updated to version 2021.13.0.
 
-1.6.x.x (relative to 1.6.13.0)
+1.6.x.x (relative to 1.6.14.0)
 =======
+
+
+
+1.6.14.0 (relative to 1.6.13.0)
+========
 
 Improvements
 ------------
 
-- RenderMan : Added support for RenderMan 27.2 and removed support for RenderMan 27.0. Support for RenderMan 26.3 and 26.4 remains unchanged. We hate to remove support for a version within a minor Gaffer release, but RenderMan versions are coming thick and fast and we have to draw the line somewhere.
+- MergeMeshes, MergeCurves, MergePoints : Added `sortKey`, `sortPrimitiveVariable` and `sortOrder` plugs, to control the order primitives are merged in.
+- RenderMan :
+  - Added support for RenderMan 27.2 and removed support for RenderMan 27.0. Support for RenderMan 26.3 and 26.4 remains unchanged. We hate to remove support for a version within a minor Gaffer release, but RenderMan versions are coming thick and fast and we have to draw the line somewhere.
+  - Improved InteractiveRender responsiveness.
 - Transform Tools : Simplified display of the target node receiving transform edits. Plugs and non-viewable nodes are no longer included in the target path.
 - Scene Editors : Simplified display of edit source in column tooltips, the inspect and edit popups, and history window. Plugs and non-viewable nodes are no longer included in the source path.
 - PlugPopup : Improved default popup title. Plugs and non-viewable nodes are no longer included in the title.
 - Viewer : Added <kbd>D</kbd> hotkey for toggling between denoised and undenoised layers.
+- OSLShader : Added support for `$shaderType:$shaderName:$parameterName` style metadata keys for `correspondingInput` metadata.
+- RenderMan shaders : Added `correspondingInput` metadata to allow automatic node connections when inserting a shader between an existing connection and pass-through connections when a shader is disabled.
+- Dispatcher : Simplified jobs by removing tasks for nodes - such as Wedge - that do no work of their own. This is particularly noticeable in TractorDispatcher, resulting in simpler job graphs in the Tractor dashboard. This behaviour is enabled
+by default but can be temporarily disabled by setting the `GAFFERDISPATCH_OMIT_EMPTY_TASKS` environment variable to a value of `0`. In future, the environment variable will be removed.
+- TractorDispatcher : Added `startPaused` plug.
+- TractorDispatcher, LocalDispatcher : Added context variable summary to task names.
+
+Fixes
+-----
+
+- TractorDispatcher : Fixed bug handling tasks which were dependend on by more than one downstream task.
+- Wedge :
+  - Fixed value preview widget's context handling. The widget now correctly updates when the context changes, and uses the correct context with respect to the focus node.
+  - Fixed creation of context variables named "" if either the `variable` or `indexVariable` plugs had empty values.
+- Arnold : Fixed handling of `custom_attributes` output parameter. This is now merged with `header:*` parameters rather than overwriting them.
+- OSLImage : Fixed unnecessary dependency between input pixel data and output channel names. This fixes flickering in the Viewer's channel selector when viewing the output. This also fixes a loophole whereby theoretically a shader could change the output channel names based on the pixel values in the first image tile (shaders are now executed with a single black pixel to establish the output channel names).
+- VectorDataWidget : Fixed circular reference in right-click popup menu.
+- SceneInspector : Fixed ordering of Global Attributes - these are now sorted alphabetically like everything else.
 
 API
 ---
 
 - MetadataAlgo : Added `firstViewableAncestor()` and `firstViewableNode()` functions.
+- Dispatcher : Added `name()` method to TaskBatch.
 
 1.6.13.0 (relative to 1.6.12.0)
 ========

@@ -394,13 +394,11 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		editor.settings()["__contextQuery"].addQuery( Gaffer.StringPlug(), "testVariable" )
 		editor.settings()["testPlug"].setInput( editor.settings()["__contextQuery"]["out"][0]["value"] )
 
-		with GafferUI.Window() as window :
-			widget = self.UpdateCountPlugValueWidget( editor.settings()["testPlug"] )
+		widget = self.UpdateCountPlugValueWidget( editor.settings()["testPlug"] )
 
 		# Editor not viewing anything yet, so we just use the default
 		# script context.
 
-		window.setVisible( True )
 		self.waitForUpdate( widget )
 		self.assertEqual( widget.updateCount, 2 ) # One at the start of the background update, and one on completion
 		self.assertEqual( widget.updateContexts[1], script.context() )

@@ -57,6 +57,10 @@ Gaffer.Metadata.registerNode(
 	transforms to points.
 	""",
 
+	"layout:activator:sortKeyIsPrimVar", lambda node : node["sortKey"].getValue() == GafferScene.MergeObjects.SortKey.PrimitiveVariable,
+
+	"layout:section:Settings.Merge Order:collapsed", False,
+
 	plugs = {
 
 		"filter" : {
@@ -94,6 +98,49 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"sortKey" : {
+
+			"description" :
+			"""
+			Determines the order in which source objects are merged into the destination.
+
+			- Location Name : Sources are sorted alphabetically by location.
+			- Primitive Variable : Sources are sorted by the values of a primitive variable they each contain.
+			""",
+
+			"layout:section" : "Settings.Merge Order",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Location Name" : GafferScene.MergeObjects.SortKey.LocationName,
+			"preset:Primitive Variable" : GafferScene.MergeObjects.SortKey.PrimitiveVariable
+
+		},
+
+		"sortPrimitiveVariable" : {
+
+			"description" :
+			"""
+			A primitive variable on each input that defines the sort order. All inputs must define
+			the named primitive variable with a Constant interpolation, and a matching type, either
+			int, float, or Color3f.
+			""",
+
+			"layout:section" : "Settings.Merge Order",
+			"layout:activator" : "sortKeyIsPrimVar",
+		},
+
+		"sortOrder" : {
+
+			"description" :
+			"""
+			Allows reversing the sort order.
+			""",
+
+			"layout:section" : "Settings.Merge Order",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Ascending" : GafferScene.MergeObjects.SortOrder.Ascending,
+			"preset:Descending" : GafferScene.MergeObjects.SortOrder.Descending
+
+		},
 
 	},
 

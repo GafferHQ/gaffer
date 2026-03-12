@@ -262,7 +262,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			IECore.msg(
 				IECore.MessageHandler.Level.Info, batch.blindData()["nodeName"].value,
-				f"Executing {frames}"
+				"Executing {}".format( batch.name() )
 			)
 
 			try :
@@ -270,8 +270,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__executeBatch( batch, canceller )
 				IECore.msg(
 					IECore.MessageHandler.Level.Info, batch.blindData()["nodeName"].value,
-					"Completed {frames} in {time}".format(
-						frames = frames,
+					"Completed {name} in {time}".format(
+						name = batch.name(),
 						time = datetime.timedelta( seconds = int( 0.5 + time.perf_counter() - startTime ) )
 					)
 				)
@@ -280,7 +280,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				IECore.msg( IECore.MessageHandler.Level.Debug, batch.blindData()["nodeName"].value, traceback.format_exc().strip() )
 				IECore.msg(
 					IECore.MessageHandler.Level.Error, batch.blindData()["nodeName"].value,
-					f"Execution failed for {frames}"
+					"Execution failed for {}".format( batch.name() )
 				)
 				raise e
 
@@ -389,6 +389,11 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				outputHandler.join()
 
 		def __initBatchWalk( self, batch ) :
+
+			## \todo `TaskBatch.Namer` is computing this as
+			# part of getting `TaskBatch.name()`. Perhaps we should share the
+			# intermediate result? There is also scope for sharing the frames
+			# formatted as a string.
 
 			if "nodeName" in batch.blindData() :
 				# Already visited via another path
