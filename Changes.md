@@ -29,6 +29,7 @@ Fixes
 - Arnold : Fixed handling of `custom_attributes` output parameter. This is now merged with `header:*` parameters rather than overwriting them.
 - OSLImage : Fixed unnecessary dependency between input pixel data and output channel names. This fixes flickering in the Viewer's channel selector when viewing the output. This also fixes a loophole whereby theoretically a shader could change the output channel names based on the pixel values in the first image tile (shaders are now executed with a single black pixel to establish the output channel names).
 - VectorDataWidget : Fixed circular reference in right-click popup menu.
+- SceneInspector : Fixed ordering of Global Attributes - these are now sorted alphabetically like everything else.
 
 API
 ---

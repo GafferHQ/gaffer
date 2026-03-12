@@ -1607,7 +1607,7 @@ InspectorTree::Inspections globalAttributesInspectionProvider( ScenePlug *scene,
 {
 	InspectorTree::Inspections result;
 	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
-	for( const auto &[name, value] : globals->members() )
+	for( auto name : alphabeticallySortedKeys( globals->members() ) )
 	{
 		if( !boost::starts_with( name.string(), g_attributePrefix ) )
 		{
