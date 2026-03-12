@@ -1056,6 +1056,24 @@ if env["GAFFERUSD"] :
 	if "#define PXR_USE_INTERNAL_BOOST_PYTHON\n" in open( str( pxrVersionHeader ) ) :
 		usdPythonLib = "${USD_LIB_PREFIX}python"
 
+	usdVersion = None
+	for line in open( str( pxrVersionHeader ) ) :
+		m = re.match( r"^#define PXR_VERSION\s*([0-9]+)", line )
+		if m :
+			usdVersion = m.group( 1 )
+			break
+
+	if usdVersion is None :
+		sys.stderr.write( "ERROR : unable to parse \"{}\".\n".format( pxrVersionHeader ) )
+		Exit( 1 )
+
+	if env["USD_MONOLITHIC"] :
+		usdLibs = [ "usd_ms" ]
+	else :
+		usdLibs = [ "sdf", "arch", "tf", "vt" ] + ( [ "ndr" ] if int( usdVersion ) < 2508 else [] ) + [ "sdr", "usd", "usdLux" ]
+
+	usdLibs = [ "${USD_LIB_PREFIX}" + x for x in usdLibs ]
+
 ###############################################################################################
 # Definitions for the libraries we wish to build
 ###############################################################################################
@@ -1499,8 +1517,7 @@ libraries = {
 	"GafferUSD" : {
 		"envAppends" : {
 			"LIBS" :
-				[ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX", usdPythonLib, "python$PYTHON_ABI_VERSION" ] +
-				[ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt", "ndr", "sdr", "usd", "usdLux" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
+				[ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX", usdPythonLib, "python$PYTHON_ABI_VERSION" ] + usdLibs,
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
 			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],
