@@ -457,8 +457,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		m = IECore.MenuDefinition()
 
-		m.append( "/Select All", { "command" : self.__selectAll } )
-		m.append( "/Clear Selection", { "command" : self.__clearSelection } )
+		m.append( "/Select All", { "command" : Gaffer.WeakMethod( self.__selectAll ) } )
+		m.append( "/Clear Selection", { "command" : Gaffer.WeakMethod( self.__clearSelection ) } )
 
 		if self.getEditable() and self.getSizeEditable() :
 
