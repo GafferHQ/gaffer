@@ -1,6 +1,10 @@
 1.6.x.x (relative to 1.6.14.0)
 =======
 
+Fixes
+-----
+
+- SConstruct, ShowURL, ArnoldtextureBake : Replaced deprecated distutils with modern alternatives.
 
 
 1.6.14.0 (relative to 1.6.13.0)
