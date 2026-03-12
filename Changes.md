@@ -1,14 +1,10 @@
 1.6.x.x (relative to 1.6.13.0)
 =======
 
-Features
---------
-
-- MergeMeshes, MergeCurves, MergePoints : Added `sortKey`, `sortPrimitiveVariable` and `sortOrder` plugs, to allow additional control of what order the merging happens in.
-
 Improvements
 ------------
 
+- MergeMeshes, MergeCurves, MergePoints : Added `sortKey`, `sortPrimitiveVariable` and `sortOrder` plugs, to control the order primitives are merged in.
 - RenderMan :
   - Added support for RenderMan 27.2 and removed support for RenderMan 27.0. Support for RenderMan 26.3 and 26.4 remains unchanged. We hate to remove support for a version within a minor Gaffer release, but RenderMan versions are coming thick and fast and we have to draw the line somewhere.
   - Improved InteractiveRender responsiveness.
