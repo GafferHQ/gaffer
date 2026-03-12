@@ -92,7 +92,21 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<CopyPrimitiveVariables>();
 	GafferBindings::DependencyNodeClass<MeshNormals>();
 	GafferBindings::DependencyNodeClass<MeshTessellate>();
-	GafferBindings::DependencyNodeClass<MergeObjects>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<GafferScene::MergeObjects>();
+
+		boost::python::enum_< GafferScene::MergeObjects::SortKey >( "SortKey" )
+			.value( "LocationName", GafferScene::MergeObjects::SortKey::LocationName )
+			.value( "PrimitiveVariable", GafferScene::MergeObjects::SortKey::PrimitiveVariable )
+		;
+
+		boost::python::enum_< GafferScene::MergeObjects::SortOrder >( "SortOrder" )
+			.value( "Ascending", GafferScene::MergeObjects::SortOrder::Ascending )
+			.value( "Descending", GafferScene::MergeObjects::SortOrder::Descending )
+		;
+	}
+
 	GafferBindings::DependencyNodeClass<MergeMeshes>();
 	GafferBindings::DependencyNodeClass<MergePoints>();
 	GafferBindings::DependencyNodeClass<MergeCurves>();

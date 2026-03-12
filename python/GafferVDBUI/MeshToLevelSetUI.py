@@ -84,6 +84,13 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		# It doesn't really make sense to order the inputs to MeshToLevelSet, the output grid isn't really
+		# affected by the order. ( The default alphabetical sort is good enough to ensure a deterministic
+		# result for the sake of floating point precision ).
+		"sortKey" : { "plugValueWidget:type" : "" },
+		"sortPrimitiveVariable" : { "plugValueWidget:type" : "" },
+		"sortOrder" : { "plugValueWidget:type" : "" },
+
 		"grid" : {
 
 			"description" :

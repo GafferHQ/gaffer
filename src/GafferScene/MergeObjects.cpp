@@ -42,6 +42,9 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
+#include "IECoreScene/Primitive.h"
+
+#include "IECore/DataAlgo.h"
 #include "IECore/NullObject.h"
 
 #include "tbb/blocked_range.h"
@@ -388,7 +391,7 @@ class MergeLocationData : public IECore::Data
 				}
 			}
 
-			// Destinatios aren't allowed to share names with the existing child names, unless they are
+			// Destinations aren't allowed to share names with the existing child names, unless they are
 			// "available". "available" means either that they would have been removed, but were kept
 			// because we noticed ahead of time that they are destinations, or that they were created
 			// to support an intermediate location.
@@ -435,6 +438,11 @@ class MergeLocationData : public IECore::Data
 				// Sort the sources for each destination
 				for( auto &i : m_destinations )
 				{
+					// Depending on `sortKey`, we may be doing another sort later, but either way
+					// we do this comparatively cheap sort here.  This gives us a consistent starting
+					// point - without it, we could get non-deterministic results if the prim var values
+					// are not unique. If the later sort happens, it will be a stable_sort, so in the
+					// case of non-unique values for a key primitive variable, this will determine order.
 					std::sort(
 						i.second.begin(), i.second.end(),
 						[] ( const ScenePlug::ScenePath &a, const ScenePlug::ScenePath &b ) {
@@ -740,6 +748,10 @@ MergeObjects::MergeObjects( const std::string &name, const std::string &defaultD
 
 	addChild( new StringPlug( "destination", Gaffer::Plug::In, defaultDestination ) );
 
+	addChild( new IntPlug( "sortKey", Gaffer::Plug::In ) );
+	addChild( new StringPlug( "sortPrimitiveVariable", Gaffer::Plug::In ) );
+	addChild( new IntPlug( "sortOrder", Gaffer::Plug::In ) );
+
 	addChild( new ObjectPlug( "__tree", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
 	addChild( new ObjectPlug( "__mergeLocation", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
 	addChild( new ObjectPlug( "__processedObject", Plug::Out, NullObject::defaultNullObject() ) );
@@ -773,34 +785,64 @@ const Gaffer::StringPlug *MergeObjects::destinationPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::IntPlug *MergeObjects::sortKeyPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::IntPlug *MergeObjects::sortKeyPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *MergeObjects::sortPrimitiveVariablePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *MergeObjects::sortPrimitiveVariablePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::IntPlug *MergeObjects::sortOrderPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::IntPlug *MergeObjects::sortOrderPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::ObjectPlug *MergeObjects::treePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::ObjectPlug *MergeObjects::treePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::ObjectPlug *MergeObjects::mergeLocationPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::ObjectPlug *MergeObjects::mergeLocationPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::ObjectPlug *MergeObjects::processedObjectPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::ObjectPlug *MergeObjects::processedObjectPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 const GafferScene::ScenePlug *MergeObjects::effectiveSourcePlug() const
@@ -860,6 +902,9 @@ void MergeObjects::affects( const Plug *input, AffectedPlugsContainer &outputs )
 		input == inPlug()->transformPlug() ||
 		input == sourcePlug()->objectPlug() ||
 		input == sourcePlug()->transformPlug() ||
+		input == sortKeyPlug() ||
+		input == sortPrimitiveVariablePlug() ||
+		input == sortOrderPlug() ||
 		affectsMergedObject( input )
 	)
 	{
@@ -941,6 +986,14 @@ void MergeObjects::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 			throw IECore::Exception( "__processedObject should only be hashed from hashObject, which checks for a matching tree location first" );
 		}
 
+		{
+			ScenePlug::GlobalScope globalScope( context );
+
+			sortKeyPlug()->hash( h );
+			sortPrimitiveVariablePlug()->hash( h );
+			sortOrderPlug()->hash( h );
+		}
+
 		const ScenePlug *effectiveSource = effectiveSourcePlug();
 
 		const ThreadState &threadState = ThreadState::current();
@@ -1014,6 +1067,18 @@ void MergeObjects::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 	}
 	else if( output == processedObjectPlug() )
 	{
+		MergeObjects::SortKey sortKey;
+		std::string sortPrimitiveVariable;
+		MergeObjects::SortOrder sortOrder;
+
+		{
+			ScenePlug::GlobalScope globalScope( context );
+
+			sortKey = (SortKey)sortKeyPlug()->getValue();
+			sortPrimitiveVariable = sortPrimitiveVariablePlug()->getValue();
+			sortOrder = (SortOrder)sortOrderPlug()->getValue();
+		}
+
 		const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 		ConstObjectPtr parentHolder;
 		const SourcePaths *sourcePaths = findSources( mergeLocationPlug(), path, context, parentHolder );
@@ -1041,10 +1106,20 @@ void MergeObjects::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 				ScenePlug::PathScope pathScope( threadState );
 				for( size_t i = range.begin(); i != range.end(); ++i )
 				{
-					pathScope.setPath( &((*sourcePaths)[i]) );
+					size_t sourcePathIndex;
+					if( sortOrder == SortOrder::Ascending )
+					{
+						sourcePathIndex = i;
+					}
+					else
+					{
+						sourcePathIndex = sourcePaths->size() - 1 - i;
+					}
+
+					pathScope.setPath( &((*sourcePaths)[sourcePathIndex]) );
 					sources[i].first = effectiveSource->objectPlug()->getValue();
 					sources[i].second = relativeTransform(
-						(*sourcePaths)[i], path, effectiveSource, inPlug(), pathScope,
+						(*sourcePaths)[sourcePathIndex], path, effectiveSource, inPlug(), pathScope,
 						matchingPrefix, toDest
 					);
 				}
@@ -1053,6 +1128,131 @@ void MergeObjects::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 			tbb::auto_partitioner(),
 			taskGroupContext
 		);
+
+
+		if( sortKey == MergeObjects::SortKey::PrimitiveVariable && !sortPrimitiveVariable.empty() )
+		{
+			// On our initial loop through the data, we just need to find the key variable type,
+			// and check that it's valid.
+
+			// It would make more sense to just store a TypeId, but we're missing a version of
+			// dispatch() that takes a TypeId, so we store a pointer to one of the prim var data's
+			// of the correct type.
+			const IECore::Data *sortVarTypeExemplar = nullptr;
+
+			for( const auto &s : sources )
+			{
+				const IECoreScene::Primitive *prim = IECore::runTimeCast<const IECoreScene::Primitive>(
+					s.first.get()
+				);
+
+				if( !prim )
+				{
+					// Non-prims will be sorted to the front ... we need to do something with them
+					// instead of throwing because MergeMeshes is supposed to ignore non-meshes
+					// so we can't halt here.
+					continue;
+				}
+
+
+				const Data *primVarData = prim->variableData<Data>(
+					sortPrimitiveVariable, IECoreScene::PrimitiveVariable::Interpolation::Constant
+				);
+
+				if( !primVarData )
+				{
+					throw IECore::Exception(
+						fmt::format(
+							"Missing key primitive variable \"{}\" with Constant interpolation while merging for location {}.",
+							sortPrimitiveVariable, ScenePlug::pathToString( path )
+						)
+					);
+				}
+
+				if( !sortVarTypeExemplar )
+				{
+					sortVarTypeExemplar = primVarData;
+				}
+				else
+				{
+					if( sortVarTypeExemplar->typeId() != primVarData->typeId() )
+					{
+						throw IECore::Exception(
+							fmt::format(
+								"Mismatched types for key primitive variable \"{}\", {} vs {}.",
+								sortPrimitiveVariable,
+								sortVarTypeExemplar->typeName(),
+								primVarData->typeName()
+							)
+						);
+					}
+				}
+			}
+
+			IECore::dispatch( sortVarTypeExemplar,
+				[&sources, &sortOrder, &sortPrimitiveVariable]( const auto *typed )
+				{
+					using TargetType = typename std::remove_const_t<std::remove_pointer_t<decltype( typed )> >;
+					if constexpr(
+						std::is_same_v<TargetType, IntData> ||
+						std::is_same_v<TargetType, FloatData> ||
+						std::is_same_v<TargetType, StringData>
+					)
+					{
+						std::stable_sort( sources.begin(), sources.end(),
+							[&sortOrder, &sortPrimitiveVariable]( const auto &a, const auto &b)
+							{
+								const IECoreScene::Primitive* aPrim = IECore::runTimeCast<const IECoreScene::Primitive>( a.first.get() );
+								const IECoreScene::Primitive* bPrim = IECore::runTimeCast<const IECoreScene::Primitive>( b.first.get() );
+
+								if( !( aPrim && bPrim ) )
+								{
+									if( sortOrder == MergeObjects::SortOrder::Ascending )
+									{
+										return (bool)aPrim < (bool)bPrim;
+									}
+									else
+									{
+										return (bool)bPrim < (bool)aPrim;
+									}
+								}
+
+								// I don't love doing these lookups inside the sort comparison. If the sources
+								// vector is large, it would probably be more efficient to copy the sources to
+								// a new vector where each element was augmented with a pointer directly to the
+								// data. Then we could sort that using the data pointers before copying back to
+								// the sources vector.
+								// For now, this is a bit simpler, and it probably won't be an issue unless
+								// someone requires an ordered merge while merging a huge number of tiny meshes,
+								// which is pretty special case.
+								const auto &aVal = aPrim->variableData<TargetType>( sortPrimitiveVariable )->readable();
+								const auto &bVal = bPrim->variableData<TargetType>( sortPrimitiveVariable )->readable();
+
+								if( sortOrder == MergeObjects::SortOrder::Ascending )
+								{
+									return aVal < bVal;
+								}
+								else
+								{
+									return bVal < aVal;
+								}
+							}
+						);
+					}
+					else
+					{
+						throw IECore::Exception(
+							fmt::format(
+								"Sort key primitive variable \"{}\", unsupported type {}.",
+								sortPrimitiveVariable,
+								typed->typeName()
+							)
+						);
+					}
+				}
+			);
+		}
+
 
 		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeMergedObject( sources, context ) );
 	}
