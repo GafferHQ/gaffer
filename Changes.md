@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.14.2)
 =======
 
+Features
+--------
+
+- ReflectionConstraint : Added a new node for constraining objects so that they are reflected in the target when viewed through a chosen camera.
+
 Improvements
 ------------
 
