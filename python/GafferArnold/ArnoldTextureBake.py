@@ -405,10 +405,9 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__outputIndexCommand"]["command"].setValue( inspect.cleandoc(
 			"""
 			import os
-			import distutils.dir_util
 
 			# Ensure path exists
-			distutils.dir_util.mkpath( variables["bakeDirectory"] )
+			os.makedirs( variables["bakeDirectory"], exist_ok = True )
 
 			f = open( variables["indexFilePath"], "w", encoding = "utf-8" )
 
