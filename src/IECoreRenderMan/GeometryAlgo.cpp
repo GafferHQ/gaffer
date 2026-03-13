@@ -273,7 +273,7 @@ struct PrimitiveVariableConverter
 		IECore::msg(
 			IECore::Msg::Warning,
 			m_messageContext,
-			fmt::format( "Unsupported primitive variable of type \"{}\"", data->typeName() )
+			fmt::format( "Unsupported primitive variable \"{}\" of type \"{}\"", name.CStr(), data->typeName() )
 		);
 	}
 

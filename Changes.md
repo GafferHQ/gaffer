@@ -4,8 +4,8 @@
 Fixes
 -----
 
+- RenderMan : Added the name of the relevant primitive variable to warnings about unsupported data types.
 - SConstruct, ShowURL, ArnoldtextureBake : Replaced deprecated distutils with modern alternatives.
-
 
 1.6.14.0 (relative to 1.6.13.0)
 ========
