@@ -281,6 +281,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:visibilityActivator" : "modeIsStringList",
+			"ui:acceptsFileList" : True,
 
 		},
 
