@@ -48,13 +48,6 @@ namespace
 
 void convertCurvesTopology( const IECoreScene::CurvesPrimitive *curves, RtPrimVarList &primVars, const std::string &messageContext )
 {
-	primVars.SetDetail(
-		curves->variableSize( PrimitiveVariable::Uniform ),
-		curves->variableSize( PrimitiveVariable::Vertex ),
-		curves->variableSize( PrimitiveVariable::Varying ),
-		curves->variableSize( PrimitiveVariable::FaceVarying )
-	);
-
 	if( curves->basis().standardBasis() == StandardCubicBasis::Unknown )
 	{
 		IECore::msg( IECore::Msg::Warning, messageContext, "Unsupported CubicBasis" );
@@ -90,15 +83,15 @@ void convertCurvesTopology( const IECoreScene::CurvesPrimitive *curves, RtPrimVa
 
 RtUString convertStaticCurves( const IECoreScene::CurvesPrimitive *curves, RtPrimVarList &primVars, const std::string &messageContext )
 {
+	GeometryAlgo::convertPrimitive( curves, primVars, messageContext );
 	convertCurvesTopology( curves, primVars, messageContext );
-	GeometryAlgo::convertPrimitiveVariables( curves, primVars, messageContext );
 	return Loader::strings().k_Ri_Curves;
 }
 
 RtUString convertAnimatedCurves( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
+	GeometryAlgo::convertPrimitive( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
 	convertCurvesTopology( samples[0], primVars, messageContext );
-	GeometryAlgo::convertPrimitiveVariables( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
 	return Loader::strings().k_Ri_Curves;
 }
 

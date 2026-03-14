@@ -34,6 +34,7 @@
 
 #include "GeometryAlgo.h"
 
+#include "Loader.h"
 #include "ParamListAlgo.h"
 
 #include "IECore/DataAlgo.h"
@@ -273,7 +274,7 @@ struct PrimitiveVariableConverter
 		IECore::msg(
 			IECore::Msg::Warning,
 			m_messageContext,
-			fmt::format( "Unsupported primitive variable of type \"{}\"", data->typeName() )
+			fmt::format( "Unsupported primitive variable \"{}\" of type \"{}\"", name.CStr(), data->typeName() )
 		);
 	}
 
@@ -310,6 +311,83 @@ struct PrimitiveVariableConverter
 		}
 
 };
+
+void convertDetail( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList )
+{
+	primVarList.SetDetail(
+		primitive->variableSize( PrimitiveVariable::Uniform ),
+		primitive->variableSize( PrimitiveVariable::Vertex ),
+		primitive->variableSize( PrimitiveVariable::Varying ),
+		primitive->variableSize( PrimitiveVariable::FaceVarying )
+	);
+}
+
+const std::string g_p( "P" );
+
+void convertP( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext )
+{
+	auto it = primitive->variables.find( g_p );
+	if( it != primitive->variables.end() )
+	{
+		const PrimitiveVariableConverter converter( messageContext );
+		dispatch( it->second.data.get(), converter, Loader::strings().k_P, it->second, primVarList );
+	}
+}
+
+void convertP( const std::vector<const IECoreScene::Primitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
+{
+	const auto firstSampleIt = samples[0]->variables.find( g_p );
+	if( firstSampleIt == samples[0]->variables.end() )
+	{
+		return;
+	}
+
+	bool animated = false;
+	for( size_t i = 1; i < samples.size(); ++i )
+	{
+		auto it = samples[i]->variables.find( g_p );
+		if( it == samples[i]->variables.end() )
+		{
+			animated = false;
+			break;
+		}
+		else if( it->second != firstSampleIt->second )
+		{
+			animated = true;
+		}
+	}
+
+	const PrimitiveVariableConverter converter( messageContext );
+	if( animated )
+	{
+		primVarList.SetTimes( sampleTimes.size(), sampleTimes.data() );
+		for( size_t i = 0; i < samples.size(); ++i )
+		{
+			auto it = samples[i]->variables.find( g_p );
+			assert( it != samples[i]->variables.end() );
+			dispatch( it->second.data.get(), converter, Loader::strings().k_P, it->second, primVarList, i );
+		}
+	}
+	else
+	{
+		dispatch( firstSampleIt->second.data.get(), converter, Loader::strings().k_P, firstSampleIt->second, primVarList );
+	}
+}
+
+void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext )
+{
+	const PrimitiveVariableConverter converter( messageContext );
+	for( const auto &[name, primitiveVariable] : primitive->variables )
+	{
+		if( name == g_p )
+		{
+			// Dealt with in `convertP()`
+			continue;
+		}
+		const RtUString convertedName( name == "uv" ? "st" : name.c_str() );
+		dispatch( primitiveVariable.data.get(), converter, convertedName, primitiveVariable, primVarList );
+	}
+}
 
 } // namespace
 
@@ -351,57 +429,21 @@ void IECoreRenderMan::GeometryAlgo::registerConverter( IECore::TypeId fromType, 
 	registry()[fromType] = { converter, motionConverter };
 }
 
-void IECoreRenderMan::GeometryAlgo::convertPrimitiveVariables( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext )
+void IECoreRenderMan::GeometryAlgo::convertPrimitive( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext )
 {
-	const PrimitiveVariableConverter converter( messageContext );
-	for( const auto &[name, primitiveVariable] : primitive->variables )
-	{
-		const RtUString convertedName( name == "uv" ? "st" : name.c_str() );
-		dispatch( primitiveVariable.data.get(), converter, convertedName, primitiveVariable, primVarList );
-	}
+	convertDetail( primitive, primVarList );
+	convertP( primitive, primVarList, messageContext );
+	convertPrimitiveVariables( primitive, primVarList, messageContext );
 }
 
-void IECoreRenderMan::GeometryAlgo::convertPrimitiveVariables( const std::vector<const IECoreScene::Primitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
+void IECoreRenderMan::GeometryAlgo::convertPrimitive( const std::vector<const IECoreScene::Primitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext = "GeometryAlgo::convertPrimitive" )
 {
-	const PrimitiveVariableConverter converter( messageContext );
-
-	bool haveSetTimes = false;
-	for( const auto &[name, primitiveVariable] : samples[0]->variables )
-	{
-		bool animated = false;
-		for( size_t i = 1; i < samples.size(); ++i )
-		{
-			auto it = samples[i]->variables.find( name );
-			if( it == samples[i]->variables.end() )
-			{
-				animated = false;
-				break;
-			}
-			else if( it->second != primitiveVariable )
-			{
-				animated = true;
-			}
-		}
-
-		const RtUString convertedName( name == "uv" ? "st" : name.c_str() );
-		if( animated )
-		{
-			if( !haveSetTimes )
-			{
-				primVarList.SetTimes( sampleTimes.size(), sampleTimes.data() );
-				haveSetTimes = true;
-			}
-
-			for( size_t i = 0; i < samples.size(); ++i )
-			{
-				auto it = samples[i]->variables.find( name );
-				assert( it != samples[i]->variables.end() );
-				dispatch( it->second.data.get(), converter, convertedName, primitiveVariable, primVarList, i );
-			}
-		}
-		else
-		{
-			dispatch( primitiveVariable.data.get(), converter, convertedName, primitiveVariable, primVarList );
-		}
-	}
+	convertDetail( samples[0], primVarList );
+	// "P" is the only primitive variable that RenderMan allows to be animated
+	// so we deal with it separately. When it is animated, `convertP()` will
+	// call `primVarList.SetTimes()` appropriately. It seems we need to call
+	// this before adding any primitive variables, animated or not, or we get
+	// crashes in RenderMan.
+	convertP( samples, sampleTimes, primVarList, messageContext );
+	convertPrimitiveVariables( samples[0], primVarList, messageContext );
 }
