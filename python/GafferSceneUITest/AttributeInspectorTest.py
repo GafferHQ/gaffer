@@ -1126,7 +1126,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
 		self.assertEqual( inspection.source(), tweak )
-		self.assertTrue( inspection.sourceType(), inspection.SourceType.EditScope )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
 		self.assertEqual( inspection.value(), IECore.FloatData( 1 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
