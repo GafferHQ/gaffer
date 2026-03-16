@@ -316,7 +316,7 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 
 	else if( auto attributes = runTimeCast<GafferScene::Attributes>( sceneNode ) )
 	{
-		if( !(attributes->filterPlug()->match( attributes->inPlug() ) & PathMatcher::ExactMatch ) )
+		if( attributes->globalPlug()->getValue() || !( attributes->filterPlug()->match( attributes->inPlug() ) & PathMatcher::ExactMatch ) )
 		{
 			return nullptr;
 		}

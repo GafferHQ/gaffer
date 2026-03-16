@@ -1226,5 +1226,34 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value(), IECore.FloatData( 8.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "" )
 
+	def testSourceForAttributeNodeInGlobalMode( self ) :
+
+		light = GafferSceneTest.TestLight()
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		light["visualiserAttributes"]["scale"]["value"].setValue( 10 )
+
+		openGLAttributes = GafferScene.OpenGLAttributes()
+		openGLAttributes["in"].setInput( light["out"] )
+		openGLAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		openGLAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 20 )
+		openGLAttributes["global"].setValue( True )
+
+		# Our node authoring the global attribute should not be the source.
+		inspection = self.__inspect( openGLAttributes["out"], "/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.value(), IECore.FloatData( 10.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "" )
+
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( False )
+
+		# Even with the plug authoring the local attribute disabled, it should still be the source
+		# for any edit at that location.
+		inspection = self.__inspect( openGLAttributes["out"], "/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
+
 if __name__ == "__main__" :
 	unittest.main()
