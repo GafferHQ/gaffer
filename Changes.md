@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.14.1)
 =======
 
+Fixes
+-----
+
+- SceneInspector, AttributeEditor : Fixed bug causing history inspection to incorrectly include AttributeTweaks `CreateIfMissing` tweaks that have not modified the scene due to the attribute already existing upstream of the tweak.
+
 1.6.14.1 (relative to 1.6.14.0)
 ========
 
