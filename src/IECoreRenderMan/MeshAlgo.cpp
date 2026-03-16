@@ -122,13 +122,6 @@ int smoothTriangles( const IECoreScene::MeshPrimitive *mesh, const std::string &
 
 RtUString convertMeshTopology( const IECoreScene::MeshPrimitive *mesh, RtPrimVarList &primVars, const std::string &messageContext  )
 {
-	primVars.SetDetail(
-		mesh->variableSize( PrimitiveVariable::Uniform ),
-		mesh->variableSize( PrimitiveVariable::Vertex ),
-		mesh->variableSize( PrimitiveVariable::Varying ),
-		mesh->variableSize( PrimitiveVariable::FaceVarying )
-	);
-
 	primVars.SetIntegerDetail( Loader::strings().k_Ri_nvertices, mesh->verticesPerFace()->readable().data(), RtDetailType::k_uniform );
 	primVars.SetIntegerDetail( Loader::strings().k_Ri_vertices, mesh->vertexIds()->readable().data(), RtDetailType::k_facevarying );
 
@@ -207,16 +200,14 @@ RtUString convertMeshTopology( const IECoreScene::MeshPrimitive *mesh, RtPrimVar
 
 RtUString convertStaticMesh( const IECoreScene::MeshPrimitive *mesh, RtPrimVarList &primVars, const std::string &messageContext )
 {
-	const RtUString result = convertMeshTopology( mesh, primVars, messageContext );
-	GeometryAlgo::convertPrimitiveVariables( mesh, primVars, messageContext );
-	return result;
+	GeometryAlgo::convertPrimitive( mesh, primVars, messageContext );
+	return convertMeshTopology( mesh, primVars, messageContext );
 }
 
 RtUString convertAnimatedMesh( const std::vector<const IECoreScene::MeshPrimitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
-	const RtUString result = convertMeshTopology( samples[0], primVars, messageContext );
-	GeometryAlgo::convertPrimitiveVariables( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
-	return result;
+	GeometryAlgo::convertPrimitive( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
+	return convertMeshTopology( samples[0], primVars, messageContext );;
 }
 
 GeometryAlgo::ConverterDescription<MeshPrimitive> g_meshConverterDescription( convertStaticMesh, convertAnimatedMesh );

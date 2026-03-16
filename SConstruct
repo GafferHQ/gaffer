@@ -46,7 +46,6 @@ import locale
 import shutil
 import subprocess
 import tempfile
-import distutils.dir_util
 import codecs
 
 EnsureSConsVersion( 3, 0, 2 ) # Substfile is a default builder as of 3.0.2
@@ -2497,7 +2496,7 @@ for f in exampleFiles :
 
 def installer( target, source, env ) :
 
-	distutils.dir_util.copy_tree( str( source[0] ), str( target[0] ), preserve_symlinks=True, update=True )
+	shutil.copytree( str( source[0] ), str( target[0] ), symlinks=True, dirs_exist_ok=True )
 
 if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 

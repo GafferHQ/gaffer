@@ -79,10 +79,20 @@ Build
 - Qt : Updated to version 6.5.8.
 - TBB : Updated to version 2021.13.0.
 
-1.6.x.x (relative to 1.6.14.0)
+1.6.x.x (relative to 1.6.14.1)
 =======
 
+1.6.14.1 (relative to 1.6.14.0)
+========
 
+Fixes
+-----
+
+- RenderMan :
+  - Fixed crashes rendering deformation motion blur.
+  - Stopped exporting animation for primitive variables other than "P". RenderMan doesn't support animation on any other primitive variable.
+  - Added the name of the relevant primitive variable to warnings about unsupported data types.
+- SConstruct, ShowURL, ArnoldtextureBake : Replaced deprecated distutils with modern alternatives.
 
 1.6.14.0 (relative to 1.6.13.0)
 ========
