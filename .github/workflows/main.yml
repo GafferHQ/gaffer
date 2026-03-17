@@ -144,6 +144,8 @@ jobs:
       run: |
         # Clear space on runner by deleting stuff we don't need from the host VM.
         rm -rf /hostVolume/usr/lib/jvm /hostVolume/usr/local/lib/android
+        # Remove unnecessary headers from `build:3.x.x` container.
+        rm -rf /usr/local/include/*
         # Set up an X server and window manager.
         Xvfb :99 -screen 0 1280x1024x24 &
         metacity --display :99.0 &
