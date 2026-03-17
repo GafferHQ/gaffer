@@ -40,6 +40,7 @@
 #include "GafferScene/OptionTweaks.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/PathFilter.h"
+#include "GafferScene/PrimitiveVariablePaint.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Set.h"
@@ -47,7 +48,9 @@
 #include "GafferScene/Transform.h"
 #include "GafferScene/RenderPasses.h"
 
+#include "Gaffer/DataStore.h"
 #include "Gaffer/EditScope.h"
+#include "Gaffer/Expression.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
@@ -56,6 +59,9 @@
 
 #include "IECore/AngleConversion.h"
 #include "IECore/CamelCase.h"
+#include "IECore/NullObject.h"
+
+#include "IECoreScene/PrimitiveVariable.h"
 
 #include "Imath/ImathMatrixAlgo.h"
 
@@ -1589,4 +1595,226 @@ std::optional<std::string> GafferScene::EditScopeAlgo::renameRenderPassNonEditab
 	}
 
 	return std::nullopt;
+}
+
+
+// Paint
+// ==========
+
+namespace {
+
+const std::string g_paintProcessorName = "Paint";
+const IECore::InternedString g_liveDataName = "liveData";
+
+SceneProcessorPtr paintProcessor( const std::string &name )
+{
+	SceneProcessorPtr result = new SceneProcessor( name );
+
+	PathFilterPtr pathFilter = new PathFilter;
+	result->addChild( pathFilter );
+
+	PrimitiveVariablePaintPtr primVarPaint = new PrimitiveVariablePaint;
+	result->addChild( primVarPaint );
+	primVarPaint->inPlug()->setInput( result->inPlug() );
+	primVarPaint->filterPlug()->setInput( pathFilter->outPlug() );
+	primVarPaint->enabledPlug()->setInput( result->enabledPlug() );
+
+	result->outPlug()->setInput( primVarPaint->outPlug() );
+
+	return result;
+}
+
+SceneProcessor *acquirePaintProcessor( EditScope *editScope, bool createIfNecessary )
+{
+	static bool isRegistered = false;
+	if( !isRegistered )
+	{
+		EditScope::registerProcessor(
+			g_paintProcessorName,
+			[]() {
+				return paintProcessor( g_paintProcessorName );
+			}
+		);
+
+		isRegistered = true;
+	}
+
+	return editScope->acquireProcessor<SceneProcessor>( g_paintProcessorName, createIfNecessary );
+}
+
+void paintProcessorUpdatePathFilter( SceneProcessor *processor )
+{
+	PrimitiveVariablePaint *paintNode = processor->getChild<PrimitiveVariablePaint>( "PrimitiveVariablePaint" );
+	if( !paintNode )
+	{
+		return;
+	}
+
+	std::vector<DataStore*> dataStores;
+	for( NameValuePlug::Iterator it( paintNode->primitiveVariablesPlug() ); !it.done(); ++it )
+	{
+		Plug *dataStorePlug = (*it)->valuePlug()->getInput();
+		if( dataStorePlug )
+		{
+			DataStore *dataStore = dataStorePlug->ancestor<DataStore>();
+			if( dataStore )
+			{
+				dataStores.push_back( dataStore );
+			}
+		}
+	}
+
+	Expression *prevExpr = processor->getChild<Expression>( "__pathFilterExpression" );
+	if( prevExpr )
+	{
+		processor->removeChild( prevExpr );
+	}
+
+	if( dataStores.size() == 0 )
+	{
+		return;
+	}
+
+	PathFilter *pathFilter = processor->getChild<PathFilter>( "PathFilter" );
+
+	if( dataStores.size() == 1 )
+	{
+		pathFilter->pathsPlug()->setInput( dataStores[0]->keysPlug() );
+		return;
+	}
+
+	ExpressionPtr newExpression = new Expression( "__pathFilterExpression" );
+
+	processor->addChild( newExpression );
+
+	std::vector<std::string> exprLines;
+
+	exprLines.push_back( "result = IECore.StringVectorData();" );
+	for( DataStore *d : dataStores )
+	{
+		// Use extend to join these vectors so that the join can be done more efficiently
+		// in C++, with optimizations like pre-allocating the vector size and releasing the
+		// GIL that could help with extremely large vectors. ( extend doesn't actually do
+		// these optimizations, but it could if performance of this was important. )
+		exprLines.push_back( fmt::format( R"(result.extend( parent["{}"]["keys"] );)", d->getName() ) );
+	}
+	exprLines.push_back( fmt::format( R"(parent["{}"]["paths"] = result;)", pathFilter->getName() ) );
+
+	//std::string expr =
+	newExpression->setExpression( fmt::format( "{}", fmt::join( exprLines, "\n" ) ), "python" );
+}
+
+} // namespace
+
+bool GafferScene::EditScopeAlgo::hasPaintEdit( const Gaffer::EditScope *scope, const std::string &variableName )
+{
+	return acquirePaintEdit( const_cast<EditScope *>( scope ), variableName, /* createIfNecessary = */ false );
+}
+
+DataStore *GafferScene::EditScopeAlgo::acquirePaintEdit( Gaffer::EditScope *scope, const std::string &variableName, bool createIfNecessary )
+{
+	SceneProcessor *processor = acquirePaintProcessor( scope, createIfNecessary );
+	if( !processor )
+	{
+		return nullptr;
+	}
+
+	PrimitiveVariablePaint *paintNode = processor->getChild<PrimitiveVariablePaint>( "PrimitiveVariablePaint" );
+	if( !paintNode )
+	{
+		return nullptr;
+	}
+
+	for( NameValuePlug::Iterator it( paintNode->primitiveVariablesPlug() ); !it.done(); ++it )
+	{
+		if( (*it)->namePlug()->getValue() == variableName )
+		{
+			Plug *dataStorePlug = (*it)->valuePlug()->getInput();
+			if( !dataStorePlug )
+			{
+				return nullptr;
+			}
+
+			return dataStorePlug->ancestor<DataStore>();
+		}
+	}
+
+	if( !createIfNecessary )
+	{
+		return nullptr;
+	}
+
+	NameValuePlugPtr primVarPlug = new NameValuePlug( variableName, new ObjectPlug( "value", Gaffer::Plug::Direction::In, IECore::NullObject::defaultNullObject() ), variableName, Gaffer::Plug::Flags::Default | Gaffer::Plug::Flags::Dynamic );
+	paintNode->primitiveVariablesPlug()->addChild( primVarPlug );
+
+	DataStorePtr newDataStore = new DataStore( "paintData" + variableName );
+	newDataStore->selectorPlug()->setValue( "${scene:path}" );
+	processor->addChild( newDataStore );
+
+	primVarPlug->valuePlug()->setInput( newDataStore->outPlug() );
+
+	paintProcessorUpdatePathFilter( processor );
+
+	return newDataStore.get();
+}
+
+void GafferScene::EditScopeAlgo::removePaintEdit( Gaffer::EditScope *scope, const std::string &variableName )
+{
+	SceneProcessor *processor = acquirePaintProcessor( scope, /* createIfNecessary = */ false );
+	if( !processor )
+	{
+		return;
+	}
+
+	PrimitiveVariablePaint *paintNode = processor->getChild<PrimitiveVariablePaint>( "PrimitiveVariablePaint" );
+	if( !paintNode )
+	{
+		return;
+	}
+
+	NameValuePlug* targetPlug = nullptr;
+	for( NameValuePlug::Iterator it( paintNode->primitiveVariablesPlug() ); !it.done(); ++it )
+	{
+		if( (*it)->namePlug()->getValue() == variableName )
+		{
+			targetPlug = it->get();
+		}
+	}
+
+	if( !targetPlug )
+	{
+		return;
+	}
+
+	Plug *dataStorePlug = targetPlug->valuePlug()->getInput();
+	if( dataStorePlug )
+	{
+		DataStore *targetDataStore = dataStorePlug->ancestor<DataStore>();
+		if( targetDataStore )
+		{
+			processor->removeChild( targetDataStore );
+		}
+	}
+
+	paintNode->primitiveVariablesPlug()->removeChild( targetPlug );
+
+	paintProcessorUpdatePathFilter( processor );
+}
+
+
+const GraphComponent *GafferScene::EditScopeAlgo::paintEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &variableName )
+{
+	DataStore *paintEdit = acquirePaintEdit( const_cast<EditScope *>( scope ), variableName, /* createIfNecessary = */ false );
+	if( !paintEdit )
+	{
+		return MetadataAlgo::readOnlyReason( scope );
+	}
+
+	const Gaffer::GraphComponent *reason = MetadataAlgo::readOnlyReason( paintEdit );
+	if( reason )
+	{
+		return reason;
+	}
+
+	return nullptr;
 }
