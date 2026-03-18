@@ -1126,9 +1126,134 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
 		self.assertEqual( inspection.source(), tweak )
-		self.assertTrue( inspection.sourceType(), inspection.SourceType.EditScope )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
 		self.assertEqual( inspection.value(), IECore.FloatData( 1 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
+
+	def testSourceForCreateIfMissingTweaks( self ) :
+
+		light = GafferSceneTest.TestLight()
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		light["visualiserAttributes"]["scale"]["value"].setValue( 10 )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+
+		self.assertEqual( editScope["out"].attributes( "/light" )["gl:visualiser:scale"].value, 10.0 )
+
+		tweak = GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "gl:visualiser:scale" )
+		tweak["enabled"].setValue( True )
+		tweak["mode"].setValue( Gaffer.TweakPlug.Mode.CreateIfMissing )
+		tweak["value"].setValue( 20.0 )
+
+		# Our CreateIfMissing tweak should not be the source as the attribute already exists upstream
+		# so the tweak did not affect the scene.
+		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
+		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Upstream )
+		self.assertEqual( inspection.value(), IECore.FloatData( 10.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "" )
+
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( False )
+
+		# With the upstream attribute disabled, our tweak should now be the source as it now affects
+		# the scene.
+		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
+		self.assertEqual( inspection.source(), tweak )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
+		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "" )
+
+	def testSourceForLocalisedCreateIfMissingTweaks( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		globalGlAttributes = GafferScene.OpenGLAttributes()
+		globalGlAttributes["in"].setInput( group["out"] )
+		globalGlAttributes["global"].setValue( True )
+		globalGlAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		globalGlAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 2.0 )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		glAttributes = GafferScene.OpenGLAttributes()
+		glAttributes["in"].setInput( globalGlAttributes["out"] )
+		glAttributes["filter"].setInput( groupFilter["out"] )
+		glAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		glAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 4.0 )
+
+		lightFilter = GafferScene.PathFilter()
+		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
+
+		attributeTweaks = GafferScene.AttributeTweaks()
+		attributeTweaks["in"].setInput( glAttributes["out"] )
+		attributeTweaks["filter"].setInput( lightFilter["out"] )
+		tweak = Gaffer.TweakPlug( "gl:visualiser:scale", 8.0, Gaffer.TweakPlug.Mode.CreateIfMissing )
+		attributeTweaks["tweaks"].addChild( tweak )
+
+		# With `localise` enabled, our CreateIfMissing tweak should not be the source as the attribute
+		# already exists upstream at "/group".
+		attributeTweaks["localise"].setValue( True )
+
+		inspection = self.__inspect( attributeTweaks["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
+
+		# Disable the attribute at "/group" to instead inherit from the global attribute. Our tweak
+		# should still not be the source.
+		glAttributes["enabled"].setValue( False )
+
+		inspection = self.__inspect( attributeTweaks["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
+
+		# No longer localise the tweak. Our tweak should now be the source as there is no upstream
+		# attribute at /group/light.
+		attributeTweaks["localise"].setValue( False )
+
+		inspection = self.__inspect( attributeTweaks["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), tweak )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.value(), IECore.FloatData( 8.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "" )
+
+	def testSourceForAttributeNodeInGlobalMode( self ) :
+
+		light = GafferSceneTest.TestLight()
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		light["visualiserAttributes"]["scale"]["value"].setValue( 10 )
+
+		openGLAttributes = GafferScene.OpenGLAttributes()
+		openGLAttributes["in"].setInput( light["out"] )
+		openGLAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		openGLAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 20 )
+		openGLAttributes["global"].setValue( True )
+
+		# Our node authoring the global attribute should not be the source.
+		inspection = self.__inspect( openGLAttributes["out"], "/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.value(), IECore.FloatData( 10.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "" )
+
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( False )
+
+		# Even with the plug authoring the local attribute disabled, it should still be the source
+		# for any edit at that location.
+		inspection = self.__inspect( openGLAttributes["out"], "/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
+		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
 
 if __name__ == "__main__" :
 	unittest.main()
