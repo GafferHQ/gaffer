@@ -359,7 +359,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 	if( ornamentWireframePoints->readable().size() > 0 )
 	{
-		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, ornamentWireframeVertsPerCurve );
+		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, ornamentWireframeVertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, ornamentWireframePoints ) );
 		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( lightWireframeColor( muted ) ) ) );
 		result.push_back( Visualisation::createOrnament( curves, /* affectsFramingBound = */ false ) );

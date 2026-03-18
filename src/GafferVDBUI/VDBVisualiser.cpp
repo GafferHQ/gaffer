@@ -303,7 +303,7 @@ class VDBVisualiser : public ObjectVisualiser
 			IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
 			vertsPerCurve->writable().resize( 3, 2 );
 
-			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 			group->addChild( curves );
 		}
@@ -349,7 +349,7 @@ class VDBVisualiser : public ObjectVisualiser
 				group->getState()->add( new IECoreGL::WireframeColorStateComponent( colors[depth % colors.size()] ) );
 				group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
 
-				IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, collector.vertsPerCurve[depth] );
+				IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, collector.vertsPerCurve[depth] );
 				curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, collector.positions[depth] ) );
 				group->addChild( curves );
 
