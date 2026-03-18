@@ -738,6 +738,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if self.__updateSelectionInButtonRelease :
 			self.__singleSelect( index )
+			self.__updateSelectionInButtonRelease = False
 			return True
 		else :
 			return self.getColumns()[index.column()].buttonReleaseSignal()(

@@ -89,6 +89,20 @@ Build
 1.6.x.x (relative to 1.6.14.1)
 =======
 
+Fixes
+-----
+
+- SceneInspector, AttributeEditor :
+  - Fixed bug causing history inspection to incorrectly include AttributeTweaks `CreateIfMissing` tweaks that have not modified the scene due to the attribute already existing upstream of the tweak.
+  - Fixed bug causing history inspection to incorrectly include Attributes nodes with an enabled `global` plug when inspecting attributes on scene locations.
+- Scene Editors : Fixed bug that could cause a checkbox to fail to update when double-clicking.
+- PathListingWidget : Prevented redundant selection update when double-clicking.
+
+API
+---
+
+- GLWidget : Added `_registerQGLWidgetCreator()` function, which can be used to customise QGLWidget creation for custom host environments.
+
 1.6.14.1 (relative to 1.6.14.0)
 ========
 
