@@ -63,6 +63,7 @@ Breaking Changes
 - OpenColorIO :
   - Changed default config.
   - Removed "Legacy (Gaffer 1.2)" config.
+- GLWidget : Removed built-in support for hosting in Maya and Houdini. Implement host integration via `GLWidget._registerQGLWidgetCreator()` instead.
 
 Build
 -----
