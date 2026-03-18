@@ -138,6 +138,15 @@ class GLWidget( GafferUI.Widget ) :
 		self.__graphicsScene.removeOverlay( child )
 		self.__overlays.remove( child )
 
+	## Allows customisation of the underlying QGLWidget, by registering a
+	# function that will be used to create QGLWidgets when they are needed. This
+	# is not typically necessary, but can be useful when hosting Gaffer inside
+	# other DCCs.
+	@staticmethod
+	def _registerQGLWidgetCreator( creator ) :
+
+		_GLGraphicsView._widgetCreator = creator
+
 	## Called whenever the widget is resized. May be reimplemented by derived
 	# classes if necessary.
 	# > Note : An OpenGL context is not available when this function is called.
@@ -214,6 +223,8 @@ class GLWidget( GafferUI.Widget ) :
 
 class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
+	_widgetCreator = None
+
 	def __init__( self, format ) :
 
 		QtWidgets.QGraphicsView.__init__( self )
@@ -261,7 +272,12 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 	@classmethod
 	def __createGLWidget( cls, format ) :
 
+		if cls._widgetCreator is not None :
+			return cls._widgetCreator( format )
+
 		# try to make a host specific widget if necessary.
+		## \todo Remove - folks wanting hosted widgets should
+		# use `GLWidget._registerQGLWidgetCreator()` instead.
 		result = cls.__createMayaQGLWidget( format )
 		if result is not None :
 			return result

@@ -10,6 +10,11 @@ Fixes
 - Scene Editors : Fixed bug that could cause a checkbox to fail to update when double-clicking.
 - PathListingWidget : Prevented redundant selection update when double-clicking.
 
+API
+---
+
+- GLWidget : Added `_registerQGLWidgetCreator()` function, which can be used to customise QGLWidget creation for custom host environments.
+
 1.6.14.1 (relative to 1.6.14.0)
 ========
 
