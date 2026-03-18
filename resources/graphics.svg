@@ -6,7 +6,7 @@
    height="1000"
    id="svg2"
    version="1.1"
-   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    sodipodi:docname="graphics.svg"
    enable-background="new"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -2079,6 +2079,14 @@
          height="32"
          width="32"
          id="pointerNotEditable"
+         style="opacity:1;fill:none;fill-opacity:0.992157;stroke:none;stroke-width:2.2069;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill" />
+      <rect
+         inkscape:label="pointerInvisible"
+         y="1290"
+         x="824"
+         height="32"
+         width="32"
+         id="pointerInvisible"
          style="opacity:1;fill:none;fill-opacity:0.992157;stroke:none;stroke-width:2.2069;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill" />
     </g>
     <g

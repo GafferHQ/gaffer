@@ -36,6 +36,7 @@
 				"pointerPivot",
 				"pointerCut",
 				"pointerNotEditable",
+				"pointerInvisible",
 			]
 		},
 
