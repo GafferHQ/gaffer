@@ -53,10 +53,9 @@ def __ocioColorManagerAdaptor() :
 	result["colorManager"]["in"].setInput( result["in"] )
 	result["colorManager"]["parameters"]["config"].setValue( "${ocio:config}" )
 	result["colorManager"]["parameters"]["color_space_linear"].setValue( "${ocio:workingSpace}" )
-	# This is the least convincing of the defaults, but the `matte_paint` role is `sRGB` for
-	# both the ACES 1.3 and the Gaffer 1.2 Legacy configs, which seems a decent guess for a
-	# low bit depth file.
-	result["colorManager"]["parameters"]["color_space_narrow"].setValue( "matte_paint" )
+	# We use the `srgb_texture` alias here as it is common between the ACES 1.3 and 2.0 configs, which
+	# otherwise have different names for the equivalent colorspace.
+	result["colorManager"]["parameters"]["color_space_narrow"].setValue( "srgb_texture" )
 
 	result["optionQuery"] = GafferScene.OptionQuery()
 	result["optionQuery"]["scene"].setInput( result["in"] )

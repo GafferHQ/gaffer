@@ -18,6 +18,7 @@ Improvements
 - CyclesAttributes : Added `cycles:adaptive_space` attribute.
 - CyclesOptions : Added `cycles:integrator:volume_ray_marching` option.
 - LightEditor : Added column for `cycles:visibility:camera` attribute.
+- OpenColorIO : Updated default config to ACES Studio 2.0.
 
 Fixes
 -----
@@ -59,18 +60,23 @@ Breaking Changes
 - CyclesLight : Removed `use_camera`, `use_diffuse`, `use_glossy`, `use_transmission`, `use_scatter`, and `lightgroup` parameter plugs as Cycles no longer considers these to be light parameters. Ray visibility and light group membership is now set via the `cycles:visibility:*` and `cycles:lightgroup` attributes on a CyclesAttributes node.
 - CyclesAttributes : Removed `cycles:shader:heterogeneous_volume` attribute as it is no longer used by Cycles.
 - CyclesOptions : Removed `cycles:background:volume_step_size` option as it is no longer used by Cycles.
+- OpenColorIO :
+  - Changed default config.
+  - Removed "Legacy (Gaffer 1.2)" config.
 
 Build
 -----
 
 - Boost : Updated to version 1.85.0.
-- Cortex : Updated to version 10.7.0.0a6.
+- Cortex : Updated to version 10.7.0.0a7.
 - Cycles : Updated to version 5.0.0.
 - Embree : Updated to version 4.4.0.
 - Imath : Updated to version 3.1.12.
 - Jemalloc : Removed when building on macOS.
 - LLVM : Updated to version 17.0.6.
-- OpenColorIO : Updated to version 2.4.2.
+- OpenColorIO :
+  - Updated to version 2.4.2.
+  - Added ACES 2.0 configs.
 - OpenEXR : Updated to version 3.3.6.
 - OpenShadingLanguage : Updated to version 1.14.8.0.
 - OpenSubdiv : Updated to version 3.6.1.
@@ -78,6 +84,7 @@ Build
 - Python : Updated to version 3.11.14.
 - Qt : Updated to version 6.5.8.
 - TBB : Updated to version 2021.13.0.
+- USD : Updated to version 26.03.
 
 1.6.x.x (relative to 1.6.14.1)
 =======
