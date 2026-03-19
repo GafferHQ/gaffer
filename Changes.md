@@ -41,6 +41,7 @@ Breaking Changes
 ----------------
 
 - Arnold : Removed support for Arnold 7.3.
+- RenderMan : Removed support for RenderMan 27.1.
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 - RenderUI : Removed deprecated `rendererPresetNames()` function.
