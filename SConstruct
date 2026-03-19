@@ -2045,6 +2045,15 @@ if exeEnv["PLATFORM"] != "win32" :
 		],
 
 	)
+else :
+	exeEnv.Append( 
+
+		# Using 4MB stack to match TBB's default thread stack size.
+		# We read this value in `Application`, so it can be changed
+		# here and will propogate to TBB threads.
+		LINKFLAGS = [ "-Stack:" + str( 4 * 1024 * 1024 ) ],
+
+	)
 
 gafferExecutable = exeEnv.Program( "$BUILD_DIR/bin/__private/gaffer", "bin/__private/gaffer.cpp")
 env.Alias( "buildCore", gafferExecutable )
