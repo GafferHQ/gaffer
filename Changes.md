@@ -19,7 +19,7 @@ Improvements
 - CyclesAttributes : Added `cycles:adaptive_space` attribute.
 - CyclesOptions : Added `cycles:integrator:volume_ray_marching` option.
 - LightEditor : Added column for `cycles:visibility:camera` attribute.
-- OpenColorIO : Updated default config to ACES Studio 2.0.
+- OpenColorIO : Added ACES Studio 2.0 config. The default config is still ACES 1.3, due to RenderMan not supporting ACES 2.0.
 
 Fixes
 -----
@@ -41,6 +41,8 @@ API
 Breaking Changes
 ----------------
 
+- Arnold : Removed support for Arnold 7.3.
+- RenderMan : Removed support for RenderMan 27.1.
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 - RenderUI : Removed deprecated `rendererPresetNames()` function.
@@ -61,9 +63,7 @@ Breaking Changes
 - CyclesLight : Removed `use_camera`, `use_diffuse`, `use_glossy`, `use_transmission`, `use_scatter`, and `lightgroup` parameter plugs as Cycles no longer considers these to be light parameters. Ray visibility and light group membership is now set via the `cycles:visibility:*` and `cycles:lightgroup` attributes on a CyclesAttributes node.
 - CyclesAttributes : Removed `cycles:shader:heterogeneous_volume` attribute as it is no longer used by Cycles.
 - CyclesOptions : Removed `cycles:background:volume_step_size` option as it is no longer used by Cycles.
-- OpenColorIO :
-  - Changed default config.
-  - Removed "Legacy (Gaffer 1.2)" config.
+- OpenColorIO : Removed "Legacy (Gaffer 1.2)" config.
 - GLWidget : Removed built-in support for hosting in Maya and Houdini. Implement host integration via `GLWidget._registerQGLWidgetCreator()` instead.
 
 Build
