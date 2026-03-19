@@ -40,6 +40,7 @@ API
 Breaking Changes
 ----------------
 
+- Arnold : Removed support for Arnold 7.3.
 - ValuePlug : Disconnection no longer emits `plugSetSignal()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 - RenderUI : Removed deprecated `rendererPresetNames()` function.
