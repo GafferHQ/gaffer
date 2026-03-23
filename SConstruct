@@ -2046,7 +2046,7 @@ if exeEnv["PLATFORM"] != "win32" :
 
 	)
 else :
-	exeEnv.Append( 
+	exeEnv.Append(
 
 		# Using 4MB stack to match TBB's default thread stack size.
 		# We read this value in `Application`, so it can be changed
