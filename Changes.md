@@ -1,5 +1,8 @@
-1.6.x.x (relative to 1.6.14.1)
+1.6.x.x (relative to 1.6.14.2)
 =======
+
+1.6.14.2 (relative to 1.6.14.1)
+========
 
 Fixes
 -----
