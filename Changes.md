@@ -91,6 +91,21 @@ Build
 1.6.x.x (relative to 1.6.14.2)
 =======
 
+Improvements
+------------
+
+- StandardLightVisualiser : Added surface texture visualisation for inputs to the `color` parameter of USD lights when GafferArnold is used (#6651).
+
+Fixes
+-----
+
+- Cycles : Re-order shader conversion functions so that component connection adapters are run last.
+
+API
+---
+
+- StandardLightVisualiser : Added `registerSurfaceTexture()` and accompanying `SurfaceTextureRegistration` convenience class for registering functions to provide surface textures.
+
 1.6.14.2 (relative to 1.6.14.1)
 ========
 
