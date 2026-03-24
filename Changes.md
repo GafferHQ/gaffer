@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.14.2)
 =======
 
+Fixes
+-----
+
+- Cycles : Re-order shader conversion functions so that component connection adapters are run last.
+
 1.6.14.2 (relative to 1.6.14.1)
 ========
 

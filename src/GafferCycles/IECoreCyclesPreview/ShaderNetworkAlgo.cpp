@@ -465,10 +465,10 @@ std::unique_ptr<ccl::ShaderGraph> convertGraph( const IECoreScene::ShaderNetwork
 		/// Hardcoded to the old OSL version to indicate that component connection adapters are
 		/// required - even though OSL now supports component connections, the Cycles API AFAIK doesn't.
 		IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( toConvert.get(), 10900 );
-		// The above only added component connection adaptors for OSL. Now add them for native
-		// Cycles shaders.
-		IECoreScene::ShaderNetworkAlgo::addComponentConnectionAdapters( toConvert.get() );
 		IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( toConvert.get() );
+		// The convertToOSLConventions call only added component connection adaptors for OSL.
+		// Now add them for native Cycles shaders.
+		IECoreScene::ShaderNetworkAlgo::addComponentConnectionAdapters( toConvert.get() );
 		ShaderMap converted;
 		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph.get(), converted );
 
