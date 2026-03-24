@@ -21,6 +21,9 @@ Improvements
 - CyclesOptions : Added `cycles:integrator:volume_ray_marching` option.
 - LightEditor : Added column for `cycles:visibility:camera` attribute.
 - OpenColorIO : Added ACES Studio 2.0 config. The default config is still ACES 1.3, due to RenderMan not supporting ACES 2.0.
+- CurvesPrimitive : Added `Pinned` wrap mode in addition to the existing `Periodic` and `NonPeriodic` modes. This conveniently interpolates CatmullRom
+and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
+- SceneReader, SceneWriter : Added support for pinned UsdGeomBasisCurves.
 
 Fixes
 -----
@@ -30,6 +33,8 @@ Fixes
 - BackgroundMethod : Fixed bug that allowed unwanted background computations to continue when a widget was hidden.
 - MeshTessellate : Fixed crashes caused by non-manifold geometry.
 - 3Delight : Fixed rendering of linear curves.
+- DeleteCurves : Fixed deletion of periodic curves.
+- ResamplePrimitiveVariables : Fixed resampling between Vertex and Varying for linear curves.
 
 API
 ---
@@ -73,7 +78,7 @@ Build
 -----
 
 - Boost : Updated to version 1.85.0.
-- Cortex : Updated to version 10.7.0.0a7.
+- Cortex : Updated to version 10.7.0.0a8.
 - Cycles : Updated to version 5.0.0.
 - Embree : Updated to version 4.4.0.
 - Imath : Updated to version 3.1.12.
