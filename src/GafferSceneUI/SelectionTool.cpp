@@ -495,5 +495,10 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 		ScriptNodeAlgo::setSelectedPaths( view()->scriptNode(), selection );
 	}
 
-	return true;
+	// TODO - it seems like there is a need to notify other clients who may be trying to monitor
+	// signals from this source. In particular, during the drag, we've been receiving dragMove events
+	// for any keyPress/keyRelease events related to modifiers, so other clients that want to monitor
+	// modifier states now need to update. Allowing this dragEnd event to continue through is probably
+	// not the right approach, but it does work.
+	return false;
 }
