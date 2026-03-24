@@ -66,20 +66,43 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		static void spotlightParameters( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &radius, float &lensRadius );
 
-	protected :
-
-		// This method should be overridden by any sub-classes that wish to
-		// provide an alternate surface texture for area-based lights.
+		// Visualisers for specific renderers can register a function with
+		// this signature to provide textures for area-based lights.
 		//
 		// It should return one of :
 		//  - nullptr : No texture applicable
 		//  - StringData : The file path of a texture.
 		//  - CompoundData : An image representation of the texture data, as
 		//      supported by IECoreGL::ToGLTextureConverter.
-		//
-		// The default implementation looks for a string parameter registered
-		// as the "textureNameParameter" for the supplied shader network's
-		// output shader.
+
+		using SurfaceTexture = std::function< IECore::DataPtr (
+			const IECore::InternedString &attributeName,
+			const IECoreScene::ShaderNetwork *shaderNetwork,
+			const IECore::CompoundObject *attributes,
+			int maxTextureResolution
+		) >;
+
+		// Registers a `SurfaceTexture` function to be used when visualising
+		// lights. The first first non-nullptr value returned from a registered
+		// function will be used as the texture. If no texture data is found,
+		// `surfaceTexture` will look for a string parameter registered as the
+		// "textureNameParameter" metadata value for the supplied shader
+		// network's output shader.
+		static void registerSurfaceTexture( SurfaceTexture texture );
+
+		// Convenience class to allow static registration of surface texture functions.
+		// e.g. `static SurfaceTextureRegistration g_texture( surfaceTextureFunction )`.
+		struct SurfaceTextureRegistration
+		{
+			SurfaceTextureRegistration( SurfaceTexture texture )
+			{
+				registerSurfaceTexture( texture );
+			}
+		};
+
+	protected :
+
+		/// \todo Make this private an not virtual when we can break ABI.
 		virtual IECore::DataPtr surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const;
 
 	private :
