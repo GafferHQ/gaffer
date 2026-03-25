@@ -120,7 +120,13 @@ class _NodeNameColumn( GafferUI.PathColumn ) :
 	def cellData( self, path, canceller = None ) :
 
 		node = path.property( "history:node", canceller )
-		return self.CellData( node.relativeName( node.scriptNode() ) )
+		if node.ancestor( Gaffer.ScriptNode ) is None :
+			return self.CellData(
+				node.relativeName( node.ancestor( GafferUI.Editor.Settings ) ),
+				background = IECore.Color4fData( imath.Color4f( 121, 77, 56, 120 ) / 255.0 )
+			)
+		else :
+			return self.CellData( node.relativeName( node.scriptNode() ) )
 
 	def headerData( self, canceller = None ) :
 
