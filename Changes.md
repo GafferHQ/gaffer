@@ -5,6 +5,10 @@ Features
 --------
 
 - Cycles : Updated to version 5.0.0.
+- FileList : Added node for listing matching files.
+- DeleteFiles : Added node for deleting files.
+- CopyFiles : Added node for copying files.
+- RenameFiles : Added node for renaming files.
 
 Improvements
 ------------
