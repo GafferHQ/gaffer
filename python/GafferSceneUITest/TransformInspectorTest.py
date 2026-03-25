@@ -203,36 +203,38 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 
 	def testEditScopes( self ) :
 
-		plane = GafferScene.Plane()
-		plane["transform"]["scale"].setValue( imath.V3f( 2 ) )
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( plane["out"] )
-		editScope["in"].setInput( plane["out"] )
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["transform"]["scale"].setValue( imath.V3f( 2 ) )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["plane"]["out"] )
+		s["editScope"]["in"].setInput( s["plane"]["out"] )
 
 		# We refuse to make a new edit because that would edit components
 		# other than the one we're inspecting.
 
 		inspection = self.__inspect(
-			editScope["out"], "/plane",
+			s["editScope"]["out"], "/plane",
 			GafferSceneUI.Private.TransformInspector.Space.Local,
 			GafferSceneUI.Private.TransformInspector.Component.Translate,
-			editScope
+			s["editScope"]
 		)
-		self.assertEqual( inspection.source(), plane["transform"]["translate"] )
+		self.assertEqual( inspection.source(), s["plane"]["transform"]["translate"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Upstream )
 		self.assertFalse( inspection.editable() )
 		self.assertEqual( inspection.nonEditableReason(), "Edit creation not supported yet. Use the transform tools in the Viewer instead." )
 
 		# But if an edit already exists, we'll use it.
 
-		edit = GafferScene.EditScopeAlgo.acquireTransformEdit( editScope, "/plane" )
+		edit = GafferScene.EditScopeAlgo.acquireTransformEdit( s["editScope"], "/plane" )
 
 		inspection = self.__inspect(
-			editScope["out"], "/plane",
+			s["editScope"]["out"], "/plane",
 			GafferSceneUI.Private.TransformInspector.Space.Local,
 			GafferSceneUI.Private.TransformInspector.Component.Translate,
-			editScope
+			s["editScope"]
 		)
 		self.assertEqual( inspection.source(), edit.translate )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )

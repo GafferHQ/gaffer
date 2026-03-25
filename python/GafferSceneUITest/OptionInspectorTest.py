@@ -321,19 +321,21 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 	def testDisabledTweaks( self ) :
 
-		options = GafferScene.StandardOptions()
-		options["options"]["render:camera"]["enabled"].setValue( True )
-		options["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
+		s = Gaffer.ScriptNode()
 
-		optionTweaks = GafferScene.OptionTweaks()
-		optionTweaks["in"].setInput( options["out"] )
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
+
+		s["optionTweaks"] = GafferScene.OptionTweaks()
+		s["optionTweaks"]["in"].setInput( s["options"]["out"] )
 		cameraTweak = Gaffer.TweakPlug( "render:camera", "/bar" )
-		optionTweaks["tweaks"].addChild( cameraTweak )
+		s["optionTweaks"]["tweaks"].addChild( cameraTweak )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
 
 		self.__assertExpectedResult(
-			self.__inspect( optionTweaks["out"], "render:camera" ),
+			self.__inspect( s["optionTweaks"]["out"], "render:camera" ),
 			source = cameraTweak,
 			sourceType = SourceType.Other,
 			editable = True,
@@ -343,11 +345,11 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		cameraTweak["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
-			self.__inspect( optionTweaks["out"], "render:camera" ),
-			source = options["options"]["render:camera"],
+			self.__inspect( s["optionTweaks"]["out"], "render:camera" ),
+			source = s["options"]["options"]["render:camera"],
 			sourceType = SourceType.Other,
 			editable = True,
-			edit = options["options"]["render:camera"]
+			edit = s["options"]["options"]["render:camera"]
 		)
 
 	def testNonExistentOption( self ) :
@@ -427,11 +429,13 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 	def testRegisteredOption( self ) :
 
-		standardOptions = GafferScene.StandardOptions()
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( standardOptions["out"] )
-		editScope["in"].setInput( standardOptions["out"] )
+		s["standardOptions"] = GafferScene.StandardOptions()
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["standardOptions"]["out"] )
+		s["editScope"]["in"].setInput( s["standardOptions"]["out"] )
 
 		self.assertIsNotNone( Gaffer.Metadata.value( "option:renderPass:enabled" , "defaultValue" ) )
 
@@ -439,16 +443,16 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		# returns `None` as we have no upstream nodes capable of editing it. We still get a result
 		# from this inspection as "defaultValue" metadata has been registered for this option.
 
-		self.assertIsNone( self.__inspect( editScope["out"], "renderPass:enabled" ).source() )
+		self.assertIsNone( self.__inspect( s["editScope"]["out"], "renderPass:enabled" ).source() )
 
 		# Providing an EditScope allows the option edit to take place.
 
-		inspection = self.__inspect( editScope["out"], "renderPass:enabled", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "renderPass:enabled", s["editScope"] )
 		edit = inspection.acquireEdit()
 		self.assertEqual(
 			edit,
 			GafferScene.EditScopeAlgo.acquireOptionEdit(
-				editScope, "renderPass:enabled", createIfNecessary = False
+				s["editScope"], "renderPass:enabled", createIfNecessary = False
 			)
 		)
 
@@ -458,7 +462,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		# to make sure we get the right source back.
 
 		self.__assertExpectedResult(
-			self.__inspect( editScope["out"], "renderPass:enabled", editScope ),
+			self.__inspect( s["editScope"]["out"], "renderPass:enabled", s["editScope"] ),
 			source = edit,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
 			editable = True,
@@ -829,22 +833,24 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 	def testDefaultValueMetadata( self ) :
 
-		customOptions = GafferScene.CustomOptions()
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( customOptions["out"] )
-		editScope["in"].setInput( customOptions["out"] )
+		s["customOptions"] = GafferScene.CustomOptions()
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["customOptions"]["out"] )
+		s["editScope"]["in"].setInput( s["customOptions"]["out"] )
 
 		# Inspecting the "test:enabled" option without an active EditScope
 		# returns `None` as we have no upstream nodes capable of editing it.
 
-		self.assertIsNone( self.__inspect( editScope["out"], "test:enabled" ) )
+		self.assertIsNone( self.__inspect( s["editScope"]["out"], "test:enabled" ) )
 
 		# Providing an EditScope does not allow an edit as the option does not
 		# exist and we don't have a default value to base the edit on
 
-		self.assertIsNone( self.__inspect( editScope["out"], "test:enabled", editScope ).value() )
-		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
+		self.assertIsNone( self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] ).value() )
+		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		with self.assertRaisesRegex( RuntimeError, "Option \"test:enabled\" does not exist" ) :
 			inspection.acquireEdit()
 
@@ -853,7 +859,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( "option:test:enabled", "defaultValue", True )
 		self.addCleanup( Gaffer.Metadata.deregisterValue, "option:test:enabled", "defaultValue" )
-		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		self.assertEqual( inspection.value(), IECore.BoolData( 1 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
@@ -861,8 +867,8 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		# If the option does exist, then its value is returned as normal
 
 		optionPlug = Gaffer.NameValuePlug( "test:enabled", False, True )
-		customOptions["options"].addChild( optionPlug )
-		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
+		s["customOptions"]["options"].addChild( optionPlug )
+		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		self.assertEqual( inspection.value(), IECore.BoolData( 0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Upstream )
 		self.assertEqual( inspection.fallbackDescription(), "" )
@@ -870,7 +876,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		# Disabling the option should revert to the fallback
 
 		optionPlug["enabled"].setValue( False )
-		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		self.assertEqual( inspection.value(), IECore.BoolData( 1 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
@@ -878,16 +884,16 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		# Updates to "defaultValue" are reflected in new inspections
 
 		Gaffer.Metadata.registerValue( "option:test:enabled", "defaultValue", False )
-		self.assertEqual( self.__inspect( editScope["out"], "test:enabled", editScope ).value(), IECore.BoolData( 0 ) )
+		self.assertEqual( self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] ).value(), IECore.BoolData( 0 ) )
 
 		# The default value now allows the option edit to take place.
 
-		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		edit = inspection.acquireEdit()
 		self.assertEqual(
 			edit,
 			GafferScene.EditScopeAlgo.acquireOptionEdit(
-				editScope, "test:enabled", createIfNecessary = False
+				s["editScope"], "test:enabled", createIfNecessary = False
 			)
 		)
 
@@ -897,7 +903,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		# to make sure we get the right source back.
 
 		self.__assertExpectedResult(
-			self.__inspect( editScope["out"], "test:enabled", editScope ),
+			self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] ),
 			source = edit,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
 			editable = True,
@@ -1099,6 +1105,37 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		assertEdit( inspection, IECore.StringData( "/existingCamera" ), "" )
 		self.assertEqual( acquiredEdit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( acquiredEdit["value"].getValue(), "/existingCamera" )
+
+	def testExternalSourceType( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["standardOptions"] = GafferScene.StandardOptions()
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
+
+		externalOptionTweaks = GafferScene.OptionTweaks()
+		externalOptionTweaks["in"].setInput( s["standardOptions"]["out"] )
+		cameraTweak = Gaffer.TweakPlug( "render:camera", "/external" )
+		externalOptionTweaks["tweaks"].addChild( cameraTweak )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["standardOptions"]["out"], "render:camera", None ),
+			source = s["standardOptions"]["options"]["render:camera"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = None,
+			editWarning = ""
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( externalOptionTweaks["out"], "render:camera", None ),
+			source = cameraTweak,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
+			editable = True,
+			edit = None,
+			editWarning = ""
+		)
 
 if __name__ == "__main__" :
 	unittest.main()

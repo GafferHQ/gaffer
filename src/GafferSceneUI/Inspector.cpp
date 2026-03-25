@@ -418,7 +418,11 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 	{
 		result->m_source = source;
 
-		if( result->m_editScope && result->m_editScopeInHistory )
+		if( !source->ancestor<ScriptNode>() )
+		{
+			result->m_sourceType = Result::SourceType::External;
+		}
+		else if( result->m_editScope && result->m_editScopeInHistory )
 		{
 			result->m_sourceType = Result::SourceType::Upstream;
 		}
@@ -498,7 +502,7 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 			}
 		}
 
-		if( result->m_editors && hadSourceAlready )
+		if( result->m_editors && hadSourceAlready && result->m_sourceType != Result::SourceType::External )
 		{
 			result->m_sourceType = Result::SourceType::Downstream;
 		}

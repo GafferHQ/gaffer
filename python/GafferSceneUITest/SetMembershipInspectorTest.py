@@ -117,19 +117,21 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 	def testFallbackValue( self ) :
 
-		plane = GafferScene.Plane()
-		group = GafferScene.Group()
-		group["in"][0].setInput( plane["out"] )
+		s = Gaffer.ScriptNode()
 
-		pathFilter = GafferScene.PathFilter()
-		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
+		s["plane"] = GafferScene.Plane()
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["plane"]["out"] )
 
-		setNode = GafferScene.Set()
-		setNode["in"].setInput( group["out"] )
-		setNode["name"].setValue( "planeSet" )
-		setNode["filter"].setInput( pathFilter["out"] )
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
 
-		inspection = self.__inspect( setNode["out"], "/group/plane", "planeSet" )
+		s["setNode"] = GafferScene.Set()
+		s["setNode"]["in"].setInput( s["group"]["out"] )
+		s["setNode"]["name"].setValue( "planeSet" )
+		s["setNode"]["filter"].setInput( s["pathFilter"]["out"] )
+
+		inspection = self.__inspect( s["setNode"]["out"], "/group/plane", "planeSet" )
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
@@ -137,9 +139,9 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		)
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /" )
 
-		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/", "/group" ] ) )
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ "/", "/group" ] ) )
 
-		inspection = self.__inspect( setNode["out"], "/group/plane", "planeSet" )
+		inspection = self.__inspect( s["setNode"]["out"], "/group/plane", "planeSet" )
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
@@ -410,11 +412,11 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# ObjectSource nodes should always return their `sets` plug as a source. Otherwise,
 		# creating a new set that doesn't yet exist would not be possible.
-
-		plane = GafferScene.Plane()
+		s = Gaffer.ScriptNode()
+		s["plane"] = GafferScene.Plane()
 		self.__assertExpectedResult(
-			self.__inspect( plane["out"], "/plane", "planeSet" ),
-			source = plane["sets"],
+			self.__inspect( s["plane"]["out"], "/plane", "planeSet" ),
+			source = s["plane"]["sets"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			fallbackDescription = "Default value",
 			editable = True
@@ -487,23 +489,25 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 	def testObjectSourceEditSetMembership( self ) :
 
-		plane1 = GafferScene.Plane()
+		s = Gaffer.ScriptNode()
 
-		group = GafferScene.Group()
-		group["in"][0].setInput( plane1["out"] )
+		s["plane1"] = GafferScene.Plane()
 
-		plane2 = GafferScene.Plane()
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["plane1"]["out"] )
 
-		parent = GafferScene.Parent()
-		parent["parent"].setValue( "/" )
-		parent["children"][0].setInput( group["out"] )
-		parent["children"][1].setInput( plane2["out"] )
+		s["plane2"] = GafferScene.Plane()
+
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["parent"].setValue( "/" )
+		s["parent"]["children"][0].setInput( s["group"]["out"] )
+		s["parent"]["children"][1].setInput( s["plane2"]["out"] )
 
 		editScopePlug = Gaffer.Plug()
 
 		# Include in `planeSet`
 
-		inspector = GafferSceneUI.Private.SetMembershipInspector( parent["out"], editScopePlug, "planeSet" )
+		inspector = GafferSceneUI.Private.SetMembershipInspector( s["parent"]["out"], editScopePlug, "planeSet" )
 		self.assertIsNotNone( inspector )
 
 		with Gaffer.Context() as c :
@@ -513,7 +517,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
 		inspection.edit( IECore.BoolData( True ) )
 
-		planeSet = parent["out"].set( "planeSet" ).value
+		planeSet = s["parent"]["out"].set( "planeSet" ).value
 
 		for path, result in [
 			( "/group/plane", IECore.PathMatcher.Result.ExactMatch ),
@@ -527,7 +531,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
 		inspection.edit( IECore.BoolData( False ) )
 
-		planeSet = parent["out"].set( "planeSet" ).value
+		planeSet = s["parent"]["out"].set( "planeSet" ).value
 
 		for path, result in [
 			( "/group/plane", IECore.PathMatcher.Result.NoMatch ),
@@ -613,19 +617,21 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# Modifying a `Set` node is beyond our powers
 
-		plane = GafferScene.Plane()
+		s = Gaffer.ScriptNode()
 
-		planeFilter = GafferScene.PathFilter()
-		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane"] ) )
+		s["plane"] = GafferScene.Plane()
 
-		setNode = GafferScene.Set()
-		setNode["name"].setValue( "planeSet" )
-		setNode["in"].setInput( plane["out"] )
-		setNode["filter"].setInput( planeFilter["out"] )
+		s["planeFilter"] = GafferScene.PathFilter()
+		s["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane"] ) )
+
+		s["setNode"] = GafferScene.Set()
+		s["setNode"]["name"].setValue( "planeSet" )
+		s["setNode"]["in"].setInput( s["plane"]["out"] )
+		s["setNode"]["filter"].setInput( s["planeFilter"]["out"] )
 
 		editScopePlug = Gaffer.Plug()
 
-		inspector = GafferSceneUI.Private.SetMembershipInspector( setNode["out"], editScopePlug, "planeSet" )
+		inspector = GafferSceneUI.Private.SetMembershipInspector( s["setNode"]["out"], editScopePlug, "planeSet" )
 
 		# Even if we know the source, we politely decline to make an edit
 
@@ -633,7 +639,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
 			inspection = inspector.inspect()
 
-		self.assertEqual( inspection.source(), setNode["name"] )
+		self.assertEqual( inspection.source(), s["setNode"]["name"] )
 
 		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
 		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "Cannot edit nodes of type \"GafferScene::Set\"." )

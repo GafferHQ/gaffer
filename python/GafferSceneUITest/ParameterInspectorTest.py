@@ -342,63 +342,67 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 	def testShaderAssignmentWarning( self ) :
 
-		shader = GafferSceneTest.TestShader()
-		shader["type"].setValue( "test:surface" )
-		shader["parameters"]["optionalString"]["enabled"].setValue( True )
+		s = Gaffer.ScriptNode()
 
-		plane = GafferScene.Plane()
+		s["testShader"] = GafferSceneTest.TestShader()
+		s["testShader"]["type"].setValue( "test:surface" )
+		s["testShader"]["parameters"]["optionalString"]["enabled"].setValue( True )
 
-		planeFilter = GafferScene.PathFilter()
-		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		s["plane"] = GafferScene.Plane()
+
+		s["planeFilter"] = GafferScene.PathFilter()
+		s["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
 
 		shaderAssignment = GafferScene.ShaderAssignment()
-		shaderAssignment["shader"].setInput( shader["out"] )
-		shaderAssignment["filter"].setInput( planeFilter["out"] )
+		shaderAssignment["shader"].setInput( s["testShader"]["out"] )
+		shaderAssignment["filter"].setInput( s["planeFilter"]["out"] )
 
 		self.__assertExpectedResult(
 			self.__inspect( shaderAssignment["out"], "/plane", "c", None, attribute="test:surface" ),
-			source = shader["parameters"]["c"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, editWarning = "Edits to TestShader may affect other locations in the scene."
+			source = s["testShader"]["parameters"]["c"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True, editWarning = "Edits to testShader may affect other locations in the scene."
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( shaderAssignment["out"], "/plane", "optionalString", None, attribute="test:surface" ),
-			source = shader["parameters"]["optionalString"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, editWarning = "Edits to TestShader may affect other locations in the scene."
+			source = s["testShader"]["parameters"]["optionalString"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True, editWarning = "Edits to testShader may affect other locations in the scene."
 		)
 
 	def testEditScopeNotInHistory( self ) :
 
-		light = GafferSceneTest.TestLight()
+		s = Gaffer.ScriptNode()
 
-		lightFilter = GafferScene.PathFilter()
-		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+		s["light"] = GafferSceneTest.TestLight()
 
-		shaderTweaks = GafferScene.ShaderTweaks()
-		shaderTweaks["in"].setInput( light["out"] )
-		shaderTweaks["filter"].setInput( lightFilter["out"] )
-		shaderTweaks["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 3 ) )
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["shaderTweaks"] = GafferScene.ShaderTweaks()
+		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
+		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["shaderTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 3 ) )
 
 		editScope = Gaffer.EditScope()
-		editScope.setup( light["out"] )
+		editScope.setup( s["light"]["out"] )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
 
 		self.__assertExpectedResult(
-			self.__inspect( light["out"], "/light", "exposure", editScope ),
-			source = light["parameters"]["exposure"], sourceType = SourceType.Other,
+			self.__inspect( s["light"]["out"], "/light", "exposure", editScope ),
+			source = s["light"]["parameters"]["exposure"], sourceType = SourceType.Other,
 			editable = False, nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
 		self.__assertExpectedResult(
-			self.__inspect( shaderTweaks["out"], "/light", "exposure" ),
-			source = shaderTweaks["tweaks"][0], sourceType = SourceType.Other,
-			editable = True, edit = shaderTweaks["tweaks"][0],
+			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure" ),
+			source = s["shaderTweaks"]["tweaks"][0], sourceType = SourceType.Other,
+			editable = True, edit = s["shaderTweaks"]["tweaks"][0],
 		)
 
 		self.__assertExpectedResult(
-			self.__inspect( shaderTweaks["out"], "/light", "exposure", editScope ),
-			source = shaderTweaks["tweaks"][0], sourceType = SourceType.Other,
+			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", editScope ),
+			source = s["shaderTweaks"]["tweaks"][0], sourceType = SourceType.Other,
 			editable = False, nonEditableReason = "The target edit scope EditScope is not in the scene history."
 		)
 
@@ -513,19 +517,21 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 	def testDisabledTweaks( self ) :
 
-		light = GafferSceneTest.TestLight()
+		s = Gaffer.ScriptNode()
 
-		lightFilter = GafferScene.PathFilter()
-		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+		s["light"] = GafferSceneTest.TestLight()
 
-		shaderTweaks = GafferScene.ShaderTweaks()
-		shaderTweaks["in"].setInput( light["out"] )
-		shaderTweaks["filter"].setInput( lightFilter["out"] )
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["shaderTweaks"] = GafferScene.ShaderTweaks()
+		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
+		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
 		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
-		shaderTweaks["tweaks"].addChild( exposureTweak )
+		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
 
 		self.__assertExpectedResult(
-			self.__inspect( shaderTweaks["out"], "/light", "exposure" ),
+			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure" ),
 			source = exposureTweak, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True, edit = exposureTweak
 		)
@@ -533,9 +539,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		exposureTweak["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
-			self.__inspect( shaderTweaks["out"], "/light", "exposure" ),
-			source = light["parameters"]["exposure"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, edit = light["parameters"]["exposure"]
+			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure" ),
+			source = s["light"]["parameters"]["exposure"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True, edit = s["light"]["parameters"]["exposure"]
 		)
 
 	def testInspectorShaderDiscovery( self ) :
@@ -602,38 +608,77 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 	def testDownstreamSourceType( self ) :
 
-		light = GafferSceneTest.TestLight()
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( light["out"] )
-		editScope["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
 
-		lightFilter = GafferScene.PathFilter()
-		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["light"]["out"] )
+		s["editScope"]["in"].setInput( s["light"]["out"] )
 
-		shaderTweaks = GafferScene.ShaderTweaks()
-		shaderTweaks["in"].setInput( editScope["out"] )
-		shaderTweaks["filter"].setInput( lightFilter["out"] )
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["shaderTweaks"] = GafferScene.ShaderTweaks()
+		s["shaderTweaks"]["in"].setInput( s["editScope"]["out"] )
+		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
 		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
-		shaderTweaks["tweaks"].addChild( exposureTweak )
+		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
 
 		self.__assertExpectedResult(
-			self.__inspect( shaderTweaks["out"], "/light", "exposure", editScope ),
+			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", s["editScope"] ),
 			source = exposureTweak, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
 			editable = True, edit = None,
-			editWarning = "Parameter has edits downstream in ShaderTweaks."
+			editWarning = "Parameter has edits downstream in shaderTweaks."
+		)
+
+	def testExternalSourceType( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["shaderTweaks"] = GafferScene.ShaderTweaks()
+		s["shaderTweaks"]["in"].setInput( s["light"]["out"] )
+		s["shaderTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
+		s["shaderTweaks"]["tweaks"].addChild( exposureTweak )
+
+		externalShaderTweaks = GafferScene.ShaderTweaks()
+		externalShaderTweaks["in"].setInput( s["light"]["out"] )
+		externalShaderTweaks["filter"].setInput( s["lightFilter"]["out"] )
+		exposureTweak2 = Gaffer.TweakPlug( "exposure", 20 )
+		externalShaderTweaks["tweaks"].addChild( exposureTweak2 )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", None ),
+			source = exposureTweak, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True, edit = None,
+			editWarning = ""
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( externalShaderTweaks["out"], "/light", "exposure", None ),
+			source = exposureTweak2, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
+			editable = True, edit = None,
+			editWarning = ""
 		)
 
 	def testLightInsideBox( self ) :
 
-		box = Gaffer.Box()
-		box["light"] = GafferSceneTest.TestLight()
-		Gaffer.PlugAlgo.promote( box["light"]["out"] )
+		s = Gaffer.ScriptNode()
+
+		s["box"] = Gaffer.Box()
+		s["box"]["light"] = GafferSceneTest.TestLight()
+		Gaffer.PlugAlgo.promote( s["box"]["light"]["out"] )
 
 		self.__assertExpectedResult(
-			self.__inspect( box["out"], "/light", "exposure" ),
-			source = box["light"]["parameters"]["exposure"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True, edit = box["light"]["parameters"]["exposure"],
+			self.__inspect( s["box"]["out"], "/light", "exposure" ),
+			source = s["box"]["light"]["parameters"]["exposure"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True, edit = s["box"]["light"]["parameters"]["exposure"],
 		)
 
 	def testDirtiedSignal( self ) :
@@ -1092,28 +1137,30 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 	def testLightCreatedInEditScope( self ) :
 
+		s = Gaffer.ScriptNode()
+
 		light = GafferSceneTest.TestLight()
 
-		editScope1 = Gaffer.EditScope( "EditScope1" )
-		editScope1.setup( light["out"] )
+		s["editScope1"] = Gaffer.EditScope( "EditScope1" )
+		s["editScope1"].setup( light["out"] )
 
-		editScope1["light"] = light
-		editScope1["parent"] = GafferScene.Parent()
-		editScope1["parent"]["parent"].setValue( "/" )
-		editScope1["parent"]["in"].setInput( editScope1["BoxIn"]["out"] )
-		editScope1["parent"]["children"][0].setInput( editScope1["light"]["out"] )
+		s["editScope1"]["light"] = light
+		s["editScope1"]["parent"] = GafferScene.Parent()
+		s["editScope1"]["parent"]["parent"].setValue( "/" )
+		s["editScope1"]["parent"]["in"].setInput( s["editScope1"]["BoxIn"]["out"] )
+		s["editScope1"]["parent"]["children"][0].setInput( s["editScope1"]["light"]["out"] )
 
-		editScope1["BoxOut"]["in"].setInput( editScope1["parent"]["out"] )
+		s["editScope1"]["BoxOut"]["in"].setInput( s["editScope1"]["parent"]["out"] )
 
-		editScope2 = Gaffer.EditScope( "EditScope2" )
-		editScope2.setup( editScope1["out"] )
-		editScope2["in"].setInput( editScope1["out"] )
+		s["editScope2"] = Gaffer.EditScope( "EditScope2" )
+		s["editScope2"].setup( s["editScope1"]["out"] )
+		s["editScope2"]["in"].setInput( s["editScope1"]["out"] )
 
 		# Make edit in EditScope2.
 
-		i = self.__inspect( editScope2["out"], "/light", "exposure", editScope2 )
+		i = self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope2"] )
 		scope2Edit = i.acquireEdit()
-		self.assertTrue( editScope2.isAncestorOf( scope2Edit ) )
+		self.assertTrue( s["editScope2"].isAncestorOf( scope2Edit ) )
 		scope2Edit["enabled"].setValue( True )
 		scope2Edit["value"].setValue( 2 )
 
@@ -1121,27 +1168,29 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		# a suitable warning.
 
 		self.__assertExpectedResult(
-			self.__inspect( editScope2["out"], "/light", "exposure", editScope1 ),
+			self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope1"] ),
 			source = scope2Edit,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
 			editable = True,
 			edit = light["parameters"]["exposure"],
-			editWarning = "Parameter has edits downstream in EditScope2."
+			editWarning = "Parameter has edits downstream in editScope2."
 		)
 
 	def testSourceWithDownstreamOverride( self ) :
 
-		light = GafferSceneTest.TestLight()
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( light["out"] )
-		editScope["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["light"]["out"] )
+		s["editScope"]["in"].setInput( s["light"]["out"] )
 
 		# Make edit in EditScope.
 
-		i = self.__inspect( editScope["out"], "/light", "exposure", editScope )
+		i = self.__inspect( s["editScope"]["out"], "/light", "exposure", s["editScope"] )
 		scopeEdit = i.acquireEdit()
-		self.assertTrue( editScope.isAncestorOf( scopeEdit ) )
+		self.assertTrue( s["editScope"].isAncestorOf( scopeEdit ) )
 		scopeEdit["enabled"].setValue( True )
 		scopeEdit["value"].setValue( 2 )
 
@@ -1149,12 +1198,12 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		# a suitable warning.
 
 		self.__assertExpectedResult(
-			self.__inspect( editScope["out"], "/light", "exposure", editScope = None ),
+			self.__inspect( s["editScope"]["out"], "/light", "exposure", editScope = None ),
 			source = scopeEdit,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
 			editable = True,
-			edit = light["parameters"]["exposure"],
-			editWarning = "Parameter has edits downstream in EditScope."
+			edit = s["light"]["parameters"]["exposure"],
+			editWarning = "Parameter has edits downstream in editScope."
 		)
 
 	def testCanEdit( self ) :
@@ -1278,28 +1327,30 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 	def testInheritAttributes( self ) :
 
-		plane = GafferScene.Plane()
+		s = Gaffer.ScriptNode()
 
-		group = GafferScene.Group()
-		group["in"][0].setInput( plane["out"] )
+		s["plane"] = GafferScene.Plane()
 
-		groupShader = GafferSceneTest.TestShader()
-		groupShader["type"].setValue( "test:surface" )
-		groupShader.loadShader( "simpleShader" )
-		groupShader["parameters"]["c"].setValue( imath.Color3f( 1, 2, 3 ) )
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["plane"]["out"] )
 
-		groupFilter = GafferScene.PathFilter()
-		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		s["groupShader"] = GafferSceneTest.TestShader()
+		s["groupShader"]["type"].setValue( "test:surface" )
+		s["groupShader"].loadShader( "simpleShader" )
+		s["groupShader"]["parameters"]["c"].setValue( imath.Color3f( 1, 2, 3 ) )
 
-		groupShaderAssignment = GafferScene.ShaderAssignment()
-		groupShaderAssignment["in"].setInput( group["out"] )
-		groupShaderAssignment["shader"].setInput( groupShader["out"] )
-		groupShaderAssignment["filter"].setInput( groupFilter["out"] )
+		s["groupFilter"] = GafferScene.PathFilter()
+		s["groupFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
-		inspection = self.__inspect( groupShaderAssignment["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=False )
+		s["groupShaderAssignment"] = GafferScene.ShaderAssignment()
+		s["groupShaderAssignment"]["in"].setInput( s["group"]["out"] )
+		s["groupShaderAssignment"]["shader"].setInput( s["groupShader"]["out"] )
+		s["groupShaderAssignment"]["filter"].setInput( s["groupFilter"]["out"] )
+
+		inspection = self.__inspect( s["groupShaderAssignment"]["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=False )
 		self.assertIsNone( inspection )
 
-		inspection = self.__inspect( groupShaderAssignment["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=True )
+		inspection = self.__inspect( s["groupShaderAssignment"]["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=True )
 		self.assertEqual( inspection.value().value, imath.Color3f( 1, 2, 3 ) )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
@@ -1313,18 +1364,18 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "No editable source found in history."
 		)
 
-		planeShader = GafferSceneTest.TestShader()
-		planeShader["type"].setValue( "test:surface" )
-		planeShader.loadShader( "simpleShader" )
-		planeShader["parameters"]["c"].setValue( imath.Color3f( 4, 5, 6 ) )
+		s["planeShader"] = GafferSceneTest.TestShader()
+		s["planeShader"]["type"].setValue( "test:surface" )
+		s["planeShader"].loadShader( "simpleShader" )
+		s["planeShader"]["parameters"]["c"].setValue( imath.Color3f( 4, 5, 6 ) )
 
-		planeFilter = GafferScene.PathFilter()
-		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+		s["planeFilter"] = GafferScene.PathFilter()
+		s["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
 
 		planeShaderAssignment = GafferScene.ShaderAssignment()
-		planeShaderAssignment["in"].setInput( groupShaderAssignment["out"] )
-		planeShaderAssignment["shader"].setInput( planeShader["out"] )
-		planeShaderAssignment["filter"].setInput( planeFilter["out"] )
+		planeShaderAssignment["in"].setInput( s["groupShaderAssignment"]["out"] )
+		planeShaderAssignment["shader"].setInput( s["planeShader"]["out"] )
+		planeShaderAssignment["filter"].setInput( s["planeFilter"]["out"] )
 
 		for inherit in [ True, False ] :
 			with self.subTest( inherit = inherit ) :
@@ -1332,11 +1383,11 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 				self.assertEqual( inspection.value().value, imath.Color3f( 4, 5, 6 ) )
 				self.__assertExpectedResult(
 					inspection,
-					source = planeShader["parameters"]["c"],
+					source = s["planeShader"]["parameters"]["c"],
 					sourceType = SourceType.Other,
 					editable = True,
-					edit = planeShader["parameters"]["c"],
-					editWarning = "Edits to TestShader may affect other locations in the scene."
+					edit = s["planeShader"]["parameters"]["c"],
+					editWarning = "Edits to planeShader may affect other locations in the scene."
 				)
 
 	def testShaderNetworkParameterInput( self ) :
