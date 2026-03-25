@@ -532,33 +532,35 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testEditScopeNesting( self ) :
 
-		light = GafferSceneTest.TestLight()
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s = Gaffer.ScriptNode()
 
-		editScope1 = Gaffer.EditScope( "EditScope1" )
-		editScope1.setup( light["out"] )
-		editScope1["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
-		i = self.__inspect( editScope1["out"], "/light", "gl:visualiser:scale", editScope1 )
+		s["editScope1"] = Gaffer.EditScope( "EditScope1" )
+		s["editScope1"].setup( s["light"]["out"] )
+		s["editScope1"]["in"].setInput( s["light"]["out"] )
+
+		i = self.__inspect( s["editScope1"]["out"], "/light", "gl:visualiser:scale", s["editScope1"] )
 		scope1Edit = i.acquireEdit()
 		scope1Edit["enabled"].setValue( True )
-		self.assertEqual( scope1Edit.ancestor( Gaffer.EditScope ), editScope1 )
+		self.assertEqual( scope1Edit.ancestor( Gaffer.EditScope ), s["editScope1"] )
 
 		editScope2 = Gaffer.EditScope()
-		editScope2.setup( light["out"] )
-		editScope1.addChild( editScope2 )
+		editScope2.setup( s["light"]["out"] )
+		s["editScope1"].addChild( editScope2 )
 		editScope2["in"].setInput( scope1Edit.ancestor( GafferScene.SceneProcessor )["out"] )
-		editScope1["BoxOut"]["in"].setInput( editScope2["out"] )
+		s["editScope1"]["BoxOut"]["in"].setInput( editScope2["out"] )
 
-		i = self.__inspect( editScope1["out"], "/light", "gl:visualiser:scale", editScope2 )
+		i = self.__inspect( s["editScope1"]["out"], "/light", "gl:visualiser:scale", editScope2 )
 		scope2Edit = i.acquireEdit()
 		scope2Edit["enabled"].setValue( True )
 		self.assertEqual( scope2Edit.ancestor( Gaffer.EditScope ), editScope2 )
 
 		# Check we still fin the edit in scope 1
 
-		i = self.__inspect( editScope1["out"], "/light", "gl:visualiser:scale", editScope1 )
-		self.assertEqual( i.acquireEdit()[0].ancestor( Gaffer.EditScope ), editScope1 )
+		i = self.__inspect( s["editScope1"]["out"], "/light", "gl:visualiser:scale", s["editScope1"] )
+		self.assertEqual( i.acquireEdit()[0].ancestor( Gaffer.EditScope ), s["editScope1"] )
 
 	def testDownstreamSourceType( self ) :
 
@@ -624,9 +626,10 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( externalAttributeTweaks["out"], "/light", "gl:visualiser:scale", None ),
 			source = scaleTweak2,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
-			editable = True,
+			editable = False,
 			edit = None,
-			editWarning = ""
+			editWarning = "",
+			nonEditableReason = "{} is external to the script.".format( externalAttributeTweaks.fullName() )
 		)
 
 	def testLightInsideBox( self ) :
@@ -1013,15 +1016,17 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testCanEdit( self ) :
 
-		sphere = GafferScene.Sphere()
+		s = Gaffer.ScriptNode()
 
-		sphereFilter = GafferScene.PathFilter()
-		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		s["sphere"] = GafferScene.Sphere()
 
-		customAttributes = GafferScene.CustomAttributes()
-		customAttributes["in"].setInput( sphere["out"] )
-		customAttributes["filter"].setInput( sphereFilter["out"] )
-		customAttributes["attributes"].addChild(
+		s["sphereFilter"] = GafferScene.PathFilter()
+		s["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		s["customAttributes"] = GafferScene.CustomAttributes()
+		s["customAttributes"]["in"].setInput( s["sphere"]["out"] )
+		s["customAttributes"]["filter"].setInput( s["sphereFilter"]["out"] )
+		s["customAttributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug(
 				"test:attr",
 				IECore.FloatData( 1.0 ),
@@ -1029,7 +1034,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 				"testPlug"
 			)
 		)
-		customAttributes["attributes"].addChild(
+		s["customAttributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug(
 				"test:stringAttr",
 				IECore.StringData( "bar" ),
@@ -1043,53 +1048,55 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			self.assertEqual( inspection.canEdit( data ), nonEditableReason == "" )
 			self.assertEqual( inspection.nonEditableReason( data ), nonEditableReason )
 
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:attr", None )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "" )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "Data of type \"StringData\" is not compatible." )
 
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:stringAttr", None )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:stringAttr", None )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "Data of type \"FloatData\" is not compatible." )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "" )
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( customAttributes["out"] )
-		editScope["in"].setInput( customAttributes["out"] )
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["customAttributes"]["out"] )
+		s["editScope"]["in"].setInput( s["customAttributes"]["out"] )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "" )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "Data of type \"StringData\" is not compatible." )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:stringAttr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:stringAttr", s["editScope"] )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "Data of type \"FloatData\" is not compatible." )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "" )
 
-		editScope["enabled"].setValue( False )
+		s["editScope"]["enabled"].setValue( False )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
-		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "The target edit scope EditScope is disabled." )
-		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope EditScope is disabled." )
-		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope EditScope is disabled." )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "The target edit scope editScope is disabled." )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope editScope is disabled." )
+		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope editScope is disabled." )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:stringAttr", editScope )
-		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "The target edit scope EditScope is disabled." )
-		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope EditScope is disabled." )
-		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope EditScope is disabled." )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:stringAttr", s["editScope"] )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "The target edit scope editScope is disabled." )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope editScope is disabled." )
+		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope editScope is disabled." )
 
 	def testEdit( self ) :
 
-		sphere = GafferScene.Sphere()
+		s = Gaffer.ScriptNode()
 
-		sphereFilter = GafferScene.PathFilter()
-		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		s["sphere"] = GafferScene.Sphere()
 
-		customAttributes = GafferScene.CustomAttributes()
-		customAttributes["in"].setInput( sphere["out"] )
-		customAttributes["filter"].setInput( sphereFilter["out"] )
-		customAttributes["attributes"].addChild(
+		s["sphereFilter"] = GafferScene.PathFilter()
+		s["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		s["customAttributes"] = GafferScene.CustomAttributes()
+		s["customAttributes"]["in"].setInput( s["sphere"]["out"] )
+		s["customAttributes"]["filter"].setInput( s["sphereFilter"]["out"] )
+		s["customAttributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug(
 				"test:attr",
 				IECore.FloatData( 1.0 ),
@@ -1107,52 +1114,52 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			else :
 				self.assertRaisesRegex( IECore.Exception, "Not editable : " + nonEditableReason, inspection.edit, data )
 
-		Gaffer.MetadataAlgo.setReadOnly( customAttributes["attributes"]["testPlug"]["enabled"], True )
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:attr", None )
-		assertEdit( inspection, IECore.FloatData( 123.0 ), "CustomAttributes.attributes.testPlug.enabled is locked." )
-		Gaffer.MetadataAlgo.setReadOnly( customAttributes["attributes"]["testPlug"]["enabled"], False )
+		Gaffer.MetadataAlgo.setReadOnly( s["customAttributes"]["attributes"]["testPlug"]["enabled"], True )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None )
+		assertEdit( inspection, IECore.FloatData( 123.0 ), "customAttributes.attributes.testPlug.enabled is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["customAttributes"]["attributes"]["testPlug"]["enabled"], False )
 
-		Gaffer.MetadataAlgo.setReadOnly( customAttributes, True )
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:attr", None )
-		assertEdit( inspection, IECore.FloatData( 123.0 ), "CustomAttributes is locked." )
-		Gaffer.MetadataAlgo.setReadOnly( customAttributes, False )
+		Gaffer.MetadataAlgo.setReadOnly( s["customAttributes"], True )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None )
+		assertEdit( inspection, IECore.FloatData( 123.0 ), "customAttributes is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["customAttributes"], False )
 
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:attr", None )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None )
 		assertEdit( inspection, IECore.FloatData( 123.0 ), "" )
-		self.assertEqual( inspection.source(), customAttributes["attributes"]["testPlug"] )
-		self.assertEqual( customAttributes["attributes"]["testPlug"]["value"].getValue(), 123.0 )
+		self.assertEqual( inspection.source(), s["customAttributes"]["attributes"]["testPlug"] )
+		self.assertEqual( s["customAttributes"]["attributes"]["testPlug"]["value"].getValue(), 123.0 )
 
 		assertEdit( inspection, IECore.StringData( "foo" ), "Data of type \"StringData\" is not compatible." )
-		self.assertEqual( customAttributes["attributes"]["testPlug"]["value"].getValue(), 123.0 )
+		self.assertEqual( s["customAttributes"]["attributes"]["testPlug"]["value"].getValue(), 123.0 )
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( customAttributes["out"] )
-		editScope["in"].setInput( customAttributes["out"] )
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["customAttributes"]["out"] )
+		s["editScope"]["in"].setInput( s["customAttributes"]["out"] )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
 		assertEdit( inspection, IECore.StringData( "foo" ), "Data of type \"StringData\" is not compatible." )
 
-		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
-		assertEdit( inspection, IECore.FloatData( 456.0 ), "EditScope is locked." )
-		Gaffer.MetadataAlgo.setReadOnly( editScope, False )
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], True )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
+		assertEdit( inspection, IECore.FloatData( 456.0 ), "editScope is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], False )
 
-		editScope["enabled"].setValue( False )
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
-		assertEdit( inspection, IECore.FloatData( 456.0 ), "The target edit scope EditScope is disabled." )
-		editScope["enabled"].setValue( True )
+		s["editScope"]["enabled"].setValue( False )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
+		assertEdit( inspection, IECore.FloatData( 456.0 ), "The target edit scope editScope is disabled." )
+		s["editScope"]["enabled"].setValue( True )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
 		# Calling `edit()` should create a new edit within the target edit scope
 		assertEdit( inspection, IECore.FloatData( 456.0 ), "" )
-		self.assertEqual( customAttributes["attributes"]["testPlug"]["value"].getValue(), 123.0 )
+		self.assertEqual( s["customAttributes"]["attributes"]["testPlug"]["value"].getValue(), 123.0 )
 		acquiredEdit = inspection.acquireEdit()
-		self.assertTrue( editScope.isAncestorOf( acquiredEdit ) )
+		self.assertTrue( s["editScope"].isAncestorOf( acquiredEdit ) )
 		self.assertEqual( acquiredEdit["value"].getValue(), 456.0 )
 
 		# Editing a disabled edit within an edit scope should re-enable it
 		acquiredEdit["enabled"].setValue( False )
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
 		assertEdit( inspection, IECore.FloatData( 789.0 ), "" )
 		self.assertEqual( acquiredEdit["enabled"].getValue(), True )
 		self.assertEqual( acquiredEdit["value"].getValue(), 789.0 )

@@ -1132,9 +1132,10 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( externalOptionTweaks["out"], "render:camera", None ),
 			source = cameraTweak,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
-			editable = True,
+			editable = False,
 			edit = None,
-			editWarning = ""
+			editWarning = "",
+			nonEditableReason = "{} is external to the script.".format( externalOptionTweaks.fullName() )
 		)
 
 if __name__ == "__main__" :

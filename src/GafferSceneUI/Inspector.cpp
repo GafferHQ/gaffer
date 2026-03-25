@@ -127,6 +127,14 @@ std::string nonEditableReason( const ValuePlug *plug )
 	}
 
 	const ValuePlug *sourcePlug = ( plug && Animation::isAnimated( plug ) ) ? plug->source<ValuePlug>() : plug;
+	if( !sourcePlug->ancestor<ScriptNode>() )
+	{
+		const GraphComponent *settingsNode = sourcePlug->ancestor( RunTimeTyped::typeIdFromTypeName( "GafferUI::Editor::Settings" ) );
+		return fmt::format(
+			"{} is external to the script.",
+			MetadataAlgo::firstViewableNode( sourcePlug )->relativeName( settingsNode )
+		);
+	}
 
 	const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( sourcePlug );
 	if( readOnlyReason )

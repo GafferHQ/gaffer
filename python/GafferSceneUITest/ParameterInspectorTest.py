@@ -579,32 +579,34 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 	def testEditScopeNesting( self ) :
 
-		light = GafferSceneTest.TestLight()
-		editScope1 = Gaffer.EditScope( "EditScope1" )
+		s = Gaffer.ScriptNode()
 
-		editScope1.setup( light["out"] )
-		editScope1["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
+		s["editScope1"] = Gaffer.EditScope( "EditScope1" )
 
-		i = self.__inspect( editScope1["out"], "/light", "intensity", editScope1 )
+		s["editScope1"].setup( s["light"]["out"] )
+		s["editScope1"]["in"].setInput( s["light"]["out"] )
+
+		i = self.__inspect( s["editScope1"]["out"], "/light", "intensity", s["editScope1"] )
 		scope1Edit = i.acquireEdit()
 		scope1Edit["enabled"].setValue( True )
-		self.assertEqual( scope1Edit.ancestor( Gaffer.EditScope ), editScope1 )
+		self.assertEqual( scope1Edit.ancestor( Gaffer.EditScope ), s["editScope1"] )
 
 		editScope2 = Gaffer.EditScope( "EditScope2" )
-		editScope2.setup( light["out"] )
-		editScope1.addChild( editScope2 )
+		editScope2.setup( s["light"]["out"] )
+		s["editScope1"].addChild( editScope2 )
 		editScope2["in"].setInput( scope1Edit.ancestor( GafferScene.SceneProcessor )["out"] )
-		editScope1["BoxOut"]["in"].setInput( editScope2["out"] )
+		s["editScope1"]["BoxOut"]["in"].setInput( editScope2["out"] )
 
-		i = self.__inspect( editScope1["out"], "/light", "intensity", editScope2 )
+		i = self.__inspect( s["editScope1"]["out"], "/light", "intensity", editScope2 )
 		scope2Edit = i.acquireEdit()
 		scope2Edit["enabled"].setValue( True )
 		self.assertEqual( scope2Edit.ancestor( Gaffer.EditScope ), editScope2 )
 
 		# Check we still find the edit in scope 1
 
-		i = self.__inspect( editScope1["out"], "/light", "intensity", editScope1 )
-		self.assertEqual( i.acquireEdit()[0].ancestor( Gaffer.EditScope ), editScope1 )
+		i = self.__inspect( s["editScope1"]["out"], "/light", "intensity", s["editScope1"] )
+		self.assertEqual( i.acquireEdit()[0].ancestor( Gaffer.EditScope ), s["editScope1"] )
 
 	def testDownstreamSourceType( self ) :
 
@@ -663,8 +665,9 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( externalShaderTweaks["out"], "/light", "exposure", None ),
 			source = exposureTweak2, sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
-			editable = True, edit = None,
-			editWarning = ""
+			editable = False, edit = None,
+			editWarning = "",
+			nonEditableReason = "{} is external to the script.".format( externalShaderTweaks.fullName() )
 		)
 
 	def testLightInsideBox( self ) :
