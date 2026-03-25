@@ -59,8 +59,21 @@ class _NodeFilter( Gaffer.PathFilter ) :
 		result = []
 		for path in paths :
 			node = path.property( "history:node", canceller )
-			if node is not None and node.scriptNode() is None :
+			if node is None :
 				continue
+
+			viewable = True
+			settingsNode = node.ancestor( GafferUI.Editor.Settings )
+			if settingsNode is not None :
+				while node and not node.isSame( settingsNode ) :
+					if node.getName().startswith( "__" ) :
+						viewable = False
+						break
+					node = node.parent()
+
+			if not viewable :
+				continue
+
 			result.append( path )
 
 		return result
