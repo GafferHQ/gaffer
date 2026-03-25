@@ -12,6 +12,12 @@ Fixes
 - Spreadsheet : Fixed formatting of OptionalValuePlug values, such as for the renderer-specific plugs on USDLight nodes.
 - GraphEditor : Fixed bug allowing framing of nodes dragged from other scripts.
 - CompoundEditor : Fixed bug allowing pinning of nodes dragged from other scripts.
+- Scene Editors :
+  - Attribute histories in the `Show History...` window now include the entire history rather than pruning once the attribute fails to exist.
+  - Fixed cell background colour when the target edit scope is upstream of the first node creating the inspected attribute. It is now yellow to indicate the downstream override, whereas before it had the default colour.
+  - Fixed creation of edits in edit scopes upstream of the first node creating the target attribute. The upstream edit scope can now be edited, whereas before it would be reported as not being part of the scene history.
+  - Fixed bug preventing disabled attribute plugs from being edited on source nodes - such as USDLight and Camera - when the edit target was set to "Source" and there was a downstream edit in an EditScope.
+- SceneAlgo : `attributeHistory` now returns the entire history rather than pruning once the attribute fails to exist.
 
 1.6.15.0 (relative to 1.6.14.2)
 ========

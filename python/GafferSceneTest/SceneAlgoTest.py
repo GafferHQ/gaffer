@@ -1026,7 +1026,9 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], group["in"][0], "/plane", "test", IECore.IntData( 2 ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], copyAttributes["out"], "/plane", "test", IECore.IntData( 2 ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], copyAttributes["source"], "/sphere", "test", IECore.IntData( 2 ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], attributes2["out"], "/sphere", "test", IECore.IntData( 2 ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], attributes2["out"], "/sphere", "test", IECore.IntData( 2 ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], attributes2["in"], "/sphere", "test", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], sphere["out"], "/sphere", "test", None, 0 )
 
 		# Test `attributeHistory()` with missing source location in `copyAttributes`
 
@@ -1041,7 +1043,9 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], group["in"][0], "/plane", "test", IECore.IntData( 1 ), 1 )
 			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], copyAttributes["out"], "/plane", "test", IECore.IntData( 1 ), 1 )
 			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], copyAttributes["in"], "/plane", "test", IECore.IntData( 1 ), 1 )
-			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], attributes1["out"], "/plane", "test", IECore.IntData( 1 ), 0 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], attributes1["out"], "/plane", "test", IECore.IntData( 1 ), 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], attributes1["in"], "/plane", "test", None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], plane["out"], "/plane", "test", None, 0 )
 
 		copyAttributes["sourceLocation"].setValue( "" )
 		assertFromAttributes1()
@@ -1091,12 +1095,17 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, destination )
 
 			if source is None :
-				self.assertIsNone( attributeHistory )
-				return
+				sourceName = destination
+				sourceData = None
+			else :
+				sourceName = source
+				sourceData = IECore.StringData( source + "_value" )
 
-			self.__assertAttributeHistory( attributeHistory, [], shuffleAttributes["out"], "/plane", destination, IECore.StringData( source + "_value" ), 1 )
-			self.__assertAttributeHistory( attributeHistory, [ 0 ], shuffleAttributes["in"], "/plane", source, IECore.StringData( source + "_value" ), 1 )
-			self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], attributes["out"], "/plane", source, IECore.StringData( source + "_value" ), 0 )
+			self.__assertAttributeHistory( attributeHistory, [], shuffleAttributes["out"], "/plane", destination, sourceData, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0 ], shuffleAttributes["in"], "/plane", sourceName, sourceData, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], attributes["out"], "/plane", sourceName, sourceData, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], attributes["in"], "/plane", sourceName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], plane["out"], "/plane", sourceName, None, 0 )
 
 		# No shuffles
 
@@ -1181,18 +1190,20 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		mergeScenes["attributesMode"].setValue( mergeScenes.Mode.Keep )
 
-		def assertAttributeHistory( path, attributeName, mergeScenesInput, value ) :
+		def assertAttributeHistory( path, attributeName, mergeScenesInput, value, upstreamPredecessors = 1 ) :
 
 			history = GafferScene.SceneAlgo.history( mergeScenes["out"]["attributes"], path )
 			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, attributeName )
 
+			if value is not None :
+				value = IECore.StringData( value )
+
+			self.__assertAttributeHistory( attributeHistory, [], mergeScenes["out"], path, attributeName, value, 1 )
 			if value is None :
-				self.assertIsNone( attributeHistory )
 				return
 
-			self.__assertAttributeHistory( attributeHistory, [], mergeScenes["out"], path, attributeName, IECore.StringData( value ), 1 )
-			self.__assertAttributeHistory( attributeHistory, [ 0 ], mergeScenesInput, path, attributeName, IECore.StringData( value ), 1 )
-			self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], mergeScenesInput.getInput(), path, attributeName, IECore.StringData( value ), 0 )
+			self.__assertAttributeHistory( attributeHistory, [ 0 ], mergeScenesInput, path, attributeName, value, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], mergeScenesInput.getInput(), path, attributeName, value, upstreamPredecessors )
 
 		assertAttributeHistory( "/plane", "a", mergeScenes["in"][0], "a1" )
 		assertAttributeHistory( "/plane", "b", None, None )
@@ -1206,15 +1217,17 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		mergeScenes["attributesMode"].setValue( mergeScenes.Mode.Merge )
 
-		assertAttributeHistory( "/plane", "a", mergeScenes["in"][1], "a2" )
-		assertAttributeHistory( "/plane", "b", mergeScenes["in"][1], "b2" )
+		# `history` only includes the immediate predecessors of inputs other than
+		#  mergeScenes["in"][0] when in Merge mode.
+		assertAttributeHistory( "/plane", "a", mergeScenes["in"][1], "a2", 0 )
+		assertAttributeHistory( "/plane", "b", mergeScenes["in"][1], "b2", 0 )
 		assertAttributeHistory( "/plane", "c", mergeScenes["in"][0], "c1" )
 
 		assertAttributeHistory( "/sphere", "a", None, None )
 		assertAttributeHistory( "/sphere", "b", None, None )
 		assertAttributeHistory( "/sphere", "c", mergeScenes["in"][2], "c" )
 
-		# Test Keep mode
+		# Test Replace mode
 
 		mergeScenes["attributesMode"].setValue( mergeScenes.Mode.Replace )
 
@@ -1301,10 +1314,25 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", "a", IECore.StringData( "planeA" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["in"], "/plane", "a", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], plane["out"], "/plane", "a", None, 0 )
 
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "b" ) )
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "c" ) )
+		for attributeName in [ "b", "c" ] :
+
+			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, attributeName )
+
+			self.__assertAttributeHistory( attributeHistory, [], outerAttributes["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0 ], outerAttributes["in"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], innerAttributes["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], innerAttributes["in"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["in"], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], plane["out"], "/plane", attributeName, None, 0 )
 
 		# Add localisation
 
@@ -1331,7 +1359,9 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", "a", IECore.StringData( "planeA" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["in"], "/plane", "a", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], plane["out"], "/plane", "a", None, 0 )
 
 		# Test attribute "b"
 
@@ -1341,7 +1371,11 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertAttributeHistory( attributeHistory, [ 0 ], localise["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner", "b", None, 0 )
 
 		# Test attribute "c"
 
@@ -1349,7 +1383,11 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.__assertAttributeHistory( attributeHistory, [], localise["out"], "/outer/inner/plane", "c", IECore.StringData( "outerC" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0 ], localise["in"], "/outer", "c", IECore.StringData( "outerC" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer", "c", IECore.StringData( "outerC" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer", "c", IECore.StringData( "outerC" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer", "c", None, 0 )
 
 		# Test location not touched by LocaliseAttributes
 
@@ -1360,16 +1398,35 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertAttributeHistory( attributeHistory, [ 0 ], localise["in"], "/outer/inner", "a", IECore.StringData( "innerA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner", "a", IECore.StringData( "innerA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner", "a", IECore.StringData( "innerA" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "a", IECore.StringData( "innerA" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "a", IECore.StringData( "innerA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner", "a", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner", "a", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner", "a", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner", "a", None, 0 )
 
 		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "b" )
 		self.__assertAttributeHistory( attributeHistory, [], localise["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0 ], localise["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner", "b", None, 0 )
 
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "c" ) )
+		# Attribute "c" does not exist, but should still provide a history
+
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "c" )
+		self.__assertAttributeHistory( attributeHistory, [], localise["out"], "/outer/inner", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0 ], localise["in"], "/outer/inner", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner", "c", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner", "c", None, 0 )
 
 	def testAttributeHistoryWithAttributeTweaks( self ) :
 
@@ -1455,12 +1512,29 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", "a", IECore.StringData( "planeA" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["in"], "/plane", "a", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], plane["out"], "/plane", "a", None, 0 )
 
 		# Without localisation, "b" and "c" have no history
 
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "b" ) )
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "c" ) )
+		for attributeName in [ "b", "c" ] :
+
+			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, attributeName )
+
+			self.__assertAttributeHistory( attributeHistory, [], tweaks["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["in"], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], plane["out"], "/plane", attributeName, None, 0 )
 
 		# Add tweak on plane attribute
 
@@ -1480,10 +1554,25 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", "a", IECore.StringData( "planeA" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 1 )
 
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "b" ) )
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "c" ) )
+		for attributeName in [ "b", "c" ] :
+
+			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, attributeName )
+
+			self.__assertAttributeHistory( attributeHistory, [], tweaks["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["in"], "/plane", attributeName, None, 1 )
+			self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], plane["out"], "/plane", attributeName, None, 0 )
 
 		# Add tweaks to inherited attributes
 
@@ -1512,7 +1601,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
 
 		# Test attribute "c"
 
@@ -1520,7 +1609,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.__assertAttributeHistory( attributeHistory, [], tweaks["out"], "/outer/inner/plane", "c", IECore.StringData( "tweakC" ), 1 )
 		self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer", "c", IECore.StringData( "outerC" ), 1 )
-		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer", "c", IECore.StringData( "outerC" ), 0 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer", "c", IECore.StringData( "outerC" ), 1 )
 
 		# Localise is on, remove parent attribute tweak "b"
 
@@ -1529,7 +1618,15 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/outer/inner/plane" )
 		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "b" )
 
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "b" ) )
+		self.__assertAttributeHistory( attributeHistory, [], tweaks["out"], "/outer/inner/plane", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner", "b", None, 0 )
 
 	def testParameterHistoryWithShaderTweaks( self ) :
 
@@ -1572,11 +1669,35 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 	def testAttributeHistoryWithMissingAttribute( self ) :
 
-		# Attribute doesn't exist, so we return None.
-
 		plane = GafferScene.Plane()
-		attributesHistory = GafferScene.SceneAlgo.history( plane["out"]["attributes"], "/plane" )
-		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( attributesHistory, "test" ) )
+		history = GafferScene.SceneAlgo.history( plane["out"]["attributes"], "/plane" )
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "test" )
+		# Attribute doesn't exist, so the history only contains the source of /plane.
+		self.__assertAttributeHistory( attributeHistory, [], plane["out"], "/plane", "test", None, 0 )
+
+	def testAttributeHistoryWithDeleteAttributes( self ) :
+
+		testLight = GafferSceneTest.TestLight()
+		testLight["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		testLight["visualiserAttributes"]["scale"]["value"].setValue( 2.0 )
+
+		deleteAttributes = GafferScene.DeleteAttributes()
+		deleteAttributes["in"].setInput( testLight["out"] )
+		deleteAttributes["names"].setValue( "gl:visualiser:scale" )
+
+		glAttributes = GafferScene.OpenGLAttributes()
+		glAttributes["in"].setInput( deleteAttributes["out"] )
+		glAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		glAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 4.0 )
+
+		history = GafferScene.SceneAlgo.history( glAttributes["out"]["attributes"], "/light" )
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "gl:visualiser:scale" )
+
+		self.__assertAttributeHistory( attributeHistory, [], glAttributes["out"], "/light", "gl:visualiser:scale", IECore.FloatData( 4.0 ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0 ], glAttributes["in"], "/light", "gl:visualiser:scale", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], deleteAttributes["out"], "/light", "gl:visualiser:scale", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], deleteAttributes["in"], "/light", "gl:visualiser:scale", IECore.FloatData( 2.0 ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], testLight["out"], "/light", "gl:visualiser:scale", IECore.FloatData( 2.0 ), 0 )
 
 	def testOptionHistory( self ) :
 

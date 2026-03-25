@@ -985,8 +985,8 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope1 to disable." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope1 to disable.", inspection.disableEdit )
+		self.assertEqual( inspection.nonDisableableReason(), "light.visualiserAttributes.scale.enabled is not enabled." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : light.visualiserAttributes.scale.enabled is not enabled.", inspection.disableEdit )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )

@@ -247,8 +247,7 @@ struct AttributeHistory : public History
 
 /// Filters `attributesHistory` and returns a history for the specific `attribute`.
 /// `attributesHistory` should have been obtained from a previous call to
-/// `history( scene->attributesPlug(), path )`. If the attribute doesn't exist then
-/// null is returned.
+/// `history( scene->attributesPlug(), path )`.
 GAFFERSCENE_API AttributeHistory::Ptr attributeHistory( const History *attributesHistory, const IECore::InternedString &attribute );
 
 /// Extends History to provide information on the history of a specific option.
