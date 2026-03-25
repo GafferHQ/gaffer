@@ -100,12 +100,9 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 			}
 		};
 
-	protected :
-
-		/// \todo Make this private an not virtual when we can break ABI.
-		virtual IECore::DataPtr surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const;
-
 	private :
+
+		IECore::DataPtr surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const;
 
 		static LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> g_description;
 

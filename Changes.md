@@ -65,6 +65,7 @@ Breaking Changes
 - CyclesOptions : Removed `cycles:background:volume_step_size` option as it is no longer used by Cycles.
 - OpenColorIO : Removed "Legacy (Gaffer 1.2)" config.
 - GLWidget : Removed built-in support for hosting in Maya and Houdini. Implement host integration via `GLWidget._registerQGLWidgetCreator()` instead.
+- StandardLightVisualiser : Made `surfaceTexture()` private. The new `registerSurfaceTexture()` method can be used to register a method to return surface texture data.
 
 Build
 -----
