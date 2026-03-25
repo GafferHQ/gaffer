@@ -321,11 +321,41 @@ class SetMembershipColumn : public InspectorColumn
 			{
 				auto scriptNode = sceneInput->ancestor<ScriptNode>();
 
-				Context::EditableScope contextScope( scriptNode->context() );
-				contextScope.setCanceller( canceller );
+				// Hack to recover ScriptNode from nodes hosted in an
+				// Editor.Settings node - see `BackgroundTask.cpp` and
+				// `Editor.Settings`.
+				/// \todo Provide root path to `headerData()` so we can do this more simply.
+				if( !scriptNode )
+				{
+					GraphComponent *graphComponent = sceneInput->parent();
+					while( graphComponent )
+					{
+						if( auto node = runTimeCast<Node>( graphComponent ) )
+						{
+							if( node->isInstanceOf( "GafferUI::Editor::Settings" ) )
+							{
+								if( auto p = node->getChild<Plug>( "__scriptNode" ) )
+								{
+									if( auto pInput = p->getInput() )
+									{
+										scriptNode = pInput->ancestor<ScriptNode>();
+										break;
+									}
+								}
+							}
+						}
+						graphComponent = graphComponent->parent();
+					}
+				}
 
-				ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
-				result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
+				if( scriptNode )
+				{
+					Context::EditableScope contextScope( scriptNode->context() );
+					contextScope.setCanceller( canceller );
+
+					ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
+					result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
+				}
 			}
 
 			return result;
