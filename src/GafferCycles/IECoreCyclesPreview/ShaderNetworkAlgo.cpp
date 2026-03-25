@@ -1314,9 +1314,20 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			newShader->parameters()[g_alphaParameter] = new FloatData( opacity );
 
 			// Normal.
-			/// \todo Convert normal parameters once we have a solution for Cycles'
-			/// need for tangents to be provided for the correct use of normal maps.
-			removeInput( shaderNetwork, { handle, g_normalParameter } );
+			if( const ShaderNetwork::Parameter normalInput = shaderNetwork->input( { handle, g_normalParameter } ) )
+			{
+				ShaderPtr normalmapShader = new Shader( "normal_map", "cycles:shader" );
+				const InternedString normalmapHandle = shaderNetwork->addShader( handle.string() + "NormalMap", std::move( normalmapShader ) );
+				// ALab has perfect examples where it makes invalid normals from scale/bias tweaks,
+				// so if we don't normalise the output Cycles will hard-crash.
+				ShaderPtr normalizeShader = new Shader( "vector_math", "cycles:shader" );
+				normalizeShader->parameters()[g_mathTypeParameter] = new StringData( "normalize" );
+				const InternedString normalizeHandle = shaderNetwork->addShader( handle.string() + "Normalize", std::move( normalizeShader ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( normalInput, { normalmapHandle, g_colorParameter } ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( { normalmapHandle, g_normalParameter }, { normalizeHandle, g_value1Parameter } ) );
+				shaderNetwork->removeConnection( ShaderNetwork::Connection( normalInput, { handle, g_normalParameter } ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( { normalizeHandle, g_vectorParameter }, { handle, g_normalParameter } ) );
+			}
 
 			// Remove occlusion.
 			removeInput( shaderNetwork, { handle, g_occlusionParameter } );
