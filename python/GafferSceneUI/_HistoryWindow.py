@@ -264,11 +264,18 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		selectedPath, selectedColumn = self.__selectionData( selection )
 
+		node = selectedPath.property( "history:node" )
+		if node.ancestor( Gaffer.ScriptNode ) is None :
+			with GafferUI.PopupWindow() as self.__popup :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Image( "warningSmall.png" )
+					GafferUI.Label( "<h4>{} is external to the script</h4>".format( node.relativeName( node.ancestor( GafferUI.Editor.Settings ) ) ) )
+
+			self.__popup.popup( parent = self )
+			return
+
 		if selectedColumn == self.__nameColumnIndex :
-			GafferUI.NodeEditor.acquire(
-				selectedPath.property( "history:node" ),
-				floating = True
-			)
+			GafferUI.NodeEditor.acquire( node, floating = True )
 		elif (
 			( selectedColumn == self.__valueColumnIndex or selectedColumn == self.__operationColumnIndex ) and
 			## \todo This is the same method _InspectorColumn.py uses to identify columns that shouldn't
