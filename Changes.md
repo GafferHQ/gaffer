@@ -11,6 +11,7 @@ Fixes
 
 - Spreadsheet : Fixed formatting of OptionalValuePlug values, such as for the renderer-specific plugs on USDLight nodes.
 - GraphEditor : Fixed bug allowing framing of nodes dragged from other scripts.
+- CompoundEditor : Fixed bug allowing pinning of nodes dragged from other scripts.
 
 1.6.15.0 (relative to 1.6.14.2)
 ========
