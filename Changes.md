@@ -26,6 +26,7 @@ Improvements
     - Changed tweak plug names to match the parameter name it tweaks.
     - Added `ai:aperture_aspect_ratio` preset menu item.
 - Outputs : Default output presets are now registered in the modules for each renderer, making them available outside of the GUI (#6403).
+- Cycles ShaderNetworkAlgo : Added support for USDPreviewSurface normal inputs.
 
 Fixes
 -----
