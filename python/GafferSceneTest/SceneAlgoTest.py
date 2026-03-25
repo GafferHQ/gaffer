@@ -941,7 +941,10 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( oh.scene, scene )
 		self.assertNotIn( "scene:path", oh.context )
 		self.assertEqual( oh.optionName, optionName )
-		self.assertEqual( oh.optionValue.value, optionValue )
+		if optionValue is None :
+			self.assertEqual( oh.optionValue, None )
+		else :
+			self.assertEqual( oh.optionValue.value, optionValue )
 		self.assertEqual( len( oh.predecessors ), numPredecessors )
 
 	def testAttributeHistory( self ) :
@@ -1833,11 +1836,11 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			history = GafferScene.SceneAlgo.history( mergeScenes["out"]["globals"] )
 			optionHistory = GafferScene.SceneAlgo.optionHistory( history, optionName )
 
+			self.__assertOptionHistory( optionHistory, [], mergeScenes["out"], optionName, value, 1 )
+
 			if value is None :
-				self.assertIsNone( optionHistory )
 				return
 
-			self.__assertOptionHistory( optionHistory, [], mergeScenes["out"], optionName, value, 1 )
 			self.__assertOptionHistory( optionHistory, [ 0 ], mergeScenesInput, optionName, value, 1 )
 			self.__assertOptionHistory( optionHistory, [ 0, 0 ], mergeScenesInput.getInput(), optionName, value, 0 )
 
@@ -1867,11 +1870,36 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 	def testOptionHistoryWithMissingOption( self ) :
 
-		# Option doesn't exist, so we return None.
+		# Option doesn't exist, so we return the source.
 
 		plane = GafferScene.Plane()
 		globalsHistory = GafferScene.SceneAlgo.history( plane["out"]["globals"] )
-		self.assertIsNone( GafferScene.SceneAlgo.optionHistory( globalsHistory, "test" ) )
+		optionHistory = GafferScene.SceneAlgo.optionHistory( globalsHistory, "test" )
+
+		self.__assertOptionHistory( optionHistory, [], plane["out"], "test", None, 0 )
+
+	def testOptionHistoryWithDeleteOptions( self ) :
+
+		options = GafferScene.StandardOptions()
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/renderCamera" )
+
+		deleteOptions = GafferScene.DeleteOptions()
+		deleteOptions["in"].setInput( options["out"] )
+		deleteOptions["names"].setValue( "render:camera" )
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["in"].setInput( deleteOptions["out"] )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:camera", "/altCamera" ) )
+
+		history = GafferScene.SceneAlgo.history( customOptions["out"]["globals"] )
+		optionHistory = GafferScene.SceneAlgo.optionHistory( history, "render:camera" )
+
+		self.__assertOptionHistory( optionHistory, [], customOptions["out"], "render:camera", "/altCamera", 1 )
+		self.__assertOptionHistory( optionHistory, [ 0 ], customOptions["in"], "render:camera", None, 1 )
+		self.__assertOptionHistory( optionHistory, [ 0, 0 ], deleteOptions["out"], "render:camera", None, 1 )
+		self.__assertOptionHistory( optionHistory, [ 0, 0, 0 ], deleteOptions["in"], "render:camera", "/renderCamera", 1 )
+		self.__assertOptionHistory( optionHistory, [ 0, 0, 0, 0 ], options["out"], "render:camera", "/renderCamera", 0 )
 
 	def testOptionHistoryWithContext( self ) :
 

@@ -796,10 +796,22 @@ void addMergeScenesPredecessors( const MergeScenes *mergeScenes, const SceneAlgo
 	SceneAlgo::OptionHistory::Ptr predecessor;
 	for( auto &h : source )
 	{
-		if( auto p = optionHistory( h.get(), destination->optionName ) )
+		auto p = optionHistory( h.get(), destination->optionName );
+		if( p && p->optionValue )
 		{
 			predecessor = p;
 		}
+	}
+
+	if( !predecessor )
+	{
+		if( !source.size() )
+		{
+			return;
+		}
+		// We didn't find a source with an option to merge. Add the first
+		// source as a predecessor so the history is not truncated.
+		predecessor = optionHistory( source[0].get(), destination->optionName );
 	}
 
 	assert( predecessor );
@@ -980,11 +992,6 @@ SceneAlgo::OptionHistory::Ptr SceneAlgo::optionHistory( const SceneAlgo::History
 	Context::Scope scopedContext( globalsHistory->context.get() );
 	ConstCompoundObjectPtr globals = globalsHistory->scene->globalsPlug()->getValue();
 	ConstObjectPtr optionValue = globals->member<Object>( g_optionPrefix + option.string() );
-
-	if( !optionValue )
-	{
-		return nullptr;
-	}
 
 	SceneAlgo::OptionHistory::Ptr result = new OptionHistory(
 		globalsHistory->scene, globalsHistory->context,

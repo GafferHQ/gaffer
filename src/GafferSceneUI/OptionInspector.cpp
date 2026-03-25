@@ -157,17 +157,7 @@ OptionHistoryCache g_optionHistoryCache(
 		assert( canceller == Context::current()->canceller() );
 		cost = 1;
 		SceneAlgo::History::ConstPtr globalsHistory = g_historyCache.get( key, canceller );
-		if( auto h = SceneAlgo::optionHistory( globalsHistory.get(), key.option ) )
-		{
-			return h;
-		}
-		else
-		{
-			// The specific option doesn't exist. But we return the history for the
-			// whole CompoundObject so we get a chance to discover nodes that could
-			// _create_ the option.
-			return globalsHistory;
-		}
+		return SceneAlgo::optionHistory( globalsHistory.get(), key.option );
 	},
 	// Max cost
 	1000,

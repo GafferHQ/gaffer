@@ -264,8 +264,7 @@ struct OptionHistory : public History
 
 /// Filters `globalsHistory` and returns a history for the specific `option`.
 /// `globalsHistory` should have been obtained from a previous call to
-/// `history( scene->globalsPlug() )`. If the option doesn't exist then
-/// null is returned.
+/// `history( scene->globalsPlug() )`.
 GAFFERSCENE_API OptionHistory::Ptr optionHistory( const History *globalsHistory, const IECore::InternedString &option );
 
 /// Returns the upstream scene originally responsible for generating the specified location.
