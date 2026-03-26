@@ -142,6 +142,8 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		std::unique_ptr<Gnomon> m_gnomon;
 		class FPS;
 		std::unique_ptr<FPS> m_fps;
+		class FrameTime;
+		std::unique_ptr<FrameTime> m_frameTime;
 
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;

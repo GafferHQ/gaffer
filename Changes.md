@@ -5,6 +5,7 @@ Features
 --------
 
 - RenderMan : Added support for RenderMan 27.3.
+- SceneView : Added frame time display.
 
 1.7.0.0a7 (relative to 1.7.0.0a6)
 =========
