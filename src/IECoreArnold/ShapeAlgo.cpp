@@ -147,7 +147,7 @@ namespace IECoreArnold
 namespace ShapeAlgo
 {
 
-bool convertPChecked( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext )
+bool convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext )
 {
 	if( const V3fVectorData *p = checkedP( primitive, messageContext ) )
 	{
@@ -161,7 +161,7 @@ bool convertPChecked( const IECoreScene::Primitive *primitive, AtNode *shape, co
 	return false;
 }
 
-bool convertPChecked( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext )
+bool convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext )
 {
 	vector<const Data *> dataSamples;
 	dataSamples.reserve( samples.size() );
@@ -179,16 +179,6 @@ bool convertPChecked( const std::vector<const IECoreScene::Primitive *> &samples
 	AtArray *array = ParameterAlgo::dataToArray( dataSamples, AI_TYPE_VECTOR );
 	AiNodeSetArray( shape, name, array );
 	return true;
-}
-
-void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name, const std::string &messageContext )
-{
-	convertPChecked( primitive, shape, name, messageContext );
-}
-
-void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name, const std::string &messageContext )
-{
-	convertPChecked( samples, shape, name, messageContext );
 }
 
 void convertRadius( const IECoreScene::Primitive *primitive, AtNode *shape, const std::string &messageContext )
