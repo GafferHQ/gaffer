@@ -1555,8 +1555,11 @@ class GeometryCache
 
 		SharedGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
 		{
-			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( object, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
-
+			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( object, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
+			if( geometry )
+			{
+				geometry->name = ccl::ustring( nodeName.c_str() );
+			}
 			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
 			{
 				// It's a pity we can't do this in VolumeAlgo in the first place. It is here instead because
@@ -1577,7 +1580,11 @@ class GeometryCache
 			const std::string &nodeName
 		)
 		{
-			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( samples, times, frame, nodeName, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
+			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( samples, times, frame, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
+			if( geometry )
+			{
+				geometry->name = ccl::ustring( nodeName.c_str() );
+			}
 
 			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ) )
 			{
@@ -2683,6 +2690,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				frameIdx = times.size()-1;
 			}
+
+			/// \todo Is it actually useful to pass `name` here? It will only be meaningful for the first
+			/// CyclesObject that references it, and will be inaccurate for any additional instances.
 			SharedGeometryPtr geometry = m_geometryCache->get( samples, times, frameIdx, attributes, name );
 			if( !geometry )
 			{

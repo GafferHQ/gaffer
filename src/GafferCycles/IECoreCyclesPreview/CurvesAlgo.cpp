@@ -143,14 +143,13 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve, ccl::Scene 
 	return hair;
 }
 
-ccl::Geometry *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::CurvesPrimitive *curve, ccl::Scene *scene )
 {
 	ccl::Hair *hair = convertCommon( curve, scene );
-	hair->name = ccl::ustring( nodeName.c_str() );
 	return hair;
 }
 
-ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, const int frameIdx, ccl::Scene *scene )
 {
 	const int numSamples = curves.size();
 
@@ -264,7 +263,6 @@ ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curv
 	}
 	mP = attr_mP->data_float3();
 
-	hair->name = ccl::ustring( nodeName.c_str() );
 	return hair;
 }
 

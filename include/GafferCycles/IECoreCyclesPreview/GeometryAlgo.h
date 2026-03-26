@@ -58,10 +58,10 @@ namespace GeometryAlgo
 {
 
 /// Converts the specified `IECore::Object` into `ccl::Geometry`.
-IECORECYCLES_API ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene );
+IECORECYCLES_API ccl::Geometry *convert( const IECore::Object *object, ccl::Scene *scene );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene );
+IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, ccl::Scene *scene );
 
 /// Converts a primitive variable to a `ccl::Attribute` inside of a `ccl::AttributeSet`.
 IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement );
@@ -70,13 +70,10 @@ IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const I
 IECORECYCLES_API void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *geometry, ccl::Scene *scene, int precision, float clipping );
 
 /// Signature of a function which can convert to `ccl:Geometry`.
-/// \todo There's really no need to pass the node name here, because it's not a unique handle that
-/// needs to be provided when creating the Geometry (like it is in Arnold). The caller can just set the name
-/// afterwards if they want to.
-using Converter = ccl::Geometry *(*)( const IECore::Object *, const std::string &, ccl::Scene * );
+using Converter = ccl::Geometry *(*)( const IECore::Object *, ccl::Scene * );
 /// Signature of a function which can convert a series of IECore::Object
 /// samples into a moving `ccl:Geometry` object.
-using MotionConverter = ccl::Geometry *(*)( const std::vector<const IECore::Object *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
+using MotionConverter = ccl::Geometry *(*)( const std::vector<const IECore::Object *> &, const std::vector<float> &, const int, ccl::Scene * );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
@@ -92,8 +89,8 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		using Converter = ccl::Geometry *(*)( const T *, const std::string &, ccl::Scene * );
-		using MotionConverter = ccl::Geometry *(*)( const std::vector<const T *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
+		using Converter = ccl::Geometry *(*)( const T *, ccl::Scene * );
+		using MotionConverter = ccl::Geometry *(*)( const std::vector<const T *> &, const std::vector<float> &, const int, ccl::Scene * );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{

@@ -217,7 +217,7 @@ namespace IECoreCycles
 namespace GeometryAlgo
 {
 
-ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECore::Object *object, ccl::Scene *scene )
 {
 	const Registry &r = registry();
 	Registry::const_iterator it = r.find( object->typeId() );
@@ -225,10 +225,10 @@ ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeNam
 	{
 		return nullptr;
 	}
-	return it->second.converter( object, nodeName, scene );
+	return it->second.converter( object, scene );
 }
 
-ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, ccl::Scene *scene )
 {
 	if( samples.empty() )
 	{
@@ -253,11 +253,11 @@ ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, cons
 	}
 	if( it->second.motionConverter )
 	{
-		return it->second.motionConverter( samples, times, frameIdx, nodeName, scene );
+		return it->second.motionConverter( samples, times, frameIdx, scene );
 	}
 	else
 	{
-		return it->second.converter( samples.front(), nodeName, scene );
+		return it->second.converter( samples.front(), scene );
 	}
 }
 
