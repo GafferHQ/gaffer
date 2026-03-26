@@ -137,6 +137,19 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+
+		"twist" : {
+
+			"description" :
+			"""
+			An additional rotation around the reflection vector, applied after the aim constraint.
+			Useful for orienting the reflection.
+			""",
+
+			"layout:activator" : "aimIsEnabled",
+
+		},
+
 	}
 
 )

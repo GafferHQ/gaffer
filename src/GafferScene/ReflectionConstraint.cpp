@@ -38,6 +38,8 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "IECore/AngleConversion.h"
+
 #include "Imath/ImathMatrixAlgo.h"
 #include "Imath/ImathVecAlgo.h"
 
@@ -60,6 +62,7 @@ ReflectionConstraint::ReflectionConstraint( const std::string &name )
 	addChild( new BoolPlug( "aimEnabled" ) );
 	addChild( new V3fPlug( "aim", Plug::In, V3f( 0, 0, -1 ) ) );
 	addChild( new V3fPlug( "up", Plug::In, V3f( 0, 1, 0 ) ) );
+	addChild( new FloatPlug( "twist" ) );
 }
 
 ReflectionConstraint::~ReflectionConstraint()
@@ -126,6 +129,16 @@ const Gaffer::V3fPlug *ReflectionConstraint::upPlug() const
 	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 5 );
 }
 
+Gaffer::FloatPlug *ReflectionConstraint::twistPlug()
+{
+	return getChild<Gaffer::FloatPlug>( g_firstPlugIndex + 6 );
+}
+
+const Gaffer::FloatPlug *ReflectionConstraint::twistPlug() const
+{
+	return getChild<Gaffer::FloatPlug>( g_firstPlugIndex + 6 );
+}
+
 bool ReflectionConstraint::affectsConstraint( const Gaffer::Plug *input ) const
 {
 	return
@@ -136,7 +149,8 @@ bool ReflectionConstraint::affectsConstraint( const Gaffer::Plug *input ) const
 		input == distancePlug() ||
 		input == aimEnabledPlug() ||
 		input->parent() == aimPlug() ||
-		input->parent() == upPlug()
+		input->parent() == upPlug() ||
+		input == twistPlug()
 	;
 }
 
@@ -161,6 +175,7 @@ void ReflectionConstraint::hashConstraint( const Gaffer::Context *context, IECor
 	aimEnabledPlug()->hash( h );
 	aimPlug()->hash( h );
 	upPlug()->hash( h );
+	twistPlug()->hash( h );
 }
 
 Imath::M44f ReflectionConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const
@@ -224,10 +239,10 @@ Imath::M44f ReflectionConstraint::computeConstraint( const Imath::M44f &fullTarg
 		const M44f rotationMatrix = rotationMatrixWithUpDir( aimPlug()->getValue(), -reflectionVector.normalized(), upPlug()->getValue() );
 		result.translate( translation );
 		result.shear( h );
+		result = M44f().setAxisAngle( reflectionVector.normalized(), IECore::degreesToRadians( twistPlug()->getValue() ) ) * result;
 		result = rotationMatrix * result;
 		result.scale( s );
 	}
-
 
 	return result;
 }

@@ -75,6 +75,9 @@ class GAFFERSCENE_API ReflectionConstraint : public Constraint
 		Gaffer::V3fPlug *upPlug();
 		const Gaffer::V3fPlug *upPlug() const;
 
+		Gaffer::FloatPlug *twistPlug();
+		const Gaffer::FloatPlug *twistPlug() const;
+
 	protected :
 
 		bool affectsConstraint( const Gaffer::Plug *input ) const override;
