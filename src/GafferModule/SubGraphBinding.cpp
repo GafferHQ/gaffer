@@ -259,6 +259,21 @@ void registerProcessor( const std::string &name, object creator )
 namespace
 {
 
+struct ReferenceChangedSlotCaller
+{
+	void operator()( boost::python::object slot, SubGraphPtr subGraph )
+	{
+		try
+		{
+			slot( subGraph );
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 struct ReferenceLoadedSlotCaller
 {
 	void operator()( boost::python::object slot, ReferencePtr r )
@@ -292,6 +307,12 @@ class ReferenceSerialiser : public NodeSerialiser
 
 };
 
+void loadReferenceWrapper( SubGraph &subGraph, const std::filesystem::path &fileName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	subGraph.loadReference( fileName );
+}
+
 void load( Reference &r, const std::filesystem::path &f )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -303,7 +324,15 @@ void load( Reference &r, const std::filesystem::path &f )
 void GafferModule::bindSubGraph()
 {
 	using SubGraphWrapper = DependencyNodeWrapper<SubGraph>;
-	DependencyNodeClass<SubGraph, SubGraphWrapper>();
+	DependencyNodeClass<SubGraph, SubGraphWrapper>()
+		.def( "loadReference", &loadReferenceWrapper )
+		.def( "referenceFileName", &SubGraph::referenceFileName, return_value_policy<copy_const_reference>() )
+		.def( "referenceChangedSignal", &SubGraph::referenceChangedSignal, return_internal_reference<1>() )
+		.def( "hasMetadataEdit", &SubGraph::hasMetadataEdit )
+		.def( "isChildEdit", &SubGraph::isChildEdit )
+	;
+
+	SignalClass<SubGraph::ReferenceChangedSignal, DefaultSignalCaller<SubGraph::ReferenceChangedSignal>, ReferenceChangedSlotCaller >( "ReferenceChangedSignal" );
 
 	using BoxWrapper = DependencyNodeWrapper<Box>;
 
@@ -337,8 +366,6 @@ void GafferModule::bindSubGraph()
 		.def( "load", &load )
 		.def( "fileName", &Reference::fileName, return_value_policy<copy_const_reference>() )
 		.def( "referenceLoadedSignal", &Reference::referenceLoadedSignal, return_internal_reference<1>() )
-		.def( "hasMetadataEdit", &Reference::hasMetadataEdit )
-		.def( "isChildEdit", &Reference::isChildEdit )
 	;
 
 	SignalClass<Reference::ReferenceLoadedSignal, DefaultSignalCaller<Reference::ReferenceLoadedSignal>, ReferenceLoadedSlotCaller >( "ReferenceLoadedSignal" );

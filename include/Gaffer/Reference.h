@@ -45,6 +45,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( StringPlug )
 
+/// \deprecated Use Box instead.
 class GAFFER_API Reference : public SubGraph
 {
 
@@ -55,39 +56,20 @@ class GAFFER_API Reference : public SubGraph
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Reference, ReferenceTypeId, SubGraph );
 
-		/// Loads the specified script, which should have been exported
-		/// using Box::exportForReference().
-		/// \undoable.
+		/// \deprecated Use `SubGraph::loadReference()` instead.
 		void load( const std::filesystem::path &fileName );
-		/// Returns the name of the script currently being referenced.
+		/// \deprecated Use `SubGraph::referenceFileName()` instead.
 		const std::filesystem::path &fileName() const;
 
+		/// \deprecated Use `SubGraph::referenceChangedSignal()` instead.
 		using ReferenceLoadedSignal = Signals::Signal<void ( Reference * )>;
-		/// Emitted when a reference is loaded (or unloaded following an undo).
 		ReferenceLoadedSignal &referenceLoadedSignal();
-
-		/// Edits
-		/// =====
-		///
-		/// Edits are changes to referenced plugs that are made by the user
-		/// after the reference has been loaded via `load()`. The Reference
-		/// node provides some limited tracking of edits, exposing them
-		/// via the following methods.
-
-		bool hasMetadataEdit( const Plug *plug, const IECore::InternedString key ) const;
-		/// Returns true if `plug` has been added as a child of a referenced plug.
-		bool isChildEdit( const Plug *plug ) const;
 
 	private :
 
-		void loadInternal( const std::filesystem::path &fileName );
-		bool isReferencePlug( const Plug *plug ) const;
+		void referenceChanged();
 
-		std::filesystem::path m_fileName;
 		ReferenceLoadedSignal m_referenceLoadedSignal;
-
-		class PlugEdits;
-		std::unique_ptr<PlugEdits> m_plugEdits;
 
 };
 
