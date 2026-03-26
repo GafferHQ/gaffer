@@ -44,6 +44,7 @@
 #include "GafferScene/FreezeTransform.h"
 #include "GafferScene/ParentConstraint.h"
 #include "GafferScene/PointConstraint.h"
+#include "GafferScene/ReflectionConstraint.h"
 #include "GafferScene/Transform.h"
 
 #include "GafferBindings/ComputeNodeBinding.h"
@@ -95,6 +96,15 @@ void GafferSceneModule::bindTransform()
 	GafferBindings::DependencyNodeClass<ParentConstraint>();
 	GafferBindings::DependencyNodeClass<FramingConstraint>();
 	GafferBindings::DependencyNodeClass<GafferScene::FreezeTransform>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<ReflectionConstraint>();
+
+		enum_<ReflectionConstraint::DistanceMode>( "DistanceMode" )
+			.value( "Camera", ReflectionConstraint::DistanceMode::Camera )
+			.value( "Constant", ReflectionConstraint::DistanceMode::Constant )
+		;
+	}
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<Transform>();

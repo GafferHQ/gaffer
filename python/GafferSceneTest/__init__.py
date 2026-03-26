@@ -195,6 +195,7 @@ from .CatalogueTest import CatalogueTest
 from .CatalogueSelectTest import CatalogueSelectTest
 from .CameraQueryTest import CameraQueryTest
 from .GlobalsSanitiserTest import GlobalsSanitiserTest
+from .ReflectionConstraintTest import ReflectionConstraintTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
