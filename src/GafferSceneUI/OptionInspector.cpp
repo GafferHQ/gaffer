@@ -236,10 +236,21 @@ Gaffer::ValuePlugPtr OptionInspector::source( const GafferScene::SceneAlgo::Hist
 	}
 	else if( auto optionTweaks = runTimeCast<OptionTweaks>( sceneNode ) )
 	{
+		ConstCompoundObjectPtr globals = optionTweaks->inPlug()->globalsPlug()->getValue();
 		for( const auto &tweak : TweakPlug::Range( *optionTweaks->tweaksPlug() ) )
 		{
 			if( tweak->namePlug()->getValue() == m_option.string() && tweak->enabledPlug()->getValue() )
 			{
+				if(
+					tweak->modePlug()->getValue() == TweakPlug::CreateIfMissing &&
+					globals->members().count( g_optionPrefix + m_option.string() )
+				)
+				{
+					// This `CreateIfMissing` tweak has not modified the scene as the
+					// option already exists upstream.
+					continue;
+				}
+
 				return tweak;
 			}
 		}

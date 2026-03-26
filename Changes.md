@@ -18,6 +18,7 @@ Fixes
   - Fixed creation of edits in edit scopes upstream of the first node creating the target attribute or option. The upstream edit scope can now be edited, whereas before it would be reported as not being part of the scene history.
   - Fixed bug preventing disabled attribute plugs from being edited on source nodes - such as USDLight and Camera - when the edit target was set to "Source" and there was a downstream edit in an EditScope.
 - SceneAlgo : `attributeHistory` and `optionHistory` now return the entire history rather than pruning once the attribute or option fails to exist.
+- SceneInspector, RenderPassEditor : Fixed bug causing history inspection to incorrectly include OptionTweaks `CreateIfMissing` tweaks that have not modified the scene due to the option already existing upstream of the tweak.
 
 1.6.15.0 (relative to 1.6.14.2)
 ========

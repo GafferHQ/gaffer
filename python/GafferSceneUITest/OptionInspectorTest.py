@@ -1138,5 +1138,38 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "{} is external to the script.".format( externalOptionTweaks.fullName() )
 		)
 
+	def testSourceForCreateIfMissingTweaks( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["standardOptions"] = GafferScene.StandardOptions()
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["standardOptions"]["options"]["render:camera"]["value"].setValue( "/defaultCamera" )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["standardOptions"]["out"] )
+		s["editScope"]["in"].setInput( s["standardOptions"]["out"] )
+
+		tweak = GafferScene.EditScopeAlgo.acquireOptionEdit( s["editScope"], "render:camera" )
+		tweak["enabled"].setValue( True )
+		tweak["mode"].setValue( Gaffer.TweakPlug.Mode.CreateIfMissing )
+		tweak["value"].setValue( "/otherCamera" )
+
+		# Our CreateIfMissing tweak should not be the source as the option already exists upstream
+		# so the tweak did not affect the scene.
+		inspection = self.__inspect( s["editScope"]["out"], "render:camera", s["editScope"] )
+		self.assertEqual( inspection.source(), s["standardOptions"]["options"]["render:camera"] )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.Upstream )
+		self.assertEqual( inspection.value(), IECore.StringData( "/defaultCamera" ) )
+
+		s["standardOptions"]["options"]["render:camera"]["enabled"].setValue( False )
+
+		# With the upstream attribute disabled, our tweak should now be the source as it now affects
+		# the scene.
+		inspection = self.__inspect( s["editScope"]["out"], "render:camera", s["editScope"] )
+		self.assertEqual( inspection.source(), tweak )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
+		self.assertEqual( inspection.value(), IECore.StringData( "/otherCamera" ) )
+
 if __name__ == "__main__" :
 	unittest.main()
