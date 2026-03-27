@@ -1362,5 +1362,24 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( len( nodes ), 1 )
 			self.assertEqual( arnold.AiNodeGetStr( nodes[0], "pattern" ), "worley1" )
 
+	def testUnwantedClosureValues( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"raySwitchHandle" : IECoreScene.Shader(
+					"ray_switch_shader", "ai:surface",
+					{ "camera" : IECore.StringData() }
+				),
+			},
+			output = "raySwitchHandle"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			with IECore.CapturingMessageHandler() as messageHandler :
+				IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

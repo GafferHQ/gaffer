@@ -96,12 +96,18 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.03.
 
-1.6.x.x (relative to 1.6.14.2)
+1.6.x.x (relative to 1.6.15.0)
 =======
+
+
+
+1.6.15.0 (relative to 1.6.14.2)
+========
 
 Features
 --------
 
+- Arnold : Added support for Arnold 7.5.
 - ReflectionConstraint : Added a new node for constraining objects so that they are reflected in the target when viewed through a chosen camera.
 
 Improvements
@@ -113,6 +119,8 @@ Fixes
 -----
 
 - Cycles : Re-order shader conversion functions so that component connection adapters are run last.
+- MeshTessellate : Fixed node menu label.
+- Arnold : Silenced warnings when rendering `ray_switch_shader` nodes exported to USD from MtoA.
 
 API
 ---
