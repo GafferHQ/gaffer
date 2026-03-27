@@ -56,7 +56,7 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"basis.value" : {
+		"basis" : {
 
 			"description" :
 			"""
@@ -71,6 +71,10 @@ Gaffer.Metadata.registerNode(
 			  to the end vertices.
 			""",
 
+		},
+
+		"basis.value" : {
+
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			# We only expose the basis types which have a step of 1.
 			# We can safely convert between any of these without them
@@ -81,7 +85,7 @@ Gaffer.Metadata.registerNode(
 
 		},
 
-		"wrap.value" : {
+		"wrap" : {
 
 			"description" :
 			"""
@@ -94,6 +98,10 @@ Gaffer.Metadata.registerNode(
 			- NonPeriodic : Neither wraps the curve to produce a loop or introduces
 			  phantom endpoints. Generally inferior to the other options.
 			""",
+
+		},
+
+		"wrap.value" : {
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Pinned" : IECoreScene.CurvesPrimitive.Wrap.Pinned,
