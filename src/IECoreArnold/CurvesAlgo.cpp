@@ -152,7 +152,7 @@ AtNode *convertCommon( const IECoreScene::CurvesPrimitive *curves, AtUniverse *u
 
 	AtNode *result = AiNode( universe, g_curvesArnoldString, AtString( nodeName.c_str() ), parentNode );
 
-	const std::vector<int> verticesPerCurve = curves->verticesPerCurve()->readable();
+	const std::vector<int> &verticesPerCurve = curves->verticesPerCurve()->readable();
 	AiNodeSetArray(
 		result,
 		g_numPointsArnoldString,
