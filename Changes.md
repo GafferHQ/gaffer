@@ -17,6 +17,7 @@ Fixes
 
 - Cycles : Re-order shader conversion functions so that component connection adapters are run last.
 - MeshTessellate : Fixed node menu label.
+- Arnold : Silenced warnings when rendering `ray_switch_shader` nodes exported to USD from MtoA.
 
 API
 ---

@@ -243,6 +243,17 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					AiNodeSetMatrix( node, name, reinterpret_cast<const AtMatrix &>( v.x ) );
 				}
 				break;
+			case AI_TYPE_CLOSURE :
+				if( auto data = runTimeCast<const StringData>( value ) )
+				{
+					// MtoA exports closures to USD as string attributes, along with
+					// an empty value. Ignore these rather than clog up the logs.
+					if( data->readable().empty() )
+					{
+						break;
+					}
+				}
+				[[fallthrough]];
 			default :
 			{
 				std::string nodeStr = AiNodeGetName( node );
