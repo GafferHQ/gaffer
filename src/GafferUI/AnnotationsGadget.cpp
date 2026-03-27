@@ -36,13 +36,12 @@
 
 #include "GafferUI/AnnotationsGadget.h"
 
-#include "GafferSceneUI/SceneGadget.h"
-
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/ImageGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Style.h"
+#include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
