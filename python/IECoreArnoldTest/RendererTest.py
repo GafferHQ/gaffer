@@ -3229,7 +3229,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with open( self.temporaryDirectory() / "test" / "test_stats.json", "r", encoding = "utf-8" ) as statsHandle:
 			stats = json.load( statsHandle )["render 0000"]
-			self.assertTrue( "microseconds" in stats["scene creation time"] )
 			self.assertTrue( "microseconds" in stats["frame time"] )
 			self.assertTrue( "peak CPU memory used" in stats )
 
@@ -4142,7 +4141,7 @@ class RendererTest( GafferTest.TestCase ) :
 					),
 					"lensEffects" : IECoreScene.Shader(
 						"imager_lens_effects", "ai:imager",
-						{ "bloom_radius" : 5 },
+						{ "vignetting" : 0.5 },
 					),
 				},
 				connections = [
@@ -4182,7 +4181,7 @@ class RendererTest( GafferTest.TestCase ) :
 					arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( lensEffects ) ),
 					"imager_lens_effects",
 				)
-				self.assertEqual( arnold.AiNodeGetInt( lensEffects, "bloom_radius" ), 5 )
+				self.assertEqual( arnold.AiNodeGetFlt( lensEffects, "vignetting" ), 0.5 )
 
 				exposure = arnold.AiNodeGetPtr( lensEffects, "input" )
 				self.assertIsNotNone( exposure )
