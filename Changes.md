@@ -16,6 +16,7 @@ Fixes
 -----
 
 - Cycles : Re-order shader conversion functions so that component connection adapters are run last.
+- MeshTessellate : Fixed node menu label.
 
 API
 ---
