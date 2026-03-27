@@ -794,7 +794,7 @@ public:
 	// This must be called after all calls to copyFromSource
 	void finalize()
 	{
-		result->setTopology( m_resultVerticesPerCurveData, result->basis(), result->periodic() );
+		result->setTopology( m_resultVerticesPerCurveData.get(), result->basis(), result->wrap() );
 	}
 
 	// Return an interpolation adequate to store data of either input interpolation
@@ -844,16 +844,16 @@ private:
 	{
 		const CurvesPrimitive *firstCurves = static_cast< const CurvesPrimitive * >( primitives[0].first );
 		CubicBasisf basis = firstCurves->basis();
-		bool periodic = firstCurves->periodic();
+		const CurvesPrimitive::Wrap wrap = firstCurves->wrap();
 
 		static const CubicBasisf invalidBasis( Imath::M44f( 0.0f ), 0 );
 
 		for( const auto & [prim, matrix] : primitives )
 		{
 			const CurvesPrimitive *curves = static_cast< const CurvesPrimitive * >( prim );
-			if( curves->periodic() != periodic )
+			if( curves->wrap() != wrap )
 			{
-				throw IECore::Exception( "Cannot merge periodic and non-periodic curves" );
+				throw IECore::Exception( "Cannot merge curves with mismatched wrap" );
 			}
 
 			if(
@@ -873,7 +873,7 @@ private:
 			basis = CubicBasisf::linear();
 		}
 
-		result->setTopology( result->verticesPerCurve(), basis, periodic );
+		result->setTopology( result->verticesPerCurve(), basis, wrap );
 	}
 
 	IntVectorDataPtr m_resultVerticesPerCurveData;

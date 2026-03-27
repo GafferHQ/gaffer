@@ -39,6 +39,7 @@ import os
 import time
 import unittest
 import random
+import itertools
 
 import imath
 
@@ -1300,6 +1301,55 @@ class RendererTest( GafferTest.TestCase ) :
 				else :
 					self.__assertNotInPrimitiveVariables( proto, "Ri:scheme" )
 					self.assertEqual( proto["type"], "Ri:PolygonMesh" )
+
+	def testCurvesWrap( self ) :
+
+		Wrap = IECoreScene.CurvesPrimitive.Wrap
+		for basis, wrap in [
+			( IECore.CubicBasisf.catmullRom(), Wrap.Pinned ),
+			( IECore.CubicBasisf.bSpline(), Wrap.Pinned ),
+			( IECore.CubicBasisf.linear(), Wrap.Pinned ),
+			( IECore.CubicBasisf.bSpline(), Wrap.Periodic ),
+			( IECore.CubicBasisf.bSpline(), Wrap.NonPeriodic ),
+		] :
+
+			with self.subTest( basis = basis, wrap = wrap ) :
+
+				with IECoreRenderManTest.RileyCapture() as capture :
+
+					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+						"RenderMan",
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+					)
+
+					curves = IECoreScene.CurvesPrimitive(
+						IECore.IntVectorData( [ 4 ] ), basis, wrap, IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 4 ) ] )
+					)
+					renderer.object(
+						"curves", curves, renderer.attributes( IECore.CompoundObject() )
+					)
+
+					del renderer
+
+				prototype = next(
+					x for x in capture.json if x["method"] == "CreateGeometryPrototype"
+				)
+
+				if IECoreScene.CurvesAlgo.isPinned( curves ) :
+
+					self.__assertPrimitiveVariableEqual(
+						prototype, "P",
+						list( itertools.chain( *[ iter( [ x, x, x ] ) for x in range( -1, 5 ) ] ) )
+					)
+					self.__assertPrimitiveVariableEqual( prototype, "Ri:wrap", [ "nonperiodic" ] )
+
+				else :
+
+					self.__assertPrimitiveVariableEqual(
+						prototype, "P",
+						list( itertools.chain( *[ iter( [ x, x, x ] ) for x in range( 0, 4 ) ] ) )
+					)
+					self.__assertPrimitiveVariableEqual( prototype, "Ri:wrap", [ "periodic" if wrap == Wrap.Periodic else "nonperiodic" ] )
 
 	def testAutomaticInstancingAttribute( self ) :
 

@@ -373,7 +373,7 @@ IECoreGL::ConstRenderablePtr ray( bool muted )
 	V3fVectorDataPtr p = new V3fVectorData;
 	addRay( V3f( 0 ), V3f( 0, 0, -1 ), vertsPerCurve->writable(), p->writable() );
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
@@ -399,7 +399,7 @@ IECoreGL::ConstRenderablePtr pointRays( float radius, bool muted )
 		addRay( dir * ( 0.2f + radius ), dir * ( 0.6f + radius ), vertsPerCurve->writable(), p->writable(), 0.1f );
 	}
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
@@ -445,7 +445,7 @@ IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, 
 		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length, true );
 	}
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 
 	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : ( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) );
@@ -473,7 +473,7 @@ IECoreGL::ConstRenderablePtr pointShape( float radius, bool muted )
 		p *= t;
 	}
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ false, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
@@ -529,7 +529,7 @@ IECoreGL::ConstRenderablePtr roundedQuadWireframe( const V2f &size, const V2f &r
 
 	vertsPerCurve.push_back( p.size() );
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( lightWireframeColor( muted ) ) ) );
 
@@ -772,7 +772,7 @@ IECoreGL::ConstRenderablePtr quadPortal( const V2f &size, float hatchingScale, b
 		}
 	}
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : Color3f( 0.07f ) ) ) );
 	return curves;
@@ -800,7 +800,7 @@ IECoreGL::ConstRenderablePtr sphereWireframe( float radius, const Vec3<bool> &ax
 		addCircle( Axis::Z,  center, radius, vertsPerCurve->writable(), p->writable() );
 	}
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), false, vertsPerCurve );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, p ) );
 	curves->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
@@ -854,7 +854,7 @@ IECoreGL::ConstRenderablePtr diskWireframe( float radius, float lineWidthScale, 
 
 	addCircle( Axis::Z, V3f( 0 ), radius, vertsPerCurveData->writable(), pData->writable() );
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), /* periodic = */ false, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
@@ -943,7 +943,7 @@ IECoreGL::ConstRenderablePtr cylinderWireframe( float radius, float length, floa
 	p.push_back( V3f( 0, -radius, halfLength ) );
 	vertsPerCurve.push_back( 2 );
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), false, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 

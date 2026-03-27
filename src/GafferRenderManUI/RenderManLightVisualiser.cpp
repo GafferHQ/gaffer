@@ -197,7 +197,7 @@ IECoreGL::ConstRenderablePtr triangle( const V3f &p0, const V3f &p1, const V3f &
 	{
 		IntVectorDataPtr vertsPerCurveData = new IntVectorData( { 3 } );
 		result = new IECoreGL::CurvesPrimitive(
-			CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData
+			CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData
 		);
 	}
 	else
@@ -242,7 +242,7 @@ IECoreGL::ConstRenderablePtr sunWireframe( const float radius )
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData( std::vector<int>( numSpikes, pointsPerSpike + 1 ) );
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive(
-		CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData
+		CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData
 	);
 
 	V3fVectorDataPtr pData = new V3fVectorData( p );
@@ -326,7 +326,7 @@ IECoreGL::ConstRenderablePtr spotLightRound( const float angle, const float heig
 		}
 	);
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 
 	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : lightWireframeColor( muted ) );
@@ -365,7 +365,7 @@ IECoreGL::ConstRenderablePtr spotLightSquare( const float angle, const float hei
 		}
 	);
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 
 	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : lightWireframeColor( muted ) );
@@ -797,7 +797,7 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 	if( ornamentWireframePoints->readable().size() > 0 )
 	{
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive(
-			CubicBasisf::linear(), false, ornamentWireframeVertsPerCurve
+			CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, ornamentWireframeVertsPerCurve
 		);
 		curves->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, ornamentWireframePoints ) );
 		curves->addPrimitiveVariable(

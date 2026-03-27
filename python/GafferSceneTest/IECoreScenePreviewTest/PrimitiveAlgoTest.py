@@ -274,7 +274,7 @@ class PrimitiveAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( merged["P"], IECoreScene.PrimitiveVariable( Interpolation.Vertex, IECore.V3fVectorData( curveVerts1 + curveVerts2, IECore.GeometricData.Interpretation.Point ) ) )
 
 		curves1.setTopology( curves1.verticesPerCurve(), curves1.basis(), True )
-		with self.assertRaisesRegex( RuntimeError, "Cannot merge periodic and non-periodic curves" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot merge curves with mismatched wrap" ) :
 			PrimitiveAlgo.mergePrimitives( [( curves1, imath.M44f() ), ( curves2, imath.M44f() ) ] )
 
 		curves2.setTopology( curves2.verticesPerCurve(), curves2.basis(), True )

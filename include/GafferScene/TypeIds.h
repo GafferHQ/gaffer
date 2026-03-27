@@ -196,6 +196,7 @@ enum TypeId
 	CameraQueryTypeId = 120151,
 	ClosurePlugTypeId = 120152,
 	ReflectionConstraintTypeId = 120153,
+	CurvesInterpolationTypeId = 120154,
 
 	LastTypeId = 120999
 };

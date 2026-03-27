@@ -121,7 +121,7 @@ class CameraVisualiser : public ObjectVisualiser
 			p.push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
 			p.push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
 
-			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurveData );
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 
 			return curves;
@@ -250,7 +250,7 @@ class CameraVisualiser : public ObjectVisualiser
 			p.push_back( V3f( handleXs[0], handleYs[2], handleZs[3] ) );
 			p.push_back( V3f( handleXs[1], handleYs[2], handleZs[3] ) );
 
-			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurveData );
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 
 			return curves;

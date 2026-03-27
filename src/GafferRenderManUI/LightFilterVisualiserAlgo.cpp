@@ -129,7 +129,7 @@ IECoreGL::GroupPtr GafferRenderManUI::lightFilterRectangles( const V2f &innerSiz
 
 	addRect( innerSize, innerScale, innerOffset, radius, 0.f, V4f( 0.f ), innerVertsPerCurve, innerP );
 
-	IECoreGL::CurvesPrimitivePtr rect = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic */ true, innerVertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr rect = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, innerVertsPerCurveData );
 	rect->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, innerPData ) );
 	rect->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 255.f / 255.f, 171.f / 255.f, 15.f / 255.f ) ) ) );
 
@@ -149,7 +149,7 @@ IECoreGL::GroupPtr GafferRenderManUI::lightFilterRectangles( const V2f &innerSiz
 
 		addRect( innerSize, innerScale, innerOffset, radius, edge, falloffScale, edgeVertsPerCurve, edgeP );
 
-		IECoreGL::CurvesPrimitivePtr edgeRect = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic */ true, edgeVertsPerCurveData );
+		IECoreGL::CurvesPrimitivePtr edgeRect = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, edgeVertsPerCurveData );
 		edgeRect->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, edgePData ) );
 		edgeRect->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 0.f ) ) ) );
 

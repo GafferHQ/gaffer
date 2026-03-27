@@ -305,6 +305,7 @@ nodeMenu.append( "/Scene/Object/Merge Points", GafferScene.MergePoints, searchTe
 nodeMenu.append( "/Scene/Object/Merge Curves", GafferScene.MergeCurves, searchText = "MergeCurves" )
 nodeMenu.append( "/Scene/Object/Mesh Subdivide", GafferScene.MeshTessellate, searchText = "MeshTessellate" )
 nodeMenu.append( "/Scene/Object/Camera Tweaks", GafferScene.CameraTweaks, searchText = "CameraTweaks" )
+nodeMenu.append( "/Scene/Object/Curves Interpolation", GafferScene.CurvesInterpolation, searchText = "CurvesInterpolation" )
 nodeMenu.append( "/Scene/Object/Curve Sampler", GafferScene.CurveSampler, searchText = "CurveSampler" )
 nodeMenu.append( "/Scene/Object/Closest Point Sampler", GafferScene.ClosestPointSampler, searchText = "ClosestPointSampler" )
 nodeMenu.append( "/Scene/Object/UV Sampler", GafferScene.UVSampler, searchText = "UVSampler" )
