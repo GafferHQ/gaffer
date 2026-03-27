@@ -259,16 +259,16 @@ class RendererTest( GafferTest.TestCase ) :
 		# then we know the light linking was broken.
 
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testRecycleLightGroups" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		def assertRed() :
 
-		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
-		self.assertGreater( testPixel.r, 0 )
-		self.assertEqual( testPixel.g, 0 )
-		self.assertEqual( testPixel.b, 0 )
+			# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+			testPixel = self.__colorAtUV( "testRecycleLightGroups", imath.V2f( 0.55 ) )
+			self.assertGreater( testPixel.r, 0 )
+			self.assertEqual( testPixel.g, 0 )
+			self.assertEqual( testPixel.b, 0 )
+
+		self.assertEventually( lambda : assertRed() )
 
 		del plane, redLight, greenLight
 
@@ -488,59 +488,63 @@ class RendererTest( GafferTest.TestCase ) :
 
 		light = renderer.light( "/light", None, lightAttributes( imath.Color3f( 1, 0, 0 ) ) )
 		renderer.render()
-		time.sleep( 1 )
 
 		# Check that we have a pure red image.
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		def assertRed() :
 
-		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
-		self.assertGreater( middlePixel.r, 0 )
-		self.assertEqual( middlePixel.g, 0 )
-		self.assertEqual( middlePixel.b, 0 )
+			middlePixel = self.__colorAtUV( "testBackgroundLightEdits", imath.V2f( 0.5 ) )
+			self.assertGreater( middlePixel.r, 0 )
+			self.assertEqual( middlePixel.g, 0 )
+			self.assertEqual( middlePixel.b, 0 )
+
+		self.assertEventually( lambda : assertRed() )
 
 		# Rerender with a green light.
 
 		renderer.pause()
 		light.attributes( lightAttributes( imath.Color3f( 0, 1, 0 ) ) )
 		renderer.render()
-		time.sleep( 1 )
 
 		# Check that we have a pure green image.
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
-		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
-		self.assertEqual( middlePixel.r, 0 )
-		self.assertGreater( middlePixel.g, 0 )
-		self.assertEqual( middlePixel.b, 0 )
+		def assertGreen() :
+
+			middlePixel = self.__colorAtUV( "testBackgroundLightEdits", imath.V2f( 0.5 ) )
+			self.assertEqual( middlePixel.r, 0 )
+			self.assertGreater( middlePixel.g, 0 )
+			self.assertEqual( middlePixel.b, 0 )
+
+		self.assertEventually( lambda : assertGreen() )
 
 		# Rerender with a blue light.
 
 		renderer.pause()
 		light.attributes( lightAttributes( imath.Color3f( 0, 0, 1 ) ) )
 		renderer.render()
-		time.sleep( 1 )
 
 		# Check that we have a pure blue image.
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
-		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
-		self.assertEqual( middlePixel.r, 0 )
-		self.assertEqual( middlePixel.g, 0 )
-		self.assertGreater( middlePixel.b, 0 )
+		def assertBlue() :
+
+			middlePixel = self.__colorAtUV( "testBackgroundLightEdits", imath.V2f( 0.5 ) )
+			self.assertEqual( middlePixel.r, 0 )
+			self.assertEqual( middlePixel.g, 0 )
+			self.assertGreater( middlePixel.b, 0 )
+
+		self.assertEventually( lambda : assertBlue() )
 
 		# Rerender without the light.
 
 		renderer.pause()
 		del light
 		renderer.render()
-		time.sleep( 1 )
 
 		# Check that we have a pure black image.
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightEdits" )
-		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( self.__colorAtUV( "testBackgroundLightEdits", imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+		)
 
 		renderer.pause()
 		del plane
@@ -590,73 +594,64 @@ class RendererTest( GafferTest.TestCase ) :
 		# Render with no background, and check we have a black image.
 
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
-		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( self.__colorAtUV( "testBackgroundShader", imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+		)
 
 		# Render with a red background.
 
 		renderer.pause()
 		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 1, 0, 0 ) ) )
 		renderer.render()
-		time.sleep( 1 )
 
 		# Check that we have a pure red image.
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		def assertRed() :
 
-		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
-		self.assertGreater( middlePixel.r, 0 )
-		self.assertEqual( middlePixel.g, 0 )
-		self.assertEqual( middlePixel.b, 0 )
+			middlePixel = self.__colorAtUV( "testBackgroundShader", imath.V2f( 0.5 ) )
+			self.assertGreater( middlePixel.r, 0 )
+			self.assertEqual( middlePixel.g, 0 )
+			self.assertEqual( middlePixel.b, 0 )
+
+		self.assertEventually( lambda : assertRed() )
 
 		# Render with a green background.
 
 		renderer.pause()
 		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 0, 1, 0 ) ) )
 		renderer.render()
-		time.sleep( 1 )
 
 		# Check that we have a pure green image.
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		def assertGreen() :
 
-		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
-		self.assertEqual( middlePixel.r, 0 )
-		self.assertGreater( middlePixel.g, 0 )
-		self.assertEqual( middlePixel.b, 0 )
+			middlePixel = self.__colorAtUV( "testBackgroundShader", imath.V2f( 0.5 ) )
+			self.assertEqual( middlePixel.r, 0 )
+			self.assertGreater( middlePixel.g, 0 )
+			self.assertEqual( middlePixel.b, 0 )
+
+		self.assertEventually( lambda : assertGreen() )
 
 		# Render with a red background again.
 
 		renderer.pause()
 		renderer.option( "cycles:background:shader", backgroundShader( imath.Color3f( 1, 0, 0 ) ) )
 		renderer.render()
-		time.sleep( 1 )
 
 		# Check that we have gone back to a pure red image.
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
-
-		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
-		self.assertGreater( middlePixel.r, 0 )
-		self.assertEqual( middlePixel.g, 0 )
-		self.assertEqual( middlePixel.b, 0 )
+		self.assertEventually( lambda : assertRed() )
 
 		# Remove background, and check we have a black image.
 
 		renderer.pause()
 		renderer.option( "cycles:background:shader", None )
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundShader" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
-		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( self.__colorAtUV( "testBackgroundShader", imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
+		)
 
 		del plane
 
@@ -1534,6 +1529,11 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.52, 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ) )
 
 	def __colorAtUV( self, image, uv, channelName = "" ) :
+
+		if isinstance( image, str ) :
+			image = IECoreImage.ImageDisplayDriver.storedImage( image )
+
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
 
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )
 
@@ -2500,14 +2500,11 @@ class RendererTest( GafferTest.TestCase ) :
 		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
-		time.sleep( 1 )
-
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testExposureEdit" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
 
 		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
-		self.assertEqualWithAbsError( testPixel, imath.Color4f( 1 ), 1e-6 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "testExposureEdit", imath.V2f( 0.55 ) ), imath.Color4f( 1 ), 1e-6 )
+		)
 
 		# Edit exposure and re-render. We should get an image twice as bright.
 
@@ -2515,13 +2512,10 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.option( "cycles:film:exposure", IECore.FloatData( 2 ) )
 
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testExposureEdit" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
-
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
-		self.assertEqualWithAbsError( testPixel, imath.Color4f( 2, 2, 2, 1 ), 1e-6 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "testExposureEdit", imath.V2f( 0.55 ) ), imath.Color4f( 2, 2, 2, 1 ), 1e-6 )
+		)
 
 		del plane
 
@@ -2694,16 +2688,16 @@ class RendererTest( GafferTest.TestCase ) :
 		light = renderer.light( "/light", None, lightAttributes( "env" ) )
 
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+		def assertGreen( handle, layer = "" ) :
 
-		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
-		self.assertEqual( testPixel.r, 0 )
-		self.assertGreater( testPixel.g, 0.99 )
-		self.assertEqual( testPixel.b, 0 )
+			# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+			testPixel = self.__colorAtUV( IECoreImage.ImageDisplayDriver.storedImage( handle ), imath.V2f( 0.55 ), layer )
+			self.assertEqual( testPixel.r, 0 )
+			self.assertGreater( testPixel.g, 0.99 )
+			self.assertEqual( testPixel.b, 0 )
+
+		self.assertEventually( lambda : assertGreen( "testOutput" ) )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -2726,7 +2720,8 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 		light.attributes( lightAttributes( "other" ) )
 		renderer.render()
-		time.sleep( 1 )
+
+		self.assertEventually( lambda : assertGreen( "testOtherOutput", "other" ) )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
@@ -2742,14 +2737,6 @@ class RendererTest( GafferTest.TestCase ) :
 		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env" )
 		self.assertEqual( testPixel.r, 0 )
 		self.assertEqual( testPixel.g, 0 )
-		self.assertEqual( testPixel.b, 0 )
-
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testOtherOutput" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
-
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "other" )
-		self.assertEqual( testPixel.r, 0 )
-		self.assertGreater( testPixel.g, 0.99 )
 		self.assertEqual( testPixel.b, 0 )
 
 		# Clear the lightgroup and re-render, we shouldn't see the light's contribution
@@ -2757,28 +2744,17 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 		light.attributes( lightAttributes( "" ) )
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testOutput" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+		self.assertEventually( lambda : assertGreen( "testOutput" ) )
 
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
-		self.assertEqual( testPixel.r, 0 )
-		self.assertGreater( testPixel.g, 0.99 )
-		self.assertEqual( testPixel.b, 0 )
+		self.assertEventually(
+			lambda : self.assertEqual( self.__colorAtUV( "testOtherOutput", imath.V2f( 0.55 ), "other" ), imath.Color4f( 0, 0, 0, 0 ) )
+		)
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
 
 		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env" )
-		self.assertEqual( testPixel.r, 0 )
-		self.assertEqual( testPixel.g, 0 )
-		self.assertEqual( testPixel.b, 0 )
-
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testOtherOutput" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
-
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "other" )
 		self.assertEqual( testPixel.r, 0 )
 		self.assertEqual( testPixel.g, 0 )
 		self.assertEqual( testPixel.b, 0 )
@@ -2830,15 +2806,15 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+		def assertVolumeVisible() :
 
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
-		self.assertGreater( testPixel.r, 0 )
-		self.assertGreater( testPixel.g, 0 )
-		self.assertGreater( testPixel.b, 0 )
+			testPixel = self.__colorAtUV( "testVDB", imath.V2f( 0.5 ) )
+			self.assertGreater( testPixel.r, 0 )
+			self.assertGreater( testPixel.g, 0 )
+			self.assertGreater( testPixel.b, 0 )
+
+		self.assertEventually( lambda : assertVolumeVisible() )
 
 		# Change the shader and ensure that the volume hasn't disappeared as a result.
 		renderer.pause()
@@ -2854,15 +2830,8 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
-
-		testPixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
-		self.assertGreater( testPixel.r, 0 )
-		self.assertGreater( testPixel.g, 0 )
-		self.assertGreater( testPixel.b, 0 )
+		self.assertEventually( lambda : assertVolumeVisible() )
 
 		del camera
 		del volume
@@ -2927,17 +2896,20 @@ class RendererTest( GafferTest.TestCase ) :
 		volume2.transform( imath.M44f().translate( imath.V3f( 50, 0, 0 ) ) )
 
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+		def assertVolumesVisible() :
 
-		# Ensure both volumes are visible.
-		for x in [ imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 0.5 ) ] :
-			testPixel = self.__colorAtUV( image, x )
-			self.assertGreater( testPixel.r, 0 )
-			self.assertGreater( testPixel.g, 0 )
-			self.assertGreater( testPixel.b, 0 )
+			image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
+			self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+			# Ensure both volumes are visible.
+			for x in [ imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 0.5 ) ] :
+				testPixel = self.__colorAtUV( image, x )
+				self.assertGreater( testPixel.r, 0 )
+				self.assertGreater( testPixel.g, 0 )
+				self.assertGreater( testPixel.b, 0 )
+
+		self.assertEventually( lambda : assertVolumesVisible() )
 
 		# Change the shader on one volume and ensure that neither volume has disappeared as a result.
 		renderer.pause()
@@ -2953,16 +2925,8 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		renderer.render()
-		time.sleep( 1 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
-
-		for x in [ imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 0.5 ) ] :
-			testPixel = self.__colorAtUV( image, x )
-			self.assertGreater( testPixel.r, 0 )
-			self.assertGreater( testPixel.g, 0 )
-			self.assertGreater( testPixel.b, 0 )
+		self.assertEventually( lambda : assertVolumesVisible() )
 
 		del camera
 		del volume
