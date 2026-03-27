@@ -339,6 +339,7 @@ nodeMenu.append( "/Scene/Transform/Point Constraint", GafferScene.PointConstrain
 nodeMenu.append( "/Scene/Transform/Aim Constraint", GafferScene.AimConstraint, searchText = "AimConstraint" )
 nodeMenu.append( "/Scene/Transform/Parent Constraint", GafferScene.ParentConstraint, searchText = "ParentConstraint" )
 nodeMenu.append( "/Scene/Transform/Framing Constraint", GafferScene.FramingConstraint, searchText = "FramingConstraint" )
+nodeMenu.append( "/Scene/Transform/Reflection Constraint", GafferScene.ReflectionConstraint, searchText = "ReflectionConstraint" )
 nodeMenu.append( "/Scene/Globals/Outputs", GafferScene.Outputs )
 nodeMenu.append( "/Scene/Globals/Delete Outputs", GafferScene.DeleteOutputs, searchText = "DeleteOutputs" )
 nodeMenu.append( "/Scene/Globals/Delete Sets", GafferScene.DeleteSets, searchText = "DeleteSets" )
