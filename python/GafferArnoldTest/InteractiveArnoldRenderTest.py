@@ -116,6 +116,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+		s["r2"]["state"].setValue( s["r"].State.Stopped )
+
 	def testEditSubdivisionAttributes( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -648,6 +651,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		self.assertEventually( lambda : assertLit() )
 
+		s["render"]["state"].setValue( s["render"].State.Stopped )
+
 	@unittest.skipIf( sys.platform == "win32", "Automated test fails on Windows whereas manual equivalent test passes." )
 	def testEditLightGroups( self ) :
 
@@ -844,6 +849,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.assertEqual( script["catalogue"]["out"].metadata()["test1B"], IECore.StringData( "hello" ) )
 		self.assertEqual( script["catalogue"]["out"].metadata()["test2"], IECore.StringData( "edited" ) )
 
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
+
 	## \todo Promote to InteractiveRenderTest and check it works for other renderer backends.
 	def testEditOutputType( self ) :
 
@@ -979,6 +986,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		)
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
 
 	def _createConstantShader( self ) :
 

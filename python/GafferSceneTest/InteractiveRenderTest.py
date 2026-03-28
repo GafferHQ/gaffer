@@ -120,6 +120,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ), IECoreImage.ImagePrimitive )
 		)
 
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+
 	def testMetadata( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -162,6 +164,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( headers.get( "gaffer:context:b" ), IECore.StringData( "A" ) )
 
 		self.assertEventually( lambda : assertMetadataAvailable() )
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testAddAndRemoveOutput( self ):
 
@@ -259,6 +263,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEventually(
 			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere3" ), IECoreImage.ImagePrimitive )
 		)
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testAddAndRemoveLocation( self ) :
 
@@ -898,6 +904,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				)
 			)
 
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+
 	def testDeleteWhilePaused( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1010,6 +1018,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Start the render again, so we know we're not just testing
 		# the same thing as testDeleteWhilePaused().
 		s["r"]["state"].setValue( s["r"].State.Running )
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testEditContext( self ) :
 
@@ -1941,6 +1951,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		renderer = s["r"]["renderer"].getValue() if "renderer" in s["r"] else s["r"]["__renderer"].getValue()
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphereRenderedIn" + renderer )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testLightFilter( self ) :
 
@@ -2886,6 +2898,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.removeStoredImage( "testRendererOption" ), IECoreImage.ImagePrimitive )
 		)
 
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
+
 	def testRendererOptionContext( self ):
 
 		script = Gaffer.ScriptNode()
@@ -2925,6 +2939,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEventually(
 			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "testRendererOptionContext" ), IECoreImage.ImagePrimitive )
 		)
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
 
 	def testResolvedRenderer( self ) :
 
@@ -3129,6 +3145,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			lambda : self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
 		)
 
+		script["render"]["state"].setValue( script["render"].State.Stopped )
+
 	def testManifest( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -3318,6 +3336,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		for k, v in metadata.items() :
 			self.assertIn( k, catalogueMetadata )
 			self.assertEqual( catalogueMetadata[k], v )
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
 
 	def tearDown( self ) :
 
