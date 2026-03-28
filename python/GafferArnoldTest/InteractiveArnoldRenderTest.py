@@ -168,17 +168,18 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		script["render"]["state"].setValue( script["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
-		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
+		)
 
 		# Now up the number of subdivision levels. The alpha coverage should
 		# increase as the shape tends towards the limit surface.
 
 		script["attributes"]["attributes"]["ai:polymesh:subdiv_iterations"]["value"].setValue( 4 )
-		self.uiThreadCallHandler.waitFor( 1 )
 
-		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
+		)
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
@@ -246,24 +247,24 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
-		self.assertAlmostEqual(
-			self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
-			1,
-			delta = 0.01
+		self.assertEventually(
+			lambda : self.assertAlmostEqual(
+				self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
+				1,
+				delta = 0.01
+			)
 		)
 
 		# Change a value on the light. The light should still be linked to the sphere
 		# and we should get the same result as before.
 		s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
-		self.assertAlmostEqual(
-			self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
-			1,
-			delta = 0.01
+		self.assertEventually(
+			lambda : self.assertAlmostEqual(
+				self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
+				1,
+				delta = 0.01
+			)
 		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
@@ -338,21 +339,21 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
-		initialColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertAlmostEqual( initialColor.r, 0.58, delta = 0.02 )
-		self.assertAlmostEqual( initialColor.g, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.58, delta = 0.02 )
+		)
+		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0, delta = 0.01 )
 
 		# Edit texture network and make sure the changes take effect
 
 		s["Tex"]["parameters"]["multiply"].setValue( imath.Color3f( 0, 1, 0 ) )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
-		updateColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertAlmostEqual( updateColor.r, 0, delta = 0.01 )
-		self.assertAlmostEqual( updateColor.g, 0.3, delta = 0.02 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0.3, delta = 0.02 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -423,7 +424,16 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Start render 1 and save the image output.
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		def assertRed() :
+
+			image = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+			self.assertAlmostEqual( image.r, 1.0, delta = 0.01 )
+			self.assertAlmostEqual( image.b, 0.0, delta = 0.01 )
+
+		# Wait for the render to show red
+		self.assertEventually( lambda : assertRed() )
+
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 		redTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 
@@ -435,7 +445,16 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Start and stop new render
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		def assertBlue() :
+
+			image = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+			self.assertAlmostEqual( image.r, 0.0, delta = 0.01 )
+			self.assertAlmostEqual( image.b, 1.0, delta = 0.01 )
+
+		# Wait for the render to show blue
+		self.assertEventually( lambda : assertBlue() )
+
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 		# Get image from new render.
@@ -459,17 +478,21 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Now test flush cache during a render
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		# Get colour after 1 second of render.
+		# Wait for the render to show red again
+		self.assertEventually( lambda : assertRed() )
+
+		# Get colour of original texture.
 		redTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 
-		# Copy new texture, flush cache and then render for 1 second.
+		# Copy new texture, flush cache and then render.
 		shutil.copyfile( blueTextureFile, tmpTextureFile )
 		# If the renderer is running, then we use `command()` to flush the
 		# cache, managing the pause/restart for us.
 		s["r"].command( "ai:cacheFlush", { "flags" : arnold.AI_CACHE_ALL } )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		# Wait for the render to show blue again.
+		self.assertEventually( lambda : assertBlue() )
 
 		# Get colour of second texture and stop.
 		blueTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
@@ -530,7 +553,10 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Start rendering.
 
 		s["render"]["state"].setValue( s["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		self.assertEventually(
+			lambda : self.assertEqual( len( s["catalogue"]["images"] ), 1 )
+		)
 
 		# Switch which object is tagged as a mesh light. This used to trigger a
 		# crash.
@@ -612,12 +638,15 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Render, and check `sphere2`` is receiving illumination.
 
 		s["render"]["state"].setValue( s["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		litColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.75, 0.5 ) )
-		self.assertGreater( litColor.r, 0.1 )
-		self.assertGreater( litColor.g, 0.1 )
-		self.assertGreater( litColor.b, 0.1 )
+		def assertLit() :
+
+			litColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.75, 0.5 ) )
+			self.assertGreater( litColor.r, 0.1 )
+			self.assertGreater( litColor.g, 0.1 )
+			self.assertGreater( litColor.b, 0.1 )
+
+		self.assertEventually( lambda : assertLit() )
 
 	@unittest.skipIf( sys.platform == "win32", "Automated test fails on Windows whereas manual equivalent test passes." )
 	def testEditLightGroups( self ) :
@@ -688,14 +717,16 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				# render just the `RGBA_default` catch-all.
 
 				script["renderer"]["state"].setValue( script["renderer"].State.Running )
-				self.uiThreadCallHandler.waitFor( 1 )
+
+				self.assertEventually(
+					lambda : self.assertEqual(
+						set( script["catalogue"]["out"].channelNames() ),
+						otherChannels |
+						{ "RGBA_default.{}".format( c ) for c in "RGBA" }
+					)
+				)
 
 				self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-				self.assertEqual(
-					set( script["catalogue"]["out"].channelNames() ),
-					otherChannels |
-					{ "RGBA_default.{}".format( c ) for c in "RGBA" }
-				)
 				self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
 
 				# Add a light group. We should now get `RGBA_groupA` for the
@@ -703,33 +734,37 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				# anything else.
 
 				script["light1"]["parameters"]["aov"].setValue( "groupA" )
-				self.uiThreadCallHandler.waitFor( 1 )
+
+				self.assertEventually(
+					lambda : self.assertEqual(
+						set( script["catalogue"]["out"].channelNames() ),
+						otherChannels |
+						{ "RGBA_default.{}".format( c ) for c in "RGBA" } |
+						{ "RGBA_groupA.{}".format( c ) for c in "RGBA" }
+					)
+				)
 
 				self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 				self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
-				self.assertEqual(
-					set( script["catalogue"]["out"].channelNames() ),
-					otherChannels |
-					{ "RGBA_default.{}".format( c ) for c in "RGBA" } |
-					{ "RGBA_groupA.{}".format( c ) for c in "RGBA" }
-				)
 
 				# Add another light group and check it appears. Ideally the
 				# `RGBA_default` catch-all would disappear as well, but Arnold doesn't
 				# do that yet.
 
 				script["light2"]["parameters"]["aov"].setValue( "groupB" )
-				self.uiThreadCallHandler.waitFor( 1 )
+
+				self.assertEventually(
+					lambda : self.assertEqual(
+						set( script["catalogue"]["out"].channelNames() ),
+						otherChannels |
+						{ "RGBA_default.{}".format( c ) for c in "RGBA" } |
+						{ "RGBA_groupA.{}".format( c ) for c in "RGBA" } |
+						{ "RGBA_groupB.{}".format( c ) for c in "RGBA" }
+					)
+				)
 
 				self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 				self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
-				self.assertEqual(
-					set( script["catalogue"]["out"].channelNames() ),
-					otherChannels |
-					{ "RGBA_default.{}".format( c ) for c in "RGBA" } |
-					{ "RGBA_groupA.{}".format( c ) for c in "RGBA" } |
-					{ "RGBA_groupB.{}".format( c ) for c in "RGBA" }
-				)
 
 				# Remove a light group. Ideally we'd assert that the additional image
 				# layers have been removed now, but Arnold doesn't seem to reliably
@@ -747,10 +782,11 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				# that it is no longer rendering.
 
 				script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
-				self.uiThreadCallHandler.waitFor( 0.5 ) # Wait for saving to complete
 
+				self.assertEventually(
+					lambda : self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
+				)
 				self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-				self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
 
 	## \todo Promote to InteractiveRenderTest and check it works for other renderer backends.
 	def testEditOutputMetadata( self ) :
@@ -787,10 +823,10 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# custom metadata in the outputs.
 
 		script["renderer"]["state"].setValue( script["renderer"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1 )
-
+		self.assertEventually(
+			lambda : self.assertEqual( script["catalogue"]["out"].metadata().get( "test1" ), IECore.StringData( "hello" ) )
+		)
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-		self.assertEqual( script["catalogue"]["out"].metadata()["test1"], IECore.StringData( "hello" ) )
 		self.assertEqual( script["catalogue"]["out"].metadata()["test2"], IECore.StringData( "world" ) )
 
 		# Modify the header parameters and rerender.
@@ -800,10 +836,11 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 			script["outputs"]["outputs"][0]["parameters"]["header_test1"]["name"].setValue( "header:test1B" )
 			script["outputs"]["outputs"][0]["parameters"]["header_test2"]["value"].setValue( "edited" )
 
-		self.uiThreadCallHandler.waitFor( 1 )
+		self.assertEventually(
+			lambda : self.assertNotIn( "test1", script["catalogue"]["out"].metadata() )
+		)
 
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-		self.assertNotIn( "test1", script["catalogue"]["out"].metadata() )
 		self.assertEqual( script["catalogue"]["out"].metadata()["test1B"], IECore.StringData( "hello" ) )
 		self.assertEqual( script["catalogue"]["out"].metadata()["test2"], IECore.StringData( "edited" ) )
 
@@ -839,10 +876,12 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Start a render, give it time to finish, and check we have an image.
 
 		script["renderer"]["state"].setValue( script["renderer"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEventually(
+			lambda : self.assertEqual( script["catalogue"]["out"].metadata().get( "gaffer:isRendering" ), IECore.BoolData( True ) )
+		)
 
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
 
 		# Modify the output to render to file instead of the catalogue. This isn't
 		# particularly likely in practice, and would most likely indicate user error
@@ -853,11 +892,11 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 			script["outputs"]["outputs"][0]["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 			script["outputs"]["outputs"][0]["type"].setValue( "exr" )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
+		self.assertEventually(
+			lambda : self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).is_file() )
+		)
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
-		self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).is_file() )
 
 		# Switch back to rendering to the Catalogue, as if the user has fixed their error.
 
@@ -875,10 +914,11 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Stop the render, and check the image is closed.
 
 		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
-		self.uiThreadCallHandler.waitFor( 1 )
 
+		self.assertEventually(
+			lambda : self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
+		)
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
 
 	## \todo Promote to InteractiveRenderTest and check it works for other renderer backends.
 	def testEditOutputFilterType( self ) :
@@ -910,19 +950,19 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["renderer"] = self._createInteractiveRender()
 		script["renderer"]["in"].setInput( script["outputs"]["out"] )
 
-		# Start a render, give it time to finish, and check we have an image.
+		# Start a render and check we have an image.
 
 		script["renderer"]["state"].setValue( script["renderer"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1 )
 
+		self.assertEventually(
+			lambda : self.assertAlmostEqual(
+				self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).r,
+				1,
+				delta = 0.01
+			)
+		)
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
-
-		self.assertAlmostEqual(
-			self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).r,
-			1,
-			delta = 0.01
-		)
 
 		# Modify the output to use a different filter, check we're still
 		# rendering to the same image in the catalogue, and that the image
@@ -930,16 +970,15 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		script["outputs"]["outputs"][0]["parameters"]["filter"]["value"].setValue( "variance" )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
+		self.assertEventually(
+			lambda : self.assertAlmostEqual(
+				self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).r,
+				0,
+				delta = 0.01
+			)
+		)
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
-
-		self.assertAlmostEqual(
-			self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).r,
-			0,
-			delta = 0.01
-		)
 
 	def _createConstantShader( self ) :
 
