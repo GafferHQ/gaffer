@@ -97,21 +97,10 @@ void IECoreCycles::CameraAlgo::convert( const IECoreScene::Camera *source, ccl::
 		destination->set_border_bottom( cropWindow.min.y );
 	}
 
-	// Shutter TODO: Need to see if this is correct or not, cycles also has a shutter curve...
-	const Imath::V2f &shutter = source->getShutter();
-	destination->set_shuttertime( abs(shutter.x) + abs(shutter.y) );
-	if( (shutter.x == 0.0) && (shutter.y > shutter.x) )
-	{
-		destination->set_motion_position( ccl::MOTION_POSITION_START );
-	}
-	else if( (shutter.x < shutter.y) && (shutter.y == 0.0) )
-	{
-		destination->set_motion_position( ccl::MOTION_POSITION_END );
-	}
-	else
-	{
-		destination->set_motion_position( ccl::MOTION_POSITION_CENTER );
-	}
+	/// \todo Set `motion_position`. We'd need to do this by comparing the camera's shutter
+	/// to the Renderer's `frame` option.
+
+	// Additional parameters
 
 	for( CompoundDataMap::const_iterator it = source->parameters().begin(), eIt = source->parameters().end(); it != eIt; ++it )
 	{
