@@ -35,6 +35,9 @@ Fixes
 - 3Delight : Fixed rendering of linear curves.
 - DeleteCurves : Fixed deletion of periodic curves.
 - ResamplePrimitiveVariables : Fixed resampling between Vertex and Varying for linear curves.
+- Cycles :
+  - Reduced memory usage when rendering a single segment of deformation blur on CPU devices.
+  - Fixed PointsPrimitive motion blur when rendering with even numbers of segments.
 
 API
 ---

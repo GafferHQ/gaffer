@@ -66,9 +66,9 @@ ccl::Geometry *convert( const IECoreVDB::VDBObject *vdbObject, ccl::Scene *scene
 	return volume;
 }
 
-ccl::Geometry *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, const int frameIdx, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	return convert( samples.front(), scene );
+	return convert( samples[primarySampleIndex], scene );
 }
 
 GeometryAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( convert, convert );

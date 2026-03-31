@@ -1454,8 +1454,8 @@ class GeometryCache
 
 	public :
 
-		GeometryCache( ccl::Scene *scene, NodeDeleter *nodeDeleter )
-			: m_scene( scene ), m_nodeDeleter( nodeDeleter )
+		GeometryCache( ccl::Session *session, NodeDeleter *nodeDeleter )
+			: m_session( session ), m_nodeDeleter( nodeDeleter )
 		{
 		}
 
@@ -1492,7 +1492,6 @@ class GeometryCache
 		SharedGeometryPtr get(
 			const std::vector<const IECore::Object *> &samples,
 			const std::vector<float> &times,
-			const int frameIdx,
 			const IECoreScenePreview::Renderer::AttributesInterface *attributes,
 			const std::string &nodeName
 		)
@@ -1501,7 +1500,7 @@ class GeometryCache
 
 			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
 			{
-				return convert( samples, times, frameIdx, cyclesAttributes, nodeName );
+				return convert( samples, times, cyclesAttributes, nodeName );
 			}
 
 			IECore::MurmurHash h;
@@ -1525,7 +1524,7 @@ class GeometryCache
 				Geometry::accessor writeAccessor;
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
-					writeAccessor->second = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
+					writeAccessor->second = convert( samples, times, cyclesAttributes, nodeName );
 				}
 				return writeAccessor->second;
 			}
@@ -1555,7 +1554,7 @@ class GeometryCache
 
 		SharedGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
 		{
-			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( object, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
+			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( object, m_session->scene.get() ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 			if( geometry )
 			{
 				geometry->name = ccl::ustring( nodeName.c_str() );
@@ -1566,7 +1565,7 @@ class GeometryCache
 				// the precision is provided by the attributes, and we don't want to pass attributes
 				// to `GeometryAlgo`.
 				assert( geometry->is_volume() );
-				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision(), attributes->getVolumeClipping() );
+				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_session->scene.get(), attributes->getVolumePrecision(), attributes->getVolumeClipping() );
 			}
 
 			return geometry;
@@ -1575,12 +1574,11 @@ class GeometryCache
 		SharedGeometryPtr convert(
 			const std::vector<const IECore::Object *> &samples,
 			const std::vector<float> &times,
-			const int frame,
 			const CyclesAttributes *attributes,
 			const std::string &nodeName
 		)
 		{
-			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( samples, times, frame, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
+			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( samples, times, m_session ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 			if( geometry )
 			{
 				geometry->name = ccl::ustring( nodeName.c_str() );
@@ -1589,13 +1587,13 @@ class GeometryCache
 			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ) )
 			{
 				assert( geometry->is_volume() );
-				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_scene, attributes->getVolumePrecision(), attributes->getVolumeClipping() );
+				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_session->scene.get(), attributes->getVolumePrecision(), attributes->getVolumeClipping() );
 			}
 
 			return geometry;
 		}
 
-		ccl::Scene *m_scene;
+		ccl::Session *m_session;
 		NodeDeleter *m_nodeDeleter;
 		using Geometry = tbb::concurrent_hash_map<IECore::MurmurHash, SharedGeometryPtr>;
 		Geometry m_geometry;
@@ -2681,19 +2679,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
-			int frameIdx = -1;
-			if( m_scene->camera->get_motion_position() == ccl::MOTION_POSITION_START )
-			{
-				frameIdx = 0;
-			}
-			else if( m_scene->camera->get_motion_position() == ccl::MOTION_POSITION_END )
-			{
-				frameIdx = times.size()-1;
-			}
-
 			/// \todo Is it actually useful to pass `name` here? It will only be meaningful for the first
 			/// CyclesObject that references it, and will be inaccurate for any additional instances.
-			SharedGeometryPtr geometry = m_geometryCache->get( samples, times, frameIdx, attributes, name );
+			SharedGeometryPtr geometry = m_geometryCache->get( samples, times, attributes, name );
 			if( !geometry )
 			{
 				return nullptr;
@@ -2907,7 +2895,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			m_shaderCache = std::make_unique<ShaderCache>( m_scene );
-			m_geometryCache = std::make_unique<GeometryCache>( m_scene, m_nodeDeleter.get() );
+			m_geometryCache = std::make_unique<GeometryCache>( m_session.get(), m_nodeDeleter.get() );
 			m_attributesCache = std::make_unique<AttributesCache>( m_shaderCache.get() );
 		}
 

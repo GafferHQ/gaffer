@@ -2939,5 +2939,133 @@ class RendererTest( GafferTest.TestCase ) :
 		del volume2
 		del vdb
 
+	def testMeshDeformationMotionBlur( self ) :
+
+		for device in GafferCycles.devices.values() :
+
+			for numSamples in ( 2, 3, 4 ) :
+
+				with self.subTest( device = device["type"], numSamples = numSamples ) :
+
+					renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+					renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
+					renderer.option( "cycles:device", IECore.StringData( "{}:00".format( device["type"] ) ) )
+
+					renderer.camera(
+						"testCamera",
+						IECoreScene.Camera(
+							parameters = {
+								"resolution" : imath.V2i( 640, 480 ),
+								"projection" : "perspective",
+							}
+						)
+					)
+					renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+					renderer.output(
+						"test",
+						IECoreScene.Output(
+							"test",
+							"ieDisplay",
+							"rgba",
+							{
+								"driverType" : "ImageDisplayDriver",
+								"handle" : "deformationMotion",
+							}
+						)
+					)
+
+					staticMesh = IECoreScene.MeshPrimitive.createSphere( 1 )
+					meshes = []
+					times = []
+					for i in range( 0, numSamples ) :
+						times.append( i / ( numSamples - 1 ) )
+						x = -3 + 6 * times[-1]
+						mesh = staticMesh.copy()
+						for i in range( len( mesh["P"].data ) ) :
+							mesh["P"].data[i] += imath.V3f( x, 0, -3 )
+						meshes.append( mesh )
+
+					object = renderer.object(
+						"sphere", meshes, times,
+						renderer.attributes( IECore.CompoundObject() )
+					)
+
+					renderer.render()
+					image = IECoreImage.ImageDisplayDriver.storedImage( "deformationMotion" )
+
+					for i in range( 0, 10 ) :
+						u = i / 9.0
+						self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.1 ) ).a, 0 )
+						self.assertGreaterEqual( self.__colorAtUV( image, imath.V2f( u, 0.5 ) ).a, 0.1 )
+						self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.9 ) ).a, 0 )
+
+					del object
+					del renderer
+
+	def testPointDeformationMotionBlur( self ) :
+
+		for device in GafferCycles.devices.values() :
+
+			for numSamples in ( 2, 3, 4 ) :
+
+				with self.subTest( device = device["type"], numSamples = numSamples ) :
+
+					renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+					renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
+					renderer.option( "cycles:device", IECore.StringData( "{}:00".format( device["type"] ) ) )
+
+					renderer.camera(
+						"testCamera",
+						IECoreScene.Camera(
+							parameters = {
+								"resolution" : imath.V2i( 640, 480 ),
+								"projection" : "perspective",
+							}
+						)
+					)
+					renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+					renderer.output(
+						"test",
+						IECoreScene.Output(
+							"test",
+							"ieDisplay",
+							"rgba",
+							{
+								"driverType" : "ImageDisplayDriver",
+								"handle" : "deformationMotion",
+							}
+						)
+					)
+
+					staticPrimitive = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0, 0, 0 ) ] ) )
+					primitives = []
+					times = []
+					for i in range( 0, numSamples ) :
+						times.append( i / ( numSamples - 1 ) )
+						x = -3 + 6 * times[-1]
+						primitive = staticPrimitive.copy()
+						for i in range( len( primitive["P"].data ) ) :
+							primitive["P"].data[i] += imath.V3f( x, 0, -3 )
+						primitives.append( primitive )
+
+					object = renderer.object(
+						"points", primitives, times,
+						renderer.attributes( IECore.CompoundObject() )
+					)
+
+					renderer.render()
+					image = IECoreImage.ImageDisplayDriver.storedImage( "deformationMotion" )
+
+					for i in range( 0, 10 ) :
+						u = i / 9.0
+						self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.1 ) ).a, 0 )
+						self.assertGreaterEqual( self.__colorAtUV( image, imath.V2f( u, 0.5 ) ).a, 0.1 )
+						self.assertEqual( self.__colorAtUV( image, imath.V2f( u, 0.9 ) ).a, 0 )
+
+					del object
+					del renderer
+
 if __name__ == "__main__":
 	unittest.main()
