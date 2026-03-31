@@ -70,10 +70,16 @@ namespace
 // - Which normal is actually used for shading is determined on a
 //  triangle-by-triangle basis using the `smooth` flag passed
 //  to `Mesh::add_triangle()`.
-// - Cycles does not support facevarying normals.
+// - Cycles as of 5.1 now supports face-varying normals as
+//  ("N", ATTR_STD_CORNER_NORMAL)
+// - And both vertex and face-varying now need to be packed as octahedral
+//  normals via the `ccl::packed_normal()` utility function.
 //
 // Also see `GeometryAlgo::convertPrimitiveVariable()` where we handle the
-// tagging of normal attributes with ATTR_STD_VERTEX_NORMAL.
+// tagging of normal attributes with ATTR_STD_VERTEX_NORMAL or
+// ATTR_STD_CORNER_NORMAL as well as pack them, where that packing decision
+// is made with ATTR_ELEMENT_VERTEX_NORMAL or ATTR_ELEMENT_CORNER_NORMAL as
+// curves also use this encoding not just meshes.
 bool hasSmoothNormals( const IECoreScene::MeshPrimitive *mesh )
 {
 	auto it = mesh->variables.find( "N" );
@@ -87,12 +93,6 @@ bool hasSmoothNormals( const IECoreScene::MeshPrimitive *mesh )
 		case PrimitiveVariable::Constant :
 		case PrimitiveVariable::Uniform :
 			// These are definitely intended to be faceted.
-			return false;
-		case PrimitiveVariable::FaceVarying :
-			// Could be a mix of faceted and non-faceted triangles, including
-			// triangles with a mix of soft and hard edges, which aren't
-			// representable in Cycles. Plump for faceted, among other things
-			// because the native Cortex cube geometry has FaceVarying normals.
 			return false;
 		default :
 			return true;
