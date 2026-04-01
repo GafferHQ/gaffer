@@ -82,3 +82,15 @@ class OptionalValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 GafferUI.PlugValueWidget.registerType( Gaffer.OptionalValuePlug, OptionalValuePlugValueWidget )
 
 Gaffer.Metadata.registerValue( Gaffer.OptionalValuePlug, "enabled", "boolPlugValueWidget:displayMode", "switch" )
+
+def __spreadsheetFormatter( plug, forToolTip ) :
+
+	return GafferUI.SpreadsheetUI.formatValue( plug["value"], forToolTip )
+
+GafferUI.SpreadsheetUI.registerValueFormatter( Gaffer.OptionalValuePlug, __spreadsheetFormatter )
+
+def __spreadsheetDecorator( plug ) :
+
+	return GafferUI.SpreadsheetUI.decoration( plug["value"] )
+
+GafferUI.SpreadsheetUI.registerDecoration( Gaffer.OptionalValuePlug, __spreadsheetDecorator )
