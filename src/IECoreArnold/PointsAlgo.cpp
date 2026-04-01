@@ -98,7 +98,7 @@ AtNode *convert( const IECoreScene::PointsPrimitive *points, AtUniverse *univers
 {
 	AtNode *result = convertCommon( points, universe, nodeName, parentNode, messageContext );
 
-	if( !ShapeAlgo::convertPChecked( points, result, g_pointsArnoldString, messageContext ) )
+	if( !ShapeAlgo::convertP( points, result, g_pointsArnoldString, messageContext ) )
 	{
 		/// \todo Would be nice to refactor `ObjectAlgo::convert()` to return `unique_ptr<AtNode>`
 		/// so we don't do manual deletion like this.
@@ -118,7 +118,7 @@ AtNode *convert( const std::vector<const IECoreScene::PointsPrimitive *> &sample
 	AtNode *result = convertCommon( samples.front(), universe, nodeName, parentNode, messageContext );
 
 	std::vector<const IECoreScene::Primitive *> primitiveSamples( samples.begin(), samples.end() );
-	if( !ShapeAlgo::convertPChecked( primitiveSamples, result, g_pointsArnoldString, messageContext ) )
+	if( !ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString, messageContext ) )
 	{
 		AiNodeDestroy( result );
 		return nullptr;
