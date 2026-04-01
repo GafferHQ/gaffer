@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.15.0)
 =======
 
+Fixes
+-----
 
+- Spreadsheet : Fixed formatting of OptionalValuePlug values, such as for the renderer-specific plugs on USDLight nodes.
 
 1.6.15.0 (relative to 1.6.14.2)
 ========
