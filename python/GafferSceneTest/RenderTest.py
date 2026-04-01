@@ -267,6 +267,28 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		render["task"].execute()
 		self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).exists() )
 
+	def testDefaultRendererOption( self ) :
+
+		standardOptions = GafferScene.StandardOptions()
+
+		render = GafferScene.Render()
+		render["in"].setInput( standardOptions["out"] )
+		self.assertEqual( render["renderer"].getValue(), "" )
+
+		standardOptions["options"]["render:defaultRenderer"]["enabled"].setValue( True )
+		standardOptions["options"]["render:defaultRenderer"]["value"].setValue( self.renderer )
+
+		self.assertEqual( render["out"].globals()["option:render:defaultRenderer"].value, self.renderer )
+
+		render["renderer"].setValue( "Other" )
+		self.assertEqual( render["out"].globals()["option:render:defaultRenderer"].value, self.renderer )
+
+		standardOptions["options"]["render:defaultRenderer"]["enabled"].setValue( False )
+		self.assertEqual( render["out"].globals()["option:render:defaultRenderer"].value, "Other" )
+
+		render["renderer"].setValue( self.renderer )
+		self.assertEqual( render["out"].globals()["option:render:defaultRenderer"].value, self.renderer )
+
 	def testNoRenderer( self ) :
 
 		outputs = GafferScene.Outputs()
