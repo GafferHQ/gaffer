@@ -109,6 +109,13 @@ Fixes
 - VectorDataWidget : Fixed circular reference in right-click popup menu.
 - SceneInspector : Fixed ordering of Global Attributes - these are now sorted alphabetically like everything else.
 
+Fixes
+-----
+
+- PlugLayout :
+  - Fixed `Internal C++ object already deleted` errors when removing "layout:accessory" metadata from plugs currently visible in the Node Editor.
+  - Fixed layout issues when combining "layout:divider" and "layout:accessory" metadata.
+
 API
 ---
 
