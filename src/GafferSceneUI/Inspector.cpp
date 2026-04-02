@@ -947,6 +947,8 @@ ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &nam
 
 		if( name == g_nodePropertyName )
 		{
+			/// \todo Revert to returning `h->scene->node()` and deal with
+			/// firstViewableNode() entirely on the UI side in _HistoryWindow.
 			return MetadataAlgo::firstViewableNode( h->scene->node() );
 		}
 
