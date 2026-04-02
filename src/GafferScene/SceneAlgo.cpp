@@ -707,7 +707,8 @@ void addLocaliseAttributesPredecessors( const SceneAlgo::History::Predecessors &
 		{
 			continue;
 		}
-		if( auto p = attributeHistory( h.get(), destination->attributeName ) )
+		auto p = attributeHistory( h.get(), destination->attributeName );
+		if( p && p->attributeValue )
 		{
 			predecessor = p;
 			longestPath = sourcePath.size();
@@ -716,10 +717,45 @@ void addLocaliseAttributesPredecessors( const SceneAlgo::History::Predecessors &
 
 	if( !predecessor )
 	{
-		return;
+		if( !source.size() )
+		{
+			return;
+		}
+		// We didn't find a source with an attribute to localise. Add the first
+		// source as a predecessor so the history is not truncated.
+		predecessor = attributeHistory( source[0].get(), destination->attributeName );
 	}
 
+	assert( predecessor );
 	destination->predecessors.push_back( predecessor );
+}
+
+void addAttributeTweaksPredecessors( const AttributeTweaks *attributeTweaks, const SceneAlgo::History::Predecessors &source, SceneAlgo::AttributeHistory *destination )
+{
+	if( attributeTweaks->localisePlug()->getValue() )
+	{
+		for( const auto &tweak : TweakPlug::Range( *attributeTweaks->tweaksPlug() ) )
+		{
+			if(
+				tweak->namePlug()->getValue() == destination->attributeName.string() &&
+				tweak->enabledPlug()->getValue() &&
+				tweak->modePlug()->getValue() == TweakPlug::CreateIfMissing
+			)
+			{
+				// We don't want to include ancestor predecessors for a localised CreateIfMissing tweak.
+				// If the attribute exists on an ancestor the tweak shouldn't do anything, and if it
+				// doesn't exist, the tweak will create a new one. Either way, the ancestors are
+				// irrelevant to the history.
+				if( source.size() )
+				{
+					destination->predecessors.push_back( attributeHistory( source[0].get(), destination->attributeName ) );
+				}
+				return;
+			}
+		}
+	}
+
+	addLocaliseAttributesPredecessors( source, destination );
 }
 
 void addMergeScenesPredecessors( const MergeScenes *mergeScenes, const SceneAlgo::History::Predecessors &source, SceneAlgo::AttributeHistory *destination )
@@ -730,10 +766,22 @@ void addMergeScenesPredecessors( const MergeScenes *mergeScenes, const SceneAlgo
 	SceneAlgo::AttributeHistory::Ptr predecessor;
 	for( auto &h : source )
 	{
-		if( auto p = attributeHistory( h.get(), destination->attributeName ) )
+		auto p = attributeHistory( h.get(), destination->attributeName );
+		if( p && p->attributeValue )
 		{
 			predecessor = p;
 		}
+	}
+
+	if( !predecessor )
+	{
+		if( !source.size() )
+		{
+			return;
+		}
+		// We didn't find a source with an attribute to merge. Add the first
+		// source as a predecessor so the history is not truncated.
+		predecessor = attributeHistory( source[0].get(), destination->attributeName );
 	}
 
 	assert( predecessor );
@@ -748,10 +796,22 @@ void addMergeScenesPredecessors( const MergeScenes *mergeScenes, const SceneAlgo
 	SceneAlgo::OptionHistory::Ptr predecessor;
 	for( auto &h : source )
 	{
-		if( auto p = optionHistory( h.get(), destination->optionName ) )
+		auto p = optionHistory( h.get(), destination->optionName );
+		if( p && p->optionValue )
 		{
 			predecessor = p;
 		}
+	}
+
+	if( !predecessor )
+	{
+		if( !source.size() )
+		{
+			return;
+		}
+		// We didn't find a source with an option to merge. Add the first
+		// source as a predecessor so the history is not truncated.
+		predecessor = optionHistory( source[0].get(), destination->optionName );
 	}
 
 	assert( predecessor );
@@ -875,11 +935,6 @@ SceneAlgo::AttributeHistory::Ptr SceneAlgo::attributeHistory( const SceneAlgo::H
 	ConstCompoundObjectPtr attributes = attributesHistory->scene->attributesPlug()->getValue();
 	ConstObjectPtr attributeValue = attributes->member<Object>( attribute );
 
-	if( !attributeValue )
-	{
-		return nullptr;
-	}
-
 	SceneAlgo::AttributeHistory::Ptr result = new AttributeHistory(
 		attributesHistory->scene, attributesHistory->context,
 		attribute, attributeValue
@@ -911,9 +966,9 @@ SceneAlgo::AttributeHistory::Ptr SceneAlgo::attributeHistory( const SceneAlgo::H
 		{
 			addMergeScenesPredecessors( mergeScenes, attributesHistory->predecessors, result.get() );
 		}
-		else if( runTimeCast<const AttributeTweaks>( node ) )
+		else if( auto attributeTweaks = runTimeCast<const AttributeTweaks>( node ) )
 		{
-			addLocaliseAttributesPredecessors( attributesHistory->predecessors, result.get() );
+			addAttributeTweaksPredecessors( attributeTweaks, attributesHistory->predecessors, result.get() );
 		}
 		else if( runTimeCast<const ShaderTweaks>( node ) )
 		{
@@ -937,11 +992,6 @@ SceneAlgo::OptionHistory::Ptr SceneAlgo::optionHistory( const SceneAlgo::History
 	Context::Scope scopedContext( globalsHistory->context.get() );
 	ConstCompoundObjectPtr globals = globalsHistory->scene->globalsPlug()->getValue();
 	ConstObjectPtr optionValue = globals->member<Object>( g_optionPrefix + option.string() );
-
-	if( !optionValue )
-	{
-		return nullptr;
-	}
 
 	SceneAlgo::OptionHistory::Ptr result = new OptionHistory(
 		globalsHistory->scene, globalsHistory->context,
@@ -1016,7 +1066,8 @@ ShaderTweaks *SceneAlgo::shaderTweaks( const ScenePlug *scene, const ScenePlug::
 	while( inheritancePath.size() )
 	{
 		History::ConstPtr h = history( scene->attributesPlug(), inheritancePath );
-		if( auto ah = attributeHistory( h.get(), attributeName ) )
+		auto ah = attributeHistory( h.get(), attributeName );
+		if( ah && ah->attributeValue )
 		{
 			return shaderTweaksWalk( ah.get() );
 		}

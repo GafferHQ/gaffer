@@ -563,9 +563,9 @@ class GraphEditor( GafferUI.Editor ) :
 
 	def __dropNodes( self, dragData ) :
 
-		if isinstance( dragData, Gaffer.Node ) :
+		if isinstance( dragData, Gaffer.Node ) and self.scriptNode().isAncestorOf( dragData ) :
 			return [ dragData ]
-		elif isinstance( dragData, Gaffer.Set ) :
+		elif isinstance( dragData, Gaffer.Set ) and self.scriptNode().isAncestorOf( dragData[0] ) :
 			nodes = [ x for x in dragData if isinstance( x, Gaffer.Node ) ]
 			if len( set( n.parent() for n in nodes ) ) == 1 :
 				# Can only frame nodes if they all share the same parent.

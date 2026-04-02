@@ -36,6 +36,7 @@
 
 #include "GafferScene/Render.h"
 
+#include "GafferScene/OptionTweaks.h"
 #include "GafferScene/OptionQuery.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
@@ -98,6 +99,7 @@ struct RenderScope : public Context::EditableScope
 size_t Render::g_firstPlugIndex = 0;
 
 static IECore::InternedString g_rendererContextName( "scene:renderer" );
+static IECore::InternedString g_defaultRendererOptionName( "render:defaultRenderer" );
 
 GAFFER_NODE_DEFINE_TYPE( Render );
 
@@ -120,7 +122,15 @@ Render::Render( const std::string &name )
 	adaptors->getChild<StringPlug>( "renderer" )->setInput( resolvedRendererPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );
 
-	outPlug()->setInput( inPlug() );
+	OptionTweaksPtr optionTweaks = new OptionTweaks();
+	setChild( "__optionTweaks", optionTweaks );
+	optionTweaks->inPlug()->setInput( inPlug() );
+
+	TweakPlugPtr tweakPlug = new TweakPlug( g_defaultRendererOptionName, new StringPlug(), TweakPlug::CreateIfMissing );
+	tweakPlug->valuePlug()->setInput( rendererPlug() );
+	optionTweaks->tweaksPlug()->addChild( tweakPlug );
+
+	outPlug()->setInput( optionTweaks->outPlug() );
 
 	// Internal network for `resolvedRenderer`. We use a Switch so that we don't
 	// even evaluate the scene globals if the renderer is overridden by `rendererPlug()`.
@@ -129,7 +139,7 @@ Render::Render( const std::string &name )
 	setChild( "__optionQuery", optionQuery );
 	optionQuery->scenePlug()->setInput( inPlug() );
 	NameValuePlug *rendererQuery = optionQuery->addQuery( rendererPlug() );
-	rendererQuery->namePlug()->setValue( "render:defaultRenderer" );
+	rendererQuery->namePlug()->setValue( g_defaultRendererOptionName );
 
 	SwitchPtr querySwitch = new Switch();
 	setChild( "__querySwitch", querySwitch );

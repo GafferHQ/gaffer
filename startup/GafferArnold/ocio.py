@@ -70,4 +70,4 @@ def __ocioColorManagerAdaptor() :
 
 	return result
 
-GafferScene.SceneAlgo.registerRenderAdaptor( "DefaultArnoldColorManager", __ocioColorManagerAdaptor )
+GafferScene.SceneAlgo.registerRenderAdaptor( "DefaultArnoldColorManager", __ocioColorManagerAdaptor, renderer = "Arnold" )

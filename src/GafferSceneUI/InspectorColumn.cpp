@@ -60,6 +60,7 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 { (int)Inspector::Result::SourceType::EditScope, new Color4fData( Imath::Color4f( 48, 100, 153, 150 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Other, nullptr },
+{ (int)Inspector::Result::SourceType::External, new Color4fData( Imath::Color4f( 121, 77, 56, 120 ) / 255.0f ) },
 };
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
@@ -248,7 +249,15 @@ PathColumn::CellData InspectorColumn::cellDataFromInspection( const GafferSceneU
 	}
 	else if( const auto source = MetadataAlgo::firstViewableNode( inspection->source() ) )
 	{
-		toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
+		if( inspection->sourceType() != Inspector::Result::SourceType::External )
+		{
+			toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
+		}
+		else
+		{
+			const GraphComponent *settingsNode = source->ancestor( RunTimeTyped::typeIdFromTypeName( "GafferUI::Editor::Settings" ) );
+			toolTip = "External Source : " + source->relativeName( settingsNode );
+		}
 	}
 
 	/// \todo Should we have the ability to create read-only columns?

@@ -36,6 +36,7 @@
 
 #include "GafferScene/InteractiveRender.h"
 
+#include "GafferScene/OptionTweaks.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/SceneProcessor.h"
@@ -183,7 +184,15 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	adaptors->getChild<StringPlug>( "renderer" )->setInput( resolvedRendererPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );
 
-	outPlug()->setInput( inPlug() );
+	OptionTweaksPtr optionTweaks = new OptionTweaks();
+	setChild( "__optionTweaks", optionTweaks );
+	optionTweaks->inPlug()->setInput( inPlug() );
+
+	TweakPlugPtr tweakPlug = new TweakPlug( "render:defaultRenderer", new StringPlug(), TweakPlug::CreateIfMissing );
+	tweakPlug->valuePlug()->setInput( rendererPlug() );
+	optionTweaks->tweaksPlug()->addChild( tweakPlug );
+
+	outPlug()->setInput( optionTweaks->outPlug() );
 
 	// We can't use plugDirtiedSignal as we need to update messagesUpdateCountPlug
 	// due to message output during render startup. We implement acceptsInput

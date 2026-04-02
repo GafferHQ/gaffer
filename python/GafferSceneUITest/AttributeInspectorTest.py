@@ -120,47 +120,49 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testFallbackValue( self ) :
 
-		light = GafferSceneTest.TestLight()
-		group = GafferScene.Group()
-		group["in"][0].setInput( light["out"] )
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["light"]["out"] )
 
 		# With no "gl:visualiser:scale" attribute at /group/light, the inspection falls back to
 		# the registered default value with `fallbackDescription()` identifying that.
 
-		inspection = self.__inspect( group["out"], "/group/light", "gl:visualiser:scale" )
+		inspection = self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value().value, Gaffer.Metadata.value( "attribute:gl:visualiser:scale", "defaultValue" ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
-		globalGlAttributes = GafferScene.OpenGLAttributes()
-		globalGlAttributes["in"].setInput( group["out"] )
-		globalGlAttributes["global"].setValue( True )
-		globalGlAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
-		globalGlAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 4.0 )
+		s["globalGlAttributes"] = GafferScene.OpenGLAttributes()
+		s["globalGlAttributes"]["in"].setInput( s["group"]["out"] )
+		s["globalGlAttributes"]["global"].setValue( True )
+		s["globalGlAttributes"]["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		s["globalGlAttributes"]["attributes"]["gl:visualiser:scale"]["value"].setValue( 4.0 )
 
 		# With no "gl:visualiser:scale" attribute at /group/light, the inspection falls back to
 		# the inherited global attribute value with `fallbackDescription()` identifying that.
 
-		inspection = self.__inspect( globalGlAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		inspection = self.__inspect( s["globalGlAttributes"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
 
-		groupFilter = GafferScene.PathFilter()
-		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		s["groupFilter"] = GafferScene.PathFilter()
+		s["groupFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
-		glAttributes = GafferScene.OpenGLAttributes()
-		glAttributes["in"].setInput( globalGlAttributes["out"] )
-		glAttributes["filter"].setInput( groupFilter["out"] )
-		glAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
-		glAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 2.0 )
+		s["glAttributes"] = GafferScene.OpenGLAttributes()
+		s["glAttributes"]["in"].setInput( s["globalGlAttributes"]["out"] )
+		s["glAttributes"]["filter"].setInput( s["groupFilter"]["out"] )
+		s["glAttributes"]["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		s["glAttributes"]["attributes"]["gl:visualiser:scale"]["value"].setValue( 2.0 )
 
 		# With no "gl:visualiser:scale" attribute at /group/light, the inspection returns
 		# the inherited attribute value from /group with `fallbackDescription` identifying that.
 
-		inspection = self.__inspect( glAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		inspection = self.__inspect( s["glAttributes"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
@@ -169,10 +171,10 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		# With a "gl:visualiser:scale" attribute created at the inspected location, it is
 		# returned instead of the inherited fallback.
 
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
-		light["visualiserAttributes"]["scale"]["value"].setValue( 4.0 )
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s["light"]["visualiserAttributes"]["scale"]["value"].setValue( 4.0 )
 
-		inspection = self.__inspect( glAttributes["out"], "/group/light", "gl:visualiser:scale" )
+		inspection = self.__inspect( s["glAttributes"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
 
@@ -421,15 +423,17 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testAttributesWarning( self ) :
 
-		sphere = GafferScene.Sphere()
+		s = Gaffer.ScriptNode()
 
-		sphereFilter = GafferScene.PathFilter()
-		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		s["sphere"] = GafferScene.Sphere()
 
-		customAttributes = GafferScene.CustomAttributes()
-		customAttributes["in"].setInput( sphere["out"] )
-		customAttributes["filter"].setInput( sphereFilter["out"] )
-		customAttributes["attributes"].addChild(
+		s["sphereFilter"] = GafferScene.PathFilter()
+		s["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		s["customAttributes"] = GafferScene.CustomAttributes()
+		s["customAttributes"]["in"].setInput( s["sphere"]["out"] )
+		s["customAttributes"]["filter"].setInput( s["sphereFilter"]["out"] )
+		s["customAttributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug(
 				"test:attr",
 				IECore.FloatData( 1.0 ),
@@ -439,74 +443,77 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		)
 
 		self.__assertExpectedResult(
-			self.__inspect( customAttributes["out"], "/sphere", "test:attr", None ),
-			source = customAttributes["attributes"]["testPlug"],
+			self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None ),
+			source = s["customAttributes"]["attributes"]["testPlug"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True,
-			edit = customAttributes["attributes"]["testPlug"],
+			edit = s["customAttributes"]["attributes"]["testPlug"],
 			editWarning = "Edits to \"test:attr\" may affect other locations in the scene."
 		)
 
 	def testEditScopeNotInHistory( self ) :
 
-		light = GafferSceneTest.TestLight()
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s = Gaffer.ScriptNode()
 
-		lightFilter = GafferScene.PathFilter()
-		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
-		attributeTweaks = GafferScene.AttributeTweaks()
-		attributeTweaks["in"].setInput( light["out"] )
-		attributeTweaks["filter"].setInput( lightFilter["out"] )
-		attributeTweaks["tweaks"].addChild( Gaffer.TweakPlug( "gl:visualiser:scale", 2.0 ) )
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( light["out"] )
+		s["attributeTweaks"] = GafferScene.AttributeTweaks()
+		s["attributeTweaks"]["in"].setInput( s["light"]["out"] )
+		s["attributeTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		s["attributeTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( "gl:visualiser:scale", 2.0 ) )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["light"]["out"] )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
 
 		self.__assertExpectedResult(
-			self.__inspect( light["out"], "/light", "gl:visualiser:scale", editScope ),
-			source = light["visualiserAttributes"]["scale"],
+			self.__inspect( s["light"]["out"], "/light", "gl:visualiser:scale", s["editScope"] ),
+			source = s["light"]["visualiserAttributes"]["scale"],
 			sourceType = SourceType.Other,
 			editable = False,
-			nonEditableReason = "The target edit scope EditScope is not in the scene history."
+			nonEditableReason = "The target edit scope editScope is not in the scene history."
 		)
 
 		self.__assertExpectedResult(
-			self.__inspect( attributeTweaks["out"], "/light", "gl:visualiser:scale" ),
-			source = attributeTweaks["tweaks"][0],
+			self.__inspect( s["attributeTweaks"]["out"], "/light", "gl:visualiser:scale" ),
+			source = s["attributeTweaks"]["tweaks"][0],
 			sourceType = SourceType.Other,
 			editable = True,
-			edit = attributeTweaks["tweaks"][0]
+			edit = s["attributeTweaks"]["tweaks"][0]
 		)
 
 		self.__assertExpectedResult(
-			self.__inspect( attributeTweaks["out"], "/light", "gl:visualiser:scale", editScope ),
-			source = attributeTweaks["tweaks"][0],
+			self.__inspect( s["attributeTweaks"]["out"], "/light", "gl:visualiser:scale", s["editScope"] ),
+			source = s["attributeTweaks"]["tweaks"][0],
 			sourceType = SourceType.Other,
 			editable = False,
-			nonEditableReason = "The target edit scope EditScope is not in the scene history."
+			nonEditableReason = "The target edit scope editScope is not in the scene history."
 		)
 
 	def testDisabledTweaks( self ) :
 
-		light = GafferSceneTest.TestLight()
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s = Gaffer.ScriptNode()
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
-		lightFilter = GafferScene.PathFilter()
-		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
 
-		attributeTweaks = GafferScene.AttributeTweaks()
-		attributeTweaks["in"].setInput( light["out"] )
-		attributeTweaks["filter"].setInput( lightFilter["out"] )
+		s["attributeTweaks"] = GafferScene.AttributeTweaks()
+		s["attributeTweaks"]["in"].setInput( s["light"]["out"] )
+		s["attributeTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
 		scaleTweak = Gaffer.TweakPlug( "gl:visualiser:scale", 2.0 )
-		attributeTweaks["tweaks"].addChild( scaleTweak )
+		s["attributeTweaks"]["tweaks"].addChild( scaleTweak )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
 
 		self.__assertExpectedResult(
-			self.__inspect( attributeTweaks["out"], "/light", "gl:visualiser:scale" ),
+			self.__inspect( s["attributeTweaks"]["out"], "/light", "gl:visualiser:scale" ),
 			source = scaleTweak,
 			sourceType = SourceType.Other,
 			editable = True,
@@ -516,83 +523,129 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		scaleTweak["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
-			self.__inspect( attributeTweaks["out"], "/light", "gl:visualiser:scale" ),
-			source = light["visualiserAttributes"]["scale"],
+			self.__inspect( s["attributeTweaks"]["out"], "/light", "gl:visualiser:scale" ),
+			source = s["light"]["visualiserAttributes"]["scale"],
 			sourceType = SourceType.Other,
 			editable = True,
-			edit = light["visualiserAttributes"]["scale"]
+			edit = s["light"]["visualiserAttributes"]["scale"]
 		)
 
 	def testEditScopeNesting( self ) :
 
-		light = GafferSceneTest.TestLight()
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s = Gaffer.ScriptNode()
 
-		editScope1 = Gaffer.EditScope( "EditScope1" )
-		editScope1.setup( light["out"] )
-		editScope1["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
-		i = self.__inspect( editScope1["out"], "/light", "gl:visualiser:scale", editScope1 )
+		s["editScope1"] = Gaffer.EditScope( "EditScope1" )
+		s["editScope1"].setup( s["light"]["out"] )
+		s["editScope1"]["in"].setInput( s["light"]["out"] )
+
+		i = self.__inspect( s["editScope1"]["out"], "/light", "gl:visualiser:scale", s["editScope1"] )
 		scope1Edit = i.acquireEdit()
 		scope1Edit["enabled"].setValue( True )
-		self.assertEqual( scope1Edit.ancestor( Gaffer.EditScope ), editScope1 )
+		self.assertEqual( scope1Edit.ancestor( Gaffer.EditScope ), s["editScope1"] )
 
 		editScope2 = Gaffer.EditScope()
-		editScope2.setup( light["out"] )
-		editScope1.addChild( editScope2 )
+		editScope2.setup( s["light"]["out"] )
+		s["editScope1"].addChild( editScope2 )
 		editScope2["in"].setInput( scope1Edit.ancestor( GafferScene.SceneProcessor )["out"] )
-		editScope1["BoxOut"]["in"].setInput( editScope2["out"] )
+		s["editScope1"]["BoxOut"]["in"].setInput( editScope2["out"] )
 
-		i = self.__inspect( editScope1["out"], "/light", "gl:visualiser:scale", editScope2 )
+		i = self.__inspect( s["editScope1"]["out"], "/light", "gl:visualiser:scale", editScope2 )
 		scope2Edit = i.acquireEdit()
 		scope2Edit["enabled"].setValue( True )
 		self.assertEqual( scope2Edit.ancestor( Gaffer.EditScope ), editScope2 )
 
 		# Check we still fin the edit in scope 1
 
-		i = self.__inspect( editScope1["out"], "/light", "gl:visualiser:scale", editScope1 )
-		self.assertEqual( i.acquireEdit()[0].ancestor( Gaffer.EditScope ), editScope1 )
+		i = self.__inspect( s["editScope1"]["out"], "/light", "gl:visualiser:scale", s["editScope1"] )
+		self.assertEqual( i.acquireEdit()[0].ancestor( Gaffer.EditScope ), s["editScope1"] )
 
 	def testDownstreamSourceType( self ) :
 
-		light = GafferSceneTest.TestLight()
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( light["out"] )
-		editScope["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
-		lightFilter = GafferScene.PathFilter()
-		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["light"]["out"] )
+		s["editScope"]["in"].setInput( s["light"]["out"] )
 
-		attributeTweaks = GafferScene.AttributeTweaks()
-		attributeTweaks["in"].setInput( editScope["out"] )
-		attributeTweaks["filter"].setInput( lightFilter["out"] )
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["attributeTweaks"] = GafferScene.AttributeTweaks()
+		s["attributeTweaks"]["in"].setInput( s["editScope"]["out"] )
+		s["attributeTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
 		scaleTweak = Gaffer.TweakPlug( "gl:visualiser:scale", 2.0 )
-		attributeTweaks["tweaks"].addChild( scaleTweak )
+		s["attributeTweaks"]["tweaks"].addChild( scaleTweak )
 
 		self.__assertExpectedResult(
-			self.__inspect( attributeTweaks["out"], "/light", "gl:visualiser:scale", editScope ),
+			self.__inspect( s["attributeTweaks"]["out"], "/light", "gl:visualiser:scale", s["editScope"] ),
 			source = scaleTweak,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
 			editable = True,
 			edit = None,
-			editWarning = "Attribute has edits downstream in AttributeTweaks."
+			editWarning = "Attribute has edits downstream in attributeTweaks."
+		)
+
+	def testExternalSourceType( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		s["attributeTweaks"] = GafferScene.AttributeTweaks()
+		s["attributeTweaks"]["in"].setInput( s["light"]["out"] )
+		s["attributeTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
+		scaleTweak = Gaffer.TweakPlug( "gl:visualiser:scale", 2.0 )
+		s["attributeTweaks"]["tweaks"].addChild( scaleTweak )
+
+		externalAttributeTweaks = GafferScene.AttributeTweaks()
+		externalAttributeTweaks["in"].setInput( s["attributeTweaks"]["out"] )
+		externalAttributeTweaks["filter"].setInput( s["lightFilter"]["out"] )
+		scaleTweak2 = Gaffer.TweakPlug( "gl:visualiser:scale", 4.0 )
+		externalAttributeTweaks["tweaks"].addChild( scaleTweak2 )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["attributeTweaks"]["out"], "/light", "gl:visualiser:scale", None ),
+			source = scaleTweak,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = None,
+			editWarning = ""
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( externalAttributeTweaks["out"], "/light", "gl:visualiser:scale", None ),
+			source = scaleTweak2,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
+			editable = False,
+			edit = None,
+			editWarning = "",
+			nonEditableReason = "{} is external to the script.".format( externalAttributeTweaks.fullName() )
 		)
 
 	def testLightInsideBox( self ) :
 
-		box = Gaffer.Box()
-		box["light"] = GafferSceneTest.TestLight()
-		box["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
-		Gaffer.PlugAlgo.promote( box["light"]["out"] )
+		s = Gaffer.ScriptNode()
+		s["box"] = Gaffer.Box()
+		s["box"]["light"] = GafferSceneTest.TestLight()
+		s["box"]["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		Gaffer.PlugAlgo.promote( s["box"]["light"]["out"] )
 
 		self.__assertExpectedResult(
-			self.__inspect( box["out"], "/light", "gl:visualiser:scale" ),
-			source = box["light"]["visualiserAttributes"]["scale"],
+			self.__inspect( s["box"]["out"], "/light", "gl:visualiser:scale" ),
+			source = s["box"]["light"]["visualiserAttributes"]["scale"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True,
-			edit = box["light"]["visualiserAttributes"]["scale"]
+			edit = s["box"]["light"]["visualiserAttributes"]["scale"]
 		)
 
 	def testDirtiedSignal( self ) :
@@ -682,28 +735,30 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testCameraAttribute( self ) :
 
-		camera = GafferScene.Camera()
-		camera["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s = Gaffer.ScriptNode()
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
 		self.__assertExpectedResult(
-			self.__inspect( camera["out"], "/camera", "gl:visualiser:scale", None ),
-			source = camera["visualiserAttributes"]["scale"],
+			self.__inspect( s["camera"]["out"], "/camera", "gl:visualiser:scale", None ),
+			source = s["camera"]["visualiserAttributes"]["scale"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True,
-			edit = camera["visualiserAttributes"]["scale"]
+			edit = s["camera"]["visualiserAttributes"]["scale"]
 		)
 
 	def testAttributes( self ) :
 
-		sphere = GafferScene.Sphere()
+		s = Gaffer.ScriptNode()
+		s["sphere"] = GafferScene.Sphere()
 
-		sphereFilter = GafferScene.PathFilter()
-		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		s["sphereFilter"] = GafferScene.PathFilter()
+		s["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
 
-		customAttributes = GafferScene.CustomAttributes()
-		customAttributes["in"].setInput( sphere["out"] )
-		customAttributes["filter"].setInput( sphereFilter["out"] )
-		customAttributes["attributes"].addChild(
+		s["customAttributes"] = GafferScene.CustomAttributes()
+		s["customAttributes"]["in"].setInput( s["sphere"]["out"] )
+		s["customAttributes"]["filter"].setInput( s["sphereFilter"]["out"] )
+		s["customAttributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug(
 				"test:attr",
 				IECore.FloatData( 1.0 ),
@@ -713,65 +768,68 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		)
 
 		self.__assertExpectedResult(
-			self.__inspect( customAttributes["out"], "/sphere", "test:attr", None ),
-			source = customAttributes["attributes"]["testPlug"],
+			self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None ),
+			source = s["customAttributes"]["attributes"]["testPlug"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True,
-			edit = customAttributes["attributes"]["testPlug"],
+			edit = s["customAttributes"]["attributes"]["testPlug"],
 			editWarning = "Edits to \"test:attr\" may affect other locations in the scene."
 		)
 
 	def testDisabledAttribute( self ) :
 
-		light = GafferSceneTest.TestLight()
+		s = Gaffer.ScriptNode()
+		s["light"] = GafferSceneTest.TestLight()
 
-		group = GafferScene.Group()
-		group["in"][0].setInput( light["out"] )
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["light"]["out"] )
 
 		# The value of the attribute isn't editable in this case, but the `enabled`
 		# plug is, so it is considered editable.
 		self.__assertExpectedResult(
-			self.__inspect( light["out"], "/light", "gl:visualiser:scale", None ),
-			source = light["visualiserAttributes"]["scale"],
+			self.__inspect( s["light"]["out"], "/light", "gl:visualiser:scale", None ),
+			source = s["light"]["visualiserAttributes"]["scale"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True,
-			edit = light["visualiserAttributes"]["scale"],
+			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
 		)
 
 		# Values should be inherited from predecessors in the history.
 		self.__assertExpectedResult(
-			self.__inspect( group["out"], "/group/light", "gl:visualiser:scale", None ),
-			source = light["visualiserAttributes"]["scale"],
+			self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale", None ),
+			source = s["light"]["visualiserAttributes"]["scale"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True,
-			edit = light["visualiserAttributes"]["scale"],
+			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
 		)
 
 	def testRegisteredAttribute( self ) :
 
-		light = GafferSceneTest.TestLight()
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( light["out"] )
-		editScope["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["light"]["out"] )
+		s["editScope"]["in"].setInput( s["light"]["out"] )
 
 		self.__assertExpectedResult(
-			self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", None ),
-			source = light["visualiserAttributes"]["scale"],
+			self.__inspect( s["editScope"]["out"], "/light", "gl:visualiser:scale", None ),
+			source = s["light"]["visualiserAttributes"]["scale"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True,
-			edit = light["visualiserAttributes"]["scale"],
+			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
 		)
 
-		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "gl:visualiser:scale", s["editScope"] )
 		edit = inspection.acquireEdit()
 		self.assertEqual(
 			edit,
 			GafferScene.EditScopeAlgo.acquireAttributeEdit(
-				editScope, "/light", "gl:visualiser:scale", createIfNecessary = False
+				s["editScope"], "/light", "gl:visualiser:scale", createIfNecessary = False
 			)
 		)
 
@@ -781,7 +839,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		# to make sure we get the right source back.
 
 		self.__assertExpectedResult(
-			self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope ),
+			self.__inspect( s["editScope"]["out"], "/light", "gl:visualiser:scale", s["editScope"] ),
 			source = edit,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
 			editable = True,
@@ -820,29 +878,31 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testLightFilter( self ) :
 
-		lightFilter = GafferSceneTest.TestLightFilter()
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( lightFilter["out"] )
-		editScope["in"].setInput( lightFilter["out"] )
+		s["lightFilter"] = GafferSceneTest.TestLightFilter()
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["lightFilter"]["out"] )
+		s["editScope"]["in"].setInput( s["lightFilter"]["out"] )
 
 		self.__assertExpectedResult(
-			self.__inspect( editScope["out"], "/lightFilter", "filteredLights" ),
-			source = lightFilter["filteredLights"],
+			self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights" ),
+			source = s["lightFilter"]["filteredLights"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True,
-			edit = lightFilter["filteredLights"],
+			edit = s["lightFilter"]["filteredLights"],
 			fallbackDescription = "Default value"
 		)
 
-		self.assertIsNone( self.__inspect( editScope["out"], "/lightFilter", "bogusAttribute" ) )
+		self.assertIsNone( self.__inspect( s["editScope"]["out"], "/lightFilter", "bogusAttribute" ) )
 
-		inspection = self.__inspect( editScope["out"], "/lightFilter", "filteredLights", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights", s["editScope"] )
 		edit = inspection.acquireEdit()
 		edit["enabled"].setValue( True )
 
 		self.__assertExpectedResult(
-			self.__inspect( editScope["out"], "/lightFilter", "filteredLights", editScope ),
+			self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights", s["editScope"] ),
 			source = edit,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
 			editable = True,
@@ -925,8 +985,8 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope1 to disable." )
-		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope1 to disable.", inspection.disableEdit )
+		self.assertEqual( inspection.nonDisableableReason(), "light.visualiserAttributes.scale.enabled is not enabled." )
+		self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : light.visualiserAttributes.scale.enabled is not enabled.", inspection.disableEdit )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
@@ -956,15 +1016,17 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testCanEdit( self ) :
 
-		sphere = GafferScene.Sphere()
+		s = Gaffer.ScriptNode()
 
-		sphereFilter = GafferScene.PathFilter()
-		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		s["sphere"] = GafferScene.Sphere()
 
-		customAttributes = GafferScene.CustomAttributes()
-		customAttributes["in"].setInput( sphere["out"] )
-		customAttributes["filter"].setInput( sphereFilter["out"] )
-		customAttributes["attributes"].addChild(
+		s["sphereFilter"] = GafferScene.PathFilter()
+		s["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		s["customAttributes"] = GafferScene.CustomAttributes()
+		s["customAttributes"]["in"].setInput( s["sphere"]["out"] )
+		s["customAttributes"]["filter"].setInput( s["sphereFilter"]["out"] )
+		s["customAttributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug(
 				"test:attr",
 				IECore.FloatData( 1.0 ),
@@ -972,7 +1034,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 				"testPlug"
 			)
 		)
-		customAttributes["attributes"].addChild(
+		s["customAttributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug(
 				"test:stringAttr",
 				IECore.StringData( "bar" ),
@@ -986,53 +1048,55 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			self.assertEqual( inspection.canEdit( data ), nonEditableReason == "" )
 			self.assertEqual( inspection.nonEditableReason( data ), nonEditableReason )
 
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:attr", None )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "" )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "Data of type \"StringData\" is not compatible." )
 
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:stringAttr", None )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:stringAttr", None )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "Data of type \"FloatData\" is not compatible." )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "" )
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( customAttributes["out"] )
-		editScope["in"].setInput( customAttributes["out"] )
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["customAttributes"]["out"] )
+		s["editScope"]["in"].setInput( s["customAttributes"]["out"] )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "" )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "" )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "Data of type \"StringData\" is not compatible." )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:stringAttr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:stringAttr", s["editScope"] )
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "Data of type \"FloatData\" is not compatible." )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "" )
 
-		editScope["enabled"].setValue( False )
+		s["editScope"]["enabled"].setValue( False )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
-		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "The target edit scope EditScope is disabled." )
-		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope EditScope is disabled." )
-		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope EditScope is disabled." )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "The target edit scope editScope is disabled." )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope editScope is disabled." )
+		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope editScope is disabled." )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:stringAttr", editScope )
-		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "The target edit scope EditScope is disabled." )
-		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope EditScope is disabled." )
-		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope EditScope is disabled." )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:stringAttr", s["editScope"] )
+		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "The target edit scope editScope is disabled." )
+		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope editScope is disabled." )
+		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope editScope is disabled." )
 
 	def testEdit( self ) :
 
-		sphere = GafferScene.Sphere()
+		s = Gaffer.ScriptNode()
 
-		sphereFilter = GafferScene.PathFilter()
-		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		s["sphere"] = GafferScene.Sphere()
 
-		customAttributes = GafferScene.CustomAttributes()
-		customAttributes["in"].setInput( sphere["out"] )
-		customAttributes["filter"].setInput( sphereFilter["out"] )
-		customAttributes["attributes"].addChild(
+		s["sphereFilter"] = GafferScene.PathFilter()
+		s["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		s["customAttributes"] = GafferScene.CustomAttributes()
+		s["customAttributes"]["in"].setInput( s["sphere"]["out"] )
+		s["customAttributes"]["filter"].setInput( s["sphereFilter"]["out"] )
+		s["customAttributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug(
 				"test:attr",
 				IECore.FloatData( 1.0 ),
@@ -1050,52 +1114,52 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			else :
 				self.assertRaisesRegex( IECore.Exception, "Not editable : " + nonEditableReason, inspection.edit, data )
 
-		Gaffer.MetadataAlgo.setReadOnly( customAttributes["attributes"]["testPlug"]["enabled"], True )
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:attr", None )
-		assertEdit( inspection, IECore.FloatData( 123.0 ), "CustomAttributes.attributes.testPlug.enabled is locked." )
-		Gaffer.MetadataAlgo.setReadOnly( customAttributes["attributes"]["testPlug"]["enabled"], False )
+		Gaffer.MetadataAlgo.setReadOnly( s["customAttributes"]["attributes"]["testPlug"]["enabled"], True )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None )
+		assertEdit( inspection, IECore.FloatData( 123.0 ), "customAttributes.attributes.testPlug.enabled is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["customAttributes"]["attributes"]["testPlug"]["enabled"], False )
 
-		Gaffer.MetadataAlgo.setReadOnly( customAttributes, True )
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:attr", None )
-		assertEdit( inspection, IECore.FloatData( 123.0 ), "CustomAttributes is locked." )
-		Gaffer.MetadataAlgo.setReadOnly( customAttributes, False )
+		Gaffer.MetadataAlgo.setReadOnly( s["customAttributes"], True )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None )
+		assertEdit( inspection, IECore.FloatData( 123.0 ), "customAttributes is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["customAttributes"], False )
 
-		inspection = self.__inspect( customAttributes["out"], "/sphere", "test:attr", None )
+		inspection = self.__inspect( s["customAttributes"]["out"], "/sphere", "test:attr", None )
 		assertEdit( inspection, IECore.FloatData( 123.0 ), "" )
-		self.assertEqual( inspection.source(), customAttributes["attributes"]["testPlug"] )
-		self.assertEqual( customAttributes["attributes"]["testPlug"]["value"].getValue(), 123.0 )
+		self.assertEqual( inspection.source(), s["customAttributes"]["attributes"]["testPlug"] )
+		self.assertEqual( s["customAttributes"]["attributes"]["testPlug"]["value"].getValue(), 123.0 )
 
 		assertEdit( inspection, IECore.StringData( "foo" ), "Data of type \"StringData\" is not compatible." )
-		self.assertEqual( customAttributes["attributes"]["testPlug"]["value"].getValue(), 123.0 )
+		self.assertEqual( s["customAttributes"]["attributes"]["testPlug"]["value"].getValue(), 123.0 )
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( customAttributes["out"] )
-		editScope["in"].setInput( customAttributes["out"] )
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["customAttributes"]["out"] )
+		s["editScope"]["in"].setInput( s["customAttributes"]["out"] )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
 		assertEdit( inspection, IECore.StringData( "foo" ), "Data of type \"StringData\" is not compatible." )
 
-		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
-		assertEdit( inspection, IECore.FloatData( 456.0 ), "EditScope is locked." )
-		Gaffer.MetadataAlgo.setReadOnly( editScope, False )
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], True )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
+		assertEdit( inspection, IECore.FloatData( 456.0 ), "editScope is locked." )
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope"], False )
 
-		editScope["enabled"].setValue( False )
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
-		assertEdit( inspection, IECore.FloatData( 456.0 ), "The target edit scope EditScope is disabled." )
-		editScope["enabled"].setValue( True )
+		s["editScope"]["enabled"].setValue( False )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
+		assertEdit( inspection, IECore.FloatData( 456.0 ), "The target edit scope editScope is disabled." )
+		s["editScope"]["enabled"].setValue( True )
 
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
 		# Calling `edit()` should create a new edit within the target edit scope
 		assertEdit( inspection, IECore.FloatData( 456.0 ), "" )
-		self.assertEqual( customAttributes["attributes"]["testPlug"]["value"].getValue(), 123.0 )
+		self.assertEqual( s["customAttributes"]["attributes"]["testPlug"]["value"].getValue(), 123.0 )
 		acquiredEdit = inspection.acquireEdit()
-		self.assertTrue( editScope.isAncestorOf( acquiredEdit ) )
+		self.assertTrue( s["editScope"].isAncestorOf( acquiredEdit ) )
 		self.assertEqual( acquiredEdit["value"].getValue(), 456.0 )
 
 		# Editing a disabled edit within an edit scope should re-enable it
 		acquiredEdit["enabled"].setValue( False )
-		inspection = self.__inspect( editScope["out"], "/sphere", "test:attr", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/sphere", "test:attr", s["editScope"] )
 		assertEdit( inspection, IECore.FloatData( 789.0 ), "" )
 		self.assertEqual( acquiredEdit["enabled"].getValue(), True )
 		self.assertEqual( acquiredEdit["value"].getValue(), 789.0 )
@@ -1108,23 +1172,25 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testSourceForEditScopeAttributeRemoval( self ) :
 
-		light = GafferSceneTest.TestLight()
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
-		light["visualiserAttributes"]["scale"]["value"].setValue( 10 )
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( light["out"] )
-		editScope["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s["light"]["visualiserAttributes"]["scale"]["value"].setValue( 10 )
 
-		self.assertEqual( editScope["out"].attributes( "/light" )["gl:visualiser:scale"].value, 10.0 )
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["light"]["out"] )
+		s["editScope"]["in"].setInput( s["light"]["out"] )
 
-		tweak = GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "gl:visualiser:scale" )
+		self.assertEqual( s["editScope"]["out"].attributes( "/light" )["gl:visualiser:scale"].value, 10.0 )
+
+		tweak = GafferScene.EditScopeAlgo.acquireAttributeEdit( s["editScope"], "/light", "gl:visualiser:scale" )
 		tweak["enabled"].setValue( True )
 		tweak["mode"].setValue( Gaffer.TweakPlug.Mode.Remove )
 
-		self.assertNotIn( "gl:visualiser:scale", editScope["out"].attributes( "/light" ) )
+		self.assertNotIn( "gl:visualiser:scale", s["editScope"]["out"].attributes( "/light" ) )
 
-		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "gl:visualiser:scale", s["editScope"] )
 		self.assertEqual( inspection.source(), tweak )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
 		self.assertEqual( inspection.value(), IECore.FloatData( 1 ) )
@@ -1132,34 +1198,36 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testSourceForCreateIfMissingTweaks( self ) :
 
-		light = GafferSceneTest.TestLight()
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
-		light["visualiserAttributes"]["scale"]["value"].setValue( 10 )
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( light["out"] )
-		editScope["in"].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s["light"]["visualiserAttributes"]["scale"]["value"].setValue( 10 )
 
-		self.assertEqual( editScope["out"].attributes( "/light" )["gl:visualiser:scale"].value, 10.0 )
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["light"]["out"] )
+		s["editScope"]["in"].setInput( s["light"]["out"] )
 
-		tweak = GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "gl:visualiser:scale" )
+		self.assertEqual( s["editScope"]["out"].attributes( "/light" )["gl:visualiser:scale"].value, 10.0 )
+
+		tweak = GafferScene.EditScopeAlgo.acquireAttributeEdit( s["editScope"], "/light", "gl:visualiser:scale" )
 		tweak["enabled"].setValue( True )
 		tweak["mode"].setValue( Gaffer.TweakPlug.Mode.CreateIfMissing )
 		tweak["value"].setValue( 20.0 )
 
 		# Our CreateIfMissing tweak should not be the source as the attribute already exists upstream
 		# so the tweak did not affect the scene.
-		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
-		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "gl:visualiser:scale", s["editScope"] )
+		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Upstream )
 		self.assertEqual( inspection.value(), IECore.FloatData( 10.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "" )
 
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( False )
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( False )
 
 		# With the upstream attribute disabled, our tweak should now be the source as it now affects
 		# the scene.
-		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "gl:visualiser:scale", s["editScope"] )
 		self.assertEqual( inspection.source(), tweak )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
 		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
@@ -1167,60 +1235,62 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testSourceForLocalisedCreateIfMissingTweaks( self ) :
 
-		light = GafferSceneTest.TestLight()
+		s = Gaffer.ScriptNode()
 
-		group = GafferScene.Group()
-		group["in"][0].setInput( light["out"] )
+		s["light"] = GafferSceneTest.TestLight()
 
-		globalGlAttributes = GafferScene.OpenGLAttributes()
-		globalGlAttributes["in"].setInput( group["out"] )
-		globalGlAttributes["global"].setValue( True )
-		globalGlAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
-		globalGlAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 2.0 )
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["light"]["out"] )
 
-		groupFilter = GafferScene.PathFilter()
-		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		s["globalGlAttributes"] = GafferScene.OpenGLAttributes()
+		s["globalGlAttributes"]["in"].setInput( s["group"]["out"] )
+		s["globalGlAttributes"]["global"].setValue( True )
+		s["globalGlAttributes"]["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		s["globalGlAttributes"]["attributes"]["gl:visualiser:scale"]["value"].setValue( 2.0 )
 
-		glAttributes = GafferScene.OpenGLAttributes()
-		glAttributes["in"].setInput( globalGlAttributes["out"] )
-		glAttributes["filter"].setInput( groupFilter["out"] )
-		glAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
-		glAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 4.0 )
+		s["groupFilter"] = GafferScene.PathFilter()
+		s["groupFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
-		lightFilter = GafferScene.PathFilter()
-		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
+		s["glAttributes"] = GafferScene.OpenGLAttributes()
+		s["glAttributes"]["in"].setInput( s["globalGlAttributes"]["out"] )
+		s["glAttributes"]["filter"].setInput( s["groupFilter"]["out"] )
+		s["glAttributes"]["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		s["glAttributes"]["attributes"]["gl:visualiser:scale"]["value"].setValue( 4.0 )
 
-		attributeTweaks = GafferScene.AttributeTweaks()
-		attributeTweaks["in"].setInput( glAttributes["out"] )
-		attributeTweaks["filter"].setInput( lightFilter["out"] )
+		s["lightFilter"] = GafferScene.PathFilter()
+		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
+
+		s["attributeTweaks"] = GafferScene.AttributeTweaks()
+		s["attributeTweaks"]["in"].setInput( s["glAttributes"]["out"] )
+		s["attributeTweaks"]["filter"].setInput( s["lightFilter"]["out"] )
 		tweak = Gaffer.TweakPlug( "gl:visualiser:scale", 8.0, Gaffer.TweakPlug.Mode.CreateIfMissing )
-		attributeTweaks["tweaks"].addChild( tweak )
+		s["attributeTweaks"]["tweaks"].addChild( tweak )
 
 		# With `localise` enabled, our CreateIfMissing tweak should not be the source as the attribute
 		# already exists upstream at "/group".
-		attributeTweaks["localise"].setValue( True )
+		s["attributeTweaks"]["localise"].setValue( True )
 
-		inspection = self.__inspect( attributeTweaks["out"], "/group/light", "gl:visualiser:scale", None )
-		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		inspection = self.__inspect( s["attributeTweaks"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
 		# Disable the attribute at "/group" to instead inherit from the global attribute. Our tweak
 		# should still not be the source.
-		glAttributes["enabled"].setValue( False )
+		s["glAttributes"]["enabled"].setValue( False )
 
-		inspection = self.__inspect( attributeTweaks["out"], "/group/light", "gl:visualiser:scale", None )
-		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		inspection = self.__inspect( s["attributeTweaks"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
 		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
 
 		# No longer localise the tweak. Our tweak should now be the source as there is no upstream
 		# attribute at /group/light.
-		attributeTweaks["localise"].setValue( False )
+		s["attributeTweaks"]["localise"].setValue( False )
 
-		inspection = self.__inspect( attributeTweaks["out"], "/group/light", "gl:visualiser:scale", None )
+		inspection = self.__inspect( s["attributeTweaks"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertEqual( inspection.source(), tweak )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
 		self.assertEqual( inspection.value(), IECore.FloatData( 8.0 ) )
@@ -1228,29 +1298,31 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 	def testSourceForAttributeNodeInGlobalMode( self ) :
 
-		light = GafferSceneTest.TestLight()
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
-		light["visualiserAttributes"]["scale"]["value"].setValue( 10 )
+		s = Gaffer.ScriptNode()
 
-		openGLAttributes = GafferScene.OpenGLAttributes()
-		openGLAttributes["in"].setInput( light["out"] )
-		openGLAttributes["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
-		openGLAttributes["attributes"]["gl:visualiser:scale"]["value"].setValue( 20 )
-		openGLAttributes["global"].setValue( True )
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		s["light"]["visualiserAttributes"]["scale"]["value"].setValue( 10 )
+
+		s["openGLAttributes"] = GafferScene.OpenGLAttributes()
+		s["openGLAttributes"]["in"].setInput( s["light"]["out"] )
+		s["openGLAttributes"]["attributes"]["gl:visualiser:scale"]["enabled"].setValue( True )
+		s["openGLAttributes"]["attributes"]["gl:visualiser:scale"]["value"].setValue( 20 )
+		s["openGLAttributes"]["global"].setValue( True )
 
 		# Our node authoring the global attribute should not be the source.
-		inspection = self.__inspect( openGLAttributes["out"], "/light", "gl:visualiser:scale", None )
-		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		inspection = self.__inspect( s["openGLAttributes"]["out"], "/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
 		self.assertEqual( inspection.value(), IECore.FloatData( 10.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "" )
 
-		light["visualiserAttributes"]["scale"]["enabled"].setValue( False )
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( False )
 
 		# Even with the plug authoring the local attribute disabled, it should still be the source
 		# for any edit at that location.
-		inspection = self.__inspect( openGLAttributes["out"], "/light", "gl:visualiser:scale", None )
-		self.assertEqual( inspection.source(), light["visualiserAttributes"]["scale"] )
+		inspection = self.__inspect( s["openGLAttributes"]["out"], "/light", "gl:visualiser:scale", None )
+		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
 		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )

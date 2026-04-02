@@ -59,8 +59,21 @@ class _NodeFilter( Gaffer.PathFilter ) :
 		result = []
 		for path in paths :
 			node = path.property( "history:node", canceller )
-			if node is not None and node.scriptNode() is None :
+			if node is None :
 				continue
+
+			viewable = True
+			settingsNode = node.ancestor( GafferUI.Editor.Settings )
+			if settingsNode is not None :
+				while node and not node.isSame( settingsNode ) :
+					if node.getName().startswith( "__" ) :
+						viewable = False
+						break
+					node = node.parent()
+
+			if not viewable :
+				continue
+
 			result.append( path )
 
 		return result
@@ -107,7 +120,13 @@ class _NodeNameColumn( GafferUI.PathColumn ) :
 	def cellData( self, path, canceller = None ) :
 
 		node = path.property( "history:node", canceller )
-		return self.CellData( node.relativeName( node.scriptNode() ) )
+		if node.ancestor( Gaffer.ScriptNode ) is None :
+			return self.CellData(
+				node.relativeName( node.ancestor( GafferUI.Editor.Settings ) ),
+				background = IECore.Color4fData( imath.Color4f( 121, 77, 56, 120 ) / 255.0 )
+			)
+		else :
+			return self.CellData( node.relativeName( node.scriptNode() ) )
 
 	def headerData( self, canceller = None ) :
 
@@ -245,11 +264,18 @@ class _HistoryWindow( GafferUI.Window ) :
 
 		selectedPath, selectedColumn = self.__selectionData( selection )
 
+		node = selectedPath.property( "history:node" )
+		if node.ancestor( Gaffer.ScriptNode ) is None :
+			with GafferUI.PopupWindow() as self.__popup :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Image( "warningSmall.png" )
+					GafferUI.Label( "<h4>{} is external to the script</h4>".format( node.relativeName( node.ancestor( GafferUI.Editor.Settings ) ) ) )
+
+			self.__popup.popup( parent = self )
+			return
+
 		if selectedColumn == self.__nameColumnIndex :
-			GafferUI.NodeEditor.acquire(
-				selectedPath.property( "history:node" ),
-				floating = True
-			)
+			GafferUI.NodeEditor.acquire( node, floating = True )
 		elif (
 			( selectedColumn == self.__valueColumnIndex or selectedColumn == self.__operationColumnIndex ) and
 			## \todo This is the same method _InspectorColumn.py uses to identify columns that shouldn't

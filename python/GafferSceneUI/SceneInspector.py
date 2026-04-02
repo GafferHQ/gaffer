@@ -99,8 +99,8 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			self["__switchIndexQuery"].addQuery( Gaffer.IntPlug(), "__sceneInspector:inputIndex" )
 
 			self["__deleteContextVariablesA"] = Gaffer.DeleteContextVariables()
-			self["__deleteContextVariablesA"].setup( self["in"] )
-			self["__deleteContextVariablesA"]["in"].setInput( self["in"] )
+			self["__deleteContextVariablesA"].setup( self["__adaptedIn"] )
+			self["__deleteContextVariablesA"]["in"].setInput( self["__adaptedIn"] )
 			self["__deleteContextVariablesA"]["variables"].setValue( "__sceneInspector:inputIndex" )
 
 			self["__deleteContextVariablesB"] = Gaffer.DeleteContextVariables()
@@ -109,7 +109,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			self["__deleteContextVariablesB"]["variables"].setValue( "__sceneInspector:inputIndex" )
 
 			self["__switch"] = Gaffer.Switch()
-			self["__switch"].setup( self["in"] )
+			self["__switch"].setup( self["__adaptedIn"] )
 			self["__switch"]["in"][0].setInput( self["__deleteContextVariablesA"]["out"] )
 			self["__switch"]["in"][1].setInput( self["__deleteContextVariablesB"]["out"] )
 			self["__switch"]["index"].setInput( self["__switchIndexQuery"]["out"][0]["value"] )
