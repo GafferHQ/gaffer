@@ -88,7 +88,7 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 					GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch ),
 					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
 					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode ),
-					GafferSceneUI.Private.VisibilityColumn( self.settings()["in"], self.settings()["editScope"] ),
+					GafferSceneUI.Private.VisibilityColumn( self.settings()["__adaptedIn"], self.settings()["editScope"] ),
 				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,

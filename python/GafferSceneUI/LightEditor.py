@@ -67,7 +67,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self["__setFilter"]["setExpression"].setValue( "__lights __lightFilters" )
 
 			self["__isolate"] = GafferScene.Isolate()
-			self["__isolate"]["in"].setInput( self["in"] )
+			self["__isolate"]["in"].setInput( self["__adaptedIn"] )
 			self["__isolate"]["filter"].setInput( self["__setFilter"]["out"] )
 
 			self["__filteredIn"] = GafferScene.ScenePlug()
@@ -84,15 +84,15 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		self.__commonColumns = [
 			_GafferSceneUI._LightEditorLocationNameColumn(),
 			GafferSceneUI.Private.VisibilityColumn(
-				self.settings()["in"],
+				self.settings()["__adaptedIn"],
 				self.settings()["editScope"]
 			),
 			_GafferSceneUI._LightEditorMuteColumn(
-				self.settings()["in"],
+				self.settings()["__adaptedIn"],
 				self.settings()["editScope"]
 			),
 			_GafferSceneUI._LightEditorSetMembershipColumn(
-				self.settings()["in"],
+				self.settings()["__adaptedIn"],
 				self.settings()["editScope"],
 				"soloLights",
 				"Solo"
@@ -283,7 +283,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		column = self.__columnCache.get( ( columnCreator, section ) )
 		if column is None :
-			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
+			column = columnCreator( self.settings()["__adaptedIn"], self.settings()["editScope"] )
 			self.__columnCache[ ( columnCreator, section ) ] = column
 
 		return column

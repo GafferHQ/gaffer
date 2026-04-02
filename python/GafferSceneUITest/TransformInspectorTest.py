@@ -146,93 +146,102 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 
 	def testObjectSourceSource( self ) :
 
-		sphere = GafferScene.Sphere()
-		self.__assertExpectedSource( sphere["out"], "/", None )
-		self.__assertExpectedSource( sphere["out"], "/sphere", sphere["transform"] )
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+		self.__assertExpectedSource( s["sphere"]["out"], "/", None )
+		self.__assertExpectedSource( s["sphere"]["out"], "/sphere", s["sphere"]["transform"] )
 
 	def testGroupSource( self ) :
 
-		sphere = GafferScene.Sphere()
-		group = GafferScene.Group()
-		group["in"][0].setInput( sphere["out"] )
+		s = Gaffer.ScriptNode()
 
-		self.__assertExpectedSource( group["out"], "/", None )
-		self.__assertExpectedSource( group["out"], "/group", group["transform"] )
-		self.__assertExpectedSource( group["out"], "/group/sphere", sphere["transform"] )
+		s["sphere"] = GafferScene.Sphere()
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["sphere"]["out"] )
 
-		group["enabled"].setValue( False )
-		self.__assertExpectedSource( group["out"], "/", None )
-		self.__assertExpectedSource( group["out"], "/sphere", sphere["transform"] )
+		self.__assertExpectedSource( s["group"]["out"], "/", None )
+		self.__assertExpectedSource( s["group"]["out"], "/group", s["group"]["transform"] )
+		self.__assertExpectedSource( s["group"]["out"], "/group/sphere", s["sphere"]["transform"] )
+
+		s["group"]["enabled"].setValue( False )
+		self.__assertExpectedSource( s["group"]["out"], "/", None )
+		self.__assertExpectedSource( s["group"]["out"], "/sphere", s["sphere"]["transform"] )
 
 	def testTransformSource( self ) :
 
-		sphere = GafferScene.Sphere()
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
 
 		sphereFilter = GafferScene.PathFilter()
 		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "sphere" ] ) )
 
-		transform = GafferScene.Transform()
-		transform["in"].setInput( sphere["out"] )
-		transform["filter"].setInput( sphereFilter["out"] )
+		s["transform"] = GafferScene.Transform()
+		s["transform"]["in"].setInput( s["sphere"]["out"] )
+		s["transform"]["filter"].setInput( sphereFilter["out"] )
 
-		for space in transform.Space.values.values() :
-			transform["space"].setValue( space )
+		for space in s["transform"].Space.values.values() :
+			s["transform"]["space"].setValue( space )
 			self.__assertExpectedSource(
-				transform["out"], "/sphere",
-				transform["transform"] if space == transform.Space.ResetLocal else transform["out"]["transform"]
+				s["transform"]["out"], "/sphere",
+				s["transform"]["transform"] if space == s["transform"].Space.ResetLocal else s["transform"]["out"]["transform"]
 			)
 
-		transform["space"].setValue( transform.Space.ResetLocal )
+		s["transform"]["space"].setValue( s["transform"].Space.ResetLocal )
 
 		sphereFilter["enabled"].setValue( False )
-		self.__assertExpectedSource( transform["out"], "/sphere", sphere["transform"] )
+		self.__assertExpectedSource( s["transform"]["out"], "/sphere", s["sphere"]["transform"] )
 
 		sphereFilter["enabled"].setValue( True )
-		transform["enabled"].setValue( False )
-		self.__assertExpectedSource( transform["out"], "/sphere", sphere["transform"] )
+		s["transform"]["enabled"].setValue( False )
+		self.__assertExpectedSource( s["transform"]["out"], "/sphere", s["sphere"]["transform"] )
 
 	def testGridSource( self ) :
 
-		grid = GafferScene.Grid()
+		s = Gaffer.ScriptNode()
+		s["grid"] = GafferScene.Grid()
 
-		self.__assertExpectedSource( grid["out"], "/", None )
-		self.__assertExpectedSource( grid["out"], "/grid", grid["transform"] )
-		self.__assertExpectedSource( grid["out"], "/grid/centerLines", None )
-		self.__assertExpectedSource( grid["out"], "/grid/gridLines", None )
-		self.__assertExpectedSource( grid["out"], "/grid/borderLines", None )
+		self.__assertExpectedSource( s["grid"]["out"], "/", None )
+		self.__assertExpectedSource( s["grid"]["out"], "/grid", s["grid"]["transform"] )
+		self.__assertExpectedSource( s["grid"]["out"], "/grid/centerLines", None )
+		self.__assertExpectedSource( s["grid"]["out"], "/grid/gridLines", None )
+		self.__assertExpectedSource( s["grid"]["out"], "/grid/borderLines", None )
 
 	def testEditScopes( self ) :
 
-		plane = GafferScene.Plane()
-		plane["transform"]["scale"].setValue( imath.V3f( 2 ) )
+		s = Gaffer.ScriptNode()
 
-		editScope = Gaffer.EditScope()
-		editScope.setup( plane["out"] )
-		editScope["in"].setInput( plane["out"] )
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["transform"]["scale"].setValue( imath.V3f( 2 ) )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["plane"]["out"] )
+		s["editScope"]["in"].setInput( s["plane"]["out"] )
 
 		# We refuse to make a new edit because that would edit components
 		# other than the one we're inspecting.
 
 		inspection = self.__inspect(
-			editScope["out"], "/plane",
+			s["editScope"]["out"], "/plane",
 			GafferSceneUI.Private.TransformInspector.Space.Local,
 			GafferSceneUI.Private.TransformInspector.Component.Translate,
-			editScope
+			s["editScope"]
 		)
-		self.assertEqual( inspection.source(), plane["transform"]["translate"] )
+		self.assertEqual( inspection.source(), s["plane"]["transform"]["translate"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Upstream )
 		self.assertFalse( inspection.editable() )
 		self.assertEqual( inspection.nonEditableReason(), "Edit creation not supported yet. Use the transform tools in the Viewer instead." )
 
 		# But if an edit already exists, we'll use it.
 
-		edit = GafferScene.EditScopeAlgo.acquireTransformEdit( editScope, "/plane" )
+		edit = GafferScene.EditScopeAlgo.acquireTransformEdit( s["editScope"], "/plane" )
 
 		inspection = self.__inspect(
-			editScope["out"], "/plane",
+			s["editScope"]["out"], "/plane",
 			GafferSceneUI.Private.TransformInspector.Space.Local,
 			GafferSceneUI.Private.TransformInspector.Component.Translate,
-			editScope
+			s["editScope"]
 		)
 		self.assertEqual( inspection.source(), edit.translate )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )

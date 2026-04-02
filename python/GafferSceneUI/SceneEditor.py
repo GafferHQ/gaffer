@@ -62,6 +62,20 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 			if numInputs == 1 :
 				self["in"] = GafferScene.ScenePlug()
+				self["__adaptedIn"] = GafferScene.ScenePlug()
+				self["RenderAdaptors"] = GafferScene.SceneAlgo.createRenderAdaptors()
+				self["RenderAdaptors"]["in"].setInput( self["in"] )
+				self["RenderAdaptors"]["client"].setValue( "SceneEditor" )
+				# Allow the individual adaptors within RenderAdaptors to appear in the history.
+				Gaffer.Metadata.registerValue( self, "ui:childNodesAreViewable", True )
+				Gaffer.Metadata.registerValue( self["RenderAdaptors"], "ui:childNodesAreViewable", True )
+				self["__optionQuery"] = GafferScene.OptionQuery()
+				self["__optionQuery"]["scene"].setInput( self["in"] )
+				self["__optionQuery"].addQuery( Gaffer.StringPlug() )
+				self["__optionQuery"]["queries"][0]["name"].setValue( "render:defaultRenderer" )
+				self["__optionQuery"]["queries"][0]["value"].setValue( Gaffer.Metadata.value( "option:render:defaultRenderer", "defaultValue" ) )
+				self["RenderAdaptors"]["renderer"].setInput( self["__optionQuery"]["out"]["out0"]["value"] )
+				self["__adaptedIn"].setInput( self["RenderAdaptors"]["out"] )
 			else :
 				self["in"] = Gaffer.ArrayPlug( elementPrototype = GafferScene.ScenePlug(), minSize = numInputs, maxSize = numInputs )
 
@@ -71,7 +85,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 				self["__filteredIn"] = GafferScene.ScenePlug()
 				self["__hierarchyFilter"] = _HierarchyFilter()
-				self["__hierarchyFilter"]["in"].setInput( self["in"] )
+				self["__hierarchyFilter"]["in"].setInput( self["__adaptedIn"] )
 				self["__filteredIn"].setInput( self["__hierarchyFilter"]["out"] )
 				Gaffer.PlugAlgo.promote( self["__hierarchyFilter"]["filter"] )
 				Gaffer.PlugAlgo.promote( self["__hierarchyFilter"]["setFilter"] )

@@ -327,7 +327,10 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 			Downstream,
 			/// No EditScope was specified, or the EditScope was not found in
 			/// the value's history.
-			Other
+			Other,
+			/// The value is coming from outside the script, such as
+			/// from a node internal to the UI.
+			External
 		};
 
 		/// The relationship between `source()` and `editScope()`.

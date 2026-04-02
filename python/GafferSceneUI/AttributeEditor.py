@@ -84,7 +84,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			)
 
 			self.__locationNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
-			self.__visibilityColumn = GafferSceneUI.Private.VisibilityColumn( self.settings()["in"], self.settings()["editScope"] )
+			self.__visibilityColumn = GafferSceneUI.Private.VisibilityColumn( self.settings()["__adaptedIn"], self.settings()["editScope"] )
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
@@ -226,7 +226,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		column = self.__columnCache.get( ( columnCreator, section ) )
 		if column is None :
-			column = columnCreator( self.settings()["in"], self.settings()["editScope"] )
+			column = columnCreator( self.settings()["__adaptedIn"], self.settings()["editScope"] )
 			self.__columnCache[ ( columnCreator, section ) ] = column
 
 		return column

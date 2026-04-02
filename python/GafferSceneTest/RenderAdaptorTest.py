@@ -476,30 +476,42 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/groupA/sphere",
 			}
 
-			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
-				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
-			)
-			GafferScene.Private.RendererAlgo.outputObjects(
-				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ),
-				GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ),
-				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
-				renderer
-			)
+			for rendererName, attribute in (
+				( "Arnold", "ai:visibility:camera" ),
+				( "Cycles", "cycles:visibility:camera" ),
+				( "3Delight", "dl:visibility.camera" ),
+				( "3Delight Cloud", "dl:visibility.camera" ),
+				( "RenderMan", "ri:visibility:camera" ),
+				( "RenderMan XPU", "ri:visibility:camera" ),
+			) :
 
-			if paths != {} :
-				self.assertTrue( paths.issubset( allPaths ) )
+				with self.subTest( rendererName = rendererName, attribute = attribute ) :
 
-			for path in allPaths :
-				capturedObject = renderer.capturedObject( path )
-				for attribute in [ "ai:visibility:camera", "cycles:visibility:camera", "dl:visibility.camera", "ri:visibility:camera" ] :
-					if path in paths :
-						# path is visible by the absence of the attribute, or its presence with a value of True
-						if attribute in capturedObject.capturedAttributes().attributes() :
-							self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
-					else :
-						# path is invisible only by the presence of the attribute with a value of False
-						self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
-						self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
+					testAdaptors["renderer"].setValue( rendererName )
+
+					renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+					)
+					GafferScene.Private.RendererAlgo.outputObjects(
+						testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ),
+						GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ),
+						GafferScene.Private.RendererAlgo.LightLinks( renderer ),
+						renderer
+					)
+
+					if paths != {} :
+						self.assertTrue( paths.issubset( allPaths ) )
+
+					for path in allPaths :
+						capturedObject = renderer.capturedObject( path )
+						if path in paths :
+							# path is visible by the absence of the attribute, or its presence with a value of True
+							if attribute in capturedObject.capturedAttributes().attributes() :
+								self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
+						else :
+							# path is invisible only by the presence of the attribute with a value of False
+							self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
+							self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
 
 		# By default everything should be camera visible
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" } )
@@ -619,27 +631,39 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/groupA/sphere",
 			}
 
-			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
-				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
-			)
-			GafferScene.Private.RendererAlgo.outputObjects(
-				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ),
-				GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ),
-				GafferScene.Private.RendererAlgo.LightLinks( renderer ),
-				renderer
-			)
+			for rendererName, attribute in (
+				( "Arnold", "ai:matte" ),
+				( "Cycles", "cycles:use_holdout" ),
+				( "3Delight", "dl:matte" ),
+				( "3Delight Cloud", "dl:matte" ),
+				( "RenderMan", "ri:Ri:Matte" ),
+				( "RenderMan XPU", "ri:Ri:Matte" ),
+			) :
 
-			for path in allPaths :
-				capturedObject = renderer.capturedObject( path )
-				for attribute in [ "ai:matte", "cycles:use_holdout", "dl:matte", "ri:Ri:Matte" ] :
-					if path in paths :
-						# path is matte only by the presence of the attribute with a value of True
-						self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
-						self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
-					else :
-						# path isn't matte by the absence of the attribute, or its presence with a value of False
-						if attribute in capturedObject.capturedAttributes().attributes() :
-							self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
+				with self.subTest( rendererName = rendererName, attribute = attribute ) :
+
+					testAdaptors["renderer"].setValue( rendererName )
+
+					renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+					)
+					GafferScene.Private.RendererAlgo.outputObjects(
+						testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ),
+						GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ),
+						GafferScene.Private.RendererAlgo.LightLinks( renderer ),
+						renderer
+					)
+
+					for path in allPaths :
+						capturedObject = renderer.capturedObject( path )
+						if path in paths :
+							# path is matte only by the presence of the attribute with a value of True
+							self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
+							self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
+						else :
+							# path isn't matte by the absence of the attribute, or its presence with a value of False
+							if attribute in capturedObject.capturedAttributes().attributes() :
+								self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
 
 		# Nothing should be matte when matte inclusions and exclusions are empty or undefined
 		assertMatte( {} )

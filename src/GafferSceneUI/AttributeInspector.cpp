@@ -164,17 +164,7 @@ AttributeHistoryCache g_attributeHistoryCache(
 		assert( canceller == Context::current()->canceller() );
 		cost = 1;
 		SceneAlgo::History::ConstPtr attributesHistory = g_historyCache.get( key, canceller );
-		if( auto h = SceneAlgo::attributeHistory( attributesHistory.get(), key.attribute ) )
-		{
-			return h;
-		}
-		else
-		{
-			// The specific attribute doesn't exist. But we return the history for the
-			// whole CompoundObject so we get a chance to discover nodes that could
-			// _create_ the attribute.
-			return attributesHistory;
-		}
+		return SceneAlgo::attributeHistory( attributesHistory.get(), key.attribute );
 	},
 	// Max cost
 	1000,

@@ -442,14 +442,31 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			historyPath = inspector.historyPath()
 
 		c = historyPath.children()
+		self.assertEqual( len( c ), 3 )
 
 		self.assertEqual( c[0].property( "name" ), str( c[0][-1] ) )
-		self.assertEqual( c[0].property( "history:node" ), s["openGLAttributes"] )
-		self.assertEqual( c[0].property( "history:value" ), 1536 )
-		self.assertEqual( c[0].property( "history:fallbackValue" ), 1024 )
+		self.assertEqual( c[0].property( "history:node" ), s["testLight"] )
+		self.assertEqual( c[0].property( "history:value" ), None )
+		self.assertEqual( c[0].property( "history:fallbackValue" ), 512 )
 		self.assertEqual( c[0].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
-		self.assertEqual( c[0].property( "history:source" ), s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"] )
-		self.assertEqual( c[0].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
+		self.assertEqual( c[0].property( "history:source" ), s["testLight"]["visualiserAttributes"]["maxTextureResolution"] )
+		self.assertEqual( c[0].property( "history:editWarning" ), "" )
+
+		self.assertEqual( c[1].property( "name" ), str( c[1][-1] ) )
+		self.assertEqual( c[1].property( "history:node" ), s["group"] )
+		self.assertEqual( c[1].property( "history:value" ), None )
+		self.assertEqual( c[1].property( "history:fallbackValue" ), 512 )
+		self.assertEqual( c[1].property( "history:operation" ), None )
+		self.assertEqual( c[1].property( "history:source" ), None )
+		self.assertEqual( c[1].property( "history:editWarning" ), None )
+
+		self.assertEqual( c[2].property( "name" ), str( c[2][-1] ) )
+		self.assertEqual( c[2].property( "history:node" ), s["openGLAttributes"] )
+		self.assertEqual( c[2].property( "history:value" ), 1536 )
+		self.assertEqual( c[2].property( "history:fallbackValue" ), 1024 )
+		self.assertEqual( c[2].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( c[2].property( "history:source" ), s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"] )
+		self.assertEqual( c[2].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
 
 		s["openGLAttributes"]["enabled"].setValue( False )
 
@@ -458,6 +475,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			historyPath = inspector.historyPath()
 
 		c = historyPath.children()
+		self.assertEqual( len( c ), 3 )
 
 		self.assertEqual( c[0].property( "name" ), str( c[0][-1] ) )
 		self.assertEqual( c[0].property( "history:node" ), s["testLight"] )

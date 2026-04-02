@@ -1,10 +1,25 @@
 1.6.x.x (relative to 1.6.15.0)
 =======
 
+Improvements
+------------
+
+- SceneInspector, AttributeEditor, HierarchyView, LightEditor, RenderPassEditor : Added inspection of scene edits performed by render adaptors registered to `client = "SceneEditor"`, such as those used by the Render Pass Editor to modify the scene at render time. Cells with values sourced from a render adaptor are displayed with a faded orange background and cannot be directly edited as render adaptors exist externally to the script and are not user-editable. The `render:defaultRenderer` option must be set in the scene globals in order for renderer-specific edits to be shown.
+- Render, InteractiveRender : The `render:defaultRenderer` option is now created as a fallback when viewing these nodes. The option is created with the current value of the node's `renderer` plug so Editors can display edits from render adaptors matching the currently selected renderer.
+
 Fixes
 -----
 
 - Spreadsheet : Fixed formatting of OptionalValuePlug values, such as for the renderer-specific plugs on USDLight nodes.
+- GraphEditor : Fixed bug allowing framing of nodes dragged from other scripts.
+- CompoundEditor : Fixed bug allowing pinning of nodes dragged from other scripts.
+- Scene Editors :
+  - Attribute and option histories in the `Show History...` window now include the entire history rather than pruning once the attribute or option fails to exist.
+  - Fixed cell background colour when the target edit scope is upstream of the first node creating the inspected attribute or option. It is now yellow to indicate the downstream override, whereas before it had the default colour.
+  - Fixed creation of edits in edit scopes upstream of the first node creating the target attribute or option. The upstream edit scope can now be edited, whereas before it would be reported as not being part of the scene history.
+  - Fixed bug preventing disabled attribute plugs from being edited on source nodes - such as USDLight and Camera - when the edit target was set to "Source" and there was a downstream edit in an EditScope.
+- SceneAlgo : `attributeHistory` and `optionHistory` now return the entire history rather than pruning once the attribute or option fails to exist.
+- SceneInspector, RenderPassEditor : Fixed bug causing history inspection to incorrectly include OptionTweaks `CreateIfMissing` tweaks that have not modified the scene due to the option already existing upstream of the tweak.
 
 1.6.15.0 (relative to 1.6.14.2)
 ========

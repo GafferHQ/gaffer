@@ -95,4 +95,4 @@ def __renderSetAdaptor() :
 
 	return processor
 
-GafferScene.SceneAlgo.registerRenderAdaptor( "RenderSetAdaptor", __renderSetAdaptor )
+GafferScene.SceneAlgo.registerRenderAdaptor( "RenderSetAdaptor", __renderSetAdaptor, "SceneView *Render", "*" )

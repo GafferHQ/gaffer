@@ -785,10 +785,10 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		result = False
 		if isinstance( event.data, Gaffer.Node ) :
-			result = True
+			result = currentEditor.scriptNode().isAncestorOf( event.data )
 		elif isinstance( event.data, Gaffer.Set ) :
 			if event.data.size() and isinstance( event.data[0], Gaffer.Node ) :
-				result = True
+				result = all( [ currentEditor.scriptNode().isAncestorOf( x ) for x in event.data if isinstance( x, Gaffer.Node ) ] )
 
 		if result :
 			self.setHighlighted( True )
