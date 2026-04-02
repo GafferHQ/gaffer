@@ -181,6 +181,7 @@ from .SplineWidget import SplineWidget
 from .Bookmarks import Bookmarks
 from . import WidgetAlgo
 from .CodeWidget import CodeWidget
+from .BreadCrumbsWidget import BreadCrumbsWidget
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

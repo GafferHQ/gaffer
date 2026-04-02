@@ -1777,6 +1777,30 @@ _styleSheet = string.Template(
 		border: 1px solid $brightColor;
 	}
 
+	#gafferBreadCrumbs {
+		border: 1px solid transparent;
+		border-bottom-color: $tintDarkerStronger;
+		border-right-color: $tintDarkerStronger;
+		background-color: $backgroundLight;
+		border-radius: $widgetCornerRadius;
+	}
+
+	#gafferBreadCrumbs QLineEdit {
+		border: 0;
+		border-radius: 0;
+		background-color: transparent;
+	}
+
+	#gafferBreadCrumbs QPushButton[gafferWithFrame="false"] {
+		margin: 1px;
+		padding: 4px;
+	}
+
+	#gafferBreadCrumbs QPushButton[gafferWithFrame="true"] {
+		margin: 0px;
+		font-weight: normal;
+	}
+
 	"""
 
 ).substitute( substitutions )

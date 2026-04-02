@@ -109,7 +109,7 @@
     </linearGradient>
     <linearGradient
        id="boundsTemplate"
-       gradientTransform="matrix(1.4488738,0,0,1.25,1285.8825,5285.1293)"
+       gradientTransform="matrix(0.92727923,0,0,0.8,893.5648,4275.413)"
        inkscape:swatch="solid">
       <stop
          style="stop-color:#ff0101;stop-opacity:0.0787037;"
@@ -1837,6 +1837,18 @@
      inkscape:label="ExportAreas"
      style="display:inline"
      inkscape:groupmode="layer">
+    <g
+       id="g2176"
+       inkscape:label="Miscellaneous">
+      <rect
+         y="3050"
+         x="100"
+         height="16"
+         width="16"
+         id="home"
+         style="display:inline;fill:none;fill-opacity:0.23999999;stroke:none;stroke-width:0.382473;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="home" />
+    </g>
     <g
        id="g2499"
        inkscape:label="LocalJobs">
@@ -3980,6 +3992,14 @@
          d="m 103.12888,2944.2346 h 3.32629 c 1.97062,0 3.494,-0.8246 3.494,-2.6834 0,-1.2159 -0.68482,-1.9007 -1.98459,-2.1383 v -0.056 c 1.07615,-0.2795 1.56531,-1.16 1.56531,-1.9706 0,-1.747 -1.4535,-2.2641 -3.34026,-2.2641 h -3.06075 z m 2.05447,-5.4506 v -2.0545 h 0.92242 c 0.96434,0 1.41158,0.2656 1.41158,0.9364 0,0.6988 -0.41928,1.1181 -1.42556,1.1181 z m 0,3.8434 v -2.362 h 1.10411 c 1.13205,0 1.64917,0.3355 1.64917,1.1321 0,0.8246 -0.53109,1.2299 -1.64917,1.2299 z"
          id="path20339"
          style="fill:#272727;fill-opacity:1;stroke:#272727;stroke-width:1.92047;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+    <g
+       id="g12211"
+       inkscape:label="Miscellaneous"
+       transform="translate(22.97006,621.95452)">
+      <g
+         id="g13042"
+         inkscape:label="home" />
     </g>
     <rect
        style="display:inline;fill:#3c3c3c;fill-opacity:1;stroke:none;stroke-width:1.00011;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -8938,7 +8958,20 @@
          id="path5688"
          d="m 15,2349.3622 h 8"
          style="fill:none;stroke:#535353;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         style="fill:#282828;fill-opacity:0.38"
+         d="m 41.5,2351.8622 v -9"
+         id="path2241" />
+      <path
+         style="fill:#282828;fill-opacity:0.38"
+         d="m 37.5,2342.8622 8,-6"
+         id="path2243" />
     </g>
+    <g
+       id="g3004"
+       style="display:inline;stroke:#282828;stroke-opacity:1"
+       transform="translate(40,144.00001)"
+       inkscape:label="GraphEditor" />
     <g
        id="focusOn"
        inkscape:label="focusOn"
@@ -11703,5 +11736,10 @@
              style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:'Arial Bold';fill:#787878;fill-opacity:0.38">A</tspan></text>
       </g>
     </g>
+    <path
+       id="path26397"
+       style="fill:url(#foreground);fill-opacity:1;stroke:#3c3c3c;stroke-opacity:1"
+       d="m 108,3103.8622 -6.5,6 h 1 v 7 h 4 v -4.5 h 3 v 4.5 h 4 v -7.0001 h 1 l -2,-1.9999 v -2.5 H 110 v 0.5 z"
+       sodipodi:nodetypes="cccccccccccccccc" />
   </g>
 </svg>
