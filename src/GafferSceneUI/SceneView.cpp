@@ -1081,6 +1081,43 @@ class CameraOverlay : public GafferUI::Gadget
 			dirty( DirtyType::Render );
 		}
 
+		// BHGC START
+
+		// separate functions/variables for each guide, should probably combine all this
+		// i just copied the resolution/aperture gate syntax, not sure if this is ideal
+
+		void actionSafeEnabled( const bool &actionSafeEnabled )
+		{
+			if( actionSafeEnabled == m_actionSafeEnabled )
+			{
+				return;
+			}
+			m_actionSafeEnabled = actionSafeEnabled;
+			dirty( DirtyType::Render );
+		}
+
+		void titleSafeEnabled( const bool &titleSafeEnabled )
+		{
+			if( titleSafeEnabled == m_titleSafeEnabled )
+			{
+				return;
+			}
+			m_titleSafeEnabled = titleSafeEnabled;
+			dirty( DirtyType::Render );
+		}
+
+		void customGridEnabled( const bool &customGridEnabled )
+		{
+			if( customGridEnabled == m_customGridEnabled )
+			{
+				return;
+			}
+			m_customGridEnabled = customGridEnabled;
+			dirty( DirtyType::Render );
+		}
+
+		// BHGC END
+
 		const std::string &getIcon() const
 		{
 			return m_icon;
@@ -1140,8 +1177,91 @@ class CameraOverlay : public GafferUI::Gadget
 			{
 				glEnable( GL_LINE_SMOOTH );
 				glLineWidth( 1.5f );
+				glColor4f( 0, 0.25, 0, 1.0f );
 
-				glColor4f( 0.5, 0.5, 0.5, 0.5 );
+				// BHGC START
+
+				// stipple looks good, but it doesn't work with rectangles becuase the edges overlap
+
+				// glEnable( GL_LINE_STIPPLE );
+				// glLineStipple(1, 0x00FF);
+
+				V2f gateSize = V2f( m_resolutionGate.max - m_resolutionGate.min );
+
+				V2f titleSize = gateSize * V2f( std::sqrt( 0.8 ) );
+				V2f actionSize = gateSize * V2f( std::sqrt( 0.9 ) );
+
+				titleSize = ( gateSize - titleSize ) / 2;
+				actionSize = ( gateSize - actionSize ) / 2;
+
+				if( m_titleSafeEnabled )
+				{
+					Box2f titleSafe = Box2f( ( m_resolutionGate.min + titleSize ), ( m_resolutionGate.max - titleSize ) );
+
+					style->renderRectangle( titleSafe );
+				}
+
+				if( m_actionSafeEnabled )
+				{
+					Box2f actionSafe = Box2f( ( m_resolutionGate.min + actionSize ), ( m_resolutionGate.max - actionSize ) );
+
+					style->renderRectangle( actionSafe );
+				}
+
+				if( m_customGridEnabled )
+				{
+					// custom grid divisions, 3x3 is rule of thirds
+
+					int divNumH = 3;
+					int divNumV = 3;
+
+					V2f divSize = V2f( gateSize / V2f( divNumH, divNumV ) );
+					/*vector<Box2f> customGrid;
+					customGrid.reserve( divNumH * divNumV ); // I read that this is galaxy brain C++, maybe not needed, haha
+
+					for( int v = 0; v < divNumV; v++ )
+					{
+						for( int h = 0; h < divNumH; h++ )
+						{
+							customGrid.push_back( Box2f( m_resolutionGate.min + ( divSize * V2f( h, v ) ), m_resolutionGate.min + ( divSize * V2f( h, v ) ) + divSize ) );
+						}
+					}
+
+					for( const auto &i : customGrid )
+					{
+						style->renderRectangle( i );
+					}*/
+
+					// test line code
+
+					glEnable( GL_LINE_STIPPLE );
+					glLineStipple( 1, 61680 ); // the second parameter is the length of the dash and space in binary. 16 1s (65535) is all dash, 8 1s (255) is half dash, half space.
+
+					for( int v = 1; v < divNumV; v++ ) // start below the top of the resolution gate and end before the bottom edge
+					{
+						float y = m_resolutionGate.min.y + ( divSize.y * v );
+
+						glBegin(GL_LINES);
+							glVertex2f( m_resolutionGate.min.x, y );
+							glVertex2f( m_resolutionGate.max.x, y );
+						glEnd();
+					}
+
+					for( int h = 1; h < divNumH; h++ )
+					{
+						float x = m_resolutionGate.min.x + ( divSize.x * h );
+
+						glBegin(GL_LINES);
+							glVertex2f( x, m_resolutionGate.min.y );
+							glVertex2f( x, m_resolutionGate.max.y );
+						glEnd();
+					}
+
+					glDisable( GL_LINE_STIPPLE );
+				}
+
+				// BHGC END
+
 				style->renderRectangle( Box2f(
 					V2f(
 						lerp( m_resolutionGate.min.x, m_resolutionGate.max.x, m_cropWindow.min.x ),
@@ -1153,7 +1273,7 @@ class CameraOverlay : public GafferUI::Gadget
 					)
 				) );
 
-				glColor4f( 0, 0.25, 0, 1.0f );
+				//glColor4f( 0, 0.25, 0, 1.0f );
 				style->renderRectangle( m_resolutionGate );
 
 				if( m_overscan[0] != 0.0f || m_overscan[1] != 0.0f || m_overscan[2] != 0.0f || m_overscan[3] != 0.0f )
@@ -1227,6 +1347,14 @@ class CameraOverlay : public GafferUI::Gadget
 		V4f m_overscan;
 		std::string m_caption;
 		std::string m_icon;
+
+		// BHGC START
+
+		bool m_actionSafeEnabled;
+		bool m_titleSafeEnabled;
+		bool m_customGridEnabled;
+
+		// BHGC END
 
 };
 
@@ -1382,6 +1510,16 @@ class SceneView::Camera : public Signals::Trackable
 				)
 			);
 
+			// BHGC START
+
+			// create plugs for each guide, combine these three into one?
+
+			plug->addChild( new BoolPlug( "actionSafeEnabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
+			plug->addChild( new BoolPlug( "titleSafeEnabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
+			plug->addChild( new BoolPlug( "customGridEnabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
+
+			// BHGC END
+
 			view->addChild( plug );
 
 			// Set up our nodes.
@@ -1526,6 +1664,25 @@ class SceneView::Camera : public Signals::Trackable
 			return plug()->getChild<V2fPlug>( 6 );
 		}
 
+		// BHGC START
+
+		const Gaffer::BoolPlug *titleSafeEnabledPlug() const
+		{
+			return plug()->getChild<BoolPlug>( "titleSafeEnabled" );
+		}
+
+		const Gaffer::BoolPlug *actionSafeEnabledPlug() const
+		{
+			return plug()->getChild<BoolPlug>( "actionSafeEnabled" );
+		}
+
+		const Gaffer::BoolPlug *customGridEnabledPlug() const
+		{
+			return plug()->getChild<BoolPlug>( "customGridEnabled" );
+		}
+
+		// BHGC END
+
 		SceneGadget *sceneGadget()
 		{
 			return static_cast<SceneGadget *>( m_view->viewportGadget()->getPrimaryChild() );
@@ -1569,6 +1726,8 @@ class SceneView::Camera : public Signals::Trackable
 				return;
 			}
 
+			// BHGC - added the guides here, i assume that's needed in order to redraw things when they're turned on and off?
+
 			if(
 				plug == scenePlug()->childNamesPlug() ||
 				plug == scenePlug()->globalsPlug() ||
@@ -1576,7 +1735,10 @@ class SceneView::Camera : public Signals::Trackable
 				plug == scenePlug()->transformPlug() ||
 				plug == lookThroughEnabledPlug() ||
 				plug == lookThroughCameraPlug() ||
-				plug == freeCameraPlug()
+				plug == freeCameraPlug() ||
+				plug == actionSafeEnabledPlug() || // BHGC
+				plug == titleSafeEnabledPlug() || // BHGC
+				plug == customGridEnabledPlug() // BHGC
 			)
 			{
 				m_lookThroughCameraDirty = m_viewportCameraDirty = true;
@@ -1867,6 +2029,17 @@ class SceneView::Camera : public Signals::Trackable
 					( apertureGate.min - viewportScreenWindow.min ) / viewportScreenWindow.size() * viewport,
 					( apertureGate.max - viewportScreenWindow.min ) / viewportScreenWindow.size() * viewport
 			) );
+
+			// BHGC START
+
+			// draw the guides, combine these three into one?
+
+			m_overlay->actionSafeEnabled( m_view->cameraPlug()->getChild<BoolPlug>( "actionSafeEnabled" )->getValue() );
+			m_overlay->titleSafeEnabled( m_view->cameraPlug()->getChild<BoolPlug>( "titleSafeEnabled" )->getValue() );
+			m_overlay->customGridEnabled( m_view->cameraPlug()->getChild<BoolPlug>( "customGridEnabled" )->getValue() );
+
+			// BHGC END
+
 			m_overlay->setVisible( true );
 
 			// Now set up a camera that can see all of the aperture and resolution gates.
