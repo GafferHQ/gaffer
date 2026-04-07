@@ -122,19 +122,53 @@ def __indent( text, n ) :
 	prefix = "\t" * n
 	return "\n".join( prefix + l for l in text.split( "\n" ) )
 
+__enabledPlugMethodTemplate = """
+def enabledPlug( self ) :
+
+	return self["{enabledPlugName}"]
+"""
+
+__correspondingInputMethodTemplate = """
+def correspondingInput( self, output ) :
+
+	inputs = {correspondingInputs}
+	return self.descendant( inputs.get( output.relativeName( self ), "" ) )
+"""
+
+def __dependencyNodeMethodDefinitions( box ) :
+
+	enabledPlug = box.enabledPlug()
+	if enabledPlug is None :
+		return ""
+
+	result = __enabledPlugMethodTemplate.format( enabledPlugName = enabledPlug.getName() )
+
+	correspondingInputs = {}
+	for outputPlug in Gaffer.Plug.RecursiveOutputRange( box ) :
+		inputPlug = box.correspondingInput( outputPlug )
+		if inputPlug is not None :
+			correspondingInputs[outputPlug.relativeName( box )] = inputPlug.relativeName( box )
+
+	if correspondingInputs :
+		result += __correspondingInputMethodTemplate.format(
+			correspondingInputs = "{\n" + "\n".join( f'\t\t"{k}" : "{v}"' for k, v in correspondingInputs.items() ) + "\n\t}"
+		)
+
+	return result
+
 __nodeTemplate = """\
 {imports}
 
-class {name}( Gaffer.SubGraph ) :
+class {name}( Gaffer.DependencyNode ) :
 
 	def __init__( self, name = "{name}" ) :
 
-		Gaffer.SubGraph.__init__( self, name )
+		Gaffer.DependencyNode.__init__( self, name )
 
 {constructor}
 
 		self.__removeDynamicFlags()
-
+{dependencyNodeMethods}
 	# Remove dynamic flags using the same logic used by the Reference node.
 	## \todo : Create the plugs without the flags in the first place.
 	def __removeDynamicFlags( self ) :
@@ -178,7 +212,8 @@ def __nodeDefinition( box, moduleName ) :
 		imports = "\n".join( sorted( imports ) ),
 		name = box.getName(),
 		constructor = __indent( "\n".join( constructorLines ), 2 ),
-		moduleName = moduleName
+		dependencyNodeMethods = __indent( __dependencyNodeMethodDefinitions( box ), 1 ),
+		moduleName = moduleName,
 	)
 
 __uiTemplate = """\
