@@ -653,6 +653,7 @@ class RendererTest( GafferTest.TestCase ) :
 			lambda : self.assertEqual( self.__colorAtUV( "testBackgroundShader", imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 0, 1 ) )
 		)
 
+		renderer.pause()
 		del plane
 
 	def testMultipleOutputs( self ) :
@@ -2517,6 +2518,7 @@ class RendererTest( GafferTest.TestCase ) :
 			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "testExposureEdit", imath.V2f( 0.55 ) ), imath.Color4f( 2, 2, 2, 1 ), 1e-6 )
 		)
 
+		renderer.pause()
 		del plane
 
 	def testUnsupportedSessionEdit( self ) :
@@ -2759,6 +2761,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( testPixel.g, 0 )
 		self.assertEqual( testPixel.b, 0 )
 
+		renderer.pause()
 		del light, plane
 
 	def testVDB( self ) :
@@ -2833,6 +2836,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertEventually( lambda : assertVolumeVisible() )
 
+		renderer.pause()
 		del camera
 		del volume
 		del vdb
@@ -2928,6 +2932,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertEventually( lambda : assertVolumesVisible() )
 
+		renderer.pause()
 		del camera
 		del volume
 		del volume2
