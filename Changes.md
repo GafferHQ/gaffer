@@ -119,6 +119,11 @@ Fixes
 - SceneAlgo : `attributeHistory` and `optionHistory` now return the entire history rather than pruning once the attribute or option fails to exist.
 - SceneInspector, RenderPassEditor : Fixed bug causing history inspection to incorrectly include OptionTweaks `CreateIfMissing` tweaks that have not modified the scene due to the option already existing upstream of the tweak.
 
+API
+---
+
+- TestCase : Added `assertEventually()` method.
+
 1.6.15.0 (relative to 1.6.14.2)
 ========
 

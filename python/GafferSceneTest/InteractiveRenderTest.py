@@ -84,6 +84,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# See https://docs.python.org/3/library/unittest.html#unittest.TestCase.run
 		return result
 
+	def assertEventually( self, fn, timeout = 10.0, interval = 0.1 ) :
+
+		GafferTest.TestCase.assertEventually( self, fn, timeout, interval, self.uiThreadCallHandler.waitFor )
+
 	def testOutputs( self ):
 
 		s = Gaffer.ScriptNode()
@@ -112,10 +116,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 1.0 )
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ), IECoreImage.ImagePrimitive )
+		)
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testMetadata( self ) :
 
@@ -148,14 +153,19 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 1.0 )
+		def assertMetadataAvailable() :
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		headers = image.blindData()
-		self.assertEqual( headers["gaffer:version"], IECore.StringData( Gaffer.About.versionString() ) )
-		self.assertEqual( headers["gaffer:sourceScene"], IECore.StringData( "r.__adaptedIn" ) )
-		self.assertEqual( headers["gaffer:context:a"], IECore.StringData( "A" ) )
-		self.assertEqual( headers["gaffer:context:b"], IECore.StringData( "A" ) )
+			image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
+			self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+			headers = image.blindData()
+			self.assertEqual( headers.get( "gaffer:version" ), IECore.StringData( Gaffer.About.versionString() ) )
+			self.assertEqual( headers.get( "gaffer:sourceScene" ), IECore.StringData( "r.__adaptedIn" ) )
+			self.assertEqual( headers.get( "gaffer:context:a" ), IECore.StringData( "A" ) )
+			self.assertEqual( headers.get( "gaffer:context:b" ), IECore.StringData( "A" ) )
+
+		self.assertEventually( lambda : assertMetadataAvailable() )
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testAddAndRemoveOutput( self ):
 
@@ -186,12 +196,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 1.0 )
-
 		# Check we have our first image, but not a second one.
 
-		self.assertTrue( isinstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive ) )
-		self.assertTrue( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ) is None )
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive )
+		)
+		self.assertEventually(
+			lambda : self.assertIsNone( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ) )
+		)
 
 		# Add a second image and check we can have that too.
 
@@ -208,19 +220,24 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
-		time.sleep( 1.0 )
-
-		self.assertTrue( isinstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive ) )
-		self.assertTrue( isinstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ), IECoreImage.ImagePrimitive ) )
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive )
+		)
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ), IECoreImage.ImagePrimitive )
+		)
 
 		# Remove the second image and check that it stops updating.
 
 		IECoreImage.ImageDisplayDriver.removeStoredImage( "myLovelySphere2" )
 		s["o"]["outputs"][1]["active"].setValue( False )
 
-		time.sleep( 1.0 )
-
-		self.assertTrue( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ) is None )
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive )
+		)
+		self.assertEventually(
+			lambda : self.assertIsNone( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ) )
+		)
 
 		# Add a third image and check we can have that too.
 
@@ -237,11 +254,17 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
-		time.sleep( 1.0 )
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive )
+		)
+		self.assertEventually(
+			lambda : self.assertIsNone( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ) )
+		)
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere3" ), IECoreImage.ImagePrimitive )
+		)
 
-		self.assertTrue( isinstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECoreImage.ImagePrimitive ) )
-		self.assertTrue( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" ) is None )
-		self.assertTrue( isinstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere3" ), IECoreImage.ImagePrimitive ) )
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testAddAndRemoveLocation( self ) :
 
@@ -275,19 +298,21 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["s"]["enabled"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		s["s"]["enabled"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -337,23 +362,26 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Render the sphere.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Switch to the empty group.
 
 		s["switch"]["index"].setValue( 1 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Switch back to the sphere.
 
 		s["switch"]["index"].setValue( 0 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -398,48 +426,53 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# Visible to start with
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 ),
+		)
 
 		# Hide /group/sphere
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
 		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 ),
+		)
 
 		# Tweak the sphere geometry - it should remain hidden
 
 		s["s"]["radius"].setValue( 1.01 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Show it again
 
 		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Hide /group
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Show it again
 
 		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -485,41 +518,45 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# Visible to start with
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Hide /group/sphere
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
 		visibilityPlug["value"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Show it again
 
 		visibilityPlug["value"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Hide /group
 
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 		visibilityPlug["value"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Show it again
 
 		visibilityPlug["value"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -554,25 +591,27 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# Visible to start with
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Move to one side
 
 		s["s"]["transform"]["translate"]["x"].setValue( 2 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Move back
 
 		s["s"]["transform"]["translate"]["x"].setValue( 0 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -614,25 +653,27 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2.0 )
-
 		# Render red sphere
 
-		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Make it green
 
 		colorPlug.setValue( imath.Color3f( 0, 1, 0 ) )
-		self.uiThreadCallHandler.waitFor( 2.0 )
 
-		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), error = 0.01 )
+		)
 
 		# Make it red again
 
 		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
-		self.uiThreadCallHandler.waitFor( 2.0 )
 
-		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -678,25 +719,28 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# Visible to start with
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Move to one side
 
 		s["c"]["transform"]["translate"]["x"].setValue( 2 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Move back
 
 		s["c"]["transform"]["translate"]["x"].setValue( 0 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
+
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testSwitchRenderCamera( self ) :
@@ -749,22 +793,23 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		script["render"]["state"].setValue( script["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# `camera1` places the sphere in the centre of the image.
 
-		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 1, delta = 0.01 )
+		)
 		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.99, 0.5 ) ).a, 0, delta = 0.01 )
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 
 		# Switch to `camera2`, which should place the sphere at the edge of the image.
 
 		script["options"]["options"]["render:camera"]["value"].setValue( "/group/camera2" )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.99, 0.5 ) ).a, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.99, 0.5 ) ).a, 1, delta = 0.01 )
+		)
 		self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 0, delta = 0.01 )
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
@@ -812,13 +857,17 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				"" if withDefaultCamera else "/group/camera"
 			)
 
-			time.sleep( 1.0 )
-
 			# Use the default resolution to start with
 
-			self.assertEqual(
-				IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
-				imath.Box2i( imath.V2i( 0 ), imath.V2i( 639, 479 ) )
+			self.assertEventually(
+				lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ), IECoreImage.ImagePrimitive )
+			)
+
+			self.assertEventually(
+				lambda : self.assertEqual(
+					IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
+					imath.Box2i( imath.V2i( 0 ), imath.V2i( 639, 479 ) )
+				)
 			)
 
 			# Now specify a resolution
@@ -826,34 +875,36 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			s["options"]["options"]["render:resolution"]["enabled"].setValue( True )
 			s["options"]["options"]["render:resolution"]["value"].setValue( imath.V2i( 200, 100 ) )
 
-			time.sleep( 1.0 )
-
-			self.assertEqual(
-				IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
-				imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 99 ) )
+			self.assertEventually(
+				lambda : self.assertEqual(
+					IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
+					imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 99 ) )
+				)
 			)
 
 			# And specify another resolution
 
 			s["options"]["options"]["render:resolution"]["value"].setValue( imath.V2i( 300, 100 ) )
 
-			time.sleep( 1.0 )
-
-			self.assertEqual(
-				IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
-				imath.Box2i( imath.V2i( 0 ), imath.V2i( 299, 99 ) )
+			self.assertEventually(
+				lambda : self.assertEqual(
+					IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
+					imath.Box2i( imath.V2i( 0 ), imath.V2i( 299, 99 ) )
+				)
 			)
 
 			# And back to the default
 
 			s["options"]["options"]["render:resolution"]["enabled"].setValue( False )
 
-			time.sleep( 1.0 )
-
-			self.assertEqual(
-				IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
-				imath.Box2i( imath.V2i( 0 ), imath.V2i( 639, 479 ) )
+			self.assertEventually(
+				lambda : self.assertEqual(
+					IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
+					imath.Box2i( imath.V2i( 0 ), imath.V2i( 639, 479 ) )
+				)
 			)
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testDeleteWhilePaused( self ) :
 
@@ -897,7 +948,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Start a render, give it time to get going, then pause it.
 		s["r"]["state"].setValue( s["r"].State.Running )
-		time.sleep( 2 )
+
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ), IECoreImage.ImagePrimitive )
+		)
+
 		s["r"]["state"].setValue( s["r"].State.Paused )
 
 		# Delete everything, and check that we don't hang.
@@ -946,7 +1001,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Start a render, give it time to get going, then pause it.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
-		time.sleep( 2 )
+
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "subdivisionTest" ), IECoreImage.ImagePrimitive )
+		)
+
 		s["r"]["state"].setValue( s["r"].State.Paused )
 
 		# Change the input to the render node, and check that we don't hang.
@@ -959,6 +1018,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Start the render again, so we know we're not just testing
 		# the same thing as testDeleteWhilePaused().
 		s["r"]["state"].setValue( s["r"].State.Running )
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testEditContext( self ) :
 
@@ -995,39 +1056,43 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# Visible to start with
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Move to one side
 
 		s.context().setFrame( 3 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Move back
 
 		s.context().setFrame( 1 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Repeat, using a context we set directly ourselves.
 
 		c = Gaffer.Context()
 		c.setFrame( 3 )
 		s["r"].setContext( c )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		c.setFrame( 1 )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1084,50 +1149,51 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["r"] = self._createInteractiveRender()
 		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2 )
+		def assertNormalisedColor( index, value ) :
+			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+			self.assertEqual( c / c[index], value )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c / c[0], imath.Color3f( 1, 0.5, 0.25 ) )
+		self.assertEventually(
+			lambda : assertNormalisedColor( 0, imath.Color3f( 1, 0.5, 0.25 ) )
+		)
 
 		# Adjust a parameter, give it time to update, and check the output.
 
 		colorPlug.setValue( imath.Color3f( 0.25, 0.5, 1 ) )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c / c[2], imath.Color3f( 0.25, 0.5, 1 ) )
+		self.assertEventually(
+			lambda : assertNormalisedColor( 2, imath.Color3f( 0.25, 0.5, 1 ) )
+		)
 
 		# Pause it, adjust a parameter, wait, and check that nothing changed.
 
 		s["r"]["state"].setValue( s["r"].State.Paused )
 		colorPlug.setValue( imath.Color3f( 1, 0.5, 0.25 ) )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c / c[2], imath.Color3f( 0.25, 0.5, 1 ) )
+		self.assertEventually(
+			lambda : assertNormalisedColor( 2, imath.Color3f( 0.25, 0.5, 1 ) )
+		)
 
 		# Unpause it, wait, and check that the update happened.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c / c[0], imath.Color3f( 1, 0.5, 0.25 ) )
+		self.assertEventually(
+			lambda : assertNormalisedColor( 0, imath.Color3f( 1, 0.5, 0.25 ) )
+		)
 
 		# Stop the render, tweak a parameter and check that nothing happened.
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 		colorPlug.setValue( imath.Color3f( 0.25, 0.5, 1 ) )
-		self.uiThreadCallHandler.waitFor( 1 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c / c[0], imath.Color3f( 1, 0.5, 0.25 ) )
+		self.assertEventually(
+			lambda : assertNormalisedColor( 0, imath.Color3f( 1, 0.5, 0.25 ) )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1179,14 +1245,13 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["r"] = self._createInteractiveRender()
 		s["r"]["in"].setInput( s["ro"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c, imath.Color3f( 0, 0, 0 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color3f( 0, 0, 0 ) )
+		)
 
 		# Add a light
 
@@ -1197,10 +1262,9 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Give it time to update, and check the output.
 
-		self.uiThreadCallHandler.waitFor( 2 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertGreater( c[1], 0.05 )
+		self.assertEventually(
+			lambda : self.assertGreater( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0.05 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1256,30 +1320,29 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["r"] = self._createInteractiveRender()
 		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertNotEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		# Remove the light by disabling it.
 
 		s["l"]["enabled"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 2 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		# Enable it again.
 
 		s["l"]["enabled"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 2 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertNotEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1339,31 +1402,29 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["r"] = self._createInteractiveRender()
 		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertNotEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		# Remove the light by hiding it.
 
 		s["v"]["attributes"]["scene:visible"]["value"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 2 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		# Put the light back by showing it.
 
 		s["v"]["attributes"]["scene:visible"]["value"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 2 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-
-		self.assertNotEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1419,32 +1480,30 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["r"] = self._createInteractiveRender()
 		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertNotEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		# Remove the light by muting it.
 
 		s["l"]["mute"]["enabled"].setValue( True )
 		s["l"]["mute"]["value"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 2 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		# Put the light back by unmuting it.
 
 		s["l"]["mute"]["value"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 2 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-
-		self.assertNotEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1503,22 +1562,21 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["renderer"] = self._createInteractiveRender()
 		s["renderer"]["in"].setInput( s["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		s["renderer"]["state"].setValue( s["renderer"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertNotEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		# Break the light by removing the shader attribute.
 
 		s["deleteAttributes"]["names"].setValue( "*" )
-		self.uiThreadCallHandler.waitFor( 2 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		# Fix the light back by putting the attribute back. We allow this to
 		# require the object to be regenerated if necessary.
@@ -1526,11 +1584,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.ignoreMessage( IECore.Msg.Level.Warning, "RenderController", "1 attribute edit required geometry to be regenerated" )
 
 		s["deleteAttributes"]["names"].setValue( "" )
-		self.uiThreadCallHandler.waitFor( 2 )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-
-		self.assertNotEqual( c[0], 0.0 )
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
 
 		s["renderer"]["state"].setValue( s["renderer"].State.Stopped )
 
@@ -1573,25 +1630,27 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# Visible to start with
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Hide
 
 		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Show again
 
 		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1635,25 +1694,27 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# Visible to start with
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		# Hide
 
 		visibilityPlug["value"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+		)
 
 		# Show again
 
 		visibilityPlug["value"].setValue( True )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -1810,8 +1871,6 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["in"].setInput( s["rendererOptions"]["out"] )
 		s["render"]["state"].setValue( s["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
-
 		# We haven't used the trace sets yet, so should be able to see
 		# the reflection.
 
@@ -1823,42 +1882,37 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			else :
 				self.assertLess( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.1 )
 
-		assertReflected( True )
+		self.assertEventually( lambda : assertReflected( True ) )
 
 		# Ask to use a trace set. Reflection should disappear because
 		# we haven't added anything to the set.
 
 		traceSetParameter.setValue( "myTraceSet" )
-		self.uiThreadCallHandler.waitFor( 1.0 )
-		assertReflected( False )
 
+		self.assertEventually( lambda : assertReflected( False ) )
 		# Now add the reflected object into the set. Reflection should
 		# come back.
 
 		s["set"]["paths"].setValue( IECore.StringVectorData( [ "/group/reflected" ] ) )
-		self.uiThreadCallHandler.waitFor( 1.0 )
-		assertReflected( True )
+		self.assertEventually( lambda : assertReflected( True ) )
 
 		# Rename the set so that it's not a trace set any more. Reflection
 		# should disappear.
 
 		s["set"]["name"].setValue( "myTraceSet" )
-		self.uiThreadCallHandler.waitFor( 1.0 )
-		assertReflected( False )
+		self.assertEventually( lambda : assertReflected( False ) )
 
 		# Rename the set so that it is a trace set, but with a different namer.
 		# Reflection should not reappear.
 
 		s["set"]["name"].setValue( "render:myOtherTraceSet" )
-		self.uiThreadCallHandler.waitFor( 1.0 )
-		assertReflected( False )
+		self.assertEventually( lambda : assertReflected( False ) )
 
 		# Update the shader to use this new trace set. Reflection should
 		# reappear.
 
 		traceSetParameter.setValue( "myOtherTraceSet" )
-		self.uiThreadCallHandler.waitFor( 1.0 )
-		assertReflected( True )
+		self.assertEventually( lambda : assertReflected( True ) )
 
 		s["render"]["state"].setValue( s["render"].State.Stopped )
 
@@ -1890,11 +1944,15 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 1.0 )
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphereRenderedIn" + self.renderer ), IECoreImage.ImagePrimitive )
+		)
 
 		renderer = s["r"]["renderer"].getValue() if "renderer" in s["r"] else s["r"]["__renderer"].getValue()
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphereRenderedIn" + renderer )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testLightFilter( self ) :
 
@@ -1960,11 +2018,17 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["render"] = self._createInteractiveRender()
 		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 
-		# Render and give it some time to finish.
+		# Render and wait for our first image to converge.
 
 		script["render"]["state"].setValue( script["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1 )
+		def assertConvergedEnough() :
+
+			c = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
+			self.assertGreater( c.r, 0.1 )
+			self.assertEqualWithAbsError( c.r, c.g, error = 0.01 )
+
+		self.assertEventually( lambda : assertConvergedEnough() )
 
 		c = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
 		unfilteredIntensity = c[0]
@@ -1974,79 +2038,90 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		lightFilterDensityPlug.setValue( 1.0 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Disable light filter and let renderer update
 
 		script["lightFilter"]["enabled"].setValue( False )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Enable light filter and let renderer update
 
 		script["lightFilter"]["enabled"].setValue( True )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Change parameter on light filter
 
 		lightFilterDensityPlug.setValue( 0.5 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity / 2.0, unfilteredIntensity / 2.0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity / 2.0, unfilteredIntensity / 2.0, 0, 1 ), error = 0.01 )
+		)
 
 		# Change parameter on light
 
 		script["light"]["parameters"]["intensity"].setValue( 2.0 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Change light filter transformation
 
 		script["lightFilter"]["transform"]["rotate"]["x"].setValue( 0.1 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Disable light
 
 		script["light"]["enabled"].setValue( False )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Reenable light
 
 		script["light"]["enabled"].setValue( True )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Reset light and filter
 
 		script["light"]["parameters"]["intensity"].setValue( 1.0 )
 		lightFilterDensityPlug.setValue( 1 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Unlink the filter
 
 		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "" )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Relink the filter
 
 		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
@@ -2126,11 +2201,17 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["render"] = self._createInteractiveRender()
 		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 
-		# Render and give it some time to finish.
+		# Render and give it some time to converge.
 
 		script["render"]["state"].setValue( script["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1 )
+		def assertConvergedEnough() :
+
+			c = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
+			self.assertGreater( c.r, 0.1 )
+			self.assertEqualWithAbsError( c.r, c.g, error = 0.01 )
+
+		self.assertEventually( lambda : assertConvergedEnough() )
 
 		c = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
 		unfilteredIntensity = c[0]
@@ -2140,73 +2221,83 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		lightFilterDensityPlug.setValue( 1.0 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Disable light filter and let renderer update
 
 		script["lightFilter"]["enabled"].setValue( False )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Enable light filter and let renderer update
 
 		script["lightFilter"]["enabled"].setValue( True )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Add a gobo and disable light filter
 
 		script["gobo"]["enabled"].setValue( True )
 		script["lightFilter"]["enabled"].setValue( False )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Look at combined result of light filter and gobo
 
 		script["lightFilter"]["enabled"].setValue( True )
 		lightFilterDensityPlug.setValue( 0.5 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity * 0.5, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity * 0.5, 0, 1 ), error = 0.01 )
+		)
 
 		# Change parameter on light
 
 		script["light"]["parameters"]["intensity"].setValue( 2.0 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Change light filter transformation
 
 		script["lightFilter"]["transform"]["rotate"]["x"].setValue( 0.1 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Change light filter parameter
 
 		script["lightFilter"]["parameters"]["geometry_type"].setValue( "sphere" )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Disable light
 
 		script["light"]["enabled"].setValue( False )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Reenable light
 
 		script["light"]["enabled"].setValue( True )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Disable gobo, reset light and filter
 
@@ -2214,22 +2305,25 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["light"]["parameters"]["intensity"].setValue( 1.0 )
 		lightFilterDensityPlug.setValue( 1 )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Unlink the filter
 
 		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "" )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
 
 		# Relink the filter
 
 		script["attributes"]["attributes"]["filteredLights"]["value"].setValue( "defaultLights" )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
@@ -2288,36 +2382,39 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["render"] = self._createInteractiveRender()
 		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 
-		# Render and give it some time to finish. Should be unfiltered, because
+		# Render and check the output. Should be unfiltered, because
 		# by default, filters aren't linked.
 
 		script["render"]["state"].setValue( script["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEventually(
+			lambda : self.assertGreater( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).r, 0.12 )
+		)
 
 		unfilteredColor = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
-		self.assertGreater( unfilteredColor[0], 0.12 )
 
 		# Try to link the filter. Should still be unfiltered, because the set is
 		# empty.
 
 		script["lightFilter"]["filteredLights"].setValue( "mySet" )
-		self.uiThreadCallHandler.waitFor( 1 )
-
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), unfilteredColor, error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), unfilteredColor, error = 0.01 )
+		)
 
 		# Add the light into the set. Now the filtering should happen.
 
 		script["light"]["sets"].setValue( "mySet" )
-		self.uiThreadCallHandler.waitFor( 1 )
-
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 0, 1 ), error = 0.01 )
+		)
 
 		# Take the light out of the set. Goodbye filtering.
 
 		script["light"]["sets"].setValue( "" )
-		self.uiThreadCallHandler.waitFor( 1 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), unfilteredColor, error = 0.01 )
+		)
 
-		self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), unfilteredColor, error = 0.01 )
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
 	def testAdaptors( self ) :
@@ -2368,11 +2465,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2.0 )
-
 		# Render red sphere
 
-		self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
+		)
+
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testBasicLightLinking( self ) :
@@ -2428,23 +2526,23 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["r"] = self._createInteractiveRender()
 		s["r"]["in"].setInput( s["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2 )
+		def assertNormalisedColor() :
+			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+			self.assertEqual( c / c[0], imath.Color3f( 1, 0.5, 0.25 ) )
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c / c[0], imath.Color3f( 1, 0.5, 0.25 ) )
+		self.assertEventually( lambda : assertNormalisedColor() )
 
 		# Unlink the light, give it time to update, and check the output.
 
 		s["l"]["defaultLight"].setValue( False )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c, imath.Color3f( 0, 0, 0 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color3f( 0, 0, 0 ) )
+		)
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -2546,18 +2644,18 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["render"] = self._createInteractiveRender()
 		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		script["render"]["state"].setValue( script["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1 )
 
 		for uv, expectedColor in [
 			( imath.V2f( 0.25, 0.75 ), imath.Color3f( 1, 0, 0 ) ),
 			( imath.V2f( 0.75, 0.75 ), imath.Color3f( 0, 1, 0 ) ),
 			( imath.V2f( 0.75, 0.25 ), imath.Color3f( 0, 0, 1 ) ),
 		] :
-			c = self._color3fAtUV( script["catalogue"], uv )
-			self.assertEqual( c.normalize(), expectedColor )
+			self.assertEventually(
+				lambda : self.assertEqual( self._color3fAtUV( script["catalogue"], uv ).normalize(), expectedColor )
+			)
 
 		# Switch the links around, and check the output again.
 
@@ -2568,15 +2666,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		] ) :
 			script["spreadsheet"]["rows"][i+1]["cells"]["linkedLights"]["value"].setValue( linkedLights )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
 		for uv, expectedColor in [
 			( imath.V2f( 0.25, 0.75 ), imath.Color3f( 0, 1, 0 ) ),
 			( imath.V2f( 0.75, 0.75 ), imath.Color3f( 0, 0, 1 ) ),
 			( imath.V2f( 0.75, 0.25 ), imath.Color3f( 1, 0, 0 ) ),
 		] :
-			c = self._color3fAtUV( script["catalogue"], uv )
-			self.assertEqual( c.normalize(), expectedColor )
+			self.assertEventually(
+				lambda : self.assertEqual( self._color3fAtUV( script["catalogue"], uv ).normalize(), expectedColor )
+			)
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 
@@ -2647,27 +2744,28 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["renderer"] = self._createInteractiveRender()
 		s["renderer"]["in"].setInput( s["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 		# We should get light only from the default light, and not the
 		# other one.
 
 		s["renderer"]["state"].setValue( s["renderer"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 2 )
+		def assertNormalisedColor() :
 
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertNotEqual( c[0], 0 )
-		self.assertEqual( c / c[0], imath.Color3f( 1, 0, 0 ) )
+			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+			self.assertNotEqual( c[0], 0 )
+			self.assertEqual( c / c[0], imath.Color3f( 1, 0, 0 ) )
+
+		self.assertEventually( lambda : assertNormalisedColor() )
 
 		# Hide the default light. We should get a black render.
 
 		s["defaultLightAttributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 		s["defaultLightAttributes"]["attributes"]["scene:visible"]["value"].setValue( False )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
-		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c, imath.Color3f( 0, 0, 0 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ), imath.Color3f( 0, 0, 0 ) )
+		)
 
 		s["renderer"]["state"].setValue( s["renderer"].State.Stopped )
 
@@ -2723,12 +2821,13 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["renderer"] = self._createInteractiveRender()
 		script["renderer"]["in"].setInput( script["rendererOptions"]["out"] )
 
-		# Start a render, give it time to finish, and check the output.
+		# Start a render and check the output.
 
 		script["renderer"]["state"].setValue( script["renderer"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1 )
 
-		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEventually(
+			lambda : self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		)
 		self.assertEqual( script["catalogue"]["out"].dataWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 640, 480 ) ) )
 		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
 
@@ -2739,16 +2838,17 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			script["options"]["options"]["render:cropWindow"]["enabled"].setValue( True )
 			script["options"]["options"]["render:cropWindow"]["value"].setValue( imath.Box2f( imath.V2f( 0 ), imath.V2f( 0.5 ) ) )
 
-		self.uiThreadCallHandler.waitFor( 1 )
-
+		self.assertEventually(
+			lambda : self.assertEqual( script["catalogue"]["out"].dataWindow(), imath.Box2i( imath.V2i( 0, 240 ), imath.V2i( 320, 480 ) ) )
+		)
 		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
-		self.assertEqual( script["catalogue"]["out"].dataWindow(), imath.Box2i( imath.V2i( 0, 240 ), imath.V2i( 320, 480 ) ) )
 		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
 
 		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
-		self.uiThreadCallHandler.waitFor( 0.5 ) # Wait for saving to complete
 
-		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
+		self.assertEventually(
+			lambda : self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
+		)
 
 	def testRendererOption( self ):
 
@@ -2793,10 +2893,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			Gaffer.NameValuePlug( "render:defaultRenderer", self.renderer )
 		)
 		script["renderer"]["state"].setValue( script["renderer"].State.Running )
-		time.sleep( 1.0 )
 
-		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "testRendererOption" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.removeStoredImage( "testRendererOption" ), IECoreImage.ImagePrimitive )
+		)
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
 
 	def testRendererOptionContext( self ):
 
@@ -2833,10 +2935,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# the `defaultRendererVariable` and enable the render.
 
 		script["renderer"]["state"].setValue( script["renderer"].State.Running )
-		time.sleep( 1.0 )
 
-		image = IECoreImage.ImageDisplayDriver.storedImage( "testRendererOptionContext" )
-		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+		self.assertEventually(
+			lambda : self.assertIsInstance( IECoreImage.ImageDisplayDriver.storedImage( "testRendererOptionContext" ), IECoreImage.ImagePrimitive )
+		)
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
 
 	def testResolvedRenderer( self ) :
 
@@ -3000,40 +3104,48 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Render, and check the plane is fully shadowed.
 
 		script["render"]["state"].setValue( script["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		)
 
 		# Remove shadow link, and check plane isn't shadowed.
 
 		script["attributes"]["attributes"].addChild(
 			Gaffer.NameValuePlug( "shadowedLights", "", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		)
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertGreater( script["sampler"]["color"]["r"].getValue(), 0.1 )
+		self.assertEventually(
+			lambda : self.assertGreater( script["sampler"]["color"]["r"].getValue(), 0.1 )
+		)
 
 		# Link to light explicitly, and check plane is shadowed.
 
 		script["attributes"]["attributes"][-1]["value"].setValue( "/pointLight" )
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		)
 
 		# Link to non-existent light, and check plane isn't shadowed.
 
 		script["attributes"]["attributes"][-1]["value"].setValue( "nonExistent" )
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertGreater( script["sampler"]["color"]["r"].getValue(), 0.1 )
+		self.assertEventually(
+			lambda : self.assertGreater( script["sampler"]["color"]["r"].getValue(), 0.1 )
+		)
 
 		# Link to light via `defaultLights`, and check plane is shadowed.
 
 		script["attributes"]["attributes"][-1]["value"].setValue( "defaultLights" )
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		)
 
 		# Remove light from set, and check plane isn't shadowed.
 
 		script["light"]["defaultLight"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 1 )
-		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		self.assertEventually(
+			lambda : self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		)
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
 
 	def testManifest( self ) :
 
@@ -3082,13 +3194,18 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.assertEventually(
+			lambda : self.assertEqual( len( s["catalogue"]["images"] ), 1 )
+		)
+
 		# Without an ID output, we don't create a manifest
 		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( s['catalogue']['out'] ).node().renderManifest() )
 
-
 		s["r"]["state"].setValue( s["r"].State.Stopped )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		self.assertEventually(
+			lambda : self.assertNotIn( "gaffer:isRendering", s["catalogue"]["out"].metadata() )
+		)
 
 		s["outputs"].addOutput(
 			"id",
@@ -3107,7 +3224,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		)
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.assertEventually(
+			lambda : self.assertEqual( len( s["catalogue"]["images"] ), 2 )
+		)
+
+		self.assertIsNotNone( GafferScene.SceneAlgo.sourceScene( s["catalogue"]["out"] ).node().renderManifest() )
 
 		# Check accessing the live manifest through the catalogue's output
 		liveManifest = GafferScene.SceneAlgo.sourceScene( s['catalogue']['out'] ).node().renderManifest()
@@ -3125,11 +3246,16 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["catalogue"]["images"].addChild( GafferScene.Catalogue.Image( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["catalogue"]["images"][2].copyFrom( s["catalogue"]["images"][1] )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.assertEventually(
+			lambda : self.assertEqual( len( s["catalogue"]["images"] ), 3 )
+		)
 
 		s["catalogue"]["imageIndex"].setValue( 2 )
 
-		self.assertIn( 'gaffer:renderManifestFilePath', s['catalogue']['out'].metadata() )
+		self.assertEventually(
+			lambda : self.assertIn( "gaffer:renderManifestFilePath", s["catalogue"]["out"].metadata() )
+		)
+
 		snapshotManifest = GafferScene.RenderManifest.loadFromImageMetadata( s['catalogue']['out'].metadata(), "" )
 		self.assertEqual( snapshotManifest.size(), 3 )
 		self.assertEqual( { n : snapshotManifest.idForPath( n ) for n in locationNames }, manifestValues )
@@ -3141,24 +3267,28 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotIn( 'gaffer:renderManifestFilePath', s['catalogue']['out'].metadata() )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
-		self.uiThreadCallHandler.waitFor( 1.0 )
 
-		self.assertIn( 'gaffer:renderManifestFilePath', s['catalogue']['out'].metadata() )
+		self.assertEventually(
+			lambda : self.assertIn( "gaffer:renderManifestFilePath", s["catalogue"]["out"].metadata() )
+		)
+
 		finalManifest = GafferScene.RenderManifest.loadFromImageMetadata( s['catalogue']['out'].metadata(), "" )
 		self.assertEqual( finalManifest.size(), 3 )
 		self.assertEqual( { n : finalManifest.idForPath( n ) for n in locationNames }, manifestValues )
 
-
 		# Setting this option during an interactive render only triggers a warning
 		s["options"]["options"]["render:manifestFilePath"]["value"].setValue( "/some/path" )
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		self.assertEventually(
+			lambda : self.assertEqual( len( s["catalogue"]["images"] ), 4 )
+		)
 
 		with IECore.CapturingMessageHandler() as mh :
 			s["r"]["state"].setValue( s["r"].State.Stopped )
-			self.uiThreadCallHandler.waitFor( 1.0 )
-
-			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEventually(
+				lambda : self.assertEqual( len( mh.messages ), 1 )
+			)
 			self.assertEqual( mh.messages[0].message, 'Ignoring "render:manifestFilePath" during interactive render. The catalogue generates its own manifest files, this option is not needed.' )
 
 	def testOutputMetadata( self ) :
@@ -3198,12 +3328,16 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["render"]["in"].setInput( script["outputs"]["out"] )
 
 		script["render"]["state"].setValue( script["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.assertEventually(
+			lambda : self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		)
 
 		catalogueMetadata = script["catalogue"]["out"].metadata()
 		for k, v in metadata.items() :
 			self.assertIn( k, catalogueMetadata )
 			self.assertEqual( catalogueMetadata[k], v )
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
 
 	def testVisibleSet( self ) :
 
@@ -3255,8 +3389,6 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["in"].setInput( s["rendererOptions"]["out"] )
 		s["render"]["state"].setValue( s["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 0.5 )
-
 		def assertVisible( sphereA, sphereB ) :
 
 			if sphereA :
@@ -3271,14 +3403,13 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# We haven't enabled use of the VisibleSet, so we should see both spheres.
 
-		assertVisible( True, True )
+		self.assertEventually( lambda : assertVisible( True, True ) )
 
 		# Enable use of the VisibleSet, both spheres should be invisible.
 
 		s["render"]["useVisibleSet"].setValue( True )
 
-		self.uiThreadCallHandler.waitFor( 0.5 )
-		assertVisible( False, False )
+		self.assertEventually( lambda : assertVisible( False, False ) )
 
 		def setVisibleSet( scriptNode, visibleSet ) :
 
@@ -3288,26 +3419,22 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		setVisibleSet( s, GafferScene.VisibleSet( expansions = IECore.PathMatcher( [ "/group" ] ) ) )
 
-		self.uiThreadCallHandler.waitFor( 0.5 )
-		assertVisible( True, True )
+		self.assertEventually( lambda : assertVisible( True, True ) )
 
 		# Exclude SphereA from the VisibleSet.
 
 		setVisibleSet( s, GafferScene.VisibleSet( expansions = IECore.PathMatcher( [ "/group" ] ), exclusions = IECore.PathMatcher( [ "/group/sphereA" ] ) ) )
-		self.uiThreadCallHandler.waitFor( 0.5 )
-		assertVisible( False, True )
+		self.assertEventually( lambda : assertVisible( False, True ) )
 
 		# Include only SphereA
 
 		setVisibleSet( s, GafferScene.VisibleSet( inclusions = IECore.PathMatcher( [ "/group/sphereA" ] ) ) )
-		self.uiThreadCallHandler.waitFor( 0.5 )
-		assertVisible( True, False )
+		self.assertEventually( lambda : assertVisible( True, False ) )
 
 		# Disable use of the VisibleSet. Both spheres should be visible again.
 
 		s["render"]["useVisibleSet"].setValue( False )
-		self.uiThreadCallHandler.waitFor( 0.5 )
-		assertVisible( True, True )
+		self.assertEventually( lambda : assertVisible( True, True ) )
 
 		s["render"]["state"].setValue( s["render"].State.Stopped )
 
@@ -3316,8 +3443,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		setVisibleSet( s, GafferScene.VisibleSet( inclusions = IECore.PathMatcher( [ "/group/sphereB" ] ) ) )
 		s["render"]["useVisibleSet"].setValue( True )
 		s["render"]["state"].setValue( s["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 0.5 )
-		assertVisible( False, True )
+		self.assertEventually( lambda : assertVisible( False, True ) )
 
 		s["render"]["state"].setValue( s["render"].State.Stopped )
 
@@ -3379,7 +3505,6 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["state"].setValue( s["render"].State.Running )
 
 		Gaffer.Metadata.registerValue( s, "ui:scene:visibleSet", GafferScene.VisibleSetData( GafferScene.VisibleSet( inclusions = IECore.PathMatcher( [ "/group/sphereB" ] ) ) ) )
-		self.uiThreadCallHandler.waitFor( 0.5 )
 
 		def assertVisible( sphereA, sphereB ) :
 
@@ -3395,16 +3520,15 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Only SphereB should be visible.
 
-		assertVisible( False, True )
+		self.assertEventually( lambda : assertVisible( False, True ) )
 
 		# Switch to the reverse camera. We should be able to render through
 		# it even though it isn't explicitly included in the VisibleSet.
 
 		s["options"]["options"]["render:camera"]["value"].setValue( "/group/reverseCamera" )
-		self.uiThreadCallHandler.waitFor( 0.5 )
 
 		# Our visible spheres should swap as they're now viewed from behind.
-		assertVisible( True, False )
+		self.assertEventually( lambda : assertVisible( True, False ) )
 
 		s["render"]["state"].setValue( s["render"].State.Stopped )
 
