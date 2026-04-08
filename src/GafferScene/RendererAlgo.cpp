@@ -380,7 +380,7 @@ bool deformationMotionTimes( const RenderOptions &renderOptions, const CompoundO
 
 bool transformSamples( const M44fPlug *transformPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECoreScenePreview::Renderer::TransformSamples &samples, IECore::MurmurHash *hash )
 {
-	std::vector< IECore::MurmurHash > sampleHashes;
+	IECoreScenePreview::Renderer::Samples<IECore::MurmurHash> sampleHashes;
 	if( !sampleTimes.size() )
 	{
 		sampleHashes.push_back( transformPlug->hash() );
@@ -476,7 +476,7 @@ bool transformSamples( const M44fPlug *transformPlug, const IECoreScenePreview::
 
 bool objectSamples( const ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECoreScenePreview::Renderer::ObjectSamples &samples, IECore::MurmurHash *hash )
 {
-	std::vector< IECore::MurmurHash > sampleHashes;
+	IECoreScenePreview::Renderer::Samples<IECore::MurmurHash> sampleHashes;
 	if( !sampleTimes.size() )
 	{
 		sampleHashes.push_back( objectPlug->hash() );

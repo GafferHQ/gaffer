@@ -174,7 +174,7 @@ void registerConverter( IECore::TypeId fromType, Converter converter )
 	registry()[fromType] = converter;
 }
 
-void primitiveVariableParameterLists( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices )
+void primitiveVariableParameterLists( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, IECoreScenePreview::Renderer::Samples<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices )
 {
 	for( const auto &variable : primitives.front()->variables )
 	{
