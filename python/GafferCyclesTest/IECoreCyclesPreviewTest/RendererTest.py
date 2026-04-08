@@ -1059,6 +1059,7 @@ class RendererTest( GafferTest.TestCase ) :
 		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
+		del primitiveHandle
 
 		# Check we got what we expected
 
@@ -1510,6 +1511,7 @@ class RendererTest( GafferTest.TestCase ) :
 			cyclesPlane.transform( imath.M44f().translate( imath.V3f( translateX, 0, -1 ) ) )
 
 		renderer.render()
+		del cyclesPlane
 
 		image = OpenImageIO.ImageBuf( str( fileName ) )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.48, 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
@@ -1591,6 +1593,7 @@ class RendererTest( GafferTest.TestCase ) :
 		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
+		del primitiveHandle
 
 		image = OpenImageIO.ImageBuf( str( fileName ) )
 		self.assertEqualWithAbsError( self.__colorAtUV( image, imath.V2f( 0.55 ) ), expectedResult, maxDifference )
@@ -1961,6 +1964,7 @@ class RendererTest( GafferTest.TestCase ) :
 		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
 		renderer.render()
+		del primitiveHandle
 
 		# Check we got what we expected.
 
