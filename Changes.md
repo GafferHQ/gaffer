@@ -42,6 +42,8 @@ Fixes
 API
 ---
 
+- SubGraph : Clarified via documentation that SubGraph is _not_ intended as a base class for custom nodes. Nodes should derive from DependencyNode
+  or some other base class instead.
 - Metadata : `ValueFunctions` now receive a `target` parameter. This is particularly useful when registering a function against a wildcard pattern.
 - PlugAlgo : Added `RampffData` and `RampfColor3fData` support to `createPlugFromData()`.
 - Widget :
