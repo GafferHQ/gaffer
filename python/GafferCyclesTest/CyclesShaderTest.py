@@ -98,5 +98,15 @@ class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotIn( "emission", script["principled_bsdf"]["parameters"].keys() )
 		self.assertEqual( script["principled_bsdf"]["parameters"]["emission_color"].getValue(), imath.Color3f( 0.5, 0.6, 0.7 ) )
 
+	def testLoadLights( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "point_light" )
+		self.assertEqual( shader["type"].getValue(), "cycles:light" )
+		self.assertIsInstance( shader["parameters"]["size"], Gaffer.FloatPlug )
+		self.assertEqual( shader["parameters"]["size"].defaultValue(), 0.0 )
+		self.assertIsInstance( shader["parameters"]["normalize"], Gaffer.BoolPlug )
+		self.assertEqual( shader["parameters"]["normalize"].defaultValue(), True )
+
 if __name__ == "__main__":
 	unittest.main()
