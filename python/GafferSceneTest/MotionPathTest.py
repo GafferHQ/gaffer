@@ -79,6 +79,7 @@ class MotionPathTest( GafferSceneTest.SceneTestCase ) :
 		camAnimZ.addKey( Gaffer.Animation.Key( 4 / 24.0, 10, Gaffer.Animation.Interpolation.Linear ) )
 
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 		script["light"]["sets"].setValue( "lights" )
 
 		script["group"] = GafferScene.Group()

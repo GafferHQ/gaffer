@@ -57,18 +57,11 @@ TestLight::TestLight( const std::string &name )
 	addChild( new TestShader( "__shader" ) );
 	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
-	/// \todo Remove this when merging to `main` after changing `TestShader` to not load a
-	/// default shader. We need it for now to remove the child plugs resulting from loading
-	/// `simpleShader` in the `TestShader` constructor.
-	shaderNode()->parametersPlug()->clearChildren();
-
 	shaderNode()->typePlug()->setValue( "light" );
 	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
 	shaderNode()->parametersPlug()->setInput( parametersPlug() );
 
 	shaderInPlug()->setInput( shaderNode()->outPlug() );
-
-	shaderNode()->loadShader( "simpleLight" );
 }
 
 TestLight::~TestLight()

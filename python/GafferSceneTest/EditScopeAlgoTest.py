@@ -301,6 +301,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testParameterEdits( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		editScope = Gaffer.EditScope()
 		editScope.setup( light["out"] )
@@ -347,6 +348,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["scope"] = Gaffer.EditScope()
 		s["scope"].setup( s["light"]["out"] )
@@ -408,10 +410,12 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# Make two lights and an EditScope
 
 		light1 = GafferSceneTest.TestLight()
+		light1.loadShader( "simpleLight" )
 		light1["name"].setValue( "light1" )
 		light1["parameters"]["intensity"].setValue( imath.Color3f( 1, 0, 0 ) )
 
 		light2 = GafferSceneTest.TestLight()
+		light2.loadShader( "simpleLight" )
 		light2["name"].setValue( "light2" )
 		light2["parameters"]["intensity"].setValue( imath.Color3f( 0, 1, 0 ) )
 
@@ -496,6 +500,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testParameterEditExceptions( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
 		editScope = Gaffer.EditScope()
@@ -532,6 +537,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		groupFilter = GafferScene.PathFilter()
 		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 		shader = GafferSceneTest.TestShader()
+		shader.loadShader( "simpleShader" )
 		shader["type"].setValue( "test:surface" )
 
 		shaderAssignment = GafferScene.ShaderAssignment()
@@ -562,8 +568,10 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["light1"] = GafferSceneTest.TestLight()
+		script["light1"].loadShader( "simpleLight" )
 		script["light1"]["name"].setValue( "light1" )
 		script["light2"] = GafferSceneTest.TestLight()
+		script["light2"].loadShader( "simpleLight" )
 		script["light2"]["name"].setValue( "light2" )
 
 		script["group"] = GafferScene.Group()
@@ -602,6 +610,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testParameterEditsDontAffectOtherAttributes( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		lightFilter = GafferScene.PathFilter()
 		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -640,6 +649,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testAttributeEdits( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
 		editScope = Gaffer.EditScope()
@@ -698,6 +708,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
 		s["scope"] = Gaffer.EditScope()
@@ -811,11 +822,13 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# Make two lights and an EditScope
 
 		light1 = GafferSceneTest.TestLight()
+		light1.loadShader( "simpleLight" )
 		light1["name"].setValue( "light1" )
 		light1["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		light1["visualiserAttributes"]["scale"]["value"].setValue( 2.0 )
 
 		light2 = GafferSceneTest.TestLight()
+		light2.loadShader( "simpleLight" )
 		light2["name"].setValue( "light2" )
 		light2["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		light2["visualiserAttributes"]["scale"]["value"].setValue( 0.5 )
@@ -896,6 +909,8 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testAttributeEditExceptions( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		editScope = Gaffer.EditScope()
 		editScope.setup( light["out"] )
 		editScope["in"].setInput( light["out"] )
@@ -916,6 +931,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testAttributeEditLocalisation( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( light["out"] )
@@ -948,11 +964,13 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["light1"] = GafferSceneTest.TestLight()
+		script["light1"].loadShader( "simpleLight" )
 		script["light1"]["name"].setValue( "light1" )
 		script["light1"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		script["light1"]["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
 
 		script["light2"] = GafferSceneTest.TestLight()
+		script["light2"].loadShader( "simpleLight" )
 		script["light2"]["name"].setValue( "light2" )
 		script["light2"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		script["light2"]["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
@@ -994,6 +1012,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testAttributeEditsDontAffectOtherAttributes( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
 		lightFilter = GafferScene.PathFilter()
@@ -1061,6 +1080,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ]) )
 
 		shader = GafferSceneTest.TestShader()
+		shader.loadShader( "simpleShader" )
 
 		shaderAssignment = GafferScene.ShaderAssignment()
 		shaderAssignment["in"].setInput( plane["out"] )

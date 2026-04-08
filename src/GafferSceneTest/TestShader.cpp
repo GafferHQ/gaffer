@@ -131,8 +131,6 @@ TestShader::TestShader( const std::string &name )
 	typePlug()->setFlags( Plug::Serialisable, true );
 
 	addChild( new Plug( "out", Plug::Out ) );
-
-	loadShader( "simpleShader" );
 }
 
 TestShader::~TestShader()
@@ -151,6 +149,10 @@ void TestShader::loadShader( const std::string &shaderName, bool keepExistingVal
 	}
 
 	namePlug()->source<StringPlug>()->setValue( shaderName );
+
+	/// \todo We should be setting `typePlug()` for each of these too, and we
+	/// need a `surface` shader option. Lots of the unit tests are having to set
+	/// type manually instead.
 
 	if( shaderName == "simpleLight" )
 	{

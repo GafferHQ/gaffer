@@ -110,6 +110,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	def testValue( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 		light["parameters"]["exposure"].setValue( 0.25 )
 
 		self.assertEqual(
@@ -122,6 +123,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 		s["group"] = GafferScene.Group()
 		s["editScope1"] = Gaffer.EditScope()
 		s["editScope2"] = Gaffer.EditScope()
@@ -204,6 +206,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		# If there is a source node inside an edit scope, make sure we use that
 
 		s["editScope1"]["light2"] = GafferSceneTest.TestLight()
+		s["editScope1"]["light2"].loadShader( "simpleLight" )
 		s["editScope1"]["light2"]["name"].setValue( "light2" )
 		s["editScope1"]["parentLight2"] = GafferScene.Parent()
 		s["editScope1"]["parentLight2"]["parent"].setValue( "/" )
@@ -345,6 +348,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testShader"] = GafferSceneTest.TestShader()
+		s["testShader"].loadShader( "simpleShader" )
 		s["testShader"]["type"].setValue( "test:surface" )
 		s["testShader"]["parameters"]["optionalString"]["enabled"].setValue( True )
 
@@ -374,6 +378,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -411,6 +416,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
+
 		s["group"] = GafferScene.Group()
 		s["editScope"] = Gaffer.EditScope()
 
@@ -434,6 +441,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -520,6 +528,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -551,6 +560,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["sphere"] = GafferScene.Sphere()
 
 		s["shader"] = GafferSceneTest.TestShader()
+		s["shader"].loadShader( "simpleShader" )
 		s["shader"]["type"].setValue( "test:surface" )
 
 		s["shaderAssignment"] = GafferScene.ShaderAssignment()
@@ -582,6 +592,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
+
 		s["editScope1"] = Gaffer.EditScope( "EditScope1" )
 
 		s["editScope1"].setup( s["light"]["out"] )
@@ -613,6 +625,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["editScope"] = Gaffer.EditScope()
 		s["editScope"].setup( s["light"]["out"] )
@@ -639,6 +652,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -676,6 +690,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		s["box"] = Gaffer.Box()
 		s["box"]["light"] = GafferSceneTest.TestLight()
+		s["box"]["light"].loadShader( "simpleLight" )
 		Gaffer.PlugAlgo.promote( s["box"]["light"]["out"] )
 
 		self.__assertExpectedResult(
@@ -687,6 +702,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	def testDirtiedSignal( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		editScope1 = Gaffer.EditScope()
 		editScope1.setup( light["out"] )
@@ -724,6 +740,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	def testNonExistentLocation( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		self.assertIsNone( self.__inspect( light["out"], "/nothingHere", "exposure" ) )
 
 		group = GafferScene.Group()
@@ -734,6 +752,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	def testNonExistentAttribute( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		editScope = Gaffer.EditScope()
 		editScope.setup( light["out"] )
@@ -745,6 +764,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	def testNonExistentParameter( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		editScope = Gaffer.EditScope()
 		editScope.setup( light["out"] )
@@ -756,6 +776,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	def testWrongAttributeType( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -779,6 +800,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	def testReadOnlyMetadataSignalling( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		editScope = Gaffer.EditScope()
 		editScope.setup( light["out"] )
@@ -839,6 +861,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
 
@@ -865,6 +888,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
 
@@ -903,6 +927,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["scope"] = Gaffer.EditScope()
 		s["scope"].setup( s["light"]["out"] )
@@ -965,6 +990,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["spreadsheet"]["rows"]["default"]["cells"]["exposure"]["value"].setValue( 5 )
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 		s["light"]["parameters"]["exposure"].setInput( s["spreadsheet"]["out"]["exposure"] )
 
 		self.assertEqual( s["light"]["parameters"]["exposure"].getValue(), 5 )
@@ -982,6 +1008,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["light"]["parameters"].addChild( Gaffer.OptionalValuePlug( "testFloat", Gaffer.FloatPlug(), False ) )
 
@@ -1027,6 +1054,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["add"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 		s["light"]["parameters"]["intensity"].setInput( s["add"]["out"] )
 
 		s["filter"] = GafferScene.PathFilter()
@@ -1143,6 +1171,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		s["editScope1"] = Gaffer.EditScope( "EditScope1" )
 		s["editScope1"].setup( light["out"] )
@@ -1184,6 +1213,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["editScope"] = Gaffer.EditScope()
 		s["editScope"].setup( s["light"]["out"] )
@@ -1214,6 +1244,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -1264,6 +1295,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )

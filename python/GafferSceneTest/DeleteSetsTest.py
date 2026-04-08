@@ -158,6 +158,8 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 	def testCantDeleteInternalSets( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		camera = GafferScene.Camera()
 
 		group = GafferScene.Group()

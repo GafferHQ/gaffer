@@ -47,6 +47,7 @@ class ShaderUITest( GafferUITest.TestCase ) :
 	def testNoduleOrdering( self ) :
 
 		s = GafferSceneTest.TestShader()
+		s.loadShader( "simpleShader" )
 
 		g = GafferUI.NodeGadget.create( s )
 		n1 = g.nodule( s["parameters"]["i"] )

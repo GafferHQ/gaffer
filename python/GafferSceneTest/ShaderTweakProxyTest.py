@@ -51,11 +51,14 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 
 		plane = GafferScene.Plane()
 		shader = GafferSceneTest.TestShader( "surface" )
+		shader.loadShader( "simpleShader" )
 		shader["type"].setValue( "surface" )
 
 		textureShader1 = GafferSceneTest.TestShader( "texture1" )
+		textureShader1.loadShader( "simpleShader" )
 
 		textureShader2 = GafferSceneTest.TestShader( "texture2" )
+		textureShader2.loadShader( "simpleShader" )
 
 		shader["parameters"]["c"].setInput( textureShader1["out"]["c"] )
 		textureShader1["parameters"]["c"].setInput( textureShader2["out"]["c"] )
@@ -74,6 +77,7 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( originalNetwork.input( ( "surface", "c" ) ), ( "texture1", "c" ) )
 
 		tweakShader = GafferSceneTest.TestShader( "tweakShader" )
+		tweakShader.loadShader( "simpleShader" )
 
 		tweaks = GafferScene.ShaderTweaks()
 		tweaks["in"].setInput( assignment["out"] )
@@ -146,6 +150,7 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 
 		plane = GafferScene.Plane()
 		shader = GafferSceneTest.TestShader( "surface" )
+		shader.loadShader( "simpleShader" )
 		shader["type"].setValue( "surface" )
 		shader["parameters"]["i"].setValue( 42 )
 
@@ -158,6 +163,7 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		assignment["shader"].setInput( shader["out"] )
 
 		tweakShader = GafferSceneTest.TestShader( "tweakShader" )
+		tweakShader.loadShader( "simpleShader" )
 
 		tweaks = GafferScene.ShaderTweaks()
 		tweaks["in"].setInput( assignment["out"] )

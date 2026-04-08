@@ -51,6 +51,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		self.assertSceneValid( l["out"] )
 
@@ -87,6 +88,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testGroupMaintainsLightSet( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		g = GafferScene.Group()
 		g["in"][0].setInput( l["out"] )
 
@@ -103,6 +106,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testDirtyPropagation( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		cs = GafferTest.CapturingSlot( l.plugDirtiedSignal() )
 		self.assertEqual( len( cs ), 0 )
 
@@ -124,6 +129,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testDisabled( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		self.assertTrue( "__lights" in l["out"]["setNames"].getValue() )
 
 		l["enabled"].setValue( False )
@@ -132,6 +139,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testAdditionalSets( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights", "defaultLights" ] ) )
 
 		l["sets"].setValue( "A B")
@@ -143,6 +152,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testDisabledHasNoSets( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 		l["sets"].setValue( "A B")
 		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B", "__lights", "defaultLights" ] ) )
 
@@ -152,6 +162,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testNonExistentSets( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 		l["sets"].setValue( "A B")
 		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B", "__lights", "defaultLights" ] ) )
 
@@ -163,6 +174,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testTransformAffectsParentBound( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		g = GafferScene.Group()
 		g["in"][0].setInput( l["out"] )
@@ -220,6 +232,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testVisualisationAttributes( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		# Test not set by default
 
@@ -255,6 +268,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testMute( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		self.assertNotIn( "light:mute", l["out"].attributes( "/light" ) )
 

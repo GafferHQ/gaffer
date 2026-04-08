@@ -541,7 +541,9 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 	def testSetsWithRenaming( self ) :
 
 		l1 = GafferSceneTest.TestLight()
+		l1.loadShader( "simpleLight" )
 		l2 = GafferSceneTest.TestLight()
+		l2.loadShader( "simpleLight" )
 
 		g = GafferScene.Group()
 		g["in"][0].setInput( l1["out"] )
@@ -599,6 +601,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		#	g
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		lg1 = GafferScene.Group()
 		lg1["name"].setValue( "lightGroup1" )

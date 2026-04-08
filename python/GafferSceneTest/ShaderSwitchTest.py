@@ -48,7 +48,9 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 
 		shader1 = GafferSceneTest.TestShader( "s1" )
+		shader1.loadShader( "simpleShader" )
 		shader2 = GafferSceneTest.TestShader( "s2" )
+		shader2.loadShader( "simpleShader" )
 
 		shader1["type"].setValue( "test:surface" )
 		shader2["type"].setValue( "test:surface" )
@@ -80,7 +82,9 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["shader1"] = GafferSceneTest.TestShader()
+		script["shader1"].loadShader( "simpleShader" )
 		script["shader2"] = GafferSceneTest.TestShader()
+		script["shader2"].loadShader( "simpleShader" )
 
 		script["shader1"]["parameters"]["i"].setValue( 1 )
 		script["shader2"]["parameters"]["i"].setValue( 2 )
@@ -109,7 +113,9 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 	def testSetup( self ) :
 
 		shader1 = GafferSceneTest.TestShader( "s1" )
+		shader1.loadShader( "simpleShader" )
 		shader2 = GafferSceneTest.TestShader( "s2" )
+		shader2.loadShader( "simpleShader" )
 
 		shader1["parameters"]["c"].setValue( imath.Color3f( 0 ) )
 		shader2["parameters"]["c"].setValue( imath.Color3f( 1 ) )
@@ -121,6 +127,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		switch["in"][1].setInput( shader2["out"]["c"] )
 
 		shader3 = GafferSceneTest.TestShader( "s3" )
+		shader3.loadShader( "simpleShader" )
 		shader3["type"].setValue( "test:surface" )
 		shader3["parameters"]["c"].setInput( switch["out"] )
 
@@ -140,12 +147,15 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n1"] = GafferSceneTest.TestShader()
+		s["n1"].loadShader( "simpleShader" )
 		s["n1"]["parameters"]["i"].setValue( 1 )
 
 		s["n2"] = GafferSceneTest.TestShader()
+		s["n2"].loadShader( "simpleShader" )
 		s["n2"]["parameters"]["i"].setValue( 2 )
 
 		s["n3"] = GafferSceneTest.TestShader()
+		s["n3"].loadShader( "simpleShader" )
 		s["n3"]["parameters"]["i"].setValue( 3 )
 		s["n3"]["type"].setValue( "test:surface" )
 

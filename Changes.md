@@ -79,6 +79,7 @@ Breaking Changes
 - GLWidget : Removed built-in support for hosting in Maya and Houdini. Implement host integration via `GLWidget._registerQGLWidgetCreator()` instead.
 - StandardLightVisualiser : Made `surfaceTexture()` private. The new `registerSurfaceTexture()` method can be used to register a method to return surface texture data.
 - ExtensionAlgo : Changed base class for extension nodes from SubGraph to DependencyNode.
+- TestLight, TestShader : Stopped loading a default shader in the constructor. As with all equivalent nodes, `loadShader()` must now be called after construction.
 
 Build
 -----

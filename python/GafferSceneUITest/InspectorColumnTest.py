@@ -126,6 +126,8 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 	def testInspectorColumnConstructors( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		path = GafferScene.ScenePath( light["out"], Gaffer.Context() )
 
 		inspector = GafferSceneUI.Private.AttributeInspector( light["out"], None, "gl:visualiser:scale" )

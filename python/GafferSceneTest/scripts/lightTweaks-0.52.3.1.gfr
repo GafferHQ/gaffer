@@ -25,6 +25,7 @@ __children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultVa
 parent.addChild( __children["defaultFormat"] )
 __children["TestLight"] = GafferSceneTest.TestLight( "TestLight" )
 parent.addChild( __children["TestLight"] )
+__children["TestLight"].loadShader( "simpleLight" )
 __children["TestLight"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["LightTweaks1"] = GafferScene.LightTweaks( "LightTweaks1" )
 parent.addChild( __children["LightTweaks1"] )

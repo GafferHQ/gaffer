@@ -680,6 +680,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		cubeA["sets"].setValue( "A CUBE" )
 
 		lightA = GafferSceneTest.TestLight()
+		lightA.loadShader( "simpleLight" )
 		lightA["sets"].setValue( "A" )
 
 		groupA = GafferScene.Group()
@@ -691,6 +692,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		sphereB["sets"].setValue( "B SPHERE" )
 
 		lightB = GafferSceneTest.TestLight()
+		lightB.loadShader( "simpleLight" )
 		lightB["sets"].setValue( "B" )
 
 		groupB = GafferScene.Group()
@@ -731,6 +733,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		sphereA["sets"].setValue( "A SPHERE" )
 
 		lightA = GafferSceneTest.TestLight()
+		lightA.loadShader( "simpleLight" )
 		lightA["sets"].setValue( "A" )
 
 		groupA = GafferScene.Group()
@@ -746,6 +749,7 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		sphereB["sets"].setValue( "B SPHERE" )
 
 		lightB = GafferSceneTest.TestLight()
+		lightB.loadShader( "simpleLight" )
 		lightB["sets"].setValue( "B" )
 
 		groupB = GafferScene.Group()
