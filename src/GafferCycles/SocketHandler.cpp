@@ -522,12 +522,13 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 	}
 }
 
-void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, bool keepExistingChildren )
+void setupLightPlugs( const std::string &shaderName, Gaffer::GraphComponent *plugsParent )
 {
 
 	// Make sure we have a plug to represent each socket, reusing plugs wherever possible.
 
 	std::set<const Plug *> validPlugs;
+	const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( "light" ) );
 
 	if( shaderName != "portal" )
 	{
@@ -606,15 +607,12 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 
 	// Remove any old plugs which it turned out we didn't need.
 
-	if( !keepExistingChildren )
+	for( int i = plugsParent->children().size() - 1; i >= 0; --i )
 	{
-		for( int i = plugsParent->children().size() - 1; i >= 0; --i )
+		Plug *child = plugsParent->getChild<Plug>( i );
+		if( validPlugs.find( child ) == validPlugs.end() )
 		{
-			Plug *child = plugsParent->getChild<Plug>( i );
-			if( validPlugs.find( child ) == validPlugs.end() )
-			{
-				plugsParent->removeChild( child );
-			}
+			plugsParent->removeChild( child );
 		}
 	}
 }

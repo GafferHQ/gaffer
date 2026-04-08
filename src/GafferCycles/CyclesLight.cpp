@@ -98,7 +98,7 @@ void CyclesLight::loadShader( const std::string &shaderName )
 {
 	shaderNode()->namePlug()->setValue( shaderName );
 	shaderNode()->typePlug()->setValue( "cycles:light" );
-	SocketHandler::setupLightPlugs( shaderName, ccl::NodeType::find( ccl::ustring( "light" ) ), parametersPlug() );
+	SocketHandler::setupLightPlugs( shaderName, parametersPlug() );
 	shaderNode()->setChild( "out", new Gaffer::Plug( "out", Gaffer::Plug::Direction::Out ) );
 	shaderInPlug()->setInput( shaderNode()->outPlug() );
 }
