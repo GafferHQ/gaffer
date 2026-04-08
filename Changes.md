@@ -24,6 +24,7 @@ Improvements
 - CurvesPrimitive : Added `Pinned` wrap mode in addition to the existing `Periodic` and `NonPeriodic` modes. This conveniently interpolates CatmullRom
 and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
 - SceneReader, SceneWriter : Added support for pinned UsdGeomBasisCurves.
+- Cycles ShaderNetworkAlgo : Added support for USDPreviewSurface normal inputs.
 
 Fixes
 -----

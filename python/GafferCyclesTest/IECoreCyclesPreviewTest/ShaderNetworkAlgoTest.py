@@ -864,6 +864,41 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( len( reader.parameters ), 1 )
 			self.assertEqual( reader.parameters["attribute"].value, "test" )
 
+	def testConvertUSDNormal( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"previewSurface" : IECoreScene.Shader(
+					"UsdPreviewSurface", "surface"
+				)
+			},
+			output = "previewSurface",
+		)
+
+		network.addShader( "texture", IECoreScene.Shader( "UsdUVTexture" ) )
+		network.addConnection( ( ( "texture", "color" ), ( "previewSurface", "normal" ) ) )
+
+		convertedNetwork = network.copy()
+		IECoreCycles.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+
+		self.assertEqual( len( convertedNetwork ), 4 )
+
+		normalize = convertedNetwork.getShader( "previewSurfaceNormalize" )
+		self.assertEqual( normalize.parameters["math_type"].value, "normalize" )
+
+		self.assertEqual(
+			convertedNetwork.input( ( "previewSurface", "normal" ) ),
+			( "previewSurfaceNormalize", "vector" ),
+		)
+		self.assertEqual(
+			convertedNetwork.input( ( "previewSurfaceNormalize", "value1" ) ),
+			( "previewSurfaceNormalMap", "normal" ),
+		)
+		self.assertEqual(
+			convertedNetwork.input( ( "previewSurfaceNormalMap", "color" ) ),
+			( "texture", "color" ),
+		)
+
 	def __assertShadersEqual( self, shader1, shader2, message = None ) :
 
 		self.assertEqual( shader1.name, shader2.name, message )
