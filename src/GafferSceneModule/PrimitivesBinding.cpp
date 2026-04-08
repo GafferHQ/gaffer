@@ -85,23 +85,7 @@ class LightSerialiser : public GafferBindings::NodeSerialiser
 			(*it)->setFlags( Gaffer::Plug::Dynamic, false );
 		}
 
-		// \todo - We should have a good way to access this on the base class - John is planning
-		// refactor this setup so that lights contain a GafferScene::Shader, instead of implementing
-		// loadShader themselves
-		const StringPlug* shaderNamePlug = light->getChild<Gaffer::StringPlug>( "__shaderName" );
-		if( !shaderNamePlug )
-		{
-			shaderNamePlug = light->getChild<Gaffer::StringPlug>( "__model" );
-		}
-		if( !shaderNamePlug )
-		{
-			if( const GafferScene::Shader *shader = light->getChild<GafferScene::Shader>( "__shader" ) )
-			{
-				shaderNamePlug = shader->namePlug();
-			}
-		}
-
-		const std::string shaderName = shaderNamePlug ? shaderNamePlug->getValue() : "";
+		const std::string shaderName = light->getChild<GafferScene::Shader>( "__shader" )->namePlug()->getValue();
 		if( shaderName.size() )
 		{
 			return defaultPC + fmt::format( "{}.loadShader( \"{}\" )\n", identifier, shaderName );
@@ -111,6 +95,13 @@ class LightSerialiser : public GafferBindings::NodeSerialiser
 	}
 
 };
+
+template<typename T>
+void loadShaderWrapper( T &node, const std::string &shaderName, bool keepExistingValues )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	node.loadShader( shaderName, keepExistingValues );
+}
 
 } // namespace
 
@@ -162,15 +153,16 @@ void GafferSceneModule::bindPrimitives()
 	GafferBindings::DependencyNodeClass<CoordinateSystem>();
 	GafferBindings::DependencyNodeClass<ExternalProcedural>();
 	GafferBindings::DependencyNodeClass<Grid>();
-	GafferBindings::DependencyNodeClass<Light>();
+	GafferBindings::DependencyNodeClass<Light>( nullptr, no_init )
+		.def( "loadShader", &loadShaderWrapper<Light>, ( boost::python::arg( "shaderName" ), boost::python::arg( "keepExistingValues" ) = false ) )
+	;
 	GafferBindings::Serialisation::registerSerialiser( Light::staticTypeId(), new LightSerialiser() );
 
 	NodeClass<LightFilter>( nullptr, no_init )
-		.def( "loadShader", &LightFilter::loadShader, ( boost::python::arg( "shaderName" ), boost::python::arg( "keepExistingValues" ) = false ) )
+		.def( "loadShader", &loadShaderWrapper<LightFilter>, ( boost::python::arg( "shaderName" ), boost::python::arg( "keepExistingValues" ) = false ) )
 	;
 
 	GafferBindings::Serialisation::registerSerialiser( LightFilter::staticTypeId(), new LightFilterSerialiser() );
-
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<Sphere>();

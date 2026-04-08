@@ -74,9 +74,7 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	DependencyNodeClass<CyclesAttributes>();
 	DependencyNodeClass<CyclesBackground>();
 	DependencyNodeClass<CyclesOptions>();
-	DependencyNodeClass<CyclesLight>()
-		.def( "loadShader", (void (CyclesLight::*)( const std::string & ) )&CyclesLight::loadShader )
-	;
+	DependencyNodeClass<CyclesLight>();
 	DependencyNodeClass<CyclesMeshLight>();
 	DependencyNodeClass<CyclesShader>();
 

@@ -38,10 +38,8 @@
 
 #include "GafferUSD/Export.h"
 #include "GafferUSD/TypeIds.h"
-#include "GafferUSD/USDShader.h"
 
 #include "GafferScene/Light.h"
-#include "GafferScene/ShaderPlug.h"
 
 namespace GafferUSD
 {
@@ -55,25 +53,6 @@ class GAFFERUSD_API USDLight : public GafferScene::Light
 
 		USDLight( const std::string &name=defaultName<USDLight>() );
 		~USDLight() override;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-		void loadShader( const std::string &shaderName, bool keepExistingValues = false );
-
-	protected :
-
-		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
-
-	private :
-
-		USDShader *shaderNode();
-		const USDShader *shaderNode() const;
-
-		GafferScene::ShaderPlug *shaderInPlug();
-		const GafferScene::ShaderPlug *shaderInPlug() const;
-
-		static size_t g_firstPlugIndex;
 
 };
 

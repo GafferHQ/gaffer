@@ -47,71 +47,11 @@ using namespace GafferSceneTest;
 
 GAFFER_NODE_DEFINE_TYPE( TestLight )
 
-size_t TestLight::g_firstPlugIndex = 0;
-
 TestLight::TestLight( const std::string &name )
-	:	Light( name )
+	:	Light( name, new TestShader() )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-
-	addChild( new TestShader( "__shader" ) );
-	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
-
-	shaderNode()->typePlug()->setValue( "light" );
-	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
-	shaderNode()->parametersPlug()->setInput( parametersPlug() );
-
-	shaderInPlug()->setInput( shaderNode()->outPlug() );
 }
 
 TestLight::~TestLight()
 {
-}
-
-TestShader *TestLight::shaderNode()
-{
-	return getChild<TestShader>( g_firstPlugIndex );
-}
-
-const TestShader *TestLight::shaderNode() const
-{
-	return getChild<TestShader>( g_firstPlugIndex );
-}
-
-ShaderPlug *TestLight::shaderInPlug()
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-const ShaderPlug *TestLight::shaderInPlug() const
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-void TestLight::loadShader( const std::string &shaderName )
-{
-	shaderNode()->loadShader( shaderName );
-	shaderNode()->typePlug()->setValue( "light" );
-	shaderInPlug()->setInput( shaderNode()->outPlug() );
-}
-
-void TestLight::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	Light::affects( input, outputs );
-
-	if( input == shaderInPlug() )
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
-}
-
-void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( shaderInPlug()->attributesHash() );
-}
-
-IECoreScene::ConstShaderNetworkPtr TestLight::computeLight( const Gaffer::Context *context ) const
-{
-	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
-	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "light" );
 }

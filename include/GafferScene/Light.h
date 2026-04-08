@@ -45,6 +45,9 @@
 namespace GafferScene
 {
 
+IE_CORE_FORWARDDECLARE( Shader )
+IE_CORE_FORWARDDECLARE( ShaderPlug )
+
 class GAFFERSCENE_API Light : public ObjectSource
 {
 
@@ -52,7 +55,6 @@ class GAFFERSCENE_API Light : public ObjectSource
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Light, LightTypeId, ObjectSource );
 
-		explicit Light( const std::string &name=defaultName<Light>() );
 		~Light() override;
 
 		Gaffer::CompoundDataPlug *attributesPlug();
@@ -72,9 +74,13 @@ class GAFFERSCENE_API Light : public ObjectSource
 		Gaffer::CompoundDataPlug *visualiserAttributesPlug();
 		const Gaffer::CompoundDataPlug *visualiserAttributesPlug() const;
 
+		void loadShader( const std::string &shaderName, bool keepExistingValues = false );
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
+
+		Light( const std::string &name, const ShaderPtr &shader );
 
 		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
@@ -88,12 +94,13 @@ class GAFFERSCENE_API Light : public ObjectSource
 		void hashStandardSetNames( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstInternedStringVectorDataPtr computeStandardSetNames() const override;
 
-		/// Must be implemented by derived classes to hash and generate the light to be placed
-		/// in the scene graph.
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const = 0;
-
 	private :
+
+		Shader *shaderNode();
+		const Shader *shaderNode() const;
+
+		ShaderPlug *shaderInPlug();
+		const ShaderPlug *shaderInPlug() const;
 
 		static size_t g_firstPlugIndex;
 

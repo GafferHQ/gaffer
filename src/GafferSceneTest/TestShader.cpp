@@ -159,6 +159,7 @@ void TestShader::loadShader( const std::string &shaderName, bool keepExistingVal
 		setupTypedPlug<Color3fPlug>( "intensity", parametersPlug, Imath::Color3f( 0.f ) );
 		setupTypedPlug<FloatPlug>( "exposure", parametersPlug, 0.f );
 		setupTypedPlug<BoolPlug>( "__areaLight", parametersPlug, false );
+		typePlug()->setValue( "light" );
 	}
 	else if( shaderName == "simpleShader" )
 	{

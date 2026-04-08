@@ -37,6 +37,8 @@
 #include "GafferScene/Light.h"
 
 #include "GafferScene/SceneNode.h"
+#include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -47,6 +49,9 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/NullObject.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
+
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -56,9 +61,30 @@ namespace
 const IECore::InternedString g_lightsSetName( "__lights" );
 const IECore::InternedString g_defaultLightsSetName( "defaultLights" );
 const IECore::InternedString g_lightMuteAttributeName( "light:mute" );
+const std::string g_surfaceSuffix( ":surface" );
 
 const IECore::BoolDataPtr g_true = new IECore::BoolData( true );
 const IECore::BoolDataPtr g_false = new IECore::BoolData( false );
+
+void shuffleSurfaceAttributes( IECore::CompoundObject::ObjectMap &attributes )
+{
+	for( auto it = attributes.begin(); it != attributes.end(); )
+	{
+		// Not all Shader subclasses can identify the type of the shader, with
+		// OSLShader being one example. Shuffle `*:surface` to `*:light` to
+		// compensate.
+		if( boost::ends_with( it->first.string(), g_surfaceSuffix ) )
+		{
+			const IECore::InternedString newName = boost::algorithm::replace_tail_copy( it->first.string(), g_surfaceSuffix.size(), ":light" );
+			attributes[newName] = it->second;
+			it = attributes.erase( it );
+		}
+		else
+		{
+			++it;
+		}
+	}
+}
 
 } // namespace
 
@@ -66,7 +92,7 @@ GAFFER_NODE_DEFINE_TYPE( Light );
 
 size_t Light::g_firstPlugIndex = 0;
 
-Light::Light( const std::string &name )
+Light::Light( const std::string &name, const ShaderPtr &shader )
 	:	ObjectSource( name, "light" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -94,6 +120,12 @@ Light::Light( const std::string &name )
 	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:lookThroughClippingPlanes", new IECore::V2fData( Imath::V2f( -100000, 100000 ) ), false, "lookThroughClippingPlanes" ) );
 
 	addChild( visualiserAttr  );
+
+	setChild( "__shader", shader );
+	shaderNode()->parametersPlug()->setFlags( Plug::Flags::AcceptsInputs, true );
+	shaderNode()->parametersPlug()->setInput( parametersPlug() );
+	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+	shaderInPlug()->setInput( shaderNode()->outPlug() );
 }
 
 Light::~Light()
@@ -150,12 +182,41 @@ const Gaffer::CompoundDataPlug *Light::visualiserAttributesPlug() const
 	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
+Shader *Light::shaderNode()
+{
+	return getChild<Shader>( g_firstPlugIndex + 5 );
+}
+
+const Shader *Light::shaderNode() const
+{
+	return getChild<Shader>( g_firstPlugIndex + 5 );
+}
+
+ShaderPlug *Light::shaderInPlug()
+{
+	return getChild<ShaderPlug>( g_firstPlugIndex + 6 );
+}
+
+const ShaderPlug *Light::shaderInPlug() const
+{
+	return getChild<ShaderPlug>( g_firstPlugIndex + 6 );
+}
+
+void Light::loadShader( const std::string &shaderName, bool keepExistingValues )
+{
+	shaderNode()->loadShader( shaderName, keepExistingValues );
+	// Work around ArnoldShader not creating `outPlug()` until after `loadShader()`
+	// is called.
+	/// \todo Fix ArnoldShader - see #5542.
+	shaderInPlug()->setInput( shaderNode()->outPlug() );
+}
+
 void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 
 	if(
-		parametersPlug()->isAncestorOf( input )
+		input == shaderInPlug()
 		|| attributesPlug()->isAncestorOf( input )
 		|| visualiserAttributesPlug()->isAncestorOf( input )
 		|| mutePlug()->isAncestorOf( input )
@@ -190,7 +251,7 @@ IECore::ConstObjectPtr Light::computeSource( const Context *context ) const
 
 void Light::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	hashLight( context, h );
+	h.append( shaderInPlug()->attributesHash() );
 	attributesPlug()->hash( h );
 	visualiserAttributesPlug()->hash( h );
 	mutePlug()->hash( h );
@@ -199,17 +260,8 @@ void Light::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Cont
 IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-
-	std::string lightAttribute = "light";
-
-	IECoreScene::ConstShaderNetworkPtr lightShaders = computeLight( context );
-	if( const IECoreScene::Shader *shader = lightShaders->outputShader() )
-	{
-		lightAttribute = shader->getType();
-	}
-
-	// As we output as const, then this just lets us get through the next few lines...
-	result->members()[lightAttribute] = const_cast<IECoreScene::ShaderNetwork*>( lightShaders.get() );
+	result->members() = shaderInPlug()->attributes()->members();
+	shuffleSurfaceAttributes( result->members() );
 
 	attributesPlug()->fillCompoundObject( result->members() );
 	visualiserAttributesPlug()->fillCompoundObject( result->members() );

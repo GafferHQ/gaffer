@@ -40,8 +40,6 @@
 #include "GafferRenderMan/TypeIds.h"
 
 #include "GafferScene/Light.h"
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderPlug.h"
 
 namespace GafferRenderMan
 {
@@ -55,25 +53,6 @@ class GAFFERRENDERMAN_API RenderManLight : public GafferScene::Light
 
 		RenderManLight( const std::string &name=defaultName<RenderManLight>() );
 		~RenderManLight() override;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-		void loadShader( const std::string &shaderName );
-
-	protected :
-
-		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
-
-	private :
-
-		GafferScene::Shader *shaderNode();
-		const GafferScene::Shader *shaderNode() const;
-
-		GafferScene::ShaderPlug *shaderInPlug();
-		const GafferScene::ShaderPlug *shaderInPlug() const;
-
-		static size_t g_firstPlugIndex;
 
 };
 

@@ -53,74 +53,14 @@ const ConstIntDataPtr g_oneData = new IntData( 1 );
 
 IE_CORE_DEFINERUNTIMETYPED( RenderManLight );
 
-size_t RenderManLight::g_firstPlugIndex = 0;
-
 RenderManLight::RenderManLight( const std::string &name )
-	:	GafferScene::Light( name )
+	:	GafferScene::Light( name, new RenderManShader() )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-
 	attributesPlug()->addChild(
 		new NameValuePlug( "ri:visibility:camera", g_oneData.get(), false, "ri:visibility:camera" )
 	);
-
-	addChild( new RenderManShader( "__shader" ) );
-	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
-
-	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
-	shaderNode()->parametersPlug()->setInput( parametersPlug() );
-
-	shaderInPlug()->setInput( shaderNode()->outPlug() );
 }
 
 RenderManLight::~RenderManLight()
 {
-}
-
-Shader *RenderManLight::shaderNode()
-{
-	return getChild<Shader>( g_firstPlugIndex );
-}
-
-const Shader *RenderManLight::shaderNode() const
-{
-	return getChild<Shader>( g_firstPlugIndex );
-}
-
-GafferScene::ShaderPlug *RenderManLight::shaderInPlug()
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-const GafferScene::ShaderPlug *RenderManLight::shaderInPlug() const
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-void RenderManLight::loadShader( const std::string &shaderName )
-{
-	shaderNode()->loadShader( shaderName );
-}
-
-void RenderManLight::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	Light::affects( input, outputs );
-
-	if(
-		input == shaderInPlug()
-	)
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
-}
-
-void RenderManLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( shaderInPlug()->attributesHash() );
-}
-
-IECoreScene::ConstShaderNetworkPtr RenderManLight::computeLight( const Gaffer::Context *context ) const
-{
-	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
-	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "ri:light" );
 }

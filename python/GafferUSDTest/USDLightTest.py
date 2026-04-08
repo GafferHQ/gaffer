@@ -53,6 +53,7 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 		light = GafferUSD.USDLight()
 		for name in ( "DistantLight", "DiskLight", "DomeLight", "RectLight", "SphereLight", "CylinderLight" ) :
 			light.loadShader( name )
+			self.assertIn( "light", light["out"].attributes( "/light") )
 			for name, defaultValue in {
 				"intensity" : 1.0 if name != "DistantLight" else 50000.0,
 				"exposure" : 0.0,
