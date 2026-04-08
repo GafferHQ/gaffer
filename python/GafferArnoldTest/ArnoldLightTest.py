@@ -43,6 +43,7 @@ import IECoreArnold
 
 import GafferSceneTest
 import GafferArnold
+import GafferOSL
 
 class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 
@@ -117,7 +118,8 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		l = GafferArnold.ArnoldLight()
 		l.loadShader( "skydome_light" )
 
-		c = GafferSceneTest.TestShader( "mockOSL" )
+		c = GafferOSL.OSLShader( "ColorRamp" )
+		c.loadShader( "Pattern/ColorRamp" )
 		c["type"].setValue( "osl:shader" )
 
 		l["parameters"]["color"].setInput( c["out"]["c"] )
@@ -126,7 +128,7 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			network.inputConnections( network.getOutput().shader ),
 			[
-				network.Connection( ( "mockOSL", "c" ), ( network.getOutput().shader, "color" ) )
+				network.Connection( ( "ColorRamp", "c" ), ( network.getOutput().shader, "color" ) )
 			]
 		)
 
