@@ -38,11 +38,13 @@
 
 #include "IECoreScene/PrimitiveVariable.h"
 
+#include "IECore/ObjectInterpolator.h"
 #include "IECore/SimpleTypedData.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/image.h"
 #include "scene/image_vdb.h"
+#include "scene/pointcloud.h"
 // Cycles (for ustring)
 #include "util/param.h"
 #include "util/version.h"
@@ -217,7 +219,7 @@ namespace IECoreCycles
 namespace GeometryAlgo
 {
 
-ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECore::Object *object, ccl::Scene *scene )
 {
 	const Registry &r = registry();
 	Registry::const_iterator it = r.find( object->typeId() );
@@ -225,14 +227,41 @@ ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeNam
 	{
 		return nullptr;
 	}
-	return it->second.converter( object, nodeName, scene );
+	return it->second.converter( object, scene );
 }
 
-ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, ccl::Session *session )
 {
 	if( samples.empty() )
 	{
 		return nullptr;
+	}
+
+	if( samples.size() % 2 == 0 && session->device->info.type != ccl::DeviceType::DEVICE_CPU )
+	{
+		// Cycles requires an odd number of motion samples for some reason, although
+		// experimentally this only seems to be the case when using GPU devices.
+		// Make memory-wasting redundant samples to work around this. Samples are
+		// expected to be spaced evenly in time, so we have to insert a redundant sample
+		// in every gap.
+		vector<ConstObjectPtr> interpolatedSamples;
+		interpolatedSamples.reserve( samples.size() - 1 );
+		vector<const IECore::Object *> processedSamples;
+		vector<float> processedTimes;
+		processedSamples.reserve( samples.size() + interpolatedSamples.size() );
+		processedTimes.reserve( times.size() + interpolatedSamples.size() );
+		for( size_t i = 0; i < samples.size(); ++i )
+		{
+			processedSamples.push_back( samples[i] );
+			processedTimes.push_back( times[i] );
+			if( i + 1 < samples.size() )
+			{
+				interpolatedSamples.push_back( linearObjectInterpolation( samples[i], samples[i+1], 0.5f ) );
+				processedSamples.push_back( interpolatedSamples.back().get() );
+				processedTimes.push_back( Imath::lerp( times[i], times[i+1], 0.5f ) );
+			}
+		}
+		return convert( processedSamples, processedTimes, session );
 	}
 
 	const IECore::Object *firstSample = samples.front();
@@ -253,11 +282,14 @@ ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, cons
 	}
 	if( it->second.motionConverter )
 	{
-		return it->second.motionConverter( samples, times, frameIdx, nodeName, scene );
+		// Cycles expects the middle sample (rounding down for even numbers of
+		// samples) to be specified as the main sample, and the other samples to
+		// be provided via ATTR_STD_MOTION_VERTEX_POSITION.
+		return it->second.motionConverter( samples, times, (samples.size() - 1) / 2, session->scene.get() );
 	}
 	else
 	{
-		return it->second.converter( samples.front(), nodeName, scene );
+		return it->second.converter( samples.front(), session->scene.get() );
 	}
 }
 
@@ -386,6 +418,47 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	else if( name == "uv.tangent" && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeVector )
 	{
 		attr->std = ccl::ATTR_STD_UV_TANGENT;
+	}
+}
+
+void convertMotion( const std::vector<const IECoreScene::Primitive *> &samples, size_t primarySampleIndex, ccl::Geometry &geometry )
+{
+	if( samples.size() < 2 )
+	{
+		return;
+	}
+
+	geometry.set_use_motion_blur( true );
+	geometry.set_motion_steps( samples.size() );
+
+	ccl::Attribute *positionAttribute = geometry.attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring( "motion_P" ) );
+	ccl::float4 *positionData = positionAttribute->data_float4();
+
+	const float *radius = nullptr;
+	if( geometry.is_pointcloud() )
+	{
+		radius = static_cast<const ccl::PointCloud *>( &geometry )->get_radius().data();
+	}
+
+	for( size_t sampleIndex = 0; sampleIndex < samples.size(); ++sampleIndex )
+	{
+		if( sampleIndex == primarySampleIndex )
+		{
+			// Cycles has a slightly odd way of representing motion samples, where the primary
+			// sample is stored in the main position attribute, and the remaining samples are
+			// stored in ATTR_STD_MOTION_VERTEX_POSITION. So we skip the primary sample here.
+			continue;
+		}
+		const V3fVectorData *pData = samples[sampleIndex]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		if( !pData )
+		{
+			continue;
+		}
+		const std::vector<Imath::V3f> &p = pData->readable();
+		for( size_t i = 0; i < p.size(); ++i )
+		{
+			*positionData++ = ccl::make_float4( p[i].x, p[i].y, p[i].z, radius ? radius[i] : 0.0f );
+		}
 	}
 }
 

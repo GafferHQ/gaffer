@@ -143,129 +143,17 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve, ccl::Scene 
 	return hair;
 }
 
-ccl::Geometry *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::CurvesPrimitive *curve, ccl::Scene *scene )
 {
 	ccl::Hair *hair = convertCommon( curve, scene );
-	hair->name = ccl::ustring( nodeName.c_str() );
 	return hair;
 }
 
-ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	const int numSamples = curves.size();
-
-	ccl::Hair *hair = nullptr;
-	std::vector<const IECoreScene::CurvesPrimitive *> samples;
-	IECoreScene::CurvesPrimitivePtr midMesh;
-
-	if( frameIdx != -1 ) // Start/End frames
-	{
-		hair = convertCommon( curves[frameIdx], scene );
-
-		if( numSamples == 2 ) // Make sure we have 3 samples
-		{
-			const V3fVectorData *p1 = curves[0]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			const V3fVectorData *p2 = curves[1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			if( p1 && p2 )
-			{
-				midMesh = curves[frameIdx]->copy();
-				V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-				IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-
-				samples.push_back( midMesh.get() );
-			}
-		}
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			if( i == frameIdx )
-			{
-				continue;
-			}
-			samples.push_back( curves[i] );
-		}
-	}
-	else if( numSamples % 2 ) // Odd numSamples
-	{
-		int _frameIdx = ( numSamples+1 ) / 2;
-		hair = convertCommon( curves[_frameIdx], scene );
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			if( i == _frameIdx )
-			{
-				continue;
-			}
-			samples.push_back( curves[i] );
-		}
-	}
-	else // Even numSamples
-	{
-		int _frameIdx = numSamples / 2 - 1;
-		const V3fVectorData *p1 = curves[_frameIdx]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-		const V3fVectorData *p2 = curves[_frameIdx+1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-		if( p1 && p2 )
-		{
-			midMesh = curves[_frameIdx]->copy();
-			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-			hair = convertCommon( midMesh.get(), scene );
-		}
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			samples.push_back( curves[i] );
-		}
-	}
-
-	// Add the motion position/normal attributes
-	hair->set_use_motion_blur( true );
-	hair->set_motion_steps( samples.size() + 1 );
-	ccl::Attribute *attr_mP = hair->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
-	ccl::float3 *mP = attr_mP->data_float3();
-
-	for( size_t i = 0; i < samples.size(); ++i )
-	{
-		PrimitiveVariableMap::const_iterator pIt = samples[i]->variables.find( "P" );
-		if( pIt != samples[i]->variables.end() )
-		{
-			const V3fVectorData *p = runTimeCast<const V3fVectorData>( pIt->second.data.get() );
-			if( p )
-			{
-				PrimitiveVariable::Interpolation pInterpolation = pIt->second.interpolation;
-				if( pInterpolation == PrimitiveVariable::Varying || pInterpolation == PrimitiveVariable::Vertex || pInterpolation == PrimitiveVariable::FaceVarying )
-				{
-					// Vertex positions
-					const V3fVectorData *p = samples[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-					const std::vector<V3f> &points = p->readable();
-					size_t numVerts = p->readable().size();
-
-					for( size_t j = 0; j < numVerts; ++j, ++mP )
-					{
-						*mP = ccl::make_float3( points[j].x, points[j].y, points[j].z );
-					}
-				}
-				else
-				{
-					msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
-					hair->attributes.remove( attr_mP );
-					hair->set_motion_steps( 0 );
-					hair->set_use_motion_blur( false );
-				}
-			}
-			else
-			{
-				msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", fmt::format( "Variable \"Position\" has unsupported type \"{}\" (expected V3fVectorData).", pIt->second.data->typeName() ) );
-				hair->attributes.remove( attr_mP );
-				hair->set_motion_steps( 0 );
-				hair->set_use_motion_blur( false );
-			}
-		}
-	}
-	mP = attr_mP->data_float3();
-
-	hair->name = ccl::ustring( nodeName.c_str() );
-	return hair;
+	ccl::Hair *result = convertCommon( curves[primarySampleIndex], scene );
+	GeometryAlgo::convertMotion( vector<const IECoreScene::Primitive *>( curves.begin(), curves.end() ), primarySampleIndex, *result );
+	return result;
 }
 
 GeometryAlgo::ConverterDescription<CurvesPrimitive> g_description( convert, convert );

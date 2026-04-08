@@ -244,127 +244,17 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *sc
 	return cmesh;
 }
 
-ccl::Geometry *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *scene )
 {
 	ccl::Mesh *cmesh = convertCommon( mesh, scene );
-	cmesh->name = ccl::ustring( nodeName.c_str() );
 	return cmesh;
 }
 
-ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	const int numSamples = meshes.size();
-
-	ccl::Mesh *cmesh = nullptr;
-	std::vector<const IECoreScene::MeshPrimitive *> samples;
-	IECoreScene::MeshPrimitivePtr midMesh;
-
-	if( frameIdx != -1 ) // Start/End frames
-	{
-		cmesh = convertCommon( meshes[frameIdx], scene );
-
-		if( numSamples == 2 ) // Make sure we have 3 samples
-		{
-			const V3fVectorData *p1 = meshes[0]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			const V3fVectorData *p2 = meshes[1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			if( p1 && p2 )
-			{
-				midMesh = meshes[frameIdx]->copy();
-				V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-				IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-				samples.push_back( midMesh.get() );
-			}
-		}
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			if( i == frameIdx )
-			{
-				continue;
-			}
-			samples.push_back( meshes[i] );
-		}
-	}
-	else if( numSamples % 2 ) // Odd numSamples
-	{
-		int _frameIdx = numSamples / 2;
-		cmesh = convertCommon( meshes[_frameIdx], scene );
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			if( i == _frameIdx )
-			{
-				continue;
-			}
-			samples.push_back( meshes[i] );
-		}
-	}
-	else // Even numSamples
-	{
-		int _frameIdx = numSamples / 2 - 1;
-		const V3fVectorData *p1 = meshes[_frameIdx]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-		const V3fVectorData *p2 = meshes[_frameIdx+1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-		if( p1 && p2 )
-		{
-			midMesh = meshes[_frameIdx]->copy();
-			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-			cmesh = convertCommon( midMesh.get(), scene );
-		}
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			samples.push_back( meshes[i] );
-		}
-	}
-
-	// Add the motion position attributes
-	cmesh->set_use_motion_blur( true );
-	cmesh->set_motion_steps( samples.size() + 1 );
-	ccl::Attribute *attr_mP = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
-	ccl::float3 *mP = attr_mP->data_float3();
-
-	for( size_t i = 0; i < samples.size(); ++i )
-	{
-		PrimitiveVariableMap::const_iterator pIt = samples[i]->variables.find( "P" );
-		if( pIt != samples[i]->variables.end() )
-		{
-			const V3fVectorData *p = runTimeCast<const V3fVectorData>( pIt->second.data.get() );
-			if( p )
-			{
-				PrimitiveVariable::Interpolation pInterpolation = pIt->second.interpolation;
-				if( pInterpolation == PrimitiveVariable::Varying || pInterpolation == PrimitiveVariable::Vertex || pInterpolation == PrimitiveVariable::FaceVarying )
-				{
-					// Vertex positions
-					const V3fVectorData *p = samples[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-					const std::vector<V3f> &points = p->readable();
-					size_t numVerts = p->readable().size();
-
-					for( size_t j = 0; j < numVerts; ++j, ++mP )
-					{
-						*mP = ccl::make_float3( points[j].x, points[j].y, points[j].z );
-					}
-				}
-				else
-				{
-					msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
-					cmesh->attributes.remove( attr_mP );
-					cmesh->set_motion_steps( 0 );
-					cmesh->set_use_motion_blur( false );
-				}
-			}
-			else
-			{
-				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", fmt::format( "Variable \"Position\" has unsupported type \"{}\" (expected V3fVectorData).", pIt->second.data->typeName() ) );
-				cmesh->attributes.remove( attr_mP );
-				cmesh->set_motion_steps( 0) ;
-				cmesh->set_use_motion_blur( true );
-			}
-		}
-	}
-
-	cmesh->name = ccl::ustring( nodeName.c_str() );
-	return cmesh;
+	ccl::Mesh *result = convertCommon( meshes[primarySampleIndex], scene );
+	GeometryAlgo::convertMotion( vector<const IECoreScene::Primitive *>( meshes.begin(), meshes.end() ), primarySampleIndex, *result );
+	return result;
 }
 
 GeometryAlgo::ConverterDescription<MeshPrimitive> g_description( convert, convert );
