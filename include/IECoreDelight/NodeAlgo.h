@@ -97,7 +97,7 @@ class ConverterDescription
 /// Adds all static PrimitiveVariables into a ParameterList for use with
 /// `NSISetAttribute()`, and all animated PrimitiveVariables into a separate vector
 /// of ParameterLists for use with `NSISetAttributeAtTime()`.
-IECOREDELIGHT_API void primitiveVariableParameterLists( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices = nullptr );
+IECOREDELIGHT_API void primitiveVariableParameterLists( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, IECoreScenePreview::Renderer::Samples<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices = nullptr );
 
 } // namespace NodeAlgo
 

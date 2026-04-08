@@ -86,17 +86,14 @@ RtUString convertCurves( const IECoreScenePreview::Renderer::Samples<const IECor
 {
 	if( CurvesAlgo::isPinned( samples[0] ) )
 	{
-		boost::container::small_vector<CurvesPrimitivePtr, 2> processedCurves;
-		boost::container::small_vector<const CurvesPrimitive *, 2> processedSamples;
-		processedCurves.reserve( samples.size() );
+		IECoreScenePreview::Renderer::Samples<CurvesPrimitivePtr> processedSamples;
 		processedSamples.reserve( samples.size() );
 		for( auto sample : samples )
 		{
-			processedCurves.push_back( sample->copy() );
-			CurvesAlgo::convertPinnedToNonPeriodic( processedCurves.back().get() );
-			processedSamples.push_back( processedCurves.back().get() );
+			processedSamples.push_back( sample->copy() );
+			CurvesAlgo::convertPinnedToNonPeriodic( processedSamples.back().get() );
 		}
-		return convertCurves( processedSamples, sampleTimes, primVars, messageContext );
+		return convertCurves( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::CurvesPrimitive *>( processedSamples ), sampleTimes, primVars, messageContext );
 	}
 
 	GeometryAlgo::convertPrimitive( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), sampleTimes, primVars, messageContext );

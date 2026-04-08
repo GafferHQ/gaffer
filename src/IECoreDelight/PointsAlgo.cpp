@@ -72,7 +72,7 @@ bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Poi
 	ParameterList parameters;
 	staticParameters( objects.front(), parameters );
 
-	vector<ParameterList> animatedParameters;
+	IECoreScenePreview::Renderer::Samples<ParameterList> animatedParameters;
 	NodeAlgo::primitiveVariableParameterLists(
 		IECoreScenePreview::Renderer::staticSamplesCast<const Primitive *>( objects ),
 		parameters, animatedParameters
