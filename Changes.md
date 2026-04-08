@@ -24,6 +24,7 @@ Fixes
   - Globals
 - MotionPath : Fixed hashing bug preventing motion path curves from updating when their source transforms were modified.
 - Viewer : Added prevention and recovery for situations where framing large objects causes the camera matrix to become corrupted with nans (#6715).
+- OSLObject : Simplified internal network to make inspector history more accurate.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========

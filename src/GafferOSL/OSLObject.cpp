@@ -51,6 +51,7 @@
 #include "IECoreImage/OpenImageIOAlgo.h"
 
 #include "IECore/MessageHandler.h"
+#include "IECore/NullObject.h"
 
 #include "boost/bind/bind.hpp"
 
@@ -232,7 +233,7 @@ OSLObject::OSLObject( const std::string &name )
 		)
 	);
 	addChild( new BoolPlug( "ignoreMissingSourceLocations" ) );
-	addChild( new ScenePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new ObjectPlug( "__resampledInObject", Plug::In, new IECore::NullObject(), Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__resampleNames", Plug::Out ) );
 	addChild( new Plug( "primitiveVariables", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new OSLCode( "__oslCode" ) );
@@ -249,7 +250,7 @@ OSLObject::OSLObject( const std::string &name )
 	resample->interpolationPlug()->setInput( interpolationPlug() );
 	resample->filterPlug()->setInput( filterPlug() );
 
-	resampledInPlug()->setInput( resample->outPlug() );
+	resampledInObjectPlug()->setInput( resample->outPlug()->objectPlug() );
 }
 
 OSLObject::~OSLObject()
@@ -326,14 +327,14 @@ const Gaffer::BoolPlug *OSLObject::ignoreMissingSourceLocationsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
 }
 
-ScenePlug *OSLObject::resampledInPlug()
+ObjectPlug *OSLObject::resampledInObjectPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
-const ScenePlug *OSLObject::resampledInPlug() const
+const ObjectPlug *OSLObject::resampledInObjectPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 StringPlug *OSLObject::resampledNamesPlug()
@@ -409,7 +410,7 @@ bool OSLObject::affectsProcessedObject( const Gaffer::Plug *input ) const
 		( input == inPlug()->transformPlug() && !useTransformPlug()->isSetToDefault() ) ||
 		input == useAttributesPlug() ||
 		( input == inPlug()->attributesPlug() && !useAttributesPlug()->isSetToDefault() ) ||
-		input == resampledInPlug()->objectPlug() ||
+		input == resampledInObjectPlug() ||
 		sourceLocationsPlug()->isAncestorOf( input ) ||
 		input == ignoreMissingSourceLocationsPlug() ||
 		( sourceLocationsUseTransform && input == sourcePlug()->transformPlug() ) ||
@@ -437,7 +438,7 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 
 	shadingEngine->hash( h );
 	interpolationPlug()->hash( h );
-	h.append( resampledInPlug()->objectPlug()->hash() );
+	h.append( resampledInObjectPlug()->hash() );
 
 	if( useTransformPlug()->getValue() )
 	{
@@ -519,7 +520,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 	PrimitiveVariable::Interpolation interpolation = static_cast<PrimitiveVariable::Interpolation>( interpolationPlug()->getValue() );
 
 
-	IECoreScene::ConstPrimitivePtr resampledObject = IECore::runTimeCast<const IECoreScene::Primitive>( resampledInPlug()->objectPlug()->getValue() );
+	IECoreScene::ConstPrimitivePtr resampledObject = IECore::runTimeCast<const IECoreScene::Primitive>( resampledInObjectPlug()->getValue() );
 	CompoundDataPtr shadingPoints = prepareShadingPoints( resampledObject.get(), shadingEngine.get(), gafferAttributes.get() );
 
 	PrimitivePtr outputPrimitive = inputPrimitive->copy();
