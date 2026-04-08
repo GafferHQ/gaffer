@@ -42,6 +42,8 @@ Fixes
 API
 ---
 
+- SubGraph : Clarified via documentation that SubGraph is _not_ intended as a base class for custom nodes. Nodes should derive from DependencyNode
+  or some other base class instead.
 - Metadata : `ValueFunctions` now receive a `target` parameter. This is particularly useful when registering a function against a wildcard pattern.
 - PlugAlgo : Added `RampffData` and `RampfColor3fData` support to `createPlugFromData()`.
 - Widget :
@@ -76,6 +78,7 @@ Breaking Changes
 - OpenColorIO : Removed "Legacy (Gaffer 1.2)" config.
 - GLWidget : Removed built-in support for hosting in Maya and Houdini. Implement host integration via `GLWidget._registerQGLWidgetCreator()` instead.
 - StandardLightVisualiser : Made `surfaceTexture()` private. The new `registerSurfaceTexture()` method can be used to register a method to return surface texture data.
+- ExtensionAlgo : Changed base class for extension nodes from SubGraph to DependencyNode.
 
 Build
 -----

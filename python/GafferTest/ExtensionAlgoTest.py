@@ -157,5 +157,38 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( script["node1"].keys(), script["node"].keys() )
 		self.assertEqual( script["node1"]["out"].getValue(), 3 )
 
+	def testDependencyNodeMethods( self ) :
+
+		box = Gaffer.Box( "TestDependencyNode" )
+
+		box["__add"] = GafferTest.AddNode()
+
+		box["__in"] = Gaffer.BoxIn()
+		box["__in"].setup( box["__add"]["op1"] )
+		box["__add"]["op1"].setInput( box["__in"]["out"] )
+
+		box["__out"] = Gaffer.BoxOut()
+		box["__out"].setup( box["__add"]["sum"] )
+		box["__out"]["in"].setInput( box["__add"]["sum"] )
+		box["__out"]["passThrough"].setInput( box["__in"]["out"] )
+
+		def assertPassThrough( node ) :
+
+			self.assertIsNotNone( node.enabledPlug() )
+			self.assertTrue( node.enabledPlug().isSame( node["enabled"] ) )
+			self.assertTrue( node.correspondingInput( node["out"] ).isSame( node["in"] ) )
+
+		assertPassThrough( box )
+
+		Gaffer.ExtensionAlgo.exportExtension( "TestDependencyNodeExtension", [ box ], self.temporaryDirectory() )
+		sys.path.append( str( self.temporaryDirectory() / "python" ) )
+		import TestDependencyNodeExtension
+
+		node = TestDependencyNodeExtension.TestDependencyNode()
+		self.assertIsInstance( node, Gaffer.DependencyNode )
+		self.assertFalse( isinstance( node, Gaffer.SubGraph ) )
+
+		assertPassThrough( node )
+
 if __name__ == "__main__":
 	unittest.main()

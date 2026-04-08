@@ -119,6 +119,7 @@ from .ShuffleImageMetadataTest import ShuffleImageMetadataTest
 from .DiskBlurTest import DiskBlurTest
 from .DataWindowQueryTest import DataWindowQueryTest
 from .SATBlurTest import SATBlurTest
+from .MetadataOverlayTest import MetadataOverlayTest
 
 if __name__ == "__main__":
 	import unittest
