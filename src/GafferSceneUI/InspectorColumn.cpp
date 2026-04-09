@@ -165,7 +165,7 @@ PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const 
 	return cellDataFromInspection( inspectorResult.get() );
 }
 
-PathColumn::CellData InspectorColumn::headerData( const IECore::Canceller *canceller ) const
+PathColumn::CellData InspectorColumn::headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const
 {
 	return m_headerData;
 }

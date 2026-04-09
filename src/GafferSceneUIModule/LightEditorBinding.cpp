@@ -313,9 +313,9 @@ class SetMembershipColumn : public InspectorColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = InspectorColumn::headerData( canceller );
+			CellData result = InspectorColumn::headerData( rootPath, canceller );
 
 			if( auto sceneInput = m_scene->getInput() )
 			{

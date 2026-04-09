@@ -107,7 +107,7 @@ class _OperationIconColumn( GafferUI.PathColumn ) :
 
 		return data
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( "Operation" )
 
@@ -128,7 +128,7 @@ class _NodeNameColumn( GafferUI.PathColumn ) :
 		else :
 			return self.CellData( node.relativeName( node.scriptNode() ) )
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( "Node" )
 
@@ -152,7 +152,7 @@ class _ValueColumn( GafferUI.PathColumn ) :
 
 		return data
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( "Value" )
 
@@ -177,7 +177,7 @@ class _ContextVariableColumn( GafferUI.PathColumn ) :
 
 		return self.CellData( value )
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( "${{{}}}".format( self.__variable ) )
 

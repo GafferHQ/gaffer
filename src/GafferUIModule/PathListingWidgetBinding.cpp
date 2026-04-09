@@ -765,6 +765,7 @@ class PathModel : public QAbstractItemModel
 			cancelUpdate();
 			m_rootPath = root;
 			m_rootItem->dirty();
+			m_headerDataState = State::Dirty;
 			m_recursiveExpansionPath.reset();
 			// Schedule update to process the dirtied items.
 			scheduleUpdate();
@@ -1366,7 +1367,7 @@ class PathModel : public QAbstractItemModel
 			std::vector<CellVariants> newHeaderData;
 			for( auto &column : m_columns )
 			{
-				newHeaderData.push_back( column->headerData( canceller ) );
+				newHeaderData.push_back( column->headerData( *m_rootPath, canceller ) );
 			}
 
 			if( m_headerData == newHeaderData )

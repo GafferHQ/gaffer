@@ -140,7 +140,7 @@ class _StatusColumn( GafferUI.PathColumn ) :
 			sortValue = int( GafferDispatch.LocalDispatcher.Job.Status[status] )
 		)
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "Status" )
 
@@ -159,7 +159,7 @@ class _RunningTimeColumn( GafferUI.PathColumn ) :
 			sortValue = seconds
 		)
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "Running Time" )
 
@@ -175,7 +175,7 @@ class _CPUUsageColumn( GafferUI.PathColumn ) :
 			toolTip = "CPU usage for current batch"
 		)
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "CPU" )
 
@@ -191,7 +191,7 @@ class _MemoryUsageColumn( GafferUI.PathColumn ) :
 			toolTip = "Memory usage for current batch"
 		)
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "Memory" )
 

@@ -148,7 +148,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		/// Returns the data needed to draw a column cell.
 		virtual CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller = nullptr ) const = 0;
 		/// Returns the data needed to draw a column header.
-		virtual CellData headerData( const IECore::Canceller *canceller = nullptr ) const = 0;
+		virtual CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller = nullptr ) const = 0;
 
 		using PathColumnSignal = Gaffer::Signals::Signal<void ( PathColumn * ), Gaffer::Signals::CatchingCombiner<void>>;
 		/// Subclasses should emit this signal when something changes
@@ -225,7 +225,7 @@ class GAFFERUI_API StandardPathColumn : public PathColumn
 		IECore::InternedString property() const;
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
-		CellData headerData( const IECore::Canceller *canceller ) const override;
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override;
 
 	private :
 
@@ -257,7 +257,7 @@ class GAFFERUI_API IconPathColumn : public PathColumn
 		IECore::InternedString property() const;
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
-		CellData headerData( const IECore::Canceller *canceller ) const override;
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override;
 
 	private :
 
@@ -281,7 +281,7 @@ class GAFFERUI_API FileIconPathColumn : public PathColumn
 		FileIconPathColumn( PathColumn::SizeMode sizeMode = Default );
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
-		CellData headerData( const IECore::Canceller *canceller ) const override;
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override;
 
 	private :
 

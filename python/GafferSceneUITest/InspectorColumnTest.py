@@ -135,20 +135,20 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		c = GafferSceneUI.Private.InspectorColumn( inspector, "label", "help!" )
 		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
-		self.assertEqual( c.headerData().value, "Label" )
-		self.assertEqual( c.headerData().toolTip, "help!" )
+		self.assertEqual( c.headerData( path ).value, "Label" )
+		self.assertEqual( c.headerData( path ).toolTip, "help!" )
 
 		c = GafferSceneUI.Private.InspectorColumn( inspector, "Fancy ( Label )", "" )
 		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
-		self.assertEqual( c.headerData().value, "Fancy ( Label )" )
-		self.assertEqual( c.headerData().toolTip, "" )
+		self.assertEqual( c.headerData( path ).value, "Fancy ( Label )" )
+		self.assertEqual( c.headerData( path ).toolTip, "" )
 
 		c = GafferSceneUI.Private.InspectorColumn( inspector )
 		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
-		self.assertEqual( c.headerData().value, "Gl:visualiser:scale" )
-		self.assertEqual( c.headerData().toolTip, "" )
+		self.assertEqual( c.headerData( path ).value, "Gl:visualiser:scale" )
+		self.assertEqual( c.headerData( path ).toolTip, "" )
 
 		c = GafferSceneUI.Private.InspectorColumn(
 			inspector,
@@ -157,8 +157,8 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		)
 		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
-		self.assertEqual( c.headerData().value, "Fancy ( Label )" )
-		self.assertEqual( c.headerData().toolTip, "help!" )
+		self.assertEqual( c.headerData( path ).value, "Fancy ( Label )" )
+		self.assertEqual( c.headerData( path ).toolTip, "help!" )
 
 	def testObjectMatrixFromSelection( self ) :
 

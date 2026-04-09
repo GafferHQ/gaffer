@@ -1030,7 +1030,7 @@ class _AdderColumn( GafferUI.PathColumn ) :
 
 		return GafferUI.PathColumn.CellData( value = "", toolTip = "Click on the header to add columns." )
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "", icon = IECore.CompoundData( { "state:normal" : "plus.png", "state:highlighted" : "plusHighlighted.png" } ), toolTip = "Click to add columns." )
 

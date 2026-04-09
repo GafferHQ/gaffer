@@ -457,7 +457,7 @@ class _DuplicateIconColumn ( GafferUI.PathColumn ) :
 
 		return data
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( self.__title )
 
@@ -492,7 +492,7 @@ class _ShaderInputColumn ( GafferUI.PathColumn ) :
 
 		return data
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( self.__title )
 
