@@ -435,8 +435,12 @@ class Shader::NetworkBuilder
 			m_hasProxyNodes |= ShaderTweakProxy::isProxy( shader.get() );
 
 			const std::string nodeName = shaderNode->nodeNamePlug()->getValue();
+			/// \todo  Stop storing `label` and `gaffer:nodeName` metadata. It
+			/// was just used as a crutch until the SceneInspector could show
+			/// the history of the shader, which it now can. And either remove
+			/// `gaffer:nodeColor` metadata or update the SceneInspector to show
+			/// it again.
 			shader->blindData()->writable()[g_label] = new IECore::StringData( nodeName );
-			// \todo: deprecated, stop storing gaffer:nodeName after a grace period
 			shader->blindData()->writable()[g_gafferNodeName] = new IECore::StringData( nodeName );
 			shader->blindData()->writable()[g_gafferNodeColor] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
 
