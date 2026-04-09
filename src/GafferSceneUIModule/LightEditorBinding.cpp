@@ -317,46 +317,17 @@ class SetMembershipColumn : public InspectorColumn
 		{
 			CellData result = InspectorColumn::headerData( rootPath, canceller );
 
-			if( auto sceneInput = m_scene->getInput() )
+			ConstContextPtr context = inspectorContext( rootPath, canceller );
+			if( !context )
 			{
-				auto scriptNode = sceneInput->ancestor<ScriptNode>();
-
-				// Hack to recover ScriptNode from nodes hosted in an
-				// Editor.Settings node - see `BackgroundTask.cpp` and
-				// `Editor.Settings`.
-				/// \todo Provide root path to `headerData()` so we can do this more simply.
-				if( !scriptNode )
-				{
-					GraphComponent *graphComponent = sceneInput->parent();
-					while( graphComponent )
-					{
-						if( auto node = runTimeCast<Node>( graphComponent ) )
-						{
-							if( node->isInstanceOf( "GafferUI::Editor::Settings" ) )
-							{
-								if( auto p = node->getChild<Plug>( "__scriptNode" ) )
-								{
-									if( auto pInput = p->getInput() )
-									{
-										scriptNode = pInput->ancestor<ScriptNode>();
-										break;
-									}
-								}
-							}
-						}
-						graphComponent = graphComponent->parent();
-					}
-				}
-
-				if( scriptNode )
-				{
-					Context::EditableScope contextScope( scriptNode->context() );
-					contextScope.setCanceller( canceller );
-
-					ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
-					result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
-				}
+				return result;
 			}
+
+			Context::EditableScope contextScope( context.get() );
+			contextScope.setCanceller( canceller );
+
+			ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
+			result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
 
 			return result;
 		}
