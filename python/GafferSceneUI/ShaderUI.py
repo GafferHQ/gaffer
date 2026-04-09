@@ -429,7 +429,7 @@ GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMe
 # ShaderParameterDialog
 ##########################################################################
 
-class _DuplicateIconColumn ( GafferUI.PathColumn ) :
+class _DuplicateIconColumn( GafferUI.PathColumn ) :
 
 	def __init__( self, title, property ) :
 
@@ -461,7 +461,7 @@ class _DuplicateIconColumn ( GafferUI.PathColumn ) :
 
 		return self.CellData( self.__title )
 
-class _ShaderInputColumn ( GafferUI.PathColumn ) :
+class _ShaderInputColumn( GafferUI.PathColumn ) :
 
 	def __init__( self, title ) :
 
