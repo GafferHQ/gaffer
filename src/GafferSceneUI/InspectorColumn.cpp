@@ -65,6 +65,8 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
 const StringDataPtr g_shaderConnectionIcon = new StringData( "sceneInspectorShaderConnection.png" );
+const InternedString g_shaderLabel( "label" );
+const InternedString g_shaderNodeName( "gaffer:nodeName" );
 
 }  // namespace
 
@@ -208,7 +210,23 @@ PathColumn::CellData InspectorColumn::cellDataFromValue( const IECore::Object *v
 		/// somewhere. Or perhaps if InspectorColumn moves to GafferUI, we would
 		/// just derive a specialisation from it in GafferSceneUI.
 		const IECoreScene::Shader *shader = shaderNetwork->outputShader();
-		return CellData( shader ? new StringData( shader->getName() ) : g_missingOutputShader );
+		if( !shader )
+		{
+			return CellData( g_missingOutputShader );
+		}
+		auto label = shader->blindData()->member<StringData>( g_shaderLabel );
+		auto nodeName = shader->blindData()->member<StringData>( g_shaderNodeName );
+		if( label && (!nodeName || label->readable() != nodeName->readable() ) )
+		{
+			// The Shader node creates `label` and `gaffer:nodeName` metadata
+			// with identical values. If the label is different it is because
+			// the user has provided something meaningful via the
+			// `ShaderAssignment.label` plug, so show that.
+			/// \todo Remove metadata creation from Shader.cpp and simplify the
+			/// logic here.
+			return CellData( label );
+		}
+		return CellData( new StringData( shader->getName() ) );
 	}
 	else if( const auto shader = runTimeCast<const IECoreScene::Shader>( value ) )
 	{
