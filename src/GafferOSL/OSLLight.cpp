@@ -136,16 +136,6 @@ const Gaffer::CompoundDataPlug *OSLLight::geometryParametersPlug() const
 	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
-Gaffer::CompoundDataPlug *OSLLight::attributesPlug()
-{
-	return Light::attributesPlug();
-}
-
-const Gaffer::CompoundDataPlug *OSLLight::attributesPlug() const
-{
-	return Light::attributesPlug();
-}
-
 OSLShader *OSLLight::shaderNode()
 {
 	return getChild<OSLShader>( g_firstPlugIndex + 5 );

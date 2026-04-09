@@ -79,10 +79,6 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 		Gaffer::CompoundDataPlug *geometryParametersPlug();
 		const Gaffer::CompoundDataPlug *geometryParametersPlug() const;
 
-		/// \todo Remove. This is provided by the base class now.
-		Gaffer::CompoundDataPlug *attributesPlug();
-		const Gaffer::CompoundDataPlug *attributesPlug() const;
-
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		void loadShader( const std::string &shaderName );
