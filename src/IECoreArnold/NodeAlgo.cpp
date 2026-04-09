@@ -47,20 +47,7 @@ namespace
 
 using namespace IECoreArnold;
 
-struct Converters
-{
-
-	Converters( NodeAlgo::Converter converter, NodeAlgo::MotionConverter motionConverter )
-		:	converter( converter ), motionConverter( motionConverter )
-	{
-	}
-
-	NodeAlgo::Converter converter;
-	NodeAlgo::MotionConverter motionConverter;
-
-};
-
-using Registry = boost::unordered_map<IECore::TypeId, Converters>;
+using Registry = boost::unordered_map<IECore::TypeId, NodeAlgo::Converter>;
 
 Registry &registry()
 {
@@ -79,17 +66,6 @@ namespace IECoreArnold
 
 namespace NodeAlgo
 {
-
-AtNode *convert( const IECore::Object *object, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	const Registry &r = registry();
-	Registry::const_iterator it = r.find( object->typeId() );
-	if( it == r.end() )
-	{
-		return nullptr;
-	}
-	return it->second.converter( object, universe, nodeName, parentNode, messageContext );
-}
 
 AtNode *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
@@ -116,19 +92,17 @@ AtNode *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, flo
 		return nullptr;
 	}
 
-	if( it->second.motionConverter )
-	{
-		return it->second.motionConverter( samples, motionStart, motionEnd, universe, nodeName, parentNode, messageContext );
-	}
-	else
-	{
-		return it->second.converter( firstSample, universe, nodeName, parentNode, messageContext );
-	}
+	return it->second( samples, motionStart, motionEnd, universe, nodeName, parentNode, messageContext );
 }
 
-void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter )
+AtNode *convert( const IECore::Object *object, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	registry().insert( Registry::value_type( fromType, Converters( converter, motionConverter ) ) );
+	return convert( { object }, 0, 1, universe, nodeName, parentNode, messageContext );
+}
+
+void registerConverter( IECore::TypeId fromType, Converter converter )
+{
+	registry().insert( Registry::value_type( fromType, converter ) );
 }
 
 } // namespace NodeAlgo

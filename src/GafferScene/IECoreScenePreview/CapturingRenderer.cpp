@@ -117,7 +117,7 @@ Renderer::AttributesInterfacePtr CapturingRenderer::attributes( const IECore::Co
 
 Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
 {
-	return this->object( name, camera, attributes );
+	return this->object( name, { camera }, {}, attributes );
 }
 
 Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
@@ -127,15 +127,10 @@ Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name,
 
 Renderer::ObjectInterfacePtr CapturingRenderer::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
-	return this->object( name, object, attributes );
+	return this->object( name, { object }, {}, attributes );
 }
 
 Renderer::ObjectInterfacePtr CapturingRenderer::lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
-{
-	return this->object( name, object, attributes );
-}
-
-Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
 	return this->object( name, { object }, {}, attributes );
 }

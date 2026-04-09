@@ -420,7 +420,6 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 
 	protected :
@@ -2416,53 +2415,13 @@ class InstanceCache : public IECore::RefCounted
 		{
 		}
 
-		// Can be called concurrently with other get() calls.
-		Instance get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
-		{
-			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-
-			if( !arnoldAttributes || !arnoldAttributes->canInstanceGeometry( object ) )
-			{
-				return Instance( convert( object, arnoldAttributes, nodeName, /* messageContext = */ nodeName ) );
-			}
-
-			IECore::MurmurHash h = object->hash();
-			arnoldAttributes->hashGeometry( object, h );
-
-			SharedAtNodePtr node;
-			Cache::const_accessor readAccessor;
-			if( m_cache.find( readAccessor, h ) )
-			{
-				node = readAccessor->second;
-				readAccessor.release();
-			}
-			else
-			{
-				Cache::accessor writeAccessor;
-				if( m_cache.insert( writeAccessor, h ) )
-				{
-					try
-					{
-						writeAccessor->second = convert( object, arnoldAttributes, "instance:" + h.toString(), /* messageContext = */ nodeName );
-					}
-					catch( const IECore::Cancelled & )
-					{
-						// Procedural expansion was cancelled. Erase `nullptr`
-						// result from the cache so that we redo the expansion
-						// if given the same procedural another time.
-						m_cache.erase( writeAccessor );
-						throw;
-					}
-				}
-				node = writeAccessor->second;
-				writeAccessor.release();
-			}
-
-			return Instance( node, m_nodeDeleter, m_universe, nodeName, m_parentNode );
-		}
-
 		Instance get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
 		{
+			if( samples.empty() )
+			{
+				return Instance( SharedAtNodePtr() );
+			}
+
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
 			if( !arnoldAttributes->canInstanceGeometry( samples.front().get() ) )
@@ -2496,7 +2455,11 @@ class InstanceCache : public IECore::RefCounted
 					}
 					catch( const IECore::Cancelled & )
 					{
+						// Procedural expansion was cancelled. Erase `nullptr`
+						// result from the cache so that we redo the expansion
+						// if given the same procedural another time.
 						m_cache.erase( writeAccessor );
+						throw;
 					}
 				}
 				node = writeAccessor->second;
@@ -2538,36 +2501,6 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 	private :
-
-		SharedAtNodePtr convert( const IECore::Object *object, const ArnoldAttributes *attributes, const std::string &nodeName, const std::string &messageContext )
-		{
-			if( !object )
-			{
-				return SharedAtNodePtr();
-			}
-
-			AtNode *node = nullptr;
-			if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) )
-			{
-				node = convertProcedural( procedural, attributes, m_universe, nodeName, m_parentNode );
-			}
-			else
-			{
-				node = NodeAlgo::convert( object, m_universe, nodeName, m_parentNode, messageContext );
-			}
-
-			if( !node )
-			{
-				return SharedAtNodePtr();
-			}
-
-			if( attributes )
-			{
-				attributes->applyGeometry( object, node );
-			}
-
-			return SharedAtNodePtr( node, m_nodeDeleter );
-		}
 
 		SharedAtNodePtr convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const ArnoldAttributes *attributes, const std::string &nodeName, const std::string &messageContext )
 		{
@@ -3313,16 +3246,6 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			auto &nodesCreatedLocal = m_nodesCreated.local();
 			result->instance().nodesCreated( nodesCreatedLocal );
 			result->nodesCreated( nodesCreatedLocal );
-			return result;
-		}
-
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
-		{
-			ArnoldObjectPtr result = static_pointer_cast<ArnoldObject>(
-				ArnoldRendererBase::object( name, object, attributes )
-			);
-
-			result->instance().nodesCreated( m_nodesCreated.local() );
 			return result;
 		}
 
@@ -4331,7 +4254,7 @@ class ArnoldGlobals
 					IECoreScene::ConstCameraPtr defaultCortexCamera = new IECoreScene::Camera();
 					m_cameras["ieCoreArnold:defaultCamera"] = defaultCortexCamera;
 					m_defaultCamera = SharedAtNodePtr(
-						NodeAlgo::convert( defaultCortexCamera.get(), m_universeBlock->universe(), "ieCoreArnold:defaultCamera", nullptr, "ieCoreArnold:defaultCamera" ),
+						NodeAlgo::convert( { defaultCortexCamera }, 0.0f, 0.0f, m_universeBlock->universe(), "ieCoreArnold:defaultCamera", nullptr, "ieCoreArnold:defaultCamera" ),
 						nodeDeleter( m_renderType )
 					);
 				}
@@ -4712,11 +4635,12 @@ ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const
 	return new ArnoldAttributes( attributes, m_shaderCache.get() );
 }
 
+
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-	Instance instance = m_instanceCache->get( camera, attributes, name );
+	Instance instance = m_instanceCache->get( { camera }, { 0.0f }, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	if( attributes )
@@ -4744,7 +4668,7 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::str
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-	Instance instance = m_instanceCache->get( object, attributes, name );
+	Instance instance = m_instanceCache->get( object ? ObjectSamples( { object } ) : ObjectSamples(), object ? SampleTimes( { 0.0f } ) : SampleTimes(),  attributes, name );
 	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter, m_universe, m_parentNode );
 	result->attributes( attributes );
 	return result;
@@ -4754,20 +4678,10 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::lightFilter( const st
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-	Instance instance = m_instanceCache->get( object, attributes, name );
+	Instance instance = m_instanceCache->get( object ? ObjectSamples( { object } ) : ObjectSamples(), object ? SampleTimes( { 0.0f } ) : SampleTimes(),  attributes, name );
 	ObjectInterfacePtr result = new ArnoldLightFilter( name, instance, m_nodeDeleter, m_universe, m_parentNode );
 	result->attributes( attributes );
 
-	return result;
-}
-
-ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
-{
-	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-
-	Instance instance = m_instanceCache->get( object, attributes, name );
-	ObjectInterfacePtr result = new ArnoldObject( instance );
-	result->attributes( attributes );
 	return result;
 }
 

@@ -1460,35 +1460,6 @@ class GeometryCache
 		}
 
 		// Can be called concurrently with other get() calls.
-		SharedGeometryPtr get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
-		{
-			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-
-			if( !cyclesAttributes->canInstanceGeometry( object ) )
-			{
-				return convert( object, cyclesAttributes, nodeName );
-			}
-
-			IECore::MurmurHash h = object->hash();
-			cyclesAttributes->hashGeometry( object, h );
-
-			Geometry::const_accessor readAccessor;
-			if( m_geometry.find( readAccessor, h ) )
-			{
-				return readAccessor->second;
-			}
-			else
-			{
-				Geometry::accessor writeAccessor;
-				if( m_geometry.insert( writeAccessor, h ) )
-				{
-					writeAccessor->second = convert( object, cyclesAttributes, nodeName );
-				}
-				return writeAccessor->second;
-			}
-		}
-
-		// Can be called concurrently with other get() calls.
 		SharedGeometryPtr get(
 			const IECoreScenePreview::Renderer::ObjectSamples &samples,
 			const IECoreScenePreview::Renderer::SampleTimes &times,
@@ -1548,25 +1519,6 @@ class GeometryCache
 		}
 
 	private :
-
-		SharedGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName )
-		{
-			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( object, m_session->scene.get() ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
-			if( geometry )
-			{
-				geometry->name = ccl::ustring( nodeName.c_str() );
-			}
-			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
-			{
-				// It's a pity we can't do this in VolumeAlgo in the first place. It is here instead because
-				// the precision is provided by the attributes, and we don't want to pass attributes
-				// to `GeometryAlgo`.
-				assert( geometry->is_volume() );
-				GeometryAlgo::convertVoxelGrids( vdb, static_cast<ccl::Volume*>( geometry.get() ), m_session->scene.get(), attributes->getVolumePrecision(), attributes->getVolumeClipping() );
-			}
-
-			return geometry;
-		}
 
 		SharedGeometryPtr convert(
 			const IECoreScenePreview::Renderer::ObjectSamples &samples,
@@ -2653,22 +2605,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "lightFilter() unimplemented" );
 			return nullptr;
-		}
-
-		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
-		{
-			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-			acquireSession();
-
-			SharedGeometryPtr geometry = m_geometryCache->get( object, attributes, name );
-			if( !geometry )
-			{
-				return nullptr;
-			}
-
-			ObjectInterfacePtr result = new CyclesObject( m_scene, geometry, name, frame(), &m_lightLinker, m_nodeDeleter.get() );
-			result->attributes( attributes );
-			return result;
 		}
 
 		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override

@@ -48,13 +48,13 @@ using namespace IECoreDelight;
 namespace
 {
 
-bool convert( const IECoreScene::DiskPrimitive *object, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const DiskPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "particles", 0, nullptr );
 
 	ParameterList parameters;
 
-	const V3f p( 0, 0, object->getZ() );
+	const V3f p( 0, 0, samples[0]->getZ() );
 	parameters.add( {
 		"P",
 		&p,
@@ -79,7 +79,7 @@ bool convert( const IECoreScene::DiskPrimitive *object, NSIContext_t context, co
 		NSIParamPerVertex
 	} );
 
-	const float width = object->getRadius() * 2;
+	const float width = samples[0]->getRadius() * 2;
 	parameters.add( {
 		"width",
 		&width,

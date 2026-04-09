@@ -57,8 +57,10 @@ static std::vector<std::pair<std::string, std::vector<std::string>>> g_gridCandi
 namespace
 {
 
-bool convert( const IECoreVDB::VDBObject *object, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreVDB::VDBObject *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle )
 {
+	const IECoreVDB::VDBObject *object = samples[0];
+
 	ParameterList parameters;
 
 	if( !object->unmodifiedFromFile() )

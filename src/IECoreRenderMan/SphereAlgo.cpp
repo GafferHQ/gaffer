@@ -49,18 +49,20 @@ namespace
 
 const RtUString g_xpuVariant( "xpu" );
 
-RtUString convertStaticSphere( const IECoreScene::SpherePrimitive *sphere, RtPrimVarList &primVars, const std::string &messageContext )
+RtUString convertSphere( const IECoreScenePreview::Renderer::Samples<const SpherePrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
+	const SpherePrimitive *sphere = samples[0];
+
 	const Session *session = Session::instance();
 	assert( session );
 	if( session->rileyVariant == g_xpuVariant )
 	{
 		// XPU doesn't support sphere primitives, so convert to a mesh.
 		MeshPrimitivePtr mesh = MeshPrimitive::createSphere( sphere->radius(), sphere->zMin(), sphere->zMax(), sphere->thetaMax() );
-		return GeometryAlgo::convert( mesh.get(), primVars, messageContext );
+		return GeometryAlgo::convert( { mesh.get() }, {}, primVars, messageContext );
 	}
 
-	GeometryAlgo::convertPrimitive( sphere, primVars, messageContext );
+	GeometryAlgo::convertPrimitive( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), sampleTimes, primVars, messageContext );
 
 	const float radius = sphere->radius();
 	const float zMin = sphere->zMin();
@@ -75,6 +77,6 @@ RtUString convertStaticSphere( const IECoreScene::SpherePrimitive *sphere, RtPri
 	return Loader::strings().k_Ri_Sphere;
 }
 
-GeometryAlgo::ConverterDescription<SpherePrimitive> g_sphereConverterDescription( convertStaticSphere );
+GeometryAlgo::ConverterDescription<SpherePrimitive> g_sphereConverterDescription( convertSphere );
 
 } // namespace

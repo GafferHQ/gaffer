@@ -77,7 +77,7 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		self.assertIsInstance( o, renderer.CapturedObject )
 		self.assertTrue( o.isSame( renderer.capturedObject( "o" ) ) )
 		self.assertEqual( o.capturedSamples(), [ IECoreScene.SpherePrimitive() ] )
-		self.assertEqual( o.capturedSampleTimes(), [] )
+		self.assertEqual( o.capturedSampleTimes(), [ 0.0 ] )
 		self.assertEqual( o.capturedAttributes(), attributes1 )
 		self.assertEqual( o.capturedLinks( "lights" ), None )
 		self.assertEqual( o.numAttributeEdits(), 1 )
@@ -396,7 +396,7 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		del oA
 		oA = rendererA.object( "/o", [ sphere1, sphere1 ], [ 0, 1 ], rendererA.attributes( attrs ) )
 
-		with self.assertRaisesRegex( AssertionError, r"Mismatched samples times at path '/o' : \[0.0, 1.0\] != \[\]" ):
+		with self.assertRaisesRegex( AssertionError, r"Mismatched samples times at path '/o' : \[0.0, 1.0\] != \[0.0\]" ):
 			CapturingRendererTest.assertRendersMatch( rendererA, rendererB )
 
 		del oB

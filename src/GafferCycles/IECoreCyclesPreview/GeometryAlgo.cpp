@@ -83,15 +83,7 @@ namespace
 
 using namespace IECoreCycles;
 
-struct Converters
-{
-
-	GeometryAlgo::Converter converter;
-	GeometryAlgo::MotionConverter motionConverter;
-
-};
-
-using Registry = std::unordered_map<IECore::TypeId, Converters>;
+using Registry = std::unordered_map<IECore::TypeId, IECoreCycles::GeometryAlgo::Converter>;
 
 Registry &registry()
 {
@@ -219,17 +211,6 @@ namespace IECoreCycles
 namespace GeometryAlgo
 {
 
-ccl::Geometry *convert( const IECore::Object *object, ccl::Scene *scene )
-{
-	const Registry &r = registry();
-	Registry::const_iterator it = r.find( object->typeId() );
-	if( it == r.end() )
-	{
-		return nullptr;
-	}
-	return it->second.converter( object, scene );
-}
-
 ccl::Geometry *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, ccl::Session *session )
 {
 	if( samples.empty() )
@@ -277,22 +258,15 @@ ccl::Geometry *convert( const IECoreScenePreview::Renderer::ObjectSamples &sampl
 	{
 		return nullptr;
 	}
-	if( it->second.motionConverter )
-	{
-		// Cycles expects the middle sample (rounding down for even numbers of
-		// samples) to be specified as the main sample, and the other samples to
-		// be provided via ATTR_STD_MOTION_VERTEX_POSITION.
-		return it->second.motionConverter( samples, times, (samples.size() - 1) / 2, session->scene.get() );
-	}
-	else
-	{
-		return it->second.converter( samples.front().get(), session->scene.get() );
-	}
+	// Cycles expects the middle sample (rounding down for even numbers of
+	// samples) to be specified as the main sample, and the other samples to
+	// be provided via ATTR_STD_MOTION_VERTEX_POSITION.
+	return it->second( samples, times, (samples.size() - 1) / 2, session->scene.get() );
 }
 
-void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter )
+void registerConverter( IECore::TypeId fromType, Converter converter )
 {
-	registry()[fromType] = { converter, motionConverter };
+	registry()[fromType] = converter;
 }
 
 void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement )

@@ -68,7 +68,7 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 			o = r.capturedObject( "o" )
 			self.assertIsNotNone( o )
 			self.assertEqual( o.capturedSamples(), [ IECoreScene.SpherePrimitive() ] )
-			self.assertEqual( o.capturedSampleTimes(), [] )
+			self.assertEqual( o.capturedSampleTimes(), [ 0.0 ] )
 			self.assertEqual( o.capturedAttributes().attributes(), coreAttributes1 )
 			self.assertEqual( o.id(), 0 )
 			self.assertEqual( o.instanceID(), 0 )

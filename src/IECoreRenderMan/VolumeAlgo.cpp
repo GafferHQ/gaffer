@@ -52,8 +52,10 @@ namespace
 
 const RtUString g_implOpenVDB( "blobbydso:impl_openvdb" );
 
-RtUString convertVDBObject( const IECoreVDB::VDBObject *vdbObject, RtPrimVarList &primVars, const std::string &messageContext )
+RtUString convertVDBObject( const IECoreScenePreview::Renderer::Samples<const IECoreVDB::VDBObject *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
+	const IECoreVDB::VDBObject *vdbObject = samples[0];
+
 	string fileName = vdbObject->fileName();
 	if( fileName.empty() || !vdbObject->unmodifiedFromFile() )
 	{
