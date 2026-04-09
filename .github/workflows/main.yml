@@ -294,7 +294,7 @@ jobs:
     - name: Install RenderMan 26.4
       run: |
         rm -r "$RMANTREE" # Free up precious disk space from the previous installation
-        ./.github/workflows/main/installRenderMan.py --version 26.4 --dailyBuildDate 2026-01-26 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+        ./.github/workflows/main/installRenderMan.py --version 26.4 --dailyBuildDate 2026-03-24 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
       shell: bash
       env:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}

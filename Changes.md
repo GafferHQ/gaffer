@@ -110,6 +110,7 @@ Improvements
 
 - SceneInspector, AttributeEditor, HierarchyView, LightEditor, RenderPassEditor : Added inspection of scene edits performed by render adaptors registered to `client = "SceneEditor"`, such as those used by the Render Pass Editor to modify the scene at render time. Cells with values sourced from a render adaptor are displayed with a faded orange background and cannot be directly edited as render adaptors exist externally to the script and are not user-editable. The `render:defaultRenderer` option must be set in the scene globals in order for renderer-specific edits to be shown.
 - Render, InteractiveRender : The `render:defaultRenderer` option is now created as a fallback when viewing these nodes. The option is created with the current value of the node's `renderer` plug so Editors can display edits from render adaptors matching the currently selected renderer.
+- SceneInspector : Added support for the custom label created by the `ShaderAssignment.label` plug (#6872).
 
 Fixes
 -----
