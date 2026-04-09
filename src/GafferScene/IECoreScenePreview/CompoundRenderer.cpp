@@ -352,13 +352,13 @@ Renderer::AttributesInterfacePtr CompoundRenderer::attributes( const IECore::Com
 	return new CompoundAttributesInterface( m_renderers, attributes );
 }
 
-Renderer::ObjectInterfacePtr CompoundRenderer::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CompoundRenderer::camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	auto compoundAttributes = static_cast<const CompoundAttributesInterface *>( attributes );
 	CompoundObjectInterfacePtr result = new CompoundObjectInterface;
 	for( size_t i = 0; i < m_renderers.size(); ++i )
 	{
-		result->objects[i] = m_renderers[i]->camera( name, camera, compoundAttributes ? compoundAttributes->attributes[i].get() : nullptr );
+		result->objects[i] = m_renderers[i]->camera( name, samples, times, compoundAttributes ? compoundAttributes->attributes[i].get() : nullptr );
 	}
 	return result;
 }

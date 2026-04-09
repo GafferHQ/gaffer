@@ -1543,12 +1543,12 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			return m_attributesCache->get( attributes );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			const string objectHandle = "camera:" + name;
-			if( !NodeAlgo::convert( { camera }, { 0.0 }, m_context, objectHandle.c_str() ) )
+			if( !NodeAlgo::convert( ObjectSamples( samples.begin(), samples.end() ), times, m_context, objectHandle.c_str() ) )
 			{
 				return nullptr;
 			}
@@ -1556,7 +1556,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			// Store the camera for later use in updateCamera().
 			{
 				tbb::spin_mutex::scoped_lock lock( m_camerasMutex );
-				m_cameras[objectHandle] = camera;
+				m_cameras[objectHandle] = samples[0];
 			}
 
 			DelightHandleSharedPtr cameraHandle(

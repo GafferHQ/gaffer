@@ -129,10 +129,10 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			return new Attributes( attributes, m_materialCache.get() );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
-			IECoreRenderMan::CameraPtr result = new IECoreRenderMan::Camera( name, camera, acquireSession() );
+			IECoreRenderMan::CameraPtr result = new IECoreRenderMan::Camera( name, samples.front().get(), acquireSession() );
 			result->attributes( attributes );
 			return result;
 		}
