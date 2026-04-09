@@ -64,11 +64,6 @@ OSLLight::OSLLight( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	// \todo - now that shaderName is not serialized, it seems questionable whether it even needs to exist, or
-	// whether we should just directly serialize shaderNode()->namePlug()  into the loadShader call.
-	// For the moment, keeping shaderName around makes it easier to support deprecated scripts, which contain
-	// a setValue on shaderName, and no loadShader
-	addChild( new StringPlug( "shaderName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new IntPlug( "shape", Plug::In, Disk, Disk, Geometry ) );
 	addChild( new FloatPlug( "radius", Plug::In, 0.01, 0 ) );
 	addChild( new StringPlug( "geometryType" ) );
@@ -80,7 +75,6 @@ OSLLight::OSLLight( const std::string &name )
 
 	/// \todo OSLShader could add this in it's constructor
 	shaderNode()->addChild( new Plug( "out", Plug::Out ) );
-	shaderNode()->namePlug()->setInput( shaderNamePlug() );
 	shaderNode()->typePlug()->setValue( "osl:light" );
 	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
 	shaderNode()->parametersPlug()->setInput( parametersPlug() );
@@ -92,64 +86,54 @@ OSLLight::~OSLLight()
 {
 }
 
-Gaffer::StringPlug *OSLLight::shaderNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *OSLLight::shaderNamePlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
 Gaffer::IntPlug *OSLLight::shapePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::IntPlug *OSLLight::shapePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 Gaffer::FloatPlug *OSLLight::radiusPlug()
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::FloatPlug *OSLLight::radiusPlug() const
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::StringPlug *OSLLight::geometryTypePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::StringPlug *OSLLight::geometryTypePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::Box3fPlug *OSLLight::geometryBoundPlug()
 {
-	return getChild<Box3fPlug>( g_firstPlugIndex + 4 );
+	return getChild<Box3fPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::Box3fPlug *OSLLight::geometryBoundPlug() const
 {
-	return getChild<Box3fPlug>( g_firstPlugIndex + 4 );
+	return getChild<Box3fPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::CompoundDataPlug *OSLLight::geometryParametersPlug()
 {
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 5 );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::CompoundDataPlug *OSLLight::geometryParametersPlug() const
 {
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 5 );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::CompoundDataPlug *OSLLight::attributesPlug()
@@ -164,22 +148,22 @@ const Gaffer::CompoundDataPlug *OSLLight::attributesPlug() const
 
 OSLShader *OSLLight::shaderNode()
 {
-	return getChild<OSLShader>( g_firstPlugIndex + 6 );
+	return getChild<OSLShader>( g_firstPlugIndex + 5 );
 }
 
 const OSLShader *OSLLight::shaderNode() const
 {
-	return getChild<OSLShader>( g_firstPlugIndex + 6 );
+	return getChild<OSLShader>( g_firstPlugIndex + 5 );
 }
 
 GafferScene::ShaderPlug *OSLLight::shaderInPlug()
 {
-	return getChild<ShaderPlug>( g_firstPlugIndex + 7 );
+	return getChild<ShaderPlug>( g_firstPlugIndex + 6 );
 }
 
 const GafferScene::ShaderPlug *OSLLight::shaderInPlug() const
 {
-	return getChild<ShaderPlug>( g_firstPlugIndex + 7 );
+	return getChild<ShaderPlug>( g_firstPlugIndex + 6 );
 }
 
 void OSLLight::loadShader( const std::string &shaderName )

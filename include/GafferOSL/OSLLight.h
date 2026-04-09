@@ -57,9 +57,6 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 		explicit OSLLight( const std::string &name=defaultName<OSLLight>() );
 		~OSLLight() override;
 
-		Gaffer::StringPlug *shaderNamePlug();
-		const Gaffer::StringPlug *shaderNamePlug() const;
-
 		enum Shape
 		{
 			Disk = 0,

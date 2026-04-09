@@ -80,6 +80,9 @@ Breaking Changes
 - StandardLightVisualiser : Made `surfaceTexture()` private. The new `registerSurfaceTexture()` method can be used to register a method to return surface texture data.
 - ExtensionAlgo : Changed base class for extension nodes from SubGraph to DependencyNode.
 - TestLight, TestShader : Stopped loading a default shader in the constructor. As with all equivalent nodes, `loadShader()` must now be called after construction.
+- OSLLight :
+  - Removed `shaderName` plug.
+  - Removed ability to load from `.gfr` files prior to version 0.45.0.0. If necessary, resave from Gaffer 1.6.
 
 Build
 -----

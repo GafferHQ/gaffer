@@ -61,18 +61,6 @@ Gaffer.Metadata.registerNode(
 
 		},
 
-		"shaderName" : {
-
-			"description" :
-			"""
-			The OSL shader to be assigned to the light
-			geometry.
-			""",
-
-			"plugValueWidget:type" : "",
-
-		},
-
 		"shape" : {
 
 			"description" :

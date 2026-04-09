@@ -88,11 +88,7 @@ class LightSerialiser : public GafferBindings::NodeSerialiser
 		// \todo - We should have a good way to access this on the base class - John is planning
 		// refactor this setup so that lights contain a GafferScene::Shader, instead of implementing
 		// loadShader themselves
-		const StringPlug* shaderNamePlug = light->getChild<Gaffer::StringPlug>( "shaderName" );
-		if( !shaderNamePlug )
-		{
-			shaderNamePlug = light->getChild<Gaffer::StringPlug>( "__shaderName" );
-		}
+		const StringPlug* shaderNamePlug = light->getChild<Gaffer::StringPlug>( "__shaderName" );
 		if( !shaderNamePlug )
 		{
 			shaderNamePlug = light->getChild<Gaffer::StringPlug>( "__model" );
