@@ -99,7 +99,7 @@ bool hasSmoothNormals( const IECoreScene::MeshPrimitive *mesh )
 	}
 }
 
-ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *scene )
+ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *scene )
 {
 	assert( mesh->typeId() == IECoreScene::MeshPrimitive::staticTypeId() );
 
@@ -244,19 +244,13 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *sc
 	return cmesh;
 }
 
-ccl::Geometry *convert( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *scene )
-{
-	ccl::Mesh *cmesh = convertCommon( mesh, scene );
-	return cmesh;
-}
-
 ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::MeshPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::Mesh *result = convertCommon( samples[primarySampleIndex], scene );
+	ccl::Mesh *result = convertPrimary( samples[primarySampleIndex], scene );
 	GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
 	return result;
 }
 
-GeometryAlgo::ConverterDescription<MeshPrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<MeshPrimitive> g_description( convert );
 
 } // namespace

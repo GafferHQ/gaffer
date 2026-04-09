@@ -57,15 +57,7 @@ namespace
 
 using namespace IECoreRenderMan;
 
-struct Converters
-{
-
-	GeometryAlgo::Converter converter;
-	GeometryAlgo::MotionConverter motionConverter;
-
-};
-
-using Registry = std::unordered_map<IECore::TypeId, Converters>;
+using Registry = std::unordered_map<IECore::TypeId, GeometryAlgo::Converter>;
 
 Registry &registry()
 {
@@ -324,16 +316,6 @@ void convertDetail( const IECoreScene::Primitive *primitive, RtPrimVarList &prim
 
 const std::string g_p( "P" );
 
-void convertP( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext )
-{
-	auto it = primitive->variables.find( g_p );
-	if( it != primitive->variables.end() )
-	{
-		const PrimitiveVariableConverter converter( messageContext );
-		dispatch( it->second.data.get(), converter, Loader::strings().k_P, it->second, primVarList );
-	}
-}
-
 void convertP( const GeometryAlgo::PrimitiveSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )
 {
 	const auto firstSampleIt = samples[0]->variables.find( g_p );
@@ -395,17 +377,6 @@ void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, RtPrimV
 // Implementation of external API
 //////////////////////////////////////////////////////////////////////////
 
-RtUString IECoreRenderMan::GeometryAlgo::convert( const IECore::Object *object, RtPrimVarList &primVars, const std::string &messageContext )
-{
-	Registry &r = registry();
-	auto it = r.find( object->typeId() );
-	if( it == r.end() )
-	{
-		return RtUString();
-	}
-	return it->second.converter( object, primVars, messageContext );
-}
-
 RtUString IECoreRenderMan::GeometryAlgo::convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	Registry &r = registry();
@@ -414,26 +385,12 @@ RtUString IECoreRenderMan::GeometryAlgo::convert( const IECoreScenePreview::Rend
 	{
 		return RtUString();
 	}
-	if( it->second.motionConverter )
-	{
-		return it->second.motionConverter( samples, sampleTimes, primVars, messageContext );
-	}
-	else
-	{
-		return it->second.converter( samples.front().get(), primVars, messageContext );
-	}
+	return it->second( samples, sampleTimes, primVars, messageContext );
 }
 
-void IECoreRenderMan::GeometryAlgo::registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter )
+void IECoreRenderMan::GeometryAlgo::registerConverter( IECore::TypeId fromType, Converter converter )
 {
-	registry()[fromType] = { converter, motionConverter };
-}
-
-void IECoreRenderMan::GeometryAlgo::convertPrimitive( const IECoreScene::Primitive *primitive, RtPrimVarList &primVarList, const std::string &messageContext )
-{
-	convertDetail( primitive, primVarList );
-	convertP( primitive, primVarList, messageContext );
-	convertPrimitiveVariables( primitive, primVarList, messageContext );
+	registry()[fromType] = converter;
 }
 
 void IECoreRenderMan::GeometryAlgo::convertPrimitive( const PrimitiveSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVarList, const std::string &messageContext )

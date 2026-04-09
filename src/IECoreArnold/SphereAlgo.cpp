@@ -68,18 +68,6 @@ void warnIfUnsupported( const IECoreScene::SpherePrimitive *sphere )
 	}
 }
 
-AtNode *convert( const IECoreScene::SpherePrimitive *sphere, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	warnIfUnsupported( sphere );
-
-	AtNode *result = AiNode( universe, g_sphereArnoldString, AtString( nodeName.c_str() ), parentNode );
-	ShapeAlgo::convertPrimitiveVariables( sphere, result, nullptr, messageContext );
-
-	AiNodeSetFlt( result, g_radiusArnoldString, sphere->radius() );
-
-	return result;
-}
-
 AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::SpherePrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	AtNode *result = AiNode( universe, g_sphereArnoldString, AtString( nodeName.c_str() ), parentNode );
@@ -101,6 +89,6 @@ AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::
 	return result;
 }
 
-NodeAlgo::ConverterDescription<SpherePrimitive> g_description( convert, convert );
+NodeAlgo::ConverterDescription<SpherePrimitive> g_description( convert );
 
 } // namespace

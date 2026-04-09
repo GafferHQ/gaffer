@@ -60,17 +60,11 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::Geometry *convert( const IECoreVDB::VDBObject *vdbObject, ccl::Scene *scene )
-{
-	ccl::Volume *volume = SceneAlgo::createNodeWithLock<ccl::Volume>( scene );
-	return volume;
-}
-
 ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreVDB::VDBObject *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	return convert( samples[primarySampleIndex], scene );
+	return SceneAlgo::createNodeWithLock<ccl::Volume>( scene );
 }
 
-GeometryAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( convert );
 
 } // namespace

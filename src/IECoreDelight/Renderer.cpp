@@ -943,29 +943,6 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		DelightHandleSharedPtr get( const IECore::Object *object )
-		{
-			const IECore::MurmurHash hash = object->Object::hash();
-
-			Cache::accessor a;
-			m_cache.insert( a, hash );
-			if( !a->second )
-			{
-				const std::string &name = "instance:" + hash.toString();
-				if( NodeAlgo::convert( object, m_context, name.c_str() ) )
-				{
-					a->second = make_shared<DelightHandle>( m_context, name, m_ownership );
-				}
-				else
-				{
-					a->second = nullptr;
-				}
-			}
-
-			return a->second;
-		}
-
-		// Can be called concurrently with other get() calls.
 		DelightHandleSharedPtr get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 		{
 			IECore::MurmurHash hash;
@@ -1571,7 +1548,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			const string objectHandle = "camera:" + name;
-			if( !NodeAlgo::convert( camera, m_context, objectHandle.c_str() ) )
+			if( !NodeAlgo::convert( { camera }, { 0.0 }, m_context, objectHandle.c_str() ) )
 			{
 				return nullptr;
 			}
@@ -1611,7 +1588,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			DelightHandleSharedPtr instance;
 			if( object )
 			{
-				instance = m_instanceCache->get( object );
+				instance = m_instanceCache->get( { object }, { 0.0 } );
 			}
 
 			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, ownership() );
@@ -1623,26 +1600,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
 			return nullptr;
-		}
-
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
-		{
-			if( !object )
-			{
-				return nullptr;
-			}
-
-			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-
-			DelightHandleSharedPtr instance = m_instanceCache->get( object );
-			if( !instance )
-			{
-				return nullptr;
-			}
-
-			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, ownership() );
-			result->attributes( attributes );
-			return result;
 		}
 
 		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
@@ -1804,7 +1761,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				camera = defaultCamera;
 
 				cameraHandle = "ieCoreDelight:defaultCamera";
-				NodeAlgo::convert( defaultCamera.get(), m_context, cameraHandle.c_str() );
+				NodeAlgo::convert( { defaultCamera.get() }, { 0.0 }, m_context, cameraHandle.c_str() );
 
 				m_defaultCamera = DelightHandle( m_context, cameraHandle, ownership() );
 

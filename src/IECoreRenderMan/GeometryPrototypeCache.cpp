@@ -71,16 +71,7 @@ GeometryPrototypePtr GeometryPrototypeCache::get( const IECoreScenePreview::Rend
 		}
 
 		RtPrimVarList primVars;
-		RtUString type;
-		if( samples.size() == 1 )
-		{
-			/// \todo Remove static conversions from GeometryAlgo?
-			type = GeometryAlgo::convert( samples[0].get(), primVars, messageContext );
-		}
-		else
-		{
-			type = GeometryAlgo::convert( samples, sampleTimes, primVars, messageContext );
-		}
+		const RtUString type = GeometryAlgo::convert( samples, sampleTimes, primVars, messageContext );
 
 		if( !type.Empty() )
 		{

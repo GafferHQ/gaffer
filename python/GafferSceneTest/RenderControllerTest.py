@@ -733,7 +733,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 				for (i,j) in zip( times, expectedSamples ):
 					self.assertAlmostEqual( i, j, places = 6 )
 			else :
-				self.assertEqual( times, [] )
+				self.assertEqual( times, [ 0.0 ] if deform else [] )
 
 		# INITIAL TRANSFORM TESTS
 

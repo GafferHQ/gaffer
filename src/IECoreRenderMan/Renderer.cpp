@@ -167,26 +167,6 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			return new LightFilter( name, typedAttributes, m_session, m_lightLinker.get() );
 		}
 
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
-		{
-			if( !object )
-			{
-				return nullptr;
-			}
-
-			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
-			acquireSession();
-
-			auto typedAttributes = static_cast<const Attributes *>( attributes );
-			ConstGeometryPrototypePtr geometryPrototype = m_geometryPrototypeCache->get( object, typedAttributes, /* messageContext = */ name );
-			if( !geometryPrototype )
-			{
-				return nullptr;
-			}
-
-			return new IECoreRenderMan::Object( name, geometryPrototype, typedAttributes, m_lightLinker.get(), m_session );
-		}
-
 		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );

@@ -312,9 +312,9 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		/// \todo Rejig class hierarchy so we can have something less generic than
 		/// Object here, but still pass CoordinateSystems. Or should
 		/// coordinate systems have their own dedicated calls?
-		virtual ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
-		/// As above, but specifying a deforming object.
 		virtual ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
+		/// Convenience overload for when there is only a single object sample.
+		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes );
 
 		/// Performs the render - should be called after the
 		/// entire scene has been specified using the methods

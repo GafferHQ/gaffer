@@ -981,8 +981,9 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
+			const IECore::Object *object = samples.front().get();
 			if( !m_renderObjects && !runTimeCast<const IECoreScenePreview::Placeholder>( object ) )
 			{
 				return nullptr;
@@ -993,11 +994,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			OpenGLObjectPtr result = new OpenGLObject( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
 			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
-		}
-
-		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
-		{
-			return object( name, samples.front().get(), attributes );
 		}
 
 		void render() override

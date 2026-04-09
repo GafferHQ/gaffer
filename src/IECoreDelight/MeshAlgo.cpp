@@ -120,22 +120,7 @@ void convertCornersAndCreases( const IECoreScene::MeshPrimitive *mesh, NSIContex
 	}
 }
 
-bool convertStatic( const IECoreScene::MeshPrimitive *mesh, NSIContext_t context, const char *handle )
-{
-	NSICreate( context, handle, "mesh", 0, nullptr );
-
-	ParameterList parameters;
-	staticParameters( mesh, parameters );
-	NodeAlgo::primitiveVariableParameterList( mesh, parameters, mesh->vertexIds() );
-
-	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
-
-	convertCornersAndCreases( mesh, context, handle );
-
-	return true;
-}
-
-bool convertAnimated( const IECoreScenePreview::Renderer::Samples<const IECoreScene::MeshPrimitive *> &meshes, const IECoreScenePreview::Renderer::SampleTimes &times, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::MeshPrimitive *> &meshes, const IECoreScenePreview::Renderer::SampleTimes &times, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "mesh", 0, nullptr );
 
@@ -164,6 +149,6 @@ bool convertAnimated( const IECoreScenePreview::Renderer::Samples<const IECoreSc
 	return true;
 }
 
-NodeAlgo::ConverterDescription<MeshPrimitive> g_description( convertStatic, convertAnimated );
+NodeAlgo::ConverterDescription<MeshPrimitive> g_description( convert );
 
 } // namespace
