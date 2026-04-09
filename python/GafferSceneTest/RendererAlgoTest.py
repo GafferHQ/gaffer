@@ -121,7 +121,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		capturedCamera = renderer.capturedObject( "/camera" )
 
 		self.assertEqual( capturedCamera.capturedSamples(), [ expectedCamera( 1 ) ] )
-		self.assertEqual( capturedCamera.capturedSampleTimes(), [] )
+		self.assertEqual( capturedCamera.capturedSampleTimes(), [ 0.0 ] )
 
 		# Animated case
 

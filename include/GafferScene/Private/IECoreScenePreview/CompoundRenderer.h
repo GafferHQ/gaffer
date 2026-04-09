@@ -59,7 +59,7 @@ class GAFFERSCENE_API CompoundRenderer final : public IECoreScenePreview::Render
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override;
 		void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override;
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override;
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const IECoreScenePreview::Renderer::ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;

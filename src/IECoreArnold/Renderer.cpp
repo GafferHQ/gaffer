@@ -416,7 +416,6 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override;
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
@@ -3213,12 +3212,6 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			return ArnoldRendererBase::attributes( fullAttributes.get() );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
-		{
-			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call camera()" );
-			return nullptr;
-		}
-
 		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call camera()" );
@@ -4635,21 +4628,6 @@ ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const
 	return new ArnoldAttributes( attributes, m_shaderCache.get() );
 }
 
-
-ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
-{
-	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-
-	Instance instance = m_instanceCache->get( { camera }, { 0.0f }, attributes, name );
-
-	ObjectInterfacePtr result = new ArnoldObject( instance );
-	if( attributes )
-	{
-		result->attributes( attributes );
-	}
-	return result;
-}
-
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
@@ -4740,14 +4718,6 @@ class ArnoldRenderer final : public ArnoldRendererBase
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			m_globals->output( name, output );
-		}
-
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
-		{
-			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-
-			m_globals->camera( name, camera );
-			return ArnoldRendererBase::camera( name, camera, attributes );
 		}
 
 		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override

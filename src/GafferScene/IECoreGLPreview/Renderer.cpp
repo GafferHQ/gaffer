@@ -944,7 +944,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
@@ -955,7 +955,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				openGLAttributes = new OpenGLAttributes( emptyAttributes.get() );
 			}
 
-			OpenGLCameraPtr result = new OpenGLCamera( name, camera, openGLAttributes, m_editQueue );
+			OpenGLCameraPtr result = new OpenGLCamera( name, samples.front().get(), openGLAttributes, m_editQueue );
 			m_editQueue.push( [this, result, name]() {
 				m_objects.push_back( result );
 				m_cameras[name] = result;

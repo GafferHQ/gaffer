@@ -2573,13 +2573,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			return m_attributesCache->get( attributes );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			// No need to acquire session because we don't need it to make a camera.
 			// This is important for certain clients (SceneGadget and RenderController)
 			// because they make a camera before calling `option()` to set the device.
-			CyclesCameraPtr result = new CyclesCamera( camera );
+			CyclesCameraPtr result = new CyclesCamera( samples[0] );
 			m_cameras[name] = result;
 			if( attributes )
 			{

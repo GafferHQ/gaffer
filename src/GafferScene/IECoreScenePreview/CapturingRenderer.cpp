@@ -115,11 +115,6 @@ Renderer::AttributesInterfacePtr CapturingRenderer::attributes( const IECore::Co
 	return new CapturedAttributes( ConstCompoundObjectPtr( attributes ) );
 }
 
-Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
-{
-	return this->object( name, { camera }, {}, attributes );
-}
-
 Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	return this->object( name, ObjectSamples( samples.begin(), samples.end() ), times, attributes );
