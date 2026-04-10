@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.16.0)
 =======
 
+Fixes
+-----
 
+- Plug : Fixed bug which meant nodes would fail to update if a newly created plug was renamed before being parented to the node.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========
