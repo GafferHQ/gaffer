@@ -38,6 +38,7 @@ Fixes
 - Cycles :
   - Reduced memory usage when rendering a single segment of deformation blur on CPU devices.
   - Fixed PointsPrimitive motion blur when rendering with even numbers of segments.
+- USDShader : Fixed value of `type` plug after loading a USDLux light.
 
 API
 ---
