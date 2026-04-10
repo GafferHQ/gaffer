@@ -49,6 +49,7 @@ Improvements
 ------------
 
 - StandardLightVisualiser : Added surface texture visualisation for inputs to the `color` parameter of USD lights when GafferArnold is used (#6651).
+- Cycles : Added support for USDPreviewSurface's `opacityMode` which allows transmission surfaces.
 
 Fixes
 -----
