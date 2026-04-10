@@ -382,7 +382,6 @@ OSLCode::OSLCode( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new Plug( "out", Plug::Out ) );
 	// Must not accept inputs for now, because we need to use `plugSetSignal()`
 	// to do the code generation.
 	/// \todo Rejig the NetworkGenerator so there is a hook for us to do our
@@ -411,12 +410,12 @@ OSLCode::~OSLCode()
 
 Gaffer::StringPlug *OSLCode::codePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::StringPlug *OSLCode::codePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 std::string OSLCode::source( const std::string shaderName ) const

@@ -227,6 +227,7 @@ GAFFER_NODE_DEFINE_TYPE( OSLShader );
 OSLShader::OSLShader( const std::string &name )
 	:	GafferScene::Shader( name )
 {
+	addChild( new Plug( "out", Plug::Out ) );
 }
 
 OSLShader::~OSLShader()
@@ -1376,33 +1377,27 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	StringPlug *namePlug = this->namePlug()->source<StringPlug>();
 	StringPlug *typePlug = this->typePlug()->source<StringPlug>();
 	Plug *parametersPlug = this->parametersPlug()->source<Plug>();
+	Plug *outPlug = this->outPlug()->source<Plug>();
 
-	Plug *existingOut = outPlug();
 	if( shaderName.empty() )
 	{
 		parametersPlug->clearChildren();
 		namePlug->setValue( "" );
 		typePlug->setValue( "" );
-		if( existingOut )
-		{
-			existingOut->clearChildren();
-		}
+		outPlug->clearChildren();
 		return;
 	}
 
 	OSLQueryPtr query = queryCache().get( shaderName );
 
-	const bool outPlugHadChildren = existingOut ? existingOut->children().size() : false;
+	const bool outPlugHadChildren = outPlug->children().size();
 	if( !keepExistingValues )
 	{
 		// If we're not preserving existing values then remove all existing
 		// parameter plugs - the various plug creators above know that if a
 		// plug exists then they should preserve its values.
 		parametersPlug->clearChildren();
-		if( existingOut )
-		{
-			existingOut->clearChildren();
-		}
+		outPlug->clearChildren();
 	}
 
 	m_metadata = nullptr;
@@ -1422,38 +1417,14 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	}
 
 	loadShaderParameters( shaderName, *query, parametersPlug, parameterMetadata );
+	loadShaderParameters( shaderName, *query, outPlug, parameterMetadata );
 
-	if( existingOut )
-	{
-		// \todo : This can be removed once old scripts have been updated, and we no longer have
-		// old out plugs set to Dynamic lying around
-		existingOut->setFlags( Gaffer::Plug::Dynamic, false );
-	}
-
-	if( !existingOut || existingOut->typeId() != Plug::staticTypeId() )
-	{
-		PlugPtr outPlug = new Plug( "out", Plug::Out, Plug::Default );
-		if( existingOut )
-		{
-			// We had an out plug but it was the wrong type (we used
-			// to use a CompoundPlug before that was deprecated). Move
-			// over any existing child plugs onto our replacement.
-			for( Plug::Iterator it( existingOut ); !it.done(); ++it )
-			{
-				outPlug->addChild( *it );
-			}
-		}
-		setChild( "out", outPlug );
-	}
-
-	loadShaderParameters( shaderName, *query, outPlug(), parameterMetadata );
-
-	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
+	if( static_cast<bool>( outPlug->children().size() ) != outPlugHadChildren )
 	{
 		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
 		// not the plug has children, so we must notify the world that the value will
 		// have changed.
-		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
+		Metadata::plugValueChangedSignal( this )( outPlug, "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
 	}
 }
 

@@ -83,6 +83,7 @@ Breaking Changes
 - OSLLight :
   - Removed `shaderName` plug.
   - Removed ability to load from `.gfr` files prior to version 0.45.0.0. If necessary, resave from Gaffer 1.6.
+- OSLShader : Removed ability to load from `.gfr` files prior to version 0.45.0.0. If necessary, resave from Gaffer 1.6.
 
 Build
 -----

@@ -73,8 +73,6 @@ OSLLight::OSLLight( const std::string &name )
 	addChild( new OSLShader( "__shader" ) );
 	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
-	/// \todo OSLShader could add this in it's constructor
-	shaderNode()->addChild( new Plug( "out", Plug::Out ) );
 	shaderNode()->typePlug()->setValue( "osl:light" );
 	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
 	shaderNode()->parametersPlug()->setInput( parametersPlug() );
