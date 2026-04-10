@@ -71,8 +71,15 @@ struct PythonValueFunction
 	ConstDataPtr operator()()
 	{
 		IECorePython::ScopedGILLock gilLock;
-		ConstDataPtr result = extract<ConstDataPtr>( m_fn() );
-		return result;
+		try
+		{
+			ConstDataPtr result = extract<ConstDataPtr>( m_fn() );
+			return result;
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
 	}
 
 	private :
@@ -91,8 +98,15 @@ struct PythonGraphComponentValueFunction
 	ConstDataPtr operator()( const GraphComponent *graphComponent )
 	{
 		IECorePython::ScopedGILLock gilLock;
-		ConstDataPtr result = extract<ConstDataPtr>( m_fn( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) ) );
-		return result;
+		try
+		{
+			ConstDataPtr result = extract<ConstDataPtr>( m_fn( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) ) );
+			return result;
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
 	}
 
 	private :
@@ -111,8 +125,15 @@ struct PythonPlugValueFunction
 	ConstDataPtr operator()( const Plug *plug )
 	{
 		IECorePython::ScopedGILLock gilLock;
-		ConstDataPtr result = extract<ConstDataPtr>( m_fn( PlugPtr( const_cast<Plug *>( plug ) ) ) );
-		return result;
+		try
+		{
+			ConstDataPtr result = extract<ConstDataPtr>( m_fn( PlugPtr( const_cast<Plug *>( plug ) ) ) );
+			return result;
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
 	}
 
 	private :
