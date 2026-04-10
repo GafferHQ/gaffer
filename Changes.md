@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.16.0)
 =======
 
+Features
+--------
+
+- ShaderTweaks : Added support for `{shaderType=someShaderType}` qualifiers in parameter names, allowing tweaking of a parameter on all shaders of a given type.
+
 Fixes
 -----
 

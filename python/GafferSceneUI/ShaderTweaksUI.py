@@ -54,6 +54,16 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Makes modifications to shader parameter values.
+
+	Shader parameters are identified by name, and can optionally be filtered by the name and type of the shader they belong to. Examples :
+
+	- `intensity` : Chooses a parameter called `intensity` on the final shader in the network. Particularly convenient for lights, which often include only one shader.
+	- `diffuseTexture.filename`: Chooses a parameter called `filename` on a shader called `diffuseTexture`.
+	- `dustLayer*.alpha` : Chooses all parameters called `alpha`, on shaders whose name matches `dustLayer*` (any of Gaffer's other standard wildcards may also be used to match the shader name).
+	- `{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image`.
+	- `diffuseTexture*{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image` and whose name matches `diffuseTexture*`.
+
+	> Tip : Parameters can be dragged from the SceneInspector and dropped into the text field to fill the name automatically.
 	""",
 
 	"layout:section:Settings.Tweaks:collapsed", False,
@@ -148,6 +158,21 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"tweaks.*.name" : {
+
+			"description" :
+			"""
+			Identifies the parameter to be tweaked. Parameters are identified by name, and can optionally be filtered by the name and type of the shader they belong to. Examples :
+
+			- `intensity` : Chooses a parameter called `intensity` on the final shader in the network. Particularly convenient for lights, which often include only one shader.
+			- `diffuseTexture.filename`: Chooses a parameter called `filename` on a shader called `diffuseTexture`.
+			- `dustLayer*.alpha` : Chooses all parameters called `alpha`, on shaders whose name matches `dustLayer*` (any of Gaffer's other standard wildcards may also be used to match the shader name).
+			- `{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image`.
+			- `diffuseTexture*{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image` and whose name matches `diffuseTexture*`.
+
+			> Tip : Parameters can be dragged from the SceneInspector and dropped into the text field to fill the name automatically.
+			"""
+		},
 	}
 
 )

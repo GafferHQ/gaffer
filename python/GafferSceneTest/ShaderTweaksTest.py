@@ -708,5 +708,76 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( set( network.shaders().keys() ), { "surface" } )
 		self.assertFalse( network.input( ( "surface", "a" ) ) )
 
+	def testShadertypeFilter( self ) :
+
+		shaderA = GafferSceneTest.TestShader( "A" )
+		shaderB = GafferSceneTest.TestShader( "B" )
+		shaderB.loadShader( "mix" )
+		shaderB["parameters"]["a"].setInput( shaderA["out"]["c"] )
+		shaderC = GafferSceneTest.TestShader( "C" )
+		shaderC.loadShader( "mixClosures" )
+		shaderC["type"].setValue( "surface" )
+		shaderC["parameters"]["mix"].setInput( shaderB["out"]["c"]["r"] )
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( plane["out"] )
+		assignment["filter"].setInput( planeFilter["out"] )
+		assignment["shader"].setInput( shaderC["out"] )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( assignment["out"] )
+		tweaks["shader"].setValue( "surface" )
+		tweaks["filter"].setInput( planeFilter["out"] )
+
+		originalNetwork = tweaks["out"].attributes( "/plane" )["surface"]
+
+		tweaks["tweaks"].addChild(
+			Gaffer.TweakPlug( "{shaderType=mix}.mix", 42, mode = Gaffer.TweakPlug.Mode.Add )
+		)
+
+		tweaked = tweaks["out"].attributes( "/plane" )["surface"]
+		self.assertEqual( tweaked.shaders()["B"].parameters["mix"].value, 42.5 )
+
+		tweaks["tweaks"][0]["name"].setValue( "{shaderType=mixClosures}.mix" )
+
+		with self.assertRaisesRegex( RuntimeError, 'Cannot apply tweak "{shaderType=mixClosures}.mix" to "C.mix" : "Add" mode is not compatible with an existing input connection.' ):
+			tweaks["out"].attributes( "/plane" )
+
+		# If we use both a handle and a shaderType, then both must match
+		tweaks["tweaks"][0]["name"].setValue( "B{shaderType=mixClosures}.mix" )
+		self.assertEqual( tweaks["out"].attributes( "/plane" )["surface"], originalNetwork )
+
+		tweaks["tweaks"][0]["name"].setValue( "B{shaderType=mix}.mix" )
+		self.assertEqual( tweaks["out"].attributes( "/plane" )["surface"], tweaked )
+
+		tweaks["tweaks"][0]["name"].setValue( "*{shaderType=mix}.mix" )
+		self.assertEqual( tweaks["out"].attributes( "/plane" )["surface"], tweaked )
+
+		# Filtering on an empty shader type matches nothing
+		tweaks["tweaks"][0]["name"].setValue( "*{shaderType=}.mix" )
+		self.assertEqual( tweaks["out"].attributes( "/plane" )["surface"], originalNetwork )
+
+		# In order to be valid, the parameter name must either be a valid shaderType qualifier, with an optional
+		# shader handle, and a parameter name, or a simple `handle.parameter`, or lastly, just a parameter
+		# name, with no braces or periods. If we get something we don't understand, we throw an exception
+		with self.assertRaisesRegex( RuntimeError, 'Could not parse shader parameter: "\*{shaderType}.mix"' ):
+			tweaks["tweaks"][0]["name"].setValue( "*{shaderType}.mix" )
+			tweaks["out"].attributes( "/plane" )
+		with self.assertRaisesRegex( RuntimeError, 'Could not parse shader parameter: "\*{}.mix"' ):
+			tweaks["tweaks"][0]["name"].setValue( "*{}.mix" )
+			tweaks["out"].attributes( "/plane" )
+		with self.assertRaisesRegex( RuntimeError, 'Could not parse shader parameter: ".mix"' ):
+			tweaks["tweaks"][0]["name"].setValue( ".mix" )
+			tweaks["out"].attributes( "/plane" )
+		with self.assertRaisesRegex( RuntimeError, 'Could not parse shader parameter: "{{{"' ):
+			tweaks["tweaks"][0]["name"].setValue( "{{{" )
+			tweaks["out"].attributes( "/plane" )
+
+
 if __name__ == "__main__":
 	unittest.main()
