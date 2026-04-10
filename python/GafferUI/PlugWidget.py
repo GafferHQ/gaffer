@@ -76,7 +76,9 @@ class PlugWidget( GafferUI.Widget ) :
 
 		## \todo Decide how we allow this sort of tweak using the public
 		# interface. Perhaps we should have a SizeableContainer or something?
-		self.__label.label()._qtWidget().setFixedWidth( self.labelWidth() )
+		self.__label._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		self.__label._qtWidget().setFixedWidth( self.labelWidth() )
+		self.__label.label()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred )
 
 		if label is not None :
 			warnings.warn(

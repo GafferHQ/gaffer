@@ -37,6 +37,8 @@
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 from Qt import QtWidgets
 
 ## A simple PlugValueWidget which just displays the name of the plug,
@@ -47,6 +49,7 @@ from Qt import QtWidgets
 #  - "renameable"
 #  - "labelPlugValueWidget:showValueChangedIndicator" : If `False`, the indicator that the
 #  plug value has changed will not be shown. Defaults to `True` if not set.
+#  - "labelPlugValueWidget:icon" : An icon to display next to the plug label.
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## \todo Remove alignment arguments. Vertically the only alignment that looks good is `Center`, and
@@ -87,6 +90,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__editableLabel = None # we'll make this lazily as needed
 
+		self.__iconWidget = None
+		self.__updateIcon()
+
 		# Connecting at front so we're called before the slots
 		# connected by the NameLabel class.
 		self.__label.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
@@ -112,6 +118,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__editableLabel.setGraphComponent( next( iter( plugs ) ) )
 			else :
 				self.__editableLabel.setGraphComponent( None )
+
+		self.__updateIcon()
 
 		self.__updatePlugMetadataChangedConnections()
 		self.__updateDoubleClickConnection()
@@ -287,6 +295,20 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# The NameLabel doesn't know that our formatter is sensitive
 			# to the metadata, so give it a little kick.
 			self.__label.setFormatter( self.__formatter )
+		elif key == "labelPlugValueWidget:icon" :
+			self.__updateIcon()
+
+	def __updateIcon( self ) :
+
+		layout = self._qtWidget().layout()
+		for i in range( 0, layout.count() ) :
+			layoutItem = layout.itemAt( i )
+			if layoutItem.widget() != self.label()._qtWidget() :
+				layout.removeItem( layoutItem )
+
+		if ( icon := sole( Gaffer.Metadata.value( p, "labelPlugValueWidget:icon" ) for p in self.getPlugs() )  ) is not None :
+			self.__iconWidget = GafferUI.Image( icon )
+			layout.addWidget( self.__iconWidget._qtWidget() )
 
 	@staticmethod
 	def __formatter( graphComponents ) :

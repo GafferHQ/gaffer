@@ -75,6 +75,29 @@ Gaffer.Metadata.registerNode(
 	}
 )
 
+def __registerIcons() :
+
+	visited = set()
+	for rendererTarget in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "optionPrefix" ) :
+		renderer = rendererTarget[9:]  # Trim off "renderer:"
+		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
+		prefix = "arnold:" if renderer == "Arnold" else Gaffer.Metadata.value( rendererTarget, "optionPrefix" )
+
+		if prefix in visited :
+			# A prefix can be registered for multiple renderers. We register them in
+			# order of importance, so skip all but the first.
+			continue
+
+		Gaffer.Metadata.registerValue(
+			GafferUSD.USDLight.staticTypeId(),
+			f"parameters.{prefix}*",
+			"labelPlugValueWidget:icon",
+			"renderer" + renderer + "OnIcon.png"
+		)
+		visited.add( prefix )
+
+__registerIcons()
+
 class _RendererFilter( GafferUI.Widget ) :
 
 	def __init__( self, plug, **kw ) :
