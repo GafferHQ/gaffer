@@ -266,10 +266,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	{
 		scope s = GafferBindings::DependencyNodeClass<OSLCode>()
 			.def( "source", &oslCodeSource, ( arg_( "shaderName" ) = "" ) )
-			.def( "shaderCompiledSignal", &OSLCode::shaderCompiledSignal, return_internal_reference<1>() )
 		;
-
-		SignalClass<OSLCode::ShaderCompiledSignal>( "ShaderCompiledSignal" );
 
 		// Use a default serialiser for OSLCode, so that we don't get a
 		// loadShader call like every other kind of shader.

@@ -43,10 +43,6 @@
 namespace GafferOSL
 {
 
-/// \todo It would be better if this node generated the .oso file
-/// on disk on demand, during shader network generation. Rejig the
-/// generation process to allow for this. Also bear in mind the related
-/// todo items in ArnoldDisplacement and ArnoldLight.
 class GAFFEROSL_API OSLCode : public OSLShader
 {
 
@@ -65,31 +61,29 @@ class GAFFEROSL_API OSLCode : public OSLShader
 		/// to give to it.
 		std::string source( const std::string shaderName = "" ) const;
 
-		using ShaderCompiledSignal = Gaffer::Signals::Signal<void ()>;
-		/// Signal emitted when a shader is compiled successfully.
-		/// \todo This exists only so the UI knows when to clear
-		/// the error indicator. When we compile shaders on demand,
-		/// we can instead use the same `errorSignal()`/`plugDirtiedSignal()`
-		/// combo we use everywhere else.
-		ShaderCompiledSignal &shaderCompiledSignal();
-
 		// This is implemented to do nothing, because OSLCode node generates the shader from
 		// the plugs, and not the other way around.  We don't want to inherit the loading behaviour
 		// from OSLShader which tries to match the plugs to a shader on disk
 		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
 
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
 	private :
 
-		void updateShader();
-		void plugSet( const Gaffer::Plug *plug );
-		void parameterAdded( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
-		void parameterRemoved( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
-		void parameterNameChanged();
+		// We connect the output from this into our `name` plug, allowing us
+		// to generate the shader on disk "just in time", when the NetworkCreator
+		// evaluates the name.
+		Gaffer::StringPlug *shaderNamePlug();
+		const Gaffer::StringPlug *shaderNamePlug() const;
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
+		void outputAdded();
+		void outputRemoved();
 
 		static size_t g_firstPlugIndex;
-
-		ShaderCompiledSignal m_shaderCompiledSignal;
-		std::unordered_map<const Gaffer::GraphComponent *, Gaffer::Signals::ScopedConnection> m_nameChangedConnections;
 
 };
 

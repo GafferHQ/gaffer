@@ -319,20 +319,27 @@ class _ErrorWidget( GafferUI.Widget ) :
 		self.__messageWidget = GafferUI.MessageWidget()
 		GafferUI.Widget.__init__( self, self.__messageWidget, **kw )
 
+		self.__node = node
 		node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
-		node.shaderCompiledSignal().connect( Gaffer.WeakMethod( self.__shaderCompiled ) )
+		node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 
 		self.__messageWidget.setVisible( False )
 
 	def __error( self, plug, source, error ) :
 
+		if plug.isSame( self.__node["__shaderName"] ) :
+			Gaffer.ParallelAlgo.callOnUIThread( functools.partial( self.__displayError, error ) )
+
+	def __displayError( self, error ) :
+
 		self.__messageWidget.clear()
 		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Error, "Compilation error", error )
 		self.__messageWidget.setVisible( True )
 
-	def __shaderCompiled( self ) :
+	def __plugDirtied( self, plug ) :
 
-		self.__messageWidget.setVisible( False )
+		if plug.isSame( self.__node["__shaderName"] ) :
+			self.__messageWidget.setVisible( False )
 
 ##########################################################################
 # Plug menu
