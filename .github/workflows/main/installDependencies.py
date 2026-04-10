@@ -49,7 +49,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a8/cortex-10.7.0.0a8-{platform}-{vfxPlatform}.{extension}"
+defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a9/cortex-10.7.0.0a9-{platform}-{vfxPlatform}.{extension}"
 
 # Parse command line arguments.
 

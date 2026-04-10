@@ -84,7 +84,7 @@ Build
 -----
 
 - Boost : Updated to version 1.85.0.
-- Cortex : Updated to version 10.7.0.0a8.
+- Cortex : Updated to version 10.7.0.0a9.
 - Cycles : Updated to version 5.0.0.
 - Embree : Updated to version 4.4.0.
 - Imath : Updated to version 3.1.12.
@@ -102,8 +102,13 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.03.
 
-1.6.x.x (relative to 1.6.15.0)
+1.6.x.x (relative to 1.6.16.0)
 =======
+
+
+
+1.6.16.0 (relative to 1.6.15.0)
+========
 
 Improvements
 ------------
@@ -111,6 +116,9 @@ Improvements
 - SceneInspector, AttributeEditor, HierarchyView, LightEditor, RenderPassEditor : Added inspection of scene edits performed by render adaptors registered to `client = "SceneEditor"`, such as those used by the Render Pass Editor to modify the scene at render time. Cells with values sourced from a render adaptor are displayed with a faded orange background and cannot be directly edited as render adaptors exist externally to the script and are not user-editable. The `render:defaultRenderer` option must be set in the scene globals in order for renderer-specific edits to be shown.
 - Render, InteractiveRender : The `render:defaultRenderer` option is now created as a fallback when viewing these nodes. The option is created with the current value of the node's `renderer` plug so Editors can display edits from render adaptors matching the currently selected renderer.
 - SceneInspector : Added support for the custom label created by the `ShaderAssignment.label` plug (#6872).
+- SceneReader :
+  - Added loading of ArnoldProcedural USD prims as ExternalProcedural objects.
+  - Added prim path to warnings when reading curves and meshes from USD files.
 
 Fixes
 -----
@@ -125,11 +133,17 @@ Fixes
   - Fixed bug preventing disabled attribute plugs from being edited on source nodes - such as USDLight and Camera - when the edit target was set to "Source" and there was a downstream edit in an EditScope.
 - SceneAlgo : `attributeHistory` and `optionHistory` now return the entire history rather than pruning once the attribute or option fails to exist.
 - SceneInspector, RenderPassEditor : Fixed bug causing history inspection to incorrectly include OptionTweaks `CreateIfMissing` tweaks that have not modified the scene due to the option already existing upstream of the tweak.
+- SceneWriter : Fixed writing of animated camera parameters to USD files.
 
 API
 ---
 
 - TestCase : Added `assertEventually()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.5.0.
 
 1.6.15.0 (relative to 1.6.14.2)
 ========
