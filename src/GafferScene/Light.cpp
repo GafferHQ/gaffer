@@ -50,12 +50,17 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-static IECore::InternedString g_lightsSetName( "__lights" );
-static IECore::InternedString g_defaultLightsSetName( "defaultLights" );
-static IECore::InternedString g_lightMuteAttributeName( "light:mute" );
+namespace
+{
 
-static IECore::BoolDataPtr g_true = new IECore::BoolData( true );
-static IECore::BoolDataPtr g_false = new IECore::BoolData( false );
+const IECore::InternedString g_lightsSetName( "__lights" );
+const IECore::InternedString g_defaultLightsSetName( "defaultLights" );
+const IECore::InternedString g_lightMuteAttributeName( "light:mute" );
+
+const IECore::BoolDataPtr g_true = new IECore::BoolData( true );
+const IECore::BoolDataPtr g_false = new IECore::BoolData( false );
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Light );
 
