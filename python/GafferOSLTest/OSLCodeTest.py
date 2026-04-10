@@ -435,6 +435,14 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		self.assertIsNone( oslCode.shaderMetadata( "test" ) )
 		self.assertIsNone( oslCode.parameterMetadata( oslCode["parameters"]["i"], "test" ) )
 
+	def testOutputGetValueDoesntThrowOnCodingError( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"]["i"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["code"].setValue( "oops!" )
+
+		self.assertEqual( oslCode["out"]["i"].getValue(), 0 )
+
 	def __osoFileName( self, oslCode ) :
 
 		result = oslCode.attributes()["osl:shader"].outputShader().name

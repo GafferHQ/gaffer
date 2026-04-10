@@ -1078,9 +1078,7 @@ void Shader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	{
 		if( output == o || o->isAncestorOf( output ) )
 		{
-			ComputeNode::hash( output, context, h );
-			namePlug()->hash( h );
-			typePlug()->hash( h );
+			h = output->defaultHash();
 			return;
 		}
 	}
