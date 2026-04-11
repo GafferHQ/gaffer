@@ -727,5 +727,43 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].context, "Plug dirty propagation" )
 		self.assertRegex( mh.messages[0].message, r"Cycle detected between node.* and node.*" )
 
+	def testDirtyPropagationAfterNameChangeBeforeParenting( self ) :
+
+		class ManyToOneDependencyNode( Gaffer.DependencyNode ) :
+
+			def __init__( self, name="CompoundPlugNode" ) :
+
+				Gaffer.DependencyNode.__init__( self, name )
+
+				self["in"] = Gaffer.Plug()  # All children of `in` affect
+				self["out"] = Gaffer.Plug() # `out`.
+
+			def affects( self, inputPlug ) :
+
+				outputs = Gaffer.DependencyNode.affects( self, inputPlug )
+
+				if inputPlug.parent().isSame( self["in"] ) :
+					outputs.append( self["out"] )
+
+				return outputs
+
+		IECore.registerRunTimeTyped( ManyToOneDependencyNode, typeName = "GafferTest::ManyToOneDependencyNode" )
+
+		node = ManyToOneDependencyNode()
+
+		dirtiedSlot = GafferTest.CapturingSlot( node.plugDirtiedSignal() )
+		with Gaffer.DirtyPropagationScope() :
+			node["in"]["foo"] = Gaffer.IntPlug()
+
+		self.assertIn( node["out"], { x[0] for x in dirtiedSlot } )
+
+		del dirtiedSlot[:]
+		with Gaffer.DirtyPropagationScope() :
+			bar = Gaffer.IntPlug()
+			bar.setName( "bar" )
+			node["in"].addChild( bar )
+
+		self.assertIn( node["out"], { x[0] for x in dirtiedSlot } )
+
 if __name__ == "__main__":
 	unittest.main()

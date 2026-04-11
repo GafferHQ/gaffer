@@ -106,6 +106,8 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		light = GafferCycles.CyclesLight()
 		light.loadShader( "point_light" )
+		# Increase intensity to match a default Arnold point_light.
+		light["parameters"]["intensity"].setValue( 5.0 )
 		return light, light["parameters"]["color"]
 
 	def _createSpotLight( self ) :

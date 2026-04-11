@@ -105,7 +105,11 @@ Build
 1.6.x.x (relative to 1.6.16.0)
 =======
 
+Fixes
+-----
 
+- Plug : Fixed bug which meant nodes would fail to update if a newly created plug was renamed before being parented to the node.
+- Metadata : Fixed handling of exceptions thrown from value functions implemented in Python. These are now correctly translated into C++ exceptions.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========

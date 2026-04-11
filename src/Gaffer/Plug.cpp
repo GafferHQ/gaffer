@@ -553,7 +553,10 @@ PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) 
 void Plug::nameChanged( IECore::InternedString oldName )
 {
 	GraphComponent::nameChanged( oldName );
-	propagateDirtinessAtLeaves( this );
+	if( node() )
+	{
+		propagateDirtinessAtLeaves( this );
+	}
 }
 
 void Plug::parentChanging( Gaffer::GraphComponent *newParent )
