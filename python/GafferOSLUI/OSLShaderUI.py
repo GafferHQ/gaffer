@@ -145,7 +145,11 @@ def __plugWidgetType( plug ) :
 
 	# See comments in `__plugNoduleVisibility()`.
 	node = plug.node()
-	parameterKey = node["type"].getValue() + ":" + node["name"].getValue() + ":" + plug.getName()
+	try :
+		parameterKey = node["type"].getValue() + ":" + node["name"].getValue() + ":" + plug.getName()
+	except :
+		return None
+
 	return Gaffer.Metadata.value( parameterKey, "plugValueWidget:type" )
 
 def __plugNoduleType( plug ) :
@@ -188,7 +192,10 @@ def __plugNoduleVisibility( plug ) :
 	# Before we can do this, we need to modify `Metadata::ValueFunction` so that
 	# it is passed a `target` argument.
 	if visible is None :
-		shaderKey = node["type"].getValue() + ":" + node["name"].getValue()
+		try :
+			shaderKey = node["type"].getValue() + ":" + node["name"].getValue()
+		except :
+			return None
 		parameterKey = shaderKey + ":" + plug.getName()
 		visible = Gaffer.Metadata.value( parameterKey, "noduleLayout:visible" )
 		if visible is None :

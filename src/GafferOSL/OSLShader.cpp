@@ -1623,7 +1623,19 @@ const IECore::CompoundData *OSLShader::metadata() const
 		return m_metadata.get();
 	}
 
-	m_metadata = g_metadataCache.get( namePlug()->getValue() );
+	std::string name;
+	try
+	{
+		name = namePlug()->getValue();
+	}
+	catch( ... )
+	{
+		// OSLCode drives the shader name with a compute that compiles the
+		// shader. This can error, in which case there can be no metadata.
+		return nullptr;
+	}
+
+	m_metadata = g_metadataCache.get( name );
 	return m_metadata.get();
 }
 

@@ -44,6 +44,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/RampPlug.h"
@@ -1021,9 +1022,19 @@ const Gaffer::Plug *Shader::correspondingInput( const Gaffer::Plug *output ) con
 	{
 		if( out->isAncestorOf( output ) )
 		{
-			const string metadataTarget = fmt::format(
-				"{}:{}:{}", typePlug()->getValue(), namePlug()->getValue(), output->relativeName( out )
-			);
+			string metadataTarget;
+			try
+			{
+				metadataTarget = fmt::format(
+					"{}:{}:{}", typePlug()->getValue(), namePlug()->getValue(), output->relativeName( out )
+				);
+			}
+			catch( const Gaffer::ProcessException & )
+			{
+				// Exception computing plug value. The UI will display this for
+				// us, so we can just ignore it.
+				return nullptr;
+			}
 			IECore::ConstStringDataPtr metadata = Metadata::value<const IECore::StringData>( metadataTarget, g_correspondingInputMetadataName );
 			if( metadata )
 			{
