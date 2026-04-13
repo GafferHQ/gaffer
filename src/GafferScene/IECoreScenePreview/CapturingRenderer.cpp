@@ -136,6 +136,15 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 
 	checkPaused();
 
+	if( samples.size() != times.size() )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "CapturingRenderer::object",
+			"Number of object samples ({}) doesn't match number of time samples ({}) for object \"{}\"",
+			samples.size(), times.size(), name
+		);
+	}
+
 	// To facilitate the testing of code that handles the return from the various object methods of
 	// a renderer, we return null if the `cr:unrenderable` attribute is set to true.
 	if( CapturedAttributes::unrenderableAttributeValue( static_cast<const CapturedAttributes *>( attributes ) ) )
@@ -322,6 +331,14 @@ uint32_t CapturingRenderer::CapturedObject::instanceID() const
 void CapturingRenderer::CapturedObject::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const SampleTimes &times )
 {
 	m_renderer->checkPaused();
+	if( samples.size() != times.size() )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "CapturingRenderer::CapturedObject::transform",
+			"Number of transform samples ({}) doesn't match number of time samples ({}) for object \"{}\"",
+			samples.size(), times.size(), m_name
+		);
+	}
 	m_capturedTransforms = samples;
 	m_capturedTransformTimes = times;
 }
