@@ -3189,5 +3189,24 @@ class DispatcherTest( GafferTest.TestCase ) :
 				)
 			)
 
+	def testIsolatedBatchNamesDontIncludeScriptFileName( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello World" )
+		script["command"]["dispatcher"]["isolated"].setValue( True )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["command"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+		rootBatch = script["dispatcher"].lastDispatch
+
+		self.assertEqual(
+			rootBatch.preTasks()[0].blindData()["name"].value,
+			"command 1"
+		)
+
 if __name__ == "__main__":
 	unittest.main()
