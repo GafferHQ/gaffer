@@ -735,6 +735,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 	def testShadertypeFilter( self ) :
 
 		shaderA = GafferSceneTest.TestShader( "A" )
+		shaderA.loadShader( "simpleShader" )
 		shaderB = GafferSceneTest.TestShader( "B" )
 		shaderB.loadShader( "mix" )
 		shaderB["parameters"]["a"].setInput( shaderA["out"]["c"] )
