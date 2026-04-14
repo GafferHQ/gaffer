@@ -108,18 +108,44 @@ GAFFERSCENE_API std::string renderManifestFilePath( const IECore::CompoundObject
 GAFFERSCENE_API bool transformMotionTimes( const RenderOptions &renderOptions, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::SampleTimes &times );
 GAFFERSCENE_API bool deformationMotionTimes( const RenderOptions &renderOptions, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::SampleTimes &times );
 
+struct GAFFERSCENE_API SampledTransform
+{
+	IECoreScenePreview::Renderer::TransformSamples samples;
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
+	Imath::M44f transformAtTime( float time ) const;
+	void concatenate( const SampledTransform &child );
+};
 /// Samples the local transform from the current location in preparation for output to the renderer.
-/// "samples" will be set to contain one sample for each sampleTime, unless the samples are all identical,
-/// in which case just one sample is output.
-/// If "hash" is passed in, then the hash will be set a value characterizing the samples.  If "hash" is
-/// already at this value, this function will do nothing and return false.  Returns true if hash is not
-/// passed in or the hash does not match.
-GAFFERSCENE_API bool transformSamples( const Gaffer::M44fPlug *transformPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECoreScenePreview::Renderer::TransformSamples &samples, IECore::MurmurHash *hash = nullptr );
+/// `sampleTimes` should have been obtained from `transformMotionTimes()` and the current context should
+/// match the frame being output.
+///
+/// If `hash` is provided, then it will be set to a value characterising the samples. If `hash` is already
+/// at the right value, then no samples are taken and `std::nullopt` is returned, indicating that an
+/// interactive render requires no update.
+///
+/// Note that if all samples are identical, a single sample will be returned. Therefore the returned
+/// `sampleTimes` may differ from the `samplesTimes` passed in. It is the _returned_ `sampleTimes` that
+/// should be passed to the Renderer.
+GAFFERSCENE_API std::optional<SampledTransform> transformSamples( const Gaffer::M44fPlug *transformPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECore::MurmurHash *hash = nullptr );
 
-/// Samples the object from the current location in preparation for output to the renderer. Sample times and
-/// hash behave the same as for the transformSamples() method. Multiple samples will only be generated for
-/// Primitives and Cameras, since other object types cannot be interpolated anyway.
-GAFFERSCENE_API bool objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECoreScenePreview::Renderer::ObjectSamples &samples, IECore::MurmurHash *hash = nullptr );
+struct SampledObject
+{
+	IECoreScenePreview::Renderer::ObjectSamples samples;
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
+};
+/// Samples the object from the current location in preparation for output to the renderer. The
+/// `sampleTimes` should have been obtained from `deformationMotionTimes()` and the current context should
+/// match the frame being output.
+///
+/// If `hash` is provided, then it will be set to a value characterising the samples. If `hash` is already
+/// at the right value, then no samples are taken and `std::nullopt` is returned, indicating that an
+/// interactive render requires no update.
+///
+/// Note that non-interpolable objects (such as Procedural or CoordinateSystem) will only receive a single
+/// sample from the current frame, no matter the values in `sampleTimes`. Therefore the returned `sampleTimes`
+/// may differ from the `sampleTimes` passed in. It is the _returned_ `sampleTimes` that should be passed to
+/// the Renderer.
+GAFFERSCENE_API std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECore::MurmurHash *hash = nullptr );
 
 GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
