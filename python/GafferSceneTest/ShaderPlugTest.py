@@ -47,9 +47,11 @@ class ShaderPlugTest( GafferSceneTest.SceneTestCase ) :
 	def testContextProcessorInput( self ) :
 
 		shader1 = GafferSceneTest.TestShader()
+		shader1.loadShader( "simpleShader" )
 		shader1["type"].setValue( "test:surface" )
 		shader1["parameters"]["c"].setValue( imath.Color3f( 1 ) )
 		shader2 = GafferSceneTest.TestShader()
+		shader2.loadShader( "simpleShader" )
 		shader2["type"].setValue( "test:surface" )
 		shader2["parameters"]["c"].setValue( imath.Color3f( 2 ) )
 

@@ -46,25 +46,12 @@
 using namespace boost::python;
 using namespace GafferUSD;
 
-namespace
-{
-
-void loadShaderWrapper( USDLight &light, const std::string &shader, bool keepExistingValues )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	light.loadShader( shader, keepExistingValues );
-}
-
-} // namespace
-
 BOOST_PYTHON_MODULE( _GafferUSD )
 {
 
 	GafferBindings::DependencyNodeClass<USDAttributes>();
 	GafferBindings::DependencyNodeClass<USDShader>();
 	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
-	GafferBindings::DependencyNodeClass<USDLight>()
-		.def( "loadShader", &loadShaderWrapper, ( arg( "shader" ), arg( "keepExistingValues" ) = true ) )
-	;
+	GafferBindings::DependencyNodeClass<USDLight>();
 
 }

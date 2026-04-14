@@ -37,6 +37,7 @@
 
 #include "GafferCycles/CyclesShader.h"
 
+#include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
 #include "GafferCycles/SocketHandler.h"
 
 #include "GafferScene/ShaderTweakProxy.h"
@@ -94,12 +95,19 @@ CyclesShader::~CyclesShader()
 
 void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
+	bool isLight = false;
+	const ccl::NodeType *shaderNodeType = nullptr;
 
-	// First populate all the Gaffer plugs for shaders
-	auto cShaderName = ccl::ustring( shaderName.c_str() );
-	const ccl::NodeType *shaderNodeType = ccl::NodeType::find( cShaderName );
+	if( IECoreCycles::lights()->member( shaderName ) )
+	{
+		isLight = true;
+	}
+	else
+	{
+		shaderNodeType = ccl::NodeType::find( ccl::ustring( shaderName.c_str() ) );
+	}
 
-	if( !shaderNodeType )
+	if( !isLight && !shaderNodeType )
 	{
 		throw Exception( fmt::format( "Shader \"{}\" not found", shaderName ) );
 	}
@@ -107,31 +115,39 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 	const bool outPlugWasEmpty = outPlug()->children().empty();
 	if( !keepExistingValues )
 	{
-		parametersPlug()->clearChildren();
+		parametersPlug()->source()->clearChildren();
 		outPlug()->clearChildren();
 	}
 
 	namePlug()->setValue( shaderName );
 
-	if( boost::ends_with( shaderName, "volume" ) )
+	if( isLight )
 	{
-		typePlug()->setValue( "cycles:volume" );
-	}
-	else if( boost::ends_with( shaderName, "displacement" ) )
-	{
-		typePlug()->setValue( "cycles:displacement" );
-	}
-	else if( shaderName == "aov_output" )
-	{
-		typePlug()->setValue( "cycles:aov:" );
+		typePlug()->setValue( "cycles:light" );
+		SocketHandler::setupLightPlugs( shaderName, parametersPlug()->source() );
 	}
 	else
 	{
-		typePlug()->setValue( "cycles:surface" );
+		assert( shaderNodeType );
+		if( boost::ends_with( shaderName, "volume" ) )
+		{
+			typePlug()->setValue( "cycles:volume" );
+		}
+		else if( boost::ends_with( shaderName, "displacement" ) )
+		{
+			typePlug()->setValue( "cycles:displacement" );
+		}
+		else if( shaderName == "aov_output" )
+		{
+			typePlug()->setValue( "cycles:aov:" );
+		}
+		else
+		{
+			typePlug()->setValue( "cycles:surface" );
+		}
+		SocketHandler::setupPlugs( shaderNodeType, parametersPlug()->source() );
+		SocketHandler::setupPlugs( shaderNodeType, outPlug(), Gaffer::Plug::Out );
 	}
-
-	SocketHandler::setupPlugs( shaderNodeType, parametersPlug() );
-	SocketHandler::setupPlugs( shaderNodeType, outPlug(), Gaffer::Plug::Out );
 
 	if( outPlug()->children().empty() != outPlugWasEmpty )
 	{

@@ -162,10 +162,12 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["t"] = Gaffer.Color3fPlug()
 
 		tex = GafferSceneTest.TestShader( "texture" )
+		tex.loadShader( "simpleShader" )
 		tex["type"].setValue( "test:surface" )
 
 		srf["parameters"]["t"].setInput( tex["out"]["c"] )
@@ -228,6 +230,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["c"].setValue( imath.Color3f( 0.4, 0.5, 0.6 ) )
 		srf["parameters"]["i"].setValue( 2 )
@@ -236,6 +239,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		srf["parameters"]["b"].setValue( imath.Box2i( imath.V2i( 3 ), imath.V2i( 4 ) ) )
 
 		tex = GafferSceneTest.TestShader( "texture" )
+		tex.loadShader( "simpleShader" )
 		tex["type"].setValue( "test:surface" )
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
@@ -295,6 +299,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["i"].setValue( 2 )
 		srf["parameters"]["t"] = Gaffer.Color3fPlug()
@@ -302,6 +307,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		srf["parameters"]["b"].setValue( imath.Box2i( imath.V2i( 3 ), imath.V2i( 4 ) ) )
 
 		tex = GafferSceneTest.TestShader( "texture" )
+		tex.loadShader( "simpleShader" )
 		tex["type"].setValue( "test:surface" )
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
@@ -344,6 +350,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["i"].setValue( 2 )
 		srf["parameters"]["t"] = Gaffer.Color3fPlug()
@@ -351,6 +358,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		srf["parameters"]["b"].setValue( imath.Box2i( imath.V2i( 3 ), imath.V2i( 4 ) ) )
 
 		tex = GafferSceneTest.TestShader( "texture" )
+		tex.loadShader( "simpleShader" )
 		tex["type"].setValue( "test:surface" )
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
@@ -393,6 +401,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["i"].setValue( 2 )
 		srf["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
@@ -480,6 +489,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		sphere = GafferScene.Sphere()
 
 		globalSurface = GafferSceneTest.TestShader( "surface" )
+		globalSurface.loadShader( "simpleShader" )
 		globalSurface["type"].setValue( "test:surface" )
 		globalSurface["parameters"]["i"].setValue( 2 )
 		globalSurface["parameters"]["c"].setValue( imath.Color3f( 0.3, 0.4, 0.5 ) )
@@ -490,6 +500,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		globalAttributes["extraAttributes"].setValue( IECore.CompoundObject( { "test:surface" : globalSurface.attributes()["test:surface"] } ) )
 
 		surface = GafferSceneTest.TestShader( "surface" )
+		surface.loadShader( "simpleShader" )
 		surface["type"].setValue( "test:surface" )
 		surface["parameters"]["i"].setValue( 3 )
 		surface["parameters"]["c"].setValue( imath.Color3f( 0.6, 0.7, 0.8 ) )

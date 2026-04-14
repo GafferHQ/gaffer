@@ -355,6 +355,7 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 	def testSetRespectsRootName( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		collect1 = GafferScene.CollectScenes()
 		collect1["in"].setInput( light["out"] )

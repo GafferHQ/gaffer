@@ -192,8 +192,10 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 	def testSets( self ) :
 
 		l1 = GafferSceneTest.TestLight()
+		l1.loadShader( "simpleLight" )
 		l1["name"].setValue( "light1" )
 		l2 = GafferSceneTest.TestLight()
+		l2.loadShader( "simpleLight" )
 		l2["name"].setValue( "light2" )
 
 		p = GafferScene.Parent()
@@ -211,6 +213,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		c = GafferScene.Cube()
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( c["out"] )
@@ -226,6 +229,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 	def testSetsUniqueToParent( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		c = GafferScene.Cube()
 
 		p = GafferScene.Parent()
@@ -243,6 +248,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		c = GafferScene.Cube()
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( c["out"] )
@@ -260,6 +266,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cube()
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		g1 = GafferScene.Group()
 		g1["in"][0].setInput( l["out"] )
 		g2 = GafferScene.Group()
@@ -278,7 +286,9 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 	def testSetsWithWithRenaming( self ) :
 
 		l1 = GafferSceneTest.TestLight()
+		l1.loadShader( "simpleLight" )
 		l2 = GafferSceneTest.TestLight()
+		l2.loadShader( "simpleLight" )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( l1["out"] )

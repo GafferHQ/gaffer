@@ -48,6 +48,7 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 		l["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		l["visualiserAttributes"]["scale"]["value"].setValue( 5 )
 
@@ -110,6 +111,7 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 	def testIgnoreMissing( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 		l["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		l["visualiserAttributes"]["scale"]["value"].setValue( 5.0 )
 

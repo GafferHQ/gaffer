@@ -219,10 +219,12 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		attributes["attributes"]["doubleSided"]["value"].setValue( False )
 
 		lightA = GafferSceneTest.TestLight()
+		lightA.loadShader( "simpleLight" )
 		lightA["name"].setValue( "lightA" )
 		lightA["sets"].setValue( "A" )
 
 		lightB = GafferSceneTest.TestLight()
+		lightB.loadShader( "simpleLight" )
 		lightB["name"].setValue( "lightB" )
 		lightB["sets"].setValue( "B" )
 
@@ -294,6 +296,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# Make a bunch of lights
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		lightPlane = GafferScene.Plane()
 		lightPlane["name"].setValue( "lights" )
@@ -308,6 +311,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# will trigger linking of all the others.
 
 		nonDefaultLight = GafferSceneTest.TestLight()
+		nonDefaultLight.loadShader( "simpleLight" )
 		nonDefaultLight["defaultLight"].setValue( False )
 
 		# Group everything into one scene
@@ -479,11 +483,13 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# result in light links being emitted to the renderer.
 
 		defaultLight = GafferSceneTest.TestLight()
+		defaultLight.loadShader( "simpleLight" )
 		defaultLight["name"].setValue( "defaultLight" )
 		defaultLightAttributes = GafferScene.StandardAttributes()
 		defaultLightAttributes["in"].setInput( defaultLight["out"] )
 
 		nonDefaultLight = GafferSceneTest.TestLight()
+		nonDefaultLight.loadShader( "simpleLight" )
 		nonDefaultLight["name"].setValue( "nonDefaultLight" )
 		nonDefaultLight["defaultLight"].setValue( False )
 
@@ -645,6 +651,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		camera = GafferScene.Camera()
 		sphere = GafferScene.Sphere()
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		lightAttr = GafferScene.StandardAttributes()
 		lightAttr["in"].setInput( sphere["out"] )
@@ -1091,22 +1098,31 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# --- lightGroupMuteChild	undefined			True (inherited)
 
 		lightMute = GafferSceneTest.TestLight()
+		lightMute.loadShader( "simpleLight" )
 		lightMute["name"].setValue( "lightMute" )
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 		light["name"].setValue( "light" )
 		lightMute2 = GafferSceneTest.TestLight()
+		lightMute2.loadShader( "simpleLight" )
 		lightMute2["name"].setValue( "lightMute2" )
 		lightMute3 = GafferSceneTest.TestLight()
+		lightMute3.loadShader( "simpleLight" )
 		lightMute3["name"].setValue( "lightMute3" )
 		lightMute3Child = GafferSceneTest.TestLight()
+		lightMute3Child.loadShader( "simpleLight" )
 		lightMute3Child["name"].setValue( "lightMute3Child" )
 		light2 = GafferSceneTest.TestLight()
+		light2.loadShader( "simpleLight" )
 		light2["name"].setValue( "light2" )
 		light2ChildMute = GafferSceneTest.TestLight()
+		light2ChildMute.loadShader( "simpleLight" )
 		light2ChildMute["name"].setValue( "light2ChildMute" )
 		light2Child = GafferSceneTest.TestLight()
+		light2Child.loadShader( "simpleLight" )
 		light2Child["name"].setValue( "light2Child" )
 		lightGroupMuteChild = GafferSceneTest.TestLight()
+		lightGroupMuteChild.loadShader( "simpleLight" )
 		lightGroupMuteChild["name"].setValue( "lightGroupMuteChild" )
 
 		parent = GafferScene.Parent()
@@ -1266,24 +1282,34 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# --- lightGroupMuteChildSolo   undefined       in          True
 
 		lightSolo = GafferSceneTest.TestLight()
+		lightSolo.loadShader( "simpleLight" )
 		lightSolo["name"].setValue( "lightSolo" )
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 		light["name"].setValue( "light" )
 		lightSolo2 = GafferSceneTest.TestLight()
+		lightSolo2.loadShader( "simpleLight" )
 		lightSolo2["name"].setValue( "lightSolo2" )
 		lightMute = GafferSceneTest.TestLight()
+		lightMute.loadShader( "simpleLight" )
 		lightMute["name"].setValue( "lightMute" )
 		lightMuteChild = GafferSceneTest.TestLight()
+		lightMuteChild.loadShader( "simpleLight" )
 		lightMuteChild["name"].setValue( "lightMuteChild" )
 		lightMuteChildSolo = GafferSceneTest.TestLight()
+		lightMuteChildSolo.loadShader( "simpleLight" )
 		lightMuteChildSolo["name"].setValue( "lightMuteChildSolo" )
 		lightMuteSolo = GafferSceneTest.TestLight()
+		lightMuteSolo.loadShader( "simpleLight" )
 		lightMuteSolo["name"].setValue( "lightMuteSolo" )
 		lightMuteSoloChild = GafferSceneTest.TestLight()
+		lightMuteSoloChild.loadShader( "simpleLight" )
 		lightMuteSoloChild["name"].setValue( "lightMuteSoloChild" )
 		lightMuteSoloChildSolo = GafferSceneTest.TestLight()
+		lightMuteSoloChildSolo.loadShader( "simpleLight" )
 		lightMuteSoloChildSolo["name"].setValue( "lightMuteSoloChildSolo" )
 		lightGroupMuteChildSolo = GafferSceneTest.TestLight()
+		lightGroupMuteChildSolo.loadShader( "simpleLight" )
 		lightGroupMuteChildSolo["name"].setValue( "lightGroupMuteChildSolo" )
 
 		parent = GafferScene.Parent()

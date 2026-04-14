@@ -82,6 +82,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		cubeC["sets"].setValue( "C CUBE" )
 
 		lightC = GafferSceneTest.TestLight()
+		lightC.loadShader( "simpleLight" )
 		lightC["sets"].setValue( "C" )
 
 		lightFilterC = GafferSceneTest.TestLightFilter()

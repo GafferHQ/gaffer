@@ -231,10 +231,12 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		# and accept them again if they provide indirect access to a shader
 
 		s["s"] = GafferSceneTest.TestShader()
+		s["s"].loadShader( "simpleShader" )
 		s["b"]["in"].setInput( s["s"]["out"] )
 		self.assertTrue( s["b"]["a"]["shader"].acceptsInput( s["b"]["in"] ) )
 
 		s["b"]["s"] = GafferSceneTest.TestShader()
+		s["b"]["s"].loadShader( "simpleShader" )
 		s["b"]["out"].setInput( s["b"]["s"]["out"] )
 		self.assertTrue( s["a"]["shader"].acceptsInput( s["b"]["out"] ) )
 
@@ -276,6 +278,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		script["a"] = GafferScene.ShaderAssignment()
 
 		script["s"] = GafferSceneTest.TestShader()
+		script["s"].loadShader( "simpleShader" )
 		script["d"] = Gaffer.Dot()
 		script["d"].setup( script["s"]["out"]["c"] )
 
@@ -367,6 +370,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["s"] = GafferSceneTest.TestShader()
+		s["s"].loadShader( "simpleShader" )
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["shader"].setInput( s["s"]["out"]["c"] )
 
@@ -467,6 +471,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["shader"] = GafferSceneTest.TestShader()
+		script["shader"].loadShader( "simpleShader" )
 		script["shader"]["type"].setValue( "shader" )
 
 		script["expression"] = Gaffer.Expression()
@@ -661,10 +666,12 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 	def testSwitchBasedOnScenePath( self ) :
 
 		shader1 = GafferSceneTest.TestShader()
+		shader1.loadShader( "simpleShader" )
 		shader1["type"].setValue( "test:surface" )
 		shader1["parameters"]["i"].setValue( 1 )
 
 		shader2 = GafferSceneTest.TestShader()
+		shader2.loadShader( "simpleShader" )
 		shader2["type"].setValue( "test:surface" )
 		shader2["parameters"]["i"].setValue( 2 )
 

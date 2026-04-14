@@ -731,6 +731,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		cube["sets"].setValue( "setA setB setC setD setE setF" )
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( sceneReader["out"] )

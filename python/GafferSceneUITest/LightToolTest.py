@@ -63,13 +63,16 @@ class LightToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["spotLight1"] = GafferSceneTest.TestLight()
+		script["spotLight1"].loadShader( "simpleLight" )
 		script["spotLight2"] = GafferSceneTest.TestLight()
+		script["spotLight2"].loadShader( "simpleLight" )
 
 		for n in [ "spotLight1", "spotLight2" ] :
 			script[n]["parameters"].addChild( Gaffer.FloatPlug( "coneAngle" ) )
 			script[n]["parameters"].addChild( Gaffer.FloatPlug( "penumbraAngle" ) )
 
 		script["light1"] = GafferSceneTest.TestLight()
+		script["light1"].loadShader( "simpleLight" )
 
 		script["group"] = GafferScene.Group()
 		script["group"]["in"][0].setInput( script["spotLight1"]["out"] )
@@ -104,6 +107,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["spotLight"] = GafferSceneTest.TestLight()
+		script["spotLight"].loadShader( "simpleLight" )
 		script["spotLight"]["parameters"].addChild( Gaffer.FloatPlug( "coneAngle", defaultValue = 10 ) )
 		script["spotLight"]["parameters"].addChild( Gaffer.FloatPlug( "penumbraAngle", defaultValue = 1 ) )
 

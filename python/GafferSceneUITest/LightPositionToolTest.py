@@ -59,6 +59,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["light"]["out"] )
@@ -105,6 +106,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 
 		script["group"] = GafferScene.Group()
 		script["group"]["in"][0].setInput( script["light"]["out"] )
@@ -162,6 +164,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["light"]["out"] )
@@ -212,6 +215,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["light"]["out"] )
@@ -255,6 +259,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 
 		view = GafferSceneUI.SceneView( script )
 		view["in"].setInput( script["light"]["out"] )

@@ -1295,6 +1295,7 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 		loc = "shaderSphere"
 
 		v = GafferSceneTest.TestShader( "assignedShader" )
+		v.loadShader( "simpleShader" )
 		v["type"].setValue( "test:shader" )
 
 		d = Gaffer.ObjectPlug(

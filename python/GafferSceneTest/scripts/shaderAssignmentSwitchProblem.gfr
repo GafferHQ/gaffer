@@ -13,6 +13,7 @@ __children = {}
 
 __children["shader"] = GafferSceneTest.TestShader( "shader" )
 parent.addChild( __children["shader"] )
+__children["shader"].loadShader( "simpleShader" )
 __children["shader"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["shaderAssignment"] = GafferScene.ShaderAssignment( "shaderAssignment" )
 parent.addChild( __children["shaderAssignment"] )

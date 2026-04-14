@@ -50,6 +50,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testDirtyPropagation( self ) :
 
 		s = GafferSceneTest.TestShader( "s" )
+		s.loadShader( "simpleShader" )
 
 		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
 
@@ -129,6 +130,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		surface["parameters"]["t"] = Gaffer.Color3fPlug()
 
 		texture = GafferSceneTest.TestShader( "texture" )
+		texture.loadShader( "simpleShader" )
 		texture["name"].setValue( "testTexture" )
 		texture["type"].setValue( "test:shader" )
 
@@ -144,6 +146,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testDirtyPropagationThroughShaderAssignment( self ) :
 
 		n = GafferSceneTest.TestShader()
+		n.loadShader( "simpleShader" )
 
 		p = GafferScene.Plane()
 		a = GafferScene.ShaderAssignment()
@@ -166,8 +169,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testParameterValuesWhenConnected( self ) :
 
 		n1 = GafferSceneTest.TestShader( "n1" )
+		n1.loadShader( "simpleShader" )
 		n2 = GafferSceneTest.TestShader( "n2" )
+		n2.loadShader( "simpleShader" )
 		n3 = GafferSceneTest.TestShader( "n3" )
+		n3.loadShader( "simpleShader" )
 		n3["type"].setValue( "test:surface" )
 
 		n3["parameters"]["i"].setInput( n1["out"]["c"]["r"] )
@@ -193,8 +199,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testDetectCyclicConnections( self ) :
 
 		n1 = GafferSceneTest.TestShader()
+		n1.loadShader( "simpleShader" )
 		n2 = GafferSceneTest.TestShader()
+		n2.loadShader( "simpleShader" )
 		n3 = GafferSceneTest.TestShader()
+		n3.loadShader( "simpleShader" )
 
 		n2["parameters"]["i"].setInput( n1["out"]["c"]["r"] )
 		n3["parameters"]["i"].setInput( n2["out"]["c"]["g"] )
@@ -216,8 +225,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testSwitch( self ) :
 
 		n1 = GafferSceneTest.TestShader( "n1" )
+		n1.loadShader( "simpleShader" )
 		n2 = GafferSceneTest.TestShader( "n2" )
+		n2.loadShader( "simpleShader" )
 		n3 = GafferSceneTest.TestShader( "n3" )
+		n3.loadShader( "simpleShader" )
 		n3["type"].setValue( "test:surface" )
 
 		switch = Gaffer.Switch()
@@ -245,8 +257,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n1"] = GafferSceneTest.TestShader()
+		s["n1"].loadShader( "simpleShader" )
 		s["n2"] = GafferSceneTest.TestShader()
+		s["n2"].loadShader( "simpleShader" )
 		s["n3"] = GafferSceneTest.TestShader()
+		s["n3"].loadShader( "simpleShader" )
 		s["n3"]["type"].setValue( "test:surface" )
 
 		s["switch"] = Gaffer.Switch()
@@ -287,8 +302,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		contextQuery.addQuery( Gaffer.IntPlug(), "index" )
 
 		n1 = GafferSceneTest.TestShader( "n1" )
+		n1.loadShader( "simpleShader" )
 		n2 = GafferSceneTest.TestShader( "n2" )
+		n2.loadShader( "simpleShader" )
 		n3 = GafferSceneTest.TestShader( "n3" )
+		n3.loadShader( "simpleShader" )
 		n3["type"].setValue( "test:surface" )
 
 		switch1 = Gaffer.Switch( "switch1" )
@@ -322,8 +340,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n1"] = GafferSceneTest.TestShader( "n1" )
+		s["n1"].loadShader( "simpleShader" )
 		s["n2"] = GafferSceneTest.TestShader( "n2" )
+		s["n2"].loadShader( "simpleShader" )
 		s["n3"] = GafferSceneTest.TestShader( "n3" )
+		s["n3"].loadShader( "simpleShader" )
 		s["n3"]["type"].setValue( "test:surface" )
 
 		s["switch"] = Gaffer.Switch()
@@ -354,7 +375,9 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testComponentToComponentConnections( self ) :
 
 		n1 = GafferSceneTest.TestShader( "n1" )
+		n1.loadShader( "simpleShader" )
 		n2 = GafferSceneTest.TestShader( "n2" )
+		n2.loadShader( "simpleShader" )
 		n2["type"].setValue( "test:surface" )
 
 		n2["parameters"]["c"]["r"].setInput( n1["out"]["c"]["g"] )
@@ -374,8 +397,11 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testNameSwitch( self ) :
 
 		n1 = GafferSceneTest.TestShader( "n1" )
+		n1.loadShader( "simpleShader" )
 		n2 = GafferSceneTest.TestShader( "n2" )
+		n2.loadShader( "simpleShader" )
 		n3 = GafferSceneTest.TestShader( "n3" )
+		n3.loadShader( "simpleShader" )
 		n3["type"].setValue( "test:surface" )
 
 		switch = Gaffer.NameSwitch()
@@ -403,6 +429,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		switch = Gaffer.Switch()
 		shader = GafferSceneTest.TestShader()
+		shader.loadShader( "simpleShader" )
 		shader["type"].setValue( "test:surface" )
 		shader["parameters"]["i"].setInput( switch["index"] )
 
@@ -415,6 +442,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		contextQuery.addQuery( Gaffer.Color3fPlug(), "c" )
 
 		texture = GafferSceneTest.TestShader( "texture" )
+		texture.loadShader( "simpleShader" )
 		texture["parameters"]["c"].setInput( contextQuery["out"][0]["value"] )
 
 		redContext = Gaffer.ContextVariables()
@@ -461,6 +489,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		spreadsheet["rows"][2]["cells"]["c"]["value"].setValue( imath.Color3f( 0, 1, 0 ) )
 
 		texture = GafferSceneTest.TestShader( "texture" )
+		texture.loadShader( "simpleShader" )
 		texture["parameters"]["c"].setInput( spreadsheet["out"]["c"] )
 
 		redContext = Gaffer.ContextVariables()
@@ -495,8 +524,10 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testContextProcessorsWithInlineSpreadsheets( self ) :
 
 		redTexture = GafferSceneTest.TestShader( "redTexture" )
+		redTexture.loadShader( "simpleShader" )
 		redTexture["parameters"]["c"].setValue( imath.Color3f( 1, 0, 0 ) )
 		greenTexture = GafferSceneTest.TestShader( "greenTexture" )
+		greenTexture.loadShader( "simpleShader" )
 		greenTexture["parameters"]["c"].setValue( imath.Color3f( 0, 1, 0 ) )
 
 		spreadsheet = Gaffer.Spreadsheet()
@@ -540,11 +571,13 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testLoops( self ) :
 
 		baseTexture = GafferSceneTest.TestShader( "baseTexture" )
+		baseTexture.loadShader( "simpleShader" )
 
 		indexQuery = Gaffer.ContextQuery()
 		indexQuery.addQuery( Gaffer.IntPlug(), "loop:index" )
 
 		overlayTexture = GafferSceneTest.TestShader( "overlayTexture" )
+		overlayTexture.loadShader( "simpleShader" )
 		overlayTexture["parameters"]["i"].setInput( indexQuery["out"][0]["value"] )
 
 		mix = GafferSceneTest.TestShader( "mix" )
@@ -562,6 +595,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		loop["iterations"].setValue( 3 )
 
 		output = GafferSceneTest.TestShader( "output" )
+		output.loadShader( "simpleShader" )
 		output["type"].setValue( "test:surface" )
 		output["parameters"]["c"].setInput( loop["out"] )
 
@@ -595,6 +629,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		# not using the context variable.
 
 		texture = GafferSceneTest.TestShader( "texture" )
+		texture.loadShader( "simpleShader" )
 
 		contextA = Gaffer.ContextVariables()
 		contextA.setup( texture["out"] )
@@ -633,6 +668,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testSpline( self ) :
 
 		n1 = GafferSceneTest.TestShader( "n1" )
+		n1.loadShader( "simpleShader" )
 		n1["type"].setValue( "test:surface" )
 
 		network = n1.attributes()["test:surface"]
@@ -658,6 +694,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( network.shaders()["n1"].parameters["ramp"].value, refSpline )
 
 		inN1 = GafferSceneTest.TestShader( "inN1" )
+		inN1.loadShader( "simpleShader" )
 
 		n1["parameters"]["ramp"]["p0"]["y"].setInput( inN1["out"]["c"] )
 		n1["parameters"]["ramp"]["p1"]["y"]["b"].setInput( inN1["out"]["c"]["g"] )
@@ -695,6 +732,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testOptionalParameter( self ) :
 
 		node = GafferSceneTest.TestShader( "n1" )
+		node.loadShader( "simpleShader" )
 		node["type"].setValue( "test:surface" )
 
 		shader = node.attributes()["test:surface"].outputShader()
@@ -744,6 +782,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		frame = GafferTest.FrameNode()
 		shader = GafferSceneTest.TestShader()
+		shader.loadShader( "simpleShader" )
 		shader["parameters"]["i"].setInput( frame["output"] )
 
 		shaderPlug = GafferScene.ShaderPlug()

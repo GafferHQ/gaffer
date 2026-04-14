@@ -96,9 +96,7 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	GafferBindings::DependencyNodeClass<ArnoldAtmosphere>();
 	GafferBindings::DependencyNodeClass<ArnoldBackground>();
 
-	GafferBindings::NodeClass<ArnoldLight>()
-		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
-	;
+	GafferBindings::NodeClass<ArnoldLight>();
 
 	GafferBindings::DependencyNodeClass<ArnoldColorManager>()
 		.def( "loadColorManager", &loadColorManagerWrapper, ( arg( "name" ), arg( "keepExistingValues" ) = false ) )

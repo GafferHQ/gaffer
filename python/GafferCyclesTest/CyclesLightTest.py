@@ -137,5 +137,19 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotIn( "size", shader.parameters )
 
+	def testLoadShaderRemovesIrrelevantPlugs( self ) :
+
+		node = GafferCycles.CyclesLight()
+
+		node.loadShader( "point_light" )
+		self.assertIn( "size", node["parameters"] )
+		self.assertNotIn( "width", node["parameters"] )
+		self.assertNotIn( "height", node["parameters"] )
+
+		node.loadShader( "quad_light" )
+		self.assertNotIn( "size", node["parameters"] )
+		self.assertIn( "width", node["parameters"] )
+		self.assertIn( "height", node["parameters"] )
+
 if __name__ == "__main__":
 	unittest.main()

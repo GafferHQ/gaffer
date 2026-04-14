@@ -93,6 +93,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		for parent in [ "groupMute", "groupUnMute", None ] :
 			for child in [ "Mute", "UnMute", None ] :
 				childNode = GafferSceneTest.TestLight()
+				childNode.loadShader( "simpleLight" )
 				childNode["name"].setValue( child or "None" )
 				script.addChild( childNode )
 
@@ -676,6 +677,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		script["variables"].addChild( Gaffer.NameValuePlug( "test", IECore.FloatData( 5.0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 
 		script["group"] = GafferScene.Group()
 		script["group"]["in"][0].setInput( script["light"]["out"] )
@@ -732,6 +734,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		script["add"]["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
 
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 		script["light"]["parameters"]["intensity"].setInput( script["add"]["out"] )
 
 		script["editScope"] = Gaffer.EditScope()

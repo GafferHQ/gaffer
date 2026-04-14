@@ -81,6 +81,8 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testSets( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		g = GafferScene.Group()
 		g["in"][0].setInput( l["out"] )
 
@@ -133,6 +135,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		#		/light
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		lg1 = GafferScene.Group()
 		lg1["name"].setValue( "lightGroup1" )
@@ -181,6 +184,8 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testSetsPassThroughWhenNoRoot( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		g = GafferScene.Group()
 		g["in"][0].setInput( l["out"] )
 
@@ -277,6 +282,8 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testSetsWithIncludeRoot( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		g = GafferScene.Group()
 		g["in"][0].setInput( l["out"] )
 
@@ -294,6 +301,8 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testSetsWithNoLeadingSlash( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		g = GafferScene.Group()
 		g["in"][0].setInput( l["out"] )
 
@@ -310,6 +319,8 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testSetNamesAndGlobalsPassThrough( self ) :
 
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
+
 		g = GafferScene.Group()
 		g["in"][0].setInput( l["out"] )
 

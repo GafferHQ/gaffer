@@ -56,25 +56,6 @@ class GAFFERSCENETEST_API TestLight : public GafferScene::Light
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-		void loadShader( const std::string &shaderName );
-
-	protected :
-
-		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
-
-	private :
-
-		TestShader *shaderNode();
-		const TestShader *shaderNode() const;
-
-		GafferScene::ShaderPlug *shaderInPlug();
-		const GafferScene::ShaderPlug *shaderInPlug() const;
-
-		static size_t g_firstPlugIndex;
-
 };
 
 } // namespace GafferSceneTest

@@ -162,6 +162,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testSets( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 		light["sets"].setValue( "A B C" )
 
 		sets = GafferScene.SceneAlgo.sets( light["out"] )
@@ -198,6 +199,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 		script["light"]["sets"].setValue( "A B C" )
 
 		script["expression"] = Gaffer.Expression()
@@ -542,6 +544,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		sphereShaderAssignment["shader"].setInput( shader["out"] )
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		lightFilter = GafferScene.PathFilter()
 		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -1644,6 +1647,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		#
 
 		testLight = GafferSceneTest.TestLight()
+		testLight.loadShader( "simpleLight" )
 		testLight["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 
 		group = GafferScene.Group()
@@ -1681,6 +1685,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testAttributeHistoryWithDeleteAttributes( self ) :
 
 		testLight = GafferSceneTest.TestLight()
+		testLight.loadShader( "simpleLight" )
 		testLight["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		testLight["visualiserAttributes"]["scale"]["value"].setValue( 2.0 )
 
@@ -2140,9 +2145,11 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# Everything linked to `defaultLights` via the default value for the attribute.
 
 		defaultLight = GafferSceneTest.TestLight()
+		defaultLight.loadShader( "simpleLight" )
 		defaultLight["name"].setValue( "defaultLight" )
 
 		nonDefaultLight = GafferSceneTest.TestLight()
+		nonDefaultLight.loadShader( "simpleLight" )
 		nonDefaultLight["name"].setValue( "nonDefaultLight" )
 		nonDefaultLight["defaultLight"].setValue( False )
 		nonDefaultLight["sets"].setValue( "specialLights" )
@@ -2733,12 +2740,14 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# /light2
 
 		light1 = GafferSceneTest.TestLight()
+		light1.loadShader( "simpleLight" )
 		light1["name"].setValue( "light1" )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( light1["out"] )
 
 		light2 = GafferSceneTest.TestLight()
+		light2.loadShader( "simpleLight" )
 		light2["name"].setValue( "light2" )
 
 		parent = GafferScene.Parent()

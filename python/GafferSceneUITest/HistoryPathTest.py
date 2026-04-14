@@ -70,6 +70,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testLight"] = GafferSceneTest.TestLight()
+		s["testLight"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -183,6 +184,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testLight"] = GafferSceneTest.TestLight()
+		s["testLight"].loadShader( "simpleLight" )
 
 		inspector = self.__inspector( s["testLight"]["out"], "exposure" )
 
@@ -222,6 +224,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testLight"] = GafferSceneTest.TestLight()
+		s["testLight"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -281,6 +284,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testLight"] = GafferSceneTest.TestLight()
+		s["testLight"].loadShader( "simpleLight" )
 		s["testLight"]["parameters"]["exposure"].setValue( 3.0 )
 
 		inspector = self.__inspector( s["testLight"]["out"], "exposure" )
@@ -303,6 +307,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testLight"] = GafferSceneTest.TestLight()
+		s["testLight"].loadShader( "simpleLight" )
 
 		inspector = self.__inspector( s["testLight"]["out"], "exposure" )
 
@@ -318,6 +323,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testLight"] = GafferSceneTest.TestLight()
+		s["testLight"].loadShader( "simpleLight" )
 
 		s["lightFilter"] = GafferScene.PathFilter()
 		s["lightFilter"]["paths"].setValue( IECore.StringVectorData( ["light"] ) )
@@ -355,6 +361,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 
 		script["lightFilter"] = GafferScene.PathFilter()
 		script["lightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
@@ -394,6 +401,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testLight"] = GafferSceneTest.TestLight()
+		s["testLight"].loadShader( "simpleLight" )
 		s["testLight"]["enabled"].setValue( False )
 
 		inspector = self.__inspector( s["testLight"]["out"], "exposure" )
@@ -409,6 +417,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["testLight"] = GafferSceneTest.TestLight()
+		s["testLight"].loadShader( "simpleLight" )
 
 		s["group"] = GafferScene.Group()
 		s["group"]["in"][0].setInput( s["testLight"]["out"] )
@@ -499,6 +508,8 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 	def testIsLeafAndIsValid( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		inspector = self.__inspector( light["out"], "exposure" )
 		with Gaffer.Context() as context :
 			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
@@ -524,6 +535,8 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 	def testNoPropertiesOnNonLeafPaths( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		inspector = self.__inspector( light["out"], "exposure" )
 		with Gaffer.Context() as context :
 			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
@@ -547,6 +560,8 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		monitor = Gaffer.PerformanceMonitor()
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		inspector = self.__inspector( light["out"], "exposure" )
 		with Gaffer.Context() as context :
 			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
@@ -563,6 +578,8 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 	def testCancellation( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		inspector = self.__inspector( light["out"], "exposure" )
 		with Gaffer.Context() as context :
 			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/light" )
@@ -589,6 +606,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
 
 		HistoryPathTest.expressionStartedCondition = threading.Condition()
 
@@ -649,6 +667,8 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 	def testContextVariables( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		group = GafferScene.Group()
 		group["in"][0].setInput( light["out"] )
 
@@ -686,6 +706,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
 
 		s["b"] = Gaffer.Box()
 		s["b"]["lightFilter"] = GafferScene.PathFilter()
@@ -780,6 +801,8 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
+
 		s["group"] = GafferScene.Group()
 		s["group"]["in"][0].setInput( s["light"]["out"] )
 

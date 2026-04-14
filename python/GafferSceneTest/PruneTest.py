@@ -228,7 +228,9 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 	def testLightSets( self ) :
 
 		light1 = GafferSceneTest.TestLight()
+		light1.loadShader( "simpleLight" )
 		light2 = GafferSceneTest.TestLight()
+		light2.loadShader( "simpleLight" )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( light1["out"] )
@@ -260,13 +262,15 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 	def testSetsWhenAncestorPruned( self ) :
 
 		light1 = GafferSceneTest.TestLight()
+		light1.loadShader( "simpleLight" )
 		light2 = GafferSceneTest.TestLight()
+		light2.loadShader( "simpleLight" )
 
 		group1 = GafferScene.Group()
 		group2 = GafferScene.Group()
 
 		group1["in"][0].setInput( light1["out"] )
-		group2["in"][0].setInput( light1["out"] )
+		group2["in"][0].setInput( light2["out"] )
 
 		topGroup = GafferScene.Group()
 		topGroup["in"][0].setInput( group1["out"] )

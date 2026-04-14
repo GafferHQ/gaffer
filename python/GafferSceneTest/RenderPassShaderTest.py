@@ -43,6 +43,7 @@ class RenderPassShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testAssignment( self ) :
 
 		s = GafferSceneTest.TestShader()
+		s.loadShader( "simpleShader" )
 		r = GafferScene.RenderPassShader()
 		r["shader"].setInput( s["out"] )
 

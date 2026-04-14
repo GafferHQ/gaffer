@@ -207,7 +207,9 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 	def testSets( self ) :
 
 		light1 = GafferSceneTest.TestLight()
+		light1.loadShader( "simpleLight" )
 		light2 = GafferSceneTest.TestLight()
+		light2.loadShader( "simpleLight" )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( light1["out"] )
@@ -246,10 +248,13 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		# - plane
 
 		light1 = GafferSceneTest.TestLight()
+		light1.loadShader( "simpleLight" )
 		light1["name"].setValue( "light1" )
 		light2 = GafferSceneTest.TestLight()
+		light2.loadShader( "simpleLight" )
 		light2["name"].setValue( "light2" )
 		light3 = GafferSceneTest.TestLight()
+		light3.loadShader( "simpleLight" )
 		light3["name"].setValue( "light3" )
 
 		group1 = GafferScene.Group()
@@ -336,6 +341,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		#       - lightFilter
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 		light["sets"].setValue( "lightsAndSpheres" )
 
 		lightFilter = GafferSceneTest.TestLightFilter()

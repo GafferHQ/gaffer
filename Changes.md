@@ -38,6 +38,8 @@ Fixes
 - Cycles :
   - Reduced memory usage when rendering a single segment of deformation blur on CPU devices.
   - Fixed PointsPrimitive motion blur when rendering with even numbers of segments.
+- USDShader : Fixed value of `type` plug after loading a USDLux light.
+- CyclesLight, ArnoldLight, LightFilter : Fixed potential hang when loading shaders (GIL management bug in `loadShader()` binding).
 
 API
 ---
@@ -49,6 +51,7 @@ API
 - Widget :
   - Improved automatic parenting via the `with parent` syntax. Children are now guaranteed to be fully constructed before they are parented.
   - Turned `toolTip`, `parenting` and `displayTransform` keyword-only constructor arguments.
+- Light : Simplified implementation of derived classes, which are now merely responsible for passing a Shader node to the base class constructor.
 
 Breaking Changes
 ----------------
@@ -79,6 +82,12 @@ Breaking Changes
 - GLWidget : Removed built-in support for hosting in Maya and Houdini. Implement host integration via `GLWidget._registerQGLWidgetCreator()` instead.
 - StandardLightVisualiser : Made `surfaceTexture()` private. The new `registerSurfaceTexture()` method can be used to register a method to return surface texture data.
 - ExtensionAlgo : Changed base class for extension nodes from SubGraph to DependencyNode.
+- TestLight, TestShader : Stopped loading a default shader in the constructor. As with all equivalent nodes, `loadShader()` must now be called after construction.
+- OSLLight :
+  - Removed `shaderName` plug.
+  - Removed ability to load from `.gfr` files prior to version 0.45.0.0. If necessary, resave from Gaffer 1.6.
+- OSLShader : Removed ability to load from `.gfr` files prior to version 0.45.0.0. If necessary, resave from Gaffer 1.6.
+- Light : Removed public constructor. Lights may now only be constructed via derived classes, which are now responsible for providing a Shader node to the base class.
 
 Build
 -----

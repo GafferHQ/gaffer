@@ -40,12 +40,9 @@
 #include "GafferArnold/TypeIds.h"
 
 #include "GafferScene/Light.h"
-#include "GafferScene/ShaderPlug.h"
 
 namespace GafferArnold
 {
-
-class ArnoldShader;
 
 class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
 {
@@ -56,23 +53,6 @@ class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
 
 		explicit ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
 		~ArnoldLight() override;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-		void loadShader( const std::string &shaderName );
-
-	protected :
-
-		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
-
-	private :
-
-		ArnoldShader *shaderNode();
-		const ArnoldShader *shaderNode() const;
-
-		GafferScene::ShaderPlug *shaderInPlug();
-		const GafferScene::ShaderPlug *shaderInPlug() const;
 
 		static size_t g_firstPlugIndex;
 
