@@ -765,10 +765,10 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		# In order to be valid, the parameter name must either be a valid shaderType qualifier, with an optional
 		# shader handle, and a parameter name, or a simple `handle.parameter`, or lastly, just a parameter
 		# name, with no braces or periods. If we get something we don't understand, we throw an exception
-		with self.assertRaisesRegex( RuntimeError, 'Could not parse shader parameter: "\*{shaderType}.mix"' ):
+		with self.assertRaisesRegex( RuntimeError, r'Could not parse shader parameter: "\*{shaderType}.mix"' ):
 			tweaks["tweaks"][0]["name"].setValue( "*{shaderType}.mix" )
 			tweaks["out"].attributes( "/plane" )
-		with self.assertRaisesRegex( RuntimeError, 'Could not parse shader parameter: "\*{}.mix"' ):
+		with self.assertRaisesRegex( RuntimeError, r'Could not parse shader parameter: "\*{}.mix"' ):
 			tweaks["tweaks"][0]["name"].setValue( "*{}.mix" )
 			tweaks["out"].attributes( "/plane" )
 		with self.assertRaisesRegex( RuntimeError, 'Could not parse shader parameter: ".mix"' ):
