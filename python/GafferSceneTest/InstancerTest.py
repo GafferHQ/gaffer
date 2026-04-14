@@ -2571,7 +2571,6 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 
 		instancer["id"].setToDefault()
 
-
 		# Now turn on time offset as well and play with everything together
 		instancer["seeds"].setValue( 10 )
 		instancer["timeOffset"]["enabled"].setValue( True )

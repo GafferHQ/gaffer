@@ -3159,9 +3159,9 @@ struct Prototype : public IECore::RefCounted
 				// This prototype is not included. Leave m_object empty, which means this prototype will be skipped.
 				return;
 			}
-
-			GafferScene::Private::RendererAlgo::deformationMotionTimes( renderOptions, m_attributes.get(), m_objectSampleTimes );
-			GafferScene::Private::RendererAlgo::objectSamples( prototypesPlug->objectPlug(), m_objectSampleTimes, m_object );
+			IECoreScenePreview::Renderer::SampleTimes objectSampleTimes;
+			GafferScene::Private::RendererAlgo::deformationMotionTimes( renderOptions, m_attributes.get(), objectSampleTimes );
+			m_object = *GafferScene::Private::RendererAlgo::objectSamples( prototypesPlug->objectPlug(), objectSampleTimes );
 		}
 		else
 		{
@@ -3178,12 +3178,12 @@ struct Prototype : public IECore::RefCounted
 
 			// Pass through our render options to the sub-capsules
 			newCapsule->setRenderOptions( renderOptions );
-			m_object.push_back( std::move( newCapsule ) );
+			m_object.samples.push_back( std::move( newCapsule ) );
+			m_object.sampleTimes.push_back( onFrameTime );
 		}
 	}
 
-	IECoreScenePreview::Renderer::ObjectSamples m_object;
-	IECoreScenePreview::Renderer::SampleTimes m_objectSampleTimes;
+	Private::RendererAlgo::SampledObject m_object;
 	ConstCompoundObjectPtr m_attributes;
 	IECoreScenePreview::Renderer::AttributesInterfacePtr m_rendererAttributes;
 	IECoreScenePreview::Renderer::TransformSamples m_transforms;
@@ -3391,7 +3391,7 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 					proto = prototypeCache.get( PrototypeCacheGetterKey( protoIndex, prototypeScope.context() ) ).get();
 				}
 
-				if( !proto->m_object.size() )
+				if( !proto->m_object.samples.size() )
 				{
 					// No object to render. This could happen if the protype didn't meet the
 					// RenderOptions::purposeIncluded test.
@@ -3442,19 +3442,9 @@ void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer
 				name.resize( namePrefixLengths[protoIndex] + std::numeric_limits< int64_t >::digits10 + 1 );
 				name.resize( std::to_chars( &name[prefixLen], &(*name.end()), instanceId ).ptr - &name[0] );
 
-				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
-				if( proto->m_objectSampleTimes.size() )
-				{
-					objectInterface = renderer->object(
-						name, proto->m_object, proto->m_objectSampleTimes, attribs
-					);
-				}
-				else
-				{
-					objectInterface = renderer->object(
-						name, proto->m_object[0].get(), attribs
-					);
-				}
+				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer->object(
+					name, proto->m_object.samples, proto->m_object.sampleTimes, attribs
+				);
 
 				if( sampleTimes.size() == 1 )
 				{
