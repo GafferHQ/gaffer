@@ -2563,16 +2563,6 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
-		void transform( const Imath::M44f &transform ) override
-		{
-			AtNode *node = m_instance.node();
-			if( !node )
-			{
-				return;
-			}
-			applyTransform( node, transform );
-		}
-
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			AtNode *node = m_instance.node();
@@ -2643,18 +2633,13 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 
 	protected :
 
-		void applyTransform( AtNode *node, const Imath::M44f &transform, const AtString matrixParameterName = g_matrixArnoldString )
-		{
-			AiNodeSetMatrix( node, matrixParameterName, reinterpret_cast<const AtMatrix&>( transform.x ) );
-		}
-
 		void applyTransform( AtNode *node, const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const AtString matrixParameterName = g_matrixArnoldString )
 		{
 			const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), matrixParameterName );
-			if( AiParamGetType( parameter ) != AI_TYPE_ARRAY )
+			if( AiParamGetType( parameter ) != AI_TYPE_ARRAY || samples.size() == 1 )
 			{
-				// Parameter doesn't support motion blur
-				applyTransform( node, samples[0], matrixParameterName );
+				// Parameter doesn't support motion blur, or we only have one sample
+				AiNodeSetMatrix( node, matrixParameterName, reinterpret_cast<const AtMatrix&>( samples[0].x ) );
 				return;
 			}
 
@@ -2709,15 +2694,6 @@ class ArnoldLightFilter : public ArnoldObjectBase
 
 		~ArnoldLightFilter() override
 		{
-		}
-
-		void transform( const Imath::M44f &transform ) override
-		{
-			ArnoldObjectBase::transform( transform );
-			m_transformMatrices.clear();
-			m_transformTimes.clear();
-			m_transformMatrices.push_back( transform );
-			applyLightFilterTransform();
 		}
 
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
@@ -2792,15 +2768,7 @@ class ArnoldLightFilter : public ArnoldObjectBase
 				return;
 			}
 			AtNode *root = m_lightFilterShader->root();
-			if( m_transformTimes.empty() )
-			{
-				assert( m_transformMatrices.size() == 1 );
-				applyTransform( root, m_transformMatrices[0], g_geometryMatrixArnoldString );
-			}
-			else
-			{
-				applyTransform( root, m_transformMatrices, m_transformTimes, g_geometryMatrixArnoldString );
-			}
+			applyTransform( root, m_transformMatrices, m_transformTimes, g_geometryMatrixArnoldString );
 		}
 
 		std::string m_name;
@@ -2838,15 +2806,6 @@ class ArnoldLight : public ArnoldObjectBase
 
 		~ArnoldLight() override
 		{
-		}
-
-		void transform( const Imath::M44f &transform ) override
-		{
-			ArnoldObjectBase::transform( transform );
-			m_transformMatrices.clear();
-			m_transformTimes.clear();
-			m_transformMatrices.push_back( transform );
-			applyLightTransform();
 		}
 
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
@@ -3000,15 +2959,7 @@ class ArnoldLight : public ArnoldObjectBase
 				return;
 			}
 			AtNode *root = m_lightShader->root();
-			if( m_transformTimes.empty() )
-			{
-				assert( m_transformMatrices.size() == 1 );
-				applyTransform( root, m_transformMatrices[0] );
-			}
-			else
-			{
-				applyTransform( root, m_transformMatrices, m_transformTimes );
-			}
+			applyTransform( root, m_transformMatrices, m_transformTimes );
 		}
 
 		void updateLightFilterLinks()

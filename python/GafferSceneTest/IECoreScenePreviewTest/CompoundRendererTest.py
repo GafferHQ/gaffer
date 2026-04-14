@@ -98,7 +98,7 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 		for r in renderers :
 			o = r.capturedObject( "o" )
 			self.assertEqual( o.capturedTransforms(), [ transform ] )
-			self.assertEqual( o.capturedTransformTimes(), [] )
+			self.assertEqual( o.capturedTransformTimes(), [ 0.0 ] )
 
 		# Light linking
 

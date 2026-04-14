@@ -204,14 +204,9 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 				/// Assigns a transform to the object, replacing any previously
 				/// assigned transform. For Interactive renders transforms may be
 				/// modified at any time the renderer is paused.
-				/// \todo Should we introduce a TransformInterface that can be
-				/// passed directly to `Renderer::object()` etc in the same
-				/// way that attributes are? This might be a way of supporting
-				/// renderers with more complex transform models than just flattened
-				/// matrices.
-				virtual void transform( const Imath::M44f &transform ) = 0;
-				/// As above, but specifying a moving transform.
 				virtual void transform( const TransformSamples &samples, const SampleTimes &times ) = 0;
+				/// Convenience overload for when there is only a single transform sample.
+				void transform( const Imath::M44f &transform );
 				/// Assigns a new block of attributes to the object, replacing any
 				/// previously assigned attributes. This may only be used in Interactive
 				/// mode, and then only when the renderer is paused. Returns true on

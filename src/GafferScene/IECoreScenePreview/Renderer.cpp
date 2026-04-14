@@ -102,6 +102,11 @@ Renderer::ObjectInterface::~ObjectInterface()
 
 }
 
+void Renderer::ObjectInterface::transform( const Imath::M44f &transform )
+{
+	this->transform( { transform }, { 0.0f } );
+}
+
 const std::vector<IECore::InternedString> &Renderer::types()
 {
 	return ::types();

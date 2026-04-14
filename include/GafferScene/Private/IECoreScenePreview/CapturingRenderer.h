@@ -127,7 +127,6 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				/// Renderer interface
 				/// ==================
 
-				void transform( const Imath::M44f &transform ) override;
 				void transform( const TransformSamples &samples, const SampleTimes &times ) override;
 				bool attributes( const AttributesInterface *attributes ) override;
 				void link( const IECore::InternedString &type, const ConstObjectSetPtr &objects ) override;

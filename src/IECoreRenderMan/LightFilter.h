@@ -58,7 +58,6 @@ class LightFilter : public IECoreScenePreview::Renderer::ObjectInterface
 		// ObjectInterface overrides
 		// =========================
 
-		void transform( const Imath::M44f &transform ) override;
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override;
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
