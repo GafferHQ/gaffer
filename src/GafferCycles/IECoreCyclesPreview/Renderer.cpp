@@ -1693,33 +1693,6 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
-		void transform( const Imath::M44f &transform ) override
-		{
-			m_object->set_tfm( SocketAlgo::setTransform( transform ) );
-			if( m_object->get_geometry()->is_mesh() )
-			{
-				auto mesh = static_cast<ccl::Mesh *>( m_object->get_geometry() );
-				if( mesh->get_num_subd_faces() )
-				{
-					mesh->set_subd_objecttoworld( m_object->get_tfm() );
-				}
-			}
-
-			ccl::array<ccl::Transform> motion;
-			if( m_object->get_geometry()->get_use_motion_blur() )
-			{
-				motion.resize( m_object->get_geometry()->get_motion_steps(), ccl::transform_empty() );
-				for( size_t i = 0; i < motion.size(); ++i )
-				{
-					motion[i] = m_object->get_tfm();
-				}
-			}
-
-			m_object->set_motion( motion );
-
-			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
-		}
-
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			ccl::array<ccl::Transform> motion;
@@ -1915,7 +1888,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
-		void transform( const Imath::M44f &transform ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			// Set environment map rotation
 			/// \todo There are a few problems here :
@@ -1933,7 +1906,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 					if( node->type == ccl::EnvironmentTextureNode::get_node_type() )
 					{
 						ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
-						Imath::Eulerf euler( transform, Imath::Eulerf::Order::XZY );
+						Imath::Eulerf euler( samples[0], Imath::Eulerf::Order::XZY );
 						env->tex_mapping.rotation = ccl::make_float3( -euler.x, -euler.y, -euler.z );
 						shader->tag_update( m_scene );
 						break;
@@ -1941,14 +1914,8 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 				}
 			}
 
-			m_object->set_tfm( SocketAlgo::setTransform( transform ) );
+			m_object->set_tfm( SocketAlgo::setTransform( samples[0] ) );
 			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
-		}
-
-		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
-		{
-			// Cycles doesn't support motion samples on lights (yet)
-			transform( samples[0] );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2143,11 +2110,6 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
 		{
-		}
-
-		void transform( const Imath::M44f &transform ) override
-		{
-			m_transformSamples = { transform };
 		}
 
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override

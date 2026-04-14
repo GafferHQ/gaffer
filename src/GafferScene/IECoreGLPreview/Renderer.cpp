@@ -526,17 +526,12 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
-		void transform( const Imath::M44f &transform ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
-			m_editQueue.push( [this, transform]() {
+			m_editQueue.push( [this, transform=samples.front()]() {
 				m_transform = transform;
 				m_transformSansScale = sansScalingAndShear( transform, false );
 			} );
-		}
-
-		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
-		{
-			transform( samples.front() );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -759,10 +754,10 @@ class OpenGLCamera : public OpenGLObject
 			}
 		}
 
-		void transform( const Imath::M44f &transform ) override
+		void transform(const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times) override
 		{
-			OpenGLObject::transform( transform );
-			editQueue().push( [this, transform]() {
+			OpenGLObject::transform( samples, times );
+			editQueue().push( [this, transform=samples.front()]() {
 				m_camera->setTransform( transform );
 			} );
 		}

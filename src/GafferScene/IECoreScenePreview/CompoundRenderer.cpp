@@ -139,17 +139,6 @@ struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInte
 		}
 	}
 
-	void transform( const Imath::M44f &transform ) override
-	{
-		for( auto &o : objects )
-		{
-			if( o )
-			{
-				o->transform( transform );
-			}
-		}
-	}
-
 	void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 	{
 		for( auto &o : objects )

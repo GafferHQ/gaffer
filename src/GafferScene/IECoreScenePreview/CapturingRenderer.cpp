@@ -319,14 +319,6 @@ uint32_t CapturingRenderer::CapturedObject::instanceID() const
 	return m_instanceID;
 }
 
-void CapturingRenderer::CapturedObject::transform( const Imath::M44f &transform )
-{
-	m_renderer->checkPaused();
-	m_capturedTransforms.clear();
-	m_capturedTransforms.push_back( transform );
-	m_capturedTransformTimes.clear();
-}
-
 void CapturingRenderer::CapturedObject::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const SampleTimes &times )
 {
 	m_renderer->checkPaused();

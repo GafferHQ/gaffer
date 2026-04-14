@@ -1038,36 +1038,22 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			);
 		}
 
-		void transform( const Imath::M44f &transform ) override
-		{
-			if( transform == M44f() && !m_haveTransform )
-			{
-				return;
-			}
-
-			M44d m( transform );
-			NSIParam_t param = {
-				"transformationmatrix",
-				m.getValue(),
-				NSITypeDoubleMatrix,
-				0, 1, // array length, count
-				0 // flags
-			};
-			NSISetAttribute( m_transformHandle.context(), m_transformHandle.name(), 1, &param );
-
-			m_haveTransform = true;
-		}
-
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			if( m_haveTransform )
 			{
 				NSIDeleteAttribute( m_transformHandle.context(), m_transformHandle.name(), "transformationmatrix" );
+				m_haveTransform = false;
 			}
 
-			for( size_t i = 0, e = samples.size(); i < e; ++i )
+			if( std::all_of( samples.begin(), samples.end(), [] ( const M44f &m ) { return m == M44f(); } ) )
 			{
-				M44d m( samples[i] );
+				return;
+			}
+
+			if( samples.size() == 1 )
+			{
+				M44d m( samples[0] );
 				NSIParam_t param = {
 					"transformationmatrix",
 					m.getValue(),
@@ -1075,7 +1061,22 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 					0, 1, // array length, count
 					0 // flags
 				};
-				NSISetAttributeAtTime( m_transformHandle.context(), m_transformHandle.name(), times[i], 1, &param );
+				NSISetAttribute( m_transformHandle.context(), m_transformHandle.name(), 1, &param );
+			}
+			else
+			{
+				for( size_t i = 0, e = samples.size(); i < e; ++i )
+				{
+					M44d m( samples[i] );
+					NSIParam_t param = {
+						"transformationmatrix",
+						m.getValue(),
+						NSITypeDoubleMatrix,
+						0, 1, // array length, count
+						0 // flags
+					};
+					NSISetAttributeAtTime( m_transformHandle.context(), m_transformHandle.name(), times[i], 1, &param );
+				}
 			}
 
 			m_haveTransform = true;
