@@ -2358,7 +2358,7 @@ ccl::DeviceInfo matchingDevices( const std::string &pattern, int threads, bool b
 	{
 		const string typeString = ccl::Device::string_from_type( device.type );
 		const int typeIndex = typeIndices[device.type]++;
-		const string name = fmt::format( "{}:{:02}", typeString, typeIndex );
+		const string name = fmt::format( "{}:{:02}", typeString, device.num );
 		if(
 			// e.g. "CPU" matches the first CPU device.
 			( typeIndex == 0 && StringAlgo::matchMultiple( typeString, pattern ) ) ||
