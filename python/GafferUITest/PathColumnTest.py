@@ -40,6 +40,7 @@ import imath
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferUI
 import GafferUITest
@@ -106,9 +107,10 @@ class PathColumnTest( GafferUITest.TestCase ) :
 	def testStandardPathColumnConstructors( self ) :
 
 		c = GafferUI.StandardPathColumn( "label", "property" )
+		path = Gaffer.Path()
 		self.assertEqual( c.property(), "property" )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
-		self.assertEqual( c.headerData().value, "label" )
+		self.assertEqual( c.headerData( path ).value, "label" )
 
 		c = GafferUI.StandardPathColumn(
 			GafferUI.PathColumn.CellData( value = "label", toolTip = "help!" ),
@@ -116,16 +118,17 @@ class PathColumnTest( GafferUITest.TestCase ) :
 		)
 		self.assertEqual( c.property(), "property" )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
-		self.assertEqual( c.headerData().value, "label" )
-		self.assertEqual( c.headerData().toolTip, "help!" )
+		self.assertEqual( c.headerData( path ).value, "label" )
+		self.assertEqual( c.headerData( path ).toolTip, "help!" )
 
 	def testIconPathColumnConstructors( self ) :
 
 		c = GafferUI.IconPathColumn( "label", "prefix", "property" )
+		path = Gaffer.Path()
 		self.assertEqual( c.prefix(), "prefix" )
 		self.assertEqual( c.property(), "property" )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
-		self.assertEqual( c.headerData().value, "label" )
+		self.assertEqual( c.headerData( path ).value, "label" )
 
 		c = GafferUI.IconPathColumn(
 			GafferUI.PathColumn.CellData( value = "label", toolTip = "help!" ),
@@ -134,8 +137,8 @@ class PathColumnTest( GafferUITest.TestCase ) :
 		self.assertEqual( c.prefix(), "prefix" )
 		self.assertEqual( c.property(), "property" )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
-		self.assertEqual( c.headerData().value, "label" )
-		self.assertEqual( c.headerData().toolTip, "help!" )
+		self.assertEqual( c.headerData( path ).value, "label" )
+		self.assertEqual( c.headerData( path ).toolTip, "help!" )
 
 	def testInstanceCreatedSignal( self ) :
 

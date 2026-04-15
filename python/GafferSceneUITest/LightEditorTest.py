@@ -758,16 +758,16 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		# Find the columns for our `add.a` and `exposure` parameters
 		widget = editor._LightEditor__pathListing
-
+		path = widget.getPath()
 		addAInspector = None
 		exposureInspector = None
 		for c in widget.getColumns() :
 			if not isinstance( c, GafferSceneUI.Private.InspectorColumn ) :
 				continue
-			if c.headerData().value == "A" :
-				addAInspector = c.inspector( widget.getPath() )
-			elif c.headerData().value == "Exposure" :
-				exposureInspector = c.inspector( widget.getPath() )
+			if c.headerData( path ).value == "A" :
+				addAInspector = c.inspector( path )
+			elif c.headerData( path ).value == "Exposure" :
+				exposureInspector = c.inspector( path )
 
 		self.assertIsNotNone( addAInspector )
 		self.assertIsNotNone( exposureInspector )
@@ -811,8 +811,9 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
 		widget = editor._LightEditor__pathListing
+		path = widget.getPath()
 
-		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertIn( "P", columnNames )
 		self.assertIn( "X", columnNames )
 		self.assertIn( "A", columnNames )
@@ -824,7 +825,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		editor._LightEditor__updateColumns()
 		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
-		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
 		self.assertIn( "X", columnNames )
 		self.assertIn( "A", columnNames )
@@ -836,7 +837,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		editor._LightEditor__updateColumns()
 		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
-		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
 		self.assertNotIn( "X", columnNames )
 		self.assertIn( "A", columnNames )
@@ -848,7 +849,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		editor._LightEditor__updateColumns()
 		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
-		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
 		self.assertNotIn( "X", columnNames )
 		self.assertNotIn( "A", columnNames )
@@ -860,7 +861,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		editor._LightEditor__updateColumns()
 		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
-		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
 		self.assertNotIn( "X", columnNames )
 		self.assertNotIn( "A", columnNames )
@@ -872,7 +873,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		editor._LightEditor__updateColumns()
 		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
 
-		columnNames = [ c.headerData().value for c in widget.getColumns() ]
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
 		self.assertNotIn( "X", columnNames )
 		self.assertNotIn( "A", columnNames )

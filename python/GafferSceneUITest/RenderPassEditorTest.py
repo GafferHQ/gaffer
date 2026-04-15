@@ -450,8 +450,9 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		GafferSceneUI.RenderPassEditor._RenderPassEditor__updateColumns.flush( editor )
 
 		pathListing = editor._RenderPassEditor__pathListing
+		path = pathListing.getPath()
 
-		columnNames = [ c.headerData().value for c in pathListing.getColumns() ]
+		columnNames = [ c.headerData( path ).value for c in pathListing.getColumns() ]
 		for columnName in [ "A", "B", "C", "D", "E" ] :
 			self.assertIn( columnName, columnNames )
 
@@ -460,7 +461,7 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		editor._RenderPassEditor__updateColumns()
 		GafferSceneUI.RenderPassEditor._RenderPassEditor__updateColumns.flush( editor )
 
-		columnNames = [ c.headerData().value for c in pathListing.getColumns() ]
+		columnNames = [ c.headerData( path ).value for c in pathListing.getColumns() ]
 		self.assertNotIn( "B", columnNames )
 		self.assertIn( "A", columnNames )
 		self.assertIn( "C", columnNames )
@@ -480,8 +481,9 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 				self.addCleanup( GafferSceneUI.RenderPassEditor.deregisterColumn, "*", columnName, "Test" )
 
 			editor._RenderPassEditor__updateColumns()
+			path = editor._RenderPassEditor__pathListing.getPath()
 			GafferSceneUI.RenderPassEditor._RenderPassEditor__updateColumns.flush( editor )
-			columnNames = [ c.headerData().value for c in editor._RenderPassEditor__pathListing.getColumns() if isinstance( c, GafferSceneUI.Private.InspectorColumn ) ]
+			columnNames = [ c.headerData( path ).value for c in editor._RenderPassEditor__pathListing.getColumns() if isinstance( c, GafferSceneUI.Private.InspectorColumn ) ]
 			self.assertEqual( columnNames, order )
 
 			for columnName, _ in columns :

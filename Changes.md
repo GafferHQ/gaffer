@@ -43,6 +43,7 @@ Fixes
 - CyclesLight, ArnoldLight, LightFilter : Fixed potential hang when loading shaders (GIL management bug in `loadShader()` binding).
 - StandardNodeGadget : Fixed crash caused by the node emitting `errorSignal()` while the gadget is undergoing construction.
 - Shader : Fixed hash for output plugs.
+- LightEditor : Fixed context used to compute the solo column header icon, this now uses the correct context with respect to the focus node.
 
 API
 ---
@@ -55,6 +56,7 @@ API
   - Improved automatic parenting via the `with parent` syntax. Children are now guaranteed to be fully constructed before they are parented.
   - Turned `toolTip`, `parenting` and `displayTransform` keyword-only constructor arguments.
 - Light : Simplified implementation of derived classes, which are now merely responsible for passing a Shader node to the base class constructor.
+- PathColumn : `headerData()` is now passed the root Path.
 
 Breaking Changes
 ----------------
@@ -92,6 +94,7 @@ Breaking Changes
 - OSLShader : Removed ability to load from `.gfr` files prior to version 0.45.0.0. If necessary, resave from Gaffer 1.6.
 - Light : Removed public constructor. Lights may now only be constructed via derived classes, which are now responsible for providing a Shader node to the base class.
 - OSLCode : Removed `shaderCompiledSignal()`.
+- PathColumn : Changed `headerData()` signature.
 
 Build
 -----

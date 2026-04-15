@@ -159,7 +159,7 @@ class InclusionsColumn : public PathColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
 			return CellData( /* value = */ nullptr, /* icon = */ m_visibleSet.inclusions.isEmpty() ? g_ancestorIncludedIconName : g_locationIncludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Inclusions" ) );
 		}
@@ -362,7 +362,7 @@ class ExclusionsColumn : public PathColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
 			return CellData( /* value = */ nullptr, /* icon = */ m_visibleSet.exclusions.isEmpty() ? g_ancestorExcludedIconName : g_locationExcludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Exclusions" ) );
 		}

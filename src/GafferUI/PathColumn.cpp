@@ -166,7 +166,7 @@ PathColumn::CellData StandardPathColumn::cellData( const Gaffer::Path &path, con
 	return CellData( cellData );
 }
 
-PathColumn::CellData StandardPathColumn::headerData( const IECore::Canceller *canceller ) const
+PathColumn::CellData StandardPathColumn::headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const
 {
 	return m_headerData;
 }
@@ -229,7 +229,7 @@ PathColumn::CellData IconPathColumn::cellData( const Gaffer::Path &path, const I
 	return result;
 }
 
-PathColumn::CellData IconPathColumn::headerData( const IECore::Canceller *canceller ) const
+PathColumn::CellData IconPathColumn::headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const
 {
 	return m_headerData;
 }
@@ -271,7 +271,7 @@ PathColumn::CellData FileIconPathColumn::cellData( const Gaffer::Path &path, con
 	return result;
 }
 
-PathColumn::CellData FileIconPathColumn::headerData( const IECore::Canceller *canceller ) const
+PathColumn::CellData FileIconPathColumn::headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const
 {
 	return CellData( m_label );
 }

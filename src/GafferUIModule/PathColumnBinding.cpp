@@ -279,7 +279,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 			throw IECore::Exception( "PathColumn::cellData() python method not defined" );
 		}
 
-		CellData headerData( const IECore::Canceller *canceller = nullptr ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( isSubclassed() )
 			{
@@ -290,7 +290,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 					if( f )
 					{
 						return extract<CellData>(
-							f( CancellerPtr( const_cast<IECore::Canceller *>( canceller ) ) )
+							f( PathPtr( const_cast<Path *>( &rootPath ) ), CancellerPtr( const_cast<IECore::Canceller *>( canceller ) ) )
 						);
 					}
 				}
@@ -370,10 +370,10 @@ PathColumn::CellData cellDataWrapper( PathColumn &pathColumn, const Path &path, 
 	return pathColumn.cellData( path, canceller );
 }
 
-PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
+PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Path &rootPath, const Canceller *canceller )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return pathColumn.headerData( canceller );
+	return pathColumn.headerData( rootPath, canceller );
 }
 
 struct ChangedSignalSlotCaller
@@ -563,7 +563,7 @@ void GafferUIModule::bindPathColumn()
 	pathColumnClass.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::SizeMode::Default ) )
 		.def( "changedSignal", &PathColumn::changedSignal, return_internal_reference<1>() )
 		.def( "cellData", &cellDataWrapper, ( arg( "path" ), arg( "canceller" ) = object() ) )
-		.def( "headerData", &headerDataWrapper, ( arg( "canceller" ) = object() ) )
+		.def( "headerData", &headerDataWrapper, ( arg( "rootPath" ), arg( "canceller" ) = object() ) )
 		.def( "buttonPressSignal", &PathColumn::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
 		.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )

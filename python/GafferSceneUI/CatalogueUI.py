@@ -126,7 +126,7 @@ class Column( GafferUI.PathColumn ) :
 
 		return self.CellData()
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( value = self.__title )
 
@@ -320,7 +320,7 @@ class __OutputIndexColumn( Column ) :
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( icon = "catalogueOutputHeader.png", toolTip = "Output Index" )
 

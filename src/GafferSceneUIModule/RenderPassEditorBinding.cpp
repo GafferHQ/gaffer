@@ -610,7 +610,7 @@ class RenderPassActiveColumn : public PathColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
 			return CellData( nullptr, /* icon = */ g_activeRenderPassIcon, /* background = */ nullptr, new IECore::StringData( "The currently active render pass." ) );
 		}

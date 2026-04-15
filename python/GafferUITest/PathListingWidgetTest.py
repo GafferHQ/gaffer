@@ -1316,7 +1316,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 					time.sleep( 0.01 )
 					IECore.Canceller.check( canceller )
 
-			def headerData( self, canceller = None ) :
+			def headerData( self, rootPath, canceller = None ) :
 
 				return self.CellData( value = "Title" )
 
@@ -1862,9 +1862,9 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 				return self.CellData()
 
-			def headerData( self, canceller = None ) :
+			def headerData( self, rootPath, canceller = None ) :
 
-				return self.CellData( value = self.__title )
+				return self.CellData( value = self.__title, toolTip = str( rootPath ) )
 
 		path = self.InfinitePath( "/" )
 
@@ -1887,23 +1887,28 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# When we first query the header, we should get nothing, because it won't
 		# have been evaluated yet.
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), None )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), None )
 		# But the query should trigger a background update that should update it
 		# asynchronously.
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
 		# The next query shouldn't trigger any update.
 		del changes[:]
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
 		self.assertEqual( changes, [] )
 
 		# Changing the column title should trigger another async update.
 		widget.getColumns()[0].setTitle( "Title 2" )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
 		self.assertEqual( changes, [] )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
 
 		# If the column changes for some other reason, then even though we'll
 		# get an async update happening, it won't find any changes to notify us
@@ -1913,6 +1918,17 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( changes, [] )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+
+		# Changing the PathListingWidget's root path should trigger another async update.
+		widget.setPath( self.InfinitePath( "/other" ) )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+		self.assertEqual( changes, [] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/other" )
 
 	def testUpdateFinished( self ) :
 
@@ -2002,7 +2018,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			self.cellDataCalls.append( str( path ) )
 			return self.CellData( value = 1 )
 
-		def headerData( self, canceller = None ) :
+		def headerData( self, rootPath, canceller = None ) :
 
 			return self.CellData( value = "Title" )
 

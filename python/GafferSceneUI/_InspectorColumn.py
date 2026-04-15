@@ -122,7 +122,8 @@ def __toggleableInspections( pathListing ) :
 	nonEditableReason = ""
 	toggleShouldDisable = True
 
-	path = pathListing.getPath().copy()
+	rootPath = pathListing.getPath()
+	path = rootPath.copy()
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 		for pathString in columnSelection.paths() :
 			path.setFromString( pathString )
@@ -141,7 +142,7 @@ def __toggleableInspections( pathListing ) :
 				inspections.append( inspection )
 			elif nonEditableReason == "" :
 				# Prefix reason with the column header to disambiguate when more than one column has selection
-				nonEditableReason = "{} : ".format( column.headerData().value ) if len( [ x for x in pathListing.getSelection() if not x.isEmpty() ] ) > 1 else ""
+				nonEditableReason = "{} : ".format( column.headerData( rootPath ).value ) if len( [ x for x in pathListing.getSelection() if not x.isEmpty() ] ) > 1 else ""
 				nonEditableReason += inspection.nonDisableableReason() if toggleShouldDisable else inspection.nonEditableReason()
 
 	return inspections, nonEditableReason, toggleShouldDisable
@@ -284,9 +285,10 @@ def __showHistory( pathListing ) :
 	columns = pathListing.getColumns()
 	selection = pathListing.getSelection()
 
+	rootPath = pathListing.getPath()
+	path = rootPath.copy()
 	for i, column in enumerate( columns ) :
 		for pathString in selection[i].paths() :
-			path = pathListing.getPath().copy()
 			path.setFromString( pathString )
 			if column.inspectorContext( path ) is None or column.inspector( path ) is None :
 				continue
@@ -294,7 +296,7 @@ def __showHistory( pathListing ) :
 				column,
 				pathListing.getPath(),
 				pathString,
-				"History : {} : {}".format( pathString, column.headerData().value )
+				"History : {} : {}".format( pathString, column.headerData( rootPath ).value )
 			)
 			pathListing.ancestor( GafferUI.Window ).addChildWindow( window, removeOnClose = True )
 			window.setVisible( True )
@@ -810,7 +812,6 @@ def _copySelectedValues( pathListing ) :
 ## Returns the pathListing selection as data, or the reason why the selection is not valid.
 def _dataFromPathListingOrReason( pathListing ) :
 
-	path = pathListing.getPath().copy()
 	selection = __orderedSelection( pathListing )
 
 	if not selection :
@@ -822,6 +823,8 @@ def _dataFromPathListingOrReason( pathListing ) :
 		## \todo Relax this constraint?
 		return "Each row in the selection must contain the same number of cells."
 
+	rootPath = pathListing.getPath()
+	path = rootPath.copy()
 	objectMatrix = IECore.ObjectMatrix( len( selection ), numColumns )
 	rowIndex = 0
 	for pathString, columns in selection :
@@ -843,7 +846,7 @@ def _dataFromPathListingOrReason( pathListing ) :
 			if value is None :
 				reason = "No value to copy."
 				if len( columns ) > 1 :
-					return "{} : {}".format( column.headerData().value, reason )
+					return "{} : {}".format( column.headerData( rootPath ).value, reason )
 				else :
 					return reason
 
@@ -935,7 +938,8 @@ def __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix ) :
 
 	pasteFunctions = []
 
-	path = pathListing.getPath().copy()
+	rootPath = pathListing.getPath()
+	path = rootPath.copy()
 	selection = __orderedSelection( pathListing )
 	## \todo Allow a N x 1 or 1 x N sized clipboard to be pasted as either a row or column
 	for rowIndex, (pathString, columns) in enumerate( selection ) :
@@ -954,7 +958,7 @@ def __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix ) :
 			if inspection.canEdit( value ) :
 				pasteFunctions.append( functools.partial( inspection.edit, value ) )
 			elif len( columns ) > 1 :
-				return "{} : {}".format( column.headerData().value, inspection.nonEditableReason( value ) )
+				return "{} : {}".format( column.headerData( rootPath ).value, inspection.nonEditableReason( value ) )
 			else :
 				return inspection.nonEditableReason( value )
 
