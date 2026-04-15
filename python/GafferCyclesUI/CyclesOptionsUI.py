@@ -239,10 +239,10 @@ def __registerDevicePresets() :
 		typeIndices[device["type"]] += 1
 
 		presetNames.append( "{}/{}".format( device["type"], device["description"] ) )
-		presetValues.append( "{}:{:02}".format( device["type"], typeIndex ) )
+		presetValues.append( "{}:{:02}".format( device["type"], device["num"].value ) )
 
 		presetNames.append( "{}/{} + CPU".format( device["type"], device["description"] ) )
-		presetValues.append( "CPU {}:{:02}".format( device["type"], typeIndex ) )
+		presetValues.append( "CPU {}:{:02}".format( device["type"], device["num"].value ) )
 
 	for deviceType, count in typeIndices.items() :
 
