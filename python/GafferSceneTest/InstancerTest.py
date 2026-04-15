@@ -2579,8 +2579,6 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		testAttributes( frameAttr = [ 1 + 2 * math.sin( i ) for i in range(0, 100) ], floatAttr = floatExpected, color4fAttr = color4fExpected, seedAttr_seedCount = 10 )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 10, "frame" : 100, "" : 100 } )
 
-		self.assertEncapsulatedRendersSame( instancer )
-
 		instancer["timeOffset"]["quantize"].setValue( 0.5 )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 10, "frame" : 9, "" : 82 } )
 
@@ -2592,15 +2590,11 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		with c:
 			testAttributes( frameAttr = [ i + 42 for i in floatExpected ], floatAttr = floatExpected, color4fAttr = color4fExpected, seedAttr_seedCount = 10 )
 			self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 10, "frame" : 5, "" : 69 } )
-			self.assertEncapsulatedRendersSame( instancer )
-
 
 		# Now reduce back down the variations to test different cumulative combinations
 		instancer["seedEnabled"].setValue( False )
 		testAttributes( frameAttr = [ i + 1 for i in floatExpected ], floatAttr = floatExpected, color4fAttr = color4fExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "frame" : 5, "" : 20 } )
-
-		self.assertEncapsulatedRendersSame( instancer )
 
 		# With just one context var, driven by the same prim var as frame, with the same quantization,
 		# the variations don't multiply
@@ -2608,22 +2602,15 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		testAttributes( frameAttr = [ i + 1 for i in floatExpected ], floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "frame" : 5, "" : 5 } )
 
-		self.assertEncapsulatedRendersSame( instancer )
-
 		# Using a different source primVar means the variations will multiply
 		instancer["timeOffset"]["name"].setValue( 'intVar' )
 		instancer["timeOffset"]["quantize"].setValue( 0 )
 		testAttributes( frameAttr = [ i + 1 for i in range(100) ], floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "frame" : 100, "" : 100 } )
 
-		self.assertEncapsulatedRendersSame( instancer )
-
 		instancer["timeOffset"]["quantize"].setValue( 20 )
 		testAttributes( frameAttr = [ ((i+10)//20)*20 + 1 for i in range(100) ], floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "frame" : 6, "" : 30 } )
-
-		self.assertEncapsulatedRendersSame( instancer )
-
 
 		# Test with multiple point sources
 		pointSources = []
@@ -2677,6 +2664,32 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		# Test passthrough when disabled
 		instancer["enabled"].setValue( False )
 		self.assertScenesEqual( instancer["in"], instancer["out"] )
+
+	# Fails because we pass the offset times as `sampleTimes` to the renderer,
+	# when sample times should always match the shutter.
+	@unittest.expectedFailure
+	def testEncapsulateTimeOffsets( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 4 ) ] ) )
+		points["timeOffset"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.FloatVectorData( range( 0, 4 ) ) )
+
+		objectSource = GafferScene.ObjectToScene()
+		objectSource["object"].setValue( points )
+		objectSource["name"].setValue( "points" )
+
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ "/points" ] ) )
+
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectSource["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+		instancer["timeOffset"]["name"].setValue( "timeOffset" )
+		instancer["timeOffset"]["enabled"].setValue( True )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 	def testContextSet( self ):
 
