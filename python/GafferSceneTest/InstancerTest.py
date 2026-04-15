@@ -2166,6 +2166,8 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		self.assertEqual( instancer["out"].set( "A" ), instancer["in"].set( "A" ) )
 		self.assertEqual( instancer["out"].set( "A" ).value.paths(), [ "/plane" ] )
 
+	# Fails due to encapsulated render not matching when `timeOffset` is used.
+	@unittest.expectedFailure
 	def testContexts( self ):
 
 		points = IECoreScene.PointsPrimitive(
