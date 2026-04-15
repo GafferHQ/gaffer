@@ -130,6 +130,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def __enter( self, widget ) :
 
 		if not isinstance( QtWidgets.QApplication.focusWidget(), ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
+			# \todo Do we want to clear the `focusItem` here too? If not, the breadcrumbs text
+			# widget will get focus as soon as this GadgetWidget gets focus, which may not be
+			# intuitive?
 			self._qtWidget().setFocus()
 
 		## \todo Widget.enterSignal() should be providing this
@@ -151,7 +154,12 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __leave( self, widget ) :
 
-		self._qtWidget().clearFocus()
+		focusWidget = QtWidgets.QApplication.focusWidget()
+		if isinstance( focusWidget, QtWidgets.QGraphicsView ) :
+			focusWidget = focusWidget.scene().focusItem()
+
+		if not isinstance( focusWidget, QtWidgets.QGraphicsProxyWidget ) :
+			self._qtWidget().clearFocus()
 
 		p = self.mousePosition( relativeTo = self )
 		event = GafferUI.ButtonEvent(
