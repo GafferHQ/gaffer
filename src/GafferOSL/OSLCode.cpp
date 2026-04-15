@@ -78,6 +78,12 @@ string colorSplineParameter( const RampfColor3fPlug *plug )
 	return result;
 }
 
+void hashParameter( const Plug *plug, IECore::MurmurHash &h )
+{
+	h.append( plug->getName() );
+	h.append( plug->typeId() );
+}
+
 string parameter( const Plug *plug )
 {
 	const Gaffer::TypeId plugType = (Gaffer::TypeId)plug->typeId();
@@ -339,35 +345,7 @@ std::filesystem::path compile( const std::string &shaderName, const std::string 
 	return osoFileName;
 }
 
-class CompileProcess : public Gaffer::Process
-{
-
-	public :
-
-		CompileProcess( OSLCode *oslCode )
-			:	Process( g_type, oslCode->outPlug() )
-		{
-			try
-			{
-				string shaderName;
-				string shaderSource = generate( oslCode, shaderName );
-				std::filesystem::path shaderFile = compile( shaderName, shaderSource );
-				oslCode->namePlug()->setValue( shaderFile.replace_extension().generic_string() );
-				oslCode->typePlug()->setValue( "osl:shader" );
-			}
-			catch( ... )
-			{
-				handleException();
-			}
-		}
-
-		static InternedString g_type;
-
-};
-
-InternedString CompileProcess::g_type( "oslCode:compile" );
-
-};
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // OSLCode
@@ -382,26 +360,16 @@ OSLCode::OSLCode( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	// Must not accept inputs for now, because we need to use `plugSetSignal()`
-	// to do the code generation.
-	/// \todo Rejig the NetworkGenerator so there is a hook for us to do our
-	/// code generation on demand at network generation time, and allow inputs
-	/// again.
-	addChild( new StringPlug( "code", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs, IECore::StringAlgo::NoSubstitutions ) );
+	addChild( new StringPlug( "code", Plug::In, "", Plug::Default, IECore::StringAlgo::NoSubstitutions ) );
+	addChild( new StringPlug( "__shaderName", Plug::Out, "", Plug::Default | Plug::AcceptsDependencyCycles ) );
 
-	// Must disable serialisation on the name because the GAFFEROSL_CODE_DIRECTORY
-	// might not be the same when we come to be loaded again.
+	typePlug()->setValue( "osl:shader" );
+	namePlug()->setInput( shaderNamePlug() );
+	// Disable serialisation of private internal connection.
 	namePlug()->setFlags( Plug::Serialisable, false );
 
-	parametersPlug()->childAddedSignal().connect( boost::bind( &OSLCode::parameterAdded, this, ::_1, ::_2 ) );
-	parametersPlug()->childRemovedSignal().connect( boost::bind( &OSLCode::parameterRemoved, this, ::_1, ::_2 ) );
-
-	outPlug()->childAddedSignal().connect( boost::bind( &OSLCode::parameterAdded, this, ::_1, ::_2 ) );
-	outPlug()->childRemovedSignal().connect( boost::bind( &OSLCode::parameterRemoved, this, ::_1, ::_2 ) );
-
-	plugSetSignal().connect( boost::bind( &OSLCode::plugSet, this, ::_1 ) );
-
-	updateShader();
+	outPlug()->childAddedSignal().connect( boost::bind( &OSLCode::outputAdded, this ) );
+	outPlug()->childRemovedSignal().connect( boost::bind( &OSLCode::outputRemoved, this ) );
 }
 
 OSLCode::~OSLCode()
@@ -418,6 +386,16 @@ const Gaffer::StringPlug *OSLCode::codePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *OSLCode::shaderNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *OSLCode::shaderNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
 std::string OSLCode::source( const std::string shaderName ) const
 {
 	string shaderNameCopy = shaderName;
@@ -428,88 +406,85 @@ void OSLCode::loadShader( const std::string &shaderName, bool keepExistingValues
 {
 }
 
-OSLCode::ShaderCompiledSignal &OSLCode::shaderCompiledSignal()
+void OSLCode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	return m_shaderCompiledSignal;
-}
-
-void OSLCode::updateShader()
-{
-	try
+	OSLShader::affects( input, outputs );
+	if(
+		parametersPlug()->isAncestorOf( input ) ||
+		outPlug()->isAncestorOf( input ) ||
+		input == codePlug()
+	)
 	{
-		CompileProcess compileProcess( this );
-		shaderCompiledSignal()();
-	}
-	catch( ... )
-	{
-		// We call updateShader() from `plugSet()`
-		// and `parameterAddedOrRemoved()`, and the
-		// client code that set the plug or added
-		// the parameter is not designed to deal with
-		// such fundamental actions throwing. So we suppress
-		// any exceptions here rather than let them
-		// percolate back out to the caller.
-		//
-		// This doesn't affect the exception handling
-		// already being performed by the CompileProcess,
-		// so we're not totally suppressing errors - they're
-		// still being reported via errorSignal().
-		//
-		// When we refactor to perform the shader
-		// generation on the fly at network
-		// generation time, this will not be necessary
-		// because client code for performing
-		// computations is designed to handle exceptions.
-		//
-		/// \todo There might well be a case for redefining
-		/// the signals themselves to use a CatchingSignalCombiner,
-		/// since then we'd be making the whole system robust
-		/// to badly behaving slots. Currently we have
-		/// a mixture of catching and non-catching signals,
-		/// but I think that's mostly a historical artifact
-		/// rather than through any thought-out design.
+		outputs.push_back( shaderNamePlug() );
 	}
 }
 
-void OSLCode::plugSet( const Gaffer::Plug *plug )
+void OSLCode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( plug == codePlug() )
+	if( output == shaderNamePlug() )
 	{
-		updateShader();
+		OSLShader::hash( output, context, h );
+		for( const auto &plug : Plug::Range( *parametersPlug() ) )
+		{
+			hashParameter( plug.get(), h );
+		}
+		for( const auto &plug : Plug::Range( *outPlug() ) )
+		{
+			hashParameter( plug.get(), h );
+		}
+		codePlug()->hash( h );
+	}
+	else
+	{
+		OSLShader::hash( output, context, h );
 	}
 }
 
-void OSLCode::parameterAdded( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
+void OSLCode::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 {
-	if( parent == outPlug() && parent->children().size() == 1 )
+	if( output == shaderNamePlug() )
 	{
-		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
-		// not the plug has children, so we must notify the world that the value will
-		// have changed.
-		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
+		string shaderName;
+		const string shaderSource = generate( this, shaderName );
+		std::filesystem::path shaderFile = compile( shaderName, shaderSource );
+		static_cast<StringPlug *>( output )->setValue( shaderFile.replace_extension() );
 	}
-
-	m_nameChangedConnections[child] = child->nameChangedSignal().connect(
-		boost::bind( &OSLCode::parameterNameChanged, this )
-	);
-	updateShader();
+	else
+	{
+		OSLShader::compute( output, context );
+	}
 }
 
-void OSLCode::parameterRemoved( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
+ValuePlug::CachePolicy OSLCode::computeCachePolicy( const Gaffer::ValuePlug *output ) const
 {
-	if( parent == outPlug() && parent->children().size() == 0 )
+	if( output == shaderNamePlug() )
+	{
+		// We don't use TBB, but it's common for many clients to want the same thing
+		// at once, and there's no point in parallel threads fighting over the creation
+		// of the file.
+		return ValuePlug::CachePolicy::TaskCollaboration;
+	}
+	return OSLShader::computeCachePolicy( output );
+}
+
+void OSLCode::outputAdded()
+{
+	if( outPlug()->children().size() == 1 )
 	{
 		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
 		// not the plug has children, so we must notify the world that the value will
 		// have changed.
 		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
 	}
-
-	m_nameChangedConnections.erase( child );
-	updateShader();
 }
 
-void OSLCode::parameterNameChanged()
+void OSLCode::outputRemoved()
 {
-	updateShader();
+	if( outPlug()->children().size() == 0 )
+	{
+		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
+		// not the plug has children, so we must notify the world that the value will
+		// have changed.
+		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
+	}
 }

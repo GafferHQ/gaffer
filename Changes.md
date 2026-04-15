@@ -24,6 +24,7 @@ Improvements
 - CurvesPrimitive : Added `Pinned` wrap mode in addition to the existing `Periodic` and `NonPeriodic` modes. This conveniently interpolates CatmullRom
 and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
 - SceneReader, SceneWriter : Added support for pinned UsdGeomBasisCurves.
+- OSLCode : The OSL shader is now compiled on demand, rather than every time the node is edited. This avoids many redundant attempts at recompilation when loading nodes with many parameters.
 
 Fixes
 -----
@@ -40,6 +41,8 @@ Fixes
   - Fixed PointsPrimitive motion blur when rendering with even numbers of segments.
 - USDShader : Fixed value of `type` plug after loading a USDLux light.
 - CyclesLight, ArnoldLight, LightFilter : Fixed potential hang when loading shaders (GIL management bug in `loadShader()` binding).
+- StandardNodeGadget : Fixed crash caused by the node emitting `errorSignal()` while the gadget is undergoing construction.
+- Shader : Fixed hash for output plugs.
 
 API
 ---
@@ -88,6 +91,7 @@ Breaking Changes
   - Removed ability to load from `.gfr` files prior to version 0.45.0.0. If necessary, resave from Gaffer 1.6.
 - OSLShader : Removed ability to load from `.gfr` files prior to version 0.45.0.0. If necessary, resave from Gaffer 1.6.
 - Light : Removed public constructor. Lights may now only be constructed via derived classes, which are now responsible for providing a Shader node to the base class.
+- OSLCode : Removed `shaderCompiledSignal()`.
 
 Build
 -----

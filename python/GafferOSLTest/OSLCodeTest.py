@@ -51,6 +51,19 @@ import GafferOSLTest
 
 class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
+	def setUp( self ) :
+
+		GafferOSLTest.OSLTestCase.setUp( self )
+
+		# Arrange to restore GAFFEROSL_CODE_DIRECTORY env-var, so tests
+		# are free to modify it temporarily.
+
+		oslCodeDir = os.environ.get( "GAFFEROSL_CODE_DIRECTORY" )
+		if oslCodeDir :
+			self.addCleanup( os.environ.__setitem__, "GAFFEROSL_CODE_DIRECTORY", oslCodeDir )
+		else :
+			self.addCleanup( os.environ.__delitem__, "GAFFEROSL_CODE_DIRECTORY" )
+
 	def testPlugTypes( self ) :
 
 		oslCode = GafferOSL.OSLCode()
@@ -97,7 +110,9 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 	def testParseError( self ) :
 
 		n = GafferOSL.OSLCode()
-		self.__assertError( n, n["code"].setValue, "oops" )
+		n["code"].setValue( "oops" )
+		with self.assertRaisesRegex( Gaffer.ProcessException, "'oops' was not declared in this scope" ) :
+			self.__osoFileName( n )
 
 	def testParseErrorDoesntDestroyExistingPlugs( self ) :
 
@@ -106,18 +121,11 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		n["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		originalPlugs = n["parameters"].children() + n["out"].children()
 
-		self.__assertError( n, n["code"].setValue, "oops" )
+		n["code"].setValue( "oops" )
+		with self.assertRaisesRegex( Gaffer.ProcessException, "'oops' was not declared in this scope" ) :
+			self.__osoFileName( n )
 
 		self.assertEqual( n["parameters"].children() + n["out"].children(), originalPlugs )
-
-	def testChildAddedSignalNotSuppressedByError( self ) :
-
-		n = GafferOSL.OSLCode()
-		self.__assertError( n, n["code"].setValue, "oops" )
-
-		cs = GafferTest.CapturingSlot( n["parameters"].childAddedSignal() )
-		n["parameters"]["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		self.assertEqual( len( cs ), 1 )
 
 	def testEmpty( self ) :
 
@@ -171,13 +179,15 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		oslCode = GafferOSL.OSLCode()
 		oslCode["out"]["out"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		self.__assertNoError( oslCode, oslCode["code"].setValue, 'out = inFloat( "s", 0 );' )
+		oslCode["code"].setValue( 'out = inFloat( "s", 0 );' )
+		self.__osoFileName( oslCode ) # Will error if can't compile shader
 
 	def testImageProcessingFunctions( self ) :
 
 		oslCode = GafferOSL.OSLCode()
 		oslCode["out"]["out"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		self.__assertNoError( oslCode, oslCode["code"].setValue, 'out = inChannel( "R", 0 );' )
+		oslCode["code"].setValue( 'out = inChannel( "R", 0 );' )
+		self.__osoFileName( oslCode ) # Will error if can't compile shader
 
 	def testColorRamp( self ) :
 
@@ -242,11 +252,14 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 			s["o"]["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		f2 = self.__osoFileName( s["o"] )
+		self.assertNotEqual( f2, f1 )
 
 		with Gaffer.UndoScope( s ) :
 			s["o"]["code"].setValue( "o = i * color( u, v, 0 );")
 
 		f3 = self.__osoFileName( s["o"] )
+		self.assertNotEqual( f3, f1 )
+		self.assertNotEqual( f3, f2 )
 
 		s.undo()
 		self.assertEqual( self.__osoFileName( s["o"] ), f2 )
@@ -306,22 +319,21 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		oslCode = GafferOSL.OSLCode()
 		oslCode["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		oslCode["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["code"].setValue( "o = in" )
 
-		self.__assertError( oslCode, oslCode["code"].setValue, "o = in" )
+		with self.assertRaisesRegex( Gaffer.ProcessException, "'in' was not declared in this scope" ) :
+			self.__osoFileName( oslCode )
 
 		cs = GafferTest.CapturingSlot( oslCode.plugDirtiedSignal() )
-		self.__assertNoError( oslCode, oslCode["parameters"]["i"].setName, "in" )
+		oslCode["parameters"]["i"].setName( "in" )
 		self.assertTrue( oslCode["out"] in [ x[0] for x in cs ] )
+		self.__osoFileName( oslCode )
 
-		self.__assertError( oslCode, oslCode["parameters"]["in"].setName, "i" )
+		oslCode["parameters"]["in"].setName( "i" )
+		with self.assertRaisesRegex( Gaffer.ProcessException, "'in' was not declared in this scope" ) :
+			self.__osoFileName( oslCode )
 
 	def testMoveCodeDirectory( self ) :
-
-		oslCodeDir = os.environ.get( "GAFFEROSL_CODE_DIRECTORY" )
-		if oslCodeDir :
-			self.addCleanup( os.environ.__setitem__, "GAFFEROSL_CODE_DIRECTORY", oslCodeDir )
-		else :
-			self.addCleanup( os.environ.__delitem__, "GAFFEROSL_CODE_DIRECTORY" )
 
 		# Make an OSL shader in a specific code directory.
 
@@ -339,15 +351,32 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		# Now simulate the loading of that script in a different environment,
 		# with a different code directory.
 
-		ss = s.serialise()
+		scriptFileName = self.temporaryDirectory() / "test.gfr"
+		s["fileName"].setValue( scriptFileName )
+		s.save()
 
 		shutil.rmtree( os.environ["GAFFEROSL_CODE_DIRECTORY"] )
-		os.environ["GAFFEROSL_CODE_DIRECTORY"] = ( self.temporaryDirectory() / "codeDirectoryB" ).as_posix()
 
-		s2 = Gaffer.ScriptNode()
-		s2.execute( ss )
+		env = os.environ.copy()
+		env["GAFFEROSL_CODE_DIRECTORY"] = ( self.temporaryDirectory() / "codeDirectoryB" ).as_posix()
 
-		self.assertTrue( self.__osoFileName( s2["o"] ).startswith( os.environ["GAFFEROSL_CODE_DIRECTORY"] ) )
+		subprocess.check_call(
+			[
+				str( Gaffer.executablePath() ), "env", "python", "-c",
+				"import GafferOSLTest; GafferOSLTest.OSLCodeTest()._assertMovedCodeDirectoryOK( '{scriptFileName}' )".format(
+					scriptFileName = scriptFileName.as_posix()
+				)
+			],
+			env = env
+		)
+
+	def _assertMovedCodeDirectoryOK( self, scriptFileName ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( scriptFileName )
+		s.load()
+
+		self.assertTrue( self.__osoFileName( s["o"] ).startswith( os.environ["GAFFEROSL_CODE_DIRECTORY"] ) )
 
 	def testRenameRemovedParameter( self ) :
 
@@ -355,58 +384,70 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		oslCode = GafferOSL.OSLCode()
 		oslCode["parameters"]["c"] = parameter
-
-		cs = GafferTest.CapturingSlot( oslCode.shaderCompiledSignal() )
 		oslCode["parameters"].removeChild( parameter )
-		self.assertEqual( len( cs ), 1 )
 
 		# Changing name is irrelevant now we've removed the parameter,
-		# and shouldn't trigger a recompile.
+		# and shouldn't propagate dirtiness.
 
-		del cs[:]
+		cs = GafferTest.CapturingSlot( oslCode.plugDirtiedSignal() )
 		parameter.setName( "d" )
 		self.assertEqual( len( cs ), 0 )
 
 	def testParseErrorLineNumbers( self ) :
 
 		oslCode = GafferOSL.OSLCode()
-		cs = GafferTest.CapturingSlot( oslCode.errorSignal() )
 		oslCode["code"].setValue( "undefined" )
 
-		self.assertEqual( len( cs ), 1 )
-		self.assertRegex( cs[0][2], "code:1: error: 'undefined' was not declared in this scope$" )
+		with self.assertRaisesRegex( Gaffer.ProcessException, "code:1: error: 'undefined' was not declared in this scope$" ) :
+			self.__osoFileName( oslCode )
+
+	def testShaderNotCompiledForEveryParameterAddition( self ) :
+
+		directory = self.temporaryDirectory() / "oslCode"
+		os.environ["GAFFEROSL_CODE_DIRECTORY"] = directory.as_posix()
+		self.assertFalse( directory.exists() )
+
+		# Shader is only generated when we ask for it.
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["parameters"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertFalse( directory.exists() )
+
+		self.__osoFileName( oslCode )
+		self.assertTrue( directory.exists() )
+		self.assertEqual( len( list( directory.iterdir() ) ), 1 )
+
+		# And is only regenerated when we ask for it again.
+
+		oslCode["parameters"]["j"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["parameters"]["k"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( len( list( directory.iterdir() ) ), 1 )
+
+		self.__osoFileName( oslCode )
+		self.assertEqual( len( list( directory.iterdir() ) ), 2 )
+
+	def testMetadataDoesntThrowOnCodingError( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["parameters"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["code"].setValue( "oops!" )
+
+		self.assertIsNone( oslCode.shaderMetadata( "test" ) )
+		self.assertIsNone( oslCode.parameterMetadata( oslCode["parameters"]["i"], "test" ) )
+
+	def testOutputGetValueDoesntThrowOnCodingError( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"]["i"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["code"].setValue( "oops!" )
+
+		self.assertEqual( oslCode["out"]["i"].getValue(), 0 )
 
 	def __osoFileName( self, oslCode ) :
 
-		# Right now we could get this information by
-		# getting the value directly from the "name" plug
-		# on the OSLCode node, but we're getting it from
-		# the computed shader instead, in the hope that
-		# one day we can refactor things so that it's the
-		# generation of the shader network that also generates
-		# the file on disk. It might be that the
-		# `GafferScene::Shader` base class shouldn't even
-		# mandate the existence of "name" and "type" plugs.
-
-		return oslCode.attributes()["osl:shader"].outputShader().name
-
-	def __assertError( self, oslCode, fn, *args, **kw ) :
-
-		cs = GafferTest.CapturingSlot( oslCode.errorSignal() )
-
-		fn( *args, **kw )
-		self.__osoFileName( oslCode )
-
-		self.assertEqual( len( cs ), 1 )
-
-	def __assertNoError( self, oslCode, fn, *args, **kw ) :
-
-		cs = GafferTest.CapturingSlot( oslCode.errorSignal() )
-
-		fn( *args, **kw )
-		self.__osoFileName( oslCode )
-
-		self.assertEqual( len( cs ), 0 )
+		result = oslCode.attributes()["osl:shader"].outputShader().name
+		self.assertTrue( pathlib.Path( result ).with_suffix( ".oso" ).is_file() )
+		return result
 
 if __name__ == "__main__":
 	unittest.main()

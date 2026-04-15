@@ -1518,6 +1518,13 @@ StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfM
 
 void StandardNodeGadget::error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message )
 {
+	if( !refCount() )
+	{
+		// We're in the process of being constructed, and can't add a reference
+		// to ourselves without causing a double delete. Just do nothing.
+		return;
+	}
+
 	std::string header;
 	if( source->node() == node() )
 	{

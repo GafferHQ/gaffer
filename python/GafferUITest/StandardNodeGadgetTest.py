@@ -350,5 +350,22 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertFalse( fOut.getLabelVisible() )
 		self.assertFalse( iOut.getLabelVisible() )
 
+	def testErrorSignalDuringConstruction( self ) :
+
+		Gaffer.Metadata.registerValue( GafferTest.BadNode, "iconScale", lambda node : node["out3"].getValue() )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, GafferTest.BadNode, "iconScale" )
+
+		node = GafferTest.BadNode()
+		## \todo We don't really want the construction of the gadget to throw, but
+		# it currently does, because it calls our metadata function which throws.
+		# It would seem a pity for all metadata clients to have to manage
+		# exceptions, so perhaps that should be dealt with centrally in the
+		# Metadata API?
+		with self.assertRaises( Gaffer.ProcessException ) :
+			# The real purpose of this test is to check that this doesn't
+			# crash when `Node::errorSignal()` is emitted by our metadata
+			# function.
+			GafferUI.StandardNodeGadget( node )
+
 if __name__ == "__main__":
 	unittest.main()
