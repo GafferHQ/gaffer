@@ -46,7 +46,6 @@
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Context.h"
-#include "Gaffer/Reference.h"
 #include "Gaffer/Metadata.h"
 
 using namespace boost::python;
