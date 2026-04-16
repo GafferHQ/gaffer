@@ -638,6 +638,17 @@ class Dispatcher::TaskBatch::Namer
 
 			for( const auto &name : names )
 			{
+				if( name == g_scriptFileNameContextEntry )
+				{
+					// When we isolate batches, we give them a new script filename,
+					// but that information would only clutter up the batch names,
+					// so we omit it here.
+					/// \todo A smarter method of naming might be to include only
+					/// context variables that differ between batches for the same
+					/// node. That would automatically take care of this omission
+					/// too.
+					continue;
+				}
 				if( context->variableHash( name ) == m_baseContext.variableHash( name ) )
 				{
 					continue;
