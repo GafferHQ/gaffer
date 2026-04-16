@@ -582,6 +582,11 @@ void SubGraph::loadReference( const std::filesystem::path &fileName )
 	);
 }
 
+bool SubGraph::isReference() const
+{
+	return m_referenceState && !m_referenceState->fileName.empty();
+}
+
 const std::filesystem::path &SubGraph::referenceFileName() const
 {
 	return m_referenceState ? m_referenceState->fileName : g_emptyPath;
@@ -763,8 +768,18 @@ void SubGraph::loadReferenceInternal( const std::filesystem::path &fileName )
 	if( !path.empty() )
 	{
 		PlugEdits::LoadingScope loadingScope( m_referenceState->plugEdits );
+		// We register our child nodes as read-only _before_ loading, to facilitate
+		// a special case in `MetadataAlgo::setNumericBookmark()`. Coverage for this
+		// is in `MetadataAlgoTest.testNumericBookmarksInReferences`.
+		Metadata::registerValue( this, g_childNodesAreReadOnlyName, new BoolData( true ), /* persistent = */ false );
 		errors = script->executeFile( path.string(), this, /* continueOnError = */ true );
-		// deregister "childNodesAreReadOnly" metadata, in case it was baked in the exported file
+		// Alas we have to register again _after_ loading for `SubGraphTest.testChildNodesAreReadOnlyMetadata`
+		// to pass. That test appears to model a problem with an internal Image Engine node - ideally the issue
+		// would be fixed there and we'd remove this. See #4320.
+		Metadata::registerValue( this, g_childNodesAreReadOnlyName, new BoolData( true ), /* persistent = */ false );
+	}
+	else
+	{
 		Metadata::deregisterValue( this, g_childNodesAreReadOnlyName );
 	}
 

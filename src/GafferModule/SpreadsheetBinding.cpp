@@ -39,7 +39,7 @@
 #include "SpreadsheetBinding.h"
 
 #include "Gaffer/Metadata.h"
-#include "Gaffer/Reference.h"
+#include "Gaffer/SubGraph.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ValuePlugBinding.h"
@@ -114,17 +114,17 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
 			const auto *plug = static_cast<const Spreadsheet::RowsPlug *>( graphComponent );
-			const auto *reference = IECore::runTimeCast<const Reference>( plug->node() );
+			const auto *subGraph = IECore::runTimeCast<const SubGraph>( plug->node() );
 
 			// Serialise columns
 
 			IECore::ConstBoolDataPtr columnsNeedSerialisation = Metadata::value<IECore::BoolData>( plug, "spreadsheet:columnsNeedSerialisation" );
 
-			if( reference )
+			if( subGraph && subGraph->isReference() )
 			{
 				// We don't currently allow users to add new columns to
 				// referenced spreadsheets - the referenced columns will be
-				// created in `Reference::loadReference()`, so don't need to
+				// created in `SubGraph::loadReference()`, so don't need to
 				// be serialised here.
 			}
 			else if( columnsNeedSerialisation && !columnsNeedSerialisation->readable() )
@@ -162,7 +162,7 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 			for( size_t rowIndex = 1; rowIndex < plug->children().size(); ++rowIndex )
 			{
 				const auto *row = plug->getChild<Spreadsheet::RowPlug>( rowIndex );
-				if( reference )
+				if( subGraph && subGraph->isReference() )
 				{
 					// References typically add rows in `loadReference()`, and we don't need to serialise
 					// those. But we also allow users to add rows as edits on top of the reference, and
@@ -171,7 +171,7 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 					/// from nodes exported by ExtensionAlgo and any other nodes that might want to add
 					/// a pre-populated RowsPlug in a constructor. We are deliberately not using the Dynamic
 					/// flag for this as we are trying to phase it out.
-					numRowsToAdd += reference->isChildEdit( row );
+					numRowsToAdd += subGraph->isChildEdit( row );
 				}
 				else
 				{

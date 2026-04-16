@@ -73,6 +73,9 @@ class GAFFER_API SubGraph : public DependencyNode
 		/// Loads a previously exported `.grf` file, replacing the internal node graph.
 		void loadReference( const std::filesystem::path &fileName );
 
+		/// Returns true if this node is referencing a `.grf` file, and false if
+		/// the child nodes are local.
+		bool isReference() const;
 		/// Returns the referenced file. If `isReference()` is false, returns an
 		/// empty path.
 		const std::filesystem::path &referenceFileName() const;
