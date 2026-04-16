@@ -325,6 +325,7 @@ void GafferModule::bindSubGraph()
 {
 	using SubGraphWrapper = DependencyNodeWrapper<SubGraph>;
 	DependencyNodeClass<SubGraph, SubGraphWrapper>()
+		.def( "exportReference", &Box::exportReference )
 		.def( "loadReference", &loadReferenceWrapper )
 		.def( "referenceFileName", &SubGraph::referenceFileName, return_value_policy<copy_const_reference>() )
 		.def( "referenceChangedSignal", &SubGraph::referenceChangedSignal, return_internal_reference<1>() )

@@ -68,6 +68,8 @@ class GAFFER_API SubGraph : public DependencyNode
 		/// to be published and then referenced into multiple `.gfr` files. When
 		/// referencing, the child nodes are not user-editable.
 
+		/// Exports the internal node graph as a `.grf` file, ready for referencing.
+		void exportReference( const std::filesystem::path &fileName ) const;
 		/// Loads a previously exported `.grf` file, replacing the internal node graph.
 		void loadReference( const std::filesystem::path &fileName );
 

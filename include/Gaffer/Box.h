@@ -58,8 +58,7 @@ class GAFFER_API Box : public SubGraph
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Box, BoxTypeId, SubGraph );
 
-		/// Exports the contents of the Box so that it can be referenced
-		/// by a Reference node.
+		/// \deprecated Use `SubGraph::exportReference()` instead.
 		void exportForReference( const std::filesystem::path &fileName ) const;
 
 		/// Creates a Box by containing a set of child nodes which
