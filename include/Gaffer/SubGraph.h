@@ -43,10 +43,18 @@
 namespace Gaffer
 {
 
+/// Allows the user to encapsulate portions of a graph by adding nodes
+/// as children and promoting a subset of plugs to the parent. Supports
+/// optional referencing, whereby the node graph is loaded from an external
+/// file. For historical reasons, SubGraph is not exposed directly - instead the
+/// Box subclass is used.
+///
 /// > Caution : This is _not_ expected to be used as a base class for
 /// > custom nodes. Any Node can use an internal network without needing to
 /// > inherit from SubGraph. SubGraph is only intended for use when the user
 /// > will interact directly with the internal network.
+///
+/// \todo Merge with Box, so that there is only one class.
 class GAFFER_API SubGraph : public DependencyNode
 {
 
@@ -68,6 +76,8 @@ class GAFFER_API SubGraph : public DependencyNode
 		/// to be published and then referenced into multiple `.gfr` files. When
 		/// referencing, the child nodes are not user-editable.
 
+		/// Exports the internal node graph as a `.grf` file, ready for referencing.
+		void exportReference( const std::filesystem::path &fileName ) const;
 		/// Loads a previously exported `.grf` file, replacing the internal node graph.
 		void loadReference( const std::filesystem::path &fileName );
 
