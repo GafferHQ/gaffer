@@ -61,9 +61,6 @@ from . import MCP
 from . import NodeAlgo
 from . import ExtensionAlgo
 
-# Class-level non-UI metadata registration
-Metadata.registerValue( Reference, "childNodesAreReadOnly", True )
-
 def rootPath() :
 
 	return pathlib.Path( os.path.expandvars( "$GAFFER_ROOT" ) )
