@@ -45,7 +45,6 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
-#include "Gaffer/Reference.h"
 #include "Gaffer/Spreadsheet.h"
 #include "Gaffer/ValuePlug.h"
 
