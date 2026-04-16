@@ -63,11 +63,7 @@ class GAFFER_API SubGraph : public DependencyNode
 		const BoolPlug *enabledPlug() const override;
 
 		/// Implemented to allow a user to define a pass-through behaviour
-		/// by wiring the nodes inside this sub graph up appropriately. The
-		/// input to the output plug must be connected from a node inside
-		/// the sub graph, where that node itself has its enabled plug driven
-		/// by the external enabled plug, and the correspondingInput for the
-		/// node comes from one of the inputs to the sub graph.
+		/// by connecting to the `passThrough` plug of an internal BoxOut node.
 		Plug *correspondingInput( const Plug *output ) override;
 		const Plug *correspondingInput( const Plug *output ) const override;
 
