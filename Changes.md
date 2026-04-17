@@ -7,6 +7,7 @@ Improvements
 - ShaderTweaks : Added support for `{shaderType=someShaderType}` qualifiers in parameter names, allowing tweaking of a parameter on all shaders of a given type (#6838).
 - Scene Editors : The effects of the `render:inclusions`, `render:exclusions` and `render:additionalLights` options are now represented in the Scene Editors. As these options result in the RenderSetAdaptor pruning scene locations at render time, the Hierarchy View, Attribute Editor and Light Editor now display the same pruned scene hierarchy provided to the renderer.
 - SetEditor, PrimitiveInspector, UVInspector : Added inspection of scene edits performed by render adaptors registered to `client = "SceneEditor"`.
+- SceneInspector : Added double-click editing of primitive variable data when the source is a PrimitiveVariables or PrimitiveVariableTweaks node.
 
 Fixes
 -----
@@ -22,6 +23,7 @@ Fixes
   - Object Type, Primitive Topology and Primitive Variables
   - Camera and ExternalProcedural parameters
   - Globals
+- SceneInspector : Primitive variable history now correctly shows the effects of ShufflePrimitiveVariables and CopyPrimitiveVariables.
 - MotionPath : Fixed hashing bug preventing motion path curves from updating when their source transforms were modified.
 - Viewer : Added prevention and recovery for situations where framing large objects causes the camera matrix to become corrupted with nans (#6715).
 - OSLObject : Simplified internal network to make inspector history more accurate.

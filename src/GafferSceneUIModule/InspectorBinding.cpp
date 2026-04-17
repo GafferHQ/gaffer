@@ -45,6 +45,7 @@
 #include "GafferSceneUI/Private/SetMembershipInspector.h"
 #include "GafferSceneUI/Private/TransformInspector.h"
 #include "GafferSceneUI/Private/OptionInspector.h"
+#include "GafferSceneUI/Private/PrimitiveVariableInspector.h"
 
 #include "GafferBindings/PathBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -256,6 +257,24 @@ void GafferSceneUIModule::bindInspector()
 			.value( "Rotate", TransformInspector::Component::Rotate )
 			.value( "Scale", TransformInspector::Component::Scale )
 			.value( "Shear", TransformInspector::Component::Shear )
+		;
+	}
+
+	{
+		scope scope = RunTimeTypedClass<PrimitiveVariableInspector>( "PrimitiveVariableInspector" )
+			.def(
+				init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, PrimitiveVariableInspector::Property, const std::string &>(
+					( arg( "scene" ), arg( "editScope" ), arg( "attribute" ), arg( "property" ), arg( "name" ) = "" )
+				)
+			)
+		;
+
+		enum_<PrimitiveVariableInspector::Property>( "Property" )
+			.value( "Interpolation", PrimitiveVariableInspector::Property::Interpolation )
+			.value( "Type", PrimitiveVariableInspector::Property::Type )
+			.value( "Interpretation", PrimitiveVariableInspector::Property::Interpretation )
+			.value( "Data", PrimitiveVariableInspector::Property::Data )
+			.value( "Indices", PrimitiveVariableInspector::Property::Indices )
 		;
 	}
 
