@@ -170,7 +170,9 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		using ObjectSamples = Samples<IECore::ConstObjectPtr>;
 		using SampleTimes = Samples<float>;
 
-		/// Convenience function for casting between sample types.
+		/// Convenience function for casting between sample types. Typically
+		/// used by implementations to downcast from ObjectSamples to a more
+		/// specific type.
 		template<typename T, typename S>
 		static Samples<T> staticSamplesCast( const Samples<S> &samples );
 
