@@ -22,6 +22,7 @@ Fixes
   - Camera and ExternalProcedural parameters
   - Globals
 - MotionPath : Fixed hashing bug preventing motion path curves from updating when their source transforms were modified.
+- Viewer : Added prevention and recovery for situations where framing large objects causes the camera matrix to become corrupted with nans (#6715).
 
 1.6.16.0 (relative to 1.6.15.0)
 ========
