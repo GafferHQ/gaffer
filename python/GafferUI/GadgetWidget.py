@@ -216,15 +216,15 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __mouseMove( self, widget, event ) :
 
+		# We get given mouse moves before they're given to the overlay items,
+		# so we must ignore them so they can be used by the overlay.
+		if self._qtWidget().itemAt( event.line.p0.x, event.line.p0.y ) is not None :
+			return False
+
 		if not self._makeCurrent() :
 			return False
 
-		self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
-
-		# we always return false so that any overlay items will get appropriate
-		# move/enter/leave events, otherwise highlighting for buttons etc can go
-		# awry.
-		return False
+		return self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
 
 	def __dragBegin( self, widget, event ) :
 
