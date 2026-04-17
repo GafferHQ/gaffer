@@ -417,7 +417,7 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override;
 
 		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 
@@ -3169,10 +3169,10 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			return nullptr;
 		}
 
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			ArnoldLightPtr result = static_pointer_cast<ArnoldLight>(
-				ArnoldRendererBase::light( name, object, attributes )
+				ArnoldRendererBase::light( name, samples, times, attributes )
 			);
 
 			auto &nodesCreatedLocal = m_nodesCreated.local();
@@ -4593,11 +4593,11 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 	return result;
 }
 
-ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-	Instance instance = m_instanceCache->get( object ? ObjectSamples( { object } ) : ObjectSamples(), object ? SampleTimes( { 0.0f } ) : SampleTimes(),  attributes, name );
+	Instance instance = m_instanceCache->get( samples, times, attributes, name );
 	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter, m_universe, m_parentNode );
 	result->attributes( attributes );
 	return result;

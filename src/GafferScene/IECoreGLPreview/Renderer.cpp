@@ -958,11 +958,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			OpenGLLightPtr result = new OpenGLLight( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
+			OpenGLLightPtr result = new OpenGLLight( name, samples.size() ? samples[0].get() : nullptr, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
 			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
 		}

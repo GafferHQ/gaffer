@@ -1582,14 +1582,14 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			DelightHandleSharedPtr instance;
-			if( object )
+			if( objectSamples.size() )
 			{
-				instance = m_instanceCache->get( { object }, { 0.0 } );
+				instance = m_instanceCache->get( objectSamples, times );
 			}
 
 			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, ownership() );

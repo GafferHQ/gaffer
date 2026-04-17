@@ -137,7 +137,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
 			acquireSession();
