@@ -39,12 +39,15 @@ import inspect
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
 import GafferImage
 import GafferScene
 import GafferSceneTest
+
+Interpolation = IECoreScene.PrimitiveVariable.Interpolation
 
 class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
@@ -946,6 +949,18 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		else :
 			self.assertEqual( oh.optionValue.value, optionValue )
 		self.assertEqual( len( oh.predecessors ), numPredecessors )
+
+	def __assertPrimitiveVariableHistory( self, primitiveVariableHistory, predecessorIndices, scene, path, primitiveVariableName, primitiveVariableValue, numPredecessors ) :
+
+		h = self.__predecessor( primitiveVariableHistory, predecessorIndices )
+
+		self.assertIsInstance( h, GafferScene.SceneAlgo.PrimitiveVariableHistory )
+
+		self.assertEqual( h.scene, scene )
+		self.assertEqual( GafferScene.ScenePlug.pathToString( h.context["scene:path"] ), path )
+		self.assertEqual( h.primitiveVariableName, primitiveVariableName )
+		self.assertEqual( h.primitiveVariableValue, primitiveVariableValue )
+		self.assertEqual( len( h.predecessors ), numPredecessors )
 
 	def testAttributeHistory( self ) :
 
@@ -2134,6 +2149,280 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferScene.SceneAlgo.history( loop["out"]["globals"] )
+
+	def testPrimitiveVariableHistory( self ) :
+
+		# Build network
+		# -------------
+		#
+		#    plane       sphere
+		#      |           |
+		# primVars1   primVars2
+		#       \         /
+		#        \       /
+		#         \     /
+		#      copyPrimitiveVariables
+		#            |
+		#          group
+		#            |
+		#        primitiveVariables3
+
+		plane = GafferScene.Plane()
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		sphere = GafferScene.Sphere()
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		primVars1 = GafferScene.PrimitiveVariables()
+		primVars1["in"].setInput( plane["out"] )
+		primVars1["filter"].setInput( planeFilter["out"] )
+		primVars1["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", 1 ) )
+
+		primVars2 = GafferScene.PrimitiveVariables()
+		primVars2["in"].setInput( sphere["out"] )
+		primVars2["filter"].setInput( sphereFilter["out"] )
+		primVars2["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", 2 ) )
+
+		copyPrimitiveVariables = GafferScene.CopyPrimitiveVariables()
+		copyPrimitiveVariables["in"].setInput( primVars1["out"] )
+		copyPrimitiveVariables["source"].setInput( primVars2["out"] )
+		copyPrimitiveVariables["filter"].setInput( planeFilter["out"] )
+		copyPrimitiveVariables["sourceLocation"].setValue( "/sphere" )
+		copyPrimitiveVariables["primitiveVariables"].setValue( "te*" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( copyPrimitiveVariables["out"] )
+
+		groupPlaneFilter = GafferScene.PathFilter()
+		groupPlaneFilter["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+
+		primitiveVariables3 = GafferScene.PrimitiveVariables()
+		primitiveVariables3["in"].setInput( group["out"] )
+		primitiveVariables3["filter"].setInput( groupPlaneFilter["out"] )
+		primitiveVariables3["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", 3 ) )
+
+		# Sanity check `history()`
+
+		def predecessorScenes( h ) :
+
+			return [ p.scene for p in h.predecessors ]
+
+		history = GafferScene.SceneAlgo.history( primitiveVariables3["out"]["object"], "/group/plane" )
+		self.assertEqual( predecessorScenes( history ), [ primitiveVariables3["in"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0 ] ) ), [ group["out"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0 ] ) ), [ group["in"][0] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0, 0 ] ) ), [ copyPrimitiveVariables["out"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0, 0, 0 ] ) ), [ copyPrimitiveVariables["in"], copyPrimitiveVariables["source"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0, 0, 0, 0 ] ) ), [ primVars1["out"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0, 0, 0, 1 ] ) ), [ primVars2["out"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0, 0, 0, 0, 0 ] ) ), [ primVars1["in"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0, 0, 0, 1, 0 ] ) ), [ primVars2["in"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0, 0, 0, 0, 0, 0 ] ) ), [ plane["out"] ] )
+		self.assertEqual( predecessorScenes( self.__predecessor( history, [ 0, 0, 0, 0, 1, 0, 0 ] ) ), [ sphere["out"] ] )
+
+		# Test `primitiveVariableHistory()`
+
+		primitiveVariableHistory = GafferScene.SceneAlgo.primitiveVariableHistory( history, "test" )
+
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [], primitiveVariables3["out"], "/group/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 3 ) ), 1 )
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0 ], primitiveVariables3["in"], "/group/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 2 ) ), 1 )
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0 ], group["out"], "/group/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 2 ) ), 1 )
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0 ], group["in"][0], "/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 2 ) ), 1 )
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0 ], copyPrimitiveVariables["out"], "/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 2 ) ), 1 )
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0, 0 ], copyPrimitiveVariables["source"], "/sphere", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 2 ) ), 1 )
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0, 0, 0 ], primVars2["out"], "/sphere", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 2 ) ), 1 )
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0, 0, 0, 0 ], primVars2["in"], "/sphere", "test", IECoreScene.PrimitiveVariable( Interpolation.Invalid, None ), 1 )
+		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], sphere["out"], "/sphere", "test", IECoreScene.PrimitiveVariable( Interpolation.Invalid, None ), 0 )
+
+		# Test `primitiveVariableHistory()` with missing source location in `copyPrimitiveVariables`
+
+		def assertFromPrimitiveVariables1() :
+
+			history = GafferScene.SceneAlgo.history( primitiveVariables3["out"]["object"], "/group/plane" )
+			primitiveVariableHistory = GafferScene.SceneAlgo.primitiveVariableHistory( history, "test" )
+
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [], primitiveVariables3["out"], "/group/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 3 ) ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0 ], primitiveVariables3["in"], "/group/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 1 ) ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0 ], group["out"], "/group/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 1 ) ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0 ], group["in"][0], "/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 1 ) ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0 ], copyPrimitiveVariables["out"], "/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 1 ) ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0, 0 ], copyPrimitiveVariables["in"], "/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 1 ) ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0, 0, 0 ], primVars1["out"], "/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.IntData( 1 ) ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0, 0, 0, 0 ], primVars1["in"], "/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Invalid, None ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], plane["out"], "/plane", "test", IECoreScene.PrimitiveVariable( Interpolation.Invalid, None ), 0 )
+
+		copyPrimitiveVariables["sourceLocation"].setValue( "" )
+		assertFromPrimitiveVariables1()
+
+		copyPrimitiveVariables["sourceLocation"].setValue( "/road/to/nowhere" )
+		assertFromPrimitiveVariables1()
+
+		# Test `primitiveVariableHistory()` with missing source primitiveVariable in `copyPrimitiveVariables`
+
+		copyPrimitiveVariables["sourceLocation"].setValue( "/sphere" )
+		primVars2["enabled"].setValue( False )
+		assertFromPrimitiveVariables1()
+
+		# Test `primitiveVariableHistory()` with `copyPrimitiveVariables` disabled
+
+		primVars2["enabled"].setValue( True )
+		copyPrimitiveVariables["enabled"].setValue( False )
+		assertFromPrimitiveVariables1()
+
+		# Test `primitiveVariableHistory()` with `copyPrimitiveVariables` unfiltered
+
+		copyPrimitiveVariables["enabled"].setValue( True )
+		copyPrimitiveVariables["filter"].setInput( None )
+		assertFromPrimitiveVariables1()
+
+	def testPrimitiveVariableHistoryWithShufflePrimitiveVariables( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["in"].setInput( plane["out"] )
+		primitiveVariables["filter"].setInput( planeFilter["out"] )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "a", "a_value" ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "b", "b_value" ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "c", "c_value" ) )
+
+		shufflePrimitiveVariables = GafferScene.ShufflePrimitiveVariables()
+		shufflePrimitiveVariables["in"].setInput( primitiveVariables["out"] )
+		shufflePrimitiveVariables["filter"].setInput( planeFilter["out"] )
+
+		def assertShuffledHistory( source, destination ) :
+
+			history = GafferScene.SceneAlgo.history( shufflePrimitiveVariables["out"]["object"], "/plane" )
+			primitiveVariableHistory = GafferScene.SceneAlgo.primitiveVariableHistory( history, destination )
+
+			if source is None :
+				sourceName = destination
+				sourceVariable = IECoreScene.PrimitiveVariable( Interpolation.Invalid, None )
+			else :
+				sourceName = source
+				sourceVariable = IECoreScene.PrimitiveVariable( Interpolation.Constant, IECore.StringData( source + "_value" ) )
+
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [], shufflePrimitiveVariables["out"], "/plane", destination, sourceVariable, 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0 ], shufflePrimitiveVariables["in"], "/plane", sourceName, sourceVariable, 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0 ], primitiveVariables["out"], "/plane", sourceName, sourceVariable, 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0 ], primitiveVariables["in"], "/plane", sourceName, IECoreScene.PrimitiveVariable( Interpolation.Invalid, None ), 1 )
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0 ], plane["out"], "/plane", sourceName, IECoreScene.PrimitiveVariable( Interpolation.Invalid, None ), 0 )
+
+		# No shuffles
+
+		assertShuffledHistory( "a", "a" )
+		assertShuffledHistory( "b", "b" )
+		assertShuffledHistory( "c", "c" )
+
+		# Shuffles
+
+		shufflePrimitiveVariables["shuffles"].addChild( Gaffer.ShufflePlug( source = "a", destination = "d" ) )
+		shufflePrimitiveVariables["shuffles"].addChild( Gaffer.ShufflePlug( source = "b", destination = "c" ) )
+
+		assertShuffledHistory( "a", "a" )
+		assertShuffledHistory( "b", "b" )
+		assertShuffledHistory( "b", "c" )
+		assertShuffledHistory( "a", "d" )
+
+		# Node disabled
+
+		shufflePrimitiveVariables["enabled"].setValue( False )
+
+		assertShuffledHistory( "a", "a" )
+		assertShuffledHistory( "b", "b" )
+		assertShuffledHistory( "c", "c" )
+		assertShuffledHistory( None, "d" )
+
+		# Filter disabled
+
+		shufflePrimitiveVariables["enabled"].setValue( True )
+		shufflePrimitiveVariables["filter"].setInput( None )
+
+		assertShuffledHistory( "a", "a" )
+		assertShuffledHistory( "b", "b" )
+		assertShuffledHistory( "c", "c" )
+		assertShuffledHistory( None, "d" )
+
+	def testPrimitiveVariableHistoryWithMergeScenes( self ) :
+
+		plane = GafferScene.Plane()
+
+		# For this very simple test, we're just looking at what input is pulled, so we don't
+		# really need different sources, except that the history compute won't include things
+		# if they're skipped because the hashes match
+		planeDifferentHash = GafferScene.Plane()
+		planeDifferentHash["dimensions"]["x"].setValue( 2 )
+
+		pPrimVar = plane["out"].object( "/plane" )["P"]
+
+		noObject = GafferScene.Group()
+		noObject["name"].setValue( "plane" )
+
+		mergeScenes = GafferScene.MergeScenes()
+		mergeScenes["in"][0].setInput( plane["out"] )
+		mergeScenes["in"][1].setInput( noObject["out"] )
+		mergeScenes["in"][2].setInput( noObject["out"] )
+
+		# Test Keep mode
+
+		mergeScenes["objectMode"].setValue( mergeScenes.Mode.Keep )
+
+		def assertPrimitiveVariableHistory( path, primitiveVariableName, mergeScenesInput, value, upstreamPredecessors = 1 ) :
+			history = GafferScene.SceneAlgo.history( mergeScenes["out"]["object"], path )
+			primitiveVariableHistory = GafferScene.SceneAlgo.primitiveVariableHistory( history, primitiveVariableName )
+
+			if value is None :
+				primVar = IECoreScene.PrimitiveVariable( Interpolation.Invalid, None )
+			else:
+				primVar = value
+
+
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [], mergeScenes["out"], path, primitiveVariableName, primVar, 1 )
+			if value is None :
+				return
+
+			self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0 ], mergeScenesInput, path, primitiveVariableName, primVar, upstreamPredecessors )
+
+		assertPrimitiveVariableHistory( "/plane", "P", mergeScenes["in"][0], pPrimVar )
+
+		mergeScenes["in"][0].setInput( plane["out"] )
+		mergeScenes["in"][1].setInput( planeDifferentHash["out"] )
+		mergeScenes["in"][2].setInput( plane["out"] )
+
+		assertPrimitiveVariableHistory( "/plane", "P", mergeScenes["in"][0], pPrimVar )
+
+		# Test Replace mode
+
+		mergeScenes["objectMode"].setValue( mergeScenes.Mode.Replace )
+
+		mergeScenes["in"][0].setInput( plane["out"] )
+		mergeScenes["in"][1].setInput( noObject["out"] )
+		mergeScenes["in"][2].setInput( noObject["out"] )
+
+		assertPrimitiveVariableHistory( "/plane", "P", mergeScenes["in"][0], pPrimVar )
+
+		mergeScenes["in"][0].setInput( noObject["out"] )
+		mergeScenes["in"][1].setInput( plane["out"] )
+		mergeScenes["in"][2].setInput( noObject["out"] )
+
+		assertPrimitiveVariableHistory( "/plane", "P", mergeScenes["in"][1], pPrimVar )
+
+		mergeScenes["in"][0].setInput( noObject["out"] )
+		mergeScenes["in"][1].setInput( noObject["out"] )
+		mergeScenes["in"][2].setInput( plane["out"] )
+
+		assertPrimitiveVariableHistory( "/plane", "P", mergeScenes["in"][2], pPrimVar )
+
+		mergeScenes["in"][0].setInput( plane["out"] )
+		mergeScenes["in"][1].setInput( planeDifferentHash["out"] )
+		mergeScenes["in"][2].setInput( plane["out"] )
+
+		assertPrimitiveVariableHistory( "/plane", "P", mergeScenes["in"][2], pPrimVar )
 
 	def testLinkingQueries( self ) :
 

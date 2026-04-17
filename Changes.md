@@ -26,6 +26,11 @@ Fixes
 - Viewer : Added prevention and recovery for situations where framing large objects causes the camera matrix to become corrupted with nans (#6715).
 - OSLObject : Simplified internal network to make inspector history more accurate.
 
+API
+---
+
+- SceneAlgo : Added `primitiveVariableHistory()` function.
+
 1.6.16.0 (relative to 1.6.15.0)
 ========
 
