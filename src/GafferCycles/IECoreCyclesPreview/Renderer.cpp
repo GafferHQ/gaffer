@@ -2560,7 +2560,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();

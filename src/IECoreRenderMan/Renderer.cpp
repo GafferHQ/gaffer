@@ -159,7 +159,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			return new IECoreRenderMan::Light( geometryPrototype, typedAttributes, m_materialCache.get(), m_lightLinker.get(), m_session );
 		}
 
-		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
 			acquireSession();

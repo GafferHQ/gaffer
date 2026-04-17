@@ -298,7 +298,8 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		/// Adds a named light filter with the initially supplied set of attributes, which are expected
 		/// to provide at least a light filter shader.
 		/// May return a nullptr if the light filter definition is not supported by the renderer.
-		virtual ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes );
 
 		/// Adds a named object to the render with the initally supplied set of attributes.
 		/// The attributes may subsequently be edited in interactive mode using
