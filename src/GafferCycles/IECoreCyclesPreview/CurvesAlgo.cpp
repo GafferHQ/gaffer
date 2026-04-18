@@ -57,7 +57,7 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve, ccl::Scene *scene )
+ccl::Hair *convertPrimary( const IECoreScene::CurvesPrimitive *curve, ccl::Scene *scene )
 {
 	assert( curve->typeId() == IECoreScene::CurvesPrimitive::staticTypeId() );
 	ccl::Hair *hair = SceneAlgo::createNodeWithLock<ccl::Hair>( scene );
@@ -143,19 +143,13 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve, ccl::Scene 
 	return hair;
 }
 
-ccl::Geometry *convert( const IECoreScene::CurvesPrimitive *curve, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &curves, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::Hair *hair = convertCommon( curve, scene );
-	return hair;
-}
-
-ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, size_t primarySampleIndex, ccl::Scene *scene )
-{
-	ccl::Hair *result = convertCommon( curves[primarySampleIndex], scene );
-	GeometryAlgo::convertMotion( vector<const IECoreScene::Primitive *>( curves.begin(), curves.end() ), primarySampleIndex, *result );
+	ccl::Hair *result = convertPrimary( curves[primarySampleIndex], scene );
+	GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( curves ), primarySampleIndex, *result );
 	return result;
 }
 
-GeometryAlgo::ConverterDescription<CurvesPrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<CurvesPrimitive> g_description( convert );
 
 } // namespace

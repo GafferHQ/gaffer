@@ -58,7 +58,7 @@ using namespace IECoreArnold;
 namespace
 {
 
-NodeAlgo::ConverterDescription<Camera> g_description( CameraAlgo::convert, CameraAlgo::convert );
+NodeAlgo::ConverterDescription<Camera> g_description( CameraAlgo::convert );
 
 const AtString g_perspCameraArnoldString("persp_camera");
 const AtString g_orthoCameraArnoldString("ortho_camera");
@@ -128,8 +128,8 @@ void setShutterCurveParameter( AtNode *camera, const IECore::Data *value, const 
 	AiNodeSetArray( camera, g_shutterCurveArnoldString, array );
 }
 
-// Performs the part of the conversion that is shared by both animated and non-animated cameras.
-AtNode *convertCommon( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+// Converts the parts of the camera that can't be animated in Arnold.
+AtNode *convertStatic( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	// Use projection to decide what sort of camera node to create
 	const std::string projection = camera->getProjection();
@@ -233,10 +233,10 @@ float apertureSize( const IECoreScene::Camera *camera )
 }
 
 template<typename F>
-auto parameterSamples( const std::vector<const IECoreScene::Camera *> &cameraSamples, F &&parameterFunction )
+auto parameterSamples( const IECoreArnold::CameraAlgo::CameraSamples &cameraSamples, F &&parameterFunction )
 {
 	using SampleType = std::invoke_result_t<F, const IECoreScene::Camera *>;
-	std::vector<SampleType> result;
+	IECoreScenePreview::Renderer::Samples<SampleType> result;
 	result.reserve( cameraSamples.size() );
 	for( const auto &camera : cameraSamples )
 	{
@@ -250,7 +250,7 @@ auto parameterSamples( const std::vector<const IECoreScene::Camera *> &cameraSam
 	return result;
 }
 
-void setAnimatedFloat( AtNode *node, AtString name, const std::vector<const IECoreScene::Camera *> &cameraSamples, float (*parameterFunction)( const IECoreScene::Camera * ) )
+void setAnimatedFloat( AtNode *node, AtString name, const IECoreArnold::CameraAlgo::CameraSamples &cameraSamples, float (*parameterFunction)( const IECoreScene::Camera * ) )
 {
 	const auto samples = parameterSamples( cameraSamples, parameterFunction );
 	if( samples.size() > 1 )
@@ -265,26 +265,9 @@ void setAnimatedFloat( AtNode *node, AtString name, const std::vector<const IECo
 
 } // namespace
 
-AtNode *CameraAlgo::convert( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *CameraAlgo::convert( const CameraSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( camera, universe, nodeName, parentNode, messageContext );
-	if( camera->getProjection()=="perspective" )
-	{
-		AiNodeSetFlt( result, g_fovArnoldString, fieldOfView( camera ) );
-		AiNodeSetFlt( result, g_apertureSizeArnoldString, apertureSize( camera ) );
-		AiNodeSetFlt( result, g_focusDistanceArnoldString, camera->getFocusDistance() );
-	}
-
-	const Imath::Box2f sw = screenWindow( camera );
-	AiNodeSetVec2( result, g_screenWindowMinArnoldString, sw.min.x, sw.min.y );
-	AiNodeSetVec2( result, g_screenWindowMaxArnoldString, sw.max.x, sw.max.y );
-
-	return result;
-}
-
-AtNode *CameraAlgo::convert( const std::vector<const IECoreScene::Camera *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	AtNode *result = convertCommon( samples[0], universe, nodeName, parentNode, messageContext );
+	AtNode *result = convertStatic( samples[0], universe, nodeName, parentNode, messageContext );
 	if( samples[0]->getProjection()=="perspective" )
 	{
 		setAnimatedFloat( result, g_fovArnoldString, samples, fieldOfView );

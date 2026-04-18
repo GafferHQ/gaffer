@@ -51,16 +51,13 @@ class Camera :  public IECoreScenePreview::Renderer::ObjectInterface
 		Camera( const std::string &name, const IECoreScene::Camera *camera, Session *session );
 		~Camera() override;
 
-		void transform( const Imath::M44f &transform ) override;
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override;
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
 		void assignID( uint32_t id ) override;
 		void assignInstanceID( uint32_t id ) override;
 
 	private :
-
-		void transformInternal( std::vector<Imath::M44f> samples, const std::vector<float> &times );
 
 		Session *m_session;
 		riley::CameraId m_cameraId;

@@ -615,15 +615,8 @@ class RenderController::SceneGraph
 				// the apply the transform.
 				if( m_changedComponents & ( ObjectComponent | TransformComponent ) )
 				{
-					assert( m_fullTransform.size() );
-					if( !m_transformTimesOutput )
-					{
-						m_objectInterface->transform( m_fullTransform[0] );
-					}
-					else
-					{
-						m_objectInterface->transform( m_fullTransform, *m_transformTimesOutput );
-					}
+					assert( m_fullTransform.samples.size() );
+					m_objectInterface->transform( m_fullTransform.samples, m_fullTransform.sampleTimes );
 				}
 
 				// Assign an ID
@@ -687,7 +680,7 @@ class RenderController::SceneGraph
 						m_boundInterface = nullptr;
 					}
 
-					m_boundInterface = controller->m_renderer->object( boundName, placeholder.get(), controller->m_defaultAttributes.get() );
+					m_boundInterface = controller->m_renderer->object( boundName, { placeholder.get() }, { 0.0 }, controller->m_defaultAttributes.get() );
 					if( m_boundInterface )
 					{
 						newBound = true;
@@ -702,15 +695,8 @@ class RenderController::SceneGraph
 			if( newBound || ( m_boundInterface && ( m_changedComponents & TransformComponent ) ) )
 			{
 				// Apply transform to bounding box
-				assert( m_fullTransform.size() );
-				if( !m_transformTimesOutput )
-				{
-					m_boundInterface->transform( m_fullTransform[0] );
-				}
-				else
-				{
-					m_boundInterface->transform( m_fullTransform, *m_transformTimesOutput );
-				}
+				assert( m_fullTransform.samples.size() );
+				m_boundInterface->transform( m_fullTransform.samples, m_fullTransform.sampleTimes );
 			}
 
 			clean( VisibleSetComponent | BoundComponent );
@@ -801,40 +787,22 @@ class RenderController::SceneGraph
 				m_transformHash = IECore::MurmurHash();
 			}
 
-			vector<M44f> samples;
-			if( !Private::RendererAlgo::transformSamples( transformPlug, m_transformTimes, samples, &m_transformHash ) )
+			auto sampledTransform = Private::RendererAlgo::transformSamples( transformPlug, m_transformTimes, &m_transformHash );
+			if( !sampledTransform )
 			{
 				return false;
 			}
 
 			if( !m_parent )
 			{
-				m_fullTransform = samples;
-				m_transformTimesOutput = samples.size() > 1 ? &m_transformTimes : nullptr;
+				m_fullTransform = *sampledTransform;
 			}
 			else
 			{
-				m_fullTransform.clear();
-				if( samples.size() == 1 )
-				{
-					m_fullTransform.reserve( m_parent->m_fullTransform.size() );
-					for( const M44f& it : m_parent->m_fullTransform )
-					{
-						m_fullTransform.push_back( samples.front() * it );
-					}
-					m_transformTimesOutput = m_parent->m_transformTimesOutput;
-				}
-				else
-				{
-					m_transformTimesOutput = &m_transformTimes;
-					m_fullTransform.reserve( samples.size() );
-
-					for( size_t i = 0; i < samples.size(); i++ )
-					{
-						m_fullTransform.push_back( samples[i] * m_parent->fullTransform( m_transformTimes[i] ) );
-					}
-				}
+				m_fullTransform = m_parent->m_fullTransform;
+				m_fullTransform.concatenate( *sampledTransform );
 			}
+
 			return true;
 		}
 
@@ -908,15 +876,16 @@ class RenderController::SceneGraph
 				return true;
 			}
 
-			vector<ConstObjectPtr> samples;
-			if( !Private::RendererAlgo::objectSamples( objectPlug, m_deformationTimes, samples, &m_objectHash ) )
+			auto sampledObject = Private::RendererAlgo::objectSamples( objectPlug, m_deformationTimes, &m_objectHash );
+			if( !sampledObject )
 			{
+				// No update required.
 				return false;
 			}
 
 			if(
 				std::all_of(
-					samples.begin(), samples.end(),
+					sampledObject->samples.begin(), sampledObject->samples.end(),
 					[] ( const ConstObjectPtr &sample ) { return runTimeCast<const IECore::NullObject>( sample.get() ); }
 				)
 			)
@@ -951,8 +920,8 @@ class RenderController::SceneGraph
 			ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
 			if( type == CameraType )
 			{
-				vector<ConstCameraPtr> cameraSamples; cameraSamples.reserve( samples.size() );
-				for( const auto &sample : samples )
+				IECoreScenePreview::Renderer::CameraSamples cameraSamples; cameraSamples.reserve( sampledObject->samples.size() );
+				for( const auto &sample : sampledObject->samples )
 				{
 					if( auto cameraSample = runTimeCast<const Camera>( sample.get() ) )
 					{
@@ -964,7 +933,7 @@ class RenderController::SceneGraph
 
 				// Create ObjectInterface
 
-				if( !samples.size() || cameraSamples.size() != samples.size() )
+				if( !sampledObject->samples.size() || cameraSamples.size() != sampledObject->samples.size() )
 				{
 					IECore::msg(
 						IECore::Msg::Warning,
@@ -977,62 +946,38 @@ class RenderController::SceneGraph
 				}
 				else
 				{
-					if( cameraSamples.size() == 1 )
-					{
-						m_objectInterface = renderer->camera(
-							name,
-							cameraSamples[0].get(),
-							attributesInterface( renderer )
-						);
-					}
-					else
-					{
-						vector<const Camera *> rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
-						for( auto &c : cameraSamples )
-						{
-							rawCameraSamples.push_back( c.get() );
-						}
-						m_objectInterface = renderer->camera(
-							name,
-							rawCameraSamples,
-							m_deformationTimes,
-							attributesInterface( renderer )
-						);
-					}
+					m_objectInterface = renderer->camera(
+						name,
+						cameraSamples,
+						sampledObject->sampleTimes,
+						attributesInterface( renderer )
+					);
 				}
 			}
 			else
 			{
-				if( !samples.size() )
+				if( !sampledObject->samples.size() )
 				{
 					return true;
 				}
 
-				if( samples.size() == 1 )
+				bool isCapsule = false;
+				if( sampledObject->samples.size() == 1 )
 				{
-					ConstObjectPtr sample = samples[0];
-					if( auto capsule = runTimeCast<const Capsule>( sample.get() ) )
+					if( auto capsule = runTimeCast<const Capsule>( sampledObject->samples[0].get() ) )
 					{
 						CapsulePtr capsuleCopy = capsule->copy();
 						capsuleCopy->setRenderOptions( renderOptions );
-						sample = capsuleCopy;
+						sampledObject->samples[0] = capsuleCopy;
+						isCapsule = true;
 					}
-					m_objectInterface.assign(
-						renderer->object( name, sample.get(), attributesInterface( renderer ) ),
-						ObjectInterfaceHandle::RemovalCallback(),
-						/* isCapsule = */ runTimeCast<const Capsule>( sample.get() )
-					);
 				}
-				else
-				{
-					/// \todo Can we rejig things so this conversion isn't necessary?
-					vector<const Object *> objectsVector; objectsVector.reserve( samples.size() );
-					for( const auto &sample : samples )
-					{
-						objectsVector.push_back( sample.get() );
-					}
-					m_objectInterface = renderer->object( name, objectsVector, m_deformationTimes, attributesInterface( renderer ) );
-				}
+
+				m_objectInterface.assign(
+					renderer->object( name, sampledObject->samples, sampledObject->sampleTimes, attributesInterface( renderer ) ),
+					ObjectInterfaceHandle::RemovalCallback(),
+					isCapsule
+				);
 			}
 
 			return true;
@@ -1139,34 +1084,6 @@ class RenderController::SceneGraph
 			m_dirtyComponents &= ~components;
 		}
 
-		M44f fullTransform( float time ) const
-		{
-			if( m_fullTransform.empty() )
-			{
-				return M44f();
-			}
-			if( !m_transformTimesOutput )
-			{
-				return m_fullTransform[0];
-			}
-
-			vector<float>::const_iterator t1 = lower_bound( m_transformTimesOutput->begin(), m_transformTimesOutput->end(), time );
-			if( t1 == m_transformTimesOutput->begin() || *t1 == time )
-			{
-				return m_fullTransform[t1 - m_transformTimesOutput->begin()];
-			}
-			else
-			{
-				vector<float>::const_iterator t0 = t1 - 1;
-				const float l = lerpfactor( time, *t0, *t1 );
-				const M44f &s0 = m_fullTransform[t0 - m_transformTimesOutput->begin()];
-				const M44f &s1 = m_fullTransform[t1 - m_transformTimesOutput->begin()];
-				M44f result;
-				LinearInterpolator<M44f>()( s0, s1, l, result );
-				return result;
-			}
-		}
-
 		/// \todo Fast path for when sets were not dirtied.
 		static unsigned sceneGraphMatch( RenderController *controller, SceneGraph::Type sceneGraphType, const ScenePlug::ScenePath &scenePath )
 		{
@@ -1202,7 +1119,7 @@ class RenderController::SceneGraph
 
 		IECore::MurmurHash m_objectHash;
 		ObjectInterfaceHandle m_objectInterface;
-		std::vector<float> m_deformationTimes;
+		IECoreScenePreview::Renderer::SampleTimes m_deformationTimes;
 
 		IECore::MurmurHash m_attributesHash;
 		IECore::CompoundObjectPtr m_fullAttributes;
@@ -1211,13 +1128,14 @@ class RenderController::SceneGraph
 		bool m_purposeIncluded;
 
 		IECore::MurmurHash m_transformHash;
-		std::vector<Imath::M44f> m_fullTransform;
-		std::vector<float> m_transformTimes;
+		// The times we sample the local transform at.
+		IECoreScenePreview::Renderer::SampleTimes m_transformTimes;
 
-		// The m_transformTimes represents what times we sample the transform at.  The actual
-		// times we output at may differ due to the transform samples turning out to not vary,
-		// or inheriting parent samples
-		std::vector<float> *m_transformTimesOutput;
+		// The full transform to be applied to the object. The number of samples
+		// here may differ from `m_transformTimes`, either because the transform
+		// turned out to be static, or due to inheriting from a parent with
+		// different numbers of samples.
+		Private::RendererAlgo::SampledTransform m_fullTransform;
 
 		IECore::MurmurHash m_childNamesHash;
 		std::vector<std::unique_ptr<SceneGraph>> m_children;

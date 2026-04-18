@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,27 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GeometryAlgo.h"
-#include "Loader.h"
-
-#include "IECoreScene/PointsPrimitive.h"
-
-using namespace IECoreScene;
-using namespace IECoreRenderMan;
-
-namespace
+namespace IECoreScenePreview
 {
 
-RtUString convertPoints( const IECoreScenePreview::Renderer::Samples<const IECoreScene::PointsPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
+template<typename T, typename S>
+Renderer::Samples<T> Renderer::staticSamplesCast( const Renderer::Samples<S> &samples )
 {
-	GeometryAlgo::convertPrimitive( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), sampleTimes, primVars, messageContext );
-	return Loader::strings().k_Ri_Points;
+	Renderer::Samples<T> result;
+	result.reserve( samples.size() );
+	for( const auto &s : samples )
+	{
+		if constexpr( std::is_pointer_v<S> )
+		{
+			result.push_back( static_cast<T>( s ) );
+		}
+		else
+		{
+			// Assume we're casting from `intrusive_ptr`.
+			result.push_back( static_cast<T>( s.get() ) );
+		}
+	}
+	return result;
 }
 
-GeometryAlgo::ConverterDescription<PointsPrimitive> g_pointsConverterDescription( convertPoints );
-
-} // namespace
+} // namespace IECoreScenePreview

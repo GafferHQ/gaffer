@@ -139,18 +139,7 @@ struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInte
 		}
 	}
 
-	void transform( const Imath::M44f &transform ) override
-	{
-		for( auto &o : objects )
-		{
-			if( o )
-			{
-				o->transform( transform );
-			}
-		}
-	}
-
-	void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+	void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 	{
 		for( auto &o : objects )
 		{
@@ -352,13 +341,13 @@ Renderer::AttributesInterfacePtr CompoundRenderer::attributes( const IECore::Com
 	return new CompoundAttributesInterface( m_renderers, attributes );
 }
 
-Renderer::ObjectInterfacePtr CompoundRenderer::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CompoundRenderer::camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	auto compoundAttributes = static_cast<const CompoundAttributesInterface *>( attributes );
 	CompoundObjectInterfacePtr result = new CompoundObjectInterface;
 	for( size_t i = 0; i < m_renderers.size(); ++i )
 	{
-		result->objects[i] = m_renderers[i]->camera( name, camera, compoundAttributes ? compoundAttributes->attributes[i].get() : nullptr );
+		result->objects[i] = m_renderers[i]->camera( name, samples, times, compoundAttributes ? compoundAttributes->attributes[i].get() : nullptr );
 	}
 	return result;
 }
@@ -385,18 +374,7 @@ Renderer::ObjectInterfacePtr CompoundRenderer::lightFilter( const std::string &n
 	return result;
 }
 
-Renderer::ObjectInterfacePtr CompoundRenderer::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
-{
-	auto compoundAttributes = static_cast<const CompoundAttributesInterface *>( attributes );
-	CompoundObjectInterfacePtr result = new CompoundObjectInterface;
-	for( size_t i = 0; i < m_renderers.size(); ++i )
-	{
-		result->objects[i] = m_renderers[i]->object( name, object, compoundAttributes->attributes[i].get() );
-	}
-	return result;
-}
-
-Renderer::ObjectInterfacePtr CompoundRenderer::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CompoundRenderer::object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	auto compoundAttributes = static_cast<const CompoundAttributesInterface *>( attributes );
 	CompoundObjectInterfacePtr result = new CompoundObjectInterface;

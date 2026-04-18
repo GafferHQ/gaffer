@@ -57,7 +57,7 @@ const AtString g_pointsArnoldString( "points" );
 const AtString g_quadArnoldString( "quad" );
 const AtString g_sphereArnoldString( "sphere" );
 
-AtNode *convertCommon( const IECoreScene::PointsPrimitive *points, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convertStatic( const IECoreScene::PointsPrimitive *points, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 
 	AtNode *result = AiNode( universe, g_pointsArnoldString, AtString( nodeName.c_str() ), parentNode );
@@ -94,30 +94,11 @@ AtNode *convertCommon( const IECoreScene::PointsPrimitive *points, AtUniverse *u
 
 }
 
-AtNode *convert( const IECoreScene::PointsPrimitive *points, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::PointsPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( points, universe, nodeName, parentNode, messageContext );
+	AtNode *result = convertStatic( samples.front(), universe, nodeName, parentNode, messageContext );
 
-	if( !ShapeAlgo::convertP( points, result, g_pointsArnoldString, messageContext ) )
-	{
-		/// \todo Would be nice to refactor `ObjectAlgo::convert()` to return `unique_ptr<AtNode>`
-		/// so we don't do manual deletion like this.
-		AiNodeDestroy( result );
-		return nullptr;
-	}
-
-	ShapeAlgo::convertRadius( points, result, messageContext );
-
-	/// \todo Aspect, rotation
-
-	return result;
-}
-
-AtNode *convert( const std::vector<const IECoreScene::PointsPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	AtNode *result = convertCommon( samples.front(), universe, nodeName, parentNode, messageContext );
-
-	std::vector<const IECoreScene::Primitive *> primitiveSamples( samples.begin(), samples.end() );
+	const auto primitiveSamples = IECoreScenePreview::Renderer::staticSamplesCast<const Primitive *>( samples );
 	if( !ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString, messageContext ) )
 	{
 		AiNodeDestroy( result );
@@ -125,7 +106,6 @@ AtNode *convert( const std::vector<const IECoreScene::PointsPrimitive *> &sample
 	}
 
 	ShapeAlgo::convertRadius( primitiveSamples, result, messageContext );
-
 
 	AiNodeSetFlt( result, g_motionStartArnoldString, motionStart );
 	AiNodeSetFlt( result, g_motionEndArnoldString, motionEnd );
@@ -135,6 +115,6 @@ AtNode *convert( const std::vector<const IECoreScene::PointsPrimitive *> &sample
 	return result;
 }
 
-NodeAlgo::ConverterDescription<PointsPrimitive> g_description( ::convert, ::convert );
+NodeAlgo::ConverterDescription<PointsPrimitive> g_description( ::convert );
 
 } // namespace

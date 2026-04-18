@@ -82,42 +82,25 @@ void convertCurvesTopology( const IECoreScene::CurvesPrimitive *curves, RtPrimVa
 	primVars.SetIntegerDetail( Loader::strings().k_Ri_nvertices, curves->verticesPerCurve()->readable().data(), RtDetailType::k_uniform );
 }
 
-RtUString convertStaticCurves( const IECoreScene::CurvesPrimitive *curves, RtPrimVarList &primVars, const std::string &messageContext )
-{
-	if( CurvesAlgo::isPinned( curves ) )
-	{
-		CurvesPrimitivePtr processedCurves = curves->copy();
-		CurvesAlgo::convertPinnedToNonPeriodic( processedCurves.get() );
-		return convertStaticCurves( processedCurves.get(), primVars, messageContext );
-	}
-
-	GeometryAlgo::convertPrimitive( curves, primVars, messageContext );
-	convertCurvesTopology( curves, primVars, messageContext );
-	return Loader::strings().k_Ri_Curves;
-}
-
-RtUString convertAnimatedCurves( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const std::vector<float> &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
+RtUString convertCurves( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
 	if( CurvesAlgo::isPinned( samples[0] ) )
 	{
-		std::vector<CurvesPrimitivePtr> processedCurves;
-		std::vector<const CurvesPrimitive *> processedSamples;
-		processedCurves.reserve( samples.size() );
+		IECoreScenePreview::Renderer::Samples<CurvesPrimitivePtr> processedSamples;
 		processedSamples.reserve( samples.size() );
 		for( auto sample : samples )
 		{
-			processedCurves.push_back( sample->copy() );
-			CurvesAlgo::convertPinnedToNonPeriodic( processedCurves.back().get() );
-			processedSamples.push_back( processedCurves.back().get() );
+			processedSamples.push_back( sample->copy() );
+			CurvesAlgo::convertPinnedToNonPeriodic( processedSamples.back().get() );
 		}
-		return convertAnimatedCurves( processedSamples, sampleTimes, primVars, messageContext );
+		return convertCurves( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::CurvesPrimitive *>( processedSamples ), sampleTimes, primVars, messageContext );
 	}
 
-	GeometryAlgo::convertPrimitive( reinterpret_cast<const std::vector<const IECoreScene::Primitive *> &>( samples ), sampleTimes, primVars, messageContext );
+	GeometryAlgo::convertPrimitive( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), sampleTimes, primVars, messageContext );
 	convertCurvesTopology( samples[0], primVars, messageContext );
 	return Loader::strings().k_Ri_Curves;
 }
 
-GeometryAlgo::ConverterDescription<CurvesPrimitive> g_curvesConverterDescription( convertStaticCurves, convertAnimatedCurves );
+GeometryAlgo::ConverterDescription<CurvesPrimitive> g_curvesConverterDescription( convertCurves );
 
 } // namespace

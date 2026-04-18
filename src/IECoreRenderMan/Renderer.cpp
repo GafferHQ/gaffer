@@ -129,10 +129,10 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			return new Attributes( attributes, m_materialCache.get() );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
-			IECoreRenderMan::CameraPtr result = new IECoreRenderMan::Camera( name, camera, acquireSession() );
+			IECoreRenderMan::CameraPtr result = new IECoreRenderMan::Camera( name, samples.front().get(), acquireSession() );
 			result->attributes( attributes );
 			return result;
 		}
@@ -167,27 +167,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			return new LightFilter( name, typedAttributes, m_session, m_lightLinker.get() );
 		}
 
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
-		{
-			if( !object )
-			{
-				return nullptr;
-			}
-
-			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
-			acquireSession();
-
-			auto typedAttributes = static_cast<const Attributes *>( attributes );
-			ConstGeometryPrototypePtr geometryPrototype = m_geometryPrototypeCache->get( object, typedAttributes, /* messageContext = */ name );
-			if( !geometryPrototype )
-			{
-				return nullptr;
-			}
-
-			return new IECoreRenderMan::Object( name, geometryPrototype, typedAttributes, m_lightLinker.get(), m_session );
-		}
-
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
 			acquireSession();

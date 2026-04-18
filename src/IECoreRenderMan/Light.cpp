@@ -155,39 +155,14 @@ Light::~Light()
 	}
 }
 
-void Light::transform( const Imath::M44f &transform )
+void Light::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 {
 	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
 	{
 		return;
 	}
 
-	const M44f correctedTransform = m_preTransform * transform;
-	StaticTransform staticTransform( correctedTransform );
-
-	const riley::LightInstanceResult result = m_session->modifyLightInstance(
-		m_lightInstance,
-		/* material = */ nullptr,
-		/* light shader = */ nullptr,
-		/* coordinateSystems = */ nullptr,
-		&staticTransform,
-		/* attributes = */ nullptr
-	);
-
-	if( result != riley::LightInstanceResult::k_Success )
-	{
-		IECore::msg( IECore::Msg::Warning, "RenderManLight::transform", "Unexpected edit failure" );
-	}
-}
-
-void Light::transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
-{
-	if( m_lightInstance == riley::LightInstanceId::InvalidId() )
-	{
-		return;
-	}
-
-	vector<Imath::M44f> correctedSamples = samples;
+	IECoreScenePreview::Renderer::TransformSamples correctedSamples = samples;
 	for( auto &m : correctedSamples )
 	{
 		m = m_preTransform * m;

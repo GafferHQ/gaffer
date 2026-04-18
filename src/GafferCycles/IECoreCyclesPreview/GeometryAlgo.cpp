@@ -83,15 +83,7 @@ namespace
 
 using namespace IECoreCycles;
 
-struct Converters
-{
-
-	GeometryAlgo::Converter converter;
-	GeometryAlgo::MotionConverter motionConverter;
-
-};
-
-using Registry = std::unordered_map<IECore::TypeId, Converters>;
+using Registry = std::unordered_map<IECore::TypeId, IECoreCycles::GeometryAlgo::Converter>;
 
 Registry &registry()
 {
@@ -219,18 +211,7 @@ namespace IECoreCycles
 namespace GeometryAlgo
 {
 
-ccl::Geometry *convert( const IECore::Object *object, ccl::Scene *scene )
-{
-	const Registry &r = registry();
-	Registry::const_iterator it = r.find( object->typeId() );
-	if( it == r.end() )
-	{
-		return nullptr;
-	}
-	return it->second.converter( object, scene );
-}
-
-ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, ccl::Session *session )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, ccl::Session *session )
 {
 	if( samples.empty() )
 	{
@@ -244,31 +225,28 @@ ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, cons
 		// Make memory-wasting redundant samples to work around this. Samples are
 		// expected to be spaced evenly in time, so we have to insert a redundant sample
 		// in every gap.
-		vector<ConstObjectPtr> interpolatedSamples;
-		interpolatedSamples.reserve( samples.size() - 1 );
-		vector<const IECore::Object *> processedSamples;
-		vector<float> processedTimes;
-		processedSamples.reserve( samples.size() + interpolatedSamples.size() );
-		processedTimes.reserve( times.size() + interpolatedSamples.size() );
+		IECoreScenePreview::Renderer::ObjectSamples processedSamples;
+		processedSamples.reserve( samples.size() * 2 - 1 );
+		IECoreScenePreview::Renderer::SampleTimes processedTimes;
+		processedTimes.reserve( samples.size() * 2 - 1 );
 		for( size_t i = 0; i < samples.size(); ++i )
 		{
 			processedSamples.push_back( samples[i] );
 			processedTimes.push_back( times[i] );
 			if( i + 1 < samples.size() )
 			{
-				interpolatedSamples.push_back( linearObjectInterpolation( samples[i], samples[i+1], 0.5f ) );
-				processedSamples.push_back( interpolatedSamples.back().get() );
+				processedSamples.push_back( linearObjectInterpolation( samples[i].get(), samples[i+1].get(), 0.5f ) );
 				processedTimes.push_back( Imath::lerp( times[i], times[i+1], 0.5f ) );
 			}
 		}
 		return convert( processedSamples, processedTimes, session );
 	}
 
-	const IECore::Object *firstSample = samples.front();
+	const IECore::Object *firstSample = samples.front().get();
 	const IECore::TypeId firstSampleTypeId = firstSample->typeId();
-	for( std::vector<const IECore::Object *>::const_iterator it = samples.begin()+1, eIt = samples.end(); it != eIt; ++it )
+	for( const auto &sample : samples )
 	{
-		if( (*it)->typeId() != firstSampleTypeId )
+		if( sample->typeId() != firstSampleTypeId )
 		{
 			throw IECore::Exception( "Inconsistent object types." );
 		}
@@ -280,22 +258,15 @@ ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, cons
 	{
 		return nullptr;
 	}
-	if( it->second.motionConverter )
-	{
-		// Cycles expects the middle sample (rounding down for even numbers of
-		// samples) to be specified as the main sample, and the other samples to
-		// be provided via ATTR_STD_MOTION_VERTEX_POSITION.
-		return it->second.motionConverter( samples, times, (samples.size() - 1) / 2, session->scene.get() );
-	}
-	else
-	{
-		return it->second.converter( samples.front(), session->scene.get() );
-	}
+	// Cycles expects the middle sample (rounding down for even numbers of
+	// samples) to be specified as the main sample, and the other samples to
+	// be provided via ATTR_STD_MOTION_VERTEX_POSITION.
+	return it->second( samples, times, (samples.size() - 1) / 2, session->scene.get() );
 }
 
-void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter )
+void registerConverter( IECore::TypeId fromType, Converter converter )
 {
-	registry()[fromType] = { converter, motionConverter };
+	registry()[fromType] = converter;
 }
 
 void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement )
@@ -421,7 +392,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 }
 
-void convertMotion( const std::vector<const IECoreScene::Primitive *> &samples, size_t primarySampleIndex, ccl::Geometry &geometry )
+void convertMotion( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &samples, size_t primarySampleIndex, ccl::Geometry &geometry )
 {
 	if( samples.size() < 2 )
 	{

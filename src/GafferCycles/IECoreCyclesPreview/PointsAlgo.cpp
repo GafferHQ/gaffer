@@ -58,7 +58,7 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points, ccl::Scene *scene )
+ccl::PointCloud *convertPrimary( const IECoreScene::PointsPrimitive *points, ccl::Scene *scene )
 {
 	assert( points->typeId() == IECoreScene::PointsPrimitive::staticTypeId() );
 	ccl::PointCloud *pointcloud = SceneAlgo::createNodeWithLock<ccl::PointCloud>( scene );
@@ -137,19 +137,13 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points, ccl:
 	return pointcloud;
 }
 
-ccl::Geometry *convert( const IECoreScene::PointsPrimitive *points, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::PointsPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::PointCloud *pointCloud = convertCommon( points, scene );
-	return pointCloud;
-}
-
-ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &points, const std::vector<float> &times, size_t primarySampleIndex, ccl::Scene *scene )
-{
-	ccl::PointCloud *result = convertCommon( points[primarySampleIndex], scene );
-	GeometryAlgo::convertMotion( vector<const IECoreScene::Primitive *>( points.begin(), points.end() ), primarySampleIndex, *result );
+	ccl::PointCloud *result = convertPrimary( samples[primarySampleIndex], scene );
+	GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
 	return result;
 }
 
-GeometryAlgo::ConverterDescription<PointsPrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<PointsPrimitive> g_description( convert );
 
 } // namespace

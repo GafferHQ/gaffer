@@ -55,12 +55,11 @@ class Object : public IECoreScenePreview::Renderer::ObjectInterface
 		~Object() override;
 
 		/// \todo RenderMan volumes seem to reject attempts to transform them
-		/// after creation, althought we get lucky and the first one works
+		/// after creation, although we get lucky and the first one works
 		/// despite returning a failure code. Perhaps we need to add transform
 		/// arguments to `Renderer::object()` and to be able to return a `bool`
 		/// here to request that the object is sent again instead?
-		void transform( const Imath::M44f &transform ) override;
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override;
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
 		void assignID( uint32_t id ) override;

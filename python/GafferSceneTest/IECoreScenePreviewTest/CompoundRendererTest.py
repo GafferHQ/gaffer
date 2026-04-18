@@ -68,7 +68,7 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 			o = r.capturedObject( "o" )
 			self.assertIsNotNone( o )
 			self.assertEqual( o.capturedSamples(), [ IECoreScene.SpherePrimitive() ] )
-			self.assertEqual( o.capturedSampleTimes(), [] )
+			self.assertEqual( o.capturedSampleTimes(), [ 0.0 ] )
 			self.assertEqual( o.capturedAttributes().attributes(), coreAttributes1 )
 			self.assertEqual( o.id(), 0 )
 			self.assertEqual( o.instanceID(), 0 )
@@ -98,7 +98,7 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 		for r in renderers :
 			o = r.capturedObject( "o" )
 			self.assertEqual( o.capturedTransforms(), [ transform ] )
-			self.assertEqual( o.capturedTransformTimes(), [] )
+			self.assertEqual( o.capturedTransformTimes(), [ 0.0 ] )
 
 		# Light linking
 

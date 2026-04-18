@@ -215,47 +215,14 @@ AtNode *convertCommon( const IECoreScene::CurvesPrimitive *curves, AtUniverse *u
 
 }
 
-AtNode *convert( const IECoreScene::CurvesPrimitive *curves, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	// Arnold does not support Vertex PrimitiveVariables (see `ShapeAlgo::convertPrimitiveVariable()`),
 	// so we must resample unless Vertex and Varying have equivalent variable sizes.
-	ConstCurvesPrimitivePtr resampledCurves = ::resampleVertexToVarying( curves, messageContext );
-
-	AtNode *result = convertCommon( resampledCurves.get(), universe, nodeName, parentNode, messageContext );
-
-	if( !ShapeAlgo::convertP( resampledCurves.get(), result, g_pointsArnoldString, messageContext ) )
-	{
-		/// \todo Would be nice to refactor `ObjectAlgo::convert()` to return `unique_ptr<AtNode>`
-		/// so we don't do manual deletion like this.
-		AiNodeDestroy( result );
-		return nullptr;
-	}
-
-	ShapeAlgo::convertRadius( resampledCurves.get(), result, messageContext );
-
-	// Convert "N" to orientations
-
-	if( const V3fVectorData *n = resampledCurves.get()->variableData<V3fVectorData>( "N", PrimitiveVariable::Vertex ) )
-	{
-		AiNodeSetStr( result, g_modeArnoldString, g_orientedArnoldString );
-		AiNodeSetArray(
-			result,
-			g_orientationsArnoldString,
-			AiArrayConvert( n->readable().size(), 1, AI_TYPE_VECTOR, (void *)&( n->readable()[0] ) )
-		);
-	}
-
-	return result;
-}
-
-AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	// Arnold does not support Vertex PrimitiveVariables (see `ShapeAlgo::convertPrimitiveVariable()`),
-	// so we must resample unless Vertex and Varying have equivalent variable sizes.
-	std::vector<ConstCurvesPrimitivePtr> updatedSamples;
-	std::vector<const Primitive *> primitiveSamples;
+	IECoreScenePreview::Renderer::Samples<ConstCurvesPrimitivePtr> updatedSamples;
+	ShapeAlgo::PrimitiveSamples primitiveSamples;
 	// Also convert "N" to orientations
-	std::vector<const Data *> nSamples;
+	IECoreScenePreview::Renderer::Samples<const Data *> nSamples;
 	updatedSamples.reserve( samples.size() );
 	primitiveSamples.reserve( samples.size() );
 	nSamples.reserve( samples.size() );
@@ -297,6 +264,6 @@ AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &sample
 	return result;
 }
 
-NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( ::convert, ::convert );
+NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( ::convert );
 
 } // namespace

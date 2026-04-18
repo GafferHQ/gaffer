@@ -943,40 +943,14 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		DelightHandleSharedPtr get( const IECore::Object *object )
-		{
-			const IECore::MurmurHash hash = object->Object::hash();
-
-			Cache::accessor a;
-			m_cache.insert( a, hash );
-			if( !a->second )
-			{
-				const std::string &name = "instance:" + hash.toString();
-				if( NodeAlgo::convert( object, m_context, name.c_str() ) )
-				{
-					a->second = make_shared<DelightHandle>( m_context, name, m_ownership );
-				}
-				else
-				{
-					a->second = nullptr;
-				}
-			}
-
-			return a->second;
-		}
-
-		// Can be called concurrently with other get() calls.
-		DelightHandleSharedPtr get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+		DelightHandleSharedPtr get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 		{
 			IECore::MurmurHash hash;
-			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+			for( const auto &sample : samples )
 			{
-				(*it)->hash( hash );
+				sample->hash( hash );
 			}
-			for( std::vector<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; ++it )
-			{
-				hash.append( *it );
-			}
+			hash.append( times.data(), times.size() );
 
 			Cache::accessor a;
 			m_cache.insert( a, hash );
@@ -1064,36 +1038,22 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			);
 		}
 
-		void transform( const Imath::M44f &transform ) override
-		{
-			if( transform == M44f() && !m_haveTransform )
-			{
-				return;
-			}
-
-			M44d m( transform );
-			NSIParam_t param = {
-				"transformationmatrix",
-				m.getValue(),
-				NSITypeDoubleMatrix,
-				0, 1, // array length, count
-				0 // flags
-			};
-			NSISetAttribute( m_transformHandle.context(), m_transformHandle.name(), 1, &param );
-
-			m_haveTransform = true;
-		}
-
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
 			if( m_haveTransform )
 			{
 				NSIDeleteAttribute( m_transformHandle.context(), m_transformHandle.name(), "transformationmatrix" );
+				m_haveTransform = false;
 			}
 
-			for( size_t i = 0, e = samples.size(); i < e; ++i )
+			if( std::all_of( samples.begin(), samples.end(), [] ( const M44f &m ) { return m == M44f(); } ) )
 			{
-				M44d m( samples[i] );
+				return;
+			}
+
+			if( samples.size() == 1 )
+			{
+				M44d m( samples[0] );
 				NSIParam_t param = {
 					"transformationmatrix",
 					m.getValue(),
@@ -1101,7 +1061,22 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 					0, 1, // array length, count
 					0 // flags
 				};
-				NSISetAttributeAtTime( m_transformHandle.context(), m_transformHandle.name(), times[i], 1, &param );
+				NSISetAttribute( m_transformHandle.context(), m_transformHandle.name(), 1, &param );
+			}
+			else
+			{
+				for( size_t i = 0, e = samples.size(); i < e; ++i )
+				{
+					M44d m( samples[i] );
+					NSIParam_t param = {
+						"transformationmatrix",
+						m.getValue(),
+						NSITypeDoubleMatrix,
+						0, 1, // array length, count
+						0 // flags
+					};
+					NSISetAttributeAtTime( m_transformHandle.context(), m_transformHandle.name(), times[i], 1, &param );
+				}
 			}
 
 			m_haveTransform = true;
@@ -1569,12 +1544,12 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			return m_attributesCache->get( attributes );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			const string objectHandle = "camera:" + name;
-			if( !NodeAlgo::convert( camera, m_context, objectHandle.c_str() ) )
+			if( !NodeAlgo::convert( ObjectSamples( samples.begin(), samples.end() ), times, m_context, objectHandle.c_str() ) )
 			{
 				return nullptr;
 			}
@@ -1582,7 +1557,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			// Store the camera for later use in updateCamera().
 			{
 				tbb::spin_mutex::scoped_lock lock( m_camerasMutex );
-				m_cameras[objectHandle] = camera;
+				m_cameras[objectHandle] = samples[0];
 			}
 
 			DelightHandleSharedPtr cameraHandle(
@@ -1614,7 +1589,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			DelightHandleSharedPtr instance;
 			if( object )
 			{
-				instance = m_instanceCache->get( object );
+				instance = m_instanceCache->get( { object }, { 0.0 } );
 			}
 
 			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, ownership() );
@@ -1628,27 +1603,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			return nullptr;
 		}
 
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
-		{
-			if( !object )
-			{
-				return nullptr;
-			}
-
-			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-
-			DelightHandleSharedPtr instance = m_instanceCache->get( object );
-			if( !instance )
-			{
-				return nullptr;
-			}
-
-			ObjectInterfacePtr result = new DelightObject( m_context, name, instance, ownership() );
-			result->attributes( attributes );
-			return result;
-		}
-
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
@@ -1807,7 +1762,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				camera = defaultCamera;
 
 				cameraHandle = "ieCoreDelight:defaultCamera";
-				NodeAlgo::convert( defaultCamera.get(), m_context, cameraHandle.c_str() );
+				NodeAlgo::convert( { defaultCamera.get() }, { 0.0 }, m_context, cameraHandle.c_str() );
 
 				m_defaultCamera = DelightHandle( m_context, cameraHandle, ownership() );
 

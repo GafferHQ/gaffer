@@ -86,63 +86,102 @@ std::shared_ptr<RenderManifest> interactiveRenderRenderManifestWrapper( Interact
 	return std::const_pointer_cast<RenderManifest>( r.renderManifest() );
 }
 
+Private::RendererAlgo::SampledObject *sampledObjectConstructor( list samples, list sampleTimes )
+{
+	Private::RendererAlgo::SampledObject result;
+	boost::python::container_utils::extend_container( result.samples, samples );
+	boost::python::container_utils::extend_container( result.sampleTimes, sampleTimes );
+	return new Private::RendererAlgo::SampledObject( result );
+}
+
+
+list sampledObjectSamples( const Private::RendererAlgo::SampledObject &sampledObject )
+{
+	list result;
+	for( const auto &x : sampledObject.samples )
+	{
+		result.append( boost::const_pointer_cast<Object>( x ) );
+	}
+	return result;
+}
+
+list sampledObjectSampleTimes( const Private::RendererAlgo::SampledObject &sampledObject )
+{
+	list result;
+	for( auto x : sampledObject.sampleTimes )
+	{
+		result.append( x );
+	}
+	return result;
+}
+
 object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, IECore::MurmurHash *hash, bool copy )
 {
-	std::vector<float> sampleTimes;
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
 
-	bool result;
-	std::vector<IECore::ConstObjectPtr> samples;
+	std::optional<GafferScene::Private::RendererAlgo::SampledObject> sampledObject;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
-		result = GafferScene::Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples, hash );
+		sampledObject = GafferScene::Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, hash );
 	}
 
-	if( !result )
+	if( !sampledObject )
 	{
 		return object();
 	}
 
-	list pythonSamples;
-	for( auto &s : samples )
+	if( copy )
 	{
-		if( copy )
+		for( auto &sample : sampledObject->samples )
 		{
-			pythonSamples.append( s->copy() );
-		}
-		else
-		{
-			pythonSamples.append( boost::const_pointer_cast<IECore::Object>( s ) );
+			sample = sample->copy();
 		}
 	}
 
-	return pythonSamples;
+	return object( *sampledObject );
+}
+
+Private::RendererAlgo::SampledTransform *sampledTransformConstructor( list samples, list sampleTimes )
+{
+	Private::RendererAlgo::SampledTransform result;
+	boost::python::container_utils::extend_container( result.samples, samples );
+	boost::python::container_utils::extend_container( result.sampleTimes, sampleTimes );
+	return new Private::RendererAlgo::SampledTransform( result );
+}
+
+list sampledTransformSamples( const Private::RendererAlgo::SampledTransform &sampledTransform )
+{
+	list result;
+	for( const auto &x : sampledTransform.samples )
+	{
+		result.append( x );
+	}
+	return result;
+}
+
+list sampledTransformSampleTimes( const Private::RendererAlgo::SampledTransform &sampledTransform )
+{
+	list result;
+	for( auto x : sampledTransform.sampleTimes )
+	{
+		result.append( x );
+	}
+	return result;
 }
 
 object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, object pythonSampleTimes, IECore::MurmurHash *hash )
 {
-	std::vector<float> sampleTimes;
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
 
-	bool result;
-	std::vector<M44f> samples;
+	std::optional<GafferScene::Private::RendererAlgo::SampledTransform> sampledTransform;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
-		result = GafferScene::Private::RendererAlgo::transformSamples( &transformPlug, sampleTimes, samples, hash );
+		sampledTransform = GafferScene::Private::RendererAlgo::transformSamples( &transformPlug, sampleTimes, hash );
 	}
 
-	if( !result )
-	{
-		return object();
-	}
-
-	list pythonSamples;
-	for( auto &s : samples )
-	{
-		pythonSamples.append( s );
-	}
-
-	return pythonSamples;
+	return sampledTransform ? object( *sampledTransform ) : object();
 }
 
 void outputCamerasWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
@@ -233,6 +272,19 @@ void GafferSceneModule::bindRender()
 				.def_readwrite( "shutter", &GafferScene::Private::RendererAlgo::RenderOptions::shutter )
 				.def_readwrite( "includedPurposes", &GafferScene::Private::RendererAlgo::RenderOptions::includedPurposes )
 				.def( self == self )
+			;
+
+			class_<GafferScene::Private::RendererAlgo::SampledTransform>( "SampledTransform" )
+				.def( "__init__", make_constructor( sampledTransformConstructor, default_call_policies() ) )
+				.add_property( "samples", &sampledTransformSamples )
+				.add_property( "sampleTimes", &sampledTransformSampleTimes )
+				.def( "concatenate", &GafferScene::Private::RendererAlgo::SampledTransform::concatenate )
+			;
+
+			class_<GafferScene::Private::RendererAlgo::SampledObject>( "SampledObject" )
+				.def( "__init__", make_constructor( sampledObjectConstructor, default_call_policies() ) )
+				.add_property( "samples", &sampledObjectSamples )
+				.add_property( "sampleTimes", &sampledObjectSampleTimes )
 			;
 
 			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object(), arg( "_copy" ) = true ) );

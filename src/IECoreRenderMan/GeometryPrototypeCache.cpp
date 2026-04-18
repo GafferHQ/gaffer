@@ -60,9 +60,9 @@ GeometryPrototypePtr GeometryPrototypeCache::get( const IECore::Object *object, 
 	return get( { object }, { 0.0f }, attributes, messageContext );
 }
 
-GeometryPrototypePtr GeometryPrototypeCache::get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, const Attributes *attributes, const std::string &messageContext )
+GeometryPrototypePtr GeometryPrototypeCache::get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, const Attributes *attributes, const std::string &messageContext )
 {
-	auto converter = [&] ( const vector<const IECore::Object *> &samples, const vector<float> &sampleTimes, const Attributes *attributes, Session *session, GeometryPrototypePtr &result ) {
+	auto converter = [&] ( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, const Attributes *attributes, Session *session, GeometryPrototypePtr &result ) {
 
 		riley::DisplacementId displacement;
 		if( auto d = attributes->displacement() )
@@ -71,16 +71,7 @@ GeometryPrototypePtr GeometryPrototypeCache::get( const std::vector<const IECore
 		}
 
 		RtPrimVarList primVars;
-		RtUString type;
-		if( samples.size() == 1 )
-		{
-			/// \todo Remove static conversions from GeometryAlgo?
-			type = GeometryAlgo::convert( samples[0], primVars, messageContext );
-		}
-		else
-		{
-			type = GeometryAlgo::convert( samples, sampleTimes, primVars, messageContext );
-		}
+		const RtUString type = GeometryAlgo::convert( samples, sampleTimes, primVars, messageContext );
 
 		if( !type.Empty() )
 		{

@@ -207,14 +207,27 @@ Camera::~Camera()
 	}
 }
 
-void Camera::transform( const Imath::M44f &transform )
+void Camera::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
 {
-	transformInternal( { transform }, { 0.0f } );
-}
+	IECoreScenePreview::Renderer::TransformSamples processedSamples = samples;
+	for( auto &m : processedSamples )
+	{
+		m = M44f().scale( V3f( 1, 1, -1 ) ) * m;
+	}
 
-void Camera::transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
-{
-	transformInternal( samples, times );
+	AnimatedTransform transform( processedSamples, times );
+
+	const auto result = m_session->riley->ModifyCamera(
+		m_cameraId,
+		nullptr,
+		&transform,
+		nullptr
+	);
+
+	if( result != riley::CameraResult::k_Success )
+	{
+		IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::Camera::transform", "Unexpected edit failure" );
+	}
 }
 
 bool Camera::attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
@@ -232,26 +245,4 @@ void Camera::assignID( uint32_t id )
 
 void Camera::assignInstanceID( uint32_t id )
 {
-}
-
-void Camera::transformInternal( std::vector<Imath::M44f> samples, const std::vector<float> &times )
-{
-	for( auto &m : samples )
-	{
-		m = M44f().scale( V3f( 1, 1, -1 ) ) * m;
-	}
-
-	AnimatedTransform transform( samples, times );
-
-	const auto result = m_session->riley->ModifyCamera(
-		m_cameraId,
-		nullptr,
-		&transform,
-		nullptr
-	);
-
-	if( result != riley::CameraResult::k_Success )
-	{
-		IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::Camera::transform", "Unexpected edit failure" );
-	}
 }

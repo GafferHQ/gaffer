@@ -98,30 +98,16 @@ void staticParameters( const IECoreScene::CurvesPrimitive *object, ParameterList
 
 }
 
-bool convertStatic( const IECoreScene::CurvesPrimitive *object, NSIContext_t context, const char *handle )
-{
-	NSICreate( context, handle, "cubiccurves", 0, nullptr );
-
-	ParameterList parameters;
-	staticParameters( object, parameters );
-
-	NodeAlgo::primitiveVariableParameterList( object, parameters );
-
-	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
-
-	return true;
-}
-
-bool convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &objects, const IECoreScenePreview::Renderer::SampleTimes &times, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "cubiccurves", 0, nullptr );
 
 	ParameterList parameters;
 	staticParameters( objects.front(), parameters );
 
-	vector<ParameterList> animatedParameters;
+	IECoreScenePreview::Renderer::Samples<ParameterList> animatedParameters;
 	NodeAlgo::primitiveVariableParameterLists(
-		vector<const Primitive *>( objects.begin(), objects.end() ),
+		IECoreScenePreview::Renderer::staticSamplesCast<const Primitive *>( objects ),
 		parameters, animatedParameters
 	);
 
@@ -138,6 +124,6 @@ bool convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &object
 	return true;
 }
 
-NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( convertStatic, convertAnimated );
+NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( convert );
 
 } // namespace

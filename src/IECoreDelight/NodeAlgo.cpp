@@ -68,15 +68,7 @@ namespace
 
 using namespace IECoreDelight;
 
-struct Converters
-{
-
-	NodeAlgo::Converter converter;
-	NodeAlgo::MotionConverter motionConverter;
-
-};
-
-using Registry = std::unordered_map<IECore::TypeId, Converters>;
+using Registry = std::unordered_map<IECore::TypeId, NodeAlgo::Converter>;
 
 Registry &registry()
 {
@@ -166,18 +158,7 @@ namespace IECoreDelight
 namespace NodeAlgo
 {
 
-bool convert( const IECore::Object *object, NSIContext_t context, const char *handle )
-{
-	Registry &r = registry();
-	auto it = r.find( object->typeId() );
-	if( it == r.end() )
-	{
-		return false;
-	}
-	return it->second.converter( object, context, handle );
-}
-
-bool convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle )
 {
 	Registry &r = registry();
 	auto it = r.find( samples.front()->typeId() );
@@ -185,30 +166,15 @@ bool convert( const std::vector<const IECore::Object *> &samples, const std::vec
 	{
 		return false;
 	}
-	if( it->second.motionConverter )
-	{
-		return it->second.motionConverter( samples, sampleTimes, context, handle );
-	}
-	else
-	{
-		return it->second.converter( samples.front(), context, handle );
-	}
+	return it->second( samples, sampleTimes, context, handle );
 }
 
-void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter )
+void registerConverter( IECore::TypeId fromType, Converter converter )
 {
-	registry()[fromType] = { converter, motionConverter };
+	registry()[fromType] = converter;
 }
 
-void primitiveVariableParameterList( const IECoreScene::Primitive *primitive, ParameterList &parameters, const IECore::IntVectorData *vertexIndices )
-{
-	for( const auto &variable : primitive->variables )
-	{
-		addPrimitiveVariableParameters( variable.first.c_str(), variable.second, vertexIndices, parameters, &parameters );
-	}
-}
-
-void primitiveVariableParameterLists( const std::vector<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices )
+void primitiveVariableParameterLists( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, IECoreScenePreview::Renderer::Samples<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices )
 {
 	for( const auto &variable : primitives.front()->variables )
 	{

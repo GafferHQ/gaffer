@@ -65,30 +65,16 @@ void staticParameters( const IECoreScene::PointsPrimitive *object, ParameterList
 	}
 }
 
-bool convertStatic( const IECoreScene::PointsPrimitive *object, NSIContext_t context, const char *handle )
-{
-	NSICreate( context, handle, "particles", 0, nullptr );
-
-	ParameterList parameters;
-	staticParameters( object, parameters );
-
-	NodeAlgo::primitiveVariableParameterList( object, parameters );
-
-	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
-
-	return true;
-}
-
-bool convertAnimated( const vector<const IECoreScene::PointsPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::PointsPrimitive *> &objects, const IECoreScenePreview::Renderer::SampleTimes &times, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "particles", 0, nullptr );
 
 	ParameterList parameters;
 	staticParameters( objects.front(), parameters );
 
-	vector<ParameterList> animatedParameters;
+	IECoreScenePreview::Renderer::Samples<ParameterList> animatedParameters;
 	NodeAlgo::primitiveVariableParameterLists(
-		vector<const Primitive *>( objects.begin(), objects.end() ),
+		IECoreScenePreview::Renderer::staticSamplesCast<const Primitive *>( objects ),
 		parameters, animatedParameters
 	);
 
@@ -105,6 +91,6 @@ bool convertAnimated( const vector<const IECoreScene::PointsPrimitive *> &object
 	return true;
 }
 
-NodeAlgo::ConverterDescription<PointsPrimitive> g_description( convertStatic, convertAnimated );
+NodeAlgo::ConverterDescription<PointsPrimitive> g_description( convert );
 
 } // namespace
