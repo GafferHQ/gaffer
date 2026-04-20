@@ -8,6 +8,7 @@ Features
 - CurvesPrimitive : Added `Pinned` wrap mode in addition to the existing `Periodic` and `NonPeriodic` modes. This conveniently interpolates CatmullRom
 and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
 - CurvesInterpolation : Added node for modifying CurvesPrimitive `basis` and `wrap`. This includes the ability to convert curves with `Pinned` wrap to `NonPeriodic`, adding the appropriate "phantom" points to maintain curve shape.
+- CurvesTangents : Added node for computing tangents on CurvesPrimitives (#6166).
 
 Improvements
 ------------
