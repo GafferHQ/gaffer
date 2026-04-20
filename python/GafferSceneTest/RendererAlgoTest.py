@@ -585,6 +585,15 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( sampledObject.sampleTimes, [ 1.0 ] )
 			self.assertNotEqual( h, IECore.MurmurHash() )
 
+	def testObjectSamplesWithoutObject( self ) :
+
+		group = GafferScene.Group()
+		with Gaffer.Context() as context :
+			context.set( "scene:path", GafferScene.ScenePlug.stringToPath( "/sphere" ) )
+			sampledObject = GafferScene.Private.RendererAlgo.objectSamples( group["out"]["object"], [ 0.75, 1.25 ] )
+		self.assertEqual( len( sampledObject.samples ), 0 )
+		self.assertEqual( len( sampledObject.sampleTimes ), 0 )
+
 	def testTransformSamplesCancellation( self ) :
 
 		sphere = GafferScene.Sphere()

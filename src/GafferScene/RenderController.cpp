@@ -883,12 +883,7 @@ class RenderController::SceneGraph
 				return false;
 			}
 
-			if(
-				std::all_of(
-					sampledObject->samples.begin(), sampledObject->samples.end(),
-					[] ( const ConstObjectPtr &sample ) { return runTimeCast<const IECore::NullObject>( sample.get() ); }
-				)
-			)
+			if( sampledObject->samples.empty() )
 			{
 				m_objectInterface = nullptr;
 				return hadObjectInterface;
