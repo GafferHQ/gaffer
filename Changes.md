@@ -25,6 +25,7 @@ Improvements
 and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
 - SceneReader, SceneWriter : Added support for pinned UsdGeomBasisCurves.
 - OSLCode : The OSL shader is now compiled on demand, rather than every time the node is edited. This avoids many redundant attempts at recompilation when loading nodes with many parameters.
+- ArnoldMeshLight : Added support for deformation motion blur (#6869).
 
 Fixes
 -----

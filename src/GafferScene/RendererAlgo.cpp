@@ -1548,13 +1548,13 @@ struct LightOutput : public LocationOutput
 		const size_t lightMatch = m_lightSet.match( path );
 		if( ( lightMatch & IECore::PathMatcher::ExactMatch ) && purposeIncluded() )
 		{
-			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
+			IECoreScenePreview::Renderer::SampleTimes sampleTimes;
+			deformationMotionTimes( sampleTimes );
+			auto sampledObject = GafferScene::Private::RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes );
 
 			const std::string name = this->name( path );
 			IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->light(
-				name,
-				!runTimeCast<const NullObject>( object.get() ) ? object.get() : nullptr,
-				attributesInterface().get()
+				name, sampledObject->samples, sampledObject->sampleTimes, attributesInterface().get()
 			);
 
 			if( objectInterface )

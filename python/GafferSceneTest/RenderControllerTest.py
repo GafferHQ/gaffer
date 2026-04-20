@@ -335,6 +335,56 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		links = renderer.capturedObject( "/group/spheres/instances/sphere/0" ).capturedLinks( "lights" )
 		self.assertEqual( len( links ), numLights )
 
+	def testDeformingLight( self ) :
+
+		# Make a deforming mesh light by hand.
+
+		frame = GafferTest.FrameNode()
+
+		sphere = GafferScene.Sphere()
+		sphere["radius"].setInput( frame["output"] )
+		sphere["type"].setValue( sphere.Type.Primitive )
+
+		lightSet = GafferScene.Set()
+		lightSet["in"].setInput( sphere["out"] )
+		lightSet["name"].setValue( '__lights' )
+		lightSet["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		# Turn on deformation blur.
+
+		options = GafferScene.StandardOptions()
+		options["in"].setInput( lightSet["out"] )
+		options["options"]["render:deformationBlur"]["enabled"].setValue( True )
+		options["options"]["render:deformationBlur"]["value"].setValue( True )
+
+		# Render, and check we get the samples we want.
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( options["out"], Gaffer.Context(), renderer )
+		controller.update()
+
+		self.assertEqual( [ s.radius() for s in renderer.capturedObject( "/sphere" ).capturedSamples() ], [ 0.75, 1.25 ] )
+		self.assertEqual( renderer.capturedObject( "/sphere" ).capturedSampleTimes(), [ 0.75, 1.25 ] )
+
+	def testDeletingObject( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		deleteObject = GafferScene.DeleteObject()
+		deleteObject["in"].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( deleteObject["out"], Gaffer.Context(), renderer )
+		controller.update()
+		self.assertIsNotNone( renderer.capturedObject( "/sphere" ) )
+
+		deleteObject["filter"].setInput( sphereFilter["out"] )
+		controller.update()
+		self.assertIsNone( renderer.capturedObject( "/sphere" ) )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testCapsuleDeformPerformance( self ) :
 
