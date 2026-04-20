@@ -325,6 +325,8 @@
 
 			"ids" : [
 				"annotations",
+				"historyBack",
+				"historyForward",
 			],
 
 		},
@@ -532,13 +534,13 @@
 			],
 
 		},
-		
+
 		"nodeEditor" : {
-			
+
 			"options" : {
 				"validatePixelAlignment" : True,
 			},
-			
+
 			"ids" : [
 				"rendererArnoldOnIcon",
 				"rendererArnoldOffIcon",
