@@ -138,6 +138,38 @@ const char *rendererName( Renderer &renderer )
 	return renderer.name().c_str();
 }
 
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererLight1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
+{
+	return renderer.light( name, object, attributes );
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererLight2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
+{
+	IECoreScenePreview::Renderer::ObjectSamples samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	IECoreScenePreview::Renderer::SampleTimes times;
+	container_utils::extend_container( times, pythonTimes );
+
+	return renderer.light( name, samples, times, attributes );
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererLightFilter1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
+{
+	return renderer.lightFilter( name, object, attributes );
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererLightFilter2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
+{
+	IECoreScenePreview::Renderer::ObjectSamples samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	IECoreScenePreview::Renderer::SampleTimes times;
+	container_utils::extend_container( times, pythonTimes );
+
+	return renderer.lightFilter( name, samples, times, attributes );
+}
+
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
 {
 	return renderer.object( name, object, attributes );
@@ -449,8 +481,10 @@ void GafferSceneModule::bindIECoreScenePreview()
 
 		.def( "camera", &rendererCamera2, ( arg( "name" ), arg( "samples" ), arg( "times" ), arg( "attributes" ) = object() ) )
 		.def( "camera", &rendererCamera1, ( arg( "name" ), arg( "camera" ), arg( "attributes" ) = object() ) )
-		.def( "light", &Renderer::light )
-		.def( "lightFilter", &Renderer::lightFilter )
+		.def( "light", &rendererLight2, ( arg( "name" ), arg( "samples" ), arg( "times" ), arg( "attributes" ) = object() ) )
+		.def( "light", &rendererLight1, ( arg( "name" ), arg( "object" ), arg( "attributes" ) = object() ) )
+		.def( "lightFilter", &rendererLightFilter2, ( arg( "name" ), arg( "samples" ), arg( "times" ), arg( "attributes" ) = object() ) )
+		.def( "lightFilter", &rendererLightFilter1, ( arg( "name" ), arg( "object" ), arg( "attributes" ) = object() ) )
 
 		.def( "object", &rendererObject1 )
 		.def( "object", &rendererObject2 )

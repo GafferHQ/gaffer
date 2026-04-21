@@ -352,24 +352,24 @@ Renderer::ObjectInterfacePtr CompoundRenderer::camera( const std::string &name, 
 	return result;
 }
 
-Renderer::ObjectInterfacePtr CompoundRenderer::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CompoundRenderer::light( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	auto compoundAttributes = static_cast<const CompoundAttributesInterface *>( attributes );
 	CompoundObjectInterfacePtr result = new CompoundObjectInterface;
 	for( size_t i = 0; i < m_renderers.size(); ++i )
 	{
-		result->objects[i] = m_renderers[i]->light( name, object, compoundAttributes->attributes[i].get() );
+		result->objects[i] = m_renderers[i]->light( name, samples, times, compoundAttributes->attributes[i].get() );
 	}
 	return result;
 }
 
-Renderer::ObjectInterfacePtr CompoundRenderer::lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CompoundRenderer::lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	auto compoundAttributes = static_cast<const CompoundAttributesInterface *>( attributes );
 	CompoundObjectInterfacePtr result = new CompoundObjectInterface;
 	for( size_t i = 0; i < m_renderers.size(); ++i )
 	{
-		result->objects[i] = m_renderers[i]->lightFilter( name, object, compoundAttributes->attributes[i].get() );
+		result->objects[i] = m_renderers[i]->lightFilter( name, samples, times, compoundAttributes->attributes[i].get() );
 	}
 	return result;
 }

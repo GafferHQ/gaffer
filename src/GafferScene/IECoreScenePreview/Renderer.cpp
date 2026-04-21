@@ -82,6 +82,30 @@ Renderer::ObjectInterfacePtr Renderer::camera( const std::string &name, const IE
 	return this->camera( name, { camera }, { 0.0f }, attributes );
 }
 
+Renderer::ObjectInterfacePtr Renderer::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+{
+	if( object )
+	{
+		return this->light( name, { object }, { 0.0f }, attributes );
+	}
+	else
+	{
+		return this->light( name, {}, {}, attributes );
+	}
+}
+
+Renderer::ObjectInterfacePtr Renderer::lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+{
+	if( object )
+	{
+		return this->lightFilter( name, { object }, { 0.0f }, attributes );
+	}
+	else
+	{
+		return this->lightFilter( name, {}, {}, attributes );
+	}
+}
+
 Renderer::ObjectInterfacePtr Renderer::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
 	return this->object( name, { object }, { 0.0f }, attributes );

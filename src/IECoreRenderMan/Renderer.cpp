@@ -137,7 +137,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
 			acquireSession();
@@ -145,21 +145,26 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			auto typedAttributes = static_cast<const Attributes *>( attributes );
 
 			ConstGeometryPrototypePtr geometryPrototype;
-			if( auto mesh = runTimeCast<const MeshPrimitive>( object ) )
+			if( objectSamples.size() )
 			{
-				// RenderMan refuses to share mesh prototypes between GeometryInstances and
-				// LightInstances, so we insert some blind data to give the mesh geometry
-				// a different hash, causing the GeometryPrototypeCache to create a prototype
-				// that won't be used by `Renderer::object()`.
-				MeshPrimitivePtr meshCopy = mesh->copy();
-				meshCopy->blindData()->writable().insert( g_forMeshLightBlindData );
-				geometryPrototype = m_geometryPrototypeCache->get( meshCopy.get(), typedAttributes, /* messageContext = */ name );
+				if( auto mesh = runTimeCast<const MeshPrimitive>( objectSamples[0].get() ) )
+				{
+					// RenderMan refuses to share mesh prototypes between GeometryInstances and
+					// LightInstances, so we insert some blind data to give the mesh geometry
+					// a different hash, causing the GeometryPrototypeCache to create a prototype
+					// that won't be used by `Renderer::object()`.
+					ObjectSamples uniquefiedObjectSamples = objectSamples;
+					MeshPrimitivePtr meshCopy = mesh->copy();
+					meshCopy->blindData()->writable().insert( g_forMeshLightBlindData );
+					uniquefiedObjectSamples[0] = meshCopy;
+					geometryPrototype = m_geometryPrototypeCache->get( uniquefiedObjectSamples, times, typedAttributes, /* messageContext = */ name );
+				}
 			}
 
 			return new IECoreRenderMan::Light( geometryPrototype, typedAttributes, m_materialCache.get(), m_lightLinker.get(), m_session );
 		}
 
-		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
 			acquireSession();

@@ -816,82 +816,11 @@ class RenderController::SceneGraph
 				return hadObjectInterface;
 			}
 
-			// Types that don't support motion blur
-			if( type == LightType || type == LightFilterType )
-			{
-				const IECore::MurmurHash objectHash = objectPlug->hash();
-				if( objectHash == m_objectHash )
-				{
-					return false;
-				}
-
-				IECore::ConstObjectPtr object = objectPlug->getValue( &objectHash );
-				m_objectHash = objectHash;
-
-				const IECore::NullObject *nullObject = runTimeCast<const IECore::NullObject>( object.get() );
-				if( renderer->name() != g_openGLRendererName )
-				{
-					m_objectInterface = nullptr;
-				}
-
-				std::string name;
-				ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
-				if( type == LightType )
-				{
-					auto light = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
-					if( light && lightLinks )
-					{
-						lightLinks->addLight( name, light );
-						m_objectInterface.assign(
-							light,
-							[name, lightLinks]() {
-								lightLinks->removeLight( name );
-							}
-						);
-					}
-					else
-					{
-						m_objectInterface = light;
-					}
-				}
-				else
-				{
-					auto lightFilter = renderer->lightFilter( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
-					if( lightFilter && lightLinks )
-					{
-						lightLinks->addLightFilter( lightFilter, m_fullAttributes.get() );
-						m_objectInterface.assign(
-							lightFilter,
-							[lightFilter, lightLinks]() {
-								lightLinks->removeLightFilter( lightFilter );
-							}
-						);
-					}
-					else
-					{
-						m_objectInterface = lightFilter;
-					}
-				}
-
-				return true;
-			}
-
 			auto sampledObject = Private::RendererAlgo::objectSamples( objectPlug, m_deformationTimes, &m_objectHash );
 			if( !sampledObject )
 			{
 				// No update required.
 				return false;
-			}
-
-			if(
-				std::all_of(
-					sampledObject->samples.begin(), sampledObject->samples.end(),
-					[] ( const ConstObjectPtr &sample ) { return runTimeCast<const IECore::NullObject>( sample.get() ); }
-				)
-			)
-			{
-				m_objectInterface = nullptr;
-				return hadObjectInterface;
 			}
 
 			if( renderer->name() != g_openGLRendererName )
@@ -916,8 +845,58 @@ class RenderController::SceneGraph
 				m_objectInterface = nullptr;
 			}
 
+			// First consider types that don't require object samples.
+
 			std::string name;
 			ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
+			if( type == LightType )
+			{
+				auto light = renderer->light( name, sampledObject->samples, sampledObject->sampleTimes, attributesInterface( renderer ) );
+				if( light && lightLinks )
+				{
+					lightLinks->addLight( name, light );
+					m_objectInterface.assign(
+						light,
+						[name, lightLinks]() {
+							lightLinks->removeLight( name );
+						}
+					);
+				}
+				else
+				{
+					m_objectInterface = light;
+				}
+				return true;
+			}
+			else if( type == LightFilterType )
+			{
+				auto lightFilter = renderer->lightFilter( name, sampledObject->samples, sampledObject->sampleTimes, attributesInterface( renderer ) );
+				if( lightFilter && lightLinks )
+				{
+					lightLinks->addLightFilter( lightFilter, m_fullAttributes.get() );
+					m_objectInterface.assign(
+						lightFilter,
+						[lightFilter, lightLinks]() {
+							lightLinks->removeLightFilter( lightFilter );
+						}
+					);
+				}
+				else
+				{
+					m_objectInterface = lightFilter;
+				}
+				return true;
+			}
+
+			// Remaining types require object samples, so early out if we don't
+			// have any.
+
+			if( sampledObject->samples.empty() )
+			{
+				m_objectInterface = nullptr;
+				return hadObjectInterface;
+			}
+
 			if( type == CameraType )
 			{
 				IECoreScenePreview::Renderer::CameraSamples cameraSamples; cameraSamples.reserve( sampledObject->samples.size() );
@@ -953,14 +932,10 @@ class RenderController::SceneGraph
 						attributesInterface( renderer )
 					);
 				}
+				return true;
 			}
 			else
 			{
-				if( !sampledObject->samples.size() )
-				{
-					return true;
-				}
-
 				bool isCapsule = false;
 				if( sampledObject->samples.size() == 1 )
 				{
@@ -978,9 +953,8 @@ class RenderController::SceneGraph
 					ObjectInterfaceHandle::RemovalCallback(),
 					isCapsule
 				);
+				return true;
 			}
-
-			return true;
 		}
 
 		void clearObject()

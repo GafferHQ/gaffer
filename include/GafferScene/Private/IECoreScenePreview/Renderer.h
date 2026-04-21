@@ -287,17 +287,19 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes = nullptr );
 
 		/// Adds a named light with the initially supplied set of attributes, which are expected
-		/// to provide at least a light shader. Object may be non-null to specify arbitrary geometry
-		/// for a geometric area light, or null to indicate that the light shader specifies its own
+		/// to provide at least a light shader. Object samples may be non-empty to specify arbitrary geometry
+		/// for a geometric area light, or empty to indicate that the light shader specifies its own
 		/// geometry internally (or is non-geometric in nature).
 		/// May return a nullptr if the light definition is not supported by the renderer.
-		/// \todo Should object be typed as Primitive?
-		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr light( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
+		/// Convenience wrapper for the above when there is only a single sample.
+		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes );
 
 		/// Adds a named light filter with the initially supplied set of attributes, which are expected
 		/// to provide at least a light filter shader.
 		/// May return a nullptr if the light filter definition is not supported by the renderer.
-		virtual ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes );
 
 		/// Adds a named object to the render with the initally supplied set of attributes.
 		/// The attributes may subsequently be edited in interactive mode using
