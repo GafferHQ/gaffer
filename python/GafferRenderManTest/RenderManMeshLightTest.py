@@ -81,5 +81,29 @@ class RenderManMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		# One for the node. None for plugs, since they are not dynamic.
 		self.assertEqual( serialisation.count( "addChild" ), 1 )
 
+	def testVisibilityAttributes( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		light = GafferRenderMan.RenderManMeshLight()
+		light["in"].setInput( sphere["out"] )
+		light["filter"].setInput( sphereFilter["out"] )
+
+		attributes = light["out"].attributes( "/sphere" )
+		self.assertEqual( attributes["ri:visibility:indirect"], IECore.BoolData( False ) )
+		self.assertEqual( attributes["ri:visibility:transmission"], IECore.BoolData( False ) )
+		self.assertNotIn( "ri:visibility:camera", attributes )
+
+		light["cameraVisibility"]["enabled"].setValue( True )
+		attributes = light["out"].attributes( "/sphere" )
+		self.assertEqual( attributes["ri:visibility:camera"], IECore.BoolData( True ) )
+
+		light["cameraVisibility"]["value"].setValue( False )
+		attributes = light["out"].attributes( "/sphere" )
+		self.assertEqual( attributes["ri:visibility:camera"], IECore.BoolData( False ) )
+
 if __name__ == "__main__":
 	unittest.main()

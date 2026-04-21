@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,70 +34,40 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "AttributesBinding.h"
-#include "CatalogueBinding.h"
-#include "CoreBinding.h"
-#include "EditScopeAlgoBinding.h"
-#include "FilterBinding.h"
-#include "GlobalsBinding.h"
-#include "HierarchyBinding.h"
-#include "IECoreGLPreviewBinding.h"
-#include "IECoreScenePreviewBinding.h"
-#include "IOBinding.h"
-#include "TweaksBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "OptionsBinding.h"
-#include "PrimitiveSamplerBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "PrimitivesBinding.h"
-#include "RenderBinding.h"
-#include "RenderControllerBinding.h"
-#include "RenderManifestBinding.h"
-#include "SceneAlgoBinding.h"
-#include "ScenePathBinding.h"
-#include "SetAlgoBinding.h"
-#include "ShaderBinding.h"
-#include "TransformBinding.h"
-#include "QueryBinding.h"
-#include "CryptomatteBinding.h"
-#include "VisibleSetBinding.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/FilteredSceneProcessor.h"
+#include "GafferScene/TypeIds.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
-
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace GafferScene
 {
 
-	bindIECoreScenePreview(); // Must be declared early since some things depend on Procedural being registered
+IE_CORE_FORWARDDECLARE( CustomAttributes );
+IE_CORE_FORWARDDECLARE( Shader );
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindRenderController();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindTweaks();
-	bindIO();
-	bindPrimitiveSampler();
-	bindIECoreGLPreview();
-	bindEditScopeAlgo();
-	bindQueries();
-	bindCryptomatte();
-	bindVisibleSet();
-	bindRenderManifest();
-	bindCatalogue();
+class GAFFERSCENE_API MeshLight : public GafferScene::FilteredSceneProcessor
+{
 
-}
+	public :
+
+		~MeshLight() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshLight, MeshLightTypeId, FilteredSceneProcessor );
+
+	protected :
+
+		MeshLight( const std::string &name, const ShaderPtr &shader );
+
+		// Derived classes may use this to add attributes to the created light.
+		CustomAttributes *customAttributes();
+
+	private :
+
+		static size_t g_firstChildIndex;
+
+};
+
+IE_CORE_DECLAREPTR( MeshLight )
+
+} // namespace GafferScene

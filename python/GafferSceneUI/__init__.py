@@ -214,6 +214,7 @@ from . import ImageSelectionToolUI
 from . import CameraQueryUI
 from . import ReflectionConstraintUI
 from . import CurvesInterpolationUI
+from . import MeshLightUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
