@@ -150,7 +150,6 @@ prependToPath( pathlib.Path.home() / "gaffer" / "shaders", "OSL_SHADER_PATHS" )
 
 if "GAFFEROSL_CODE_DIRECTORY" not in os.environ :
 	os.environ["GAFFEROSL_CODE_DIRECTORY"] = str( pathlib.Path.home() / "gaffer" / "oslCode" )
-	appendToPath( os.environ["GAFFEROSL_CODE_DIRECTORY"], "OSL_SHADER_PATHS" )
 
 if sys.platform == "win32" and "OSL_LOAD_DLLS_FROM_PATH" not in os.environ :
 	# Prevent OSL from adding entries from `PATH` to Python binary search paths.
