@@ -57,6 +57,7 @@ API
   - Improved automatic parenting via the `with parent` syntax. Children are now guaranteed to be fully constructed before they are parented.
   - Turned `toolTip`, `parenting` and `displayTransform` keyword-only constructor arguments.
 - Light : Simplified implementation of derived classes, which are now merely responsible for passing a Shader node to the base class constructor.
+- MeshLight : Added based class to simplify the implementation of renderer-specific mesh light nodes.
 - PathColumn : `headerData()` is now passed the root Path.
 
 Breaking Changes

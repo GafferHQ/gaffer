@@ -36,117 +36,57 @@
 
 #include "GafferRenderMan/RenderManMeshLight.h"
 
-#include "GafferRenderMan/RenderManAttributes.h"
 #include "GafferRenderMan/RenderManShader.h"
 
-#include "GafferScene/Set.h"
-#include "GafferScene/ShaderAssignment.h"
+#include "GafferScene/CustomAttributes.h"
 
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/Switch.h"
-
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferRenderMan;
 
+namespace
+{
+
+const ConstCompoundObjectPtr g_hiddenVisibilityAttributes = [] {
+
+	const CompoundObjectPtr result = new CompoundObject;
+	result->members()["ri:visibility:indirect"] = new BoolData( false );
+	result->members()["ri:visibility:transmission"] = new BoolData( false );
+	return result;
+
+} ();
+
+} // namespace
+
 GAFFER_NODE_DEFINE_TYPE( RenderManMeshLight );
 
 RenderManMeshLight::RenderManMeshLight( const std::string &name )
-	:	GafferScene::FilteredSceneProcessor( name, IECore::PathMatcher::NoMatch )
+	:	GafferScene::MeshLight(
+			name,
+			[] { RenderManShaderPtr shader = new RenderManShader; shader->loadShader( "PxrMeshLight" ); return shader; } ()
+		)
 {
 
-	// RenderManAttributes node. We use this to hide the objects to everything
-	// except camera rays, since that seems a reasonable default behaviour for
-	// a mesh light. The user can turn this back on with a RenderManAttributes
-	// node, in which case the surface shader is used for ray hits.
+	// Hide the objects to everything except camera rays, since that seems a
+	// reasonable default behaviour for a mesh light. The user can turn this
+	// back on with a RenderManAttributes node, in which case the surface shader
+	// is used for ray hits.
 
-	RenderManAttributesPtr attributes = new RenderManAttributes( "__attributes" );
-	attributes->inPlug()->setInput( inPlug() );
-	attributes->filterPlug()->setInput( filterPlug() );
-	for( const auto &attributeName : { "ri:visibility:indirect", "ri:visibility:transmission" } )
-	{
-		auto plug = attributes->attributesPlug()->getChild<NameValuePlug>( attributeName );
-		plug->enabledPlug()->setValue( true );
-		if( auto p = plug->valuePlug<BoolPlug>() )
-		{
-			p->setValue( false );
-		}
-		else
-		{
-			plug->valuePlug<IntPlug>()->setValue( 0 );
-		}
-	}
+	customAttributes()->extraAttributesPlug()->setValue( g_hiddenVisibilityAttributes );
 
-	addChild( attributes );
-
-	// Promote the camera visibility plug, since that is more likely to be used
+	// Promote a camera visibility plug, since that is more likely to be used
 	// than the others.
+	/// \todo We could promote as OptionalValuePlug to avoid exposing the
+	/// `name` plug unnecessarily.
 
-	Plug *internalCameraVisibilityPlug = attributes->attributesPlug()->getChild<Plug>( "ri:visibility:camera" );
+	NameValuePlugPtr internalCameraVisibilityPlug = new NameValuePlug(
+		"ri:visibility:camera", new BoolPlug( "value", Plug::In, true ), false, "cameraVisibility"
+	);
+	customAttributes()->attributesPlug()->addChild( internalCameraVisibilityPlug );
 	PlugPtr cameraVisibilityPlug = internalCameraVisibilityPlug->createCounterpart( "cameraVisibility", Plug::In );
 	addChild( cameraVisibilityPlug );
 	internalCameraVisibilityPlug->setInput( cameraVisibilityPlug );
-
-	// Shader node. This loads the PxrMeshLight shader.
-
-	RenderManShaderPtr shader = new RenderManShader( "__shader" );
-	shader->loadShader( "PxrMeshLight" );
-	addChild( shader );
-
-	PlugPtr parametersPlug = shader->parametersPlug()->createCounterpart( "parameters", Plug::In );
-	addChild( parametersPlug );
-	for( Plug::Iterator srcIt( parametersPlug.get() ), dstIt( shader->parametersPlug() ); !srcIt.done(); ++srcIt, ++dstIt )
-	{
-		(*dstIt)->setInput( *srcIt );
-	}
-
-	// ShaderAssignment node. This assigns the PxrMeshLight shader
-	// to the objects chosen by the filter.
-
-	ShaderAssignmentPtr shaderAssignment = new ShaderAssignment( "__shaderAssignment" );
-	shaderAssignment->inPlug()->setInput( attributes->outPlug() );
-	shaderAssignment->filterPlug()->setInput( filterPlug() );
-	shaderAssignment->shaderPlug()->setInput( shader->outPlug() );
-	addChild( shaderAssignment );
-
-	// Set node. This adds the objects into the __lights set,
-	// so they will be output correctly to the renderer.
-
-	SetPtr set = new Set( "__set" );
-	set->inPlug()->setInput( shaderAssignment->outPlug() );
-	set->filterPlug()->setInput( filterPlug() );
-	set->namePlug()->setValue( "__lights" );
-	set->modePlug()->setValue( Set::Add );
-	addChild( set );
-
-	// Default lights Set node.
-
-	BoolPlugPtr defaultLightPlug = new BoolPlug( "defaultLight", Plug::In, true );
-	addChild( defaultLightPlug );
-
-	SetPtr defaultLightsSet = new Set( "__defaultLightsSet" );
-	defaultLightsSet->inPlug()->setInput( set->outPlug() );
-	defaultLightsSet->filterPlug()->setInput( filterPlug() );
-	defaultLightsSet->enabledPlug()->setInput( defaultLightPlug.get() );
-	defaultLightsSet->namePlug()->setValue( "defaultLights" );
-	defaultLightsSet->modePlug()->setValue( Set::Add );
-	addChild( defaultLightsSet );
-
-	// Switch for enabling/disabling
-
-	SwitchPtr enabledSwitch = new Switch( "__switch" );
-	enabledSwitch->setup( inPlug() );
-	enabledSwitch->inPlugs()->getChild<ScenePlug>( 0 )->setInput( inPlug() );
-	enabledSwitch->inPlugs()->getChild<ScenePlug>( 1 )->setInput( defaultLightsSet->outPlug() );
-	enabledSwitch->indexPlug()->setValue( 1 );
-	enabledSwitch->enabledPlug()->setInput( enabledPlug() );
-	addChild( enabledSwitch );
-
-	outPlug()->setInput( enabledSwitch->outPlug() );
-	// We don't need to serialise the connection because we make
-	// it upon construction.
-	/// \todo Can we just do this in the SceneProcessor base class?
-	outPlug()->setFlags( Plug::Serialisable, false );
 }
 
 RenderManMeshLight::~RenderManMeshLight()

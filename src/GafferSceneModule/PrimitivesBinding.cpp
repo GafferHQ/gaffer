@@ -49,6 +49,7 @@
 #include "GafferScene/ImageScatter.h"
 #include "GafferScene/ImageToPoints.h"
 #include "GafferScene/Light.h"
+#include "GafferScene/MeshLight.h"
 #include "GafferScene/ObjectToScene.h"
 #include "GafferScene/Plane.h"
 #include "GafferScene/ShaderPlug.h"
@@ -163,6 +164,8 @@ void GafferSceneModule::bindPrimitives()
 	;
 
 	GafferBindings::Serialisation::registerSerialiser( LightFilter::staticTypeId(), new LightFilterSerialiser() );
+
+	GafferBindings::DependencyNodeClass<MeshLight>( nullptr, no_init );
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<Sphere>();

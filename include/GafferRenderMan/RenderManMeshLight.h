@@ -39,12 +39,12 @@
 #include "GafferRenderMan/Export.h"
 #include "GafferRenderMan/TypeIds.h"
 
-#include "GafferScene/FilteredSceneProcessor.h"
+#include "GafferScene/MeshLight.h"
 
 namespace GafferRenderMan
 {
 
-class GAFFERRENDERMAN_API RenderManMeshLight : public GafferScene::FilteredSceneProcessor
+class GAFFERRENDERMAN_API RenderManMeshLight : public GafferScene::MeshLight
 {
 
 	public :
@@ -52,11 +52,7 @@ class GAFFERRENDERMAN_API RenderManMeshLight : public GafferScene::FilteredScene
 		explicit RenderManMeshLight( const std::string &name=defaultName<RenderManMeshLight>() );
 		~RenderManMeshLight() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferRenderMan::RenderManMeshLight, RenderManMeshLightTypeId, FilteredSceneProcessor );
-
-	private :
-
-		static size_t g_firstPlugIndex;
+		GAFFER_NODE_DECLARE_TYPE( GafferRenderMan::RenderManMeshLight, RenderManMeshLightTypeId, MeshLight );
 
 };
 
