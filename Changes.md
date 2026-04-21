@@ -13,6 +13,7 @@ Fixes
 - Metadata : Fixed handling of exceptions thrown from value functions implemented in Python. These are now correctly translated into C++ exceptions.
 - Cycles, OSLObject, OSLImage, Expression : Fixed crashes when using OSL on macOS.
 - Dispatcher : Removed `dispatcher:scriptFileName` from labels for isolated tasks.
+- NodeMenu : Fixed slow operation when many OSLCode shaders have been generated.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========
