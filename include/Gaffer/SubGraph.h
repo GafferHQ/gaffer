@@ -117,7 +117,7 @@ class GAFFER_API SubGraph : public DependencyNode
 	private :
 
 		void loadReferenceInternal( const std::filesystem::path &fileName );
-		bool isReferencePlug( const Plug *plug ) const;
+		bool isReferenceable( const GraphComponent *descendant ) const;
 
 		ReferenceChangedSignal m_referenceChangedSignal;
 

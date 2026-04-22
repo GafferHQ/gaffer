@@ -96,6 +96,7 @@ Breaking Changes
 - Light : Removed public constructor. Lights may now only be constructed via derived classes, which are now responsible for providing a Shader node to the base class.
 - OSLCode : Removed `shaderCompiledSignal()`.
 - PathColumn : Changed `headerData()` signature.
+- Reference : Removed support for loading `.grf` files from versions prior to 0.18.0.0.
 
 Build
 -----
