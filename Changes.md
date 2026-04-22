@@ -69,6 +69,7 @@ Breaking Changes
 - GafferUI :
   - Removed legacy compatibility code for PySide2 and PyQt.
   - Removed `_Variant` class.
+- Reference : Removed support for loading `.grf` files from versions prior to 0.18.0.0.
 
 Build
 -----

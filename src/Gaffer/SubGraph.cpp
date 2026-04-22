@@ -325,7 +325,7 @@ class SubGraph::PlugEdits : public Signals::Trackable
 				return &(it->second);
 			}
 
-			if( !m_subGraph->isReferencePlug( plug ) )
+			if( !m_subGraph->isReferenceable( plug ) )
 			{
 				// We'll allow retrieval of existing edits on this plug, but we
 				// won't create new ones.
@@ -399,7 +399,7 @@ class SubGraph::PlugEdits : public Signals::Trackable
 		{
 			for( auto &plug : Plug::RecursiveRange( *m_subGraph ) )
 			{
-				if( !m_subGraph->isReferencePlug( plug.get() ) )
+				if( !m_subGraph->isReferenceable( plug.get() ) )
 				{
 					continue;
 				}
@@ -527,26 +527,12 @@ void SubGraph::exportReference( const std::filesystem::path &fileName ) const
 		throw IECore::Exception( "SubGraph::exportForReference called without ScriptNode" );
 	}
 
-	// we only want to save out our child nodes and plugs that are visible in the UI, so we build a filter
-	// to specify just the things to export.
-
-	boost::regex invisiblePlug( "^__.*$" );
 	StandardSetPtr toExport = new StandardSet;
-	for( ChildIterator it = children().begin(), eIt = children().end(); it != eIt; ++it )
+	for( const auto &child : GraphComponent::Range( *this ) )
 	{
-		if( (*it)->isInstanceOf( Node::staticTypeId() ) )
+		if( isReferenceable( child.get() ) )
 		{
-			toExport->add( *it );
-		}
-		else if( const Plug *plug = IECore::runTimeCast<Plug>( it->get() ) )
-		{
-			if(
-				!boost::regex_match( plug->getName().c_str(), invisiblePlug )
-				&& plug != userPlug()
-			)
-			{
-				toExport->add( *it );
-			}
+			toExport->add( child.get() );
 		}
 	}
 
@@ -715,22 +701,9 @@ void SubGraph::loadReferenceInternal( const std::filesystem::path &fileName )
 	for( Plug::Iterator it( this ); !it.done(); ++it )
 	{
 		Plug *plug = it->get();
-		if( isReferencePlug( plug ) )
+		if( isReferenceable( plug ) )
 		{
 			previousPlugs[plug->getName()] = plug;
-			plug->setName( "__tmp__" + plug->getName().string() );
-		}
-	}
-
-	// We don't export user plugs to references, but old versions of
-	// Gaffer did, so as above, we must get them out of the way during
-	// the load.
-	for( Plug::Iterator it( userPlug() ); !it.done(); ++it )
-	{
-		Plug *plug = it->get();
-		if( isReferencePlug( plug ) )
-		{
-			previousPlugs[plug->relativeName( this )] = plug;
 			plug->setName( "__tmp__" + plug->getName().string() );
 		}
 	}
@@ -751,7 +724,6 @@ void SubGraph::loadReferenceInternal( const std::filesystem::path &fileName )
 	// Set up a container to catch all the children added during loading.
 	StandardSetPtr newChildren = new StandardSet;
 	childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newChildren.get(), ::_2 ) );
-	userPlug()->childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newChildren.get(), ::_2 ) );
 
 	// load the reference. we use continueOnError=true to get everything possible
 	// loaded, but if any errors do occur we throw an exception at the end of this
@@ -870,51 +842,40 @@ bool SubGraph::isChildEdit( const Plug *plug ) const
 	return m_referenceState && m_referenceState->plugEdits.isChildEdit( plug );
 }
 
-bool SubGraph::isReferencePlug( const Plug *plug ) const
+bool SubGraph::isReferenceable( const GraphComponent *descendant ) const
 {
-	// If a plug is the descendant of a plug starting with
-	// __, and that plug is a direct child of the reference,
-	// assume that it is for gaffer's internal use, so would
-	// never come directly from a reference. This lines up
-	// with the export code in `exportReference()`, where
-	// such plugs are excluded from the export.
-
-	// find ancestor of p which is a direct child of this node:
-	const Plug* ancestorPlug = plug;
-	const GraphComponent* parent = plug->parent();
-	while( parent != this )
+	// Walk up until `descendant` is immediately parented to us.
+	const GraphComponent *parent = descendant->parent();
+	while( parent && parent != this )
 	{
-		ancestorPlug = runTimeCast< const Plug >( parent );
-		if( !ancestorPlug )
-		{
-			// Looks like the plug we're looking for doesn't exist,
-			// so we exit the loop.
-			break;
-		}
-		parent = ancestorPlug->parent();
+		descendant = parent;
+		parent = descendant->parent();
 	}
 
-	if( ancestorPlug && boost::starts_with( ancestorPlug->getName().c_str(), "__" ) )
+	if( !parent )
 	{
+		// We weren't an ancestor of `descendant`.
 		return false;
 	}
 
-	// we know this doesn't come from a reference,
-	// because it's made during construction.
-	if( plug == userPlug() )
+	if( runTimeCast<const Node>( descendant ) )
 	{
-		return false;
+		return true;
+	}
+	else if( auto plug = runTimeCast<const Plug>( descendant ) )
+	{
+		// There are two classes of plug that we don't want to include
+		// in exported references :
+		//
+		// 1. The `user` plug and its children. We want the `user` namespace
+		//    to be available to users of the reference, so it must be empty
+		//    when exported.
+		// 2. Plugs prefixed with `__`. These are hidden plugs created by
+		//    various UI components, for example to store the node's position
+		//    in the GraphEditor. Arguably these should be metadata instead,
+		//    but until they are, we need to ignore them.
+		return plug != userPlug() && !boost::starts_with( plug->getName().c_str(), "__" );
 	}
 
-	// User plugs are not meant to be referenced either. But old
-	// versions of Gaffer did export them so we must be careful.
-	// Since we make loaded plugs non-dynamic, we can assume that
-	// if the plug is dynamic it was added locally by a user
-	// rather than loaded from a reference.
-	if( ancestorPlug == userPlug() && plug->getFlags( Plug::Dynamic ) )
-	{
-		return false;
-	}
-	// everything else must be from a reference then.
-	return true;
+	return false;
 }
