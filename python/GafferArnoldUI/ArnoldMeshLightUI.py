@@ -63,16 +63,6 @@ Gaffer.Metadata.registerNode(
 
 		},
 
-		"parameters.*" : {
-
-			"description" :
-			"""
-			Refer to Arnold's documentation for the mesh_light
-			shader.
-			""",
-
-		},
-
 	}
 
 )
