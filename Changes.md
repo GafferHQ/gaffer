@@ -14,6 +14,11 @@ Fixes
 - Cycles, OSLObject, OSLImage, Expression : Fixed crashes when using OSL on macOS.
 - Dispatcher : Removed `dispatcher:scriptFileName` from labels for isolated tasks.
 - NodeMenu : Fixed slow operation when many OSLCode shaders have been generated.
+- SceneInspector : Added missing "source type" cell background colours for the following properties :
+  - Bound
+  - Object Type, Primitive Topology and Primitive Variables
+  - Camera and ExternalProcedural parameters
+  - Globals
 
 1.6.16.0 (relative to 1.6.15.0)
 ========

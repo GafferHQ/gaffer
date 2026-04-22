@@ -305,7 +305,9 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		const T typedValue( const T &defaultValue, bool useFallbacks = true ) const;
 
 		/// The plug that was used to author the current value, or null if
-		/// it cannot be determined.
+		/// it cannot be determined. This may be an input plug that the user
+		/// could edit, or where not possible, an output plug where the value
+		/// was first visible.
 		///
 		/// > Note : Does not consider fallback values. When a fallback is in
 		/// > effect because the main value is null, `source()` will either
