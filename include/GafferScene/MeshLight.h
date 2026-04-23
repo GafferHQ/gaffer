@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,26 +36,38 @@
 
 #pragma once
 
-#include "GafferArnold/Export.h"
-#include "GafferArnold/TypeIds.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/FilteredSceneProcessor.h"
+#include "GafferScene/TypeIds.h"
 
-#include "GafferScene/MeshLight.h"
-
-namespace GafferArnold
+namespace GafferScene
 {
 
-class GAFFERARNOLD_API ArnoldMeshLight : public GafferScene::MeshLight
+IE_CORE_FORWARDDECLARE( CustomAttributes );
+IE_CORE_FORWARDDECLARE( Shader );
+
+class GAFFERSCENE_API MeshLight : public GafferScene::FilteredSceneProcessor
 {
 
 	public :
 
-		explicit ArnoldMeshLight( const std::string &name=defaultName<ArnoldMeshLight>() );
-		~ArnoldMeshLight() override;
+		~MeshLight() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldMeshLight, ArnoldMeshLightTypeId, GafferScene::MeshLight );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshLight, MeshLightTypeId, FilteredSceneProcessor );
+
+	protected :
+
+		MeshLight( const std::string &name, const ShaderPtr &shader );
+
+		// Derived classes may use this to add attributes to the created light.
+		CustomAttributes *customAttributes();
+
+	private :
+
+		static size_t g_firstChildIndex;
 
 };
 
-IE_CORE_DECLAREPTR( ArnoldMeshLight )
+IE_CORE_DECLAREPTR( MeshLight )
 
-} // namespace GafferArnold
+} // namespace GafferScene

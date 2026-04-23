@@ -260,8 +260,7 @@ def __translateNodeMetadata( nodeEntry ) :
 			nodeEntry, paramName, "desc",
 			defaultValue = __aiMetadataGetStr( nodeEntry, paramName, "help" )
 		)
-		if description is not None :
-			__metadata[paramPath]["description"] = description
+		__metadata[paramPath]["description"] = description or "Refer to Arnold's documentation for further details."
 
 		# Presets
 
