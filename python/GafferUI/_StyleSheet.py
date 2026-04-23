@@ -1777,7 +1777,7 @@ _styleSheet = string.Template(
 		border: 1px solid $brightColor;
 	}
 
-	#gafferBreadCrumbs {
+	[gafferClass="GafferUI.BreadCrumbsWidget"] {
 		border: 1px solid transparent;
 		border-bottom-color: $tintDarkerStronger;
 		border-right-color: $tintDarkerStronger;
@@ -1785,18 +1785,18 @@ _styleSheet = string.Template(
 		border-radius: $widgetCornerRadius;
 	}
 
-	#gafferBreadCrumbs QLineEdit {
+	[gafferClass="GafferUI.BreadCrumbsWidget"] QLineEdit {
 		border: 0;
 		border-radius: 0;
 		background-color: transparent;
 	}
 
-	#gafferBreadCrumbs QPushButton[gafferWithFrame="false"] {
+	[gafferClass="GafferUI.BreadCrumbsWidget"] QPushButton[gafferWithFrame="false"] {
 		margin: 1px;
 		padding: 4px;
 	}
 
-	#gafferBreadCrumbs QPushButton[gafferWithFrame="true"] {
+	[gafferClass="GafferUI.BreadCrumbsWidget"] QPushButton[gafferWithFrame="true"] {
 		margin: 0px;
 		font-weight: normal;
 	}

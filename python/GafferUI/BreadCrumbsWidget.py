@@ -54,8 +54,6 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, self.__row, **kw )
 
-		self.__row._qtWidget().setObjectName( "gafferBreadCrumbs" )
-
 		with self.__row :
 			self.__pathButtonContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
