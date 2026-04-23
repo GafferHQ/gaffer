@@ -286,14 +286,19 @@ class _HistoryWindow( GafferUI.Window ) :
 		) :
 			editPlug = selectedPath.property( "history:source" )
 			if editPlug is not None :
-				## \todo It would be nice to implement direct toggling for boolean values here.
-				self.__popup = GafferUI.PlugPopup(
-					[ editPlug ], warning = selectedPath.property( "history:editWarning" )
-				)
-				if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-					self.__popup.plugValueWidget().setNameVisible( False )
-
-				self.__popup.popup( parent = self )
+				if editPlug.direction() == Gaffer.Plug.Direction.In :
+					## \todo It would be nice to implement direct toggling for boolean values here.
+					self.__popup = GafferUI.PlugPopup(
+						[ editPlug ], warning = selectedPath.property( "history:editWarning" )
+					)
+					if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
+						self.__popup.plugValueWidget().setNameVisible( False )
+					self.__popup.popup( parent = self )
+				else :
+					GafferUI.PopupWindow.showWarning(
+						"{} is not editable".format( editPlug.relativeName( editPlug.ancestor( Gaffer.ScriptNode ) ) ),
+						parent = pathListing
+					)
 
 	def __dragBegin( self, pathListing, event ) :
 

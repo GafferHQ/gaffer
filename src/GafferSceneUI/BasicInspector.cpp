@@ -154,3 +154,21 @@ IECore::ConstObjectPtr BasicInspector::value( const GafferScene::SceneAlgo::Hist
 	Context::Scope scope( history->context.get() );
 	return m_valueFunction( history->scene->getChild<ValuePlug>( m_plug->getName() ) );
 }
+
+Gaffer::ValuePlugPtr BasicInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
+{
+	if( history->scene->direction() == Plug::Out )
+	{
+		ConstObjectPtr v = value( history );
+		ConstObjectPtr previousValue;
+		if( history->predecessors.size() )
+		{
+			previousValue = value( history->predecessors.front().get() );
+		}
+		if( (bool)v != bool(previousValue) || (v && !v->isEqualTo( previousValue.get() )) )
+		{
+			return history->scene->getChild<ValuePlug>( m_plug->getName() );
+		}
+	}
+	return nullptr;
+}
