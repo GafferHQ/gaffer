@@ -58,11 +58,12 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 			self.__pathButtonContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 			self.__textWidget = GafferUI.TextWidget( toolTip =
-				"Right-click for contents menu."
-				"<br><kbd>Down</kbd> for contents menu."
-				"<br><kbd>Up</kbd> to change to container path."
-				"<br><kbd>Tab</kbd> for auto-complete."
-				"<br><kbd>Home</kbd> to return to root."
+				"## Actions\n\n"
+				"- Right-click for contents menu.\n"
+				"- <kbd>Down</kbd> to show children.\n"
+				"- <kbd>Up</kbd> to go to parent.\n"
+				"- <kbd>Tab</kbd> for auto-complete.\n"
+				"- <kbd>Home</kbd> to return to root."
 			)
 
 			self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__textKeyPress ) )
