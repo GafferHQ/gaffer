@@ -282,7 +282,7 @@ jobs:
     - name: Install RenderMan 26.4
       run: |
         rm -r "$RMANTREE" # Free up precious disk space from the previous installation
-        ./.github/workflows/main/installRenderMan.py --version 26.4 --dailyBuildDate 2026-03-24 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+        ./.github/workflows/main/installRenderMan.py --version 26.4 --dailyBuildDate 2026-04-24 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
       shell: bash
       env:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
@@ -290,15 +290,19 @@ jobs:
         RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
       if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
 
-    - name: Build and test against RenderMan 26.4
+    - name: Build against RenderMan 26.4
       run: |
         scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
-        echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
-        ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }} IECoreRenderManTest GafferRenderManTest GafferRenderManUITest
-        echo "::remove-matcher owner=unittest::"
       env:
         PYTHONUTF8: 1
       if: ${{ env.RMANTREE != '' }}
+
+    - name: Test against RenderMan 26.4
+      # See comments for RenderMan 27.1.
+      run: |
+        podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
+        df -H
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' && matrix.name != 'linux-gcc11-platform23' }}
 
     - name: Install RenderMan 27.1
       run: |
