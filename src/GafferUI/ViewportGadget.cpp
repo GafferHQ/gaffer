@@ -308,6 +308,13 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			M44f t = m_transform;
 			t.multDirMatrix( z, z );
 			t.multDirMatrix( y, y );
+			if( !( std::isfinite( y.length() ) && std::isfinite( z.length() ) ) )
+			{
+				// If our current camera position has somehow become corrupted with nan's or inf's,
+				// reset it.
+				z = V3f( 0, 0, -1 );
+				y = V3f( 0, 1, 0 );
+			}
 			return frame( box, z, y, variableAspectZoom );
 		}
 
@@ -316,6 +323,12 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		ViewportGadget::CameraFlags frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ), bool variableAspectZoom = false )
 		{
+			if( !( std::isfinite( box.min.length() ) && std::isfinite( box.max.length() ) ) )
+			{
+				// If the target is not finite, we can't meaningfully frame it
+				return CameraFlags::None;
+			}
+
 			// Make a matrix to center the camera on the box, with the appropriate view direction.
 			M44f cameraMatrix = rotationMatrixWithUpDir( V3f( 0, 0, -1 ), viewDirection, upVector );
 			M44f translationMatrix;
