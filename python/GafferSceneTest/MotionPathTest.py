@@ -517,3 +517,41 @@ class MotionPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( curve.verticesPerCurve(), IECore.IntVectorData( [ 6 ] ) )
 		for i in range( 0, len(curve["frame"].data) ) :
 			self.assertAlmostEqual( curve["frame"].data[i], onFrameSamples[i] + 0.25, 5 )
+
+	def testPathUpdatesWhenTransformsAreModified( self ) :
+
+		script, expectedP = self.makeScene()
+		script["motion"]["start"]["mode"].setValue( GafferScene.MotionPath.FrameMode.Absolute )
+		script["motion"]["end"]["mode"].setValue( GafferScene.MotionPath.FrameMode.Absolute )
+
+		script["motion"]["start"]["frame"].setValue( 0 )
+		script["motion"]["end"]["frame"].setValue( 4 )
+
+		def assertCurveValid() :
+			for f in range( 0, 4 ) :
+				script.context().setFrame( f )
+				with script.context() :
+					curve = script["motion"]["out"].object( "/group/cube" )
+					bound = script["motion"]["out"].bound( "/group/cube" )
+				self.assertTrue( curve.arePrimitiveVariablesValid() )
+				self.assertEqual( curve.verticesPerCurve(), IECore.IntVectorData( [ 5 ] ) )
+				self.assertEqual( curve["P"].data, expectedP )
+				self.assertEqual( curve["frame"].data, IECore.FloatVectorData( [ 0, 1, 2, 3, 4 ] ) )
+				self.assertEqual( bound, curve.bound() )
+
+		assertCurveValid()
+
+		# modify the first and last keyframes
+		animY = Gaffer.Animation.acquire( script["cube"]["transform"]["translate"]["y"] )
+		animY.addKey( Gaffer.Animation.Key( 0 / 24.0, 3, Gaffer.Animation.Interpolation.Constant ) )
+		expectedP[0] = imath.V3f( expectedP[0].x, 3, expectedP[0].z )
+
+		animX = Gaffer.Animation.acquire( script["cube"]["transform"]["translate"]["x"] )
+		animX.addKey( Gaffer.Animation.Key( 4 / 24.0, 4, Gaffer.Animation.Interpolation.Constant ) )
+		expectedP[4] = imath.V3f( 4, expectedP[4].y, expectedP[4].z )
+
+		# the curve should represent our modifications
+		assertCurveValid()
+
+if __name__ == "__main__":
+	unittest.main()
