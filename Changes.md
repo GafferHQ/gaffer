@@ -12,6 +12,7 @@ Fixes
 -----
 
 - Plug : Fixed bug which meant nodes would fail to update if a newly created plug was renamed before being parented to the node.
+- PopupWindow : Fixed reference cycle that could trigger crashes in certain circumstances, including the usage of custom render pass name widgets in the RenderPassEditor.
 - Metadata : Fixed handling of exceptions thrown from value functions implemented in Python. These are now correctly translated into C++ exceptions.
 - Cycles, OSLObject, OSLImage, Expression : Fixed crashes when using OSL on macOS.
 - Dispatcher : Removed `dispatcher:scriptFileName` from labels for isolated tasks.

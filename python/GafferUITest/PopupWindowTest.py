@@ -34,9 +34,13 @@
 #
 ##########################################################################
 
+import gc
 import unittest
 import weakref
 
+import IECore
+
+import Gaffer
 import GafferUI
 import GafferUITest
 
@@ -75,6 +79,25 @@ class PopupWindowTest( GafferUITest.TestCase ) :
 
 		self.assertIsNone( weakWindow() )
 		self.assertIsNone( weakPopup() )
+
+	def testGarbageCollectionOnBackgroundThread( self ) :
+
+		# Make a PopupWindow, and delete it.
+		with GafferUI.PopupWindow() as p :
+			p = GafferUI.VectorDataWidget( IECore.IntVectorData() )
+		del p
+
+		# If the above were to create any reference cycles involving a QWidget,
+		# then the QWidget will eventually be destroyed by Python's garbage
+		# collector. We don't control when that runs, and if it runs on a
+		# background thread then PySide will attempt to send the C++ QWidget to
+		# the main thread using `Py_AddPendingCall()`, to be deleted there later.
+		# That causes crashes in `~QObject` in `Shiboken::BindingManager::runDeletionInMainThread()`,
+		# potentially due to double-deletion of the QObject. Our conclusion :
+		# PySide is buggy, and we must never make reference cycles involving
+		# QWidget.
+		b = Gaffer.ParallelAlgo.callOnBackgroundThread( None, gc.collect )
+		b.wait()
 
 if __name__ == "__main__":
 	unittest.main()
