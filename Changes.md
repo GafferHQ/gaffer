@@ -19,6 +19,7 @@ Fixes
   - Object Type, Primitive Topology and Primitive Variables
   - Camera and ExternalProcedural parameters
   - Globals
+- MotionPath : Fixed hashing bug preventing motion path curves from updating when their source transforms were modified.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========
