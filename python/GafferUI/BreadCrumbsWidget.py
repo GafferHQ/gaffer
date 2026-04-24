@@ -114,12 +114,10 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 			path[-1] if len( path ) > 0 else "",
 			image = "home.png" if len( path ) == 0 else None,
 			hasFrame = False,
-			highlightOnOver = False,
+			highlightOnOver = True,
 			toolTip = "Click to set as current path." + ( "<br>Right-click for adjacent paths menu." if len( path ) > 0 else "" )
 		)
 		pathButton.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__pathButtonPress ), path ) )
-		pathButton.enterSignal().connect( Gaffer.WeakMethod( self.__pathButtonEnter ) )
-		pathButton.leaveSignal().connect( Gaffer.WeakMethod( self.__pathButtonLeave ) )
 
 		return ( pathButton, GafferUI.Label( "/" ) )
 
@@ -174,14 +172,6 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 			return True
 
 		return False
-
-	def __pathButtonEnter( self, button ) :
-
-		button.setHasFrame( True )
-
-	def __pathButtonLeave( self, button ) :
-
-		button.setHasFrame( False )
 
 	def __textChanged( self, textWidget ) :
 
