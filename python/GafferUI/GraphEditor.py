@@ -882,8 +882,6 @@ class _HistoryWidget( GafferUI.Widget ) :
 		self.__rootChangedConnection = self.__graphEditor().graphGadget().rootChangedSignal().connectFront( Gaffer.WeakMethod( self.__rootChanged ), scoped = True )
 		self.__graphEditor().graphGadgetWidget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
-		self.__history = [ ( self.__graphEditor().scriptNode(), None ) ]
-
 		with self.__row :
 			self.__backButton = GafferUI.Button( "", "historyBack.png", hasFrame = False, toolTip = "Step back in Graph Editor history. Right-click for past-nodes popup menu.[<kbd>[</kbd>]" )
 			self.__forwardButton = GafferUI.Button( "", "historyForward.png", hasFrame = False, toolTip = "Step forward in Graph Editor history. Right-click for future-nodes popup menu.[<kbd>]</kbd>]" )
