@@ -54,7 +54,7 @@ class PopupWindow( GafferUI.Window ) :
 
 		self._qtWidget().setWindowFlags( QtCore.Qt.Popup | QtCore.Qt.FramelessWindowHint )
 		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
-		self._qtWidget().paintEvent = _paintWindowBackground.__get__( self._qtWidget() )
+		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent, fallbackResult = None )
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
@@ -107,13 +107,15 @@ class PopupWindow( GafferUI.Window ) :
 			if self.ancestor( GafferUI.VectorDataWidget ) is None :
 				self.close()
 
-def _paintWindowBackground( qWidget, event ) :
+	def __paintEvent( self, event ) :
 
-	painter = QtGui.QPainter( qWidget )
-	painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		qWidget = self._qtWidget()
+		painter = QtGui.QPainter( qWidget )
+		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 
-	painter.setBrush( QtGui.QColor( 35, 35, 35 ) )
-	painter.setPen( QtGui.QColor( 0, 0, 0, 0 ) )
+		painter.setBrush( QtGui.QColor( 35, 35, 35 ) )
+		painter.setPen( QtGui.QColor( 0, 0, 0, 0 ) )
 
-	radius = qWidget.layout().contentsMargins().left()
-	painter.drawRoundedRect( QtCore.QRectF( 0, 0, qWidget.width(), qWidget.height() ), radius, radius )
+		radius = qWidget.layout().contentsMargins().left()
+		painter.drawRoundedRect( QtCore.QRectF( 0, 0, qWidget.width(), qWidget.height() ), radius, radius )
+
