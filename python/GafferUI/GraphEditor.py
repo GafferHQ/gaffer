@@ -230,8 +230,7 @@ class GraphEditor( GafferUI.Editor ) :
 		self.__dragEnterPointer = None
 		self.__gadgetWidget.getViewportGadget().preRenderSignal().connect( Gaffer.WeakMethod( self.__preRender ) )
 
-		self.__viewableChildrenPathFilter = _ViewableChildrenPathFilter( self.scriptNode() )
-		self.__rootPath = Gaffer.GraphComponentPath( self.scriptNode(), [], filter = self.__viewableChildrenPathFilter )
+		self.__rootPath = Gaffer.GraphComponentPath( self.scriptNode(), [], filter = _ViewableChildrenPathFilter( self.scriptNode() ) )
 		self.__rootPathChangedConnection = self.__rootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__rootPathChanged ), scoped = True )
 
 		with GafferUI.ListContainer( borderWidth = 8, spacing = 0 ) as overlay :
