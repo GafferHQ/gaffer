@@ -105,7 +105,7 @@ if args.dailyBuildDate :
 	# we care about. We identify this by an input within the form that specifies
 	# the filename.
 
-	platformSuffix = "-linuxRHEL7_gcc93icx232.x86_64.rpm" if os.name != "nt" else "-windows11_vc143icx232.x86_64.msi"
+	platformSuffix = "-linuxRHEL9_gcc11icx232.x86_64.rpm" if os.name != "nt" else "-windows11_vc143icx232.x86_64.msi"
 	fileNameRegex = re.compile( f"RenderManProServer-{args.version}_[0-9]+{platformSuffix}" )
 
 	input = soup.find( "input", attrs = { "name" : "filename", "value" : fileNameRegex } )
