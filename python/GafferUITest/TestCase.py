@@ -43,6 +43,7 @@ import weakref
 
 from Qt import QtCore
 from Qt import QtCompat
+from Qt import QtWidgets
 
 import IECore
 
@@ -96,6 +97,15 @@ class TestCase( GafferTest.TestCase ) :
 
 		widgetInstances = self.__widgetInstances()
 		self.assertEqual( widgetInstances, [] )
+
+		import gc
+		widgets = [ o for o in gc.get_objects() if isinstance( o, QtWidgets.QWidget ) and GafferUI._qtObjectIsValid( o ) ]
+		# Ideally we want to `assertEqual( widgets, [] )`, but on failure that
+		# calls `repr( widget )`, which can lead to the dreaded `Internal C++ object already deleted`
+		# exception. Taking the type allows us to at least get a little bit of information
+		# about the zombie widget though.
+		#del widgets
+		self.assertEqual( widgets, [] )
 
 	def waitForIdle( self, count = 1 ) :
 
