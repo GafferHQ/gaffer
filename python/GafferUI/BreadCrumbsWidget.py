@@ -177,6 +177,8 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 
 		popupRequested = False
 		if self.__popupMenu is not None and self.__popupMenu.visible() :
+			# Dispose of current menu safely. We can be called from the keypress
+			# forwarding code of the menu, so we can't destroy it immediately.
 			GafferUI.WidgetAlgo.keepUntilIdle( self.__popupMenu )
 			self.__popupMenu = None
 			popupRequested = True
