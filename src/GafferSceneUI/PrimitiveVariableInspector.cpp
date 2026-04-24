@@ -38,23 +38,16 @@
 
 #include "GafferScene/PrimitiveVariables.h"
 #include "GafferScene/PrimitiveVariableTweaks.h"
-#include "GafferScene/Camera.h"
-#include "GafferScene/EditScopeAlgo.h"
-#include "GafferScene/Light.h"
-#include "GafferScene/LightFilter.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneNode.h"
 
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameValuePlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ValuePlug.h"
 
 #include "IECore/DataAlgo.h"
-#include "IECore/NullObject.h"
 
 #include "fmt/format.h"
 
