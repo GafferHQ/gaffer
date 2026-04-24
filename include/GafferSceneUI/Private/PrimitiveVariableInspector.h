@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2026, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,43 +36,57 @@
 
 #pragma once
 
+#include "GafferSceneUI/Export.h"
+
+#include "GafferSceneUI/Private/Inspector.h"
+
 namespace GafferSceneUI
 {
 
-enum TypeId
+namespace Private
 {
-	SceneViewTypeId = 121000,
-	SceneGadgetTypeId = 121001,
-	SelectionToolTypeId = 121002,
-	CropWindowToolTypeId = 121003,
-	ShaderViewTypeId = 121004,
-	ShaderNodeGadgetTypeId = 121005,
-	TransformToolTypeId = 121006,
-	TranslateToolTypeId = 121007,
-	ScaleToolTypeId = 121008,
-	RotateToolTypeId = 121009,
-	CameraToolTypeId = 121010,
-	UVViewTypeId = 121011,
-	UVSceneTypeId = 121012,
-	HistoryPathTypeId = 121013,
-	SetPathTypeId = 121014,
-	LightToolTypeId = 121015,
-	LightPositionToolTypeId = 121016,
-	RenderPassPathTypeId = 121017,
-	VisualiserToolTypeId = 121018,
-	ImageSelectionToolTypeId = 121019,
-	InspectorTypeId = 121020,
-	OptionInspectorTypeId = 121021,
-	AttributeInspectorTypeId = 121022,
-	ParameterInspectorTypeId = 121023,
-	SetMembershipInspectorTypeId = 121024,
-	BasicInspectorTypeId = 121025,
-	UniformPLocatorTypeId = 121026,  // Private to `VisualiserTool`
-	InspectorPathTypeId = 121027,
-	TransformInspectorTypeId = 121028,
-	PrimitiveVariableInspectorTypeId = 121029,
 
-	LastTypeId = 121199
+class GAFFERSCENEUI_API PrimitiveVariableInspector : public Inspector
+{
+
+	public :
+
+		enum class Property
+		{
+			Interpolation,
+			Type,
+			Interpretation,
+			Data,
+			Indices,
+		};
+
+		PrimitiveVariableInspector(
+			const GafferScene::ScenePlugPtr &scene,
+			const Gaffer::PlugPtr &editScope,
+			IECore::InternedString primitiveVariable,
+			Property property,
+			const std::string &name = "",
+			const std::string &type = "primitiveVariable"
+		);
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::PrimitiveVariableInspector, PrimitiveVariableInspectorTypeId, Inspector );
+
+	protected :
+
+		GafferScene::SceneAlgo::History::ConstPtr history() const override;
+		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history) const override;
+		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
+
+	private :
+
+		const GafferScene::ScenePlugPtr m_scene;
+		const IECore::InternedString m_primitiveVariable;
+		const Property m_property;
+
 };
 
-} // namespace GafferSceneUI
+IE_CORE_DECLAREPTR( PrimitiveVariableInspector )
+
+}  // namespace Private
+
+}  // namespace GafferSceneUI

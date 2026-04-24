@@ -120,18 +120,27 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.03.
 
-1.6.x.x (relative to 1.6.16.0)
+1.6.x.x (relative to 1.6.17.0)
 =======
+
+
+
+1.6.17.0 (relative to 1.6.16.0)
+========
 
 Improvements
 ------------
 
 - ShaderTweaks : Added support for `{shaderType=someShaderType}` qualifiers in parameter names, allowing tweaking of a parameter on all shaders of a given type (#6838).
+- Scene Editors : The effects of the `render:inclusions`, `render:exclusions` and `render:additionalLights` options are now represented in the Scene Editors. As these options result in the RenderSetAdaptor pruning scene locations at render time, the Hierarchy View, Attribute Editor and Light Editor now display the same pruned scene hierarchy provided to the renderer.
+- SetEditor, PrimitiveInspector, UVInspector : Added inspection of scene edits performed by render adaptors registered to `client = "SceneEditor"`.
+- SceneInspector : Added double-click editing of primitive variable data when the source is a PrimitiveVariables or PrimitiveVariableTweaks node.
 
 Fixes
 -----
 
 - Plug : Fixed bug which meant nodes would fail to update if a newly created plug was renamed before being parented to the node.
+- PopupWindow : Fixed reference cycle that could trigger crashes in certain circumstances, including the usage of custom render pass name widgets in the RenderPassEditor.
 - Metadata : Fixed handling of exceptions thrown from value functions implemented in Python. These are now correctly translated into C++ exceptions.
 - Cycles, OSLObject, OSLImage, Expression : Fixed crashes when using OSL on macOS.
 - Dispatcher : Removed `dispatcher:scriptFileName` from labels for isolated tasks.
@@ -141,6 +150,15 @@ Fixes
   - Object Type, Primitive Topology and Primitive Variables
   - Camera and ExternalProcedural parameters
   - Globals
+- SceneInspector : Primitive variable history now correctly shows the effects of ShufflePrimitiveVariables and CopyPrimitiveVariables.
+- MotionPath : Fixed hashing bug preventing motion path curves from updating when their source transforms were modified.
+- Viewer : Added prevention and recovery for situations where framing large objects causes the camera matrix to become corrupted with nans (#6715).
+- OSLObject : Simplified internal network to make inspector history more accurate.
+
+API
+---
+
+- SceneAlgo : Added `primitiveVariableHistory()` function.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========

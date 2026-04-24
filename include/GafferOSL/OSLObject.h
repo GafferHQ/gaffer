@@ -130,8 +130,8 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		GafferScene::ShaderPlug *shaderPlug();
 		const GafferScene::ShaderPlug *shaderPlug() const;
 
-		GafferScene::ScenePlug *resampledInPlug();
-		const GafferScene::ScenePlug *resampledInPlug() const;
+		Gaffer::ObjectPlug *resampledInObjectPlug();
+		const Gaffer::ObjectPlug *resampledInObjectPlug() const;
 
 		Gaffer::StringPlug *resampledNamesPlug();
 		const Gaffer::StringPlug *resampledNamesPlug() const;

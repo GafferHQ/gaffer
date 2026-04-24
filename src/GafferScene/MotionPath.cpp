@@ -305,19 +305,44 @@ void MotionPath::hashObject( const ScenePath &path, const Context *context, cons
 		return;
 	}
 
+	float start = ( (FrameMode)startModePlug()->getValue() == FrameMode::Absolute ) ? startFramePlug()->getValue() : context->getFrame() + startFramePlug()->getValue();
+	float end = ( (FrameMode)endModePlug()->getValue() == FrameMode::Absolute ) ? endFramePlug()->getValue() : context->getFrame() + endFramePlug()->getValue();
+	if( start >= end )
+	{
+		h = inPlug()->objectPlug()->defaultHash();
+		return;
+	}
+
 	FilteredSceneProcessor::hashObject( path, context, parent, h );
 
+	float step = 0;
+	int samples = 0;
+	if( (SamplingMode)samplingModePlug()->getValue() == SamplingMode::Variable )
+	{
+		step = stepPlug()->getValue();
+		samples = ceil( ( end - start ) / step - 1e-6 ) + 1;
+	}
+	else
+	{
+		samples = samplesPlug()->getValue();
+		step = ( end - start ) / ( samples - 1 );
+	}
+
+	Context::EditableScope scope( context );
+	for( int i = 0; i < samples - 1; ++i )
+	{
+		float f = start + step * i;
+		scope.setFrame( f );
+		h.append( inPlug()->fullTransformHash( path ) );
+	}
+
+	scope.setFrame( end );
 	h.append( inPlug()->fullTransformHash( path ) );
 
-	h.append( context->getFrame() );
-
-	startModePlug()->hash( h );
-	startFramePlug()->hash( h );
-	endModePlug()->hash( h );
-	endFramePlug()->hash( h );
-	samplingModePlug()->hash( h );
-	stepPlug()->hash( h );
-	samplesPlug()->hash( h );
+	h.append( start );
+	h.append( end );
+	h.append( step );
+	h.append( samples );
 }
 
 ConstObjectPtr MotionPath::computeObject( const ScenePath &path, const Context *context, const ScenePlug *parent ) const
