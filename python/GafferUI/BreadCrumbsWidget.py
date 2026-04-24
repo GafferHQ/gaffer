@@ -115,7 +115,7 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 			image = "home.png" if len( path ) == 0 else None,
 			hasFrame = False,
 			highlightOnOver = True,
-			toolTip = "Click to set as current path." + ( "<br>Right-click for adjacent paths menu." if len( path ) > 0 else "" )
+			toolTip = "Click to navigate here." + ( "<br>Right-click to choose a sibling." if len( path ) > 0 else "" )
 		)
 		pathButton.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__pathButtonPress ), path ) )
 
