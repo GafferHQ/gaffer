@@ -84,7 +84,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode )
 			self.__pathListing = GafferUI.PathListingWidget(
 				_GafferSceneUI._SetEditor.SetPath(
-					self.settings()["in"], self.context(), "/",
+					self.settings()["__adaptedIn"], self.context(), "/",
 					filter = Gaffer.CompoundPathFilter( [ self.__searchFilter, self.__emptySetFilter, self.__emptySelectionFilter ] ),
 				),
 				columns = [
@@ -227,7 +227,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 		result = IECore.PathMatcher()
 		with Gaffer.Context( self.context() ) :
 			for setName in setNames :
-				result.addPaths( self.settings()["in"].set( setName ).value )
+				result.addPaths( self.settings()["__adaptedIn"].set( setName ).value )
 
 		return result
 
@@ -330,7 +330,7 @@ class _FilterPlugValueWidget( GafferUI.StringPlugValueWidget ) :
 
 	def __scene( self ) :
 
-		return self.getPlug().node()["in"]
+		return self.getPlug().node()["__adaptedIn"]
 
 	def __setLookup( self, paths ) :
 

@@ -210,7 +210,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 			)
 
 		if plug in (
-			self.settings()["in"]["object"], self.settings()["in"]["exists"],
+			self.settings()["__adaptedIn"]["object"], self.settings()["__adaptedIn"]["exists"],
 			self.settings()["location"]
 		) :
 			self.__updateLazily()
@@ -233,15 +233,15 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 		if not targetPath :
 			return None
 
-		if not self.settings()["in"].exists( targetPath ) :
+		if not self.settings()["__adaptedIn"].exists( targetPath ) :
 			return None
 
-		return self.settings()["in"].object( targetPath )
+		return self.settings()["__adaptedIn"].object( targetPath )
 
 	@__backgroundUpdate.plug
 	def __backgroundUpdatePlug( self ) :
 
-		return self.settings()["in"]
+		return self.settings()["__adaptedIn"]
 
 	@__backgroundUpdate.preCall
 	def __backgroundUpdatePreCall( self ) :
