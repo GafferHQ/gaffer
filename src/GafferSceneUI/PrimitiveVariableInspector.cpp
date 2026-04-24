@@ -72,9 +72,6 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
-const std::string g_attributePrefix( "attribute:" );
-const InternedString g_defaultValue( "defaultValue" );
-
 // This uses the same strategy that ValuePlug uses for the hash cache,
 // using `plug->dirtyCount()` to invalidate previous cache entries when
 // a plug is dirtied.
