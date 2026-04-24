@@ -76,7 +76,6 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 
 		self.__popupMenuTitle = popupMenuTitle
 
-		self.__path = Gaffer.DictPath( {}, "/" )  # Updated in `setPath()`
 		self.setPath( path )
 
 	def setPath( self, path ) :
