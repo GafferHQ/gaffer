@@ -43,6 +43,7 @@
 #include "GafferSceneUI/Private/InspectorColumn.h"
 #include "GafferSceneUI/Private/OptionInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
+#include "GafferSceneUI/Private/PrimitiveVariableInspector.h"
 #include "GafferSceneUI/Private/TransformInspector.h"
 #include "GafferSceneUI/TypeIds.h"
 
@@ -1189,105 +1190,6 @@ InspectorTree::Inspections objectParametersInspectionProvider( ScenePlug *scene,
 
 const InspectorTree::Registration g_objectParametersInspectionRegistration( { "Location", "Object", "Parameters" }, objectParametersInspectionProvider );
 
-ConstStringDataPtr g_invalidStringData = new StringData( "Invalid" );
-ConstStringDataPtr g_constantStringData = new StringData( "Constant" );
-ConstStringDataPtr g_uniformStringData = new StringData( "Uniform" );
-ConstStringDataPtr g_vertexStringData = new StringData( "Vertex" );
-ConstStringDataPtr g_varyingStringData = new StringData( "Varying" );
-ConstStringDataPtr g_faceVaryingStringData = new StringData( "FaceVarying" );
-
-const PrimitiveVariable *primitiveVariable( const Object *object, const std::string &name )
-{
-	auto primitive = runTimeCast<const Primitive>( object );
-	if( !primitive )
-	{
-		return nullptr;
-	}
-
-	auto it = primitive->variables.find( name );
-	return it != primitive->variables.end() ? &it->second : nullptr;
-}
-
-ConstStringDataPtr primitiveVariableInterpolation( const std::string &name, const ObjectPlug *objectPlug )
-{
-	ConstObjectPtr object = objectPlug->getValue();
-	auto variable = primitiveVariable( object.get(), name );
-	if( !variable )
-	{
-		return nullptr;
-	}
-
-	switch( variable->interpolation )
-	{
-		case PrimitiveVariable::Invalid : return g_invalidStringData;
-		case PrimitiveVariable::Constant : return g_constantStringData;
-		case PrimitiveVariable::Uniform : return g_uniformStringData;
-		case PrimitiveVariable::Vertex : return g_vertexStringData;
-		case PrimitiveVariable::Varying : return g_varyingStringData;
-		case PrimitiveVariable::FaceVarying : return g_faceVaryingStringData;
-		default : return nullptr;
-	}
-}
-
-ConstStringDataPtr primitiveVariableType( const std::string &name, const ObjectPlug *objectPlug )
-{
-	ConstObjectPtr object = objectPlug->getValue();
-	auto variable = primitiveVariable( object.get(), name );
-	if( !variable || !variable->data )
-	{
-		return nullptr;
-	}
-
-	return new StringData( variable->data->typeName() );
-}
-
-const boost::container::flat_map<IECore::GeometricData::Interpretation, IECore::ConstStringDataPtr> g_geometricInterpretations = {
-	{ GeometricData::None, new IECore::StringData( "None" ) },
-	{ GeometricData::Point, new IECore::StringData( "Point" ) },
-	{ GeometricData::Normal, new IECore::StringData( "Normal" ) },
-	{ GeometricData::Vector, new IECore::StringData( "Vector" ) },
-	{ GeometricData::Color, new IECore::StringData( "Color" ) },
-	{ GeometricData::UV, new IECore::StringData( "UV" ) },
-	{ GeometricData::Rational, new IECore::StringData( "Rational" ) }
-};
-
-ConstStringDataPtr primitiveVariableInterpretation( const std::string &name, const ObjectPlug *objectPlug )
-{
-	ConstObjectPtr object = objectPlug->getValue();
-	auto variable = primitiveVariable( object.get(), name );
-	if( !variable || !variable->data )
-	{
-		return nullptr;
-	}
-
-	auto it = g_geometricInterpretations.find( IECore::getGeometricInterpretation( variable->data.get() ) );
-	return it != g_geometricInterpretations.end() ? it->second : nullptr;
-}
-
-ConstDataPtr primitiveVariableData( const std::string &name, const ObjectPlug *objectPlug )
-{
-	ConstObjectPtr object = objectPlug->getValue();
-	auto variable = primitiveVariable( object.get(), name );
-	if( !variable )
-	{
-		return nullptr;
-	}
-
-	return variable->data;
-}
-
-ConstDataPtr primitiveVariableIndices( const std::string &name, const ObjectPlug *objectPlug )
-{
-	ConstObjectPtr object = objectPlug->getValue();
-	auto variable = primitiveVariable( object.get(), name );
-	if( !variable )
-	{
-		return nullptr;
-	}
-
-	return variable->indices;
-}
-
 InspectorTree::Inspections primitiveVariablesInspectionProvider( ScenePlug *scene, const Gaffer::PlugPtr &editScope )
 {
 	InspectorTree::Inspections result;
@@ -1303,20 +1205,14 @@ InspectorTree::Inspections primitiveVariablesInspectionProvider( ScenePlug *scen
 	{
 		result.push_back( {
 			{ name, "Interpolation" },
-			new GafferSceneUI::Private::BasicInspector(
-				scene->objectPlug(), editScope,
-				[ name = name ] ( const ObjectPlug *objectPlug ) {
-					return primitiveVariableInterpolation( name, objectPlug );
-				}
+			new GafferSceneUI::Private::PrimitiveVariableInspector(
+				scene, editScope, name, PrimitiveVariableInspector::Property::Interpolation
 			)
 		} );
 		result.push_back( {
 			{ name, "Type" },
-			new GafferSceneUI::Private::BasicInspector(
-				scene->objectPlug(), editScope,
-				[ name = name ] ( const ObjectPlug *objectPlug ) {
-					return primitiveVariableType( name, objectPlug );
-				}
+			new GafferSceneUI::Private::PrimitiveVariableInspector(
+				scene, editScope, name, PrimitiveVariableInspector::Property::Type
 			)
 		} );
 
@@ -1325,31 +1221,22 @@ InspectorTree::Inspections primitiveVariablesInspectionProvider( ScenePlug *scen
 		{
 			result.push_back( {
 				{ name, "Interpretation" },
-				new GafferSceneUI::Private::BasicInspector(
-					scene->objectPlug(), editScope,
-					[ name = name ] ( const ObjectPlug *objectPlug ) {
-						return primitiveVariableInterpretation( name, objectPlug );
-					}
+				new GafferSceneUI::Private::PrimitiveVariableInspector(
+					scene, editScope, name, PrimitiveVariableInspector::Property::Interpretation
 				)
 			} );
 		}
 
 		result.push_back( {
 			{ name, "Data" },
-			new GafferSceneUI::Private::BasicInspector(
-				scene->objectPlug(), editScope,
-				[ name = name ] ( const ObjectPlug *objectPlug ) {
-					return primitiveVariableData( name, objectPlug );
-				}
+			new GafferSceneUI::Private::PrimitiveVariableInspector(
+				scene, editScope, name, PrimitiveVariableInspector::Property::Data
 			)
 		} );
 		result.push_back( {
 			{ name, "Indices" },
-			new GafferSceneUI::Private::BasicInspector(
-				scene->objectPlug(), editScope,
-				[ name = name ] ( const ObjectPlug *objectPlug ) {
-					return primitiveVariableIndices( name, objectPlug );
-				}
+			new GafferSceneUI::Private::PrimitiveVariableInspector(
+				scene, editScope, name, PrimitiveVariableInspector::Property::Indices
 			)
 		} );
 	}

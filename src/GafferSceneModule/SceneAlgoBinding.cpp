@@ -46,6 +46,7 @@
 #include "GafferImage/ImagePlug.h"
 
 #include "IECoreScene/Camera.h"
+#include "IECoreScene/PrimitiveVariable.h"
 
 #include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/RefCountedBinding.h"
@@ -309,6 +310,34 @@ SceneAlgo::OptionHistory::Ptr optionHistoryWrapper( const SceneAlgo::History &gl
 	return SceneAlgo::optionHistory( &globalsHistory, optionName );
 }
 
+std::string primitiveVariableHistoryGetPrimitiveVariableName( const SceneAlgo::PrimitiveVariableHistory &h )
+{
+	return h.primitiveVariableName.string();
+}
+
+void primitiveVariableHistorySetPrimitiveVariableName( SceneAlgo::PrimitiveVariableHistory &h, IECore::InternedString n )
+{
+	h.primitiveVariableName = n;
+}
+
+IECoreScene::PrimitiveVariable primitiveVariableHistoryGetPrimitiveVariableValue( const SceneAlgo::PrimitiveVariableHistory &h )
+{
+	// Returning a copy because `primitiveVariableValue` is const, and owned by Gaffer's cache.
+	// Allowing modification in Python would be catastrophic and hard to debug.
+	return IECoreScene::PrimitiveVariable( h.primitiveVariableValue, true );
+}
+
+void primitiveVariableHistorySetPrimitiveVariableValue( SceneAlgo::PrimitiveVariableHistory &h, const IECoreScene::PrimitiveVariable &v )
+{
+	h.primitiveVariableValue = v;
+}
+
+SceneAlgo::PrimitiveVariableHistory::Ptr primitiveVariableHistoryWrapper( const SceneAlgo::History &primitiveVariablesHistory, const InternedString &primitiveVariableName )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::primitiveVariableHistory( &primitiveVariablesHistory, primitiveVariableName );
+}
+
 ScenePlugPtr sourceWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &path )
 {
 	IECorePython::ScopedGILRelease r;
@@ -482,6 +511,13 @@ void bindSceneAlgo()
 	;
 
 	def( "optionHistory", &optionHistoryWrapper );
+
+	IECorePython::RefCountedClass<SceneAlgo::PrimitiveVariableHistory, SceneAlgo::History>( "PrimitiveVariableHistory" )
+		.add_property( "primitiveVariableName", &primitiveVariableHistoryGetPrimitiveVariableName, &primitiveVariableHistorySetPrimitiveVariableName )
+		.add_property( "primitiveVariableValue", &primitiveVariableHistoryGetPrimitiveVariableValue, &primitiveVariableHistorySetPrimitiveVariableValue )
+	;
+
+	def( "primitiveVariableHistory", &primitiveVariableHistoryWrapper );
 
 	def( "source", &sourceWrapper );
 	def( "objectTweaks", &objectTweaksWrapper );

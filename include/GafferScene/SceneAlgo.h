@@ -44,6 +44,7 @@
 #include "Gaffer/NumericPlug.h"
 
 #include "IECoreScene/Camera.h"
+#include "IECoreScene/PrimitiveVariable.h"
 
 #include "IECore/Export.h"
 
@@ -266,6 +267,27 @@ struct OptionHistory : public History
 /// `globalsHistory` should have been obtained from a previous call to
 /// `history( scene->globalsPlug() )`.
 GAFFERSCENE_API OptionHistory::Ptr optionHistory( const History *globalsHistory, const IECore::InternedString &option );
+
+/// Extends History to provide information on the history of a specific primitive variable.
+/// Primitive variables may be renamed by ShufflePrimitiveVariables nodes and this is reflected
+/// in the `primitiveVariableName` field.
+struct PrimitiveVariableHistory : public History
+{
+	IE_CORE_DECLAREMEMBERPTR( PrimitiveVariableHistory )
+	PrimitiveVariableHistory(
+		const ScenePlugPtr &scene, const Gaffer::ContextPtr &context,
+		const IECore::InternedString &primitiveVariableName, const IECoreScene::PrimitiveVariable &primitiveVariableValue
+	) :	History( scene, context ), primitiveVariableName( primitiveVariableName ), primitiveVariableValue( primitiveVariableValue ) {}
+	IECore::InternedString primitiveVariableName;
+	IECoreScene::PrimitiveVariable primitiveVariableValue;
+};
+
+/// Filters `objectHistory` and returns a history for the specific `primitiveVariable`.
+/// `objectHistory` should have been obtained from a previous call to
+/// `history( scene->objectPlug(), path )`. If the primitive variable doesn't exist then
+/// null is returned.
+GAFFERSCENE_API PrimitiveVariableHistory::Ptr primitiveVariableHistory( const History *objectHistory, const IECore::InternedString &primitiveVariable );
+
 
 /// Returns the upstream scene originally responsible for generating the specified location.
 GAFFERSCENE_API ScenePlug *source( const ScenePlug *scene, const ScenePlug::ScenePath &path );
