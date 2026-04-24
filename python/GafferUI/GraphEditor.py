@@ -50,13 +50,13 @@ class _ViewableChildrenPathFilter( Gaffer.PathFilter ) :
 
 		Gaffer.PathFilter.__init__( self, userData )
 
-		self.__scriptRoot = weakref.ref( scriptRoot )
+		self.__scriptRoot = scriptRoot
 
 	def _filter( self, paths, canceller ) :
 
 		result = []
 		for p in paths :
-			n = self.__scriptRoot().descendant( str( p ).lstrip( "/" ).replace( "/", "." ) )
+			n = self.__scriptRoot.descendant( str( p ).lstrip( "/" ).replace( "/", "." ) )
 			if isinstance( n, Gaffer.Node ) and Gaffer.Metadata.value( n, "ui:childNodesAreViewable" ) :
 				result.append( p )
 
