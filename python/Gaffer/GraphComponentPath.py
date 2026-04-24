@@ -95,6 +95,10 @@ class GraphComponentPath( Gaffer.Path ) :
 		## \todo Perhaps BackgroundTask cancellation shouldn't only be plug-centric?
 		return script["fileName"]
 
+	def setFromComponent( self, component ) :
+
+		self.setFromString( component.relativeName( self.__rootComponent ).replace( ".", "/" ) if not component.isSame( self.__rootComponent ) else "/" )
+
 	def _children( self, canceller ) :
 
 		try :

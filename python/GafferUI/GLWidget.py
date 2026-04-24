@@ -371,6 +371,7 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 		self.__backgroundDrawFunction = backgroundDrawFunction
 		self.sceneRectChanged.connect( self.__sceneRectChanged )
+		self.focusItemChanged.connect( self.__focusItemChanged )
 
 		self.__overlays = {} # Mapping from GafferUI.Widget to _OverlayProxyWidget
 
@@ -426,6 +427,14 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 		for proxy in self.__overlays.values() :
 			self.__updateItemGeometry( proxy, sceneRect )
+
+	def __focusItemChanged( self, newItem, oldItem, reason ) :
+
+		if newItem is None and reason == QtCore.Qt.PopupFocusReason :
+			# Don't lose the focus item for this view due to a popup menu.
+			# Losing that would prevent the `GLWidget` from forwarding events
+			# to overlay widgets.
+			self.setFocusItem( oldItem )
 
 	def __updateItemGeometry( self, item, sceneRect ) :
 

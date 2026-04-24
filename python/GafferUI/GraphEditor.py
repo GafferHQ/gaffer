@@ -43,6 +43,35 @@ import IECore
 import Gaffer
 import GafferUI
 
+class _ViewableChildrenPathFilter( Gaffer.PathFilter ) :
+
+	def __init__( self, scriptRoot, userData = {} ) :
+
+		Gaffer.PathFilter.__init__( self, userData )
+
+		self.__scriptRoot = scriptRoot
+
+	def _filter( self, paths, canceller ) :
+
+		result = []
+		for p in paths :
+			n = self.__scriptRoot.descendant( str( p ).lstrip( "/" ).replace( "/", "." ) )
+			if isinstance( n, Gaffer.Node ) and Gaffer.Metadata.value( n, "ui:childNodesAreViewable" ) :
+				result.append( p )
+
+		return result
+
+def _currentFrame( viewportGadget ) :
+
+	rasterMin = viewportGadget.rasterToWorldSpace( imath.V2f( 0 ) ).p0
+	rasterMax = viewportGadget.rasterToWorldSpace( imath.V2f( viewportGadget.getViewport() ) ).p0
+
+	frame = imath.Box2f()
+	frame.extendBy( imath.V2f( rasterMin[0], rasterMin[1] ) )
+	frame.extendBy( imath.V2f( rasterMax[0], rasterMax[1] ) )
+
+	return frame
+
 class GraphEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -64,18 +93,25 @@ class GraphEditor( GafferUI.Editor ) :
 		self.__gadgetWidget.getViewportGadget().setDragTracking( GafferUI.ViewportGadget.DragTracking.XDragTracking | GafferUI.ViewportGadget.DragTracking.YDragTracking )
 		self.__frame( scriptNode.selection() )
 
-		self.__gadgetWidget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-		self.__gadgetWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		self.__gadgetWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.__gadgetWidget.getViewportGadget().buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__gadgetWidget.getViewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__gadgetWidget.getViewportGadget().buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 		self.__dragEnterPointer = None
 		self.__gadgetWidget.getViewportGadget().preRenderSignal().connect( Gaffer.WeakMethod( self.__preRender ) )
 
+		self.__rootPath = Gaffer.GraphComponentPath( self.scriptNode(), [], filter = _ViewableChildrenPathFilter( self.scriptNode() ) )
+		self.__rootPathChangedConnection = self.__rootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__rootPathChanged ), scoped = True )
+
 		with GafferUI.ListContainer( borderWidth = 8, spacing = 0 ) as overlay :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				self.__historyWidget = _HistoryWidget( self.graphGadget(), self.scriptNode() )
+				GafferUI.BreadCrumbsWidget( self.__rootPath, "Node Path" )
+
 				GafferUI.Spacer( imath.V2i( 1 ) )
+
 				GafferUI.MenuButton(
 					image = "annotations.png", hasFrame = False,
 					menu = GafferUI.Menu(
@@ -455,6 +491,12 @@ class GraphEditor( GafferUI.Editor ) :
 					enabledPlug.setValue( not enabled )
 
 			return True
+		elif event.key == "BracketLeft" and not event.modifiers :
+			self.__historyWidget.moveHistoryIndex( -1 )
+			return True
+		elif event.key == "BracketRight" and not event.modifiers :
+			self.__historyWidget.moveHistoryIndex( 1 )
+			return True
 
 		return False
 
@@ -487,7 +529,7 @@ class GraphEditor( GafferUI.Editor ) :
 			# we're extending the existing framing, which we assume the
 			# user was happy with other than it not showing the nodes in question.
 			# so we just take the union of the existing frame and the one for the nodes.
-			cb = self.__currentFrame()
+			cb = _currentFrame( self.graphGadgetWidget().getViewportGadget() )
 			bound.extendBy( imath.Box3f( imath.V3f( cb.min().x, cb.min().y, 0 ), imath.V3f( cb.max().x, cb.max().y, 0 ) ) )
 		else :
 			# we're reframing from scratch, so the frame for the nodes is all we need.
@@ -573,26 +615,10 @@ class GraphEditor( GafferUI.Editor ) :
 
 		return []
 
-	def __currentFrame( self ) :
-		viewportGadget = self.graphGadgetWidget().getViewportGadget()
-
-		rasterMin = viewportGadget.rasterToWorldSpace( imath.V2f( 0 ) ).p0
-		rasterMax = viewportGadget.rasterToWorldSpace( imath.V2f( viewportGadget.getViewport() ) ).p0
-
-		frame = imath.Box2f()
-		frame.extendBy( imath.V2f( rasterMin[0], rasterMin[1] ) )
-		frame.extendBy( imath.V2f( rasterMax[0], rasterMax[1] ) )
-
-		return frame
-
 	def __rootChanged( self, graphGadget, previousRoot ) :
 
-		# save/restore the current framing so jumping in
-		# and out of Boxes isn't a confusing experience.
+		frame = self.__historyWidget.frame( graphGadget.getRoot() )
 
-		Gaffer.Metadata.registerValue( previousRoot, "ui:graphEditor{}:framing".format( id( self ) ), self.__currentFrame(), persistent = False )
-
-		frame = Gaffer.Metadata.value( self.graphGadget().getRoot(), "ui:graphEditor{}:framing".format( id( self ) ) )
 		if frame is not None :
 			self.graphGadgetWidget().getViewportGadget().frame(
 				imath.Box3f( imath.V3f( frame.min().x, frame.min().y, 0 ), imath.V3f( frame.max().x, frame.max().y, 0 ) )
@@ -614,7 +640,12 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.titleChangedSignal()( self )
 
+		self.__rootPath.setFromComponent( graphGadget.getRoot() )
+
 	def __rootNameChanged( self, root, oldName ) :
+
+		with Gaffer.Signals.BlockedConnection( self.__rootPathChangedConnection ) :
+			self.__rootPath.setFromComponent( self.graphGadget().getRoot() )
 
 		self.titleChangedSignal()( self )
 
@@ -623,6 +654,11 @@ class GraphEditor( GafferUI.Editor ) :
 		# This may be called for our root, or any of its parents
 		if node.parent() == None :
 			self.graphGadget().setRoot( self.scriptNode() )
+
+	def __rootPathChanged( self, path ) :
+
+		with Gaffer.Signals.BlockedConnection( self.__rootPathChangedConnection ) :
+			self.graphGadget().setRoot( path.property( "graphComponent:graphComponent" ) )
 
 	def __preRender( self, viewportGadget ) :
 
@@ -829,3 +865,121 @@ class GraphEditor( GafferUI.Editor ) :
 		return enabledPlug
 
 GafferUI.Editor.registerType( "GraphEditor", GraphEditor )
+
+class _HistoryWidget( GafferUI.Widget ) :
+
+	def __init__( self, graphGadget, scriptNode, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		GafferUI.Widget.__init__( self, self.__row, **kw )
+
+		self.__graphGadget = graphGadget
+		self.__scriptNode = scriptNode
+
+		self.__rootChangedConnection = self.__graphGadget.rootChangedSignal().connectFront( Gaffer.WeakMethod( self.__rootChanged ), scoped = True )
+
+		with self.__row :
+			self.__backButton = GafferUI.Button( "", "historyBack.png", hasFrame = False, toolTip = "Step back in Graph Editor history. Right-click for past-nodes popup menu.[<kbd>[</kbd>]" )
+			self.__forwardButton = GafferUI.Button( "", "historyForward.png", hasFrame = False, toolTip = "Step forward in Graph Editor history. Right-click for future-nodes popup menu.[<kbd>]</kbd>]" )
+			self.__backButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__backButtonPressed ) )
+			self.__forwardButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__forwardButtonPressed ) )
+
+		# A list of tuples of the form `( rootNode, frame )`. A frame value of `None`
+		# indicates framing to fit all child nodes.
+		self.__history = [ ( self.__scriptNode, None ) ]
+		self.__historyIndex = 0
+		self.__historyPopup = None
+
+		self.__updateHistoryButtonsEnabled()
+
+
+	# Returns the frame to use for the given root node or `None` to indicate default framing.
+	def frame( self, rootNode ) :
+
+		frame = None
+		for i in range( self.__historyIndex, -1, -1 ) :
+			historyNode, historyFrame = self.__history[i]
+			if historyNode.isSame( rootNode ) and historyFrame is not None :
+				frame = historyFrame
+				break
+
+		return frame
+
+	def moveHistoryIndex( self, delta ) :
+
+		if self.__historyIndex + delta < 0 or self.__historyIndex + delta >= len( self.__history ) :
+			return
+
+		self.__history[self.__historyIndex] = ( self.__history[self.__historyIndex][0], _currentFrame( self.__graphGadget.parent() ) )
+
+		self.__historyIndex += delta
+
+		# \todo Where do we go if the node has been deleted?
+		graphEditor = self.ancestor( GafferUI.GraphEditor )
+		assert( graphEditor is not None )
+		rootNode = self.__history[self.__historyIndex][0]
+		if rootNode.isSame( self.__scriptNode ) or self.__scriptNode.isAncestorOf( rootNode ) :
+			with Gaffer.Signals.BlockedConnection( self.__rootChangedConnection ) :
+				if rootNode.isSame( graphEditor.graphGadget().getRoot() ) :
+					# `GraphGadget` won't emit `rootChangedSignal()` because the roots are the same.
+					# Framing might be different, so we do it ourselves.
+					frame = self.frame( rootNode )
+					if frame is not None :
+						graphEditor.graphGadgetWidget().getViewportGadget().frame(
+							imath.Box3f( imath.V3f( frame.min().x, frame.min().y, 0 ), imath.V3f( frame.max().x, frame.max().y, 0 ) )
+						)
+					else :
+						self.__frame( graphEditor.graphGadget().getRoot().children( Gaffer.Node ) )
+				self.__graphGadget.setRoot( rootNode )
+
+		self.__updateHistoryButtonsEnabled()
+
+	def __backButtonPressed( self, button, event ) :
+
+		if event.buttons == event.Buttons.Left :
+			self.moveHistoryIndex( -1 )
+		elif event.buttons == event.Buttons.Right :
+			self.__showHistoryPopup( range( self.__historyIndex - 1, -1, -1 ), button )
+
+	def __forwardButtonPressed( self, button, event ) :
+
+		if event.buttons == event.Buttons.Left :
+			self.moveHistoryIndex( 1 )
+		elif event.buttons == event.Buttons.Right :
+			self.__showHistoryPopup( range( self.__historyIndex + 1, len( self.__history ), 1 ), button )
+
+	def __rootChanged( self, graphGadget, previousRoot ) :
+
+		self.__history = self.__history[:self.__historyIndex + 1]
+		self.__history[self.__historyIndex] = ( self.__history[self.__historyIndex][0], _currentFrame( self.__graphGadget.parent() ) )
+
+		self.__history.append( ( graphGadget.getRoot(), None ) )
+		self.__historyIndex += 1
+		self.__updateHistoryButtonsEnabled()
+
+	def __showHistoryPopup(self, historyRange, popupParent ) :
+
+		graphEditor = self.ancestor( GafferUI.GraphEditor )
+		menuDefinition = IECore.MenuDefinition()
+		prefix = "/"
+		for counter, i in enumerate( historyRange ) :
+			menuDefinition.append(
+				prefix + str( counter ),
+				{
+					"label" : self.__history[i][0].relativeName( self.__scriptNode ) if not self.__history[i][0].isSame( self.__scriptNode ) else "Script Root",
+					"command" : functools.partial( Gaffer.WeakMethod( self.moveHistoryIndex ), i - self.__historyIndex ),
+				}
+			)
+
+			if counter == 10 :
+				prefix = "/More/"
+				menuDefinition.append( "/Divider", { "divider" : True } )
+
+		self.__historyPopup = GafferUI.Menu( menuDefinition )
+		self.__historyPopup.popup( popupParent, position = imath.V2i( popupParent.bound().min().x, popupParent.bound().max().y ) )
+
+	def __updateHistoryButtonsEnabled( self ) :
+
+		self.__backButton.setEnabled( self.__historyIndex > 0 )
+		self.__forwardButton.setEnabled( self.__historyIndex < ( len( self.__history ) - 1 ) )

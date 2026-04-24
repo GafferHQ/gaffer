@@ -130,6 +130,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def __enter( self, widget ) :
 
 		if not isinstance( QtWidgets.QApplication.focusWidget(), ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
+			# \todo Do we want to clear the `focusItem` here too? If not, the breadcrumbs text
+			# widget will get focus as soon as this GadgetWidget gets focus, which may not be
+			# intuitive?
 			self._qtWidget().setFocus()
 
 		## \todo Widget.enterSignal() should be providing this
@@ -151,7 +154,12 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __leave( self, widget ) :
 
-		self._qtWidget().clearFocus()
+		focusWidget = QtWidgets.QApplication.focusWidget()
+		if isinstance( focusWidget, QtWidgets.QGraphicsView ) :
+			focusWidget = focusWidget.scene().focusItem()
+
+		if not isinstance( focusWidget, QtWidgets.QGraphicsProxyWidget ) :
+			self._qtWidget().clearFocus()
 
 		p = self.mousePosition( relativeTo = self )
 		event = GafferUI.ButtonEvent(
@@ -208,15 +216,15 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __mouseMove( self, widget, event ) :
 
+		# We get given mouse moves before they're given to the overlay items,
+		# so we must ignore them so they can be used by the overlay.
+		if self._qtWidget().itemAt( event.line.p0.x, event.line.p0.y ) is not None :
+			return False
+
 		if not self._makeCurrent() :
 			return False
 
-		self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
-
-		# we always return false so that any overlay items will get appropriate
-		# move/enter/leave events, otherwise highlighting for buttons etc can go
-		# awry.
-		return False
+		return self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
 
 	def __dragBegin( self, widget, event ) :
 

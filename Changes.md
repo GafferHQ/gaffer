@@ -7,6 +7,9 @@ Improvements
 - ShaderTweaks : Added support for `{shaderType=someShaderType}` qualifiers in parameter names, allowing tweaking of a parameter on all shaders of a given type (#6838).
 - Scene Editors : The effects of the `render:inclusions`, `render:exclusions` and `render:additionalLights` options are now represented in the Scene Editors. As these options result in the RenderSetAdaptor pruning scene locations at render time, the Hierarchy View, Attribute Editor and Light Editor now display the same pruned scene hierarchy provided to the renderer.
 - SetEditor, PrimitiveInspector, UVInspector : Added inspection of scene edits performed by render adaptors registered to `client = "SceneEditor"`.
+- Graph Editor :
+  - Added location bar for additional control of the Graph Editor's root. Text and button interactions can be used to navigate the node hierarchy.
+  - Added forward and back buttons to step through the history of the editor's root nodes.
 
 Fixes
 -----
@@ -24,6 +27,13 @@ Fixes
   - Globals
 - MotionPath : Fixed hashing bug preventing motion path curves from updating when their source transforms were modified.
 - Viewer : Added prevention and recovery for situations where framing large objects causes the camera matrix to become corrupted with nans (#6715).
+
+API
+---
+
+- GraphComponentPath : Added `setFromComponent()`
+- GraphEditor : Added `getRootPath()` to return the `GraphComponentPath` that controls the editor's root node.
+- BreadCrumbsWidget : Added widget for interacting with paths using a combination of button widgets and text entry.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========

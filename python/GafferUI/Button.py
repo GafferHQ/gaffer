@@ -180,9 +180,11 @@ class Button( GafferUI.Widget ) :
 	def __enter( self, widget ) :
 
 		self.__highlightForHover = True
+		self.setHighlighted( True )
 		self.__updateIcon()
 
 	def __leave( self, widget ) :
 
 		self.__highlightForHover = False
+		self.setHighlighted( False )
 		self.__updateIcon()

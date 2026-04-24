@@ -136,6 +136,7 @@ from .PopupWindowTest import PopupWindowTest
 from .ColorChooserTest import ColorChooserTest
 from .ContextTrackerTest import ContextTrackerTest
 from .MetadataAlgoTest import MetadataAlgoTest
+from .BreadCrumbsWidgetTest import BreadCrumbsWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

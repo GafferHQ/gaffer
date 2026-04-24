@@ -325,6 +325,8 @@
 
 			"ids" : [
 				"annotations",
+				"historyBack",
+				"historyForward",
 			],
 
 		},
@@ -528,16 +530,17 @@
 				"searchFieldBackground",
 				"search",
 				"searchOn",
+				"home",
 			],
 
 		},
-		
+
 		"nodeEditor" : {
-			
+
 			"options" : {
 				"validatePixelAlignment" : True,
 			},
-			
+
 			"ids" : [
 				"rendererArnoldOnIcon",
 				"rendererArnoldOffIcon",
