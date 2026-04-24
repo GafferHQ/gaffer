@@ -90,9 +90,7 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 
 	def __updateWidgets( self ) :
 
-		## \todo Is it worth keeping buttons that are still valid?
-		while len( self.__pathButtonContainer ) > 0 :
-			self.__pathButtonContainer.remove( self.__pathButtonContainer[0] )
+		del self.__pathButtonContainer[:]
 
 		path = self.__path.copy()
 		path.setFromString( path.root() )
