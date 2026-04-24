@@ -81,7 +81,7 @@ class BreadCrumbsWidget( GafferUI.Widget ) :
 	def setPath( self, path ) :
 
 		self.__path = path
-		self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged, fallbackResult = None ) )
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ), scoped = True )
 		self.__updateWidgets()
 
 	def getPath( self ) :
