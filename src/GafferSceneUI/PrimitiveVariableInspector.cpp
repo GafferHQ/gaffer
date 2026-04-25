@@ -38,23 +38,16 @@
 
 #include "GafferScene/PrimitiveVariables.h"
 #include "GafferScene/PrimitiveVariableTweaks.h"
-#include "GafferScene/Camera.h"
-#include "GafferScene/EditScopeAlgo.h"
-#include "GafferScene/Light.h"
-#include "GafferScene/LightFilter.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneNode.h"
 
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
-#include "Gaffer/Metadata.h"
-#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameValuePlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ValuePlug.h"
 
 #include "IECore/DataAlgo.h"
-#include "IECore/NullObject.h"
 
 #include "fmt/format.h"
 
@@ -71,9 +64,6 @@ using namespace GafferSceneUI::Private;
 
 namespace
 {
-
-const std::string g_attributePrefix( "attribute:" );
-const InternedString g_defaultValue( "defaultValue" );
 
 // This uses the same strategy that ValuePlug uses for the hash cache,
 // using `plug->dirtyCount()` to invalidate previous cache entries when
