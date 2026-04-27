@@ -94,6 +94,12 @@ def __registerIcons() :
 			"labelPlugValueWidget:icon",
 			"renderer" + renderer + "OnIcon.png"
 		)
+		Gaffer.Metadata.registerValue(
+			GafferUSD.USDLight.staticTypeId(),
+			f"parameters.{prefix}*",
+			"labelPlugValueWidget:iconToolTip",
+			f"Parameter is specific to {renderer}."
+		)
 		visited.add( prefix )
 
 __registerIcons()
