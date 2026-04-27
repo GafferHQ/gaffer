@@ -4,7 +4,7 @@
 API
 ---
 
-- SetExpressionAlgo : Added new namespace with functions for evaluating set expressions.
+- SetExpressionAlgo : Added new namespace with functions for evaluating and editing set expressions.
 
 1.6.17.0 (relative to 1.6.16.0)
 ========

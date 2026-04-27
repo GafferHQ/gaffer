@@ -54,6 +54,9 @@
 
 #include "fmt/format.h"
 
+#include <optional>
+#include <set>
+
 using namespace IECore;
 using namespace Gaffer;
 
@@ -64,7 +67,11 @@ namespace
 {
 
 struct BinaryOp;
-struct Nil {};
+struct Nil
+{
+	bool operator==( const Nil & ) const { return true; }
+	bool operator<( const Nil & ) const { return false; }
+};
 
 // Determine which Ops are supported in SetExpressions
 // and provide a way to print them for debugging.
@@ -106,6 +113,28 @@ struct BinaryOp
 	ExpressionAst left;
 	Op op;
 	ExpressionAst right;
+
+	bool operator==( const BinaryOp &other ) const
+	{
+		if( ( op == Intersection || op == Union ) && other.op == op )
+		{
+			return ( left == other.left && right == other.right ) || ( left == other.right && right == other.left );
+		}
+
+		return left == other.left &&
+				op == other.op &&
+				right == other.right;
+	}
+	bool operator<( const BinaryOp &other ) const
+	{
+		if( left < other.left ) return true;
+		if( other.left < left ) return false;
+
+		if( op < other.op ) return true;
+		if( other.op < op ) return false;
+
+		return right < other.right;
+	}
 };
 
 struct CreateBinaryOpImplementation
@@ -159,6 +188,355 @@ struct AstPrinter
 	}
 
 	std::ostream &stream;
+};
+
+// Serialising the AST
+// -------------------
+struct AstSerialiser
+{
+	using result_type = std::string;
+
+	std::string operator()( const Nil & ) const
+	{
+		return "";
+	}
+
+	std::string operator()( const std::string &value ) const
+	{
+		return value;
+	}
+
+	std::string operator()( const BinaryOp &expr ) const
+	{
+		return toString( expr, std::nullopt, false );
+	}
+
+	std::string toString( const ExpressionAst &ast, std::optional<Op> parentOp, bool onRightSide ) const
+	{
+		if( const auto s = boost::get<std::string>( &ast ) )
+		{
+			return *s;
+		}
+
+		if( const auto bin = boost::get<BinaryOp>( &ast ) )
+		{
+			auto info = opInfo( bin->op );
+
+			std::string left  = toString( bin->left,  bin->op, /* onRightSide = */ false );
+			std::string right = toString( bin->right, bin->op, /* onRightSide = */ true );
+
+			bool needParens = false;
+			if( parentOp )
+			{
+				auto parentInfo = opInfo( *parentOp );
+
+				if( info.precedence < parentInfo.precedence )
+				{
+					needParens = true;
+				}
+				else if( onRightSide && *parentOp == Difference && bin->op == Difference )
+				{
+					// We require parenthesis here to differentiate "A - B - C" from "A - (B - C)".
+					needParens = true;
+				}
+
+				if( *parentOp == In || *parentOp == Containing )
+				{
+					// For clarity, always wrap BinaryOp children of these ops in parenthesis
+					// so the serialised result is "(A B) in (C D)" rather than "A B in C D",
+					// which could read as "A (B in C) D" to the user.
+					if( boost::get<BinaryOp>( &ast ) )
+					{
+						needParens = true;
+					}
+				}
+			}
+
+			std::string result = left + info.repr + right;
+			return needParens ? "(" + result + ")" : result;
+		}
+
+		return "";
+	}
+
+	private :
+
+		struct OpInfo
+		{
+			int precedence;
+			std::string repr;
+		};
+
+		OpInfo opInfo( Op op ) const
+		{
+			switch( op )
+			{
+				case Difference :
+					return { 5, " - " };
+				case Intersection :
+					return { 4, " & " };
+				case Union :
+					return { 3, " " };
+				case Containing :
+					return { 2, " containing " };
+				case In :
+					return { 1, " in " };
+			}
+			return { 0, "" };
+		}
+};
+
+void collectOperands( const ExpressionAst &ast, Op targetOp, std::vector<ExpressionAst> &result )
+{
+	if( const auto *bin = boost::get<BinaryOp>( &ast ) )
+	{
+		if( bin->op == targetOp )
+		{
+			collectOperands( bin->left, targetOp, result );
+			collectOperands( bin->right, targetOp, result );
+			return;
+		}
+	}
+
+	if( !boost::get<Nil>( &ast ) )
+	{
+		result.push_back( ast );
+	}
+}
+
+ExpressionAst buildTree( Op op, const std::vector<ExpressionAst> &nodes )
+{
+	if( nodes.empty() )
+	{
+		return Nil{};
+	}
+
+	ExpressionAst result = nodes[0];
+	for( size_t i = 1; i < nodes.size(); ++i )
+	{
+		result = BinaryOp( result, op, nodes[i] );
+	}
+
+	return result;
+}
+
+// Simplifying the AST
+// -------------------
+struct SimplifyVisitor
+{
+	using result_type = ExpressionAst;
+
+	ExpressionAst operator()(const Nil &n) const
+	{
+		return n;
+	}
+
+	ExpressionAst operator()(const std::string &s ) const
+	{
+		return s;
+	}
+
+	ExpressionAst operator()(const BinaryOp &expr ) const
+	{
+		ExpressionAst left = boost::apply_visitor( *this, expr.left );
+		ExpressionAst right = boost::apply_visitor( *this, expr.right );
+
+		if( expr.op == Difference )
+		{
+			if( isSubsetOf( left, right ) )
+			{
+				// A - A -> Nil
+				// (A [&,in,containing] B) - A -> Nil
+				return Nil{};
+			}
+
+			if( auto innerRight = boost::get<BinaryOp>( &right ) )
+			{
+				if( innerRight->op == Union )
+				{
+					// A - (A | B) -> Nil
+					std::vector<ExpressionAst> ops;
+					collectOperands( right, Union, ops );
+
+					if( std::any_of( ops.begin(), ops.end(), [&]( const ExpressionAst &r ) { return isSubsetOf( left, r ); } ) )
+					{
+						return Nil();
+					}
+				}
+			}
+
+			if( auto inner = boost::get<BinaryOp>( &left ) )
+			{
+				if( inner->op == Union )
+				{
+					// (A | B | C) - (B | C) -> A - (B | C)
+					std::vector<ExpressionAst> ops;
+					collectOperands( left, Union, ops );
+
+					std::vector<ExpressionAst> rightOps;
+					collectOperands( right, Union, rightOps );
+
+					ops.erase(
+						std::remove_if(
+							ops.begin(), ops.end(),
+							[&]( const ExpressionAst &o ) {
+								return std::any_of(
+									rightOps.begin(), rightOps.end(),
+									[&]( const ExpressionAst &r ) {
+										return isSubsetOf( o, r );
+									}
+								);
+							}
+						),
+						ops.end()
+					);
+
+					if( ops.empty() )
+					{
+						return Nil{};
+					}
+
+					return BinaryOp( buildTree( Union, uniqueOperands( ops ) ), Difference, right );
+				}
+				else if( inner->op == Difference )
+				{
+					// (A - B) - C -> A - (B | C)
+					if( isSubsetOf( inner->right, right ) )
+					{
+						// inner->right is subset of right and can be entirely replaced by it.
+						return BinaryOp( inner->left, Difference, right );
+					}
+
+					std::vector<ExpressionAst> ops;
+					collectOperands( inner->right, Union, ops );
+					collectOperands( right, Union, ops );
+
+					return BinaryOp( inner->left, Difference, buildTree( Union, uniqueOperands( ops ) ) );
+				}
+			}
+		}
+
+		if( left == right )
+		{
+			// A [|,&,in,containing] A -> A
+			return left;
+		}
+
+		if( expr.op == Union || expr.op == Intersection )
+		{
+			// A | B | B | A -> A | B
+			// A & B [&|] B & A -> A & B
+			std::vector<ExpressionAst> ops;
+			collectOperands( left, expr.op, ops );
+			collectOperands( right, expr.op, ops );
+			ops = uniqueOperands( ops );
+
+			if( expr.op == Union )
+			{
+				removeSubsets( ops );
+			}
+			else if( expr.op == Intersection )
+			{
+				removeSupersets( ops );
+			}
+
+			return buildTree( expr.op, ops );
+		}
+
+		return BinaryOp( left, expr.op, right );
+	}
+
+	private :
+
+		std::vector<ExpressionAst> uniqueOperands( std::vector<ExpressionAst> &operands ) const
+		{
+			std::set<ExpressionAst> seen;
+			std::vector<ExpressionAst> result;
+			for( auto &o : operands )
+			{
+				if( seen.insert( o ).second )
+				{
+					result.push_back( o );
+				}
+			}
+			return result;
+		}
+
+		bool isSubsetOf( const ExpressionAst &a, const ExpressionAst &b ) const
+		{
+			if( a == b )
+			{
+				return true;
+			}
+
+			if( const auto *binB = boost::get<BinaryOp>( &b ) )
+			{
+				if( binB->op == Union )
+				{
+					return isSubsetOf( a, binB->left ) || isSubsetOf( a, binB->right );
+				}
+				if( binB->op == Intersection )
+				{
+					return isSubsetOf( a, binB->left ) && isSubsetOf( a, binB->right );
+				}
+			}
+
+			if( const auto *bin = boost::get<BinaryOp>( &a ) )
+			{
+				switch( bin->op )
+				{
+					case Intersection :
+						return isSubsetOf( bin->left, b ) || isSubsetOf( bin->right, b );
+					case Union :
+						return isSubsetOf( bin->left, b ) && isSubsetOf( bin->right, b );
+					case In :
+					case Containing :
+					case Difference :
+						return isSubsetOf( bin->left, b );
+				}
+			}
+
+			return false;
+		}
+
+		template<typename Predicate>
+		void removeIfAnyMatch( std::vector<ExpressionAst> &items, Predicate pred ) const
+		{
+			items.erase(
+				std::remove_if(
+					items.begin(), items.end(),
+					[&]( const ExpressionAst &a ) {
+						return std::any_of(
+							items.begin(), items.end(),
+							[&]( const ExpressionAst &b ) {
+								return &a != &b && pred( a, b );
+							}
+						);
+					}
+				),
+				items.end()
+			);
+		}
+
+		void removeSubsets( std::vector<ExpressionAst> &items ) const
+		{
+			removeIfAnyMatch(
+				items,
+				[&]( const ExpressionAst &a, const ExpressionAst &b ) {
+					return isSubsetOf( a, b );
+				}
+			);
+		}
+
+		void removeSupersets( std::vector<ExpressionAst> &items ) const
+		{
+			removeIfAnyMatch(
+				items,
+				[&]( const ExpressionAst &a, const ExpressionAst &b ) {
+					return isSubsetOf( b, a );
+				}
+			);
+		}
 };
 
 #ifdef BOOST_SPIRIT_DEBUG
@@ -466,6 +844,20 @@ void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
 	}
 }
 
+ExpressionAst simplifyExpression( ExpressionAst ast )
+{
+	while( true )
+	{
+		ExpressionAst simplified = boost::apply_visitor( SimplifyVisitor{}, ast );
+
+		if( simplified == ast )
+		{
+			return simplified;
+		}
+		ast = simplified;
+	}
+}
+
 } // namespace
 
 namespace Gaffer
@@ -494,6 +886,14 @@ IECore::MurmurHash setExpressionHash( const std::string &setExpression, const Se
 	IECore::MurmurHash h = IECore::MurmurHash();
 	setExpressionHash( setExpression, setProvider, h );
 	return h;
+}
+
+std::string simplify( const std::string &setExpression )
+{
+	ExpressionAst ast;
+	expressionToAST( setExpression, ast );
+
+	return boost::apply_visitor( AstSerialiser{}, simplifyExpression( ast ) );
 }
 
 } // namespace SetExpressionAlgo

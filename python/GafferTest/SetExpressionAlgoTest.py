@@ -98,5 +98,187 @@ class SetExpressionAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.SetExpressionAlgo.evaluateSetExpression( "*", s ), IECore.PathMatcher( [ "/a", "/b", "/c", "/d", "/a/a", "/a/b", "/a/c", "/b/a", "/b/b", "/b/c", "/c/a", "/c/b", "c/c/", "/1", "/2", "/3", "/4" ] ) )
 
+	def testSimplify( self ) :
+
+		s = SetExpressionAlgoTest.MySetProvider()
+
+		for expression, result in [
+			( "", "" ),
+			( "A", "A" ),
+			( "A A", "A" ),
+			( "A B", "A B" ),
+			( "A A*", "A A*" ),
+			( "((A))", "A" ),
+			( "A & A", "A" ),
+			( "A in A", "A" ),
+			( "A containing A", "A" ),
+
+			( "A - A", "" ),
+			( "A - B", "A - B" ),
+			( "(A & B) - A", "" ),
+			( "(A & B) - B", "" ),
+			( "(A & B) - C", "(A & B) - C" ),
+			( "(A in B) - A", "" ),
+			( "(A in B) - B", "(A in B) - B" ),
+			( "(A in B) - C", "(A in B) - C" ),
+			( "(A containing B) - A", "" ),
+			( "(A containing B) - B", "(A containing B) - B" ),
+			( "(A containing B) - C", "(A containing B) - C" ),
+			( "(A B) - A", "B - A" ),
+			( "(A B) - B", "A - B" ),
+			( "(A B) - C", "(A B) - C" ),
+
+			( "A B A B", "A B" ),
+			( "(A B) (A B)", "A B" ),
+			( "((A B) (C A))", "A B C" ),
+			( "B A C A C B", "B A C" ),
+			( "((A B) (C (D E)))", "A B C D E" ),
+
+			( "A & B A & B", "A & B" ),
+			( "A & B B & A", "A & B" ),
+			( "A & B & B & A", "A & B" ),
+			( "(A & (B & C))", "A & B & C" ),
+			( "(A B) & (A B C)", "A B" ),
+			( "(A B B C) & (A B A C C D)", "A B C" ),
+			( "(A & (A B))", "A" ),
+			( "A (A & B)", "A" ),
+			( "A A & B", "A" ),
+			( "B (A & B)", "B" ),
+			( "B A & B", "B" ),
+
+			( "(A in B) & A", "A in B" ),
+			( "(A in B) & B", "(A in B) & B" ),
+			( "(A containing B) & A", "A containing B" ),
+			( "(A containing B) & B", "(A containing B) & B" ),
+
+			( "(A in B) - (A B)", "" ),
+			( "(A in B) - (A C)", "" ),
+			( "(A in B) - (B C)", "(A in B) - (B C)" ),
+			( "(A in B) (A in B)", "A in B" ),
+			( "(A in B) (B in A)", "(A in B) (B in A)" ),
+			( "(A in B) (A & B) (A in B)", "(A in B) A & B" ),
+			( "(A in B) containing (B in A)", "(A in B) containing (B in A)" ),
+			( "(A in B) containing (A in B)", "A in B" ),
+			( "(A in B) in (B in A)", "(A in B) in (B in A)" ),
+			( "(A in B) in (A in B)", "A in B" ),
+			( "(A in B) in C", "(A in B) in C" ),
+			( "(A in B) (C in D)", "(A in B) (C in D)" ),
+			## \todo Consider simplifying the below to "(A C D) in B".
+			( "(((A in B) (C in B)) (D in B))", "(A in B) (C in B) (D in B)" ),
+
+			( "(A containing B) (A containing B)", "A containing B" ),
+			( "(A containing B) (B containing A)", "(A containing B) (B containing A)" ),
+			( "(A containing B) (A in B) (A containing B)", "(A containing B) (A in B)" ),
+			( "(A containing B) (A in B) (A containing B) (A in B)", "(A containing B) (A in B)" ),
+			( "A containing B in B containing A", "(A containing B) in (B containing A)" ),
+			( "A containing B in A containing B", "A containing B" ),
+
+			( "((A in B) containing B) - A", "" ),
+			( "((A in B) containing B) - B", "((A in B) containing B) - B" ),
+			( "((A in B) containing B) - C", "((A in B) containing B) - C" ),
+
+			( "((A - B) containing B) - A", "" ),
+			( "((A - B) containing B) - B", "((A - B) containing B) - B" ),
+			( "((A - B) containing B) - C", "((A - B) containing B) - C" ),
+
+			( "((A & B) containing B) - A", "" ),
+			( "((A & B) containing B) - B", "" ),
+			( "((A & B) containing B) - C", "((A & B) containing B) - C" ),
+			( "((A & B) containing B) - (A C)", "" ),
+			( "((A & B) containing B) - (A & B)", "" ),
+			( "((A & B) containing B) - (A - B)", "((A & B) containing B) - (A - B)" ),
+
+			( "(((A & D) & (B in C)) containing B) - A", "" ),
+			( "(A (A - B) (A & B) (A in B) (A containing B)) - A", "" ),
+			( "(A (A - B) (A & B) (A in B) (A containing B)) - B", "A - B" ),
+
+			( "A - B - C", "A - (B C)" ),
+			( "A - (B - C)", "A - (B - C)" ),
+			( "A (B - C)", "A B - C" ),
+			( "A - B - C - B", "A - (B C)" ),
+			( "A - (A B C)", "" ),
+			( "A - (A - B)", "A - (A - B)" ),
+
+			( "A - (B - C) - B", "A - B" ),
+			( "A - (B - C) - D", "A - (B - C D)" ),
+			( "(A - B) - (C B)", "A - (C B)" ),
+			( "(A - B) - (C D)", "A - (B C D)" ),
+			( "(((A - B) - C) - D)", "A - (B C D)" ),
+
+			( "A - (B & C)", "A - (B & C)" ),
+			( "A - (B & C) - B", "A - B" ),
+			( "A - (B (B & C))", "A - B" ),
+
+			( "A B - C A B", "A B" ),
+			( "A - C B - C", "A - C B - C" ),
+			( "(A - C) (B - C)", "A - C B - C" ),
+
+			( "(A B) - A - B", "" ),
+			( "(A B) - (A B)", "" ),
+			( "(A B) - (B A)", "" ),
+			( "(A B) - (A C)", "B - (A C)"),
+			( "(A B) - (C A B)", "" ),
+			( "(A B) - (A - B)", "(A B) - (A - B)" ),
+			( "(A B) - (A & B)", "(A B) - (A & B)" ),
+			( "(A B) - (A in B)", "(A B) - (A in B)" ),
+			( "(A B) - (A containing B)", "(A B) - (A containing B)" ),
+
+			( "(A B C) - A - B", "C - (A B)" ),
+			( "(A B C) - A", "(B C) - A" ),
+			( "(A B C) - (A B C)", "" ),
+			( "(A B C) - (C A B)", "" ),
+			( "(A B C D) - B", "(A C D) - B" ),
+			( "(A B C) - (B & A)", "(A B C) - (B & A)"),
+			( "(A (B C)) - B", "(A C) - B" ),
+			( "(A (B C)) - C", "(A B) - C" ),
+
+			( "((A B) - C) - D", "(A B) - (C D)" ),
+			( "((A - B) - C) - D", "A - (B C D)" ),
+			( "A - B - C D", "A - (B C) D" ),
+
+			( "(A & B) - (A & B)", "" ),
+			( "(A & B) - (B & A)", "" ),
+			( "(A & B) - (A & C)", "(A & B) - (A & C)" ),
+			( "(A & B) - (A C)", "" ),
+			( "(A & B) - (A B)", "" ),
+			( "(A & B) - (C B)", "" ),
+			( "(((A & B) & (C in D)) containing E) - A", "" ),
+			( "((A & B) (A & C)) - A", "" ),
+			( "A & B - C - C", "A & B - C" ),
+			( "(A A & B) - A", "" ),
+			( "(A A & B) - (A & B)", "A - (A & B)" ),
+
+			( "A /a - /a", "A" ),
+			( "A /b - /a", "A /b - /a" ),
+			( "(A /a) - /a", "A - /a" ),
+			( "(A /a) - A", "/a - A" ),
+			( "(A /a) - (B /a)", "A - (B /a)" ),
+			( "(A /a) - (B /b)", "(A /a) - (B /b)" ),
+
+			( "(A & (B in C)) - A", "" ),
+			( "(A & (B in C)) - B", "" ),
+			( "(A & (B in C)) - C", "(A & (B in C)) - C" ),
+
+			( "((A & B) containing C) - A", "" ),
+			( "((A & B) containing C) - B", "" ),
+			( "((A & B) containing C) - C", "((A & B) containing C) - C" ),
+			( "((A & B) containing C) - (A B)", "" ),
+			( "((A & B) containing C) - (A & B)", "" ),
+			( "((A & B) containing C) - (A - B)", "((A & B) containing C) - (A - B)" ),
+
+			( "((A & B) C) - A", "C - A" ),
+			( "((A & B) C) - B", "C - B" ),
+			( "((A & B) C) - C", "(A & B) - C" ),
+
+			( "C in (((D A B A) - A) & B)", "C in ((D B) - A & B)" ),
+		] :
+			with self.subTest( expression = expression, result = result ) :
+				simplified = Gaffer.SetExpressionAlgo.simplify( expression )
+				self.assertEqual( simplified, result )
+				# Our simplified expression cannot be further simplified.
+				self.assertEqual( Gaffer.SetExpressionAlgo.simplify( simplified ), simplified )
+				# Our simplified expression should evaluate to the same result as the original.
+				self.assertEqual( Gaffer.SetExpressionAlgo.evaluateSetExpression( expression, s ), Gaffer.SetExpressionAlgo.evaluateSetExpression( simplified, s ) )
+
 if __name__ == "__main__":
 	unittest.main()

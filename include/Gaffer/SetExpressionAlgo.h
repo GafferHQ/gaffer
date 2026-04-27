@@ -49,6 +49,9 @@ namespace Gaffer
 namespace SetExpressionAlgo
 {
 
+/// Evaluation
+/// ==========
+
 /// Interface for providing sets to `evaluateSetExpression` and `setExpressionHash`.
 struct SetProvider
 {
@@ -65,6 +68,21 @@ GAFFER_API IECore::PathMatcher evaluateSetExpression( const std::string &setExpr
 
 GAFFER_API void setExpressionHash( const std::string &setExpression, const SetProvider &setProvider, IECore::MurmurHash &h );
 GAFFER_API IECore::MurmurHash setExpressionHash( const std::string &setExpression, const SetProvider &setProvider );
+
+/// Editing
+/// =======
+
+/// Returns a simplified form of `setExpression`, handling cases including :
+/// - Duplications (e.g. "A A" -> "A")
+/// - Local cancellation (e.g. "A - A" -> "" or "(A B C) - (B C)" -> "A - (B C)")
+/// - Redundant operations (e.g. "A [in,containing,&] A" -> "A")
+/// - Repeated difference operators (e.g. "A - B - C - B" -> "A - (B C)")
+/// Simplification is intended to improve readability and reduce obvious redundancy,
+/// while keeping the evaluated result the same as the input set expression.
+/// Note that simplification does not return the canonical form of the expression -
+/// expressions that are functionally equivalent but differently structured may
+/// simplify to different results.
+GAFFER_API std::string simplify( const std::string &setExpression );
 
 } // namespace SetExpressionAlgo
 

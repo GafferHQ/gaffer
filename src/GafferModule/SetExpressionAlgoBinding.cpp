@@ -113,6 +113,7 @@ void bindSetExpressionAlgo()
 	def( "evaluateSetExpression", &evaluateSetExpressionWrapper );
 	def( "setExpressionHash", &setExpressionHashWrapper1 );
 	def( "setExpressionHash", &setExpressionHashWrapper2 );
+	def( "simplify", &Gaffer::SetExpressionAlgo::simplify );
 }
 
 } // namespace GafferModule
