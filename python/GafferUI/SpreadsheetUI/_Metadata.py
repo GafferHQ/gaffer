@@ -279,6 +279,7 @@ for key in [
 	"spreadsheet:columnWidth",
 	"plugValueWidget:type",
 	"presetsPlugValueWidget:allowCustom",
+	"ui:scene:acceptsSetExpression",
 ] :
 
 	Gaffer.Metadata.registerValue(

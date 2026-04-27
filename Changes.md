@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.17.0)
 =======
 
+Improvements
+------------
+
+- TweakPlug : Added `SetExpressionInclude` and `SetExpressionExclude` modes for tweaking set expressions.
+
 API
 ---
 
