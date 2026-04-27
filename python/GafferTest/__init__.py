@@ -163,6 +163,7 @@ from .ThreadMonitorTest import ThreadMonitorTest
 from .CollectTest import CollectTest
 from .ProcessTest import ProcessTest
 from .PatternMatchTest import PatternMatchTest
+from .SetExpressionAlgoTest import SetExpressionAlgoTest
 
 from .IECorePreviewTest import *
 

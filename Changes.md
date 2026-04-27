@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.17.0)
 =======
 
+API
+---
 
+- SetExpressionAlgo : Added new namespace with functions for evaluating set expressions.
 
 1.6.17.0 (relative to 1.6.16.0)
 ========

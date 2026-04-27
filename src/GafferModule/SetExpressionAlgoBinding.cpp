@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,79 +34,85 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/SetAlgo.h"
+#include "boost/python.hpp"
 
 #include "Gaffer/SetExpressionAlgo.h"
 
-using namespace IECore;
-using namespace Gaffer;
-using namespace GafferScene;
+#include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ScopedGILRelease.h"
+
+using namespace boost::python;
 
 namespace
 {
 
-struct SceneSetProvider : public Gaffer::SetExpressionAlgo::SetProvider
+struct SetProviderWrapper : Gaffer::SetExpressionAlgo::SetProvider, wrapper<Gaffer::SetExpressionAlgo::SetProvider>
 {
-	SceneSetProvider( const ScenePlug *scene )
-		: m_scene( scene )
-	{
-	}
 
 	IECore::ConstInternedStringVectorDataPtr setNames() const override
 	{
-		return m_scene->setNames();
+		IECorePython::ScopedGILLock gilLock;
+		return this->get_override( "setNames" )();
 	}
 
 	const IECore::PathMatcher paths( const std::string &setName ) const override
 	{
-		return m_scene->set( setName )->readable();
+		IECorePython::ScopedGILLock gilLock;
+		object result = this->get_override( "paths" )( setName );
+		extract<IECore::PathMatcher> e( result );
+
+		if( e.check() )
+		{
+			return e();
+		}
+		else
+		{
+			return IECore::PathMatcher();
+		}
 	}
 
 	void hash( const std::string &setName, IECore::MurmurHash &h ) const override
 	{
-		h.append( m_scene->setHash( setName ) );
+		IECorePython::ScopedGILLock gilLock;
+		h.append( (uint64_t)this->get_override( "hash" )( setName ) );
 	}
 
-	const ScenePlug *m_scene;
 };
 
-} // namespace
-
-namespace GafferScene
+IECore::PathMatcher evaluateSetExpressionWrapper( const std::string &setExpression, const Gaffer::SetExpressionAlgo::SetProvider &setProvider )
 {
-
-namespace SetAlgo
-{
-
-PathMatcher evaluateSetExpression( const std::string &setExpression, const ScenePlug *scene )
-{
-	return SetExpressionAlgo::evaluateSetExpression( setExpression, SceneSetProvider( scene ) );
+	IECorePython::ScopedGILRelease r;
+	return evaluateSetExpression( setExpression, setProvider );
 }
 
-void setExpressionHash( const std::string &setExpression, const ScenePlug *scene, IECore::MurmurHash &h )
+IECore::MurmurHash setExpressionHashWrapper1( const std::string &setExpression, const Gaffer::SetExpressionAlgo::SetProvider &setProvider )
 {
-	SetExpressionAlgo::setExpressionHash( setExpression, SceneSetProvider( scene ), h );
+	IECorePython::ScopedGILRelease r;
+	return setExpressionHash( setExpression, setProvider );
 }
 
-IECore::MurmurHash setExpressionHash( const std::string &setExpression, const ScenePlug *scene )
+void setExpressionHashWrapper2( const std::string &setExpression, const Gaffer::SetExpressionAlgo::SetProvider &setProvider, IECore::MurmurHash &h )
 {
-	IECore::MurmurHash h = IECore::MurmurHash();
-	setExpressionHash( setExpression, scene, h );
-	return h;
+	IECorePython::ScopedGILRelease r;
+	setExpressionHash( setExpression, setProvider, h );
 }
 
-bool affectsSetExpression( const Plug *scenePlugChild )
-{
-	if( auto parent = scenePlugChild->parent<ScenePlug>() )
-	{
-		return
-			scenePlugChild == parent->setPlug() ||
-			scenePlugChild == parent->setNamesPlug()
-		;
-	}
-	return false;
 }
 
-} // namespace SetAlgo
+namespace GafferModule
+{
 
-} // namespace GafferScene
+void bindSetExpressionAlgo()
+{
+	object module( borrowed( PyImport_AddModule( "Gaffer.SetExpressionAlgo" ) ) );
+	scope().attr( "SetExpressionAlgo" ) = module;
+	scope moduleScope( module );
+
+	class_<SetProviderWrapper, boost::noncopyable>( "SetProvider" );
+
+	def( "evaluateSetExpression", &evaluateSetExpressionWrapper );
+	def( "setExpressionHash", &setExpressionHashWrapper1 );
+	def( "setExpressionHash", &setExpressionHashWrapper2 );
+}
+
+} // namespace GafferModule

@@ -331,6 +331,50 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertFalse( GafferScene.SetAlgo.affectsSetExpression( Gaffer.IntPlug() ) )
 
+	def testContext( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphereA"] = GafferScene.Sphere()
+		s["sphereA"]["name"].setValue( "sphereA" )
+		s["sphereB"] = GafferScene.Sphere()
+		s["sphereB"]["name"].setValue( "sphereB" )
+		s["sphereC"] = GafferScene.Sphere()
+		s["sphereC"]["name"].setValue( "sphereC" )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["sphereA"]["out"] )
+		s["group"]["in"][1].setInput( s["sphereB"]["out"] )
+		s["group"]["in"][2].setInput( s["sphereC"]["out"] )
+
+		s["set"] = GafferScene.Set()
+		s["set"]["name"].setValue( "varyingSet" )
+		s["set"]["in"].setInput( s["group"]["out"] )
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["set"]["paths"] = IECore.StringVectorData( [ f"/group/sphere{x}" for x in context.get( "test:setContents", "" ) ] )' )
+
+		hashes = set()
+
+		with Gaffer.Context() as context :
+
+			for contents, paths in (
+				( "A", [ "/group/sphereA" ] ),
+				( "B", [ "/group/sphereB" ] ),
+				( "C", [ "/group/sphereC" ] ),
+				( "AB", [ "/group/sphereA", "/group/sphereB" ] ),
+				( "BC", [ "/group/sphereB", "/group/sphereC" ] ),
+				( "", [] ),
+			) :
+				with self.subTest( contents = contents, paths = paths ) :
+
+					context["test:setContents"] = contents
+					self.assertCorrectEvaluation( s["set"]["out"], "varyingSet", paths )
+
+					h = GafferScene.SetAlgo.setExpressionHash( "varyingSet", s["set"]["out"] )
+					self.assertNotIn( h, hashes )
+					hashes.add( h )
+
 	def assertCorrectEvaluation( self, scenePlug, expression, expectedContents ) :
 
 		result = set( GafferScene.SetAlgo.evaluateSetExpression( expression, scenePlug ).paths() )

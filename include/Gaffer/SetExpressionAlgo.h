@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
@@ -35,79 +34,38 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/SetAlgo.h"
+#pragma once
 
-#include "Gaffer/SetExpressionAlgo.h"
+#include "Gaffer/Export.h"
 
-using namespace IECore;
-using namespace Gaffer;
-using namespace GafferScene;
+#include "IECore/PathMatcher.h"
+#include "IECore/VectorTypedData.h"
 
-namespace
+#include <string>
+
+namespace Gaffer
 {
 
-struct SceneSetProvider : public Gaffer::SetExpressionAlgo::SetProvider
+namespace SetExpressionAlgo
 {
-	SceneSetProvider( const ScenePlug *scene )
-		: m_scene( scene )
-	{
-	}
 
-	IECore::ConstInternedStringVectorDataPtr setNames() const override
-	{
-		return m_scene->setNames();
-	}
-
-	const IECore::PathMatcher paths( const std::string &setName ) const override
-	{
-		return m_scene->set( setName )->readable();
-	}
-
-	void hash( const std::string &setName, IECore::MurmurHash &h ) const override
-	{
-		h.append( m_scene->setHash( setName ) );
-	}
-
-	const ScenePlug *m_scene;
+/// Interface for providing sets to `evaluateSetExpression` and `setExpressionHash`.
+struct SetProvider
+{
+	/// Must be implemented to provide the names of all available sets.
+	virtual IECore::ConstInternedStringVectorDataPtr setNames() const = 0;
+	/// Must be implemented to provide the contents of set `setName`.
+	virtual const IECore::PathMatcher paths( const std::string &setName ) const = 0;
+	/// Must be implemented to provide the hash of `setName`.
+	virtual void hash( const std::string &setName, IECore::MurmurHash &h ) const = 0;
+	virtual ~SetProvider() {};
 };
 
-} // namespace
+GAFFER_API IECore::PathMatcher evaluateSetExpression( const std::string &setExpression, const SetProvider &setProvider );
 
-namespace GafferScene
-{
+GAFFER_API void setExpressionHash( const std::string &setExpression, const SetProvider &setProvider, IECore::MurmurHash &h );
+GAFFER_API IECore::MurmurHash setExpressionHash( const std::string &setExpression, const SetProvider &setProvider );
 
-namespace SetAlgo
-{
+} // namespace SetExpressionAlgo
 
-PathMatcher evaluateSetExpression( const std::string &setExpression, const ScenePlug *scene )
-{
-	return SetExpressionAlgo::evaluateSetExpression( setExpression, SceneSetProvider( scene ) );
-}
-
-void setExpressionHash( const std::string &setExpression, const ScenePlug *scene, IECore::MurmurHash &h )
-{
-	SetExpressionAlgo::setExpressionHash( setExpression, SceneSetProvider( scene ), h );
-}
-
-IECore::MurmurHash setExpressionHash( const std::string &setExpression, const ScenePlug *scene )
-{
-	IECore::MurmurHash h = IECore::MurmurHash();
-	setExpressionHash( setExpression, scene, h );
-	return h;
-}
-
-bool affectsSetExpression( const Plug *scenePlugChild )
-{
-	if( auto parent = scenePlugChild->parent<ScenePlug>() )
-	{
-		return
-			scenePlugChild == parent->setPlug() ||
-			scenePlugChild == parent->setNamesPlug()
-		;
-	}
-	return false;
-}
-
-} // namespace SetAlgo
-
-} // namespace GafferScene
+} // namespace Gaffer
