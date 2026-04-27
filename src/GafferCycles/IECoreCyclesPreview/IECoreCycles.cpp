@@ -146,9 +146,9 @@ IECore::CompoundDataPtr nodeData()
 	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &nodes = result->writable();
 
-	for( const auto& nodeType : ccl::NodeType::types() )
+	for( const auto& nodeType : ccl::NodeType::type_names() )
 	{
-		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType.first );
+		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType );
 		if( cNodeType )
 		{
 			// We skip "ShaderNode" types here
@@ -156,14 +156,14 @@ IECore::CompoundDataPtr nodeData()
 				continue;
 
 			// The shader node we skip
-			if( nodeType.first == "shader" )
+			if( nodeType == "shader" )
 				continue;
 
 			IECore::CompoundDataPtr node = new IECore::CompoundData();
 			IECore::CompoundDataMap &n = node->writable();
 			n["in"] = getSockets( cNodeType, false );
 			n["out"] = getSockets( cNodeType, true );
-			nodes[nodeType.first.c_str()] = std::move( node );
+			nodes[nodeType.c_str()] = std::move( node );
 		}
 	}
 	return result;
@@ -174,14 +174,14 @@ IECore::CompoundDataPtr shaderData()
 	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &shaders = result->writable();
 
-	for( const auto& nodeType : ccl::NodeType::types() )
+	for( const auto& nodeType : ccl::NodeType::type_names() )
 	{
 		// Skip over the "output" ShaderNode, as this is a part of the main
 		// "shader" node.
-		if( std::string( nodeType.first.c_str() ) == "output" )
+		if( std::string( nodeType.c_str() ) == "output" )
 			continue;
 
-		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType.first );
+		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType );
 		if( cNodeType )
 		{
 			if( cNodeType->type == ccl::NodeType::SHADER )
@@ -191,7 +191,7 @@ IECore::CompoundDataPtr shaderData()
 				s["in"] = getSockets( cNodeType, false );
 				s["out"] = getSockets( cNodeType, true );
 
-				std::string type( nodeType.first.c_str() );
+				std::string type( nodeType.c_str() );
 
 				if( boost::ends_with( type, "bsdf" ) )
 				{
