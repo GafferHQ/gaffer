@@ -83,6 +83,17 @@ GAFFER_API IECore::MurmurHash setExpressionHash( const std::string &setExpressio
 /// expressions that are functionally equivalent but differently structured may
 /// simplify to different results.
 GAFFER_API std::string simplify( const std::string &setExpression );
+/// Returns a set expression that includes `inclusions` in `setExpression`.
+/// The new set expression is equivalent to `setExpression | inclusions` with any
+/// overlapping operations in `inclusions` first removed from `setExpression` and
+/// the result simplified.
+GAFFER_API std::string include( const std::string &setExpression, const std::string &inclusions );
+/// Returns a set expression that excludes `exclusions` from `setExpression`.
+/// The new set expression is equivalent to `setExpression - exclusions` with any
+/// overlapping operations in `exclusions` first removed from `setExpression` and
+/// the result simplified. Returns "" if `setExpression` is empty or would simplify
+/// to an empty expression.
+GAFFER_API std::string exclude( const std::string &setExpression, const std::string &exclusions );
 
 } // namespace SetExpressionAlgo
 

@@ -114,6 +114,8 @@ void bindSetExpressionAlgo()
 	def( "setExpressionHash", &setExpressionHashWrapper1 );
 	def( "setExpressionHash", &setExpressionHashWrapper2 );
 	def( "simplify", &Gaffer::SetExpressionAlgo::simplify );
+	def( "include", &Gaffer::SetExpressionAlgo::include );
+	def( "exclude", &Gaffer::SetExpressionAlgo::exclude );
 }
 
 } // namespace GafferModule

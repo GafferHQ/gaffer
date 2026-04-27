@@ -539,6 +539,111 @@ struct SimplifyVisitor
 		}
 };
 
+// Removes the ops in `removalsAst` from the visited AST.
+/// \todo This could be exposed as
+/// SetExpressionAlgo::remove( const std::string &setExpression, const std::string &removals )`
+/// to provide a more robust way of performing operations such as drag-and-drop removal of
+/// set names in SetFilterUI or _InspectorColumn. When doing this we'd likely want a mode
+/// that does not remove from the RHS of Difference ops, as this currently does.
+struct RemovalVisitor
+{
+	using result_type = ExpressionAst;
+
+	RemovalVisitor( const ExpressionAst &removalsAst )
+	{
+		std::vector<ExpressionAst> ops;
+		collectOperands( removalsAst, Union, ops );
+
+		for( auto &o : ops )
+		{
+			m_removals.insert( o );
+		}
+	}
+
+	ExpressionAst operator()( const std::string &s ) const
+	{
+		return filter( s );
+	}
+
+	ExpressionAst operator()( const Nil & ) const
+	{
+		return Nil{};
+	}
+
+	ExpressionAst operator()( const BinaryOp &expr ) const
+	{
+		if( m_removals.count( expr ) )
+		{
+			return Nil();
+		}
+
+		ExpressionAst filteredLeft = filter( boost::apply_visitor( *this, expr.left ) );
+		if( expr.op != Union && boost::get<Nil>( &filteredLeft ) )
+		{
+			// Omit the operation as the entire left side has been removed.
+			return Nil{};
+		}
+
+		if( expr.op == Containing || expr.op == In )
+		{
+			// Removals only affect the left side of these operations.
+			return BinaryOp( filteredLeft, expr.op, expr.right );
+		}
+
+		ExpressionAst filteredRight = filter( boost::apply_visitor( *this, expr.right ) );
+		if( expr.op == Union && boost::get<Nil>( &filteredLeft ) )
+		{
+			// Union with no remaining left side, so return the right.
+			return filteredRight;
+		}
+
+		if( boost::get<Nil>( &filteredRight ) )
+		{
+			if( expr.op == Intersection )
+			{
+				// Omit the operation as the entire right side has been removed.
+				return Nil();
+			}
+
+			// Return the left side of the Union or Difference.
+			return filteredLeft;
+		}
+
+		return BinaryOp( filteredLeft, expr.op, filteredRight );
+	}
+
+	private :
+
+		ExpressionAst filter( const ExpressionAst &ast ) const
+		{
+			std::vector<ExpressionAst> result;
+			std::vector<ExpressionAst> ops;
+			collectOperands( ast, Union, ops );
+			for( auto &o : ops )
+			{
+				if( !m_removals.count( o ) )
+				{
+					result.push_back( o );
+				}
+			}
+
+			return buildTree( Union, result );
+		}
+
+		ExpressionAst filter( const std::string &s ) const
+		{
+			if( m_removals.count( s ) )
+			{
+				return Nil();
+			}
+
+			return s;
+		}
+
+		std::set<ExpressionAst> m_removals;
+
+};
+
 #ifdef BOOST_SPIRIT_DEBUG
 // support for printing ExpressionsAst's for debugging through BOOST_SPIRIT_DEBUG
 std::ostream& operator<<( std::ostream& stream, const ExpressionAst& expr )
@@ -858,6 +963,43 @@ ExpressionAst simplifyExpression( ExpressionAst ast )
 	}
 }
 
+ExpressionAst includeExpression( const ExpressionAst &ast, const ExpressionAst &inclusions )
+{
+	// We first apply the RemovalVisitor to remove any ops in inclusions from the input ast
+	// before we merge `ast` with `inclusions` and simplify. This ensures the inclusions remain
+	// on the right-hand side of the expression after simplification.
+	// As the RemovalVisitor acts as a global removal operation on `ast`, it is able to remove
+	// all ops in `ast` that are obviated by the ones in `inclusions`, rather than relying on
+	// the local cancellation operations performed by `simplifyExpression()`.
+	ExpressionAst simplifiedInclusions = simplifyExpression( inclusions );
+	ExpressionAst filteredAst = boost::apply_visitor( RemovalVisitor( simplifiedInclusions ), simplifyExpression( ast ) );
+
+	if( boost::get<Nil>( &filteredAst ) )
+	{
+		// `ast` has been completely replaced by `inclusions` so we can return it directly.
+		return simplifiedInclusions;
+	}
+
+	return simplifyExpression( BinaryOp( filteredAst, Union, simplifiedInclusions ) );
+}
+
+ExpressionAst excludeExpression( const ExpressionAst &ast, const ExpressionAst &exclusions )
+{
+	// We first apply the RemovalVisitor to remove any ops in exclusions from the input ast
+	// before we subtract `exclusions` from `ast` and simplify. This ensures the exclusions
+	// remain on the right-hand side of the final expression after simplification.
+	ExpressionAst simplifiedExclusions = simplifyExpression( exclusions );
+	ExpressionAst filteredAst = boost::apply_visitor( RemovalVisitor( simplifiedExclusions ), simplifyExpression( ast ) );
+
+	if( boost::get<Nil>( &filteredAst ) )
+	{
+		// Return Nil as it is invalid to subtract from an empty set expression.
+		return Nil();
+	}
+
+	return simplifyExpression( BinaryOp( filteredAst, Difference, simplifiedExclusions ) );
+}
+
 } // namespace
 
 namespace Gaffer
@@ -894,6 +1036,36 @@ std::string simplify( const std::string &setExpression )
 	expressionToAST( setExpression, ast );
 
 	return boost::apply_visitor( AstSerialiser{}, simplifyExpression( ast ) );
+}
+
+std::string include( const std::string &setExpression, const std::string &inclusions )
+{
+	if( inclusions == "" )
+	{
+		return setExpression;
+	}
+
+	ExpressionAst ast;
+	ExpressionAst inclusionsAst;
+	expressionToAST( setExpression, ast );
+	expressionToAST( inclusions, inclusionsAst );
+
+	return boost::apply_visitor( AstSerialiser{}, includeExpression( ast, inclusionsAst ) );
+}
+
+std::string exclude( const std::string &setExpression, const std::string &exclusions )
+{
+	if( exclusions == "" )
+	{
+		return setExpression;
+	}
+
+	ExpressionAst ast;
+	ExpressionAst exclusionsAst;
+	expressionToAST( setExpression, ast );
+	expressionToAST( exclusions, exclusionsAst );
+
+	return boost::apply_visitor( AstSerialiser{}, excludeExpression( ast, exclusionsAst ) );
 }
 
 } // namespace SetExpressionAlgo
