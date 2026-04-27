@@ -53,20 +53,24 @@ using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 
+// SubGraph
+// ========
+
 namespace
 {
 
-// Box
-// ===
-
-class BoxSerialiser : public NodeSerialiser
+class SubGraphSerialiser : public NodeSerialiser
 {
 
 	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
 		{
-			return true;
+			const SubGraph *subGraph = static_cast<const SubGraph *>( child->parent() );
+			if( !subGraph->isReference() )
+			{
+				return true;
+			}
 		}
 		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
 	}
@@ -75,11 +79,59 @@ class BoxSerialiser : public NodeSerialiser
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
 		{
-			return true;
+			const SubGraph *subGraph = static_cast<const SubGraph *>( child->parent() );
+			if( !subGraph->isReference() )
+			{
+				return true;
+			}
 		}
 		return NodeSerialiser::childNeedsConstruction( child, serialisation );
 	}
 
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		const SubGraph *subGraph = static_cast<const SubGraph *>( graphComponent );
+
+		const std::filesystem::path &fileName = subGraph->referenceFileName();
+		if( fileName.empty() )
+		{
+			return "";
+		};
+
+		if( IECore::runTimeCast<const Reference>( subGraph ) )
+		{
+			// Serialise using deprecated method so we can load again in Gaffer 1.6
+			// if needed.
+			/// \todo Remove
+			return identifier + ".load( \"" + fileName.generic_string() + "\" )\n";
+		}
+		else
+		{
+			return identifier + ".loadReference( \"" + fileName.generic_string() + "\" )\n";
+		}
+	}
+
+};
+
+void loadReferenceWrapper( SubGraph &subGraph, const std::filesystem::path &fileName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	subGraph.loadReference( fileName );
+}
+
+struct ReferenceChangedSlotCaller
+{
+	void operator()( boost::python::object slot, SubGraphPtr subGraph )
+	{
+		try
+		{
+			slot( subGraph );
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
 };
 
 } // namespace
@@ -274,24 +326,6 @@ struct ReferenceLoadedSlotCaller
 	}
 };
 
-class ReferenceSerialiser : public NodeSerialiser
-{
-
-	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
-	{
-		const Reference *r = static_cast<const Reference *>( graphComponent );
-
-		const std::filesystem::path &fileName = r->fileName();
-		if( fileName.empty() )
-		{
-			return "";
-		};
-
-		return identifier + ".load( \"" + fileName.generic_string() + "\" )\n";
-	}
-
-};
-
 void load( Reference &r, const std::filesystem::path &f )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -303,7 +337,19 @@ void load( Reference &r, const std::filesystem::path &f )
 void GafferModule::bindSubGraph()
 {
 	using SubGraphWrapper = DependencyNodeWrapper<SubGraph>;
-	DependencyNodeClass<SubGraph, SubGraphWrapper>();
+	DependencyNodeClass<SubGraph, SubGraphWrapper>()
+		.def( "exportReference", &SubGraph::exportReference )
+		.def( "loadReference", &loadReferenceWrapper )
+		.def( "isReference", &SubGraph::isReference )
+		.def( "referenceFileName", &SubGraph::referenceFileName, return_value_policy<copy_const_reference>() )
+		.def( "referenceChangedSignal", &SubGraph::referenceChangedSignal, return_internal_reference<1>() )
+		.def( "hasMetadataEdit", &SubGraph::hasMetadataEdit )
+		.def( "isChildEdit", &SubGraph::isChildEdit )
+	;
+
+	SignalClass<SubGraph::ReferenceChangedSignal, DefaultSignalCaller<SubGraph::ReferenceChangedSignal>, ReferenceChangedSlotCaller >( "ReferenceChangedSignal" );
+
+	Serialisation::registerSerialiser( SubGraph::staticTypeId(), new SubGraphSerialiser );
 
 	using BoxWrapper = DependencyNodeWrapper<Box>;
 
@@ -312,8 +358,6 @@ void GafferModule::bindSubGraph()
 		.def( "create", &Box::create )
 		.staticmethod( "create" )
 	;
-
-	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
 
 	NodeClass<BoxIO>( nullptr, no_init )
 		.def( "setup", &setup<BoxIO>, ( arg( "plug" ) = object() ) )
@@ -337,13 +381,9 @@ void GafferModule::bindSubGraph()
 		.def( "load", &load )
 		.def( "fileName", &Reference::fileName, return_value_policy<copy_const_reference>() )
 		.def( "referenceLoadedSignal", &Reference::referenceLoadedSignal, return_internal_reference<1>() )
-		.def( "hasMetadataEdit", &Reference::hasMetadataEdit )
-		.def( "isChildEdit", &Reference::isChildEdit )
 	;
 
 	SignalClass<Reference::ReferenceLoadedSignal, DefaultSignalCaller<Reference::ReferenceLoadedSignal>, ReferenceLoadedSlotCaller >( "ReferenceLoadedSignal" );
-
-	Serialisation::registerSerialiser( Reference::staticTypeId(), new ReferenceSerialiser );
 
 	NodeClass<EditScope>()
 		.def( "setup", &setup<EditScope>, ( arg( "plug" ) ) )

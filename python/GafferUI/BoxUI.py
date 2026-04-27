@@ -37,6 +37,7 @@
 import os
 import inspect
 import functools
+import pathlib
 
 import IECore
 
@@ -214,6 +215,21 @@ def __formatPlugs( box, plugs ) :
 
 	return result
 
+def __waitForReferenceFileName( menu, node, **dialogueKeywords ) :
+
+	bookmarks = GafferUI.Bookmarks.acquire( node, category="reference" )
+
+	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
+	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
+
+	dialogue = GafferUI.PathChooserDialogue( path, leaf=True, bookmarks=bookmarks, **dialogueKeywords )
+	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.Window ) )
+
+	if not path :
+		return
+
+	return pathlib.Path( path ).with_suffix( ".grf" )
+
 def __exportForReferencing( menu, node ) :
 
 	nonDefaultPlugs = __nonDefaultPlugs( node )
@@ -239,34 +255,15 @@ def __exportForReferencing( menu, node ) :
 		if not dialogue.waitForConfirmation() :
 			return
 
-	bookmarks = GafferUI.Bookmarks.acquire( node, category="reference" )
-
-	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
-	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
-
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export reference", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
-	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.Window ) )
-
+	path = __waitForReferenceFileName( menu, node, title="Export reference", confirmLabel="Export" )
 	if not path :
 		return
-
-	path = str( path )
-	if not path.endswith( ".grf" ) :
-		path += ".grf"
 
 	node.exportForReference( path )
 
 def __importReference( menu, node ) :
 
-	bookmarks = GafferUI.Bookmarks.acquire( node, category="reference" )
-
-	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
-	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
-
-	window = menu.ancestor( GafferUI.Window )
-	dialogue = GafferUI.PathChooserDialogue( path, title="Import reference", confirmLabel="Import", leaf=True, valid=True, bookmarks=bookmarks )
-	path = dialogue.waitForPath( parentWindow = window )
-
+	path = __waitForReferenceFileName( menu, node, title="Import reference", confirmLabel="Import", valid=True )
 	if not path :
 		return
 
@@ -274,7 +271,7 @@ def __importReference( menu, node ) :
 	with GafferUI.ErrorDialogue.ErrorHandler(
 		title = "Error Importing Reference",
 		closeLabel = "Oy vey",
-		parentWindow = window
+		parentWindow = menu.ancestor( GafferUI.Window )
 	) :
 		with Gaffer.UndoScope( scriptNode ) :
 			scriptNode.executeFile( str( path ), parent = node, continueOnError = True )
