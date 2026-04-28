@@ -44,6 +44,7 @@
 #include "IECore/StringAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/flat_set.hpp"
 #include "boost/fusion/include/adapt_struct.hpp"
 #include "boost/phoenix/operator.hpp"
 #include "boost/spirit/include/classic_core.hpp"
@@ -640,7 +641,7 @@ struct RemovalVisitor
 			return s;
 		}
 
-		std::set<ExpressionAst> m_removals;
+		boost::container::flat_set<ExpressionAst> m_removals;
 
 };
 
