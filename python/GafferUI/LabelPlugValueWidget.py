@@ -37,6 +37,8 @@
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 from Qt import QtWidgets
 
 ## A simple PlugValueWidget which just displays the name of the plug,
@@ -47,6 +49,8 @@ from Qt import QtWidgets
 #  - "renameable"
 #  - "labelPlugValueWidget:showValueChangedIndicator" : If `False`, the indicator that the
 #  plug value has changed will not be shown. Defaults to `True` if not set.
+#  - "labelPlugValueWidget:icon" : An icon to display next to the plug label.
+#  - "labelPlugValueWidget:iconToolTip" : A toolTip to show for the icon.
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## \todo Remove alignment arguments. Vertically the only alignment that looks good is `Center`, and
@@ -87,6 +91,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__editableLabel = None # we'll make this lazily as needed
 
+		self.__iconWidget = None
+		self.__updateIcon()
+
 		# Connecting at front so we're called before the slots
 		# connected by the NameLabel class.
 		self.__label.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
@@ -113,6 +120,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			else :
 				self.__editableLabel.setGraphComponent( None )
 
+		self.__updateIcon()
+
 		self.__updatePlugMetadataChangedConnections()
 		self.__updateDoubleClickConnection()
 
@@ -135,6 +144,12 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				result += "- Shift+left or middle drag to transfer value"
 
 		return result
+
+	def setFixedWidth( self, width ) :
+
+		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		self._qtWidget().setFixedWidth( width )
+		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred )
 
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
@@ -287,6 +302,27 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# The NameLabel doesn't know that our formatter is sensitive
 			# to the metadata, so give it a little kick.
 			self.__label.setFormatter( self.__formatter )
+		elif key == "labelPlugValueWidget:icon" :
+			self.__updateIcon()
+		elif key == "labelPlugValueWidget:iconToolTip" :
+			self.__updateIcon()
+
+	def __updateIcon( self ) :
+
+		layout = self._qtWidget().layout()
+		if self.__iconWidget is not None :
+			layout.removeWidget( self.__iconWidget._qtWidget() )
+			# Tell Qt to delete the object in the next event loop iteration.
+			# The widget is no longer in the layout but is still a child of
+			# `self._qtWidget()`.
+			self.__iconWidget._qtWidget().deleteLater()
+
+		if ( icon := sole( Gaffer.Metadata.value( p, "labelPlugValueWidget:icon" ) for p in self.getPlugs() )  ) is not None :
+			self.__iconWidget = GafferUI.Image( icon )
+			toolTip = sole( Gaffer.Metadata.value( p, "labelPlugValueWidget:iconToolTip" ) for p in self.getPlugs() )
+			if toolTip is not None :
+				self.__iconWidget.setToolTip( toolTip )
+			layout.addWidget( self.__iconWidget._qtWidget() )
 
 	@staticmethod
 	def __formatter( graphComponents ) :

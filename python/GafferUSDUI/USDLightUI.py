@@ -43,6 +43,30 @@ import Gaffer
 import GafferUI
 import GafferUSD
 
+def __renderer( plug ) :
+
+	for rendererTarget in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "optionPrefix" ) :
+		renderer = rendererTarget[9:]  # Trim off "renderer:"
+		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
+		prefix = "arnold:" if renderer == "Arnold" else Gaffer.Metadata.value( rendererTarget, "optionPrefix" )
+
+		if plug.getName().startswith( prefix ) :
+			return renderer
+
+	return None
+
+def __labelPlugValueWidgetIcon( plug ) :
+
+	if ( renderer := __renderer( plug ) ) is not None :
+		return "renderer" + renderer + "OnIcon.png"
+
+	return None
+
+def __labelPlugValueWidgetIconToolTip( plug ) :
+
+	if ( renderer := __renderer( plug ) ) is not None :
+		return f"Parameter is specific to {renderer}."
+
 Gaffer.Metadata.registerNode(
 
 	GafferUSD.USDLight,
@@ -71,6 +95,13 @@ Gaffer.Metadata.registerNode(
 			"path:value" : True,
 			"fileSystemPath:extensions" : "ies",
 		},
+
+		"parameters.*" : {
+
+			"labelPlugValueWidget:icon" : __labelPlugValueWidgetIcon,
+			"labelPlugValueWidget:iconToolTip" : __labelPlugValueWidgetIconToolTip,
+
+		}
 
 	}
 )

@@ -33,47 +33,47 @@ class "GafferCyclesLightAPI" (
 
 	string inputs:cycles:lightgroup = "" (
 		displayGroup = "Basic"
-		displayName = "Light Group (Cycles)"
+		displayName = "Light Group"
 	)
 
 	bool inputs:cycles:use_mis = true (
 		displayGroup = "Refine"
-		displayName = "MIS (Cycles)"
+		displayName = "MIS"
 	)
 
 	bool inputs:cycles:use_camera = true (
 		displayGroup = "Refine"
-		displayName = "Camera (Cycles)"
+		displayName = "Camera"
 	)
 
 	bool inputs:cycles:use_diffuse = true (
 		displayGroup = "Refine"
-		displayName = "Diffuse (Cycles)"
+		displayName = "Diffuse"
 	)
 
 	bool inputs:cycles:use_glossy = true (
 		displayGroup = "Refine"
-		displayName = "Glossy (Cycles)"
+		displayName = "Glossy"
 	)
 
 	bool inputs:cycles:use_transmission = true (
 		displayGroup = "Refine"
-		displayName = "Transmission (Cycles)"
+		displayName = "Transmission"
 	)
 
 	bool inputs:cycles:use_scatter = true (
 		displayGroup = "Refine"
-		displayName = "Volume Scatter (Cycles)"
+		displayName = "Volume Scatter"
 	)
 
 	bool inputs:cycles:use_caustics = false (
 		displayGroup = "Refine"
-		displayName = "Shadow Caustics (Cycles)"
+		displayName = "Shadow Caustics"
 	)
 
 	int inputs:cycles:max_bounces = 1024 (
 		displayGroup = "Refine"
-		displayName = "Max Bounces (Cycles)"
+		displayName = "Max Bounces"
 	)
 
 }
@@ -90,7 +90,7 @@ class "GafferCyclesDiskLightAPI" (
 
 	float inputs:cycles:spread = 180.0 (
 		displayGroup = "Geometry"
-		displayName = "Spread (Cycles)"
+		displayName = "Spread"
 	)
 
 }
@@ -107,7 +107,7 @@ class "GafferCyclesQuadLightAPI" (
 
 	float inputs:cycles:spread = 180.0 (
 		displayGroup = "Geometry"
-		displayName = "Spread (Cycles)"
+		displayName = "Spread"
 	)
 
 }
@@ -124,7 +124,7 @@ class "GafferCyclesBackgroundLightAPI" (
 
 	int inputs:cycles:map_resolution = 1024 (
 		displayGroup = "Sampling"
-		displayName = "Map Resolution (Cycles)"
+		displayName = "Map Resolution"
 	)
 
 }

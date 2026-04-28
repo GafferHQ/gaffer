@@ -95,7 +95,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			self.getPlugs(),
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		nameWidget.setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__column[0].append(
 			nameWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -105,7 +105,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["exists"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		existsLabelWidget.label()._qtWidget().setFixedWidth( 35 )
+		existsLabelWidget.setFixedWidth( 35 )
 		self.__column[0].append(
 			existsLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -120,7 +120,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug['type'] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		typeLabelWidget.label()._qtWidget().setFixedWidth( 30 )
+		typeLabelWidget.setFixedWidth( 30 )
 		self.__column[0].append(
 			typeLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -135,7 +135,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["interpolation"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		interpLabelWidget.label()._qtWidget().setFixedWidth( 80 )
+		interpLabelWidget.setFixedWidth( 80 )
 		self.__column[0].append(
 			interpLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -149,7 +149,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["value"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		valueLabelWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		valueLabelWidget.setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__column[1].append(
 			valueLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top

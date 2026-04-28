@@ -13,6 +13,7 @@ Improvements
 - Scene Editors : The effects of the `render:inclusions`, `render:exclusions` and `render:additionalLights` options are now represented in the Scene Editors. As these options result in the RenderSetAdaptor pruning scene locations at render time, the Hierarchy View, Attribute Editor and Light Editor now display the same pruned scene hierarchy provided to the renderer.
 - SetEditor, PrimitiveInspector, UVInspector : Added inspection of scene edits performed by render adaptors registered to `client = "SceneEditor"`.
 - SceneInspector : Added double-click editing of primitive variable data when the source is a PrimitiveVariables or PrimitiveVariableTweaks node.
+- USDLight : Added icon indicating which renderer a renderer-specific parameter applies to and removed the renderer text from the plug label.
 
 Fixes
 -----
@@ -37,6 +38,9 @@ API
 ---
 
 - SceneAlgo : Added `primitiveVariableHistory()` function.
+- LabelPlugValueWidget :
+  - Added support for icons and icon toolTips on plug names using `labelPlugValueWidget:icon` and `labelPlugValueWidget:iconToolTip` metadata, respectively.
+  - Added `setFixedWidth()` method.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========

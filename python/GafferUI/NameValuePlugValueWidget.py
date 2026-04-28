@@ -44,6 +44,8 @@ import GafferUI.SpreadsheetUI
 
 from GafferUI.PlugValueWidget import sole
 
+from Qt import QtWidgets
+
 ## Supported plug metadata :
 #
 # - "nameValuePlugPlugValueWidget:ignoreNamePlug", set to True to ignore the name plug and instead show a
@@ -66,7 +68,7 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.getPlugs(),
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 			)
-			nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+			nameWidget.setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 			nameWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 		else :
 			nameWidget = GafferUI.StringPlugValueWidget( { plug["name"] for plug in self.getPlugs() } )
