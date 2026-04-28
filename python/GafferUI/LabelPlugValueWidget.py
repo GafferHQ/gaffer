@@ -304,10 +304,12 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __updateIcon( self ) :
 
 		layout = self._qtWidget().layout()
-		for i in range( 0, layout.count() ) :
-			layoutItem = layout.itemAt( i )
-			if layoutItem.widget() != self.label()._qtWidget() :
-				layout.removeItem( layoutItem )
+		if self.__iconWidget is not None :
+			layout.removeWidget( self.__iconWidget._qtWidget() )
+			# Tell Qt to delete the object in the next event loop iteration.
+			# The widget is no longer in the layout but is still a child of
+			# `self._qtWidget()`.
+			self.__iconWidget._qtWidget().deleteLater()
 
 		if ( icon := sole( Gaffer.Metadata.value( p, "labelPlugValueWidget:icon" ) for p in self.getPlugs() )  ) is not None :
 			self.__iconWidget = GafferUI.Image( icon )
