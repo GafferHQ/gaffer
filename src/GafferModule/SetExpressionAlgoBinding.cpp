@@ -74,7 +74,9 @@ struct SetProviderWrapper : Gaffer::SetExpressionAlgo::SetProvider, wrapper<Gaff
 	void hash( const std::string &setName, IECore::MurmurHash &h ) const override
 	{
 		IECorePython::ScopedGILLock gilLock;
-		h.append( (uint64_t)this->get_override( "hash" )( setName ) );
+		object pythonHash( h );
+		this->get_override( "hash" )( setName, pythonHash );
+		h = extract<IECore::MurmurHash>( pythonHash );
 	}
 
 };

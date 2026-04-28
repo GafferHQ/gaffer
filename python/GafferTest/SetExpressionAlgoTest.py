@@ -60,18 +60,10 @@ class SetExpressionAlgoTest( GafferTest.TestCase ) :
 			else :
 				return IECore.PathMatcher()
 
-		def hash( self, setName ) :
+		def hash( self, setName, h ) :
 
-			if setName == "A" :
-				return 1
-			elif setName == "B" :
-				return 2
-			elif setName == "C" :
-				return 3
-			elif setName == "D" :
-				return 4
-			else :
-				return 0
+			if setName in self.setNames() :
+				h.append( setName )
 
 	def testSetProvider( self ) :
 
