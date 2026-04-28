@@ -149,6 +149,7 @@ Gaffer.Metadata.registerNode(
 			"presetValues" : functools.partial( __parameterMetadata, key = "presetValues" ),
 			"nodule:type" : functools.partial( __parameterMetadata, key = "nodule:type" ),
 			"noduleLayout:visible" : functools.partial( __parameterMetadata, key = "noduleLayout:visible" ),
+			"labelPlugValueWidget:icon" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:icon" ),
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register

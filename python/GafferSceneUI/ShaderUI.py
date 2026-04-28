@@ -164,6 +164,7 @@ Gaffer.Metadata.registerNode(
 			"presetValues" : functools.partial( __parameterMetadata, key = "presetValues" ),
 			"nodule:type" : functools.partial( __parameterMetadata, key = "nodule:type" ),
 			"noduleLayout:visible" : functools.partial( __parameterMetadata, key = "noduleLayout:visible", shaderFallbackKey = "noduleLayout:defaultVisibility" ),
+			"labelPlugValueWidget:icon" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:icon" ),
 
 		},
 
