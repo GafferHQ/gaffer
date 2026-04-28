@@ -90,7 +90,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			self.getPlugs(),
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		nameWidget.setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__row.append(
 			nameWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -100,7 +100,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["exists"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		existsLabelWidget.label()._qtWidget().setFixedWidth( 40 )
+		existsLabelWidget.setFixedWidth( 40 )
 		self.__row.append(
 			existsLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -115,7 +115,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["value"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		valueLabelWidget.label()._qtWidget().setFixedWidth( 40 )
+		valueLabelWidget.setFixedWidth( 40 )
 		self.__row.append(
 			valueLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top

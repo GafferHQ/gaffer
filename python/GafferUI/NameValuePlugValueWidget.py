@@ -68,9 +68,7 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.getPlugs(),
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 			)
-			nameWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
-			nameWidget._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
-			nameWidget.label()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred )
+			nameWidget.setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 			nameWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 		else :
 			nameWidget = GafferUI.StringPlugValueWidget( { plug["name"] for plug in self.getPlugs() } )

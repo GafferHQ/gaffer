@@ -80,7 +80,7 @@ class _QueryWidget( GafferUI.PlugValueWidget ) :
 			{ plug.node().sourcePlugFromQuery( plug ) for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		sourceLabelWidget.label()._qtWidget().setFixedWidth( 40 )
+		sourceLabelWidget.setFixedWidth( 40 )
 		self.__row.append(
 			sourceLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -95,7 +95,7 @@ class _QueryWidget( GafferUI.PlugValueWidget ) :
 			{ plug.node().valuePlugFromQuery( plug ) for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		valueLabelWidget.label()._qtWidget().setFixedWidth( 40 )
+		valueLabelWidget.setFixedWidth( 40 )
 		self.__row.append(
 			valueLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top

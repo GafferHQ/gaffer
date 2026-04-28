@@ -145,6 +145,12 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return result
 
+	def setFixedWidth( self, width ) :
+
+		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		self._qtWidget().setFixedWidth( width )
+		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred )
+
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 

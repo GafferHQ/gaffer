@@ -38,7 +38,9 @@ API
 ---
 
 - SceneAlgo : Added `primitiveVariableHistory()` function.
-- LabelPlugValueWidget : Added support for icons and icon toolTips on plug names using `labelPlugValueWidget:icon` and `labelPlugValueWidget:iconToolTip` metadata, respectively.
+- LabelPlugValueWidget :
+  - Added support for icons and icon toolTips on plug names using `labelPlugValueWidget:icon` and `labelPlugValueWidget:iconToolTip` metadata, respectively.
+  - Added `setFixedWidth()` method.
 
 1.6.16.0 (relative to 1.6.15.0)
 ========
