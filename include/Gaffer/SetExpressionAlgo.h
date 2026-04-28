@@ -43,10 +43,7 @@
 
 #include <string>
 
-namespace Gaffer
-{
-
-namespace SetExpressionAlgo
+namespace Gaffer::SetExpressionAlgo
 {
 
 /// Evaluation
@@ -95,6 +92,4 @@ GAFFER_API std::string include( const std::string &setExpression, const std::str
 /// to an empty expression.
 GAFFER_API std::string exclude( const std::string &setExpression, const std::string &exclusions );
 
-} // namespace SetExpressionAlgo
-
-} // namespace Gaffer
+} // namespace Gaffer::SetExpressionAlgo
