@@ -52,7 +52,17 @@ struct SetProviderWrapper : Gaffer::SetExpressionAlgo::SetProvider, wrapper<Gaff
 	IECore::ConstInternedStringVectorDataPtr setNames() const override
 	{
 		IECorePython::ScopedGILLock gilLock;
-		return this->get_override( "setNames" )();
+		object result = this->get_override( "setNames" )();
+		extract<IECore::InternedStringVectorDataPtr> e( result );
+
+		if( e.check() )
+		{
+			return e();
+		}
+		else
+		{
+			return IECore::ConstInternedStringVectorDataPtr();
+		}
 	}
 
 	const IECore::PathMatcher paths( const std::string &setName ) const override
