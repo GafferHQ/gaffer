@@ -91,7 +91,9 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 				m for m in Gaffer.TweakPlug.Mode.names.values() if m not in [
 					Gaffer.TweakPlug.Mode.ListAppend,
 					Gaffer.TweakPlug.Mode.ListPrepend,
-					Gaffer.TweakPlug.Mode.ListRemove
+					Gaffer.TweakPlug.Mode.ListRemove,
+					Gaffer.TweakPlug.Mode.SetExpressionInclude,
+					Gaffer.TweakPlug.Mode.SetExpressionExclude,
 				]
 			] :
 				for name, value in [
