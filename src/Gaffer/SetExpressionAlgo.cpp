@@ -253,8 +253,7 @@ struct AstSerialiser
 				}
 			}
 
-			std::string result = left + info.repr + right;
-			return needParens ? "(" + result + ")" : result;
+			return fmt::format( needParens ? "({}{}{})" : "{}{}{}", left, info.repr, right );
 		}
 
 		return "";
@@ -265,7 +264,7 @@ struct AstSerialiser
 		struct OpInfo
 		{
 			int precedence;
-			std::string repr;
+			const char *repr;
 		};
 
 		OpInfo opInfo( Op op ) const
