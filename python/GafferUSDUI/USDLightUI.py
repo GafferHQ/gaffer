@@ -62,6 +62,11 @@ def __labelPlugValueWidgetIcon( plug ) :
 
 	return None
 
+def __labelPlugValueWidgetIconToolTip( plug ) :
+
+	if ( renderer := __renderer( plug ) ) is not None :
+		return f"Parameter is specific to {renderer}."
+
 Gaffer.Metadata.registerNode(
 
 	GafferUSD.USDLight,
@@ -94,6 +99,7 @@ Gaffer.Metadata.registerNode(
 		"parameters.*" : {
 
 			"labelPlugValueWidget:icon" : __labelPlugValueWidgetIcon,
+			"labelPlugValueWidget:iconToolTip" : __labelPlugValueWidgetIconToolTip,
 
 		}
 
