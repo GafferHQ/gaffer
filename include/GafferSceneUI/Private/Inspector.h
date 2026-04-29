@@ -381,6 +381,8 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// receive the value.
 		void edit( const IECore::Object *value ) const;
 
+		bool editScopeInHistory() const;
+
 	private :
 
 		Result( const IECore::ConstObjectPtr &value, const Gaffer::EditScopePtr &editScope );
