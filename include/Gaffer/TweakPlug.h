@@ -75,9 +75,11 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			ListPrepend,
 			ListRemove,
 			CreateIfMissing,
+			SetExpressionInclude,
+			SetExpressionExclude,
 
 			First = Replace,
-			Last = CreateIfMissing,
+			Last = SetExpressionExclude,
 		};
 
 		/// Complete constructor, able to specify all relevant properties of the child plugs.

@@ -74,7 +74,7 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		modeWidget = GafferUI.PlugValueWidget.create( self.__childPlugs( plugs, "mode" ) )
-		modeWidget._qtWidget().setFixedWidth( 105 )
+		modeWidget._qtWidget().setFixedWidth( 135 )
 		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 		self.__row.append( modeWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
@@ -209,6 +209,21 @@ def __validModes( plug ) :
 			Gaffer.TweakPlug.Mode.ListRemove
 		]
 
+	## \todo When displaying presets while editing a Spreadsheet cell, this is called
+	# from the equivalent child plug of the Spreadsheet's `out` plug, which isn't set up
+	# to receive metadata forwarding from downstream plugs. The Spreadsheet's default row
+	# does receive the forwarded metadata, as it is used as the source of metadata for
+	# the other spreadsheet rows, so for now we look for metadata on that plug instead.
+	valuePlug = plug.parent()["value"]
+	if valuePlug.direction() == Gaffer.Plug.Direction.Out and valuePlug.ancestor( Gaffer.Spreadsheet ) :
+		valuePlug = plug.node().correspondingInput( valuePlug )
+
+	if valuePlug and Gaffer.Metadata.value( valuePlug, "ui:scene:acceptsSetExpression" ) :
+		result += [
+			Gaffer.TweakPlug.Mode.SetExpressionInclude,
+			Gaffer.TweakPlug.Mode.SetExpressionExclude
+		]
+
 	return result
 
 Gaffer.Metadata.registerValue(
@@ -284,6 +299,18 @@ __modeDescriptions = {
 	Gaffer.TweakPlug.Mode.CreateIfMissing :
 	"""
 	Like `Create`, but does nothing if the {property} already exists.
+	""",
+	Gaffer.TweakPlug.Mode.SetExpressionInclude :
+	"""
+	Includes sets or locations into an existing set expression, ensuring they are matched.
+	Produces a set expression equivalent to `{{source}} \\| inclusions` with duplicate or
+	redundant operations omitted. If the {property} doesn't exist yet, it is created.
+	""",
+	Gaffer.TweakPlug.Mode.SetExpressionExclude :
+	"""
+	Excludes sets or locations from an existing set expression, ensuring they aren't matched.
+	Produces a set expression equivalent to `{{source}} - exclusions` with duplicate or
+	redundant operations omitted. Does not error if the {property} doesn't exist.
 	"""
 
 }

@@ -137,6 +137,8 @@ void GafferModule::bindTweakPlugs()
 			.value( "ListPrepend", TweakPlug::ListPrepend )
 			.value( "ListRemove", TweakPlug::ListRemove )
 			.value( "CreateIfMissing", TweakPlug::CreateIfMissing )
+			.value( "SetExpressionInclude", TweakPlug::SetExpressionInclude )
+			.value( "SetExpressionExclude", TweakPlug::SetExpressionExclude )
 		;
 
 		enum_<TweakPlug::MissingMode>( "MissingMode" )

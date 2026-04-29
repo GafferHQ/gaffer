@@ -38,6 +38,7 @@
 
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/SetExpressionAlgo.h"
 
 #include "IECore/DataAlgo.h"
 #include "IECore/PathMatcherData.h"
@@ -132,6 +133,8 @@ T applyNumericTweak(
 			case TweakPlug::Remove :
 			case TweakPlug::Create :
 			case TweakPlug::CreateIfMissing :
+			case TweakPlug::SetExpressionInclude :
+			case TweakPlug::SetExpressionExclude :
 				throw IECore::Exception(
 					fmt::format(
 						"Cannot apply tweak with mode {} using applyNumericTweak.",
@@ -246,6 +249,34 @@ T applyListTweak(
 	}
 }
 
+template<typename T>
+T applySetExpressionTweak(
+	const T &source,
+	const T &tweak,
+	TweakPlug::Mode mode,
+	const std::string &tweakName
+)
+{
+	if constexpr( std::is_same_v<T, std::string> )
+	{
+		if( mode == TweakPlug::Mode::SetExpressionExclude )
+		{
+			return Gaffer::SetExpressionAlgo::exclude( source, tweak );
+		}
+
+		return Gaffer::SetExpressionAlgo::include( source, tweak );
+	}
+	else
+	{
+		throw IECore::Exception(
+			fmt::format(
+				"Cannot apply tweak with mode {} to \"{}\" : Data type {} not supported.",
+				TweakPlug::modeToString( mode ), tweakName, IECore::TypedData<T>::staticTypeName()
+			)
+		);
+	}
+}
+
 template< typename T >
 T applyReplaceTweak(
 	const T &source,
@@ -295,6 +326,13 @@ T applyValueTweak(
 	else if( mode == TweakPlug::Replace )
 	{
 		return applyReplaceTweak( source, tweak );
+	}
+	else if(
+		mode == TweakPlug::SetExpressionInclude ||
+		mode == TweakPlug::SetExpressionExclude
+	)
+	{
+		return applySetExpressionTweak( source, tweak, mode, tweakName );
 	}
 	else
 	{
@@ -605,6 +643,10 @@ const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )
 			return "ListRemove";
 		case Gaffer::TweakPlug::CreateIfMissing :
 			return "CreateIfMissing";
+		case Gaffer::TweakPlug::SetExpressionInclude :
+			return "SetExpressionInclude";
+		case Gaffer::TweakPlug::SetExpressionExclude :
+			return "SetExpressionExclude";
 	}
 	return  "Invalid";
 }

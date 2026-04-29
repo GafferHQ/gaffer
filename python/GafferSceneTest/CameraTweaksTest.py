@@ -91,7 +91,9 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 				m for m in Gaffer.TweakPlug.Mode.names.values() if m not in [
 					Gaffer.TweakPlug.Mode.ListAppend,
 					Gaffer.TweakPlug.Mode.ListPrepend,
-					Gaffer.TweakPlug.Mode.ListRemove
+					Gaffer.TweakPlug.Mode.ListRemove,
+					Gaffer.TweakPlug.Mode.SetExpressionInclude,
+					Gaffer.TweakPlug.Mode.SetExpressionExclude,
 				]
 			] :
 				for name, value in [
@@ -119,64 +121,66 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 					] :
 						continue
 
-					tweaks["tweaks"].clearChildren()
-					tweaks["tweaks"].addChild( Gaffer.TweakPlug( name, value ) )
-					tweaks["tweaks"]["tweak"]["mode"].setValue( mode )
+					with self.subTest( mode = mode, name = name ) :
 
-					if name == "fieldOfView":
-						orig = c["out"].object( "/camera" ).calculateFieldOfView()[0]
-					elif name == "apertureAspectRatio":
-						origWindow  = c["out"].object( "/camera" ).frustum(
-								IECoreScene.Camera.FilmFit.Distort
-							).size()
-						orig = origWindow[0] / origWindow[1]
-					else:
-						orig = c["out"].object( "/camera" ).parameters()[name].value
+						tweaks["tweaks"].clearChildren()
+						tweaks["tweaks"].addChild( Gaffer.TweakPlug( name, value ) )
+						tweaks["tweaks"]["tweak"]["mode"].setValue( mode )
 
-					if mode == Gaffer.TweakPlug.Mode.Remove:
-						if not name in [ "fieldOfView", "apertureAspectRatio" ]:
-							self.assertFalse( name in tweaks["out"].object( "/camera" ).parameters() )
-						continue
-					elif mode == Gaffer.TweakPlug.Mode.Replace:
-						ref = value
-					elif mode == Gaffer.TweakPlug.Mode.Add:
-						ref = orig + value
-					elif mode == Gaffer.TweakPlug.Mode.Multiply:
-						ref = orig * value
-					elif mode == Gaffer.TweakPlug.Mode.Subtract:
-						ref = orig - value
-					elif mode == Gaffer.TweakPlug.Mode.Create:
-						ref = value
-					elif mode == Gaffer.TweakPlug.Mode.CreateIfMissing :
-						ref = orig
-					elif mode == GafferScene.TweakPlug.Mode.Min:
-						if type( value ) == imath.V2f:
-							ref = imath.V2f( min( orig[0], value[0] ), min( orig[1], value[1] ) )
+						if name == "fieldOfView":
+							orig = c["out"].object( "/camera" ).calculateFieldOfView()[0]
+						elif name == "apertureAspectRatio":
+							origWindow  = c["out"].object( "/camera" ).frustum(
+									IECoreScene.Camera.FilmFit.Distort
+								).size()
+							orig = origWindow[0] / origWindow[1]
 						else:
-							ref = min( orig, value )
-					elif mode == GafferScene.TweakPlug.Mode.Max:
-						if type( value ) == imath.V2f:
-							ref = imath.V2f( max( orig[0], value[0] ), max( orig[1], value[1] ) )
+							orig = c["out"].object( "/camera" ).parameters()[name].value
+
+						if mode == Gaffer.TweakPlug.Mode.Remove:
+							if not name in [ "fieldOfView", "apertureAspectRatio" ]:
+								self.assertFalse( name in tweaks["out"].object( "/camera" ).parameters() )
+							continue
+						elif mode == Gaffer.TweakPlug.Mode.Replace:
+							ref = value
+						elif mode == Gaffer.TweakPlug.Mode.Add:
+							ref = orig + value
+						elif mode == Gaffer.TweakPlug.Mode.Multiply:
+							ref = orig * value
+						elif mode == Gaffer.TweakPlug.Mode.Subtract:
+							ref = orig - value
+						elif mode == Gaffer.TweakPlug.Mode.Create:
+							ref = value
+						elif mode == Gaffer.TweakPlug.Mode.CreateIfMissing :
+							ref = orig
+						elif mode == GafferScene.TweakPlug.Mode.Min:
+							if type( value ) == imath.V2f:
+								ref = imath.V2f( min( orig[0], value[0] ), min( orig[1], value[1] ) )
+							else:
+								ref = min( orig, value )
+						elif mode == GafferScene.TweakPlug.Mode.Max:
+							if type( value ) == imath.V2f:
+								ref = imath.V2f( max( orig[0], value[0] ), max( orig[1], value[1] ) )
+							else:
+								ref = max( orig, value )
+
+						if name == "fieldOfView":
+							modified = tweaks["out"].object( "/camera" ).calculateFieldOfView()[0]
+							ref = max( 0, min( 179.99, ref ) )
+						elif name == "apertureAspectRatio":
+							modWindow  = tweaks["out"].object( "/camera" ).frustum(
+									IECoreScene.Camera.FilmFit.Distort
+								).size()
+							modified = modWindow[0] / modWindow[1]
+							ref = max( 0.0000001, ref )
 						else:
-							ref = max( orig, value )
+							modified = tweaks["out"].object( "/camera" ).parameters()[name].value
 
-					if name == "fieldOfView":
-						modified = tweaks["out"].object( "/camera" ).calculateFieldOfView()[0]
-						ref = max( 0, min( 179.99, ref ) )
-					elif name == "apertureAspectRatio":
-						modWindow  = tweaks["out"].object( "/camera" ).frustum(
-								IECoreScene.Camera.FilmFit.Distort
-							).size()
-						modified = modWindow[0] / modWindow[1]
-						ref = max( 0.0000001, ref )
-					else:
-						modified = tweaks["out"].object( "/camera" ).parameters()[name].value
-
-					if type( value ) == imath.V2f:
-						self.assertAlmostEqual( modified[0], ref[0], places = 4 )
-						self.assertAlmostEqual( modified[1], ref[1], places = 4 )
-					else:
-						self.assertAlmostEqual( modified, ref, places = 4 )
+						if type( value ) == imath.V2f:
+							self.assertAlmostEqual( modified[0], ref[0], places = 4 )
+							self.assertAlmostEqual( modified[1], ref[1], places = 4 )
+						else:
+							self.assertAlmostEqual( modified, ref, places = 4 )
 
 	def testIgnoreMissing( self ) :
 

@@ -694,5 +694,44 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( script2["node"]["user"]["tweak"]["mode"].defaultValue(), Gaffer.TweakPlug.Mode.Subtract )
 		self.assertEqual( script2["node"]["user"]["tweak"]["value"].defaultValue(), 10 )
 
+	def testSetExpressionTweakModes( self ) :
+
+		for source, tweakMode, tweakValue, result in (
+			( None, Gaffer.TweakPlug.Mode.SetExpressionInclude, "a", "a" ),
+			( "", Gaffer.TweakPlug.Mode.SetExpressionInclude, "a", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionInclude, "", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionInclude, "a", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b", "a b" ),
+			( "a b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b", "a b" ),
+			( "a b c", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b", "a c b" ),
+			( "a b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b x", "a b x" ),
+			( "a b c", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b d e", "a c b d e" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "a", "a" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b", "a b" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "c", "a - b c" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b c", "a b c" ),
+			( None, Gaffer.TweakPlug.Mode.SetExpressionExclude, "a", None ),
+			( "", Gaffer.TweakPlug.Mode.SetExpressionExclude, "a", "" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionExclude, "", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionExclude, "a", "" ),
+			( "a b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "b", "a - b" ),
+			( "a b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "b x", "a - (b x)" ),
+			( "a b c", Gaffer.TweakPlug.Mode.SetExpressionExclude, "b d", "(a c) - (b d)" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "a", "" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "b", "a - b" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "c", "a - (b c)" ),
+		) :
+
+			with self.subTest( source = source, tweakMode = tweakMode, tweakValue = tweakValue, result = result ) :
+
+				plug = Gaffer.TweakPlug( "v", tweakValue, tweakMode )
+				data = IECore.CompoundData( { "v" : source } )
+				if result is not None :
+					self.assertTrue( plug.applyTweak( data ) )
+					self.assertEqual( data["v"], IECore.StringData( result ) )
+				else :
+					self.assertFalse( plug.applyTweak( data ) )
+					self.assertIsNone( data["v"] )
+
 if __name__ == "__main__":
 	unittest.main()
