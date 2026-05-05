@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 # The following functions are protected rather than private so that
 # they can be shared by OptionTweaksUI.
@@ -83,20 +84,20 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Options,
 
 	"description",
-	"""
+	_("""
 	The base type for nodes that apply options to the scene.
-	""",
+	"""),
 
 	plugs = {
 
 		"options" : {
 
 			"description" :
-			"""
+			_("""
 			The options to be applied - arbitrary numbers of user defined options may be added
 			as children of this plug via the user interface, or using the CompoundDataPlug API via
 			python.
-			""",
+			"""),
 
 			"compoundDataPlugValueWidget:editable" : False,
 
@@ -130,7 +131,7 @@ Gaffer.Metadata.registerNode(
 		"extraOptions" : {
 
 			"description" :
-			"""
+			_("""
 			An additional set of options to be added. Arbitrary numbers
 			of options may be specified within a single `IECore.CompoundObject`,
 			where each key/value pair in the object defines an option.
@@ -142,7 +143,7 @@ Gaffer.Metadata.registerNode(
 			If the same option is defined by both the `options` and the
 			`extraOptions` plugs, then the value from the `extraOptions`
 			is taken.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 			"layout:section" : "Extra",

@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DataWindowQuery,
 
 	"description",
-	"""
+	_("""
 	Queries the data window of an image as well as the center and size of the data window.
-	""",
+	"""),
 	"layout:section:Settings.Outputs:collapsed", False,
 
 	plugs = {
@@ -52,18 +53,18 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The image to query.
-			""",
+			"""),
 
 		},
 
 		"view" : {
 
 			"description" :
-			"""
+			_("""
 			The view to query.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
@@ -74,9 +75,9 @@ Gaffer.Metadata.registerNode(
 		"dataWindow" : {
 
 			"description" :
-			"""
+			_("""
 			The data window of the image.
-			""",
+			"""),
 			"nodule:type" : "GafferUI::CompoundNodule",
 			"layout:section" : "Settings.Outputs",
 
@@ -85,9 +86,9 @@ Gaffer.Metadata.registerNode(
 		"center" : {
 
 			"description" :
-			"""
+			_("""
 			The center of the data window of the image.
-			""",
+			"""),
 			"layout:section" : "Settings.Outputs",
 
 		},
@@ -95,9 +96,9 @@ Gaffer.Metadata.registerNode(
 		"size" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the data window of the image.
-			""",
+			"""),
 			"layout:section" : "Settings.Outputs",
 
 		},

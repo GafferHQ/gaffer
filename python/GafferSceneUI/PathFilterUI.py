@@ -46,6 +46,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -56,10 +57,10 @@ Gaffer.Metadata.registerNode(
 	GafferScene.PathFilter,
 
 	"description",
-	"""
+	_("""
 	Chooses locations by matching them against a list of
 	paths.
-	""",
+	"""),
 
 	"ui:spreadsheet:enabledRowNamesConnection", "paths",
 	"ui:spreadsheet:selectorValue", "${scene:path}",
@@ -69,7 +70,7 @@ Gaffer.Metadata.registerNode(
 		"paths" : {
 
 			"description" :
-			"""
+			_("""
 			The list of paths to the locations to be matched by the filter.
 			A path is formed by a sequence of names separated by `/`, and
 			specifies the hierarchical position of a location within the scene.
@@ -89,7 +90,7 @@ Gaffer.Metadata.registerNode(
 			the hierarchy.
 
 			 - `/.../house` matches `/house`, `/street/house` and `/city/street/house`.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"ui:scene:acceptsPaths" : True,
@@ -103,13 +104,13 @@ Gaffer.Metadata.registerNode(
 		"roots" : {
 
 			"description" :
-			"""
+			_("""
 			An optional filter input used to provide multiple root locations
 			which the `paths` are relative to. This can be useful when working
 			on a single asset in isolation, and then placing it into multiple
 			locations within a layout. When no filter is connected, all `paths`
 			are treated as being relative to `/`, the true scene root.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -172,7 +173,7 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 		menuDefinition.append( "/selectDivider", { "divider" : True } )
 		menuDefinition.append(
-			"/Select Affected Objects",
+			"/" + _("Select Affected Objects"),
 			{
 				"command" : functools.partial( _selectAffected, pathMatcher, scenes ),
 				"active" : len( selectedIndices ) > 0 and len( scenes ) > 0,

@@ -35,16 +35,17 @@
 ##########################################################################
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.BoxOut,
 
 	"description",
-	"""
+	_("""
 	Convenience node for representing output plugs
 	visually in the internal node graph of a Box.
-	""",
+	"""),
 
 	"icon", "boxOutNode.png",
 
@@ -53,7 +54,7 @@ Gaffer.Metadata.registerNode(
 		"passThrough" : {
 
 			"description" :
-			"""
+			_("""
 			May be connected to a BoxIn node to define
 			an input that is passed through when the Box
 			is disabled. Defining a pass-through also
@@ -63,7 +64,7 @@ Gaffer.Metadata.registerNode(
 			  nodes are reconnected automatically.
 			- The Box can be dragged onto an existing connection
 			  to insert it.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -72,10 +73,10 @@ Gaffer.Metadata.registerNode(
 		"enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Automatically connected to the Box.enabled plugs
 			to control the pass-through behaviour.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 			"nodule:type" : "",

@@ -39,26 +39,27 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.LUT,
 
 	"description",
-	"""
+	_("""
 	Applies color transformations provided by
 	OpenColorIO via a LUT file and OCIO FileTransform.
-	""",
+	"""),
 
 	plugs = {
 
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the LUT file to be read. Only OpenColorIO
 			supported files will function as expected.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -71,9 +72,9 @@ Gaffer.Metadata.registerNode(
 		"interpolation" : {
 
 			"description" :
-			"""
+			_("""
 			The interpolation mode for the color transformation.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Best" : GafferImage.LUT.Interpolation.Best,
@@ -85,9 +86,9 @@ Gaffer.Metadata.registerNode(
 		"direction" : {
 
 			"description" :
-			"""
+			_("""
 			The direction to perform the color transformation.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Forward" : GafferImage.OpenColorIOTransform.Direction.Forward,

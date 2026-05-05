@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 # Command suitable for use with `NodeMenu.append()`.
 def nodeMenuCreateCommand( menu ) :
@@ -50,67 +51,67 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Checkerboard,
 
 	"description",
-	"""
+	_("""
 	Outputs an image of a checkerboard pattern.
-	""",
+	"""),
 
 	plugs = {
 
 		"format" : {
 
 			"description" :
-			"""
+			_("""
 			The resolution and aspect ratio of the image.
-			""",
+			"""),
 
 		},
 
 		"colorA" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of half of the squares of the pattern.
-			""",
+			"""),
 
 		},
 
 		"colorB" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of the other half of the squares of the pattern.
-			""",
+			"""),
 
 		},
 
 		"size" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the squares in pixels. This can be varied independently
 			in the x and y directions.
-			""",
+			"""),
 
 		},
 
 		"layer" : {
 
 			"description" :
-			"""
+			_("""
 			The layer to generate. The output channels will
 			be named ( layer.R, layer.G, layer.B and layer.A ).
-			""",
+			"""),
 			"stringPlugValueWidget:placeholderText" : "[RGBA]",
 		},
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			A transformation applied to the entire checkerboard pattern.
 			The translate and pivot values are specified in pixels,
 			and the rotate value is specified in degrees.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Transform",

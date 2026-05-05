@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 def __image( plug ) :
 
@@ -48,9 +49,9 @@ Gaffer.Metadata.registerNode(
 	GafferUI.Tool,
 
 	"description",
-	"""
+	_("""
 	Base class for interactive tools used in the Viewer.
-	""",
+	"""),
 
 	plugs = {
 

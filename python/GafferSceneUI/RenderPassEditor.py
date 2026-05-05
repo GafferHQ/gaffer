@@ -45,8 +45,10 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 import GafferScene
+from GafferSceneUI._InspectorColumn import _isInspectorColumn
 import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
@@ -200,7 +202,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		return lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 			GafferSceneUI.Private.OptionInspector( scene, editScope, optionName ),
-			columnName,
+			_(columnName),
 			toolTip
 		)
 
@@ -460,7 +462,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def __favouriteColumn( self, column, favourite ) :
 
-		if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		if not _isInspectorColumn( column ) :
 			return
 
 		inspector = column.inspector( self.__pathListing.getPath() )
@@ -530,13 +532,14 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		m = IECore.MenuDefinition()
 		userEditableSection = self.__currentSectionEditable()
-		if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		if _isInspectorColumn( column ) :
 
 			if userEditableSection :
 				m.append(
 					"/Remove",
 					{
 						"command" : functools.partial( Gaffer.WeakMethod( self.__favouriteColumn ), column, False ),
+						"label" : _("Remove"),
 					}
 				)
 			else :
@@ -545,6 +548,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 					{
 						"command" : functools.partial( Gaffer.WeakMethod( self.__favouriteColumn ), column ),
 						"checkBox" : "option:{}".format( column.inspector( self.__pathListing.getPath() ).name() ) in self.settings()["favouriteColumns"].getValue(),
+						"label" : _("Favourite"),
 					}
 				)
 
@@ -554,6 +558,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				"/Remove All",
 				{
 					"command" : Gaffer.WeakMethod( self.__resetFavourites ),
+					"label" : _("Remove All"),
 				}
 			)
 
@@ -564,6 +569,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 					"/Reset to Default",
 					{
 						"command" : functools.partial( Gaffer.WeakMethod( self.__resetFavourites ), True ),
+						"label" : _("Reset to Default"),
 					}
 				)
 
@@ -573,6 +579,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				"/Save as Default",
 				{
 					"command" : Gaffer.WeakMethod( self.__saveFavourites ),
+					"label" : _("Save as Default"),
 				}
 			)
 
@@ -726,7 +733,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		script = self.scriptNode()
 		if Gaffer.MetadataAlgo.readOnly( script ) :
-			GafferUI.PopupWindow.showWarning( "The script is read-only.", parent = self )
+			GafferUI.PopupWindow.showWarning( _("The script is read-only."), parent = self )
 			return
 
 		with Gaffer.UndoScope( script ) :
@@ -753,7 +760,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				"Rename Selected Render Pass...",
 				{
 					"command" : Gaffer.WeakMethod( self.__renameSelectedRenderPass ),
-					"active" : self.__canEditRenderPasses() and len( self.__selectedRenderPasses() ) == 1
+					"active" : self.__canEditRenderPasses() and len( self.__selectedRenderPasses() ) == 1,
+					"label" : _("Rename Selected Render Pass..."),
 				}
 			)
 
@@ -763,7 +771,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				"Delete Selected Render Passes",
 				{
 					"command" : Gaffer.WeakMethod( self.__deleteSelectedRenderPasses ),
-					"active" : self.__canEditRenderPasses()
+					"active" : self.__canEditRenderPasses(),
+					"label" : _("Delete Selected Render Passes"),
 				}
 			)
 
@@ -837,17 +846,17 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = False )
 		if renderPassesProcessor is None or selectedRenderPasses[0] not in renderPassesProcessor["names"].getValue() :
-			self.__warningPopup( "Unable to rename", "Pass was not created in {}.".format( editScope.relativeName( self.scriptNode() ) ) )
+			self.__warningPopup( _("Unable to rename"), _("Pass was not created in {}.").format( editScope.relativeName( self.scriptNode() ) ) )
 			return
 
 		dialogue = _RenderPassCreationDialogue(
 			existingNames = [ x for x in self.__renderPassNames( self.settings()["in"] ) if x != selectedRenderPasses[0] ],
 			editScope = editScope,
-			title = "Rename Render Pass",
-			confirmLabel = "Rename",
-			actionDescription = "Rename render pass in",
+			title = _("Rename Render Pass"),
+			confirmLabel = _("Rename"),
+			actionDescription = _("Rename render pass in"),
 			defaultName = selectedRenderPasses[0],
-			message = "<h4>Renaming will only affect the current edit scope.</h4>\nReferences elsewhere in the node graph may need to be updated manually."
+			message = _("<h4>Renaming will only affect the current edit scope.</h4>\nReferences elsewhere in the node graph may need to be updated manually.")
 		)
 
 		renderPassName = dialogue.waitForRenderPassName( parentWindow = self.ancestor( GafferUI.Window ) )
@@ -855,7 +864,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 			nonEditableReason = GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( editScope, renderPassName )
 			if nonEditableReason is not None :
-				self.__warningPopup( "Unable to rename", nonEditableReason )
+				self.__warningPopup( _("Unable to rename"), nonEditableReason )
 				return
 
 			with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
@@ -916,15 +925,15 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			if upstreamCount > 0 :
 
 				dialogue = GafferUI.ConfirmationDialogue(
-					"Unable to Delete Upstream Render Passes",
-					"{count} render pass{suffix} created upstream of <b>{editScopeName}</b>.<br><br>We recommend deleting {target} in the upstream Edit Scope, or disabling {target} in <b>{editScopeName}</b>.".format(
+					_("Unable to Delete Upstream Render Passes"),
+					_("{count} render pass{suffix} created upstream of <b>{editScopeName}</b>.<br><br>We recommend deleting {target} in the upstream Edit Scope, or disabling {target} in <b>{editScopeName}</b>.").format(
 						count = upstreamCount,
 						suffix = "es were" if upstreamCount != 1 else " was",
 						editScopeName = editScope.relativeName( self.scriptNode() ),
 						target = "them" if upstreamCount != 1 else "it"
 					),
 					details = "\n".join( sorted( upstreamSelection ) ),
-					confirmLabel = "Disable Render Pass{}".format( "es" if upstreamCount != 1 else "" ),
+					confirmLabel = _("Disable Render Pass{}").format( "es" if upstreamCount != 1 else "" ),
 				)
 				if dialogue.waitForConfirmation( parentWindow = self.ancestor( GafferUI.Window ) ) :
 					self.__disableRenderPasses( upstreamSelection, editScope )
@@ -938,15 +947,15 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if downstreamCount > 0 :
 
 			dialogue = GafferUI.ConfirmationDialogue(
-				"Unable to Delete Downstream Render Passes",
-				"{count} render pass{suffix} created downstream of <b>{editScopeName}</b>.<br><br>We recommend deleting {target} in the downstream Edit Scope.".format(
+				_("Unable to Delete Downstream Render Passes"),
+				_("{count} render pass{suffix} created downstream of <b>{editScopeName}</b>.<br><br>We recommend deleting {target} in the downstream Edit Scope.").format(
 					count = downstreamCount,
 					suffix = "es were" if downstreamCount != 1 else " was",
 					editScopeName = editScope.relativeName( self.scriptNode() ),
 					target = "them" if downstreamCount != 1 else "it"
 				),
 				details = "\n".join( sorted( downstreamSelection ) ),
-				confirmLabel = "Close",
+				confirmLabel = _("Close"),
 				cancelLabel = None
 			)
 			dialogue.waitForConfirmation( parentWindow = self.ancestor( GafferUI.Window ) )
@@ -1008,15 +1017,15 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		self.__removeButton.setEnabled( editable and selection )
 		if not editable :
-			removeToolTip = "To delete render passes, first choose an editable Edit Scope."
+			removeToolTip = _("To delete render passes, first choose an editable Edit Scope.")
 		elif not selection :
-			removeToolTip = "To delete render passes, select them from the Name column."
+			removeToolTip = _("To delete render passes, select them from the Name column.")
 		else :
-			removeToolTip = "Click to delete selected render passes."
+			removeToolTip = _("Click to delete selected render passes.")
 		self.__removeButton.setToolTip( removeToolTip )
 
 		self.__addButton.setEnabled( editable )
-		self.__addButton.setToolTip( "Click to add render pass." if editable else "To add a render pass, first choose an editable Edit Scope." )
+		self.__addButton.setToolTip( _("Click to add render pass.") if editable else _("To add a render pass, first choose an editable Edit Scope.") )
 
 GafferUI.Editor.registerType( "RenderPassEditor", RenderPassEditor )
 
@@ -1028,11 +1037,11 @@ class _AdderColumn( GafferUI.PathColumn ) :
 
 	def cellData( self, path, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "", toolTip = "Click on the header to add columns." )
+		return GafferUI.PathColumn.CellData( value = "", toolTip = _("Click on the header to add columns.") )
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "", icon = IECore.CompoundData( { "state:normal" : "plus.png", "state:highlighted" : "plusHighlighted.png" } ), toolTip = "Click to add columns." )
+		return GafferUI.PathColumn.CellData( value = "", icon = IECore.CompoundData( { "state:normal" : "plus.png", "state:highlighted" : "plusHighlighted.png" } ), toolTip = _("Click to add columns.") )
 
 ##########################################################################
 # Metadata controlling the settings UI
@@ -1080,9 +1089,9 @@ Gaffer.Metadata.registerNode(
 		"displayGrouped" : {
 
 			"description" :
-			"""
+			_("""
 			Click to toggle between list and grouped display of render passes.
-			""",
+			"""),
 
 			"layout:section" : "Filter",
 			"layout:divider" : True,
@@ -1095,9 +1104,9 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			Filters the displayed render passes. Accepts standard wildcards such as `*` and `?`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix" : "search",
@@ -1110,9 +1119,9 @@ Gaffer.Metadata.registerNode(
 		"hideDisabled" : {
 
 			"description" :
-			"""
+			_("""
 			Hides render passes that are disabled for rendering.
-			""",
+			"""),
 
 			"boolPlugValueWidget:labelVisible" : True,
 			"layout:section" : "Filter",
@@ -1209,7 +1218,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromValues( self, values, exception ) :
 
 		for i in range( 0, self._qtWidget().count() ) :
-			if self._qtWidget().tabText( i ) == values[0] :
+			if self._qtWidget().tabData( i ) == values[0] :
 				try :
 					self.__ignoreCurrentChanged = True
 					self._qtWidget().setCurrentIndex( i )
@@ -1223,9 +1232,9 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 
 		index = self._qtWidget().currentIndex()
-		text = self._qtWidget().tabText( index )
+		originalName = self._qtWidget().tabData( index )
 		with self._blockedUpdateFromValues() :
-			self.getPlug().setValue( text )
+			self.getPlug().setValue( originalName if originalName else "" )
 
 	def __updateTabs( self ) :
 
@@ -1243,9 +1252,11 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# Deduplicate sections while preserving order in case the same
 			# section has been registered to multiple matching groupKeys.
 			for name in list( dict.fromkeys( tabNames ) ) :
-				self._qtWidget().addTab( name )
+				idx = self._qtWidget().addTab( _(name) )
+				self._qtWidget().setTabData( idx, name )
 
-			self._qtWidget().addTab( "Favourites" )
+			idx = self._qtWidget().addTab( _("Favourites") )
+			self._qtWidget().setTabData( idx, "Favourites" )
 		finally :
 			self.__ignoreCurrentChanged = False
 
@@ -1270,7 +1281,7 @@ RenderPassEditor._Spacer = _Spacer
 
 class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, existingNames = [], editScope = None, title = "Add Render Pass", cancelLabel = "Cancel", confirmLabel = "Add", actionDescription = "Add render pass to", defaultName = "", message = "", **kw ) :
+	def __init__( self, existingNames = [], editScope = None, title = _("Add Render Pass"), cancelLabel = _("Cancel"), confirmLabel = _("Add"), actionDescription = _("Add render pass to"), defaultName = "", message = "", **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
 
@@ -1341,7 +1352,7 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 
 		self.__confirmButton.setEnabled( unique and name != "" )
 		self.__confirmButton.setImage( None if unique else "warningSmall.png" )
-		self.__confirmButton.setToolTip( "" if unique else "A render pass named '{}' already exists.".format( name ) )
+		self.__confirmButton.setToolTip( "" if unique else _("A render pass named '{}' already exists.").format( name ) )
 
 class RenderPassChooserWidget( GafferUI.Widget ) :
 
@@ -1419,7 +1430,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with self.__listContainer :
 			if showLabel :
-				GafferUI.Label( "Render Pass" )
+				GafferUI.Label( _("Render Pass") )
 			self.__busyWidget = GafferUI.BusyWidget( size = 18 )
 			self.__busyWidget.setVisible( False )
 			searchable = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:searchable" )
@@ -1447,12 +1458,12 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def getToolTip( self ) :
 
 		if self.__currentRenderPass == "" :
-			return "No render pass is active."
+			return _("No render pass is active.")
 
 		if self.__currentRenderPass not in self.__renderPasses :
-			return "{} is not available.".format( self.__currentRenderPass )
+			return _("{} is not available.").format( self.__currentRenderPass )
 		else :
-			return "{} is the current render pass.".format( self.__currentRenderPass )
+			return _("{} is the current render pass.").format( self.__currentRenderPass )
 
 	def _auxiliaryPlugs( self, plug ) :
 
@@ -1539,7 +1550,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
-		result.append( "/__RenderPassesDivider__", { "divider" : True, "label" : "Render Passes" } )
+		result.append( "/__RenderPassesDivider__", { "divider" : True, "label" : _("Render Passes") } )
 
 		if self.__getHideDisabled() :
 			renderPasses = [ name for name, status in self.__renderPasses.items() if status.adaptedEnabled ]
@@ -1547,12 +1558,12 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			renderPasses = self.__renderPasses.keys()
 
 		if self.__updatePending :
-			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
+			result.append( "/" + _("Refresh"), { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
 		elif len( renderPasses ) == 0 :
 			if not self.__renderPasses :
-				result.append( "/No Render Passes Available", { "active" : False, "searchable" : False } )
+				result.append( "/" + _("No Render Passes Available"), { "active" : False, "searchable" : False, "label" : _("No Render Passes Available") } )
 			else :
-				result.append( "/All Render Passes Disabled", { "active" : False, "searchable" : False } )
+				result.append( "/" + _("All Render Passes Disabled"), { "active" : False, "searchable" : False, "label" : _("All Render Passes Disabled") } )
 		else :
 			groupingFn = GafferSceneUI.RenderPassEditor.pathGroupingFunction()
 			prefixes = IECore.PathMatcher()
@@ -1588,15 +1599,16 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
-		result.append( "/__OptionsDivider__", { "divider" : True, "label" : "Options" } )
+		result.append( "/__OptionsDivider__", { "divider" : True, "label" : _("Options") } )
 
 		result.append(
 			"/Display Grouped",
 			{
 				"checkBox" : self.__getDisplayGrouped(),
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setDisplayGrouped ) ),
-				"description" : "Toggle grouped display of render passes.",
-				"searchable" : False
+				"description" : _("Toggle grouped display of render passes."),
+				"searchable" : False,
+				"label" : _("Display Grouped"),
 			}
 		)
 
@@ -1605,8 +1617,9 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			{
 				"checkBox" : self.__getHideDisabled(),
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setHideDisabled ) ),
-				"description" : "Hide render passes disabled for rendering.",
-				"searchable" : False
+				"description" : _("Hide render passes disabled for rendering."),
+				"searchable" : False,
+				"label" : _("Hide Disabled"),
 			}
 		)
 
@@ -1631,11 +1644,11 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			case ( True, True ) :
 				return ""
 			case ( True, False ) :
-				return f"{renderPass} has been automatically disabled by a render adaptor."
+				return _("{} has been automatically disabled by a render adaptor.").format( renderPass )
 			case ( False, False ) :
-				return f"{renderPass} has been disabled."
+				return _("{} has been disabled.").format( renderPass )
 			case ( False, True ) :
-				return f"{renderPass} has been automatically enabled by a render adaptor."
+				return _("{} has been automatically enabled by a render adaptor.").format( renderPass )
 
 		return ""
 
@@ -1675,7 +1688,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __updateMenuButton( self ) :
 
-		self.__menuButton.setText( self.__currentRenderPass or "None" )
+		self.__menuButton.setText( self.__currentRenderPass or _("None") )
 		self.__menuButton.setImage( self.__renderPassIcon( self.__currentRenderPass ) )
 
 	def __updateSettingsInput( self ) :

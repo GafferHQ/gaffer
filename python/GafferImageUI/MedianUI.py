@@ -35,6 +35,7 @@
 ##########################################################################
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 # Command suitable for use with `NodeMenu.append()`.
 def nodeMenuCreateCommand( menu ) :
@@ -49,9 +50,9 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Median,
 
 	"description",
-	"""
+	_("""
 	Applies a median filter to the image. This can be useful for
 	removing noise.
-	""",
+	"""),
 
 )

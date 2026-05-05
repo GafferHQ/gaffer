@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Public methods
@@ -63,9 +64,9 @@ Gaffer.Metadata.registerNode(
 	Gaffer.Dot,
 
 	"description",
-	"""
+	_("""
 	A utility node which can be used for organising large graphs.
-	""",
+	"""),
 
 	"nodeGadget:minWidth", 0.0,
 	"nodeGadget:padding", 0.5,
@@ -90,7 +91,7 @@ Gaffer.Metadata.registerNode(
 		"labelType" : {
 
 			"description" :
-			"""
+			_("""
 			The method used to apply an optional label
 			to the dot. Using a node name is recommended,
 			because it encourages the use of descriptive node
@@ -99,7 +100,7 @@ Gaffer.Metadata.registerNode(
 			label does however provide more flexibility, since
 			node names are restricted in the characters they
 			can use.
-			""",
+			"""),
 
 			"plugValueWidget:type" :"GafferUI.PresetsPlugValueWidget",
 			"nodule:type" : "",
@@ -114,9 +115,9 @@ Gaffer.Metadata.registerNode(
 		"label" : {
 
 			"description" :
-			"""
+			_("""
 			The label displayed when the type is set to custom.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"layout:activator" : "labelTypeIsCustom",

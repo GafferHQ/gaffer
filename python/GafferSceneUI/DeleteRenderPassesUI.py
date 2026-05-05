@@ -40,26 +40,27 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.DeleteRenderPasses,
 
 	"description",
-	"""
+	_("""
 	Deletes render passes from the scene globals.
-	""",
+	"""),
 
 	plugs = {
 
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			Defines how the names listed in the `names` plug
 			are treated. Delete mode deletes the listed names.
 			Keep mode keeps the listed names, deleting all others.
-			""",
+			"""),
 
 			"preset:Delete" : GafferScene.DeleteRenderPasses.Mode.Delete,
 			"preset:Keep" : GafferScene.DeleteRenderPasses.Mode.Keep,
@@ -71,12 +72,12 @@ Gaffer.Metadata.registerNode(
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			The names of render passes to be deleted (or kept
 			if the mode is set to Keep). Names should be separated
 			by spaces and may contain any of Gaffer's standard
 			wildcards.
-			""",
+			"""),
 
 			"ui:scene:acceptsRenderPassNames" : True,
 
@@ -117,7 +118,7 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 
 	passNames = globals.get( "option:renderPass:names" ) or []
 	if not len( passNames ) :
-		menuDefinition.prepend( "/Render Passes/No Render Passes Available", { "active" : False } )
+		menuDefinition.prepend( "/" + _("Render Passes") + "/" + _("No Render Passes Available"), { "active" : False } )
 		return
 
 	for passName in reversed( sorted( list( passNames ) ) ) :

@@ -38,23 +38,24 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Transform,
 
 	"description",
-	"""
+	_("""
 	Applies a transformation to the local matrix
 	of all locations matched by the filter.
-	""",
+	"""),
 
 	plugs = {
 
 		"space" : {
 
 			"description" :
-			"""
+			_("""
 			The space in which the transformation is specified.
 			Note that no matter which space is chosen, only the
 			local matrices of the filtered locations are ever modified.
@@ -82,7 +83,7 @@ Gaffer.Metadata.registerNode(
 			:	The transformation is specified as an absolute matrix
 				in world space. Each of the filtered locations will
 				be moved to this absolute position.
-			""",
+			"""),
 
 			"preset:Local" : GafferScene.Transform.Space.Local,
 			"preset:Parent" : GafferScene.Transform.Space.Parent,
@@ -98,9 +99,9 @@ Gaffer.Metadata.registerNode(
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			The transform to be applied.
-			""",
+			"""),
 
 		}
 

@@ -38,113 +38,114 @@
 import Gaffer
 import GafferUI
 import GafferArnold
+from GafferUI.i18n import _
 
 def __renderingSummary( plug ) :
 
 	info = []
 	if plug["ai:bucket_size"]["enabled"].getValue() :
-		info.append( "Bucket Size %d" % plug["ai:bucket_size"]["value"].getValue() )
+		info.append( _("Bucket Size %d") % plug["ai:bucket_size"]["value"].getValue() )
 	if plug["ai:bucket_scanning"]["enabled"].getValue() :
-		info.append( "Bucket Scanning %s" % plug["ai:bucket_scanning"]["value"].getValue().capitalize() )
+		info.append( _("Bucket Scanning %s") % plug["ai:bucket_scanning"]["value"].getValue().capitalize() )
 	if plug["ai:parallel_node_init"]["enabled"].getValue() :
-		info.append( "Parallel Init %s" % ( "On" if plug["ai:parallel_node_init"]["value"].getValue() else "Off" ) )
+		info.append( _("Parallel Init %s") % ( _("On") if plug["ai:parallel_node_init"]["value"].getValue() else _("Off") ) )
 	if plug["ai:threads"]["enabled"].getValue() :
-		info.append( "Threads %d" % plug["ai:threads"]["value"].getValue() )
+		info.append( _("Threads %d") % plug["ai:threads"]["value"].getValue() )
 	return ", ".join( info )
 
 def __samplingSummary( plug ) :
 
 	info = []
 	if plug["ai:AA_samples"]["enabled"].getValue() :
-		info.append( "AA %d" % plug["ai:AA_samples"]["value"].getValue() )
+		info.append( _("AA %d") % plug["ai:AA_samples"]["value"].getValue() )
 	if plug["ai:GI_diffuse_samples"]["enabled"].getValue() :
-		info.append( "Diffuse %d" % plug["ai:GI_diffuse_samples"]["value"].getValue() )
+		info.append( _("Diffuse %d") % plug["ai:GI_diffuse_samples"]["value"].getValue() )
 	if plug["ai:GI_specular_samples"]["enabled"].getValue() :
-		info.append( "Specular %d" % plug["ai:GI_specular_samples"]["value"].getValue() )
+		info.append( _("Specular %d") % plug["ai:GI_specular_samples"]["value"].getValue() )
 	if plug["ai:GI_transmission_samples"]["enabled"].getValue() :
-		info.append( "Transmission %d" % plug["ai:GI_transmission_samples"]["value"].getValue() )
+		info.append( _("Transmission %d") % plug["ai:GI_transmission_samples"]["value"].getValue() )
 	if plug["ai:GI_sss_samples"]["enabled"].getValue() :
-		info.append( "SSS %d" % plug["ai:GI_sss_samples"]["value"].getValue() )
+		info.append( _("SSS %d") % plug["ai:GI_sss_samples"]["value"].getValue() )
 	if plug["ai:GI_volume_samples"]["enabled"].getValue() :
-		info.append( "Volume %d" % plug["ai:GI_volume_samples"]["value"].getValue() )
+		info.append( _("Volume %d") % plug["ai:GI_volume_samples"]["value"].getValue() )
 	if plug["ai:light_samples"]["enabled"].getValue() :
-		info.append( "Light %d" % plug["ai:light_samples"]["value"].getValue() )
+		info.append( _("Light %d") % plug["ai:light_samples"]["value"].getValue() )
 	if plug["ai:AA_seed"]["enabled"].getValue() :
-		info.append( "Seed {0}".format( plug["ai:AA_seed"]["value"].getValue() ) )
+		info.append( _("Seed {0}").format( plug["ai:AA_seed"]["value"].getValue() ) )
 	if plug["ai:AA_sample_clamp"]["enabled"].getValue() :
-		info.append( "Clamp {0}".format( GafferUI.NumericWidget.valueToString( plug["ai:AA_sample_clamp"]["value"].getValue() ) ) )
+		info.append( _("Clamp {0}").format( GafferUI.NumericWidget.valueToString( plug["ai:AA_sample_clamp"]["value"].getValue() ) ) )
 	if plug["ai:AA_sample_clamp_affects_aovs"]["enabled"].getValue() :
-		info.append( "Clamp AOVs {0}".format( "On" if plug["ai:AA_sample_clamp_affects_aovs"]["value"].getValue() else "Off" ) )
+		info.append( _("Clamp AOVs {0}").format( _("On") if plug["ai:AA_sample_clamp_affects_aovs"]["value"].getValue() else _("Off") ) )
 	if plug["ai:indirect_sample_clamp"]["enabled"].getValue() :
-		info.append( "Indirect Clamp {0}".format( GafferUI.NumericWidget.valueToString( plug["ai:indirect_sample_clamp"]["value"].getValue() ) ) )
+		info.append( _("Indirect Clamp {0}").format( GafferUI.NumericWidget.valueToString( plug["ai:indirect_sample_clamp"]["value"].getValue() ) ) )
 	if plug["ai:low_light_threshold"]["enabled"].getValue() :
-		info.append( "Low Light {0}".format( GafferUI.NumericWidget.valueToString( plug["ai:low_light_threshold"]["value"].getValue() ) ) )
+		info.append( _("Low Light {0}").format( GafferUI.NumericWidget.valueToString( plug["ai:low_light_threshold"]["value"].getValue() ) ) )
 	return ", ".join( info )
 
 def __adaptiveSamplingSummary( plug ) :
 
 	info = []
 	if plug["ai:enable_adaptive_sampling"]["enabled"].getValue() :
-		info.append( "Enable %d" % plug["ai:enable_adaptive_sampling"]["value"].getValue() )
+		info.append( _("Enable %d") % plug["ai:enable_adaptive_sampling"]["value"].getValue() )
 	if plug["ai:AA_samples_max"]["enabled"].getValue() :
-		info.append( "AA Max %d" % plug["ai:AA_samples_max"]["value"].getValue() )
+		info.append( _("AA Max %d") % plug["ai:AA_samples_max"]["value"].getValue() )
 	if plug["ai:AA_adaptive_threshold"]["enabled"].getValue() :
-		info.append( "Threshold %s" % GafferUI.NumericWidget.valueToString( plug["ai:AA_adaptive_threshold"]["value"].getValue() ) )
+		info.append( _("Threshold %s") % GafferUI.NumericWidget.valueToString( plug["ai:AA_adaptive_threshold"]["value"].getValue() ) )
 	return ", ".join( info )
 
 def __interactiveRenderingSummary( plug ) :
 
 	info = []
 	if plug["ai:enable_progressive_render"]["enabled"].getValue() :
-		info.append( "Progressive %s" % ( "On" if plug["ai:enable_progressive_render"]["value"].getValue() else "Off" ) )
+		info.append( _("Progressive %s") % ( _("On") if plug["ai:enable_progressive_render"]["value"].getValue() else _("Off") ) )
 	if plug["ai:progressive_min_AA_samples"]["enabled"].getValue() :
-		info.append( "Min AA %d" % plug["ai:progressive_min_AA_samples"]["value"].getValue() )
+		info.append( _("Min AA %d") % plug["ai:progressive_min_AA_samples"]["value"].getValue() )
 	return ", ".join( info )
 
 def __rayDepthSummary( plug ) :
 
 	info = []
 	if plug["ai:GI_total_depth"]["enabled"].getValue() :
-		info.append( "Total %d" % plug["ai:GI_total_depth"]["value"].getValue() )
+		info.append( _("Total %d") % plug["ai:GI_total_depth"]["value"].getValue() )
 	if plug["ai:GI_diffuse_depth"]["enabled"].getValue() :
-		info.append( "Diffuse %d" % plug["ai:GI_diffuse_depth"]["value"].getValue() )
+		info.append( _("Diffuse %d") % plug["ai:GI_diffuse_depth"]["value"].getValue() )
 	if plug["ai:GI_specular_depth"]["enabled"].getValue() :
-		info.append( "Specular %d" % plug["ai:GI_specular_depth"]["value"].getValue() )
+		info.append( _("Specular %d") % plug["ai:GI_specular_depth"]["value"].getValue() )
 	if plug["ai:GI_transmission_depth"]["enabled"].getValue() :
-		info.append( "Transmission %d" % plug["ai:GI_transmission_depth"]["value"].getValue() )
+		info.append( _("Transmission %d") % plug["ai:GI_transmission_depth"]["value"].getValue() )
 	if plug["ai:GI_volume_depth"]["enabled"].getValue() :
-		info.append( "Volume %d" % plug["ai:GI_volume_depth"]["value"].getValue() )
+		info.append( _("Volume %d") % plug["ai:GI_volume_depth"]["value"].getValue() )
 	if plug["ai:auto_transparency_depth"]["enabled"].getValue() :
-		info.append( "Transparency %d" % plug["ai:auto_transparency_depth"]["value"].getValue() )
+		info.append( _("Transparency %d") % plug["ai:auto_transparency_depth"]["value"].getValue() )
 	return ", ".join( info )
 
 def __subdivisionSummary( plug ) :
 	info = []
 	if plug["ai:max_subdivisions"]["enabled"].getValue():
-		info.append( "Max Subdivisions  %d" % plug["ai:max_subdivisions"]["value"].getValue() )
+		info.append( _("Max Subdivisions %d") % plug["ai:max_subdivisions"]["value"].getValue() )
 	if plug["ai:subdiv_dicing_camera"]["enabled"].getValue():
-		info.append( "Dicing Camera %s" % plug["ai:subdiv_dicing_camera"]["value"].getValue() )
+		info.append( _("Dicing Camera %s") % plug["ai:subdiv_dicing_camera"]["value"].getValue() )
 	if plug["ai:subdiv_frustum_culling"]["enabled"].getValue():
-		info.append( "Frustum Culling %s" % ( "On" if plug["ai:subdiv_frustum_culling"]["value"].getValue() else "Off" ) )
+		info.append( _("Frustum Culling %s") % ( _("On") if plug["ai:subdiv_frustum_culling"]["value"].getValue() else _("Off") ) )
 	if plug["ai:subdiv_frustum_padding"]["enabled"].getValue():
-		info.append( "Frustum Padding %s" % GafferUI.NumericWidget.valueToString( plug["ai:subdiv_frustum_padding"]["value"].getValue() ) )
+		info.append( _("Frustum Padding %s") % GafferUI.NumericWidget.valueToString( plug["ai:subdiv_frustum_padding"]["value"].getValue() ) )
 	return ", ".join( info )
 
 def __texturingSummary( plug ) :
 
 	info = []
 	if plug["ai:texture_max_memory_MB"]["enabled"].getValue() :
-		info.append( "Memory {0}".format( GafferUI.NumericWidget.valueToString( plug["ai:texture_max_memory_MB"]["value"].getValue() ) ) )
+		info.append( _("Memory {0}").format( GafferUI.NumericWidget.valueToString( plug["ai:texture_max_memory_MB"]["value"].getValue() ) ) )
 	if plug["ai:texture_per_file_stats"]["enabled"].getValue() :
-		info.append( "Per File Stats {0}".format( "On" if plug["ai:texture_per_file_stats"]["value"].getValue() else "Off" ) )
+		info.append( _("Per File Stats {0}").format( _("On") if plug["ai:texture_per_file_stats"]["value"].getValue() else _("Off") ) )
 	if plug["ai:texture_max_sharpen"]["enabled"].getValue() :
-		info.append( "Sharpen {0}".format( GafferUI.NumericWidget.valueToString( plug["ai:texture_max_sharpen"]["value"].getValue() ) ) )
+		info.append( _("Sharpen {0}").format( GafferUI.NumericWidget.valueToString( plug["ai:texture_max_sharpen"]["value"].getValue() ) ) )
 	if plug["ai:texture_use_existing_tx"]["enabled"].getValue() :
-		info.append( "Use `.tx` {0}".format( "On" if plug["ai:texture_use_existing_tx"]["value"].getValue() else "Off" ) )
+		info.append( _("Use `.tx` {0}").format( _("On") if plug["ai:texture_use_existing_tx"]["value"].getValue() else _("Off") ) )
 	if plug["ai:texture_auto_generate_tx"]["enabled"].getValue() :
-		info.append( "Auto `.tx` {0}".format( "On" if plug["ai:texture_auto_generate_tx"]["value"].getValue() else "Off" ) )
+		info.append( _("Auto `.tx` {0}").format( _("On") if plug["ai:texture_auto_generate_tx"]["value"].getValue() else _("Off") ) )
 	if plug["ai:texture_auto_tx_path"]["enabled"].getValue() :
-		info.append( "Auto `.tx` path" )
+		info.append( _("Auto `.tx` path") )
 	return ", ".join( info )
 
 def __featuresSummary( plug ) :
@@ -163,7 +164,7 @@ def __featuresSummary( plug ) :
 		( "ai:ignore_imagers", "Imagers" ),
 	) :
 		if plug[childName]["enabled"].getValue() :
-			info.append( label + ( " Off " if plug[childName]["value"].getValue() else " On" ) )
+			info.append( label + ( " " + _("Off") + " " if plug[childName]["value"].getValue() else " " + _("On") ) )
 
 	return ", ".join( info )
 
@@ -180,7 +181,7 @@ def __errorHandlingSummary( plug ) :
 
 	info = []
 	if plug["ai:abort_on_error"]["enabled"].getValue() :
-		info.append( "Abort on Error " + ( "On" if plug["ai:abort_on_error"]["value"].getValue() else "Off" ) )
+		info.append( _("Abort on Error") + " " + ( _("On") if plug["ai:abort_on_error"]["value"].getValue() else _("Off") ) )
 	for suffix in ( "texture", "pixel", "shader" ) :
 		if plug["ai:error_color_bad_" + suffix]["enabled"].getValue() :
 			info.append( suffix.capitalize() )
@@ -191,9 +192,9 @@ def __loggingSummary( plug ) :
 
 	info = []
 	if plug["ai:log:filename"]["enabled"].getValue() :
-		info.append( "File name" )
+		info.append( _("File name") )
 	if plug["ai:log:max_warnings"]["enabled"].getValue() :
-		info.append( "Max Warnings %d" % plug["ai:log:max_warnings"]["value"].getValue() )
+		info.append( _("Max Warnings %d") % plug["ai:log:max_warnings"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -201,11 +202,11 @@ def __statisticsSummary( plug ) :
 
 	info = []
 	if plug["ai:statisticsFileName"]["enabled"].getValue() :
-		info.append( "Stats File: " + plug["ai:statisticsFileName"]["value"].getValue() )
+		info.append( _("Stats File:") + " " + plug["ai:statisticsFileName"]["value"].getValue() )
 	if plug["ai:profileFileName"]["enabled"].getValue() :
-		info.append( "Profile File: " + plug["ai:profileFileName"]["value"].getValue() )
+		info.append( _("Profile File:") + " " + plug["ai:profileFileName"]["value"].getValue() )
 	if plug["ai:reportFileName"]["enabled"].getValue() :
-		info.append( "Report File: " + plug["ai:reportFileName"]["value"].getValue() )
+		info.append( _("Report File:") + " " + plug["ai:reportFileName"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -217,7 +218,7 @@ def __licensingSummary( plug ) :
 		( "ai:skip_license_check", "Skip Check" )
 	) :
 		if plug[name]["enabled"].getValue() :
-			info.append( label + " " + ( "On" if plug[name]["value"].getValue() else "Off" ) )
+			info.append( label + " " + ( _("On") if plug[name]["value"].getValue() else _("Off") ) )
 
 	return ", ".join( info )
 
@@ -225,10 +226,10 @@ def __gpuSummary( plug ) :
 
 	info = []
 	if plug["ai:render_device"]["enabled"].getValue() :
-		info.append( "Device: %s" %  plug["ai:render_device"]["value"].getValue() )
+		info.append( _("Device: %s") % plug["ai:render_device"]["value"].getValue() )
 
 	if plug["ai:gpu_max_texture_resolution"]["enabled"].getValue() :
-		info.append( "Max Res: %i" % plug["ai:gpu_max_texture_resolution"]["value"].getValue() )
+		info.append( _("Max Res: %i") % plug["ai:gpu_max_texture_resolution"]["value"].getValue() )
 	return ", ".join( info )
 
 Gaffer.Metadata.registerNode(
@@ -236,11 +237,11 @@ Gaffer.Metadata.registerNode(
 	GafferArnold.ArnoldOptions,
 
 	"description",
-	"""
+	_("""
 	Sets global scene options applicable to the Arnold
 	renderer. Use the StandardOptions node to set
 	global options applicable to all renderers.
-	""",
+	"""),
 
 	plugs = {
 

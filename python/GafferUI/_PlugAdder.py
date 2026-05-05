@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 def __plugMenu( title, plugs ) :
 
@@ -56,7 +57,7 @@ def __plugMenu( title, plugs ) :
 			}
 		)
 
-	menu = GafferUI.Menu( menuDefinition, title = title )
+	menu = GafferUI.Menu( menuDefinition, title = _( title ) )
 	menu.popup( modal = True )
 
 	return chosenPlugs[0] if chosenPlugs else None
@@ -88,7 +89,7 @@ def __menu( title, names ) :
 				}
 			)
 
-	menu = GafferUI.Menu( menuDefinition, title = title )
+	menu = GafferUI.Menu( menuDefinition, title = _( title ) )
 	menu.popup( modal = True )
 
 	return chosenNames[0] if chosenNames else ""

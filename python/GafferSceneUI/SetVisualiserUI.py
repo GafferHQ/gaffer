@@ -41,17 +41,18 @@ import GafferSceneUI
 
 import IECore
 import imath
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.SetVisualiser,
 
 	"description",
-	"""
+	_("""
 	Visualises Set membership values by applying a custom shader and coloring
 	based on which sets each object belongs to. Membership of more than one set
 	is visualised by a stripe pattern.
-	""",
+	"""),
 
 	"layout:customWidget:legend:widgetType", "GafferSceneUI.SetVisualiserUI._OutSetsPlugValueWidget",
 	"layout:customWidget:legend:section", "Settings.Legend",
@@ -62,12 +63,12 @@ Gaffer.Metadata.registerNode(
 		"sets" : {
 
 			"description" :
-			"""
+			_("""
 			A space separated list of sets to consider membership of. This
 			supports wild cards, eg: asset:* to allow membership display to
 			focus on a specific group of sets. Right-click to insert the name
 			of any sets in the input scene.
-			""",
+			"""),
 
 			"ui:scene:acceptsSetNames" : True
 		},
@@ -75,32 +76,32 @@ Gaffer.Metadata.registerNode(
 		"includeInherited" : {
 
 			"description" :
-			"""
+			_("""
 			When enabled, objects that inherit Set membership from their parents
 			will also be coloured. Disabling this will only color objects that
 			are exactly matched by any given Set.
-			"""
+			""")
 
 		},
 
 		"stripeWidth" : {
 
 			"description" :
-			"""
+			_("""
 			The thickness (in pixels) of the stripes used to indicate an object
 			is in more than one set.
-			"""
+			""")
 
 		},
 
 		"colorOverrides" : {
 
 			"description" :
-			"""
+			_("""
 			Allows the randomly generated set colors to be overridden by
 			specific colors to use for Sets matching the supplied filter. This
 			can be a name, or a match string.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Color Overrides",
 
@@ -114,11 +115,11 @@ Gaffer.Metadata.registerNode(
 		"colorOverrides.*.name" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies which set or sets to apply the override to. This can be
 			a name, or a match string. Right-click to insert the name of any
 			set in the input scene.
-			""",
+			"""),
 
 			"ui:scene:acceptsSetName" : True
 
@@ -260,11 +261,11 @@ class _SetColorLedgendRowWidget( GafferUI.ListContainer ) :
 	def __addMenuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
-		result.append( "Add Color Override", {
+		result.append( _("Add Color Override"), {
 			"command" : Gaffer.WeakMethod( self.__addOverride ),
 			"active" : not self.__hasExistingOverrideFor( self.__label.getText() )
 		} )
-		result.append( "Select Members", {
+		result.append( _("Select Members"), {
 			"command" : Gaffer.WeakMethod( self.__selectMembers )
 		} )
 		return result

@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.FilterResults,
 
 	"description",
-	"""
+	_("""
 	Searches an input scene for all locations matched
 	by a filter.
 
@@ -51,27 +52,27 @@ Gaffer.Metadata.registerNode(
 	used. In particular it should be noted that the usage of
 	`...` in a PathFilter will cause the entire input scene to
 	be searched even if there are no matches to be found.
-	""",
+	"""),
 
 	plugs = {
 
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to be searched for matching
 			locations.
-			""",
+			"""),
 
 		},
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter to be used when searching for
 			matching locations.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
 
@@ -80,9 +81,9 @@ Gaffer.Metadata.registerNode(
 		"root" : {
 
 			"description" :
-			"""
+			_("""
 			Isolates the search to this location and its descendants.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -93,11 +94,11 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The results of the search, as an `IECore::PathMatcher` object. This
 			is most useful for performing hierarchical queries and for iterating
 			through the paths without an expensive conversion to strings.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -106,11 +107,11 @@ Gaffer.Metadata.registerNode(
 		"outStrings" : {
 
 			"description" :
-			"""
+			_("""
 			The results of the search, converted to a list of strings. This is
 			useful for connecting directly to other plugs, such as
 			`Wedge.strings` or `CollectScenes.rootNames`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 

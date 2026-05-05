@@ -37,16 +37,17 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 def __attributesSummary( plug ) :
 
 	info = []
 	if plug["scene:visible"]["enabled"].getValue() :
-		info.append( "Visible" if plug["scene:visible"]["value"].getValue() else "Invisible" )
+		info.append( _("Visible") if plug["scene:visible"]["value"].getValue() else _("Invisible") )
 	if plug["doubleSided"]["enabled"].getValue() :
-		info.append( "Double Sided" if plug["doubleSided"]["value"].getValue() else "Single Sided" )
+		info.append( _("Double Sided") if plug["doubleSided"]["value"].getValue() else _("Single Sided") )
 	if plug["render:displayColor"]["enabled"].getValue() :
-		info.append( "Display Color" )
+		info.append( _("Display Color") )
 
 	return ", ".join( info )
 
@@ -54,7 +55,7 @@ def __instancingSummary( plug ) :
 
 	info = []
 	if plug["gaffer:automaticInstancing"]["enabled"].getValue() :
-		info.append( "Automatic Instancing " + ( "On" if plug["gaffer:automaticInstancing"]["value"].getValue() else "Off" ) )
+		info.append( _("Automatic Instancing") + " " + ( _("On") if plug["gaffer:automaticInstancing"]["value"].getValue() else _("Off") ) )
 
 	return ", ".join( info )
 
@@ -67,9 +68,9 @@ def __motionBlurSummary( plug ) :
 		if onOffEnabled or segmentsEnabled :
 			items = []
 			if onOffEnabled :
-				items.append( "On" if plug["gaffer:"+motionType+"Blur"]["value"].getValue() else "Off" )
+				items.append( _("On") if plug["gaffer:"+motionType+"Blur"]["value"].getValue() else _("Off") )
 			if segmentsEnabled :
-				items.append( "%d Segments" % plug["gaffer:"+motionType+"BlurSegments"]["value"].getValue() )
+				items.append( _("%d Segments") % plug["gaffer:"+motionType+"BlurSegments"]["value"].getValue() )
 			info.append( motionType.capitalize() + " : " + "/".join( items ) )
 
 	return ", ".join( info )
@@ -79,10 +80,10 @@ Gaffer.Metadata.registerNode(
 	GafferScene.StandardAttributes,
 
 	"description",
-	"""
+	_("""
 	Modifies the standard attributes on objects - these should
 	be respected by all renderers.
-	""",
+	"""),
 
 	plugs = {
 

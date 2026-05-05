@@ -36,34 +36,35 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Plane,
 
 	"description",
-	"""
+	_("""
 	Produces scenes containing a plane.
-	""",
+	"""),
 
 	plugs = {
 
 		"dimensions" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the plane in the X and Y directions.
-			""",
+			"""),
 
 		},
 
 		"divisions" : {
 
 			"description" :
-			"""
+			_("""
 			The number of subdivisions of the plane in the
 			X and Y directions.
-			""",
+			"""),
 
 		},
 

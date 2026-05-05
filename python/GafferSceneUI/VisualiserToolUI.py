@@ -44,15 +44,16 @@ import GafferUI
 import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.VisualiserTool,
 
 	"description",
-	"""
+	_("""
 	Tool for displaying object data.
-	""",
+	"""),
 
 	"viewer:shortCut", "L",
 	"viewer:shouldAutoActivate", False,
@@ -67,7 +68,7 @@ Gaffer.Metadata.registerNode(
 		"dataName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the data to visualise. Primitive variable names must be
 			prefixed by `primitiveVariable:`. For example, `primitiveVariable:uv`
 			would display the `uv` primitive variable. Primitive variables of
@@ -75,7 +76,7 @@ Gaffer.Metadata.registerNode(
 
 			To visualise vertex indices instead of a primitive variable, use the
 			value `vertex:index`.
-			""",
+			"""),
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 150,
@@ -86,9 +87,9 @@ Gaffer.Metadata.registerNode(
 		"opacity" : {
 
 			"description" :
-			"""
+			_("""
 			The amount the visualiser will occlude the scene locations being visualised.
-			""",
+			"""),
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 45,
@@ -97,14 +98,14 @@ Gaffer.Metadata.registerNode(
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			The method for displaying the data.
 
 			- Auto : Chooses the most appropriate mode based on the data and primitive type.
 			- Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
 			- Color (Auto Range) : Float, integer, V2f and color data is displayed without
 			modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
-			""",
+			"""),
 
 			"preset:Auto" : GafferSceneUI.VisualiserTool.Mode.Auto,
 			"preset:Color" : GafferSceneUI.VisualiserTool.Mode.Color,
@@ -120,12 +121,12 @@ Gaffer.Metadata.registerNode(
 		"valueMin" : {
 
 			"description" :
-			"""
+			_("""
 			The minimum data channel value that will be mapped to 0.
 
 			For float data only the first channel is used. For V2f data only the first
 			and second channels are used. For V3f data all three channels are used.
-			""",
+			"""),
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 175,
@@ -136,12 +137,12 @@ Gaffer.Metadata.registerNode(
 		"valueMax" : {
 
 			"description" :
-			"""
+			_("""
 			The maximum data channel value that will be mapped to 1.
 
 			For float data only the first channel is used. For V2f data only the first
 			and second channels are used. For V3f data all three channels are used.
-			""",
+			"""),
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 175,
@@ -152,9 +153,9 @@ Gaffer.Metadata.registerNode(
 		"size" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the size of the displayed text.
-			""",
+			"""),
 
 			"plugValueWidget:type" : ""
 
@@ -162,9 +163,9 @@ Gaffer.Metadata.registerNode(
 		"vectorScale" : {
 
 			"description" :
-			"""
+			_("""
 			The scale factor to apply to vectors.
-			""",
+			"""),
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 45,
@@ -176,9 +177,9 @@ Gaffer.Metadata.registerNode(
 		"vectorColor" : {
 
 			"description" :
-			"""
+			_("""
 			The colour to use for drawing vectors.
-			""",
+			"""),
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 175,
@@ -279,7 +280,7 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 					primitiveVariables.add( v )
 
 		if len( primitiveVariables ) == 0 :
-			menuDefinition.append( "/None Available", { "active" : False } )
+			menuDefinition.append( "/" + _("None Available"), { "active" : False } )
 
 		else :
 			for v in reversed( sorted( primitiveVariables ) ) :
@@ -291,9 +292,9 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 					}
 				)
 
-		menuDefinition.prepend( "/PrimitiveVariableDivider", { "divider" : True, "label" : "Primitive Variables" } )
+		menuDefinition.prepend( "/PrimitiveVariableDivider", { "divider" : True, "label" : _("Primitive Variables") } )
 
-		menuDefinition.append( "/Other", { "divider" : True, "label" : "Other" } )
+		menuDefinition.append( "/" + _("Other"), { "divider" : True, "label" : _("Other") } )
 		menuDefinition.append(
 			"/Vertex Index",
 			{

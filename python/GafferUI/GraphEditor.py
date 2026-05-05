@@ -37,11 +37,14 @@
 
 import functools
 import imath
+import unicodedata
 
 import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
+from GafferUI import i18n as _i18n
 
 class GraphEditor( GafferUI.Editor ) :
 
@@ -80,7 +83,7 @@ class GraphEditor( GafferUI.Editor ) :
 					image = "annotations.png", hasFrame = False,
 					menu = GafferUI.Menu(
 						Gaffer.WeakMethod( self.__annotationsMenu ),
-						title = "Annotations"
+						title = _("Annotations")
 					)
 				)
 			GafferUI.Spacer( imath.V2i( 1 ) )
@@ -89,6 +92,8 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.__nodeMenu = None
 		self.__readOnlyPopup = None
+		self.__rootChildAddedConnection = None
+		self.__pendingTranslatedNodes = set()
 
 	## Returns the internal GadgetWidget holding the GraphGadget.
 	def graphGadgetWidget( self ) :
@@ -116,7 +121,7 @@ class GraphEditor( GafferUI.Editor ) :
 		if title:
 			return title
 
-		result = IECore.CamelCase.toSpaced( self.__class__.__name__ )
+		result = _( IECore.CamelCase.toSpaced( self.__class__.__name__ ) )
 
 		root = self.graphGadget().getRoot()
 		if not root.isSame( self.scriptNode() ) :
@@ -215,7 +220,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		if Gaffer.Plug.Direction.In in plugDirections :
 			menuDefinition.append(
-				"/Connections/Show Input Connections",
+				"/" + _("Connections") + "/" + _("Show Input Connections"),
 				{
 					"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
 					"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
@@ -225,7 +230,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		if Gaffer.Plug.Direction.Out in plugDirections :
 			menuDefinition.append(
-				"/Connections/Show Output Connections",
+				"/" + _("Connections") + "/" + _("Show Output Connections"),
 				{
 					"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
 					"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
@@ -235,7 +240,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		if Gaffer.Plug.Direction.In in plugDirections :
 			menuDefinition.append(
-				"/Connections/Show Input Labels",
+				"/" + _("Connections") + "/" + _("Show Input Labels"),
 				{
 					"checkBox" : functools.partial( cls.__getNoduleLabelsVisible, node, "input" ),
 					"command" : functools.partial( cls.__setNoduleLabelsVisible, node, "input" ),
@@ -245,7 +250,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		if Gaffer.Plug.Direction.Out in plugDirections :
 			menuDefinition.append(
-				"/Connections/Show Output Labels",
+				"/" + _("Connections") + "/" + _("Show Output Labels"),
 				{
 					"checkBox" : functools.partial( cls.__getNoduleLabelsVisible, node, "output" ),
 					"command" : functools.partial( cls.__setNoduleLabelsVisible, node, "output" ),
@@ -262,7 +267,7 @@ class GraphEditor( GafferUI.Editor ) :
 		if enabledPlug is not None :
 			menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 			menuDefinition.append(
-				"/Enabled",
+				"/" + _("Enabled"),
 				{
 					"command" : functools.partial( cls.__setValue, enabledPlug ),
 					"checkBox" : enabledPlug.getValue(),
@@ -274,7 +279,7 @@ class GraphEditor( GafferUI.Editor ) :
 	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
 		menuDefinition.append( "/FocusDivider", { "divider" : True } )
-		menuDefinition.append( "/Focus", {
+		menuDefinition.append( "/" + _("Focus") + "", {
 			"command" : functools.partial( graphEditor.scriptNode().setFocus, node ),
 			"active" : not node.isSame( graphEditor.scriptNode().getFocus() ),
 			"shortCut" : "Ctrl+`"
@@ -284,7 +289,7 @@ class GraphEditor( GafferUI.Editor ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
-		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
+		menuDefinition.append( "/" + _("Show Contents..."), { "command" : functools.partial( cls.acquire, node ) } )
 
 	__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 	## Returns a signal which is emitted whenever a node is double clicked.
@@ -349,7 +354,7 @@ class GraphEditor( GafferUI.Editor ) :
 		else :
 
 			if self.__readOnlyPopup is None :
-				GafferUI.PopupWindow.showWarning( "Node Graph Not Editable", parent = self, center = self.bound().center() )
+				GafferUI.PopupWindow.showWarning( _("Node Graph Not Editable"), parent = self, center = self.bound().center() )
 
 	def __nodeMenuVisibilityChanged( self, widget ) :
 
@@ -614,6 +619,94 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.titleChangedSignal()( self )
 
+		# Conectar a los nodos nuevos bajo el root actual para traducir el texto
+		# inmediatamente, sin depender del siguiente frame de renderizado.
+		try :
+			self.__rootChildAddedConnection = graphGadget.getRoot().childAddedSignal().connect(
+				Gaffer.WeakMethod( self.__rootChildAdded ), scoped = True
+			)
+		except Exception :
+			self.__rootChildAddedConnection = None
+
+		# Re-translate gadgets in the new root
+		self.__translateNodeGadgets( graphGadget )
+		self.__gadgetWidget._qtWidget().update()
+
+	def __rootChildAdded( self, parent, child ) :
+
+		if not _i18n.translateNodeNames() :
+			return
+
+		if not isinstance( child, Gaffer.Node ) :
+			return
+
+		if self.__translateNodeGadgetIfPossible( child ) :
+			self.__gadgetWidget._qtWidget().update()
+			return
+
+		# En algunos casos el nodo se añade antes de que exista su grafeto.
+		# Reintentamos en reposo hasta que se cree.
+		self.__pendingTranslatedNodes.add( child )
+		GafferUI.EventLoop.addIdleCallback( self.__deferredTranslatePendingNodes )
+
+	def __translateNodeGadgetIfPossible( self, node ) :
+
+		graphGadget = self.graphGadget()
+		gadget = graphGadget.nodeGadget( node )
+		if gadget is None :
+			return False
+
+		try :
+			contents = gadget.getContents()
+			# StandardNodeGadget uses a NameGadget by default, which
+			# resets to node.getName() on nameChangedSignal and would
+			# overwrite any translated text.  Replace it with a plain
+			# TextGadget so the translation is stable.  Once replaced,
+			# isinstance() returns False and the node is not reprocessed.
+			if isinstance( contents, GafferUI.NameGadget ) :
+				safeText = self.__getSafeTranslation( node )
+				gadget.setContents( GafferUI.TextGadget( safeText ) )
+		except Exception :
+			pass
+
+		return True
+
+	@staticmethod
+	def __getSafeTranslation( node ) :
+
+		typeName = node.typeName().rpartition( ":" )[-1]
+		translated = _i18n.getNodeLabel( typeName, node )
+		# IECoreGL::Font only supports single-byte chars (char c),
+		# so strip accents for the OpenGL node graph labels.
+		return _i18n.stripAccents( translated )
+
+	def __deferredTranslatePendingNodes( self ) :
+
+		if not self.__pendingTranslatedNodes :
+			return False
+
+		pending = list( self.__pendingTranslatedNodes )
+		madeProgress = False
+		for node in pending :
+			# El nodo puede haber sido borrado o movido a otro root
+			try :
+				if node.parent() is None :
+					self.__pendingTranslatedNodes.discard( node )
+					continue
+			except Exception :
+				self.__pendingTranslatedNodes.discard( node )
+				continue
+
+			if self.__translateNodeGadgetIfPossible( node ) :
+				self.__pendingTranslatedNodes.discard( node )
+				madeProgress = True
+
+		if madeProgress :
+			self.__gadgetWidget._qtWidget().update()
+
+		# Seguir intentándolo mientras queden pendientes.
+		return bool( self.__pendingTranslatedNodes )
+
 	def __rootNameChanged( self, root, oldName ) :
 
 		self.titleChangedSignal()( self )
@@ -630,6 +723,10 @@ class GraphEditor( GafferUI.Editor ) :
 
 		graphGadget = self.graphGadget()
 		nodes = [ g.node() for g in graphGadget.unpositionedNodeGadgets() ]
+
+		# Translate labels for any new node gadgets
+		self.__translateNodeGadgets( graphGadget )
+
 		if not nodes :
 			return
 
@@ -651,6 +748,80 @@ class GraphEditor( GafferUI.Editor ) :
 		# layout has gone off screen.
 
 		self.frame( nodes, extend = True )
+
+		# Schedule a deferred re-translation pass.  setContents() during
+		# preRender may not take visual effect until the *next* frame, and
+		# the graph goes idle after creation, so request one extra render.
+		if _i18n.translateNodeNames() :
+			GafferUI.EventLoop.addIdleCallback( self.__deferredTranslateNodeGadgets )
+
+	def __deferredTranslateNodeGadgets( self ) :
+
+		self.__translateNodeGadgets( self.graphGadget() )
+		self.__gadgetWidget._qtWidget().update()
+		return False
+
+	def __translateNodeGadgets( self, graphGadget ) :
+
+		if not _i18n.translateNodeNames() :
+			return
+
+		root = graphGadget.getRoot()
+		for node in root.children( Gaffer.Node ) :
+			gadget = graphGadget.nodeGadget( node )
+			if gadget is None :
+				continue
+
+			try :
+				contents = gadget.getContents()
+				if isinstance( contents, GafferUI.NameGadget ) :
+					safeText = self.__getSafeTranslation( node )
+					gadget.setContents( GafferUI.TextGadget( safeText ) )
+					# Translate nodule labels – set instance metadata which
+					# has highest priority and overrides shader-UI registrations.
+					self.__translateNoduleLabels( node )
+			except Exception :
+				pass
+
+	@staticmethod
+	def __translateNoduleLabels( node ) :
+
+		def _recurse( plug, depth = 0 ) :
+			if depth > 8 :
+				return
+			GraphEditor.__translatePlugNoduleLabel( plug )
+			for child in plug.children( Gaffer.Plug ) :
+				_recurse( child, depth + 1 )
+
+		for plug in node.children( Gaffer.Plug ) :
+			_recurse( plug )
+
+	@staticmethod
+	def __translatePlugNoduleLabel( plug ) :
+
+		# Read the current label from any registration source
+		label = Gaffer.Metadata.value( plug, "noduleLayout:label" )
+		if label is None or not isinstance( label, str ) :
+			# Handle standalone color/vector components (g→V, b→A)
+			name = plug.getName()
+			comp = _i18n.translateColorComponent( name )
+			if comp is not None and comp != name.upper() :
+				Gaffer.Metadata.registerValue( plug, "noduleLayout:label", comp )
+			return
+
+		translated = _i18n.translateLabel( label )
+
+		# Always strip accents for IECoreGL rendering, even when
+		# the label was already translated by a dynamic callback
+		# (e.g. OSLShaderUI.__plugNoduleLabel) that does not strip.
+		safe = _i18n.stripAccents( translated )
+
+		if safe == label :
+			return
+
+		# Set as instance metadata (highest priority)
+		Gaffer.Metadata.registerValue( plug, "noduleLayout:label", safe )
+
 
 	def __annotationsMenu( self ) :
 
@@ -829,3 +1000,25 @@ class GraphEditor( GafferUI.Editor ) :
 		return enabledPlug
 
 GafferUI.Editor.registerType( "GraphEditor", GraphEditor )
+
+# ---------------------------------------------------------------------------
+# Nodule label translation
+# ---------------------------------------------------------------------------
+# Register a default noduleLayout:label on the base Gaffer.Plug type so that
+# nodule labels in the graph canvas are translated.  More specific
+# registrations (e.g. on TweakPlug) take precedence automatically.
+
+def __translatedNoduleLabel( plug ) :
+
+	name = plug.getName()
+	if not _i18n.translateNodeNames() :
+		return name
+
+	# CamelCase-split, then translate via .po / _WORD_MAP
+	spaced = _i18n._camelToSpaced( name )
+	translated = _i18n.translateLabel( spaced )
+
+	# IECoreGL font only supports single-byte chars – strip accents
+	return _i18n.stripAccents( translated )
+
+Gaffer.Metadata.registerValue( Gaffer.Plug, "noduleLayout:label", __translatedNoduleLabel )

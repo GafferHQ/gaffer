@@ -36,51 +36,52 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepSlice,
 
 	"description",
-	"""
+	_("""
 	Takes a slice out of an image with depth defined by Z ( and optionally ZBack ) channels by
 	discarding everything outside of a clipping range. The range is half open, including point samples
 	exactly at the near clip, but excluding point samples exactly at the far clip. This means that if
 	you split an image into a front and back with two DeepSlices, they will composite back together to
 	match the original.  Optionally also flattens the image.
-	""",
+	"""),
 
 	plugs = {
 
 		"nearClip" : {
 
 			"description" :
-			"""
+			_("""
 			Removes everything with Z less than the near clip depth.
-			""",
+			"""),
 
 		},
-		"nearClip.enabled" : { "description" : "Enables near clip." },
-		"nearClip.value" : { "description" : "Depth for near clip." },
+		"nearClip.enabled" : { "description" : _("Enables near clip.") },
+		"nearClip.value" : { "description" : _("Depth for near clip.") },
 		"farClip" : {
 
 			"description" :
-			"""
+			_("""
 			Removes everything with Z greater than or equal to the far clip depth.
-			""",
+			"""),
 
 		},
-		"farClip.enabled" : { "description" : "Enables far clip." },
-		"farClip.value" : { "description" : "Depth for far clip." },
+		"farClip.enabled" : { "description" : _("Enables far clip.") },
+		"farClip.value" : { "description" : _("Depth for far clip.") },
 		"flatten" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs a flat image, instead of output a deep image with any samples within the range.
 			Flattening as part of DeepSlice is up to 2X faster than flattening afterwards, and is
 			convenient if you're using a DeepSlice to preview the contents of a deep image by
 			scrubbing through depth.
-			""",
+			"""),
 
 		},
 	}

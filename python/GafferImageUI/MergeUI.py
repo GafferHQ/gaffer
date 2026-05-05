@@ -37,6 +37,7 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 def __inputLabel( plug ) :
 
@@ -57,7 +58,7 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Merge,
 
 	"description",
-	"""
+	_("""
 	Composites two or more images together. The following operations
 	are available :
 
@@ -75,7 +76,7 @@ Gaffer.Metadata.registerNode(
 	  - Under : A(1-b) + B
 	  - Min : min( A, B )
 	  - Max : max( A, B )
-	""",
+	"""),
 
 	plugs = {
 
@@ -89,19 +90,19 @@ Gaffer.Metadata.registerNode(
 		"operation" : {
 
 			"description" :
-			"""
+			_("""
 			The compositing operation used to merge the
 			image together. See node documentation for
 			more details.
-			""",
+			"""),
 
 			"preset:Add" : GafferImage.Merge.Operation.Add,
 			"preset:Atop" : GafferImage.Merge.Operation.Atop,
 			"preset:Divide" : GafferImage.Merge.Operation.Divide,
-			"preset:In" : GafferImage.Merge.Operation.In,
-			"preset:Out" : GafferImage.Merge.Operation.Out,
+			"preset:Interior" : GafferImage.Merge.Operation.In,
+			"preset:Exterior" : GafferImage.Merge.Operation.Out,
 			"preset:Mask" : GafferImage.Merge.Operation.Mask,
-			"preset:Matte" : GafferImage.Merge.Operation.Matte,
+			"preset:Stencil" : GafferImage.Merge.Operation.Matte,
 			"preset:Multiply" : GafferImage.Merge.Operation.Multiply,
 			"preset:Over" : GafferImage.Merge.Operation.Over,
 			"preset:Subtract" : GafferImage.Merge.Operation.Subtract,

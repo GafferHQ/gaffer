@@ -122,17 +122,17 @@ if moduleSearchPath.find( "arnold" ) :
 
 		GafferArnoldUI.ShaderMenu.appendShaders( nodeMenu.definition() )
 
-		nodeMenu.append( "/Arnold/Globals/Options", GafferArnold.ArnoldOptions, searchText = "ArnoldOptions" )
+		nodeMenu.append( "/Arnold/Globals/Arnold Options", GafferArnold.ArnoldOptions, searchText = "ArnoldOptions" )
 		nodeMenu.append( "/Arnold/Globals/Atmosphere", GafferArnold.ArnoldAtmosphere, searchText = "ArnoldAtmosphere" )
-		nodeMenu.append( "/Arnold/Globals/Background", GafferArnold.ArnoldBackground, searchText = "ArnoldBackground" )
+		nodeMenu.append( "/Arnold/Globals/Arnold Background", GafferArnold.ArnoldBackground, searchText = "ArnoldBackground" )
 		nodeMenu.append( "/Arnold/Globals/AOVShader", GafferArnold.ArnoldAOVShader, searchText = "ArnoldAOVShader" )
 		nodeMenu.append( "/Arnold/Globals/Imager", GafferArnold.ArnoldImager, searchText = "ArnoldImager" )
 		nodeMenu.append( "/Arnold/Displacement", GafferArnold.ArnoldDisplacement, searchText = "ArnoldDisplacement"  )
 		nodeMenu.append( "/Arnold/CameraShaders", GafferArnold.ArnoldCameraShaders, searchText = "ArnoldCameraShaders"  )
 		nodeMenu.append( "/Arnold/VDB", GafferArnold.ArnoldVDB, searchText = "ArnoldVDB"  )
 		nodeMenu.append( "/Arnold/Procedural", GafferArnold.ArnoldProcedural, searchText = "ArnoldProcedural"  )
-		nodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
-		nodeMenu.append( "/Arnold/Shader Ball", GafferArnold.ArnoldShaderBall, searchText = "ArnoldShaderBall" )
+		nodeMenu.append( "/Arnold/Arnold Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
+		nodeMenu.append( "/Arnold/Arnold Shader Ball", GafferArnold.ArnoldShaderBall, searchText = "ArnoldShaderBall" )
 		nodeMenu.append( "/Arnold/Arnold Texture Bake", GafferArnold.ArnoldTextureBake, searchText = "ArnoldTextureBake" )
 
 		GafferArnoldUI.CacheMenu.appendDefinitions( scriptWindowMenu, "/Tools/Arnold" )
@@ -196,8 +196,8 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 				searchText = "dl" + label
 			)
 
-		nodeMenu.append( "/3Delight/Attributes", GafferDelight.DelightAttributes, searchText = "DelightAttributes"  )
-		nodeMenu.append( "/3Delight/Options", GafferDelight.DelightOptions, searchText = "DelightOptions"  )
+		nodeMenu.append( "/3Delight/Delight Attributes", GafferDelight.DelightAttributes, searchText = "DelightAttributes"  )
+		nodeMenu.append( "/3Delight/Delight Options", GafferDelight.DelightOptions, searchText = "DelightOptions"  )
 
 	except Exception as m :
 
@@ -217,10 +217,10 @@ if os.environ.get( "CYCLES_ROOT" ) and moduleSearchPath.find( "GafferCycles" ) :
 
 			GafferCyclesUI.ShaderMenu.appendShaders( nodeMenu.definition() )
 
-			nodeMenu.append( "/Cycles/Globals/Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
-			nodeMenu.append( "/Cycles/Globals/Background", GafferCycles.CyclesBackground, searchText = "CyclesBackground" )
-			nodeMenu.append( "/Cycles/Attributes", GafferCycles.CyclesAttributes, searchText = "CyclesAttributes" )
-			nodeMenu.append( "/Cycles/Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
+			nodeMenu.append( "/Cycles/Globals/Cycles Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
+			nodeMenu.append( "/Cycles/Globals/Cycles Background", GafferCycles.CyclesBackground, searchText = "CyclesBackground" )
+			nodeMenu.append( "/Cycles/Cycles Attributes", GafferCycles.CyclesAttributes, searchText = "CyclesAttributes" )
+			nodeMenu.append( "/Cycles/Cycles Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
 
 	except Exception as m :
 
@@ -241,9 +241,9 @@ if (
 
 		GafferRenderManUI.RenderManShaderUI.appendShaders( nodeMenu.definition() )
 
-		nodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes, searchText = "RenderManAttributes" )
+		nodeMenu.append( "/RenderMan/RenderMan Attributes", GafferRenderMan.RenderManAttributes, searchText = "RenderManAttributes" )
 		nodeMenu.append( "/RenderMan/Integrator", GafferRenderMan.RenderManIntegrator, searchText = "RenderManIntegrator" )
-		nodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions, searchText = "RenderManOptions" )
+		nodeMenu.append( "/RenderMan/RenderMan Options", GafferRenderMan.RenderManOptions, searchText = "RenderManOptions" )
 		nodeMenu.append( "/RenderMan/Display Filter", GafferRenderMan.RenderManDisplayFilter, searchText = "RenderManDisplayFilter" )
 		nodeMenu.append( "/RenderMan/Sample Filter", GafferRenderMan.RenderManSampleFilter, searchText = "RenderManSampleFilter" )
 
@@ -254,8 +254,8 @@ if (
 
 # Scene nodes
 
-nodeMenu.append( "/Scene/File/Reader", GafferScene.SceneReader, searchText = "SceneReader" )
-nodeMenu.append( "/Scene/File/Writer", GafferScene.SceneWriter, searchText = "SceneWriter" )
+nodeMenu.append( "/Scene/File/Scene Reader", GafferScene.SceneReader, searchText = "SceneReader" )
+nodeMenu.append( "/Scene/File/Scene Writer", GafferScene.SceneWriter, searchText = "SceneWriter" )
 nodeMenu.append( "/Scene/Source/Object To Scene", GafferScene.ObjectToScene, searchText = "ObjectToScene" )
 nodeMenu.append( "/Scene/Source/Image To Points", GafferScene.ImageToPoints, searchText = "ImageToPoints" )
 nodeMenu.append( "/Scene/Source/Image Scatter", GafferScene.ImageScatter, searchText = "ImageScatter" )
@@ -267,7 +267,7 @@ nodeMenu.append( "/Scene/Source/Grid", GafferScene.Grid )
 nodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )
 nodeMenu.append( "/Scene/Source/Primitive/Plane", GafferScene.Plane )
 nodeMenu.append( "/Scene/Source/Primitive/Sphere", GafferScene.Sphere )
-nodeMenu.append( "/Scene/Source/Primitive/Text", GafferScene.Text )
+nodeMenu.append( "/Scene/Source/Primitive/Text 3D", GafferScene.Text )
 nodeMenu.append( "/Scene/Source/Scatter", GafferScene.Scatter )
 nodeMenu.append( "/Scene/Source/Instancer", GafferScene.Instancer )
 nodeMenu.append( "/Scene/Source/MotionPath", GafferScene.MotionPath )
@@ -321,16 +321,16 @@ nodeMenu.append( "/Scene/Filters/Path Filter", GafferScene.PathFilter, searchTex
 nodeMenu.append( "/Scene/Filters/Union Filter", GafferScene.UnionFilter, searchText = "UnionFilter" )
 nodeMenu.append( "/Scene/Hierarchy/Group", GafferScene.Group )
 nodeMenu.append( "/Scene/Hierarchy/Parent", GafferScene.Parent )
-nodeMenu.append( "/Scene/Hierarchy/Merge", GafferScene.MergeScenes, searchText = "MergeScenes" )
+nodeMenu.append( "/Scene/Hierarchy/Merge Scenes", GafferScene.MergeScenes, searchText = "MergeScenes" )
 nodeMenu.append( "/Scene/Hierarchy/Duplicate", GafferScene.Duplicate )
 nodeMenu.append( "/Scene/Hierarchy/SubTree", GafferScene.SubTree ) #\todo - rename to 'Subtree' (node needs to change too)
 nodeMenu.append( "/Scene/Hierarchy/Prune", GafferScene.Prune )
 nodeMenu.append( "/Scene/Hierarchy/Isolate", GafferScene.Isolate )
-nodeMenu.append( "/Scene/Hierarchy/Collect", GafferScene.CollectScenes, searchText = "CollectScenes" )
+nodeMenu.append( "/Scene/Hierarchy/Collect Scenes", GafferScene.CollectScenes, searchText = "CollectScenes" )
 nodeMenu.append( "/Scene/Hierarchy/Encapsulate", GafferScene.Encapsulate )
 nodeMenu.append( "/Scene/Hierarchy/Unencapsulate", GafferScene.Unencapsulate )
 nodeMenu.append( "/Scene/Hierarchy/Rename", GafferScene.Rename )
-nodeMenu.append( "/Scene/Transform/Transform", GafferScene.Transform )
+nodeMenu.append( "/Scene/Transform/Scene Transform", GafferScene.Transform )
 nodeMenu.append( "/Scene/Transform/Freeze Transform", GafferScene.FreezeTransform, searchText = "FreezeTransform" )
 nodeMenu.append( "/Scene/Transform/Point Constraint", GafferScene.PointConstraint, searchText = "PointConstraint" )
 nodeMenu.append( "/Scene/Transform/Aim Constraint", GafferScene.AimConstraint, searchText = "AimConstraint" )
@@ -348,7 +348,7 @@ nodeMenu.append( "/Scene/Globals/Shuffle Options", GafferScene.ShuffleOptions, s
 nodeMenu.append( "/Scene/Globals/Option Tweaks", GafferScene.OptionTweaks, searchText = "OptionTweaks" )
 nodeMenu.append( "/Scene/Globals/Set", GafferScene.Set )
 nodeMenu.append( "/Scene/Globals/Set Visualiser", GafferScene.SetVisualiser, searchText = "SetVisualiser" )
-nodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes, searchText = "OpenGLAttributes" )
+nodeMenu.append( "/Scene/OpenGL/OpenGL Attributes", GafferScene.OpenGLAttributes, searchText = "OpenGLAttributes" )
 nodeMenu.definition().append( "/Scene/OpenGL/Shader", { "subMenu" : GafferSceneUI.OpenGLShaderUI.shaderSubMenu } )
 nodeMenu.append( "/Scene/Utility/Filter Query", GafferScene.FilterQuery, searchText = "FilterQuery" )
 nodeMenu.append( "/Scene/Utility/Transform Query", GafferScene.TransformQuery, searchText = "TransformQuery" )
@@ -384,10 +384,10 @@ def __contactSheetCreateCommand( menu ) :
 
 	return result
 
-nodeMenu.append( "/Image/File/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
-nodeMenu.append( "/Image/File/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
+nodeMenu.append( "/Image/File/Image Reader", GafferImage.ImageReader, searchText = "ImageReader" )
+nodeMenu.append( "/Image/File/Image Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
 nodeMenu.append( "/Image/Shape/Rectangle", GafferImage.Rectangle, postCreator = GafferImageUI.RectangleUI.postCreate )
-nodeMenu.append( "/Image/Shape/Text", GafferImage.Text, postCreator = GafferImageUI.TextUI.postCreate )
+nodeMenu.append( "/Image/Shape/Text 2D", GafferImage.Text, postCreator = GafferImageUI.TextUI.postCreate )
 nodeMenu.append( "/Image/Pattern/Constant", GafferImage.Constant )
 nodeMenu.append( "/Image/Pattern/Checkerboard", GafferImageUI.CheckerboardUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Image/Pattern/Ramp", GafferImage.Ramp, postCreator = GafferImageUI.RampUI.postCreate)
@@ -412,7 +412,7 @@ nodeMenu.append( "/Image/Merge/Contact Sheet", __contactSheetCreateCommand, sear
 nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )
 nodeMenu.append( "/Image/Merge/Mix", GafferImage.Mix )
 nodeMenu.append( "/Image/Transform/Resize", GafferImage.Resize )
-nodeMenu.append( "/Image/Transform/Transform", GafferImage.ImageTransform, searchText = "ImageTransform" )
+nodeMenu.append( "/Image/Transform/Image Transform", GafferImage.ImageTransform, searchText = "ImageTransform" )
 nodeMenu.append( "/Image/Transform/Crop", GafferImage.Crop, postCreator = GafferImageUI.CropUI.postCreate )
 nodeMenu.append( "/Image/Transform/Offset", GafferImage.Offset )
 nodeMenu.append( "/Image/Transform/Mirror", GafferImage.Mirror )
@@ -420,7 +420,7 @@ nodeMenu.append( "/Image/Warp/VectorWarp", GafferImage.VectorWarp )
 nodeMenu.append( "/Image/Channels/Shuffle", GafferImage.Shuffle, searchText = "Shuffle" )
 nodeMenu.append( "/Image/Channels/Copy", GafferImage.CopyChannels, searchText = "CopyChannels" )
 nodeMenu.append( "/Image/Channels/Delete", GafferImage.DeleteChannels, searchText = "DeleteChannels" )
-nodeMenu.append( "/Image/Channels/Collect", GafferImage.CollectImages, searchText = "CollectImages" )
+nodeMenu.append( "/Image/Channels/Collect Images", GafferImage.CollectImages, searchText = "CollectImages" )
 nodeMenu.append( "/Image/Utility/Metadata", GafferImage.ImageMetadata, searchText = "ImageMetadata" )
 nodeMenu.append( "/Image/Utility/Delete Metadata", GafferImage.DeleteImageMetadata, searchText = "DeleteImageMetadata" )
 nodeMenu.append( "/Image/Utility/Copy Metadata", GafferImage.CopyImageMetadata, searchText = "CopyImageMetadata" )
@@ -434,7 +434,7 @@ nodeMenu.append( "/Image/Utility/FormatQuery", GafferImage.FormatQuery )
 nodeMenu.append( "/Image/Utility/DataWindowQuery", GafferImage.DataWindowQuery )
 nodeMenu.append( "/Image/Utility/OpenColorIO Context", GafferImage.OpenColorIOContext, searchText = "OpenColorIOContext" )
 nodeMenu.append( "/Image/Deep/FlatToDeep", GafferImage.FlatToDeep, searchText = "FlatToDeep" )
-nodeMenu.append( "/Image/Deep/Merge", GafferImage.DeepMerge, searchText = "DeepMerge" )
+nodeMenu.append( "/Image/Deep/Deep Merge", GafferImage.DeepMerge, searchText = "DeepMerge" )
 nodeMenu.append( "/Image/Deep/Tidy", GafferImage.DeepTidy, searchText = "DeepTidy" )
 nodeMenu.append( "/Image/Deep/DeepToFlat", GafferImage.DeepToFlat )
 nodeMenu.append( "/Image/Deep/Sample Counts", GafferImage.DeepSampleCounts, searchText = "DeepSampleCounts" )
@@ -543,7 +543,7 @@ for lightType in [
 ] :
 	nodeMenu.append( "/USD/Light/{}".format( IECore.CamelCase.toSpaced( lightType ) ), functools.partial( __usdLightCreator, lightType ), searchText = lightType )
 
-nodeMenu.append( "/USD/Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
+nodeMenu.append( "/USD/USD Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
 nodeMenu.append( "/USD/Layer Writer", GafferUSD.USDLayerWriter, searchText = "USDLayerWriter" )
 nodeMenu.append( "/USD/Promote Instances", GafferUSD.PromotePointInstances, searchText = "PromotePointInstances" )
 

@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 
@@ -57,7 +58,7 @@ class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 			filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 			self.__filterText = GafferUI.TextWidget()
-			self.__filterText.setPlaceholderText( "Filter..." )
+			self.__filterText.setPlaceholderText( _("Filter...") )
 
 			self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ) )
 			self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ) )

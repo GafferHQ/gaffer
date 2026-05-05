@@ -43,12 +43,14 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 def appendDefinitions( menuDefinition, prefix ) :
 
-	menuDefinition.append( prefix + "/About Gaffer...", { "command" : about } )
-	menuDefinition.append( prefix + "/Preferences...", { "command" : preferences } )
-	menuDefinition.append( prefix + "/Documentation...", { "command" : functools.partial( GafferUI.showURL, os.path.expandvars( "$GAFFER_ROOT/doc/gaffer/html/index.html" ) ) } )
-	menuDefinition.append( prefix + "/Quit", { "command" : quit, "shortCut" : "Ctrl+Q" } )
+	menuDefinition.append( prefix + "/About Gaffer...", { "command" : about, "label" : _( "About Gaffer..." ) } )
+	menuDefinition.append( prefix + "/Preferences...", { "command" : preferences, "label" : _( "Preferences..." ) } )
+	menuDefinition.append( prefix + "/Documentation...", { "command" : functools.partial( GafferUI.showURL, os.path.expandvars( "$GAFFER_ROOT/doc/gaffer/html/index.html" ) ), "label" : _( "Documentation..." ) } )
+	menuDefinition.append( prefix + "/Quit", { "command" : quit, "shortCut" : "Ctrl+Q", "label" : _( "Quit" ) } )
 
 def quit( menu ) :
 
@@ -97,10 +99,10 @@ def preferences( menu ) :
 	if window is not None and window() :
 		window = window()
 	else :
-		window = GafferUI.Dialogue( "Preferences" )
-		closeButton = window._addButton( "Close" )
+		window = GafferUI.Dialogue( _( "Preferences" ) )
+		closeButton = window._addButton( _( "Close" ) )
 		closeButton.clickedSignal().connect( __closePreferences )
-		saveButton = window._addButton( "Save" )
+		saveButton = window._addButton( _( "Save" ) )
 		saveButton.clickedSignal().connect( __savePreferences )
 		window._setWidget( GafferUI.NodeUI.create( application["preferences"] ) )
 		__preferencesWindows[application] = weakref.ref( window )

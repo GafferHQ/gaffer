@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 import GafferScene
 import GafferSceneUI
@@ -80,9 +81,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Light,
 
 	"description",
-	"""
+	_("""
 	Creates a scene with a single light in it.
-	""",
+	"""),
 
 	plugs = {
 
@@ -95,11 +96,11 @@ Gaffer.Metadata.registerNode(
 		"attributes" : {
 
 			"description" :
-			"""
+			_("""
 			Arbitrary attributes which are applied to the light. Typical
 			uses include setting renderer specific visibility attributes
 			to hide the shape from the camera.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -125,9 +126,9 @@ Gaffer.Metadata.registerNode(
 		"parameters" : {
 
 			"description" :
-			"""
+			_("""
 			The parameters of the light shader - these will vary based on the light type.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"nodule:type" : "GafferUI::CompoundNodule",
@@ -171,12 +172,12 @@ Gaffer.Metadata.registerNode(
 		"defaultLight" : {
 
 			"description" :
-			"""
+			_("""
 			Whether this light illuminates all geometry by default. When
 			toggled, the light will be added to the \"defaultLights\" set, which
 			can be referenced in set expressions and manipulated by downstream
 			nodes.
-			""",
+			"""),
 
 			"layout:section" : "Light Linking",
 
@@ -185,10 +186,10 @@ Gaffer.Metadata.registerNode(
 		"mute" : {
 
 			"description" :
-			"""
+			_("""
 			Whether this light is muted. When toggled, the attribute \"light:mute\"
 			will be set to true. When not toggled, it will be omitted from the attributes.
-			""",
+			"""),
 
 			"layout:section" : "Light Linking",
 			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
@@ -197,9 +198,9 @@ Gaffer.Metadata.registerNode(
 		"visualiserAttributes" : {
 
 			"description" :
-			"""
+			_("""
 			Attributes that affect the visualisation of this Light in the Viewer.
-			""",
+			"""),
 
 			"layout:section" : "Visualisation",
 			"compoundDataPlugValueWidget:editable" : False,
@@ -218,31 +219,31 @@ Gaffer.Metadata.registerNode(
 		"visualiserAttributes.lightDrawingMode" : {
 
 			"description" :
-			"""
+			_("""
 			Controls how lights are presented in the Viewer.
-			""",
+			"""),
 
-			"label" : "Light Drawing Mode",
+			"label" : _("Light Drawing Mode"),
 
 		},
 
 		"visualiserAttributes.maxTextureResolution" : {
 
 			"description" :
-			"""
+			_("""
 			Visualisers that load textures will respect this setting to
 			limit their resolution.
-			""",
+			"""),
 
 		},
 
 		"visualiserAttributes.frustum" : {
 
 			"description" :
-			"""
+			_("""
 			Controls whether applicable lights draw a representation of their
 			light projection in the viewer.
-			"""
+			""")
 
 		},
 
@@ -258,19 +259,19 @@ Gaffer.Metadata.registerNode(
 		"visualiserAttributes.lightFrustumScale" : {
 
 			"description" :
-			"""
+			_("""
 			Allows light projections to be scaled to better suit the scene.
-			"""
+			""")
 
 		},
 
 		"visualiserAttributes.scale" : {
 
 			"description" :
-			"""
+			_("""
 			Scales non-geometric visualisations in the viewport to make them
 			easier to work with.
-			""",
+			"""),
 
 		},
 
@@ -286,9 +287,9 @@ Gaffer.Metadata.registerNode(
 		"visualiserAttributes.lookThroughAperture" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the aperture used when looking through this light. Overrides the Viewer's Camera Settings.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "lookThroughApertureVisibility"
 
@@ -297,9 +298,9 @@ Gaffer.Metadata.registerNode(
 		"visualiserAttributes.lookThroughClippingPlanes" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the clipping planes used when looking through this light. Overrides the Viewer's Camera Settings.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "lookThroughClippingPlanesVisibility"
 
@@ -317,6 +318,7 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 	menuDefinition.append(
 		"/Light Links",
 		{
+			"label" : _("Light Links"),
 			"subMenu" : functools.partial( __lightLinksSubMenu, view )
 		}
 	)
@@ -336,8 +338,9 @@ def __lightLinksSubMenu( view ) :
 	result.append(
 		"Select Linked Objects",
 		{
+			"label" : _("Select Linked Objects"),
 			"command" : functools.partial(
-				__selectLinked, context = view.context(), title = "Selecting Linked Objects",
+				__selectLinked, context = view.context(), title = _("Selecting Linked Objects"),
 				linkingQuery = functools.partial( GafferScene.SceneAlgo.linkedObjects, view["in"], selectedLights )
 			),
 			"active" : not selectedLights.isEmpty(),
@@ -347,8 +350,9 @@ def __lightLinksSubMenu( view ) :
 	result.append(
 		"Select Linked Lights",
 		{
+			"label" : _("Select Linked Lights"),
 			"command" : functools.partial(
-				__selectLinked, context = view.context(), title = "Selecting Linked Lights",
+				__selectLinked, context = view.context(), title = _("Selecting Linked Lights"),
 				linkingQuery = functools.partial( GafferScene.SceneAlgo.linkedLights, view["in"], selectedObjects )
 			),
 			"active" : not selectedObjects.isEmpty(),

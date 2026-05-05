@@ -36,32 +36,33 @@
 
 import Gaffer
 import GafferArnold
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldImager,
 
 	"description",
-	"""
+	_("""
 	Assigns an imager. This is stored as an `ai:imager` option in Gaffer's
 	globals, and applied to all render outputs.
 
 	> Tip : Use the `layer_selection` parameter on each imager to control
 	> which AOVs the imager applies to.
-	""",
+	"""),
 
 	plugs = {
 
 		"imager" : {
 
 			"description" :
-			"""
+			_("""
 			The imager to be assigned. The output of an ArnoldShader node
 			holding an imager should be connected here. Multiple imagers may be
 			assigned at once by chaining them together via their `input`
 			parameters, and then assigning the final imager via the ArnoldImager
 			node.
-			""",
+			"""),
 
 			"noduleLayout:section" : "left",
 			"nodule:type" : "GafferUI::StandardNodule",
@@ -71,7 +72,7 @@ Gaffer.Metadata.registerNode(
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			The mode used to combine the `imager` input with any imagers that
 			already exist in the globals.
 
@@ -81,7 +82,7 @@ Gaffer.Metadata.registerNode(
 			  any pre-existing imagers.
 			- InsertLast : Inserts the new imagers so that they will be run after
 			  any pre-existing imagers.
-			""",
+			"""),
 
 			"preset:Replace" : GafferArnold.ArnoldImager.Mode.Replace,
 			"preset:InsertFirst" : GafferArnold.ArnoldImager.Mode.InsertFirst,

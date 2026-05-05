@@ -42,12 +42,13 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class AboutWindow( GafferUI.Window ) :
 
 	def __init__( self, about, **kw ) :
 
-		GafferUI.Window.__init__( self, title = "About " + about.name(), sizeMode=GafferUI.Window.SizeMode.Manual, borderWidth = 6, **kw )
+		GafferUI.Window.__init__( self, title = _("About ") + about.name(), sizeMode=GafferUI.Window.SizeMode.Manual, borderWidth = 6, **kw )
 
 		with self :
 
@@ -96,7 +97,7 @@ class AboutWindow( GafferUI.Window ) :
 					GafferUI.ListContainer.Orientation.Vertical,
 					spacing=10,
 					borderWidth=10,
-					parenting = { "label"  : "License" },
+					parenting = { "label"  : _("License") },
 				) :
 
 					license = "".join( open( os.path.expandvars( about.license() ), encoding = "utf-8" ).readlines() )
@@ -114,7 +115,7 @@ class AboutWindow( GafferUI.Window ) :
 						GafferUI.ListContainer.Orientation.Vertical,
 						spacing=10,
 						borderWidth=10,
-						parenting = { "label" : "Dependencies" },
+						parenting = { "label" : _("Dependencies") },
 					) :
 
 						with GafferUI.ScrolledContainer(

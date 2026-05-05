@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferArnold
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldDisplacement,
 
 	"description",
-	"""
+	_("""
 	Creates displacements to be applied to meshes for
 	rendering in Arnold. A displacement consists of a
 	shader to provide the displacement map and several
@@ -53,7 +54,7 @@ Gaffer.Metadata.registerNode(
 	settings of the mesh, which in turn controls the detail
 	of the displacement. Use a ShaderAssignment node to assign
 	the ArnoldDisplacement to specific objects.
-	""",
+	"""),
 
 	"layout:activator:autoBumpVisibility", lambda node : not node["autoBump"].isSetToDefault(),
 
@@ -70,12 +71,12 @@ Gaffer.Metadata.registerNode(
 		"map" : {
 
 			"description" :
-			"""
+			_("""
 			The Arnold shader that provides the displacement
 			map. Connect a float or colour input to displace
 			along the object normals or a vector input to displace
 			in a specific direction.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 			"noduleLayout:section" : "left",
@@ -85,10 +86,10 @@ Gaffer.Metadata.registerNode(
 		"height" : {
 
 			"description" :
-			"""
+			_("""
 			Controls the amount of displacement. Only used when
 			performing displacement along the normal.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -97,7 +98,7 @@ Gaffer.Metadata.registerNode(
 		"padding" : {
 
 			"description" :
-			"""
+			_("""
 			Padding added to an object's bounding box to take
 			into account displacement. Arnold will subdivide
 			and displace an object the first time a ray intersects
@@ -105,7 +106,7 @@ Gaffer.Metadata.registerNode(
 			parts of the object will be clipped. If the padding
 			is too large, rendertime will suffer and Arnold
 			will emit a warning message.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -114,13 +115,13 @@ Gaffer.Metadata.registerNode(
 		"zeroValue" : {
 
 			"description" :
-			"""
+			_("""
 			Defines a value that will cause no displacement to
 			occur. For instance, if the displacement map contains
 			a greyscale noise between 0 and 1, a zero value of 0.5
 			will mean that the displacement pushes into the object
 			in some places and out in others.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -129,11 +130,11 @@ Gaffer.Metadata.registerNode(
 		"autoBump" : {
 
 			"description" :
-			"""
+			_("""
 			Automatically turns the details of the displacement map
 			into bump, wherever the mesh is not subdivided enough
 			to properly capture them.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"layout:visibilityActivator" : "autoBumpVisibility",

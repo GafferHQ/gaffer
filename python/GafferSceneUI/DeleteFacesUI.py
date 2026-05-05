@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.DeleteFaces,
 
 	"description",
-	"""
+	_("""
 	Deletes faces from a mesh using a primitive variable to choose the faces.
-	""",
+	"""),
 
 	plugs = {
 
@@ -56,23 +57,23 @@ Gaffer.Metadata.registerNode(
 
 		"faces" : {
 			"description" :
-			"""
+			_("""
 			Uniformly interpolated int, float or bool primitive variable to choose which faces to delete. Note a non-zero value indicates the face will be deleted.
-			"""
+			""")
 		},
 
 		"invert" : {
 			"description" :
-			"""
+			_("""
 			Invert the condition used to delete faces. If the primvar is zero then the face will be deleted.
-			"""
+			""")
 		},
 
 		"ignoreMissingVariable" : {
 			"description" :
-			"""
+			_("""
 			Causes the node to do nothing if the primitive variable doesn't exist on the curves, instead of erroring.
-			"""
+			""")
 		},
 
 	}

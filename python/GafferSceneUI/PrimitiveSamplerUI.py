@@ -36,47 +36,48 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.PrimitiveSampler,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which sample primitive variables from
 	another primitive.
-	""",
+	"""),
 
 	plugs = {
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter used to determine which objects in the
 			`in` scene will receive primitive variables sampled
 			from the `sourceLocation` in the `source` scene.
-			""",
+			"""),
 
 		},
 
 		"source" : {
 
 			"description" :
-			"""
+			_("""
 			The scene that contains the source primitive that
 			primitive variables will be sampled from.
-			""",
+			"""),
 
 		},
 
 		"sourceLocation" : {
 
 			"description" :
-			"""
+			_("""
 			The location of the primitive in the `source` scene that
 			will be sampled from.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "source",
@@ -86,24 +87,24 @@ Gaffer.Metadata.registerNode(
 		"primitiveVariables" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the primitive variables to be sampled from the source
 			primitive. These should be separated by spaces and can use Gaffer's
 			standard wildcards to match multiple variables. The sampled variables
 			are prefixed with `prefix` before being added to the sampling object.
-			""",
+			"""),
 
 		},
 
 		"prefix" : {
 
 			"description" :
-			"""
+			_("""
 			A prefix applied to the names of the sampled primitive variables before
 			they are added to the sampling object. This is particularly useful when
 			sampling something like "P", and not not wanting to modify the true
 			vertex positions of the sampling primitive.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Output",
 
@@ -112,10 +113,10 @@ Gaffer.Metadata.registerNode(
 		"status" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a boolean primitive variable created to record the success or
 			failure of the sampling operation.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Output",
 

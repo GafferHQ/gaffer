@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Rename,
 
 	"description",
-	"""
+	_("""
 	Renames locations in the scene.
-	""",
+	"""),
 
 	"layout:activator:nameIsSetToDefault", lambda node : node["name"].isSetToDefault(),
 
@@ -53,7 +54,7 @@ Gaffer.Metadata.registerNode(
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The new name for the location. If this name is non-empty then it
 			takes precedence, and all other renaming operations are ignored.
 
@@ -61,7 +62,7 @@ Gaffer.Metadata.registerNode(
 			> location's original name, and can be used in a Spreadsheet's
 			> `selector` to allow each row to define the new name for a
 			> particular location.
-			""",
+			"""),
 
 			"layout:divider" : True,
 
@@ -72,11 +73,11 @@ Gaffer.Metadata.registerNode(
 		"deletePrefix" : {
 
 			"description" :
-			"""
+			_("""
 			A prefix to remove from the start of the original name. Prefixes are removed
 			before the suffixes and before the find and replace operation is
 			performed.
-			""",
+			"""),
 
 			"layout:activator" : "nameIsSetToDefault",
 
@@ -85,10 +86,10 @@ Gaffer.Metadata.registerNode(
 		"deleteSuffix" : {
 
 			"description" :
-			"""
+			_("""
 			A suffix to remove from the start of the original name. Suffixes are removed
 			before the find and replace operation is performed.
-			""",
+			"""),
 
 			"layout:activator" : "nameIsSetToDefault",
 			"layout:divider" : True,
@@ -98,7 +99,7 @@ Gaffer.Metadata.registerNode(
 		"find" : {
 
 			"description" :
-			"""
+			_("""
 			A string to search for within the original name. All occurrences of this string
 			will be replaced with the value of `replace`. When `useRegularExpressions`
 			is on, the search string is treated as a regular expression, with the
@@ -133,7 +134,7 @@ Gaffer.Metadata.registerNode(
 			- `()` : Captures the subgroup of the pattern within the brackets,
 			allowing it to be referenced by `{}` in the `replace` string.
 
-			""",
+			"""),
 
 			"layout:activator" : "nameIsSetToDefault",
 
@@ -142,7 +143,7 @@ Gaffer.Metadata.registerNode(
 		"replace" : {
 
 			"description" :
-			"""
+			_("""
 			The replacement for strings matched by the `find` plug.
 			When `useRegularExpressions` is on, this can refer to
 			captured patterns using Python's standard string formatting
@@ -152,7 +153,7 @@ Gaffer.Metadata.registerNode(
 			- `{1}` : The 1st subgroup captured within `()` brackets by the `find` string.
 			- `{N}` : The Nth subgroup captured within `()` brackets by the `find` string.
 			- `{1:0>4}` : The 1st subgroup, aligned to the right and padded to width 4.
-			""",
+			"""),
 
 			"layout:activator" : "nameIsSetToDefault",
 
@@ -161,11 +162,11 @@ Gaffer.Metadata.registerNode(
 		"useRegularExpressions" : {
 
 			"description" :
-			"""
+			_("""
 			When on, the `find` string is treated as a regular expression,
 			allowing it to perform complex pattern matching and to capture sections
 			of the match to be referenced by the `replace` string.
-			""",
+			"""),
 
 			"layout:activator" : "nameIsSetToDefault",
 			"layout:divider" : True,
@@ -175,11 +176,11 @@ Gaffer.Metadata.registerNode(
 		"addPrefix" : {
 
 			"description" :
-			"""
+			_("""
 			A string to add at the start of the name. Prefixes are
 			added last, after the find and replace operation has
 			been performed.
-			""",
+			"""),
 
 			"layout:activator" : "nameIsSetToDefault",
 
@@ -188,11 +189,11 @@ Gaffer.Metadata.registerNode(
 		"addSuffix" : {
 
 			"description" :
-			"""
+			_("""
 			A string to add at the end of the name. Suffixes are
 			added last, after the find and replace operation has
 			been performed.
-			""",
+			"""),
 
 
 			"layout:activator" : "nameIsSetToDefault",

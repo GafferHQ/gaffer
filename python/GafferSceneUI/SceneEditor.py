@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 
@@ -201,7 +202,7 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			Filters the input scene to isolate locations with matching names.
 			The filter may contain any of Gaffer's standard wildcards, and may
 			either be used to match individual location names or entire paths.
@@ -213,7 +214,7 @@ Gaffer.Metadata.registerNode(
 			  text `building` anywhere in its name.
 			- `/cityA/.../building*` : Matches only locations within `cityA`
 			  whose name starts with `building`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "searchOn.png",
@@ -231,10 +232,10 @@ Gaffer.Metadata.registerNode(
 		"setFilter" : {
 
 			"description" :
-			"""
+			_("""
 			Filters the input scene to isolate locations belonging to specific
 			sets.
-			""",
+			"""),
 
 			"label" : "",
 			"plugValueWidget:type" : "GafferSceneUI.SceneEditor._SetFilterPlugValueWidget",
@@ -346,7 +347,7 @@ class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			image = "setFilterOff.png",
 			menu = GafferUI.Menu(
 				Gaffer.WeakMethod( self.__setsMenuDefinition ),
-				title = "Set Filter"
+				title = _("Set Filter")
 			),
 			hasFrame = False,
 		)

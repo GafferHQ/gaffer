@@ -40,6 +40,7 @@ import os
 import IECore
 import Gaffer
 import GafferSceneUI
+from GafferUI.i18n import _
 
 # UsdLux lights
 
@@ -480,10 +481,23 @@ for attributeName in [
 
 # Register transform columns
 
+_spaceLabels = {
+	GafferSceneUI.Private.TransformInspector.Space.Local : "Local",
+	GafferSceneUI.Private.TransformInspector.Space.World : "World",
+}
+
+_componentLabels = {
+	GafferSceneUI.Private.TransformInspector.Component.Translate : "Translate",
+	GafferSceneUI.Private.TransformInspector.Component.Rotate : "Rotate",
+	GafferSceneUI.Private.TransformInspector.Component.Scale : "Scale",
+	GafferSceneUI.Private.TransformInspector.Component.Shear : "Shear",
+}
+
 def transformColumn( scene, editScope, space, component ) :
 
 	inspector = GafferSceneUI.Private.TransformInspector( scene, editScope, space, component )
-	return GafferSceneUI.Private.InspectorColumn( inspector )
+	displayName = _( "{} {}".format( _spaceLabels[space], _componentLabels[component] ) )
+	return GafferSceneUI.Private.InspectorColumn( inspector, displayName )
 
 for space in GafferSceneUI.Private.TransformInspector.Space.values.values() :
 	for component in GafferSceneUI.Private.TransformInspector.Component.values.values() :

@@ -40,10 +40,11 @@ import imath
 import IECore
 
 import GafferUI
+from GafferUI.i18n import _
 
 class ColorChooserDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title="Select color", color=imath.Color3f( 1 ), cancelLabel="Cancel", confirmLabel="OK", **kw ) :
+	def __init__( self, title=_("Select color"), color=imath.Color3f( 1 ), cancelLabel=_("Cancel"), confirmLabel=_("OK"), **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, **kw )
 

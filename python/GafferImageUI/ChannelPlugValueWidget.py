@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -157,11 +158,11 @@ class ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				)
 
 		if not result.items() :
-			result.append( "/No Channels Available", { "active" : False } )
+			result.append( "/" + _("No Channels Available"), { "active" : False, "label" : _("No Channels Available") } )
 
 		result.append( "/CustomDivider", { "divider" : True } )
 		result.append(
-			"/Custom",
+			"/" + _("Custom"),
 			{
 				"command" : Gaffer.WeakMethod( self.__applyCustom ),
 				"checkBox" : isCustom,

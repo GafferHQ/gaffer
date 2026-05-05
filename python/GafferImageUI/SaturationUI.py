@@ -36,26 +36,27 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Saturation,
 
 	"description",
-	"""
+	_("""
 	Increases or decreases the saturation of an image. Saturation is calculated relative
 	to a standard luminance measure using the RGB coefficients `0.2126, 0.7152, 0.0722`.
-	""",
+	"""),
 
 	plugs = {
 
 		"saturation" : {
 
 			"description" :
-			"""
+			_("""
 			Values less than 1 bring colors closer to monochrome, values greater than 1
 			push colors away from monochrome.
-			""",
+			"""),
 
 		},
 

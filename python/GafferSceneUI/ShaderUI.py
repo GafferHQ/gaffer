@@ -52,6 +52,7 @@ import GafferScene
 import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -105,13 +106,13 @@ Gaffer.Metadata.registerNode(
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the shader being represented. This should
 			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
-			""",
+			"""),
 
-			"label" : "Shader",
+			"label" : _("Shader"),
 			"readOnly" : True,
 			"layout:section" : "",
 			"nodule:type" : "",
@@ -122,11 +123,11 @@ Gaffer.Metadata.registerNode(
 		"type" : {
 
 			"description" :
-			"""
+			_("""
 			The type of the shader being represented. This should
 			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
-			""",
+			"""),
 
 			"readOnly" : True,
 			"layout:section" : "",
@@ -138,9 +139,9 @@ Gaffer.Metadata.registerNode(
 		"parameters" : {
 
 			"description" :
-			"""
+			_("""
 			Where the parameters for the shader are represented.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::CompoundNodule",
 			"noduleLayout:section" : "left",
@@ -191,9 +192,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The output from the shader.
-			""",
+			"""),
 
 			"noduleLayout:section" : "right",
 			"plugValueWidget:type" : "",
@@ -212,9 +213,9 @@ Gaffer.Metadata.registerNode(
 		"attributeSuffix" : {
 
 			"description" :
-			"""
+			_("""
 			Suffix for the attribute used for shader assignment.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"plugValueWidget:type" : "",
@@ -241,7 +242,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with row :
 
 			self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( plugs )
-			self.__reloadButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = "Click to reload shader" )
+			self.__reloadButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = _("Click to reload shader") )
 			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ) )
 
 	def setPlugs( self, plugs ) :
@@ -307,7 +308,7 @@ def __loadFromFile( menu, extensions, nodeCreator ) :
 	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( extensions ) )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Load Shader", confirmLabel = "Load", valid=True, leaf=True, bookmarks = bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title=_("Load Shader"), confirmLabel = _("Load"), valid=True, leaf=True, bookmarks = bookmarks )
 	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.ScriptWindow ) )
 
 	if not path :
@@ -369,7 +370,7 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 		)
 
 	result.append( "/LoadDivider", { "divider" : True } )
-	result.append( "/Load...", { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( lambda menu : __loadFromFile( menu, extensions, nodeCreator ) ) } )
+	result.append( "/" + _("Load..."), { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( lambda menu : __loadFromFile( menu, extensions, nodeCreator ) ) } )
 
 	return result
 
@@ -439,10 +440,10 @@ class _DuplicateIconColumn ( GafferUI.PathColumn ) :
 
 		if "shader:instances" in path.propertyNames() and path.property( "shader:instances" ) > 1 :
 			data.icon = "duplicate.png"
-			data.toolTip = "Shader occurs in multiple networks."
+			data.toolTip = _("Shader occurs in multiple networks.")
 		elif len( path.property( "shader:parameterValues" ) ) > 1 :
 			data.icon = "duplicate.png"
-			data.toolTip = "Parameter occurs in multiple shaders."
+			data.toolTip = _("Parameter occurs in multiple shaders.")
 
 		return data
 
@@ -472,12 +473,12 @@ class _ShaderInputColumn ( GafferUI.PathColumn ) :
 				if len( inputs ) > 1 :
 					data.value = "---"
 
-					data.toolTip = "Select parameter inputs and scroll to first.\n\nInputs :\n"
+					data.toolTip = _("Select parameter inputs and scroll to first.\n\nInputs :\n")
 					for i in inputs :
 						data.toolTip += "- {}\n".format( i )
 				else :
 					data.value = next( iter( inputs ) )
-					data.toolTip = "Select and scroll to parameter input."
+					data.toolTip = _("Select and scroll to parameter input.")
 
 		return data
 
@@ -768,7 +769,7 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 		self.__filter.setEnabled( False )
 		self.__filter.userData()["UI"] = {
 			"editable" : True,
-			"label" : "Filter",
+			"label" : _("Filter"),
 			"propertyFilters" : { "name": "Name", "shader:type": "Type" }
 		}
 
@@ -891,7 +892,7 @@ class _ShaderParameterDialogue( _ShaderDialogueBase ) :
 	def __init__( self, shaderNetworks, title = None, **kw ) :
 
 		if title is None :
-			title = "Select Shader Parameters"
+			title = _("Select Shader Parameters")
 
 		_ShaderDialogueBase.__init__( self, shaderNetworks, title, True, **kw )
 
@@ -912,7 +913,7 @@ class _ShaderDialogue( _ShaderDialogueBase ) :
 	def __init__( self, shaderNetworks, title = None, **kw ) :
 
 		if title is None :
-			title = "Select Shader"
+			title = _("Select Shader")
 
 		_ShaderDialogueBase.__init__( self, shaderNetworks, title, False, **kw )
 

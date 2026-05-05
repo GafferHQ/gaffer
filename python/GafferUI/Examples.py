@@ -42,6 +42,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 __examples = collections.OrderedDict()
 
 def registerExample( key, absFilePath, description = "", notableNodes = None ) :
@@ -92,7 +94,7 @@ def __buildExamplesMenu( nodeOrNone, menu ) :
 				}
 			)
 	else:
-		result.append( "/No Examples Available", { "active" : False } )
+		result.append( "/" + _("No Examples Available"), { "active" : False } )
 
 	return result
 

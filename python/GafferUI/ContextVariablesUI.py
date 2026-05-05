@@ -35,16 +35,17 @@
 ##########################################################################
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.ContextVariables,
 
 	"description",
-	"""
+	_("""
 	Adds variables which can be referenced by upstream expressions
 	and string substitutions.
-	""",
+	"""),
 
 	plugs = {
 
@@ -63,11 +64,11 @@ Gaffer.Metadata.registerNode(
 		"variables" : {
 
 			"description" :
-			"""
+			_("""
 			The variables to be added. Each variable is represented
 			as a child plug, created either through the UI or using the
 			CompoundDataPlug API.
-			""",
+			"""),
 
 			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 			"nodule:type" : "",
@@ -77,7 +78,7 @@ Gaffer.Metadata.registerNode(
 		"extraVariables" : {
 
 			"description" :
-			"""
+			_("""
 			An additional set of variables to be added. Arbitrary numbers
 			of variables may be specified within a single IECore::CompoundData
 			object, where each key/value pair in the object defines a variable.
@@ -87,7 +88,7 @@ Gaffer.Metadata.registerNode(
 			If the same variable is defined by both the variables and the
 			extraVariables plugs, then the value from the extraVariables
 			is taken.
-			""",
+			"""),
 
 			"layout:section" : "Extra",
 			"nodule:type" : "",

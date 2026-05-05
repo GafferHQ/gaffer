@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 import GafferImageUI
 
@@ -52,13 +53,13 @@ Gaffer.Metadata.registerNode(
 	GafferImageUI.ColorInspectorTool,
 
 	"description",
-	"""
+	_("""
 	Tool for showing color values.
 	- Mouse over a pixel to show the color value.
 	- Supports dragging color values from a pixel.
 	- <kbd>Ctrl</kbd> + click to create a persistent pixel inspector.
 	- <kbd>Ctrl</kbd> + drag to create a persistent region inspector.
-	""",
+	"""),
 
 	"viewer:shortCut", "I",
 	"order", 0,
@@ -489,13 +490,13 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			if mode == GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Cursor:
 				m = IECore.MenuDefinition()
-				m.append( "/Pixel Inspector",
-					{ "command" : functools.partial( Gaffer.WeakMethod( self.__addClick ), GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Pixel ) }
+				m.append( "/" + _("Pixel Inspector"),
+					{ "command" : functools.partial( Gaffer.WeakMethod( self.__addClick ), GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Pixel ), "label" : _("Pixel Inspector") }
 				)
-				m.append( "/Area Inspector",
-					{ "command" : functools.partial( Gaffer.WeakMethod( self.__addClick ), GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Area ) }
+				m.append( "/" + _("Area Inspector"),
+					{ "command" : functools.partial( Gaffer.WeakMethod( self.__addClick ), GafferImageUI.ColorInspectorTool.ColorInspectorPlug.Mode.Area ), "label" : _("Area Inspector") }
 				)
-				button = GafferUI.MenuButton( "", "plus.png", hasFrame=False, menu = GafferUI.Menu( m, title = "Add Color Inspector" ) )
+				button = GafferUI.MenuButton( "", "plus.png", hasFrame=False, menu = GafferUI.Menu( m, title = _("Add Color Inspector") ) )
 			else:
 				button = GafferUI.Button( "", "delete.png", hasFrame=False )
 				button.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteClick ) )

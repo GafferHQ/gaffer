@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ShaderBall,
 
 	"description",
-	"""
+	_("""
 	Generates scenes suitable for rendering shader balls.
-	""",
+	"""),
 
 	"childNodesAreReadOnly", True,
 
@@ -53,9 +54,9 @@ Gaffer.Metadata.registerNode(
 		"shader" : {
 
 			"description" :
-			"""
+			_("""
 			The shader to be rendered.
-			""",
+			"""),
 
 			"noduleLayout:section" : "left",
 			"nodule:type" : "GafferUI::StandardNodule",
@@ -65,10 +66,10 @@ Gaffer.Metadata.registerNode(
 		"resolution" : {
 
 			"description" :
-			"""
+			_("""
 			The resolution of the shader ball image, which
 			is always a square.
-			""",
+			"""),
 
 		},
 
