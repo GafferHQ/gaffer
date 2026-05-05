@@ -570,7 +570,8 @@ class RenderController::SceneGraph
 
 			if( m_objectInterface.isCapsule() && ( changedGlobals & CapsuleAffectingGlobalComponents ) )
 			{
-				// Account for `Capsule::setRenderOptions()` being called in `updateObject()`.
+				// Account for `Capsule::setRenderOptions()` being called by
+				// `RendererAlgo::outputObject()` in `updateObject()`.
 				m_dirtyComponents |= ObjectComponent;
 				m_objectHash = MurmurHash();
 			}
@@ -936,22 +937,10 @@ class RenderController::SceneGraph
 			}
 			else
 			{
-				bool isCapsule = false;
-				if( sampledObject->samples.size() == 1 )
-				{
-					if( auto capsule = runTimeCast<const Capsule>( sampledObject->samples[0].get() ) )
-					{
-						CapsulePtr capsuleCopy = capsule->copy();
-						capsuleCopy->setRenderOptions( renderOptions );
-						sampledObject->samples[0] = capsuleCopy;
-						isCapsule = true;
-					}
-				}
-
 				m_objectInterface.assign(
-					renderer->object( name, sampledObject->samples, sampledObject->sampleTimes, attributesInterface( renderer ) ),
+					Private::RendererAlgo::outputObject( name, *sampledObject, attributesInterface( renderer ), renderOptions, renderer ),
 					ObjectInterfaceHandle::RemovalCallback(),
-					isCapsule
+					/* isCapsule = */ sampledObject->samples[0]->isInstanceOf( Capsule::staticTypeId() )
 				);
 				return true;
 			}
