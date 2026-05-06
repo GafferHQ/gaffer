@@ -119,5 +119,44 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 			self.assertEqual( o.capturedLinks( "lights" ), { r.capturedObject( "l1" ), r.capturedObject( "l2" ) } )
 			self.assertEqual( o.numLinkEdits( "lights" ), 2 )
 
+	def testPointInstancer( self ) :
+
+		renderers = [
+			GafferScene.Private.IECoreScenePreview.Renderer.create( "Capturing" ),
+			GafferScene.Private.IECoreScenePreview.Renderer.create( "Capturing" )
+		]
+		compoundRenderer = GafferScene.Private.IECoreScenePreview.CompoundRenderer( renderers )
+
+		# Object creation
+
+		coreAttributes1 = IECore.CompoundObject( { "x" : IECore.IntData( 1 ) } )
+		attributes1 = compoundRenderer.attributes( coreAttributes1 )
+
+		coreAttributes2 = IECore.CompoundObject( { "x" : IECore.IntData( 2 ) } )
+		attributes2 = compoundRenderer.attributes( coreAttributes2 )
+
+		prototype = compoundRenderer.Prototype(
+			[ IECoreScene.SpherePrimitive() ], [ 0.0 ], attributes2
+		)
+
+		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 1 ] ) )
+
+		objectInterface = compoundRenderer.pointInstancer(
+			"pointInstancer", [ pointInstancer ], [ 0.0 ], [ prototype ], attributes1
+		)
+
+		for r in renderers :
+			o = r.capturedObject( "pointInstancer" )
+			self.assertEqual( o.capturedSamples(), [ pointInstancer ] )
+			self.assertEqual( o.capturedSampleTimes(), [ 0.0 ] )
+			self.assertEqual( o.capturedAttributes().attributes(), coreAttributes1 )
+			prototypes = o.capturedPointInstancerPrototypes()
+			self.assertEqual( len( prototypes ), 1 )
+			self.assertEqual( prototypes[0].samples, prototype.samples )
+			self.assertEqual( prototypes[0].times, prototype.times )
+			self.assertEqual( prototypes[0].attributes.attributes(), coreAttributes2 )
+
 if __name__ == "__main__":
 	unittest.main()
