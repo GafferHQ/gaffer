@@ -67,13 +67,7 @@ Attributes::Attributes( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "attributes" ) );
-	addChild( new BoolPlug( "global", Plug::In, false ) );
 	addChild( new CompoundObjectPlug( "extraAttributes", Plug::In, new IECore::CompoundObject ) );
-
-	// Connect to signals we use to manage pass-throughs for globals
-	// and attributes based on the value of globalPlug().
-	plugSetSignal().connect( boost::bind( &Attributes::plugSet, this, ::_1 ) );
-	plugInputChangedSignal().connect( boost::bind( &Attributes::plugInputChanged, this, ::_1 ) );
 }
 
 
@@ -106,139 +100,41 @@ const Gaffer::CompoundDataPlug *Attributes::attributesPlug() const
 	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex );
 }
 
-Gaffer::BoolPlug *Attributes::globalPlug()
-{
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::BoolPlug *Attributes::globalPlug() const
-{
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
-}
-
 Gaffer::CompoundObjectPlug *Attributes::extraAttributesPlug()
 {
-	return getChild<Gaffer::CompoundObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::CompoundObjectPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::CompoundObjectPlug *Attributes::extraAttributesPlug() const
 {
-	return getChild<Gaffer::CompoundObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::CompoundObjectPlug>( g_firstPlugIndex + 1 );
 }
-
-void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	AttributeProcessor::affects( input, outputs );
-
-	if(
-		input == globalPlug() ||
-		input == inPlug()->globalsPlug() ||
-		attributesPlug()->isAncestorOf( input ) ||
-		input == extraAttributesPlug()
-	)
-	{
-		// We can only affect a particular output if we haven't
-		// connected it as a pass-through in updateInternalConnections().
-		if( !outPlug()->globalsPlug()->getInput() )
-		{
-			outputs.push_back( outPlug()->globalsPlug() );
-		}
-	}
-
-}
-
-void Attributes::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	if( globalPlug()->getValue() )
-	{
-		// We will modify the globals.
-		AttributeProcessor::hashGlobals( context, parent, h );
-		inPlug()->globalsPlug()->hash( h );
-		attributesPlug()->hash( h );
-		extraAttributesPlug()->hash( h );
-	}
-	else
-	{
-		// We won't modify the globals - pass through the hash.
-		h = inPlug()->globalsPlug()->hash();
-	}
-}
-
-IECore::ConstCompoundObjectPtr Attributes::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	ConstCompoundObjectPtr inputGlobals = inPlug()->globalsPlug()->getValue();
-	if( !globalPlug()->getValue() )
-	{
-		return inputGlobals;
-	}
-
-	const CompoundDataPlug *p = attributesPlug();
-	IECore::CompoundObjectPtr result = new CompoundObject;
-	// Since we're not going to modify any existing members (only add new ones),
-	// and our result becomes const on returning it, we can directly reference
-	// the input members in our result without copying. Be careful not to modify
-	// them though!
-	result->members() = inputGlobals->members();
-
-	std::string name;
-	for( NameValuePlug::Iterator it( p ); !it.done(); ++it )
-	{
-		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
-		if( d )
-		{
-			result->members()["attribute:" + name] = d;
-		}
-	}
-
-	IECore::ConstCompoundObjectPtr extraAttributes = extraAttributesPlug()->getValue();
-	for( const auto &e : extraAttributes->members() )
-	{
-		result->members()["attribute:" + e.first.string()] = e.second;
-	}
-
-	return result;
-}
-
 bool Attributes::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
-	if( outPlug()->attributesPlug()->getInput() )
-	{
-		// We've made a pass-through connection
-		return false;
-	}
-
 	return
 		AttributeProcessor::affectsProcessedAttributes( input ) ||
 		attributesPlug()->isAncestorOf( input ) ||
-		input == globalPlug() ||
 		input == extraAttributesPlug()
 	;
 }
 
-void Attributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Attributes::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( ( attributesPlug()->children().empty() && extraAttributesPlug()->isSetToDefault() ) || globalPlug()->getValue() )
+	if( !attributesPlug()->children().size() && extraAttributesPlug()->isSetToDefault() )
 	{
-		h = inPlug()->attributesPlug()->hash();
+		return;
 	}
-	else
-	{
-		AttributeProcessor::hashProcessedAttributes( path, context, h );
-		attributesPlug()->hash( h );
-		extraAttributesPlug()->hash( h );
-	}
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
+	attributesPlug()->hash( h );
+	extraAttributesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	const CompoundDataPlug *ap = attributesPlug();
 	IECore::ConstCompoundObjectPtr extraAttributes = extraAttributesPlug()->getValue();
 	if( !ap->children().size() && extraAttributes->members().empty() )
-	{
-		return inputAttributes;
-	}
-
-	if( globalPlug()->getValue() )
 	{
 		return inputAttributes;
 	}
@@ -257,43 +153,4 @@ IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const Sce
 	}
 
 	return result;
-}
-
-void Attributes::plugSet( Gaffer::Plug *plug )
-{
-	if( plug == globalPlug() )
-	{
-		updateInternalConnections();
-	}
-}
-
-void Attributes::plugInputChanged( Gaffer::Plug *plug )
-{
-	if( plug == globalPlug() )
-	{
-		updateInternalConnections();
-	}
-}
-
-void Attributes::updateInternalConnections()
-{
-	// Manage internal pass-throughs based on the value of the globalPlug().
-	const Plug *p = globalPlug()->source<Gaffer::Plug>();
-	boost::tribool global;
-	if( p->direction() == Plug::Out && runTimeCast<const ComputeNode>( p->node() ) )
-	{
-		// Can vary from compute to compute.
-		global = boost::indeterminate;
-	}
-	else
-	{
-		global = globalPlug()->getValue();
-	}
-
-	outPlug()->globalsPlug()->setInput(
-		global || boost::indeterminate( global ) ? nullptr : inPlug()->globalsPlug()
-	);
-	outPlug()->attributesPlug()->setInput(
-		!global || boost::indeterminate( global ) ? nullptr : inPlug()->attributesPlug()
-	);
 }

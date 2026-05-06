@@ -89,8 +89,8 @@ class GAFFERSCENE_API SetVisualiser : public AttributeProcessor
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
-		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
+		void hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 	private :
 

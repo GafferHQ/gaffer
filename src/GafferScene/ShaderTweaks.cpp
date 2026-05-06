@@ -467,37 +467,39 @@ bool ShaderTweaks::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 	;
 }
 
-void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ShaderTweaks::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( tweaksPlug()->children().empty() )
 	{
-		h = inPlug()->attributesPlug()->hash();
+		return;
 	}
-	else
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
+
+	shaderPlug()->hash( h );
+	tweaksPlug()->hash( h );
+	ignoreMissingPlug()->hash( h );
+	localisePlug()->hash( h );
+
+	for( auto &tweak : TweakPlug::Range( *tweaksPlug() ) )
 	{
-		AttributeProcessor::hashProcessedAttributes( path, context, h );
-		shaderPlug()->hash( h );
-		tweaksPlug()->hash( h );
-		ignoreMissingPlug()->hash( h );
-		localisePlug()->hash( h );
-
-		for( auto &tweak : TweakPlug::Range( *tweaksPlug() ) )
+		const auto shaderOutput = ::shaderOutput( tweak.get() );
+		if( shaderOutput.first )
 		{
-			const auto shaderOutput = ::shaderOutput( tweak.get() );
-			if( shaderOutput.first )
-			{
-				shaderOutput.first->attributesHash( shaderOutput.second, h );
-			}
+			shaderOutput.first->attributesHash( shaderOutput.second, h );
 		}
+	}
 
-		if( localisePlug()->getValue() )
+	if( localisePlug()->getValue() )
+	{
+		if( auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
 		{
-			h.append( inPlug()->fullAttributesHash( path, /* withGlobalAttributes = */ true ) );
+			h.append( inPlug()->fullAttributesHash( *path, /* withGlobalAttributes = */ true ) );
 		}
 	}
 }
 
-IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	const string shader = shaderPlug()->getValue();
 	if( shader.empty() )
@@ -526,8 +528,11 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 	ConstCompoundObjectPtr fullAttributes;
 	if( localisePlug()->getValue() )
 	{
-		fullAttributes = inPlug()->fullAttributes( path, /* withGlobalAttributes = */ true );
-		source = &fullAttributes->members();
+		if( auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
+		{
+			fullAttributes = inPlug()->fullAttributes( *path, /* withGlobalAttributes = */ true );
+			source = &fullAttributes->members();
+		}
 	}
 
 	for( const auto &attribute : *source )

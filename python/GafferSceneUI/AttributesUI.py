@@ -122,18 +122,6 @@ Gaffer.Metadata.registerNode(
 
 		},
 
-		"global" : {
-
-			"description" :
-			"""
-			Causes the attributes to be applied to the scene globals
-			instead of the individual locations defined by the filter.
-			""",
-
-			"layout:section" : "Filter",
-
-		},
-
 		"filter" : {
 
 			"layout:activator" : "isNotGlobal",

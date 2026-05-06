@@ -108,28 +108,29 @@ bool AttributeTweaks::affectsProcessedAttributes( const Gaffer::Plug *input) con
 	;
 }
 
-void AttributeTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void AttributeTweaks::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( tweaksPlug()->children().empty() )
 	{
-		h = inPlug()->attributesPlug()->hash();
+		return;
 	}
-	else
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
+	localisePlug()->hash( h );
+
+	if( localisePlug()->getValue() )
 	{
-		AttributeProcessor::hashProcessedAttributes( path, context, h );
-		localisePlug()->hash( h );
-
-		if( localisePlug()->getValue() )
+		if( auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
 		{
-			h.append( inPlug()->fullAttributesHash( path, /* withGlobalAttributes = */ true ) );
+			h.append( inPlug()->fullAttributesHash( *path, /* withGlobalAttributes = */ true ) );
 		}
-
-		ignoreMissingPlug()->hash( h );
-		tweaksPlug()->hash( h );
 	}
+
+	ignoreMissingPlug()->hash( h );
+	tweaksPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr AttributeTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr AttributeTweaks::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	const TweaksPlug *tweaksPlug = this->tweaksPlug();
 	if( tweaksPlug->children().empty() )
@@ -150,8 +151,11 @@ IECore::ConstCompoundObjectPtr AttributeTweaks::computeProcessedAttributes( cons
 	ConstCompoundObjectPtr fullAttributes;
 	if( localisePlug()->getValue() )
 	{
-		fullAttributes = inPlug()->fullAttributes( path, /* withGlobalAttributes = */ true );
-		source = fullAttributes.get();
+		if( auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
+		{
+			fullAttributes = inPlug()->fullAttributes( *path, /* withGlobalAttributes = */ true );
+			source = fullAttributes.get();
+		}
 	}
 
 	tweaksPlug->applyTweaks(

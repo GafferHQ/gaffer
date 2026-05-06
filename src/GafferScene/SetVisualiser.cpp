@@ -331,9 +331,16 @@ bool SetVisualiser::affectsProcessedAttributes( const Gaffer::Plug *input ) cons
 	;
 }
 
-void SetVisualiser::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, MurmurHash &h ) const
+void SetVisualiser::hashProcessedAttributes( const Gaffer::Context *context, MurmurHash &h ) const
 {
-	AttributeProcessor::hashProcessedAttributes( path, context, h );
+	auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	if( !path )
+	{
+		// Processing global attributes, where set visualisation makes no sense.
+		return;
+	}
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
 
 	ConstCompoundDataPtr outSetsData = outSetsPlug()->getValue();
 
@@ -349,11 +356,12 @@ void SetVisualiser::hashProcessedAttributes( const ScenePath &path, const Gaffer
 		h.append( inPlug()->setHash( setName ) );
 	}
 
+	const auto &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 	h.append( path.data(), path.size() );
 	stripeWidthPlug()->hash( h );
 }
 
-ConstCompoundObjectPtr SetVisualiser::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+ConstCompoundObjectPtr SetVisualiser::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	CompoundObjectPtr result = new CompoundObject;
 
@@ -380,6 +388,7 @@ ConstCompoundObjectPtr SetVisualiser::computeProcessedAttributes( const ScenePat
 	for( auto &setName : setNamesData->readable() )
 	{
 		const PathMatcherData *pathMatchData = targetSets->member<const PathMatcherData>( setName );
+		const auto &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 		if( pathMatchData->readable().match( path ) & matchResult )
 		{
 			shaderColors.push_back( setColorsData->readable()[ index ] );

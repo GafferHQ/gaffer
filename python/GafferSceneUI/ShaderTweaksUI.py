@@ -95,9 +95,13 @@ Gaffer.Metadata.registerNode(
 			shaders. Shaders will be localised to locations matching the
 			node's filter prior to tweaking. The original inherited shader will
 			remain untouched.
+
+			> Note : Has no effect when `global` is on.
 			""",
 
-			"layout:index" : 1
+			"layout:index" : 1,
+			"layout:activator" : "isNotGlobal",
+
 		},
 
 		"ignoreMissing" : {

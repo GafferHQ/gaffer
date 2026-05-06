@@ -99,6 +99,38 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		t["shader"].setValue( "" )
 		self.assertScenesEqual( t["out"], l["out"] )
 
+	def testGlobal( self ) :
+
+		shader = GafferSceneTest.TestShader()
+		shader.loadShader( "simpleShader" )
+		shader["type"].setValue( "surface" )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["shader"].setInput( shader["out"] )
+		shaderAssignment["global"].setValue( True )
+
+		self.assertIn( "attribute:surface", shaderAssignment["out"].globals() )
+		self.assertEqual( shaderAssignment["out"].globals()["attribute:surface"].outputShader().parameters["i"], IECore.IntData( 0 ) )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( shaderAssignment["out"] )
+		tweaks["global"].setValue( True )
+		tweaks["shader"].setValue( "surface" )
+
+		self.assertEqual( tweaks["out"].globalsHash(), tweaks["in"].globalsHash() )
+		self.assertEqual( tweaks["out"].globals(), tweaks["in"].globals() )
+
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "i", 2 ) )
+		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Add )
+		self.assertNotEqual( tweaks["out"].globalsHash(), tweaks["in"].globalsHash() )
+		self.assertEqual( tweaks["out"].globals()["attribute:surface"].outputShader().parameters["i"], IECore.IntData( 2 ) )
+
+		shader["parameters"]["i"].setValue( 10 )
+		self.assertEqual( tweaks["out"].globals()["attribute:surface"].outputShader().parameters["i"], IECore.IntData( 12 ) )
+
+		tweaks["localise"].setValue( True ) # Nothing to localise, so should be same as before
+		self.assertEqual( tweaks["out"].globals()["attribute:surface"].outputShader().parameters["i"], IECore.IntData( 12 ) )
+
 	def testSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
