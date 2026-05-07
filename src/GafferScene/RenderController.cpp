@@ -576,7 +576,7 @@ class RenderController::SceneGraph
 				m_objectHash = MurmurHash();
 			}
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene.get(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_lightLinks.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -600,7 +600,7 @@ class RenderController::SceneGraph
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
+							if( updateObject( controller->m_scene.get(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
 								controller->m_failedAttributeEdits++;
@@ -808,7 +808,7 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the object changed.
-		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const ScenePlug *scene, LightLinks *lightLinks )
+		bool updateObject( const ScenePlug *scene, Type type, IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, LightLinks *lightLinks )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType || m_drawMode != VisibleSet::Visibility::Visible || !m_purposeIncluded )
@@ -817,7 +817,7 @@ class RenderController::SceneGraph
 				return hadObjectInterface;
 			}
 
-			auto sampledObject = Private::RendererAlgo::objectSamples( objectPlug, m_deformationTimes, &m_objectHash );
+			auto sampledObject = Private::RendererAlgo::objectSamples( scene->objectPlug(), m_deformationTimes, &m_objectHash );
 			if( !sampledObject )
 			{
 				// No update required.
