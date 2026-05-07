@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - AttributeTweaks, AttributeVisualiser, ShaderAssignment, ShaderTweaks, ShuffleAttributes : Added `global` plug, to allow global attributes to be processed instead of using `filter` to process per-location attributes.
+- ShaderTweaks : Added tweaking of integrators, background shaders, atmosphere shaders and render pass shaders.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`. This matches volume assignments imported from USD, and means that Gaffer now exports materials to USD using the same convention.
 - InteractiveRender : Added `useVisibleSet` plug. When on, only the scene locations contained in the Visible Set will be rendered.
 - Application :

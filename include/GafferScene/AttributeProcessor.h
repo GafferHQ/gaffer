@@ -77,6 +77,9 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 		/// Must be implemented by derived classes to return the processed attributes.
 		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const = 0;
 
+		/// Would be better as private and final, but needs to be protected so that it can be called by ShaderTweaks.
+		IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const override;
+
 	private :
 
 		void init();
@@ -85,7 +88,6 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 		void updateInternalConnections();
 
 		void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const final;
-		IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const final;
 
 		void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const final;
 		IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const final;

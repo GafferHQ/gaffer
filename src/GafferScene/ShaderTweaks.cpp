@@ -52,6 +52,8 @@
 #include "IECore/TypeTraits.h"
 #include "IECore/DataAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "fmt/format.h"
 
 #include <regex>
@@ -395,6 +397,8 @@ IECore::InternedString regexSubMatchToInterned( const std::ssub_match &subMatch 
 	return IECore::InternedString( &( *subMatch.first ), subMatch.length() );
 }
 
+const std::string g_optionPrefix( "option:" );
+
 }  // namespace
 
 GAFFER_NODE_DEFINE_TYPE( ShaderTweaks );
@@ -553,6 +557,37 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const G
 		{
 			out[attribute.first] = tweakedNetwork;
 		}
+	}
+
+	return result;
+}
+
+IECore::ConstCompoundObjectPtr ShaderTweaks::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	// This will have tweaks to `attribute:*` globals applied already.
+	ConstCompoundObjectPtr inputGlobals = AttributeProcessor::computeGlobals( context, parent );
+
+	// Now we want to add tweaks to `option:*` globals as well.
+
+	IECore::CompoundObjectPtr result = new CompoundObject;
+	IECore::CompoundObjectPtr optionsToProcess = new CompoundObject;
+
+	for( const auto &[name, value] : inputGlobals->members() )
+	{
+		if( boost::starts_with( name.string(), g_optionPrefix ) )
+		{
+			optionsToProcess->members()[name.string().substr( g_optionPrefix.size())] = value;
+		}
+		else
+		{
+			result->members()[name] = value;
+		}
+	}
+
+	IECore::ConstCompoundObjectPtr processedOptions = computeProcessedAttributes( context, optionsToProcess.get() );
+	for( const auto &[name, value] : processedOptions->members() )
+	{
+		result->members()[g_optionPrefix+name.string()] = value;
 	}
 
 	return result;
