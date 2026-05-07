@@ -190,7 +190,7 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 	}
 	else if( auto shaderAssignment = runTimeCast<ShaderAssignment>( sceneNode ) )
 	{
-		if( !(shaderAssignment->filterPlug()->match( shaderAssignment->inPlug() ) & PathMatcher::ExactMatch) )
+		if( shaderAssignment->globalPlug()->getValue() || !(shaderAssignment->filterPlug()->match( shaderAssignment->inPlug() ) & PathMatcher::ExactMatch) )
 		{
 			return nullptr;
 		}
@@ -210,7 +210,7 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 	}
 	else if( auto shaderTweaks = runTimeCast<ShaderTweaks>( sceneNode ) )
 	{
-		if( !(shaderTweaks->filterPlug()->match( shaderTweaks->inPlug() ) & PathMatcher::ExactMatch) )
+		if( shaderTweaks->globalPlug()->getValue() || !(shaderTweaks->filterPlug()->match( shaderTweaks->inPlug() ) & PathMatcher::ExactMatch) )
 		{
 			return nullptr;
 		}
