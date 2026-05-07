@@ -41,7 +41,7 @@ Gaffer.Metadata.registerNode(
 
 	GafferScene.AttributeProcessor,
 
-	"layout:activator:isNotGlobal", lambda node : not node["global"].getValue(),
+	"layout:activator:isNotGlobal", lambda node : "global" not in node or not node["global"].getValue(),
 
 	plugs = {
 

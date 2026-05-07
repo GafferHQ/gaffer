@@ -147,6 +147,18 @@ parent["Transform"]["transform"]["translate"] = imath.V3f( i )
 		with context:
 			self.assertEqual( script["CollectTransforms"]["transforms"].getValue(), ref )
 
+	def testGlobal( self ) :
+
+		# We don't expect this to be exercised in practice because the `__global` plug
+		# is private, but check that we at least get sensible behaviour if it is
+		# turned on.
+
+		collect = GafferScene.CollectTransforms()
+		collect["attributes"].setValue( IECore.StringVectorData( [ "a" ] ) )
+		collect["__global"].setValue( True )
+
+		self.assertEqual( collect["out"].globalsHash(), collect["in"].globalsHash() )
+		self.assertEqual( collect["out"].globals(), collect["in"].globals() )
 
 if __name__ == "__main__":
 	unittest.main()

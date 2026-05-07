@@ -213,5 +213,23 @@ class LocaliseAttributesTest( GafferSceneTest.SceneTestCase ) :
 		localiseAttributes["attributes"].setValue( "x" )
 		self.assertIn( localiseAttributes["out"]["attributes"], { x[0] for x in cs } )
 
+	def testGlobal( self ) :
+
+		globalAttributes = GafferScene.StandardAttributes()
+		globalAttributes["global"].setValue( True )
+		globalAttributes["attributes"]["doubleSided"]["enabled"].setValue( True )
+
+		localiseAttributes = GafferScene.LocaliseAttributes()
+		localiseAttributes["in"].setInput( globalAttributes["out"] )
+		self.assertEqual( localiseAttributes["out"].globalsHash(), localiseAttributes["in"].globalsHash() )
+		self.assertEqual( localiseAttributes["out"].globals(), localiseAttributes["in"].globals() )
+
+		# The plug is private, so folks shouldn't turn it on. But if they do,
+		# they should get a well-behaved no-op.
+
+		localiseAttributes["__global"].setValue( True )
+		self.assertEqual( localiseAttributes["out"].globalsHash(), localiseAttributes["in"].globalsHash() )
+		self.assertEqual( localiseAttributes["out"].globals(), localiseAttributes["in"].globals() )
+
 if __name__ == "__main__":
 	unittest.main()

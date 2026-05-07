@@ -72,6 +72,10 @@ CollectTransforms::CollectTransforms( const std::string &name )
 	addChild( new BoolPlug( "requireVariation", Plug::In, false ) );
 
 	addChild( new CompoundObjectPlug( "transforms", Plug::Out, new CompoundObject() ) );
+
+	// Hide `global` plug, since collecting transforms makes no sense unless
+	// `scene:path` is defined.
+	globalPlug()->setName( "__global" );
 }
 
 CollectTransforms::~CollectTransforms()

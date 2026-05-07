@@ -51,6 +51,8 @@ LocaliseAttributes::LocaliseAttributes( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "attributes", Plug::In, "*" ) );
 	addChild( new BoolPlug( "includeGlobalAttributes", Plug::In, false ) );
+	// Hide `global` plug, since localising global attributes is a no-op.
+	globalPlug()->setName( "__global" );
 }
 
 LocaliseAttributes::~LocaliseAttributes()
@@ -104,6 +106,13 @@ void LocaliseAttributes::hashProcessedAttributes( const Gaffer::Context *context
 
 IECore::ConstCompoundObjectPtr LocaliseAttributes::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
+	auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	if( !path )
+	{
+		// Processing global attributes.
+		return inputAttributes;
+	}
+
 	const string attributes = attributesPlug()->getValue();
 	if( attributes.empty() )
 	{
@@ -113,8 +122,7 @@ IECore::ConstCompoundObjectPtr LocaliseAttributes::computeProcessedAttributes( c
 	CompoundObjectPtr result = new CompoundObject;
 	result->members() = inputAttributes->members();
 
-	const auto &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-	ConstCompoundObjectPtr fullAttributes = inPlug()->fullAttributes( path, /* withGlobalAttributes = */ includeGlobalAttributesPlug()->getValue() );
+	ConstCompoundObjectPtr fullAttributes = inPlug()->fullAttributes( *path, /* withGlobalAttributes = */ includeGlobalAttributesPlug()->getValue() );
 	for( const auto &attribute : fullAttributes->members() )
 	{
 		if( StringAlgo::matchMultiple( attribute.first, attributes ) )
