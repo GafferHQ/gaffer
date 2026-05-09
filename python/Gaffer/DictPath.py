@@ -88,14 +88,14 @@ class DictPath( Gaffer.Path ) :
 
 	def copy( self ) :
 
-		return DictPath( self.__dict, self[:], self.root(), self.getFilter(), self.__dictTypes )
+		return self.__class__( self.__dict, self[:], self.root(), self.getFilter(), self.__dictTypes )
 
 	def _children( self, canceller ) :
 
 		try :
 			e = self.__dictEntry()
 			if isinstance( e, self.__dictTypes ) :
-				return [ DictPath( self.__dict, self[:] + [ x ], self.root(), dictTypes=self.__dictTypes ) for x in e.keys() ]
+				return [ self.__class__( self.__dict, self[:] + [ x ], self.root(), dictTypes=self.__dictTypes ) for x in e.keys() ]
 		except :
 			return []
 

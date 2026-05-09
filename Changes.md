@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.0.0a5)
 =======
 
+API
+---
 
+- DictPath : Added support for subclassing, without the need to override `copy()` or `_children()`.
 
 1.7.0.0a5 (relative to 1.7.0.0a4)
 =========
