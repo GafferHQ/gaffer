@@ -5,6 +5,7 @@ Features
 --------
 
 - SceneStats : Added a new node for computing aggregate scene statistics.
+- SceneInspector : Added Statistics tab with aggregated geometry statistics for the entire scene.
 
 API
 ---
