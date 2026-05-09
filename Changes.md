@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.0.0a5)
 =======
 
+Features
+--------
+
+- SceneStats : Added a new node for computing aggregate scene statistics.
+
 API
 ---
 

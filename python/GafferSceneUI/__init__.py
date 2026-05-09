@@ -213,6 +213,7 @@ from . import CatalogueUI
 from . import CatalogueSelectUI
 from . import ImageSelectionToolUI
 from . import CameraQueryUI
+from . import SceneStatsUI
 from . import ReflectionConstraintUI
 from . import CurvesInterpolationUI
 from . import MeshLightUI

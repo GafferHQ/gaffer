@@ -49,6 +49,7 @@
 #include "GafferScene/OptionQuery.h"
 #include "GafferScene/PrimitiveQuery.h"
 #include "GafferScene/PrimitiveVariableQuery.h"
+#include "GafferScene/SceneStats.h"
 #include "GafferScene/SetQuery.h"
 #include "GafferScene/ShaderQuery.h"
 #include "GafferScene/TransformQuery.h"
@@ -216,6 +217,27 @@ const StringPlugPtr typePlugFromQuery( const GafferScene::PrimitiveVariableQuery
 	return const_cast<StringPlug *>( q.typePlugFromQuery( &p ) );
 }
 
+class SceneStatsSerialiser : public NodeSerialiser
+{
+	std::string postConstructor( const GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		const GafferScene::SceneStats *node = static_cast<const GafferScene::SceneStats *>( graphComponent );
+		for( const auto &queryPlug : OptionalValuePlug::Range( *node->queriesPlug() ) )
+		{
+			const Serialisation::Serialiser *serialiser = Serialisation::acquireSerialiser( queryPlug->valuePlug() );
+			result += fmt::format(
+				"{}.addQuery( {}, \"{}\" )\n",
+				identifier, serialiser->constructor( queryPlug->valuePlug(), serialisation ),
+				queryPlug->getName().string()
+			);
+		}
+
+		return result;
+	}
+};
+
 } // namespace
 
 void GafferSceneModule::bindQueries()
@@ -284,4 +306,10 @@ void GafferSceneModule::bindQueries()
 	}
 
 	GafferBindings::DependencyNodeClass<GafferScene::SetQuery>();
+
+	GafferBindings::DependencyNodeClass<GafferScene::SceneStats>()
+		.def( "addQuery", &addQuery<GafferScene::SceneStats>, ( arg( "plug" ), arg( "name" ) = "" ) )
+		.def( "removeQuery", &removeQuery<GafferScene::SceneStats, ValuePlug> )
+	;
+	GafferBindings::Serialisation::registerSerialiser( GafferScene::SceneStats::staticTypeId(), new SceneStatsSerialiser() );
 }

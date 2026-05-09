@@ -199,6 +199,7 @@ from .ReflectionConstraintTest import ReflectionConstraintTest
 from .CurvesInterpolationTest import CurvesInterpolationTest
 from .CurvesTangentsTest import CurvesTangentsTest
 from .PrimitiveQueryTest import PrimitiveQueryTest
+from .SceneStatsTest import SceneStatsTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
