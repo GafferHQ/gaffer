@@ -462,7 +462,7 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 		// Initialise editors from source if we can.
 		if( source && source->ancestor<EditScope>() == result->m_editScope )
 		{
-			const std::string nonEditableReason = ::nonEditableReason( result->m_source.get() );
+			const std::string nonEditableReason = ::nonEditableReason( source.get() );
 			if( nonEditableReason.empty() )
 			{
 				result->m_editors = {
