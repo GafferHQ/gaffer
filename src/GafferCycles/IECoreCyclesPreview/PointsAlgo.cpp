@@ -61,6 +61,14 @@ namespace
 ccl::PointCloud *convertPrimary( const IECoreScene::PointsPrimitive *points, ccl::Scene *scene )
 {
 	assert( points->typeId() == IECoreScene::PointsPrimitive::staticTypeId() );
+
+	const V3fVectorData *p = points->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+	if( !p )
+	{
+		msg( Msg::Warning, "IECoreCyles::PointsAlgo", "PointsPrimitive does not have \"P\" primitive variable of interpolation type Vertex." );
+		return nullptr;
+	}
+
 	ccl::PointCloud *pointcloud = SceneAlgo::createNodeWithLock<ccl::PointCloud>( scene );
 
 	PrimitiveVariableMap variablesToConvert = points->variables;
@@ -68,7 +76,6 @@ ccl::PointCloud *convertPrimary( const IECoreScene::PointsPrimitive *points, ccl
 	size_t numPoints = points->getNumPoints();
 	pointcloud->reserve( numPoints );
 
-	const V3fVectorData *p = points->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &pos = p->readable();
 
 	if( const FloatVectorData *w = points->variableData<FloatVectorData>( "width", PrimitiveVariable::Vertex ) )
@@ -139,9 +146,13 @@ ccl::PointCloud *convertPrimary( const IECoreScene::PointsPrimitive *points, ccl
 
 ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::PointsPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::PointCloud *result = convertPrimary( samples[primarySampleIndex], scene );
-	GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
-	return result;
+	if( ccl::PointCloud *result = convertPrimary( samples[primarySampleIndex], scene ) )
+	{
+		GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
+		return result;
+	}
+
+	return nullptr;
 }
 
 GeometryAlgo::ConverterDescription<PointsPrimitive> g_description( convert );

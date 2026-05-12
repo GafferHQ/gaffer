@@ -45,6 +45,7 @@ Fixes
   - Reduced memory usage when rendering a single segment of deformation blur.
   - Fixed PointsPrimitive motion blur when rendering with even numbers of segments.
   - Fixed translation of Uniform `N` primitive variables, these are now resampled to FaceVarying.
+  - Fixed crashes when rendering primitives with missing `P` primitive variables (#6267).
 - USDShader : Fixed value of `type` plug after loading a USDLux light.
 - CyclesLight, ArnoldLight, LightFilter : Fixed potential hang when loading shaders (GIL management bug in `loadShader()` binding).
 - StandardNodeGadget : Fixed crash caused by the node emitting `errorSignal()` while the gadget is undergoing construction.

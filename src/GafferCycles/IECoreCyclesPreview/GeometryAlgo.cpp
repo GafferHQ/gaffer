@@ -62,21 +62,6 @@ using namespace IECoreScene;
 // Internal utilities
 //////////////////////////////////////////////////////////////////////////
 
-namespace std
-{
-
-/// \todo Move to IECore/TypeIds.h
-template<>
-struct hash<IECore::TypeId>
-{
-	size_t operator()( IECore::TypeId typeId ) const
-	{
-		return hash<size_t>()( typeId );
-	}
-};
-
-} // namespace std
-
 namespace
 {
 

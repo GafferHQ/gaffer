@@ -60,6 +60,14 @@ namespace
 ccl::Hair *convertPrimary( const IECoreScene::CurvesPrimitive *curve, ccl::Scene *scene )
 {
 	assert( curve->typeId() == IECoreScene::CurvesPrimitive::staticTypeId() );
+
+	const V3fVectorData *p = curve->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+	if( !p )
+	{
+		msg( Msg::Warning, "IECoreCyles::CurvesAlgo", "CurvesPrimitive does not have \"P\" primitive variable of interpolation type Vertex." );
+		return nullptr;
+	}
+
 	ccl::Hair *hair = SceneAlgo::createNodeWithLock<ccl::Hair>( scene );
 	/// \todo Support per-object `curve_shape` configured via an attribute.
 	hair->curve_shape = scene->params.hair_shape;
@@ -75,7 +83,6 @@ ccl::Hair *convertPrimary( const IECoreScene::CurvesPrimitive *curve, ccl::Scene
 
 	hair->reserve_curves( numCurves, numKeys );
 
-	const V3fVectorData *p = curve->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &points = p->readable();
 
 	if( const FloatVectorData *w = curve->variableData<FloatVectorData>( "width", PrimitiveVariable::Vertex ) )
@@ -145,9 +152,13 @@ ccl::Hair *convertPrimary( const IECoreScene::CurvesPrimitive *curve, ccl::Scene
 
 ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &curves, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::Hair *result = convertPrimary( curves[primarySampleIndex], scene );
-	GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( curves ), primarySampleIndex, *result );
-	return result;
+	if( ccl::Hair *result = convertPrimary( curves[primarySampleIndex], scene ) )
+	{
+		GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( curves ), primarySampleIndex, *result );
+		return result;
+	}
+
+	return nullptr;
 }
 
 GeometryAlgo::ConverterDescription<CurvesPrimitive> g_description( convert );

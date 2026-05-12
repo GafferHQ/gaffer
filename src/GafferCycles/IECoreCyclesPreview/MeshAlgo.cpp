@@ -96,6 +96,13 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 {
 	assert( mesh->typeId() == IECoreScene::MeshPrimitive::staticTypeId() );
 
+	const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+	if( !p )
+	{
+		msg( Msg::Warning, "IECoreCyles::MeshAlgo", "MeshPrimitive does not have \"P\" primitive variable of interpolation type Vertex." );
+		return nullptr;
+	}
+
 	// Triangulate if necessary
 
 	ConstMeshPrimitivePtr triangulatedMesh;
@@ -108,23 +115,21 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 
 	// Convert topology and points
 
+	const size_t numFaces = mesh->numFaces();
+	const vector<Imath::V3f> &points = p->readable();
+	const vector<int> &vertexIds = mesh->vertexIds()->readable();
+	const size_t numVerts = points.size();
+
 	ccl::Mesh *cmesh = SceneAlgo::createNodeWithLock<ccl::Mesh>( scene );
+	cmesh->reserve_mesh( numVerts, numFaces );
+	for( size_t i = 0; i < numVerts; i++ )
+	{
+		cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
+	}
 
 	if( mesh->interpolation() == "catmullClark" )
 	{
 		cmesh->set_subdivision_type( ccl::Mesh::SUBDIVISION_CATMULL_CLARK );
-
-		const size_t numFaces = mesh->numFaces();
-		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-		const vector<Imath::V3f> &points = p->readable();
-		const vector<int> &vertexIds = mesh->vertexIds()->readable();
-		const size_t numVerts = points.size();
-
-		cmesh->reserve_mesh( numVerts, numFaces );
-		for( size_t i = 0; i < numVerts; i++ )
-		{
-			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
-		}
 
 		const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 		size_t ncorners = 0;
@@ -180,19 +185,6 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 	}
 	else
 	{
-		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-		const vector<Imath::V3f> &points = p->readable();
-		const size_t numVerts = points.size();
-		const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
-
-		const size_t numFaces = mesh->numFaces();
-		cmesh->reserve_mesh( numVerts, numFaces );
-
-		for( size_t i = 0; i < numVerts; i++ )
-		{
-			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
-		}
-
 		const bool smooth = hasSmoothNormals( mesh );
 		for( size_t i = 0; i < vertexIds.size(); i+= 3 )
 		{
@@ -247,9 +239,13 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 
 ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::MeshPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::Mesh *result = convertPrimary( samples[primarySampleIndex], scene );
-	GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
-	return result;
+	if( ccl::Mesh *result = convertPrimary( samples[primarySampleIndex], scene ) )
+	{
+		GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
+		return result;
+	}
+
+	return nullptr;
 }
 
 GeometryAlgo::ConverterDescription<MeshPrimitive> g_description( convert );
