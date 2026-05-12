@@ -5,7 +5,7 @@ Fixes
 -----
 
 - SceneInspector : Fixed crash caused by a particular configuration of ShuffleAttributes or ShufflePrimitiveVariables nodes (#6923).
-- All Inspectors : Fixed an issue where an EditScope with downstream edits could sometimes be incorrectly flagged as non-editable.
+- Scene Editors : Fixed an issue where an EditScope with downstream edits could sometimes be incorrectly flagged as non-editable.
 - Box : Fixed hangs creating a Box. This was caused by a GIL management bug in the Python bindings.
 
 1.6.18.0 (relative to 1.6.17.0)
