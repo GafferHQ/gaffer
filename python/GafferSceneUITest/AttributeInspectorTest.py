@@ -263,6 +263,10 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		# If there's an edit downstream of the EditScope we're asked to use,
 		# then we're allowed to be editable still
 
+		# This is true even if the downstream edit is enabled and read-only
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope2"], True )
+		lightEditScope2Edit["enabled"].setValue( True )
+
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
 		self.assertTrue( inspection.editable() )
 		self.assertEqual( inspection.nonEditableReason(), "" )
@@ -274,7 +278,29 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 				s["editScope1"], "/group/light", "gl:visualiser:scale", createIfNecessary = False
 			)
 		)
-		self.assertEqual( inspection.editWarning(), "" )
+		self.assertEqual( inspection.editWarning(), "Attribute has edits downstream in editScope2." )
+
+
+		# Having now created the edit, we should be able to acquire it again ( this uses a slightly
+		# different code path since now it will be found as a source ).
+
+		lightEditScope1Edit["enabled"].setValue( True )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
+		self.assertTrue( inspection.editable() )
+		self.assertEqual( inspection.nonEditableReason(), "" )
+		lightEditScope1Edit = inspection.acquireEdit()
+		self.assertIsNotNone( lightEditScope1Edit )
+		self.assertEqual(
+			lightEditScope1Edit,
+			GafferScene.EditScopeAlgo.acquireAttributeEdit(
+				s["editScope1"], "/group/light", "gl:visualiser:scale", createIfNecessary = False
+			)
+		)
+		self.assertEqual( inspection.editWarning(), "Attribute has edits downstream in editScope2." )
+
+		# Unlock the edit scope again for the rest of the tests
+		Gaffer.MetadataAlgo.setReadOnly( s["editScope2"], False )
 
 		# If there is a source node inside an edit scope, make sure we use that
 
