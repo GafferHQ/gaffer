@@ -238,6 +238,17 @@ class SetVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		visualiser["colorOverrides"].addChild( Gaffer.NameValuePlug( "setB", "notAColor", True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertRaises( RuntimeError, visualiser["__outSets"].getValue )
 
+	def testGlobal( self ) :
+
+		# The `__global` plug is private so nobody should use it. But if
+		# they do, check we get sensible no-op behaviour.
+
+		visualiser = GafferScene.SetVisualiser()
+		visualiser["__global"].setValue( True )
+
+		self.assertEqual( visualiser["out"].globalsHash(), visualiser["in"].globalsHash() )
+		self.assertEqual( visualiser["out"].globals(), visualiser["in"].globals() )
+
 	__testSetNames = [ 'setA', 'setB', 'setC' ]
 
 	def __basicSphereScene( self ) :

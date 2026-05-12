@@ -51,6 +51,9 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::AttributeProcessor, AttributeProcessorTypeId, FilteredSceneProcessor );
 
+		Gaffer::BoolPlug *globalPlug();
+		const Gaffer::BoolPlug *globalPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
@@ -67,20 +70,24 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 		/// by `computeProcessedAttributes()`. Overrides must start by calling the base
 		/// class first, and return true if it returns true.
 		virtual bool affectsProcessedAttributes( const Gaffer::Plug *input ) const = 0;
-		/// Must be implemented by derived classes to do one of the following :
-		///
-		/// - Call `AttributeProcessor::hashProcessedAttributes()` and then append to the hash
-		///   with all plugs used in `computeProcessedAttributes()`.
-		/// - Assign `h = inPlug()->attributesPlug()->hash()` to signify that
-		///   `computeProcessedAttributes()` will pass through `inputAttributes`
-		///   unchanged.
-		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		/// Must be implemented by derived classes to form a hash representing the
+		/// work done by `computeProcessedAttributes()`. If `computeProcessedAttributes()`
+		/// will be a no-op, then `h` should be left unchanged.
+		virtual void hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Must be implemented by derived classes to return the processed attributes.
-		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const = 0;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const = 0;
+
+		/// Would be better as private and final, but needs to be protected so that it can be called by ShaderTweaks.
+		IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 	private :
 
 		void init();
+		void plugSet( Gaffer::Plug *plug );
+		void plugInputChanged( Gaffer::Plug *plug );
+		void updateInternalConnections();
+
+		void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const final;
 
 		void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const final;
 		IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const final;
@@ -93,6 +100,8 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 		friend class ShaderAssignment;
 		friend class Attributes;
 		friend class AttributeVisualiser;
+
+		static size_t g_firstPlugIndex;
 
 };
 

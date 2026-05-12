@@ -1164,6 +1164,37 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		assertShuffledHistory( "c", "c" )
 		assertShuffledHistory( None, "d" )
 
+	def testAttributeHistoryWithGlobalShuffleAttributes( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( plane["out"] )
+		attributes["filter"].setInput( planeFilter["out"] )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "a", "a_value" ) )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "b", "b_value" ) )
+
+		shuffleAttributes = GafferScene.ShuffleAttributes()
+		shuffleAttributes["in"].setInput( attributes["out"] )
+		shuffleAttributes["filter"].setInput( planeFilter["out"] )
+		shuffleAttributes["global"].setValue( True ) # Overrides filter
+		shuffleAttributes["shuffles"].addChild( Gaffer.ShufflePlug( source = "a", destination = "b" ) )
+
+		# Not shuffled, because `shuffleAttributes` filtered to globals.
+		self.assertEqual( shuffleAttributes["out"].attributes( "/plane" )["b"].value, "b_value" )
+
+		# So shouldn't appear shuffled in history.
+		history = GafferScene.SceneAlgo.history( shuffleAttributes["out"]["attributes"], "/plane" )
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "b" )
+		self.__assertAttributeHistory( attributeHistory, [], shuffleAttributes["out"], "/plane", "b", IECore.StringData( "b_value" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0 ], shuffleAttributes["in"], "/plane", "b", IECore.StringData( "b_value" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], attributes["out"], "/plane", "b", IECore.StringData( "b_value" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], attributes["in"], "/plane", "b", None, 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], plane["out"], "/plane", "b", None, 0 )
+
 	def testAttributeHistoryWithMergeScenes( self ) :
 
 		#               plane                    sphere

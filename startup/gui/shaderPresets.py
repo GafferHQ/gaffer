@@ -52,14 +52,16 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	__registerShaderPresets( [
 
-		( "Arnold Surface", "ai:surface" ),
-		( "Arnold Displacement", "ai:disp_map" ),
-		( "Arnold Volume", "ai:volume" ),
-		( "Arnold Light", "ai:light" ),
-		( "Arnold Gobo", "ai:lightFilter:gobo" ),
-		( "Arnold Decay", "ai:lightFilter:light_decay" ),
-		( "Arnold Barndoor", "ai:lightFilter:barndoor" ),
-		( "Arnold Blocker", "ai:lightFilter:filter" )
+		( "Arnold/Surface", "ai:surface" ),
+		( "Arnold/Displacement", "ai:disp_map" ),
+		( "Arnold/Volume", "ai:volume" ),
+		( "Arnold/Light", "ai:light" ),
+		( "Arnold/Gobo", "ai:lightFilter:gobo" ),
+		( "Arnold/Decay", "ai:lightFilter:light_decay" ),
+		( "Arnold/Barndoor", "ai:lightFilter:barndoor" ),
+		( "Arnold/Blocker", "ai:lightFilter:filter" ),
+		( "Arnold/Atmosphere", "ai:atmosphere" ),
+		( "Arnold/Background", "ai:background" )
 
 	] )
 
@@ -70,8 +72,9 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 		import GafferCycles
 
 		__registerShaderPresets( [
-			( "Cycles Surface", "cycles:surface" ),
-			( "Cycles Light", "cycles:light" ),
+			( "Cycles/Surface", "cycles:surface" ),
+			( "Cycles/Light", "cycles:light" ),
+			( "Cycles/Background", "cycles:background" ),
 		] )
 
 with IECore.IgnoredExceptions( ImportError ) :
@@ -80,8 +83,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	__registerShaderPresets( [
 
-		( "OSL Surface", "osl:surface" ),
-		( "OSL Light", "osl:light" ),
+		( "OSL/Surface", "osl:surface" ),
+		( "OSL/Light", "osl:light" ),
 
 	] )
 
@@ -93,16 +96,17 @@ if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
 
 		__registerShaderPresets( [
 
-			( "RenderMan Surface", "ri:surface" ),
-			( "RenderMan Light", "ri:light" ),
-			( "RenderMan Light Filter", "ri:lightFilter" ),
+			( "RenderMan/Surface", "ri:surface" ),
+			( "RenderMan/Light", "ri:light" ),
+			( "RenderMan/Light Filter", "ri:lightFilter" ),
+			( "RenderMan/Integrator", "ri:integrator" ),
 
 		] )
 
 __registerShaderPresets( [
 
-		( "OpenGL Surface", "gl:surface" ),
-		( "USD Surface", "surface" ),
-		( "USD Light", "light" ),
+		( "OpenGL/Surface", "gl:surface" ),
+		( "USD/Surface", "surface" ),
+		( "USD/Light", "light" ),
 
 	] )

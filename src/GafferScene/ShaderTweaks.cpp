@@ -52,6 +52,8 @@
 #include "IECore/TypeTraits.h"
 #include "IECore/DataAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "fmt/format.h"
 
 #include <regex>
@@ -395,6 +397,8 @@ IECore::InternedString regexSubMatchToInterned( const std::ssub_match &subMatch 
 	return IECore::InternedString( &( *subMatch.first ), subMatch.length() );
 }
 
+const std::string g_optionPrefix( "option:" );
+
 }  // namespace
 
 GAFFER_NODE_DEFINE_TYPE( ShaderTweaks );
@@ -467,37 +471,39 @@ bool ShaderTweaks::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 	;
 }
 
-void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ShaderTweaks::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( tweaksPlug()->children().empty() )
 	{
-		h = inPlug()->attributesPlug()->hash();
+		return;
 	}
-	else
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
+
+	shaderPlug()->hash( h );
+	tweaksPlug()->hash( h );
+	ignoreMissingPlug()->hash( h );
+	localisePlug()->hash( h );
+
+	for( auto &tweak : TweakPlug::Range( *tweaksPlug() ) )
 	{
-		AttributeProcessor::hashProcessedAttributes( path, context, h );
-		shaderPlug()->hash( h );
-		tweaksPlug()->hash( h );
-		ignoreMissingPlug()->hash( h );
-		localisePlug()->hash( h );
-
-		for( auto &tweak : TweakPlug::Range( *tweaksPlug() ) )
+		const auto shaderOutput = ::shaderOutput( tweak.get() );
+		if( shaderOutput.first )
 		{
-			const auto shaderOutput = ::shaderOutput( tweak.get() );
-			if( shaderOutput.first )
-			{
-				shaderOutput.first->attributesHash( shaderOutput.second, h );
-			}
+			shaderOutput.first->attributesHash( shaderOutput.second, h );
 		}
+	}
 
-		if( localisePlug()->getValue() )
+	if( localisePlug()->getValue() )
+	{
+		if( auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
 		{
-			h.append( inPlug()->fullAttributesHash( path, /* withGlobalAttributes = */ true ) );
+			h.append( inPlug()->fullAttributesHash( *path, /* withGlobalAttributes = */ true ) );
 		}
 	}
 }
 
-IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	const string shader = shaderPlug()->getValue();
 	if( shader.empty() )
@@ -526,8 +532,11 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 	ConstCompoundObjectPtr fullAttributes;
 	if( localisePlug()->getValue() )
 	{
-		fullAttributes = inPlug()->fullAttributes( path, /* withGlobalAttributes = */ true );
-		source = &fullAttributes->members();
+		if( auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
+		{
+			fullAttributes = inPlug()->fullAttributes( *path, /* withGlobalAttributes = */ true );
+			source = &fullAttributes->members();
+		}
 	}
 
 	for( const auto &attribute : *source )
@@ -548,6 +557,37 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 		{
 			out[attribute.first] = tweakedNetwork;
 		}
+	}
+
+	return result;
+}
+
+IECore::ConstCompoundObjectPtr ShaderTweaks::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	// This will have tweaks to `attribute:*` globals applied already.
+	ConstCompoundObjectPtr inputGlobals = AttributeProcessor::computeGlobals( context, parent );
+
+	// Now we want to add tweaks to `option:*` globals as well.
+
+	IECore::CompoundObjectPtr result = new CompoundObject;
+	IECore::CompoundObjectPtr optionsToProcess = new CompoundObject;
+
+	for( const auto &[name, value] : inputGlobals->members() )
+	{
+		if( boost::starts_with( name.string(), g_optionPrefix ) )
+		{
+			optionsToProcess->members()[name.string().substr( g_optionPrefix.size())] = value;
+		}
+		else
+		{
+			result->members()[name] = value;
+		}
+	}
+
+	IECore::ConstCompoundObjectPtr processedOptions = computeProcessedAttributes( context, optionsToProcess.get() );
+	for( const auto &[name, value] : processedOptions->members() )
+	{
+		result->members()[g_optionPrefix+name.string()] = value;
 	}
 
 	return result;

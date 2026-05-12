@@ -1,3 +1,4 @@
+
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
@@ -97,14 +98,14 @@ bool ShaderAssignment::affectsProcessedAttributes( const Gaffer::Plug *input ) c
 	return AttributeProcessor::affectsProcessedAttributes( input ) || input == shaderPlug() || input == labelPlug();
 }
 
-void ShaderAssignment::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ShaderAssignment::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	AttributeProcessor::hashProcessedAttributes( path, context, h );
+	AttributeProcessor::hashProcessedAttributes( context, h );
 	h.append( shaderPlug()->attributesHash() );
 	labelPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	ConstCompoundObjectPtr attributes = shaderPlug()->attributes();
 

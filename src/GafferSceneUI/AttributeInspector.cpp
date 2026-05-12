@@ -332,7 +332,7 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 
 	else if( auto attributeTweaks = runTimeCast<AttributeTweaks>( sceneNode ) )
 	{
-		if( !( attributeTweaks->filterPlug()->match( attributeTweaks->inPlug() ) & PathMatcher::ExactMatch ) )
+		if( attributeTweaks->globalPlug()->getValue() || !( attributeTweaks->filterPlug()->match( attributeTweaks->inPlug() ) & PathMatcher::ExactMatch ) )
 		{
 			return nullptr;
 		}

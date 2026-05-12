@@ -397,7 +397,8 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		attributes = GafferScene.CustomAttributes()
 		cs = GafferTest.CapturingSlot( attributes.plugDirtiedSignal() )
 
-		# Adding or removing an attribute should dirty `out.attributes`
+		# Adding or removing an attribute should dirty `out.attributes`,
+		# but not `out.globals`.
 
 		attributes["attributes"].addChild(
 			Gaffer.NameValuePlug( "test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
@@ -407,6 +408,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		del cs[:]
 		del attributes["attributes"][0]
 		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+		self.assertNotIn( attributes["out"]["globals"], { x[0] for x in cs } )
 
 		# And although the Dynamic flag is currently required for proper serialisation
 		# of CustomAttributes nodes, its absence shouldn't prevent dirty propagation.
@@ -415,10 +417,12 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		del cs[:]
 		attributes["attributes"].addChild( Gaffer.NameValuePlug( "test2", 10 ) )
 		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+		self.assertNotIn( attributes["out"]["globals"], { x[0] for x in cs } )
 
 		del cs[:]
 		del attributes["attributes"][0]
 		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+		self.assertNotIn( attributes["out"]["globals"], { x[0] for x in cs } )
 
 	def testGlobalsDirtyPropagation( self ) :
 
@@ -434,6 +438,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		options["options"]["render:camera"]["enabled"].setValue( True )
 
 		self.assertIn( attributes["out"]["globals"], { x[0] for x in cs } )
+		self.assertNotIn( attributes["out"]["attributes"], { x[0] for x in cs } )
 		self.assertEqual( attributes["out"].globals(), IECore.CompoundObject( { "option:render:camera" : IECore.StringData( "" ) } ) )
 
 	def testLoadExtraAttributesFrom0_59( self ) :

@@ -175,9 +175,9 @@ bool AttributeVisualiser::affectsProcessedAttributes( const Gaffer::Plug *input 
 	;
 }
 
-void AttributeVisualiser::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void AttributeVisualiser::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	AttributeProcessor::hashProcessedAttributes( path, context, h );
+	AttributeProcessor::hashProcessedAttributes( context, h );
 	attributeNamePlug()->hash( h );
 	modePlug()->hash( h );
 	minPlug()->hash( h );
@@ -188,7 +188,7 @@ void AttributeVisualiser::hashProcessedAttributes( const ScenePath &path, const 
 	shaderParameterPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	const std::string attributeName = attributeNamePlug()->getValue();
 	if( !attributeName.size() )

@@ -1596,6 +1596,55 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["assign"]["out"], "/cube", ( "srf", "b" ), attribute = "test:surface" )
 		self.assertEqual( connectionSource( inspection.value() ), ( "", "" ) )
 
+	def testSourceIgnoresGlobaShaderTweaks( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light"] = GafferSceneTest.TestLight()
+		script["light"].loadShader( "simpleLight" )
+
+		script["bogusFilter"] = GafferScene.PathFilter()
+		script["bogusFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		script["shaderTweaks"] = GafferScene.ShaderTweaks()
+		script["shaderTweaks"]["in"].setInput( script["light"]["out"] )
+		script["shaderTweaks"]["filter"].setInput( script["bogusFilter"]["out"] )
+		script["shaderTweaks"]["global"].setValue( True )
+		script["shaderTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 10 ) )
+
+		inspection = self.__inspect( script["shaderTweaks"]["out"], "/light", "exposure" )
+		self.assertEqual( inspection.source(), script["light"]["parameters"]["exposure"] )
+
+	def testSourceIgnoresGlobalShaderAssignment( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["cube"] = GafferScene.Cube()
+
+		script["localShader"] = GafferSceneTest.TestShader()
+		script["localShader"].loadShader( "simpleShader" )
+		script["localShader"]["type"].setValue( "test:surface" )
+
+		script["globalShader"] = GafferSceneTest.TestShader()
+		script["globalShader"].loadShader( "simpleShader" )
+		script["globalShader"]["type"].setValue( "test:surface" )
+
+		script["cubeFilter"] = GafferScene.PathFilter()
+		script["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		script["localAssignment"] = GafferScene.ShaderAssignment()
+		script["localAssignment"]["in"].setInput( script["cube"]["out"] )
+		script["localAssignment"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["localAssignment"]["shader"].setInput( script["localShader"]["out"] )
+
+		script["globalAssignment"] = GafferScene.ShaderAssignment()
+		script["globalAssignment"]["in"].setInput( script["localAssignment"]["out"] )
+		script["globalAssignment"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["globalAssignment"]["global"].setValue( True )
+		script["globalAssignment"]["shader"].setInput( script["globalShader"]["out"] )
+
+		inspection = self.__inspect( script["globalAssignment"]["out"], "/cube", "c", attribute="test:surface" )
+		self.assertEqual( inspection.source(), script["localShader"]["parameters"]["c"] )
 
 if __name__ == "__main__":
 	unittest.main()

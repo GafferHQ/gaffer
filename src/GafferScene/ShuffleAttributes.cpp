@@ -70,20 +70,18 @@ bool ShuffleAttributes::affectsProcessedAttributes( const Gaffer::Plug *input ) 
 	return AttributeProcessor::affectsProcessedAttributes( input ) || shufflesPlug()->isAncestorOf( input );
 }
 
-void ShuffleAttributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ShuffleAttributes::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( shufflesPlug()->children().empty() )
 	{
-		h = inPlug()->attributesPlug()->hash();
+		return;
 	}
-	else
-	{
-		AttributeProcessor::hashProcessedAttributes( path, context, h );
-		shufflesPlug()->hash( h );
-	}
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
+	shufflesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr ShuffleAttributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShuffleAttributes::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	if( shufflesPlug()->children().empty() || inputAttributes->members().empty() )
 	{

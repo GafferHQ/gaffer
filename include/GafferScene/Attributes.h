@@ -58,13 +58,8 @@ class GAFFERSCENE_API Attributes : public AttributeProcessor
 		Gaffer::CompoundDataPlug *attributesPlug();
 		const Gaffer::CompoundDataPlug *attributesPlug() const;
 
-		Gaffer::BoolPlug *globalPlug();
-		const Gaffer::BoolPlug *globalPlug() const;
-
 		Gaffer::CompoundObjectPlug *extraAttributesPlug();
 		const Gaffer::CompoundObjectPlug *extraAttributesPlug() const;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
@@ -72,18 +67,11 @@ class GAFFERSCENE_API Attributes : public AttributeProcessor
 		/// on `attribute:{rendererPrefix}:*` metadata registrations.
 		Attributes( const std::string &name, const std::string &rendererPrefix );
 
-		void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const override;
-
 		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
-		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
+		void hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 	private :
-
-		void plugSet( Gaffer::Plug *plug );
-		void plugInputChanged( Gaffer::Plug *plug );
-		void updateInternalConnections();
 
 		static size_t g_firstPlugIndex;
 

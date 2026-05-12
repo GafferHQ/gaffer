@@ -61,7 +61,11 @@ Gaffer.Metadata.registerNode(
 			inherited from ancestors or the scene globals. Attributes will be
 			localised to locations matching the node's filter prior to tweaking.
 			The original inherited attributes will remain untouched.
-			"""
+
+			> Note : Has no effect when `global` is on.
+			""",
+
+			"layout:activator" : "isNotGlobal",
 
 		},
 

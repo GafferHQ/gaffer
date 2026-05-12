@@ -679,7 +679,7 @@ void addShuffleAttributesPredecessors( const ShuffleAttributes *shuffleAttribute
 	// has come from.
 
 	InternedString sourceAttributeName = destination->attributeName;
-	if( shuffleAttributes->filterPlug()->match( shuffleAttributes->inPlug() ) & PathMatcher::ExactMatch )
+	if( !shuffleAttributes->globalPlug()->getValue() && ( shuffleAttributes->filterPlug()->match( shuffleAttributes->inPlug() ) & PathMatcher::ExactMatch ) )
 	{
 		auto inputAttributes = shuffleAttributes->inPlug()->attributesPlug()->getValue();
 		map<InternedString, InternedString> shuffledNames;
