@@ -1332,6 +1332,38 @@ class RendererTest( GafferTest.TestCase ) :
 					self.__assertNotInPrimitiveVariables( proto, "Ri:scheme" )
 					self.assertEqual( proto["type"], "Ri:PolygonMesh" )
 
+	def testMatrixPrimitiveVariables( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+			mesh["constantMatrix"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
+			)
+			mesh["vertexMatrix"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.M44fVectorData( [ imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) ] * 4 )
+			)
+
+			renderer.object(
+				"mesh", mesh, renderer.attributes( IECore.CompoundObject() )
+			)
+
+			del mesh, renderer
+
+		prototype = next(
+			x for x in capture.json if x["method"] == "CreateGeometryPrototype"
+		)
+
+		self.__assertPrimitiveVariableEqual( prototype, "constantMatrix", [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1 ] )
+		self.__assertPrimitiveVariableEqual( prototype, "vertexMatrix", [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1 ] * 4 )
+
 	def testAutomaticInstancingAttribute( self ) :
 
 		for instancingEnabled in ( True, False ) :
