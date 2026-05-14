@@ -397,17 +397,3 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			)
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
-
-##########################################################################
-# Gadgets
-##########################################################################
-
-def __nodeGadget( node ) :
-
-	nodeGadget = GafferUI.StandardNodeGadget( node )
-	GafferSceneUI.PathFilterUI.addObjectDropTarget( nodeGadget )
-	GafferSceneUI.SetFilterUI.addSetDropTarget( nodeGadget )
-
-	return nodeGadget
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.Set, __nodeGadget )

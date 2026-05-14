@@ -324,3 +324,14 @@ def __graphEditorCreated( graphEditor ) :
 	graphEditor.graphGadget().dropSignal().connect( functools.partial( __locationDrop, graphEditor = weakref.ref( graphEditor ) ) )
 
 GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated )
+
+##########################################################################
+# Filter drop handlers
+##########################################################################
+
+def __nodeGadgetCreated( nodeGadget ) :
+
+	GafferSceneUI.PathFilterUI.addObjectDropTarget( nodeGadget )
+	GafferSceneUI.SetFilterUI.addSetDropTarget( nodeGadget )
+
+GafferUI.NodeGadget.instanceCreatedSignal().connect( __nodeGadgetCreated )
