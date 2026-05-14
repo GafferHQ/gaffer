@@ -70,6 +70,7 @@ API
 - SetExpressionAlgo : Added new namespace with functions for evaluating and editing set expressions.
 - GraphComponentPath : Added `setFromComponent()`
 - BreadCrumbsWidget : Added widget for interacting with paths using a combination of button widgets and text entry.
+- NodeGadget : Added `instanceCreatedSignal()`. This allows extensions to customise gadgets after their creation.
 
 Breaking Changes
 ----------------

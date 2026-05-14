@@ -116,5 +116,15 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 		Gaffer.Metadata.registerValue( n, "nodeGadget:type", "GafferUI::StandardNodeGadget" )
 		self.assertTrue( isinstance( GafferUI.NodeGadget.create( n ), GafferUI.StandardNodeGadget ) )
 
+	def testInstanceCreatedSignal( self ) :
+
+		cs = GafferTest.CapturingSlot( GafferUI.NodeGadget.instanceCreatedSignal() )
+		node = Gaffer.Node()
+
+		gadget1 = GafferUI.StandardNodeGadget( node )
+		gadget2 = GafferUI.NodeGadget.create( node )
+
+		self.assertEqual( [ x[0] for x in cs ], [ gadget1, gadget2 ] )
+
 if __name__ == "__main__":
 	unittest.main()
