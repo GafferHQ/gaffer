@@ -53,6 +53,7 @@ Fixes
 - StandardNodeGadget : Fixed crash caused by the node emitting `errorSignal()` while the gadget is undergoing construction.
 - Shader : Fixed hash for output plugs.
 - LightEditor : Fixed context used to compute the solo column header icon, this now uses the correct context with respect to the focus node.
+- NodeGadget : Fixed potential hang calling `create()` from Python.
 
 API
 ---
