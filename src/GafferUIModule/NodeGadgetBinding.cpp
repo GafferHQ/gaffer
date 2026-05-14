@@ -94,6 +94,12 @@ struct InstanceCreatedSlotCaller
 	}
 };
 
+NodeGadgetPtr nodeGadgetCreateWrapper( Gaffer::Node &node )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return NodeGadget::create( &node );
+}
+
 struct NodeGadgetCreator
 {
 	NodeGadgetCreator( object fn )
@@ -191,7 +197,7 @@ void GafferUIModule::bindNodeGadget()
 		.def( "node", (Gaffer::Node *(NodeGadget::*)())&NodeGadget::node, return_value_policy<CastToIntrusivePtr>() )
 		.def( "noduleAddedSignal", &NodeGadget::noduleAddedSignal, return_internal_reference<1>() )
 		.def( "noduleRemovedSignal", &NodeGadget::noduleRemovedSignal, return_internal_reference<1>() )
-		.def( "create", &NodeGadget::create ).staticmethod( "create" )
+		.def( "create", &nodeGadgetCreateWrapper ).staticmethod( "create" )
 		.def( "instanceCreatedSignal", &NodeGadget::instanceCreatedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "instanceCreatedSignal" )
 		.def( "registerNodeGadget", &registerNodeGadget1 )
