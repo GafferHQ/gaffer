@@ -252,18 +252,11 @@ def __drop( nodeGadget, event ) :
 
 	return True
 
-def addSetDropTarget( nodeGadget ) :
+def __nodeGadgetCreated( nodeGadget ) :
 
 	nodeGadget.dragEnterSignal().connect( __dragEnter )
 	nodeGadget.dragLeaveSignal().connect( __dragLeave )
 	nodeGadget.dragMoveSignal().connect( __dragMove )
 	nodeGadget.dropSignal().connect( __drop )
 
-def __nodeGadget( setFilter ) :
-
-	nodeGadget = GafferUI.StandardNodeGadget( setFilter )
-	addSetDropTarget( nodeGadget )
-
-	return nodeGadget
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.SetFilter, __nodeGadget )
+GafferUI.NodeGadget.instanceCreatedSignal().connect( __nodeGadgetCreated )

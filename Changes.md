@@ -109,6 +109,8 @@ Breaking Changes
 - Light : Removed public constructor. Lights may now only be constructed via derived classes, which are now responsible for providing a Shader node to the base class.
 - OSLCode : Removed `shaderCompiledSignal()`.
 - PathColumn : Changed `headerData()` signature.
+- SetFilterUI : Removed `addSetDropTarget()` function. Drag and drop of sets is now automatically support for all NodeGadgets.
+- PathFilterUI : Removed `addObjectDropTarget()` function. Drag and drop of paths is now automatically support for all NodeGadgets.
 
 Build
 -----

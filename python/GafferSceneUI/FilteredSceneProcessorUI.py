@@ -81,20 +81,6 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Gadgets
-##########################################################################
-
-def __nodeGadget( node ) :
-
-	nodeGadget = GafferUI.StandardNodeGadget( node )
-	GafferSceneUI.PathFilterUI.addObjectDropTarget( nodeGadget )
-	GafferSceneUI.SetFilterUI.addSetDropTarget( nodeGadget )
-
-	return nodeGadget
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.FilteredSceneProcessor, __nodeGadget )
-
-##########################################################################
 # GraphEditor context menu
 ##########################################################################
 
