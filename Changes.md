@@ -113,24 +113,28 @@ Build
 -----
 
 - Boost : Updated to version 1.85.0.
-- Cortex : Updated to version 10.7.0.0a9.
+- Cortex : Updated to version 10.7.0.0a10.
 - Cycles : Updated to version 5.1.0.
 - Embree : Updated to version 4.4.0.
 - Imath : Updated to version 3.1.12.
 - Jemalloc : Removed when building on macOS.
 - LLVM : Updated to version 17.0.6.
+- MaterialX : Updated to version 1.39.4.
+- Nanobind : Added version 2.12.0.
 - OpenColorIO :
   - Updated to version 2.4.2.
   - Added ACES 2.0 configs.
 - OpenEXR : Updated to version 3.3.6.
 - OpenShadingLanguage : Updated to version 1.14.8.0.
 - OpenSubdiv : Updated to version 3.6.1.
+- OpenVDB : Updated to version 12.1.1.
 - PySide : Updated to version 6.5.8.
 - Python : Updated to version 3.11.14.
 - Qt : Updated to version 6.5.8.
+- Robin-map : Added version 1.4.1.
 - SSE2NEON : Added version 1.9.1 when building on macOS.
 - TBB : Updated to version 2021.13.0.
-- USD : Updated to version 26.03.
+- USD : Updated to version 26.05.
 
 1.6.x.x (relative to 1.6.18.0)
 =======
