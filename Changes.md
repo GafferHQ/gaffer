@@ -1,18 +1,17 @@
 1.7.x.x (relative to 1.7.3.0)
 =======
 
+Features
+--------
+
+- USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+
 Fixes
 -----
 
 - Set expressions : Fixed potential crash.
 
 1.7.3.0 (relative to 1.7.2.0)
-=======
-
-Features
---------
-
-- PointInstancerQuery : Added a new node for querying the properties (prototype, transform, visibility etc) of a specific instance within a PointInstancer.
 
 Improvements
 ------------
