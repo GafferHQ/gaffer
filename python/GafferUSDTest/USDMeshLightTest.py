@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,15 +34,54 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .USDAttributesTest import USDAttributesTest
-from .USDLayerWriterTest import USDLayerWriterTest
-from .USDShaderTest import USDShaderTest
-from .USDLightTest import USDLightTest
-from .USDMeshLightTest import USDMeshLightTest
-from ._PointInstancerAdaptorTest import _PointInstancerAdaptorTest
-from .PromotePointInstancesTest import PromotePointInstancesTest
+import unittest
 
-if __name__ == "__main__":
-	import unittest
+import IECore
+
+import Gaffer
+import GafferScene
+import GafferSceneTest
+import GafferUSD
+
+class USDMeshLightTest( GafferSceneTest.SceneTestCase ) :
+
+	def testParameters( self ) :
+
+		light = GafferUSD.USDMeshLight()
+
+		# Should have all the parameters of a MeshLight shader.
+
+		shader = GafferUSD.USDShader()
+		shader.loadShader( "MeshLight" )
+		self.assertEqual( light["parameters"].keys(), shader["parameters"].keys() )
+
+		# Parameters should drive a light shader in the scene.
+
+		sphere = GafferScene.Sphere()
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		light["in"].setInput( sphere["out"] )
+		light["filter"].setInput( sphereFilter["out"] )
+
+		light["parameters"]["exposure"].setValue( 10 )
+		self.assertIn( "light", light["out"].attributes( "/sphere" ) )
+		self.assertEqual( light["out"].attributes( "/sphere" )["light"].outputShader().parameters["exposure"], IECore.FloatData( 10 ) )
+
+	def testSerialisation( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["light"] = GafferUSD.USDMeshLight()
+		script["light"]["parameters"]["intensity"].setValue( 10 )
+
+		serialisation = script.serialise()
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( serialisation )
+		self.assertEqual( script2["light"]["parameters"]["intensity"].getValue(), 10 )
+
+		# One for the node. None for plugs, since they are not dynamic.
+		self.assertEqual( serialisation.count( "addChild" ), 1 )
+
+
+if __name__ == "__main__" :
 	unittest.main()
