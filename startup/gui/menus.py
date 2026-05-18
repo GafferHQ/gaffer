@@ -552,6 +552,7 @@ if os.environ.get( "GAFFERUSD_HIDE_LIGHT_UI", "" ) != "1" :
 		"DistantLight", "DiskLight", "RectLight", "SphereLight", "CylinderLight", "DomeLight", "SpotLight"
 	] :
 		nodeMenu.append( "/USD/Light/{}".format( IECore.CamelCase.toSpaced( lightType ) ), functools.partial( __usdLightCreator, lightType ), searchText = lightType )
+	nodeMenu.append( "/USD/Light/Mesh Light", GafferUSD.USDMeshLight, searchText = "MeshLight" )
 
 nodeMenu.append( "/USD/Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
 nodeMenu.append( "/USD/Layer Writer", GafferUSD.USDLayerWriter, searchText = "USDLayerWriter" )

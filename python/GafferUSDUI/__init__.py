@@ -38,6 +38,7 @@ from . import USDAttributesUI
 from . import USDLayerWriterUI
 from . import USDShaderUI
 from . import USDLightUI
+from . import USDMeshLightUI
 from . import _PointInstancerAdaptorUI
 from . import PromotePointInstancesUI
 
