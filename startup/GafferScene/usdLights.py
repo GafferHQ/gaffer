@@ -84,10 +84,10 @@ Gaffer.Metadata.registerValue( "light:SphereLight", "type", "point" )
 Gaffer.Metadata.registerValue( "light:DiskLight", "type", "disk" )
 Gaffer.Metadata.registerValue( "light:CylinderLight", "type", "cylinder" )
 Gaffer.Metadata.registerValue( "light:DistantLight", "type", "distant" )
-Gaffer.Metadata.registerValue( "light:GeometryLight", "type", "mesh" )
+Gaffer.Metadata.registerValue( "light:MeshLight", "type", "mesh" )
 Gaffer.Metadata.registerValue( "light:DomeLight", "type", "environment" )
 
-for light in [ "RectLight", "SphereLight", "DiskLight", "CylinderLight", "DistantLight", "GeometryLight", "DomeLight" ] :
+for light in [ "RectLight", "SphereLight", "DiskLight", "CylinderLight", "DistantLight", "MeshLight", "DomeLight" ] :
 
 	metadataTarget = "light:{}".format( light )
 	Gaffer.Metadata.registerValue( metadataTarget, "colorParameter", "color" )

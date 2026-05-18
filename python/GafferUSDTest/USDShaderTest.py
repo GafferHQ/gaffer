@@ -265,3 +265,14 @@ class USDShaderTest( GafferSceneTest.SceneTestCase ) :
 		shaderAssignment["shader"].setInput( shader["out"]["displacement"] )
 		self.assertEqual( shaderAssignment["out"].attributes( "/sphere" ).keys(), [ "displacement" ] )
 		self.assertIsInstance( shaderAssignment["out"].attributes( "/sphere" )["displacement"], IECoreScene.ShaderNetwork )
+
+	def testMeshLight( self ) :
+
+		shader = GafferUSD.USDShader()
+		shader.loadShader( "MeshLight" )
+
+		self.assertEqual( shader["name"].getValue(), "MeshLight" )
+		self.assertEqual( shader["type"].getValue(), "light" )
+
+		self.assertTrue( "exposure" in shader["parameters"] )
+		self.assertEqual( shader["out"].typeId(), Gaffer.Plug.staticTypeId() )

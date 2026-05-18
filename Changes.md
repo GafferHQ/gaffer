@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.0.0)
 =======
 
+Features
+--------
+
+- USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+
 Improvements
 ------------
 
