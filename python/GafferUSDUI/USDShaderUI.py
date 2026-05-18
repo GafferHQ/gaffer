@@ -66,7 +66,11 @@ def __primProperty( plug ) :
 	elif plugName.startswith( "shadow:" ) :
 		primDefinition = Usd.SchemaRegistry().FindAppliedAPIPrimDefinition( "ShadowAPI" )
 	else :
-		primDefinition = Usd.SchemaRegistry().FindConcretePrimDefinition( __shaderName( plug ) )
+		shaderName = __shaderName( plug )
+		if shaderName == "MeshLight" :
+			primDefinition = Usd.SchemaRegistry().FindAppliedAPIPrimDefinition( "MeshLightAPI" )
+		else :
+			primDefinition = Usd.SchemaRegistry().FindConcretePrimDefinition( shaderName )
 
 	if primDefinition :
 		return primDefinition.GetPropertyDefinition( "inputs:" + plug.getName() )
@@ -320,6 +324,7 @@ __propertyOrder = {
 	"RectLight" : __orderDict( __lightPropertyOrder + [ "width", "height", "texture:file" ] + __apiPropertyOrder ),
 	"SphereLight" : __orderDict( __lightPropertyOrder + [ "radius" ] + __apiPropertyOrder ),
 	"CylinderLight" : __orderDict( __lightPropertyOrder + [ "length", "radius" ] + __apiPropertyOrder ),
+	"MeshLight" : __orderDict( __lightPropertyOrder + __apiPropertyOrder ),
 
 }
 

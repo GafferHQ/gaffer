@@ -6,6 +6,7 @@ Improvements
 
 - Cycles : Added support for rendering PointInstancers.
 - SceneInspector : Added PointInstancer section to the Statistics tab.
+- USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
 
 Fixes
 -----
@@ -45,12 +46,6 @@ Fixes
 - SceneAlgo : Fixed potential deadlock in `parallelGatherLocations()`.
 
 1.7.3.0 (relative to 1.7.2.0)
-=======
-
-Features
---------
-
-- PointInstancerQuery : Added a new node for querying the properties (prototype, transform, visibility etc) of a specific instance within a PointInstancer.
 
 Improvements
 ------------
