@@ -9,6 +9,7 @@ Features
   - Prototypes and points that are editable downstream.
   - Export to USD.
   - Faster rendering.
+- USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
 
 Fixes
 -----
