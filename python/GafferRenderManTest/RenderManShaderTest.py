@@ -185,6 +185,12 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader.loadShader( "PxrBakePointCloud" )
 		self.assertEqual( shader["type"].getValue(), "ri:shader" )
 
+	def testVolumeShaderType( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrVolume" )
+		self.assertEqual( shader["type"].getValue(), "ri:volume" )
+
 	def testUtilityPatternArray( self ) :
 
 		shader = GafferRenderMan.RenderManShader()
