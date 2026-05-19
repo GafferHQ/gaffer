@@ -37,7 +37,47 @@
 import math
 import imath
 
+from pxr import Gf
+from pxr import Sdf
+from pxr import Usd
+
 import Gaffer
+
+def __defaultValue( target ) :
+
+	light, _, parameter = target[6:].partition( ":" )
+
+	if parameter.startswith( "shaping:" ) :
+		primDefinition = Usd.SchemaRegistry().FindAppliedAPIPrimDefinition( "ShapingAPI" )
+	elif parameter.startswith( "shadow:" ) :
+		primDefinition = Usd.SchemaRegistry().FindAppliedAPIPrimDefinition( "ShadowAPI" )
+	else :
+		primDefinition = Usd.SchemaRegistry().FindConcretePrimDefinition( light )
+
+	if primDefinition is None :
+		return None
+
+	attribute = primDefinition.GetAttributeDefinition( f"inputs:{parameter}" )
+	if not attribute.IsAttribute() :
+		return None
+
+	value = attribute.GetFallbackValue()
+
+	## \todo Should Cortex bind `IECoreUSD::DataAlgo::fromUSD()` to Python
+	# so we can use it here?
+	if isinstance( value, Gf.Vec3f ) :
+		if attribute.GetTypeName() == "color3f" :
+			value = imath.Color3f( *value )
+		else :
+			value = imath.V3f( *value )
+	elif isinstance( value, Gf.Vec4f ) :
+		value = imath.Color4f( *value )
+	elif isinstance( value, Sdf.AssetPath ) :
+		value = value.path
+	elif attribute.GetTypeName() == "asset" and value is None :
+		value = ""
+
+	return value
 
 Gaffer.Metadata.registerValue( "light:RectLight", "type", "quad" )
 Gaffer.Metadata.registerValue( "light:SphereLight", "type", "point" )
@@ -55,6 +95,10 @@ for light in [ "RectLight", "SphereLight", "DiskLight", "CylinderLight", "Distan
 	Gaffer.Metadata.registerValue( metadataTarget, "exposureParameter", "exposure" )
 	Gaffer.Metadata.registerValue( metadataTarget, "coneAngleParameter", "shaping:cone:angle" )
 	Gaffer.Metadata.registerValue( metadataTarget, "coneAngleType", "half" )
+
+	## \todo Broaden these metadata registrations and migrate USDShader and USDShaderUI
+	# to use them as the source of truth in place of their USD SchemaRegistry queries.
+	Gaffer.Metadata.registerValue( f"{metadataTarget}:*", "defaultValue", __defaultValue )
 
 for light in [ "SphereLight", "DiskLight", "CylinderLight", "DistantLight" ] :
 	metadataTarget = "light:{}".format( light )
