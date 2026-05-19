@@ -118,6 +118,7 @@ const RtUString g_userMaterialId( "user:__materialid" );
 const vector<InternedString> g_displacementAttributeNames = { "ri:displacement", "osl:displacement", "displacement" };
 const vector<InternedString> g_lightAttributeNames = { "ri:light", "light" };
 const vector<InternedString> g_surfaceAttributeNames = { "ri:surface", "surface" };
+const vector<InternedString> g_volumeAttributeNames = { "ri:volume", "volume" };
 
 template<typename T>
 T *attributeCast( const IECore::RunTimeTyped *v, const IECore::InternedString &name )
@@ -227,7 +228,25 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 	// Convert shaders.
 
 	const auto [surfaceName, surface] = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames );
-	m_surfaceMaterial = materialCache->getMaterial( surface ? surface : g_facingRatio.get(), surface ? surfaceName : InternedString(), attributes );
+	const auto [volumeName, volume] = shaderNetworkAttribute( attributes->members(), g_volumeAttributeNames );
+
+	if( volume )
+	{
+		// We can only choose a single material - either a volume or a surface.
+		// RenderMan supports rendering closed geometry (as well as VDBs) with a
+		// volume shader, so if a volume shader is assigned then we use it for all
+		// geometry types.
+		m_material = materialCache->getMaterial( volume, volumeName, attributes );
+	}
+	else
+	{
+		// No volume shader available, so use surface shader, falling back to a simple
+		// facing ratio.
+		// > Note : This is no good for VDBs, but we don't fall back to a default
+		// > volume as we don't know the right value for the `densityFloatPrimVar`
+		// > parameter.
+		m_material = materialCache->getMaterial( surface ? surface : g_facingRatio.get(), surface ? surfaceName : InternedString(), attributes );
+	}
 
 	const auto [displacementName, displacement] = shaderNetworkAttribute( attributes->members(), g_displacementAttributeNames );
 	if( displacement )
@@ -241,6 +260,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 		// Mesh lights default to having a black material so they don't appear
 		// in indirect rays, but the user can override with a surface assignment
 		// if they want further control. Other lights don't have materials.
+		// We assume that a volume shader makes no sense here.
 		m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get(), surface ? surfaceName : InternedString(), attributes );
 	}
 
@@ -338,9 +358,9 @@ const RtParamList &Attributes::instanceAttributes() const
 	return m_instanceAttributes;
 }
 
-const Material *Attributes::surfaceMaterial() const
+const Material *Attributes::material() const
 {
-	return m_surfaceMaterial.get();
+	return m_material.get();
 }
 
 const Material *Attributes::lightMaterial() const
