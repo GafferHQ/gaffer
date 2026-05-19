@@ -38,6 +38,8 @@
 
 #include "Gaffer/DependencyNode.h"
 
+#include <filesystem>
+
 namespace Gaffer
 {
 
@@ -55,6 +57,51 @@ class GAFFER_API SubGraph : public DependencyNode
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::SubGraph, SubGraphTypeId, DependencyNode );
 
+		/// Referencing
+		/// -----------
+		///
+		/// By default, a SubGraph's internal nodes are considered to be local,
+		/// meaning that they are serialised into the same `.gfr` file as the
+		/// SubGraph itself. In this state, the child nodes are user-editable.
+		/// Alternatively, SubGraphs may reference child nodes stored externally
+		/// in a separate `.grf` file. This allows self-contained node graphs
+		/// to be published and then referenced into multiple `.gfr` files. When
+		/// referencing, the child nodes are not user-editable.
+
+		/// Exports the internal node graph as a `.grf` file, ready for referencing.
+		void exportReference( const std::filesystem::path &fileName ) const;
+		/// Loads a previously exported `.grf` file, replacing the internal node graph.
+		void loadReference( const std::filesystem::path &fileName );
+
+		/// Returns true if this node is referencing a `.grf` file, and false if
+		/// the child nodes are local.
+		bool isReference() const;
+		/// Returns the referenced file. If `isReference()` is false, returns an
+		/// empty path.
+		const std::filesystem::path &referenceFileName() const;
+
+		using ReferenceChangedSignal = Signals::Signal<void ( SubGraph * )>;
+		/// Emitted when `referenceFileName()` changes, or when a reference
+		/// is reloaded.
+		ReferenceChangedSignal &referenceChangedSignal();
+
+		/// Reference Edits
+		/// ===============
+		///
+		/// Although child nodes can not be edited when referenced, promoted
+		/// plugs can be. This allows the user to control the internal network
+		/// via an interface defined when the reference was published.
+		///
+		/// The SubGraph node provides some - currently limited - tracking of
+		//// such edits, exposing them via the following methods.
+
+		bool hasMetadataEdit( const Plug *plug, const IECore::InternedString key ) const;
+		/// Returns true if `plug` has been added as a child of a referenced plug.
+		bool isChildEdit( const Plug *plug ) const;
+
+		/// DependencyNode API
+		/// ------------------
+
 		/// Does nothing
 		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
 
@@ -63,14 +110,24 @@ class GAFFER_API SubGraph : public DependencyNode
 		const BoolPlug *enabledPlug() const override;
 
 		/// Implemented to allow a user to define a pass-through behaviour
-		/// by wiring the nodes inside this sub graph up appropriately. The
-		/// input to the output plug must be connected from a node inside
-		/// the sub graph, where that node itself has its enabled plug driven
-		/// by the external enabled plug, and the correspondingInput for the
-		/// node comes from one of the inputs to the sub graph.
+		/// by connecting to the `passThrough` plug of an internal BoxOut node.
 		Plug *correspondingInput( const Plug *output ) override;
 		const Plug *correspondingInput( const Plug *output ) const override;
 
+	private :
+
+		void loadReferenceInternal( const std::filesystem::path &fileName );
+		bool isReferenceable( const GraphComponent *descendant ) const;
+
+		ReferenceChangedSignal m_referenceChangedSignal;
+
+		class PlugEdits;
+		struct ReferenceState;
+		// Initialised lazily, when we first load a reference.
+		std::unique_ptr<ReferenceState> m_referenceState;
+
 };
+
+IE_CORE_DECLAREPTR( SubGraph )
 
 } // namespace Gaffer

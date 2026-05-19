@@ -43,7 +43,7 @@
 #include "Gaffer/Dot.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
-#include "Gaffer/Reference.h"
+#include "Gaffer/SubGraph.h"
 #include "Gaffer/Switch.h"
 
 #include "GafferBindings/PlugBinding.h"
@@ -147,12 +147,12 @@ bool shouldSerialiseInput( const Plug *plug, const Serialisation &serialisation 
 			return false;
 		}
 	}
-	else if( auto reference = runTimeCast<const Reference>( plug->node() ) )
+	else if( auto subGraph = runTimeCast<const SubGraph>( plug->node() ) )
 	{
-		if( reference->isAncestorOf( plug->getInput()->node() ) )
+		if( subGraph->isReference() && subGraph->isAncestorOf( plug->getInput()->node() ) )
 		{
 			// Don't serialise connection from a plug on an internal node
-			// onto an external plug of the Reference. These will have been
+			// onto an external plug of the reference. These will have been
 			// serialised in the `.grf` file itself.
 			return false;
 		}
