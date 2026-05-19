@@ -275,7 +275,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[2].property( "history:node" ), s["editScope"]["LightEdits"] )
 		self.assertEqual( c[2].property( "history:value" ), 3.0 )
 		self.assertEqual( c[2].property( "history:fallbackValue" ), None )
-		self.assertEqual( c[2].property( "history:operation" ), Gaffer.TweakPlug.Mode.Replace )
+		self.assertEqual( c[2].property( "history:operation" ), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( c[2].property( "history:source" ), edit )
 		self.assertEqual( c[2].property( "history:editWarning" ), "" )
 
