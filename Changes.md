@@ -24,7 +24,9 @@ Improvements
 - ShaderTweaks : Added support for tweaking ramp parameters.
 - CyclesAttributes : Added `cycles:adaptive_space` attribute.
 - CyclesOptions : Added `cycles:integrator:volume_ray_marching` option.
-- LightEditor : Added column for `cycles:visibility:camera` attribute.
+- LightEditor :
+  - Added column for `cycles:visibility:camera` attribute.
+  - USD lights now display default values for parameters that haven't been authored on the light. These are presented as dimmed "fallback" values.
 - OpenColorIO : Added ACES Studio 2.0 config. The default config is still ACES 1.3, due to RenderMan not supporting ACES 2.0.
 - SceneReader, SceneWriter : Added support for pinned UsdGeomBasisCurves.
 - OSLCode : The OSL shader is now compiled on demand, rather than every time the node is edited. This avoids many redundant attempts at recompilation when loading nodes with many parameters.
