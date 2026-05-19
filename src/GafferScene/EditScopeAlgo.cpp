@@ -525,6 +525,11 @@ ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath 
 	}
 	else
 	{
+		if( const auto defaultValue = Gaffer::Metadata::value( fmt::format( "{}:{}:{}", attribute, shader->getName(), parameter.name.string() ), "defaultValue" ) )
+		{
+			return defaultValue;
+		}
+
 		throw IECore::Exception( fmt::format( "Parameter \"{}\" does not exist", parameter.name.string() ) );
 	}
 }

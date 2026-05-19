@@ -1646,5 +1646,97 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( script["globalAssignment"]["out"], "/cube", "c", attribute="test:surface" )
 		self.assertEqual( inspection.source(), script["localShader"]["parameters"]["c"] )
 
+	def testDefaultValueMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"].loadShader( "simpleLight" )
+
+		s["shaderTweak"] = GafferScene.ShaderTweaks()
+		s["shaderTweak"]["in"].setInput( s["light"]["out"] )
+
+		s["shaderTweakFilter"] = GafferScene.PathFilter()
+		s["shaderTweakFilter"]["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+		s["shaderTweak"]["filter"].setInput( s["shaderTweakFilter"]["out"] )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["shaderTweak"]["out"] )
+		s["editScope"]["in"].setInput( s["shaderTweak"]["out"] )
+
+		# Inspecting the "testParameter" shader parameter with or without an active EditScope
+		# returns `None` as we have no upstream nodes capable of editing it, and we don't know
+		# how to create an edit within the EditScope.
+
+		self.assertIsNone( self.__inspect( s["editScope"]["out"], "/light", "testParameter" ) )
+		self.assertIsNone( self.__inspect( s["editScope"]["out"], "/light", "testParameter", s["editScope"] ) )
+
+		# Registering "defaultValue" metadata for the parameter allows it to be
+		# returned as the inspected value when the parameter does not exist.
+
+		Gaffer.Metadata.registerValue( "light:simpleLight:testParameter", "defaultValue", IECore.FloatData( 2.0 ) )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "light:simpleLight:testParameter", "defaultValue" )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "testParameter", s["editScope"] )
+		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
+		self.assertIsNone( inspection.value( useFallbacks = False ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.fallbackDescription(), "Default value" )
+
+		# Once a parameter is created on the inspected shader, it is
+		# returned instead of the defaultValue fallback.
+
+		s["shaderTweak"]["shader"].setValue( "light" )
+		lightTweakPlug = Gaffer.TweakPlug( "testParameter", IECore.FloatData( 4.0 ), Gaffer.TweakPlug.Mode.Create )
+		s["shaderTweak"]["tweaks"].addChild( lightTweakPlug )
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "testParameter" )
+		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.source(), lightTweakPlug )
+		self.assertEqual( inspection.fallbackDescription(), "" )
+
+		# Disabling the parameter should revert to the fallback.
+
+		lightTweakPlug["enabled"].setValue( False )
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "testParameter" )
+		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.fallbackDescription(), "Default value" )
+
+		# Updates to "defaultValue" are reflected in new inspections.
+
+		Gaffer.Metadata.registerValue( "light:simpleLight:testParameter", "defaultValue", IECore.FloatData( 8.0 ) )
+		self.assertEqual( self.__inspect( s["editScope"]["out"], "/light", "testParameter" ).value(), IECore.FloatData( 8.0 ) )
+
+		# The fallback value should allow us to create an edit in the edit scope.
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "testParameter", s["editScope"] )
+		edit = inspection.acquireEdit()
+		self.assertEqual(
+			edit,
+			GafferScene.EditScopeAlgo.acquireParameterEdit(
+				s["editScope"], "/light", "light", ( "", "testParameter" ), createIfNecessary = False
+			)
+		)
+
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 16.0 )
+
+		# With the tweak in place in `editScope`, ensure a new inspection returns the
+		# correct value and source.
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "testParameter", s["editScope"] )
+		self.assertEqual( inspection.value(), IECore.FloatData( 16.0 ) )
+
+		self.__assertExpectedResult(
+			inspection,
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit,
+			fallbackDescription = ""
+		)
+
 if __name__ == "__main__":
 	unittest.main()
