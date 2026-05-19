@@ -812,9 +812,6 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "myLovelySphere", imath.V2f( 0.6, 0.5 ) ), imath.Color4f( 1 ), 0.02 )
 		)
-		# Store converged color for later comparison with modified portal.
-		color = self.__colorAtUV( "myLovelySphere", imath.V2f( 0.6, 0.5 ) )
-		self.assertEqualWithAbsError( color, imath.Color4f( 1 ), 0.02 )
 
 		renderer.pause()
 
@@ -834,9 +831,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
-		expectedColor = color * imath.Color4f( 2, 0, 2, 1 )
 		self.assertEventually(
-			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "myLovelySphere", imath.V2f( 0.6, 0.5 ) ), expectedColor, 0.04 )
+			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "myLovelySphere", imath.V2f( 0.6, 0.5 ) ), imath.Color4f( 2, 0, 2, 1 ), 0.04 )
 		)
 		self.assertEventually(
 			lambda : self.assertEqual( self.__colorAtUV( "myLovelySphere", imath.V2f( 0.3, 0.5 ) )[0], 0 )
