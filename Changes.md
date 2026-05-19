@@ -9,6 +9,7 @@ Fixes
 - Box : Fixed hangs creating a Box. This was caused by a GIL management bug in the Python bindings.
 - Button, SelectionMenu, TabbedContainer : Fixed issues with stylesheet propagation in custom builds of Qt 6.
 - RenderMan : Fixed export of matrix primitive variables.
+- Dispatcher : Fixed handling of TaskLists without `preTasks`. These are now correctly omitted from the dispatch graph.
 
 1.6.18.0 (relative to 1.6.17.0)
 ========

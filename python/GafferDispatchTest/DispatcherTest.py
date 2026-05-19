@@ -3161,6 +3161,46 @@ class DispatcherTest( GafferTest.TestCase ) :
 			self.assertEqual( renderTask.plug(), script["render"]["task"] )
 			self.assertEqual( renderTask.frames(), [ i ] )
 
+	def testOmitEmptyLeafTaskLists( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["taskList"] = GafferDispatch.TaskList()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello World" )
+		script["command"]["preTasks"][0].setInput( script["taskList"]["task"] )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["command"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		for omit in ( None, False, True ) :
+
+			with self.subTest( omit = omit ) :
+
+				if omit is None :
+					if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+						del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+				else :
+					os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = str( int( omit ) )
+
+				script["dispatcher"]["task"].execute()
+				rootBatch = script["dispatcher"].lastDispatch
+				self.assertIsNone( rootBatch.plug() )
+
+				self.assertEqual( len( rootBatch.preTasks() ), 1 )
+				self.assertEqual( rootBatch.preTasks()[0].plug(), script["command"]["task"] )
+
+				if omit is not False :
+
+					self.assertEqual( rootBatch.preTasks()[0].preTasks(), [] )
+
+				else :
+
+					self.assertEqual( len( rootBatch.preTasks()[0].preTasks() ), 1 )
+					self.assertEqual( rootBatch.preTasks()[0].preTasks()[0].plug(), script["taskList"]["task"] )
+
 	def testBatchNames( self ) :
 
 		script = Gaffer.ScriptNode()

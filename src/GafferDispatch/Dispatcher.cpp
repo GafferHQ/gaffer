@@ -833,7 +833,10 @@ void Dispatcher::TaskBatch::preprocess( bool omitEmpty, Namer &namer, bool immed
 			continue;
 		}
 
-		if( omitEmpty && preTask->frames().empty() && !preTask->node()->isInstanceOf( "GafferDispatch::TaskList" ) )
+		if(
+			omitEmpty && preTask->frames().empty() &&
+			(!preTask->node()->isInstanceOf( "GafferDispatch::TaskList" ) || preTask->preTasks().empty() )
+		)
 		{
 			for( const auto &prePreTask : preTask->preTasks() )
 			{
