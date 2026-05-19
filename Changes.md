@@ -8,7 +8,9 @@ Fixes
 - Scene Editors : Fixed an issue where an EditScope with downstream edits could sometimes be incorrectly flagged as non-editable.
 - Box : Fixed hangs creating a Box. This was caused by a GIL management bug in the Python bindings.
 - Button, SelectionMenu, TabbedContainer : Fixed issues with stylesheet propagation in custom builds of Qt 6.
-- RenderMan : Fixed export of matrix primitive variables.
+- RenderMan :
+  - Fixed rendering of `ri:volume` shader assignments loaded from USD files.
+  - Fixed export of matrix primitive variables.
 - RenderManShader : Fixed loading of `PxrVolume` shaders, which are now assigned correctly as `ri:volume` attributes rather than `ri:surface`. They still rendered correctly before, but now export correctly to USD as well.
 - Dispatcher : Fixed handling of TaskLists without `preTasks`. These are now correctly omitted from the dispatch graph.
 

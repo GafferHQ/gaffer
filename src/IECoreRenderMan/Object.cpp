@@ -94,7 +94,7 @@ Object::Object( const std::string &name, const ConstGeometryPrototypePtr &geomet
 		riley::UserId(),
 		/* group = */ riley::GeometryPrototypeId::InvalidId(),
 		m_geometryPrototype->id(),
-		m_attributes->surfaceMaterial()->id(),
+		m_attributes->material()->id(),
 		g_emptyCoordinateSystems,
 		IdentityTransform(),
 		mergedAttributes( m_attributes->instanceAttributes(), m_extraAttributes )
@@ -169,7 +169,7 @@ bool Object::attributes( const IECoreScenePreview::Renderer::AttributesInterface
 	const riley::GeometryInstanceResult result = m_session->riley->ModifyGeometryInstance(
 		/* group = */ riley::GeometryPrototypeId::InvalidId(),
 		m_geometryInstance,
-		&typedAttributes->surfaceMaterial()->id(),
+		&typedAttributes->material()->id(),
 		/* coordsys = */ nullptr,
 		/* xform = */ nullptr,
 		&allAttributes
