@@ -24,6 +24,7 @@ Improvements
 - LightEditor :
   - Added column for `cycles:visibility:camera` attribute.
   - USD lights now display default values for parameters that haven't been authored on the light. These are presented as dimmed "fallback" values.
+  - Changed default tweak mode to `Create` for newly created parameter tweaks.
 - OpenColorIO : Added ACES Studio 2.0 config. The default config is still ACES 1.3, due to RenderMan not supporting ACES 2.0.
 - CurvesPrimitive : Added `Pinned` wrap mode in addition to the existing `Periodic` and `NonPeriodic` modes. This conveniently interpolates CatmullRom
 and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
@@ -72,6 +73,7 @@ API
 - SetExpressionAlgo : Added new namespace with functions for evaluating and editing set expressions.
 - GraphComponentPath : Added `setFromComponent()`
 - BreadCrumbsWidget : Added widget for interacting with paths using a combination of button widgets and text entry.
+- EditScopeAlgo : `acquireParameterEdit()` now creates new TweakPlugs in `Create` mode rather than `Replace`. This matches the behaviour of `acquireOptionEdit()` and `acquireAttributeEdit()`.
 
 Breaking Changes
 ----------------

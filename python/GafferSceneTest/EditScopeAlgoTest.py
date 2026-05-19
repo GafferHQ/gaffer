@@ -317,7 +317,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		edit = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "intensity" ) )
 		self.assertIsInstance( edit, Gaffer.TweakPlug )
 		self.assertIsInstance( edit["value"], Gaffer.Color3fPlug )
-		self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Replace )
+		self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( edit["value"].getValue(), imath.Color3f( 0 ) )
 		self.assertEqual( edit["enabled"].getValue(), False )
 		self.assertEqual( editScope["LightEdits"]["ShaderTweaks"]["enabled"].getInput(), editScope["LightEdits"]["enabled"] )
