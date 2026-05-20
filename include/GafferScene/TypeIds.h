@@ -204,6 +204,7 @@ enum TypeId
 	CopyObjectTypeId = 120159,
 	QuantizePrimitiveVariablesTypeId = 120160,
 	RandomPrimitiveVariableTypeId = 120161,
+	PointInstancerCoreTypeId = 120162,
 
 	LastTypeId = 120999
 };
