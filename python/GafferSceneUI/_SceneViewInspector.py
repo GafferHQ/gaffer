@@ -331,7 +331,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 			for path in selectedPaths :
 				context.set( "scene:path", IECore.InternedStringVectorData( path[1:].split( "/" ) ) )
 				inspectorResult = self.__inspector.inspect()
-				if inspectorResult is not None :
+				if inspectorResult is not None and not inspectorResult.fallbackDescription() :
 					inspectorResults.append( inspectorResult )
 
 		return inspectorResults
