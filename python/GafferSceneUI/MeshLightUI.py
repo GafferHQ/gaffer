@@ -80,6 +80,8 @@ Gaffer.Metadata.registerNode(
 			"presetValues" : functools.partial( __shaderMetadata, name = "presetValues" ),
 			"layout:section" : functools.partial( __shaderMetadata, name = "layout:section" ),
 			"layout:index" : functools.partial( __shaderMetadata, name = "layout:index" ),
+			"labelPlugValueWidget:icon" : functools.partial( __shaderMetadata, name = "labelPlugValueWidget:icon" ),
+			"labelPlugValueWidget:iconToolTip" : functools.partial( __shaderMetadata, name = "labelPlugValueWidget:iconToolTip" ),
 
 		},
 
