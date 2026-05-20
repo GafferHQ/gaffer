@@ -200,6 +200,7 @@ IECore::ConstObjectPtr CurvesTangents::computeProcessedObject( const ScenePath &
 	}
 
 	Mode mode = (Mode)modePlug()->getValue();
+	const auto interpolation = mode == Mode::Derivative ? PrimitiveVariable::Interpolation::Varying : PrimitiveVariable::Interpolation::Vertex;
 	if( mode == Mode::Derivative && curves->basis().standardBasis() == StandardCubicBasis::Linear )
 	{
 		// This is equivalent, and means that we only need to consider
@@ -342,10 +343,7 @@ IECore::ConstObjectPtr CurvesTangents::computeProcessedObject( const ScenePath &
 	// Copy input and add tangent primitive variable.
 
 	CurvesPrimitivePtr result = runTimeCast<CurvesPrimitive>( curves->copy() );
-	result->variables[tangentName] = PrimitiveVariable(
-		mode == Mode::Derivative ? PrimitiveVariable::Interpolation::Varying : PrimitiveVariable::Interpolation::Vertex,
-		tangentData
-	);
+	result->variables[tangentName] = PrimitiveVariable( interpolation, tangentData );
 
 	return result;
 }

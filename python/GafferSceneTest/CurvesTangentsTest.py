@@ -164,6 +164,39 @@ class CurvesTangentsTest( GafferSceneTest.SceneTestCase ) :
 				tangents = node["out"].object( "/object" )["tangent"]
 				self.assertEqual( list( tangents.data ), [ t.normalized() for t in expectedTangents ] )
 
+	def testDerivativeOnLinearCurves( self ) :
+
+		curves = IECoreScene.CurvesPrimitive(
+			IECore.IntVectorData( [ 4 ] ),
+			IECore.CubicBasisf.linear(), IECoreScene.CurvesPrimitive.Wrap.NonPeriodic,
+			IECore.V3fVectorData( [
+				imath.V3f( 0, 0, 0 ), imath.V3f( 2, 0, 0 ), imath.V3f( 1, 1, 0 ), imath.V3f( 1, 2, 0 ),
+			] )
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( curves )
+
+		objectFilter = GafferScene.PathFilter()
+		objectFilter["paths"].setValue( IECore.StringVectorData( [ "/object" ] ) )
+
+		node = GafferScene.CurvesTangents()
+		node["in"].setInput( objectToScene["out"] )
+		node["filter"].setInput( objectFilter["out"] )
+		node["mode"].setValue( node.Mode.Derivative )
+
+		self.assertTrue( node["out"].object( "/object" ).arePrimitiveVariablesValid() )
+
+		tangents = node["out"].object( "/object" )["tangent"]
+		self.assertEqual( tangents.interpolation, IECoreScene.PrimitiveVariable.Interpolation.Varying )
+		self.assertEqual(
+			tangents.data,
+			IECore.V3fVectorData(
+				[ imath.V3f( 2, 0, 0 ), imath.V3f( -1, 1, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( 0, 1, 0 ) ],
+				IECore.GeometricData.Interpretation.Vector
+			)
+		)
+
 	def testTangentName( self ) :
 
 		grid = GafferScene.Grid()
