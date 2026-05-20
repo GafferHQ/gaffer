@@ -153,6 +153,11 @@ struct PrimitiveVariableConverter
 		);
 	}
 
+	void operator()( const M44fData *data, RtUString name, const PrimitiveVariable &primitiveVariable, RtPrimVarList &primVarList, unsigned sampleIndex=0 ) const
+	{
+		primVarList.SetMatrixDetail( name, reinterpret_cast<const pxrcore::Matrix4x4 *>( &data->readable() ), detail( primitiveVariable.interpolation ), sampleIndex );
+	}
+
 	// Vector data
 
 	void operator()( const IntVectorData *data, RtUString name, const PrimitiveVariable &primitiveVariable, RtPrimVarList &primVarList, unsigned sampleIndex=0 ) const
@@ -249,6 +254,25 @@ struct PrimitiveVariableConverter
 			{
 				name,
 				RtDataType::k_color,
+				detail( primitiveVariable.interpolation ),
+				/* length = */ 1,
+				/* array = */ false,
+				/* motion = */ sampleIndex > 0,
+				/* deduplicated = */ false
+			},
+			primitiveVariable,
+			primVarList,
+			sampleIndex
+		);
+	}
+
+	void operator()( const M44fVectorData *data, RtUString name, const PrimitiveVariable &primitiveVariable, RtPrimVarList &primVarList, unsigned sampleIndex=0 ) const
+	{
+		emit(
+			data,
+			{
+				name,
+				RtDataType::k_matrix,
 				detail( primitiveVariable.interpolation ),
 				/* length = */ 1,
 				/* array = */ false,

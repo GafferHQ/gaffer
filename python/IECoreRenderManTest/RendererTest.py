@@ -813,9 +813,6 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "myLovelySphere", imath.V2f( 0.6, 0.5 ) ), imath.Color4f( 1 ), 0.02 )
 		)
-		# Store converged color for later comparison with modified portal.
-		color = self.__colorAtUV( "myLovelySphere", imath.V2f( 0.6, 0.5 ) )
-		self.assertEqualWithAbsError( color, imath.Color4f( 1 ), 0.02 )
 
 		renderer.pause()
 
@@ -835,9 +832,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
-		expectedColor = color * imath.Color4f( 2, 0, 2, 1 )
 		self.assertEventually(
-			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "myLovelySphere", imath.V2f( 0.6, 0.5 ) ), expectedColor, 0.04 )
+			lambda : self.assertEqualWithAbsError( self.__colorAtUV( "myLovelySphere", imath.V2f( 0.6, 0.5 ) ), imath.Color4f( 2, 0, 2, 1 ), 0.04 )
 		)
 		self.assertEventually(
 			lambda : self.assertEqual( self.__colorAtUV( "myLovelySphere", imath.V2f( 0.3, 0.5 ) )[0], 0 )
@@ -1381,6 +1377,38 @@ class RendererTest( GafferTest.TestCase ) :
 						list( itertools.chain( *[ iter( [ x, x, x ] ) for x in range( 0, 4 ) ] ) )
 					)
 					self.__assertPrimitiveVariableEqual( prototype, "Ri:wrap", [ "periodic" if wrap == Wrap.Periodic else "nonperiodic" ] )
+
+	def testMatrixPrimitiveVariables( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+			mesh["constantMatrix"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
+			)
+			mesh["vertexMatrix"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.M44fVectorData( [ imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) ] * 4 )
+			)
+
+			renderer.object(
+				"mesh", mesh, renderer.attributes( IECore.CompoundObject() )
+			)
+
+			del mesh, renderer
+
+		prototype = next(
+			x for x in capture.json if x["method"] == "CreateGeometryPrototype"
+		)
+
+		self.__assertPrimitiveVariableEqual( prototype, "constantMatrix", [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1 ] )
+		self.__assertPrimitiveVariableEqual( prototype, "vertexMatrix", [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1 ] * 4 )
 
 	def testAutomaticInstancingAttribute( self ) :
 
