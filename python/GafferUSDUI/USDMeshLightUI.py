@@ -53,6 +53,13 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section:Basic:collapsed" : False,
 
+			"layout:customWidget:rendererFilter:widgetType" : "GafferUSDUI.USDLightUI._RendererFilter",
+			"layout:customWidget:rendererFilter:index" : 0,
+
+			"layout:customWidget:standardFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:standardFilter:index" : 1,
+			"layout:customWidget:standardFilter:accessory" : True,
+
 		},
 
 		"parameters.*" : {
