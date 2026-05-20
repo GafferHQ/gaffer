@@ -806,6 +806,9 @@ class LightToolHandle : public Handle
 
 			ConstCompoundObjectPtr attributes = scene()->fullAttributes( m_handlePath );
 
+			ScenePlug::PathScope pathScope( m_view->context() );
+			pathScope.setPath( &m_handlePath );
+
 			for( const auto &[attributeName, value ] : attributes->members() )
 			{
 				if(
@@ -825,12 +828,21 @@ class LightToolHandle : public Handle
 					{
 						if( auto parameter = Metadata::value<StringData>( metadataTarget, m ) )
 						{
-							m_inspectors[m] = new ParameterInspector(
+							const ParameterInspectorPtr inspector = new ParameterInspector(
 								scene(),
 								m_editScope,
 								attributeName,
 								ShaderNetwork::Parameter( "", parameter->readable() )
 							);
+							if( const auto inspection = inspector->inspect() )
+							{
+								// We only want to show handles for parameters with authored
+								// values, so we omit inspections returning a fallback value.
+								if( inspection->fallbackDescription().empty() )
+								{
+									m_inspectors[m] = inspector;
+								}
+							}
 						}
 					}
 
