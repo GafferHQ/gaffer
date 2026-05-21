@@ -39,6 +39,7 @@
 #include "boost/python.hpp"
 
 #include "GafferScene/InteractiveRender.h"
+#include "GafferScene/Private/PointInstancerAlgo.h"
 #include "GafferScene/Private/RendererAlgo.h"
 #include "GafferScene/Render.h"
 
@@ -219,6 +220,19 @@ struct RenderSlotCaller
 	}
 };
 
+
+MurmurHash prototypesHashWrapper( const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return GafferScene::Private::PointInstancerAlgo::prototypesHash( &scene );
+}
+
+IECoreScene::PointInstancerPtr flattenWrapper( IECoreScene::PointInstancer &instancer, const  GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return GafferScene::Private::PointInstancerAlgo::flatten( &instancer, renderOptions, &scene );
+}
+
 } // namespace
 
 void GafferSceneModule::bindRender()
@@ -300,6 +314,16 @@ void GafferSceneModule::bindRender()
 			def( "outputCameras", &outputCamerasWrapper );
 			def( "outputLights", &outputLightsWrapper );
 			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/", arg( "renderManifest" ) = object() ) );
+		}
+
+		{
+			object pointInstancerAlgoModule( borrowed( PyImport_AddModule( "GafferScene.Private.PointInstancerAlgo" ) ) );
+			scope().attr( "Private" ).attr( "PointInstancerAlgo" ) = pointInstancerAlgoModule;
+
+			scope pointInstancerAlgoModuleScope( pointInstancerAlgoModule );
+
+			def( "prototypesHash", &prototypesHashWrapper );
+			def( "flatten", &flattenWrapper );
 		}
 	}
 
