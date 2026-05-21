@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+- MeshLight : Added viewport visualisation of textures.
 
 Fixes
 -----
