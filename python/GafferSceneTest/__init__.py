@@ -197,6 +197,7 @@ from .CameraQueryTest import CameraQueryTest
 from .GlobalsSanitiserTest import GlobalsSanitiserTest
 from .ReflectionConstraintTest import ReflectionConstraintTest
 from .CurvesInterpolationTest import CurvesInterpolationTest
+from .CurvesTangentsTest import CurvesTangentsTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
