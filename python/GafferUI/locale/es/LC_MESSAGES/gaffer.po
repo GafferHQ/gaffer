@@ -9390,8 +9390,8 @@ msgstr "> Precaucion: El nodo Isolate no funciona bien con el comodin `...` en\n
 msgid "Converts lights into cameras. Spotlights are converted to a perspective\ncamera with the field of view matching the cone angle, and distant lights are\nconverted to an orthographic camera."
 msgstr "Convierte luces en camaras. Los focos se convierten en una camara\nperspectiva con el campo de vision coincidiendo con el angulo del cono, y las luces\ndistantes se convierten en una camara ortografica."
 
-msgid "Makes modifications to shader parameter values."
-msgstr "Realiza modificaciones a los valores de los parametros de shader."
+msgid "Makes modifications to shader parameter values.\n\n\tShader parameters are identified by name, and can optionally be filtered by the name and type of the shader they belong to. Examples :\n\n\t- `intensity` : Chooses a parameter called `intensity` on the final shader in the network. Particularly convenient for lights, which often include only one shader.\n\t- `diffuseTexture.filename`: Chooses a parameter called `filename` on a shader called `diffuseTexture`.\n\t- `dustLayer*.alpha` : Chooses all parameters called `alpha`, on shaders whose name matches `dustLayer*` (any of Gaffer's other standard wildcards may also be used to match the shader name).\n\t- `{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image`.\n\t- `diffuseTexture*{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image` and whose name matches `diffuseTexture*`.\n\n\t> Tip : Parameters can be dragged from the SceneInspector and dropped into the text field to fill the name automatically.\n\t"
+msgstr "Realiza modificaciones a los valores de los parámetros de shader.\n\n\tLos parámetros de shader se identifican por nombre, y opcionalmente pueden filtrarse por el nombre y tipo del shader al que pertenecen. Ejemplos:\n\n\t- `intensity` : Elige un parámetro llamado `intensity` en el shader final de la red. Especialmente conveniente para luces, que a menudo incluyen un solo shader.\n\t- `diffuseTexture.filename`: Elige un parámetro llamado `filename` en un shader llamado `diffuseTexture`.\n\t- `dustLayer*.alpha` : Elige todos los parámetros llamados `alpha`, en shaders cuyo nombre coincida con `dustLayer*` (también pueden usarse otros comodines estándar de Gaffer para coincidir con el nombre del shader).\n\t- `{shaderType=image}.mipmap_bias` : Elige todos los parámetros llamados `mipmap_bias` en shaders cuyo tipo sea `image`.\n\t- `diffuseTexture*{shaderType=image}.mipmap_bias` : Elige todos los parámetros llamados `mipmap_bias` en shaders cuyo tipo sea `image` y cuyo nombre coincida con `diffuseTexture*`.\n\n\t> Consejo: Los parámetros pueden arrastrarse desde el inspector de escena y soltarse en el campo de texto para rellenar el nombre automáticamente.\n\t"
 
 msgid "Copies inherited attributes into local attributes."
 msgstr "Copia atributos heredados a atributos locales."
@@ -13419,8 +13419,8 @@ msgstr "El nombre de una variable de contexto que se establece con la ubicación
 msgid "The name of the file to be read. File sequences with arbitrary padding may be specified using the '#' character as a placeholder for the frame numbers. If this file sequence format is used, then missingFrameMode will be activated."
 msgstr "El nombre del archivo a leer. Las secuencias de archivos con relleno arbitrario pueden especificarse usando el carácter '#' como marcador de posición para los números de fotograma. Si se usa este formato de secuencia, se activará missingFrameMode."
 
-msgid "Where to source the actual area to use. If this is set to DataWindow, it will use the input's Data Window, if it is set to DisplayWindow, it will use the input's Display Window, and if it is set to Area, it will use the Area plug."
-msgstr "De dónde obtener el área real a utilizar. Si está en DataWindow, usará la ventana de datos de la entrada; si está en DisplayWindow, usará la ventana de visualización de la entrada; y si está en Area, usará el conector Area."
+msgid "The source of the area to crop to.\n\n\t\t\t- Area : A user-defined area specified by the `area` plug.\n\t\t\t- Format : A user-defined area specified by the `format` plug.\n\t\t\t- DataWindow : The data window of the input image.\n\t\t\t- DisplayWindow : The display window of the input image.\n\t\t\t- Auto : The minimal area that contains all the non-empty pixels\n\t\t\t  of the input image. For flat images, this means pixels\n\t\t\t  with a non-zero value in at least one channel, and for deep images\n\t\t\t  it means pixels with at least one sample.\n\t\t\t"
+msgstr "El origen del área de recorte.\n\n\t\t\t- Area: Un área definida por el usuario especificada por el conector `area`.\n\t\t\t- Format: Un área definida por el usuario especificada por el conector `format`.\n\t\t\t- DataWindow: La ventana de datos de la imagen de entrada.\n\t\t\t- DisplayWindow: La ventana de visualización de la imagen de entrada.\n\t\t\t- Auto: El área mínima que contiene todos los píxeles no vacíos\n\t\t\t  de la imagen de entrada. Para imágenes planas, esto significa píxeles\n\t\t\t  con un valor distinto de cero en al menos un canal, y para imágenes\n\t\t\t  profundas significa píxeles con al menos una muestra.\n\t\t\t"
 
 msgid "The method to use for placing the light. - Shadow : Places the light so that it casts a shadow from the pivot point onto the target point. - Highlight : Places the light so that it creates a specular highlight at the target point."
 msgstr "El método a utilizar para colocar la luz. - Shadow: Coloca la luz para que proyecte una sombra desde el punto de pivote hacia el punto objetivo. - Highlight: Coloca la luz para que cree un reflejo especular en el punto objetivo."
@@ -14668,4 +14668,11 @@ msgstr "Tipo de datos no soportado"
 
 msgid "Unsupported type"
 msgstr "Tipo no soportado"
+
+#: PlugPopup.py (rebase 1.6.18.0 - new upstream strings)
+msgid " on {} nodes"
+msgstr " en {} nodos"
+
+msgid "Editing {}{}"
+msgstr "Editando {}{}"
 

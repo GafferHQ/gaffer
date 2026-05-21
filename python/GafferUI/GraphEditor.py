@@ -666,6 +666,7 @@ class GraphEditor( GafferUI.Editor ) :
 			if isinstance( contents, GafferUI.NameGadget ) :
 				safeText = self.__getSafeTranslation( node )
 				gadget.setContents( GafferUI.TextGadget( safeText ) )
+				self.__translateNoduleLabels( node )
 		except Exception :
 			pass
 
@@ -802,11 +803,19 @@ class GraphEditor( GafferUI.Editor ) :
 		# Read the current label from any registration source
 		label = Gaffer.Metadata.value( plug, "noduleLayout:label" )
 		if label is None or not isinstance( label, str ) :
-			# Handle standalone color/vector components (g→V, b→A)
+			# No metadata registered – use plug name as source for translation
 			name = plug.getName()
+			# Handle standalone color/vector components (g→V, b→A)
 			comp = _i18n.translateColorComponent( name )
 			if comp is not None and comp != name.upper() :
 				Gaffer.Metadata.registerValue( plug, "noduleLayout:label", comp )
+				return
+			# Translate the plug name itself (e.g. "intensity" → "intensidad")
+			spaced = _i18n._camelToSpaced( name )
+			translated = _i18n.translateLabel( spaced )
+			safe = _i18n.stripAccents( translated )
+			if safe != name :
+				Gaffer.Metadata.registerValue( plug, "noduleLayout:label", safe )
 			return
 
 		translated = _i18n.translateLabel( label )
