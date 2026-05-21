@@ -322,10 +322,24 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		// There isn't any meaningful place to draw anything for the mesh
 		// light, so instead we make the mesh outline visible and light coloured.
 		IECoreGL::StatePtr meshState = new IECoreGL::State( false );
-		meshState->add( new IECoreGL::Primitive::DrawSolid( false ) );
 		meshState->add( new IECoreGL::Primitive::DrawOutline( true ) );
 		meshState->add( new IECoreGL::Primitive::OutlineWidth( 2.0f ) );
 		meshState->add( new IECoreGL::OutlineColorStateComponent( lightWireframeColor4( muted ) ) );
+
+		if( drawShaded )
+		{
+			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+			if( textureData )
+			{
+				addTexturedConstantShader( meshState.get(), textureData, tint, /* saturation = */ 1.f, /* gamma = */ Color3f( 1.f ), maxTextureResolution );
+			}
+			meshState->add( new IECoreGL::Primitive::DrawSolid( (bool)textureData ) );
+		}
+		else
+		{
+			meshState->add( new IECoreGL::Primitive::DrawSolid( false ) );
+		}
+
 		state = meshState;
 	}
 	else if( type == "photometric" )

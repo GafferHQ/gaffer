@@ -312,24 +312,7 @@ void addTexturedConstantShader(
 	const float saturation, const Color3f &gamma, int maxTextureResolution
 )
 {
-	CompoundObjectPtr shaderParameters = new CompoundObject;
-
-	shaderParameters->members()["texture"] = const_cast<Data *>( textureData.get() );
-	shaderParameters->members()["texture:maxResolution"] = new IntData( maxTextureResolution );
-	shaderParameters->members()["tint"] = new Color3fData( tint );
-	shaderParameters->members()["saturation"] = new FloatData( saturation );
-	shaderParameters->members()["gamma"] = new Color3fData( gamma );
-
-	group->getState()->add(
-		new IECoreGL::ShaderStateComponent(
-			IECoreGL::ShaderLoader::defaultShaderLoader(),
-			IECoreGL::TextureLoader::defaultTextureLoader(),
-			"",
-			"",
-			texturedConstantFragSource(),
-			shaderParameters
-		)
-	);
+	GafferSceneUI::Private::LightVisualiserAlgo::addTexturedConstantShader( group->getState(), textureData, tint, saturation, gamma, maxTextureResolution );
 }
 
 // Customized IECoreGL primitive supporting `uvOrientation`
@@ -546,7 +529,7 @@ IECoreGL::ConstRenderablePtr roundedQuadSurface(
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
 	{
-		addTexturedConstantShader( group.get(), textureData, tint, saturation, gamma, maxTextureResolution );
+		::addTexturedConstantShader( group.get(), textureData, tint, saturation, gamma, maxTextureResolution );
 	}
 	else
 	{
@@ -824,7 +807,7 @@ IECoreGL::ConstRenderablePtr environmentSphereSurface(
 
 	if( textureData )
 	{
-		addTexturedConstantShader( sphereGroup.get(), textureData, tint, saturation, gamma, maxTextureResolution );
+		::addTexturedConstantShader( sphereGroup.get(), textureData, tint, saturation, gamma, maxTextureResolution );
 	}
 	else
 	{
@@ -871,7 +854,7 @@ IECoreGL::ConstRenderablePtr diskSurface(
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
 	{
-		addTexturedConstantShader( group.get(), textureData, tint, saturation, gamma, maxTextureResolution );
+		::addTexturedConstantShader( group.get(), textureData, tint, saturation, gamma, maxTextureResolution );
 	}
 	else
 	{
@@ -1066,6 +1049,31 @@ void addConstantShader( IECoreGL::Group *group, const Color3f &tint, int aimType
 			"",
 			constantFragSource(),
 			parameters
+		)
+	);
+}
+
+void addTexturedConstantShader(
+	IECoreGL::State *state, ConstDataPtr textureData, const Color3f &tint,
+	const float saturation, const Color3f &gamma, int maxTextureResolution
+)
+{
+	CompoundObjectPtr shaderParameters = new CompoundObject;
+
+	shaderParameters->members()["texture"] = const_cast<Data *>( textureData.get() );
+	shaderParameters->members()["texture:maxResolution"] = new IntData( maxTextureResolution );
+	shaderParameters->members()["tint"] = new Color3fData( tint );
+	shaderParameters->members()["saturation"] = new FloatData( saturation );
+	shaderParameters->members()["gamma"] = new Color3fData( gamma );
+
+	state->add(
+		new IECoreGL::ShaderStateComponent(
+			IECoreGL::ShaderLoader::defaultShaderLoader(),
+			IECoreGL::TextureLoader::defaultTextureLoader(),
+			"",
+			"",
+			texturedConstantFragSource(),
+			shaderParameters
 		)
 	);
 }

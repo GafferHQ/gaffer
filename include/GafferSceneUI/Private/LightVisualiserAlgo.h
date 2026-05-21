@@ -146,4 +146,6 @@ GAFFERSCENEUI_API void addWireframeCurveState( IECoreGL::Group *group, const flo
 /// made into a function that can be called by implementation shaders.
 GAFFERSCENEUI_API void addConstantShader( IECoreGL::Group *group, const Imath::Color3f &tint, int aimType = -1 );
 
+GAFFERSCENEUI_API void addTexturedConstantShader( IECoreGL::State *state, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, const float saturation, const Imath::Color3f &gamma, int maxTextureResolution );
+
 }  // namespace GafferSceneUI::Private::LightVisualiserAlgo
