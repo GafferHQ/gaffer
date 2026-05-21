@@ -11,6 +11,11 @@ Features
   - Faster rendering.
 - USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
 
+Improvements
+------------
+
+- MeshLight : Added viewport visualisation of textures.
+
 Fixes
 -----
 
