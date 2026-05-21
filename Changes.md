@@ -160,6 +160,11 @@ Features
   - Added Arnold rendering.
   - Added RenderMan rendering.
 
+Improvements
+------------
+
+- MeshLight : Added viewport visualisation of textures.
+
 Fixes
 -----
 
