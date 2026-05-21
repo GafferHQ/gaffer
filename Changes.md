@@ -10,6 +10,7 @@ Improvements
 ------------
 
 - SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
+- MeshLight : Added viewport visualisation of textures.
 
 Fixes
 -----
