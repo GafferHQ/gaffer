@@ -538,10 +538,11 @@ def __usdLightCreator( lightType ) :
 
 	return light
 
-for lightType in [
-	"DistantLight", "DiskLight", "RectLight", "SphereLight", "CylinderLight", "DomeLight", "SpotLight"
-] :
-	nodeMenu.append( "/USD/Light/{}".format( IECore.CamelCase.toSpaced( lightType ) ), functools.partial( __usdLightCreator, lightType ), searchText = lightType )
+if os.environ.get( "GAFFERUSD_HIDE_LIGHT_UI", "" ) != "1" :
+	for lightType in [
+		"DistantLight", "DiskLight", "RectLight", "SphereLight", "CylinderLight", "DomeLight", "SpotLight"
+	] :
+		nodeMenu.append( "/USD/Light/{}".format( IECore.CamelCase.toSpaced( lightType ) ), functools.partial( __usdLightCreator, lightType ), searchText = lightType )
 
 nodeMenu.append( "/USD/Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
 nodeMenu.append( "/USD/Layer Writer", GafferUSD.USDLayerWriter, searchText = "USDLayerWriter" )
