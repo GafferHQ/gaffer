@@ -1,6 +1,11 @@
 1.6.x.x (relative to 1.6.18.0)
 =======
 
+Improvements
+------------
+
+- Interface :  Added the ability to hide USDLight nodes from the Tab Menu by setting the `GAFFERUSD_HIDE_LIGHT_UI` environment variable to `1`. This will also hide the USD lights category in the LightEditor.
+
 Fixes
 -----
 
