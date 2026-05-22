@@ -419,7 +419,7 @@ shaderMetadata = {
 
 	},
 
-	"ri:surface:PxrVolume" : {
+	"ri:volume:PxrVolume" : {
 
 		"noduleLayout:defaultVisibility" : False,
 
