@@ -3142,5 +3142,89 @@ class RendererTest( GafferTest.TestCase ) :
 					del objectInterface
 					del renderer
 
+	def testAutoTile( self ) :
+
+		plane = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ),
+			imath.V2i( 2 )
+		)
+
+		plane["uniformColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			IECore.Color3fVectorData( [
+				imath.Color3f( i, i, i )
+				for i in range( 1, 5 )
+			] )
+		)
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 } ),
+				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : "uniformColor" } ),
+			},
+			connections = [
+				( ( "attribute", "color" ), ( "output", "emission_color" ) ),
+			],
+			output = "output",
+		)
+
+		untiledImage = None
+
+		for cropWindow in ( False, True ) :
+
+			camera = IECoreScene.Camera(
+				parameters = { "cropWindow" : imath.Box2f( imath.V2f( 0.1 ), imath.V2f( 0.85 ) ) } if cropWindow else {}
+			)
+
+			for tileSize in ( None, 160, 1024 ) :
+
+				with self.subTest( cropWindow = cropWindow, tileSize = tileSize ) :
+
+					renderer = self.createRenderer()
+
+					if tileSize :
+						renderer.option( "cycles:session:tile_size", IECore.IntData( tileSize ) )
+
+					renderer.camera( "testCamera", camera )
+					renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+					fileName = self.temporaryDirectory() / "test_{}_{}.exr".format( cropWindow, tileSize )
+					renderer.output(
+						"testOutput",
+						IECoreScene.Output(
+							str( fileName ),
+							"exr",
+							"rgba",
+							{}
+						)
+					)
+
+					planeHandle = renderer.object( "/plane", plane, renderer.attributes( IECore.CompoundObject ( { "cycles:surface" : shader } ) ) )
+					planeHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+					renderer.render()
+
+					del planeHandle
+					del renderer
+
+					image = OpenImageIO.ImageBuf( str( fileName ) )
+					self.assertEqual( image.spec().full_width, 640 )
+					self.assertEqual( image.spec().full_height, 480 )
+
+					def assertColorAtUV( image, uv, color ) :
+
+						pixel = image.getpixel( int( uv.x * (image.spec().full_width - 1) ), int( uv.y * (image.spec().full_height - 1) ) )
+						self.assertEqual( imath.Color4f( *pixel ), color )
+
+					assertColorAtUV( image, imath.V2f( 0.33, 0.66 ), imath.Color4f( 1, 1, 1, 1 ) )
+					assertColorAtUV( image, imath.V2f( 0.66, 0.66 ), imath.Color4f( 2, 2, 2, 1 ) )
+					assertColorAtUV( image, imath.V2f( 0.33, 0.33 ), imath.Color4f( 3, 3, 3, 1 ) )
+					assertColorAtUV( image, imath.V2f( 0.66, 0.33 ), imath.Color4f( 4, 4, 4, 1 ) )
+
+					if not cropWindow and tileSize is None and untiledImage is None :
+						untiledImage = image
+					else :
+						self.assertFalse( OpenImageIO.ImageBufAlgo.compare( image, untiledImage, failthresh = 0, warnthresh = 0 ).error )
+
 if __name__ == "__main__":
 	unittest.main()
