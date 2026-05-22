@@ -123,6 +123,13 @@ def __setsPlug( node ) :
 
 	return None
 
+def __filterPlug( node ) :
+
+	filterPlugs = list( GafferScene.FilterPlug.InputRange( node ) )
+	if len( filterPlugs ) == 1 :
+		return filterPlugs[0]
+	return None
+
 def __editable( plug ) :
 	if Gaffer.MetadataAlgo.readOnly( plug ) or not plug.settable() :
 		return False
@@ -142,11 +149,15 @@ def __dropMode( nodeGadget, event ) :
 
 	setsPlug = __setsPlug( nodeGadget.node() )
 	if setsPlug is None :
+		filterPlug = __filterPlug( nodeGadget.node() )
+		if filterPlug is None :
+			return __DropMode.None_
+
 		filter = None
-		if nodeGadget.node()["filter"].getInput() is not None :
-			filter = nodeGadget.node()["filter"].source().node()
+		if filterPlug.getInput() is not None :
+			filter = filterPlug.source().node()
 		if filter is None :
-			return __DropMode.Replace if __editable( nodeGadget.node()["filter"] ) else __DropMode.NotEditable
+			return __DropMode.Replace if __editable( filterPlug ) else __DropMode.NotEditable
 		elif not isinstance( filter, GafferScene.SetFilter ) :
 			return __DropMode.None_
 		setsPlug = filter["setExpression"]
@@ -219,7 +230,7 @@ def __drop( nodeGadget, event ) :
 
 	setsPlug = __setsPlug( nodeGadget.node() )
 	if setsPlug is None :
-		setsPlug = __setsPlug( nodeGadget.node()["filter"].source().node() )
+		setsPlug = __setsPlug( __filterPlug( nodeGadget.node() ).source().node() )
 
 	dropSets = event.data
 
@@ -241,7 +252,7 @@ def __drop( nodeGadget, event ) :
 
 			setFilter = GafferScene.SetFilter()
 			nodeGadget.node().parent().addChild( setFilter )
-			nodeGadget.node()["filter"].setInput( setFilter["out"] )
+			__filterPlug( nodeGadget.node() ).setInput( setFilter["out"] )
 
 			setsPlug = setFilter["setExpression"]
 
@@ -258,12 +269,3 @@ def addSetDropTarget( nodeGadget ) :
 	nodeGadget.dragLeaveSignal().connect( __dragLeave )
 	nodeGadget.dragMoveSignal().connect( __dragMove )
 	nodeGadget.dropSignal().connect( __drop )
-
-def __nodeGadget( setFilter ) :
-
-	nodeGadget = GafferUI.StandardNodeGadget( setFilter )
-	addSetDropTarget( nodeGadget )
-
-	return nodeGadget
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.SetFilter, __nodeGadget )

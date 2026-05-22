@@ -255,7 +255,7 @@ def __pathsPlug( node ) :
 
 def __filterPlug( node ) :
 
-	filterPlugs = list( GafferScene.FilterPlug.Range( node ) )
+	filterPlugs = list( GafferScene.FilterPlug.InputRange( node ) )
 	if len( filterPlugs ) == 1 :
 		return filterPlugs[0]
 	return None
@@ -268,12 +268,10 @@ def __dropMode( nodeGadget, event ) :
 
 	pathsPlug = __pathsPlug( nodeGadget.node() )
 	if pathsPlug is None :
-		filter = None
-
 		filterPlug = __filterPlug( nodeGadget.node() )
 		if filterPlug is None :
 			return __DropMode.None_
-
+		filter = None
 		if filterPlug.getInput() is not None :
 			filter = filterPlug.source().node()
 		if filter is None :
@@ -413,13 +411,3 @@ def addObjectDropTarget( nodeGadget ) :
 	nodeGadget.dragLeaveSignal().connect( __dragLeave )
 	nodeGadget.dragMoveSignal().connect( __dragMove )
 	nodeGadget.dropSignal().connect( __drop )
-
-def __nodeGadget( pathFilter ) :
-
-	nodeGadget = GafferUI.StandardNodeGadget( pathFilter )
-	addObjectDropTarget( nodeGadget )
-
-	return nodeGadget
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.PathFilter, __nodeGadget )
-GafferUI.NodeGadget.registerNodeGadget( Gaffer.SubGraph, __nodeGadget )

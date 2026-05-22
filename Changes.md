@@ -54,6 +54,7 @@ Fixes
 - StandardNodeGadget : Fixed crash caused by the node emitting `errorSignal()` while the gadget is undergoing construction.
 - Shader : Fixed hash for output plugs.
 - LightEditor : Fixed context used to compute the solo column header icon, this now uses the correct context with respect to the focus node.
+- NodeGadget : Fixed potential hang calling `create()` from Python.
 
 API
 ---
@@ -71,6 +72,7 @@ API
 - SetExpressionAlgo : Added new namespace with functions for evaluating and editing set expressions.
 - GraphComponentPath : Added `setFromComponent()`
 - BreadCrumbsWidget : Added widget for interacting with paths using a combination of button widgets and text entry.
+- NodeGadget : Added `instanceCreatedSignal()`. This allows extensions to customise gadgets after their creation.
 
 Breaking Changes
 ----------------
