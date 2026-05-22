@@ -111,6 +111,8 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				const ObjectSamples &capturedSamples() const;
 				const SampleTimes &capturedSampleTimes() const;
 
+				const std::vector<Prototype> &capturedPointInstancerPrototypes() const;
+
 				const TransformSamples &capturedTransforms() const;
 				const SampleTimes &capturedTransformTimes() const;
 
@@ -143,6 +145,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				const std::string m_name;
 				ObjectSamples m_capturedSamples;
 				SampleTimes m_capturedSampleTimes;
+				std::vector<Prototype> m_capturedPointInstancerPrototypes;
 				TransformSamples m_capturedTransforms;
 				SampleTimes m_capturedTransformTimes;
 				ConstCapturedAttributesPtr m_capturedAttributes;
@@ -169,6 +172,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const IECoreScenePreview::Renderer::ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes ) override;
 		void render() override;
 		void pause() override;
 

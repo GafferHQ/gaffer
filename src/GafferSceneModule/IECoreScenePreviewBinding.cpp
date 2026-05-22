@@ -361,6 +361,16 @@ list capturedObjectCapturedSampleTimes( const CapturingRenderer::CapturedObject 
 	return result;
 }
 
+list capturedObjectCapturedPointInstancerPrototypes( const CapturingRenderer::CapturedObject &o )
+{
+	list result;
+	for( auto &p : o.capturedPointInstancerPrototypes() )
+	{
+		result.append( p );
+	}
+	return result;
+}
+
 list capturedObjectCapturedTransforms( const CapturingRenderer::CapturedObject &o )
 {
 	list result;
@@ -651,6 +661,7 @@ void GafferSceneModule::bindIECoreScenePreview()
 		.def( "capturedName", &capturedObjectCapturedName )
 		.def( "capturedSamples", &capturedObjectCapturedSamples )
 		.def( "capturedSampleTimes", &capturedObjectCapturedSampleTimes )
+		.def( "capturedPointInstancerPrototypes", &capturedObjectCapturedPointInstancerPrototypes )
 		.def( "capturedTransforms", &capturedObjectCapturedTransforms )
 		.def( "capturedTransformTimes", &capturedObjectCapturedTransformTimes )
 		.def( "capturedAttributes", &capturedObjectCapturedAttributes )
