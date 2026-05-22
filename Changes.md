@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Interface :  Added the ability to hide USDLight nodes from the Tab Menu by setting the `GAFFERUSD_HIDE_LIGHT_UI` environment variable to `1`. This will also hide the USD lights category in the LightEditor.
+- ShaderTweaks, ShaderQuery : Added `RenderMan Volume` preset for the `shader` plug.
 
 Fixes
 -----
