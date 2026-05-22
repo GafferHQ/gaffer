@@ -2580,6 +2580,79 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertShadingNetworkParameterEqual( displacements[0]["displacement"], "texture.filename", [ "dispDirA/displacement.exr" ] )
 		self.__assertShadingNetworkParameterEqual( displacements[1]["displacement"], "texture.filename", [ "dispDirB/displacement.exr" ] )
 
+	def testMaterialAssignment( self ) :
+
+		surfaceShader1 = IECoreScene.ShaderNetwork(
+			shaders = { "output" : IECoreScene.Shader( "PxrSurface", parameters = { "diffuseColor" : imath.Color3f( 1 ) } ) },
+			output = "output"
+		)
+
+		surfaceShader2 = IECoreScene.ShaderNetwork(
+			shaders = { "output" : IECoreScene.Shader( "PxrSurface", parameters = { "diffuseColor" : imath.Color3f( 2 ) } ) },
+			output = "output"
+		)
+
+		volumeShader1 = IECoreScene.ShaderNetwork(
+			shaders = { "output" : IECoreScene.Shader( "PxrVolume", parameters = { "diffuseColor" : imath.Color3f( 3 ) } ) },
+			output = "output"
+		)
+
+		volumeShader2 = IECoreScene.ShaderNetwork(
+			shaders = { "output" : IECoreScene.Shader( "PxrVolume", parameters = { "diffuseColor" : imath.Color3f( 4 ) } ) },
+			output = "output"
+		)
+
+		for riVolume, volume, riSurface, surface, expectedColor in [
+			( None, None, None, None, None ),
+			( volumeShader1, None, None, None, [ 3, 3, 3 ] ),
+			( volumeShader1, volumeShader2, None, None, [ 3, 3, 3 ] ),
+			( None, volumeShader2, None, None, [ 4, 4, 4 ] ),
+			( volumeShader1, None, surfaceShader1, None, [ 3, 3, 3 ] ),
+			( None, None, surfaceShader1, None, [ 1, 1, 1 ] ),
+			( None, None, surfaceShader1, surfaceShader2, [ 1, 1, 1 ] ),
+			( None, None, None, surfaceShader2, [ 2, 2, 2 ] ),
+		] :
+
+			with self.subTest( riVolume = bool( riVolume ), volume = bool( volume ), riSurface = bool( riSurface ), surface = bool( surface ) ) :
+
+				with IECoreRenderManTest.RileyCapture() as capture :
+
+					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+						self.renderer,
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+					)
+
+					mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+
+					attributes = {}
+					if riVolume is not None :
+						attributes["ri:volume"] = riVolume
+
+					if volume is not None :
+						attributes["volume"] = volume
+
+					if riSurface is not None :
+						attributes["ri:surface"] = riSurface
+
+					if surface is not None :
+						attributes["surface"] = surface
+
+					attributes = renderer.attributes( IECore.CompoundObject( attributes ) )
+
+					renderer.object( "mesh", mesh, attributes )
+
+					del attributes
+					del renderer
+
+				materials = [ x for x in capture.json if x["method"] == "CreateMaterial" ]
+				self.assertEqual( len( materials ), 1 )
+
+				if expectedColor is None :
+					node = materials[0]["material"]["nodes"][-1]
+					self.__assertNotInParameters( node["params"]["params"], "diffuseColor" )
+				else :
+					self.__assertShadingNetworkParameterEqual( materials[0]["material"], "output.diffuseColor", expectedColor )
+
 	def testCamera( self ) :
 
 		for ( proj, nearClip, farClip, focalLength, aperture, translate, dof, fStop, flWorldScale, focusDist ) in [

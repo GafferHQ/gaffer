@@ -97,6 +97,7 @@ if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
 		__registerShaderPresets( [
 
 			( "RenderMan/Surface", "ri:surface" ),
+			( "RenderMan/Volume", "ri:volume" ),
 			( "RenderMan/Light", "ri:light" ),
 			( "RenderMan/Light Filter", "ri:lightFilter" ),
 			( "RenderMan/Integrator", "ri:integrator" ),

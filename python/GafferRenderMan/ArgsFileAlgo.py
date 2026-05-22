@@ -80,7 +80,10 @@ def registerMetadata( argsFile, parametersToIgnore = set() ) :
 			if target is None :
 				return None
 
-			target = target.format( name = argsFile.stem )
+			if argsFile.stem == "PxrVolume" :
+				target = "ri:volume:PxrVolume"
+			else :
+				target = target.format( name = argsFile.stem )
 
 		elif element.tag == "page" :
 

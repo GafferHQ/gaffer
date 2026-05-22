@@ -743,18 +743,26 @@ void RenderManShader::loadShader( const std::string &shaderName, bool keepExisti
 
 	namePlug()->source<StringPlug>()->setValue( shaderName );
 
-	string shaderType = tree.get<string>( "args.shaderType.tag.<xmlattr>.value" );
-	if( shaderType == "bxdf" )
+	string shaderType;
+	if( shaderName == "PxrVolume" )
 	{
-		shaderType = "surface";
+		shaderType = "volume";
 	}
-	else if( shaderType == "pattern" )
+	else
 	{
-		shaderType = "shader";
-	}
-	else if( shaderType == "lightfilter" )
-	{
-		shaderType = "lightFilter";
+		shaderType = tree.get<string>( "args.shaderType.tag.<xmlattr>.value" );
+		if( shaderType == "bxdf" )
+		{
+			shaderType = "surface";
+		}
+		else if( shaderType == "pattern" )
+		{
+			shaderType = "shader";
+		}
+		else if( shaderType == "lightfilter" )
+		{
+			shaderType = "lightFilter";
+		}
 	}
 
 	typePlug()->source<StringPlug>()->setValue( "ri:" + shaderType );
