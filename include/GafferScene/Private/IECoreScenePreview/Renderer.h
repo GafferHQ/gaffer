@@ -40,6 +40,7 @@
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/Output.h"
+#include "IECoreScene/PointInstancer.h"
 
 #include "IECore/CompoundObject.h"
 #include "IECore/MessageHandler.h"
@@ -168,6 +169,7 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		using TransformSamples = Samples<Imath::M44f>;
 		using CameraSamples = Samples<IECoreScene::ConstCameraPtr>;
 		using ObjectSamples = Samples<IECore::ConstObjectPtr>;
+		using PointInstancerSamples = Samples<IECoreScene::ConstPointInstancerPtr>;
 		using SampleTimes = Samples<float>;
 
 		/// Convenience function for casting between sample types. Typically
@@ -311,6 +313,20 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		virtual ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
 		/// Convenience overload for when there is only a single object sample.
 		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes );
+
+		/// Prototype geometry for use in the `pointInstancer()` method.
+		struct Prototype
+		{
+			ObjectSamples samples;
+			SampleTimes times;
+			AttributesInterfacePtr attributes;
+		};
+		/// Renders prototype geometry instanced onto a point cloud.
+		/// > Note : It is the caller's responsibility to have
+		/// > prepared `prototypes` based on the value of
+		/// >`PointInstancer::getPrototypes()`. Therefore the renderer
+		/// > need not be concerned with the value of `getPrototypes()`.
+		virtual ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes );
 
 		/// Performs the render - should be called after the
 		/// entire scene has been specified using the methods

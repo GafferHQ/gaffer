@@ -111,6 +111,12 @@ Renderer::ObjectInterfacePtr Renderer::object( const std::string &name, const IE
 	return this->object( name, { object }, { 0.0f }, attributes );
 }
 
+Renderer::ObjectInterfacePtr Renderer::pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes )
+{
+	IECore::msg( IECore::Msg::Warning, "Renderer::pointInstancer", "Not implemented" );
+	return nullptr;
+}
+
 IECore::DataPtr Renderer::command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters )
 {
 	throw IECore::NotImplementedException( "Renderer::command" );
