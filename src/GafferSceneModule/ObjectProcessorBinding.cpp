@@ -40,6 +40,7 @@
 
 #include "GafferScene/CopyPrimitiveVariables.h"
 #include "GafferScene/CurvesInterpolation.h"
+#include "GafferScene/CurvesTangents.h"
 #include "GafferScene/Deformer.h"
 #include "GafferScene/DeleteCurves.h"
 #include "GafferScene/DeleteFaces.h"
@@ -112,6 +113,16 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<MergePoints>();
 	GafferBindings::DependencyNodeClass<MergeCurves>();
 	GafferBindings::DependencyNodeClass<CurvesInterpolation>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<CurvesTangents>();
+
+		enum_<GafferScene::CurvesTangents::Mode>( "Mode" )
+			.value( "FirstDifference", GafferScene::CurvesTangents::Mode::FirstDifference )
+			.value( "CentralDifference", GafferScene::CurvesTangents::Mode::CentralDifference )
+			.value( "Derivative", GafferScene::CurvesTangents::Mode::Derivative )
+		;
+	}
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
