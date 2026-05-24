@@ -5,6 +5,7 @@ API
 ---
 
 - DictPath : Added support for subclassing, without the need to override `copy()` or `_children()`.
+- PlugCreationGadget : Added counterpart to PlugCreationWidget, allowing plugs to be created easily in the GraphEditor.
 
 1.7.0.0a5 (relative to 1.7.0.0a4)
 =========

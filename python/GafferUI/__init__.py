@@ -272,7 +272,7 @@ from .TweakPlugValueWidget import TweakPlugValueWidget
 from .PlugPopup import PlugPopup
 from .OptionalValuePlugValueWidget import OptionalValuePlugValueWidget
 from .TogglePlugValueWidget import TogglePlugValueWidget
-from .PlugCreationWidget import PlugCreationWidget
+from .PlugCreationWidget import PlugCreationWidget, PlugCreationGadget
 
 # and then specific node uis
 

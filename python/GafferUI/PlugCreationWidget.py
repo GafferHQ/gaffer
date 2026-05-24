@@ -139,37 +139,8 @@ class PlugCreationWidget( GafferUI.Widget ) :
 	# used only when wrapping the created plug in a NameValuePlug or TweakPlug.
 	def createPlug( self, prototypePlug, name = "" ) :
 
-		plug = prototypePlug.createCounterpart( prototypePlug.getName(), Gaffer.Plug.Direction.In )
-
-		action = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:action" ) or "addPlug"
-
-		if action == "addPlug" and isinstance( self.__plugParent, Gaffer.CompoundDataPlug ) :
-			action = "addNameValuePlug"
-		elif action == "addPlug" and isinstance( self.__plugParent, Gaffer.TweaksPlug ) :
-			action = "addTweakPlug"
-
 		with Gaffer.UndoScope( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
-
-			match action :
-				case "addPlug" :
-					if isinstance( self.__plugParent, Gaffer.Box ) :
-						## \todo Could this be made the default via a metadata registration in SubGraphUI.py?
-						Gaffer.Metadata.registerValue( plug, "nodule:type", "" )
-					plug.setFlags( Gaffer.Plug.Flags.Dynamic, True )
-					self.__plugParent.addChild( plug )
-				case "addNameValuePlug" :
-					plug = Gaffer.NameValuePlug( "", plug, True, "member0", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-					plug["name"].setValue( name )
-					self.__plugParent.addChild( plug )
-				case "addTweakPlug" :
-					plug = Gaffer.TweakPlug( "tweak0", valuePlug = plug, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-					plug["name"].setValue( name )
-					self.__plugParent.addChild( plug )
-					Gaffer.NodeAlgo.applyUserDefault( plug["mode"] )
-				case "setup" :
-					self.__plugParent.setup( plug )
-				case "addQuery" :
-					self.__plugParent.node().addQuery( plug, name )
+			return _createPlug( self.__plugParent, prototypePlug, name )
 
 	def __menuDefinition( self ) :
 
@@ -178,7 +149,7 @@ class PlugCreationWidget( GafferUI.Widget ) :
 		pendingDivider = None
 		def appendItem( menuPath, plugType, plugKW = {} ) :
 
-			if not self.__plugTypeIncluded( plugType ) :
+			if not _plugTypeIncluded( self.__plugParent, plugType ) :
 				return
 
 			nonlocal pendingDivider
@@ -282,20 +253,6 @@ class PlugCreationWidget( GafferUI.Widget ) :
 		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plugParent, plug, key ) :
 			self.__updateReadOnly()
 
-	def __plugTypeIncluded( self, plugType ) :
-
-		includedTypes = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:includedTypes" ) or "*"
-		excludedTypes = Gaffer.Metadata.value( self.__plugParent, "plugCreationWidget:excludedTypes" ) or ""
-		includedTypes = includedTypes.replace( ".", "::" )
-		excludedTypes = excludedTypes.replace( ".", "::" )
-
-		typeName = plugType.staticTypeName()
-
-		if IECore.StringAlgo.matchMultiple( typeName, excludedTypes ) :
-			return False
-
-		return IECore.StringAlgo.matchMultiple( typeName, includedTypes )
-
 	@staticmethod
 	def __dragEnterSignalCombiner( results ) :
 
@@ -320,7 +277,7 @@ class PlugCreationWidget( GafferUI.Widget ) :
 			plug = Gaffer.PlugAlgo.createPlugFromData( "plug", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, dragDropEvent.data )
 			plug.setName( plug.typeName().rpartition( ":" )[2] )
 
-		if plug is None or not plugCreationWidget.__plugTypeIncluded( type( plug ) ) :
+		if plug is None or not _plugTypeIncluded( plugCreationWidget.__plugParent, type( plug ) ) :
 			GafferUI.PopupWindow.showWarning( "Unsupported data type", parent = plugCreationWidget )
 			return
 
@@ -336,7 +293,7 @@ class PlugCreationWidget( GafferUI.Widget ) :
 				name = plug["name"].getValue()
 			plug = plug["value"]
 
-		if not plugCreationWidget.__plugTypeIncluded( type( plug ) ) :
+		if not _plugTypeIncluded( plugCreationWidget.__plugParent, type( plug ) ) :
 			GafferUI.PopupWindow.showWarning( "Unsupported type", parent = plugCreationWidget )
 			return
 
@@ -372,3 +329,91 @@ class PlugCreationWidget( GafferUI.Widget ) :
 			self.__currentDropHandler( self, event )
 
 		self.__currentDropHandler = None
+
+## Companion to PlugCreationWidget, for use in the GraphEditor. Supports
+# the same metadata.
+class PlugCreationGadget( GafferUI.PlugAdder ) :
+
+	def __init__( self, plugParent ) :
+
+		GafferUI.PlugAdder.__init__( self )
+
+		self.__plugParent = plugParent
+
+	def canCreateConnection( self, endpoint ) :
+
+		if not GafferUI.PlugAdder.canCreateConnection( self, endpoint ) :
+			return False
+
+		if endpoint.direction() != Gaffer.Plug.Direction.Out :
+			return False
+
+		return _plugTypeIncluded( self.__plugParent, endpoint )
+
+	def createConnection( self, endpoint ) :
+
+		with Gaffer.UndoScope( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
+
+			plug = _createPlug( self.__plugParent, endpoint, endpoint.getName() )
+
+			if isinstance( plug, ( Gaffer.NameValuePlug, Gaffer.TweakPlug, Gaffer.OptionalValuePlug ) ) :
+				plug["value"].setInput( endpoint )
+			else :
+				plug.setInput( endpoint )
+
+IECore.registerRunTimeTyped( PlugCreationGadget, "GafferUI::PlugCreationGadget" )
+GafferUI.NoduleLayout.registerCustomGadget( "GafferUI.PlugCreationGadget", PlugCreationGadget )
+
+# Shared Utilities
+# ================
+#
+# These are used by both PlugCreationWidget and PlugCreationGadget
+
+def _plugTypeIncluded( plugParent, plugType ) :
+
+	includedTypes = Gaffer.Metadata.value( plugParent, "plugCreationWidget:includedTypes" ) or "*"
+	excludedTypes = Gaffer.Metadata.value( plugParent, "plugCreationWidget:excludedTypes" ) or ""
+	includedTypes = includedTypes.replace( ".", "::" )
+	excludedTypes = excludedTypes.replace( ".", "::" )
+
+	typeName = plugType.staticTypeName()
+
+	if IECore.StringAlgo.matchMultiple( typeName, excludedTypes ) :
+		return False
+
+	return IECore.StringAlgo.matchMultiple( typeName, includedTypes )
+
+def _createPlug( plugParent, prototypePlug, name ) :
+
+	plug = prototypePlug.createCounterpart( prototypePlug.getName(), Gaffer.Plug.Direction.In )
+
+	action = Gaffer.Metadata.value( plugParent, "plugCreationWidget:action" ) or "addPlug"
+
+	if action == "addPlug" and isinstance( plugParent, Gaffer.CompoundDataPlug ) :
+		action = "addNameValuePlug"
+	elif action == "addPlug" and isinstance( plugParent, Gaffer.TweaksPlug ) :
+		action = "addTweakPlug"
+
+	match action :
+		case "addPlug" :
+			if isinstance( plugParent, Gaffer.Box ) :
+				## \todo Could this be made the default via a metadata registration in SubGraphUI.py?
+				Gaffer.Metadata.registerValue( plug, "nodule:type", "" )
+			plug.setFlags( Gaffer.Plug.Flags.Dynamic, True )
+			plugParent.addChild( plug )
+			return plug
+		case "addNameValuePlug" :
+			plug = Gaffer.NameValuePlug( "", plug, True, "member0", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			plug["name"].setValue( name )
+			plugParent.addChild( plug )
+			return plug
+		case "addTweakPlug" :
+			plug = Gaffer.TweakPlug( "tweak0", valuePlug = plug, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			plug["name"].setValue( name )
+			plugParent.addChild( plug )
+			Gaffer.NodeAlgo.applyUserDefault( plug["mode"] )
+			return plug
+		case "setup" :
+			plugParent.setup( plug )
+		case "addQuery" :
+			return plugParent.node().addQuery( plug, name )
