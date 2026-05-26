@@ -217,6 +217,7 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
 			acquireSession();
 			m_lightLinker->updateDirtyLinks();
+			m_geometryPrototypeCache->clearUnused();
 			m_materialCache->clearUnused();
 			m_globals->render();
 		}
