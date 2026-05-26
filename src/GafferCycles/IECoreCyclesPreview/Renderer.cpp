@@ -70,6 +70,7 @@
 
 #include "fmt/format.h"
 
+#include <filesystem>
 #include <tuple>
 #include <unordered_map>
 
@@ -2337,6 +2338,7 @@ ccl::SessionParams defaultSessionParams( IECoreScenePreview::Renderer::RenderTyp
 	{
 		params.headless = true;
 		params.background = true;
+		params.temp_dir = std::filesystem::temp_directory_path().string();
 	}
 
 	return params;
@@ -2992,6 +2994,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			updatedBufferParams.full_y = (int)(camera->get_border_bottom() * (float)height);
 			updatedBufferParams.width =  (int)(camera->get_border_right() * (float)width) - updatedBufferParams.full_x;
 			updatedBufferParams.height = (int)(camera->get_border_top() * (float)height) - updatedBufferParams.full_y;
+			updatedBufferParams.window_width = updatedBufferParams.width;
+			updatedBufferParams.window_height = updatedBufferParams.height;
 
 			if( m_bufferParams.modified( updatedBufferParams ) )
 			{
@@ -3214,6 +3218,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			else
 			{
 				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, layersData->readable() ) );
+				// In auto-tiled renders Cycles writes tiles to a temporary EXR in
+				// `SessionParams.temp_dir` and invokes this callback once all
+				// tiles are complete. The host is then responsible for telling the
+				// session to process the buffer and send the completed frame to
+				// the output driver via `Session::process_full_buffer_from_disk()`.
+				m_session->full_buffer_written_cb = [session = m_session.get()]( ccl::string_view fileName ) {
+					session->process_full_buffer_from_disk( fileName );
+					// Clean up the temporary EXR as it is not removed by Cycles after processing.
+					std::filesystem::remove( std::filesystem::path( fileName.str() ) );
+				};
 			}
 
 			m_outputsChanged = false;
