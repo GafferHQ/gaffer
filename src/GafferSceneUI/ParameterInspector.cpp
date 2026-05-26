@@ -44,6 +44,7 @@
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/ShaderTweaks.h"
 
+#include "Gaffer/Metadata.h"
 #include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Switch.h"
@@ -62,6 +63,7 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
+const InternedString g_defaultValue( "defaultValue" );
 const InternedString g_shaderConnectionShader( "shaderConnection:shader" );
 const InternedString g_shaderConnectionParameter( "shaderConnection:parameter" );
 
@@ -153,6 +155,24 @@ IECore::ConstObjectPtr ParameterInspector::fallbackValue( const GafferScene::Sce
 		return parameterData( fallbackAttribute.get(), m_parameter );
 	}
 
+	auto shaderNetwork = runTimeCast<const ShaderNetwork>( AttributeInspector::value( history ) );
+	if( !shaderNetwork )
+	{
+		return nullptr;
+	}
+
+	const IECoreScene::Shader *shader = m_parameter.shader.string().empty() ? shaderNetwork->outputShader() : shaderNetwork->getShader( m_parameter.shader );
+	if( !shader )
+	{
+		return nullptr;
+	}
+
+	if( const auto defaultValue = Gaffer::Metadata::value( fmt::format( "{}:{}:{}", shader->getType(), shader->getName(), m_parameter.name.string() ), g_defaultValue ) )
+	{
+		description = "Default value";
+		return defaultValue;
+	}
+
 	return nullptr;
 }
 
@@ -238,6 +258,12 @@ Inspector::AcquireEditFunctionOrFailure ParameterInspector::acquireEditFunction(
 	auto attributeHistory = static_cast<const SceneAlgo::AttributeHistory *>( history );
 
 	ConstObjectPtr v = value( history );
+	if( !v )
+	{
+		std::string description;
+		v = fallbackValue( history, description );
+	}
+
 	if( !v )
 	{
 		return fmt::format( "Parameter \"{}\" does not exist.", m_parameter.name.string() );

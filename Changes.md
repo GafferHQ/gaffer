@@ -24,7 +24,10 @@ Improvements
 - ShaderTweaks : Added support for tweaking ramp parameters.
 - CyclesAttributes : Added `cycles:adaptive_space` attribute.
 - CyclesOptions : Added `cycles:integrator:volume_ray_marching` option.
-- LightEditor : Added column for `cycles:visibility:camera` attribute.
+- LightEditor :
+  - Added column for `cycles:visibility:camera` attribute.
+  - USD lights now display default values for parameters that haven't been authored on the light. These are presented as dimmed "fallback" values.
+  - Changed default tweak mode to `Create` for newly created parameter tweaks.
 - OpenColorIO : Added ACES Studio 2.0 config. The default config is still ACES 1.3, due to RenderMan not supporting ACES 2.0.
 - SceneReader, SceneWriter : Added support for pinned UsdGeomBasisCurves.
 - OSLCode : The OSL shader is now compiled on demand, rather than every time the node is edited. This avoids many redundant attempts at recompilation when loading nodes with many parameters.
@@ -74,6 +77,7 @@ API
 - GraphComponentPath : Added `setFromComponent()`
 - BreadCrumbsWidget : Added widget for interacting with paths using a combination of button widgets and text entry.
 - NodeGadget : Added `instanceCreatedSignal()`. This allows extensions to customise gadgets after their creation.
+- EditScopeAlgo : `acquireParameterEdit()` now creates new TweakPlugs in `Create` mode rather than `Replace`. This matches the behaviour of `acquireOptionEdit()` and `acquireAttributeEdit()`.
 
 Breaking Changes
 ----------------

@@ -525,6 +525,11 @@ ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath 
 	}
 	else
 	{
+		if( const auto defaultValue = Gaffer::Metadata::value( fmt::format( "{}:{}:{}", shader->getType(), shader->getName(), parameter.name.string() ), "defaultValue" ) )
+		{
+			return defaultValue;
+		}
+
 		throw IECore::Exception( fmt::format( "Parameter \"{}\" does not exist", parameter.name.string() ) );
 	}
 }
@@ -612,7 +617,7 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireParameterEdit( Gaffer::EditScope *
 	/// every cell will have a `setValue()` for the name, and we expect to have fewer enabled cells than disabled ones.
 	/// Change the TweakPlug constructor (or provide an overload) so we can get the defaults we want. Consider the
 	/// relationship to NameValuePlug and ShufflePlug constructors at the same time.
-	TweakPlugPtr tweakPlug = new TweakPlug( tweakName, valuePlug, TweakPlug::Replace, false );
+	TweakPlugPtr tweakPlug = new TweakPlug( tweakName, valuePlug, TweakPlug::Create, false );
 
 	auto *shaderTweaks = processor->getChild<ShaderTweaks>( "ShaderTweaks" );
 	shaderTweaks->tweaksPlug()->addChild( tweakPlug );

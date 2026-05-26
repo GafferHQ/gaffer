@@ -924,7 +924,8 @@ class LightToolHandle : public Handle
 
 			for( const auto &i : m_inspectors )
 			{
-				if( !i.second->inspect() )
+				auto inspection = i.second->inspect();
+				if( !inspection || !inspection->fallbackDescription().empty() )
 				{
 					return false;
 				}
