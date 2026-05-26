@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.19.0)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed failure to release unused geometry in interactive renders.
 
 1.6.19.0 (relative to 1.6.18.0)
 ========
