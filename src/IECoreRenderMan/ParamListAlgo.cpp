@@ -113,6 +113,12 @@ struct ParameterConverter
 		paramList.SetMatrix( name, reinterpret_cast<const pxrcore::Matrix4x4 &>( data->readable() ) );
 	}
 
+	void operator()( const M44dData *data, RtUString name, RtParamList &paramList ) const
+	{
+		const Imath::M44f m( data->readable() );
+		paramList.SetMatrix( name, pxrcore::Matrix4x4( m.x ) );
+	}
+
 	void operator()( const IntVectorData *data, RtUString name, RtParamList &paramList ) const
 	{
 		paramList.SetIntegerArray( name, data->readable().data(), data->readable().size() );
