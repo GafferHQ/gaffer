@@ -4,7 +4,9 @@
 Fixes
 -----
 
-- RenderMan : Fixed failure to release unused geometry in interactive renders.
+- RenderMan :
+  - Fixed failure to release unused geometry in interactive renders.
+  - Fixed export of M44d values.
 - SceneInspector, PathListingWidget : Fixed formatting of V2d, V3d, M33d and M44d values.
 
 1.6.19.0 (relative to 1.6.18.0)
