@@ -552,6 +552,8 @@ class RendererTest( GafferTest.TestCase ) :
 					"user:testColor" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
 					"user:testV2i" : IECore.V2iData( imath.V2i( 1, 2 ) ),
 					"user:testV2f" : IECore.V2fData( imath.V2f( 1.5, 2.5 ) ),
+					"user:testM44f" : IECore.M44fData( imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) ),
+					"user:testM44d" : IECore.M44dData( imath.M44d().scale( imath.V3d( 1, 2, 3 ) ) ),
 					"user:testIntArray" : IECore.IntVectorData( [ 3, 2, 1 ] ),
 					"user:testFloatArray" : IECore.FloatVectorData( [ 3.5, 2.5, 1.5 ] ),
 					"user:testStringArray" : IECore.StringVectorData( [ "a", "b", "c" ] ),
@@ -572,6 +574,8 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertParameterEqual( attributes, "user:testColor", [ 1.0, 2.0, 3.0 ] )
 		self.__assertParameterEqual( attributes, "user:testV2i", [ 1, 2 ] )
 		self.__assertParameterEqual( attributes, "user:testV2f", [ 1.5, 2.5 ] )
+		self.__assertParameterEqual( attributes, "user:testM44f", [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1 ] )
+		self.__assertParameterEqual( attributes, "user:testM44d", [ 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1 ] )
 		self.__assertParameterEqual( attributes, "user:testIntArray", [ 3, 2, 1 ] )
 		self.__assertParameterEqual( attributes, "user:testFloatArray", [ 3.5, 2.5, 1.5 ] )
 		self.__assertParameterEqual( attributes, "user:testStringArray", [ "a", "b", "c" ] )

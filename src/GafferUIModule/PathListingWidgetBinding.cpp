@@ -452,6 +452,10 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 			return toString( static_cast<const IECore::V2fData *>( value )->readable() );
 		case IECore::V3fDataTypeId :
 			return toString( static_cast<const IECore::V3fData *>( value )->readable() );
+		case IECore::V2dDataTypeId :
+			return toString( static_cast<const IECore::V2dData *>( value )->readable() );
+		case IECore::V3dDataTypeId :
+			return toString( static_cast<const IECore::V3dData *>( value )->readable() );
 		case IECore::Color3fDataTypeId :
 			return toString( static_cast<const IECore::Color3fData *>( value )->readable() );
 		case IECore::Color4fDataTypeId :
@@ -468,6 +472,10 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 			return toString( static_cast<const IECore::M33fData *>( value )->readable() );
 		case IECore::M44fDataTypeId :
 			return toString( static_cast<const IECore::M44fData *>( value )->readable() );
+		case IECore::M33dDataTypeId :
+			return toString( static_cast<const IECore::M33dData *>( value )->readable() );
+		case IECore::M44dDataTypeId :
+			return toString( static_cast<const IECore::M44dData *>( value )->readable() );
 		case IECore::DateTimeDataTypeId :
 		{
 			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );

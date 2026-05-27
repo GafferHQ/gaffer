@@ -144,13 +144,21 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.x.x (relative to 1.6.19.0)
+1.6.x.x (relative to 1.6.19.1)
 =======
+
+
+
+1.6.19.1 (relative to 1.6.19.0)
+========
 
 Fixes
 -----
 
-- RenderMan : Fixed failure to release unused geometry in interactive renders.
+- RenderMan :
+  - Fixed failure to release unused geometry in interactive renders.
+  - Fixed export of M44d values.
+- SceneInspector, PathListingWidget : Fixed formatting of V2d, V3d, M33d and M44d values.
 
 1.6.19.0 (relative to 1.6.18.0)
 ========
