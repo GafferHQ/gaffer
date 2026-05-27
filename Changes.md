@@ -14,20 +14,21 @@ Improvements
 ------------
 
 - AttributeTweaks, AttributeVisualiser, ShaderAssignment, ShaderTweaks, ShuffleAttributes : Added `global` plug, to allow global attributes to be processed instead of using `filter` to process per-location attributes.
-- ShaderTweaks : Added tweaking of integrators, background shaders, atmosphere shaders and render pass shaders.
+- ShaderTweaks :
+  - Added tweaking of integrators, background shaders, atmosphere shaders and render pass shaders.
+  - Added support for tweaking ramp parameters.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`. This matches volume assignments imported from USD, and means that Gaffer now exports materials to USD using the same convention.
 - InteractiveRender : Added `useVisibleSet` plug. When on, only the scene locations contained in the Visible Set will be rendered.
 - Application :
   - Applications now run using a dedicated `gaffer` executable instead of `python`. This means the root process is now called `gaffer` on all platforms. The `bin/gaffer` (Linux) and `bin/gaffer.cmd` (Windows) launch scripts should still be used as before (#6654).
   - Set the main thread stack limit to 4MB on Windows (#6809).
   - Matched TBB worker thread stack limit to the limit for the main thread. On Linux, this can be configured with `ulimit -s`.
-- ShaderTweaks : Added support for tweaking ramp parameters.
 - CyclesAttributes : Added `cycles:adaptive_space` attribute.
 - CyclesOptions : Added `cycles:integrator:volume_ray_marching` option.
 - LightEditor :
   - Added column for `cycles:visibility:camera` attribute.
   - USD lights now display default values for parameters that haven't been authored on the light. These are presented as dimmed "fallback" values.
-  - Changed default tweak mode to `Create` for newly created parameter tweaks.
+- LightEditor, SceneInspector : Changed default tweak mode to `Create` for newly created parameter tweaks.
 - OpenColorIO : Added ACES Studio 2.0 config. The default config is still ACES 1.3, due to RenderMan not supporting ACES 2.0.
 - SceneReader, SceneWriter : Added support for pinned UsdGeomBasisCurves.
 - OSLCode : The OSL shader is now compiled on demand, rather than every time the node is edited. This avoids many redundant attempts at recompilation when loading nodes with many parameters.
@@ -84,7 +85,9 @@ Breaking Changes
 
 - Arnold : Removed support for Arnold 7.3.
 - RenderMan : Removed support for RenderMan 27.1.
-- ValuePlug : Disconnection no longer emits `plugSetSignal()`.
+- ValuePlug :
+  - Disconnection no longer emits `plugSetSignal()`.
+  - Removed deprecated cache policies. Use `TaskCollaboration` instead of `TaskIsolation`. Use `Default` instead of `Legacy`. Instead of `Standard`, use `TaskCollaboration` for `computeCachePolicy()` and `Default` for `hashCachePolicy()`.
 - ArnoldShader : The `standard_volume` shader is now assigned via an `ai:volume` attribute instead of `ai:surface`.
 - RenderUI : Removed deprecated `rendererPresetNames()` function.
 - Menu : Removed support for `enter` and `leave` properties on menu items.
@@ -99,7 +102,6 @@ Breaking Changes
 - GafferUI : Renamed SplineWidget to RampWidget. Renamed SplinePlugValueWidget to RampPlugValueWidget. The old RampPlugValueWidget is no longer exposed, since it was only used internally.
 - Metadata : Added `target` argument to `ValueFunction` signature.
 - Widget : The `toolTip`, `parenting` and `displayTransform` constructor arguments are no longer positional.
-- ValuePlug : Removed deprecated cache policies. Use `TaskCollaboration` instead of `TaskIsolation`. Use `Default` instead of `Legacy`. Instead of `Standard`, use `TaskCollaboration` for `computeCachePolicy()` and `Default` for `hashCachePolicy()`.
 - Box : Removed deprecated plug promotion methods. Use `PlugAlgo` instead.
 - CyclesLight : Removed `use_camera`, `use_diffuse`, `use_glossy`, `use_transmission`, `use_scatter`, and `lightgroup` parameter plugs as Cycles no longer considers these to be light parameters. Ray visibility and light group membership is now set via the `cycles:visibility:*` and `cycles:lightgroup` attributes on a CyclesAttributes node.
 - CyclesAttributes : Removed `cycles:shader:heterogeneous_volume` attribute as it is no longer used by Cycles.
