@@ -2373,7 +2373,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["frameRange"]["start"].setValue( 8 )
 		s["frameRange"]["end"].setValue( 22 )
 		s["frame"].setValue( 11 )
-		s["variables"].addMember( "test", IECore.StringData( "value" ), "test" )
+		s["variables"].addMember( "test", IECore.StringData( "value #" ), "test" )
 
 		s["n"] = GafferDispatchTest.TextWriter()
 		s["n"]["dispatcher"]["isolated"].setValue( True )
@@ -2384,7 +2384,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
 		s["d"]["tasks"][0].setInput( s["n"]["task"] )
 
-		s["d"]["task"].execute()
+		with IECore.CapturingMessageHandler() as mh :
+			s["d"]["task"].execute()
+
+		# The "test" variable has a frame substitution in it, but `TaskBatch` contexts
+		# omit frame variables. This test ensures the serialisation of `variables` done
+		# in `isolate()` does not error due to the missing frame variable.
+		self.assertEqual( len( mh.messages ), 0 )
 
 		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
 
@@ -2399,7 +2405,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		testPlugs = [ p for p in newScript["variables"].children() if p["name"].getValue() == "test" ]
 		self.assertEqual( len( testPlugs ), 1 )
-		self.assertEqual( testPlugs[0]["value"].getValue(), "value" )
+		self.assertEqual( testPlugs[0]["value"].getValue(), "value 1" )
 
 	def testIsolated( self ) :
 

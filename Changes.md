@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Dispatcher : Fixed `Context has no variable named...` error when dispatching an isolated task with a `StringPlug` script variable containing a frame substitution.
 - RenderMan : Fixed handling of multiple intervals in `ri:checkpoint:interval` option. Intervals may be separated by spaces or commas.
 
 1.6.19.1 (relative to 1.6.19.0)
