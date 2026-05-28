@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.19.1)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed handling of multiple intervals in `ri:checkpoint:interval` option. Intervals may be separated by spaces or commas.
 
 1.6.19.1 (relative to 1.6.19.0)
 ========
