@@ -51,7 +51,15 @@ Renderer::Samples<T> Renderer::staticSamplesCast( const Renderer::Samples<S> &sa
 		else
 		{
 			// Assume we're casting from `intrusive_ptr`.
-			result.push_back( static_cast<T>( s.get() ) );
+			if constexpr( std::is_pointer_v<T> )
+			{
+				result.push_back( static_cast<T>( s.get() ) );
+			}
+			else
+			{
+				// Assume we're casting to `intrusive_ptr`.
+				result.push_back( boost::static_pointer_cast<typename T::element_type>( s ) );
+			}
 		}
 	}
 	return result;

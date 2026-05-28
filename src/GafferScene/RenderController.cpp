@@ -570,12 +570,13 @@ class RenderController::SceneGraph
 
 			if( m_objectInterface.isCapsule() && ( changedGlobals & CapsuleAffectingGlobalComponents ) )
 			{
-				// Account for `Capsule::setRenderOptions()` being called in `updateObject()`.
+				// Account for `Capsule::setRenderOptions()` being called by
+				// `RendererAlgo::outputObject()` in `updateObject()`.
 				m_dirtyComponents |= ObjectComponent;
 				m_objectHash = MurmurHash();
 			}
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene.get(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_lightLinks.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -599,7 +600,7 @@ class RenderController::SceneGraph
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
+							if( updateObject( controller->m_scene.get(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
 								controller->m_failedAttributeEdits++;
@@ -807,7 +808,7 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the object changed.
-		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const ScenePlug *scene, LightLinks *lightLinks )
+		bool updateObject( const ScenePlug *scene, Type type, IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, LightLinks *lightLinks )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType || m_drawMode != VisibleSet::Visibility::Visible || !m_purposeIncluded )
@@ -816,7 +817,7 @@ class RenderController::SceneGraph
 				return hadObjectInterface;
 			}
 
-			auto sampledObject = Private::RendererAlgo::objectSamples( objectPlug, m_deformationTimes, &m_objectHash );
+			auto sampledObject = Private::RendererAlgo::objectSamples( scene->objectPlug(), m_deformationTimes, &m_objectHash );
 			if( !sampledObject )
 			{
 				// No update required.
@@ -936,22 +937,10 @@ class RenderController::SceneGraph
 			}
 			else
 			{
-				bool isCapsule = false;
-				if( sampledObject->samples.size() == 1 )
-				{
-					if( auto capsule = runTimeCast<const Capsule>( sampledObject->samples[0].get() ) )
-					{
-						CapsulePtr capsuleCopy = capsule->copy();
-						capsuleCopy->setRenderOptions( renderOptions );
-						sampledObject->samples[0] = capsuleCopy;
-						isCapsule = true;
-					}
-				}
-
 				m_objectInterface.assign(
-					renderer->object( name, sampledObject->samples, sampledObject->sampleTimes, attributesInterface( renderer ) ),
+					Private::RendererAlgo::outputObject( name, *sampledObject, attributesInterface( renderer ), renderOptions, renderer ),
 					ObjectInterfaceHandle::RemovalCallback(),
-					isCapsule
+					/* isCapsule = */ sampledObject->samples[0]->isInstanceOf( Capsule::staticTypeId() )
 				);
 				return true;
 			}

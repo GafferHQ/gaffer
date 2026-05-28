@@ -700,6 +700,21 @@ std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug
 	return result;
 }
 
+IECoreScenePreview::Renderer::ObjectInterfacePtr outputObject( const std::string &name, const SampledObject &sampledObject, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer )
+{
+	if( sampledObject.samples.size() == 1 )
+	{
+		if( auto capsule = runTimeCast<const Capsule>( sampledObject.samples[0].get() ) )
+		{
+			CapsulePtr capsuleCopy = capsule->copy();
+			capsuleCopy->setRenderOptions( renderOptions );
+			return renderer->object( name, { capsuleCopy }, sampledObject.sampleTimes, attributes );
+		}
+	}
+
+	return renderer->object( name, sampledObject.samples, sampledObject.sampleTimes, attributes );
+}
+
 } // namespace RendererAlgo
 
 } // namespace Private
@@ -1657,19 +1672,8 @@ struct ObjectOutput : public LocationOutput
 			return true;
 		}
 
-		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface = this->attributesInterface();
-		if( sampledObject->samples.size() == 1 )
-		{
-			if( auto capsule = runTimeCast<const Capsule>( sampledObject->samples[0].get() ) )
-			{
-				CapsulePtr capsuleCopy = capsule->copy();
-				capsuleCopy->setRenderOptions( renderOptions() );
-				sampledObject->samples[0] = capsuleCopy;
-			}
-		}
-
-		objectInterface = renderer()->object( name( path ), sampledObject->samples, sampledObject->sampleTimes, attributesInterface.get() );
+		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = outputObject( name( path ), *sampledObject, attributesInterface.get(), renderOptions(), renderer() );
 
 		if( objectInterface )
 		{

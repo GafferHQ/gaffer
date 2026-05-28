@@ -50,16 +50,6 @@ GeometryPrototypeCache::GeometryPrototypeCache( Session *session )
 {
 }
 
-GeometryPrototypePtr GeometryPrototypeCache::get( const IECore::Object *object, const Attributes *attributes, const std::string &messageContext )
-{
-	if( !object )
-	{
-		return nullptr;
-	}
-
-	return get( { object }, { 0.0f }, attributes, messageContext );
-}
-
 GeometryPrototypePtr GeometryPrototypeCache::get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, const Attributes *attributes, const std::string &messageContext )
 {
 	auto converter = [&] ( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, const Attributes *attributes, Session *session, GeometryPrototypePtr &result ) {
