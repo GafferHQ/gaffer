@@ -156,7 +156,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType" : "GafferSceneUI.ShaderUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferUI.PlugVisibilityGadget",
 
 		},
 
@@ -207,7 +207,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type" : "",
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType" : "GafferSceneUI.ShaderUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferUI.PlugVisibilityGadget",
 
 		},
 
@@ -385,47 +385,6 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 	result.append( "/Load...", { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( lambda menu : __loadFromFile( menu, extensions, nodeCreator ) ) } )
 
 	return result
-
-##########################################################################
-# Interaction with ShaderNodeGadget
-##########################################################################
-
-def __setPlugMetadata( plug, key, value ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.Metadata.registerValue( plug, key, value )
-
-def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
-
-	if not isinstance( plug.node(), GafferScene.Shader ) :
-		return
-
-	if not (
-		plug.node()["parameters"].isAncestorOf( plug ) or
-		plug.node()["out"].isAncestorOf( plug )
-	) :
-		return
-
-	if len( menuDefinition.items() ) :
-		menuDefinition.append( "/HideDivider", { "divider" : True } )
-
-	if plug.direction() == plug.Direction.In :
-		numConnections = 1 if plug.getInput() else 0
-	else :
-		numConnections = len( plug.outputs() )
-
-	menuDefinition.append(
-
-		"/Hide",
-		{
-			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
-			"active" : numConnections == 0 and not Gaffer.MetadataAlgo.readOnly( plug ),
-		}
-
-	)
-
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )
-
 
 ##########################################################################
 # ShaderParameterDialog

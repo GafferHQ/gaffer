@@ -273,6 +273,7 @@ from .PlugPopup import PlugPopup
 from .OptionalValuePlugValueWidget import OptionalValuePlugValueWidget
 from .TogglePlugValueWidget import TogglePlugValueWidget
 from .PlugCreationWidget import PlugCreationWidget, PlugCreationGadget
+from . import _PlugVisibilityGadget
 
 # and then specific node uis
 

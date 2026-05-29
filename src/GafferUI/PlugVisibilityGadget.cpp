@@ -34,8 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/Shader.h"
-
 #include "GafferUI/Nodule.h"
 #include "GafferUI/NoduleLayout.h"
 #include "GafferUI/PlugAdder.h"
@@ -51,7 +49,6 @@ using namespace std;
 using namespace boost::placeholders;
 using namespace Gaffer;
 using namespace GafferUI;
-using namespace GafferScene;
 
 namespace
 {
@@ -59,21 +56,21 @@ namespace
 IECore::InternedString g_visibleKey( "noduleLayout:visible" );
 IECore::InternedString g_noduleTypeKey( "nodule:type" );
 
-class ShaderPlugAdder : public PlugAdder
+class PlugVisibilityGadget : public PlugAdder
 {
 
 	public :
 
-		ShaderPlugAdder( GraphComponentPtr plugsParent )
+		PlugVisibilityGadget( GraphComponentPtr plugsParent )
 			:	m_plugsParent( plugsParent )
 		{
-			plugsParent->childAddedSignal().connect( boost::bind( &ShaderPlugAdder::childAdded, this ) );
-			plugsParent->childRemovedSignal().connect( boost::bind( &ShaderPlugAdder::childRemoved, this ) );
+			plugsParent->childAddedSignal().connect( boost::bind( &PlugVisibilityGadget::childAdded, this ) );
+			plugsParent->childRemovedSignal().connect( boost::bind( &PlugVisibilityGadget::childRemoved, this ) );
 			Metadata::plugValueChangedSignal( plugsParent->ancestor<Node>() ).connect(
-				boost::bind( &ShaderPlugAdder::plugMetadataChanged, this, ::_1, ::_2 )
+				boost::bind( &PlugVisibilityGadget::plugMetadataChanged, this, ::_1, ::_2 )
 			);
 
-			buttonReleaseSignal().connect( boost::bind( &ShaderPlugAdder::buttonRelease, this, ::_2 ) );
+			buttonReleaseSignal().connect( boost::bind( &PlugVisibilityGadget::buttonRelease, this, ::_2 ) );
 
 			updateVisibility();
 		}
@@ -111,7 +108,7 @@ class ShaderPlugAdder : public PlugAdder
 		bool buttonRelease( const ButtonEvent &event )
 		{
 			vector<Plug *> plugs = showablePlugs();
-			Plug *plug = plugMenuSignal()( "Show Parameter", plugs );
+			Plug *plug = plugMenuSignal()( "Show Plug", plugs );
 			if( !plug )
 			{
 				return false;
@@ -194,14 +191,14 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferSceneUI.ShaderUI.PlugAdder", &create );
+		NoduleLayout::registerCustomGadget( "GafferUI.PlugVisibilityGadget", &create );
 	}
 
 	private :
 
 		static GadgetPtr create( GraphComponentPtr parent )
 		{
-			return new ShaderPlugAdder( parent );
+			return new PlugVisibilityGadget( parent );
 		}
 
 };
