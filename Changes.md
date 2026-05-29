@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.0.0a2)
 =======
 
+API
+---
 
+- Image : Added `updateImage()` method.
 
 1.7.0.0a2 (relative to 1.7.0.0a1)
 =========
