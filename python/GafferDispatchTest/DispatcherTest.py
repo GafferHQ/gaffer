@@ -2405,7 +2405,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		testPlugs = [ p for p in newScript["variables"].children() if p["name"].getValue() == "test" ]
 		self.assertEqual( len( testPlugs ), 1 )
-		self.assertEqual( testPlugs[0]["value"].getValue(), "value 1" )
+		self.assertEqual( testPlugs[0]["value"].getValue(), "value #" )
 
 	def testIsolated( self ) :
 
@@ -2766,6 +2766,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["framesPerSecond"].setValue( 1.0 )
+		s["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "####" ), name = "a", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "b", Gaffer.StringPlug( "value" ), name = "b", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["variablesBExpression"] = Gaffer.Expression()
+		s["variablesBExpression"].setExpression( 'parent["variables"]["b"]["value"] = {1: "a", 2: "b", 3: "c", 4: "d", 5: "e"}[context.getFrame()]' )
 
 		s["n"] = GafferDispatchTest.TextWriter()
 		s["n"]["dispatcher"]["isolated"].setValue( True )
@@ -2821,8 +2826,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( set( [ type( n ) for n in Gaffer.Node.RecursiveRange( newScript ) ] ), set( [ GafferDispatchTest.TextWriter, Gaffer.Spreadsheet ] ) )
 
 		self.assertEqual( len( newScript["isolatedAnimation"]["rows"] ), 6 )  # default + frame count
-		self.assertEqual( len( newScript["isolatedAnimation"]["rows"].defaultRow()["cells"] ), 3 )
+		self.assertEqual( len( newScript["isolatedAnimation"]["rows"].defaultRow()["cells"] ), 4 )
 
+		self.assertIsNone( newScript["variables"]["a"]["value"].getInput() )
+		self.assertEqual( newScript["variables"]["b"]["value"].getInput(), newScript["isolatedAnimation"]["out"]["variables_b_value"] )
 		self.assertIsNone( newScript["n"]["fileName"].getInput() )
 		self.assertIsNone( newScript["n"]["text"].getInput() )
 		self.assertIsNone( newScript["n"]["mode"].getInput() )
@@ -2834,6 +2841,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 			for f in range( 1, 6 ) :
 				with self.subTest( f = f ) :
 					c.setFrame( f )
+					self.assertEqual( newScript["variables"]["a"]["value"].getValue(), "####" )
+					self.assertEqual( newScript["variables"]["b"]["value"].getValue(), [ "a", "b", "c", "d", "e" ][f-1] )
 					self.assertEqual( newScript["n"]["fileName"].getValue(), "${script:name}" )
 					self.assertEqual( newScript["n"]["text"].getValue(), "####" )
 					self.assertEqual( newScript["n"]["mode"].getValue(), "x" )
@@ -2885,6 +2894,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( set( [ type( n ) for n in Gaffer.Node.RecursiveRange( newScript["b"] ) ] ), set( [ GafferDispatchTest.TextWriter, Gaffer.Spreadsheet ] ) )
 
+		self.assertEqual( newScript["b"]["n"]["user"]["promotedFloatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_promotedFloatPlug"] )
 		self.assertEqual( newScript["b"]["n"]["user"]["unpromotedFloatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_unpromotedFloatPlug"] )
 
 		with s.context() as c :

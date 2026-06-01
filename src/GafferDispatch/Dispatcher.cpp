@@ -43,6 +43,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Signals.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
@@ -292,7 +293,10 @@ void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *source
 		auto destinationPlug = destinationScript->descendant<ValuePlug>( sourcePlug->relativeName( sourceScript ) );
 		assert( destinationPlug );
 
-		bakePlugValue( destinationPlug, sourcePlug.get(), frames );
+		if( sourcePlug->getInput() )
+		{
+			bakePlugValue( destinationPlug, sourcePlug.get(), frames );
+		}
 	}
 }
 
