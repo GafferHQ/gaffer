@@ -2851,10 +2851,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["b"]["n"] = GafferDispatchTest.TextWriter()
 		s["b"]["n"]["dispatcher"]["isolated"].setValue( True )
 		s["b"]["n"]["dispatcher"]["batchSize"].setValue( 2 )
-		p = Gaffer.FloatPlug( "floatPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		a = Gaffer.FloatPlug( "unpromotedFloatPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"].addChild( a )
+		p = Gaffer.FloatPlug( "promotedFloatPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["n"]["user"].addChild( p )
 		promotedPlug = Gaffer.PlugAlgo.promote( p )
 		promotedTask = Gaffer.PlugAlgo.promote( s["b"]["n"]["task"] )
+
+		curveA = Gaffer.Animation.acquire( a )
+		curveA.addKey( Gaffer.Animation.Key( time = 1, value = 10 ) )
+		curveA.addKey( Gaffer.Animation.Key( time = 2, value = 20 ) )
 
 		curve = Gaffer.Animation.acquire( promotedPlug )
 		curve.addKey( Gaffer.Animation.Key( time = 1, value = 1 ) )
@@ -2879,12 +2885,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( set( [ type( n ) for n in Gaffer.Node.RecursiveRange( newScript["b"] ) ] ), set( [ GafferDispatchTest.TextWriter, Gaffer.Spreadsheet ] ) )
 
-		self.assertEqual( newScript["b"]["n"]["user"]["floatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_floatPlug"] )
+		self.assertEqual( newScript["b"]["n"]["user"]["unpromotedFloatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_unpromotedFloatPlug"] )
 
 		with s.context() as c :
 			for f in range( 1, 3 ) :
 				c.setFrame( f )
-				self.assertEqual( newScript["b"]["n"]["user"]["floatPlug"].getValue(), [ 1, 2 ][f - 1] )
+				self.assertEqual( newScript["b"]["n"]["user"]["promotedFloatPlug"].getValue(), [ 1, 2 ][f - 1] )
+				self.assertEqual( newScript["b"]["n"]["user"]["unpromotedFloatPlug"].getValue(), [ 10, 20 ][f - 1] )
 
 	def testIsolatedObjectPlugs( self ) :
 
