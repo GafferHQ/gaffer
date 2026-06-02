@@ -1567,7 +1567,7 @@ class RendererTest( GafferTest.TestCase ) :
 				IECore.CompoundObject( {
 					"osl:displacement" : IECoreScene.ShaderNetwork(
 						shaders = {
-							"output" : IECoreScene.Shader( "PxrDisplace", "osl:displacement", { "dispAmount" : 1.0 } )
+							"output" : IECoreScene.Shader( "PxrDisplace", "ri:displacement", { "dispAmount" : 1.0 } )
 						},
 						output = ( "output", "result" )
 					),
@@ -1578,7 +1578,7 @@ class RendererTest( GafferTest.TestCase ) :
 				IECore.CompoundObject( {
 					"osl:displacement" : IECoreScene.ShaderNetwork(
 						shaders = {
-							"output" : IECoreScene.Shader( "PxrDisplace", "osl:displacement", { "dispAmount" : 2.0 } )
+							"output" : IECoreScene.Shader( "PxrDisplace", "ri:displacement", { "dispAmount" : 2.0 } )
 						},
 						output = ( "output", "result" )
 					),
