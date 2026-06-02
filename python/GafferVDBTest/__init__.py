@@ -43,6 +43,7 @@ from .ModuleTest import ModuleTest
 from .SphereLevelSetTest import SphereLevelSetTest
 from .PointsToLevelSetTest import PointsToLevelSetTest
 from .VolumeScatterTest import VolumeScatterTest
+from .DeleteGridsTest import DeleteGridsTest
 
 if __name__ == "__main__":
 	import unittest

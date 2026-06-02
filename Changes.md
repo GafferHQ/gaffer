@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.0.0a1)
 =======
 
+Features
+--------
 
+- DeleteGrids : Added node for deleting grids from locations containing OpenVDB volumes.
 
 1.7.0.0a1 (relative to 1.6.19.1)
 =========
