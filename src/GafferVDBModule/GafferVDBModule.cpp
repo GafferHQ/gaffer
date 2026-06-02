@@ -36,6 +36,7 @@
 
 #include "boost/python.hpp"
 
+#include "GafferVDB/DeleteGrids.h"
 #include "GafferVDB/LevelSetOffset.h"
 #include "GafferVDB/LevelSetToMesh.h"
 #include "GafferVDB/MeshToLevelSet.h"
@@ -58,5 +59,13 @@ BOOST_PYTHON_MODULE( _GafferVDB )
 	GafferBindings::DependencyNodeClass<SphereLevelSet>();
 	GafferBindings::DependencyNodeClass<PointsToLevelSet>();
 	GafferBindings::DependencyNodeClass<VolumeScatter>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<DeleteGrids>();
+		enum_<DeleteGrids::Mode>( "Mode" )
+			.value( "Keep", DeleteGrids::Keep )
+			.value( "Delete", DeleteGrids::Delete )
+		;
+	}
 
 }

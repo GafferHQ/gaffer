@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Image Engine Design Inc nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,21 +34,47 @@
 #
 ##########################################################################
 
-from ._GafferVDBUI import *
+import IECore
 
-# Because the `_GafferVDBUI` Python module currently doesn't require
-# any symbols from the `GafferVDBUI` library, we need to load it explicitly
-# to get our custom visualiser registered.
-__import__( "Gaffer" ).__loadSharedLibrary( "GafferVDBUI" )
+import GafferVDB
+import GafferVDBTest
+import GafferScene
 
-from . import DeleteGridsUI
-from . import LevelSetToMeshUI
-from . import MeshToLevelSetUI
-from . import LevelSetOffsetUI
-from . import PointsGridToPointsUI
-from . import SphereLevelSetUI
-from . import PointsToLevelSetUI
-from . import VolumeScatterUI
-from . import VDBInspector
+class DeleteGridsTest( GafferVDBTest.VDBTestCase ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDBUI" )
+	def test( self ) :
+
+		smoke = GafferScene.SceneReader()
+		smoke["fileName"].setValue( self.dataDir / "smoke.vdb" )
+		self.assertEqual( smoke["out"].object( "/vdb" ).gridNames(), [ "density" ] )
+
+		points = GafferScene.SceneReader()
+		points["fileName"].setValue( self.dataDir / "points.vdb" )
+		self.assertEqual( points["out"].object( "/vdb" ).gridNames(), [ "points" ] )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( smoke["out"] )
+		group["in"][1].setInput( points["out"] )
+
+		pathFilter = GafferScene.PathFilter()
+
+		deleteGrids = GafferVDB.DeleteGrids()
+		deleteGrids["in"].setInput( group["out"] )
+		deleteGrids["filter"].setInput( pathFilter["out"] )
+
+		self.assertScenesEqual( deleteGrids["out"], deleteGrids["in"] )
+		self.assertSceneHashesEqual( deleteGrids["out"], deleteGrids["in"] )
+
+		pathFilter["paths"].setValue(
+			IECore.StringVectorData( [ "/group/*" ] )
+		)
+
+		self.assertScenesEqual( deleteGrids["out"], deleteGrids["in"] )
+
+		deleteGrids["grids"].setValue( "points" )
+		self.assertEqual( deleteGrids["out"].object( "/group/vdb" ).gridNames(), [ "density" ] )
+		self.assertEqual( deleteGrids["out"].object( "/group/vdb1" ).gridNames(), [] )
+
+		deleteGrids["mode"].setValue( deleteGrids.Mode.Keep )
+		self.assertEqual( deleteGrids["out"].object( "/group/vdb" ).gridNames(), [] )
+		self.assertEqual( deleteGrids["out"].object( "/group/vdb1" ).gridNames(), [ "points" ] )

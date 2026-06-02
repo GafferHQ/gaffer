@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -36,20 +36,50 @@
 
 #pragma once
 
+#include "GafferVDB/Export.h"
+#include "GafferVDB/TypeIds.h"
+
+#include "GafferScene/ObjectProcessor.h"
+
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+
 namespace GafferVDB
 {
 
-enum TypeId
+class GAFFERVDB_API DeleteGrids : public GafferScene::ObjectProcessor
 {
-	MeshToLevelSetTypeId = 123200,
-	LevelSetToMeshTypeId = 123201,
-	LevelSetOffsetTypeId = 123202,
-	PointsGridToPointsTypeId = 123203,
-	SphereLevelSetTypeId = 123204,
-	PointsToLevelSetTypeId = 123205,
-	VolumeScatterTypeId = 123206,
-	DeleteGridsTypeId = 123207,
-	LastTypeId = 123399
+
+	public :
+
+		explicit DeleteGrids(const std::string &name = defaultName<DeleteGrids>() );
+		~DeleteGrids() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferVDB::DeleteGrids, DeleteGridsTypeId, GafferScene::ObjectProcessor );
+
+		enum Mode
+		{
+			Delete = 0,
+			Keep = 1
+		};
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		Gaffer::StringPlug *gridsPlug();
+		const Gaffer::StringPlug *gridsPlug() const;
+
+	protected :
+
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
+
+	private:
+
+		static size_t g_firstPlugIndex;
 };
+
+IE_CORE_DECLAREPTR( DeleteGrids )
 
 } // namespace GafferVDB

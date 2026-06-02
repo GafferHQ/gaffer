@@ -1,6 +1,6 @@
-##########################################################################
+###########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,49 @@
 #
 ##########################################################################
 
-from ._GafferVDBUI import *
+import Gaffer
+import GafferVDB
 
-# Because the `_GafferVDBUI` Python module currently doesn't require
-# any symbols from the `GafferVDBUI` library, we need to load it explicitly
-# to get our custom visualiser registered.
-__import__( "Gaffer" ).__loadSharedLibrary( "GafferVDBUI" )
+Gaffer.Metadata.registerNode(
 
-from . import DeleteGridsUI
-from . import LevelSetToMeshUI
-from . import MeshToLevelSetUI
-from . import LevelSetOffsetUI
-from . import PointsGridToPointsUI
-from . import SphereLevelSetUI
-from . import PointsToLevelSetUI
-from . import VolumeScatterUI
-from . import VDBInspector
+	GafferVDB.DeleteGrids,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDBUI" )
+	"description",
+	"""
+	Deletes grids from an OpenVDB volume.
+	""",
+
+	plugs = {
+
+		"mode" : {
+
+			"description" :
+			"""
+			Defines how deletion is performed :
+
+			- Delete : The listed grids are deleted.
+			- Keep : The listed grids are kept, and all others are deleted.
+			""",
+
+			"preset:Delete" : GafferVDB.DeleteGrids.Mode.Delete,
+			"preset:Keep" : GafferVDB.DeleteGrids.Mode.Keep,
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+
+		},
+
+		"grids" : {
+
+			"description" :
+			"""
+			The names of the grids to be deleted (or kept
+			if the mode is set to Keep). Names should be separated
+			by spaces and may contain any of Gaffer's standard
+			wildcards.
+			""",
+
+		},
+
+	}
+
+)
