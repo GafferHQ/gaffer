@@ -55,6 +55,7 @@ namespace
 
 IECore::InternedString g_visibleKey( "noduleLayout:visible" );
 IECore::InternedString g_noduleTypeKey( "nodule:type" );
+IECore::InternedString g_showableKey( "plugVisibilityGadget:showable" );
 
 class PlugVisibilityGadget : public PlugAdder
 {
@@ -123,9 +124,14 @@ class PlugVisibilityGadget : public PlugAdder
 		{
 			vector<Plug *> result;
 
-			for( Plug::Iterator it( m_plugsParent.get() ); !it.done(); ++it )
+			for( Plug::RecursiveIterator it( m_plugsParent.get() ); !it.done(); ++it )
 			{
 				Plug *plug = it->get();
+				IECore::ConstBoolDataPtr showable = Metadata::value<IECore::BoolData>( plug, g_showableKey );
+				if( !showable || !showable->readable() )
+				{
+					continue;
+				}
 				if( !plug->getFlags( Plug::AcceptsInputs ) )
 				{
 					continue;
@@ -151,6 +157,7 @@ class PlugVisibilityGadget : public PlugAdder
 					continue;
 				}
 				result.push_back( it->get() );
+				it.prune();
 			}
 
 			return result;

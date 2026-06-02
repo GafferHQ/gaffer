@@ -50,13 +50,17 @@ def __setPlugMetadata( plug, key, value ) :
 def __hasVisibilityGadget( plug ) :
 
 	parent = plug.parent()
-	for key in Gaffer.Metadata.registeredValues( parent ) :
-		if key.endswith( ":gadgetType" ) and Gaffer.Metadata.value( parent, key ) == "GafferUI.PlugVisibilityGadget" :
-			return True
+	while True :
+		for key in Gaffer.Metadata.registeredValues( parent ) :
+			if key.endswith( ":gadgetType" ) and Gaffer.Metadata.value( parent, key ) == "GafferUI.PlugVisibilityGadget" :
+				return True
+		parent = parent.parent()
+		if parent is None or isinstance( parent, Gaffer.Node ) :
+			return False
 
 def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
-	if not __hasVisibilityGadget( plug ) :
+	if not __hasVisibilityGadget( plug ) or not Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) :
 		return
 
 	if len( menuDefinition.items() ) :
