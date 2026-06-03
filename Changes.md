@@ -6,6 +6,16 @@ Features
 
 - DeleteGrids : Added node for deleting grids from locations containing OpenVDB volumes.
 
+Fixes
+-----
+
+- RenderMan : Fixed PxrDisplace shader assignments, which now target the `ri:displacement` attribute rather than `osl:displacement`. This renders as before in Gaffer, but is more compatible with other applications when exported to USD.
+
+Breaking Changes
+----------------
+
+- RenderMan : PxrDisplace now assigns as an `ri:displacement` attribute rather than `osl:displacement`.
+
 1.7.0.0a1 (relative to 1.6.19.1)
 =========
 
