@@ -2373,7 +2373,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["frameRange"]["start"].setValue( 8 )
 		s["frameRange"]["end"].setValue( 22 )
 		s["frame"].setValue( 11 )
-		s["variables"].addMember( "test", IECore.StringData( "value" ), "test" )
+		s["variables"].addMember( "test", IECore.StringData( "value #" ), "test" )
 
 		s["n"] = GafferDispatchTest.TextWriter()
 		s["n"]["dispatcher"]["isolated"].setValue( True )
@@ -2384,7 +2384,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
 		s["d"]["tasks"][0].setInput( s["n"]["task"] )
 
-		s["d"]["task"].execute()
+		with IECore.CapturingMessageHandler() as mh :
+			s["d"]["task"].execute()
+
+		# The "test" variable has a frame substitution in it, but `TaskBatch` contexts
+		# omit frame variables. This test ensures the serialisation of `variables` done
+		# in `isolate()` does not error due to the missing frame variable.
+		self.assertEqual( len( mh.messages ), 0 )
 
 		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
 
@@ -2399,7 +2405,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		testPlugs = [ p for p in newScript["variables"].children() if p["name"].getValue() == "test" ]
 		self.assertEqual( len( testPlugs ), 1 )
-		self.assertEqual( testPlugs[0]["value"].getValue(), "value" )
+		self.assertEqual( testPlugs[0]["value"].getValue(), "value #" )
 
 	def testIsolated( self ) :
 
@@ -2760,6 +2766,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["framesPerSecond"].setValue( 1.0 )
+		s["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "####" ), name = "a", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "b", Gaffer.StringPlug( "value" ), name = "b", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["variablesBExpression"] = Gaffer.Expression()
+		s["variablesBExpression"].setExpression( 'parent["variables"]["b"]["value"] = {1: "a", 2: "b", 3: "c", 4: "d", 5: "e"}[context.getFrame()]' )
 
 		s["n"] = GafferDispatchTest.TextWriter()
 		s["n"]["dispatcher"]["isolated"].setValue( True )
@@ -2815,8 +2826,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( set( [ type( n ) for n in Gaffer.Node.RecursiveRange( newScript ) ] ), set( [ GafferDispatchTest.TextWriter, Gaffer.Spreadsheet ] ) )
 
 		self.assertEqual( len( newScript["isolatedAnimation"]["rows"] ), 6 )  # default + frame count
-		self.assertEqual( len( newScript["isolatedAnimation"]["rows"].defaultRow()["cells"] ), 3 )
+		self.assertEqual( len( newScript["isolatedAnimation"]["rows"].defaultRow()["cells"] ), 4 )
 
+		self.assertIsNone( newScript["variables"]["a"]["value"].getInput() )
+		self.assertEqual( newScript["variables"]["b"]["value"].getInput(), newScript["isolatedAnimation"]["out"]["variables_b_value"] )
 		self.assertIsNone( newScript["n"]["fileName"].getInput() )
 		self.assertIsNone( newScript["n"]["text"].getInput() )
 		self.assertIsNone( newScript["n"]["mode"].getInput() )
@@ -2828,6 +2841,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 			for f in range( 1, 6 ) :
 				with self.subTest( f = f ) :
 					c.setFrame( f )
+					self.assertEqual( newScript["variables"]["a"]["value"].getValue(), "####" )
+					self.assertEqual( newScript["variables"]["b"]["value"].getValue(), [ "a", "b", "c", "d", "e" ][f-1] )
 					self.assertEqual( newScript["n"]["fileName"].getValue(), "${script:name}" )
 					self.assertEqual( newScript["n"]["text"].getValue(), "####" )
 					self.assertEqual( newScript["n"]["mode"].getValue(), "x" )
@@ -2845,10 +2860,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["b"]["n"] = GafferDispatchTest.TextWriter()
 		s["b"]["n"]["dispatcher"]["isolated"].setValue( True )
 		s["b"]["n"]["dispatcher"]["batchSize"].setValue( 2 )
-		p = Gaffer.FloatPlug( "floatPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		a = Gaffer.FloatPlug( "unpromotedFloatPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"].addChild( a )
+		p = Gaffer.FloatPlug( "promotedFloatPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["n"]["user"].addChild( p )
 		promotedPlug = Gaffer.PlugAlgo.promote( p )
 		promotedTask = Gaffer.PlugAlgo.promote( s["b"]["n"]["task"] )
+
+		curveA = Gaffer.Animation.acquire( a )
+		curveA.addKey( Gaffer.Animation.Key( time = 1, value = 10 ) )
+		curveA.addKey( Gaffer.Animation.Key( time = 2, value = 20 ) )
 
 		curve = Gaffer.Animation.acquire( promotedPlug )
 		curve.addKey( Gaffer.Animation.Key( time = 1, value = 1 ) )
@@ -2873,12 +2894,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( set( [ type( n ) for n in Gaffer.Node.RecursiveRange( newScript["b"] ) ] ), set( [ GafferDispatchTest.TextWriter, Gaffer.Spreadsheet ] ) )
 
-		self.assertEqual( newScript["b"]["n"]["user"]["floatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_floatPlug"] )
+		self.assertEqual( newScript["b"]["n"]["user"]["promotedFloatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_promotedFloatPlug"] )
+		self.assertEqual( newScript["b"]["n"]["user"]["unpromotedFloatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_unpromotedFloatPlug"] )
 
 		with s.context() as c :
 			for f in range( 1, 3 ) :
 				c.setFrame( f )
-				self.assertEqual( newScript["b"]["n"]["user"]["floatPlug"].getValue(), [ 1, 2 ][f - 1] )
+				self.assertEqual( newScript["b"]["n"]["user"]["promotedFloatPlug"].getValue(), [ 1, 2 ][f - 1] )
+				self.assertEqual( newScript["b"]["n"]["user"]["unpromotedFloatPlug"].getValue(), [ 10, 20 ][f - 1] )
 
 	def testIsolatedObjectPlugs( self ) :
 

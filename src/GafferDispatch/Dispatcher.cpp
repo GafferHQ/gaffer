@@ -43,6 +43,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Signals.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
@@ -214,8 +215,9 @@ void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, con
 		return;
 	}
 
-	ScriptNode *destinationScript = destinationPlug->node()->scriptNode();
-	Spreadsheet *animationSpreadsheet = destinationScript->getChild<Spreadsheet>( g_isolatedAnimationNodeName );
+	Node *destinationNode = destinationPlug->node();
+	Node *animationNodeParent = destinationNode->isInstanceOf( (IECore::TypeId)ScriptNodeTypeId ) ? destinationNode : destinationNode->parent<Node>();
+	Spreadsheet *animationSpreadsheet = animationNodeParent->getChild<Spreadsheet>( g_isolatedAnimationNodeName );
 
 	Context::EditableScope frameContext( Context::current() );
 	frameContext.setFrame( frames.front() );
@@ -239,15 +241,14 @@ void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, con
 			animating = true;
 			if( !animationSpreadsheet )
 			{
-				Node *parentNode = destinationPlug->node()->parent<Node>();
-				parentNode->addChild( new Spreadsheet( g_isolatedAnimationNodeName ) );
-				animationSpreadsheet = parentNode->getChild<Spreadsheet>( parentNode->children().size() - 1 );
+				animationNodeParent->addChild( new Spreadsheet( g_isolatedAnimationNodeName ) );
+				animationSpreadsheet = animationNodeParent->getChild<Spreadsheet>( animationNodeParent->children().size() - 1 );
 				animationSpreadsheet->selectorPlug()->setValue( "${frame}" );
 			}
 
 			if( columnName.string().empty() )
 			{
-				columnName = boost::replace_all_copy( destinationPlug->relativeName( destinationPlug->node() ), ".", "_" );
+				columnName = boost::replace_all_copy( destinationPlug->relativeName( destinationNode ), ".", "_" );
 				animationSpreadsheet->rowsPlug()->addColumn( destinationPlug, columnName );
 
 				destinationPlug->setInput( animationSpreadsheet->outPlug()->getChild<Plug>( columnName ) );
@@ -292,7 +293,10 @@ void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *source
 		auto destinationPlug = destinationScript->descendant<ValuePlug>( sourcePlug->relativeName( sourceScript ) );
 		assert( destinationPlug );
 
-		bakePlugValue( destinationPlug, sourcePlug.get(), frames );
+		if( sourcePlug->getInput() )
+		{
+			bakePlugValue( destinationPlug, sourcePlug.get(), frames );
+		}
 	}
 }
 

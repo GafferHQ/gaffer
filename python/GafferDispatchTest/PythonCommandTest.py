@@ -529,5 +529,29 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		with open( self.temporaryDirectory() / "pythonCommand.txt" ) as inFile :
 			self.assertEqual( inFile.readlines()[0].strip(), "4" )
 
+	def testScriptNodeExecute( self ) :
+
+		# PythonCommand that calls `ScriptNode.execute()` to add a plug to the script's
+		# `variables` plug. This in turn triggers `ScriptNode::plugSet()` to transfer
+		# the plug's value into the script's context. We _don't_ want any substitutions
+		# to be applied to the value at this point, which means `ScriptNode::execute()`
+		# must scope a ThreadState without the current PythonCommand's `Process`.
+
+		pythonCommand = GafferDispatch.PythonCommand()
+		pythonCommand["command"].setValue( inspect.cleandoc(
+			"""
+			import Gaffer
+			toExecute = '''
+			import Gaffer
+			parent["variables"].addChild( Gaffer.NameValuePlug( "test", "testing #", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+			'''
+			script = Gaffer.ScriptNode()
+			script.execute( toExecute )
+			assert( script.context()["test"] == "testing #" )
+			"""
+		) )
+
+		pythonCommand["task"].execute()
+
 if __name__ == "__main__":
 	unittest.main()
