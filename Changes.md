@@ -9,7 +9,11 @@ Features
 Fixes
 -----
 
-- RenderMan : Fixed PxrDisplace shader assignments, which now target the `ri:displacement` attribute rather than `osl:displacement`. This renders as before in Gaffer, but is more compatible with other applications when exported to USD.
+- RenderMan :
+  - Fixed PxrDisplace shader assignments, which now target the `ri:displacement` attribute rather than `osl:displacement`. This renders as before in Gaffer, but is more compatible with other applications when exported to USD.
+  - Fixed handling of multiple intervals in `ri:checkpoint:interval` option. Intervals may be separated by spaces or commas. [^1]
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
 Breaking Changes
 ----------------
@@ -167,7 +171,10 @@ Build
 1.6.x.x (relative to 1.6.19.1)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed handling of multiple intervals in `ri:checkpoint:interval` option. Intervals may be separated by spaces or commas.
 
 1.6.19.1 (relative to 1.6.19.0)
 ========

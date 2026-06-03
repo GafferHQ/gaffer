@@ -62,6 +62,7 @@ namespace
 
 const string g_renderManPrefix( "ri:" );
 const IECore::InternedString g_cameraOption( "camera" );
+const IECore::InternedString g_checkpointIntervalOption( "ri:checkpoint:interval" );
 const IECore::InternedString g_layerName( "layerName" );
 const IECore::InternedString g_sampleMotionOption( "sampleMotion" );
 const IECore::InternedString g_frameOption( "frame" );
@@ -467,6 +468,24 @@ void Globals::option( const IECore::InternedString &name, const IECore::Object *
 		{
 			m_renderParameters.Remove( RtUString( "progressMode" ) );
 			m_options.Remove( RtUString( "progressMode" ) );
+		}
+	}
+	else if( name == g_checkpointIntervalOption )
+	{
+		// Both `PRManOptions.args` and `PxrOptionsAPI` specify
+		// `checkpoint:interval` as a string. But for multiple intervals,
+		// RenderMan actually requires the host to provide a string array.
+		// RenderMan for Blender splits on spaces and hdPrman splits on commas,
+		// so we support both.
+		if( auto *d = optionCast<const StringData>( value, name ) )
+		{
+			StringVectorDataPtr splitData = new StringVectorData;
+			boost::algorithm::split( splitData->writable(), d->readable(), boost::algorithm::is_any_of( " ," ), boost::algorithm::token_compress_on );
+			ParamListAlgo::convertParameter( RtUString( "checkpoint:interval" ), splitData.get(), m_options );
+		}
+		else
+		{
+			m_options.Remove( RtUString( "checkpoint:interval" ) );
 		}
 	}
 	else if( boost::starts_with( name.c_str(), "ri:lpe:" ) )
