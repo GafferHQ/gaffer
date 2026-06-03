@@ -45,6 +45,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Monitor.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -921,6 +922,16 @@ bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent
 	DirtyPropagationScope dirtyScope;
 	bool result = false;
 	bool wasExecuting = m_executing;
+
+	// As with `ScriptNodeBinding::serialise()`, we don't want to perform string
+	// substitutions. Removing the current Process from ThreadState ensures
+	// `StringPlug::getValue()` will not perform substitutions.
+	const Context *contextVariables = Context::current();
+	const Monitor::MonitorSet &monitors = Monitor::current();
+	const ThreadState defaultThreadState;
+	ThreadState::Scope defaultThreadStateScope( defaultThreadState );
+	Context::Scope contextScope( contextVariables );
+	Monitor::Scope monitorScope( monitors );
 
 	m_executing = true;
 	try

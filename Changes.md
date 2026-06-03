@@ -12,6 +12,9 @@ Fixes
 - RenderMan :
   - Fixed PxrDisplace shader assignments, which now target the `ri:displacement` attribute rather than `osl:displacement`. This renders as before in Gaffer, but is more compatible with other applications when exported to USD.
   - Fixed handling of multiple intervals in `ri:checkpoint:interval` option. Intervals may be separated by spaces or commas. [^1]
+- Dispatcher : [^1]
+  - Fixed `Context has no variable named...` error when dispatching an isolated task with a `StringPlug` script variable containing a frame substitution.
+  - Fixed unnecessary baking of values for ScriptNode variables plugs without input connections.
 
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
@@ -168,12 +171,20 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.x.x (relative to 1.6.19.1)
+1.6.x.x (relative to 1.6.19.2)
 =======
+
+
+
+1.6.19.2 (relative to 1.6.19.1)
+========
 
 Fixes
 -----
 
+- Dispatcher :
+  - Fixed `Context has no variable named...` error when dispatching an isolated task with a `StringPlug` script variable containing a frame substitution.
+  - Fixed unnecessary baking of values for ScriptNode variables plugs without input connections.
 - RenderMan : Fixed handling of multiple intervals in `ri:checkpoint:interval` option. Intervals may be separated by spaces or commas.
 
 1.6.19.1 (relative to 1.6.19.0)
