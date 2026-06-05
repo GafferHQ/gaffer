@@ -1024,6 +1024,71 @@ class RendererTest( GafferTest.TestCase ) :
 		del sphere, light
 		del renderer
 
+	def testUSDMeshLightAttributes( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			sphere = renderer.object(
+				"sphere",
+				IECoreScene.SpherePrimitive(),
+				renderer.attributes( IECore.CompoundObject( {
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"MeshLight", "light",
+								{ "lightColor" : imath.Color3f( 0.0, 1.0, 1.0 ) }
+							),
+						},
+						output = "output",
+					),
+				} ) )
+			)
+
+			del renderer
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"]
+		self.__assertParameterEqual( attributes, "visibility:camera", [ 1 ] )
+		self.__assertParameterEqual( attributes, "visibility:indirect", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:transmission", [ 0 ] )
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			sphere = renderer.object(
+				"sphere",
+				IECoreScene.SpherePrimitive(),
+				renderer.attributes( IECore.CompoundObject( {
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"MeshLight", "light",
+								{ "lightColor" : imath.Color3f( 0.0, 1.0, 1.0 ) }
+							),
+						},
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+					"ri:visibility:indirect" : IECore.BoolData( True ),
+					"ri:visibility:transmission" : IECore.BoolData( True ),
+				} ) )
+			)
+
+			del renderer
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"]
+		self.__assertParameterEqual( attributes, "visibility:camera", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:indirect", [ 1 ] )
+		self.__assertParameterEqual( attributes, "visibility:transmission", [ 1 ] )
+
 	def testConnectionToMissingShader( self ) :
 
 		# This test doesn't assert anything, but demonstrates that making
