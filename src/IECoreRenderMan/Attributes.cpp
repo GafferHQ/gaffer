@@ -115,6 +115,9 @@ const IECore::InternedString g_automaticInstancingAttributeName( "gaffer:automat
 const InternedString g_doubleSidedAttributeName( "doubleSided" );
 const InternedString g_lightMuteAttributeName( "light:mute" );
 const InternedString g_renderManLightFilterAttributeName( "ri:lightFilter" );
+const InternedString g_visibilityCameraAttributeName( "ri:visibility:camera" );
+const InternedString g_visibilityIndirectAttributeName( "ri:visibility:indirect" );
+const InternedString g_visibilityTransmissionAttributeName( "ri:visibility:transmission" );
 const RtUString g_userMaterialId( "user:__materialid" );
 
 const vector<InternedString> g_displacementAttributeNames = { "ri:displacement", "osl:displacement", "displacement" };
@@ -241,6 +244,10 @@ ConstCompoundObjectPtr convertUSDMeshLight( const CompoundObject *attributes )
 	ShaderNetworkAlgo::convertUSDMeshLightShaders( newLightShaderNetwork.get(), surface );
 
 	result->members()[lightShaderAttribute] = std::move( newLightShaderNetwork );
+
+	result->members().try_emplace( g_visibilityIndirectAttributeName, new BoolData( false ) );
+	result->members().try_emplace( g_visibilityTransmissionAttributeName, new BoolData( false ) );
+	result->members().try_emplace( g_visibilityCameraAttributeName, new BoolData( true ) );
 
 	return result;
 }
