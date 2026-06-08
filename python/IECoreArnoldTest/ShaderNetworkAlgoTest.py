@@ -1624,6 +1624,65 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 						self.assertAlmostEqual( light.parameters["color"].value[i], imath.Color3f( 0.1 * 0.4, 0.2 * 0.5, 0.3 * 0.6 )[i] )
 					self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "lightTexture", "out" ) )
 
+	def testUSDMeshLightAttributes( self ) :
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "RectLight", "light" ) }, output = ( "light", "out" ) )
+			}
+		)
+
+		modifiedAttributes = IECoreArnold.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+		self.assertNotIn( "ai:visibility:camera", modifiedAttributes )
+		self.assertNotIn( "ai:visibility:shadow", modifiedAttributes )
+		self.assertNotIn( "ai:visibility:diffuse_reflect", modifiedAttributes )
+		self.assertNotIn( "ai:visibility:specular_reflect", modifiedAttributes )
+		self.assertNotIn( "ai:visibility:diffuse_transmit", modifiedAttributes )
+		self.assertNotIn( "ai:visibility:specular_transmit", modifiedAttributes )
+		self.assertNotIn( "ai:visibility:volume", modifiedAttributes )
+		self.assertNotIn( "ai:visibility:subsurface", modifiedAttributes )
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "MeshLight", "light" ) }, output = ( "light", "out" ) )
+			}
+		)
+
+		modifiedAttributes = IECoreArnold.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+		self.assertEqual( modifiedAttributes["ai:visibility:camera"].value, True )
+		self.assertEqual( modifiedAttributes["ai:visibility:shadow"].value, False )
+		self.assertEqual( modifiedAttributes["ai:visibility:diffuse_reflect"].value, False )
+		self.assertEqual( modifiedAttributes["ai:visibility:specular_reflect"].value, False )
+		self.assertEqual( modifiedAttributes["ai:visibility:diffuse_transmit"].value, False )
+		self.assertEqual( modifiedAttributes["ai:visibility:specular_transmit"].value, False )
+		self.assertEqual( modifiedAttributes["ai:visibility:volume"].value, False )
+		self.assertEqual( modifiedAttributes["ai:visibility:subsurface"].value, False )
+
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "MeshLight", "light" ) }, output = ( "light", "out" ) ),
+				"ai:visibility:camera" : IECore.BoolData( False ),
+				"ai:visibility:shadow" : IECore.BoolData( True ),
+				"ai:visibility:diffuse_reflect" : IECore.BoolData( True ),
+				"ai:visibility:specular_reflect" : IECore.BoolData( True ),
+				"ai:visibility:diffuse_transmit" : IECore.BoolData( True ),
+				"ai:visibility:specular_transmit" : IECore.BoolData( True ),
+				"ai:visibility:volume" : IECore.BoolData( True ),
+				"ai:visibility:subsurface" : IECore.BoolData( True ),
+			}
+		)
+
+		modifiedAttributes = IECoreArnold.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+		self.assertEqual( modifiedAttributes["ai:visibility:camera"].value, False )
+		self.assertEqual( modifiedAttributes["ai:visibility:shadow"].value, True )
+		self.assertEqual( modifiedAttributes["ai:visibility:diffuse_reflect"].value, True )
+		self.assertEqual( modifiedAttributes["ai:visibility:specular_reflect"].value, True )
+		self.assertEqual( modifiedAttributes["ai:visibility:diffuse_transmit"].value, True )
+		self.assertEqual( modifiedAttributes["ai:visibility:specular_transmit"].value, True )
+		self.assertEqual( modifiedAttributes["ai:visibility:volume"].value, True )
+		self.assertEqual( modifiedAttributes["ai:visibility:subsurface"].value, True )
+
 
 if __name__ == "__main__":
 	unittest.main()
