@@ -752,6 +752,15 @@ const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
 
+IECore::InternedString g_cameraVisibilityAttributeName( "ai:visibility:camera" );
+IECore::InternedString g_shadowVisibilityAttributeName( "ai:visibility:shadow" );
+IECore::InternedString g_diffuseReflectVisibilityAttributeName( "ai:visibility:diffuse_reflect" );
+IECore::InternedString g_specularReflectVisibilityAttributeName( "ai:visibility:specular_reflect" );
+IECore::InternedString g_diffuseTransmitVisibilityAttributeName( "ai:visibility:diffuse_transmit" );
+IECore::InternedString g_specularTransmitVisibilityAttributeName( "ai:visibility:specular_transmit" );
+IECore::InternedString g_volumeVisibilityAttributeName( "ai:visibility:volume" );
+IECore::InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsurface" );
+
 const std::vector<IECore::InternedString> g_surfaceShaderAttributeNames = {
 	"ai:surface",
 	"osl:surface",
@@ -1334,6 +1343,15 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( newLightShaderNetwork.get() );
 
 	result->members()[lightAttribute] = std::move( newLightShaderNetwork );
+
+	result->members().try_emplace( g_cameraVisibilityAttributeName, new IECore::BoolData( true ) );
+	result->members().try_emplace( g_shadowVisibilityAttributeName, new IECore::BoolData( false ) );
+	result->members().try_emplace( g_diffuseReflectVisibilityAttributeName, new IECore::BoolData( false ) );
+	result->members().try_emplace( g_specularReflectVisibilityAttributeName, new IECore::BoolData( false ) );
+	result->members().try_emplace( g_diffuseTransmitVisibilityAttributeName, new IECore::BoolData( false ) );
+	result->members().try_emplace( g_specularTransmitVisibilityAttributeName, new IECore::BoolData( false ) );
+	result->members().try_emplace( g_volumeVisibilityAttributeName, new IECore::BoolData( false ) );
+	result->members().try_emplace( g_subsurfaceVisibilityAttributeName, new IECore::BoolData( false ) );
 
 	return result;
 }
