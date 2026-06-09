@@ -38,6 +38,7 @@
 
 #include "GafferScene/Capsule.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/Private/PointInstancerAlgo.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/SetAlgo.h"
@@ -53,6 +54,7 @@
 #include "IECoreScene/CoordinateSystem.h"
 #include "IECoreScene/Output.h"
 #include "IECoreScene/Primitive.h"
+#include "IECoreScene/PointInstancer.h"
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -547,7 +549,7 @@ std::optional<SampledTransform> transformSamples( const M44fPlug *transformPlug,
 	return result;
 }
 
-std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECore::MurmurHash *hash )
+std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, ObjectHash *hash )
 {
 	IECoreScenePreview::Renderer::Samples<IECore::MurmurHash> sampleHashes;
 	if( !sampleTimes.size() )
@@ -594,7 +596,12 @@ std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug
 			}
 		}
 
-		if( combinedHash == *hash )
+		if( hash->isPointInstancer )
+		{
+			combinedHash.append( PointInstancerAlgo::prototypesHash( objectPlug->parent<ScenePlug>() ) );
+		}
+
+		if( combinedHash == hash->value )
 		{
 			return std::nullopt;
 		}
@@ -678,7 +685,8 @@ std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug
 				// at a time )
 				if( hash )
 				{
-					*hash = combinedHash;
+					hash->value = combinedHash;
+					hash->isPointInstancer = false;
 				}
 
 				return objectSamples( objectPlug, {} );
@@ -694,13 +702,27 @@ std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug
 
 	if( hash )
 	{
-		*hash = combinedHash;
+		hash->value = combinedHash;
+		const bool isPointInstancer = result.samples.size() && result.samples[0]->isInstanceOf( PointInstancer::staticTypeId() );
+		if( isPointInstancer )
+		{
+			if( !hash->isPointInstancer )
+			{
+				// Hash was either uninitialised, or we didn't find a PointInstancer last time round.
+				hash->value.append( PointInstancerAlgo::prototypesHash( objectPlug->parent<ScenePlug>() ) );
+			}
+			else
+			{
+				// We already applied the `prototypesHash` above, when testing for early return.
+			}
+		}
+		hash->isPointInstancer = isPointInstancer;
 	}
 
 	return result;
 }
 
-IECoreScenePreview::Renderer::ObjectInterfacePtr outputObject( const std::string &name, const SampledObject &sampledObject, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer )
+IECoreScenePreview::Renderer::ObjectInterfacePtr outputObject( const std::string &name, const SampledObject &sampledObject, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const RenderOptions &renderOptions, const ScenePlug *scene, IECoreScenePreview::Renderer *renderer )
 {
 	if( sampledObject.samples.size() == 1 )
 	{
@@ -710,6 +732,35 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr outputObject( const std::string
 			capsuleCopy->setRenderOptions( renderOptions );
 			return renderer->object( name, { capsuleCopy }, sampledObject.sampleTimes, attributes );
 		}
+	}
+
+	if( runTimeCast<const IECoreScene::PointInstancer>( sampledObject.samples[0].get() ) )
+	{
+		IECoreScenePreview::Renderer::PointInstancerSamples samples = IECoreScenePreview::Renderer::staticSamplesCast<IECoreScene::ConstPointInstancerPtr>( sampledObject.samples );
+		for( auto &sample : samples )
+		{
+			// We flatten PointInstancers for several reasons :
+			//
+			// - Not all our Renderer backends implement `procedural()`, which is currently
+			//   our only mechanism for instancing a group rather than a single primitive.
+			// - Flattening vs hierarchical instancing has memory and performance implications
+			//   that are highly situation specific. Therefore we prefer the user to make an
+			//   informed decision and use the Encapsulate node on the prototypes if hierarchical
+			//   instancing is preferred (and the backend supports it).
+			// - Users often unwittingly make prototypes with multiple locations but only
+			//   a single renderable object - for example by having an intermediate transform
+			//   or separate `proxy` and `render` geometry. Flattening this reduces to simple
+			//   single-primitive instancing without the overhead of additional hierarchy.
+			sample = PointInstancerAlgo::flatten( sample.get(), renderOptions, scene );
+		}
+
+		auto prototypes = PointInstancerAlgo::prototypes( samples[0].get(), renderOptions, scene, renderer );
+		if( prototypes.empty() )
+		{
+			// Warning already emitted by `pointInstancerPrototypes()`.
+			return nullptr;
+		}
+		return renderer->pointInstancer( name, samples, sampledObject.sampleTimes, prototypes, attributes );
 	}
 
 	return renderer->object( name, sampledObject.samples, sampledObject.sampleTimes, attributes );
@@ -1673,7 +1724,7 @@ struct ObjectOutput : public LocationOutput
 		}
 
 		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface = this->attributesInterface();
-		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = outputObject( name( path ), *sampledObject, attributesInterface.get(), renderOptions(), renderer() );
+		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = outputObject( name( path ), *sampledObject, attributesInterface.get(), renderOptions(), scene, renderer() );
 
 		if( objectInterface )
 		{
@@ -1690,7 +1741,9 @@ struct ObjectOutput : public LocationOutput
 			}
 		}
 
-		return true;
+		// By convention, we don't render the children of PointInstancers. This allows prototypes to
+		// be nested without fear of them being rendered in their own right.
+		return !runTimeCast<const IECoreScene::PointInstancer>( sampledObject->samples[0].get() );
 	}
 
 	const PathMatcher &m_cameraSet;

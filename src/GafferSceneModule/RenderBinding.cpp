@@ -116,7 +116,7 @@ list sampledObjectSampleTimes( const Private::RendererAlgo::SampledObject &sampl
 	return result;
 }
 
-object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, IECore::MurmurHash *hash, bool copy )
+object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, GafferScene::Private::RendererAlgo::ObjectHash *hash, bool copy )
 {
 	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
@@ -299,6 +299,14 @@ void GafferSceneModule::bindRender()
 				.def( "__init__", make_constructor( sampledObjectConstructor, default_call_policies() ) )
 				.add_property( "samples", &sampledObjectSamples )
 				.add_property( "sampleTimes", &sampledObjectSampleTimes )
+			;
+
+			class_<GafferScene::Private::RendererAlgo::ObjectHash>( "ObjectHash" )
+				.def( init<const GafferScene::Private::RendererAlgo::ObjectHash &>() )
+				.def_readwrite( "value", &GafferScene::Private::RendererAlgo::ObjectHash::value )
+				.def_readwrite( "isPointInstancer", &GafferScene::Private::RendererAlgo::ObjectHash::isPointInstancer )
+				.def( self == self )
+				.def( self != self )
 			;
 
 			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object(), arg( "_copy" ) = true ) );

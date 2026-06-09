@@ -133,6 +133,15 @@ struct SampledObject
 	IECoreScenePreview::Renderer::ObjectSamples samples;
 	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 };
+
+struct ObjectHash
+{
+	IECore::MurmurHash value;
+	bool isPointInstancer = false;
+	bool operator==( const ObjectHash &rhs ) const { return value == rhs.value && isPointInstancer == rhs.isPointInstancer; }
+	bool operator!=( const ObjectHash &rhs ) const { return !(*this == rhs); }
+};
+
 /// Samples the object from the current location in preparation for output to the renderer. The
 /// `sampleTimes` should have been obtained from `deformationMotionTimes()` and the current context should
 /// match the frame being output.
@@ -145,10 +154,10 @@ struct SampledObject
 /// sample from the current frame, no matter the values in `sampleTimes`. Therefore the returned `sampleTimes`
 /// may differ from the `sampleTimes` passed in. It is the _returned_ `sampleTimes` that should be passed to
 /// the Renderer.
-GAFFERSCENE_API std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECore::MurmurHash *hash = nullptr );
+GAFFERSCENE_API std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, ObjectHash *hash = nullptr );
 
-/// Outputs a sampled object to the renderer. This takes care of special cases for Capsules.
-GAFFERSCENE_API IECoreScenePreview::Renderer::ObjectInterfacePtr outputObject( const std::string &name, const SampledObject &sampledObject, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer );
+/// Outputs a sampled object to the renderer. This takes care of special cases for Capsules and PointInstancers.
+GAFFERSCENE_API IECoreScenePreview::Renderer::ObjectInterfacePtr outputObject( const std::string &name, const SampledObject &sampledObject, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const RenderOptions &renderOptions, const ScenePlug *scene, IECoreScenePreview::Renderer *renderer );
 
 GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
