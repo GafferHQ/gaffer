@@ -1945,8 +1945,10 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 			self["numPoints"] = Gaffer.IntPlug( defaultValue = 2 )
 			self["sphereRadius"] = Gaffer.FloatPlug( defaultValue = 1 )
+			self["transform"] = Gaffer.TransformPlug()
 
 			self["objectToScene"] = GafferScene.ObjectToScene()
+			self["objectToScene"]["transform"].setInput( self["transform"] )
 			self["objectToScene"]["name"].setValue( "instancer" )
 
 			self["expression"] = Gaffer.Expression()

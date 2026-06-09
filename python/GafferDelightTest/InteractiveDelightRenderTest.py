@@ -48,6 +48,7 @@ import GafferDelight
 class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "3Delight"
+	pointInstancerSupported = True
 
 	@unittest.skip( "No light linking support just yet" )
 	def testBasicLightLinking( self ) :

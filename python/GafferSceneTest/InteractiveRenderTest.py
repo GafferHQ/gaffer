@@ -56,6 +56,10 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 	# Derived classes should set `cls.renderer` to the type of
 	# renderer to be tested.
 	renderer = None
+	# Derived classes should set this to `True` for renderers which implement
+	# the `pointInstancer()` call, so that it is tested.
+	## \todo Flip this to `True` by default, and make derived classes opt out.
+	pointInstancerSupported = False
 
 	@classmethod
 	def setUpClass( cls ) :
@@ -3603,6 +3607,167 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		script["shaderAssignment"]["enabled"].setValue( False )
 		self.assertEventually( lambda : assertColor( imath.Color4f( 1 ) ) )
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testEditPointInstancer( self ) :
+
+		if not self.pointInstancerSupported :
+			raise unittest.SkipTest( "PointInstancer not supported" )
+
+		script = Gaffer.ScriptNode()
+
+		script["catalogue"] = GafferScene.Catalogue()
+
+		script["instancer"] = GafferSceneTest.RenderControllerTest.ExamplePointInstancer()
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["instancer"]["out"] )
+		script["parent"]["children"][0].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+
+		# Two instances should be visible.
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 1 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.8 ) ).a, 1 )
+		)
+
+		script["instancer"]["numPoints"].setValue( 1 )
+
+		# Now only one should be visible.
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 1 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.8 ) ).a, 0 )
+		)
+
+		script["instancer"]["transform"]["translate"]["x"].setValue( -2 )
+
+		# Now the instance should have moved.
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).a, 0 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( script["catalogue"], imath.V2f( 0.2, 0.5 ) ).a, 1 )
+		)
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testEditPointInstancerPrototypeShader( self ) :
+
+		if not self.pointInstancerSupported :
+			raise unittest.SkipTest( "PointInstancer not supported" )
+
+		script = Gaffer.ScriptNode()
+
+		script["catalogue"] = GafferScene.Catalogue()
+
+		script["instancer"] = GafferSceneTest.RenderControllerTest.ExamplePointInstancer()
+
+		script["shader"], colorPlug, shaderOut = self._createConstantShader()
+		colorPlug.setValue( imath.Color3f( 1, 0, 0 ) )
+
+		script["prototypeFilter"] = GafferScene.PathFilter()
+		script["prototypeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/instancer/prototypes/*" ] ) )
+
+		script["shaderAssignment"] = GafferScene.ShaderAssignment()
+		script["shaderAssignment"]["in"].setInput( script["instancer"]["out"] )
+		script["shaderAssignment"]["filter"].setInput( script["prototypeFilter"]["out"] )
+		script["shaderAssignment"]["shader"].setInput( shaderOut )
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["shaderAssignment"]["out"] )
+		script["parent"]["children"][0].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+
+		# We should have red instances at first.
+
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ), 0.01 )
+		)
+
+		# But if we edit the shader they should change colour.
+
+		colorPlug.setValue( imath.Color3f( 0, 0, 1 ) )
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( 0, 0, 1, 1 ), 0.01 )
+		)
 
 		script["render"]["state"].setValue( script["render"].State.Stopped )
 

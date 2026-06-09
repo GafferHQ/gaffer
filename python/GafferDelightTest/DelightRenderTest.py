@@ -38,6 +38,8 @@ import unittest
 
 import IECore
 
+import GafferDelight
+import GafferOSL
 import GafferSceneTest
 
 class DelightRenderTest( GafferSceneTest.RenderTest ) :
@@ -46,6 +48,7 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 	sceneDescriptionSuffix = ".nsi"
 	# Apparent bug in 3Delight's EXR driver writes M44f as Box2f.
 	unsupportedOutputMetadataTypes = [ IECore.M44fData ]
+	pointInstancerSupported = True
 
 	@unittest.skip( "No light linking support just yet" )
 	def testLightLinking( self ) :
@@ -61,6 +64,23 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 	def testInstanceIDOutput( self ) :
 
 		pass
+
+	def _createConstantShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "Surface/Constant" )
+		return shader, shader["parameters"]["Cs"], shader["out"]["out"]
+
+	def _createOptions( self ) :
+
+		# Improve anti-aliasing for motion-blur tests.
+
+		options = GafferDelight.DelightOptions()
+
+		options["options"]["dl:oversampling"]["enabled"].setValue( True )
+		options["options"]["dl:oversampling"]["value"].setValue( 16 )
+
+		return options
 
 if __name__ == "__main__":
 	unittest.main()
