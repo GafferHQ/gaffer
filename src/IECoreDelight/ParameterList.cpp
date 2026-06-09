@@ -274,6 +274,16 @@ NSIParam_t ParameterList::parameter( const char *name, const IECore::Data *value
 			result.count = isSingleArray ? 1 : v.size();
 			break;
 		}
+		case M44dVectorDataTypeId :
+		{
+			const vector<M44d> &v = static_cast<const M44dVectorData *>( value )->readable();
+			result.type = NSITypeDoubleMatrix;
+			result.arraylength = isSingleArray ? v.size() : 1;
+			result.flags |= isSingleArray ? NSIParamIsArray : 0;
+			result.data = v.data();
+			result.count = isSingleArray ? 1 : v.size();
+			break;
+		}
 		default :
 			result.type = NSITypeInvalid;
 			msg( Msg::Warning, "ParameterList", fmt::format( "Attribute \"{}\" has unsupported datatype \"{}\".", name, value->typeName() ) );
