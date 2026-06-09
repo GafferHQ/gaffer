@@ -58,6 +58,10 @@ class Image( GafferUI.Widget ) :
 		# the same size.
 		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed ) )
 
+		self.updateImage( imagePrimitiveOrFileName )
+
+	def updateImage( self, imagePrimitiveOrFileName ) :
+
 		if isinstance( imagePrimitiveOrFileName, str ) :
 			pixmap = self._qtPixmapFromFile( str( imagePrimitiveOrFileName ) )
 		elif isinstance( imagePrimitiveOrFileName, IECoreImage.ImagePrimitive ) :

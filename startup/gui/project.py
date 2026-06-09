@@ -44,6 +44,7 @@ import Gaffer
 import GafferImage
 import GafferDispatch
 import GafferTractor
+import GafferFlamenco
 
 ##########################################################################
 # Note this file is shared with the `dispatch` app. We need to ensure any
@@ -117,7 +118,7 @@ if 'GafferUI' in sys.modules :
 # Dispatchers
 ##########################################################################
 
-for dispatcher in [ GafferDispatch.LocalDispatcher, GafferTractor.TractorDispatcher ] :
+for dispatcher in [ GafferDispatch.LocalDispatcher, GafferTractor.TractorDispatcher, GafferFlamenco.FlamencoDispatcher ] :
 
 	Gaffer.Metadata.registerValue( dispatcher, "jobName", "userDefault", "${script:name}" )
 	directoryName = dispatcher.staticTypeName().rpartition( ":" )[2].replace( "Dispatcher", "" ).lower()
