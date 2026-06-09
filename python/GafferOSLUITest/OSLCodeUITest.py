@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+import GafferSceneUI
 import GafferOSL
 import GafferOSLTest
 import GafferOSLUI
@@ -65,6 +66,31 @@ class OSLCodeUITest( GafferOSLTest.OSLTestCase ) :
 		del node["out"]["o"]
 		self.assertTrue( isinstance( nodeGadget1.nodule( node["out"] ), GafferUI.StandardNodule ) )
 		self.assertTrue( isinstance( nodeGadget2.nodule( node["out"] ), GafferUI.StandardNodule ) )
+
+	def testUISurvivesCompilationError( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferOSL.OSLCode()
+		script["node"]["parameters"].addChild( Gaffer.StringPlug( "inString", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		script["node"]["parameters"].addChild( Gaffer.IntPlug( "inInt", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		script["node"]["parameters"].addChild( Gaffer.FloatPlug( "inFloat", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		script["node"]["out"].addChild( Gaffer.StringPlug( "outString", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		script["node"]["out"].addChild( Gaffer.IntPlug( "outInt", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		script["node"]["out"].addChild( Gaffer.Color3fPlug( "outColor", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		# Make a shader that won't compile.
+
+		script["node"]["code"].setValue( "i am a compilation error" )
+		with self.assertRaisesRegex( Gaffer.ProcessException, ".*Syntax error.*" ) :
+			script["node"]["name"].getValue()
+
+		# And check that we can still create UIs for it without
+		# throwing an exception.
+
+		GafferUI.NodeUI.create( script["node"] )
+		GafferUI.NodeGadget.create( script["node"] )
+		GafferUI.GraphGadget( script )
 
 if __name__ == "__main__":
 	unittest.main()
