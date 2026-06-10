@@ -183,6 +183,7 @@ from . import AttributeTweaksUI
 from . import OptionTweaksUI
 from . import OptionQueryUI
 from . import RenameUI
+from . import PrimitiveQueryUI
 from . import PrimitiveVariableQueryUI
 from . import SetQueryUI
 from . import MeshSegmentsUI

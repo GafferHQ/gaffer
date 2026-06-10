@@ -47,6 +47,7 @@
 #include "GafferScene/ExistenceQuery.h"
 #include "GafferScene/FilterQuery.h"
 #include "GafferScene/OptionQuery.h"
+#include "GafferScene/PrimitiveQuery.h"
 #include "GafferScene/PrimitiveVariableQuery.h"
 #include "GafferScene/SetQuery.h"
 #include "GafferScene/ShaderQuery.h"
@@ -268,6 +269,7 @@ void GafferSceneModule::bindQueries()
 		;
 	}
 
+	GafferBindings::DependencyNodeClass< GafferScene::PrimitiveQuery >();
 	GafferBindings::DependencyNodeClass< GafferScene::ExistenceQuery >();
 	GafferBindings::DependencyNodeClass< GafferScene::FilterQuery >();
 
