@@ -310,11 +310,9 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 
 		self.__setupBasicConstant( s )
 
-		# TODO - this is inconsistent
-
 		self.assertEqual(
-			self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", Property.Interpolation ).value(),
-			IECore.StringData( "Invalid" )
+			self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", Property.Interpolation ),
+			None
 		)
 
 		self.assertEqual(

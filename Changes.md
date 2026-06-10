@@ -7,6 +7,11 @@ Features
 - FlamencoDispatcher : Added a new node for sending tasks to Blender's [Flamenco]((https://flamenco.blender.org) render farm manager.
 - PrimitiveQuery : Added a new node for querying a primitive's type and variable sizes.
 
+Fixes
+-----
+
+- SceneInspector : Fixed Interpolation field for primitive variables that don't exist. Previously it said "Invalid", and now it shows nothing.
+
 API
 ---
 

@@ -243,6 +243,10 @@ IECore::ConstObjectPtr PrimitiveVariableInspector::value( const GafferScene::Sce
 
 	if( m_property == Property::Interpolation )
 	{
+		if( !primitiveVariableHistory->primitiveVariableValue.data )
+		{
+			return nullptr;
+		}
 		auto it = g_primitiveVariableInterpolations.find( primitiveVariableHistory->primitiveVariableValue.interpolation );
 		return it != g_primitiveVariableInterpolations.end() ? it->second : nullptr;
 	}
