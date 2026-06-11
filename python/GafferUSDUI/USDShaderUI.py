@@ -126,12 +126,7 @@ def __description( plug ) :
 
 	property = __primProperty( plug )
 	if property :
-		description = property.GetMetadata( "documentation" )
-		if description is not None :
-			# Spare UsdLux from embarrassment until it defines what
-			# various parameters are actually intended to do.
-			description = description.replace( "TODO: clarify semantics", "" )
-		return description
+		return property.GetDocumentation()
 
 	## \todo Get USD to actually provide help metadata. It's defined in a `doc`
 	# attribute in `shaderDefs.usda`, but not actually converted to Sdr by
