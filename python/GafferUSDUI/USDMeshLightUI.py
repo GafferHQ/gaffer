@@ -73,6 +73,12 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"parameters.arnold:*" : {
+
+			"description" : "Refer to Arnold's documentation for further details.",
+
+		},
+
 	}
 
 )
