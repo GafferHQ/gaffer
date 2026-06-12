@@ -11,6 +11,7 @@ Fixes
 -----
 
 - SceneInspector : Fixed Interpolation field for primitive variables that don't exist. Previously it said "Invalid", and now it shows nothing.
+- Renderer API : Added missing `Renderer.inl` header file.
 
 API
 ---
