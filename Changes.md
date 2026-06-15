@@ -17,6 +17,17 @@ API
 
 - Image : Added `updateImage()` method.
 
+Build
+-----
+
+- Cortex : Updated to version 10.7.0.0a11.
+
+Breaking Changes
+----------------
+
+- SceneReader : Removed `./` prefix from relative prototype paths loaded from USD files.
+- Instancer : Defaulted `GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS` to `1`, as required by SceneReader's updated handling of relative USD prototypes. The environment variable may be removed in future.
+
 1.7.0.0a2 (relative to 1.7.0.0a1)
 =========
 

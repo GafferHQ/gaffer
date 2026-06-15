@@ -1067,7 +1067,7 @@ class Instancer::EngineData : public Data
 			m_prototypeIndexRemap.reserve( rootStrings->size() );
 
 
-			const static bool g_explicitAbsolutePaths = checkEnvFlag( "GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS", false );
+			const static bool g_explicitAbsolutePaths = checkEnvFlag( "GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS", true );
 
 			size_t i = 0;
 			ScenePlug::ScenePath path;

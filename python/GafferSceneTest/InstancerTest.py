@@ -3690,17 +3690,17 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere/0" ), rootSphere["out"].object( "/sphere" ) )
 		self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere1/1" ), sphereB["out"].object( "/sphere" ) )
 
-		if os.environ.get( "GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS", "0" ) != "0":
+		if os.environ.get( "GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS", "1" ) != "0":
 			self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere2/2" ), sphereA["out"].object( "/sphere" ) )
 			self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere2/2" ), sphereB["out"].object( "/sphere" ) )
 		else:
 			self.assertEqual( instancer["out"].object( "/groupA/object/instances/sphere2/2" ), rootSphere["out"].object( "/sphere" ) )
 			self.assertEqual( instancer["out"].object( "/groupB/object/instances/sphere2/2" ), rootSphere["out"].object( "/sphere" ) )
 
-	def testRelativePrototypePathsWithExplicitAbsolute( self ):
+	def testRelativePrototypePathsWithoutExplicitAbsolute( self ):
 		try :
 			env = Gaffer.environment()
-			env["GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS"] = "1"
+			env["GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS"] = "0"
 			subprocess.check_output(
 				[ str( Gaffer.executablePath() ), "test", "GafferSceneTest.InstancerTest.testRelativePrototypePaths" ],
 				stderr = subprocess.STDOUT,
