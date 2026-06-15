@@ -1039,6 +1039,7 @@ cyclesDefines = [
 ###############################################################################################
 
 usdPythonLib = basePythonEnv.subst( "boost_python$BOOST_PYTHON_LIB_SUFFIX" )
+usdLibs = []
 if env["GAFFERUSD"] :
 
 	pxrVersionHeader = baseLibEnv.FindFile(
