@@ -86,3 +86,15 @@ GafferUI.Examples.registerExample(
 		GafferCycles.CyclesOptions
 	]
 )
+
+GafferUI.Examples.registerExample(
+	"Scene Processing/Statistics",
+	"$GAFFER_ROOT/resources/examples/sceneProcessing/statistics.gfr",
+	description = "Demonstrates how to use the SceneStats node to add a statistics overlay to rendered images.",
+	notableNodes = [
+		GafferScene.PrimitiveQuery,
+		GafferScene.SceneStats,
+		GafferImage.ImageMetadata,
+		GafferImage.MetadataOverlay,
+	]
+)
