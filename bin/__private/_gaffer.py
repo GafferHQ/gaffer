@@ -105,12 +105,6 @@ if sys.platform in ( "linux", "darwin" ) :
 	# Stop Cortex from making all Python modules load with RTLD_GLOBAL.
 	os.environ["IECORE_RTLD_GLOBAL"] = "0"
 
-# Load USD PointInstancer prototypes as relative paths by default. This allows
-# the _PointInstancerAdaptor to function even when the instancers are reparented
-# in the Gaffer hierarchy.
-if "IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES" not in os.environ :
-	os.environ["IECOREUSD_POINTINSTANCER_RELATIVE_PROTOTYPES"] = "1"
-
 # Work around https://github.com/ImageEngine/cortex/issues/1338, which causes
 # bad serialisations in certain locales.
 os.environ["LC_NUMERIC"] = "C"
