@@ -750,12 +750,16 @@ def _leafTypes( typeId ) :
 	derivedTypes = IECore.RunTimeTyped.derivedTypeIds( typeId )
 
 	# By "leaf" we really mean "derived enough to appear in the Selection Mask
-	# menu". So we must pretend that the private InstancerCapsule subclass of
-	# Capsule doesn't exist.
+	# menu". So we ignore a couple of derived types.
 	## \todo No doubt this could be expressed more naturally somehow, perhaps
-	# just with a set union of `derivedTypes` and `typesWeUseInTheMenu`.
-	instancerCapsuleTypeId = IECore.RunTimeTyped.typeIdFromTypeName( "InstancerCapsule" )
-	derivedTypes = [ t for t in derivedTypes if t != instancerCapsuleTypeId ]
+	# just with a set union of `derivedTypes` and `typesWeUseInTheMenu`. We
+	# might like to have separate masks for PointsPrimitives and PointInstancers
+	# too.
+	ignoredDerivedTypes = {
+		IECore.RunTimeTyped.typeIdFromTypeName( "InstancerCapsule" ),
+		IECoreScene.PointInstancer.staticTypeId()
+	}
+	derivedTypes = [ t for t in derivedTypes if t not in ignoredDerivedTypes ]
 
 	if derivedTypes :
 		return set().union( *[ _leafTypes( t ) for t in derivedTypes ] )
