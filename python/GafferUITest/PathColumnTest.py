@@ -174,6 +174,8 @@ class PathColumnTest( GafferUITest.TestCase ) :
 			# fully constructed state should do all their initialisation before
 			# calling the base class `__init__()`. Hopefully this is not too
 			# onerous.
+			## \todo This could be fixed using a custom metaclass for PathColum -
+			# see NodeGadget binding.
 			self.assertEqual( column.member, "preInitValue" )
 
 		connection = GafferUI.PathColumn.instanceCreatedSignal().connect( instanceCreated, scoped = True )

@@ -54,7 +54,19 @@ Imath::V3f connectionTangent( T &p, const GafferUI::ConnectionCreator *creator )
 	return p.T::connectionTangent( creator );
 }
 
+PyTypeObject *nodeGadgetMetaclass();
+
 } // namespace Detail
+
+// Override to prevent the default implementation emitting
+// `instanceCreatedSignal()` for wrapped instances. This allows
+// us to emit the signal ourselves from our custom metaclass, only
+// after the Python subclass is fully constructed.
+template<typename T>
+inline void intrusive_ptr_add_ref( NodeGadgetWrapper<T> *nodeGadget )
+{
+	nodeGadget->addRef();
+}
 
 template<typename T, typename TWrapper>
 NodeGadgetClass<T, TWrapper>::NodeGadgetClass( const char *docString )
@@ -62,6 +74,8 @@ NodeGadgetClass<T, TWrapper>::NodeGadgetClass( const char *docString )
 {
 	this->def( "nodule", &Detail::nodule<T> );
 	this->def( "connectionTangent", &Detail::connectionTangent<T> );
+	// Install our custom metaclass.
+	Py_SET_TYPE( this->ptr(), Detail::nodeGadgetMetaclass() );
 }
 
 } // namespace GafferUIBindings
