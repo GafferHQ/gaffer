@@ -126,5 +126,38 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( [ x[0] for x in cs ], [ gadget1, gadget2 ] )
 
+	def testInstanceCreatedSignalForPythonSubclasses( self ) :
+
+		class MyNodeGadget( GafferUI.StandardNodeGadget ) :
+
+			def __init__( self, node ) :
+
+				GafferUI.StandardNodeGadget.__init__( self, node )
+
+				self.initialised = True
+
+		numSlotCalls = 0
+
+		def instanceCreated( gadget ) :
+
+			self.assertIsInstance( gadget, MyNodeGadget )
+			self.assertTrue( gadget.initialised )
+
+			# At one point in time, `instanceCreatedSignal()` was emitted
+			# before the Python object was fully initialised, and these
+			# methods among others would throw exceptions.
+			gadget.dragEnterSignal()
+			repr( gadget )
+
+			nonlocal numSlotCalls
+			numSlotCalls += 1
+
+		connection = GafferUI.NodeGadget.instanceCreatedSignal().connect( instanceCreated, scoped = True )
+
+		node = Gaffer.Node()
+		gadget = MyNodeGadget( node )
+
+		self.assertEqual( numSlotCalls, 1 )
+
 if __name__ == "__main__":
 	unittest.main()

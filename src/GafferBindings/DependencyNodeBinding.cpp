@@ -65,6 +65,9 @@ PyObject *dependencyNodeMetaclassCall( PyObject *self, PyObject *args, PyObject 
 
 } // namespace GafferBindings
 
+/// \todo We're doing something similar for the NodeGadget binding. Consider
+/// consolidating everything into the binding for RefCounted, perhaps by calling
+/// a new `RefCounted::postConstructor()` virtual method.
 PyTypeObject *GafferBindings::Detail::dependencyNodeMetaclass()
 {
 	static PyTypeObject g_dependencyNodeMetaclass;

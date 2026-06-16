@@ -12,6 +12,7 @@ Fixes
 
 - SceneInspector : Fixed Interpolation field for primitive variables that don't exist. Previously it said "Invalid", and now it shows nothing.
 - Renderer API : Added missing `Renderer.inl` header file.
+- NodeGadget : Fixed usage of `instanceCreatedSignal()` with NodeGadgets implemented in Python [^1].
 
 API
 ---
@@ -28,6 +29,8 @@ Breaking Changes
 
 - SceneReader : Removed `./` prefix from relative prototype paths loaded from USD files.
 - Instancer : Defaulted `GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS` to `1`, as required by SceneReader's updated handling of relative USD prototypes. The environment variable may be removed in future.
+
+[^1]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a2 (relative to 1.7.0.0a1)
 =========
