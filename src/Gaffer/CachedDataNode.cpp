@@ -280,7 +280,7 @@ void CachedDataNode::save( const std::filesystem::path &directory, boost::unorde
 		{
 			throw IECore::Exception( fmt::format( "Unable to save entry \"{}\" on \"{}\" - no live value, but cannot find on disk.", cache.first, fullName() ) );
 		}
-		IECore::FileIndexedIOPtr file = new IECore::FileIndexedIO( destPath, IECore::IndexedIO::rootPath, IECore::IndexedIO::Exclusive | IECore::IndexedIO::Write);
+		IECore::FileIndexedIOPtr file = new IECore::FileIndexedIO( destPath.generic_string(), IECore::IndexedIO::rootPath, IECore::IndexedIO::Exclusive | IECore::IndexedIO::Write);
 
 		cache.second.m_value->save( file, "object" );
 
@@ -495,16 +495,16 @@ void CachedDataNode::compute( ValuePlug *output, const Context *context ) const
 				std::string cacheFileName = cacheFileNameFromHash( cacheIt->second.m_hash );
 
 				IECore::FileIndexedIOPtr file;
-				if( IECore::FileIndexedIO::canRead( m_directory / cacheFileName ) )
+				if( IECore::FileIndexedIO::canRead( ( m_directory / cacheFileName ).generic_string() ) )
 				{
 					file = new IECore::FileIndexedIO(
-						m_directory / cacheFileName, IECore::IndexedIO::rootPath, IECore::IndexedIO::Read
+						( m_directory / cacheFileName ).generic_string(), IECore::IndexedIO::rootPath, IECore::IndexedIO::Read
 					);
 				}
-				else if( IECore::FileIndexedIO::canRead( recycleBinForDirectory( m_directory / cacheFileName ) ) )
+				else if( IECore::FileIndexedIO::canRead( recycleBinForDirectory( m_directory / cacheFileName ).generic_string() ) )
 				{
 					file = new IECore::FileIndexedIO(
-						recycleBinForDirectory( m_directory / cacheFileName ), IECore::IndexedIO::rootPath, IECore::IndexedIO::Read
+						recycleBinForDirectory( m_directory / cacheFileName ).generic_string(), IECore::IndexedIO::rootPath, IECore::IndexedIO::Read
 					);
 				}
 				else

@@ -197,7 +197,7 @@ Serialisation::~Serialisation()
 
 		for( auto const& directoryEntry : std::filesystem::directory_iterator( *m_localCacheDir ) )
 		{
-			auto cacheFileHash = CachedDataNode::cacheFileNameToHash( directoryEntry.path().filename() );
+			auto cacheFileHash = CachedDataNode::cacheFileNameToHash( directoryEntry.path().filename().generic_string() );
 			if( cacheFileHash )
 			{
 				if( !m_usedCaches.count( *cacheFileHash ) )
