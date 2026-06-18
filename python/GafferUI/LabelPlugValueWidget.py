@@ -160,30 +160,38 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__setValueChanged( any( values ) )
 
+	## \todo This has a pretty high overhead for large plug hierarchies, such
+	# as those in Spreadsheets. It could probably benefit from being reimplemented
+	# in C++, which would mean reimplementing NodeAlgo's user-default mechanism
+	# in C++ too.
 	@staticmethod
 	def _hasUserValue( plug ) :
 
-		if plug.direction() == Gaffer.Plug.Direction.Out :
-			return False
+		def walk( plug, checkIsSetToDefault ) :
 
-		if plug.getInput() is not None :
-			return True
+			if plug.direction() == Gaffer.Plug.Direction.Out :
+				return False
 
-		if any(
-			p.getInput() is not None and p.direction() != Gaffer.Plug.Direction.Out
-			for p in Gaffer.Plug.RecursiveRange( plug )
-		) :
-			return True
+			if plug.getInput() is not None :
+				return True
 
-		if isinstance( plug, Gaffer.ValuePlug ) and Gaffer.NodeAlgo.hasUserDefault( plug ) :
-			return not Gaffer.NodeAlgo.isSetToUserDefault( plug )
+			if isinstance( plug, Gaffer.ValuePlug ) and Gaffer.NodeAlgo.hasUserDefault( plug ) :
+				if not Gaffer.NodeAlgo.isSetToUserDefault( plug ) :
+					return True
+				else :
+					# Plug is at the user-specified default value. We still
+					# need to check for connections to children, but don't
+					# want to check their values against the non-user default.
+					checkIsSetToDefault = False
 
-		if len( plug ) :
-			return any( LabelPlugValueWidget._hasUserValue( p ) for p in Gaffer.Plug.Range( plug ) )
-		elif isinstance( plug, Gaffer.ValuePlug ) :
-			return not plug.isSetToDefault()
-		else :
-			return False
+			if len( plug ) :
+				return any( walk( p, checkIsSetToDefault ) for p in Gaffer.Plug.Range( plug ) )
+			elif checkIsSetToDefault and isinstance( plug, Gaffer.ValuePlug ) :
+				return not plug.isSetToDefault()
+			else :
+				return False
+
+		return walk( plug, checkIsSetToDefault = True )
 
 	# Sets whether or not the label be rendered in a ValueChanged state.
 	def __setValueChanged( self, valueChanged ) :
