@@ -839,8 +839,18 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 
 void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const Node *parent, const Set *filter ) const
 {
-	std::filesystem::path cacheDir = localCacheDirectory( &fileName );
-	std::string s = serialiseInternal( parent, filter, &cacheDir );
+	std::string s;
+
+	// TODO - this doesn't feel right
+	if( !parent || parent == this )
+	{
+		std::filesystem::path cacheDir = localCacheDirectory( &fileName );
+		s = serialiseInternal( parent, filter, &cacheDir );
+	}
+	else
+	{
+		s = serialiseInternal( parent, filter );
+	}
 
 	std::ofstream f( fileName.c_str() );
 	if( !f.good() )
