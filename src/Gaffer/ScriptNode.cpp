@@ -40,6 +40,7 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/BackgroundTask.h"
+#include "Gaffer/CachedDataNode.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/Container.inl"
 #include "Gaffer/Context.h"
@@ -383,6 +384,21 @@ ScriptNode::ScriptNode( const std::string &name )
 
 ScriptNode::~ScriptNode()
 {
+	for( const auto &i : m_ownedRecycleBins )
+	{
+		// This is a fairly scary looking system call, so this is probably a good place to write
+		// down some justification why this seems like it should be safe:
+		// In order to be added to m_ownedRecycleBins, a path must be added through acquireRecycleBin,
+		// which creates the path, and ensures that:
+		// * it ends in ".recycleBin"
+		// * it didn't previously exist
+		// That should ensure that we're not deleting directories we don't own.
+		// In order to be placed in a recycle bin, a file must be found in a "_cacheDir" directory
+		// corresponding to a script file that is currently being overwritten, and must look like
+		// a Gaffer cache ( ie. matches the regex "[0-9a-f]{32}.io", enforced by
+		// CachedDataNode::cacheFileNameToHash ).
+		std::filesystem::remove_all( i );
+	}
 }
 
 StringPlug *ScriptNode::fileNamePlug()
@@ -823,7 +839,8 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 
 void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const Node *parent, const Set *filter ) const
 {
-	std::string s = serialiseInternal( parent, filter );
+	std::filesystem::path cacheDir = localCacheDirectory( &fileName );
+	std::string s = serialiseInternal( parent, filter, &cacheDir );
 
 	std::ofstream f( fileName.c_str() );
 	if( !f.good() )
@@ -896,7 +913,38 @@ bool ScriptNode::importFile( const std::filesystem::path &fileName, Node *parent
 	return result;
 }
 
-std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter ) const
+std::filesystem::path ScriptNode::localCacheDirectory( const std::filesystem::path *fileName ) const
+{
+	std::filesystem::path effectiveFileName = fileName ? *fileName : std::filesystem::path( fileNamePlug()->getValue() );
+
+	return effectiveFileName.parent_path() / ( effectiveFileName.stem().string() + "_cacheDir" );
+}
+
+std::filesystem::path ScriptNode::acquireRecycleBin( const std::filesystem::path &cacheDir ) const
+{
+	std::filesystem::path result = CachedDataNode::recycleBinForDirectory( cacheDir );
+
+	if( m_ownedRecycleBins.count( result ) )
+	{
+		// We already own this recycle bin
+		return result;
+	}
+
+	if( std::filesystem::exists( result ) )
+	{
+		// TODO - need a way to repair this
+		// TODO - put a tag file in the dir so we can identify owning process / handle differently if process still open?
+		throw IECore::Exception( fmt::format( "Cannot acquire recycle bin - something else owns a recycle bin at \"{}\"", result.string() ) );
+	}
+
+	std::filesystem::create_directories( result );
+
+	m_ownedRecycleBins.insert( result );
+
+	return result;
+}
+
+std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter, const std::filesystem::path *cacheDirectory ) const
 {
 	if( !g_serialiseFunction )
 	{
@@ -910,7 +958,7 @@ std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter
 		scope.set( "serialiser:includeParentMetadata", &includeParentMetadata );
 	}
 
-	return g_serialiseFunction( parent ? parent : this, filter );
+	return g_serialiseFunction( parent ? parent : this, filter, cacheDirectory );
 }
 
 bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context )
