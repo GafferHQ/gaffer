@@ -324,21 +324,24 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
 
 	shaders = set()
-	pathsVisited = set()
+	filesVisited = set()
 	for path in searchPaths :
 
-		if path in pathsVisited :
-			continue
+		path = path.resolve()
 
 		for extension in extensions :
 			for file in path.rglob( f"*.{extension}") :
+
+				if file in filesVisited :
+					continue
+				else :
+					filesVisited.add( file )
+
 				shaderPath = file.relative_to( path )
 				if __hiddenShadersPathMatcher.match( shaderPath.as_posix() ) & IECore.PathMatcher.Result.ExactMatch :
 					continue
 				if matchExpression.match( shaderPath.as_posix() ) :
 					shaders.add( shaderPath.with_suffix( "" ).as_posix() )
-
-		pathsVisited.add( path )
 
 	shaders = sorted( list( shaders ) )
 	categorisedShaders = [ x for x in shaders if "/" in x ]
