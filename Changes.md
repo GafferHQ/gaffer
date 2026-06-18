@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.0.0a4)
 =======
 
+Fixes
+-----
 
+- NodeEditor : Fixed redundant updates when editing private plugs, such as when repositioning the currently viewed node in the Graph Editor.
 
 1.7.0.0a4 (relative to 1.7.0.0a3)
 =========
