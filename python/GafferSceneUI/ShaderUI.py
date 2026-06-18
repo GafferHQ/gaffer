@@ -36,11 +36,10 @@
 
 import dataclasses
 import os
+import pathlib
 import re
-import string
 import fnmatch
 import functools
-import imath
 from collections import deque
 
 import IECore
@@ -49,7 +48,6 @@ import IECoreScene
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
 
@@ -283,6 +281,7 @@ GafferUI.NodeFinderDialogue.registerMode( "Shader Names", __shaderNameExtractor 
 ## Appends menu items for the creation of all shaders found on some searchpaths.
 def appendShaders( menuDefinition, prefix, searchPaths, extensions, nodeCreator, matchExpression = "*", searchTextPrefix = "" ) :
 
+	searchPaths = [ pathlib.Path( p ) for p in searchPaths ]
 	menuDefinition.append( prefix, { "subMenu" : functools.partial( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) } )
 
 __hiddenShadersPathMatcher = IECore.PathMatcher()
@@ -331,15 +330,13 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 		if path in pathsVisited :
 			continue
 
-		for root, dirs, files in os.walk( path ) :
-			for file in files :
-				if os.path.splitext( file )[1][1:] in extensions :
-					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( os.path.sep )
-					shaderPath = shaderPath.replace( "\\", "/" )
-					if __hiddenShadersPathMatcher.match( shaderPath ) & IECore.PathMatcher.Result.ExactMatch :
-						continue
-					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
-						shaders.add( os.path.splitext( shaderPath )[0] )
+		for extension in extensions :
+			for file in path.rglob( f"*.{extension}") :
+				shaderPath = file.relative_to( path )
+				if __hiddenShadersPathMatcher.match( shaderPath.as_posix() ) & IECore.PathMatcher.Result.ExactMatch :
+					continue
+				if matchExpression.match( shaderPath.as_posix() ) :
+					shaders.add( shaderPath.with_suffix( "" ).as_posix() )
 
 		pathsVisited.add( path )
 
