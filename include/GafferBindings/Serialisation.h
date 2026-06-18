@@ -45,6 +45,12 @@
 #include "IECore/Canceller.h"
 #include "IECore/Object.h"
 
+#include <filesystem>
+
+// TODO use std::unordered_set once I figure out how to get MurmurHash to work with it
+//#include <unordered_set>
+#include "boost/unordered_set.hpp"
+
 namespace GafferBindings
 {
 
@@ -55,7 +61,9 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 
 		/// Supports cancellation via the usual mechanism of scoping a Context
 		/// containing an `IECore::Canceller`.
-		Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName = "parent", const Gaffer::Set *filter = nullptr );
+		Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName = "parent", const Gaffer::Set *filter = nullptr, const std::filesystem::path *localCacheDir = nullptr );
+
+		~Serialisation();
 
 		/// Returns the parent passed to the constructor.
 		const Gaffer::GraphComponent *parent() const;
@@ -75,6 +83,10 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 
 		/// Ensures that `import moduleName` is included in the result.
 		void addModule( const std::string &moduleName );
+
+		const std::filesystem::path *cacheDir();
+		boost::unordered_set< IECore::MurmurHash > &usedCaches();
+		std::string &warning();
 
 		/// Returns the result of the serialisation.
 		std::string result() const;
@@ -161,6 +173,7 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		const Gaffer::GraphComponent *m_parent;
 		const std::string m_parentName;
 		const Gaffer::Set *m_filter;
+		const std::filesystem::path *m_localCacheDir;
 		const bool m_protectParentNamespace;
 
 		std::string m_hierarchyScript;
@@ -168,6 +181,8 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		std::string m_postScript;
 
 		std::set<std::string> m_modules;
+		boost::unordered_set<IECore::MurmurHash> m_usedCaches;
+		std::string m_warning;
 
 		void walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser, const IECore::Canceller *canceller );
 

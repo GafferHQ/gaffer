@@ -43,8 +43,10 @@
 #include "GafferBindings/MetadataBinding.h"
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/CachedDataNode.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/Spreadsheet.h"
 #include "Gaffer/Version.h"
 
@@ -143,10 +145,15 @@ std::string modulePathInternal( const boost::python::object &o )
 // Serialisation
 //////////////////////////////////////////////////////////////////////////
 
-Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName, const Gaffer::Set *filter )
-	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter ),
+Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName, const Gaffer::Set *filter, const std::filesystem::path *localCacheDir )
+	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter ), m_localCacheDir( localCacheDir ),
 		m_protectParentNamespace( Context::current()->get<bool>( "serialiser:protectParentNamespace", true ) )
 {
+	if( m_localCacheDir && !runTimeCast<const ScriptNode>( m_parent ) )
+	{
+		throw IECore::Exception( "Doesn't make sense to serialise with a cache directory when not serialising a ScriptNode" );
+	}
+
 	IECorePython::ScopedGILLock gilLock;
 	walk( parent, parentName, acquireSerialiser( parent ), Context::current()->canceller() );
 
@@ -160,6 +167,65 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 		{
 			m_postScript += metadataSerialisation( plug, parentName, *this );
 		}
+	}
+}
+
+Serialisation::~Serialisation()
+{
+	if( m_warning.size() )
+	{
+		IECore::msg( IECore::Msg::Warning, "Serialisation", m_warning );
+	}
+
+	if( !m_localCacheDir || !std::filesystem::exists( *m_localCacheDir ) || std::filesystem::is_empty( *m_localCacheDir ) )
+	{
+		// No cleanup needed
+		return;
+	}
+
+	// TODO - add recycle bin dir to ScriptNode. Error if recycle bin folder already exists but isn't on ScriptNode
+	// yet.
+
+	const ScriptNode* script = IECore::runTimeCast<const ScriptNode>( m_parent );
+
+	// We enforce in the constructor that m_parent must be a ScriptNode if m_localCacheDir is set
+	assert( script );
+
+	try
+	{
+		std::filesystem::path recycleBin = script->acquireRecycleBin( *m_localCacheDir );
+
+		for( auto const& directoryEntry : std::filesystem::directory_iterator( *m_localCacheDir ) )
+		{
+			auto cacheFileHash = CachedDataNode::cacheFileNameToHash( directoryEntry.path().filename() );
+			if( cacheFileHash )
+			{
+				if( !m_usedCaches.count( *cacheFileHash ) )
+				{
+					// TODO - does this invalidate iterator?
+					std::filesystem::rename( directoryEntry.path(), recycleBin / directoryEntry.path().filename() );
+				}
+			}
+			else
+			{
+				if( directoryEntry.path() != recycleBin )
+				{
+					IECore::msg(
+						IECore::Msg::Warning, "Serialisation",
+						fmt::format( "Unexpected file \"{}\" in cache directory \"{}\".",
+							directoryEntry.path().filename().string(), m_localCacheDir->string()
+						)
+					);
+				}
+			}
+		}
+	}
+	catch( IECore::Exception &e )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "Serialisation",
+			std::string( "Unable to clean up unused caches : " ) + e.what()
+		);
 	}
 }
 
@@ -420,6 +486,21 @@ std::string Serialisation::childIdentifier( const std::string &parentIdentifier,
 void Serialisation::addModule( const std::string &moduleName )
 {
 	m_modules.insert( moduleName );
+}
+
+const std::filesystem::path *Serialisation::cacheDir()
+{
+	return m_localCacheDir;
+}
+
+boost::unordered_set< IECore::MurmurHash > &Serialisation::usedCaches()
+{
+	return m_usedCaches;
+}
+
+std::string &Serialisation::warning()
+{
+	return m_warning;
 }
 
 void Serialisation::registerSerialiser( IECore::TypeId targetType, SerialiserPtr serialiser )
