@@ -39,6 +39,7 @@
 #include "GafferOSL/OSLShader.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
@@ -53,6 +54,7 @@
 #include "OSL/oslclosure.h"
 #include "OSL/oslconfig.h"
 #include "OSL/oslexec.h"
+#include "OSL/oslquery.h"
 #include "OSL/oslversion.h"
 #include "OSL/rendererservices.h"
 
@@ -1743,12 +1745,27 @@ const T *varyingValue( const IECore::CompoundData *points, const char *name )
 	}
 }
 
+bool shaderExists( const IECoreScene::Shader *shader )
+{
+	using ExistenceCache = IECorePreview::LRUCache<string, bool>;
+	static ExistenceCache g_existenceCache(
+		[] ( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller )
+		{
+			const char *searchPath = getenv( "OSL_SHADER_PATHS" );
+			OSL::OSLQuery query;
+			return query.open( shaderName, searchPath ? searchPath : "" );
+		},
+		10000
+	);
+
+	return g_existenceCache.get( shader->getName() );
+}
+
 } // namespace
 
 ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork ) : ShadingEngine( shaderNetwork->copy() )
 {
 }
-
 
 ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
 	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
@@ -1771,9 +1788,9 @@ ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
 				// full list of invalid shaders.
 
 				const Shader *shader = shaderNetwork->getShader( handle );
-				if( !boost::starts_with( shader->getType(), "osl:" ) )
+				if( !shaderExists( shader ) )
 				{
-					invalidShaders.push_back( shader->getName() + " (" + shader->getType() + ")" );
+					invalidShaders.push_back( shader->getName() );
 				}
 
 				if( invalidShaders.size() )
