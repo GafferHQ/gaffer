@@ -53,6 +53,7 @@
 #include "Gaffer/TransformPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ValuePlug.h"
+#include "Gaffer/ArrayPlug.h"
 
 #include "IECore/DataAlgo.h"
 #include "IECore/SplineData.h"
@@ -620,6 +621,125 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 	}
 
 }
+
+IECore::DataPtr getArrayAsVectorData( const ArrayPlug *plug )
+{
+	size_t size = plug->children().size();
+	if ( !size )
+	{
+		return nullptr;
+	}
+	auto *childPlug = plug->getChild( 0 );
+	int i = 0;
+	switch(static_cast<Gaffer::TypeId>(childPlug->typeId()))
+	{
+		case FloatPlugTypeId :
+		{
+			FloatVectorDataPtr data = new FloatVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const FloatPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case IntPlugTypeId :
+		{
+			IntVectorDataPtr data = new IntVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const IntPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case Color3fPlugTypeId :
+		{
+			Color3fVectorDataPtr data = new Color3fVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const Color3fPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case Color4fPlugTypeId :
+		{
+			Color4fVectorDataPtr data = new Color4fVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const Color4fPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case StringPlugTypeId :
+		{
+			StringVectorDataPtr data = new StringVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const StringPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case BoolPlugTypeId :
+		{
+			BoolVectorDataPtr data = new BoolVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const BoolPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case V2fPlugTypeId :
+		{
+			V2fVectorDataPtr data = new V2fVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const V2fPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case V3fPlugTypeId :
+		{
+			V3fVectorDataPtr data = new V3fVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const V3fPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		case M44fPlugTypeId :
+		{
+			M44fVectorDataPtr data = new M44fVectorData();
+			auto &writable = data->writable();
+			writable.resize( size );
+			for( Plug::InputIterator it( plug ); !it.done(); ++it, ++i )
+			{
+				writable[i] = static_cast<const M44fPlug *>( it->get() )->getValue();
+			}
+			return data;
+		}
+		default :
+			throw IECore::Exception(
+				fmt::format( "ArrayPlug \"{}\" has unsupported child type \"{}\"", plug->getName().string(), childPlug->typeName() )
+			);
+	}
+
+}
+
 
 IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
 {
