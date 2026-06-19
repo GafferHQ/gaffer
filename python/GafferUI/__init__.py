@@ -275,6 +275,9 @@ from . import AnnotationsUI
 from .TweakPlugValueWidget import TweakPlugValueWidget
 from .PlugPopup import PlugPopup
 from .OptionalValuePlugValueWidget import OptionalValuePlugValueWidget
+from .WidgetEditor import WidgetEditor
+from .WidgetEditor import WidgetPath
+
 
 # and then specific node uis
 
