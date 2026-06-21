@@ -5,6 +5,7 @@ Features
 --------
 
 - QuantizePrimitiveVariables : Added new node for quantizing the values of primitive variables.
+- DataStore : Added new node for storing large data alongside a Gaffer script, which is more efficient than storing large data inside the script file. Data is stored on the DataStore node by calling setEntry, instead of setting plug values. This node will be used as a basis of future tools that create data within Gaffer ( such as paint tools ).
 
 Improvements
 ------------
