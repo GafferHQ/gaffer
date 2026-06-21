@@ -155,6 +155,8 @@ enum TypeId
 	Box2fVectorDataPlugTypeId = 118109,
 	PatternMatchTypeId = 118110,
 	Int64VectorDataPlugTypeId = 118111,
+	CachedDataNodeTypeId = 118112,
+	SetEntryActionTypeId = 118113,
 
 	LastTypeId = 118799
 
