@@ -341,8 +341,8 @@ class GAFFER_API ScriptNode : public Node
 		// Serialisation and execution
 		// ===========================
 
-		std::string serialiseInternal( const Node *parent, const Set *filter ) const;
-		bool executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context = "" );
+		std::string serialiseInternal( const Node *parent, const Set *filter, const std::filesystem::path *filePath = nullptr ) const;
+		bool executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::filesystem::path *sourceFile = nullptr );
 
 		using SerialiseFunction = std::function<std::string ( const Node *, const Set * )>;
 		using ExecuteFunction = std::function<bool ( ScriptNode *, const std::string &, Node *, bool, const std::string & )>;

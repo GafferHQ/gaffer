@@ -248,6 +248,9 @@ const IECore::InternedString g_frameStart( "frameRange:start" );
 const IECore::InternedString g_frameEnd( "frameRange:end" );
 const IECore::InternedString g_framesPerSecond( "framesPerSecond" );
 
+const IECore::InternedString g_executionSourceFileContextName( "execution:sourceFile" );
+const IECore::InternedString g_serialiserTargetFileContextName( "serialiser:targetFile" );
+
 } // namespace
 
 class ScriptNode::FocusSet : public Gaffer::Set
@@ -823,7 +826,7 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 
 void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const Node *parent, const Set *filter ) const
 {
-	std::string s = serialiseInternal( parent, filter );
+	std::string s = serialiseInternal( parent, filter, &fileName );
 
 	std::ofstream f( fileName.c_str() );
 	if( !f.good() )
@@ -841,26 +844,26 @@ void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const N
 
 bool ScriptNode::execute( const std::string &serialisation, Node *parent, bool continueOnError )
 {
-	return executeInternal( serialisation, parent, continueOnError, "" );
+	return executeInternal( serialisation, parent, continueOnError );
 }
 
 bool ScriptNode::executeFile( const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	const std::string serialisation = readFile( fileName );
-	return executeInternal( serialisation, parent, continueOnError, fileName.generic_string() );
+	return executeInternal( serialisation, parent, continueOnError, &fileName );
 }
 
 bool ScriptNode::load( bool continueOnError)
 {
 	DirtyPropagationScope dirtyScope;
 
-	const std::string fileName = fileNamePlug()->getValue();
+	const std::filesystem::path fileName = fileNamePlug()->getValue();
 	const std::string s = readFile( fileName );
 
 	deleteNodes();
 	variablesPlug()->clearChildren();
 
-	const bool result = executeInternal( s, nullptr, continueOnError, fileName );
+	const bool result = executeInternal( s, nullptr, continueOnError, &fileName );
 
 	UndoScope undoDisabled( this, UndoScope::Disabled );
 	unsavedChangesPlug()->setValue( false );
@@ -896,7 +899,7 @@ bool ScriptNode::importFile( const std::filesystem::path &fileName, Node *parent
 	return result;
 }
 
-std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter ) const
+std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter, const std::filesystem::path *filePath ) const
 {
 	if( !g_serialiseFunction )
 	{
@@ -910,10 +913,17 @@ std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter
 		scope.set( "serialiser:includeParentMetadata", &includeParentMetadata );
 	}
 
+	std::string filePathString;
+	if( filePath )
+	{
+		filePathString = filePath->generic_string();
+		scope.set( g_serialiserTargetFileContextName, &filePathString );
+	}
+
 	return g_serialiseFunction( parent ? parent : this, filter );
 }
 
-bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context )
+bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::filesystem::path *sourceFile )
 {
 	if( !g_executeFunction )
 	{
@@ -923,6 +933,7 @@ bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent
 	bool result = false;
 	bool wasExecuting = m_executing;
 
+
 	// As with `ScriptNodeBinding::serialise()`, we don't want to perform string
 	// substitutions. Removing the current Process from ThreadState ensures
 	// `StringPlug::getValue()` will not perform substitutions.
@@ -930,13 +941,22 @@ bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent
 	const Monitor::MonitorSet &monitors = Monitor::current();
 	const ThreadState defaultThreadState;
 	ThreadState::Scope defaultThreadStateScope( defaultThreadState );
-	Context::Scope contextScope( contextVariables );
+	Context::EditableScope contextScope( contextVariables );
 	Monitor::Scope monitorScope( monitors );
+	std::string sourceFileString;
+	if( sourceFile )
+	{
+		sourceFileString = sourceFile->generic_string();
+		contextScope.set<std::string>( g_executionSourceFileContextName, &sourceFileString );
+	}
 
 	m_executing = true;
 	try
 	{
-		result = g_executeFunction( this, serialisation, parent ? parent : this, continueOnError, context );
+		result = g_executeFunction(
+			this, serialisation, parent ? parent : this, continueOnError,
+			sourceFile ? sourceFile->generic_string() : ""
+		);
 	}
 	catch( ... )
 	{
