@@ -40,6 +40,7 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Container.h"
+#include "Gaffer/CachedDataNode.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Set.h"
 #include "Gaffer/TypedPlug.h"
@@ -237,6 +238,9 @@ class GAFFER_API ScriptNode : public Node
 		/// the contents of this script. See `execute()` for a description
 		/// of the continueOnError argument and the return value.
 		bool importFile( const std::filesystem::path &fileName, Node *parent = nullptr, bool continueOnError = false );
+
+		const CacheDirectoryManager &cacheDirectoryManager() const;
+
 		//@}
 
 		//! @name Computation context
@@ -341,10 +345,10 @@ class GAFFER_API ScriptNode : public Node
 		// Serialisation and execution
 		// ===========================
 
-		std::string serialiseInternal( const Node *parent, const Set *filter ) const;
+		std::string serialiseInternal( const Node *parent, const Set *filter, CacheDirectoryManager *cacheDirectoryManager = nullptr ) const;
 		bool executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context = "" );
 
-		using SerialiseFunction = std::function<std::string ( const Node *, const Set * )>;
+		using SerialiseFunction = std::function<std::string ( const Node *, const Set *, CacheDirectoryManager *cacheDirectoryManager )>;
 		using ExecuteFunction = std::function<bool ( ScriptNode *, const std::string &, Node *, bool, const std::string & )>;
 
 		// Actual implementations reside in libGafferBindings (due to Python
@@ -362,6 +366,12 @@ class GAFFER_API ScriptNode : public Node
 		// The names of variables that we have added to `m_context`
 		// from `variablesPlug()`.
 		boost::container::flat_set<IECore::InternedString> m_currentVariables;
+
+		// The CacheDirectoryManager is responsible for keeping track of recycle bins that hold
+		// caches that aren't currently needed, but could be needed to support undo operations.
+		// We hold it here so it has the same lifespan as the undo stack associated with this
+		// Script.
+		mutable CacheDirectoryManager m_cacheDirectoryManager;
 
 		void updateContextVariables();
 		void plugSet( Plug *plug );

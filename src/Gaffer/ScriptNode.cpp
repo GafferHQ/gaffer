@@ -823,7 +823,18 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 
 void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const Node *parent, const Set *filter ) const
 {
-	std::string s = serialiseInternal( parent, filter );
+	// TODO : We need to differentiate between a serialisation that is going to take ownership of caches
+	// ( for example, after a saveAs, the filename will be updated, and all the caches in the script
+	// should then point to the freshly saved files ), versus one that is not ( doing an
+	// "Export Selection" should not affect the current script, and any live values must still be
+	// kept as live values )
+	//
+	// Checking if the caller hasn't set parent doesn't seem like a reliable way to detect that the caller
+	// has set fileName to the current value of script["fileName"] or the future value of script["fileName"]
+	// ... but this does seem to work for all current uses of this function.
+	bool takeCacheOwnership = !parent;
+	m_cacheDirectoryManager.startSerialisation( fileName, takeCacheOwnership );
+	std::string s = serialiseInternal( parent, filter, &m_cacheDirectoryManager );
 
 	std::ofstream f( fileName.c_str() );
 	if( !f.good() )
@@ -896,7 +907,12 @@ bool ScriptNode::importFile( const std::filesystem::path &fileName, Node *parent
 	return result;
 }
 
-std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter ) const
+const CacheDirectoryManager &ScriptNode::cacheDirectoryManager() const
+{
+	return m_cacheDirectoryManager;
+}
+
+std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter, CacheDirectoryManager *cacheDirectoryManager ) const
 {
 	if( !g_serialiseFunction )
 	{
@@ -910,7 +926,7 @@ std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter
 		scope.set( "serialiser:includeParentMetadata", &includeParentMetadata );
 	}
 
-	return g_serialiseFunction( parent ? parent : this, filter );
+	return g_serialiseFunction( parent ? parent : this, filter, cacheDirectoryManager );
 }
 
 bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context )
