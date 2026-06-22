@@ -5,6 +5,9 @@ Fixes
 -----
 
 - NodeEditor : Fixed redundant updates when editing private plugs, such as when repositioning the currently viewed node in the Graph Editor.
+- RenderPassEditor : Fixed errors displaying presets while editing the `type` column [^1].
+
+[^1]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a4 (relative to 1.7.0.0a3)
 =========

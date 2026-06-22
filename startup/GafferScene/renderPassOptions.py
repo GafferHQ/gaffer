@@ -34,7 +34,19 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
+import GafferScene
+
+def __renderPassTypes() :
+
+	types = sorted( list( GafferScene.RenderPassTypeAdaptor.registeredTypeNames() ) )
+
+	if callable( GafferScene.RenderPassTypeAdaptor.autoTypeFunction() ) :
+		types.insert( 0, "auto" )
+
+	return types
 
 Gaffer.Metadata.registerValues( {
 
@@ -60,6 +72,12 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label" : "Type",
 		"layout:section" : "Render Pass",
+
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetsPlugValueWidget:allowCustom" : True,
+		"preset:Standard" : "",
+		"presetNames" : lambda target : IECore.StringVectorData( [ IECore.CamelCase.toSpaced( p ) for p in __renderPassTypes() ] ),
+		"presetValues" : lambda target : IECore.StringVectorData( __renderPassTypes() ),
 
 	},
 
