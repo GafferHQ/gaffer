@@ -1023,6 +1023,13 @@ void ScriptNode::plugSet( Plug *plug )
 	else if( plug == fileNamePlug() )
 	{
 		const std::filesystem::path fileName( fileNamePlug()->getValue() );
+
+		if( m_context->get<std::string>( g_scriptName ).size() == 0 )
+		{
+			// If this is the first time this plug is being set, register the initial directory
+			m_cacheDirectoryManager.registerInitialDefaultCacheDirectory( fileName );
+		}
+
 		context()->set( g_scriptName, fileName.stem().string() );
 
 		MetadataAlgo::setReadOnly(
