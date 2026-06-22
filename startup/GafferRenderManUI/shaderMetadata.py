@@ -511,6 +511,71 @@ shaderMetadata = {
 
 	},
 
+	"osl:shader:PxrStylizedControl" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "inputRGB", "Artistic_Light_Rotation_Vector", "lineAlbedo", "distortU", "distortV", "inputTextureCoords", "resultRGB", "resultAOV" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrStylizedHatchControl" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "Hatching_Signal_Input", "Input_RGB", "NPRalbedo2", "NPRalbedo3", "Input_Texture_Coords", "resultRGB", "resultAOV" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrStylizedLightControl" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "Input_RGB", "Artistic_Light_Rotation_Vector", "Result_RGB", "Result_Float", "Result_Shadow_Float", "Result_Lighting_Float", "resultAOV" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrStylizedLinesControl" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "Line_Color_RGB", "Normal_Map", "resultRGB", "resultAOV" ]
+
+		},
+
+	},
+
+	"osl:shader:PxrStylizedToonControl" : {
+
+		"noduleLayout:defaultVisibility" : False,
+
+		"parameters" : {
+
+			k : { "noduleLayout:visible" : True }
+			for k in [ "Input_RGB", "Signal_Input_Float", "Shadow_Input_Float", "resultRGB", "resultAOV" ]
+
+		},
+
+	},
+
 }
 
 for shader, metadata in shaderMetadata.items() :
