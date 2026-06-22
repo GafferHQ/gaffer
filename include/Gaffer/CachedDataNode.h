@@ -46,8 +46,6 @@
 
 #include "boost/algorithm/string/replace.hpp"
 
-#include "tbb/spin_rw_mutex.h"
-
 // TODO use std::unordered_set once I figure out how to get MurmurHash to work with it
 //#include <unordered_set>
 #include "boost/unordered_set.hpp"
@@ -69,6 +67,17 @@ public:
 	std::filesystem::path getCacheDirectory();
 
 	std::optional<std::filesystem::path> findCache( const std::string &fileName ) const;
+
+	// Special case function to handle files that have been moved together with their caches.
+	// Usually, we only check directories that are stored as the source on the CachedDataNode,
+	// or have been written during the current session. But if a file is moved together with
+	// its caches, then the cache directory path has never actually been written, but we still
+	// want to treat it as a possible source for finding caches - we do this by storing the
+	// cache directory corresponding to the initial script path.
+	// TODO - possible simplification by instead having a function similar to this called
+	// whenever the ScriptNode::fileNamePlug() gets a plug set, instead of tracking cache
+	// directories we've written to?
+	void registerInitialDefaultCacheDirectory( const std::filesystem::path &scriptPath );
 
 private:
 
@@ -109,7 +118,8 @@ class GAFFER_API CachedDataNode : public ComputeNode
 
 		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
 
-		// TODO - separate call to remove entries, or pass null here to remove?
+		// Create an entry with the given key and value, or set value to nullptr to remove the given
+		// key.
 		void setEntry( const IECore::InternedString &key, IECore::ConstObjectPtr value );
 
 		IECore::ConstObjectPtr getEntry( const IECore::InternedString &key, bool throwExceptions = true ) const;
@@ -136,7 +146,7 @@ class GAFFER_API CachedDataNode : public ComputeNode
 			mutable IECore::ConstObjectPtr m_liveValue;
 		};
 
-		void setEntryInternal( const IECore::InternedString &key, std::optional<CacheEntry> value );
+		void setEntryInternal( const IECore::InternedString &key, const std::optional<CacheEntry> &value );
 		IECore::ConstObjectPtr getEntryIfLive( const IECore::InternedString &key ) const;
 
 		IntPlug *refreshCountPlug();
@@ -145,11 +155,6 @@ class GAFFER_API CachedDataNode : public ComputeNode
 		// Evaluate the cache - used by getEntry, and the output plugs
 		ObjectPlug *evaluatePlug();
 		const ObjectPlug *evaluatePlug() const;
-
-		// TODO - figure out what I'm doing with this mutex - it was needed by an earlier prototype, but
-		// maybe is no longer necessary ... is it true that calls to setValue are expected to be serial,
-		// and not happen while computes are running, and can the same be assumed for setEntry?
-		//mutable tbb::spin_rw_mutex m_mutex;
 
 		const std::filesystem::path m_sourceDirectory;
 		std::map<IECore::InternedString, CacheEntry> m_caches;

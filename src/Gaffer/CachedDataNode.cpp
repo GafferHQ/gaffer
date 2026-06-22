@@ -63,7 +63,7 @@ class CachedDataNode::SetEntryAction : public Gaffer::Action
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CachedDataNode::SetEntryAction, SetEntryActionTypeId, Gaffer::Action );
 
 		SetEntryAction( CachedDataNodePtr node, const IECore::InternedString &key, IECore::ConstObjectPtr value )
-			: m_node( node ), m_key( key ), m_doValue( { value->hash(), value } )
+			: m_node( node ), m_key( key ), m_doValue( value ? std::make_optional<CacheEntry>( {value->hash(), value} ) : std::nullopt )
 		{
 			auto it = node->m_caches.find( key );
 			if( it != node->m_caches.end() )
@@ -119,8 +119,8 @@ class CachedDataNode::SetEntryAction : public Gaffer::Action
 		// to use the .recycleBin folder for dealing with this memory accumulation: when we save, we could
 		// write all live value in the undo queue into the recycle bin, and clear them out of the undo
 		// queue. Kinda seems like a good idea, but maybe not necessary currently.
-		CacheEntry m_doValue;
-		CacheEntry m_undoValue;
+		std::optional<CacheEntry> m_doValue;
+		std::optional<CacheEntry> m_undoValue;
 
 };
 
@@ -219,7 +219,7 @@ void CachedDataNode::save( CacheDirectoryManager &cacheDirectoryManager, boost::
 {
 	// TODO - weird things happen if exceptions occur during serialization
 
-	std::filesystem::path directory = cacheDirectoryManager.getCacheDirectory();
+	const std::filesystem::path directory = cacheDirectoryManager.getCacheDirectory();
 
 	for( auto &cache : m_caches )
 	{
@@ -339,20 +339,27 @@ void CachedDataNode::affects( const Plug *input, AffectedPlugsContainer &outputs
 
 void CachedDataNode::setEntry( const IECore::InternedString &key, IECore::ConstObjectPtr value )
 {
-	// TODO - reevaluate use of mutex
-	//tbb::spin_rw_mutex::scoped_lock lock( m_mutex, /* write = */ true );
-
 	// Ignore setEntry calls if it matches the existing value
 	auto it = m_caches.find( key );
-	if( it != m_caches.end() && it->second.m_hash == value->hash() )
+	if( value )
 	{
-		return;
+		if( it != m_caches.end() && it->second.m_hash == value->hash() )
+		{
+			return;
+		}
+	}
+	else
+	{
+		if( it == m_caches.end() )
+		{
+			return;
+		}
 	}
 
 	Action::enact( new SetEntryAction( this, key, value ) );
 }
 
-void CachedDataNode::setEntryInternal( const IECore::InternedString &key, std::optional<CacheEntry> value )
+void CachedDataNode::setEntryInternal( const IECore::InternedString &key, const std::optional<CacheEntry> &value )
 {
 	if( value )
 	{
@@ -362,6 +369,7 @@ void CachedDataNode::setEntryInternal( const IECore::InternedString &key, std::o
 	{
 		m_caches.erase( key );
 	}
+
 	refreshCountPlug()->setValue( refreshCountPlug()->getValue() + 1 );
 }
 
@@ -421,7 +429,6 @@ void CachedDataNode::hash( const ValuePlug *output, const Context *context, IECo
 
 		const IECore::InternedString &key = context->get<IECore::InternedString>( g_cacheEvaluationKeyName );
 
-		//tbb::spin_rw_mutex::scoped_lock lock( m_mutex, /* write = */ false );
 		auto it = m_caches.find( key );
 		if( it == m_caches.end() )
 		{
@@ -445,7 +452,6 @@ void CachedDataNode::hash( const ValuePlug *output, const Context *context, IECo
 	{
 		ComputeNode::hash( output, context, h );
 
-		//tbb::spin_rw_mutex::scoped_lock lock( m_mutex, /* write = */ false );
 		for( const auto &i : m_caches )
 		{
 			h.append( i.first );
@@ -463,7 +469,6 @@ void CachedDataNode::compute( ValuePlug *output, const Context *context ) const
 		IECore::ConstObjectPtr result;
 		const IECore::InternedString &key = context->get<IECore::InternedString>( g_cacheEvaluationKeyName );
 
-		//tbb::spin_rw_mutex::scoped_lock lock( m_mutex, /* write = */ false );
 		auto it = m_caches.find( key );
 		if( it == m_caches.end() )
 		{
@@ -526,8 +531,6 @@ void CachedDataNode::compute( ValuePlug *output, const Context *context ) const
 	{
 		std::vector<std::string> keys;
 
-		//tbb::spin_rw_mutex::scoped_lock lock( m_mutex, /* write = */ false );
-
 		for( const auto &i : m_caches )
 		{
 			keys.push_back( i.first );
@@ -544,6 +547,16 @@ void CachedDataNode::compute( ValuePlug *output, const Context *context ) const
 	}
 
 	ComputeNode::compute( output, context );
+}
+
+namespace
+{
+
+std::filesystem::path cacheDirFromScriptPath( const std::filesystem::path &scriptPath )
+{
+	return scriptPath.parent_path() / ( scriptPath.stem().string() + "_cacheDir" );
+}
+
 }
 
 CacheDirectoryManager::CacheDirectoryManager()
@@ -569,16 +582,9 @@ CacheDirectoryManager::~CacheDirectoryManager()
 	}
 }
 
-/*std::filesystem::path ScriptNode::localCacheDirectory( const std::filesystem::path *fileName ) const
-{
-	std::filesystem::path effectiveFileName = fileName ? *fileName : std::filesystem::path( fileNamePlug()->getValue() );
-
-	return effectiveFileName.parent_path() / ( effectiveFileName.stem().string() + "_cacheDir" );
-}*/
-
 std::filesystem::path CacheDirectoryManager::getCacheDirectory()
 {
-	std::filesystem::path result = m_currentScriptPath.parent_path() / ( m_currentScriptPath.stem().string() + "_cacheDir" );
+	const std::filesystem::path result = cacheDirFromScriptPath( m_currentScriptPath );
 	if( !m_currentCacheDirWritten )
 	{
 		std::filesystem::create_directories( result );
@@ -588,10 +594,6 @@ std::filesystem::path CacheDirectoryManager::getCacheDirectory()
 
 	return result;
 }
-
-
-
-
 
 std::filesystem::path CacheDirectoryManager::acquireRecycleBin()
 {
@@ -638,6 +640,14 @@ std::optional<std::filesystem::path> CacheDirectoryManager::findCache( const std
 	return {};
 }
 
+void CacheDirectoryManager::registerInitialDefaultCacheDirectory( const std::filesystem::path &scriptPath )
+{
+	const std::filesystem::path cacheDir( cacheDirFromScriptPath( scriptPath ) );
+	if( std::filesystem::exists( cacheDir ) )
+	{
+		m_cacheDirectories.insert( cacheDir );
+	}
+}
 
 void CacheDirectoryManager::startSerialisation( const std::filesystem::path &currentScriptPath, bool takeOwnership )
 {
@@ -657,7 +667,7 @@ void CacheDirectoryManager::finishSerialisation( const boost::unordered_set<IECo
 
 	try
 	{
-		std::filesystem::path recycleBin = acquireRecycleBin();
+		std::filesystem::path recycleBin;
 
 		for( auto const& directoryEntry : std::filesystem::directory_iterator( getCacheDirectory() ) )
 		{
@@ -666,18 +676,25 @@ void CacheDirectoryManager::finishSerialisation( const boost::unordered_set<IECo
 			{
 				if( !usedCaches.count( *cacheFileHash ) )
 				{
+					if( recycleBin.empty() )
+					{
+						recycleBin = acquireRecycleBin();
+					}
 					// TODO - check takeOwnership
-					// TODO - does this invalidate iterator?
+					// It's a little bit non-obvious whether it's safe to move this file while we have a
+					// directory iterator, but the docs say about changing directory contents: "it is unspecified
+					// whether the change would be observed through the iterator." Since they don't say
+					// anything about the iterator becoming invalid, I guess this is fine.
 					std::filesystem::rename( directoryEntry.path(), recycleBin / directoryEntry.path().filename() );
 				}
 			}
 			else
 			{
-				if( directoryEntry.path() != recycleBin )
+				if( directoryEntry.path().filename() != ".recycleBin" )
 				{
 					IECore::msg(
 						IECore::Msg::Warning, "Serialisation",
-						fmt::format( "Unexpected file \"{}\" in cache directory \"{}\".",
+						fmt::format( "Unexpected file {} in cache directory {}.",
 							directoryEntry.path().filename(), getCacheDirectory()
 						)
 					);

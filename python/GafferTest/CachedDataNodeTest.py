@@ -56,7 +56,7 @@ class CachedDataNodeTest( GafferTest.TestCase ) :
 		if value is None:
 			del s["compareBox"]["compound"][key]
 		else:
-			s["compareBox"]["compound"].addMembers( IECore.CompoundData( { key : value } ) )
+			s["compareBox"]["compound"].addMembers( IECore.CompoundData( { key : value } ), True )
 
 	def assertComparisonValid( self, s ) :
 		keys = set( s["cachedDataNode"]["keys"].getValue() )
@@ -69,7 +69,7 @@ class CachedDataNodeTest( GafferTest.TestCase ) :
 		for k in keys:
 			self.assertEqual( s["cachedDataNode"].getEntry( k ), compoundData[ k ] )
 
-	def assertSaved( self, s, recycleBinStillOpen = False ) :
+	def assertSaved( self, s, expectRecycleBin = False ) :
 
 		hashes = set()
 
@@ -92,7 +92,7 @@ class CachedDataNodeTest( GafferTest.TestCase ) :
 			cacheFiles = set( os.listdir( cacheDir ) )
 
 		expectedCacheFiles = set( [ "%s.io" % h.toString() for h in hashes ] )
-		if recycleBinStillOpen:
+		if expectRecycleBin:
 			expectedCacheFiles.add( ".recycleBin" )
 
 		self.assertEqual( cacheFiles, expectedCacheFiles )
@@ -166,7 +166,7 @@ class CachedDataNodeTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 		self.assertComparisonValid( s )
-		self.assertSaved( s, recycleBinStillOpen = True )
+		self.assertSaved( s )
 
 		del s
 
@@ -185,21 +185,59 @@ class CachedDataNodeTest( GafferTest.TestCase ) :
 
 		s.save()
 		self.assertComparisonValid( s )
-		self.assertSaved( s, recycleBinStillOpen = True )
+		self.assertSaved( s, expectRecycleBin = True )
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() / "test_cacheDir" ) )
 		self.assertTrue( os.path.exists( self.temporaryDirectory() / "test_cacheDir" / ".recycleBin" ) )
 		self.assertEqual( len( os.listdir( self.temporaryDirectory() / "test_cacheDir" / ".recycleBin" ) ), 2 )
 
+		# Do another save, which moves another entry to the recycle bin
+		self.comparisonSetEntry( s, "a", IECore.IntData( 10000 ) )
+		self.assertComparisonValid( s )
+		s.save()
+		self.assertComparisonValid( s )
+		self.assertSaved( s, expectRecycleBin = True )
+
+		self.assertEqual( len( os.listdir( self.temporaryDirectory() / "test_cacheDir" / ".recycleBin" ) ), 3 )
+
 		del s
 
+		# Closing the script deletes the recycle bin
 		self.assertFalse( os.path.exists( self.temporaryDirectory() / "test_cacheDir" / ".recycleBin" ) )
 
+		# Everything still loads fine
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.load()
 		self.assertComparisonValid( s )
 		self.assertSaved( s )
+
+	def testMovingManyEntriesToRecycleBin( self ):
+		# Just wanted to double check that iterating the cache directory is working properly, by
+		# moving a whole bunch of files at once to the recycle bin
+		s = Gaffer.ScriptNode()
+		self.setupComparison( s )
+
+		for i in range( 1000 ):
+			self.comparisonSetEntry( s, "a%i"%i, IECore.IntData( 7 * i ) )
+
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
+		self.assertComparisonValid( s )
+		s.save()
+		self.assertComparisonValid( s )
+		self.assertSaved( s )
+
+		for i in range( 1000 ):
+			self.comparisonSetEntry( s, "a%i"%i, None )
+
+		self.comparisonSetEntry( s, "b", IECore.IntData( 4 ) )
+
+		self.assertEqual( s["cachedDataNode"]["keys"].getValue(), IECore.StringVectorData( [ "b" ] ) )
+
+		self.assertComparisonValid( s )
+		s.save()
+		self.assertSaved( s, expectRecycleBin = True )
+		self.assertEqual( len( os.listdir( self.temporaryDirectory() / "test_cacheDir" / ".recycleBin" ) ), 1000 )
 
 	def testHardLinks( self ):
 
@@ -281,13 +319,47 @@ class CachedDataNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( os.stat( self.temporaryDirectory() / "source_cacheDir" / "22b41848d90e4f05d50ab80c68957527.io" ).st_nlink, 2 )
 		self.assertEqual( os.stat( self.temporaryDirectory() / "test_cacheDir" / "22b41848d90e4f05d50ab80c68957527.io" ).st_nlink, 2 )
 
+	def testRenameA( self ):
+		s = Gaffer.ScriptNode()
+		s["cachedDataNode"] = Gaffer.CachedDataNode()
+		s["cachedDataNode"].setEntry( "a", IECore.IntData( 7 ) )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
+		s.save()
+		del s
+
+		os.rename( self.temporaryDirectory() / "test.gfr", self.temporaryDirectory() / "renameA.gfr" )
+
+		# The renamed script remembers the absolute path of where the caches were previously saved,
+		# and is able to load the entry.
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.temporaryDirectory() / "renameA.gfr" )
+		s.load()
+		self.assertEqual( s["cachedDataNode"].getEntry( "a" ), IECore.IntData( 7 ) )
+
+	def testRenameB( self ):
+		s = Gaffer.ScriptNode()
+		s["cachedDataNode"] = Gaffer.CachedDataNode()
+		s["cachedDataNode"].setEntry( "a", IECore.IntData( 42 ) )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
+		s.save()
+		del s
+
+		os.rename( self.temporaryDirectory() / "test.gfr", self.temporaryDirectory() / "renameB.gfr" )
+		os.rename( self.temporaryDirectory() / "test_cacheDir", self.temporaryDirectory() / "renameB_cacheDir" )
+
+		# If we move a file and its caches together, it should be able to find the new cache locations when
+		# we load.
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.temporaryDirectory() / "renameB.gfr" )
+		s.load()
+		self.assertEqual( s["cachedDataNode"].getEntry( "a" ), IECore.IntData( 42 ) )
+
 
 	# TODO : More undo tests
 	# TODO : think about backups and render scripts
 	# TODO : test save as
 	# TODO : Test pasting into new script
 	# TODO : Implement/Test takeOwnership for dealing with Reference
-	# TODO : Support a script that has been renamed together with caches
 
 if __name__ == "__main__":
 	unittest.main()
