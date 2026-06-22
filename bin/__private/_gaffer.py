@@ -138,6 +138,15 @@ oslcPath = gafferRoot / "bin" / ( "oslc.exe" if sys.platform == "win32" else "os
 if oslcPath.exists() :
 	os.environ["OSLHOME"] = str( gafferRoot )
 
+if os.environ.get( "IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS", "0" ) != "0" :
+	# The SceneWriter will be writing shaders with just their leaf names
+	# (e.g. `Noise` rather than `Pattern/Noise`). Put all our subdirectories
+	# on the shader path so that they'll still be found.
+	## \todo Longer term we are probably going to need to flatten the shader directory
+	# itself instead.
+	for path in ( gafferRoot / "shaders" ).rglob( "*/" ) :
+		prependToPath( path, "OSL_SHADER_PATHS" )
+
 ## \todo Should we rename these to "osl" to match our "glsl" folder?
 prependToPath( gafferRoot / "shaders", "OSL_SHADER_PATHS" )
 prependToPath( pathlib.Path.home() / "gaffer" / "shaders", "OSL_SHADER_PATHS" )

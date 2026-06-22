@@ -646,7 +646,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				output = "output"
 			) )
 
-		self.assertEqual( str(engineError.exception), "The following shaders can't be used as they are not OSL shaders: aiImage (shader), aiImage (shader)" )
+		self.assertEqual( str(engineError.exception), "The following shaders can't be used as they are not OSL shaders: aiImage, aiImage" )
 
 	def testReadV2fUserData( self ) :
 
@@ -1232,6 +1232,20 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 			self.assertEqual( len( results["Ci"] ), 1 )
 			self.assertEqual( results["Ci"][0][0], 0 )
+
+	def testShaderTypeNotNeeded( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
+
+		engine = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"constant" : IECoreScene.Shader( shader, "typeNotSpecified", { "Cs" : imath.Color3f( 1, 0.5, 0.25 ) } ),
+			},
+			output = "constant",
+		) )
+
+		points = engine.shade( self.rectanglePoints() )
+		self.assertEqual( points["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 1, 0.5, 0.25 ) ] * 100 ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -1,7 +1,22 @@
 1.7.x.x (relative to 1.7.0.0a3)
 =======
 
+Improvements
+------------
 
+- SceneWriter : Added `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS` environment variable. When set to a value of `1`, OSL shaders are written to USD in a format compatible with `hdPrman`, for rendering with RenderMan in `usdview` and other Hydra-based applications. [^1]
+
+Fixes
+-----
+
+- ShadingEngine : Fixed handling of shaders when an `.oso` file does exist, but `Shader::getType()` does not match `osl:*`. Examples include Pxr shaders loaded from USD files. [^1]
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.0.0a12.
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a3 (relative to 1.7.0.0a2)
 =========
@@ -214,10 +229,28 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.x.x (relative to 1.6.19.2)
+1.6.x.x (relative to 1.6.20.0)
 =======
 
 
+
+1.6.20.0 (relative to 1.6.19.2)
+========
+
+Improvements
+------------
+
+- SceneWriter : Added `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS` environment variable. When set to a value of `1`, OSL shaders are written to USD in a format compatible with `hdPrman`, for rendering with RenderMan in `usdview` and other Hydra-based applications.
+
+Fixes
+-----
+
+- ShadingEngine : Fixed handling of shaders when an `.oso` file does exist, but `Shader::getType()` does not match `osl:*`. Examples include Pxr shaders loaded from USD files.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.6.0.
 
 1.6.19.2 (relative to 1.6.19.1)
 ========
