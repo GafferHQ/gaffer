@@ -11,7 +11,7 @@ Features
   - Faster rendering.
 - USDMeshLight :
   - Added node to add necessary attributes to geometry to convert to a USDMeshLight.
-  - Added Arnold rendering.
+  - Added Arnold and RenderMan rendering.
 
 Improvements
 ------------
