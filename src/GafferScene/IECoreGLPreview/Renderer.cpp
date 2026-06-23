@@ -991,6 +991,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
+		ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes ) override
+		{
+			return object( name, staticSamplesCast<IECore::ConstObjectPtr>( samples ), times, attributes );
+		}
+
 		void render() override
 		{
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
