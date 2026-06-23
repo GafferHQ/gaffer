@@ -892,6 +892,48 @@ ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNe
 	return result;
 }
 
+template<typename T>
+T *attributeCast( const IECore::RunTimeTyped *v, const IECore::InternedString &name )
+{
+	if( !v )
+	{
+		return nullptr;
+	}
+
+	T *t = IECore::runTimeCast<T>( v );
+	if( t )
+	{
+		return t;
+	}
+
+	IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::ShaderNetworkAlgo", fmt::format( "Expected {} but got {} for attribute \"{}\".", T::staticTypeName(), v->typeName(), name.c_str() ) );
+	return nullptr;
+}
+
+template<typename T>
+const T *attribute( const CompoundObject::ObjectMap &attributes, IECore::InternedString name )
+{
+	auto it = attributes.find( name );
+	if( it == attributes.end() )
+	{
+		return nullptr;
+	}
+
+	return attributeCast<const T>( it->second.get(), name );
+}
+
+pair<InternedString, const ShaderNetwork *> shaderNetworkAttribute( const CompoundObject::ObjectMap &attributes, const vector<InternedString> &attributeNames )
+{
+	for( const auto &name : attributeNames )
+	{
+		if( const auto *shaderNetwork = attribute<ShaderNetwork>( attributes, name ) )
+		{
+			return { name, shaderNetwork };
+		}
+	}
+	return { InternedString(), nullptr };
+}
+
 } // namespace
 
 std::vector<riley::ShadingNode> IECoreRenderMan::ShaderNetworkAlgo::convert( const IECoreScene::ShaderNetwork *network )
@@ -1021,8 +1063,11 @@ const InternedString g_diffuseParameter( "diffuse" );
 const InternedString g_diffuseColorParameter( "diffuseColor" );
 const InternedString g_diffuseDoubleSidedParameter( "diffuseDoubleSided" );
 const InternedString g_diffuseGainParameter( "diffuseGain") ;
+const InternedString g_emissionColorParameter( "emissionColor" );
 const InternedString g_emissionFocusParameter( "emissionFocus" );
 const InternedString g_emissionFocusTintParameter( "emissionFocusTint" );
+const InternedString g_emissiveColorParameter( "emissiveColor" );
+const InternedString g_emitColorParameter( "emitColor" );
 const InternedString g_enableColorTemperatureParameter( "enableColorTemperature" );
 const InternedString g_enableShadowsParameter( "enableShadows" );
 const InternedString g_enableTemperatureParameter( "enableTemperature" );
@@ -1074,6 +1119,7 @@ const InternedString g_specularIorParameter( "specularIor" );
 const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
 const InternedString g_temperatureParameter( "temperature" );
+const InternedString g_textureColorParameter( "textureColor" );
 const InternedString g_textureFileParameter( "texture:file" );
 const InternedString g_textureFormatParameter( "texture:format" );
 const InternedString g_typeParameter( "type" );
@@ -1083,6 +1129,9 @@ const InternedString g_varnameParameter( "varname" );
 const InternedString g_widthParameter( "width" );
 
 const std::string g_renderManLightNamespace( "ri:light:" );
+
+const InternedString g_lightAttributeName( "light" );
+const vector<InternedString> g_surfaceAttributeNames = { "ri:surface", "surface" };
 
 const std::vector<InternedString> g_pxrSurfaceParameters = {
 	g_diffuseGainParameter,
@@ -1206,6 +1255,51 @@ void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr 
 			network->addConnection( c );
 		}
 	}
+}
+
+std::pair<ShaderNetwork::Parameter, ShaderNetwork::Parameter> surfaceGlowParameters( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	ShaderNetwork::Parameter glowColorParameter;
+	ShaderNetwork::Parameter glowColorInput;
+	if( !shaderNetwork )
+	{
+		return { glowColorParameter, glowColorInput };
+	}
+
+	for( const auto &[handle, shader] : shaderNetwork->shaders() )
+	{
+		if(
+			shader->getName() == "PxrSurface" ||
+			shader->getName() == "PxrLayerSurface" ||
+			shader->getName() == "PxrMarschnerHair"
+		)
+		{
+			glowColorParameter = { handle, g_glowColorParameter };
+			break;
+		}
+		else if( shader->getName() == "LamaEmission" )
+		{
+			glowColorParameter = { handle, g_emissionColorParameter };
+			break;
+		}
+		else if( shader->getName() == "PxrDisney" || shader->getName() == "PxrConstant" )
+		{
+			glowColorParameter = { handle, g_emitColorParameter };
+			break;
+		}
+		else if( shader->getName() == "UsdPreviewSurface" )
+		{
+			glowColorParameter = { handle, g_emissiveColorParameter };
+			break;
+		}
+	}
+
+	if( glowColorParameter )
+	{
+		glowColorInput = shaderNetwork->input( glowColorParameter );
+	}
+
+	return { glowColorParameter, glowColorInput };
 }
 
 } // namespace
@@ -1365,6 +1459,61 @@ M44f IECoreRenderMan::ShaderNetworkAlgo::usdLightTransform( const Shader *lightS
 	}
 
 	return M44f();
+}
+
+ConstCompoundObjectPtr IECoreRenderMan::ShaderNetworkAlgo::convertUSDMeshLightAttributes( const CompoundObject *attributes )
+{
+	const auto *lightNetwork = attribute<ShaderNetwork>( attributes->members(), g_lightAttributeName );
+	if( !lightNetwork )
+	{
+		return attributes;
+	}
+
+	const Shader *outputShader = lightNetwork->outputShader();
+	if( !outputShader || outputShader->getName() != "MeshLight" )
+	{
+		return attributes;
+	}
+
+	CompoundObjectPtr result = attributes->copy();
+
+	ShaderNetworkPtr newLightShaderNetwork = lightNetwork->copy();
+	const ShaderNetwork *surfaceNetwork = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames ).second;
+
+	const auto &[glowColorParameter, glowColorInput] = surfaceGlowParameters( surfaceNetwork );
+
+	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
+	const Shader *lightOutputShader = lightNetwork->outputShader();
+
+	ShaderPtr newLightShader = new Shader( "PxrMeshLight", "ri:light" );
+	transferUSDLightParameters( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
+	transferUSDParameter( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, g_normalizeParameter, newLightShader.get(), g_areaNormalizeParameter, false );
+
+	// RenderMan's PxrMeshLight has a separate parameter `textureColor` we can use for the surface
+	// glow. It takes care of the tinting for us so we only need to take care of transferring the
+	// glow color and input network, if any.
+	if( glowColorParameter )
+	{
+		const Color3f c = parameterValue( surfaceNetwork->getShader( glowColorParameter.shader ), glowColorParameter.name, Color3f( 0.f ) );
+		newLightShader->parameters()[g_textureColorParameter] = new Color3fData( c );
+	}
+
+	if( glowColorInput )
+	{
+		ShaderNetworkPtr glowNetwork = surfaceNetwork->copy();
+		glowNetwork->setOutput( glowColorInput );
+		IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( glowNetwork.get() );
+		ShaderNetwork::Parameter newGlowInput = IECoreScene::ShaderNetworkAlgo::addShaders( newLightShaderNetwork.get(), glowNetwork.get(), /* connections = */ true );
+
+		newLightShaderNetwork->addConnection( { newGlowInput, { lightOutputParameter.shader, g_textureColorParameter } } );
+	}
+
+	replaceUSDShader( newLightShaderNetwork.get(), lightOutputParameter.shader, std::move( newLightShader ) );
+	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( newLightShaderNetwork.get() );
+
+	result->members()[g_lightAttributeName] = std::move( newLightShaderNetwork );
+
+	return result;
 }
 
 //////////////////////////////////////////////////////////////////////////
