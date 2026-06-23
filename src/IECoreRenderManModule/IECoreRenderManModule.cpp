@@ -85,6 +85,8 @@ BOOST_PYTHON_MODULE( _IECoreRenderMan )
 	def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
 	def( "usdLightTransform", &ShaderNetworkAlgo::usdLightTransform );
 
+	def( "convertUSDMeshLightShaders", &ShaderNetworkAlgo::convertUSDMeshLightShaders );
+
 	{
 		scope s = class_<ShaderNetworkAlgo::VStructAction>( "VStructAction" )
 			.def_readonly( "type", &ShaderNetworkAlgo::VStructAction::type )
