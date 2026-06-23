@@ -71,7 +71,7 @@ Gaffer.Metadata.registerNode(
 		},
 
 
-		"data" : {
+		"out" : {
 
 			"description" :
 			"""

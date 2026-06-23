@@ -108,8 +108,8 @@ class GAFFER_API CachedDataNode : public ComputeNode
 		StringPlug *selectorPlug();
 		const StringPlug *selectorPlug() const;
 
-		ObjectPlug *dataPlug();
-		const ObjectPlug *dataPlug() const;
+		ObjectPlug *outPlug();
+		const ObjectPlug *outPlug() const;
 
 		StringVectorDataPlug *keysPlug();
 		const StringVectorDataPlug *keysPlug() const;
@@ -118,10 +118,8 @@ class GAFFER_API CachedDataNode : public ComputeNode
 
 		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
 
-		// Create an entry with the given key and value, or set value to nullptr to remove the given
-		// key.
 		void setEntry( const IECore::InternedString &key, IECore::ConstObjectPtr value );
-
+		void removeEntry( const IECore::InternedString &key );
 		IECore::ConstObjectPtr getEntry( const IECore::InternedString &key, bool throwExceptions = true ) const;
 
 		bool hasLiveEntries() const;

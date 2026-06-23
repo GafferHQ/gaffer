@@ -122,6 +122,7 @@ void GafferModule::bindCachedData()
 		.def( init<std::string, std::string, IECore::CompoundDataPtr>( ( arg( "name" )=GraphComponent::defaultName<CachedDataNode>(), arg( "sourceDirectory") = "", arg( "caches" ) = object() ) ) )
 		.def( "save", &CachedDataNode::save )
 		.def( "setEntry", &CachedDataNode::setEntry )
+		.def( "removeEntry", &CachedDataNode::removeEntry )
 		.def( "getEntry", &getEntryWrapper, ( arg_( "key" ), arg_( "throwExceptions" ) = true ) )
 		.def( "hasLiveEntries", &CachedDataNode::hasLiveEntries )
 	;

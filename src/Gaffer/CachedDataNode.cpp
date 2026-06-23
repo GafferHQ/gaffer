@@ -140,7 +140,7 @@ CachedDataNode::CachedDataNode(
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "selector", Plug::In ) );
-	addChild( new ObjectPlug( "data", Plug::Out, new IECore::NullObject() ) );
+	addChild( new ObjectPlug( "out", Plug::Out, new IECore::NullObject() ) );
 	addChild( new StringVectorDataPlug( "keys", Plug::Out ) );
 	addChild( new IntPlug( "__refreshCount", Plug::In ) );
 	addChild( new ObjectPlug( "__evaluate", Plug::Out, new IECore::NullObject() ) );
@@ -175,12 +175,12 @@ const StringPlug *CachedDataNode::selectorPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 0 );
 }
 
-ObjectPlug *CachedDataNode::dataPlug()
+ObjectPlug *CachedDataNode::outPlug()
 {
 	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
 }
 
-const ObjectPlug *CachedDataNode::dataPlug() const
+const ObjectPlug *CachedDataNode::outPlug() const
 {
 	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
 }
@@ -333,30 +333,40 @@ void CachedDataNode::affects( const Plug *input, AffectedPlugsContainer &outputs
 		input == evaluatePlug()
 	)
 	{
-		outputs.push_back( dataPlug() );
+		outputs.push_back( outPlug() );
 	}
 }
 
 void CachedDataNode::setEntry( const IECore::InternedString &key, IECore::ConstObjectPtr value )
 {
+	if( !value )
+	{
+		throw IECore::Exception( "Null value passed to setValue" );
+	}
+
 	// Ignore setEntry calls if it matches the existing value
 	auto it = m_caches.find( key );
-	if( value )
+	if( it != m_caches.end() && it->second.m_hash == value->hash() )
 	{
-		if( it != m_caches.end() && it->second.m_hash == value->hash() )
-		{
-			return;
-		}
-	}
-	else
-	{
-		if( it == m_caches.end() )
-		{
-			return;
-		}
+		return;
 	}
 
 	Action::enact( new SetEntryAction( this, key, value ) );
+}
+
+void CachedDataNode::removeEntry( const IECore::InternedString &key )
+{
+	// Ignore removeEntry calls if there is no entry
+	auto it = m_caches.find( key );
+	if( it == m_caches.end() )
+	{
+		return;
+	}
+
+	// We have a removeEntry method in order to present a clearer API,
+	// but we internally represent a remove as a SetEntry with a null
+	// value in order to avoid duplicating code for SetEntryAction.
+	Action::enact( new SetEntryAction( this, key, nullptr ) );
 }
 
 void CachedDataNode::setEntryInternal( const IECore::InternedString &key, const std::optional<CacheEntry> &value )
@@ -438,7 +448,7 @@ void CachedDataNode::hash( const ValuePlug *output, const Context *context, IECo
 		h = it->second.m_hash;
 		return;
 	}
-	else if( output == dataPlug() )
+	else if( output == outPlug() )
 	{
 		Context::EditableScope s( context );
 		IECore::InternedString select = selectorPlug()->getValue();
@@ -518,7 +528,7 @@ void CachedDataNode::compute( ValuePlug *output, const Context *context ) const
 		return;
 
 	}
-	else if( output == dataPlug() )
+	else if( output == outPlug() )
 	{
 		Context::EditableScope s( context );
 		IECore::InternedString select = selectorPlug()->getValue();
@@ -554,7 +564,7 @@ namespace
 
 std::filesystem::path cacheDirFromScriptPath( const std::filesystem::path &scriptPath )
 {
-	return scriptPath.parent_path() / ( scriptPath.stem().string() + "_cacheDir" );
+	return scriptPath.parent_path() / ( scriptPath.filename().string() + ".cachedData" );
 }
 
 }
