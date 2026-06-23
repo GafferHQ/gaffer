@@ -55,6 +55,7 @@
 #include "boost/unordered_map.hpp"
 
 #include <unordered_map>
+#include <tuple>
 
 using namespace std;
 using namespace Imath;
@@ -397,6 +398,42 @@ ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNe
 	return result;
 }
 
+template<typename T>
+T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
+{
+	T *t = IECore::runTimeCast<T>( v );
+	if( t )
+	{
+		return t;
+	}
+
+	IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", fmt::format( "Expected {} but got {} for {} \"{}\".", T::staticTypeName(), v->typeName(), type, name.c_str() ) );
+	return nullptr;
+}
+
+template<typename T>
+const T *attribute( const IECore::CompoundObject::ObjectMap &attributes, IECore::InternedString name )
+{
+	auto it = attributes.find( name );
+	if( it == attributes.end() )
+	{
+		return nullptr;
+	}
+
+	return reportedCast<const T>( it->second.get(), "attribute", name );
+}
+
+pair<IECore::InternedString, const IECoreScene::ShaderNetwork *> shaderNetworkAttribute( const vector<IECore::InternedString> &attributeNames, const IECore::CompoundObject::ObjectMap &attributes )
+{
+	for( const auto &name : attributeNames )
+	{
+		if( const auto *shaderNetwork = attribute<IECoreScene::ShaderNetwork>( attributes, name ) )
+		{
+			return { name, shaderNetwork };
+		}
+	}
+	return { IECore::InternedString(), nullptr };
+}
 
 } // namespace
 
@@ -718,6 +755,19 @@ const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
 
+const std::vector<IECore::InternedString> g_surfaceShaderAttributeNames = {
+	"ai:surface",
+	"osl:surface",
+	/// \todo Remove support for interpreting "osl:shader" as a surface shader assignment.
+	"osl:shader",
+	"surface"
+};
+
+const std::vector<IECore::InternedString> g_lightShaderAttributeNames = {
+	"light",
+	"ai:light",
+};
+
 const string g_arnoldNamespace( "arnold:" );
 
 void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
@@ -905,6 +955,45 @@ void convertUSDUVTextures( ShaderNetwork *network )
 
 		replaceUSDShader( network, handle, std::move( imageShader ) );
 	}
+}
+
+std::pair<ShaderNetwork::Parameter, ShaderNetwork::Parameter> surfaceGlowParameters( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	ShaderNetwork::Parameter emissionColorParameter;
+	ShaderNetwork::Parameter emissionColorInput;
+	if( !shaderNetwork )
+	{
+		return { emissionColorParameter, emissionColorInput };
+	}
+
+	for( const auto &[handle, shader] : shaderNetwork->shaders() )
+	{
+		if(
+			shader->getName() == "standard_surface" ||
+			shader->getName() == "standard_hair" ||
+			shader->getName() == "toon"
+		)
+		{
+			emissionColorParameter = { handle, g_emissionColorParameter };
+			break;
+		}
+		else if( shader->getName() == "openpbr_surface" )
+		{
+			emissionColorParameter = { handle, g_emissionColorParameter };
+			break;
+		}
+		else if( shader->getName() == "UsdPreviewSurface" )
+		{
+			emissionColorParameter = { handle, g_emissiveColorParameter };
+			break;
+		}
+	}
+	if( emissionColorParameter )
+	{
+		emissionColorInput = shaderNetwork->input( emissionColorParameter );
+	}
+
+	return { emissionColorParameter, emissionColorInput };
 }
 
 } // namespace
@@ -1182,5 +1271,75 @@ void applySubstitutions( IECoreScene::ShaderNetwork *shaderNetwork, InternedStri
 {
 	IECoreScene::ShaderNetworkAlgo::applyRenderAdaptors( shaderNetwork, attributeName, attributes );
 }
+
+//////////////////////////////////////////////////////////////////////////
+// USDMeshLight Conversion
+//////////////////////////////////////////////////////////////////////////
+
+ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attributes )
+{
+	const auto [lightAttribute, lightNetwork] = shaderNetworkAttribute( g_lightShaderAttributeNames, attributes->members() );
+	if( !lightNetwork )
+	{
+		return attributes;
+	}
+
+	const IECoreScene::Shader *outputShader = lightNetwork->outputShader();
+	if( !outputShader || outputShader->getName() != "MeshLight" )
+	{
+		return attributes;
+	}
+
+	IECore::CompoundObjectPtr result = attributes->copy();
+
+	IECoreScene::ShaderNetworkPtr newLightShaderNetwork = lightNetwork->copy();
+	const IECoreScene::ShaderNetwork *surfaceNetwork = shaderNetworkAttribute( g_surfaceShaderAttributeNames, attributes->members() ).second;
+
+	const auto &[emissionColorParameter, emissionColorInput] = surfaceGlowParameters( surfaceNetwork );
+
+	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
+	const Shader *lightOutputShader = lightNetwork->outputShader();
+
+	ShaderPtr newLightShader = new Shader( "mesh_light", "ai:light" );
+	transferUSDLightParameters( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
+
+	const Color3f lightColor = parameterValue( lightOutputShader, g_colorParameter, Color3f( 1.f ) );
+	if( emissionColorParameter )
+	{
+		const Color3f surfaceColor = parameterValue( surfaceNetwork->getShader( emissionColorParameter.shader ), emissionColorParameter.name, Color3f( 0.f ) );
+		newLightShader->parameters()[g_colorParameter] = new Color3fData( surfaceColor * lightColor );
+	}
+
+	const ShaderNetwork::Parameter meshLightColorParameter = { lightOutputParameter.shader, g_colorParameter };
+	if( emissionColorInput && !lightNetwork->input( meshLightColorParameter ) && lightColor != Color3f( 0.f ) )
+	{
+		ShaderNetworkPtr glowNetwork = surfaceNetwork->copy();
+		glowNetwork->setOutput( emissionColorInput );
+		IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( glowNetwork.get() );
+		ShaderNetwork::Parameter newGlowColorInput = IECoreScene::ShaderNetworkAlgo::addShaders( newLightShaderNetwork.get(), glowNetwork.get(), /* connections = */ true );
+
+		if( lightColor != Color3f( 1.f ) )
+		{
+			ShaderPtr tintShader = new Shader( "multiply", "ai:surface", { { "input2", new Color3fData( lightColor ) } } );
+			const InternedString tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
+
+			newLightShaderNetwork->addConnection( { newGlowColorInput, { tintHandle, "input1" } } );
+			newLightShaderNetwork->addConnection( { { tintHandle, "out" }, meshLightColorParameter } );
+		}
+		else
+		{
+			newLightShaderNetwork->addConnection( { newGlowColorInput, meshLightColorParameter } );
+		}
+
+	}
+
+	replaceUSDShader( newLightShaderNetwork.get(), lightOutputParameter.shader, std::move( newLightShader ) );
+	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( newLightShaderNetwork.get() );
+
+	result->members()[lightAttribute] = std::move( newLightShaderNetwork );
+
+	return result;
+}
+
 
 } // namespace IECoreArnold::ShaderNetworkAlgo

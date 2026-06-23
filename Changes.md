@@ -155,7 +155,9 @@ Features
 - DeleteFiles : Added node for deleting files.
 - CopyFiles : Added node for copying files.
 - RenameFiles : Added node for renaming files.
-- USD MeshLight : Added node to add necessary attributes to geometry to convert to a USD MeshLight.
+- USD MeshLight :
+  - Added node to add necessary attributes to geometry to convert to a USD MeshLight.
+  - Added Arnold rendering.
 
 Fixes
 -----
