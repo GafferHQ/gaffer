@@ -580,8 +580,19 @@ class PlugLayout( GafferUI.Widget ) :
 		if plug.direction() != plug.Direction.In :
 			return
 
+		# Private plugs do not affect activations or summaries.
+		relativeName = plug.relativeName( self.__node() )
+		if relativeName.startswith( "__" ) or ".__" in relativeName :
+			return
+
+		# Activations can depend on any plug on this node.
 		self.__activationsDirty = True
-		self.__summariesDirty = True
+
+		# But summaries and `section.valuesChanged` can only depend
+		# on plugs we are actually displaying.
+		if self.__parent.isAncestorOf( plug ) :
+			self.__summariesDirty = True
+
 		self.__updateLazily()
 
 	def __contextChanged( self, contextTracker ) :
