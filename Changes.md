@@ -9,7 +9,9 @@ Features
   - Prototypes and points that are editable downstream.
   - Export to USD.
   - Faster rendering.
-- USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+- USDMeshLight :
+  - Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+  - Added Arnold rendering.
 
 Improvements
 ------------
@@ -297,6 +299,11 @@ Features
 - DeleteFiles : Added node for deleting files.
 - CopyFiles : Added node for copying files.
 - RenameFiles : Added node for renaming files.
+
+Improvements
+------------
+
+- MeshLight : Added viewport visualisation of textures.
 
 Fixes
 -----
