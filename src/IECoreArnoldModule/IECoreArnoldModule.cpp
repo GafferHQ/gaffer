@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/ParameterAlgo.h"
 #include "IECoreArnold/ShaderNetworkAlgo.h"
@@ -179,6 +181,13 @@ bool shaderNetworkAlgoUpdate( list pythonNodes, const IECoreScene::ShaderNetwork
 	return result;
 }
 
+IECore::CompoundObjectPtr convertUSDMeshLightAttributesWrapper( const IECore::CompoundObject &attributes, bool copy )
+{
+	IECorePython::ScopedGILRelease r;
+	IECore::ConstCompoundObjectPtr result = ShaderNetworkAlgo::convertUSDMeshLightAttributes( &attributes );
+	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundObject>( result );
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _IECoreArnold )
@@ -216,6 +225,7 @@ BOOST_PYTHON_MODULE( _IECoreArnold )
 		def( "convert", &shaderNetworkAlgoConvert );
 		def( "update", &shaderNetworkAlgoUpdate );
 		def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
+		def( "convertUSDMeshLightAttributes", &convertUSDMeshLightAttributesWrapper, ( arg_( "_copy" ) = true ) );
 	}
 
 }
