@@ -1020,8 +1020,11 @@ const InternedString g_diffuseParameter( "diffuse" );
 const InternedString g_diffuseColorParameter( "diffuseColor" );
 const InternedString g_diffuseDoubleSidedParameter( "diffuseDoubleSided" );
 const InternedString g_diffuseGainParameter( "diffuseGain") ;
+const InternedString g_emissionColorParameter( "emissionColor" );
 const InternedString g_emissionFocusParameter( "emissionFocus" );
 const InternedString g_emissionFocusTintParameter( "emissionFocusTint" );
+const InternedString g_emissiveColorParameter( "emissiveColor" );
+const InternedString g_emitColorParameter( "emitColor" );
 const InternedString g_enableColorTemperatureParameter( "enableColorTemperature" );
 const InternedString g_enableShadowsParameter( "enableShadows" );
 const InternedString g_enableTemperatureParameter( "enableTemperature" );
@@ -1073,6 +1076,7 @@ const InternedString g_specularIorParameter( "specularIor" );
 const InternedString g_specularModelTypeParameter( "specularModelType" );
 const InternedString g_specularRoughnessParameter( "specularRoughness" );
 const InternedString g_temperatureParameter( "temperature" );
+const InternedString g_textureColorParameter( "textureColor" );
 const InternedString g_textureFileParameter( "texture:file" );
 const InternedString g_textureFormatParameter( "texture:format" );
 const InternedString g_treatAsPointParameter( "treatAsPoint" );
@@ -1207,6 +1211,51 @@ void replaceUSDShader( ShaderNetwork *network, InternedString handle, ShaderPtr 
 			network->addConnection( c );
 		}
 	}
+}
+
+std::pair<ShaderNetwork::Parameter, ShaderNetwork::Parameter> surfaceGlowParameters( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	ShaderNetwork::Parameter glowColorParameter;
+	ShaderNetwork::Parameter glowColorInput;
+	if( !shaderNetwork )
+	{
+		return { glowColorParameter, glowColorInput };
+	}
+
+	for( const auto &[handle, shader] : shaderNetwork->shaders() )
+	{
+		if(
+			shader->getName() == "PxrSurface" ||
+			shader->getName() == "PxrLayerSurface" ||
+			shader->getName() == "PxrMarschnerHair"
+		)
+		{
+			glowColorParameter = { handle, g_glowColorParameter };
+			break;
+		}
+		else if( shader->getName() == "LamaEmission" )
+		{
+			glowColorParameter = { handle, g_emissionColorParameter };
+			break;
+		}
+		else if( shader->getName() == "PxrDisney" || shader->getName() == "PxrConstant" )
+		{
+			glowColorParameter = { handle, g_emitColorParameter };
+			break;
+		}
+		else if( shader->getName() == "UsdPreviewSurface" )
+		{
+			glowColorParameter = { handle, g_emissiveColorParameter };
+			break;
+		}
+	}
+
+	if( glowColorParameter )
+	{
+		glowColorInput = shaderNetwork->input( glowColorParameter );
+	}
+
+	return { glowColorParameter, glowColorInput };
 }
 
 } // namespace
@@ -1383,6 +1432,38 @@ M44f IECoreRenderMan::ShaderNetworkAlgo::usdLightTransform( const Shader *lightS
 	}
 
 	return M44f();
+}
+
+void IECoreRenderMan::ShaderNetworkAlgo::convertUSDMeshLightShaders( IECoreScene::ShaderNetwork *lightNetwork, const IECoreScene::ShaderNetwork *surfaceNetwork )
+{
+	const auto &[glowColorParameter, glowColorInput] = surfaceGlowParameters( surfaceNetwork );
+
+	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
+	const Shader *lightOutputShader = lightNetwork->outputShader();
+
+	ShaderPtr newLightShader = new Shader( "PxrMeshLight", "ri:light" );
+	transferUSDLightParameters( lightNetwork, lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
+	transferUSDShapingParameters( lightNetwork, lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
+	transferUSDParameter( lightNetwork, lightOutputParameter.shader, lightOutputShader, g_normalizeParameter, newLightShader.get(), g_areaNormalizeParameter, false );
+
+	if( glowColorParameter )
+	{
+		const Color3f c = parameterValue( surfaceNetwork->getShader( glowColorParameter.shader ), glowColorParameter.name, Color3f( 0.f ) );
+		newLightShader->parameters()[g_textureColorParameter] = new Color3fData( c );
+	}
+
+	if( glowColorInput )
+	{
+		ShaderNetworkPtr glowNetwork = surfaceNetwork->copy();
+		glowNetwork->setOutput( glowColorInput );
+		IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( glowNetwork.get() );
+		ShaderNetwork::Parameter newGlowInput = IECoreScene::ShaderNetworkAlgo::addShaders( lightNetwork, glowNetwork.get(), /* connections = */ true );
+
+		lightNetwork->addConnection( { newGlowInput, { lightOutputParameter.shader, g_textureColorParameter } } );
+	}
+
+	replaceUSDShader( lightNetwork, lightOutputParameter.shader, std::move( newLightShader ) );
+	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( lightNetwork );
 }
 
 //////////////////////////////////////////////////////////////////////////
