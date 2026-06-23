@@ -121,6 +121,12 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 		shader.loadShader( "PxrDiffuse" )
 		return shader, shader["parameters"]["diffuseColor"], shader["out"]
 
+	def _createEmissiveShader( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrConstant" )
+		return shader, shader["parameters"]["emitColor"], shader["out"]
+
 	def _createPointLight( self ) :
 
 		light = GafferRenderMan.RenderManLight()
@@ -148,6 +154,12 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 	def _cameraVisibilityAttribute( self ) :
 
 		return "ri:visibility:camera"
+
+	def _createCheckerShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "PxrChecker" )
+		return shader, shader["parameters"]["colorA"], shader["parameters"]["colorB"], shader["out"]["resultRGB"]
 
 	def __colorAtUV( self, image, uv ) :
 
