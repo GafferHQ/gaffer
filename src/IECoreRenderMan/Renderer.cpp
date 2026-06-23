@@ -50,6 +50,7 @@
 #include "PointInstancerCache.h"
 #include "Session.h"
 #include "Transform.h"
+#include "USDMeshLight.h"
 #include "Volume.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
@@ -150,24 +151,40 @@ class RenderManRenderer final : public IECoreScenePreview::Renderer
 
 			auto typedAttributes = static_cast<const Attributes *>( attributes );
 
-			ConstGeometryPrototypePtr geometryPrototype;
+			ConstGeometryPrototypePtr lightGeometryPrototype;
+			ConstGeometryPrototypePtr surfaceGeometryPrototype;
 			if( objectSamples.size() )
 			{
 				if( auto mesh = runTimeCast<const MeshPrimitive>( objectSamples[0].get() ) )
 				{
+					if( typedAttributes->isUSDMeshLight() )
+					{
+						surfaceGeometryPrototype = m_geometryPrototypeCache->get( objectSamples, times, typedAttributes, /* messageContext = */ name );
+						if( !surfaceGeometryPrototype )
+						{
+							return nullptr;
+						}
+					}
+
 					// RenderMan refuses to share mesh prototypes between GeometryInstances and
 					// LightInstances, so we insert some blind data to give the mesh geometry
 					// a different hash, causing the GeometryPrototypeCache to create a prototype
 					// that won't be used by `Renderer::object()`.
 					ObjectSamples uniquefiedObjectSamples = objectSamples;
 					MeshPrimitivePtr meshCopy = mesh->copy();
+
 					meshCopy->blindData()->writable().insert( g_forMeshLightBlindData );
 					uniquefiedObjectSamples[0] = meshCopy;
-					geometryPrototype = m_geometryPrototypeCache->get( uniquefiedObjectSamples, times, typedAttributes, /* messageContext = */ name );
+					lightGeometryPrototype = m_geometryPrototypeCache->get( uniquefiedObjectSamples, times, typedAttributes, /* messageContext = */ name );
+
+					if( typedAttributes->isUSDMeshLight() )
+					{
+						return new IECoreRenderMan::USDMeshLight( name, lightGeometryPrototype, surfaceGeometryPrototype, typedAttributes, m_materialCache.get(), m_lightLinker.get(), m_session );
+					}
 				}
 			}
 
-			return new IECoreRenderMan::Light( geometryPrototype, typedAttributes, m_materialCache.get(), m_lightLinker.get(), m_session );
+			return new IECoreRenderMan::Light( lightGeometryPrototype, typedAttributes, m_materialCache.get(), m_lightLinker.get(), m_session );
 		}
 
 		ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
