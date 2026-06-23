@@ -6,7 +6,9 @@ Improvements
 
 - Cycles : Added support for rendering PointInstancers.
 - SceneInspector : Added PointInstancer section to the Statistics tab.
-- USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+- USDMeshLight :
+  - Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+  - Added Arnold rendering.
 - MeshLight : Added viewport visualisation of textures.
 
 Fixes
