@@ -1396,5 +1396,234 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
 			self.assertEqual( len( nodes ), 0 )
 
+	def testUSDMeshLight( self ) :
+
+		# No surface network
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"light" : IECoreScene.Shader( "MeshLight", "light" )
+					},
+					output = "light"
+				)
+			}
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			modifiedAttributes = IECoreArnold.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+			lightNetwork = modifiedAttributes["light"]
+
+			self.assertEqual( len( lightNetwork.shaders() ), 1 )
+			shader = lightNetwork.getShader( "light" )
+			self.assertIsNotNone( shader )
+			self.assertEqual( shader.name, "mesh_light" )
+			self.assertEqual( shader.type, "ai:light" )
+			self.assertEqual( shader.parameters["color"].value, imath.Color3f( 1, 1, 1 ) )
+			self.assertFalse( lightNetwork.input( ( "light", "color" ) ) )
+
+		for shaderName, emissionColorParameter in [
+			( "standard_surface", "emission_color" ),
+			( "openpbr_surface", "emission_color" ),
+			( "standard_hair", "emission_color" ),
+			( "toon", "emission_color" ),
+			( "UsdPreviewSurface", "emissiveColor" )
+		] :
+
+			with self.subTest( shaderName = shaderName ) :
+
+				# Surface network with color, no texture
+
+				attributes = IECore.CompoundObject(
+					{
+						"light" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"light" : IECoreScene.Shader(
+									"MeshLight", "light",
+									{ "color" : imath.Color3f( 0.1, 0.2, 0.3 ), "intensity" : 2.0, "exposure" : 3.0 }
+								)
+							},
+							output = "light"
+						),
+						"surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"surface" : IECoreScene.Shader(
+									shaderName, "ai:surface",
+									{ emissionColorParameter : imath.Color3f( 0.4, 0.5, 0.6 ) }
+								),
+							},
+							output = "surface"
+						)
+					}
+				)
+
+				with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+					originalSurfaceNetwork = attributes["surface"].copy()
+					modifiedAttributes = IECoreArnold.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+					lightNetwork = modifiedAttributes["light"]
+					surfaceNetwork = modifiedAttributes["surface"]
+
+					self.assertEqual( surfaceNetwork, originalSurfaceNetwork )
+
+					self.assertEqual( len( lightNetwork.shaders() ), 1 )
+					light = lightNetwork.getShader( "light" )
+					self.assertIsNotNone( light )
+					self.assertEqual( light.name, "mesh_light" )
+					self.assertEqual( light.type, "ai:light" )
+					for i in range( 0, 3 ) :
+						self.assertAlmostEqual( light.parameters["color"].value[i], imath.Color3f( 0.1 * 0.4, 0.2 * 0.5, 0.3 * 0.6 )[i] )
+					self.assertEqual( light.parameters["intensity"].value, 2.0 )
+					self.assertEqual( light.parameters["exposure"].value, 3.0 )
+					self.assertFalse( lightNetwork.input( ( "light", "color" ) ) )
+
+				# Surface network with color texture
+
+				for index, lightColor in enumerate( [ imath.Color3f( 0.0 ), imath.Color3f( 0.0, 0.5, 1.0 ), imath.Color3f( 1.0 ) ] ) :
+
+					with self.subTest( lightColor = lightColor ) :
+
+						attributes = IECore.CompoundObject (
+							{
+								"light" : IECoreScene.ShaderNetwork(
+									shaders = { "light" : IECoreScene.Shader( "MeshLight", "light", { "color" : lightColor } ) },
+									output = "light"
+								),
+								"surface" : IECoreScene.ShaderNetwork(
+									shaders = {
+										"switch" : IECoreScene.Shader( "switch_shader", "ai:surface" ),
+										"surface" : IECoreScene.Shader(
+											shaderName, "ai:surface",
+											{ emissionColorParameter : imath.Color3f( 0.4, 0.5, 0.6 ) }
+										),
+										"correct" : IECoreScene.Shader(
+											"color_correct", "ai:surface",
+											{ "main_gain" : 2 }
+										),
+										"texture" : IECoreScene.Shader(
+											"image", "ai:surface",
+											{ "filename" : "testFile.tx" }
+										),
+									},
+									connections = [
+										( ( "texture", "out" ), ( "correct", "input" ) ),
+										( ( "correct", "out" ), ( "surface", emissionColorParameter ) ),
+										( ( "surface", "out" ), ( "switch", "input0" ) ),
+									],
+									output = "switch"
+								)
+							}
+						)
+
+						with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+							originalSurfaceNetwork = attributes["surface"].copy()
+							modifiedAttributes = IECoreArnold.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+							lightNetwork = modifiedAttributes["light"]
+							surfaceNetwork = modifiedAttributes["surface"]
+
+							self.assertEqual( surfaceNetwork, originalSurfaceNetwork )
+
+							self.assertEqual(
+								len( lightNetwork.shaders() ),
+								[
+									1,  # No texture needed if no light emitted
+									4,  # light, multiply, correct and texture shaders
+									3, # Same as above but no multiply shader
+								][index]
+							)
+
+							light = lightNetwork.getShader( "light" )
+							self.assertIsNotNone( light )
+							self.assertEqual( light.name, "mesh_light" )
+							self.assertEqual( light.type, "ai:light" )
+							for i in range( 0, 3 ) :
+								self.assertAlmostEqual( light.parameters["color"].value[i], ( lightColor * imath.Color3f( 0.4, 0.5, 0.6 ) )[i] )
+
+							if lightColor != imath.Color3f( 0 ) :
+								correct = lightNetwork.getShader( "correct" )
+								self.assertIsNotNone( correct )
+								self.assertEqual( correct.parameters["main_gain"].value, 2 )
+
+								texture = lightNetwork.getShader( "texture" )
+								self.assertIsNotNone( texture )
+								self.assertEqual( texture.parameters["filename"].value, "testFile.tx" )
+
+								if lightColor != imath.Color3f( 1 ) :
+									tint = lightNetwork.getShader( "tint" )
+									self.assertIsNotNone ( tint )
+									self.assertEqual( tint.parameters["input2"].value, lightColor )
+									self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "tint", "out" ) )
+									self.assertEqual( lightNetwork.input( ( "tint", "input1" ) ), ( "correct", "out" ) )
+								else :
+									self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "correct", "out" ) )
+
+								self.assertEqual( lightNetwork.input( ( "correct", "input" ) ), ( "texture", "out" ) )
+
+				# Light with color texture
+
+				attributes = IECore.CompoundObject(
+					{
+						"light" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"light" : IECoreScene.Shader( "MeshLight", "light", { "color" : imath.Color3f( 0.1, 0.2, 0.3 ) } ),
+								"lightTexture" : IECoreScene.Shader( "image", "ai:surface", { "filename" : "lightTestFile.tx" } ),
+							},
+							connections = [ ( ( "lightTexture", "out" ), ( "light", "color" ) ) ],
+							output = "light"
+						),
+						"surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"surface" : IECoreScene.Shader(
+									shaderName, "ai:surface",
+									{ emissionColorParameter : imath.Color3f( 0.4, 0.5, 0.6 ) }
+								),
+								"correct" : IECoreScene.Shader(
+									"color_correct", "ai:surface",
+									{ "main_gain" : 2 }
+								),
+								"texture" : IECoreScene.Shader(
+									"image", "ai:surface",
+									{ "filename" : "testFile.tx" }
+								),
+							},
+							connections = [
+								( ( "texture", "out" ), ( "correct", "input" ) ),
+								( ( "correct", "out" ), ( "surface", emissionColorParameter ) ),
+							],
+							output = "surface"
+						)
+					}
+				)
+
+				with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+					originalSurfaceNetwork = attributes["surface"].copy()
+					modifiedAttributes = IECoreArnold.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+					lightNetwork = modifiedAttributes["light"]
+					surfaceNetwork = modifiedAttributes["surface"]
+
+					self.assertEqual( surfaceNetwork, originalSurfaceNetwork )
+
+					self.assertEqual( len( lightNetwork.shaders() ), 2 )
+
+					self.assertIsNone( lightNetwork.getShader( "correct" ) )
+					self.assertIsNone( lightNetwork.getShader( "texture" ) )
+
+					lightTexture = lightNetwork.getShader( "lightTexture" )
+					self.assertIsNotNone( lightTexture )
+					self.assertEqual( lightTexture.parameters["filename"].value, "lightTestFile.tx" )
+
+					light = lightNetwork.getShader( "light" )
+					self.assertIsNotNone( light )
+					self.assertEqual( light.name, "mesh_light" )
+					self.assertEqual( light.type, "ai:light" )
+					for i in range( 0, 3 ) :
+						self.assertAlmostEqual( light.parameters["color"].value[i], imath.Color3f( 0.1 * 0.4, 0.2 * 0.5, 0.3 * 0.6 )[i] )
+					self.assertEqual( lightNetwork.input( ( "light", "color" ) ), ( "lightTexture", "out" ) )
+
+
 if __name__ == "__main__":
 	unittest.main()

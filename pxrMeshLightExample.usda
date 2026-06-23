@@ -1,0 +1,97 @@
+#usda 1.0
+(
+    """
+    Demonstrates the RenderMan `PxrMeshLightAPI` schema.
+
+    A mesh light is an ordinary `Mesh` gprim that has been turned into an
+    area light by applying light API schemas:
+
+      * `MeshLightAPI`    - the UsdLux schema that makes any mesh emit light,
+                            and which carries the standard light inputs
+                            (`inputs:intensity`, `inputs:color`, ...).
+      * `PxrMeshLightAPI` - RenderMan's schema. It is auto-applied on top of
+                            `MeshLightAPI`, sets `light:shaderId` to
+                            `PxrMeshLight`, and adds the RenderMan-specific
+                            light inputs (the `inputs:ri:light:*` attributes
+                            below). We list it explicitly here to make the
+                            renderer dependency obvious.
+
+    Render with `prman` / a RenderMan-enabled Hydra delegate, or load into
+    Gaffer (the `usdMeshLight` branch maps this to a `PxrMeshLight` shader).
+    """
+    defaultPrim = "World"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "World"
+{
+    # ------------------------------------------------------------------
+    # The mesh light: a unit plane that emits cyan light.
+    # ------------------------------------------------------------------
+    def Mesh "MeshLight" (
+        prepend apiSchemas = ["MeshLightAPI", "PxrMeshLightAPI"]
+    )
+    {
+        # --- Geometry (a 2x2 quad facing +Z) ---
+        int[] faceVertexCounts = [4]
+        int[] faceVertexIndices = [0, 1, 2, 3]
+        point3f[] points = [(-1, -1, 0), (1, -1, 0), (1, 1, 0), (-1, 1, 0)]
+        normal3f[] normals = [(0, 0, 1), (0, 0, 1), (0, 0, 1), (0, 0, 1)] (
+            interpolation = "vertex"
+        )
+        uniform token subdivisionScheme = "none"
+
+        # --- Identifies which light shader RenderMan should use. ---
+        # Authored automatically by `PxrMeshLightAPI`; shown here explicitly.
+        uniform token light:shaderId = "PxrMeshLight"
+
+        # --- Standard UsdLux inputs (from MeshLightAPI) ---
+        float inputs:intensity = 5
+        float inputs:exposure = 0
+        color3f inputs:color = (0, 1, 1)
+        float inputs:diffuse = 1
+        float inputs:specular = 1
+        bool inputs:normalize = true
+        bool inputs:enableColorTemperature = false
+        float inputs:colorTemperature = 6500
+
+        # --- RenderMan-specific inputs (from PxrMeshLightAPI) ---
+        float inputs:ri:light:intensityNearDist = 0
+        float inputs:ri:light:specular = 1
+        float inputs:ri:light:diffuse = 1
+        int inputs:ri:light:thinShadow = 0
+        float inputs:ri:light:importanceMultiplier = 1
+
+        # Position the light to the side, angled toward the sphere.
+        double3 xformOp:translate = (1.5, 0, 1)
+        float3 xformOp:rotateXYZ = (0, -45, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+    }
+
+    # ------------------------------------------------------------------
+    # A sphere to receive the light, so the effect is visible in a render.
+    # ------------------------------------------------------------------
+    def Sphere "Sphere" (
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        double radius = 1
+        rel material:binding = </World/Materials/DiffuseWhite>
+    }
+
+    def Scope "Materials"
+    {
+        def Material "DiffuseWhite"
+        {
+            token outputs:ri:surface.connect = </World/Materials/DiffuseWhite/Surface.outputs:out>
+
+            def Shader "Surface"
+            {
+                uniform token info:id = "PxrDiffuse"
+                color3f inputs:diffuseColor = (0.8, 0.8, 0.8)
+                token outputs:out
+            }
+        }
+    }
+}
