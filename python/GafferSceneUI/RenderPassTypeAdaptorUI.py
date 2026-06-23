@@ -37,14 +37,6 @@
 import Gaffer
 import GafferScene
 
-def renderPassTypePresetNames() :
-
-	return Gaffer.Metadata.value( "option:renderPass:type", "presetNames" )
-
-def renderPassTypePresetValues() :
-
-	return Gaffer.Metadata.value( "option:renderPass:type", "presetValues" )
-
 Gaffer.Metadata.registerNode(
 
 	GafferScene.RenderPassTypeAdaptor,
