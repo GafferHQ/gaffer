@@ -755,14 +755,14 @@ const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
 
-IECore::InternedString g_cameraVisibilityAttributeName( "ai:visibility:camera" );
-IECore::InternedString g_shadowVisibilityAttributeName( "ai:visibility:shadow" );
-IECore::InternedString g_diffuseReflectVisibilityAttributeName( "ai:visibility:diffuse_reflect" );
-IECore::InternedString g_specularReflectVisibilityAttributeName( "ai:visibility:specular_reflect" );
-IECore::InternedString g_diffuseTransmitVisibilityAttributeName( "ai:visibility:diffuse_transmit" );
-IECore::InternedString g_specularTransmitVisibilityAttributeName( "ai:visibility:specular_transmit" );
-IECore::InternedString g_volumeVisibilityAttributeName( "ai:visibility:volume" );
-IECore::InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsurface" );
+const InternedString g_cameraVisibilityAttributeName( "ai:visibility:camera" );
+const InternedString g_shadowVisibilityAttributeName( "ai:visibility:shadow" );
+const InternedString g_diffuseReflectVisibilityAttributeName( "ai:visibility:diffuse_reflect" );
+const InternedString g_specularReflectVisibilityAttributeName( "ai:visibility:specular_reflect" );
+const InternedString g_diffuseTransmitVisibilityAttributeName( "ai:visibility:diffuse_transmit" );
+const InternedString g_specularTransmitVisibilityAttributeName( "ai:visibility:specular_transmit" );
+const InternedString g_volumeVisibilityAttributeName( "ai:visibility:volume" );
+const InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsurface" );
 
 const std::vector<IECore::InternedString> g_surfaceShaderAttributeNames = {
 	"ai:surface",
