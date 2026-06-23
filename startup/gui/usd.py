@@ -54,7 +54,9 @@ for i, parameter in enumerate( [
 	"transmission", "sss", "indirect", "volume", "max_bounces", "lens_radius", "aspect_ratio",
 	"cast_volumetric_shadows", "shadow_density", "samples", "volume_samples", "resolution"
 ] ) :
-	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.arnold:{parameter}", "layout:index", 1000 + i )
+	for lightType in [ GafferUSD.USDLight, GafferUSD.USDMeshLight ] :
+		Gaffer.Metadata.registerValue( lightType, f"parameters.arnold:{parameter}", "layout:index", 1000 + i )
+
 
 Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters", "layout:activator:coneAngleEnabled", lambda plug : plug["shaping:cone:angle"]["enabled"].getValue() )
 Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.arnold:lens_radius", "layout:activator", "coneAngleEnabled" )
