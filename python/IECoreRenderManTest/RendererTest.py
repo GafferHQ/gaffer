@@ -1025,6 +1025,88 @@ class RendererTest( GafferTest.TestCase ) :
 		del sphere, light
 		del renderer
 
+	def testUSDMeshLightAttributes( self ) :
+
+		sidesParameter = "Ri:Sides"
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			renderer.light(
+				"sphere",
+				IECoreScene.MeshPrimitive.createSphere( 1 ),
+				renderer.attributes( IECore.CompoundObject( {
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"MeshLight", "light",
+								{ "lightColor" : imath.Color3f( 0.0, 1.0, 1.0 ) }
+							),
+						},
+						output = "output",
+					),
+				} ) )
+			)
+
+			del renderer
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateLightInstance" )["attributes"]["params"]
+		self.__assertParameterEqual( attributes, "visibility:camera", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:indirect", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:transmission", [ 0 ] )
+		self.__assertParameterEqual( attributes, sidesParameter, [ 1 ] )
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"]
+		self.__assertNotInParameters( attributes, "visibility:camera" )
+		self.__assertNotInParameters( attributes, "visibility:indirect" )
+		self.__assertNotInParameters( attributes, "visibility:transmission" )
+		self.__assertNotInParameters( attributes, sidesParameter )
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			renderer.light(
+				"sphere",
+				IECoreScene.MeshPrimitive.createSphere( 1 ),
+				renderer.attributes( IECore.CompoundObject( {
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"MeshLight", "light",
+								{ "lightColor" : imath.Color3f( 0.0, 1.0, 1.0 ) }
+							),
+						},
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+					"ri:visibility:indirect" : IECore.BoolData( True ),
+					"ri:visibility:transmission" : IECore.BoolData( True ),
+					"doubleSided" : IECore.BoolData( True ),
+				} ) )
+			)
+
+			del renderer
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateLightInstance" )["attributes"]["params"]
+		self.__assertParameterEqual( attributes, "visibility:camera", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:indirect", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:transmission", [ 0 ] )
+		self.__assertParameterEqual( attributes, sidesParameter, [ 1 ] )
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"]
+		self.__assertParameterEqual( attributes, "visibility:camera", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:indirect", [ 1 ] )
+		self.__assertParameterEqual( attributes, "visibility:transmission", [ 1 ] )
+		self.__assertParameterEqual( attributes, sidesParameter, [ 2 ] )
+
 	def testConnectionToMissingShader( self ) :
 
 		# This test doesn't assert anything, but demonstrates that making

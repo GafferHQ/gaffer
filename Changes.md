@@ -6,7 +6,7 @@ Improvements
 
 - USDMeshLight :
   - Added node to add necessary attributes to geometry to convert to a USDMeshLight.
-  - Added Arnold rendering.
+  - Added Arnold and RenderMan rendering.
 - MeshLight : Added viewport visualisation of textures.
 
 Fixes
