@@ -39,6 +39,8 @@
 #include "ParamListAlgo.h"
 #include "Loader.h"
 
+#include "IECoreRenderMan/ShaderNetworkAlgo.h"
+
 #include "IECoreScene/ShaderNetwork.h"
 
 #include "IECore/SimpleTypedData.h"
@@ -181,7 +183,7 @@ pair<InternedString, const ShaderNetwork *> shaderNetworkAttribute( const Compou
 bool isMeshLight( const IECoreScene::ShaderNetwork *lightShader )
 {
 	const IECoreScene::Shader *outputShader = lightShader->outputShader();
-	return outputShader && outputShader->getName() == "PxrMeshLight";
+	return outputShader && ( outputShader->getName() == "PxrMeshLight" || outputShader->getName() == "MeshLight" );
 }
 
 IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
@@ -218,6 +220,31 @@ IECoreScene::ConstShaderNetworkPtr g_black = []() {
 
 } ();
 
+ConstCompoundObjectPtr convertUSDMeshLight( const CompoundObject *attributes )
+{
+	const auto &[lightShaderAttribute, lightShaderNetwork] = shaderNetworkAttribute( attributes->members(), g_lightAttributeNames );
+	if( !lightShaderNetwork )
+	{
+		return attributes;
+	}
+
+	const Shader *outputShader = lightShaderNetwork->outputShader();
+	if( !outputShader || outputShader->getName() != "MeshLight" )
+	{
+		return attributes;
+	}
+
+	CompoundObjectPtr result = attributes->copy();
+
+	ShaderNetworkPtr newLightShaderNetwork = lightShaderNetwork->copy();
+	const ShaderNetwork *surface = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames ).second;
+	ShaderNetworkAlgo::convertUSDMeshLightShaders( newLightShaderNetwork.get(), surface );
+
+	result->members()[lightShaderAttribute] = std::move( newLightShaderNetwork );
+
+	return result;
+}
+
 const std::string g_renderAttributePrefix( "render:" );
 const std::string g_userAttributePrefix( "user:" );
 
@@ -225,6 +252,9 @@ const std::string g_userAttributePrefix( "user:" );
 
 Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache *materialCache )
 {
+	ConstCompoundObjectPtr modifiedAttributes = convertUSDMeshLight( attributes );
+	attributes = modifiedAttributes.get();
+
 	// Convert shaders.
 
 	const auto [surfaceName, surface] = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames );
@@ -257,11 +287,11 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 	m_lightShader = shaderNetworkAttribute( attributes->members(), g_lightAttributeNames ).second;
 	if( m_lightShader && isMeshLight( m_lightShader.get() ) )
 	{
-		// Mesh lights default to having a black material so they don't appear
-		// in indirect rays, but the user can override with a surface assignment
-		// if they want further control. Other lights don't have materials.
-		// We assume that a volume shader makes no sense here.
-		m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get(), surface ? surfaceName : InternedString(), attributes );
+			// Mesh lights default to having a black material so they don't appear
+			// in indirect rays, but the user can override with a surface assignment
+			// if they want further control. Other lights don't have materials.
+			// We assume that a volume shader makes no sense here.
+			m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get(), surface ? surfaceName : InternedString(), attributes );
 	}
 
 	if( surface )

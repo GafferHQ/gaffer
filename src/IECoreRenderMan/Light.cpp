@@ -82,7 +82,7 @@ M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 		// and this correction ensures the sun is in the right place.
 		return M44f().rotate( V3f( -M_PI_2, 0.f, 0.f ) );
 	}
-	else if( lightShader->getName() == "PxrMeshLight" )
+	else if( lightShader->getName() == "PxrMeshLight" || lightShader->getName() == "MeshLight" )
 	{
 		return M44f();
 	}

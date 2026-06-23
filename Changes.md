@@ -63,6 +63,7 @@ Features
 - USD MeshLight :
   - Added node to add necessary attributes to geometry to convert to a USD MeshLight.
   - Added Arnold rendering.
+  - Added RenderMan rendering.
 
 Fixes
 -----
