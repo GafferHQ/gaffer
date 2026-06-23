@@ -4,7 +4,9 @@
 Features
 --------
 
-- USDMeshLight : Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+- USDMeshLight :
+  - Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+  - Added Arnold rendering.
 
 Improvements
 ------------
@@ -75,6 +77,174 @@ Improvements
   - Defaulted to writing RenderMan attributes in a format compatible with `hdPrman`, for rendering in `usdview` and other Hydra-based applications.
   - Defaulted to writing OSL shaders in a format compatible with `hdPrman`, for rendering in `usdview` and other Hydra-based applications.
 - Outputs : Added output presets for RenderMan's NPR AOVs.
+<<<<<<< HEAD
+=======
+- SceneWriter : Defaulted to writing OSL shaders in a format compatible with `hdPrman`, for rendering in `usdview` and other Hydra-based applications.
+
+Fixes
+-----
+
+- Arnold :
+  - Fixed fallback to a facing ratio shader when a shader is removed during an interactive render.
+  - Fixed crash attempting to render with a shader that doesn't exist.
+- Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors [^1].
+- RenderMan :
+  - Fixed `R10043` warning when using PxrDisplace [^1].
+  - Fixed automatic creation of required AOVs for PxrStylized filters in XPU [^1].
+- Catalogue : Fixed errors caused by undoing an image deletion or snapshot.
+- Gaffer module : Fixed bug preventing `environment()` from returning environment variables modified after startup on macOS.
+
+API
+---
+
+- DictPath : Added support for subclassing, without the need to override `copy()` or `_children()`.
+- PlugCreationGadget : Added counterpart to PlugCreationWidget, allowing plugs to be created easily in the GraphEditor.
+- PlugVisibilityGadget : Added gadget for managing plug visibility in the GraphEditor.
+
+Breaking Changes
+----------------
+
+- ShaderUI : Removed PlugAdder. Use `GafferUI.PlugVisibilityGadget` instead.
+- SceneWriter : Changed writing of OSL shaders to USD. Set `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=0` to revert to the default behaviour from Gaffer 1.6.
+- Catalogue : Removed support for image order metadata from versions prior to 1.4.0.0. In the unlikely event this is needed, reorder and resave from Gaffer 1.6.
+
+Build
+-----
+
+- Fixed errors building `gaffer` executable on macOS [^2].
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
+[^2]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
+
+1.7.0.0a5 (relative to 1.7.0.0a4)
+=========
+
+Fixes
+-----
+
+- NodeEditor : Fixed redundant updates when editing private plugs, such as when repositioning the currently viewed node in the Graph Editor.
+- RenderPassEditor : Fixed errors displaying presets while editing the `type` column [^1].
+- RenderMan : Fixed potential hang when updating the Visible Set immediately after starting an interactive render with `useVisibleSet` enabled [^1].
+- NodeGadgetBinding : Fixed linking errors when using NodeGadgetClass. Clients should link to the new `GafferUIBindings` shared library [^1].
+
+API
+---
+
+- ShadingEngine : Added `TextureOrigin` enum, to allow emulation of renderers whose texture origin is at the top left rather than bottom left.
+
+Breaking Changes
+----------------
+
+- RenderPassTypeAdaptorUI : Removed `renderPassTypePresetNames()` and `renderPassTypePresetValues()`.
+- OpenImageIO : Removed source compatibility for versions prior to 3.
+- OpenShadingLanguage : Removed source compatibility for versions prior to 1.14.
+
+[^1]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
+
+1.7.0.0a4 (relative to 1.7.0.0a3)
+=========
+
+Improvements
+------------
+
+- SceneWriter : Added `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS` environment variable. When set to a value of `1`, OSL shaders are written to USD in a format compatible with `hdPrman`, for rendering with RenderMan in `usdview` and other Hydra-based applications. [^1]
+
+Fixes
+-----
+
+- ShadingEngine : Fixed handling of shaders when an `.oso` file does exist, but `Shader::getType()` does not match `osl:*`. Examples include Pxr shaders loaded from USD files. [^1]
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.0.0a12.
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
+
+1.7.0.0a3 (relative to 1.7.0.0a2)
+=========
+
+Features
+--------
+
+- FlamencoDispatcher : Added a new node for sending tasks to Blender's [Flamenco](https://flamenco.blender.org) render farm manager.
+- PrimitiveQuery : Added a new node for querying a primitive's type and variable sizes.
+- FileList : Added node for listing matching files.
+- DeleteFiles : Added node for deleting files.
+- CopyFiles : Added node for copying files.
+- RenameFiles : Added node for renaming files.
+
+Improvements
+------------
+
+- MeshLight : Added viewport visualisation of textures.
+
+Fixes
+-----
+
+- SceneInspector : Fixed Interpolation field for primitive variables that don't exist. Previously it said "Invalid", and now it shows nothing.
+- Renderer API : Added missing `Renderer.inl` header file.
+- NodeGadget : Fixed usage of `instanceCreatedSignal()` with NodeGadgets implemented in Python [^1].
+
+API
+---
+
+- Image : Added `updateImage()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.0.0a11.
+
+Breaking Changes
+----------------
+
+- SceneReader : Removed `./` prefix from relative prototype paths loaded from USD files.
+- Instancer : Defaulted `GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS` to `1`, as required by SceneReader's updated handling of relative USD prototypes. The environment variable may be removed in future.
+
+[^1]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
+
+1.7.0.0a2 (relative to 1.7.0.0a1)
+=========
+
+Features
+--------
+
+- DeleteGrids : Added node for deleting grids from locations containing OpenVDB volumes.
+
+Fixes
+-----
+
+- RenderMan :
+  - Fixed PxrDisplace shader assignments, which now target the `ri:displacement` attribute rather than `osl:displacement`. This renders as before in Gaffer, but is more compatible with other applications when exported to USD.
+  - Fixed handling of multiple intervals in `ri:checkpoint:interval` option. Intervals may be separated by spaces or commas. [^1]
+- Dispatcher : [^1]
+  - Fixed `Context has no variable named...` error when dispatching an isolated task with a `StringPlug` script variable containing a frame substitution.
+  - Fixed unnecessary baking of values for ScriptNode variables plugs without input connections.
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
+
+Breaking Changes
+----------------
+
+- RenderMan : PxrDisplace now assigns as an `ri:displacement` attribute rather than `osl:displacement`.
+
+1.7.0.0a1 (relative to 1.6.19.1)
+=========
+
+Features
+--------
+
+- Cycles : Updated to version 5.1.0.
+- CurvesPrimitive : Added `Pinned` wrap mode in addition to the existing `Periodic` and `NonPeriodic` modes. This conveniently interpolates CatmullRom
+and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
+- CurvesInterpolation : Added node for modifying CurvesPrimitive `basis` and `wrap`. This includes the ability to convert curves with `Pinned` wrap to `NonPeriodic`, adding the appropriate "phantom" points to maintain curve shape.
+- CurvesTangents : Added node for computing tangents on CurvesPrimitives (#6166).
+
+Improvements
+------------
+
+>>>>>>> dfed117d5 (Arnold : Add support for USD mesh lights)
 - AttributeTweaks, AttributeVisualiser, ShaderAssignment, ShaderTweaks, ShuffleAttributes : Added `global` plug, to allow global attributes to be processed instead of using `filter` to process per-location attributes.
 - ShaderTweaks :
   - Added tweaking of integrators, background shaders, atmosphere shaders and render pass shaders.
