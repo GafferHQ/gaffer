@@ -764,6 +764,8 @@ const InternedString g_specularTransmitVisibilityAttributeName( "ai:visibility:s
 const InternedString g_volumeVisibilityAttributeName( "ai:visibility:volume" );
 const InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsurface" );
 
+const InternedString g_emptyString( "" );
+
 const std::vector<IECore::InternedString> g_surfaceShaderAttributeNames = {
 	"ai:surface",
 	"osl:surface",
@@ -1313,24 +1315,27 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 	transferUSDLightParameters( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
 
 	const Color3f lightColor = parameterValue( lightOutputShader, g_colorParameter, Color3f( 1.f ) );
+	const Color3f surfaceColor = emissionColorParameter ? parameterValue( surfaceNetwork->getShader( emissionColorParameter.shader ), emissionColorParameter.name, Color3f( 0.f ) ) : Color3f( 0.f );
 	if( emissionColorParameter )
 	{
-		const Color3f surfaceColor = parameterValue( surfaceNetwork->getShader( emissionColorParameter.shader ), emissionColorParameter.name, Color3f( 0.f ) );
 		newLightShader->parameters()[g_colorParameter] = new Color3fData( surfaceColor * lightColor );
 	}
 
+	InternedString tintHandle;
 	const ShaderNetwork::Parameter meshLightColorParameter = { lightOutputParameter.shader, g_colorParameter };
-	if( emissionColorInput && !lightNetwork->input( meshLightColorParameter ) && lightColor != Color3f( 0.f ) )
+	ShaderNetwork::Parameter meshLightColorInput = newLightShaderNetwork->input( meshLightColorParameter );
+	if( emissionColorInput && lightColor != Color3f( 0.f ) )
 	{
 		ShaderNetworkPtr glowNetwork = surfaceNetwork->copy();
 		glowNetwork->setOutput( emissionColorInput );
 		IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( glowNetwork.get() );
 		ShaderNetwork::Parameter newGlowColorInput = IECoreScene::ShaderNetworkAlgo::addShaders( newLightShaderNetwork.get(), glowNetwork.get(), /* connections = */ true );
 
+		removeInput( newLightShaderNetwork.get(), meshLightColorParameter );
 		if( lightColor != Color3f( 1.f ) )
 		{
 			ShaderPtr tintShader = new Shader( "multiply", "ai:surface", { { "input2", new Color3fData( lightColor ) } } );
-			const InternedString tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
+			tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
 
 			newLightShaderNetwork->addConnection( { newGlowColorInput, { tintHandle, "input1" } } );
 			newLightShaderNetwork->addConnection( { { tintHandle, "out" }, meshLightColorParameter } );
@@ -1339,7 +1344,29 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 		{
 			newLightShaderNetwork->addConnection( { newGlowColorInput, meshLightColorParameter } );
 		}
+	}
 
+	if(
+		meshLightColorInput &&
+		(
+			( surfaceColor != Color3f( 0.f ) && surfaceColor != Color3f( 1.f ) ) ||
+			emissionColorInput
+		)
+	)
+	{
+		if( tintHandle == g_emptyString )
+		{
+			ShaderPtr tintShader = new Shader( "multiply", "ai:surface", { { "input1", new Color3fData( surfaceColor ) } } );
+			tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
+
+			if( meshLightColorInput )
+			{
+				newLightShaderNetwork->removeConnection( { meshLightColorInput, meshLightColorParameter } );
+			}
+			newLightShaderNetwork->addConnection( { { tintHandle, "out" }, meshLightColorParameter } );
+		}
+
+		newLightShaderNetwork->addConnection( { meshLightColorInput, { tintHandle, "input2" } } );
 	}
 
 	replaceUSDShader( newLightShaderNetwork.get(), lightOutputParameter.shader, std::move( newLightShader ) );
