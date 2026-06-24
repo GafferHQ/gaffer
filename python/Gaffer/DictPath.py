@@ -84,7 +84,7 @@ class DictPath( Gaffer.Path ) :
 				if not isinstance( e, self.__dictTypes ) :
 					return e
 
-		return Gaffer.Path.property( self, name )
+		return Gaffer.Path.property( self, name, canceller )
 
 	def copy( self ) :
 
