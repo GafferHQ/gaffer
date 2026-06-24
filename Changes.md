@@ -11,6 +11,8 @@ Breaking Changes
 ----------------
 
 - RenderPassTypeAdaptorUI : Removed `renderPassTypePresetNames()` and `renderPassTypePresetValues()`.
+- OpenImageIO : Removed source compatibility for versions prior to 3.
+- OpenShadingLanguage : Removed source compatibility for versions prior to 1.14.
 
 [^1]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 

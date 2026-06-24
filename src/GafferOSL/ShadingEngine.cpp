@@ -310,7 +310,7 @@ bool convertValueToOSL( void *dst, TypeDesc dstType, const void *src, TypeDesc s
 		{
 			return true;
 		}
-#if OSL_LIBRARY_VERSION_CODE >= 11400
+
 		if( g_shadingSystemBatchSize > 1 )
 		{
 			*(ustring *)dst = *(const char**)src;
@@ -319,9 +319,7 @@ bool convertValueToOSL( void *dst, TypeDesc dstType, const void *src, TypeDesc s
 		{
 			*(ustringhash *)dst = ustringhash( *(const char**)src );
 		}
-#else
-		*(ustring *)dst = *(const char**)src;
-#endif
+
 		return true;
 	}
 
@@ -415,13 +413,7 @@ struct PointCloud
 
 	}
 
-#if OSL_LIBRARY_VERSION_CODE >= 11400
-		using PointIndex = int;
-#else
-		using PointIndex = size_t;
-#endif
-
-	int search( const OSL::Vec3 &center, float radius, int maxPoints, PointIndex *outIndices, float *outDistances ) const
+	int search( const OSL::Vec3 &center, float radius, int maxPoints, int *outIndices, float *outDistances ) const
 	{
 		vector<IECore::V3fTree::Neighbour> neighbours;
 		neighbours.reserve( maxPoints );
@@ -466,14 +458,13 @@ struct PointCloud
 		return it != m_attributes.end() ? &it->second : nullptr;
 	}
 
-	int get( const Attribute &attribute, PointIndex index, TypeDesc outType, void *outData ) const
+	int get( const Attribute &attribute, int index, TypeDesc outType, void *outData ) const
 	{
-#if OSL_LIBRARY_VERSION_CODE >= 11400
 		if( index < 0 )
 		{
 			return 0;
 		}
-#endif
+
 		if( (size_t)index >= m_size )
 		{
 			return 0;
@@ -828,7 +819,7 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 				return;
 			}
 
-			vector<PointCloud::PointIndex> tmpIndices( maxPoints ); tmpIndices.resize( maxPoints );
+			vector<int> tmpIndices( maxPoints ); tmpIndices.resize( maxPoints );
 			vector<float> tmpDistances( maxPoints ); tmpDistances.resize( maxPoints );
 
 			auto wideIndices = results.windices();
@@ -1131,7 +1122,7 @@ class RendererServices : public OSL::RendererServices
 
 		int pointcloud_search(
 			ShaderGlobals *sg, ustringhash filename, const OSL::Vec3 &center, float radius, int maxPoints,
-			bool sort, PointCloud::PointIndex *outIndices, float *outDistances,
+			bool sort, int *outIndices, float *outDistances,
 			int derivsOffset
 		) override
 		{
@@ -1171,14 +1162,8 @@ class RendererServices : public OSL::RendererServices
 			return numPoints;
 		}
 
-#if OSL_LIBRARY_VERSION_CODE >= 11400
-		using ConstPointIndex = const PointCloud::PointIndex;
-#else
-		using ConstPointIndex = PointCloud::PointIndex;
-#endif
-
 		int pointcloud_get(
-			ShaderGlobals *sg, ustringhash filename, ConstPointIndex *indices, int count,
+			ShaderGlobals *sg, ustringhash filename, const int *indices, int count,
 			ustringhash attrName, TypeDesc attrType,
 			void *outData
 		) override
@@ -1255,8 +1240,6 @@ struct EmissionParameters
 struct StringParameter
 {
 
-#if OSL_LIBRARY_VERSION_CODE >= 11400
-
 	static_assert( sizeof( ustring ) == sizeof( ustringhash ) );
 	static_assert( is_trivially_copyable_v<ustring> );
 	static_assert( is_trivially_copyable_v<ustringhash> );
@@ -1282,14 +1265,6 @@ struct StringParameter
 	// We just use bytes for storage so we can deal with both cases.
 	std::byte storage[sizeof(ustring)];
 
-#else
-
-	ustring asUString() const { return string; }
-	ustring string;
-
-#endif
-
-
 };
 
 struct DebugParameters
@@ -1312,11 +1287,7 @@ ShadingSystemWriteMutex g_shadingSystemWriteMutex;
 OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 {
 	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
-#if OIIO_VERSION >= 30000
 	static std::shared_ptr<OSL::TextureSystem> g_textureSystem = nullptr;
-#else
-	static OSL::TextureSystem *g_textureSystem = nullptr;
-#endif
 	static OSL::ShadingSystem *g_shadingSystem = nullptr;
 
 	if( g_shadingSystem )
@@ -1335,13 +1306,8 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	g_textureSystem->attribute( "flip_t", 1 );
 
 	g_shadingSystem = new ShadingSystem(
-#if OIIO_VERSION >= 30000
 		new RendererServices( g_textureSystem.get() ),
 		g_textureSystem.get()
-#else
-		new RendererServices( g_textureSystem ),
-		g_textureSystem
-#endif
 	);
 
 	ClosureParam emissionParams[] = {
