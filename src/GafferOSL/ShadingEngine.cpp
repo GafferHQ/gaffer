@@ -64,6 +64,7 @@
 #include "OSL/wide.h"
 #endif
 
+#include "OpenImageIO/imagecache.h"
 #include "OpenImageIO/ustring.h"
 
 #include "boost/algorithm/string/classification.hpp"
@@ -1284,30 +1285,36 @@ struct DebugParameters
 using ShadingSystemWriteMutex = tbb::spin_mutex;
 ShadingSystemWriteMutex g_shadingSystemWriteMutex;
 
-OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
+OSL::ShadingSystem *acquireShadingSystem( ShadingEngine::TextureOrigin textureOrigin, int *batchSize = nullptr )
 {
 	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
-	static std::shared_ptr<OSL::TextureSystem> g_textureSystem = nullptr;
-	static OSL::ShadingSystem *g_shadingSystem = nullptr;
+	// One for each value of TextureOrigin.
+	static std::array<std::shared_ptr<OIIO::TextureSystem>, 2> g_textureSystems;
+	static std::array<OSL::ShadingSystem *, 2> g_shadingSystems = { nullptr, nullptr };
 
-	if( g_shadingSystem )
+	OSL::ShadingSystem *&shadingSystem = g_shadingSystems[(int)textureOrigin];
+
+	if( shadingSystem )
 	{
 		if( batchSize )
 		{
 			*batchSize = g_shadingSystemBatchSize;
 		}
-		return g_shadingSystem;
+		return shadingSystem;
 	}
 
-	g_textureSystem = OIIO::TextureSystem::create( /* shared = */ false );
-	// By default, OIIO considers the image origin to be at the
-	// top left. We consider it to be at the bottom left.
-	// Compensate.
-	g_textureSystem->attribute( "flip_t", 1 );
+	// One ImageCache, not shared with the outside world, but shared by both `TextureOrigin::Bottom`
+	// and `TextureOrigin::Top`.
+	static std::shared_ptr<OIIO::ImageCache> g_imageCache = OIIO::ImageCache::create( /* shared = */ false );
+	std::shared_ptr<OIIO::TextureSystem> &textureSystem = g_textureSystems[(int)textureOrigin];
 
-	g_shadingSystem = new ShadingSystem(
-		new RendererServices( g_textureSystem.get() ),
-		g_textureSystem.get()
+	textureSystem = OIIO::TextureSystem::create( /* shared = */ false, g_imageCache );
+	// By default, OIIO considers the image origin to be at the top left.
+	textureSystem->attribute( "flip_t", textureOrigin == ShadingEngine::TextureOrigin::Bottom ? 1 : 0 );
+
+	shadingSystem = new ShadingSystem(
+		new RendererServices( textureSystem.get() ),
+		textureSystem.get()
 	);
 
 	ClosureParam emissionParams[] = {
@@ -1324,7 +1331,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		CLOSURE_FINISH_PARAM( DebugParameters )
 	};
 
-	g_shadingSystem->register_closure(
+	shadingSystem->register_closure(
 		/* name */ "emission",
 		/* id */ EmissionClosureId,
 		/* params */ emissionParams,
@@ -1332,7 +1339,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		/* setup */ nullptr
 	);
 
-	g_shadingSystem->register_closure(
+	shadingSystem->register_closure(
 		/* name */ "debug",
 		/* id */ DebugClosureId,
 		/* params */ debugParams,
@@ -1340,7 +1347,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		/* setup */ nullptr
 	);
 
-	g_shadingSystem->register_closure(
+	shadingSystem->register_closure(
 		/* name */ "deformation",
 		/* id */ DeformationClosureId,
 		/* params */ debugParams,
@@ -1350,21 +1357,21 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 
 	if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
 	{
-		g_shadingSystem->attribute( "searchpath:shader", searchPath );
+		shadingSystem->attribute( "searchpath:shader", searchPath );
 	}
 
 	if( const char *oslHome = getenv( "OSLHOME" ) )
 	{
-		g_shadingSystem->attribute( "searchpath:library", ( std::filesystem::path( oslHome ) / "lib" ).string() );
+		shadingSystem->attribute( "searchpath:library", ( std::filesystem::path( oslHome ) / "lib" ).string() );
 	}
 	else
 	{
 		msg( Msg::Warning, "ShadingEngine", "Please set OSLHOME env var to allow finding OSL libraries." );
 	}
 
-	g_shadingSystem->attribute( "lockgeom", 1 );
+	shadingSystem->attribute( "lockgeom", 1 );
 
-	g_shadingSystem->attribute( "commonspace", "object" );
+	shadingSystem->attribute( "commonspace", "object" );
 
 	g_shadingSystemBatchSize = 1;
 
@@ -1385,11 +1392,11 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	// farm ... getting a subtle flicker because frames that hit out of date farm blades
 	// render ever-so-slightly darker is not much fun.
 
-	if( requestBatch && g_shadingSystem->configure_batch_execution_at( 16 ) )
+	if( requestBatch && shadingSystem->configure_batch_execution_at( 16 ) )
 	{
 		g_shadingSystemBatchSize = 16;
 	}
-	else if( requestBatch && g_shadingSystem->configure_batch_execution_at( 8 ) )
+	else if( requestBatch && shadingSystem->configure_batch_execution_at( 8 ) )
 	{
 		g_shadingSystemBatchSize = 8;
 	}
@@ -1405,9 +1412,9 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	else
 	{
 		ustring llvm_jit_target;
-		g_shadingSystem->getattribute("llvm_jit_target", llvm_jit_target);
+		shadingSystem->getattribute("llvm_jit_target", llvm_jit_target);
 		int llvm_jit_fma;
-		g_shadingSystem->getattribute("llvm_jit_fma", llvm_jit_fma);
+		shadingSystem->getattribute("llvm_jit_fma", llvm_jit_fma);
 
 		msg( Msg::Info, "ShadingEngine", fmt::format( "Initialized shading system with support for {}-wide batched shading. Architecture: {}, Fused-Multiply-Add: {}", g_shadingSystemBatchSize, llvm_jit_target.string(), llvm_jit_fma ? "Enabled" : "Disabled" ) );
 	}
@@ -1417,7 +1424,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	{
 		*batchSize = g_shadingSystemBatchSize;
 	}
-	return g_shadingSystem;
+	return shadingSystem;
 }
 
 } // namespace
@@ -1629,21 +1636,27 @@ class ShadingResults
 // and the OSL machinery that needs to be stored per "renderer-thread"
 struct ThreadInfo
 {
-	ThreadInfo() :
-		oslThreadInfo( ::shadingSystem()->create_thread_info() ),
-		shadingContext( ::shadingSystem()->get_context( oslThreadInfo ) )
+	ThreadInfo( OSL::ShadingSystem *shadingSystem ) :
+		oslThreadInfo( shadingSystem->create_thread_info() ),
+		shadingContext( shadingSystem->get_context( oslThreadInfo ) ),
+		m_shadingSystem( shadingSystem )
 	{
 	}
 
 	~ThreadInfo()
 	{
-		::shadingSystem()->release_context( shadingContext );
-		::shadingSystem()->destroy_thread_info( oslThreadInfo );
+		m_shadingSystem->release_context( shadingContext );
+		m_shadingSystem->destroy_thread_info( oslThreadInfo );
 	}
 
 	ShadingResults::DebugResultsMap debugResults;
 	OSL::PerThreadInfo *oslThreadInfo;
 	OSL::ShadingContext *shadingContext;
+
+	private :
+
+		OSL::ShadingSystem *m_shadingSystem;
+
 };
 
 
@@ -1729,16 +1742,17 @@ bool shaderExists( const IECoreScene::Shader *shader )
 
 } // namespace
 
-ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork ) : ShadingEngine( shaderNetwork->copy() )
+ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork, TextureOrigin textureOrigin )
+	:	ShadingEngine( shaderNetwork->copy(), textureOrigin )
 {
 }
 
-ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
-	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
+ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork, TextureOrigin textureOrigin )
+	:	m_textureOrigin( textureOrigin ), m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
 {
 	IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( shaderNetwork.get(), OSL_VERSION );
 
-	ShadingSystem *shadingSystem = ::shadingSystem();
+	ShadingSystem *shadingSystem = acquireShadingSystem( textureOrigin );
 
 	{
 		ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
@@ -1793,7 +1807,7 @@ ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
 
 void ShadingEngine::queryShaderGroup()
 {
-	ShadingSystem *shadingSystem = ::shadingSystem();
+	ShadingSystem *shadingSystem = acquireShadingSystem( m_textureOrigin );
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 
 	// Globals
@@ -1896,6 +1910,11 @@ namespace
 
 struct ExecuteShadeParameters
 {
+	ExecuteShadeParameters( OSL::ShadingSystem *shadingSystem )
+		:	threadInfoCache( shadingSystem )
+	{
+	}
+
 	ShaderGlobals shaderGlobals;
 
 	const IECore::Canceller *canceller;
@@ -2098,9 +2117,9 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 {
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 
-	ExecuteShadeParameters shadeParameters;
 	int batchSize;
-	ShadingSystem *shadingSystem = ::shadingSystem( &batchSize );
+	ShadingSystem *shadingSystem = ::acquireShadingSystem( m_textureOrigin, &batchSize );
+	ExecuteShadeParameters shadeParameters( shadingSystem );
 
 	const Gaffer::Context *context = Gaffer::Context::current();
 	shadeParameters.canceller = context->canceller();

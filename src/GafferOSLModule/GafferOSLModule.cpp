@@ -226,8 +226,24 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 
 
 	{
-		scope s = IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
-			.def( init<const IECoreScene::ShaderNetwork *>() )
+		IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted> shadingEngineClass( "ShadingEngine" );
+		scope s = shadingEngineClass;
+
+		enum_<ShadingEngine::TextureOrigin>( "TextureOrigin" )
+			.value( "Bottom", ShadingEngine::TextureOrigin::Bottom )
+			.value( "Top", ShadingEngine::TextureOrigin::Top )
+		;
+
+		class_<ShadingEngine::Transform>( "Transform" )
+			.def( init<const Imath::M44f &>() )
+			.def( init<const Imath::M44f &, const Imath::M44f&>() )
+			.def_readwrite( "fromObjectSpace", &ShadingEngine::Transform::fromObjectSpace )
+			.def_readwrite( "toObjectSpace", &ShadingEngine::Transform::toObjectSpace )
+			.def( "__repr__", &repr )
+		;
+
+		shadingEngineClass
+			.def( init<const IECoreScene::ShaderNetwork *, ShadingEngine::TextureOrigin>( ( arg( "shaderNetwork" ), arg( "textureOrigin" ) = ShadingEngine::TextureOrigin::Bottom ) ) )
 			.def( "hash", &ShadingEngine::hash )
 			.def( "shade", &shadeWrapper,
 				(
@@ -240,13 +256,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 			.def( "hasDeformation", &ShadingEngine::hasDeformation )
 		;
 
-		class_<ShadingEngine::Transform>( "Transform" )
-			.def( init<const Imath::M44f &>() )
-			.def( init<const Imath::M44f &, const Imath::M44f&>() )
-			.def_readwrite( "fromObjectSpace", &ShadingEngine::Transform::fromObjectSpace )
-			.def_readwrite( "toObjectSpace", &ShadingEngine::Transform::toObjectSpace )
-			.def( "__repr__", &repr )
-		;
+
 	}
 
 	{

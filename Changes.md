@@ -7,6 +7,11 @@ Fixes
 - NodeEditor : Fixed redundant updates when editing private plugs, such as when repositioning the currently viewed node in the Graph Editor.
 - RenderPassEditor : Fixed errors displaying presets while editing the `type` column [^1].
 
+API
+---
+
+- ShadingEngine : Added `TextureOrigin` enum, to allow emulation of renderers whose texture origin is at the top left rather than bottom left.
+
 Breaking Changes
 ----------------
 
