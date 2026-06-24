@@ -88,6 +88,18 @@ GafferUI.Examples.registerExample(
 )
 
 GafferUI.Examples.registerExample(
+	"Scene Processing/Shader Tweaks",
+	"$GAFFER_ROOT/resources/examples/sceneProcessing/shaderTweaks.gfr",
+	description = """
+	Demonstrates using ShaderTweaks for modifying shader networks.
+	""",
+	notableNodes = [
+		GafferScene.ShaderTweaks,
+		GafferScene.ShaderTweakProxy
+	]
+)
+
+GafferUI.Examples.registerExample(
 	"Scene Processing/Statistics",
 	"$GAFFER_ROOT/resources/examples/sceneProcessing/statistics.gfr",
 	description = "Demonstrates how to use the SceneStats node to add a statistics overlay to rendered images.",
