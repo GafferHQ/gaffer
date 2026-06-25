@@ -891,6 +891,48 @@ ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNe
 	return result;
 }
 
+template<typename T>
+T *attributeCast( const IECore::RunTimeTyped *v, const IECore::InternedString &name )
+{
+	if( !v )
+	{
+		return nullptr;
+	}
+
+	T *t = IECore::runTimeCast<T>( v );
+	if( t )
+	{
+		return t;
+	}
+
+	IECore::msg( IECore::Msg::Warning, "IECoreRenderMan::Renderer", fmt::format( "Expected {} but got {} for attribute \"{}\".", T::staticTypeName(), v->typeName(), name.c_str() ) );
+	return nullptr;
+}
+
+template<typename T>
+const T *attribute( const CompoundObject::ObjectMap &attributes, IECore::InternedString name )
+{
+	auto it = attributes.find( name );
+	if( it == attributes.end() )
+	{
+		return nullptr;
+	}
+
+	return attributeCast<const T>( it->second.get(), name );
+}
+
+pair<InternedString, const ShaderNetwork *> shaderNetworkAttribute( const CompoundObject::ObjectMap &attributes, const vector<InternedString> &attributeNames )
+{
+	for( const auto &name : attributeNames )
+	{
+		if( const auto *shaderNetwork = attribute<ShaderNetwork>( attributes, name ) )
+		{
+			return { name, shaderNetwork };
+		}
+	}
+	return { InternedString(), nullptr };
+}
+
 } // namespace
 
 std::vector<riley::ShadingNode> IECoreRenderMan::ShaderNetworkAlgo::convert( const IECoreScene::ShaderNetwork *network )
@@ -1088,6 +1130,9 @@ const InternedString g_varnameParameter( "varname" );
 const InternedString g_widthParameter( "width" );
 
 const std::string g_renderManLightNamespace( "ri:light:" );
+
+const vector<InternedString> g_lightAttributeNames = { "ri:light", "light" };
+const vector<InternedString> g_surfaceAttributeNames = { "ri:surface", "surface" };
 
 const std::vector<InternedString> g_pxrSurfaceParameters = {
 	g_diffuseGainParameter,
@@ -1434,17 +1479,33 @@ M44f IECoreRenderMan::ShaderNetworkAlgo::usdLightTransform( const Shader *lightS
 	return M44f();
 }
 
-void IECoreRenderMan::ShaderNetworkAlgo::convertUSDMeshLightShaders( IECoreScene::ShaderNetwork *lightNetwork, const IECoreScene::ShaderNetwork *surfaceNetwork )
+ConstCompoundObjectPtr IECoreRenderMan::ShaderNetworkAlgo::convertUSDMeshLightAttributes( const CompoundObject *attributes )
 {
+	const auto &[lightAttribute, lightNetwork] = shaderNetworkAttribute( attributes->members(), g_lightAttributeNames );
+	if( !lightNetwork )
+	{
+		return attributes;
+	}
+
+	const Shader *outputShader = lightNetwork->outputShader();
+	if( !outputShader || outputShader->getName() != "MeshLight" )
+	{
+		return attributes;
+	}
+
+	CompoundObjectPtr result = attributes->copy();
+
+	ShaderNetworkPtr newLightShaderNetwork = lightNetwork->copy();
+	const ShaderNetwork *surfaceNetwork = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames ).second;
+
 	const auto &[glowColorParameter, glowColorInput] = surfaceGlowParameters( surfaceNetwork );
 
 	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
 	const Shader *lightOutputShader = lightNetwork->outputShader();
 
 	ShaderPtr newLightShader = new Shader( "PxrMeshLight", "ri:light" );
-	transferUSDLightParameters( lightNetwork, lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
-	transferUSDShapingParameters( lightNetwork, lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
-	transferUSDParameter( lightNetwork, lightOutputParameter.shader, lightOutputShader, g_normalizeParameter, newLightShader.get(), g_areaNormalizeParameter, false );
+	transferUSDLightParameters( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
+	transferUSDParameter( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, g_normalizeParameter, newLightShader.get(), g_areaNormalizeParameter, false );
 
 	if( glowColorParameter )
 	{
@@ -1457,13 +1518,17 @@ void IECoreRenderMan::ShaderNetworkAlgo::convertUSDMeshLightShaders( IECoreScene
 		ShaderNetworkPtr glowNetwork = surfaceNetwork->copy();
 		glowNetwork->setOutput( glowColorInput );
 		IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( glowNetwork.get() );
-		ShaderNetwork::Parameter newGlowInput = IECoreScene::ShaderNetworkAlgo::addShaders( lightNetwork, glowNetwork.get(), /* connections = */ true );
+		ShaderNetwork::Parameter newGlowInput = IECoreScene::ShaderNetworkAlgo::addShaders( newLightShaderNetwork.get(), glowNetwork.get(), /* connections = */ true );
 
-		lightNetwork->addConnection( { newGlowInput, { lightOutputParameter.shader, g_textureColorParameter } } );
+		newLightShaderNetwork->addConnection( { newGlowInput, { lightOutputParameter.shader, g_textureColorParameter } } );
 	}
 
-	replaceUSDShader( lightNetwork, lightOutputParameter.shader, std::move( newLightShader ) );
-	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( lightNetwork );
+	replaceUSDShader( newLightShaderNetwork.get(), lightOutputParameter.shader, std::move( newLightShader ) );
+	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( newLightShaderNetwork.get() );
+
+	result->members()[lightAttribute] = std::move( newLightShaderNetwork );
+
+	return result;
 }
 
 //////////////////////////////////////////////////////////////////////////

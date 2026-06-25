@@ -118,6 +118,7 @@ const InternedString g_renderManLightFilterAttributeName( "ri:lightFilter" );
 const InternedString g_visibilityCameraAttributeName( "ri:visibility:camera" );
 const InternedString g_visibilityIndirectAttributeName( "ri:visibility:indirect" );
 const InternedString g_visibilityTransmissionAttributeName( "ri:visibility:transmission" );
+const InternedString g_sidesAttributeName( "ri:sides" );
 const RtUString g_userMaterialId( "user:__materialid" );
 
 const vector<InternedString> g_displacementAttributeNames = { "ri:displacement", "osl:displacement", "displacement" };
@@ -183,10 +184,16 @@ pair<InternedString, const ShaderNetwork *> shaderNetworkAttribute( const Compou
 	return { InternedString(), nullptr };
 }
 
-bool isMeshLight( const IECoreScene::ShaderNetwork *lightShader )
+bool isUSDMeshLight( const IECoreScene::ShaderNetwork *lightShader )
 {
 	const IECoreScene::Shader *outputShader = lightShader->outputShader();
-	return outputShader && ( outputShader->getName() == "PxrMeshLight" || outputShader->getName() == "MeshLight" );
+	return outputShader && outputShader->getName() == "MeshLight";
+}
+
+bool isPxrMeshLight( const IECoreScene::ShaderNetwork *lightShader )
+{
+	const IECoreScene::Shader *outputShader = lightShader->outputShader();
+	return outputShader && outputShader->getName() == "PxrMeshLight";
 }
 
 IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
@@ -223,35 +230,6 @@ IECoreScene::ConstShaderNetworkPtr g_black = []() {
 
 } ();
 
-ConstCompoundObjectPtr convertUSDMeshLight( const CompoundObject *attributes )
-{
-	const auto &[lightShaderAttribute, lightShaderNetwork] = shaderNetworkAttribute( attributes->members(), g_lightAttributeNames );
-	if( !lightShaderNetwork )
-	{
-		return attributes;
-	}
-
-	const Shader *outputShader = lightShaderNetwork->outputShader();
-	if( !outputShader || outputShader->getName() != "MeshLight" )
-	{
-		return attributes;
-	}
-
-	CompoundObjectPtr result = attributes->copy();
-
-	ShaderNetworkPtr newLightShaderNetwork = lightShaderNetwork->copy();
-	const ShaderNetwork *surface = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames ).second;
-	ShaderNetworkAlgo::convertUSDMeshLightShaders( newLightShaderNetwork.get(), surface );
-
-	result->members()[lightShaderAttribute] = std::move( newLightShaderNetwork );
-
-	result->members().try_emplace( g_visibilityIndirectAttributeName, new BoolData( false ) );
-	result->members().try_emplace( g_visibilityTransmissionAttributeName, new BoolData( false ) );
-	result->members().try_emplace( g_visibilityCameraAttributeName, new BoolData( true ) );
-
-	return result;
-}
-
 const std::string g_renderAttributePrefix( "render:" );
 const std::string g_userAttributePrefix( "user:" );
 
@@ -259,7 +237,10 @@ const std::string g_userAttributePrefix( "user:" );
 
 Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache *materialCache )
 {
-	ConstCompoundObjectPtr modifiedAttributes = convertUSDMeshLight( attributes );
+	const ShaderNetwork *lightShader = shaderNetworkAttribute( attributes->members(), g_lightAttributeNames ).second;
+	m_isUSDMeshLight = lightShader && ::isUSDMeshLight( lightShader );
+
+	ConstCompoundObjectPtr modifiedAttributes = ShaderNetworkAlgo::convertUSDMeshLightAttributes( attributes );
 	attributes = modifiedAttributes.get();
 
 	// Convert shaders.
@@ -292,13 +273,13 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 	}
 
 	m_lightShader = shaderNetworkAttribute( attributes->members(), g_lightAttributeNames ).second;
-	if( m_lightShader && isMeshLight( m_lightShader.get() ) )
+	if( m_lightShader && isPxrMeshLight( m_lightShader.get() ) )
 	{
 			// Mesh lights default to having a black material so they don't appear
 			// in indirect rays, but the user can override with a surface assignment
 			// if they want further control. Other lights don't have materials.
 			// We assume that a volume shader makes no sense here.
-			m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get(), surface ? surfaceName : InternedString(), attributes );
+			m_lightMaterial = materialCache->getMaterial( ( surface && !m_isUSDMeshLight ) ? surface : g_black.get(), ( surface && !m_isUSDMeshLight ) ? surfaceName : InternedString(), attributes );
 	}
 
 	if( surface )
@@ -376,6 +357,19 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 	}
 
 	m_lightFilter = attribute<ShaderNetwork>( attributes->members(), g_renderManLightFilterAttributeName );
+
+	if( m_lightShader && isPxrMeshLight( m_lightShader.get() ) )
+	{
+		m_lightInstanceAttributes = RtParamList( m_instanceAttributes );
+
+		static BoolDataPtr g_falseData( new BoolData( false ) );
+		static IntDataPtr g_oneData( new IntData( 1 ) );
+
+		ParamListAlgo::convertParameter( RtUString( g_visibilityCameraAttributeName.c_str() + g_renderManPrefix.size() ), g_falseData.get(), *m_lightInstanceAttributes );
+		ParamListAlgo::convertParameter( RtUString( g_visibilityIndirectAttributeName.c_str() + g_renderManPrefix.size() ), g_falseData.get(), *m_lightInstanceAttributes );
+		ParamListAlgo::convertParameter( RtUString( g_visibilityTransmissionAttributeName.c_str() + g_renderManPrefix.size() ), g_falseData.get(), *m_lightInstanceAttributes );
+		ParamListAlgo::convertParameter( RtUString( g_sidesAttributeName.c_str() + g_renderManPrefix.size() ), g_oneData.get(), *m_lightInstanceAttributes );
+	}
 }
 
 Attributes::~Attributes()
@@ -402,6 +396,11 @@ const IECore::MurmurHash &Attributes::instanceAttributesHash() const
 	return m_instanceAttributesHash;
 }
 
+const RtParamList &Attributes::lightInstanceAttributes() const
+{
+	return m_lightInstanceAttributes ? *m_lightInstanceAttributes : m_instanceAttributes;
+}
+
 const Material *Attributes::material() const
 {
 	return m_material.get();
@@ -420,4 +419,9 @@ const IECoreScene::ShaderNetwork *Attributes::lightShader() const
 const IECoreScene::ShaderNetwork *Attributes::lightFilter() const
 {
 	return m_lightFilter.get();
+}
+
+const bool Attributes::isUSDMeshLight() const
+{
+	return m_isUSDMeshLight;
 }
