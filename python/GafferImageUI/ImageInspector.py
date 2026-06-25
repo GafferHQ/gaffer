@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 import GafferImageUI
 
@@ -101,14 +102,14 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 					Gaffer.DictPath( {}, "/" ), # Placeholder, updated in `__setPathListingPaths()``
 					columns = [
 						GafferUI.PathListingWidget.defaultNameColumn,
-						GafferUI.StandardPathColumn( "Value", "image:value", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+						GafferUI.StandardPathColumn( _("Value"), "image:value", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
 					],
 					displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 					selectionMode = GafferUI.PathListingWidget.SelectionMode.Cell,
 					horizontalScrollMode = GafferUI.ScrollMode.Automatic,
 					sortable = False,
 					parenting = {
-						"label" : "Image"
+						"label" : _("Image")
 					}
 				)
 
@@ -119,21 +120,21 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 						GafferUI.StandardPathColumn(
 							GafferUI.PathColumn.CellData(
 								"Min",
-								toolTip = "The minimum value of all pixels in the data window."
+								toolTip = _("The minimum value of all pixels in the data window.")
 							),
 							"stats:min", sizeMode = GafferUI.PathColumn.SizeMode.Stretch
 						),
 						GafferUI.StandardPathColumn(
 							GafferUI.PathColumn.CellData(
 								"Max",
-								toolTip = "The maximum value of all pixels in the data window."
+								toolTip = _("The maximum value of all pixels in the data window.")
 							),
 							"stats:max", sizeMode = GafferUI.PathColumn.SizeMode.Stretch
 						),
 						GafferUI.StandardPathColumn(
 							GafferUI.PathColumn.CellData(
 								"Average",
-								toolTip = "The average value of all pixels in the data window."
+								toolTip = _("The average value of all pixels in the data window.")
 							),
 							"stats:average", sizeMode = GafferUI.PathColumn.SizeMode.Stretch
 						),
@@ -143,7 +144,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 					sortable = False,
 					horizontalScrollMode = GafferUI.ScrollMode.Automatic,
 					parenting = {
-						"label" : "Channels"
+						"label" : _("Channels")
 					}
 				)
 
@@ -151,14 +152,14 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 					Gaffer.DictPath( {}, "/" ),
 					columns = [
 						GafferUI.PathListingWidget.defaultNameColumn,
-						GafferUI.StandardPathColumn( "Value", "metadata:value", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+						GafferUI.StandardPathColumn( _("Value"), "metadata:value", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
 					],
 					displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 					selectionMode = GafferUI.PathListingWidget.SelectionMode.Cell,
 					horizontalScrollMode = GafferUI.ScrollMode.Automatic,
 					sortable = False,
 					parenting = {
-						"label" : "Metadata"
+						"label" : _("Metadata")
 					}
 				)
 
@@ -238,7 +239,7 @@ Gaffer.Metadata.registerNode(
 		"view" : {
 
 			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
-			"description" : "The view to inspect",
+			"description" : _("The view to inspect"),
 
 		},
 

@@ -40,6 +40,7 @@ import string
 import Gaffer
 import GafferUI
 import GafferArnold
+from GafferUI.i18n import _
 
 def __visibilitySummary( plug ) :
 
@@ -57,10 +58,10 @@ def __visibilitySummary( plug ) :
 
 	)	:
 		if plug["ai:visibility:" + childName]["enabled"].getValue() :
-			info.append( label + ( " On" if plug["ai:visibility:" + childName]["value"].getValue() else " Off" ) )
+			info.append( label + ( " " + _("On") if plug["ai:visibility:" + childName]["value"].getValue() else " " + _("Off") ) )
 
 	if plug["ai:visibility:shadow_group"]["enabled"].getValue() :
-		info.append( "ShadowGroup Applied" )
+		info.append( _("ShadowGroup Applied") )
 
 	return ", ".join( info )
 
@@ -83,7 +84,7 @@ def __autoBumpVisibilitySummary( plug ) :
 
 	)	:
 		if plug["ai:autobump_visibility:" + childName]["enabled"].getValue() :
-			info.append( label + ( " On" if plug["ai:autobump_visibility:" + childName]["value"].getValue() else " Off" ) )
+			info.append( label + ( " " + _("On") if plug["ai:autobump_visibility:" + childName]["value"].getValue() else " " + _("Off") ) )
 
 	return ", ".join( info )
 
@@ -92,7 +93,7 @@ def __transformSummary( plug ) :
 	info = []
 
 	if plug["ai:transform_type"]["enabled"].getValue() :
-		info.append( "Transform Type " + __transformTypeEnumNames[ plug["ai:transform_type"]["value"].getValue() ] )
+		info.append( _("Transform Type") + " " + __transformTypeEnumNames[ plug["ai:transform_type"]["value"].getValue() ] )
 
 	return ", ".join( info )
 
@@ -106,10 +107,10 @@ def __shadingSummary( plug ) :
 		( "ai:self_shadows", "Self Shadows" ),
 	) :
 		if plug[childName]["enabled"].getValue() :
-			info.append( label + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+			info.append( label + ( " " + _("On") if plug[childName]["value"].getValue() else " " + _("Off") ) )
 
 	if plug["ai:sss_setname"]["enabled"].getValue() :
-		info.append( "SSS Set Name " + plug["ai:sss_setname"]["value"].getValue() )
+		info.append( _("SSS Set Name") + " " + plug["ai:sss_setname"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -117,9 +118,9 @@ def __subdivisionSummary( plug ) :
 
 	info = []
 	if plug["ai:polymesh:subdiv_iterations"]["enabled"].getValue() :
-		info.append( "Iterations %d" % plug["ai:polymesh:subdiv_iterations"]["value"].getValue() )
+		info.append( _("Iterations %d") % plug["ai:polymesh:subdiv_iterations"]["value"].getValue() )
 	if plug["ai:polymesh:subdiv_adaptive_error"]["enabled"].getValue() :
-		info.append( "Error %s" % GafferUI.NumericWidget.valueToString( plug["ai:polymesh:subdiv_adaptive_error"]["value"].getValue() ) )
+		info.append( _("Error %s") % GafferUI.NumericWidget.valueToString( plug["ai:polymesh:subdiv_adaptive_error"]["value"].getValue() ) )
 	if plug["ai:polymesh:subdiv_adaptive_metric"]["enabled"].getValue() :
 		info.append( string.capwords( plug["ai:polymesh:subdiv_adaptive_metric"]["value"].getValue().replace( "_", " " ) ) + " Metric" )
 	if plug["ai:polymesh:subdiv_adaptive_space"]["enabled"].getValue() :
@@ -134,11 +135,11 @@ def __subdivisionSummary( plug ) :
 			}.get( plug["ai:polymesh:subdiv_uv_smoothing"]["value"].getValue() )
 		)
 	if plug["ai:polymesh:subdiv_smooth_derivs"]["enabled"].getValue() :
-		info.append( "Smooth Derivs " + ( "On" if plug["ai:polymesh:subdiv_smooth_derivs"]["value"].getValue() else "Off" ) )
+		info.append( _("Smooth Derivs") + " " + ( _("On") if plug["ai:polymesh:subdiv_smooth_derivs"]["value"].getValue() else _("Off") ) )
 	if plug["ai:polymesh:subdiv_frustum_ignore"]["enabled"].getValue() :
-		info.append( "Frustum Ignore " + ( "On" if plug["ai:polymesh:subdiv_frustum_ignore"]["value"].getValue() else "Off" ) )
+		info.append( _("Frustum Ignore") + " " + ( _("On") if plug["ai:polymesh:subdiv_frustum_ignore"]["value"].getValue() else _("Off") ) )
 	if plug["ai:polymesh:subdivide_polygons"]["enabled"].getValue() :
-		info.append( "Subdivide Polygons " + ( "On" if plug["ai:polymesh:subdivide_polygons"]["value"].getValue() else "Off" ) )
+		info.append( _("Subdivide Polygons") + " " + ( _("On") if plug["ai:polymesh:subdivide_polygons"]["value"].getValue() else _("Off") ) )
 
 	return ", ".join( info )
 
@@ -148,7 +149,7 @@ def __curvesSummary( plug ) :
 	if plug["ai:curves:mode"]["enabled"].getValue() :
 		info.append( string.capwords( plug["ai:curves:mode"]["value"].getValue() ) )
 	if plug["ai:curves:min_pixel_width"]["enabled"].getValue() :
-		info.append( "Min Pixel Width %s" % GafferUI.NumericWidget.valueToString( plug["ai:curves:min_pixel_width"]["value"].getValue() ) )
+		info.append( _("Min Pixel Width %s") % GafferUI.NumericWidget.valueToString( plug["ai:curves:min_pixel_width"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -156,7 +157,7 @@ def __pointsSummary( plug ) :
 
 	info = []
 	if plug["ai:points:min_pixel_width"]["enabled"].getValue() :
-		info.append( "Min Pixel Width {}".format( GafferUI.NumericWidget.valueToString( plug["ai:points:min_pixel_width"]["value"].getValue() ) ) )
+		info.append( _("Min Pixel Width {}").format( GafferUI.NumericWidget.valueToString( plug["ai:points:min_pixel_width"]["value"].getValue() ) ) )
 
 	return ", ".join( info )
 
@@ -164,21 +165,21 @@ def __volumeSummary( plug ) :
 
 	info = []
 	if plug["ai:volume:step_scale"]["enabled"].getValue() :
-		info.append( "Volume Step Scale %s" % GafferUI.NumericWidget.valueToString( plug["ai:volume:step_scale"]["value"].getValue() ) )
+		info.append( _("Volume Step Scale %s") % GafferUI.NumericWidget.valueToString( plug["ai:volume:step_scale"]["value"].getValue() ) )
 	if plug["ai:volume:step_size"]["enabled"].getValue() :
-		info.append( "Volume Step Size %s" % GafferUI.NumericWidget.valueToString( plug["ai:volume:step_size"]["value"].getValue() ) )
+		info.append( _("Volume Step Size %s") % GafferUI.NumericWidget.valueToString( plug["ai:volume:step_size"]["value"].getValue() ) )
 	if plug["ai:shape:step_scale"]["enabled"].getValue() :
-		info.append( "Shape Step Scale %s" % GafferUI.NumericWidget.valueToString( plug["ai:shape:step_scale"]["value"].getValue() ) )
+		info.append( _("Shape Step Scale %s") % GafferUI.NumericWidget.valueToString( plug["ai:shape:step_scale"]["value"].getValue() ) )
 	if plug["ai:shape:step_size"]["enabled"].getValue() :
-		info.append( "Shape Step Size %s" % GafferUI.NumericWidget.valueToString( plug["ai:shape:step_size"]["value"].getValue() ) )
+		info.append( _("Shape Step Size %s") % GafferUI.NumericWidget.valueToString( plug["ai:shape:step_size"]["value"].getValue() ) )
 	if plug["ai:shape:volume_padding"]["enabled"].getValue() :
-		info.append( "Padding %s" % GafferUI.NumericWidget.valueToString( plug["ai:shape:volume_padding"]["value"].getValue() ) )
+		info.append( _("Padding %s") % GafferUI.NumericWidget.valueToString( plug["ai:shape:volume_padding"]["value"].getValue() ) )
 	if plug["ai:volume:velocity_scale"]["enabled"].getValue() :
-		info.append( "Velocity Scale %s" % GafferUI.NumericWidget.valueToString( plug["ai:volume:velocity_scale"]["value"].getValue() ) )
+		info.append( _("Velocity Scale %s") % GafferUI.NumericWidget.valueToString( plug["ai:volume:velocity_scale"]["value"].getValue() ) )
 	if plug["ai:volume:velocity_fps"]["enabled"].getValue() :
-		info.append( "Velocity FPS %s" % GafferUI.NumericWidget.valueToString( plug["ai:volume:velocity_fps"]["value"].getValue() ) )
+		info.append( _("Velocity FPS %s") % GafferUI.NumericWidget.valueToString( plug["ai:volume:velocity_fps"]["value"].getValue() ) )
 	if plug["ai:volume:velocity_outlier_threshold"]["enabled"].getValue() :
-		info.append( "Velocity Outlier Threshold %s" % GafferUI.NumericWidget.valueToString( plug["ai:volume:velocity_outlier_threshold"]["value"].getValue() ) )
+		info.append( _("Velocity Outlier Threshold %s") % GafferUI.NumericWidget.valueToString( plug["ai:volume:velocity_outlier_threshold"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -186,7 +187,7 @@ def __toonSummary( plug ) :
 
 	info = []
 	if plug["ai:toon_id"]["enabled"].getValue() :
-		info.append( "Toon Id " + plug["ai:toon_id"]["value"].getValue() )
+		info.append( _("Toon Id") + " " + plug["ai:toon_id"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -195,9 +196,9 @@ Gaffer.Metadata.registerNode(
 	GafferArnold.ArnoldAttributes,
 
 	"description",
-	"""
+	_("""
 	Applies Arnold attributes to objects in the scene.
-	""",
+	"""),
 
 	plugs = {
 

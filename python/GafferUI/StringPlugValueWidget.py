@@ -43,6 +43,7 @@ import Gaffer
 import GafferUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 ## Supported Metadata :
 #
@@ -249,7 +250,7 @@ def __substitutionsButtonPress( widget, event ) :
 			label.buttonPressSignal().connect( lambda widget, event : True )
 			label.dragBeginSignal().connect( functools.partial( __substitutionsDragBegin, text = text ) )
 			label.dragEndSignal().connect( __substitutionsDragEnd )
-			button = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Copy Text" )
+			button = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = _("Copy Text") )
 			button.clickedSignal().connect( functools.partial( __substitutionsCopyClicked, text = text ) )
 
 	widget.__substitutionsPopupWindow.popup( parent = widget )

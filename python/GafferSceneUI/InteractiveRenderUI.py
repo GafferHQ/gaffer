@@ -43,6 +43,7 @@ import GafferImage
 import GafferScene
 import GafferSceneUI
 import GafferUI
+from GafferUI.i18n import _
 import GafferImageUI
 
 from GafferUI.PlugValueWidget import sole
@@ -95,7 +96,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 		with self.__frame :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 				GafferUI.Spacer( imath.V2i( 1, 1 ), imath.V2i( 1, 1 ) )
-				self.__label = GafferUI.Label( "Render" )
+				self.__label = GafferUI.Label( _("Render") )
 				self.__stateWidget = _StatePlugValueWidget( None )
 				self.__messagesWidget = _MessageSummaryPlugValueWidget( None )
 
@@ -315,7 +316,7 @@ class _MessagesWindow( GafferUI.Window ) :
 	def __updateTitle( self, *unused ) :
 
 		plug = self.getChild().getPlug()
-		self.setTitle( "{} Messages".format( plug.node().relativeName( plug.ancestor( Gaffer.ScriptNode ) ) ) )
+		self.setTitle( _("{} Messages").format( plug.node().relativeName( plug.ancestor( Gaffer.ScriptNode ) ) ) )
 
 	def __destroy( self, *unused ) :
 
@@ -380,10 +381,10 @@ Gaffer.Metadata.registerNode(
 	GafferScene.InteractiveRender,
 
 	"description",
-	"""
+	_("""
 	Performs interactive renders, updating the render on the fly
 	whenever the input scene changes.
-	""",
+	"""),
 
 	"layout:section:Settings.Log:collapsed", False,
 
@@ -398,9 +399,9 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to be rendered.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 
@@ -409,14 +410,14 @@ Gaffer.Metadata.registerNode(
 		"renderer" : {
 
 			"description" :
-			"""
+			_("""
 			The renderer to use. Default mode uses the `render:defaultRenderer` option from
 			the input scene globals to choose the renderer. This can be authored using
 			the StandardOptions node.
 
 			> Note : Changing renderer currently requires that the current render is
 			> manually stopped and restarted.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.RenderUI.RendererPlugValueWidget",
 
@@ -435,11 +436,11 @@ Gaffer.Metadata.registerNode(
 		"state" : {
 
 			"description" :
-			"""
+			_("""
 			Turns the rendering on and off, or pauses it.
-			""",
+			"""),
 
-			"label" : "Render",
+			"label" : _("Render"),
 			"plugValueWidget:type" : "GafferSceneUI.InteractiveRenderUI._StatePlugValueWidget",
 
 		},
@@ -447,10 +448,10 @@ Gaffer.Metadata.registerNode(
 		"resolvedRenderer" : {
 
 			"description" :
-			"""
+			_("""
 			The renderer that will be used, accounting for the value of the
 			`render:defaultRenderer` option if `renderer` is set to "Default".
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 
@@ -459,11 +460,11 @@ Gaffer.Metadata.registerNode(
 		"messages" : {
 
 			"description" :
-			"""
+			_("""
 			Messages from the render process.
-			""",
+			"""),
 
-			"label" : "Messages",
+			"label" : _("Messages"),
 			"plugValueWidget:type" : "GafferSceneUI.InteractiveRenderUI._MessagesPlugValueWidget",
 			"layout:section" : "Settings.Log"
 
@@ -472,9 +473,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			A direct pass-through of the input scene.
-			""",
+			"""),
 
 		},
 

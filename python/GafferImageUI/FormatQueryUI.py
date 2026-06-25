@@ -36,16 +36,17 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.FormatQuery,
 
 	"description",
-	"""
+	_("""
 	Extracts the format of an input image, for driving the format input of another image node, or
 	driving expressions.
-	""",
+	"""),
 	"layout:section:Settings.Out:collapsed", False,
 
 	plugs = {
@@ -53,18 +54,18 @@ Gaffer.Metadata.registerNode(
 		"image" : {
 
 			"description" :
-			"""
+			_("""
 			The image to query.
-			""",
+			"""),
 
 		},
 
 		"view" : {
 
 			"description" :
-			"""
+			_("""
 			The view to be queried.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
@@ -75,9 +76,9 @@ Gaffer.Metadata.registerNode(
 		"format" : {
 
 			"description" :
-			"""
+			_("""
 			The format of the image ( as a FormatPlug, compatible with inputs on Constant or Resize ).
-			""",
+			"""),
 			"nodule:type" : "GafferUI::CompoundNodule",
 			"layout:section" : "Settings.Out",
 
@@ -89,9 +90,9 @@ Gaffer.Metadata.registerNode(
 		"center" : {
 
 			"description" :
-			"""
+			_("""
 			The middle of the displayWindow.  Stored as V2f, since it could be a half-pixel.
-			""",
+			"""),
 			"layout:section" : "Settings.Out",
 
 		},
@@ -99,9 +100,9 @@ Gaffer.Metadata.registerNode(
 		"size" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the displayWindow as V2i.
-			""",
+			"""),
 			"layout:section" : "Settings.Out",
 
 		},

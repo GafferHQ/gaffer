@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.DeleteCurves,
 
 	"description",
-	"""
+	_("""
 	Delete curves from a curves primitive using a primitive variable to choose the curves.
-	""",
+	"""),
 
 	plugs = {
 
@@ -56,23 +57,23 @@ Gaffer.Metadata.registerNode(
 
 		"curves" : {
 			"description" :
-			"""
+			_("""
 			Uniformly interpolated int, float or bool primitive variable to choose which curves to delete. Note a non-zero value indicates the curve will be deleted.
-			"""
+			""")
 		},
 
 		"invert" : {
 			"description" :
-			"""
+			_("""
 			Invert the condition used to delete curves. If the primvar is zero then the curve will be deleted.
-			"""
+			""")
 		},
 
 		"ignoreMissingVariable" : {
 			"description" :
-			"""
+			_("""
 			Causes the node to do nothing if the primitive variable doesn't exist on the curves, instead of erroring.
-			"""
+			""")
 		},
 
 	}

@@ -39,6 +39,7 @@ import fnmatch
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class NodeFinderDialogue( GafferUI.Dialogue ) :
 
@@ -51,7 +52,7 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 			# criteria row
 
 			GafferUI.Label(
-				"Find",
+				_("Find"),
 				parenting = {
 					"index" : ( 0, 0 ),
 					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ),
@@ -67,7 +68,7 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 			# match text row
 
 			GafferUI.Label(
-				"Matching",
+				_("Matching"),
 				parenting = {
 					"index" : ( 0, 2 ),
 					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ),
@@ -83,9 +84,9 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 
 		self._setWidget( grid )
 
-		self.__cancelButton = self._addButton( "Cancel" )
-		self.__selectNextButton = self._addButton( "Select Next" )
-		self.__selectAllButton = self._addButton( "Select All" )
+		self.__cancelButton = self._addButton( _("Cancel") )
+		self.__selectNextButton = self._addButton( _("Select Next") )
+		self.__selectAllButton = self._addButton( _("Select All") )
 
 		self.__matchPattern.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
 
@@ -105,9 +106,9 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 
 		self.__scope = scope
 		if isinstance( self.__scope, Gaffer.ScriptNode ) :
-			self.setTitle( "Find nodes" )
+			self.setTitle( _("Find nodes") )
 		else :
-			self.setTitle( "Find nodes in %s" % self.__scope.getName() )
+			self.setTitle( _("Find nodes in %s") % self.__scope.getName() )
 
 	def getScope( self ) :
 

@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferArnold
+from GafferUI.i18n import _
 
 
 Gaffer.Metadata.registerNode(
@@ -44,11 +45,11 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 
-	"""
+	_("""
 	LightFilter that can be positioned in space to filter light in a particular
 	region. Note that this is a non-physical effect. LightFilters need to get
 	linked to lights which you can do via a StandardAttributes node.
-	""",
+	"""),
 
 	plugs = {
 
@@ -57,11 +58,11 @@ Gaffer.Metadata.registerNode(
 		"parameters.shader" : {
 
 			"description" :
-			"""
+			_("""
 			Shader to be used for the light_blocker filter. UVs are only
 			available if the geometry type is set to "box". Shading will need
 			to be based on P otherwise.
-			""",
+			"""),
 
 		},
 

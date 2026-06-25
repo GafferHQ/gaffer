@@ -40,6 +40,7 @@ import GafferScene
 import GafferSceneUI
 
 import IECore
+from GafferUI.i18n import _
 
 def __rendererNames( plug ) :
 
@@ -78,20 +79,20 @@ Gaffer.Metadata.registerNode(
 	GafferScene.RenderPassShader,
 
 	"description",
-	"""
+	_("""
 	Sets up a global shader in the options to replace a shader used by a render pass type.
-	""",
+	"""),
 
 	plugs = {
 
 		"renderer" : {
 
 			"description" :
-			"""
+			_("""
 			The renderer the shader should affect. Shaders assigned to a specific
 			renderer will take precedence over shaders assigned to "All" when
 			rendering with that renderer.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
@@ -103,9 +104,9 @@ Gaffer.Metadata.registerNode(
 		"usage" : {
 
 			"description" :
-			"""
+			_("""
 			How the shader is to be used.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 

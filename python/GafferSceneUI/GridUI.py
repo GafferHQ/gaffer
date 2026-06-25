@@ -37,36 +37,37 @@
 import Gaffer
 import GafferScene
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Grid,
 
 	"description",
-	""""
+	_(""""
 	A grid. This is used to draw the grid in the viewer,
 	but is also included as a node in case it might be
 	useful, perhaps for placing a grid in renders done
 	using the OpenGLRender node.
-	""",
+	"""),
 
 	plugs = {
 
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the grid.
-			""",
+			"""),
 
 		},
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			The transform applied to the grid.
-			""",
+			"""),
 
 			"layout:section" : "Transform",
 
@@ -75,62 +76,62 @@ Gaffer.Metadata.registerNode(
 		"dimensions" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the grid in the x and y
 			axes. Use the transform to rotate the
 			grid into a different plane.
-			""",
+			"""),
 
 		},
 
 		"spacing" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the space between adjacent lines
 			in the grid.
-			"""
+			""")
 
 		},
 
 		"gridColor" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of the lines forming the main part
 			of the grid.
-			"""
+			""")
 
 		},
 
 		"centerColor" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of the two lines forming the central
 			cross of the grid.
-			"""
+			""")
 
 		},
 
 		"borderColor" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of the lines forming the border
 			of the grid.
-			"""
+			""")
 
 		},
 
 		"gridPixelWidth" : {
 
 			"description" :
-			"""
+			_("""
 			The width of the lines forming the main part
 			of the grid. This width applies only to the
 			OpenGL representation of the grid.
-			"""
+			""")
 
 		},
 
@@ -138,22 +139,22 @@ Gaffer.Metadata.registerNode(
 		"centerPixelWidth" : {
 
 			"description" :
-			"""
+			_("""
 			The width of the two lines forming the central
 			cross of the grid. This width applies only to the
 			OpenGL representation of the grid.
-			"""
+			""")
 
 		},
 
 		"borderPixelWidth" : {
 
 			"description" :
-			"""
+			_("""
 			The width of the lines forming the border
 			of the grid. This width applies only to the
 			OpenGL representation of the grid.
-			"""
+			""")
 
 		},
 

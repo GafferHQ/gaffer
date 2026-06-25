@@ -45,13 +45,36 @@ import IECoreScene
 import Gaffer
 import GafferScene
 import GafferUI
+from GafferUI.i18n import _
+from GafferUI import i18n as _i18n
 import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
 
 from . import _GafferSceneUI
+from GafferSceneUI._InspectorColumn import _isInspectorColumn
 
 from Qt import QtWidgets
+
+class _TranslatedNameColumn( GafferUI.PathColumn ) :
+	"""A PathColumn that delegates to StandardPathColumn but translates
+	the displayed name values using the i18n word-by-word system."""
+
+	def __init__( self, header, propertyName ) :
+
+		GafferUI.PathColumn.__init__( self )
+		self.__inner = GafferUI.StandardPathColumn( header, propertyName )
+
+	def cellData( self, path, canceller = None ) :
+
+		data = self.__inner.cellData( path, canceller )
+		if data.value is not None and isinstance( data.value, str ) :
+			data.value = _i18n.translateLabel( data.value )
+		return data
+
+	def headerData( self, canceller = None ) :
+
+		return self.__inner.headerData( canceller )
 
 class SceneInspector( GafferSceneUI.SceneEditor ) :
 
@@ -143,10 +166,10 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 		self.settings()["compare"]["scene"]["value"].setInput( self.settings()["in"] )
 
-		nameColumn = GafferUI.StandardPathColumn( "Name", "name" )
+		nameColumn = _TranslatedNameColumn( _("Name"), "name" )
 		self.__standardColumns = [
 			nameColumn,
-			GafferSceneUI.Private.InspectorColumn( "inspector:inspector", headerData = GafferUI.PathColumn.CellData( value = "Value" ) ),
+			GafferSceneUI.Private.InspectorColumn( "inspector:inspector", headerData = GafferUI.PathColumn.CellData( value = _("Value") ) ),
 		]
 
 		self.__diffColumns = [
@@ -171,7 +194,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 			with GafferUI.TabbedContainer() :
 
-				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Location" } ) :
+				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : _("Location") } ) :
 
 					GafferUI.PlugLayout(
 						self.settings(), orientation = GafferUI.ListContainer.Orientation.Horizontal,
@@ -194,7 +217,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 					)
 					GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__locationPathListing )
 
-				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Globals" } ) :
+				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : _("Globals") } ) :
 
 					GafferUI.PlugLayout(
 						self.settings(), orientation = GafferUI.ListContainer.Orientation.Horizontal,
@@ -255,7 +278,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 		columnSelection = {
 			column : selection for column, selection in zip( pathListing.getColumns(), pathListing.getSelection() )
-			if isinstance( column, GafferSceneUI.Private.InspectorColumn )
+			if _isInspectorColumn( column )
 		}
 		firstInspectorColumn = next( iter( columnSelection ), None )
 		if firstInspectorColumn is None :
@@ -437,10 +460,10 @@ Gaffer.Metadata.registerNode(
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The scene location to inspect. Defaults to the currently selected location. Use
 			the HierarchyView or Viewer to select a location.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.SceneInspector._LocationPlugValueWidget",
 			"layout:section" : "TopRow",
@@ -480,7 +503,7 @@ Gaffer.Metadata.registerNode(
 		"locationFilter" : {
 
 			"description" :
-			"""
+			_("""
 			Filters the displayed properties. The filter may contain any of Gaffer's
 			standard wildcards, and may either be used to match individual property
 			names or entire paths.
@@ -494,7 +517,7 @@ Gaffer.Metadata.registerNode(
 			- `/Attributes/Standard` : Shows standard attributes.
 			- `/Attributes/*/*surface/*/*color*` : Shows surface shader parameters whose
 			  name contains `color`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "searchOn.png",
@@ -512,11 +535,11 @@ Gaffer.Metadata.registerNode(
 		"isolateLocationDifferences" : {
 
 			"description" :
-			"""
+			_("""
 			Hides all rows where the A and B columns both have the same value.
-			""",
+			"""),
 
-			"label" : "Isolate Differences",
+			"label" : _("Isolate Differences"),
 			"layout:section" : "LocationFilterRow",
 			"boolPlugValueWidget:labelVisible" : True,
 			"layout:visibilityActivator" : lambda plug : any( p.getValue() for p in plug.node()._locationComparisonEnablers() ),
@@ -526,7 +549,7 @@ Gaffer.Metadata.registerNode(
 		"globalsFilter" : {
 
 			"description" :
-			"""
+			_("""
 			Filters the displayed properties. The filter may contain any of Gaffer's
 			standard wildcards, and may either be used to match individual property
 			names or entire paths.
@@ -538,7 +561,7 @@ Gaffer.Metadata.registerNode(
 			  in their name, be they options, outputs or anything else.
 			- `/Options/Standard` : Shows standard options.
 			- `/Outputs/.../Data` : Shows the Data field for all outputs.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "searchOn.png",
@@ -552,11 +575,11 @@ Gaffer.Metadata.registerNode(
 		"isolateGlobalsDifferences" : {
 
 			"description" :
-			"""
+			_("""
 			Hides all rows where the A and B columns both have the same value.
-			""",
+			"""),
 
-			"label" : "Isolate Differences",
+			"label" : _("Isolate Differences"),
 			"layout:section" : "GlobalsFilterRow",
 			"boolPlugValueWidget:labelVisible" : True,
 			"layout:visibilityActivator" : lambda plug : any( p.getValue() for p in plug.node()._globalsComparisonEnablers() ),
@@ -575,7 +598,7 @@ class _CompareMenuButton( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__button, node["compare"], **kw )
 
 		self.__button.setMenu(
-			GafferUI.Menu( title = "Compare", definition = Gaffer.WeakMethod( self.__menuDefinition ) )
+			GafferUI.Menu( title = _("Compare"), definition = Gaffer.WeakMethod( self.__menuDefinition ) )
 		)
 
 		self.setToolTip( "Click to configure A/B comparisons." )
@@ -707,7 +730,7 @@ class _LocationPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		selectedPath = GafferSceneUI.ScriptNodeAlgo.getLastSelectedPath( self.scriptNode() )
 		self.__pathPlugValueWidget.pathWidget().setPlaceholderText(
-			selectedPath or "Select a location to inspect"
+			selectedPath or _("Select a location to inspect")
 		)
 
 SceneInspector._LocationPlugValueWidget = _LocationPlugValueWidget
@@ -820,28 +843,28 @@ class _FocusPlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			selectionLabel = "Pin {}".format( selection[0].getName() )
 
-		menuDefinition.append( "/Pin", {
+		menuDefinition.append( "/" + _("Pin"), {
 			"command" : functools.partial( Gaffer.WeakMethod( self.setNodeSet ), nodeSet = Gaffer.StandardSet( selection[:] ) ) ,
 				"label" : selectionLabel,
 			} )
 
 		# Add following items
 
-		menuDefinition.append( "/Follow Divider", { "divider" : True, "label" : "Follow" } )
+		menuDefinition.append( "/Follow Divider", { "divider" : True, "label" : _("Follow") } )
 
-		menuDefinition.append( "/Focus Node", {
+		menuDefinition.append( "/" + _("Focus Node"), {
 			"command" : functools.partial( Gaffer.WeakMethod( self.setNodeSet ), nodeSet = self.scriptNode().focusSet() ),
 			"checkBox" : self.__nodeSet.isSame( self.scriptNode().focusSet() ),
 		} )
 
-		menuDefinition.append( "/Node Selection", {
+		menuDefinition.append( "/" + _("Node Selection"), {
 			"command" : functools.partial( Gaffer.WeakMethod( self.setNodeSet ), nodeSet = selection ),
 			"checkBox" : self.__nodeSet.isSame( selection ),
 		} )
 
 		# Add bookmarks
 
-		menuDefinition.append( "/NumericBookmarkDivider", { "divider" : True, "label" : "Follow Numeric Bookmark" } )
+		menuDefinition.append( "/NumericBookmarkDivider", { "divider" : True, "label" : _("Follow Numeric Bookmark") } )
 
 		for bookmark in range( 1, 10 ) :
 			title = f"{bookmark}"
@@ -859,7 +882,7 @@ class _FocusPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Show menu
 
-		self.__menu = GafferUI.Menu( menuDefinition, title = "Focus" )
+		self.__menu = GafferUI.Menu( menuDefinition, title = _("Focus") )
 
 		bound = self.bound()
 		self.__menu.popup(
@@ -1028,15 +1051,15 @@ class _ComparePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				self.__aGrid = GafferUI.GridContainer( spacing = 4 )
 				with self.__aGrid.nextRow()  :
-					createLabel( "Location" )
+					createLabel( _("Location") )
 					_LocationPlugValueWidget( plug.parent()["location"] )
 
 				with self.__aGrid.nextRow()  :
-					createLabel( "Node" )
+					createLabel( _("Node") )
 					self.__inputLabelWidget = _InputLabelWidget()
 
 				with self.__aGrid.nextRow()  :
-					createLabel( "Render Pass" )
+					createLabel( _("Render Pass") )
 					_CurrentRenderPassWidget( plug["renderPass"]["value"] )
 
 				aFrame._qtWidget().setProperty( "gafferDiff", "A" )
@@ -1045,15 +1068,15 @@ class _ComparePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				self.__bGrid = GafferUI.GridContainer( spacing = 4 )
 				with self.__bGrid.nextRow()  :
-					createLabel( "Location" )
+					createLabel( _("Location") )
 					_LocationPlugValueWidget( plug["location"]["value"] )
 
 				with self.__bGrid.nextRow()  :
-					createLabel( "Node" )
+					createLabel( _("Node") )
 					_CompareScenePlugValueWidget( plug["scene"]["value"] )
 
 				with self.__bGrid.nextRow()  :
-					createLabel( "Render Pass" )
+					createLabel( _("Render Pass") )
 					GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget( plug["renderPass"]["value"] )
 
 				bFrame._qtWidget().setProperty( "gafferDiff", "B" )
@@ -1106,7 +1129,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		newColumnSelection = IECore.PathMatcher()
 		if not columnSelection.isEmpty() :
 			selectionCount += columnSelection.size()
-			if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+			if not _isInspectorColumn( column ) :
 				return
 			for selection in columnSelection.paths() :
 				path.setFromString( selection )
@@ -1134,7 +1157,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 
 def __inspectorColumnCreated( column ) :
 
-	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+	if _isInspectorColumn( column ) :
 		column.contextMenuSignal().connect( __contextMenu )
 
 GafferSceneUI.Private.InspectorColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )

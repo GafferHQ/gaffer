@@ -46,6 +46,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtWidgets
 
@@ -801,7 +802,7 @@ class _TabLayout( _Layout ) :
 		updatedTabs = collections.OrderedDict()
 		updatedTabVisibilities = []
 		for name, subsection in section.subsections.items() :
-			tab = existingTabs.get( name )
+			tab = existingTabs.get( _(name) )
 			if tab is None :
 				# Use scroll bars only when the TabLayout is not embedded
 				if self.__embedded :
@@ -815,13 +816,13 @@ class _TabLayout( _Layout ) :
 
 				tab.setChild( _CollapsibleLayout( self.orientation() ) )
 			updatedTabVisibilities.append( tab.getChild().update( subsection, revealChildren ) )
-			updatedTabs[name] = tab
+			updatedTabs[_(name)] = tab
 
 		if existingTabs.keys() != updatedTabs.keys() :
 			with Gaffer.Signals.BlockedConnection( self.__currentTabChangedConnection ) :
 				del self.__tabbedContainer[:]
-				for name, tab in updatedTabs.items() :
-					self.__tabbedContainer.append( tab, label = name )
+				for translatedName, tab in updatedTabs.items() :
+					self.__tabbedContainer.append( tab, label = translatedName )
 
 		for index, subsection in enumerate( section.subsections.values() ) :
 			self.__tabbedContainer.setTabVisible( self.__tabbedContainer[index], updatedTabVisibilities[index] )
@@ -865,7 +866,7 @@ class _CollapsibleLayout( _Layout ) :
 			collapsible = self.__collapsibles.get( name )
 			if collapsible is None :
 
-				collapsible = GafferUI.Collapsible( name, _CollapsibleLayout( self.orientation() ), collapsed = True )
+				collapsible = GafferUI.Collapsible( _(name), _CollapsibleLayout( self.orientation() ), collapsed = True )
 				# Hack to add margins at the top and bottom but not at the sides.
 				## \todo This is exposed in the public API via the borderWidth
 				# parameter to the Collapsible. That parameter sucks because a) it

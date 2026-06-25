@@ -40,6 +40,7 @@ import imath
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 ## A function suitable as the postCreator in a NodeMenu.append() call. It
 # sets the ramp position for the node to cover the entire format.
@@ -57,66 +58,66 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Ramp,
 
 	"description",
-	"""
+	_("""
 	Outputs an image of a color gradient interpolated using the ramp plug.
-	""",
+	"""),
 
 	plugs = {
 
 		"format" : {
 
 			"description" :
-			"""
+			_("""
 			The resolution and aspect ratio of the image.
-			""",
+			"""),
 
 		},
 
 		"ramp" : {
 
 			"description" :
-			"""
+			_("""
 			The gradient of colour used to draw the ramp.
-			""",
+			"""),
 
 		},
 
 		"startPosition" : {
 
 			"description" :
-			"""
+			_("""
 			2d position for the start of the ramp color interpolation.
-			""",
+			"""),
 
 		},
 
 		"endPosition" : {
 
 			"description" :
-			"""
+			_("""
 			2d position for the end of the ramp color interpolation.
-			""",
+			"""),
 
 		},
 
 		"layer" : {
 
 			"description" :
-			"""
+			_("""
 			The layer to generate. The output channels will
 			be named ( layer.R, layer.G, layer.B and layer.A ).
-			""",
+			"""),
 			"stringPlugValueWidget:placeholderText" : "[RGBA]",
 		},
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			A transformation applied to the entire ramp.
 			The translate and pivot values are specified in pixels,
 			and the rotate value is specified in degrees.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Transform",

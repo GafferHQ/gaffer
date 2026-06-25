@@ -39,6 +39,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -49,18 +50,18 @@ Gaffer.Metadata.registerNode(
 	GafferScene.ExternalProcedural,
 
 	"description",
-	"""
+	_("""
 	References external geometry procedurals and archives.
-	""",
+	"""),
 
 	plugs = {
 
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The path to the external procedural or archive.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -72,9 +73,9 @@ Gaffer.Metadata.registerNode(
 		"bound" : {
 
 			"description" :
-			"""
+			_("""
 			The bounding box of the external procedural or archive.
-			""",
+			"""),
 
 		},
 
@@ -82,9 +83,9 @@ Gaffer.Metadata.registerNode(
 		"parameters" : {
 
 			"description" :
-			"""
+			_("""
 			An arbitrary set of parameters to be passed to the external procedural.
-			""",
+			"""),
 
 		},
 

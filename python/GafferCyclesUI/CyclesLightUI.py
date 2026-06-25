@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferCycles
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
@@ -81,7 +82,7 @@ Gaffer.Metadata.registerNode(
 		"parameters.is_sphere" : {
 
 			"description" :
-			"""
+			_("""
 			Treat the light as a sphere. Disable to avoid
 			sharp boundaries when the light intersects with
 			other geometry.
@@ -90,7 +91,7 @@ Gaffer.Metadata.registerNode(
 			> enabling "Soft Falloff" in Blender and
 			> matches the behaviour of Cycles 3.6 and
 			> earlier.
-			""",
+			"""),
 
 		},
 

@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class BrowserEditor( GafferUI.Editor ) :
 
@@ -56,7 +57,7 @@ class BrowserEditor( GafferUI.Editor ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 6 ) :
 
-				GafferUI.Label( "Mode" )
+				GafferUI.Label( _("Mode") )
 
 				modeMenu = GafferUI.MultiSelectionMenu(
 					allowMultipleSelection = False,
@@ -199,7 +200,7 @@ class BrowserEditor( GafferUI.Editor ) :
 			menuDefinition = IECore.MenuDefinition()
 
 			if self.__opMatcher == "__loading__" :
-				menuDefinition.append( "/Loading actions...", { "active" : False } )
+				menuDefinition.append( "/" + _("Loading actions..."), { "active" : False } )
 			else  :
 				selectedPaths = pathListing.getSelectedPaths()
 				if len( selectedPaths ) == 1 :
@@ -207,7 +208,7 @@ class BrowserEditor( GafferUI.Editor ) :
 				else :
 					parameterValue = selectedPaths
 
-				menuDefinition.append( "/Actions", { "subMenu" : functools.partial( Gaffer.WeakMethod( self.__actionsSubMenu ), parameterValue ) } )
+				menuDefinition.append( "/" + _("Actions"), { "subMenu" : functools.partial( Gaffer.WeakMethod( self.__actionsSubMenu ), parameterValue ) } )
 
 			self.__menu = GafferUI.Menu( menuDefinition )
 			if len( menuDefinition.items() ) :
@@ -222,9 +223,9 @@ class BrowserEditor( GafferUI.Editor ) :
 			ops = self.__opMatcher.matches( parameterValue )
 			if len( ops ) :
 				for op, parameter in ops :
-					menuDefinition.append( "/%s (%s)" % ( op.typeName(), parameter.name ), { "command" : self.__opDialogueCommand( op ) } )
+					menuDefinition.append( "/" + _("%s (%s)") % ( op.typeName(), parameter.name ), { "command" : self.__opDialogueCommand( op ) } )
 			else :
-				menuDefinition.append( "/None available", { "active" : False } )
+				menuDefinition.append( "/" + _("None available"), { "active" : False } )
 
 			return menuDefinition
 

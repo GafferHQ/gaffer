@@ -39,6 +39,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -49,18 +50,18 @@ Gaffer.Metadata.registerNode(
 	GafferScene.SubTree,
 
 	"description",
-	"""A node for extracting a specific branch from a scene.""",
+	_("""A node for extracting a specific branch from a scene."""),
 
 	plugs = {
 
 		"root" : {
 
 			"description" :
-			"""
+			_("""
 			The location to become the new root for the output scene.
 			All locations below this will be kept, and all others will
 			be discarded.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 
@@ -69,45 +70,45 @@ Gaffer.Metadata.registerNode(
 		"includeRoot" : {
 
 			"description" :
-			"""
+			_("""
 			Causes the root location to also be kept in the output scene, in
 			addition to its children. For instance, if the scene contains only
 			`/city/street/house` and the root is set to `/city/street`, then the
 			new scene will by default contain only `/house` - but the
 			`includeRoot` setting will cause it to contain `/street/house`
 			instead.
-			""",
+			"""),
 
 		},
 
 		"inheritTransform" : {
 
 			"description" :
-			"""
+			_("""
 			Maintains the subtree's world-space position by applying the `root`
 			location's full transform to the subtree's children.
-			"""
+			""")
 
 		},
 
 		"inheritAttributes" : {
 
 			"description" :
-			"""
+			_("""
 			Maintains the subtree's attributes (including shader assignments) by
 			applying the `root` location's full attributes to the subtree's
 			children.
-			"""
+			""")
 
 		},
 
 		"inheritSetMembership" : {
 
 			"description" :
-			"""
+			_("""
 			Maintains the subtree's membership in sets by transferring the
 			`root` location's memberships to the subtree's children.
-			"""
+			""")
 
 
 		},

@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -46,28 +47,28 @@ Gaffer.Metadata.registerNode(
 	GafferScene.DeleteOptions,
 
 	"description",
-	"""
+	_("""
 	A node which removes options from the globals.
-	""",
+	"""),
 
 	plugs = {
 
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			The names of options to be removed. Names should be
 			separated by spaces and can use Gaffer's standard wildcards.
-			""",
+			"""),
 
 		},
 
 		"invertNames" : {
 
 			"description" :
-			"""
+			_("""
 			When on, matching names are kept, and non-matching names are removed.
-			""",
+			"""),
 
 		},
 

@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 
@@ -53,6 +54,15 @@ from . import _GafferSceneUI
 # This file extends the C++ functionality of InspectorColumn with functionality
 # that is easier to implement in Python. This should all be considered as one
 # component.
+
+def _isInspectorColumn( column ) :
+
+	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		return True
+	inner = getattr( column, "_inner", None )
+	if inner is not None and isinstance( inner, GafferSceneUI.Private.InspectorColumn ) :
+		return True
+	return False
 
 def __toggleBoolean( pathListing, inspections ) :
 
@@ -87,7 +97,7 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 				inspections.append( inspection )
 
 	if len( inspections ) == 0 :
-		GafferUI.PopupWindow.showWarning( "The selected cells cannot be edited in the current Edit Scope", parent = pathListing )
+		GafferUI.PopupWindow.showWarning( _("The selected cells cannot be edited in the current Edit Scope"), parent = pathListing )
 		return
 
 	nonEditable = [ i for i in inspections if not i.editable() ]
@@ -315,13 +325,13 @@ def __validateSelection( pathListing ) :
 		if columnSelection.isEmpty() :
 			continue
 
-		if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		if not _isInspectorColumn( column ) :
 			return False
 
 		if firstSelectedColumn is None :
 			firstSelectedColumn = column
 		elif type( column ) != type( firstSelectedColumn ) :
-			GafferUI.PopupWindow.showWarning( "Cannot edit columns with mixed types", parent = pathListing )
+			GafferUI.PopupWindow.showWarning( _("Cannot edit columns with mixed types"), parent = pathListing )
 			return False
 
 	return True
@@ -349,7 +359,7 @@ def __buttonDoubleClick( path, pathListing, event ) :
 
 def __contextMenu( column, pathListing, menuDefinition ) :
 
-	if not any( isinstance( c, GafferSceneUI.Private.InspectorColumn ) for c in pathListing.getColumns() ) :
+	if not any( _isInspectorColumn( c ) for c in pathListing.getColumns() ) :
 		return
 
 	pluralSuffix = "" if sum( [ x.size() for x in pathListing.getSelection() ] ) == 1 else "s"
@@ -446,7 +456,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 
 def __keyPress( column, pathListing, event ) :
 
-	if not any( isinstance( c, GafferSceneUI.Private.InspectorColumn ) for c in pathListing.getColumns() ) :
+	if not any( _isInspectorColumn( c ) for c in pathListing.getColumns() ) :
 		return
 
 	if event.key == "C" and event.modifiers == event.Modifiers.Control :
@@ -594,7 +604,7 @@ def __drop( column, path, pathListing, event ) :
 		return True
 
 	if __dropMode( column, path, inspection, event ) == __DropMode.NotEditable :
-		GafferUI.PopupWindow.showWarning( "Cannot modify set expressions containing operators with drag and drop.", parent = pathListing )
+		GafferUI.PopupWindow.showWarning( _("Cannot modify set expressions containing operators with drag and drop."), parent = pathListing )
 		return True
 
 	data = __dropData( column, path, inspection, event )
@@ -666,7 +676,7 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 			grid = GafferUI.GridContainer( spacing = 6 )
 			with grid.nextRow() :
 
-				GafferUI.Label( "<b>Source</b>", parenting = { "alignment" : (  GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
+				GafferUI.Label( _("<b>Source</b>"), parenting = { "alignment" : (  GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
 
 				if inspection.fallbackDescription() :
 					GafferUI.Label( inspection.fallbackDescription() )
@@ -681,7 +691,7 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 
 			with grid.nextRow() :
 
-				GafferUI.Label( "<b>Value</b>", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
+				GafferUI.Label( _("<b>Value</b>"), parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
 
 				value = inspection.value()
 				valueLabel = None
@@ -712,7 +722,7 @@ class __InspectionPopupWindow( GafferUI.PopupWindow ) :
 					valueLabel.dragBeginSignal().connect( Gaffer.WeakMethod( self.__valueDragBegin ) )
 					valueLabel.dragEndSignal().connect( Gaffer.WeakMethod( self.__valueDragEnd ) )
 
-				button = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Copy Value", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) } )
+				button = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = _("Copy Value"), parenting = { "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) } )
 				button.clickedSignal().connect( Gaffer.WeakMethod( self.__valueCopyClicked ) )
 
 	def __nameLabelDragEnd( self, widget, event ) :
@@ -829,7 +839,7 @@ def _dataFromPathListingOrReason( pathListing ) :
 
 		for columnIndex, column in enumerate( columns ) :
 
-			if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+			if _isInspectorColumn( column ) :
 				# Prefer the raw `Inspector.Result.value` over the potentially
 				# reformatted `column.cellData()`.
 				value = column.inspect( path )
@@ -983,11 +993,11 @@ def __orderedSelection( pathListing ) :
 
 def __inspectorColumnCreated( column ) :
 
-	if isinstance( column, ( GafferUI.StandardPathColumn, GafferSceneUI.Private.InspectorColumn ) ) :
+	if isinstance( column, GafferUI.StandardPathColumn ) or _isInspectorColumn( column ) :
 		column.contextMenuSignal().connectFront( __contextMenu )
 		column.keyPressSignal().connectFront( __keyPress )
 
-	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+	if _isInspectorColumn( column ) :
 		## \todo `buttonPressSignal` should provide the column for us.
 		column.buttonPressSignal().connectFront( functools.partial( __buttonPress, column ) )
 		column.buttonDoubleClickSignal().connectFront( __buttonDoubleClick )
@@ -1036,8 +1046,8 @@ def __selectInvisibleAncestorsPopup( pathListing, ancestors ) :
 	with GafferUI.PopupWindow() as pathListing.__inspectorColumnPopup :
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 			GafferUI.Image( "warningSmall.png" )
-			GafferUI.Label( "<h4>Location(s) have been unhidden, but are still not visible because they have invisible ancestors.</h4>" )
-			button = GafferUI.Button( image = "selectInvisibleAncestors.png", hasFrame = False, toolTip = "Select invisible ancestors" )
+			GafferUI.Label( "<h4>" + _("Location(s) have been unhidden, but are still not visible because they have invisible ancestors.") + "</h4>" )
+			button = GafferUI.Button( image = "selectInvisibleAncestors.png", hasFrame = False, toolTip = _("Select invisible ancestors") )
 			button.clickedSignal().connect( functools.partial( __selectAncestorsClicked, pathListing = pathListing, ancestors = ancestors ) )
 
 	pathListing.__inspectorColumnPopup.popup( parent = pathListing )
@@ -1068,7 +1078,7 @@ def __toggleVisibility( pathListing ) :
 			inspections.append( ( inspection, pathString ) )
 
 	if len( inspections ) == 0 :
-		GafferUI.PopupWindow.showWarning( "The selected cells cannot be edited in the current Edit Scope", parent = pathListing )
+		GafferUI.PopupWindow.showWarning( _("The selected cells cannot be edited in the current Edit Scope"), parent = pathListing )
 		return
 
 	editor = pathListing.ancestor( GafferUI.Editor )

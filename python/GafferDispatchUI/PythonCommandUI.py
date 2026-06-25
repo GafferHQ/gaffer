@@ -41,26 +41,27 @@ import GafferUI
 import GafferDispatch
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.PythonCommand,
 
 	"description",
-	"""
+	_("""
 	Runs python code.
-	""",
+	"""),
 
 	plugs = {
 
 		"command" : {
 
 			"description" :
-			"""
+			_("""
 			The command to run. This may reference any of the
 			variables by name, and also the node itself as `self`
 			and the current Context as `context`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferDispatchUI.PythonCommandUI._CommandPlugValueWidget",
 			"layout:label" : "",
@@ -70,10 +71,10 @@ Gaffer.Metadata.registerNode(
 		"variables" : {
 
 			"description" :
-			"""
+			_("""
 			An arbitrary set of variables which can be accessed via
 			the `variables` dictionary within the python command.
-			""",
+			"""),
 
 			"layout:section" : "Variables",
 
@@ -82,7 +83,7 @@ Gaffer.Metadata.registerNode(
 		"framesMode" : {
 
 			"description" :
-			"""
+			_("""
 			Determines how tasks for different frames are distributed
 			between calls to the command :
 
@@ -116,7 +117,7 @@ Gaffer.Metadata.registerNode(
 			> Note : In Single mode, the command will only be called for each
 			> frame if the inputs are animated. If the inputs are static
 			> then the command will only be called once.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",

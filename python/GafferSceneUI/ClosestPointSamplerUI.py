@@ -36,28 +36,29 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ClosestPointSampler,
 
 	"description",
-	"""
+	_("""
 	Samples primitive variables from the closest point on
 	the surface of a source primitive, and transfers the
 	values onto new primitive variable on the sampling objects.
-	""",
+	"""),
 
 	plugs = {
 
 		"position" : {
 
 			"description" :
-			"""
+			_("""
 			The primitive variable that provides the positions
 			to find the closest point to. This defaults to "P",
 			the vertex position of the sampling object.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Input",
 			# Put the Input section before the Output section

@@ -41,6 +41,7 @@ import IECoreScene
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 
@@ -186,7 +187,7 @@ class _HistoryWindow( GafferUI.Window ) :
 	def __init__( self, inspectorColumn, inspectionRootPath, inspectionPathString, title=None, **kw ) :
 
 		if title is None :
-			title = "History"
+			title = _("History")
 
 		GafferUI.Window.__init__( self, title, borderWidth = 4, **kw )
 

@@ -42,6 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
@@ -52,9 +53,9 @@ Gaffer.Metadata.registerNode(
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			Defines the scene used for the shader preview.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferSceneUI.ShaderViewUI._ScenePlugValueWidget",
 		},
 
@@ -74,7 +75,7 @@ class _ScenePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title = "Shader Preview Scene" )
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title = _("Shader Preview Scene") )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "scene.png", hasFrame=False )
 
 		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
@@ -102,7 +103,7 @@ class _ScenePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m.append( "/SettingsDivider", { "divider" : True } )
 
-		m.append( "/Settings...", { "command" : Gaffer.WeakMethod( self.__showSettings ) } )
+		m.append( "/" + _("Settings..."), { "command" : Gaffer.WeakMethod( self.__showSettings ) } )
 
 		return m
 
@@ -122,7 +123,7 @@ class _SettingsWindow( GafferUI.Window ) :
 
 	def __init__( self, shaderView ) :
 
-		GafferUI.Window.__init__( self, "ShaderView Settings" )
+		GafferUI.Window.__init__( self, _("ShaderView Settings") )
 
 		with self :
 			with GafferUI.ListContainer() :

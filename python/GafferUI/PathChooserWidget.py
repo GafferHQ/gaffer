@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class PathChooserWidget( GafferUI.Widget ) :
 
@@ -66,7 +67,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, borderWidth = 8 ) :
 
 					self.__displayModeButton = GafferUI.Button( image = "pathListingTree.png", hasFrame=False )
-					self.__displayModeButton.setToolTip( "Toggle between list and tree views" )
+					self.__displayModeButton.setToolTip( _("Toggle between list and tree views") )
 					self.__displayModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__displayModeButtonClicked ) )
 
 					self.__bookmarksButton = GafferUI.MenuButton(
@@ -74,17 +75,17 @@ class PathChooserWidget( GafferUI.Widget ) :
 						hasFrame=False,
 						menu = GafferUI.Menu( Gaffer.WeakMethod( self.__bookmarksMenuDefinition ) ),
 					)
-					self.__bookmarksButton.setToolTip( "Bookmarks" )
+					self.__bookmarksButton.setToolTip( _("Bookmarks") )
 					self.__bookmarksButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragEnter ) )
 					self.__bookmarksButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragLeave ) )
 					self.__bookmarksButton.dropSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDrop ) )
 
 					reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
-					reloadButton.setToolTip( "Refresh view" )
+					reloadButton.setToolTip( _("Refresh view") )
 					reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ) )
 
 					upButton = GafferUI.Button( image = "pathUpArrow.png", hasFrame=False )
-					upButton.setToolTip( "Up one level" )
+					upButton.setToolTip( _("Up one level") )
 					upButton.clickedSignal().connect( Gaffer.WeakMethod( self.__upButtonClicked ) )
 
 					GafferUI.Spacer( imath.V2i( 2, 2 ) )
@@ -367,9 +368,9 @@ class PathChooserWidget( GafferUI.Widget ) :
 		m.append( "/SaveDeleteDivider", { "divider" : True } )
 
 		for name in self.__bookmarks.names( persistent=True ) :
-			m.append( "/Delete/" + name, { "command" : functools.partial( self.__bookmarks.remove, name ) } )
+			m.append( "/" + _("Delete") + name, { "command" : functools.partial( self.__bookmarks.remove, name ) } )
 
-		m.append( "/Add Bookmark...", {
+		m.append( "/" + _("Add Bookmark..."), {
 			"command" : Gaffer.WeakMethod( self.__saveBookmark ),
 			"active" : self.__dirPath.isValid() and str( self.__dirPath ) not in unbookmarkableLocations,
 		} )
@@ -423,7 +424,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 			path = self.__dirPath
 
 		name = path[-1] if len( path ) else "Root"
-		d = GafferUI.TextInputDialogue( initialText=name, title="Save Bookmark", confirmLabel="Save" )
+		d = GafferUI.TextInputDialogue( initialText=name, title=_("Save Bookmark"), confirmLabel=_("Save") )
 		name = d.waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if name is not None :

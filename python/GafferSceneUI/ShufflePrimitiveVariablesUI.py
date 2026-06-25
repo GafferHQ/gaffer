@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ShufflePrimitiveVariables,
 
 	"description",
-	"""
+	_("""
 	ShufflePrimitiveVariables is used to copy or rename arbitrary numbers of primitive
 	variables at the filtered locations. The deleteSource plugs may be used to remove
 	the original source primitive variable(s) after the shuffling has been completed.
@@ -52,20 +53,20 @@ Gaffer.Metadata.registerNode(
 	An additional context variable `${source}` can be used on the destination plugs
 	to insert the name of each source primitive variable. For example, to append `ref`
 	to all primitive variables set the source to `*` and the destination to `${source}ref`.
-	""",
+	"""),
 
 	plugs = {
 
 		"shuffles" : {
 
 			"description" :
-			"""
+			_("""
 			The primitive variables to be shuffled - arbitrary numbers of primitive variables
 			may be shuffled via the source/destination plugs. The deleteSource plug may be
 			used to remove the original primitive variable(s). The replaceDestination plug may
 			be used to specify whether each shuffle should replace already written destination
 			data with the same name.
-			""",
+			"""),
 
 			"divider" : True,
 

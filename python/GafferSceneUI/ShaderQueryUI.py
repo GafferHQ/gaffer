@@ -44,6 +44,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Internal utilities
@@ -159,30 +160,30 @@ Gaffer.Metadata.registerNode(
 	GafferScene.ShaderQuery,
 
 	"description",
-	"""
+	_("""
 	Queries shader parameters from a scene location, creating outputs
 	for each parameter.
-	""",
+	"""),
 
 	plugs = {
 
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query the shader for.
-			""",
+			"""),
 
 		},
 
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene to query the shader at.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -193,11 +194,11 @@ Gaffer.Metadata.registerNode(
 		"shader" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the shader to query.
 			> Note : If the shader does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"presetsPlugValueWidget:allowCustom" : True,
@@ -210,10 +211,10 @@ Gaffer.Metadata.registerNode(
 		"inherit" : {
 
 			"description" :
-			"""
+			_("""
 			Queries inherited shader assignments if the location has no local
 			assignment of its own.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -222,7 +223,7 @@ Gaffer.Metadata.registerNode(
 		"queries" : {
 
 			"description" :
-			"""
+			_("""
 			The shader parameters to be queried - arbitrary numbers of shader
 			parameters may be added as children of this plug via the user interface,
 			or via python. Each child is a `NameValuePlug` whose `name` plug is
@@ -236,7 +237,7 @@ Gaffer.Metadata.registerNode(
 			> Note : If either the shader or parameter does not exist then the
 			> query will not be performed and all outputs will be set to their
 			> default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -250,37 +251,37 @@ Gaffer.Metadata.registerNode(
 		"queries.*" : {
 
 			"description" :
-			"""
+			_("""
 			A pair of parameter name to query and default value.
-			""",
+			"""),
 
 		},
 
 		"queries.*.name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the parameter to query.
-			""",
+			"""),
 
 		},
 
 		"queries.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			The value to output if the parameter does not exist.
-			""",
+			"""),
 
 		},
 
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -296,9 +297,9 @@ Gaffer.Metadata.registerNode(
 		"out.*" : {
 
 			"description" :
-			"""
+			_("""
 			The result of the query.
-			""",
+			"""),
 
 			"label" : functools.partial( __getLabel, parentPlug = ""),
 
@@ -312,10 +313,10 @@ Gaffer.Metadata.registerNode(
 		"out.*.exists" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs true if the shader, location and parameter exist, otherwise
 			false.
-			""",
+			"""),
 
 			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
@@ -326,10 +327,10 @@ Gaffer.Metadata.registerNode(
 		"out.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the value of the specified parameter, or the default value
 			if the parameter does not exist.
-			""",
+			"""),
 
 			"noduleLayout:section" : "right",
 			"noduleLayout:spacing" : 0.2,
@@ -624,7 +625,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
+		menuDefinition.append( "/" + _("Delete"), { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 def __deletePlug( plug ) :
 

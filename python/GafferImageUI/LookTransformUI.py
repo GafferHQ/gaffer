@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.LookTransform,
 
 	"description",
-	"""
+	_("""
 	Applies OpenColorIO "looks" to an image.
 
 	A 'look' is a named color transform, intended to modify the look of an
@@ -59,14 +60,14 @@ Gaffer.Metadata.registerNode(
 	See the look plug for further syntax details.
 
 	See opencolorio.org for look configuration customization examples.
-	""",
+	"""),
 
 	plugs = {
 
 		"look" : {
 
 			"description" :
-			"""
+			_("""
 			Look Syntax:
 
 			Multiple looks are combined with commas: 'neutral, primary'
@@ -74,7 +75,7 @@ Gaffer.Metadata.registerNode(
 			Direction is specified with +/- prefixes: '+neutral, -primary'
 
 			Missing look 'fallbacks' specified with |: 'neutral, -primary | -primary'
-			""",
+			"""),
 
 			"layout:index" : 0,
 
@@ -82,7 +83,7 @@ Gaffer.Metadata.registerNode(
 
 		"direction" : {
 
-			"description" : "Specify the look transform direction",
+			"description" : _("Specify the look transform direction"),
 
 			"preset:Forward" : GafferImage.OpenColorIOTransform.Direction.Forward,
 			"preset:Inverse" : GafferImage.OpenColorIOTransform.Direction.Inverse,
