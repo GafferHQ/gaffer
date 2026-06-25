@@ -54,7 +54,6 @@
 #include "IECore/FileSequenceFunctions.h"
 #include "IECore/MessageHandler.h"
 
-#include "OpenImageIO/imagecache.h"
 #include "OpenImageIO/deepdata.h"
 
 #include <boost/algorithm/string.hpp>
