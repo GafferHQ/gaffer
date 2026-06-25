@@ -187,51 +187,7 @@ list framed( BackdropNodeGadget &b )
 	return result;
 }
 
-// This is the `__call__` operator for the metaclass we use for NodeGadgets.
-// It is responsible for creating and initialising NodeGadget instances in
-// Python, which allows us to emit `instanceCreatedSignal()` only when the Python
-// `__init__` call has completed fully.
-PyObject *nodeGadgetMetaclassCall( PyObject *self, PyObject *args, PyObject *kw )
-{
-	// Delegate the actual work to the default `type.__call__` method.
-	// This will call `__new__` and `__init__` and return a new NodeGadget
-	// instance.
-	PyObject *result = PyType_Type.tp_call( self, args, kw );
-	if( result )
-	{
-		// Emit the `instanceCreatedSignal()`, now that the Python instance
-		// has fully constructed.
-		auto n = boost::python::extract<GafferUI::NodeGadget *>( result )();
-		GafferUI::NodeGadget::instanceCreatedSignal()( n );
-	}
-	return result;
-}
-
 } // namespace
-
-/// \todo We're doing something similar for the DependencyNode binding. Consider
-/// consolidating everything into the binding for RefCounted, perhaps by calling
-/// a new `RefCounted::postConstructor()` virtual method.
-PyTypeObject *GafferUIBindings::Detail::nodeGadgetMetaclass()
-{
-	static PyTypeObject g_nodeGadgetMetaclass;
-	if( !g_nodeGadgetMetaclass.tp_name )
-	{
-		// Initialise. We derive from the standard Boost Python metaclass
-		// because it has functionality critical to making the Boost bindings
-		// work. The only thing we're doing is adding `nodeGadgetMetaclassCall`
-		// as the implementation of the `__call__` method.
-		Py_SET_TYPE( &g_nodeGadgetMetaclass, &PyType_Type );
-		g_nodeGadgetMetaclass.tp_name = "GafferUI.NodeGadgetMetaclass";
-		g_nodeGadgetMetaclass.tp_basicsize = PyType_Type.tp_basicsize,
-		g_nodeGadgetMetaclass.tp_base = boost::python::objects::class_metatype().get();
-		g_nodeGadgetMetaclass.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;
-		g_nodeGadgetMetaclass.tp_call = nodeGadgetMetaclassCall;
-		PyType_Ready( &g_nodeGadgetMetaclass );
-	}
-
-	return &g_nodeGadgetMetaclass;
-}
 
 void GafferUIModule::bindNodeGadget()
 {

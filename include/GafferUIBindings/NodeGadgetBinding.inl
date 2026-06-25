@@ -54,7 +54,7 @@ Imath::V3f connectionTangent( T &p, const GafferUI::ConnectionCreator *creator )
 	return p.T::connectionTangent( creator );
 }
 
-PyTypeObject *nodeGadgetMetaclass();
+GAFFERUIBINDINGS_API PyTypeObject *nodeGadgetMetaclass();
 
 } // namespace Detail
 
