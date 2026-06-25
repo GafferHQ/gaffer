@@ -1033,9 +1033,9 @@ class RendererTest( GafferTest.TestCase ) :
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
-			sphere = renderer.object(
+			sphere = renderer.light(
 				"sphere",
-				IECoreScene.SpherePrimitive(),
+				IECoreScene.MeshPrimitive.createSphere( 1 ),
 				renderer.attributes( IECore.CompoundObject( {
 					"light" : IECoreScene.ShaderNetwork(
 						shaders = {
@@ -1051,10 +1051,15 @@ class RendererTest( GafferTest.TestCase ) :
 
 			del renderer
 
-		attributes = next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"]
-		self.__assertParameterEqual( attributes, "visibility:camera", [ 1 ] )
+		attributes = next( x for x in capture.json if x["method"] == "CreateLightInstance" )["attributes"]["params"]
+		self.__assertParameterEqual( attributes, "visibility:camera", [ 0 ] )
 		self.__assertParameterEqual( attributes, "visibility:indirect", [ 0 ] )
 		self.__assertParameterEqual( attributes, "visibility:transmission", [ 0 ] )
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"]
+		self.assertNotIn( "visibility:camera", attributes )
+		self.assertNotIn( "visibility:indirect", attributes )
+		self.assertNotIn( "visibility:transmission", attributes )
 
 		with IECoreRenderManTest.RileyCapture() as capture :
 
@@ -1063,9 +1068,9 @@ class RendererTest( GafferTest.TestCase ) :
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 
-			sphere = renderer.object(
+			sphere = renderer.light(
 				"sphere",
-				IECoreScene.SpherePrimitive(),
+				IECoreScene.MeshPrimitive.createSphere( 1 ),
 				renderer.attributes( IECore.CompoundObject( {
 					"light" : IECoreScene.ShaderNetwork(
 						shaders = {
@@ -1083,6 +1088,11 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 
 			del renderer
+
+		attributes = next( x for x in capture.json if x["method"] == "CreateLightInstance" )["attributes"]["params"]
+		self.__assertParameterEqual( attributes, "visibility:camera", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:indirect", [ 0 ] )
+		self.__assertParameterEqual( attributes, "visibility:transmission", [ 0 ] )
 
 		attributes = next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"]
 		self.__assertParameterEqual( attributes, "visibility:camera", [ 0 ] )

@@ -86,6 +86,6 @@ IECORERENDERMAN_API void resolveVStructs( IECoreScene::ShaderNetwork *shaderNetw
 
 /// Modifies, in place, the given USDMeshLight to conform to the USD specification.
 /// `surfaceNetwork` may be `nullptr` if no such shader is present.
-IECORERENDERMAN_API void convertUSDMeshLightShaders( IECoreScene::ShaderNetwork *lightNetwork, const IECoreScene::ShaderNetwork *surfaceNetwork );
+IECORERENDERMAN_API IECore::ConstCompoundObjectPtr convertUSDMeshLightAttributes( const IECore::CompoundObject *attributes );
 
 } // namespace IECoreRenderMan::ShaderNetworkAlgo

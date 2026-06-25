@@ -64,6 +64,8 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		/// Attributes to be applied to GeometryInstances.
 		const RtParamList &instanceAttributes() const;
 		const IECore::MurmurHash &instanceAttributesHash() const;
+		/// Attributes to be applied to light GeometryInstances.
+		const RtParamList &lightInstanceAttributes() const;
 
 		const Material *material() const;
 		const Displacement *displacement() const { return m_displacement.get(); }
@@ -76,17 +78,21 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 
 		const IECoreScene::ShaderNetwork *lightFilter() const;
 
+		const bool isUSDMeshLight() const;
+
 	private :
 
 		std::optional<IECore::MurmurHash> m_prototypeHash;
 		RtParamList m_prototypeAttributes;
 		RtParamList m_instanceAttributes;
 		IECore::MurmurHash m_instanceAttributesHash;
+		std::optional<RtParamList> m_lightInstanceAttributes;
 		ConstMaterialPtr m_material;
 		ConstDisplacementPtr m_displacement;
 		IECoreScene::ConstShaderNetworkPtr m_lightShader;
 		ConstMaterialPtr m_lightMaterial;
 		IECoreScene::ConstShaderNetworkPtr m_lightFilter;
+		bool m_isUSDMeshLight;
 
 };
 
