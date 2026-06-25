@@ -46,6 +46,11 @@ Build
 
 - Cortex : Updated to version 10.7.0.0a12.
 
+Breaking Changes
+----------------
+
+- PxrMeshLight is now invisible to camera, indirect and transmission rays.
+
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a3 (relative to 1.7.0.0a2)
