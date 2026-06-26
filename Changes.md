@@ -7,6 +7,7 @@ Fixes
 - NodeEditor : Fixed redundant updates when editing private plugs, such as when repositioning the currently viewed node in the Graph Editor.
 - RenderPassEditor : Fixed errors displaying presets while editing the `type` column [^1].
 - RenderMan : Fixed potential hang when updating the Visible Set immediately after starting an interactive render with `useVisibleSet` enabled [^1].
+- NodeGadgetBinding : Fixed linking errors when using NodeGadgetClass. Clients should link to the new `GafferUIBindings` shared library [^1].
 
 Breaking Changes
 ----------------

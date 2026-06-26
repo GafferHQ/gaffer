@@ -37,6 +37,7 @@
 
 #pragma once
 
+#include "GafferUIBindings/Export.h"
 #include "GafferUIBindings/GadgetBinding.h"
 
 #include "GafferUI/NodeGadget.h"
