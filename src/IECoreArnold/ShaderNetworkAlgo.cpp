@@ -1320,7 +1320,7 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 
 	InternedString tintHandle;
 	const ShaderNetwork::Parameter meshLightColorParameter = { lightOutputParameter.shader, g_colorParameter };
-	ShaderNetwork::Parameter meshLightColorInput = newLightShaderNetwork->input( meshLightColorParameter );
+	const ShaderNetwork::Parameter meshLightColorInput = newLightShaderNetwork->input( meshLightColorParameter );
 	if( emissionColorInput && lightColor != Color3f( 0.f ) )
 	{
 		ShaderNetworkPtr glowNetwork = surfaceNetwork->copy();

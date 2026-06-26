@@ -61,6 +61,10 @@ void updateLightGeometry( const IECoreScene::ShaderNetwork *shaderNetwork, NSICo
 /// tests.
 IECOREDELIGHT_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
 
+/// Modifies, in place, the given attributes to conform to the USD specification.
+IECOREDELIGHT_API IECore::ConstCompoundObjectPtr convertUSDMeshLightAttributes( const IECore::CompoundObject *attributes );
+
+
 }  // namespace ShaderNetworkAlgo
 
 }  // namespace IECoreDelight

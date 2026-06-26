@@ -555,5 +555,27 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 		self.assertEqual( texture.parameters["file"].value, "test.UDIM.png" )
 		self.assertEqual( texture.parameters["file_meta_colorspace"].value, "sRGB" )
 
+	def testUSDMeshLight( self ) :
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = { "light" : IECoreScene.Shader( "MeshLight", "light" ) },
+					output = "light"
+				)
+			}
+		)
+
+		modifiedAttributes = IECoreDelight.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+		lightNetwork = modifiedAttributes["light"]
+
+		self.assertEqual( len( lightNetwork.shaders() ), 1 )
+		shader = lightNetwork.getShader( "light" )
+		self.assertIsNotNone( shader )
+		self.assertEqual( shader.name, "areaLight" )
+		self.assertEqual( shader.type, "osl:light" )
+		self.assertFalse( lightNetwork.input( ( "light", "i_color" ) ) )
+
+
 if __name__ == "__main__":
 	unittest.main()
