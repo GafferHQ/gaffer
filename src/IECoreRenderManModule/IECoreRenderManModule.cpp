@@ -72,10 +72,10 @@ ShaderNetworkAlgo::VStructAction evaluateVStructConditionalWrapper( const std::s
 	);
 }
 
-IECore::CompoundObjectPtr convertUSDMeshLightAttributesWrapper( const IECore::CompoundObject &globals, bool copy )
+IECore::CompoundObjectPtr convertUSDMeshLightAttributesWrapper( const IECore::CompoundObject &attributes, bool copy )
 {
 	IECorePython::ScopedGILRelease r;
-	IECore::ConstCompoundObjectPtr result = ShaderNetworkAlgo::convertUSDMeshLightAttributes( &globals );
+	IECore::ConstCompoundObjectPtr result = ShaderNetworkAlgo::convertUSDMeshLightAttributes( &attributes );
 	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundObject>( result );
 }
 
