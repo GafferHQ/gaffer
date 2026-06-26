@@ -238,6 +238,7 @@ struct Globals::InteractiveRenderThread
 					m_state = m_requestedState.value();
 					m_requestedState.reset();
 				}
+				m_stateCondition.notify_one();
 
 				if( m_state == State::Stopped )
 				{
