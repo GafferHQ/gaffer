@@ -1359,10 +1359,7 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 			ShaderPtr tintShader = new Shader( "multiply", "ai:surface", { { "input1", new Color3fData( surfaceColor ) } } );
 			tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
 
-			if( meshLightColorInput )
-			{
-				newLightShaderNetwork->removeConnection( { meshLightColorInput, meshLightColorParameter } );
-			}
+			newLightShaderNetwork->removeConnection( { meshLightColorInput, meshLightColorParameter } );
 			newLightShaderNetwork->addConnection( { { tintHandle, "out" }, meshLightColorParameter } );
 		}
 
