@@ -752,6 +752,141 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					self.assertFalse( shaderNetwork.input( ( "layerMixer", "baselayer_diffuseGain" ) ) )
 					self.assertEqual( shaderNetwork.getShader( "layerMixer" ).parameters["baselayer_enableDiffuse"].value, False )
 
+	def testUSDMeshLight( self ) :
+
+		attributes = IECore.CompoundObject(
+			{
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"light" : IECoreScene.Shader( "MeshLight", "light" )
+					},
+					output = "light"
+				)
+			}
+		)
+
+		modifiedAttributes = IECoreRenderMan.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+		lightNetwork = modifiedAttributes["light"]
+
+		self.assertEqual( len( lightNetwork.shaders() ), 1 )
+		shader = lightNetwork.getShader( "light" )
+		self.assertIsNotNone( shader )
+		self.assertEqual( shader.name, "PxrMeshLight" )
+		self.assertEqual( shader.type, "ri:light" )
+		self.assertNotIn( "textureColor", shader.parameters )
+		self.assertFalse( lightNetwork.input( ( "light", "textureColor" ) ) )
+
+		for shaderName, emissionColorParameter in [
+			( "PxrSurface", "glowColor" ),
+			( "PxrLayerSurface", "glowColor" ),
+			( "PxrMarschnerHair", "glowColor" ),
+			( "LamaEmission", "emissionColor" ),
+			( "PxrConstant", "emitColor" ),
+			( "PxrDisney", "emitColor" ),
+			( "UsdPreviewSurface", "emissiveColor" ),
+		] :
+			with self.subTest( shaderName = shaderName ) :
+				attributes = IECore.CompoundObject(
+					{
+						"light" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"light" : IECoreScene.Shader(
+									"MeshLight", "light",
+									{ "color" : imath.Color3f( 0, 1, 0 ), "intensity" : 2.0, "exposure" : 3.0 }
+								)
+							},
+							output = "light"
+						),
+						"surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"surface" : IECoreScene.Shader(
+									shaderName, "ri:surface",
+									{ emissionColorParameter : imath.Color3f( 1, 0, 0 ) }
+								),
+							},
+							output = "surface"
+						)
+					}
+				)
+
+				originalSurfaceNetwork = attributes["surface"].copy()
+				modifiedAttributes = IECoreRenderMan.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+				lightNetwork = modifiedAttributes["light"]
+				surfaceNetwork = modifiedAttributes["surface"]
+
+				self.assertEqual( surfaceNetwork, originalSurfaceNetwork )
+
+				self.assertEqual( len( lightNetwork.shaders() ), 1 )
+				shader = lightNetwork.getShader( "light" )
+				self.assertIsNotNone( shader )
+				self.assertEqual( shader.name, "PxrMeshLight" )
+				self.assertEqual( shader.type, "ri:light" )
+				self.assertEqual( shader.parameters["lightColor"].value, imath.Color3f( 0, 1, 0 ) )
+				self.assertEqual( shader.parameters["textureColor"].value, imath.Color3f( 1, 0, 0 ) )
+				self.assertEqual( shader.parameters["intensity"].value, 2.0 )
+				self.assertEqual( shader.parameters["exposure"].value, 3.0 )
+				self.assertFalse( lightNetwork.input( ( "light", "textureColor" ) ) )
+
+				attributes = IECore.CompoundObject(
+					{
+						"light" : IECoreScene.ShaderNetwork(
+							shaders = { "light" : IECoreScene.Shader( "MeshLight", "light" ) },
+							output = "light"
+						),
+						"surface": IECoreScene.ShaderNetwork(
+							shaders = {
+								"surface" : IECoreScene.Shader(
+									shaderName, "ri:surface",
+									{ emissionColorParameter : imath.Color3f( 0, 0, 1 ) }
+								),
+								"correct" : IECoreScene.Shader(
+									"PxrColorCorrect", "ri:shader",
+									{ "rgbGain" : 2 }
+								),
+								"texture" : IECoreScene.Shader(
+									"PxrTexture", "ri:shader",
+									{ "filename" : "testFile.tex" }
+								),
+							},
+							connections = [
+								( ( "texture", "resultRGB" ), ( "correct", "inputRGB" ) ),
+								( ( "correct", "resultRGB" ), ( "surface", emissionColorParameter ) ),
+							],
+							output = "surface"
+						)
+					}
+				)
+
+				if shaderName == "LamaEmission" :
+					attributes["surface"].addShader( "lamaSurface", IECoreScene.Shader( "LamaSurface", "ri:surface" ) )
+					attributes["surface"].setOutput( "lamaSurface" )
+					attributes["surface"].addConnection( ( ( "surface", "bxdf_out"), ( "lamaSurface", "materialFront" ) ) )
+
+				originalSurfaceNetwork = attributes["surface"].copy()
+				modifiedAttributes = IECoreRenderMan.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+				lightNetwork = modifiedAttributes["light"]
+				surfaceNetwork = modifiedAttributes["surface"]
+
+				self.assertEqual( surfaceNetwork, originalSurfaceNetwork )
+
+				self.assertEqual( len( lightNetwork.shaders() ), 3 )
+
+				shader = lightNetwork.getShader( "correct" )
+				self.assertIsNotNone( shader )
+				self.assertEqual( shader.parameters["rgbGain"].value, 2 )
+
+				shader = lightNetwork.getShader( "texture" )
+				self.assertIsNotNone( shader )
+				self.assertEqual( shader.parameters["filename"].value, "testFile.tex" )
+
+				shader = lightNetwork.getShader( "light" )
+				self.assertIsNotNone( shader )
+				self.assertEqual( shader.name, "PxrMeshLight" )
+				self.assertEqual( shader.type, "ri:light" )
+				self.assertEqual( shader.parameters["textureColor"].value, imath.Color3f( 0, 0, 1 ) )
+				self.assertEqual( lightNetwork.input( ( "light", "textureColor" ) ), ( "correct", "resultRGB" ) )
+				self.assertEqual( lightNetwork.input( ( "correct", "inputRGB" ) ), ( "texture", "resultRGB" ) )
+
 	def __assertShadersEqual( self, shader1, shader2, message = None ) :
 
 		self.assertEqual( shader1.name, shader2.name, message )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,26 +34,50 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "GafferUSD/USDAttributes.h"
-#include "GafferUSD/USDLayerWriter.h"
-#include "GafferUSD/USDLight.h"
-#include "GafferUSD/USDMeshLight.h"
-#include "GafferUSD/USDShader.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "Attributes.h"
+#include "GeometryPrototypeCache.h"
+#include "Light.h"
+#include "LightLinker.h"
+#include "MaterialCache.h"
+#include "Session.h"
 
-using namespace boost::python;
-using namespace GafferUSD;
+#include "Riley.h"
 
-BOOST_PYTHON_MODULE( _GafferUSD )
+namespace IECoreRenderMan
 {
 
-	GafferBindings::DependencyNodeClass<USDAttributes>();
-	GafferBindings::DependencyNodeClass<USDShader>();
-	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
-	GafferBindings::DependencyNodeClass<USDLight>();
-	GafferBindings::DependencyNodeClass<USDMeshLight>();
+class USDMeshLight : public IECoreScenePreview::Renderer::ObjectInterface
+{
 
-}
+	public :
+
+		USDMeshLight( const std::string &name, const ConstGeometryPrototypePtr &lightGeometryPrototype, const ConstGeometryPrototypePtr &surfaceGeometryPrototype, const Attributes *attributes, MaterialCache *materialCache, LightLinker *lightLinker, Session *session );
+		~USDMeshLight() override;
+
+		// ObjectInterface overrides
+		// =========================
+
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override;
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
+		void assignID( uint32_t id ) override;
+		void assignInstanceID( uint32_t id ) override;
+
+		// Interface used by LightLinker
+		// =============================
+
+		void updateLightFilterShader( const IECoreScene::ConstShaderNetworkPtr &lightFilterShader );
+		void updateLinking( RtUString memberships, RtUString shadowSubset );
+
+	private :
+
+		IECoreScenePreview::Renderer::ObjectInterfacePtr m_light;
+		IECoreScenePreview::Renderer::ObjectInterfacePtr m_surface;
+
+};
+
+} // namespace IECoreRenderMan

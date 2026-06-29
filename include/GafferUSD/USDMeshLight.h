@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,26 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "GafferUSD/USDAttributes.h"
-#include "GafferUSD/USDLayerWriter.h"
-#include "GafferUSD/USDLight.h"
-#include "GafferUSD/USDMeshLight.h"
-#include "GafferUSD/USDShader.h"
+#include "GafferUSD/Export.h"
+#include "GafferUSD/TypeIds.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "GafferScene/MeshLight.h"
 
-using namespace boost::python;
-using namespace GafferUSD;
-
-BOOST_PYTHON_MODULE( _GafferUSD )
+namespace GafferUSD
 {
 
-	GafferBindings::DependencyNodeClass<USDAttributes>();
-	GafferBindings::DependencyNodeClass<USDShader>();
-	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
-	GafferBindings::DependencyNodeClass<USDLight>();
-	GafferBindings::DependencyNodeClass<USDMeshLight>();
+class GAFFERUSD_API USDMeshLight : public GafferScene::MeshLight
+{
 
-}
+	public :
+
+		explicit USDMeshLight( const std::string &name=defaultName<USDMeshLight>() );
+		~USDMeshLight() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferUSD::USDMeshLight, USDMeshLightTypeId, GafferScene::MeshLight );
+
+};
+
+IE_CORE_DECLAREPTR( USDMeshLight )
+
+} // namespace GafferUSD

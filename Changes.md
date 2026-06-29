@@ -46,6 +46,11 @@ Build
 
 - Cortex : Updated to version 10.7.0.0a12.
 
+Breaking Changes
+----------------
+
+- PxrMeshLight is now invisible to camera, indirect and transmission rays.
+
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a3 (relative to 1.7.0.0a2)
@@ -60,6 +65,15 @@ Features
 - DeleteFiles : Added node for deleting files.
 - CopyFiles : Added node for copying files.
 - RenameFiles : Added node for renaming files.
+- USD MeshLight :
+  - Added node to add necessary attributes to geometry to convert to a USD MeshLight.
+  - Added Arnold rendering.
+  - Added RenderMan rendering.
+
+Improvements
+------------
+
+- MeshLight : Added viewport visualisation of textures.
 
 Fixes
 -----

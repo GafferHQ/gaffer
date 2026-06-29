@@ -82,7 +82,7 @@ M44f correctiveTransform( const IECoreScene::Shader *lightShader )
 		// and this correction ensures the sun is in the right place.
 		return M44f().rotate( V3f( -M_PI_2, 0.f, 0.f ) );
 	}
-	else if( lightShader->getName() == "PxrMeshLight" )
+	else if( lightShader->getName() == "PxrMeshLight" || lightShader->getName() == "MeshLight" )
 	{
 		return M44f();
 	}
@@ -122,7 +122,7 @@ Light::Light( const ConstGeometryPrototypePtr &geometryPrototype, const Attribut
 
 {
 	m_allAttributes.SetString( Loader::strings().k_grouping_membership, g_defaultLightGroup );
-	m_allAttributes.Update( attributes->instanceAttributes() );
+	m_allAttributes.Update( attributes->lightInstanceAttributes() );
 
 	m_lightShader = acquireLightShader( attributes );
 	if( !m_lightShader || m_lightShader->id() == riley::LightShaderId::InvalidId() )
@@ -218,7 +218,7 @@ bool Light::attributes( const IECoreScenePreview::Renderer::AttributesInterface 
 		return true;
 	}
 
-	m_allAttributes.Update( renderManAttributes->instanceAttributes() );
+	m_allAttributes.Update( renderManAttributes->lightInstanceAttributes() );
 
 	const Material *material = renderManAttributes->lightMaterial();
 	const riley::LightInstanceResult result = m_session->modifyLightInstance(

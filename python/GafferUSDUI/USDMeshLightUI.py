@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,15 +34,51 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .USDAttributesTest import USDAttributesTest
-from .USDLayerWriterTest import USDLayerWriterTest
-from .USDShaderTest import USDShaderTest
-from .USDLightTest import USDLightTest
-from .USDMeshLightTest import USDMeshLightTest
-from ._PointInstancerAdaptorTest import _PointInstancerAdaptorTest
-from .PromotePointInstancesTest import PromotePointInstancesTest
+import Gaffer
+import GafferUSD
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+Gaffer.Metadata.registerNode(
+
+	GafferUSD.USDMeshLight,
+
+	"description",
+	"""
+	Turns mesh primitives into USD mesh lights by assigning a MeshLight
+	shader and adding the meshes to the default lights set.
+	""",
+
+	plugs = {
+
+		"parameters" : {
+
+			"layout:section:Basic:collapsed" : False,
+
+			"layout:customWidget:rendererFilter:widgetType" : "GafferUSDUI.USDLightUI._RendererFilter",
+			"layout:customWidget:rendererFilter:index" : 0,
+
+			"layout:customWidget:standardFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:standardFilter:index" : 1,
+			"layout:customWidget:standardFilter:accessory" : True,
+
+		},
+
+		"parameters.*" : {
+
+			# USD light parameters don't accept connections. `MeshLightUI` forwards
+			# metadata requests to the internal shader, which means `USDShaderUI`
+			# is supplying metadata for `USDMeshLight`. The USD schemas used there
+			# don't supply connectability metadata, so we force nodules to be removed
+			# here. ( For `USDLight`, this is handled in `LightUI` ).
+			"nodule:type" : "",
+
+		},
+
+		"parameters.arnold:*" : {
+
+			"description" : "Refer to Arnold's documentation for further details.",
+
+		},
+
+	}
+
+)
