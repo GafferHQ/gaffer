@@ -54,10 +54,19 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( ShadingEngine )
 
-		explicit ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork );
+		enum class TextureOrigin
+		{
+			// 0 at the bottom, 1 at the top. Gaffer's standard coordinate system.
+			Bottom,
+			// 0 at the top, 1 at the bottom. For emulating renderers with upside
+			// down textures.
+			Top
+		};
+
+		explicit ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork, TextureOrigin textureOrigin = TextureOrigin::Bottom );
 
 		// Fast version that takes ownership of network instead of copying
-		ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork );
+		ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork, TextureOrigin textureOrigin = TextureOrigin::Bottom );
 
 		~ShadingEngine() override;
 
@@ -98,6 +107,7 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		void queryShaderGroup();
 
+		const TextureOrigin m_textureOrigin;
 		const IECore::MurmurHash m_hash;
 
 		bool m_timeNeeded;

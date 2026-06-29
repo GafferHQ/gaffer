@@ -82,13 +82,9 @@ namespace
 {
 
 // When OSL uses a TypeDesc to say it is holding an `OIIO::TypeString`,
-// that is not actually true. Instead, it will either be referring to
-// a `ustringhash` or a `ustring`, depending on library version.
-#if OSL_LIBRARY_VERSION_CODE >= 11400
+// that is not actually true. Instead, it will be referring to
+// a `ustringhash`.
 using OSLStringType = ustringhash;
-#else
-using OSLStringType = ustring;
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 // RenderState. OSL would think of this as representing the object

@@ -9,10 +9,17 @@ Fixes
 - RenderMan : Fixed potential hang when updating the Visible Set immediately after starting an interactive render with `useVisibleSet` enabled [^1].
 - NodeGadgetBinding : Fixed linking errors when using NodeGadgetClass. Clients should link to the new `GafferUIBindings` shared library [^1].
 
+API
+---
+
+- ShadingEngine : Added `TextureOrigin` enum, to allow emulation of renderers whose texture origin is at the top left rather than bottom left.
+
 Breaking Changes
 ----------------
 
 - RenderPassTypeAdaptorUI : Removed `renderPassTypePresetNames()` and `renderPassTypePresetValues()`.
+- OpenImageIO : Removed source compatibility for versions prior to 3.
+- OpenShadingLanguage : Removed source compatibility for versions prior to 1.14.
 
 [^1]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 
