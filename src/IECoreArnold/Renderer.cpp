@@ -1245,6 +1245,20 @@ IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
 IECore::InternedString g_filteredLights( "filteredLights" );
 
+IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
+
+	IECoreScene::ShaderNetworkPtr result = new IECoreScene::ShaderNetwork;
+
+	const IECore::InternedString utilityHandle = result->addShader(
+		"utility", new IECoreScene::Shader( "utility" )
+	);
+
+	result->setOutput( { "utility", "out" } );
+
+	return result;
+
+} ();
+
 const std::vector<IECore::InternedString> g_surfaceShaderAttributeNames = {
 	"ai:surface",
 	"osl:surface",
@@ -1313,6 +1327,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			updateShadingFlag( g_arnoldMatteAttributeName, Matte, attributes );
 
 			m_surfaceShader = shaderCache->get( g_surfaceShaderAttributeNames, attributes );
+			if( !m_surfaceShader )
+			{
+				m_surfaceShader = shaderCache->get( g_facingRatio.get(), "", nullptr );
+			}
+
 			m_volumeShader = shaderCache->get( g_volumeShaderAttributeNames, attributes );
 			m_filterMap = shaderCache->get( g_filterMapAttributeNames, attributes );
 			m_uvRemap = shaderCache->get( g_uvRemapAttributeNames, attributes );
@@ -1623,15 +1642,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 
 				AiNodeSetBool( node, g_matteArnoldString, m_shadingFlags & ArnoldAttributes::Matte );
-
-				if( AtNode *shader = preferredShader( geometry ) )
-				{
-					AiNodeSetPtr( node, g_shaderArnoldString, shader );
-				}
-				else
-				{
-					AiNodeResetParameter( node, g_shaderArnoldString );
-				}
+				AiNodeSetPtr( node, g_shaderArnoldString, preferredShader( geometry ) );
 
 				if( m_traceSets && m_traceSets->readable().size() )
 				{
