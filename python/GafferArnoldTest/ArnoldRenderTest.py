@@ -62,6 +62,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "Arnold"
 	sceneDescriptionSuffix = ".ass"
+	pointInstancerSupported = True
 
 	def setUp( self ) :
 
@@ -1626,6 +1627,12 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			with GafferTest.TestRunner.PerformanceScope() :
 				s["render"]["task"].execute()
 
+	def _createConstantShader( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "flat" )
+		return shader, shader["parameters"]["color"], shader["out"]
+
 	def _createDiffuseShader( self ) :
 
 		shader = GafferArnold.ArnoldShader()
@@ -1657,6 +1664,11 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		options["options"]["ai:GI_total_depth"]["enabled"].setValue( True )
 		options["options"]["ai:GI_total_depth"]["value"].setValue( 0 )
+
+		# Improve sampling for motion blur tests.
+
+		options["options"]["ai:AA_samples"]["enabled"].setValue( True )
+		options["options"]["ai:AA_samples"]["value"].setValue( 3 )
 
 		return options
 

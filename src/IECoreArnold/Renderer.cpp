@@ -312,6 +312,10 @@ const AtString g_funcPtrArnoldString( "funcptr" );
 const AtString g_ginstanceArnoldString( "ginstance" );
 const AtString g_ignoreMotionBlurArnoldString( "ignore_motion_blur" );
 const AtString g_inputArnoldString( "input" );
+const AtString g_instanceMatrixArnoldString( "instance_matrix" );
+const AtString g_instanceShaderArnoldString( "instance_shader" );
+const AtString g_instanceVisibilityArnoldString( "instance_visibility" );
+const AtString g_instancerArnoldString( "instancer" );
 const AtString g_lightGroupArnoldString( "light_group" );
 const AtString g_shadowGroupArnoldString( "shadow_group" );
 const AtString g_linearArnoldString( "linear" );
@@ -326,6 +330,8 @@ const AtString g_motionStartArnoldString( "motion_start" );
 const AtString g_motionEndArnoldString( "motion_end" );
 const AtString g_nameArnoldString( "name" );
 const AtString g_nodeArnoldString("node");
+const AtString g_nodeIndexesArnoldString( "node_idxs" );
+const AtString g_nodesArnoldString( "nodes" );
 const AtString g_objectArnoldString( "object" );
 const AtString g_opaqueArnoldString( "opaque" );
 const AtString g_pointsArnoldString( "points" );
@@ -398,6 +404,7 @@ class ArnoldGlobals;
 class Instance;
 IE_CORE_FORWARDDECLARE( ShaderCache );
 IE_CORE_FORWARDDECLARE( PrototypeCache );
+IE_CORE_FORWARDDECLARE( PointInstancerCache );
 IE_CORE_FORWARDDECLARE( ArnoldObject );
 
 /// This class implements the basics of outputting attributes
@@ -420,6 +427,7 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes ) override;
 
 	protected :
 
@@ -429,6 +437,7 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 		AtUniverse *m_universe;
 		ShaderCachePtr m_shaderCache;
 		PrototypeCachePtr m_prototypeCache;
+		PointInstancerCachePtr m_pointInstancerCache;
 
 		IECore::MessageHandlerPtr m_messageHandler;
 
@@ -1608,8 +1617,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			// Early out for IECoreScene::Procedurals. Arnold's inheritance rules for procedurals are back
 			// to front, with any explicitly set parameters on the procedural node overriding parameters of child
 			// nodes completely. We emulate the inheritance we want in ArnoldProceduralRenderer.
+			//
+			// Since Arnold's `instancer` node is implemented as a procedural, it suffers from the same problems,
+			// so we treat it the same way.
 
-			if( isConvertedProcedural( geometry ) )
+			if( isConvertedProcedural( geometry ) || AiNodeIs( geometry, g_instancerArnoldString ) )
 			{
 				// Arnold neither inherits nor overrides visibility parameters. Instead
 				// it does a bitwise `&` between the procedural and its children. The
@@ -1728,6 +1740,33 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			return true;
 
+		}
+
+		unsigned char visibility() const
+		{
+			return m_visibility;
+		}
+
+		AtNode *preferredShader( const AtNode *geometry ) const
+		{
+			if( m_volumeShader )
+			{
+				// Prefer the volume shader if we have one, and the geometry is either
+				// a volume or a shape being rendered as a volume (non-zero step size).
+				bool preferVolume = AiNodeIs( geometry, g_volumeArnoldString );
+				if( !preferVolume && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( geometry ), g_stepSizeArnoldString ) )
+				{
+					preferVolume = AiNodeGetFlt( geometry, g_stepSizeArnoldString ) > 0.0f;
+				}
+				if( preferVolume )
+				{
+					return m_volumeShader->root();
+				}
+			}
+
+			// Otherwise use the surface shader. We use this even for volume geometry,
+			// because Gaffer historically assigned volume shaders as `ai:surface`.
+			return m_surfaceShader->root();
 		}
 
 		const IECoreScene::ShaderNetwork *lightShader() const
@@ -2284,28 +2323,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			h.append( m_sssSetName.c_str() ? m_sssSetName.c_str() : "" );
 		}
 
-		AtNode *preferredShader( const AtNode *geometry ) const
-		{
-			if( m_volumeShader )
-			{
-				// Prefer the volume shader if we have one, and the geometry is either
-				// a volume or a shape being rendered as a volume (non-zero step size).
-				bool preferVolume = AiNodeIs( geometry, g_volumeArnoldString );
-				if( !preferVolume && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( geometry ), g_stepSizeArnoldString ) )
-				{
-					preferVolume = AiNodeGetFlt( geometry, g_stepSizeArnoldString ) > 0.0f;
-				}
-				if( preferVolume )
-				{
-					return m_volumeShader->root();
-				}
-			}
-
-			// Otherwise use the surface shader. We use this even for volume geometry,
-			// because Gaffer historically assigned volume shaders as `ai:surface`.
-			return m_surfaceShader->root();
-		}
-
 		unsigned char m_visibility;
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
@@ -2407,6 +2424,7 @@ class Instance
 		// Constructors are private as they are only intended for use in
 		// `PrototypeCache::createInstance()`. See comment in `nodesCreated()`.
 		friend class PrototypeCache;
+		friend class PointInstancerCache;
 
 		// Non-instanced
 		Instance( const SharedAtNodePtr &node )
@@ -2451,7 +2469,7 @@ class PrototypeCache : public IECore::RefCounted
 		// respect `ArnoldAttributes::canInstanceGeometry()` - all conversions
 		// are cached and reused where possible. The result must therefore always
 		// be used with a `ginstance` node.
-		ConstSharedAtNodePtr get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &messageContext )
+		SharedAtNodePtr get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &messageContext )
 		{
 			if( samples.empty() )
 			{
@@ -2590,6 +2608,220 @@ class PrototypeCache : public IECore::RefCounted
 };
 
 IE_CORE_DECLAREPTR( PrototypeCache )
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// PointInstancerCache
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct InstancerNodes
+{
+	SharedAtNodePtr node;
+	std::vector<SharedAtNodePtr> prototypeNodes;
+	std::vector<ArnoldAttributesPtr> prototypeAttributes;
+};
+
+using InstancerNodesSharedPtr = std::shared_ptr<InstancerNodes>;
+
+class PointInstancerCache : public IECore::RefCounted
+{
+
+	public :
+
+		PointInstancerCache( const PrototypeCachePtr &prototypeCache, NodeDeleter nodeDeleter, AtUniverse *universe, AtNode *parentNode )
+			:	m_prototypeCache( prototypeCache ), m_nodeDeleter( nodeDeleter ), m_universe( universe ), m_parentNode( parentNode )
+		{
+		}
+
+		std::pair<Instance, InstancerNodesSharedPtr> createInstance(
+			const IECoreScenePreview::Renderer::PointInstancerSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times,
+			const std::vector<IECoreScenePreview::Renderer::Prototype> &prototypes, const IECoreScenePreview::Renderer::AttributesInterface *attributes,
+			const std::string &nodeName
+		)
+		{
+			if( samples.empty() )
+			{
+				return { Instance( nullptr ), nullptr };
+			}
+
+			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+			if( !arnoldAttributes->canInstanceGeometry( samples.front().get() ) )
+			{
+				auto nodes = convert( samples, times, prototypes, nodeName );
+				return { Instance( nodes->node ), nodes };
+			}
+			else
+			{
+				auto nodes = get( samples, times, prototypes );
+				return { Instance( nodes->node, m_nodeDeleter, m_universe, nodeName, m_parentNode ), nodes };
+			}
+		}
+
+		// Must not be called concurrently with anything.
+		void clearUnused()
+		{
+			vector<IECore::MurmurHash> toErase;
+			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
+			{
+				if( it->second.use_count() == 1 )
+				{
+					// Only one reference - this is ours, so
+					// nothing outside of the cache is using the
+					// node.
+					toErase.push_back( it->first );
+				}
+			}
+			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
+			{
+				m_cache.erase( *it );
+			}
+		}
+
+		void nodesCreated( vector<AtNode *> &nodes ) const
+		{
+			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
+			{
+				if( it->second )
+				{
+					nodes.push_back( it->second->node.get() );
+				}
+			}
+		}
+
+	private :
+
+		InstancerNodesSharedPtr get( const IECoreScenePreview::Renderer::PointInstancerSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const std::vector<IECoreScenePreview::Renderer::Prototype> &prototypes )
+		{
+			IECore::MurmurHash hash;
+			for( const auto &sample : samples )
+			{
+				sample->hash( hash );
+			}
+			hash.append( times.data(), times.size() );
+
+			for( const auto &p : prototypes )
+			{
+				for( const auto &sample : p.samples )
+				{
+					sample->hash( hash );
+				}
+				hash.append( p.times.data(), p.times.size() );
+				auto prototypeAttributes = static_cast<const ArnoldAttributes *>( p.attributes.get() );
+				prototypeAttributes->hashGeometry( p.samples.front().get(), hash );
+				/// \todo This is unnecessarily pessimistic - not all attributes affect the prototype.
+				prototypeAttributes->allAttributes()->hash( hash );
+			}
+
+			Cache::const_accessor readAccessor;
+			if( m_cache.find( readAccessor, hash ) )
+			{
+				return readAccessor->second;
+			}
+			else
+			{
+				Cache::accessor writeAccessor;
+				if( m_cache.insert( writeAccessor, hash ) )
+				{
+					writeAccessor->second = convert( samples, times, prototypes, fmt::format( "instancer:{}", hash.toString() ) );
+				}
+				return writeAccessor->second;
+			}
+		}
+
+		/// \todo Experiment with Arnold's new `instance_matrix` feature, where you can add an
+		/// array of instancing matrices directly onto a `polymesh`. This could potentially give
+		/// much better time to first pixel.
+		InstancerNodesSharedPtr convert(
+			const IECoreScenePreview::Renderer::PointInstancerSamples &samples,
+			const IECoreScenePreview::Renderer::SampleTimes &times,
+			const std::vector<IECoreScenePreview::Renderer::Prototype> &prototypes, const std::string &nodeName
+		)
+		{
+			auto instancerNode = SharedAtNodePtr( AiNode( m_universe, g_instancerArnoldString, AtString( nodeName.c_str() ), m_parentNode ), m_nodeDeleter );
+
+			vector<SharedAtNodePtr> prototypeNodes;
+			std::vector<ArnoldAttributesPtr> prototypeAttributes;
+			std::vector<AtNode *> prototypeShaders;
+			prototypeNodes.reserve( prototypes.size() );
+			prototypeAttributes.reserve( prototypes.size() );
+			prototypeShaders.reserve( prototypeShaders.size() );
+			AtArray *prototypesArray = AiArrayAllocate( prototypes.size(), 1, AI_TYPE_NODE );
+
+			for( size_t prototypeIndex = 0; prototypeIndex < prototypes.size(); prototypeIndex++ ) // TODO : parallel_for
+			{
+				const auto &prototype = prototypes[prototypeIndex];
+				prototypeNodes.push_back( m_prototypeCache->get(
+					prototype.samples, prototype.times, prototype.attributes.get(),
+					/* messageContext = */ fmt::format( "{}:prototype{}", nodeName, prototypeIndex ) )
+				);
+				AiArraySetPtr( prototypesArray, prototypeIndex, prototypeNodes[prototypeIndex].get() );
+				prototypeAttributes.push_back( boost::static_pointer_cast<ArnoldAttributes>( prototype.attributes ) );
+				prototypeShaders.push_back( prototypeAttributes[prototypeIndex]->preferredShader( prototypeNodes[prototypeIndex].get() ) );
+			}
+
+			AiNodeSetArray( instancerNode.get(), g_nodesArnoldString, prototypesArray );
+
+			// Convert transforms
+
+			AiNodeSetFlt( instancerNode.get(), g_motionStartArnoldString, times.front() );
+			AiNodeSetFlt( instancerNode.get(), g_motionEndArnoldString, times.back() );
+
+			vector<IECoreScene::PointInstancer::TransformQuery> sampleQueries;
+			for( const auto &sample : samples )
+			{
+				sampleQueries.push_back( IECoreScene::PointInstancer::TransformQuery( *sample ) );
+			}
+
+			auto matrixArray = AiArrayAllocate( samples[0]->getNumPoints(), sampleQueries.size(), AI_TYPE_MATRIX );
+			size_t matrixArrayIndex = 0;
+			for( const auto &query : sampleQueries )
+			{
+				for( size_t instanceIndex = 0, e = samples[0]->getNumPoints(); instanceIndex < e; ++instanceIndex )
+				{
+					Imath::M44f m = query.transform( instanceIndex );
+					AiArraySetMtx( matrixArray, matrixArrayIndex++, reinterpret_cast<const AtMatrix&>( m.x ) );
+				}
+			}
+
+			auto prototypeIndices = samples[0]->getPrototypeIndex();
+			auto indexArray = AiArrayAllocate( samples[0]->getNumPoints(), 1, AI_TYPE_UINT );
+			auto visibilityArray = AiArrayAllocate( samples[0]->getNumPoints(), 1, AI_TYPE_BYTE );
+			auto shaderArray = AiArrayAllocate( samples[0]->getNumPoints(), 1, AI_TYPE_NODE );
+			for( size_t instanceIndex = 0, e = samples[0]->getNumPoints(); instanceIndex < e; ++instanceIndex )
+			{
+				const int prototypeIndex = prototypeIndices ? prototypeIndices[instanceIndex] : 0;
+				AiArraySetInt( indexArray, instanceIndex, prototypeIndex );
+				AiArraySetByte( visibilityArray, instanceIndex, prototypeAttributes[prototypeIndex]->visibility() );
+				AiArraySetPtr( shaderArray, instanceIndex, prototypeShaders[prototypeIndex] );
+			}
+
+			AiNodeSetArray( instancerNode.get(), g_instanceMatrixArnoldString, matrixArray );
+			AiNodeSetArray( instancerNode.get(), g_nodeIndexesArnoldString, indexArray );
+			AiNodeSetArray( instancerNode.get(), g_instanceVisibilityArnoldString, visibilityArray );
+			AiNodeSetArray( instancerNode.get(), g_instanceShaderArnoldString, shaderArray );
+
+			AiNodeSetByte( instancerNode.get(), g_visibilityArnoldString, 0 );
+
+			return std::make_shared<InstancerNodes>( InstancerNodes{
+				instancerNode, std::move( prototypeNodes ), std::move( prototypeAttributes )
+			} );
+		}
+
+		PrototypeCachePtr m_prototypeCache;
+		NodeDeleter m_nodeDeleter;
+		AtUniverse *m_universe;
+		AtNode *m_parentNode;
+
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, InstancerNodesSharedPtr>;
+		Cache m_cache;
+
+};
+
+IE_CORE_DECLAREPTR( PointInstancerCache )
 
 } // namespace
 
@@ -3159,6 +3391,31 @@ IE_CORE_DECLAREPTR( ArnoldLight )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// ArnoldInstancerObject
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class ArnoldInstancerObject : public ArnoldObject
+{
+
+	public :
+
+		ArnoldInstancerObject( const Instance &instance, const InstancerNodesSharedPtr &instancerNodes )
+			:	ArnoldObject( instance ), m_nodes( instancerNodes )
+		{
+		}
+
+	private :
+
+		InstancerNodesSharedPtr m_nodes;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // Procedurals
 //////////////////////////////////////////////////////////////////////////
 
@@ -3271,6 +3528,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			{
 				nodes.insert( nodes.end(), nodesCreated.begin(), nodesCreated.end() );
 			}
+			m_pointInstancerCache->nodesCreated( nodes );
 			m_prototypeCache->nodesCreated( nodes );
 			m_shaderCache->nodesCreated( nodes );
 		}
@@ -4610,6 +4868,7 @@ ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, AtUniverse *uni
 		m_universe( universe ),
 		m_shaderCache( new ShaderCache( nodeDeleter, universe, parentNode ) ),
 		m_prototypeCache( new PrototypeCache( nodeDeleter, universe, parentNode ) ),
+		m_pointInstancerCache( new PointInstancerCache( m_prototypeCache, nodeDeleter, universe, parentNode ) ),
 		m_messageHandler( messageHandler ),
 		m_parentNode( parentNode )
 {
@@ -4627,7 +4886,6 @@ IECore::InternedString ArnoldRendererBase::name() const
 ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const IECore::CompoundObject *attributes )
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-
 	return new ArnoldAttributes( attributes, m_shaderCache.get() );
 }
 
@@ -4676,6 +4934,17 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::st
 	return result;
 }
 
+ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes )
+{
+	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
+	auto [instance, nodes] = m_pointInstancerCache->createInstance( samples, times, prototypes, attributes, name );
+	ObjectInterfacePtr result = new ArnoldInstancerObject( instance, nodes );
+	result->attributes( attributes );
+
+	return result;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -4707,6 +4976,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 		{
 			pause();
 			// Delete cached nodes before universe is destroyed.
+			m_pointInstancerCache.reset( nullptr );
 			m_prototypeCache.reset( nullptr );
 			m_shaderCache.reset( nullptr );
 		}
@@ -4735,6 +5005,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			m_shaderCache->preRender( m_globals->renderType() );
+			m_pointInstancerCache->clearUnused();
 			m_prototypeCache->clearUnused();
 			m_globals->render();
 		}
