@@ -140,8 +140,9 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 		)
 
 		pointInstancer = IECoreScene.PointInstancer( 2 )
-		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ), imath.V3f( 1 ) ] ) )
 		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 1 ] ) )
+		self.assertTrue( pointInstancer.arePrimitiveVariablesValid() )
 
 		objectInterface = compoundRenderer.pointInstancer(
 			"pointInstancer", [ pointInstancer ], [ 0.0 ], [ prototype ], attributes1
