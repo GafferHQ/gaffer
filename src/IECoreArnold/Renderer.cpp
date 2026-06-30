@@ -1253,7 +1253,7 @@ IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
 		"utility", new IECoreScene::Shader( "utility" )
 	);
 
-	result->setOutput( { "utility", "out" } );
+	result->setOutput( { utilityHandle, "out" } );
 
 	return result;
 
@@ -1642,7 +1642,15 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 
 				AiNodeSetBool( node, g_matteArnoldString, m_shadingFlags & ArnoldAttributes::Matte );
-				AiNodeSetPtr( node, g_shaderArnoldString, preferredShader( geometry ) );
+
+				if( AtNode *shader = preferredShader( geometry ) )
+				{
+					AiNodeSetPtr( node, g_shaderArnoldString, shader );
+				}
+				else
+				{
+					AiNodeResetParameter( node, g_shaderArnoldString );
+				}
 
 				if( m_traceSets && m_traceSets->readable().size() )
 				{
@@ -2294,8 +2302,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 
 			// Otherwise use the surface shader. We use this even for volume geometry,
-			// because Gaffer has always assigned volume shaders as `ai:surface`.
-			return m_surfaceShader ? m_surfaceShader->root() : nullptr;
+			// because Gaffer historically assigned volume shaders as `ai:surface`.
+			return m_surfaceShader->root();
 		}
 
 		unsigned char m_visibility;
