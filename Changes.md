@@ -1,7 +1,23 @@
 1.7.x.x (relative to 1.7.0.0a5)
 =======
 
+Features
+--------
 
+- SceneStats : Added a new node for computing aggregate scene statistics.
+- SceneInspector : Added Statistics tab with aggregated geometry statistics for the entire scene.
+
+API
+---
+
+- DictPath : Added support for subclassing, without the need to override `copy()` or `_children()`.
+- PlugCreationGadget : Added counterpart to PlugCreationWidget, allowing plugs to be created easily in the GraphEditor.
+- PlugVisibilityGadget : Added gadget for managing plug visibility in the GraphEditor.
+
+Breaking Changes
+----------------
+
+- ShaderUI : Removed PlugAdder. Use `GafferUI.PlugVisibilityGadget` instead.
 
 1.7.0.0a5 (relative to 1.7.0.0a4)
 =========

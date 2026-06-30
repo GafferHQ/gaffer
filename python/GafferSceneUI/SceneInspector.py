@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import collections
+import enum
 import functools
 
 import imath
@@ -77,6 +79,8 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 			self["globalsFilter"] = Gaffer.StringPlug()
 			self["isolateGlobalsDifferences"] = Gaffer.BoolPlug()
+
+			self["selectionOnlyStatistics"] = Gaffer.BoolPlug()
 
 			# Stop the input scenes claiming that all locations exist when
 			# they don't have an input.
@@ -125,6 +129,53 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			self["__bScene"]["in"].setInput( self["__switch"]["out"] )
 			self["__bScene"]["variables"].addChild( Gaffer.NameValuePlug( "__sceneInspector:inputIndex", 1 ) )
 
+			# An additional internal network is used to collect data for the Statistics tab.
+
+			self["__primitiveQuery"] = GafferScene.PrimitiveQuery()
+			self["__primitiveQuery"]["scene"].setInput( self["__switchedIn"] )
+			self["__primitiveQuery"]["location"].setValue( "${scene:path}" )
+
+			self["__allRootsFilter"] = GafferScene.PathFilter()
+			self["__allRootsFilter"]["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+			self["__selectedPathsFilter"] = GafferScene.PathFilter()
+
+			self["__statisticsRootFilter"] = Gaffer.Switch()
+			self["__statisticsRootFilter"].setup( self["__allRootsFilter"]["out"] )
+			self["__statisticsRootFilter"]["in"][0].setInput( self["__allRootsFilter"]["out"] )
+			self["__statisticsRootFilter"]["in"][1].setInput( self["__selectedPathsFilter"]["out"] )
+			self["__statisticsRootFilter"]["index"].setValue( 1 )
+			self["__statisticsRootFilter"]["enabled"].setInput( self["selectionOnlyStatistics"] )
+
+			self["__statisticsFilter"] = GafferScene.PathFilter()
+			self["__statisticsFilter"]["roots"].setInput( self["__statisticsRootFilter"]["out"] )
+			self["__statisticsFilter"]["paths"].setValue( IECore.StringVectorData( [ "..." ] ) )
+
+			self["__statistics"] = GafferScene.SceneStats()
+			self["__statistics"]["scene"].setInput( self["__switchedIn"] )
+			self["__statistics"]["filter"].setInput( self["__statisticsFilter"]["out"] )
+
+			self["__statistics"].addQuery( Gaffer.IntPlug( defaultValue = 1 ), "locationCount" )
+
+			for primitiveType in [ "MeshPrimitive", "CurvesPrimitive", "PointsPrimitive" ] :
+
+				queryPrefix = "{}{}".format( primitiveType[0].lower(), primitiveType[1:] )
+				nodeNamePrefix = f"__{queryPrefix}"
+
+				enabler = Gaffer.PatternMatch()
+				enabler["string"].setInput( self["__primitiveQuery"]["type"] )
+				enabler["pattern"].setValue( primitiveType )
+				self[f"{nodeNamePrefix}Enabler"] = enabler
+
+				# Queries enabled for just this primitive type.
+
+				for interpolation in ( "uniform", "vertex", "varying", "faceVarying" ) :
+					interpolationSuffix = interpolation[0].upper() + interpolation[1:]
+					interpolationPlug = self["__primitiveQuery"][interpolation]
+					query = self["__statistics"].addQuery( interpolationPlug, f"{queryPrefix}{interpolationSuffix}" )
+					query["enabled"].setInput( enabler["match"] )
+					query["value"].setInput( interpolationPlug )
+
 		def _locationComparisonEnablers( self ) :
 
 			return [ p["enabled"] for p in self["compare"] ]
@@ -153,6 +204,17 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			nameColumn,
 			_GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.A ),
 			_GafferSceneUI._SceneInspector.InspectorDiffColumn( _GafferSceneUI._SceneInspector.InspectorDiffColumn.DiffContext.B ),
+		]
+
+		self.__standardStatisticsColumns = [
+			nameColumn,
+			GafferUI.PathListingWidget.StandardColumn( "Value", "statistics:valueA" ),
+		]
+
+		self.__diffStatisticsColumns = [
+			nameColumn,
+			_StatisticsDiffColumn( _StatisticsDiffColumn.DiffContext.A ),
+			_StatisticsDiffColumn( _StatisticsDiffColumn.DiffContext.B ),
 		]
 
 		with mainColumn :
@@ -217,6 +279,26 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 						sortable = False,
 					)
 					GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__globalsPathListing )
+
+				with GafferUI.ListContainer( spacing = 4, borderWidth = 4, parenting = { "label" : "Statistics" } ) :
+
+					GafferUI.PlugLayout(
+						self.settings(), orientation = GafferUI.ListContainer.Orientation.Horizontal,
+						rootSection = "StatisticsRow"
+					)
+
+					self.__statisticsPathListing = GafferUI.PathListingWidget(
+						_StatisticsPath.create( self.settings()["__statistics"], self.__globalsContexts() ),
+						columns = self.__standardStatisticsColumns,
+						selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
+						displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+						sortable = False,
+					)
+
+					# It would make more sense for dirtiness to be handled by _StatisticsPath itself.
+					# But we do it here because we have the benefit of deriving from `Signals.Trackable`,
+					# meaning the connection will be automatically removed when we die.
+					self.settings()["__statistics"].plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__statisticsPlugDirtied ) )
 
 		GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
@@ -322,6 +404,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			comparingLocations = comparingGlobals or self.settings()["compare"]["location"]["enabled"].getValue()
 			self.__locationPathListing.setColumns( self.__diffColumns if comparingLocations else self.__standardColumns )
 			self.__globalsPathListing.setColumns( self.__diffColumns if comparingGlobals else self.__standardColumns )
+			self.__statisticsPathListing.setColumns( self.__diffStatisticsColumns if comparingLocations else self.__standardStatisticsColumns )
 
 		if plug in (
 			self.settings()["location"],
@@ -353,9 +436,16 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 		self.__locationPathListing.getPath().tree().setContexts( self.__selectionContexts() )
 		self.__globalsPathListing.getPath().tree().setContexts( self.__globalsContexts() )
 
+		self.__statisticsPathListing.setPath( _StatisticsPath.create( self.settings()["__statistics"], self.__globalsContexts() ) )
+
 	def __selectedPathsChanged( self, scriptNode ) :
 
 		self.__locationPathListing.getPath().tree().setContexts( self.__selectionContexts() )
+		self.settings()["__selectedPathsFilter"]["paths"].setValue(
+			IECore.StringVectorData(
+				GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() ).paths()
+			)
+		)
 
 	def __globalsContexts( self ) :
 
@@ -405,6 +495,12 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 			pathPattern = f"/.../*{pattern}*/..."
 
 		tree.setFilter( pathPattern )
+
+	def __statisticsPlugDirtied( self, plug ) :
+
+		if self.settings()["__statistics"]["out"].isAncestorOf( plug ) :
+			path = self.__statisticsPathListing.getPath()
+			path.pathChangedSignal()( path )
 
 GafferUI.Editor.registerType( "SceneInspector", SceneInspector )
 
@@ -561,6 +657,19 @@ Gaffer.Metadata.registerNode(
 			"layout:section" : "GlobalsFilterRow",
 			"boolPlugValueWidget:labelVisible" : True,
 			"layout:visibilityActivator" : lambda plug : any( p.getValue() for p in plug.node()._globalsComparisonEnablers() ),
+
+		},
+
+		"selectionOnlyStatistics" : {
+
+			"description" :
+			"""
+			Shows statistics for only the selected locations and their descendants.
+			""",
+
+			"label" : "Selected Locations Only",
+			"layout:section" : "StatisticsRow",
+			"boolPlugValueWidget:labelVisible" : True,
 
 		},
 
@@ -1139,3 +1248,81 @@ def __inspectorColumnCreated( column ) :
 		column.contextMenuSignal().connect( __contextMenu )
 
 GafferSceneUI.Private.InspectorColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )
+
+class _StatisticsPath( Gaffer.DictPath ) :
+
+	Statistic = collections.namedtuple( "Value", [ "contextA", "contextB", "plug" ] )
+
+	@classmethod
+	def create( cls, node, contexts ) :
+
+		d = {
+			"Locations" : cls.Statistic( contexts[0], contexts[1], node["out"]["locationCount"]["sum"] ),
+			"Mesh Primitives" : {
+				"Primitives" : cls.Statistic( contexts[0], contexts[1], node["out"]["meshPrimitiveVertex"]["count"] ),
+				"Vertices" : cls.Statistic( contexts[0], contexts[1], node["out"]["meshPrimitiveVertex"]["sum"] ),
+				"Faces" : cls.Statistic( contexts[0], contexts[1], node["out"]["meshPrimitiveUniform"]["sum"] ),
+			},
+			"Curves Primitives" : {
+				"Primitives" : cls.Statistic( contexts[0], contexts[1], node["out"]["curvesPrimitiveVertex"]["count"] ),
+				"Vertices" : cls.Statistic( contexts[0], contexts[1], node["out"]["curvesPrimitiveVertex"]["sum"] ),
+				"Curves" : cls.Statistic( contexts[0], contexts[1], node["out"]["curvesPrimitiveUniform"]["sum"] ),
+			},
+			"Points Primitives" : {
+				"Primitives" : cls.Statistic( contexts[0], contexts[1], node["out"]["pointsPrimitiveVertex"]["count"] ),
+				"Vertices" : cls.Statistic( contexts[0], contexts[1], node["out"]["pointsPrimitiveVertex"]["sum"] ),
+			}
+		}
+
+		result = cls( d, "/" )
+		return result
+
+	def propertyNames( self, canceller = None ) :
+
+		return Gaffer.DictPath.propertyNames( self ) + [ "statistics:valueA", "statistics:valueB" ]
+
+	def property( self, name, canceller = None ) :
+
+		if name in ( "statistics:valueA", "statistics:valueB" ) :
+
+			v = Gaffer.DictPath.property( self, "dict:value" )
+			if v is None :
+				return None
+
+			context = v.contextA if name == "statistics:valueA" else v.contextB
+			with Gaffer.Context( context, canceller ) :
+				return v.plug.getValue()
+
+		return Gaffer.DictPath.property( self, name, canceller )
+
+	def cancellationSubject( self ) :
+
+		locationPath = self.copy().setFromString( "/Locations" )
+		return locationPath.property( "dict:value" ).plug
+
+class _StatisticsDiffColumn( GafferUI.PathColumn ) :
+
+	class DiffContext( enum.IntEnum ) :
+
+		A = 0
+		B = 1
+
+	__backgroundColors = [ imath.Color4f( 0.7, 0.12, 0, 0.3 ), imath.Color4f( 0.13, 0.62, 0, 0.3 ) ]
+
+	def __init__( self, diffContext ) :
+
+		GafferUI.PathColumn.__init__( self )
+		self.__diffContext = diffContext
+
+	def cellData( self, path, canceller = None ) :
+
+		values = [ path.property( "statistics:valueA", canceller ), path.property( "statistics:valueB", canceller ) ]
+
+		return self.CellData(
+			value = values[self.__diffContext],
+			background = self.__backgroundColors[self.__diffContext] if values[0] != values[1] else None
+		)
+
+	def headerData( self, rootPath, canceller = None ) :
+
+		return self.CellData( str( self.__diffContext.name ) )

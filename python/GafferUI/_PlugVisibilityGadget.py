@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,79 +34,51 @@
 #
 ##########################################################################
 
-import IECore
+import functools
 
 import Gaffer
+import GafferUI
 
-class DictPath( Gaffer.Path ) :
+# This file adds context menu items associated with the PlugVisibilityGadget,
+# the rest of which is implemented in `src/GafferUI/PlugVisibilityGadget.cpp`.
 
-	def __init__( self, dict, path, root="/", filter=None, dictTypes = ( dict, IECore.CompoundData, IECore.CompoundObject ) ) :
+def __setPlugMetadata( plug, key, value ) :
 
-		Gaffer.Path.__init__( self, path, root, filter=filter )
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		Gaffer.Metadata.registerValue( plug, key, value )
 
-		assert( isinstance( dict, dictTypes ) )
+def __hasVisibilityGadget( plug ) :
 
-		self.__dictTypes = dictTypes
-		self.__dict = dict
-
-	## Returns the dictionary that this path represents. If this
-	# is modified, then it is the responsibility of the modifying
-	# code to emit pathChangedSignal().
-	def dict( self ) :
-
-		return self.__dict
-
-	def isValid( self, canceller = None ) :
-
-		try :
-			self.__dictEntry()
-			return True
-		except :
+	parent = plug.parent()
+	while True :
+		for key in Gaffer.Metadata.registeredValues( parent ) :
+			if key.endswith( ":gadgetType" ) and Gaffer.Metadata.value( parent, key ) == "GafferUI.PlugVisibilityGadget" :
+				return True
+		parent = parent.parent()
+		if parent is None or isinstance( parent, Gaffer.Node ) :
 			return False
 
-	def isLeaf( self, canceller = None ) :
+def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
-		try :
-			e = self.__dictEntry()
-			return not isinstance( e, self.__dictTypes )
-		except :
-			return False
+	if not __hasVisibilityGadget( plug ) or not Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) :
+		return
 
-	def propertyNames( self, canceller = None ) :
+	if len( menuDefinition.items() ) :
+		menuDefinition.append( "/HideDivider", { "divider" : True } )
 
-		return Gaffer.Path.propertyNames( self ) + [ "dict:value" ]
+	if plug.direction() == plug.Direction.In :
+		numConnections = 1 if plug.getInput() else 0
+	else :
+		numConnections = len( plug.outputs() )
 
-	def property( self, name, canceller = None ) :
+	menuDefinition.append(
 
-		if name == "dict:value" :
-			with IECore.IgnoredExceptions( Exception ) :
-				e = self.__dictEntry()
-				if not isinstance( e, self.__dictTypes ) :
-					return e
+		"/Hide",
+		{
+			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
+			"active" : numConnections == 0 and not Gaffer.MetadataAlgo.readOnly( plug ),
+		}
 
-		return Gaffer.Path.property( self, name, canceller )
+	)
 
-	def copy( self ) :
-
-		return self.__class__( self.__dict, self[:], self.root(), self.getFilter(), self.__dictTypes )
-
-	def _children( self, canceller ) :
-
-		try :
-			e = self.__dictEntry()
-			if isinstance( e, self.__dictTypes ) :
-				return [ self.__class__( self.__dict, self[:] + [ x ], self.root(), dictTypes=self.__dictTypes ) for x in e.keys() ]
-		except :
-			return []
-
-		return []
-
-	def __dictEntry( self ) :
-
-		e = self.__dict
-		for p in self :
-			e = e[p]
-
-		return e
-
-IECore.registerRunTimeTyped( DictPath, typeName = "Gaffer::DictPath" )
+GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )

@@ -130,20 +130,36 @@ class TestCase( GafferTest.TestCase ) :
 		)
 
 		safePlugNames = (
-			"title",
-			"description"
+			"Backdrop.title",
+			"Backdrop.description",
+			"ScriptNode.fileName",
+			"LocalDispatcher.jobName",
 		)
 
 		examples = GafferUI.Examples.registeredExamples()
 		for e in examples.values():
-			path = os.path.expandvars( e['filePath'] )
-			with open( path, "r", encoding = "utf-8" ) as example :
-				for line in example :
-					# If the line contains a set for one of our safe plugs, don't check
-					if any( '["%s"].setValue(' % plug in line for plug in safePlugNames ) :
+
+			script = Gaffer.ScriptNode()
+			script["fileName"].setValue( os.path.expandvars( e["filePath"] ) )
+			script.load()
+
+			for node in [ script ] + list( Gaffer.Node.RecursiveRange( script ) ) :
+				for plug in Gaffer.StringPlug.RecursiveInputRange( node ) :
+
+					plugName = "{nodeName}.{plugName}".format(
+						nodeName = node.typeName().rpartition( ":" )[2],
+						plugName = plug.relativeName( node )
+					)
+
+					if plugName in safePlugNames :
 						continue
+
+					if Gaffer.PlugAlgo.dependsOnCompute( plug ) :
+						continue
+
+					value = plug.getValue()
 					for phrase in forbidden :
-						self.assertFalse( phrase in line, "Example %s references unstable '%s':\n%s" % ( e['filePath'], phrase, line ) )
+						self.assertFalse( phrase in value, "Example {} references unstable '{}' in {}".format( e["filePath"], phrase, plug.relativeName( script ) ) )
 
 	def assertNodeUIsHaveExpectedLifetime( self, module ) :
 

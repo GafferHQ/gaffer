@@ -208,5 +208,41 @@ class DictPathTest( GafferTest.TestCase ) :
 		p = Gaffer.DictPath( d, "/ invalid" )
 		self.assertEqual( p.property( "dict:value"), None )
 
+	def testDerivedClass( self ) :
+
+		class MyDictPath( Gaffer.DictPath ) :
+
+			def propertyNames( self, canceller = None ) :
+
+				return Gaffer.DictPath.propertyNames( self, canceller ) + [ "myDict:value" ]
+
+			def property( self, name, canceller = None ) :
+
+				if name == "myDict:value" :
+					value = Gaffer.DictPath.property( self, "dict:value", canceller )
+					return value * 2 if value is not None else None
+
+				return Gaffer.DictPath.property( self, name, canceller )
+
+		path = MyDictPath( { "a" : 10, "d" : { "e" : 20 } }, "/" )
+		self.assertTrue( "dict:value" in path.propertyNames() )
+		self.assertEqual( path.property( "dict:value" ), None )
+		self.assertTrue( "myDict:value" in path.propertyNames() )
+		self.assertEqual( path.property( "myDict:value" ), None )
+
+		children = path.children()
+		self.assertEqual( len( children ), 2 )
+		for child in children :
+			self.assertIsInstance( child, MyDictPath )
+
+		self.assertEqual( str( children[0] ), "/a" )
+		self.assertEqual( str( children[1] ), "/d" )
+
+		self.assertEqual( children[0].property( "myDict:value" ), 20 )
+		self.assertEqual( children[1].property( "myDict:value" ), None )
+
+		path.setFromString( "/d/e" )
+		self.assertEqual( path.property( "myDict:value" ), 40 )
+
 if __name__ == "__main__":
 	unittest.main()
