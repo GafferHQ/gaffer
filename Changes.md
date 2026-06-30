@@ -7,6 +7,13 @@ Features
 - SceneStats : Added a new node for computing aggregate scene statistics.
 - SceneInspector : Added Statistics tab with aggregated geometry statistics for the entire scene.
 
+Fixes
+-----
+
+- Arnold :
+  - Fixed fallback to a facing ratio shader when a shader is removed during an interactive render.
+  - Fixed crash attempting to render with a shader that doesn't exist.
+
 API
 ---
 

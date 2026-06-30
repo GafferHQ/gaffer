@@ -3532,6 +3532,80 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["render"]["state"].setValue( s["render"].State.Stopped )
 
+	def testRemoveShader( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferScene.Catalogue()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 0, 0, -10 ) )
+
+		constantShader, colorPlug, shaderOutPlug = self._createConstantShader()
+		script["shader"] = constantShader
+		colorPlug.setValue( imath.Color3f( 1, 0.5, 0.25 ) )
+
+		script["shaderAssignment"] = GafferScene.ShaderAssignment()
+		script["shaderAssignment"]["in"].setInput( script["sphere"]["out"] )
+		script["shaderAssignment"]["shader"].setInput( shaderOutPlug )
+		script["shaderAssignment"]["enabled"].setValue( False )
+
+		script["camera"] = GafferScene.Camera()
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["shaderAssignment"]["out"] )
+		script["group"]["in"][1].setInput( script["camera"]["out"] )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["group"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/group/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["state"].setValue( script["render"].State.Running )
+
+		def assertColor( expectedColor ) :
+
+			color = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
+			self.assertEqualWithAbsError( color, expectedColor, 0.01 )
+
+		# Shader assignment disabled, so should get white from default facing
+		# ratio shader.
+
+		self.assertEventually( lambda : assertColor( imath.Color4f( 1 ) ) )
+
+		# Shader assignment enabled, so should get colour from shader.
+
+		script["shaderAssignment"]["enabled"].setValue( True )
+		self.assertEventually( lambda : assertColor( imath.Color4f( 1, 0.5, 0.25, 1 ) ) )
+
+		# Back to default facing ratio.
+
+		script["shaderAssignment"]["enabled"].setValue( False )
+		self.assertEventually( lambda : assertColor( imath.Color4f( 1 ) ) )
+
+		script["render"]["state"].setValue( script["render"].State.Stopped )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

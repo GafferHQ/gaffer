@@ -451,9 +451,12 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 			return AiNode( universe, nodeType, nodeName, parentNode );
 		};
 		convertWalk( network->getOutput(), network.get(), name, nodeCreator, result, converted, nodeParameters );
-		for( const auto &kv : network->outputShader()->blindData()->readable() )
+		if( result.size() )
 		{
-			ParameterAlgo::setParameter( result.back(), AtString( kv.first.c_str() ), kv.second.get() );
+			for( const auto &kv : network->outputShader()->blindData()->readable() )
+			{
+				ParameterAlgo::setParameter( result.back(), AtString( kv.first.c_str() ), kv.second.get() );
+			}
 		}
 	}
 	return result;

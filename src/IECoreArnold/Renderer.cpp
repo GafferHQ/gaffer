@@ -1245,6 +1245,20 @@ IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
 IECore::InternedString g_filteredLights( "filteredLights" );
 
+IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
+
+	IECoreScene::ShaderNetworkPtr result = new IECoreScene::ShaderNetwork;
+
+	const IECore::InternedString utilityHandle = result->addShader(
+		"utility", new IECoreScene::Shader( "utility" )
+	);
+
+	result->setOutput( { utilityHandle, "out" } );
+
+	return result;
+
+} ();
+
 const std::vector<IECore::InternedString> g_surfaceShaderAttributeNames = {
 	"ai:surface",
 	"osl:surface",
@@ -1313,6 +1327,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			updateShadingFlag( g_arnoldMatteAttributeName, Matte, attributes );
 
 			m_surfaceShader = shaderCache->get( g_surfaceShaderAttributeNames, attributes );
+			if( !m_surfaceShader )
+			{
+				m_surfaceShader = shaderCache->get( g_facingRatio.get(), "", nullptr );
+			}
+
 			m_volumeShader = shaderCache->get( g_volumeShaderAttributeNames, attributes );
 			m_filterMap = shaderCache->get( g_filterMapAttributeNames, attributes );
 			m_uvRemap = shaderCache->get( g_uvRemapAttributeNames, attributes );
@@ -2283,8 +2302,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 
 			// Otherwise use the surface shader. We use this even for volume geometry,
-			// because Gaffer has always assigned volume shaders as `ai:surface`.
-			return m_surfaceShader ? m_surfaceShader->root() : nullptr;
+			// because Gaffer historically assigned volume shaders as `ai:surface`.
+			return m_surfaceShader->root();
 		}
 
 		unsigned char m_visibility;
