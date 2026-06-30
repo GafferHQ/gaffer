@@ -10,7 +10,9 @@ Features
 Fixes
 -----
 
-- Arnold : Fixed fallback to a facing ratio shader when a shader is removed during an interactive render.
+- Arnold :
+  - Fixed fallback to a facing ratio shader when a shader is removed during an interactive render.
+  - Fixed crash attempting to render with a shader that doesn't exist.
 
 API
 ---
