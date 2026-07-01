@@ -6,6 +6,7 @@ Fixes
 
 - Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors.
 - RenderMan : Fixed `R10043` warning when using PxrDisplace.
+- RenderMan : Fixed automatic creation of required AOVs for PxrStylized filters in XPU.
 
 1.6.20.0 (relative to 1.6.19.2)
 ========
