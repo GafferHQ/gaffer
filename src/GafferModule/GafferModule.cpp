@@ -40,6 +40,7 @@
 #include "ApplicationRootBinding.h"
 #include "ArrayPlugBinding.h"
 #include "BoxPlugBinding.h"
+#include "CachedDataBinding.h"
 #include "CollectBinding.h"
 #include "CompoundDataPlugBinding.h"
 #include "CompoundNumericPlugBinding.h"
@@ -186,6 +187,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindOptionalValuePlug();
 	bindCollect();
 	bindSetExpressionAlgo();
+	bindCachedData();
 
 	NodeClass<Backdrop>();
 	DependencyNodeClass<PatternMatch>();

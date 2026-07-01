@@ -304,6 +304,7 @@ from . import EditScopeUI
 from . import ContextVariableTweaksUI
 from . import CollectUI
 from . import PatternMatchUI
+from . import CachedDataNodeUI
 
 # backwards compatibility
 ## \todo Remove me

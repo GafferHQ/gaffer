@@ -43,8 +43,10 @@
 #include "GafferBindings/MetadataBinding.h"
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/CachedDataNode.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/Spreadsheet.h"
 #include "Gaffer/Version.h"
 
@@ -61,6 +63,7 @@
 #include "boost/tokenizer.hpp"
 
 #include "fmt/format.h"
+#include "fmt/std.h"
 
 #include <unordered_map>
 
@@ -143,8 +146,8 @@ std::string modulePathInternal( const boost::python::object &o )
 // Serialisation
 //////////////////////////////////////////////////////////////////////////
 
-Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName, const Gaffer::Set *filter )
-	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter ),
+Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName, const Gaffer::Set *filter, CacheDirectoryManager *cacheDirectoryManager )
+	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter ), m_cacheDirectoryManager( cacheDirectoryManager ),
 		m_protectParentNamespace( Context::current()->get<bool>( "serialiser:protectParentNamespace", true ) )
 {
 	IECorePython::ScopedGILLock gilLock;
@@ -160,6 +163,19 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 		{
 			m_postScript += metadataSerialisation( plug, parentName, *this );
 		}
+	}
+}
+
+Serialisation::~Serialisation()
+{
+	if( m_cacheWarning.size() )
+	{
+		IECore::msg( IECore::Msg::Warning, "Serialisation", m_cacheWarning );
+	}
+
+	if( m_cacheDirectoryManager )
+	{
+		m_cacheDirectoryManager->finishSerialisation( m_usedCaches );
 	}
 }
 
@@ -420,6 +436,21 @@ std::string Serialisation::childIdentifier( const std::string &parentIdentifier,
 void Serialisation::addModule( const std::string &moduleName )
 {
 	m_modules.insert( moduleName );
+}
+
+CacheDirectoryManager *Serialisation::cacheDirectoryManager()
+{
+	return m_cacheDirectoryManager;
+}
+
+boost::unordered_set< IECore::MurmurHash > &Serialisation::usedCaches()
+{
+	return m_usedCaches;
+}
+
+std::string &Serialisation::cacheWarning()
+{
+	return m_cacheWarning;
 }
 
 void Serialisation::registerSerialiser( IECore::TypeId targetType, SerialiserPtr serialiser )
