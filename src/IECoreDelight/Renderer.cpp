@@ -1230,11 +1230,17 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 			HandleFunctor &&handleFunctor  // Signature : const DelightHandle &functor( const DelightAttributes * )
 		)
 		{
+			auto castAttributes = static_cast<const DelightAttributes *>( attributes );
 			if( m_attributes )
 			{
 				if( attributes == m_attributes )
 				{
 					return true;
+				}
+
+				if( m_attributes->isUSDMeshLight() != castAttributes->isUSDMeshLight() )
+				{
+					return false;
 				}
 
 				NSIDisconnect(
@@ -1249,7 +1255,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 				);
 			}
 
-			m_attributes = static_cast<const DelightAttributes *>( attributes );
+			m_attributes = castAttributes;
 			NSIConnect(
 				m_transformHandle.context(),
 				handleFunctor( m_attributes.get() ).name(), "",
@@ -1333,7 +1339,6 @@ class DelightLight : public DelightObject
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const bool wasMuted = m_attributes && m_attributes->lightMute();
-			const bool wasUSDMeshLight = m_attributes && m_attributes->isUSDMeshLight();
 
 			attributesInternal(
 				attributes,
@@ -1342,11 +1347,6 @@ class DelightLight : public DelightObject
 					return a->lightHandle();
 				}
 			);
-
-			if( m_attributes->isUSDMeshLight() != wasUSDMeshLight )
-			{
-				return false;
-			}
 
 			if( wasMuted && !m_attributes->lightMute() )
 			{
