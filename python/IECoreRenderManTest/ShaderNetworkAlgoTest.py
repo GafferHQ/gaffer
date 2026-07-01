@@ -786,46 +786,48 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			( "UsdPreviewSurface", "emissiveColor" ),
 		] :
 			with self.subTest( shaderName = shaderName ) :
-				attributes = IECore.CompoundObject(
-					{
-						"light" : IECoreScene.ShaderNetwork(
-							shaders = {
-								"light" : IECoreScene.Shader(
-									"MeshLight", "light",
-									{ "color" : imath.Color3f( 0, 1, 0 ), "intensity" : 2.0, "exposure" : 3.0 }
-								)
-							},
-							output = "light"
-						),
-						"surface" : IECoreScene.ShaderNetwork(
-							shaders = {
-								"surface" : IECoreScene.Shader(
-									shaderName, "ri:surface",
-									{ emissionColorParameter : imath.Color3f( 1, 0, 0 ) }
+				for surfaceColor in [ imath.Color3f( 0.0 ), imath.Color3f( 1.0 ) ] :
+					with self.subTest( surfaceColor = surfaceColor ) :
+						attributes = IECore.CompoundObject(
+							{
+								"light" : IECoreScene.ShaderNetwork(
+									shaders = {
+										"light" : IECoreScene.Shader(
+											"MeshLight", "light",
+											{ "color" : imath.Color3f( 0, 1, 0 ), "intensity" : 2.0, "exposure" : 3.0 }
+										)
+									},
+									output = "light"
 								),
-							},
-							output = "surface"
+								"surface" : IECoreScene.ShaderNetwork(
+									shaders = {
+										"surface" : IECoreScene.Shader(
+											shaderName, "ri:surface",
+											{ emissionColorParameter : surfaceColor }
+										),
+									},
+									output = "surface"
+								)
+							}
 						)
-					}
-				)
 
-				originalSurfaceNetwork = attributes["surface"].copy()
-				modifiedAttributes = IECoreRenderMan.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
-				lightNetwork = modifiedAttributes["light"]
-				surfaceNetwork = modifiedAttributes["surface"]
+						originalSurfaceNetwork = attributes["surface"].copy()
+						modifiedAttributes = IECoreRenderMan.ShaderNetworkAlgo.convertUSDMeshLightAttributes( attributes )
+						lightNetwork = modifiedAttributes["light"]
+						surfaceNetwork = modifiedAttributes["surface"]
 
-				self.assertEqual( surfaceNetwork, originalSurfaceNetwork )
+						self.assertEqual( surfaceNetwork, originalSurfaceNetwork )
 
-				self.assertEqual( len( lightNetwork.shaders() ), 1 )
-				shader = lightNetwork.getShader( "light" )
-				self.assertIsNotNone( shader )
-				self.assertEqual( shader.name, "PxrMeshLight" )
-				self.assertEqual( shader.type, "ri:light" )
-				self.assertEqual( shader.parameters["lightColor"].value, imath.Color3f( 0, 1, 0 ) )
-				self.assertEqual( shader.parameters["textureColor"].value, imath.Color3f( 1, 0, 0 ) )
-				self.assertEqual( shader.parameters["intensity"].value, 2.0 )
-				self.assertEqual( shader.parameters["exposure"].value, 3.0 )
-				self.assertFalse( lightNetwork.input( ( "light", "textureColor" ) ) )
+						self.assertEqual( len( lightNetwork.shaders() ), 1 )
+						shader = lightNetwork.getShader( "light" )
+						self.assertIsNotNone( shader )
+						self.assertEqual( shader.name, "PxrMeshLight" )
+						self.assertEqual( shader.type, "ri:light" )
+						self.assertEqual( shader.parameters["lightColor"].value, imath.Color3f( 0, 1, 0 ) )
+						self.assertEqual( shader.parameters["textureColor"].value, surfaceColor )
+						self.assertEqual( shader.parameters["intensity"].value, 2.0 )
+						self.assertEqual( shader.parameters["exposure"].value, 3.0 )
+						self.assertFalse( lightNetwork.input( ( "light", "textureColor" ) ) )
 
 				attributes = IECore.CompoundObject(
 					{

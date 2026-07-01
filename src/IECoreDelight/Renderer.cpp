@@ -678,10 +678,17 @@ namespace
 // surfaces), we support "light" attributes as well for compatibility with
 // other renderers and some specific workflows in Gaffer.
 std::array<std::string, 4> g_surfaceShaderAttributeNames = { "osl:light", "light", "osl:surface", "surface" };
+std::array<std::string, 2> g_USDMeshLightSurfaceShaderAttributeNames = { "osl:surface", "surface" };
 std::array<std::string, 2> g_volumeShaderAttributeNames = { "osl:volume", "volume" };
 std::array<std::string, 2> g_displacementShaderAttributeNames = { "osl:displacement", "displacement" };
 const InternedString g_USDLightAttributeName = "light";
 const InternedString g_USDSurfaceAttributeName = "surface";
+
+const InternedString g_visibilityCameraAttributeName = "dl:visibility.camera";
+const InternedString g_visibilityReflectionAttributeName = "dl:visibility.reflection";
+const InternedString g_visibilityRefractionAttributeName = "dl:visibility.refraction";
+const InternedString g_visibilityShadowAttributeName = "dl:visibility.shadow";
+const InternedString g_visibilitySpecularAttributeName = "dl:visibility.specular";
 
 const IECore::InternedString g_setsAttributeName( "sets" );
 const IECore::InternedString g_lightMuteAttributeName( "light:mute" );
@@ -695,12 +702,43 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 			:	m_handle( context, "attributes:" + attributes->Object::hash().toString(), ownership, "attributes", {} ),
 				m_lightMute( false ), m_hash( attributes->Object::hash() )
 		{
-			for( const auto &attributeName : g_surfaceShaderAttributeNames )
+			bool isUSDMeshLight = false;
+			if( auto usdLightNetwork = attributes->member<ShaderNetwork>( g_USDLightAttributeName ) )
 			{
-				m_surfaceShader = shader(attributeName, attributes, shaderCache );
-				if( m_surfaceShader )
+				if( const Shader *shader = usdLightNetwork->outputShader() )
 				{
-					break;
+					if( shader->getName() == "MeshLight" )
+					{
+						m_USDMeshLightHandle = DelightHandle( context, "attributes:" + attributes->Object::hash().toString() + ":usdMeshLight", ownership, "attributes", {} );
+						isUSDMeshLight = true;
+					}
+				}
+			}
+
+			ConstCompoundObjectPtr modifiedAttributes = IECoreDelight::ShaderNetworkAlgo::convertUSDMeshLightAttributes( attributes );
+			attributes = modifiedAttributes.get();
+
+			if( !isUSDMeshLight )
+			{
+				for( const auto &attributeName : g_surfaceShaderAttributeNames )
+				{
+					m_surfaceShader = shader(attributeName, attributes, shaderCache );
+					if( m_surfaceShader )
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				m_USDMeshLightShader = shader(g_USDLightAttributeName, attributes, shaderCache );
+				for( const auto &attributeName : g_USDMeshLightSurfaceShaderAttributeNames )
+				{
+					m_surfaceShader = shader(attributeName, attributes, shaderCache );
+					if( m_surfaceShader )
+					{
+						break;
+					}
 				}
 			}
 
@@ -730,7 +768,8 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 			}
 
-			ParameterList params;
+			ParameterList surfaceParams;
+			ParameterList usdMeshLightParams;
 			for( const auto &m : attributes->members() )
 			{
 				if( m.first == g_setsAttributeName )
@@ -747,7 +786,29 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				{
 					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
 					{
-						params.add( m.first.c_str() + 3, d, true );
+						if( isUSDMeshLight )
+						{
+							// USDMeshLight requires some attributes to be set to specific values
+							if( m.first != g_visibilityShadowAttributeName )
+							{
+								surfaceParams.add( m.first.c_str() + 3, d, true );
+							}
+
+							if(
+								m.first != g_visibilityCameraAttributeName &&
+								m.first != g_visibilityReflectionAttributeName &&
+								m.first != g_visibilityRefractionAttributeName &&
+								m.first != g_visibilityShadowAttributeName &&
+								m.first != g_visibilitySpecularAttributeName
+							)
+							{
+								usdMeshLightParams.add( m.first.c_str() + 3, d, true );
+							}
+						}
+						else
+						{
+							surfaceParams.add( m.first.c_str() + 3, d, true );
+						}
 					}
 				}
 				else if( boost::starts_with( m.first.string(), "render:" ) )
@@ -758,7 +819,8 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				{
 					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
 					{
-						params.add( m.first.c_str(), d, true );
+						surfaceParams.add( m.first.c_str(), d, true );
+						usdMeshLightParams.add( m.first.c_str(), d, true );
 					}
 				}
 				else if( boost::contains( m.first.string(), ":" ) || m.first == g_USDLightAttributeName || m.first == g_USDSurfaceAttributeName )
@@ -772,7 +834,40 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 			}
 
-			NSISetAttribute( m_handle.context(), m_handle.name(), params.size(), params.data() );
+			if( isUSDMeshLight )
+			{
+				static BoolDataPtr g_trueData = new BoolData( true );
+				static BoolDataPtr g_falseData = new BoolData( false );
+
+				surfaceParams.add( g_visibilityShadowAttributeName.c_str() + 3, g_falseData.get(), true );
+
+				usdMeshLightParams.add( g_visibilityCameraAttributeName.c_str() + 3, g_falseData.get(), true );
+				usdMeshLightParams.add( g_visibilityReflectionAttributeName.c_str() + 3, g_falseData.get(), true );
+				usdMeshLightParams.add( g_visibilityRefractionAttributeName.c_str() + 3, g_falseData.get(), true );
+				usdMeshLightParams.add( g_visibilityShadowAttributeName.c_str() + 3, g_trueData.get(), true );
+				usdMeshLightParams.add( g_visibilitySpecularAttributeName.c_str() + 3, g_falseData.get(), true );
+
+				NSISetAttribute( m_USDMeshLightHandle.context(), m_USDMeshLightHandle.name(), usdMeshLightParams.size(), usdMeshLightParams.data() );
+
+				NSIConnect(
+					context,
+					m_USDMeshLightShader->handle().name(), "",
+					m_USDMeshLightHandle.name(), "surfaceshader",
+					0, nullptr
+				);
+
+				if( m_displacementShader )
+				{
+					NSIConnect(
+						context,
+						m_displacementShader->handle().name(), "",
+						m_USDMeshLightHandle.name(), "displacementshader",
+						0, nullptr
+					);
+				}
+			}
+
+			NSISetAttribute( m_handle.context(), m_handle.name(), surfaceParams.size(), surfaceParams.data() );
 
 			if( !m_surfaceShader )
 			{
@@ -817,12 +912,17 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 
 		const ShaderNetwork *usdLightShader() const
 		{
-			return m_usdLightShader.get();
+			return !m_USDMeshLightShader ? m_usdLightShader.get() : nullptr;
 		}
 
-		const DelightHandle &handle() const
+		const DelightHandle &surfaceHandle() const
 		{
 			return m_handle;
+		}
+
+		const DelightHandle &lightHandle() const
+		{
+			return m_USDMeshLightHandle ? m_USDMeshLightHandle : m_handle;
 		}
 
 		bool lightMute() const
@@ -833,6 +933,11 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 		const IECore::MurmurHash hash() const
 		{
 			return m_hash;
+		}
+
+		bool isUSDMeshLight() const
+		{
+			return m_USDMeshLightShader != nullptr;
 		}
 
 	private :
@@ -850,9 +955,11 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 		}
 
 		DelightHandle m_handle;
+		DelightHandle m_USDMeshLightHandle;
 		ConstDelightShaderPtr m_surfaceShader;
 		ConstDelightShaderPtr m_volumeShader;
 		ConstDelightShaderPtr m_displacementShader;
+		ConstDelightShaderPtr m_USDMeshLightShader;
 
 		ConstShaderNetworkPtr m_usdLightShader;
 		bool m_lightMute;
@@ -1090,42 +1197,13 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			if( m_attributes )
-			{
-				if( attributes == m_attributes )
+			return attributesInternal(
+				attributes,
+				[]( const DelightAttributes *a ) -> const DelightHandle &
 				{
-					return true;
+					return a->surfaceHandle();
 				}
-
-				NSIDisconnect(
-					m_transformHandle.context(),
-					m_attributes->handle().name(), "",
-					m_transformHandle.name(), "geometryattributes"
-				);
-				NSIDisconnect(
-					m_transformHandle.context(),
-					m_attributes->handle().name(), "",
-					m_transformHandle.name(), "shaderattributes"
-				);
-			}
-
-			m_attributes = static_cast<const DelightAttributes *>( attributes );
-			NSIConnect(
-				m_transformHandle.context(),
-				m_attributes->handle().name(), "",
-				m_transformHandle.name(), "geometryattributes",
-				0, nullptr
-
 			);
-			NSIConnect(
-				m_transformHandle.context(),
-				m_attributes->handle().name(), "",
-				m_transformHandle.name(), "shaderattributes",
-				0, nullptr
-
-			);
-
-			return true;
 		}
 
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
@@ -1145,6 +1223,50 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 		}
 
 	protected :
+
+		template<class HandleFunctor>
+		bool attributesInternal(
+			const IECoreScenePreview::Renderer::AttributesInterface *attributes,
+			HandleFunctor &&handleFunctor  // Signature : const DelightHandle &functor( const DelightAttributes * )
+		)
+		{
+			if( m_attributes )
+			{
+				if( attributes == m_attributes )
+				{
+					return true;
+				}
+
+				NSIDisconnect(
+					m_transformHandle.context(),
+					handleFunctor( m_attributes.get() ).name(), "",
+					m_transformHandle.name(), "geometryattributes"
+				);
+				NSIDisconnect(
+					m_transformHandle.context(),
+					handleFunctor( m_attributes.get() ).name(), "",
+					m_transformHandle.name(), "shaderattributes"
+				);
+			}
+
+			m_attributes = static_cast<const DelightAttributes *>( attributes );
+			NSIConnect(
+				m_transformHandle.context(),
+				handleFunctor( m_attributes.get() ).name(), "",
+				m_transformHandle.name(), "geometryattributes",
+				0, nullptr
+
+			);
+			NSIConnect(
+				m_transformHandle.context(),
+				handleFunctor( m_attributes.get() ).name(), "",
+				m_transformHandle.name(), "shaderattributes",
+				0, nullptr
+
+			);
+
+			return true;
+		}
 
 		const DelightHandle m_transformHandle;
 		// We keep a reference to the prototype and attributes so that they
@@ -1211,7 +1333,20 @@ class DelightLight : public DelightObject
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const bool wasMuted = m_attributes && m_attributes->lightMute();
-			DelightObject::attributes( attributes );
+			const bool wasUSDMeshLight = m_attributes && m_attributes->isUSDMeshLight();
+
+			attributesInternal(
+				attributes,
+				[]( const DelightAttributes *a ) -> const DelightHandle &
+				{
+					return a->lightHandle();
+				}
+			);
+
+			if( m_attributes->isUSDMeshLight() != wasUSDMeshLight )
+			{
+				return false;
+			}
 
 			if( wasMuted && !m_attributes->lightMute() )
 			{
@@ -1523,6 +1658,66 @@ class DelightInstancerObject : public DelightObject
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// DelightUSDMeshLight
+//////////////////////////////////////////////////////////////////////////
+
+
+namespace
+{
+
+class DelightUSDMeshLight : public DelightLight
+{
+	public :
+
+		DelightUSDMeshLight( NSIContext_t context, const std::string &name, DelightHandleSharedPtr prototype, DelightHandle::Ownership ownership ) :
+			DelightLight( context, name + ":light", prototype, ownership )
+		{
+			m_surface = new DelightObject( context, name + ":surface", prototype, ownership );
+		}
+
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
+		{
+			DelightLight::transform( samples, times );
+			m_surface->transform( samples, times );
+		}
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
+		{
+			const std::optional<bool> wasUSDMeshLight = m_attributes ? m_attributes->isUSDMeshLight() : std::optional<bool>();
+
+			bool result = DelightLight::attributes( attributes );
+
+			if( !result || ( wasUSDMeshLight.has_value() && *wasUSDMeshLight != m_attributes->isUSDMeshLight() ) )
+			{
+				return false;
+			}
+
+			return m_surface->attributes( attributes );
+		}
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
+		{
+			DelightLight::link( type, objects );
+			m_surface->link( type, objects );
+		}
+		void assignID( uint32_t id ) override
+		{
+			m_surface->assignID( id );
+		}
+		void assignInstanceID( uint32_t id ) override
+		{
+			// This isn't actually used yet, but it will be ready to go if we add support for encapsulation
+			// to our 3delight backend so we need to deal with encapsulated instancers.
+			m_surface->assignInstanceID( id );
+		}
+
+	private :
+
+		IECoreScenePreview::Renderer::ObjectInterfacePtr m_surface;
+
+};
+
+}  // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // DelightRenderer
 //////////////////////////////////////////////////////////////////////////
 
@@ -1827,7 +2022,16 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				prototype = m_prototypeCache->get( objectSamples, times );
 			}
 
-			ObjectInterfacePtr result = new DelightLight( m_context, name, prototype, ownership() );
+			auto castAttributes = static_cast<const DelightAttributes *>( attributes );
+			ObjectInterfacePtr result;
+			if( castAttributes->isUSDMeshLight() )
+			{
+				result = new DelightUSDMeshLight( m_context, name, prototype, ownership() );
+			}
+			else
+			{
+				result = new DelightLight( m_context, name, prototype, ownership() );
+			}
 			result->attributes( attributes );
 
 			return result;
