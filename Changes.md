@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.20.0)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed automatic creation of required AOVs for PxrStylized filters in XPU.
 
 1.6.20.0 (relative to 1.6.19.2)
 ========
