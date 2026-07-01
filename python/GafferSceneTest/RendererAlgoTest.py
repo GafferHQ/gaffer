@@ -505,21 +505,21 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
 
-			h1 = IECore.MurmurHash()
+			h1 = GafferScene.Private.RendererAlgo.ObjectHash()
 			sampledObject1 = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h1 )
 			self.assertEqual( sampledObject1.samples[0].radius(), 1 )
 			self.assertEqual( sampledObject1.sampleTimes, [ 1.0 ] )
-			self.assertNotEqual( h1, IECore.MurmurHash() )
+			self.assertNotEqual( h1.value, IECore.MurmurHash() )
 
 			sphere["radius"].setValue( 2 )
-			h2 = IECore.MurmurHash( h1 )
+			h2 = GafferScene.Private.RendererAlgo.ObjectHash( h1 )
 			sampledObject2 = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h2 )
 			self.assertEqual( sampledObject2.samples[0].radius(), 2 )
 			self.assertEqual( sampledObject2.sampleTimes, [ 1.0 ] )
-			self.assertNotEqual( h2, IECore.MurmurHash() )
+			self.assertNotEqual( h2.value, IECore.MurmurHash() )
 			self.assertNotEqual( h2, h1 )
 
-			h3 = IECore.MurmurHash( h2 )
+			h3 = GafferScene.Private.RendererAlgo.ObjectHash( h2 )
 			sampledObject3 = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h3 )
 			self.assertIsNone( sampledObject3 ) # Hash matched, so no samples generated
 			self.assertEqual( h3, h2 )
@@ -570,20 +570,20 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with cancelledContext :
 
-			h = IECore.MurmurHash()
+			h = GafferScene.Private.RendererAlgo.ObjectHash()
 			with self.assertRaises( IECore.Cancelled ) :
 				GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h )
 
 			# The hash should not have been updated, so that when we use
 			# it in a non-cancelled context, we get some samples returned.
-			self.assertEqual( h, IECore.MurmurHash() )
+			self.assertEqual( h, GafferScene.Private.RendererAlgo.ObjectHash() )
 
 		with context :
 
 			sampledObject = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h )
 			self.assertEqual( [ s.radius() for s in sampledObject.samples ], [ 1.0 ] )
 			self.assertEqual( sampledObject.sampleTimes, [ 1.0 ] )
-			self.assertNotEqual( h, IECore.MurmurHash() )
+			self.assertNotEqual( h, GafferScene.Private.RendererAlgo.ObjectHash() )
 
 	def testObjectSamplesWithoutObject( self ) :
 

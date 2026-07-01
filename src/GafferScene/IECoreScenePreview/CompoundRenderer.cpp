@@ -385,6 +385,22 @@ Renderer::ObjectInterfacePtr CompoundRenderer::object( const std::string &name, 
 	return result;
 }
 
+Renderer::ObjectInterfacePtr CompoundRenderer::pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes )
+{
+	auto compoundAttributes = static_cast<const CompoundAttributesInterface *>( attributes );
+	CompoundObjectInterfacePtr result = new CompoundObjectInterface;
+	vector<Prototype> rendererPrototypes( prototypes );
+	for( size_t i = 0; i < m_renderers.size(); ++i )
+	{
+		for( size_t pi = 0; pi < prototypes.size(); ++pi )
+		{
+			rendererPrototypes[pi].attributes = static_cast<const CompoundAttributesInterface *>( prototypes[pi].attributes.get() )->attributes[i];
+		}
+		result->objects[i] = m_renderers[i]->pointInstancer( name, samples, times, rendererPrototypes, compoundAttributes->attributes[i].get() );
+	}
+	return result;
+}
+
 void CompoundRenderer::render()
 {
 	for( auto &r : m_renderers )

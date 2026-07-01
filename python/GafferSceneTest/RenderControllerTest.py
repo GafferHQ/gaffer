@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import inspect
 import unittest
 
 import imath
@@ -1935,6 +1936,173 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		self.assertTrue( capture.isSame( renderer.capturedObject( "/cube" ) ) )
+
+	class ExamplePointInstancer( GafferScene.SceneNode ) :
+
+		def __init__( self, name = "ExamplePointInstancer" ) :
+
+			GafferScene.SceneNode.__init__( self, name )
+
+			self["numPoints"] = Gaffer.IntPlug( defaultValue = 2 )
+			self["sphereRadius"] = Gaffer.FloatPlug( defaultValue = 1 )
+			self["transform"] = Gaffer.TransformPlug()
+
+			self["objectToScene"] = GafferScene.ObjectToScene()
+			self["objectToScene"]["transform"].setInput( self["transform"] )
+			self["objectToScene"]["name"].setValue( "instancer" )
+
+			self["expression"] = Gaffer.Expression()
+			self["expression"].setExpression( inspect.cleandoc(
+				"""
+				import imath
+				import IECore
+				import IECoreScene
+				numPoints = parent["numPoints"]
+				pointInstancer = IECoreScene.PointInstancer( numPoints )
+				pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( i ) for i in range( numPoints ) ] ) )
+				pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ i % 2 for i in range( numPoints ) ] ) )
+				pointInstancer.setPrototypes( IECore.StringVectorData( [ "./prototypes/sphere", "./prototypes/cube" ] ) )
+
+				parent["objectToScene"]["object"] = pointInstancer
+				"""
+			) )
+
+			self["sphere"] = GafferScene.Sphere()
+			self["sphere"]["radius"].setInput( self["sphereRadius"] )
+			self["sphere"]["type"].setValue( self["sphere"].Type.Primitive )
+			self["cube"] = GafferScene.Cube()
+
+			self["prototypesGroup"] = GafferScene.Group()
+			self["prototypesGroup"]["name"].setValue( "prototypes" )
+			self["prototypesGroup"]["in"][0].setInput( self["sphere"]["out"] )
+			self["prototypesGroup"]["in"][1].setInput( self["cube"]["out"] )
+
+			self["parent"] = GafferScene.Parent()
+			self["parent"]["in"].setInput( self["objectToScene"]["out"] )
+			self["parent"]["children"][0].setInput( self["prototypesGroup"]["out"] )
+			self["parent"]["parent"].setValue( "/instancer" )
+
+			self["out"].setInput( self["parent"]["out"] )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancer( self ) :
+
+		pointInstancer = self.ExamplePointInstancer()
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( pointInstancer["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 100 )
+
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		self.assertIn( "/instancer", renderer.capturedObjectNames() )
+		self.assertNotIn( "/instancer/prototypes", renderer.capturedObjectNames() )
+		self.assertNotIn( "/instancer/prototypes/sphere", renderer.capturedObjectNames() )
+		self.assertNotIn( "/instancer/prototypes/cube", renderer.capturedObjectNames() )
+
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/instancer" )
+			expectedInstancer = pointInstancer["out"]["object"].getValue()
+			expectedInstancer = GafferScene.Private.PointInstancerAlgo.flatten(
+				expectedInstancer, GafferScene.Private.RendererAlgo.RenderOptions( pointInstancer["out"] ), pointInstancer["out"]
+			)
+
+		capuredInstancer = renderer.capturedObject( "/instancer" )
+		self.assertEqual( capuredInstancer.capturedSamples(), [ expectedInstancer ] )
+		self.assertEqual( capuredInstancer.capturedSampleTimes(), [ 1 ] )
+
+		self.assertEqual( len( capuredInstancer.capturedPointInstancerPrototypes() ), 2 )
+		self.assertEqual( capuredInstancer.capturedPointInstancerPrototypes()[0].samples, [ pointInstancer["out"].object( "/instancer/prototypes/sphere" ) ] )
+		self.assertEqual( capuredInstancer.capturedPointInstancerPrototypes()[0].times, [ 1 ] )
+		self.assertEqual( capuredInstancer.capturedPointInstancerPrototypes()[1].samples, [ pointInstancer["out"].object( "/instancer/prototypes/cube" ) ] )
+		self.assertEqual( capuredInstancer.capturedPointInstancerPrototypes()[1].times, [ 1 ] )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerPointCloudEdit( self ) :
+
+		pointInstancer = self.ExamplePointInstancer()
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( pointInstancer["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 100 )
+
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		capture = renderer.capturedObject( "/instancer" )
+		self.assertEqual( capture.capturedSamples()[0].numPoints, 2 )
+		del capture
+
+		pointInstancer["numPoints"].setValue( 4 )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		capture = renderer.capturedObject( "/instancer" )
+		self.assertEqual( capture.capturedSamples()[0].numPoints, 4 )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerPrototypeEdit( self ) :
+
+		pointInstancer = self.ExamplePointInstancer()
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( pointInstancer["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 100 )
+
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		capture = renderer.capturedObject( "/instancer" )
+		self.assertEqual( capture.capturedPointInstancerPrototypes()[0].samples[0].radius(), 1 )
+		del capture
+
+		pointInstancer["sphereRadius"].setValue( 2 )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		capture = renderer.capturedObject( "/instancer" )
+		self.assertEqual( capture.capturedPointInstancerPrototypes()[0].samples[0].radius(), 2 )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerUnrelatedEdits( self ) :
+
+		pointInstancer = self.ExamplePointInstancer()
+
+		sphere = GafferScene.Sphere()
+		parent = GafferScene.Parent()
+		parent["in"].setInput( pointInstancer["out"] )
+		parent["children"][0].setInput( sphere["out"] )
+		parent["parent"].setValue( "/" )
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "user:test", 10 ) )
+		customOptions["in"].setInput( parent["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( customOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 100 )
+
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		capture = renderer.capturedObject( "/instancer" )
+		self.assertEqual( capture.capturedPointInstancerPrototypes()[0].samples[0].radius(), 1 )
+
+		# Sphere has nothing to do with `/instancer`, so editing it should
+		# not invalidate the captured instancer, no matter how many times we
+		# do it.
+
+		for i in range( 0, 5 ) :
+			sphere["radius"].setValue( 10 + i )
+			self.assertTrue( controller.updateRequired() )
+			controller.update()
+			self.assertTrue( renderer.capturedObject( "/instancer" ).isSame( capture ) )
+
+		# Likewise, the custom option should not cause invalidation.
+
+		customOptions["options"][0]["value"].setValue( 20 )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		self.assertTrue( renderer.capturedObject( "/instancer" ).isSame( capture ) )
 
 if __name__ == "__main__":
 	unittest.main()

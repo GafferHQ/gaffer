@@ -39,6 +39,7 @@
 #include "boost/python.hpp"
 
 #include "GafferScene/InteractiveRender.h"
+#include "GafferScene/Private/PointInstancerAlgo.h"
 #include "GafferScene/Private/RendererAlgo.h"
 #include "GafferScene/Render.h"
 
@@ -115,7 +116,7 @@ list sampledObjectSampleTimes( const Private::RendererAlgo::SampledObject &sampl
 	return result;
 }
 
-object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, IECore::MurmurHash *hash, bool copy )
+object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, GafferScene::Private::RendererAlgo::ObjectHash *hash, bool copy )
 {
 	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
 	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
@@ -219,6 +220,19 @@ struct RenderSlotCaller
 	}
 };
 
+
+MurmurHash prototypesHashWrapper( const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return GafferScene::Private::PointInstancerAlgo::prototypesHash( &scene );
+}
+
+IECoreScene::PointInstancerPtr flattenWrapper( IECoreScene::PointInstancer &instancer, const  GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return GafferScene::Private::PointInstancerAlgo::flatten( &instancer, renderOptions, &scene );
+}
+
 } // namespace
 
 void GafferSceneModule::bindRender()
@@ -287,6 +301,14 @@ void GafferSceneModule::bindRender()
 				.add_property( "sampleTimes", &sampledObjectSampleTimes )
 			;
 
+			class_<GafferScene::Private::RendererAlgo::ObjectHash>( "ObjectHash" )
+				.def( init<const GafferScene::Private::RendererAlgo::ObjectHash &>() )
+				.def_readwrite( "value", &GafferScene::Private::RendererAlgo::ObjectHash::value )
+				.def_readwrite( "isPointInstancer", &GafferScene::Private::RendererAlgo::ObjectHash::isPointInstancer )
+				.def( self == self )
+				.def( self != self )
+			;
+
 			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object(), arg( "_copy" ) = true ) );
 			def( "transformSamples", &transformSamplesWrapper, ( arg( "transformPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object() ) );
 
@@ -300,6 +322,16 @@ void GafferSceneModule::bindRender()
 			def( "outputCameras", &outputCamerasWrapper );
 			def( "outputLights", &outputLightsWrapper );
 			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/", arg( "renderManifest" ) = object() ) );
+		}
+
+		{
+			object pointInstancerAlgoModule( borrowed( PyImport_AddModule( "GafferScene.Private.PointInstancerAlgo" ) ) );
+			scope().attr( "Private" ).attr( "PointInstancerAlgo" ) = pointInstancerAlgoModule;
+
+			scope pointInstancerAlgoModuleScope( pointInstancerAlgoModule );
+
+			def( "prototypesHash", &prototypesHashWrapper );
+			def( "flatten", &flattenWrapper );
 		}
 	}
 

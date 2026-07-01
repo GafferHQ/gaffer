@@ -573,12 +573,18 @@ class RenderController::SceneGraph
 				// Account for `Capsule::setRenderOptions()` being called by
 				// `RendererAlgo::outputObject()` in `updateObject()`.
 				m_dirtyComponents |= ObjectComponent;
-				m_objectHash = MurmurHash();
+				m_objectHash = Private::RendererAlgo::ObjectHash();
 			}
 
+			const bool hadPointInstancer = m_objectHash.isPointInstancer;
 			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene.get(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_lightLinks.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
+				if( hadPointInstancer != m_objectHash.isPointInstancer )
+				{
+					// Account for `updateChildren()` checking `isPointInstancer` flag.
+					m_dirtyComponents |= ChildNamesComponent;
+				}
 			}
 
 			if( m_objectInterface )
@@ -599,7 +605,7 @@ class RenderController::SceneGraph
 						else
 						{
 							// Failed to apply attributes - must replace entire object.
-							m_objectHash = MurmurHash();
+							m_objectHash = Private::RendererAlgo::ObjectHash();
 							if( updateObject( controller->m_scene.get(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
@@ -938,7 +944,7 @@ class RenderController::SceneGraph
 			else
 			{
 				m_objectInterface.assign(
-					Private::RendererAlgo::outputObject( name, *sampledObject, attributesInterface( renderer ), renderOptions, renderer ),
+					Private::RendererAlgo::outputObject( name, *sampledObject, attributesInterface( renderer ), renderOptions, scene, renderer ),
 					ObjectInterfaceHandle::RemovalCallback(),
 					/* isCapsule = */ sampledObject->samples[0]->isInstanceOf( Capsule::staticTypeId() )
 				);
@@ -949,7 +955,7 @@ class RenderController::SceneGraph
 		void clearObject()
 		{
 			m_objectInterface = nullptr;
-			m_objectHash = MurmurHash();
+			m_objectHash = Private::RendererAlgo::ObjectHash();
 		}
 
 		bool updateVisibleSet( const ScenePlug::ScenePath &path, const GafferScene::VisibleSet &visibleSet, size_t minimumExpansionDepth )
@@ -971,6 +977,17 @@ class RenderController::SceneGraph
 		// will subsequently be updated in parallel by update().
 		bool updateChildren( const InternedStringVectorDataPlug *childNamesPlug )
 		{
+			if( m_objectHash.isPointInstancer )
+			{
+				// By convention, we don't render the children of
+				// PointInstancers. This allows prototypes to be nested without
+				// fear of them being rendered in their own right.
+				const bool hadChildren = m_children.size();
+				m_children.clear();
+				m_childNamesHash = IECore::MurmurHash();
+				return hadChildren;
+			}
+
 			const IECore::MurmurHash childNamesHash = childNamesPlug->hash();
 			if( childNamesHash == m_childNamesHash )
 			{
@@ -1080,7 +1097,7 @@ class RenderController::SceneGraph
 
 		const SceneGraph *m_parent;
 
-		IECore::MurmurHash m_objectHash;
+		Private::RendererAlgo::ObjectHash m_objectHash;
 		ObjectInterfaceHandle m_objectInterface;
 		IECoreScenePreview::Renderer::SampleTimes m_deformationTimes;
 

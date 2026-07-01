@@ -176,6 +176,13 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 	return result;
 }
 
+Renderer::ObjectInterfacePtr CapturingRenderer::pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes )
+{
+	auto result = object( name, staticSamplesCast<ConstObjectPtr>( samples ), times, attributes );
+	static_cast<CapturedObject *>( result.get() )->m_capturedPointInstancerPrototypes = prototypes;
+	return result;
+}
+
 void CapturingRenderer::render()
 {
 	IECore::MessageHandler::Scope s( m_messageHandler.get() );
@@ -264,6 +271,11 @@ const IECoreScenePreview::Renderer::ObjectSamples &CapturingRenderer::CapturedOb
 const IECoreScenePreview::Renderer::SampleTimes &CapturingRenderer::CapturedObject::capturedSampleTimes() const
 {
 	return m_capturedSampleTimes;
+}
+
+const std::vector<IECoreScenePreview::Renderer::Prototype> &CapturingRenderer::CapturedObject::capturedPointInstancerPrototypes() const
+{
+	return m_capturedPointInstancerPrototypes;
 }
 
 const IECoreScenePreview::Renderer::TransformSamples &CapturingRenderer::CapturedObject::capturedTransforms() const

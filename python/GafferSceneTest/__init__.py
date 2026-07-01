@@ -200,6 +200,7 @@ from .CurvesInterpolationTest import CurvesInterpolationTest
 from .CurvesTangentsTest import CurvesTangentsTest
 from .PrimitiveQueryTest import PrimitiveQueryTest
 from .SceneStatsTest import SceneStatsTest
+from .PointInstancerAlgoTest import PointInstancerAlgoTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
