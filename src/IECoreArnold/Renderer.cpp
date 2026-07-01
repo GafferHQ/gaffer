@@ -397,7 +397,7 @@ namespace
 class ArnoldGlobals;
 class Instance;
 IE_CORE_FORWARDDECLARE( ShaderCache );
-IE_CORE_FORWARDDECLARE( InstanceCache );
+IE_CORE_FORWARDDECLARE( PrototypeCache );
 IE_CORE_FORWARDDECLARE( ArnoldObject );
 
 /// This class implements the basics of outputting attributes
@@ -428,7 +428,7 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 		NodeDeleter m_nodeDeleter;
 		AtUniverse *m_universe;
 		ShaderCachePtr m_shaderCache;
-		InstanceCachePtr m_instanceCache;
+		PrototypeCachePtr m_prototypeCache;
 
 		IECore::MessageHandlerPtr m_messageHandler;
 
@@ -1385,7 +1385,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// go on the shape rather than the ginstance. These are problematic because they
 		// must be taken into account when determining the hash for instancing, and
 		// because they cannot be edited interactively. This method applies those
-		// attributes, and is called from InstanceCache during geometry conversion.
+		// attributes, and is called from PrototypeCache during geometry conversion.
 		void applyGeometry( const IECore::Object *object, AtNode *node ) const
 		{
 			if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
@@ -2357,12 +2357,26 @@ IE_CORE_DECLAREPTR( ArnoldAttributes )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// InstanceCache
+// PrototypeCache
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
+// Arnold doesn't have a clear separation between prototypes and instances.
+// For example, a `polymesh` has its own `shader` and `matrix` parameters
+// allowing it to be rendered directly. But it can also be referenced by a
+// `ginstance` node that has its own shader and matrix.
+//
+// We want to avoid the overhead of the `ginstance` node when we know we're
+// not going to be instancing a shape more than once. The Instance class
+// can therefore exist in two states :
+//
+// 1. A uniquely owned `ginstance` referencing a potentially shared shape.
+// 2. A uniquely owned shape node with no `ginstance`.
+//
+// In both cases, the `node()` function returns the uniquely owned node,
+// which we apply transforms and shaders etc to.
 class Instance
 {
 
@@ -2381,7 +2395,7 @@ class Instance
 			}
 			else
 			{
-				// Technically the node was created in `InstanceCache.get()`
+				// Technically the node was created in `PrototypeCache.createInstance()`
 				// rather than by us directly, but we are the sole owner and
 				// this is the most natural place to report the creation.
 				nodes.push_back( m_node.get() );
@@ -2391,8 +2405,8 @@ class Instance
 	private :
 
 		// Constructors are private as they are only intended for use in
-		// `InstanceCache::get()`. See comment in `nodesCreated()`.
-		friend class InstanceCache;
+		// `PrototypeCache::createInstance()`. See comment in `nodesCreated()`.
+		friend class PrototypeCache;
 
 		// Non-instanced
 		Instance( const SharedAtNodePtr &node )
@@ -2406,7 +2420,6 @@ class Instance
 		{
 			if( node )
 			{
-				AiNodeSetByte( node.get(), g_visibilityArnoldString, 0 );
 				m_ginstance = SharedAtNodePtr(
 					AiNode( universe, g_ginstanceArnoldString, AtString( instanceName.c_str() ), parent ),
 					nodeDeleter
@@ -2423,28 +2436,26 @@ class Instance
 // Forward declaration
 AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const ArnoldAttributes *attributes, AtUniverse *universe, const std::string &nodeName, AtNode *parentNode );
 
-class InstanceCache : public IECore::RefCounted
+class PrototypeCache : public IECore::RefCounted
 {
 
 	public :
 
-		InstanceCache( NodeDeleter nodeDeleter, AtUniverse *universe, AtNode *parentNode )
+		PrototypeCache( NodeDeleter nodeDeleter, AtUniverse *universe, AtNode *parentNode )
 			:	m_nodeDeleter( nodeDeleter ), m_universe( universe ), m_parentNode( parentNode )
 		{
 		}
 
-		Instance get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
+		// Converts `samples` to an appropriate Arnold node, reusing previous
+		// conversions when the same samples are passed more than once. Does not
+		// respect `ArnoldAttributes::canInstanceGeometry()` - all conversions
+		// are cached and reused where possible. The result must therefore always
+		// be used with a `ginstance` node.
+		ConstSharedAtNodePtr get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &messageContext )
 		{
 			if( samples.empty() )
 			{
-				return Instance( SharedAtNodePtr() );
-			}
-
-			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-
-			if( !arnoldAttributes->canInstanceGeometry( samples.front().get() ) )
-			{
-				return Instance( convert( samples, times, arnoldAttributes, nodeName, /* messageContext = */ nodeName ) );
+				return nullptr;
 			}
 
 			IECore::MurmurHash h;
@@ -2453,14 +2464,15 @@ class InstanceCache : public IECore::RefCounted
 				sample->hash( h );
 			}
 			h.append( times.data(), times.size() );
+
+			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 			arnoldAttributes->hashGeometry( samples.front().get(), h );
 
 			SharedAtNodePtr node;
 			Cache::const_accessor readAccessor;
 			if( m_cache.find( readAccessor, h ) )
 			{
-				node = readAccessor->second;
-				readAccessor.release();
+				return readAccessor->second;
 			}
 			else
 			{
@@ -2469,7 +2481,11 @@ class InstanceCache : public IECore::RefCounted
 				{
 					try
 					{
-						writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString(), /* messageContext = */ nodeName );
+						writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString(), messageContext );
+						if( writeAccessor->second )
+						{
+							AiNodeSetByte( writeAccessor->second.get(), g_visibilityArnoldString, 0 );
+						}
 					}
 					catch( const IECore::Cancelled & )
 					{
@@ -2480,11 +2496,28 @@ class InstanceCache : public IECore::RefCounted
 						throw;
 					}
 				}
-				node = writeAccessor->second;
-				writeAccessor.release();
+				return writeAccessor->second;
+			}
+		}
+
+		// Creates an Instance, using `get()` where `ArnoldAttributes::canInstanceGeometry()` allows it,
+		// otherwise creating a unique shape node.
+		Instance createInstance( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
+		{
+			if( samples.empty() )
+			{
+				return Instance( nullptr );
 			}
 
-			return Instance( node, m_nodeDeleter, m_universe, nodeName, m_parentNode );
+			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+			if( !arnoldAttributes->canInstanceGeometry( samples.front().get() ) )
+			{
+				return Instance( convert( samples, times, arnoldAttributes, nodeName, /* messageContext = */ nodeName ) );
+			}
+			else
+			{
+				return Instance( get( samples, times, attributes, nodeName ), m_nodeDeleter, m_universe, nodeName, m_parentNode );
+			}
 		}
 
 		// Must not be called concurrently with anything.
@@ -2556,7 +2589,7 @@ class InstanceCache : public IECore::RefCounted
 
 };
 
-IE_CORE_DECLAREPTR( InstanceCache )
+IE_CORE_DECLAREPTR( PrototypeCache )
 
 } // namespace
 
@@ -3238,7 +3271,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			{
 				nodes.insert( nodes.end(), nodesCreated.begin(), nodesCreated.end() );
 			}
-			m_instanceCache->nodesCreated( nodes );
+			m_prototypeCache->nodesCreated( nodes );
 			m_shaderCache->nodesCreated( nodes );
 		}
 
@@ -3307,7 +3340,7 @@ AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, co
 	tbb::this_task_arena::isolate(
 		// Isolate in case procedural spawns TBB tasks, because
 		// `convertProcedural()` is called behind a lock in
-		// `InstanceCache.get()`.
+		// `PrototypeCache.get()`.
 		[&]() {
 			procedural->render( renderer.get() );
 		}
@@ -4576,7 +4609,7 @@ ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, AtUniverse *uni
 	:	m_nodeDeleter( nodeDeleter ),
 		m_universe( universe ),
 		m_shaderCache( new ShaderCache( nodeDeleter, universe, parentNode ) ),
-		m_instanceCache( new InstanceCache( nodeDeleter, universe, parentNode ) ),
+		m_prototypeCache( new PrototypeCache( nodeDeleter, universe, parentNode ) ),
 		m_messageHandler( messageHandler ),
 		m_parentNode( parentNode )
 {
@@ -4602,7 +4635,7 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-	Instance instance = m_instanceCache->get( ObjectSamples( samples.begin(), samples.end() ), times, attributes, name );
+	Instance instance = m_prototypeCache->createInstance( ObjectSamples( samples.begin(), samples.end() ), times, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	if( attributes )
@@ -4616,7 +4649,7 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::str
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-	Instance instance = m_instanceCache->get( samples, times, attributes, name );
+	Instance instance = m_prototypeCache->createInstance( samples, times, attributes, name );
 	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter, m_universe, m_parentNode );
 	result->attributes( attributes );
 	return result;
@@ -4626,7 +4659,7 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::lightFilter( const st
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-	Instance instance = m_instanceCache->get( samples, times,  attributes, name );
+	Instance instance = m_prototypeCache->createInstance( samples, times,  attributes, name );
 	ObjectInterfacePtr result = new ArnoldLightFilter( name, instance, m_nodeDeleter, m_universe, m_parentNode );
 	result->attributes( attributes );
 
@@ -4637,7 +4670,7 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::st
 {
 	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-	Instance instance = m_instanceCache->get( samples, times, attributes, name );
+	Instance instance = m_prototypeCache->createInstance( samples, times, attributes, name );
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
 	return result;
@@ -4674,7 +4707,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 		{
 			pause();
 			// Delete cached nodes before universe is destroyed.
-			m_instanceCache.reset( nullptr );
+			m_prototypeCache.reset( nullptr );
 			m_shaderCache.reset( nullptr );
 		}
 
@@ -4702,7 +4735,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			m_shaderCache->preRender( m_globals->renderType() );
-			m_instanceCache->clearUnused();
+			m_prototypeCache->clearUnused();
 			m_globals->render();
 		}
 
