@@ -94,6 +94,86 @@ With any luck, you now have a functioning version of Gaffer.
 ../gaffer-build/bin/gaffer
 ```
 
+### Build process on Windows 11###
+
+#### 1- Use Git Bash
+
+```bash
+# Must be executed inside Git Bash to interpret the .sh file
+./config/installDependencies.sh ../gaffer-build
+```
+Once the dependencies finish unpacking into your gaffer-build directory, close Git Bash.
+
+#### 2- Install Scons
+
+```powershell
+:: 1. Navigate to your local clone directory
+cd path\to\your\gaffer
+
+:: 2. Install SCons into your python environment if you haven't already
+pip install scons
+```
+
+#### 3- Add existing 7-Zip to your System PATH
+- Typically, it is located at C:\Program Files\7-Zip. Check if 7z.exe is sitting inside that folder.
+- In your Windows Search bar, type "environment variables" and select Edit the system environment variables.
+- Click the Environment Variables... button at the bottom right.
+- In the System variables list (the bottom section), find Path and click Edit....
+- Click New and paste the path: C:\Program Files\7-Zip
+- Click OK on all windows to save.
+- Restart your terminal and run the script again.
+
+#### 4- Force Python to use UTF-8 encoding in this PowerShell window
+
+```powershell
+[System.Environment]::SetEnvironmentVariable("PYTHONUTF8", "1", "User")
+```
+
+#### 5- Scons tips for laters
+
+Before you can build you need to setup a few things because of the difference between linux and windows. Windows requires a little bit more hand holding. Make sure you do these steps below for a successful and fluid build.
+
+***1. Inkscape Errors:*** Gaffer utilizes Inkscape purely during the compilation phase to automatically convert all of the UI icon assets (.svg vector files) into .png raster graphics for the application layouts. But the problem is that even though Inkscape might be in the environment path scons will not find it. So we have to force it in the command line. The line to add at the end of the build command is `INKSCAPE="C:\Program Files\Inkscape\bin\inkscape.exe" --config=force`
+
+***2. Scons cannot see installed git:*** Same issue with Inkscape we'll need to create a symbolic link to the real git for scons to see. Open power shell in elviated privilages
+```powershell
+# Create a link from your real git executable straight into the gaffer-build folder
+New-Item -ItemType SymbolicLink -Path "C:\src\gaffer-build\bin\git.exe" -Target "C:\Program Files\Git\bin\git.exe"
+```
+
+***3. GLEW.lib:*** The linker will blow up looking for GLEW.lib, the fix is to find the real file, and create a mirror copy named exactly what the linker wants.
+Open a normal PowerShell window and search for the actual GLEW library file inside your dependencies directory:
+```powershell
+Get-ChildItem -Path "C:\src\gaffer-build\lib\" -Filter "*glew*"
+```
+*(You will likely see `glew32.lib` or `glew32s.lib` print out in the list).*
+
+Now, Open **PowerShell as an Administrator**, and create a hard link pointing from their expected name to the file that *actually* exists.
+**If the file found was `glew32.lib`, run:**
+```powershell
+New-Item -ItemType HardLink -Path "C:\src\gaffer-build\lib\GLEW.lib" -Value "C:\src\gaffer-build\lib\glew32.lib"
+```
+
+***4. Build Time:*** By default, SCons acts conservatively and compiles everything on a single CPU thread. You need to explicitly tell it to spin up parallel workers using the -j (jobs) flag. ***Note: switching to multi core build will error out when reaching the Inkscape stage. Because you split the build into multiple parallel threads using `-j 8`, Gaffer launched 8 separate instances of Inkscape simultaneously, all trying to access the exact same SVG file at once. Inkscape on Windows often handles parallel thread calling very poorly, resulting in memory overflows and crashes. Since you only need to build these icons once (and they don't change when you tweak your RenderMan C++ node code), you can bypass this multi-threaded bug easily.Because SCons tracks file generation states, it will not recompile any of your C++ code. All your RenderMan and Gaffer UI objects are already safely compiled as .obj and .dll binaries from your last run. So make sure to run the build again with `-j 1` when the build errors out on the icons
+
+#### 5- Building on windows
+Once all the tips in step #5 are completed open a fresh powershell and run the following command to build for various render engines
+
+1. Default build with cycles: `scons build -j 16 BUILD_DIR=../gaffer-build NKSCAPE="C:\Program Files\Inkscape\bin\inkscape.exe"`
+2. Build with RenderMan: `scons build -j 16 RENDERMAN_ROOT="C:\Program Files\Pixar\RenderManProServer-27.3" build BUILD_DIR=../gaffer-build NKSCAPE="C:\Program Files\Inkscape\bin\inkscape.exe"`
+3. Build with Arnold: `scons build -j 16 ARNOLD_ROOT="C:\src\Arnold-7.5.2.0" build BUILD_DIR=../gaffer-build NKSCAPE="C:\Program Files\Inkscape\bin\inkscape.exe"`
+4. Build with 3Delight: `scons build -j 16 DELIGHT_ROOT="C:\Program Files\3Delight" build BUILD_DIR=../gaffer-build NKSCAPE="C:\Program Files\Inkscape\bin\inkscape.exe"`
+
+If you want to build for all engines just add reach location one after the other as following:
+```powershell
+scons build -j 16 RENDERMAN_ROOT="C:\Program Files\Pixar\RenderManProServer-27.3" ARNOLD_ROOT="C:\src\Arnold-7.5.2.0" DELIGHT_ROOT="C:\Program Files\3Delight" BUILD_DIR=..\gaffer-build INKSCAPE="C:\Program Files\Inkscape\bin\inkscape.exe"
+```
+
+***Once you hit the Inkscape error, redo the above command with***
+```powershell
+scons build -j 1 RENDERMAN_ROOT="C:\Program Files\Pixar\RenderManProServer-27.3" ARNOLD_ROOT="C:\src\Arnold-7.5.2.0" DELIGHT_ROOT="C:\Program Files\3Delight" BUILD_DIR=..\gaffer-build INKSCAPE="C:\Program Files\Inkscape\bin\inkscape.exe"
+```
+
 ### Building with third-party renderer support
 
 Gaffer dependencies ships with Cycles, but to build the modules for one of the other supported third-party renderers, you will need to set appropriate `scons` options pointing to your installation. The options are:
