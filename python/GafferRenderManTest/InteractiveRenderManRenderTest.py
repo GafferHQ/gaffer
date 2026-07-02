@@ -49,6 +49,7 @@ import GafferRenderMan
 class InteractiveRenderManRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "RenderMan"
+	pointInstancerSupported = True
 
 	def testEditCropWindowWithInteractiveDenoiser( self ) :
 

@@ -53,6 +53,7 @@ import GafferSceneTest
 class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "RenderMan"
+	pointInstancerSupported = True
 
 	def testRepeatedRender( self ) :
 
@@ -107,6 +108,12 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertAlmostEqual( middlePixel.a, 1, delta = 0.01 )
 			self.assertEqual( lowerPixel, imath.Color4f( 0 ) )
 
+	def _createConstantShader( self ) :
+
+		shader = GafferRenderMan.RenderManShader()
+		shader.loadShader( "PxrConstant" )
+		return shader, shader["parameters"]["emitColor"], shader["out"]
+
 	def _createDiffuseShader( self ) :
 
 		shader = GafferRenderMan.RenderManShader()
@@ -151,6 +158,11 @@ class RenderManXPURenderTest( RenderManRenderTest ) :
 	# or update OpenImageIOReader to load integer IDs via `reinterpret_cast`.
 	@unittest.skip( "XPU only renders integer ID outputs, but we want floats" )
 	def testIDOutput( self ) :
+
+		pass
+
+	@unittest.skip( "Apparent bounding box bug clips motion" )
+	def testPointInstancerMotionBlur( self ) :
 
 		pass
 
