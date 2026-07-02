@@ -7,6 +7,11 @@ Features
 - SceneStats : Added a new node for computing aggregate scene statistics.
 - SceneInspector : Added Statistics tab with aggregated geometry statistics for the entire scene.
 
+Improvements
+------------
+
+- Outputs : Added output presets for RenderMan's NPR AOVs.
+
 Fixes
 -----
 
