@@ -1481,7 +1481,6 @@ class PointInstancerCache : public IECore::RefCounted
 				make_shared<DelightHandle>( m_context, handle, m_ownership ),
 				std::move( prototypeHandles ), std::move( prototypeAttributes )
 			} );
-			return nullptr;
 		}
 
 		PrototypeCachePtr m_prototypeCache;
