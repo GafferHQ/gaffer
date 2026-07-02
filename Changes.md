@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.20.0)
 =======
 
+Fixes
+-----
 
+- Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors.
 
 1.6.20.0 (relative to 1.6.19.2)
 ========
