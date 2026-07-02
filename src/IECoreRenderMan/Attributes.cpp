@@ -292,6 +292,19 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 			continue;
 		}
 
+		auto it = g_prototypeAttributes.find( name );
+		if( it != g_prototypeAttributes.end() )
+		{
+			ParamListAlgo::convertParameter( it->second, data, m_prototypeAttributes );
+			if( m_prototypeHash )
+			{
+				/// \todo Make the hash match between non-specified attributes and attributes which
+				/// are explicitly specified with their default values.
+				data->hash( *m_prototypeHash );
+			}
+			continue;
+		}
+
 		if( name == g_lightMuteAttributeName )
 		{
 			ParamListAlgo::convertParameter( Loader::strings().k_lighting_mute, data, m_instanceAttributes );
@@ -312,28 +325,17 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 				RtUString( withUserPrefix.c_str() ), data, m_instanceAttributes
 			);
 		}
-
-		if( !boost::starts_with( name.c_str(), g_renderManPrefix.c_str() ) )
+		else if( !boost::starts_with( name.c_str(), g_renderManPrefix.c_str() ) )
 		{
+			// Avoid appending to `m_instanceAttributesHash`.
 			continue;
-		}
-
-		auto it = g_prototypeAttributes.find( name );
-		if( it != g_prototypeAttributes.end() )
-		{
-			ParamListAlgo::convertParameter( it->second, data, m_prototypeAttributes );
-			if( m_prototypeHash )
-			{
-				/// \todo Make the hash match between non-specified attributes and attributes which
-				/// are explicitly specified with their default values.
-				data->hash( *m_prototypeHash );
-			}
 		}
 		else
 		{
 			ParamListAlgo::convertParameter( RtUString( name.c_str() + g_renderManPrefix.size() ), data, m_instanceAttributes );
-
 		}
+
+		value->hash( m_instanceAttributesHash );
 	}
 
 	m_lightFilter = attribute<ShaderNetwork>( attributes->members(), g_renderManLightFilterAttributeName );
@@ -356,6 +358,11 @@ const RtParamList &Attributes::prototypeAttributes() const
 const RtParamList &Attributes::instanceAttributes() const
 {
 	return m_instanceAttributes;
+}
+
+const IECore::MurmurHash &Attributes::instanceAttributesHash() const
+{
+	return m_instanceAttributesHash;
 }
 
 const Material *Attributes::material() const
