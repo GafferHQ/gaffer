@@ -1598,7 +1598,7 @@ class RendererTest( GafferTest.TestCase ) :
 					nsi,
 					[
 						(
-							"MeshLight",
+							"MeshLight:light",
 							imath.V3f( 1.0, 2.0, 3.0 ),
 							imath.V3f( 10.0, 20.0, 30.0 ),
 							"mesh",
