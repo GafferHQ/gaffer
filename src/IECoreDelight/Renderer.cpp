@@ -1560,14 +1560,14 @@ class PointInstancerCache : public IECore::RefCounted
 
 					NSIConnect(
 						m_context,
-						typedAttributes->handle().name(), "",
+						typedAttributes->surfaceHandle().name(), "",
 						transformHandle.c_str(), "geometryattributes",
 						0, nullptr
 
 					);
 					NSIConnect(
 						m_context,
-						typedAttributes->handle().name(), "",
+						typedAttributes->surfaceHandle().name(), "",
 						transformHandle.c_str(), "shaderattributes",
 						0, nullptr
 
