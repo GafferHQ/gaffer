@@ -93,12 +93,17 @@ IECore::MurmurHash Private::PointInstancerAlgo::prototypesHash( const ScenePlug 
 		return result;
 	}
 
+	auto prototypePaths = pointInstancer->getPrototypes();
+	if( !prototypePaths )
+	{
+		return result;
+	}
+
 	const auto &currentPath = Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 
 	const ThreadState &threadState = ThreadState::current();
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
-	auto prototypePaths = pointInstancer->getPrototypes();
 	using PrototypeRange = tbb::blocked_range<PrimitiveVariable::IndexedView<string>::Iterator>;
 
 	return tbb::parallel_deterministic_reduce(

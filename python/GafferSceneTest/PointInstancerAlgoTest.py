@@ -165,6 +165,18 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( GafferScene.Private.PointInstancerAlgo.prototypesHash( plane["out"] ), IECore.MurmurHash() )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPrototypesHashWithoutPrototypes( self ) :
+
+		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancerNode = GafferScene.ObjectToScene()
+		pointInstancerNode["object"].setValue( pointInstancer )
+		pointInstancerNode["name"].setValue( "instancer" )
+
+		with Gaffer.Context() as context :
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/instancer" )
+			self.assertEqual( GafferScene.Private.PointInstancerAlgo.prototypesHash( pointInstancerNode["out"] ), IECore.MurmurHash() )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
 	def testPrototypesHashWithMissingPrototype( self ) :
 
 		pointInstancer = IECoreScene.PointInstancer( 2 )
