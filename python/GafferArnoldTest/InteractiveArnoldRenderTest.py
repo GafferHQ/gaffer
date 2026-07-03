@@ -56,6 +56,7 @@ import GafferArnold
 class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "Arnold"
+	pointInstancerSupported = True
 
 	# Arnold outputs licensing warnings that would cause failures
 	failureMessageLevel = IECore.MessageHandler.Level.Error

@@ -63,6 +63,7 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		const RtParamList &prototypeAttributes() const;
 		/// Attributes to be applied to GeometryInstances.
 		const RtParamList &instanceAttributes() const;
+		const IECore::MurmurHash &instanceAttributesHash() const;
 
 		const Material *material() const;
 		const Displacement *displacement() const { return m_displacement.get(); }
@@ -80,6 +81,7 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		std::optional<IECore::MurmurHash> m_prototypeHash;
 		RtParamList m_prototypeAttributes;
 		RtParamList m_instanceAttributes;
+		IECore::MurmurHash m_instanceAttributesHash;
 		ConstMaterialPtr m_material;
 		ConstDisplacementPtr m_displacement;
 		IECoreScene::ConstShaderNetworkPtr m_lightShader;

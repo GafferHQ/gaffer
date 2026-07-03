@@ -1457,6 +1457,80 @@ class RendererTest( GafferTest.TestCase ) :
 				"polyAdaptiveSubdivideLinearAttributes2",
 			)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerInstancing( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		pointInstancer1 = IECoreScene.PointInstancer( 1 )
+		pointInstancer1.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer1.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		pointInstancer2 = pointInstancer1.copy()
+		pointInstancer2.setPosition( IECore.V3fVectorData( [ imath.V3f( 1 ) ] ) )
+
+		attributes1 = renderer.attributes( IECore.CompoundObject() )
+
+		noInstanceAttributes = renderer.attributes(
+			IECore.CompoundObject( {
+				"gaffer:automaticInstancing" : IECore.BoolData( 0 ),
+			} )
+		)
+
+		prototype1 = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[ IECoreScene.SpherePrimitive() ], [ 0.0 ], attributes1
+		)
+
+		prototype2 = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[ IECoreScene.SpherePrimitive( 2 ) ], [ 0.0 ], attributes1
+		)
+
+		renderer.pointInstancer( "instancer1_attributes1_prototype1_A", [ pointInstancer1 ], [ 0.0 ], [ prototype1 ], attributes1 )
+		renderer.pointInstancer( "instancer1_attributes1_prototype1_B", [ pointInstancer1 ], [ 0.0 ], [ prototype1 ], attributes1 )
+
+		renderer.pointInstancer( "instancer2_attributes1_prototype1_A", [ pointInstancer2 ], [ 0.0 ], [ prototype1 ], attributes1 )
+		renderer.pointInstancer( "instancer2_attributes1_prototype1_B", [ pointInstancer2 ], [ 0.0 ], [ prototype1 ], attributes1 )
+
+		renderer.pointInstancer( "instancer1_noInstancing_A", [ pointInstancer1 ], [ 0.0 ], [ prototype1 ], noInstanceAttributes )
+		renderer.pointInstancer( "instancer1_noInstancing_B", [ pointInstancer1 ], [ 0.0 ], [ prototype1 ], noInstanceAttributes )
+
+		renderer.render()
+		del attributes1, noInstanceAttributes, prototype1, prototype2
+		del renderer
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
+			numGInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numInstancers = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "instancer" ] )
+
+			self.assertEqual( numInstancers, 4 )
+			self.assertEqual( numGInstances, 4 )
+
+			self.__assertInstanced(
+				universe,
+				"instancer1_attributes1_prototype1_A",
+				"instancer1_attributes1_prototype1_B",
+			)
+
+			self.__assertInstanced(
+				universe,
+				"instancer2_attributes1_prototype1_A",
+				"instancer2_attributes1_prototype1_B",
+			)
+
+			self.__assertNotInstanced(
+				universe,
+				"instancer1_noInstancing_A",
+				"instancer1_noInstancing_B",
+			)
+
 	def testTransformTypeAttribute( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

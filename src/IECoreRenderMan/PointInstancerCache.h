@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,59 +36,69 @@
 
 #pragma once
 
+#include "IECore/RefCounted.h"
+
 #include "Attributes.h"
 #include "GeometryPrototypeCache.h"
-#include "LightLinker.h"
 #include "Session.h"
 
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "tbb/concurrent_unordered_map.h"
+
+#include <mutex>
 
 namespace IECoreRenderMan
 {
 
-class Object : public IECoreScenePreview::Renderer::ObjectInterface
+class PointInstancerCache
 {
 
 	public :
 
-		Object( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, LightLinker *lightLinker, const Session *session );
-		~Object() override;
+		PointInstancerCache( Session *session, GeometryPrototypeCache *geometryPrototypeCache );
 
-		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override;
-		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override;
-		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override;
-		void assignID( uint32_t id ) override;
-		void assignInstanceID( uint32_t id ) override;
-
-	protected :
-
-		const Session *m_session;
-		LightLinker *m_lightLinker;
-		riley::GeometryInstanceId m_geometryInstance;
-		/// Used to keep material etc alive as long as we need it.
-		ConstAttributesPtr m_attributes;
-		/// Used to keep geometry prototype alive as long as we need it.
-		ConstGeometryPrototypePtr m_geometryPrototype;
-		RtParamList m_extraAttributes;
-		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedLights;
-		IECoreScenePreview::Renderer::ConstObjectSetPtr m_shadowedLights;
-
-};
-
-class PointInstancerObject : public Object
-{
-
-	public :
-
-		PointInstancerObject( const std::string &name, const ConstGeometryPrototypePtr &geometryPrototype, const Attributes *attributes, LightLinker *lightLinker, const Session *session, const IECore::ConstRefCountedPtr &prototypesOwner )
-			:	Object( name, geometryPrototype, attributes, lightLinker, session ), m_prototypesOwner( prototypesOwner )
+		struct PointInstancer : public IECore::RefCounted
 		{
-		}
+
+			~PointInstancer() override;
+
+			// Group below which instances are parented.
+			GeometryPrototypePtr group;
+
+			private :
+
+				friend class PointInstancerCache;
+
+				Session *m_session;
+				std::vector<GeometryPrototypePtr> m_prototypeGeometries; // Maintains lifetime of prototypes
+				std::vector<AttributesPtr> m_prototypeAttributes; // Maintains lifetime of attributes
+				std::vector<riley::GeometryInstanceId> m_instances; // Maintains lifetime of instances
+
+		};
+		IE_CORE_DECLAREPTR( PointInstancer );
+
+		// Can be called concurrently with other calls to `get()`.
+		ConstPointInstancerPtr get(
+			const IECoreScenePreview::Renderer::PointInstancerSamples &samples,
+			const IECoreScenePreview::Renderer::SampleTimes &sampleTimes,
+			const std::vector<IECoreScenePreview::Renderer::Prototype> &prototypes,
+			const Attributes *attributes, const std::string &messageContext
+		);
+
+		// Must not be called concurrently with anything.
+		void clearUnused();
 
 	private :
 
-		// Keeps the referenced prototypes alive as long as the object.
-		IECore::ConstRefCountedPtr m_prototypesOwner;
+		Session *m_session;
+		GeometryPrototypeCache *m_geometryPrototypeCache;
+
+		struct CacheEntry
+		{
+			std::once_flag onceFlag;
+			PointInstancerPtr instancer;
+		};
+		using Cache = tbb::concurrent_unordered_map<IECore::MurmurHash, CacheEntry>;
+		Cache m_cache;
 
 };
 
