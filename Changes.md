@@ -18,6 +18,7 @@ Fixes
 - Arnold :
   - Fixed fallback to a facing ratio shader when a shader is removed during an interactive render.
   - Fixed crash attempting to render with a shader that doesn't exist.
+- Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors [^1].
 
 API
 ---
@@ -30,6 +31,8 @@ Breaking Changes
 ----------------
 
 - ShaderUI : Removed PlugAdder. Use `GafferUI.PlugVisibilityGadget` instead.
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a5 (relative to 1.7.0.0a4)
 =========
@@ -290,7 +293,10 @@ Build
 1.6.x.x (relative to 1.6.20.0)
 =======
 
+Fixes
+-----
 
+- Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors.
 
 1.6.20.0 (relative to 1.6.19.2)
 ========

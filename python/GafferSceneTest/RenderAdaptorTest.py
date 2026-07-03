@@ -483,7 +483,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				( "3Delight", "dl:visibility.camera" ),
 				( "3Delight Cloud", "dl:visibility.camera" ),
 				( "RenderMan", "ri:visibility:camera" ),
-				( "RenderMan XPU", "ri:visibility:camera" ),
+				( "RenderManXPU", "ri:visibility:camera" ),
 			) :
 
 				with self.subTest( rendererName = rendererName, attribute = attribute ) :
@@ -638,7 +638,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				( "3Delight", "dl:matte" ),
 				( "3Delight Cloud", "dl:matte" ),
 				( "RenderMan", "ri:Ri:Matte" ),
-				( "RenderMan XPU", "ri:Ri:Matte" ),
+				( "RenderManXPU", "ri:Ri:Matte" ),
 			) :
 
 				with self.subTest( rendererName = rendererName, attribute = attribute ) :
