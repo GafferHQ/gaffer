@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.0.0a6)
 =======
 
+Features
+--------
+
+- CopyObject : Added new node for copying objects from one scene to another.
+
 Improvements
 ------------
 
