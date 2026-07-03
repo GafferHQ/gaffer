@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import functools
 import inspect
 
 import IECore
@@ -41,24 +42,9 @@ import IECore
 import Gaffer
 import GafferScene
 
-def __matteAdaptor() :
+def __matteAdaptor( attributeName ) :
 
 	processor = GafferScene.SceneProcessor()
-
-	processor["renderer"] = Gaffer.StringPlug()
-
-	processor["__attributeSpreadsheet"] = Gaffer.Spreadsheet()
-	processor["__attributeSpreadsheet"]["selector"].setInput( processor["renderer"] )
-	processor["__attributeSpreadsheet"]["rows"].addColumn( Gaffer.StringPlug( "name" ) )
-	for renderer, attributeName in (
-		( "Arnold", "ai:matte" ),
-		( "Cycles", "cycles:use_holdout" ),
-		( "3Delight*", "dl:matte" ),
-		( "RenderMan*", "ri:Ri:Matte" )
-	) :
-		row = processor["__attributeSpreadsheet"]["rows"].addRow()
-		row["name"].setValue( renderer )
-		row["cells"]["name"]["value"].setValue( attributeName )
 
 	processor["__optionQuery"] = GafferScene.OptionQuery()
 	processor["__optionQuery"]["scene"].setInput( processor["in"] )
@@ -88,8 +74,7 @@ def __matteAdaptor() :
 
 	processor["__matteInclusions"] = GafferScene.AttributeTweaks()
 	processor["__matteInclusions"]["in"].setInput( processor["in"] )
-	processor["__matteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__matteInclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
+	processor["__matteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attributeName, Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 
 	processor["__matteInclusions"]["filter"].setInput( processor["__matteInclusionsFilter"]["out"] )
 	# __matteInclusions is only required when `render:matteInclusions` exists and the root of the scene hasn't been set as matte
@@ -103,8 +88,7 @@ def __matteAdaptor() :
 
 	processor["__matteExclusions"] = GafferScene.AttributeTweaks()
 	processor["__matteExclusions"]["in"].setInput( processor["__matteInclusions"]["out"] )
-	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__matteExclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
+	processor["__matteExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attributeName, Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 
 	processor["__matteExclusions"]["filter"].setInput( processor["__matteExclusionsFilter"]["out"] )
 	# __matteExclusions is only required when `render:matteExclusions` exists
@@ -115,8 +99,7 @@ def __matteAdaptor() :
 
 	processor["__rootMatteInclusions"] = GafferScene.AttributeTweaks()
 	processor["__rootMatteInclusions"]["in"].setInput( processor["__matteExclusions"]["out"] )
-	processor["__rootMatteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__rootMatteInclusions"]["tweaks"][0]["name"].setInput( processor["__attributeSpreadsheet"]["out"]["name"] )
+	processor["__rootMatteInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attributeName, Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 
 	processor["__rootMatteInclusions"]["filter"].setInput( processor["__rootPaths"]["out"] )
 	# All children of / are matte if `render:matteInclusions` matches the root of the scene.
@@ -128,4 +111,12 @@ def __matteAdaptor() :
 
 	return processor
 
-GafferScene.SceneAlgo.registerRenderAdaptor( "MatteAdaptor", __matteAdaptor )
+for renderer, attributeName in (
+	( "Arnold", "ai:matte" ),
+	( "Cycles", "cycles:use_holdout" ),
+	( "3Delight*", "dl:matte" ),
+	( "RenderMan*", "ri:Ri:Matte" )
+) :
+	# Adaptors are registered to both `renderer` and "OpenGL" so these attributes are also
+	# available for use with the Viewer's OpenGL diagnostic shading modes.
+	GafferScene.SceneAlgo.registerRenderAdaptor( "{}MatteAdaptor".format( renderer.rstrip( "*" ) ), functools.partial( __matteAdaptor, attributeName ), renderer = "{} OpenGL".format( renderer ) )
