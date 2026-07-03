@@ -205,6 +205,7 @@ from .CopyObjectTest import CopyObjectTest
 from .QuantizePrimitiveVariablesTest import QuantizePrimitiveVariablesTest
 from .RandomPrimitiveVariableTest import RandomPrimitiveVariableTest
 from .PointInstancerCoreTest import PointInstancerCoreTest
+from .PointInstancerTest import PointInstancerTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
