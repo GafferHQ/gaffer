@@ -46,5 +46,13 @@ from .CatalogueSelect import CatalogueSelect
 from .ShaderBall import ShaderBall
 from .RenderPassWedge import RenderPassWedge
 from .RenderPassTypeAdaptor import RenderPassTypeAdaptor
+from .PointInstancer import PointInstancer
+
+# Manually inject enums for PointInstancer class.
+## \todo It'd be nice if ExtensionAlgo could do this for us somehow.
+import enum
+PointInstancer.PrototypesMode = enum.IntEnum( "PrototypesMode", [ "List", "PrimitiveVariable", "None_" ], start = 0 )
+PointInstancer.PrototypeIndexMode = enum.IntEnum( "PrototypeIndexMpde", [ "Constant", "Random", "PrimitiveVariable", "None_" ], start = 0 )
+del enum
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferScene" )

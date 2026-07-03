@@ -4,6 +4,10 @@
 Features
 --------
 
+- PointInstancer : Added new node for creating PointInstancer objects (#6810). This has the following benefits over the old Instancer node :
+  - Prototypes and points that are editable downstream.
+  - Export to USD.
+  - Faster rendering.
 - RandomPrimitiveVariable : Added new node for creating random per-face or per-vertex primitive variables with a variety of distributions.
 
 Improvements
