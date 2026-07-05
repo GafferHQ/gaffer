@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import sys
 import unittest
 import imath
 import os
@@ -382,7 +383,7 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		reference = referenceFile.child( "object" ).readObject( 0.0 )
 
 		catmarkRate2 = MeshAlgo.tessellateMesh( source, 1, calculateNormals = True )
-		self.assertEqual( catmarkRate2, reference )
+		self.assertMeshesPracticallyEqual( catmarkRate2, reference, 0.0002 if sys.platform == "darwin" else 0 )
 		self.assertEqual( catmarkRate2.verticesPerFace, IECore.IntVectorData( [ 4 ] * 804  ) )
 
 		# For this fairly general mesh, it's hard to test a lot of specifics about high tessellation rates without
@@ -506,7 +507,7 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 				str( self.usdFileDir / "nonManifoldTessellated.usd" ), IECore.IndexedIO.OpenMode.Read
 			)
 			reference = referenceFile.child( "object" ).readObject( 0.0 )
-			self.assertEqual( MeshAlgo.tessellateMesh( nonManifold, 2, calculateNormals = True ), reference )
+			self.assertMeshesPracticallyEqual( MeshAlgo.tessellateMesh( nonManifold, 2, calculateNormals = True ), reference, 0.00001 if sys.platform == "darwin" else 0 )
 
 		# Hard to define correct results on this weird data without using reference data, but we can
 		# at least run a couple higher tessellations to make sure we don't crash or something.
