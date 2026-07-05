@@ -134,10 +134,10 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 		if useUI:
 
 			with GafferUI.Window() as window :
+				window.setVisible( True )
 				window.setFullScreen( True )
 				viewer = GafferUI.Viewer( script )
 
-			window.setVisible( True )
 			viewer.setNodeSet( Gaffer.StandardSet( [ watchNode ] ) )
 
 
