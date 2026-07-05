@@ -783,6 +783,7 @@ if commandEnv["PLATFORM"] == "darwin" :
 	commandEnv["ENV"]["DYLD_FRAMEWORK_PATH"] = commandEnv.subst( ":".join(
 		[ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] )
 	) )
+	commandEnv["ENV"]["PYTHONHOME"] = commandEnv.subst( "$BUILD_DIR/lib/Python.framework/Versions/Current" )
 elif commandEnv["PLATFORM"] == "win32" :
 	commandEnv["ENV"]["PATH"] = commandEnv.subst( ";".join( [ "$BUILD_DIR/lib" ] + split( commandEnv[ "LOCATE_DEPENDENCY_LIBPATH" ] ) + [ commandEnv["ENV"]["PATH"] ] ) )
 else:
