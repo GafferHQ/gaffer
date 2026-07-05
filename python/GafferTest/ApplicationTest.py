@@ -96,7 +96,7 @@ class ApplicationTest( GafferTest.TestCase ) :
 					).strip()
 				try :
 					self.assertEqual( command, gaffer + f" env {sleepCommand} 100" )
-					self.assertEqual( name, gafferExe )
+					self.assertEqual( os.path.basename( name ), gafferExe )
 
 				except self.failureException :
 					# It can take some time for the bootstrap `execv` call to replace the

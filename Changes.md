@@ -33,7 +33,13 @@ Breaking Changes
 
 - ShaderUI : Removed PlugAdder. Use `GafferUI.PlugVisibilityGadget` instead.
 
+Build
+-----
+
+- Fixed errors building `gaffer` executable on macOS [^2].
+
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
+[^2]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a5 (relative to 1.7.0.0a4)
 =========
