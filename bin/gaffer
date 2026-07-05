@@ -102,9 +102,17 @@ else
 	prependToPath "$rootDir/lib" DYLD_FRAMEWORK_PATH
 fi
 
-# Unset PYTHONHOME to make sure our internal Python build is used in
-# preference to anything in the external environment.
-unset PYTHONHOME
+if [[ `uname` = "Darwin" ]] ; then
+	# Changes in Python 3.11 cause `sys.exec_prefix` to not be set correctly
+	# on macOS when Python is run from a symlink (like we do from $rootDir/bin).
+	# This is fixed in Python 3.15, until then we can set PYTHONHOME to work
+	# around the issue.
+	export PYTHONHOME="$rootDir/lib/Python.framework/Versions/Current"
+else
+	# Unset PYTHONHOME to make sure our internal Python build is used in
+	# preference to anything in the external environment.
+	unset PYTHONHOME
+fi
 
 # Run `_gaffer.py` to set up the environment and launch Gaffer
 # ============================================================
