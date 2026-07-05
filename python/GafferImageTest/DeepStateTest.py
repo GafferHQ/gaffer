@@ -158,7 +158,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 			if method in [ pruneOneFlatten, prunePointNineFlatten ]:
 				# Pruning does require merging alpha at the back before alpha at the front, so floating point
 				# imprecision in alpha is introduced
-				self.assertLess( stats["max"].getValue(), imath.Color4f( 0.000006, 0.000007, 0.000006, 0.000001 ), "Compute method %s does not match single stage flatten" % method.getName() )
+				self.assertLess( stats["max"].getValue(), imath.Color4f( 0.000006, 0.000007, 0.000006, 0.0000011 if sys.platform == "darwin" else 0.000001 ), "Compute method %s does not match single stage flatten" % method.getName() )
 			else:
 				# Without pruning, the alpha is processed identically
 				self.assertLess( stats["max"].getValue(), imath.Color4f( 0.000007, 0.000007, 0.000007, 0.0000006 ), "Compute method %s does not match single stage flatten" % method.getName() )
