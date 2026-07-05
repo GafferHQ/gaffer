@@ -85,7 +85,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 archiveURL = args.archiveURL.format(
-	platform = { "darwin" : "macos", "win32" : "windows" }.get( sys.platform, "linux" ),
+	## \todo Rename "macos-arm64" Cortex release to "macos" to match GafferDependencies.
+	platform = { "darwin" : "macos-arm64", "win32" : "windows" }.get( sys.platform, "linux" ),
 	vfxPlatform = args.vfxPlatform,
 	extension = "tar.gz" if sys.platform != "win32" else "zip"
 )
