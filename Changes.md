@@ -38,7 +38,13 @@ Breaking Changes
 - SceneWriter : Changed writing of OSL shaders to USD. Set `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=0` to revert to the default behaviour from Gaffer 1.6.
 - Catalogue : Removed support for image order metadata from versions prior to 1.4.0.0. In the unlikely event this is needed, reorder and resave from Gaffer 1.6.
 
+Build
+-----
+
+- Fixed errors building `gaffer` executable on macOS [^2].
+
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
+[^2]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a5 (relative to 1.7.0.0a4)
 =========
