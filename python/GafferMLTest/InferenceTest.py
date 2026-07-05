@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import sys
 import subprocess
 import pathlib
 import unittest
@@ -75,6 +76,7 @@ class InferenceTest( GafferTest.TestCase ) :
 		script2.execute( script.serialise() )
 		assertLoaded( script2["inference"] )
 
+	@unittest.skipIf( GafferTest.inCI() and sys.platform == "darwin", "Compute fails with virtualised device on macOS CI" )
 	def testCompute( self ) :
 
 		inference = GafferML.Inference()
@@ -103,6 +105,7 @@ class InferenceTest( GafferTest.TestCase ) :
 			IECore.FloatVectorData( [ 4 ] * 60 )
 		)
 
+	@unittest.skipIf( GafferTest.inCI() and sys.platform == "darwin", "Compute fails with virtualised device on macOS CI" )
 	def testComputeError( self ) :
 
 		inference = GafferML.Inference()
