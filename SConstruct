@@ -1032,6 +1032,7 @@ cyclesDefines = [
 	( "WITH_CUDA" ),
 	( "WITH_CUDA_DYNLOAD" ),
 	( "WITH_OPTIX" ),
+	( "WITH_SSE2NEON" ),
 ]
 
 
