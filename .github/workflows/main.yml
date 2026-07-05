@@ -36,6 +36,7 @@ jobs:
           linux-debug,
           linux-platform24,
           windows,
+          macos,
         ]
 
         include:
@@ -88,6 +89,15 @@ jobs:
             testArguments: -excludedCategories performance
             sconsCacheMegabytes: 800
             jobs: 4
+
+          - name: macos
+            os: macos-15
+            buildType: RELEASE
+            publish: false
+            containerImage:
+            testArguments: -excludedCategories performance
+            sconsCacheMegabytes: 400
+            jobs: 3
 
     runs-on: ${{ matrix.os }}
 
@@ -161,6 +171,21 @@ jobs:
         echo DISPLAY=:99.0 >> $GITHUB_ENV
       shell: bash
       if: runner.os == 'Linux'
+
+    - name: Install toolchain (macOS)
+      run: |
+        # Remove all pre-installed homebrew packages.
+        brew remove --force $(brew list --formula)
+        brew remove --cask --force $(brew list)
+        # Install build requirements.
+        brew install pipx
+        pipx install scons==4.6.0
+        # Install docs dependencies matching the versions specified in the
+        # linux build container.
+        sudo pip3 install setuptools==81.0.0 sphinx==4.3.1 sphinx_rtd_theme==1.0.0 myst-parser==0.15.2 docutils==0.17.1 sphinxcontrib-applehelp==1.0.4 sphinxcontrib-devhelp==1.0.2 sphinxcontrib-htmlhelp==2.0.1 sphinxcontrib-jsmath==1.0.1 sphinxcontrib-serializinghtml==1.1.5 sphinxcontrib-qthelp==1.0.3 --break-system-packages
+        # Install Inkscape.
+        brew install --cask inkscape
+      if: runner.os == 'macOS'
 
     - name: 'Install Python Modules'
       run: |
@@ -279,7 +304,7 @@ jobs:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
         RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
         RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
-      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'macOS' }}
 
     - name: Build and test against RenderMan 26.3
       run: |
@@ -300,7 +325,7 @@ jobs:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
         RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
         RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
-      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'macOS' }}
 
     - name: Build against RenderMan 26.4
       run: |
@@ -325,7 +350,7 @@ jobs:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
         RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
         RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
-      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'macOS' }}
 
     - name: Build against RenderMan 27.2
       run: |
