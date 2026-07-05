@@ -36,6 +36,7 @@
 
 import math
 import os
+import sys
 import time
 import unittest
 import random
@@ -454,6 +455,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
+	@unittest.skipIf( sys.platform == "darwin", "Depth buffer issues on macOS" )
 	def testObjectAtLine( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -711,6 +713,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
+	@unittest.skipIf( sys.platform == "darwin", "Depth buffer issues on macOS" )
 	def testNormalAt( self ) :
 
 		s = Gaffer.ScriptNode()
