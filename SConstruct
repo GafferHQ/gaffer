@@ -473,7 +473,11 @@ if env["PLATFORM"] != "win32" :
 	if "clang++" in os.path.basename( env["CXX"] ) :
 
 		env.Append(
-			CXXFLAGS = [ "-Wno-unused-local-typedef" ]
+			CXXFLAGS = [ "-Wno-unused-local-typedef" ],
+			# XCode 16 warns about deprecations in fmtlib. Overriding `FMT_DEPRECATED`
+			# allows us to remove the [[deprecated]] attributes and still build with
+			# `-Werror,-Wdeprecated-declarations`.
+			CPPDEFINES = [ ( "FMT_DEPRECATED", "" ) ]
 		)
 
 		# Turn off the parts of `-Wextra` that we don't like.
