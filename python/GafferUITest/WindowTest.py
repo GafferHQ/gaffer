@@ -404,6 +404,7 @@ class WindowTest( GafferUITest.TestCase ) :
 		for i in range( 0, 50 ) :
 
 			child = GafferUI.Window()
+			child._qtWidget().resize( 200, 100 )
 			child.setChild( GafferUI.Label( "World" ) )
 
 			parent.addChildWindow( child, removeOnClose = True )
