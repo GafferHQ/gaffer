@@ -371,6 +371,20 @@ jobs:
         archive: false
       if: matrix.publish
 
+    - name: Compare Images
+      run: |
+        python .github/workflows/main/imageDiff.py --buildDir ${{ env.GAFFER_BUILD_DIR }} --variant ${{ matrix.name }} --branch ${{ github.base_ref }} --outputDir imageDiff
+      env:
+        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: matrix.publish && github.event_name == 'pull_request'
+
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ env.GAFFER_BUILD_NAME }}-imageDiff
+        path: imageDiff
+        if-no-files-found: ignore
+      if: matrix.publish && github.event_name == 'pull_request'
+
     - name: Publish Release
       run: |
         python ./config/publishRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} --repo ${{ github.repository }} --releaseId ${{ env.GAFFER_GITHUB_RELEASEID }} ${{ env.GAFFER_NIGHTLY == '1' && '--maxAssets 10' || '' }}
