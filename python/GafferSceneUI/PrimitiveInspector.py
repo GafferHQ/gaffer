@@ -135,7 +135,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 			GafferSceneUI.SceneEditor.Settings.__init__( self )
 			self["location"] = Gaffer.StringPlug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::PrimitiveInspector::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::PrimitiveInspector::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 

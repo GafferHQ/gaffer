@@ -152,4 +152,4 @@ class RenderPassTypeAdaptor( GafferScene.SceneProcessor ) :
 
 		return type
 
-IECore.registerRunTimeTyped( RenderPassTypeAdaptor, typeName = "GafferScene::RenderPassTypeAdaptor" )
+IECore.registerRunTimeTyped( RenderPassTypeAdaptor, "GafferScene::RenderPassTypeAdaptor" )

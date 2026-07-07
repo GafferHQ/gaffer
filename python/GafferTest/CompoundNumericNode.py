@@ -48,4 +48,4 @@ class CompoundNumericNode( Gaffer.Node ) :
 
 		self.addChild( Gaffer.V3fPlug( "p", Gaffer.Plug.Direction.In ) )
 
-IECore.registerRunTimeTyped( CompoundNumericNode, typeName = "GafferTest::CompoundNumericNode" )
+IECore.registerRunTimeTyped( CompoundNumericNode, "GafferTest::CompoundNumericNode" )

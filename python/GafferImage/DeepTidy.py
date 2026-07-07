@@ -56,4 +56,4 @@ class DeepTidy( GafferImage.ImageProcessor ) :
 		Gaffer.PlugAlgo.promote( self['__deepState']['pruneOccluded'] )
 		Gaffer.PlugAlgo.promote( self['__deepState']['occludedThreshold'] )
 
-IECore.registerRunTimeTyped( DeepTidy, typeName = "GafferImage::DeepTidy" )
+IECore.registerRunTimeTyped( DeepTidy, "GafferImage::DeepTidy" )

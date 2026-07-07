@@ -58,7 +58,7 @@ class SetEditor( GafferSceneUI.SceneEditor ) :
 			self["hideEmptySets"] = Gaffer.BoolPlug()
 			self["hideEmptySelection"] = Gaffer.BoolPlug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::SetEditor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::SetEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 

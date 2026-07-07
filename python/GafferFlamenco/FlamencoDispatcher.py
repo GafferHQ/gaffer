@@ -220,6 +220,6 @@ class FlamencoDispatcher( GafferDispatch.Dispatcher ) :
 		else :
 			return None
 
-IECore.registerRunTimeTyped( FlamencoDispatcher, typeName = "GafferFlamenco::FlamencoDispatcher" )
+IECore.registerRunTimeTyped( FlamencoDispatcher, "GafferFlamenco::FlamencoDispatcher" )
 
 GafferDispatch.Dispatcher.registerDispatcher( "Flamenco", FlamencoDispatcher, FlamencoDispatcher._setupPlugs )

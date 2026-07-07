@@ -139,6 +139,6 @@ class _StylizedAOVAdaptor( GafferScene.SceneProcessor ) :
 
 		return outputGlobals
 
-IECore.registerRunTimeTyped( _StylizedAOVAdaptor, typeName = "GafferRenderMan::_StylizedAOVAdaptor" )
+IECore.registerRunTimeTyped( _StylizedAOVAdaptor, "GafferRenderMan::_StylizedAOVAdaptor" )
 
 GafferScene.SceneAlgo.registerRenderAdaptor( "RenderManStylizedAOVAdaptor", _StylizedAOVAdaptor, "*Render", "RenderMan" )

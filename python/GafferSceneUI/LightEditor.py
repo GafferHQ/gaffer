@@ -73,7 +73,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self["__filteredIn"] = GafferScene.ScenePlug()
 			self["__filteredIn"].setInput( self["__isolate"]["out"] )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::LightEditor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::LightEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 

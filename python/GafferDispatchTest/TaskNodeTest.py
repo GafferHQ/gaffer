@@ -427,7 +427,7 @@ class TaskNodeTest( GafferTest.TestCase ) :
 				else :
 					return GafferDispatch.SystemCommand.affectsTask( self, input )
 
-		IECore.registerRunTimeTyped( MySystemCommand, typeName = "GafferDispatchTest::MySystemCommand" )
+		IECore.registerRunTimeTyped( MySystemCommand, "GafferDispatchTest::MySystemCommand" )
 
 		n = MySystemCommand()
 		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )

@@ -95,4 +95,4 @@ class RenderPassWedge( GafferDispatch.TaskContextProcessor ) :
 
 		return contexts
 
-IECore.registerRunTimeTyped( RenderPassWedge, typeName = "GafferScene::RenderPassWedge" )
+IECore.registerRunTimeTyped( RenderPassWedge, "GafferScene::RenderPassWedge" )

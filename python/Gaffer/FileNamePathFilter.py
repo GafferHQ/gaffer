@@ -84,4 +84,4 @@ class FileNamePathFilter( Gaffer.PathFilter ) :
 
 		return result
 
-IECore.registerRunTimeTyped( FileNamePathFilter, typeName = "Gaffer::FileNamePathFilter" )
+IECore.registerRunTimeTyped( FileNamePathFilter, "Gaffer::FileNamePathFilter" )

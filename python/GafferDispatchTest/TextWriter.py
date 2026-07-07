@@ -113,6 +113,6 @@ class TextWriter( GafferDispatch.TaskNode ) :
 
 		return text
 
-IECore.registerRunTimeTyped( TextWriter, typeName = "GafferDispatchTest::TextWriter" )
+IECore.registerRunTimeTyped( TextWriter, "GafferDispatchTest::TextWriter" )
 
 Gaffer.Metadata.registerValue( TextWriter, "dispatcher:allowIsolation", True )

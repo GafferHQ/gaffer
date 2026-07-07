@@ -61,7 +61,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			self["section"] = Gaffer.StringPlug( defaultValue = "Attributes" )
 			self["editScope"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::AttributeEditor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::AttributeEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 

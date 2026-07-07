@@ -52,4 +52,4 @@ class ArrayPlugNode( Gaffer.Node ) :
 			)
 		)
 
-IECore.registerRunTimeTyped( ArrayPlugNode, typeName="GafferTest::ArrayPlugNode" )
+IECore.registerRunTimeTyped( ArrayPlugNode, "GafferTest::ArrayPlugNode" )

@@ -747,7 +747,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 				return outputs
 
-		IECore.registerRunTimeTyped( ManyToOneDependencyNode, typeName = "GafferTest::ManyToOneDependencyNode" )
+		IECore.registerRunTimeTyped( ManyToOneDependencyNode, "GafferTest::ManyToOneDependencyNode" )
 
 		node = ManyToOneDependencyNode()
 

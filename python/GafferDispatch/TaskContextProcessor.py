@@ -78,4 +78,4 @@ class TaskContextProcessor( GafferDispatch.TaskNode ) :
 
 		raise NotImplementedError
 
-IECore.registerRunTimeTyped( TaskContextProcessor, typeName = "GafferDispatch::TaskContextProcessor" )
+IECore.registerRunTimeTyped( TaskContextProcessor, "GafferDispatch::TaskContextProcessor" )

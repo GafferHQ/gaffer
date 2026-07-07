@@ -58,4 +58,4 @@ class CatalogueSelect( GafferImage.ImageProcessor ) :
 		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
 
 
-IECore.registerRunTimeTyped( CatalogueSelect, typeName = "GafferScene::CatalogueSelect" )
+IECore.registerRunTimeTyped( CatalogueSelect, "GafferScene::CatalogueSelect" )

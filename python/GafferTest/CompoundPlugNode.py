@@ -76,4 +76,4 @@ class CompoundPlugNode( Gaffer.DependencyNode ) :
 
 		return outputs
 
-IECore.registerRunTimeTyped( CompoundPlugNode, typeName = "GafferTest::CompoundPlugNode" )
+IECore.registerRunTimeTyped( CompoundPlugNode, "GafferTest::CompoundPlugNode" )

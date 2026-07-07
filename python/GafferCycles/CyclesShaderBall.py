@@ -93,4 +93,4 @@ class CyclesShaderBall( GafferScene.ShaderBall ) :
 
 		self._outPlug().setInput( self["__cyclesOptions"]["out"] )
 
-IECore.registerRunTimeTyped( CyclesShaderBall, typeName = "GafferCycles::CyclesShaderBall" )
+IECore.registerRunTimeTyped( CyclesShaderBall, "GafferCycles::CyclesShaderBall" )

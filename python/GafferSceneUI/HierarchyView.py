@@ -61,7 +61,7 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 
 			self["editScope"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::HierarchyView::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::HierarchyView::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 

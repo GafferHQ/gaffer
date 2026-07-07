@@ -164,4 +164,4 @@ class Wedge( GafferDispatch.TaskContextProcessor ) :
 
 		return contexts
 
-IECore.registerRunTimeTyped( Wedge, typeName = "GafferDispatch::Wedge" )
+IECore.registerRunTimeTyped( Wedge, "GafferDispatch::Wedge" )

@@ -62,7 +62,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 			self["editScope"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::CompoundEditor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferUI::CompoundEditor::Settings" )
 
 	# The CompoundEditor constructor args are considered 'private', used only
 	# by the persistent layout system.

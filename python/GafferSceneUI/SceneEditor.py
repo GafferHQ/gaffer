@@ -81,7 +81,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 				Gaffer.PlugAlgo.promote( self["__hierarchyFilter"]["filter"] )
 				Gaffer.PlugAlgo.promote( self["__hierarchyFilter"]["setFilter"] )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::SceneEditor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::SceneEditor::Settings" )
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
@@ -317,7 +317,7 @@ class _HierarchyFilter( GafferScene.SceneProcessor ) :
 		else :
 			return filterSet or setFilterValue
 
-IECore.registerRunTimeTyped( _HierarchyFilter, typeName = "GafferSceneUI::SceneEditor::_HierarchyFilter" )
+IECore.registerRunTimeTyped( _HierarchyFilter, "GafferSceneUI::SceneEditor::_HierarchyFilter" )
 
 SceneEditor._HierarchyFilter = _HierarchyFilter
 
