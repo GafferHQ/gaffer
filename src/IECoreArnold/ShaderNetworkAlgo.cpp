@@ -1371,15 +1371,6 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 
 	result->members()[lightAttribute] = std::move( newLightShaderNetwork );
 
-	result->members().try_emplace( g_cameraVisibilityAttributeName, new IECore::BoolData( true ) );
-	result->members().try_emplace( g_shadowVisibilityAttributeName, new IECore::BoolData( false ) );
-	result->members().try_emplace( g_diffuseReflectVisibilityAttributeName, new IECore::BoolData( false ) );
-	result->members().try_emplace( g_specularReflectVisibilityAttributeName, new IECore::BoolData( false ) );
-	result->members().try_emplace( g_diffuseTransmitVisibilityAttributeName, new IECore::BoolData( false ) );
-	result->members().try_emplace( g_specularTransmitVisibilityAttributeName, new IECore::BoolData( false ) );
-	result->members().try_emplace( g_volumeVisibilityAttributeName, new IECore::BoolData( false ) );
-	result->members().try_emplace( g_subsurfaceVisibilityAttributeName, new IECore::BoolData( false ) );
-
 	return result;
 }
 
