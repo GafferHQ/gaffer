@@ -738,6 +738,8 @@ void convertConnection( const IECoreScene::ShaderNetwork::Connection &connection
 
 using HandleSet = std::unordered_set<InternedString>;
 
+const InternedString g_inputMaterial( "inputMaterial" );
+
 void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, vector<riley::ShadingNode> &shadingNodes, HandleSet &visited )
 {
 	if( !visited.insert( outputParameter.shader ).second )
@@ -768,6 +770,16 @@ void convertShaderNetworkWalk( const ShaderNetwork::Parameter &outputParameter, 
 			// only accepts whole arrays as values. In practice, we're only using
 			// ArrayPlugs where RenderMan is only interested in connections and not
 			// values anyway, so we're not losing anything.
+			continue;
+		}
+		else if( shader->getName() == "PxrDisplace" && parameterName == g_inputMaterial )
+		{
+			// The PxrDisplace shader comes in two flavours - C++ and OSL. The OSL version
+			// declares an `inputMaterial` parameter that the C++ version doesn't have, and
+			// it seems like RenderMan always uses the C++ version internally. Avoid
+			// `inputMaterial, unknown or mismatched input parameter` warning that we'd get
+			// if we tried to pass a value for it.
+			continue;
 		}
 		else
 		{
