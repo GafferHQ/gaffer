@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - Outputs : Added output presets for RenderMan's NPR AOVs.
+- SceneWriter : Defaulted to writing OSL shaders in a format compatible with `hdPrman`, for rendering in `usdview` and other Hydra-based applications.
 
 Fixes
 -----
@@ -30,6 +31,7 @@ Breaking Changes
 ----------------
 
 - ShaderUI : Removed PlugAdder. Use `GafferUI.PlugVisibilityGadget` instead.
+- SceneWriter : Changed writing of OSL shaders to USD. Set `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=0` to revert to the default behaviour from Gaffer 1.6.
 
 1.7.0.0a5 (relative to 1.7.0.0a4)
 =========
