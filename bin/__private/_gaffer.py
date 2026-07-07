@@ -138,6 +138,9 @@ oslcPath = gafferRoot / "bin" / ( "oslc.exe" if sys.platform == "win32" else "os
 if oslcPath.exists() :
 	os.environ["OSLHOME"] = str( gafferRoot )
 
+if "IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS" not in os.environ :
+	os.environ["IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS"] = "1"
+
 if os.environ.get( "IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS", "0" ) != "0" :
 	# The SceneWriter will be writing shaders with just their leaf names
 	# (e.g. `Noise` rather than `Pattern/Noise`). Put all our subdirectories
