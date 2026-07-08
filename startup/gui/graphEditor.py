@@ -114,7 +114,7 @@ def __nodeContextMenu( graphEditor, nodeList, menuDefinition ) :
 	GafferSceneUI.CryptomatteUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
 	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
 
-GafferUI.GraphEditor.nodeContextMenuSignal( True ).connect( __nodeContextMenu )
+GafferUI.GraphEditor.nodeContextMenuSignal( True ).connectFront( __nodeContextMenu )
 
 def __plugContextMenu( graphEditor, plug, menuDefinition ) :
 

@@ -12,6 +12,8 @@ Improvements
 - GraphEditor :
   - Changed node context menu items to operate on multiple nodes where possible (#2783).
   - Added drag & drop from LightEditor and AttributeEditor. Dropping a location navigates to the node that created the location.
+  - Added context menu item and keyboard shortcut, <kbd>/</kbd>, for hiding all of a node's disconnected input plugs.
+
 - RenderMan : Changed PxrCryptomatte's material output to use the name of the terminal shader, rather than a hash of the network. This is stable under animation. As before, the output can be customised by creating a `user:__materialid` attribute.
 
 Fixes
