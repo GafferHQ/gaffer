@@ -194,7 +194,7 @@ Gaffer.Metadata.registerValue( __children["area"], 'layout:section', 'Settings' 
 Gaffer.Metadata.registerValue( __children["area"], 'layout:index', 7 )
 Gaffer.Metadata.registerValue( __children["area"], 'description', 'The text frame, in pixels relative to the data window.' )
 __children["Expression"]["__engine"].setValue( 'python' )
-__children["Expression"]["__expression"].setValue( '# Text font\nif parent["__in"]["p2"] is not "" :\n\tparent["__out"]["p2"] = parent["__in"]["p2"]\nelse :\n\tparent["__out"]["p2"] = parent["__in"]["p1"]\n\n\n# Text\ntext = parent["__in"]["p0"]\nlines = text.split( "\\n" )\nparent["__out"]["p1"] = lines[0]\nbody = lines\nbody.pop( 0 )\nbody.insert( 0, " " )\nbody = "\\n".join( body )\nparent["__out"]["p0"] = body' )
+__children["Expression"]["__expression"].setValue( '# Text font\nif parent["__in"]["p2"] != "" :\n\tparent["__out"]["p2"] = parent["__in"]["p2"]\nelse :\n\tparent["__out"]["p2"] = parent["__in"]["p1"]\n\n\n# Text\ntext = parent["__in"]["p0"]\nlines = text.split( "\\n" )\nparent["__out"]["p1"] = lines[0]\nbody = lines\nbody.pop( 0 )\nbody.insert( 0, " " )\nbody = "\\n".join( body )\nparent["__out"]["p0"] = body' )
 Gaffer.Metadata.registerValue( parent, 'noduleLayout:customGadget:addButtonTop:visible', False )
 Gaffer.Metadata.registerValue( parent, 'noduleLayout:customGadget:addButtonBottom:visible', False )
 Gaffer.Metadata.registerValue( parent, 'noduleLayout:customGadget:addButtonLeft:visible', False )
