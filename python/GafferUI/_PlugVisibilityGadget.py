@@ -58,6 +58,14 @@ def __hasVisibilityGadget( plug ) :
 		if parent is None or isinstance( parent, Gaffer.Node ) :
 			return False
 
+def __nodeHasVisibilityGadget( node ) :
+
+	for p in Gaffer.Plug.RecursiveRange( node ) :
+		for key in Gaffer.Metadata.registeredValues( p ) :
+			if key.endswith( ":gadgetType" ) and Gaffer.Metadata.value( p, key ) == "GafferUI.PlugVisibilityGadget" :
+				return True
+	return False
+
 def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	if not __hasVisibilityGadget( plug ) or not Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) :
@@ -82,3 +90,73 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 	)
 
 GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )
+
+##########################################################################
+# GraphEditor context menu
+##########################################################################
+
+def __hideDisconnectedWalk( gadget ) :
+
+	if isinstance( gadget, GafferUI.Nodule ) :
+
+		plug = gadget.plug()
+
+		if ( plug.direction() == plug.Direction.In and plug.getInput() ) or ( plug.direction() == plug.Direction.Out and len( plug.outputs() ) > 0 ) :
+			return True
+
+		if any( __hideDisconnectedWalk( g ) for g in gadget.children() ) :
+			return True
+
+		if (
+			not Gaffer.MetadataAlgo.readOnly( plug ) and
+			__hasVisibilityGadget( plug ) and
+			Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) and
+			Gaffer.Metadata.value( plug, "noduleLayout:visible" ) != False
+		) :
+			Gaffer.Metadata.registerValue( plug, "noduleLayout:visible", False )
+
+		return False
+
+	return sum( __hideDisconnectedWalk( c ) for c in gadget.children() ) > 0
+
+def __hideDisconnected( graphGadget, nodeList ) :
+
+	with Gaffer.UndoScope( graphGadget.getRoot().scriptNode() ) :
+		for node in nodeList :
+			nodeGadget = graphGadget.nodeGadget( node )
+			if nodeGadget is None :
+				continue
+
+			__hideDisconnectedWalk( nodeGadget )
+
+def __editorKeyPress( editor, event ) :
+
+	if event.key == "Bar" and event.modifiers == event.modifiers.Shift :
+		__hideDisconnected( editor.graphGadget(), editor.scriptNode().selection() )
+
+def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
+
+	def plugNodulesWalk( gadget ) :
+		if isinstance( gadget, GafferUI.Nodule ) :
+			return True
+		return any( plugNodulesWalk( c ) for c in gadget.children() )
+
+	graphGadget = graphEditor.graphGadget()
+	for node in nodeList :
+		if plugNodulesWalk( graphGadget.nodeGadget( node ) ) :
+			readOnly = any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList )
+
+			menuDefinition.append(
+				"/Connections/Hide Disconnected",
+				{
+					"command" : functools.partial( __hideDisconnected, graphGadget, nodeList ),
+					"shortCut" : "|",
+					"active" : not readOnly and any( __nodeHasVisibilityGadget( n ) for n in nodeList ),
+				}
+			)
+			return
+
+def connectToGraphEditor( editor ) :
+
+	assert( isinstance( editor, GafferUI.GraphEditor ) )
+	editor.keyPressSignal().connect( __editorKeyPress )

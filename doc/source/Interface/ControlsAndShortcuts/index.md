@@ -156,6 +156,7 @@ Auto-arrange selected nodes          | {kbd}`Ctrl` + {kbd}`L`
 Duplicate outgoing connection        | {kbd}`Shift` + {{leftClick}} and drag connection just before in plug
 Disconnect connections under cursor  | {kbd}`X` + {{leftClick}}
 Disconnect connections under line    | {kbd}`X` + {{leftClick}} and drag to draw a line, then release {{leftClick}}
+Hide disconnected nodules            | {kbd}`|`
 
 ### Focus Node ###
 
