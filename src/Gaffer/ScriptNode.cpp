@@ -703,7 +703,7 @@ void ScriptNode::copy( const Node *parent, const Set *filter )
 	ApplicationRoot *app = applicationRoot();
 	if( !app )
 	{
-		throw( "ScriptNode has no ApplicationRoot" );
+		throw IECore::Exception( "ScriptNode has no ApplicationRoot" );
 	}
 
 	std::string s = serialise( parent, filter );
@@ -721,7 +721,7 @@ void ScriptNode::paste( Node *parent, bool continueOnError )
 	ApplicationRoot *app = applicationRoot();
 	if( !app )
 	{
-		throw( "ScriptNode has no ApplicationRoot" );
+		throw IECore::Exception( "ScriptNode has no ApplicationRoot" );
 	}
 
 	IECore::ConstStringDataPtr s = IECore::runTimeCast<const IECore::StringData>( app->getClipboardContents() );
