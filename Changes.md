@@ -21,6 +21,7 @@ Fixes
   - Fixed crash attempting to render with a shader that doesn't exist.
 - Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors [^1].
 - RenderMan : Fixed `R10043` warning when using PxrDisplace [^1].
+- Catalogue : Fixed errors caused by undoing an image deletion.
 
 API
 ---
@@ -34,6 +35,7 @@ Breaking Changes
 
 - ShaderUI : Removed PlugAdder. Use `GafferUI.PlugVisibilityGadget` instead.
 - SceneWriter : Changed writing of OSL shaders to USD. Set `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=0` to revert to the default behaviour from Gaffer 1.6.
+- Catalogue : Removed support for image order metadata from versions prior to 1.4.0.0. In the unlikely event this is needed, reorder and resave from Gaffer 1.6.
 
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 

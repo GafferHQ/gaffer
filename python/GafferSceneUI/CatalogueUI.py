@@ -533,29 +533,15 @@ def __incrementImageIndex( catalogue, direction ) :
 
 	# Match the UI's top-to-bottom order instead of 'up is a larger number'
 	increment = -1 if direction == "Up" else 1
-
-	# The Catalog UI re-orders images internally using metadata, rather than by
-	# shuffling plugs. As such, we can't just set imageIndex. We don't want to
-	# be poking into the specifics of how this works, so for now we re-use
-	# _ImagesPath as it knows all that logic.
-
-	images = catalogue["images"].source().children()
-	if len( images ) == 0 :
-		return
-
-	maxIndex = len( images ) - 1
-	orderedImages = _ImagesPath( catalogue["images"].source(), [] )._orderedImages()
+	maxIndex = len( catalogue["images"] ) - 1
 
 	# There are times when this can be out of sync with the number of images.
 	# Generally when the UI hasn't been opened.
-	currentPlugIndex = min( indexPlug.getValue(), maxIndex )
+	currentIndex = min( indexPlug.getValue(), maxIndex )
+	nextIndex = max( min( currentIndex + increment, maxIndex ), 0 )
 
-	catalogueIndex = orderedImages.index( images[currentPlugIndex] )
-	nextIndex = max( min( catalogueIndex + increment, maxIndex ), 0 )
-	nextPlugIndex = images.index( orderedImages[nextIndex] )
-
-	if nextPlugIndex != currentPlugIndex :
-		indexPlug.setValue( nextPlugIndex )
+	if nextIndex != currentIndex :
+		indexPlug.setValue( nextIndex )
 
 def __duplicateCurrentImage( catalogue ) :
 
@@ -577,26 +563,23 @@ def _duplicateImages( catalogue, plugIndices ) :
 
 	images = catalogue["images"].source()
 	# As we may be inserting more than one image, keep a copy of the original
-	# list so the selection indices remain valid
-	sourceImages = [ i for i in images.children() ]
-	# We need to insert the duplicate before the source, as it's usually
-	# used to snapshot in-progress renders.
-	orderedImages = _ImagesPath( images, [] )._orderedImages()
+	# list so the selection indices remain valid.
+	sourceImages = images.children()
+	orderedImages = list( images.children() )
 
 	insertions = []
 
 	for index in plugIndices :
 		image = sourceImages[ index ]
 		suffix = "Copy" if image["fileName"].getValue() else "Snapshot1"
-		uiInsertionIndex = orderedImages.index( image )
+		insertionIndex = orderedImages.index( image )
 		imageCopy = GafferScene.Catalogue.Image( image.getName() + suffix, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		images.addChild( imageCopy )
 		imageCopy.copyFrom( image )
-		orderedImages.insert( uiInsertionIndex, imageCopy )
-		insertions.append( len(images) - 1 )
+		orderedImages.insert( insertionIndex, imageCopy )
+		insertions.append( insertionIndex )
 
-	_ImagesPath._reorderImages( orderedImages )
-
+	images.reorderChildren( orderedImages )
 	return insertions
 
 ##########################################################################
@@ -641,21 +624,6 @@ class _ImagesPath( Gaffer.Path ) :
 
 		return self.__images
 
-	def _orderedImages( self ) :
-
-		# Start with the order of the Image plugs. Ideally this is all we want
-		# to use.
-		imageAndIndices = [ [ image, plugIndex ] for plugIndex, image in enumerate( self.__images.children() ) ]
-		# Apply ordering from legacy metadata. We used this before we had the
-		# ability to reorder the Image plugs themselves. We'll remove the metadata
-		# the first chance we get - when `_reorderImages()` is called.
-		for imageAndIndex in imageAndIndices :
-			uiIndex = Gaffer.Metadata.value( imageAndIndex[0], _ImagesPath.indexMetadataName )
-			if uiIndex is not None :
-				imageAndIndex[1] = uiIndex
-
-		return [ i[0] for i in sorted( imageAndIndices, key = lambda i : i[1] ) ]
-
 	def _children( self, canceller ) :
 
 		if len( self ) != 0 :
@@ -663,7 +631,7 @@ class _ImagesPath( Gaffer.Path ) :
 
 		return [
 			self.__class__( self.__images, [ image.getName() ], self.root(), self.getFilter() )
-			for image in self._orderedImages()
+			for image in self.__images
 		]
 
 	def _pathChangedSignalCreated( self ) :
@@ -680,18 +648,6 @@ class _ImagesPath( Gaffer.Path ) :
 			image : image.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = True )
 			for image in self.__images
 		}
-
-	@staticmethod
-	def _reorderImages( orderedImages ) :
-
-		# Remove legacy metadata that was once used to reorder images before we
-		# had a `reorderChildren()` method.
-		for image in orderedImages :
-			Gaffer.Metadata.deregisterValue( image, _ImagesPath.indexMetadataName )
-
-		# Because we can reorder the images properly via the API now.
-		if orderedImages :
-			orderedImages[0].parent().reorderChildren( orderedImages )
 
 	def __childAdded( self, parent, child ) :
 
@@ -911,10 +867,6 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 
 		return self.__catalogue()["images"].source()
 
-	def __orderedImages( self ) :
-
-		return _ImagesPath( self.__images(), [] )._orderedImages()
-
 	def __indicesFromSelection( self ) :
 		indices = []
 		selection = self.__pathListing.getSelection()
@@ -974,14 +926,6 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			self.__images().addChild( GafferScene.Catalogue.Image.load( str( path ) ) )
 			self.getPlug().setValue( len( self.__images() ) - 1 )
 
-	def __uiIndexToIndex( self, index ) :
-
-		target = self.__orderedImages()[ index ]
-
-		for i, image in enumerate( self.__images() ) :
-			if image.isSame( target ) :
-				return i
-
 	def __removeClicked( self, *unused ) :
 
 		indices = self.__indicesFromSelection()
@@ -994,22 +938,10 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
-			orderedImages = self.__orderedImages()
-			reselectionIndex = len( orderedImages )
+			for index in reversed( indices ) :
+				self.__images().removeChild( self.__images()[index] )
 
-			for index in reversed( sorted( indices ) ) :
-				image = self.__images()[ index ]
-				uiIndex = orderedImages.index( image )
-				reselectionIndex = min( max( 0, uiIndex - 1 ), reselectionIndex )
-				self.__images().removeChild( image )
-				orderedImages.remove( image )
-
-			_ImagesPath._reorderImages( orderedImages )
-
-			# Figure out new selection
-			if orderedImages :
-				selectionIndex = self.__uiIndexToIndex( reselectionIndex )
-				self.getPlug().setValue( selectionIndex )
+			self.getPlug().setValue( max( 0, indices[-1] - len( indices ) ) )
 
 	def __extractClicked( self, *unused ) :
 
@@ -1111,7 +1043,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			return
 		self.__moveToPath = targetPath
 
-		images = self.__orderedImages()
+		images = list( self.__images() )
 		imagesToMove = [image for image in images if '/'+image.getName() in event.data]
 
 		# Because of multi-selection it's possible to move the mouse over a selected image.
@@ -1152,7 +1084,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			self.getPlug().ancestor( Gaffer.ScriptNode ),
 			mergeGroup = "ImageListing{}{}".format( id( self, ), self.__mergeGroupId )
 		) :
-			_ImagesPath._reorderImages( [image for image in images if image ] )
+			self.__images().reorderChildren( [ image for image in images if image ] )
 
 		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
 
