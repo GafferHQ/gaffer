@@ -6,6 +6,11 @@ Features
 
 - RandomPrimitiveVariable : Added new node for creating random per-face or per-vertex primitive variables with a variety of distributions.
 
+Improvements
+------------
+
+- GraphEditor : - Added <kbd>C</kbd> shortcut for setting node colors.
+
 Fixes
 -----
 
