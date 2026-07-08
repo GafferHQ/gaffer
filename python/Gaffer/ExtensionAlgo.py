@@ -179,7 +179,7 @@ class {name}( Gaffer.DependencyNode ) :
 				for plug in Gaffer.Plug.RecursiveRange( plug ) :
 					plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
 
-IECore.registerRunTimeTyped( {name}, typeName = "{moduleName}::{name}" )
+IECore.registerRunTimeTyped( {name}, "{moduleName}::{name}" )
 """
 
 def __nodeDefinition( box, moduleName ) :

@@ -190,7 +190,7 @@ class Application( IECore.Parameterised ) :
 				IECore.formatParameterHelp( p, formatter )
 			formatter.unindent()
 
-IECore.registerRunTimeTyped( Application, typeName = "Gaffer::Application" )
+IECore.registerRunTimeTyped( Application, "Gaffer::Application" )
 
 # Various parts of the UI try to store their state as attributes on
 # the root object, and therefore require it's identity in python to

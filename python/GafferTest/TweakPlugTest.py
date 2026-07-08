@@ -526,7 +526,7 @@ class TweakPlugTest( GafferTest.TestCase ) :
 				if plug.isSame( self["out"] ) :
 					plug.setValue( IECore.StringVectorData( [ "a", "b", "c", "d", "e" ] ) )
 
-		IECore.registerRunTimeTyped( UncachedOutNode, typeName = "GafferTest::UncachedOutNode" )
+		IECore.registerRunTimeTyped( UncachedOutNode, "GafferTest::UncachedOutNode" )
 
 		# This exposed a bug whereby TweakPlug could clobber the incoming tweak
 		# data before applying it.

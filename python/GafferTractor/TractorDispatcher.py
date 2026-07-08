@@ -244,6 +244,6 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		parentPlug["tractor"]["service"] = Gaffer.StringPlug()
 		parentPlug["tractor"]["tags"] = Gaffer.StringPlug()
 
-IECore.registerRunTimeTyped( TractorDispatcher, typeName = "GafferTractor::TractorDispatcher" )
+IECore.registerRunTimeTyped( TractorDispatcher, "GafferTractor::TractorDispatcher" )
 
 GafferDispatch.Dispatcher.registerDispatcher( "Tractor", TractorDispatcher, TractorDispatcher._setupPlugs )

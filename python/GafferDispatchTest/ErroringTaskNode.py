@@ -68,4 +68,4 @@ class ErroringTaskNode( GafferDispatch.TaskNode ) :
 
 		raise RuntimeError( "Error in postTasks" )
 
-IECore.registerRunTimeTyped( ErroringTaskNode, typeName = "GafferDispatchTest::ErroringTaskNode" )
+IECore.registerRunTimeTyped( ErroringTaskNode, "GafferDispatchTest::ErroringTaskNode" )

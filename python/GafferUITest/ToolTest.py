@@ -52,7 +52,7 @@ class ToolTest( GafferUITest.TestCase ) :
 
 			GafferUI.Tool.__init__( self, view, name )
 
-	IECore.registerRunTimeTyped( TestTool, typeName = "GafferUITest::TestTool" )
+	IECore.registerRunTimeTyped( TestTool, "GafferUITest::TestTool" )
 	GafferUI.Tool.registerTool( "TestTool", GafferUITest.ViewTest.MyView, TestTool )
 
 	def testDerivingInPython( self ) :

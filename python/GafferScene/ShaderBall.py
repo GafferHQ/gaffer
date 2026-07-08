@@ -99,4 +99,4 @@ class ShaderBall( GafferScene.SceneNode ) :
 
 		return self["__enabler"]["in"][1]
 
-IECore.registerRunTimeTyped( ShaderBall, typeName = "GafferScene::ShaderBall" )
+IECore.registerRunTimeTyped( ShaderBall, "GafferScene::ShaderBall" )

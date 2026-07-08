@@ -75,4 +75,4 @@ class ArnoldShaderBall( GafferScene.ShaderBall ) :
 
 		self._outPlug().setInput( self["__arnoldOptions"]["out"] )
 
-IECore.registerRunTimeTyped( ArnoldShaderBall, typeName = "GafferArnold::ArnoldShaderBall" )
+IECore.registerRunTimeTyped( ArnoldShaderBall, "GafferArnold::ArnoldShaderBall" )

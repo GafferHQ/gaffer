@@ -184,7 +184,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 			return [ self["compare"][n]["enabled"] for n in [ "scene", "renderPass" ] ]
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::SceneInspector::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::SceneInspector::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 

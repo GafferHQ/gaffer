@@ -81,4 +81,4 @@ class InfoPathFilter( Gaffer.PathFilter ) :
 
 		return result
 
-IECore.registerRunTimeTyped( InfoPathFilter, typeName = "Gaffer::InfoPathFilter" )
+IECore.registerRunTimeTyped( InfoPathFilter, "Gaffer::InfoPathFilter" )

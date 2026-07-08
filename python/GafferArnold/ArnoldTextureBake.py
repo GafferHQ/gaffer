@@ -622,4 +622,4 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 
 
-IECore.registerRunTimeTyped( ArnoldTextureBake, typeName = "GafferArnold::ArnoldTextureBake" )
+IECore.registerRunTimeTyped( ArnoldTextureBake, "GafferArnold::ArnoldTextureBake" )

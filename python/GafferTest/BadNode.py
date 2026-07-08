@@ -87,4 +87,4 @@ class BadNode( Gaffer.ComputeNode ) :
 			pass
 
 
-IECore.registerRunTimeTyped( BadNode, typeName = "GafferTest::BadNode" )
+IECore.registerRunTimeTyped( BadNode, "GafferTest::BadNode" )

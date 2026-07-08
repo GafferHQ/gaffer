@@ -69,4 +69,4 @@ class TaskSwitch( GafferDispatch.TaskNode ) :
 		# node is executed.
 		pass
 
-IECore.registerRunTimeTyped( TaskSwitch, typeName = "GafferDispatch::TaskSwitch" )
+IECore.registerRunTimeTyped( TaskSwitch, "GafferDispatch::TaskSwitch" )

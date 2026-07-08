@@ -73,7 +73,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			# SceneEditor in NodeSetEditor?
 			self["in"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::Viewer::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferUI::Viewer::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 

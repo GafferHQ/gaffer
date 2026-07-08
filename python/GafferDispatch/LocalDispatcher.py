@@ -518,7 +518,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		self.__jobPool.addJob( job )
 		job._execute()
 
-IECore.registerRunTimeTyped( LocalDispatcher, typeName = "GafferDispatch::LocalDispatcher" )
+IECore.registerRunTimeTyped( LocalDispatcher, "GafferDispatch::LocalDispatcher" )
 GafferDispatch.Dispatcher.registerDispatcher( "Local", LocalDispatcher )
 
 ## \todo Should this be a shared component implemented in C++ in `Messages.h`?

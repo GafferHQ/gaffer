@@ -78,7 +78,7 @@ class Editor( GafferUI.Widget ) :
 			# Editor from Node?
 			self["__scriptNode"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::Editor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferUI::Editor::Settings" )
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 

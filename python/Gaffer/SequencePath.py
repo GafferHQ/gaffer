@@ -174,4 +174,4 @@ class SequencePath( Gaffer.Path ) :
 
 		return False
 
-IECore.registerRunTimeTyped( SequencePath, typeName = "Gaffer::SequencePath" )
+IECore.registerRunTimeTyped( SequencePath, "Gaffer::SequencePath" )

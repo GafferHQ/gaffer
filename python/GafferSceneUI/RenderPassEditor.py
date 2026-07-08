@@ -86,7 +86,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self["__filteredIn"] = GafferScene.ScenePlug()
 			self["__filteredIn"].setInput( self["__filter"]["out"] )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassEditor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::RenderPassEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -1180,7 +1180,7 @@ class _Filter( GafferScene.SceneProcessor ) :
 
 		self["out"].setInput( self["__keepEnabledPasses"]["out"] )
 
-IECore.registerRunTimeTyped( _Filter, typeName = "GafferSceneUI::RenderPassEditor::_Filter" )
+IECore.registerRunTimeTyped( _Filter, "GafferSceneUI::RenderPassEditor::_Filter" )
 
 ##########################################################################
 # Widgets
@@ -1402,7 +1402,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self["__adaptors"] = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
 			self["__adaptors"]["in"].setInput( self["in"] )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassPlugValueWidget::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::RenderPassPlugValueWidget::Settings" )
 
 	__PassStatus = collections.namedtuple( "__PassStatus", [ "enabled", "adaptedEnabled" ] )
 

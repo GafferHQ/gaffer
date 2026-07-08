@@ -65,7 +65,7 @@ class ViewTest( GafferUITest.TestCase ) :
 
 			GafferUI.View.__init__( self, "MyView", scriptNode, Gaffer.IntPlug( "in" ) )
 
-	IECore.registerRunTimeTyped( MyView, typeName = "GafferUITest::MyView" )
+	IECore.registerRunTimeTyped( MyView, "GafferUITest::MyView" )
 
 	def testFactory( self ) :
 

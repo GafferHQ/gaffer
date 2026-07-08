@@ -141,4 +141,4 @@ class _PointInstancerAdaptor( GafferScene.SceneProcessor ) :
 
 		self["out"].setInput( self["instancer"]["out"] )
 
-IECore.registerRunTimeTyped( _PointInstancerAdaptor, typeName = "GafferUSD::_PointInstancerAdaptor" )
+IECore.registerRunTimeTyped( _PointInstancerAdaptor, "GafferUSD::_PointInstancerAdaptor" )
