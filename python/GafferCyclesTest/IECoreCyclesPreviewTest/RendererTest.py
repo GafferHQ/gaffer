@@ -67,6 +67,20 @@ class RendererTest( GafferTest.TestCase ) :
 
 		return renderer
 
+	@staticmethod
+	def devices() :
+
+		result = []
+
+		for device in GafferCycles.devices.values() :
+			# Cycles fails to render with the virtual metal devices available on CI.
+			if device["type"].value == "METAL" and device["description"].value.startswith( "Apple Paravirtual device" ) :
+				continue
+
+			result.append( device )
+
+		return result
+
 	def testObjectColor( self ) :
 
 		renderer = self.createRenderer()
@@ -2475,7 +2489,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testDevices( self ) :
 
 		typeIndices = {}
-		for device in GafferCycles.devices.values() :
+		for device in self.devices() :
 
 			deviceType = device["type"]
 			typeIndex = typeIndices.setdefault( deviceType, 0 )
@@ -2978,7 +2992,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testMeshDeformationMotionBlur( self ) :
 
-		for device in GafferCycles.devices.values() :
+		for device in self.devices() :
 
 			for numSamples in ( 2, 3, 4 ) :
 
@@ -3042,7 +3056,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testPointDeformationMotionBlur( self ) :
 
-		for device in GafferCycles.devices.values() :
+		for device in self.devices() :
 
 			for numSamples in ( 2, 3, 4 ) :
 

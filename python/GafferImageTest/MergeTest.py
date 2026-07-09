@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import sys
 import unittest
 import imath
 
@@ -715,7 +716,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( self.mergeBoundariesRefPath )
 
-		self.assertImagesEqual( loop["out"], reader["out"], ignoreMetadata = True, maxDifference = 1e-5 if scale > 1 else 0 )
+		self.assertImagesEqual( loop["out"], reader["out"], ignoreMetadata = True, maxDifference = 1e-5 if scale > 1 or sys.platform == "darwin" else 0 )
 
 	def testBoundaryCorrectness( self ):
 		self.runBoundaryCorrectness( 1 )

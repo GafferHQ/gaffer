@@ -134,10 +134,10 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 		if useUI:
 
 			with GafferUI.Window() as window :
+				window.setVisible( True )
 				window.setFullScreen( True )
 				viewer = GafferUI.Viewer( script )
 
-			window.setVisible( True )
 			viewer.setNodeSet( Gaffer.StandardSet( [ watchNode ] ) )
 
 
@@ -166,8 +166,9 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 
 			script['InteractiveArnoldRender']['state'].setValue( GafferScene.InteractiveRender.State.Stopped )
 
-			del window, viewer, timer
-			self.waitForIdle( 10 )
+			del viewer, timer
+			self.waitForIdle( 1000 )
+			del window
 
 		else:
 			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :

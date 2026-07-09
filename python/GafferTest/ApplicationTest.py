@@ -75,7 +75,10 @@ class ApplicationTest( GafferTest.TestCase ) :
 				time.sleep( 0.1 )
 				if os.name != "nt" :
 					command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
-					name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
+					name = subprocess.check_output(
+						[ "ps", "-p", str( process.pid ), "-o", "comm=" ] + ( [ "-c" ] if sys.platform == "darwin" else [] ),
+						universal_newlines = True
+					).strip()
 				else :
 					# On Windows, `process` is the shell process (`cmd.exe`) that runs our `gaffer.exe _gaffer.py` process which finally runs
 					# `gaffer __gaffer.py`.

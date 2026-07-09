@@ -92,7 +92,7 @@ elif sys.platform == "darwin" :
             "installer",
             "-pkg",
             "/Volumes/3Delight NSI "
-            "{delightVersion}/3DelightNSI-{delightVersion}-Darwin-x86_64.pkg".format(
+            "{delightVersion}/3DelightNSI-{delightVersion}-Darwin-Universal.pkg".format(
                 delightVersion = delightVersion
             ),
             "-target",

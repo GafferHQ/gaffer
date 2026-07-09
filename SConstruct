@@ -473,7 +473,11 @@ if env["PLATFORM"] != "win32" :
 	if "clang++" in os.path.basename( env["CXX"] ) :
 
 		env.Append(
-			CXXFLAGS = [ "-Wno-unused-local-typedef" ]
+			CXXFLAGS = [ "-Wno-unused-local-typedef" ],
+			# XCode 16 warns about deprecations in fmtlib. Overriding `FMT_DEPRECATED`
+			# allows us to remove the [[deprecated]] attributes and still build with
+			# `-Werror,-Wdeprecated-declarations`.
+			CPPDEFINES = [ ( "FMT_DEPRECATED", "" ) ]
 		)
 
 		# Turn off the parts of `-Wextra` that we don't like.
@@ -783,6 +787,7 @@ if commandEnv["PLATFORM"] == "darwin" :
 	commandEnv["ENV"]["DYLD_FRAMEWORK_PATH"] = commandEnv.subst( ":".join(
 		[ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] )
 	) )
+	commandEnv["ENV"]["PYTHONHOME"] = commandEnv.subst( "$BUILD_DIR/lib/Python.framework/Versions/Current" )
 elif commandEnv["PLATFORM"] == "win32" :
 	commandEnv["ENV"]["PATH"] = commandEnv.subst( ";".join( [ "$BUILD_DIR/lib" ] + split( commandEnv[ "LOCATE_DEPENDENCY_LIBPATH" ] ) + [ commandEnv["ENV"]["PATH"] ] ) )
 else:
@@ -1031,6 +1036,7 @@ cyclesDefines = [
 	( "WITH_CUDA" ),
 	( "WITH_CUDA_DYNLOAD" ),
 	( "WITH_OPTIX" ),
+	( "WITH_SSE2NEON" ),
 ]
 
 
@@ -2032,6 +2038,7 @@ exeEnv = env.Clone()
 
 # Piggy-back on some of `baseLibEnv` variables.
 exeEnv["PYTHON_ABI_VERSION"] = baseLibEnv["PYTHON_ABI_VERSION"]
+exeEnv["PYTHON_VERSION"] = baseLibEnv["PYTHON_VERSION"]
 
 exeEnv.Append(
 
@@ -2044,7 +2051,7 @@ exeEnv.Append(
 
 )
 
-if exeEnv["PLATFORM"] != "win32" :
+if os.path.basename( exeEnv["CXX"] ) == "g++" :
 	exeEnv["LINKFLAGS"].remove( "-Wl,--as-needed" )
 	exeEnv.Append(
 
@@ -2056,7 +2063,8 @@ if exeEnv["PLATFORM"] != "win32" :
 		],
 
 	)
-else :
+
+if exeEnv["PLATFORM"] == "win32" :
 	exeEnv.Append(
 
 		# Using 4MB stack to match TBB's default thread stack size.

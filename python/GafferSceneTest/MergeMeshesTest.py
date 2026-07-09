@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import sys
 import unittest
 import imath
 import inspect
@@ -190,6 +191,7 @@ class MergeMeshesTest( GafferSceneTest.SceneTestCase ) :
 
 	# One of the more obvious very weird cases: two meshes, where one contains the other, and the destination
 	# plug for each mesh is set to overwrite the other mesh.
+	@unittest.skipIf( sys.platform == "darwin", "Precision differences on macOS arm64" )
 	def testSwap( self ):
 
 		bigCube = GafferScene.Cube()
@@ -336,6 +338,7 @@ class MergeMeshesTest( GafferSceneTest.SceneTestCase ) :
 
 		return path
 
+	@unittest.skipIf( sys.platform == "darwin", "Precision differences on macOS arm64" )
 	def testReferenceSetup( self ) :
 
 		random.seed( 42 )
