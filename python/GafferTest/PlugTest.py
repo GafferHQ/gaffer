@@ -1071,6 +1071,63 @@ class PlugTest( GafferTest.TestCase ) :
 			set( Gaffer.Plug.RecursiveRange( node1 ) ) | set( Gaffer.Plug.RecursiveRange( node2 ) )
 		)
 
+	def testAddChildAndReorder( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node1"] = Gaffer.Node()
+		script["node1"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["node1"]["user"]["p"]["c1"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["node1"]["user"]["p"]["c2"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script["node2"] = Gaffer.Node()
+		script["node2"]["user"]["p"] = script["node1"]["user"]["p"].createCounterpart( "p", Gaffer.Plug.Direction.In )
+		script["node2"]["user"]["p"].setInput( script["node1"]["user"]["p"] )
+
+		def assertPreconditions() :
+
+			self.assertEqual( len( script["node1"]["user"]["p"] ), 2 )
+			self.assertEqual( script["node1"]["user"]["p"][0].getName(), "c1" )
+			self.assertEqual( script["node1"]["user"]["p"][1].getName(), "c2" )
+
+			self.assertEqual( len( script["node2"]["user"]["p"] ), 2 )
+			self.assertEqual( script["node2"]["user"]["p"][0].getName(), "c1" )
+			self.assertEqual( script["node2"]["user"]["p"][1].getName(), "c2" )
+
+			self.assertEqual( script["node2"]["user"]["p"]["c1"].getInput(), script["node1"]["user"]["p"]["c1"] )
+			self.assertEqual( script["node2"]["user"]["p"]["c2"].getInput(), script["node1"]["user"]["p"]["c2"] )
+
+		assertPreconditions()
+
+		with Gaffer.UndoScope( script ) :
+
+			script["node1"]["user"]["p"].addChild( Gaffer.Plug( "c3", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+			script["node1"]["user"]["p"].reorderChildren( reversed( script["node1"]["user"]["p"] ) )
+
+		def assertPostconditions() :
+
+			self.assertEqual( len( script["node1"]["user"]["p"] ), 3 )
+			self.assertEqual( script["node1"]["user"]["p"][0].getName(), "c3" )
+			self.assertEqual( script["node1"]["user"]["p"][1].getName(), "c2" )
+			self.assertEqual( script["node1"]["user"]["p"][2].getName(), "c1" )
+
+			self.assertEqual( len( script["node2"]["user"]["p"] ), 3 )
+			self.assertEqual( script["node2"]["user"]["p"][0].getName(), "c3" )
+			self.assertEqual( script["node2"]["user"]["p"][1].getName(), "c2" )
+			self.assertEqual( script["node2"]["user"]["p"][2].getName(), "c1" )
+
+			self.assertEqual( script["node2"]["user"]["p"]["c1"].getInput(), script["node1"]["user"]["p"]["c1"] )
+			self.assertEqual( script["node2"]["user"]["p"]["c2"].getInput(), script["node1"]["user"]["p"]["c2"] )
+			self.assertEqual( script["node2"]["user"]["p"]["c3"].getInput(), script["node1"]["user"]["p"]["c3"] )
+
+		assertPostconditions()
+
+		script.undo()
+		assertPreconditions()
+
+		script.redo()
+		assertPostconditions()
+
 	def testRemoveOutputsRemovesChildOutputs( self ) :
 
 		p1 = Gaffer.V2iPlug()

@@ -1195,6 +1195,39 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 				script.undo()
 				assertPreconditions()
 
+	def testAddImageAndReorder( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferScene.Catalogue()
+
+		script["catalogue"]["images"].addChild( GafferScene.Catalogue.Image( "image1" ) )
+
+		def assertPreconditions() :
+
+			self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+			self.assertEqual( script["catalogue"]["images"][0].getName(), "image1" )
+
+		assertPreconditions()
+
+		with Gaffer.UndoScope( script ) :
+
+			script["catalogue"]["images"].addChild( GafferScene.Catalogue.Image( "image2" ) )
+			script["catalogue"]["images"].reorderChildren( reversed( script["catalogue"]["images"] ) )
+
+		def assertPostconditions() :
+
+			self.assertEqual( len( script["catalogue"]["images"] ), 2 )
+			self.assertEqual( script["catalogue"]["images"][0].getName(), "image2" )
+			self.assertEqual( script["catalogue"]["images"][1].getName(), "image1" )
+
+		assertPostconditions()
+
+		script.undo()
+		assertPreconditions()
+
+		script.redo()
+		assertPostconditions()
+
 	def testImageNames( self ) :
 
 		def assertImageNames( catalogue ) :
