@@ -25,6 +25,8 @@ To install Gaffer in Linux:
 
 Gaffer is now installed to `/opt/gaffer-!GAFFER_VERSION!-linux`.
 
+> Note :
+> On Ubuntu you might also need to install the `libxcb-cursor0` package by running the following command: `sudo apt install libxcb-cursor0`
 
 ## Installing in Windows ##
 
