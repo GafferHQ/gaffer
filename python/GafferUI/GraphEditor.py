@@ -221,15 +221,23 @@ class GraphEditor( GafferUI.Editor ) :
 		__append( destinationPlug, "Destination Node" )
 
 	__nodeContextMenuSignal = Gaffer.Signals.Signal3()
+	__multiNodeContextMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
 	# node in the graph. Slots may connect to this signal to edit the
-	# menu definition on the fly - the signature for the signal is
-	# ( graphEditor, node, menuDefinition ) and the menu definition should just be
-	# edited in place. Typically you would add slots to this signal
-	# as part of a startup script.
-	@classmethod
-	def nodeContextMenuSignal( cls ) :
+	# menu definition on the fly. If `multiNode` is `False`, the signature
+	# for the signal is ( graphEditor, node, menuDefinition ).
+	# Otherwise the signature is ( graphEditor, nodeList, menuDefinition ).
+	# The menu is built by first emitting the multi-node signal then the
+	# single node signal with the same `menuDefinition`.
+	# For both, the menu definition should just be edited in place. Typically
+	# you would add slots to this signal as part of a startup script.
 
+	# \todo Deprecate the single node signal in version `1.8` and remove it in `1.9`.
+	@classmethod
+	def nodeContextMenuSignal( cls, multiNode = False ) :
+
+		if multiNode :
+			return cls.__multiNodeContextMenuSignal
 		return cls.__nodeContextMenuSignal
 
 	## May be used from a slot attached to nodeContextMenuSignal() to install some
@@ -430,8 +438,13 @@ class GraphEditor( GafferUI.Editor ) :
 					if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
 						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget )
 					if nodeGadget is not None :
+						selection = self.scriptNode().selection()
+						nodeList = list( selection ) if nodeGadget.node() in selection else [nodeGadget.node()]
+						self.nodeContextMenuSignal( True )( self, nodeList, overrideMenuDefinition )
+
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
-						overrideMenuTitle = nodeGadget.node().getName()
+
+						overrideMenuTitle = ( "{} Nodes".format( len( nodeList ) ) ) if len( nodeList ) > 1 else nodeList[0].getName()
 
 				if len( overrideMenuDefinition.items() ) :
 					menuDefinition = overrideMenuDefinition
