@@ -70,7 +70,7 @@ __children["Constant"]["color"].setValue( imath.Color4f( 0, 0.0500000007, 0.1500
 __children["Constant"]["__uiPosition"].setValue( imath.V2f( 0.550862312, 9.60000134 ) )
 __children["Expression"]["__uiPosition"].setValue( imath.V2f( -9.94744205, 1.43570542 ) )
 __children["Expression"]["__engine"].setValue( 'python' )
-__children["Expression"]["__expression"].setValue( 'desc = context.get( "versionDescription", "" )\nauthor = context.get( "versionAuthor", "" )\ntext = ""\n\nif ( author is not "" ) :\n\ttext += "AUTHOR: " + author + "\\n"\nif ( desc is not "" ) :\n\ttext += "DESCRIPTION: " + desc\n\nparent["__out"]["p0"] = text' )
+__children["Expression"]["__expression"].setValue( 'desc = context.get( "versionDescription", "" )\nauthor = context.get( "versionAuthor", "" )\ntext = ""\n\nif author != "" :\n\ttext += "AUTHOR: " + author + "\\n"\nif desc != "" :\n\ttext += "DESCRIPTION: " + desc\n\nparent["__out"]["p0"] = text' )
 
 
 del __children

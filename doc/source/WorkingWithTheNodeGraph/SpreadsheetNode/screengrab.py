@@ -48,11 +48,9 @@ import subprocess
 import tempfile
 import time
 
-import Qt
 from Qt import QtCore, QtWidgets
 
 import imath
-import IECore
 import Gaffer
 import GafferScene
 import GafferUI
