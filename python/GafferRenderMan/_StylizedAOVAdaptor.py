@@ -69,10 +69,6 @@ class _StylizedAOVAdaptor( GafferScene.SceneProcessor ) :
 			"""
 		) )
 
-	__stylizedFilters = {
-		"PxrStylizedCanvas", "PxrStylizedHatching", "PxrStylizedLines", "PxrStylizedToon",
-	}
-
 	__aovDefinitions = {
 
 		"albedo" : "lpe nothruput;noinfinitecheck;noclamp;unoccluded;overwrite;C<.S'passthru'>*((U2L)|O)",
@@ -104,11 +100,7 @@ class _StylizedAOVAdaptor( GafferScene.SceneProcessor ) :
 		if displayFilter is None or not isinstance( displayFilter, IECoreScene.ShaderNetwork ) :
 			return inputGlobals
 
-		displayFilters = {
-			shader.name for shader in displayFilter.shaders().values()
-		}
-
-		if not displayFilters.intersection( _StylizedAOVAdaptor.__stylizedFilters ) :
+		if not any( shader.name.startswith( "PxrStylized" ) for shader in displayFilter.shaders().values() ) :
 			return inputGlobals
 
 		# Stylized Looks are in use, so make sure we have all the AOVs needed.
@@ -141,4 +133,4 @@ class _StylizedAOVAdaptor( GafferScene.SceneProcessor ) :
 
 IECore.registerRunTimeTyped( _StylizedAOVAdaptor, "GafferRenderMan::_StylizedAOVAdaptor" )
 
-GafferScene.SceneAlgo.registerRenderAdaptor( "RenderManStylizedAOVAdaptor", _StylizedAOVAdaptor, "*Render", "RenderMan" )
+GafferScene.SceneAlgo.registerRenderAdaptor( "RenderManStylizedAOVAdaptor", _StylizedAOVAdaptor, "*Render", "RenderMan*" )

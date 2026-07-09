@@ -21,6 +21,7 @@ Fixes
   - Fixed crash attempting to render with a shader that doesn't exist.
 - Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors [^1].
 - RenderMan : Fixed `R10043` warning when using PxrDisplace [^1].
+- RenderMan : Fixed automatic creation of required AOVs for PxrStylized filters in XPU [^1].
 - Catalogue : Fixed errors caused by undoing an image deletion.
 - Gaffer module : Fixed bug preventing `environment()` from returning environment variables modified after startup on macOS.
 
@@ -310,6 +311,7 @@ Fixes
 
 - Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors.
 - RenderMan : Fixed `R10043` warning when using PxrDisplace.
+- RenderMan : Fixed automatic creation of required AOVs for PxrStylized filters in XPU.
 
 1.6.20.0 (relative to 1.6.19.2)
 ========
