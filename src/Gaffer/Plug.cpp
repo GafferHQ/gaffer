@@ -663,26 +663,30 @@ void Plug::parentChanged( Gaffer::GraphComponent *oldParent )
 
 void Plug::childrenReordered( const std::vector<size_t> &oldIndices )
 {
-	// Reorder the children of our outputs to match our new order. We disable
-	// undo while we do this, because `childrenReordered()` will be called again
-	// when the original action is undone anyway.
-	UndoScope undoDisabler( ancestor<ScriptNode>(), UndoScope::Disabled );
-	for( auto output : m_outputs )
+	// Reorder the children of our outputs to match our new order. We don't
+	// do this during undo or redo, because our reordering will have been
+	// captured the first time around, and will be replayed for us automatically.
+
+	ScriptNode *scriptNode = ancestor<ScriptNode>();
+	if( !scriptNode || ( scriptNode->currentActionStage() != Action::Undo && scriptNode->currentActionStage() != Action::Redo ) )
 	{
-		if( output->children().size() != oldIndices.size() )
+		for( auto output : m_outputs )
 		{
-			IECore::msg(
-				IECore::Msg::Warning, "Plug::childrenReordered",
-				fmt::format( "Not reordering output \"{}\" because its size doesn't match the input", output->fullName() )
-			);
-			continue;
+			if( output->children().size() != oldIndices.size() )
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "Plug::childrenReordered",
+					fmt::format( "Not reordering output \"{}\" because its size doesn't match the input", output->fullName() )
+				);
+				continue;
+			}
+			GraphComponent::ChildContainer children; children.reserve( oldIndices.size() );
+			for( auto i : oldIndices )
+			{
+				children.push_back( output->getChild( i ) );
+			}
+			output->reorderChildren( children );
 		}
-		GraphComponent::ChildContainer children; children.reserve( oldIndices.size() );
-		for( auto i : oldIndices )
-		{
-			children.push_back( output->getChild( i ) );
-		}
-		output->reorderChildren( children );
 	}
 
 	// Propagate dirtiness, because some nodes are sensitive
