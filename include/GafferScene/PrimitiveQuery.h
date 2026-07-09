@@ -81,6 +81,9 @@ class GAFFERSCENE_API PrimitiveQuery : public Gaffer::ComputeNode
 		Gaffer::IntPlug *faceVaryingPlug();
 		const Gaffer::IntPlug *faceVaryingPlug() const;
 
+		Gaffer::ObjectPlug *primitivePlug();
+		const Gaffer::ObjectPlug *primitivePlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

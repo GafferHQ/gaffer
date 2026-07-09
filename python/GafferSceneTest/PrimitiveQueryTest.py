@@ -36,6 +36,7 @@
 
 import unittest
 
+import IECore
 import IECoreScene
 
 import GafferScene
@@ -57,6 +58,7 @@ class PrimitiveQueryTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( query["vertex"].getValue(), mesh.variableSize( IECoreScene.PrimitiveVariable.Interpolation.Vertex ) )
 		self.assertEqual( query["varying"].getValue(), mesh.variableSize( IECoreScene.PrimitiveVariable.Interpolation.Varying ) )
 		self.assertEqual( query["faceVarying"].getValue(), mesh.variableSize( IECoreScene.PrimitiveVariable.Interpolation.FaceVarying ) )
+		self.assertEqual( query["primitive"].getValue(), mesh )
 
 		query["enabled"].setValue( False )
 		self.assertEqual( query["type"].getValue(), "" )
@@ -64,6 +66,7 @@ class PrimitiveQueryTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( query["vertex"].getValue(), 0 )
 		self.assertEqual( query["varying"].getValue(), 0 )
 		self.assertEqual( query["faceVarying"].getValue(), 0 )
+		self.assertEqual( query["primitive"].getValue(), IECore.NullObject.defaultNullObject() )
 
 	def testDefaultOutputs( self ) :
 
@@ -75,6 +78,7 @@ class PrimitiveQueryTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( query["vertex"].getValue(), 0 )
 			self.assertEqual( query["varying"].getValue(), 0 )
 			self.assertEqual( query["faceVarying"].getValue(), 0 )
+			self.assertEqual( query["primitive"].getValue(), IECore.NullObject.defaultNullObject() )
 
 		# No scene connected, no location
 		assertDefaults()

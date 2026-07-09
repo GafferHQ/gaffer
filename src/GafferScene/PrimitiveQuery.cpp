@@ -38,6 +38,8 @@
 
 #include "IECoreScene/Primitive.h"
 
+#include "IECore/NullObject.h"
+
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -57,6 +59,7 @@ PrimitiveQuery::PrimitiveQuery( const std::string &name )
 	addChild( new Gaffer::IntPlug( "vertex", Gaffer::Plug::Out ) );
 	addChild( new Gaffer::IntPlug( "varying", Gaffer::Plug::Out ) );
 	addChild( new Gaffer::IntPlug( "faceVarying", Gaffer::Plug::Out ) );
+	addChild( new Gaffer::ObjectPlug( "primitive", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
 }
 
 PrimitiveQuery::~PrimitiveQuery()
@@ -143,6 +146,16 @@ const Gaffer::IntPlug *PrimitiveQuery::faceVaryingPlug() const
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 7 );
 }
 
+Gaffer::ObjectPlug *PrimitiveQuery::primitivePlug()
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 8 );
+}
+
+const Gaffer::ObjectPlug *PrimitiveQuery::primitivePlug() const
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 8 );
+}
+
 void PrimitiveQuery::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
@@ -159,6 +172,7 @@ void PrimitiveQuery::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 		outputs.push_back( vertexPlug() );
 		outputs.push_back( varyingPlug() );
 		outputs.push_back( faceVaryingPlug() );
+		outputs.push_back( primitivePlug() );
 	}
 }
 
@@ -169,7 +183,8 @@ void PrimitiveQuery::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 		output == uniformPlug() ||
 		output == vertexPlug() ||
 		output == varyingPlug() ||
-		output == faceVaryingPlug()
+		output == faceVaryingPlug() ||
+		output == primitivePlug()
 	)
 	{
 		ComputeNode::hash( output, context, h );
@@ -200,7 +215,8 @@ void PrimitiveQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 		output == uniformPlug() ||
 		output == vertexPlug() ||
 		output == varyingPlug() ||
-		output == faceVaryingPlug()
+		output == faceVaryingPlug() ||
+		output == primitivePlug()
 	)
 	{
 		IECoreScene::ConstPrimitivePtr primitive;
@@ -237,6 +253,10 @@ void PrimitiveQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 		else if( output == faceVaryingPlug() )
 		{
 			static_cast<Gaffer::IntPlug *>( output )->setValue( primitive ? (int)primitive->variableSize( IECoreScene::PrimitiveVariable::FaceVarying ) : 0 );
+		}
+		else if( output == primitivePlug() )
+		{
+			static_cast<Gaffer::ObjectPlug *>( output )->setValue( primitive ? primitive : IECore::ConstObjectPtr( IECore::NullObject::defaultNullObject() ) );
 		}
 	}
 	else
