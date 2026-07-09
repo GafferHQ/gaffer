@@ -72,7 +72,9 @@ class PopupWindow( GafferUI.Window ) :
 
 		self.setVisible( True )
 		size = self._qtWidget().sizeHint()
+		print( "PopupWindow.popup : Attempting to move popup to {}".format( center - imath.V2i( size.width() / 2, size.height() / 2 ) ) )
 		self.setPosition( center - imath.V2i( size.width() / 2, size.height() / 2 ) )
+		print( "PopupWindow.popup : Popup moved to {}".format( self.getPosition() ) )
 
 	## Reimplemented from Widget to report the parent passed to `popup()`.
 	def parent( self ) :
