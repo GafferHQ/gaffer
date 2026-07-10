@@ -26,6 +26,8 @@ We can now enter any OSL code we want to generate the output from the input. Sta
 stripes = aastep( 0, sin( P.y * M_PI / width ) )
 ```
 
+![](images/stripesShader.png "Stripes shader")
+
 Now hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to update the shader. The Viewer will update to show a shader ball with the shader on it, and adjusting the width parameter will update the render interactively.
 
 ![](images/shaderBallStripes.png "Shader ball")
@@ -50,6 +52,8 @@ float vv = P.y + 0.2 * pnoise( P.x * 3, 4 );
 float m = aastep( 0, sin( vv * M_PI / width ) );
 stripes = mix( color1, color2, m );
 ```
+
+![](images/coloredStripesShader.png "Stripes shader")
 
 And as before, hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to update the shader.
 

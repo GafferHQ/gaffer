@@ -1,5 +1,7 @@
 # BuildTarget: images/blank.png
 # BuildTarget: images/parameters.png
+# BuildTarget: images/stripesShader.png
+# BuildTarget: images/coloredStripesShader.png
 # BuildTarget: images/shaderBallColoredStripes.png
 # BuildTarget: images/shaderBallStripes.png
 
@@ -26,6 +28,10 @@ GafferUI.WidgetAlgo.grab( widget = oslEditor, imagePath = "images/parameters.png
 oslEditor.parent().setVisible( False )
 
 script["OSLCode"]["code"].setValue( "stripes = aastep( 0, sin( P.y * M_PI / width ) )" )
+oslEditor.parent().setVisible( True )
+GafferUI.WidgetAlgo.grab( widget = oslEditor, imagePath = "images/stripesShader.png" )
+oslEditor.parent().setVisible( False )
+
 viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
 # delay so it can render
 t = time.time() + 3
@@ -38,6 +44,10 @@ script["OSLCode"]["parameters"]["color1"].setValue( imath.Color3f( 0.814999998, 
 script["OSLCode"]["parameters"]["color2"] = Gaffer.Color3fPlug( defaultValue = imath.Color3f( 0, 0, 0 ) )
 script["OSLCode"]["parameters"]["color2"].setValue( imath.Color3f( 0.210374981, 0.581973732, 0.764999986 ) )
 script["OSLCode"]["code"].setValue( "float vv = P.y + 0.2 * pnoise( P.x * 3, 4 );\nfloat m = aastep( 0, sin( vv * M_PI / width ) );\nstripes = mix( color1, color2, m );" )
+oslEditor.parent().setVisible( True )
+GafferUI.WidgetAlgo.grab( widget = oslEditor, imagePath = "images/coloredStripesShader.png" )
+oslEditor.parent().setVisible( False )
+
 # delay so it can render
 t = time.time() + 3
 while time.time() < t :
