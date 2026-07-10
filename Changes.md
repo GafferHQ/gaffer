@@ -34,6 +34,7 @@ Breaking Changes
 ----------------
 
 - RenderMan : Changed the default values used for PxrCryptomatte's material output.
+- ScriptNode : Changed preconditions for calling `serialiseToFile`. If the desired behaviour is that the ScriptNode in memory will be now be associated with the new file ( ie. a saveAs operation ), then the caller is responsible for setting `ScriptNode.fileNamePlug()` to the new file name before calling `serialiseToFile`.
 
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========
