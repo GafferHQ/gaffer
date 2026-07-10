@@ -69,6 +69,6 @@ OSL resources
 This short tutorial has only scratched the surface of what can be done with Open Shading Language. The following resources are a good place to learn more :
 
 - The [language specification](https://open-shading-language.readthedocs.io)
-- The [OSL mailing list](https://groups.google.com/forum/#!forum/osl-dev)
+- The [OSL mailing list](https://lists.aswf.io/g/osl-dev/)
 
-[1]: https://github.com/imageworks/OpenShadingLanguage
+[1]: https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
