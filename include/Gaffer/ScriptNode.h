@@ -199,6 +199,11 @@ class GAFFER_API ScriptNode : public Node
 		/// serialised nodes to those contained in the set.
 		std::string serialise( const Node *parent = nullptr, const Set *filter = nullptr ) const;
 		/// Calls serialise() and saves the result into the specified file.
+		/// Note : If you intend for this to have the effect of a "saveAs", where the open
+		/// script will now correspond to the newly saved file, then you should set
+		/// fileNamePlug() to the new fileName before calling this. Failing to do this can
+		/// result in DataStore nodes still pointing to the old files, and somewhat weird
+		/// corner case behaviour.
 		void serialiseToFile( const std::filesystem::path &fileName, const Node *parent = nullptr, const Set *filter = nullptr ) const;
 		/// Executes a previously generated serialisation. If continueOnError is true, then
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
