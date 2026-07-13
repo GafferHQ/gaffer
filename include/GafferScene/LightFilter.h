@@ -65,6 +65,9 @@ class GAFFERSCENE_API LightFilter : public ObjectSource
 		Gaffer::StringPlug *filteredLightsPlug();
 		const Gaffer::StringPlug *filteredLightsPlug() const;
 
+		Gaffer::StringPlug *filteredLightsExclusionsPlug();
+		const Gaffer::StringPlug *filteredLightsExclusionsPlug() const;
+
 		Gaffer::Plug *parametersPlug();
 		const Gaffer::Plug *parametersPlug() const;
 

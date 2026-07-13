@@ -48,7 +48,8 @@ namespace
 const IECore::InternedString g_defaultValue( "defaultValue" );
 const std::string g_metadataTargets(
 	"attribute:scene:visible attribute:doubleSided attribute:render:* attribute:gaffer:* " \
-	"attribute:linkedLights attribute:linkedLights:exclusions attribute:shadowedLights attribute:shadowedLights:exclusions attribute:filteredLights"
+	"attribute:linkedLights attribute:linkedLights:exclusions attribute:shadowedLights attribute:shadowedLights:exclusions " \
+	"attribute:filteredLights attribute:filteredLights:exclusions"
 );
 
 } // namespace

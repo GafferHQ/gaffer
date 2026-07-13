@@ -94,6 +94,18 @@ Gaffer.Metadata.registerNode(
 			"layout:index" : 1,
 		},
 
+		"filteredLightsExclusions" : {
+
+			"description" :
+			"""
+			The lights that are never filtered by this light filter, even
+			when they are included by `filteredLights`. Accepts a set
+			expression or a space separated list of lights.
+			""",
+
+			"layout:index" : 2,
+		},
+
 		"sets" : {
 
 			"layout:divider" : True,

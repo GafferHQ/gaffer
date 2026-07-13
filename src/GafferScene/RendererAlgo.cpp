@@ -1040,6 +1040,7 @@ namespace
 IECore::InternedString g_linkedLightsAttributeName( "linkedLights" );
 IECore::InternedString g_linkedLightsExclusionsAttributeName( "linkedLights:exclusions" );
 IECore::InternedString g_filteredLightsAttributeName( "filteredLights" );
+IECore::InternedString g_filteredLightsExclusionsAttributeName( "filteredLights:exclusions" );
 IECore::InternedString g_defaultLightsSetName( "defaultLights" );
 IECore::InternedString g_shadowedLightsAttributeName( "shadowedLights" );
 IECore::InternedString g_shadowedLightsExclusionsAttributeName( "shadowedLights:exclusions" );
@@ -1233,8 +1234,26 @@ void LightLinks::clearLightLinks()
 
 std::string LightLinks::filteredLightsExpression( const IECore::CompoundObject *attributes ) const
 {
-	const StringData *d = attributes->member<StringData>( g_filteredLightsAttributeName );
-	return d ? d->readable() : "";
+	if( const StringData *d = attributes->member<StringData>( g_filteredLightsAttributeName ) )
+	{
+		const std::string &filteredLights = d->readable();
+		if( isBlank( filteredLights ) )
+		{
+			return "";
+		}
+
+		if( const StringData *e = attributes->member<StringData>( g_filteredLightsExclusionsAttributeName ) )
+		{
+			const std::string &exclusions = e->readable();
+			if( !isBlank( exclusions ) )
+			{
+				return fmt::format( "({}) - ({})", filteredLights, exclusions );
+			}
+		}
+		return filteredLights;
+	}
+
+	return "";
 }
 
 void LightLinks::outputLightLinks( const ScenePlug *scene, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::ObjectInterface *object, IECore::MurmurHash *hash ) const

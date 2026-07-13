@@ -2102,6 +2102,23 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
 		)
 
+		# Exclude the light from the light filter
+
+		script["attributes"]["attributes"]["filteredLights:exclusions"]["enabled"].setValue( True )
+		script["attributes"]["attributes"]["filteredLights:exclusions"]["value"].setValue( "defaultLights" )
+
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity * 2.0, unfilteredIntensity * 2.0, 0, 1 ), error = 0.01 )
+		)
+
+		# Remove the exclusion
+
+		script["attributes"]["attributes"]["filteredLights:exclusions"]["enabled"].setValue( False )
+
+		self.assertEventually(
+			lambda : self.assertEqualWithAbsError( self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ), imath.Color4f( unfilteredIntensity, unfilteredIntensity, 0, 1 ), error = 0.01 )
+		)
+
 		# Reset light and filter
 
 		script["light"]["parameters"]["intensity"].setValue( 1.0 )

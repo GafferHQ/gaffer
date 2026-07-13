@@ -964,6 +964,23 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( linkedFilter ) ), "light_blocker" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( linkedGobo ) ), "gobo" )
 
+		s["attributes"]["attributes"]["filteredLights:exclusions"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["filteredLights:exclusions"]["value"].setValue( "/group/light" )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			light = arnold.AiNodeLookUpByName( universe, "light:/group/light" )
+			linkedFilters = arnold.AiNodeGetArray( light, "filters" )
+			numFilters = arnold.AiArrayGetNumElements( linkedFilters.contents )
+
+			self.assertEqual( numFilters, 1 )
+			linkedGobo = arnold.cast( arnold.AiArrayGetPtr( linkedFilters, 0 ), arnold.POINTER( arnold.AtNode ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( linkedGobo ) ), "gobo" )
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testLightFiltersMany( self ) :
 

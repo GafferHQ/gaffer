@@ -281,6 +281,25 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"attribute:filteredLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights that are never filtered by this light filter, even when they
+		are included by the `filteredLights` attribute. Accepts a set expression
+		or a space separated list of lights. Has no effect unless `filteredLights`
+		specifies lights to be filtered.
+		""",
+		"category" : "Standard",
+		"label" : "Filtered Lights Exclusions",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True,
+
+	},
+
 	"attribute:gaffer:automaticInstancing" : {
 
 		"defaultValue" : True,
