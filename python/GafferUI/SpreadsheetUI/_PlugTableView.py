@@ -63,7 +63,7 @@ from .._TableView import _TableView
 
 class _PlugTableView( GafferUI.Widget ) :
 
-	Mode = enum.Enum( "Mode", [ "RowNames", "Defaults", "Cells" ] )
+	Mode = enum.Enum( "Mode", [ "RowNames", "Defaults", "Cells", "Results" ] )
 
 	def __init__( self, selectionModel, mode, **kw ) :
 		tableView = _NavigableTable()
@@ -83,13 +83,14 @@ class _PlugTableView( GafferUI.Widget ) :
 		tableView.setHorizontalHeader( self.__horizontalHeader._qtWidget() )
 		self.__horizontalHeader.buttonPressSignal().connect( Gaffer.WeakMethod( self.__headerButtonPress ) )
 
-		if mode in ( self.Mode.Cells, self.Mode.Defaults ) :
+		if mode in ( self.Mode.Cells, self.Mode.Defaults, self.Mode.Results ) :
 
 			self.__applyColumnWidthMetadata()
 			self.__applyColumnOrderMetadata()
 
-			tableView.horizontalHeader().sectionResized.connect( Gaffer.WeakMethod( self.__columnResized ) )
-			tableView.horizontalHeader().sectionMoved.connect( Gaffer.WeakMethod( self.__columnMoved ) )
+			if mode != self.Mode.Results :
+				tableView.horizontalHeader().sectionResized.connect( Gaffer.WeakMethod( self.__columnResized ) )
+				tableView.horizontalHeader().sectionMoved.connect( Gaffer.WeakMethod( self.__columnMoved ) )
 
 			self.__ignoreColumnResized = False
 			self.__ignoreColumnMoved = False
@@ -147,7 +148,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		# Drawing
 
-		tableView.setItemDelegate( _PlugTableDelegate( tableView ) )
+		# The Results table only presents read-only values, we don't want non-editable cells dimmed there.
+		tableView.setItemDelegate( _PlugTableDelegate( tableView, dimNonEditable = mode != self.Mode.Results ) )
 
 		# Size and scrolling
 
@@ -157,8 +159,15 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		tableView.setSizePolicy(
 			QtWidgets.QSizePolicy.Fixed if mode == self.Mode.RowNames else QtWidgets.QSizePolicy.Maximum,
-			QtWidgets.QSizePolicy.Fixed if mode == self.Mode.Defaults else QtWidgets.QSizePolicy.Maximum,
+			QtWidgets.QSizePolicy.Fixed if mode in ( self.Mode.Defaults, self.Mode.Results ) else QtWidgets.QSizePolicy.Maximum,
 		)
+
+		# Results table plug and value drag
+		if mode == self.Mode.Results :
+			tableView.setDragEnabled( False )
+			self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
+			self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+			self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 
 	def plugAt( self, position ) :
 
@@ -273,6 +282,8 @@ class _PlugTableView( GafferUI.Widget ) :
 			viewProxy = _ProxyModels.RowNamesProxyModel( tableView )
 		elif self.__mode == self.Mode.Cells :
 			viewProxy = _ProxyModels.CellsProxyModel( tableView )
+		elif self.__mode == self.Mode.Results :
+			viewProxy = _ProxyModels.ResultsProxyModel( tableView )
 		else :
 			viewProxy = _ProxyModels.DefaultsProxyModel( tableView )
 
@@ -310,9 +321,9 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applyReadOnlyMetadata( self ) :
 
-		readOnly = Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() )
+		readOnly = self.__mode == self.Mode.Results or Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() )
 
-		if self.__mode in ( self.Mode.Cells, self.Mode.Defaults ) :
+		if self.__mode in ( self.Mode.Cells, self.Mode.Defaults, self.Mode.Results ) :
 
 			self._qtWidget().horizontalHeader().setSectionsMovable( not readOnly )
 			QtCompat.setSectionResizeMode(
@@ -546,7 +557,7 @@ class _PlugTableView( GafferUI.Widget ) :
 	# specified event, or `None` if dropping is not possible.
 	def __dropFunction( self, event ) :
 
-		if Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() ) :
+		if self.__mode == self.Mode.Results or Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() ) :
 			return None
 
 		destinationPlug = self.plugAt( event.line.p0 )
@@ -630,6 +641,36 @@ class _PlugTableView( GafferUI.Widget ) :
 		GafferUI.EventLoop.addIdleCallback( focusOnIdle )
 		return True
 
+	def __dragBegin( self, widget, event ) :
+
+		plug = self.plugAt( event.line.p0 )
+		if plug is None :
+			return None
+
+		if event.buttons == event.Buttons.Middle :
+			if isinstance( plug, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
+				plug = plug["value"]
+			if hasattr( plug, "getValue" ) :
+				GafferUI.Pointer.setCurrent( "values" )
+				with self.ancestor( GafferUI.PlugValueWidget ).context() :
+					return plug.getValue()
+			return None
+		elif event.buttons == event.Buttons.Left :
+			GafferUI.Pointer.setCurrent( "plug" )
+			return plug
+
+		return None
+
+	def __dragEnd( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( None )
+
+	def __mouseMove( self, widget, event ) :
+
+		# Suppress QTableView's drag-selection, as we use left-drag to
+		# access the plug for a cell in the Results table.
+		return event.buttons & event.Buttons.Left
+
 	def __connectionPlugs( self, sourcePlug, targetPlug ) :
 
 		if isinstance( targetPlug, Gaffer.Spreadsheet.CellPlug ) :
@@ -666,7 +707,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __buttonPress( self, widget, event ) :
 
-		if event.buttons != event.Buttons.Right :
+		if self.__mode != self.Mode.Results and event.buttons != event.Buttons.Right :
 			return False
 
 		point = self._qtWidget().viewport().mapFrom(
@@ -677,6 +718,19 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		# Disabled items won't show up in the selection model
 		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+			return True
+
+		if self.__mode == self.Mode.Results and event.buttons & ( event.Buttons.Left | event.Buttons.Middle ) :
+
+			if event.modifiers != event.Modifiers.None_ :
+				return False
+
+			# Take ownership of selection from the underlying QTableView and
+			# return True, so that we can begin a drag if necessary.
+			selectionModel = self._qtWidget().selectionModel()
+			selectionModel.select( index, QtCore.QItemSelectionModel.ClearAndSelect )
+			selectionModel.setCurrentIndex( index, QtCore.QItemSelectionModel.NoUpdate )
+
 			return True
 
 		# Ensure the cell that was clicked is selected. This avoids any ambiguity
@@ -709,6 +763,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if self.__mode == self.Mode.RowNames :
 			self.__prependRowMenuItems( definition, selectedPlugs )
+		elif self.__mode == self.Mode.Results :
+			self.__prependResultsMenuItems( definition, selectedPlugs )
 		else :
 			self.__prependCellMenuItems( definition, selectedPlugs )
 
@@ -721,6 +777,10 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if event.buttons != event.Buttons.Left :
 			return False
+
+		if self.__mode == self.Mode.Results :
+			# Results are non-editable.
+			return True
 
 		# Consistency is a little tricky here. Ideally we'd have the same
 		# interaction for all plug types, without adding unnecessary steps. We
@@ -756,6 +816,15 @@ class _PlugTableView( GafferUI.Widget ) :
 		return True
 
 	def __keyPress( self, widget, event ) :
+
+		if self.__mode == self.Mode.Results :
+
+			# Results are non-editable and only support copying
+			if event.modifiers == event.Modifiers.Control and event.key == "C" :
+				self.__copyResults()
+				return True
+
+			return False
 
 		forRows = self.__mode == self.Mode.RowNames
 
@@ -1028,6 +1097,29 @@ class _PlugTableView( GafferUI.Widget ) :
 		for path, args in reversed( items ) :
 			menuDefinition.prepend( path, args )
 
+	def __prependResultsMenuItems( self, menuDefinition, plugs ) :
+
+		targetDivider = "/__SpreadsheetRowAndCellDivider__"
+		if menuDefinition.item( targetDivider ) is None :
+			menuDefinition.prepend( targetDivider, { "divider" : True } )
+
+		items = [
+
+			( "/__CopyCellsDivider__", { "divider" : True } ),
+
+			(
+				"Copy Cell{}".format( "" if len( plugs ) == 1 else "s" ),
+				{
+					"command" : Gaffer.WeakMethod( self.__copyResults ),
+					"shortCut" : "Ctrl+C"
+				}
+			),
+
+		]
+
+		for path, args in reversed( items ) :
+			menuDefinition.prepend( path, args )
+
 	def __getClipboard( self ) :
 
 		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
@@ -1070,6 +1162,14 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 			_ClipboardAlgo.pasteRows( clipboard, rowsPlug )
+
+	def __copyResults( self ) :
+
+		model = self._qtWidget().model()
+		plugs = [ sorted( self.selectedPlugs(), key = model.indexForPlug ) ]
+		with self.ancestor( GafferUI.PlugValueWidget ).context() :
+			if _ClipboardAlgo.canCopyPlugs( plugs ) :
+				_ClipboardAlgo.copyPlugs( plugs )
 
 	def __setRowNameWidth( self, width, *unused ) :
 

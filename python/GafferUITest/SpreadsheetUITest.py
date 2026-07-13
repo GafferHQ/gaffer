@@ -1091,5 +1091,20 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		b["rows"].removeColumn( 0 )
 		self.assertEqual( model.columnCount(), columnCount - 1 )
 
+	def testBoxedSpreadsheet( self ) :
+
+		b = Gaffer.Box()
+		b["s"] = self.__createSpreadsheet( numRows = 3 )
+
+		Gaffer.PlugAlgo.promote( b["s"]["rows"] )
+		widget = GafferUI.SpreadsheetUI._RowsPlugValueWidget( b["rows"] )
+		self.assertIsNone( widget._RowsPlugValueWidget__resultsTable )
+
+		# The result row should only be created when both the "rows" and "out"
+		# plugs are promoted from the Spreadsheet.
+		Gaffer.PlugAlgo.promote( b["s"]["out"] )
+		widget = GafferUI.SpreadsheetUI._RowsPlugValueWidget( b["rows"] )
+		self.assertIsNotNone( widget._RowsPlugValueWidget__resultsTable )
+
 if __name__ == "__main__":
 	unittest.main()

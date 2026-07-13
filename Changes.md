@@ -1,7 +1,15 @@
 1.7.x.x (relative to 1.7.0.0a6)
 =======
 
+Improvements
+------------
 
+- SpreadsheetUI : Added "Result" row, showing the output value computed for each column. Cells in this row can be left-dragged to connect the column to a plug, or middle-dragged to transfer the current value.
+
+API
+---
+
+- Spreadsheet : Added support for `spreadsheet:resultRowVisible` metadata, which can be used to hide the result row.
 
 1.7.0.0a6 (relative to 1.7.0.0a5)
 =========

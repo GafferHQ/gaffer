@@ -42,16 +42,18 @@ from ._PlugTableModelBase import _PlugTableModelBase
 
 class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
-	def __init__( self, parent = None ) :
+	def __init__( self, parent = None, dimNonEditable = True ) :
 
 		QtWidgets.QStyledItemDelegate.__init__( self, parent )
+
+		self.__dimNonEditable = dimNonEditable
 
 	def paint( self, painter, option, index ) :
 
 		QtWidgets.QStyledItemDelegate.paint( self, painter, option, index )
 
 		flags = index.flags()
-		enabled = flags & QtCore.Qt.ItemIsEnabled and flags & QtCore.Qt.ItemIsEditable
+		enabled = flags & QtCore.Qt.ItemIsEnabled and ( flags & QtCore.Qt.ItemIsEditable if self.__dimNonEditable else True )
 		cellPlugEnabled = index.data( _PlugTableModelBase.CellPlugEnabledRole )
 
 		if option.state & QtWidgets.QStyle.State_HasFocus :
