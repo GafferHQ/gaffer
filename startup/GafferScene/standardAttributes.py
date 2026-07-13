@@ -201,6 +201,28 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"attribute:linkedLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights never to be linked to this object, even when they are
+		included by the `linkedLights` attribute. Accepts a set expression
+		or a space separated list of lights.
+
+		> Tip : Since `linkedLights` defaults to \"defaultLights\",
+		> exclusions take effect even when no `linkedLights`
+		> attribute has been created.
+		""",
+		"category" : "Standard",
+		"label" : "Linked Lights Exclusions",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True
+
+	},
+
 	"attribute:shadowedLights" : {
 
 		"defaultValue" : "__lights",

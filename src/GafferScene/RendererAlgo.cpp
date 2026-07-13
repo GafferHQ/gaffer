@@ -1038,6 +1038,7 @@ namespace
 {
 
 IECore::InternedString g_linkedLightsAttributeName( "linkedLights" );
+IECore::InternedString g_linkedLightsExclusionsAttributeName( "linkedLights:exclusions" );
 IECore::InternedString g_filteredLightsAttributeName( "filteredLights" );
 IECore::InternedString g_defaultLightsSetName( "defaultLights" );
 IECore::InternedString g_shadowedLightsAttributeName( "shadowedLights" );
@@ -1045,6 +1046,24 @@ IECore::InternedString g_shadowGroupAttributeName( "ai:visibility:shadow_group" 
 IECore::InternedString g_lights( "lights" );
 IECore::InternedString g_lightFilters( "lightFilters" );
 const std::string g_shadowedLightsDefaultValue( "__lights" );
+const std::string g_linkedLightsDefaultValue( "defaultLights" );
+const std::string g_emptyString;
+
+bool isBlank( const std::string &s )
+{
+	return s.find_first_not_of( " \t\n\r" ) == std::string::npos;
+}
+
+const std::string &subtractSetExpressions( const std::string &expression, const std::string &exclusions, std::string &storage )
+{
+	if( isBlank( expression ) || isBlank( exclusions ) )
+	{
+		return expression;
+	}
+
+	storage = fmt::format( "({}) - ({})", expression, exclusions );
+	return storage;
+}
 
 } // namespace
 
@@ -1220,18 +1239,22 @@ std::string LightLinks::filteredLightsExpression( const IECore::CompoundObject *
 void LightLinks::outputLightLinks( const ScenePlug *scene, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::ObjectInterface *object, IECore::MurmurHash *hash ) const
 {
 	const StringData *linkedLightsExpressionData = attributes->member<StringData>( g_linkedLightsAttributeName );
+	const StringData *linkedLightsExclusionsExpressionData = attributes->member<StringData>( g_linkedLightsExclusionsAttributeName );
 	const StringData *shadowedLightsExpressionData = attributes->member<StringData>( g_shadowedLightsAttributeName );
 	if( !shadowedLightsExpressionData && m_shadowedLightsFallbackAttributeName )
 	{
 		shadowedLightsExpressionData = attributes->member<StringData>( *m_shadowedLightsFallbackAttributeName );
 	}
-	const std::string linkedLightsExpression = linkedLightsExpressionData ? linkedLightsExpressionData->readable() : "defaultLights";
+	const std::string &linkedLightsExpression = linkedLightsExpressionData ? linkedLightsExpressionData->readable() : g_linkedLightsDefaultValue;
+	const std::string &linkedLightsExclusions = linkedLightsExclusionsExpressionData ? linkedLightsExclusionsExpressionData->readable() : g_emptyString;
+
 	const std::string &shadowedLightsExpression = shadowedLightsExpressionData ? shadowedLightsExpressionData->readable() : g_shadowedLightsDefaultValue;
 
 	if( hash )
 	{
 		IECore::MurmurHash h;
 		h.append( linkedLightsExpression );
+		h.append( linkedLightsExclusions );
 		h.append( shadowedLightsExpression );
 		if( !m_lightLinksDirty && *hash == h )
 		{
@@ -1245,7 +1268,8 @@ void LightLinks::outputLightLinks( const ScenePlug *scene, const IECore::Compoun
 		*hash = h;
 	}
 
-	IECoreScenePreview::Renderer::ConstObjectSetPtr objectSet = linkedLights( linkedLightsExpression, scene );
+	std::string expressionStorage;
+	IECoreScenePreview::Renderer::ConstObjectSetPtr objectSet = linkedLights( subtractSetExpressions( linkedLightsExpression, linkedLightsExclusions, expressionStorage ), scene );
 	object->link( g_lights, objectSet );
 	objectSet = linkedLights( shadowedLightsExpression, scene );
 	object->link( g_shadowedLightsAttributeName, objectSet );

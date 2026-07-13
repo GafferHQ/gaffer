@@ -784,6 +784,66 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			shadows = arnold.AiNodeGetArray( sphere1, "shadow_group" )
 			self.assertEqual( arnold.AiArrayGetNumElements( shadows ), 0 )
 
+	def testLightLinkingExclusions( self ) :
+
+		sphere1 = GafferScene.Sphere()
+		sphere2 = GafferScene.Sphere()
+
+		attributes = GafferScene.StandardAttributes()
+
+		light1 = GafferArnold.ArnoldLight()
+		light1.loadShader( "point_light" )
+
+		light2 = GafferArnold.ArnoldLight()
+		light2.loadShader( "point_light" )
+
+		group = GafferScene.Group()
+
+		render = GafferScene.Render()
+		render["renderer"].setValue( "Arnold" )
+
+		attributes["in"].setInput( sphere1["out"] )
+		group["in"][0].setInput( attributes["out"] )
+		group["in"][1].setInput( light1["out"] )
+		group["in"][2].setInput( light2["out"] )
+		group["in"][3].setInput( sphere2["out"] )
+
+		render["in"].setInput( group["out"] )
+
+		# Illumination
+		attributes["attributes"]["linkedLights"]["enabled"].setValue( True )
+		attributes["attributes"]["linkedLights"]["value"].setValue( "defaultLights" )
+		attributes["attributes"]["linkedLights:exclusions"]["enabled"].setValue( True )
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( "/group/light" )
+
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			# the first sphere had linked lights
+			sphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
+
+			# check illumination
+			self.assertTrue( arnold.AiNodeGetBool( sphere, "use_light_group" ) )
+			lights = arnold.AiNodeGetArray( sphere, "light_group" )
+			self.assertEqual( arnold.AiArrayGetNumElements( lights ), 1 )
+			self.assertEqual(
+				arnold.AiNodeGetName( arnold.AiArrayGetPtr( lights, 0 ) ),
+				"light:/group/light1"
+			)
+
+			# the second sphere does not have any light linking enabled
+			sphere1 = arnold.AiNodeLookUpByName( universe, "/group/sphere1" )
+
+			# check illumination
+			self.assertFalse( arnold.AiNodeGetBool( sphere1, "use_light_group" ) )
+			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
+			self.assertEqual( arnold.AiArrayGetNumElements( lights ), 0 )
+
 	def testNoLinkedLightsOnLights( self ) :
 
 		sphere = GafferScene.Sphere()

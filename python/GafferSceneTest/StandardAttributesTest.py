@@ -168,7 +168,7 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 	def testNodeConstructsWithAllAttributes( self ) :
 
 		targets = "attribute:scene:visible attribute:doubleSided attribute:render:* attribute:gaffer:* " \
-			+ "attribute:linkedLights attribute:shadowedLights attribute:filteredLights"
+			+ "attribute:linkedLights attribute:linkedLights:exclusions attribute:shadowedLights attribute:filteredLights"
 
 		node = GafferScene.StandardAttributes()
 		for attribute in Gaffer.Metadata.targetsWithMetadata( targets, "defaultValue" ) :

@@ -264,6 +264,26 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
 		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 3 )
 
+		# Likewise if we add exclusions.
+
+		attributes["attributes"]["linkedLights:exclusions"]["enabled"].setValue( True )
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( "B" )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), set() )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 4 )
+
+		# Or update exclusions.
+
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( "A" )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 5 )
+
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( " " )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 6 )
+
 		# If we change an attribute which has no bearing on light linking,
 		# we don't want links to be emitted again. Attributes change frequently
 		# and light linking can be expensive.
@@ -271,7 +291,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		attributes["attributes"]["doubleSided"]["value"].setValue( True )
 		controller.update()
 		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
-		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 3 )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 6 )
 
 		del capturedSphere, capturedLightA, capturedLightB
 
