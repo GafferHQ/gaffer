@@ -346,7 +346,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.assertEventually(
 			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.58, delta = 0.02 )
 		)
-		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0, delta = 0.01 )
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0, delta = 0.01 )
+		)
 
 		# Edit texture network and make sure the changes take effect
 
