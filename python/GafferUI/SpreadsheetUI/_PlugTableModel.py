@@ -42,7 +42,6 @@ import Gaffer
 import GafferUI
 
 from Qt import QtCore
-from Qt import QtGui
 
 from . import _Formatting
 

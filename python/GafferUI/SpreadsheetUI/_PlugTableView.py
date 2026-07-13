@@ -55,7 +55,6 @@ from . import _ClipboardAlgo
 from . import _ProxyModels
 from ._CellPlugValueWidget import _CellPlugValueWidget
 from ._PlugTableDelegate import _PlugTableDelegate
-from ._PlugTableModel import _PlugTableModel
 from ._ProxySelectionModel import _ProxySelectionModel
 from ._SectionChooser import _SectionChooser
 
