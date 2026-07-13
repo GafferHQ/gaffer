@@ -274,7 +274,7 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"category" : "Standard",
 		"label" : "Filtered Lights",
-		"layout:section" : "Light Linking",
+		"layout:section" : "Light Filters",
 
 		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
 		"ui:scene:acceptsSetExpression" : True,
@@ -293,7 +293,7 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"category" : "Standard",
 		"label" : "Filtered Lights Exclusions",
-		"layout:section" : "Light Linking",
+		"layout:section" : "Light Filters",
 
 		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
 		"ui:scene:acceptsSetExpression" : True,

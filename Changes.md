@@ -13,6 +13,7 @@ Improvements
 - StandardAttributes :
   - Added `linkedLights:exclusions` and `shadowedLights:exclusions` attributes, specifying lights that never illuminate or cast shadows from an object.
   - Added `filteredLights:exclusions` attribute, specifying lights that are never filtered by a light filter.
+  - Moved `filteredLights` and `filteredLights:exclusions` to a new "Light Filters" section in the NodeEditor and AttributeEditor.
 - LightFilter, ArnoldLightFilter, RenderManLightFilter : Added `filteredLightsExclusions` plug.
 
 Fixes
