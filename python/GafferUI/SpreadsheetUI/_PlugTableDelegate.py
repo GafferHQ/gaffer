@@ -38,7 +38,7 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
-from ._PlugTableModel import _PlugTableModel
+from ._PlugTableModelBase import _PlugTableModelBase
 
 class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
@@ -52,7 +52,7 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
 		flags = index.flags()
 		enabled = flags & QtCore.Qt.ItemIsEnabled and flags & QtCore.Qt.ItemIsEditable
-		cellPlugEnabled = index.data( _PlugTableModel.CellPlugEnabledRole )
+		cellPlugEnabled = index.data( _PlugTableModelBase.CellPlugEnabledRole )
 
 		if option.state & QtWidgets.QStyle.State_HasFocus :
 
@@ -64,7 +64,7 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 			focusColour.setAlpha( 30 )
 			painter.fillRect( option.rect, focusColour )
 
-		if index.data( _PlugTableModel.ActiveRole ) :
+		if index.data( _PlugTableModelBase.ActiveRole ) :
 			pen = QtGui.QPen( QtGui.QColor( 240, 220, 40, 150 ) )
 			pen.setWidth( 2 )
 			painter.setPen( pen )
