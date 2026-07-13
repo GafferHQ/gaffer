@@ -1,6 +1,6 @@
 # Light Linking #
 
-When lighting a scene, you will sometimes need to selectively control whether a piece of geometry is illuminated by a particular light, both for artistic purposes and to cut down on rendering time. The relationships that determine whether a light applies to an object are collectively known as **light linking**, and are controlled by the object's `linkedLights` attribute.
+When lighting a scene, you will sometimes need to selectively control whether a piece of geometry is illuminated by a particular light, both for artistic purposes and to cut down on rendering time. The relationships that determine whether a light applies to an object are collectively known as **light linking**, and are controlled by the object's `linkedLights` and `linkedLights:exclusions` attributes.
 
 ![](images/illustrationLightLinking.png "A sphere, a cube, and two lights, but the second light only illuminates the cube")
 
@@ -17,16 +17,22 @@ From the light side of things, by default, each light is a member of a set named
 
 ![](images/interfaceDefaultLightPlug.png "The Default Light plug of a light")
 
-From the object side of things, by default, an object is lit by all lights belonging to the "defaultLights" set. To bring about any other behaviour, such as having the object only lit by one light, a `linkedLights` attribute must be added to the object's location in the hierarchy, and the attribute must specify one or more lights, or sets of lights. The `linkedLights` attribute follows standard [inheritance rules for attributes](../AnatomyOfAScene/index.html#attributes) in the hierarchy, so if the object doesn't have the `linkedLights` attribute, but one of its ancestors does, it will inherit the attribute.
+From the object side of things, by default, an object is lit by all lights belonging to the "defaultLights" set. To bring about any other behaviour, such as having the object only lit by one light, a `linkedLights` attribute must be added to the object's location in the hierarchy, and the attribute must specify one or more lights, or sets of lights.
+
+To prevent an object from being lit by specific lights, a `linkedLights:exclusions` attribute can be added to the object's location in the hierarchy. Like `linkedLights`, it can specify one or more lights, or sets of lights. Lights specified in `linkedLights:exclusions` will **never** illuminate the object, even when that same light is specified in the object's `linkedLights` attribute.
 
 ```{eval-rst}
 .. figure:: images/interfaceLinkedLightsAttribute.png
     :scale: 100%
-    :alt: The linkedLights attribute of an object as it appears in the Scene Inspector.
+    :alt: The linkedLights and linkedLights:exclusions attributes of an object as they appear in the Scene Inspector.
 
-    The linkedLights attribute of an object, as it appears in the Scene Inspector.
+    The linkedLights and linkedLights:exclusions attributes, as they appear in the Scene Inspector.
 ```
 
+The `linkedLights` and `linkedLights:exclusions` attributes follow standard [inheritance rules for attributes](../AnatomyOfAScene/index.html#attributes) in the hierarchy, so if the object doesn't have the attribute, but one of its ancestors does, it will inherit the attribute. As attributes are inherited independently, `linkedLights:exclusions` can be added at a location inheriting a `linkedLights` attribute from an ancestor (or vice-versa). For example, an object at `/group/sphere` with only a `linkedLights:exclusions` attribute will inherit a `linkedLights` attribute authored at `/group`, and will be lit by those lights minus its own exclusions.
+
+> Tip :
+> As objects without a `linkedLights` attribute are lit by all lights in the "defaultLights" set, an object with only a `linkedLights:exclusions` attribute is lit by the default lights, minus its exclusions.
 
 ## Instructions ##
 
@@ -71,6 +77,17 @@ Be aware that if an object belongs to multiple sets with light linking, the obje
 
 ![](images/illustrationLightLinkingMultipleSets.png "A graph where an object belongs to multiple sets, each with different linked lights")
 
+### Excluding lights ###
+
+To exclude lights from illuminating the object, toggle the Linked Lights Exclusions plug and provide a [set expression](../../Reference/ScriptingReference/SetExpressions/index.md) that specifies the lights, or sets of lights to be excluded. This adds the `linkedLights:exclusions` attribute to the object's location. Lights matched by this expression will never illuminate the object, even when they are included by the Linked Lights plug.
+
+![](images/taskLightLinkingExclusionsSetExpression.png "A light linking exclusions set expression with a set")
+
+> Important :
+> Unlike the Linked Lights plug, the Linked Lights Exclusions plug is not an exclusive list. If you toggle the plug and leave the expression blank, no lights are excluded, and illumination is unchanged.
+
+> Tip :
+> The same lights could be excluded with a subtraction in the Linked Lights expression itself, such as `defaultLights - myLights`. The advantage of the Linked Lights Exclusions plug is that it is a separate attribute, so exclusions can be authored further down the hierarchy, or by a downstream node, without redefining the Linked Lights expression.
 
 ## Example scenario ##
 
