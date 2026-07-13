@@ -35,7 +35,6 @@
 ##########################################################################
 
 import functools
-import traceback
 
 import imath
 
