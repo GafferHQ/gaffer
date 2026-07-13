@@ -48,6 +48,7 @@ from Qt import QtWidgets
 
 from . import _Algo
 from ._LinkedScrollBar import _LinkedScrollBar
+from ._OutPlugTableModel import _OutPlugTableModel
 from ._PlugTableModel import _PlugTableModel
 from ._PlugTableView import _PlugTableView
 from ._SectionChooser import _SectionChooser
@@ -67,6 +68,14 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		model = _PlugTableModel( plug, self._qtWidget() )
 		selectionModel = QtCore.QItemSelectionModel( model, self._qtWidget() )
+
+		spreadsheet = Gaffer.PlugAlgo.findDestination(
+			plug, lambda p : p.node() if isinstance( p.node(), Gaffer.Spreadsheet ) else None
+		)
+
+		outPlug = Gaffer.PlugAlgo.findDestination(
+			spreadsheet["out"], lambda p : p if p.node() == plug.node() else None
+		) if spreadsheet is not None else None
 
 		with self.__grid :
 
@@ -160,15 +169,79 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+			self.__outputsTable = None
+			if outPlug is not None :
+
+				# The Outputs table is a read-only row showing the value of each column.
+				# Only shown when the Spreadsheet node's `out` plug is available on the
+				# same node as `plug`.
+
+				outputModel = _OutPlugTableModel( outPlug, plug, self._qtWidget() )
+				outputsSelectionModel = QtCore.QItemSelectionModel( outputModel, self._qtWidget() )
+
+				self.__outputsTable = _PlugTableView(
+					outputsSelectionModel, _PlugTableView.Mode.Outputs,
+					parenting = {
+						"index" : ( 1, 3 ),
+					}
+				)
+
+				self.__outputsTable.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__cellsMouseMove ) )
+				self.__outputsTable.leaveSignal().connect( Gaffer.WeakMethod( self.__cellsLeave ) )
+
+				# Keep the Outputs selection mutually exclusive with the selection
+				# shared by the other tables.
+				selectionModel.selectionChanged.connect(
+					functools.partial( Gaffer.WeakMethod( self.__selectionChanged ), outputsSelectionModel )
+				)
+				outputsSelectionModel.selectionChanged.connect(
+					functools.partial( Gaffer.WeakMethod( self.__selectionChanged ), selectionModel )
+				)
+
 			with GafferUI.ListContainer(
+				GafferUI.ListContainer.Orientation.Horizontal,
 				spacing = 4,
 				parenting = {
-					"index" : ( slice( 1, 3 ), 3 ),
+					"index" : ( 0, 3 ),
 				}
 			) :
 
+				self.__addRowButton = GafferUI.MenuButton(
+					image = "plus.png", hasFrame = False,
+					toolTip = "Click to add row, or drop new row names",
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addRowMenuDefinition ) ),
+					immediate = True,
+					parenting = {
+						"horizontalAlignment" : GafferUI.HorizontalAlignment.Left,
+						"verticalAlignment" : GafferUI.VerticalAlignment.Top,
+					}
+				)
+				self.__addRowButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragEnter ) )
+				self.__addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ) )
+				self.__addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ) )
+
+				if self.__outputsTable is not None :
+
+					self.__outputLabel = GafferUI.Label(
+						"<h4>Output</h4>", horizontalAlignment = GafferUI.HorizontalAlignment.Right,
+					)
+					# Ignore the width in X so that the label is sized based on the width dictated by `rowNamesTable`.
+					self.__outputLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+					GafferUI.Spacer( imath.V2i( 3, 20 ), maximumSize = imath.V2i( 3, 20 ) )
+
+			with GafferUI.ListContainer(
+				spacing = 4,
+				parenting = {
+					"index" : ( slice( 1, 3 ), 4 if self.__outputsTable is not None else 3 ),
+				}
+			) :
+
+				linkedScrollTables = [ self.__cellsTable, self.__defaultTable ]
+				if self.__outputsTable is not None :
+					linkedScrollTables.append( self.__outputsTable )
+
 				_LinkedScrollBar(
-					GafferUI.ListContainer.Orientation.Horizontal, [ self.__cellsTable, self.__defaultTable ],
+					GafferUI.ListContainer.Orientation.Horizontal, linkedScrollTables,
 				)
 
 				self.__statusLabel = GafferUI.Label( "" )
@@ -176,20 +249,6 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# of the status text. Ignore the width in X so that the column width is dictated solely by `cellsTable`,
 				# otherwise large status labels can force cells off the screen.
 				self.__statusLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
-
-			self.__addRowButton = GafferUI.MenuButton(
-				image = "plus.png", hasFrame = False,
-				toolTip = "Click to add row, or drop new row names",
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addRowMenuDefinition ) ),
-				immediate = True,
-				parenting = {
-					"index" : ( 0, 3 ),
-					"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Top ),
-				}
-			)
-			self.__addRowButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragEnter ) )
-			self.__addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ) )
-			self.__addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ) )
 
 			if isinstance( plug.node(), Gaffer.Reference ) :
 				# Currently we only allow new rows to be added to references
@@ -224,6 +283,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__updateVisibleSections()
 		self.__updateDefaultRowVisibility()
+		self.__updateOutputRowVisibility()
 		self.__updateRowFilterWidgets()
 		self.__applyRowFilter()
 
@@ -409,21 +469,25 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		plug = widget.plugAt( event.line.p0 )
 		if plug is not None :
 
-			rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
-			if rowPlug == rowPlug.parent().defaultRow() :
-				rowName = "Default"
+			if widget == self.__outputsTable :
+				rowName = "Output"
 			else :
-				with self.context() :
-					rowName = rowPlug["name"].getValue() or "unnamed"
+				rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+				if rowPlug == rowPlug.parent().defaultRow() :
+					rowName = "Default"
+				else :
+					with self.context() :
+						rowName = rowPlug["name"].getValue() or "unnamed"
 
 			columnPlug = self.getPlug().defaultRow()["cells"][plug.getName()]
 			columnName = Gaffer.Metadata.value( columnPlug, "spreadsheet:columnLabel" )
 			if not columnName :
 				columnName = IECore.CamelCase.toSpaced( columnPlug.getName() )
 
-			status = "Row : {}, Column : {}".format(
+			status = "Row : {}, Column : {}{}".format(
 				rowName,
-				columnName
+				columnName,
+				". Left drag to connect. Middle drag to transfer value." if widget == self.__outputsTable else ""
 			)
 
 		self.__statusLabel.setText( status )
@@ -431,6 +495,13 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __cellsLeave( self, widget ) :
 
 		self.__statusLabel.setText( "" )
+
+	def __selectionChanged( self, selectionModelToClear, selected, deselected ) :
+
+		# Whenever a new selection is made in one set of tables, clear the
+		# selection in the other so the two never appear selected at once.
+		if not selected.isEmpty() :
+			selectionModelToClear.clearSelection()
 
 	def __updateDefaultRowVisibility( self ) :
 
@@ -440,10 +511,24 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__defaultLabel.setVisible( visible and not self.__rowFilterEnabled )
 		self.__defaultTable.setRowFilter( "" if visible else "__hideDefaultRow__" )
 
+	def __updateOutputRowVisibility( self ) :
+
+		if self.__outputsTable is None :
+			return
+
+		visible = Gaffer.Metadata.value( self.getPlug(), "spreadsheet:outputRowVisible" )
+		if visible is None :
+			visible = True
+		self.__outputLabel.setVisible( visible )
+		self.__outputsTable.setVisible( visible )
+
 	def __plugMetadataChanged( self, plug, key, reason ) :
 
-		if plug == self.getPlug() and key == "spreadsheet:defaultRowVisible" :
-			self.__updateDefaultRowVisibility()
+		if plug == self.getPlug() :
+			if key == "spreadsheet:defaultRowVisible" :
+				self.__updateDefaultRowVisibility()
+			elif key == "spreadsheet:outputRowVisible" :
+				self.__updateOutputRowVisibility()
 
 	def __currentSectionChanged( self, tabBar ) :
 
@@ -454,6 +539,8 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		section = self.__sectionChooser.currentSection()
 		self.__defaultTable.setVisibleSection( section )
 		self.__cellsTable.setVisibleSection( section )
+		if self.__outputsTable is not None :
+			self.__outputsTable.setVisibleSection( section )
 
 	def __updateRowFilterWidgets( self ) :
 

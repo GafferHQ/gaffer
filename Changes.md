@@ -13,6 +13,7 @@ Improvements
   - Changed node context menu items to operate on multiple nodes where possible (#2783).
   - Added drag & drop from LightEditor and AttributeEditor. Dropping a location navigates to the node that created the location.
 - RenderMan : Changed PxrCryptomatte's material output to use the name of the terminal shader, rather than a hash of the network. This is stable under animation. As before, the output can be customised by creating a `user:__materialid` attribute.
+- SpreadsheetUI : Added "Output" row, showing the output value computed for each column. Cells in this row can be left-dragged to connect the column to a plug, or middle-dragged to transfer the current value.
 
 Fixes
 -----
@@ -24,6 +25,7 @@ API
 ---
 
 - GraphEditor : Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
+- Spreadsheet : Added support for `spreadsheet:outputRowVisible` metadata, which can be used to hide the output row.
 
 Breaking Changes
 ----------------
