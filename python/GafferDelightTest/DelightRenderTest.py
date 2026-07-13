@@ -65,6 +65,11 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 
 		pass
 
+	@unittest.skip( "No shadow linking support just yet" )
+	def testShadowLinkingExclusions( self ) :
+
+		pass
+
 	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our 3Delight backend" )
 	def testInstanceIDOutput( self ) :
 

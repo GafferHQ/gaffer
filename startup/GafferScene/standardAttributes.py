@@ -240,6 +240,28 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"attribute:shadowedLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights that never cast shadows from this object, even when they are
+		included by the `shadowedLights` attribute. Accepts a set expression or
+		a space separated list of lights.
+
+		> Tip : Since `shadowedLights` defaults to \"__lights\", exclusions
+		> take effect even when no `shadowedLights` attribute has been
+		> created.
+		""",
+		"category" : "Standard",
+		"label" : "Shadowed Lights Exclusions",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True,
+
+	},
+
 	"attribute:filteredLights" : {
 
 		"defaultValue" : "",

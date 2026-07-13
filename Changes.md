@@ -10,7 +10,7 @@ Improvements
 ------------
 
 - PrimitiveQuery : Added `primitive` output [^2].
-- StandardAttributes : Added `linkedLights:exclusions` attribute, specifying lights that never illuminate an object.
+- StandardAttributes : Added `linkedLights:exclusions` and `shadowedLights:exclusions` attributes, specifying lights that never illuminate or cast shadows from an object.
 
 Fixes
 -----

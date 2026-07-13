@@ -784,7 +784,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			shadows = arnold.AiNodeGetArray( sphere1, "shadow_group" )
 			self.assertEqual( arnold.AiArrayGetNumElements( shadows ), 0 )
 
-	def testLightLinkingExclusions( self ) :
+	def testLightAndShadowLinkingExclusions( self ) :
 
 		sphere1 = GafferScene.Sphere()
 		sphere2 = GafferScene.Sphere()
@@ -816,6 +816,13 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		attributes["attributes"]["linkedLights:exclusions"]["enabled"].setValue( True )
 		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( "/group/light" )
 
+		# Shadows
+		attributes["attributes"]["shadowedLights"]["enabled"].setValue( True )
+		attributes["attributes"]["shadowedLights"]["value"].setValue( "defaultLights" )
+
+		attributes["attributes"]["shadowedLights:exclusions"]["enabled"].setValue( True )
+		attributes["attributes"]["shadowedLights:exclusions"]["value"].setValue( "/group/light" )
+
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 		render["task"].execute()
@@ -836,6 +843,15 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 				"light:/group/light1"
 			)
 
+			# check shadows
+			self.assertTrue( arnold.AiNodeGetBool( sphere, "use_shadow_group" ) )
+			shadows = arnold.AiNodeGetArray( sphere, "shadow_group" )
+			self.assertEqual( arnold.AiArrayGetNumElements( shadows ), 1 )
+			self.assertEqual(
+				arnold.AiNodeGetName( arnold.AiArrayGetPtr( shadows, 0 ) ),
+				"light:/group/light1"
+			)
+
 			# the second sphere does not have any light linking enabled
 			sphere1 = arnold.AiNodeLookUpByName( universe, "/group/sphere1" )
 
@@ -843,6 +859,11 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertFalse( arnold.AiNodeGetBool( sphere1, "use_light_group" ) )
 			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
 			self.assertEqual( arnold.AiArrayGetNumElements( lights ), 0 )
+
+			# check shadows
+			self.assertFalse( arnold.AiNodeGetBool( sphere1, "use_shadow_group" ) )
+			shadows = arnold.AiNodeGetArray( sphere1, "shadow_group" )
+			self.assertEqual( arnold.AiArrayGetNumElements( shadows ), 0 )
 
 	def testNoLinkedLightsOnLights( self ) :
 

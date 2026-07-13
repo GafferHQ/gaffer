@@ -3142,6 +3142,22 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			lambda : self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
 		)
 
+		# Exclude the light, check the plane isn't shadowed.
+
+		script["attributes"]["attributes"].addChild(
+			Gaffer.NameValuePlug( "shadowedLights:exclusions", "/pointLight", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		self.assertEventually(
+			lambda : self.assertGreater( script["sampler"]["color"]["r"].getValue(), 0.1 )
+		)
+
+		# Exclude a non-existent light, and check plane is shadowed.
+
+		script["attributes"]["attributes"][-1]["value"].setValue( "nonExistent" )
+		self.assertEventually(
+			lambda : self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
+		)
+
 		# Remove light from set, and check plane isn't shadowed.
 
 		script["light"]["defaultLight"].setValue( False )
