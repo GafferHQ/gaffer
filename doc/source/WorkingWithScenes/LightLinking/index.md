@@ -5,7 +5,7 @@ When lighting a scene, you will sometimes need to selectively control whether a 
 ![](images/illustrationLightLinking.png "A sphere, a cube, and two lights, but the second light only illuminates the cube")
 
 > Note :
-> The only supported renderer that currently implements light linking is Arnold.
+> Light linking is only supported when rendering with Arnold, Cycles, or RenderMan.
 
 > Tip :
 > Maya users will be familiar with the concept of light-centric (light-to-object) and object-centric (object-to-light) light linking. The procedure for linking lights in Gaffer is similar to object-centric linking.
