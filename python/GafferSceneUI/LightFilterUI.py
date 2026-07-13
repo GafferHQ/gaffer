@@ -86,9 +86,10 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			The lights that are being filtered. Accepts a SetExpression. You
-			might want to set it to 'defaultLights' to have the filter affect
-			all lights that haven't been excluded from that set.
+			The lights to be filtered by this light filter. Accepts a
+			set expression or a space separated list of lights. Use
+			\"defaultLights\" to refer to all lights that contribute
+			to illumination by default.
 			""",
 
 			"layout:index" : 1,
