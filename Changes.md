@@ -4,7 +4,7 @@
 Fixes
 -----
 
-RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files.
+- RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files.
 
 1.6.20.1 (relative to 1.6.20.0)
 ========
