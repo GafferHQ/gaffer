@@ -97,9 +97,16 @@ def __nodeDoubleClick( graphEditor, node ) :
 
 GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick )
 
-def __nodeContextMenu( graphEditor, node, menuDefinition ) :
+def __acquireNodeEditors( nodeList ) :
 
-	menuDefinition.append( "/Edit...", { "command" : functools.partial( GafferUI.NodeEditor.acquire, node, floating = True ) } )
+	for n in nodeList :
+		GafferUI.NodeEditor.acquire( n, floating = True )
+
+def __nodeContextMenu( graphEditor, nodeList, menuDefinition ) :
+
+	menuDefinition.append( "/Edit...", { "command" : functools.partial( __acquireNodeEditors, nodeList ) } )
+
+def __singleNodeContextMenu( graphEditor, node, menuDefinition ) :
 
 	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, node, menuDefinition )
@@ -110,7 +117,8 @@ def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 	GafferSceneUI.CryptomatteUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 
-GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu )
+GafferUI.GraphEditor.nodeContextMenuSignal( True ).connect( __nodeContextMenu )
+GafferUI.GraphEditor.nodeContextMenuSignal().connect( __singleNodeContextMenu )
 
 def __plugContextMenu( graphEditor, plug, menuDefinition ) :
 
