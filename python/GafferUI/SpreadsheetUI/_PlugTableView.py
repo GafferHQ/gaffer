@@ -696,6 +696,17 @@ class _PlugTableView( GafferUI.Widget ) :
 		if any( Gaffer.MetadataAlgo.getReadOnly( p ) for p in Gaffer.Plug.RecursiveRange( targetPlug ) ) :
 			return False
 
+		spreadsheet = Gaffer.PlugAlgo.findDestination(
+			targetPlug.ancestor( Gaffer.Spreadsheet.RowsPlug ),
+			lambda p : p.node() if isinstance( p.node(), Gaffer.Spreadsheet ) else None
+		)
+		if spreadsheet is not None and Gaffer.PlugAlgo.findSource(
+			sourcePlug,
+			lambda p : p if p.node() == spreadsheet and spreadsheet["out"].isAncestorOf( p ) else None
+		) :
+			# Prevent connections from a Spreadsheet's out plug to its own RowsPlug.
+			return False
+
 		with self.ancestor( GafferUI.PlugValueWidget ).context() :
 			if not targetPlug.ancestor( Gaffer.Spreadsheet.RowPlug )["enabled"].getValue() :
 				return False
