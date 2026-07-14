@@ -45,12 +45,12 @@ jobs:
             os: ubuntu-24.04
             buildType: RELEASE
             publish: true
-            containerImage: ghcr.io/gafferhq/build/build:3.4.0
+            containerImage: ghcr.io/gafferhq/build/build:4.0.0a2
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
             # test user rather than as root.
-            testRunner: sudo -E -u testUser
+            testRunner: runuser -u testUser --
             sconsCacheMegabytes: 400
             jobs: 4
 
@@ -58,8 +58,8 @@ jobs:
             os: ubuntu-24.04
             buildType: DEBUG
             publish: false
-            containerImage: ghcr.io/gafferhq/build/build:3.4.0
-            testRunner: sudo -E -u testUser
+            containerImage: ghcr.io/gafferhq/build/build:4.0.0a2
+            testRunner: runuser -u testUser --
             testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
@@ -75,7 +75,7 @@ jobs:
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
             # test user rather than as root.
-            testRunner: sudo -E -u testUser
+            testRunner: runuser -u testUser --
             sconsCacheMegabytes: 400
             jobs: 4
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a11/cortex-10.7.0.0a11-linux-platform24.tar.gz
@@ -179,7 +179,7 @@ jobs:
         brew remove --cask --force $(brew list)
         # Install build requirements.
         brew install pipx
-        pipx install scons==4.6.0
+        pipx install scons==4.10.1
         # Install docs dependencies matching the versions specified in the
         # linux build container.
         sudo pip3 install setuptools==81.0.0 sphinx==4.3.1 sphinx_rtd_theme==1.0.0 myst-parser==0.15.2 docutils==0.17.1 sphinxcontrib-applehelp==1.0.4 sphinxcontrib-devhelp==1.0.2 sphinxcontrib-htmlhelp==2.0.1 sphinxcontrib-jsmath==1.0.1 sphinxcontrib-serializinghtml==1.1.5 sphinxcontrib-qthelp==1.0.3 --break-system-packages
