@@ -147,7 +147,7 @@ def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 			readOnly = any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList )
 
 			menuDefinition.append(
-				"/Connections/Hide Disconnected",
+				"/Connections/Hide Unconnected Plugs",
 				{
 					"command" : functools.partial( __hideDisconnected, graphGadget, nodeList ),
 					"shortCut" : "|",
