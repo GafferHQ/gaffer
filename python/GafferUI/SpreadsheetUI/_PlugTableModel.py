@@ -36,27 +36,22 @@
 ##########################################################################
 
 import IECore
-import imath
 
 import Gaffer
 import GafferUI
 
 from Qt import QtCore
-from Qt import QtGui
 
-from . import _Formatting
+from ._PlugTableModelBase import _PlugTableModelBase
 
 ## The underlying model that provides data for the various TableViews used
 # in the SpreadsheetUI. It can be remapped into the specific
 # RowNames/Defaults/Cells views via one of the available proxy models.
-class _PlugTableModel( QtCore.QAbstractTableModel ) :
-
-	CellPlugEnabledRole = QtCore.Qt.UserRole
-	ActiveRole = CellPlugEnabledRole + 1
+class _PlugTableModel( _PlugTableModelBase ) :
 
 	def __init__( self, rowsPlug, parent = None ) :
 
-		QtCore.QAbstractTableModel.__init__( self, parent )
+		_PlugTableModelBase.__init__( self, rowsPlug, parent )
 
 		self.__rowsPlug = rowsPlug
 
@@ -67,11 +62,6 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.__columnAddedConnection = rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ), scoped = True )
 		self.__columnRemovedConnection = rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ), scoped = True )
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( rowsPlug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True )
-
-		self.__contextTracker = GafferUI.ContextTracker.acquireForFocus( rowsPlug )
-		self.__contextTrackerChangedConnection = self.__contextTracker.changedSignal().connect( Gaffer.WeakMethod( self.__contextTrackerChanged ), scoped = True )
-		self.__context = None
-		self.__contextTrackerChanged( self.__contextTracker )
 
 		self.__spreadsheet = Gaffer.PlugAlgo.findDestination(
 			self.__rowsPlug, lambda plug : plug.node() if isinstance( plug.node(), Gaffer.Spreadsheet ) else None
@@ -129,26 +119,6 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			return QtCore.QModelIndex()
 
 		return self.index( rowIndex, columnIndex )
-
-	# Decorations
-	# ===========
-
-	## Returns the decoration for the specified plug.
-	@classmethod
-	def decoration( cls, plug ) :
-
-		decorator = cls.__valueDecorators.get( plug.__class__ )
-		return decorator( plug ) if decorator is not None else None
-
-	## Registers a function to return a decoration to be shown
-	# alongside the formatted value. Currently the only supported
-	# return type is `Color3f`.
-	@classmethod
-	def registerDecoration( cls, plugType, decorator ) :
-
-		cls.__valueDecorators[plugType] = decorator
-
-	__valueDecorators = {}
 
 	# Overrides for methods inherited from QAbstractTableModel
 	# --------------------------------------------------------
@@ -209,7 +179,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		plug = self.valuePlugForIndex( index )
 		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
 		if plug != rowPlug["enabled"] :
-			with self.__context :
+			with self._context() :
 				try :
 					enabled = rowPlug["enabled"].getValue()
 				except :
@@ -227,82 +197,6 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 				result |= QtCore.Qt.ItemIsUserCheckable
 
 		return result
-
-	def data( self, index, role ) :
-
-		if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole :
-
-			return self.__formatValue( index )
-
-		elif role == QtCore.Qt.DecorationRole :
-
-			plug = self.valuePlugForIndex( index )
-			with self.__context :
-				try :
-					value = self.decoration( plug )
-				except :
-					return None
-
-			if value is None :
-				return None
-			elif isinstance( value, imath.Color3f ) :
-				displayTransform = GafferUI.Widget._owner( self.parent() ).displayTransform()
-				return GafferUI.Widget._qtColor( displayTransform( value ) )
-			else :
-				IECore.msg( IECore.Msg.Level.Error, "Spreadsheet Decoration", "Unsupported type {}".format( type( value ) ) )
-				return None
-
-		elif role == QtCore.Qt.CheckStateRole :
-
-			plug = self.__checkStatePlug( index )
-			if plug is not None :
-				with self.__context :
-					try :
-						value = plug.getValue()
-					except :
-						return None
-				return QtCore.Qt.Checked if value else QtCore.Qt.Unchecked
-
-		elif role == QtCore.Qt.ToolTipRole :
-
-			return self.__formatValue( index, forToolTip = True )
-
-		elif role == self.CellPlugEnabledRole :
-
-			plug = self.plugForIndex( index )
-			enabled = True
-			if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
-				with self.__context :
-					try :
-						enabled = plug.enabledPlug().getValue()
-					except :
-						return None
-			return enabled
-
-		elif role == self.ActiveRole :
-
-			if self.__spreadsheet is not None :
-				with self.__context :
-					if index.row() == 0 :
-						# We don't show active state for the default row because
-						# our context isn't watertight, and doesn't track things
-						# like `scene:path`, so the default being active may
-						# commonly be a false positive. In this case we think
-						# the best compromise is to show an ambiguous state.
-						return False
-					elif index.column() < 2 :
-						return index.row() == self.__spreadsheet["activeRowIndex"].getValue()
-					elif index.row() > 0 :
-						activeInPlug = self.__spreadsheet.activeInPlug(
-							self.__spreadsheet["out"][index.column() - 2]
-						)
-						valuePlug = self.valuePlugForIndex( index )
-						return Gaffer.PlugAlgo.findSource(
-							activeInPlug,
-							lambda plug : plug == valuePlug
-						)
-
-		return None
 
 	def setData( self, index, value, role ) :
 
@@ -323,6 +217,43 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		return self.__checkStatePlug( index ) is not None
 
+	def _cellPlugEnabledData( self, index ) :
+
+		plug = self.plugForIndex( index )
+		enabled = True
+		if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
+			with self._context() :
+				try :
+					enabled = plug.enabledPlug().getValue()
+				except :
+					return None
+		return enabled
+
+	def _activeData( self, index ) :
+
+		if self.__spreadsheet is not None :
+			with self._context() :
+				if index.row() == 0 :
+					# We don't show active state for the default row because
+					# our context isn't watertight, and doesn't track things
+					# like `scene:path`, so the default being active may
+					# commonly be a false positive. In this case we think
+					# the best compromise is to show an ambiguous state.
+					return False
+				elif index.column() < 2 :
+					return index.row() == self.__spreadsheet["activeRowIndex"].getValue()
+				elif index.row() > 0 :
+					activeInPlug = self.__spreadsheet.activeInPlug(
+						self.__spreadsheet["out"][index.column() - 2]
+					)
+					valuePlug = self.valuePlugForIndex( index )
+					return Gaffer.PlugAlgo.findSource(
+						activeInPlug,
+						lambda plug : plug == valuePlug
+					)
+
+		return None
+
 	# Methods of our own
 	# ------------------
 
@@ -337,29 +268,29 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 	def __rowAdded( self, rowsPlug, row ) :
 
 		## \todo Is there any benefit in finer-grained signalling?
-		self.__emitModelReset()
+		self._emitModelReset()
 		self.headerDataChanged.emit( QtCore.Qt.Vertical, 0, self.rowCount() )
 
 	def __rowRemoved( self, rowsPlug, row ) :
 
 		## \todo Is there any benefit in finer-grained signalling?
-		self.__emitModelReset()
+		self._emitModelReset()
 
 	def __rowsReordered( self, rowsPlug, oldIndices ) :
 
 		## \todo Is there any benefit in finer-grained signalling?
-		self.__emitModelReset()
+		self._emitModelReset()
 
 	def __columnAdded( self, cellsPlug, cellPlug ) :
 
 		## \todo Is there any benefit in finer-grained signalling?
-		self.__emitModelReset()
+		self._emitModelReset()
 		self.headerDataChanged.emit( QtCore.Qt.Horizontal, 0, self.columnCount() )
 
 	def __columnRemoved( self, cellsPlug, cellPlug ) :
 
 		## \todo Is there any benefit in finer-grained signalling?
-		self.__emitModelReset()
+		self._emitModelReset()
 
 	def __plugDirtied( self, plug ) :
 
@@ -392,38 +323,3 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			# Read-only metadata is actually reflected in `flags()`, but there's no signal to emit
 			# when they change. Emitting `dataChanged` is enough to kick a redraw off.
 			self.dataChanged.emit( index, index )
-
-	def __contextTrackerChanged( self, contextTracker ) :
-
-		context = self.__contextTracker.context( self.rowsPlug() )
-		if self.__context is None or self.__context.hash() != context.hash() :
-			self.__context = context
-			self.__emitModelReset()
-
-	def __emitModelReset( self ) :
-
-		self.beginResetModel()
-		self.endResetModel()
-
-	def __formatValue( self, index, forToolTip = False ) :
-
-		plug = self.valuePlugForIndex( index )
-
-		if not forToolTip and isinstance( plug, Gaffer.BoolPlug ) :
-			# Dealt with via CheckStateRole
-			return None
-
-		try :
-			with self.__context :
-				return _Formatting.formatValue( plug, forToolTip )
-		except :
-			return None
-
-# Plug decorators
-# ---------------
-
-def __colorPlugDecorator( plug ) :
-
-	return plug.getValue()
-
-_PlugTableModel.registerDecoration( Gaffer.Color3fPlug, __colorPlugDecorator )

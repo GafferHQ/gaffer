@@ -38,21 +38,23 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
-from ._PlugTableModel import _PlugTableModel
+from ._PlugTableModelBase import _PlugTableModelBase
 
 class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
-	def __init__( self, parent = None ) :
+	def __init__( self, parent = None, dimNonEditable = True ) :
 
 		QtWidgets.QStyledItemDelegate.__init__( self, parent )
+
+		self.__dimNonEditable = dimNonEditable
 
 	def paint( self, painter, option, index ) :
 
 		QtWidgets.QStyledItemDelegate.paint( self, painter, option, index )
 
 		flags = index.flags()
-		enabled = flags & QtCore.Qt.ItemIsEnabled and flags & QtCore.Qt.ItemIsEditable
-		cellPlugEnabled = index.data( _PlugTableModel.CellPlugEnabledRole )
+		enabled = flags & QtCore.Qt.ItemIsEnabled and ( flags & QtCore.Qt.ItemIsEditable if self.__dimNonEditable else True )
+		cellPlugEnabled = index.data( _PlugTableModelBase.CellPlugEnabledRole )
 
 		if option.state & QtWidgets.QStyle.State_HasFocus :
 
@@ -64,7 +66,7 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 			focusColour.setAlpha( 30 )
 			painter.fillRect( option.rect, focusColour )
 
-		if index.data( _PlugTableModel.ActiveRole ) :
+		if index.data( _PlugTableModelBase.ActiveRole ) :
 			pen = QtGui.QPen( QtGui.QColor( 240, 220, 40, 150 ) )
 			pen.setWidth( 2 )
 			painter.setPen( pen )

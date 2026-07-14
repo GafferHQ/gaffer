@@ -607,6 +607,7 @@ imageName = "interfaceSpreadsheetNodePatternWidths"
 tempImagePathHalf = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Half" ) )
 tempImagePathSingle = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Single" ) )
 tempImagePathDouble = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Double" ) )
+Gaffer.Metadata.registerValue( script["Spreadsheet"]["rows"], "spreadsheet:resultRowVisible", False )
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Spreadsheet"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
 __delay( 0.1 )
@@ -616,6 +617,7 @@ GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = tempImagePathHa
 Gaffer.Metadata.registerValue( script["Spreadsheet"]["rows"][0], 'spreadsheet:rowNameWidth', 300.0 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = tempImagePathDouble )
 nodeEditorWindow.parent().close()
+Gaffer.Metadata.deregisterValue( script["Spreadsheet"]["rows"], "spreadsheet:resultRowVisible" )
 del nodeEditorWindow
 __dispatchScript(
 	script = "scripts/{scriptName}_edit.gfr".format( scriptName = imageName ),

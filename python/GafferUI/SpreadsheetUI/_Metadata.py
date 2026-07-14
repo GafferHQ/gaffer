@@ -370,6 +370,14 @@ def __forwardedPresetValuesMetadata( plug ) :
 
 	return __presetValuesMetadata( __presetSourcePlug( plug ) )
 
+## \todo Also support preset metadata forwarding for a Spreadsheet's out plug. This would
+# be used by the Result row of a _RowsPlugValueWidget to display the preset name rather than
+# the raw value, so the cell formatting matches that of the RowsPlug cells.
+# We can't do that currently as the Spreadsheet's out plug doesn't have a specific type that
+# we can register metadata against, and a registration to `Gaffer.Spreadsheet, "out.*..."`
+# doesn't cover promoted out plugs. Another potential solution would be to introduce a hack
+# in `_Formatting.formatValue()` to reuse the presets from the default row when none are found
+# for the plug being formatted.
 Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "default.*...", "presetNames", __forwardedPresetNamesMetadata )
 Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "default.*...", "presetValues", __forwardedPresetValuesMetadata )
 Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.*...", "presetNames", __defaultPlugPresetNamesMetadata )

@@ -44,6 +44,9 @@ import itertools
 import unittest
 
 import GafferUI.SpreadsheetUI._ClipboardAlgo as _ClipboardAlgo
+from GafferUI.SpreadsheetUI._OutPlugTableModel import _OutPlugTableModel
+
+from Qt import QtCore
 
 class SpreadsheetUITest( GafferUITest.TestCase ) :
 
@@ -1016,6 +1019,92 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetNames" ), IECore.StringVectorData( [ "TestDefault2", "TestDefault3" ] ) )
 		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "presetValues" ), IECore.StringVectorData( [ "testDefault2", "testDefault3" ] ) )
+
+	def testOutPlugTableModel( self ) :
+
+		s = self.__createSpreadsheet( numRows = 3 )
+		rowsPlug = s["rows"]
+
+		model = _OutPlugTableModel( s["out"], rowsPlug )
+
+		self.assertEqual( model.rowsPlug(), rowsPlug )
+		self.assertEqual( model.rowCount(), 1 )
+
+		numColumns = len( rowsPlug.defaultRow()["cells"] )
+		self.assertEqual( model.columnCount(), numColumns )
+
+		for column in range( 0, numColumns ) :
+			index = model.index( 0, column )
+			self.assertTrue( index.isValid() )
+			self.assertEqual( model.plugForIndex( index ), s["out"][column] )
+			self.assertEqual( model.valuePlugForIndex( index ), s["out"][column] )
+			self.assertEqual( model.indexForPlug( s["out"][column] ), index )
+
+			self.assertTrue( index.flags() & QtCore.Qt.ItemIsSelectable )
+			self.assertTrue( index.flags() & QtCore.Qt.ItemIsEnabled )
+			self.assertFalse( index.flags() & QtCore.Qt.ItemIsEditable )
+
+		s["selector"].setValue( "row2" )
+		self.assertEqual( model.data( model.index( 0, 0 ), QtCore.Qt.DisplayRole ), "s2" )
+		self.assertEqual( model.data( model.index( 0, 3 ), QtCore.Qt.DisplayRole ), "200" )
+
+		self.assertIsNone( model.plugForIndex( model.index( 0, numColumns ) ) )
+		self.assertIsNone( model.plugForIndex( model.index( 1, 0 ) ) )
+
+	def testOutPlugTableModelColumnCountUpdate( self ) :
+
+		s = Gaffer.Spreadsheet()
+		rowsPlug = s["rows"]
+
+		model = _OutPlugTableModel( s["out"], rowsPlug )
+		self.assertEqual( model.columnCount(), 0 )
+
+		rowsPlug.addColumn( Gaffer.IntPlug(), "column0" )
+		self.assertEqual( model.columnCount(), 1 )
+
+		rowsPlug.addColumn( Gaffer.StringPlug(), "column1" )
+		self.assertEqual( model.columnCount(), 2 )
+
+		rowsPlug.removeColumn( 0 )
+		self.assertEqual( model.columnCount(), 1 )
+
+	def testOutPlugTableModelWithPromotedSpreadsheet( self ) :
+
+		b = Gaffer.Box()
+		b["s"] = self.__createSpreadsheet( numRows = 3 )
+
+		Gaffer.PlugAlgo.promote( b["s"]["rows"] )
+		Gaffer.PlugAlgo.promote( b["s"]["out"] )
+
+		model = _OutPlugTableModel( b["out"], b["rows"] )
+		self.assertEqual( model.rowsPlug(), b["rows"] )
+		self.assertEqual( model.rowCount(), 1 )
+		columnCount = len( b["rows"].defaultRow()["cells"] )
+		self.assertEqual( model.columnCount(), columnCount )
+
+		b["rows"].addColumn( Gaffer.IntPlug(), "column" )
+		self.assertEqual( model.columnCount(), columnCount + 1 )
+
+		b["rows"].removeColumn( 0 )
+		self.assertEqual( model.columnCount(), columnCount )
+
+		b["rows"].removeColumn( 0 )
+		self.assertEqual( model.columnCount(), columnCount - 1 )
+
+	def testBoxedSpreadsheet( self ) :
+
+		b = Gaffer.Box()
+		b["s"] = self.__createSpreadsheet( numRows = 3 )
+
+		Gaffer.PlugAlgo.promote( b["s"]["rows"] )
+		widget = GafferUI.SpreadsheetUI._RowsPlugValueWidget( b["rows"] )
+		self.assertIsNone( widget._RowsPlugValueWidget__resultsTable )
+
+		# The result row should only be created when both the "rows" and "out"
+		# plugs are promoted from the Spreadsheet.
+		Gaffer.PlugAlgo.promote( b["s"]["out"] )
+		widget = GafferUI.SpreadsheetUI._RowsPlugValueWidget( b["rows"] )
+		self.assertIsNotNone( widget._RowsPlugValueWidget__resultsTable )
 
 if __name__ == "__main__":
 	unittest.main()

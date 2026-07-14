@@ -38,7 +38,7 @@ from . import _Metadata
 from . import _Menus
 
 from ._CellPlugValueWidget import _CellPlugValueWidget
-from ._PlugTableModel import _PlugTableModel
+from ._PlugTableModelBase import _PlugTableModelBase
 from ._RowsPlugValueWidget import _RowsPlugValueWidget
 
 # Value Formatting
@@ -67,12 +67,12 @@ def registerValueWidget( plugType, plugValueWidgetCreator ) :
 # return type is `Color3f`.
 def registerDecoration( plugType, decorator ) :
 
-	_PlugTableModel.registerDecoration( plugType, decorator )
+	_PlugTableModelBase.registerDecoration( plugType, decorator )
 
 ## Returns the decoration for the specified plug.
 def decoration( plug ) :
 
-	return _PlugTableModel.decoration( plug )
+	return _PlugTableModelBase.decoration( plug )
 
 # Signals
 # =======
