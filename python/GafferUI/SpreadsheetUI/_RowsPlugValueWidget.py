@@ -437,6 +437,9 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not isinstance( event.data, Gaffer.ValuePlug ) or event.data.getInput() is not None :
 			return False
 
+		if event.data.direction() == Gaffer.Plug.Direction.Out :
+			return False
+
 		if not isinstance( self.getPlug().node(), Gaffer.Spreadsheet ) :
 			# Dropping plugs involves making an output connection from
 			# the spreadsheet, which we don't want to do for a promoted
