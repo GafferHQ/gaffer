@@ -151,7 +151,7 @@ def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 				{
 					"command" : functools.partial( __hideDisconnected, graphGadget, nodeList ),
 					"shortCut" : "|",
-					"active" : not readOnly and any( __nodeHasVisibilityGadget( n ) for n in nodeList ),
+					"active" : not readOnly and all( __nodeHasVisibilityGadget( n ) for n in nodeList ),
 				}
 			)
 			return
