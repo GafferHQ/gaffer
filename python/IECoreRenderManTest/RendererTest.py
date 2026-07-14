@@ -1192,6 +1192,118 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( m.level, IECore.Msg.Level.Warning )
 			self.assertIn( "Ignoring unsupported parameter", m.message )
 
+	def testGeometricInterpretation( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+
+			mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+			mesh["constantPoint"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point )
+			)
+			mesh["vertexPoint"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 4, IECore.GeometricData.Interpretation.Point )
+			)
+			mesh["constantVector"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Vector )
+			)
+			mesh["vertexVector"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 4, IECore.GeometricData.Interpretation.Vector )
+			)
+			mesh["constantNormal"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Normal )
+			)
+			mesh["vertexNormal"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 4, IECore.GeometricData.Interpretation.Normal )
+			)
+			mesh["constantFloat3"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Numeric )
+			)
+			mesh["vertexFloat3"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 4, IECore.GeometricData.Interpretation.Numeric )
+			)
+
+			attributes = IECore.CompoundObject( {
+				"user:point" : IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point ),
+				"user:pointArray" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 10, IECore.GeometricData.Interpretation.Point ),
+				"user:vector" : IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ),
+				"user:vectorArray" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 12, IECore.GeometricData.Interpretation.Vector ),
+				"user:normal" : IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ),
+				"user:normalArray" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 3, IECore.GeometricData.Interpretation.Normal ),
+				"user:float3" : IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Numeric ),
+				"user:float3Array" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 5, IECore.GeometricData.Interpretation.Numeric ),
+			} )
+
+			renderer.object(
+				"mesh", mesh, renderer.attributes( attributes )
+			)
+
+			del mesh, renderer
+
+		proto = next(
+			x for x in capture.json if x["method"] == "CreateGeometryPrototype"
+		)
+
+		def assertExpectedParamInfo( paramInfo, dataType, length, isArray ) :
+
+			self.assertEqual( paramInfo["type"], dataType )
+			self.assertEqual( paramInfo["length"], length )
+			self.assertEqual( paramInfo["array"], isArray )
+
+		def assertExpectedPrimVar( name, dataType, length, isArray ) :
+
+			primVar = next( x for x in proto["primvars"]["params"] if x["info"]["name"] == name )
+			assertExpectedParamInfo( primVar["info"], dataType, length, isArray )
+
+		# Matching RtDataType
+		dataTypes = {
+			"integer" : 0,
+			"float" : 1,
+			"color" : 2,
+			"point" : 3,
+			"vector" : 4,
+			"normal" : 5
+		}
+
+		assertExpectedPrimVar( "constantPoint", dataTypes["point"], 1, False )
+		assertExpectedPrimVar( "vertexPoint", dataTypes["point"], 1, False )
+		assertExpectedPrimVar( "constantVector", dataTypes["vector"], 1, False )
+		assertExpectedPrimVar( "vertexVector", dataTypes["vector"], 1, False )
+		assertExpectedPrimVar( "constantNormal", dataTypes["normal"], 1, False )
+		assertExpectedPrimVar( "vertexNormal", dataTypes["normal"], 1, False )
+		assertExpectedPrimVar( "constantFloat3", dataTypes["float"], 3, True )
+		assertExpectedPrimVar( "vertexFloat3", dataTypes["float"], 3, True )
+
+		instance = next(
+			x for x in capture.json if x["method"] == "CreateGeometryInstance"
+		)
+
+		def assertExpectedAttribute( name, dataType, length, isArray ) :
+
+			attribute = next( x for x in instance["attributes"]["params"] if x["info"]["name"] == name )
+			assertExpectedParamInfo( attribute["info"], dataType, length, isArray )
+
+		assertExpectedAttribute( "user:point", dataTypes["point"], 1, False )
+		assertExpectedAttribute( "user:pointArray", dataTypes["point"], 10, True )
+		assertExpectedAttribute( "user:vector", dataTypes["vector"], 1, False )
+		assertExpectedAttribute( "user:vectorArray", dataTypes["vector"], 12, True )
+		assertExpectedAttribute( "user:normal", dataTypes["normal"], 1, False )
+		assertExpectedAttribute( "user:normalArray", dataTypes["normal"], 3, True )
+		assertExpectedAttribute( "user:float3", dataTypes["float"], 3, True )
+		assertExpectedAttribute( "user:float3Array", dataTypes["float"], 15, True )
+
 	def testSubdivInterpolatedBoundary( self ) :
 
 		for interpolateBoundary, expected in [

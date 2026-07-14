@@ -94,8 +94,10 @@ RtDataType dataType( IECore::GeometricData::Interpretation interpretation )
 			return RtDataType::k_vector;
 		case GeometricData::Normal :
 			return RtDataType::k_normal;
-		default :
+		case GeometricData::Point :
 			return RtDataType::k_point;
+		default :
+			return RtDataType::k_float;
 	}
 }
 
@@ -138,13 +140,14 @@ struct PrimitiveVariableConverter
 
 	void operator()( const V3fData *data, RtUString name, const PrimitiveVariable &primitiveVariable, RtPrimVarList &primVarList, unsigned sampleIndex=0 ) const
 	{
+		const RtDataType type = dataType( data->getInterpretation() );
 		primVarList.SetParam(
 			{
 				name,
-				dataType( data->getInterpretation() ),
+				type,
 				detail( primitiveVariable.interpolation ),
-				/* length = */ 1,
-				/* array = */ false,
+				/* length = */ type == RtDataType::k_float ? 3u : 1u,
+				/* array = */ type == RtDataType::k_float,
 				/* motion = */ sampleIndex > 0,
 				/* deduplicated = */ false
 			},
@@ -230,14 +233,15 @@ struct PrimitiveVariableConverter
 
 	void operator()( const V3fVectorData *data, RtUString name, const PrimitiveVariable &primitiveVariable, RtPrimVarList &primVarList, unsigned sampleIndex=0 ) const
 	{
+		const RtDataType type = dataType( data->getInterpretation() );
 		emit(
 			data,
 			{
 				name,
-				dataType( data->getInterpretation() ),
+				type,
 				detail( primitiveVariable.interpolation ),
-				/* length = */ 1,
-				/* array = */ false,
+				/* length = */ type == RtDataType::k_float ? 3u : 1u,
+				/* array = */ type == RtDataType::k_float,
 				/* motion = */ sampleIndex > 0,
 				/* deduplicated = */ false
 			},

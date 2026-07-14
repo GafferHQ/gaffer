@@ -1,7 +1,12 @@
 1.7.x.x (relative to 1.7.0.0a6)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files [^1].
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a6 (relative to 1.7.0.0a5)
 =========
@@ -312,7 +317,10 @@ Build
 1.6.x.x (relative to 1.6.20.1)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files.
 
 1.6.20.1 (relative to 1.6.20.0)
 ========
