@@ -10,6 +10,9 @@ Fixes
 -----
 
 - RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files.
+- Cycles : 
+  - Fixed potential crashes when using `render:` attributes on objects due to passing invalid data.
+  - Removed passing of `render:` matrix attribute types to objects as they're not supported currently.
 
 Build
 -----
