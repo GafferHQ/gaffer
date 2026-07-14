@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
 
 class _ViewableChildrenPathFilter( Gaffer.PathFilter ) :
 
@@ -307,17 +308,19 @@ class GraphEditor( GafferUI.Editor ) :
 	## May be used from a slot attached to nodeContextMenuSignal() to install a
 	# standard menu item for modifying the enabled state of a node.
 	@classmethod
-	def appendEnabledPlugMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendEnabledPlugMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
-		enabledPlug = cls.__enabledPlugForEditing( node )
-		if enabledPlug is not None :
+		enabledPlugs = [ cls.__enabledPlugForEditing( node ) for node in nodeList ]
+		if any( p is not None for p in enabledPlugs ) :
+			value = sole( p.getValue() for p in enabledPlugs if p is not None )
+			active = all( enabledPlugs ) and all( p.settable() and not Gaffer.MetadataAlgo.readOnly( p ) for p in enabledPlugs )
 			menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 			menuDefinition.append(
 				"/Enabled",
 				{
-					"command" : functools.partial( cls.__setValue, enabledPlug ),
-					"checkBox" : enabledPlug.getValue(),
-					"active" : enabledPlug.settable() and not Gaffer.MetadataAlgo.readOnly( enabledPlug )
+					"command" : functools.partial( cls.__setValue, enabledPlugs ),
+					"checkBox" : ( value or False ) and active,
+					"active" : active
 				}
 			)
 
@@ -829,10 +832,11 @@ class GraphEditor( GafferUI.Editor ) :
 			graphGadget.setNodeOutputConnectionsMinimised( node, not value )
 
 	@classmethod
-	def __setValue( cls, plug, value ) :
+	def __setValue( cls, plugs, value ) :
 
-		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-			plug.setValue( value )
+		with Gaffer.UndoScope( plugs[0].ancestor( Gaffer.ScriptNode ) ) :
+			for p in plugs :
+				p.setValue( value )
 
 	@staticmethod
 	def __childrenViewable( node ) :
