@@ -103,8 +103,11 @@ struct ParameterConverter
 			case GeometricData::Normal :
 				paramList.SetNormal( name, reinterpret_cast<const RtVector3 &>( data->readable() ) );
 				break;
-			default :
+			case GeometricData::Point :
 				paramList.SetPoint( name, reinterpret_cast<const RtVector3 &>( data->readable() ) );
+				break;
+			default :
+				paramList.SetFloatArray( name, data->readable().getValue(), 3 );
 		}
 	}
 
@@ -164,8 +167,11 @@ struct ParameterConverter
 			case GeometricData::Normal :
 				paramList.SetNormalArray( name, reinterpret_cast<const RtVector3 *>( data->readable().data() ), data->readable().size() );
 				break;
-			default :
+			case GeometricData::Point :
 				paramList.SetPointArray( name, reinterpret_cast<const RtVector3 *>( data->readable().data() ), data->readable().size() );
+				break;
+			default :
+				paramList.SetFloatArray( name, data->readable().front().getValue(), 3 * data->readable().size() );
 		}
 	}
 
