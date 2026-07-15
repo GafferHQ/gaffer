@@ -208,6 +208,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "axis", "ai:lightFilter:filter", "Blocker", "Falloff Axis" )
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "shader", "ai:lightFilter:filter", "Blocker" )
 	GafferSceneUI.LightEditor.registerAttribute( "ai:light", "filteredLights", "Blocker" )
+	GafferSceneUI.LightEditor.registerAttribute( "ai:light", "filteredLights:exclusions", "Blocker" )
 
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "use_near_atten", "ai:lightFilter:light_decay", "Decay", "Near Enable" )
 	GafferSceneUI.LightEditor.registerShaderParameter( "ai:light", "use_far_atten", "ai:lightFilter:light_decay", "Decay", "Far Enable" )

@@ -176,3 +176,23 @@ class ArnoldLightFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( h1, h2 )
 
 		self.assertEqual( l["out"].attributes( "/lightFilter" )["filteredLights"], IECore.StringData( "/does/not/exist" ) )
+
+	def testFilteredLightsExclusionsPlug( self ) :
+
+		l = GafferArnold.ArnoldLightFilter()
+		l.loadShader( "light_blocker" )
+
+		self.assertNotIn( "filteredLights:exclusions", l["out"].attributes( "/lightFilter" ) )
+
+		l["filteredLightsExclusions"].setValue( "defaultLights" )
+
+		self.assertIn( "filteredLights:exclusions", l["out"].attributes( "/lightFilter" ) )
+		self.assertEqual( l["out"].attributes( "/lightFilter" )["filteredLights:exclusions"], IECore.StringData( "defaultLights" ) )
+
+		h1 = l["out"].attributesHash( "/lightFilter" )
+		l["filteredLightsExclusions"].setValue( "/does/not/exist" )
+		h2 = l["out"].attributesHash( "/lightFilter" )
+
+		self.assertNotEqual( h1, h2 )
+
+		self.assertEqual( l["out"].attributes( "/lightFilter" )["filteredLights:exclusions"], IECore.StringData( "/does/not/exist" ) )

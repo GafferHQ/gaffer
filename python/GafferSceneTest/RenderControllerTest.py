@@ -264,6 +264,26 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
 		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 3 )
 
+		# Likewise if we add exclusions.
+
+		attributes["attributes"]["linkedLights:exclusions"]["enabled"].setValue( True )
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( "B" )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), set() )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 4 )
+
+		# Or update exclusions.
+
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( "A" )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 5 )
+
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( " " )
+		controller.update()
+		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 6 )
+
 		# If we change an attribute which has no bearing on light linking,
 		# we don't want links to be emitted again. Attributes change frequently
 		# and light linking can be expensive.
@@ -271,7 +291,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		attributes["attributes"]["doubleSided"]["value"].setValue( True )
 		controller.update()
 		self.assertEqual( capturedSphere.capturedLinks( "lights" ), { capturedLightB } )
-		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 3 )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 6 )
 
 		del capturedSphere, capturedLightA, capturedLightB
 
@@ -335,6 +355,136 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		links = renderer.capturedObject( "/group/spheres/instances/sphere/0" ).capturedLinks( "lights" )
 		self.assertEqual( len( links ), numLights )
+
+	def linkingPerformanceTest( self, lightInclusions = None, lightExclusions = None, shadowInclusions = None, shadowExclusions = None, timeUpdate = False ) :
+
+		numSpheres = 10000
+		numLights = 1000
+
+		# Make a bunch of spheres
+
+		sphere = GafferScene.Sphere()
+
+		spherePlane = GafferScene.Plane()
+		spherePlane["name"].setValue( "spheres" )
+		spherePlane["divisions"].setValue( imath.V2i( 1, numSpheres / 2 - 1 ) )
+
+		sphereInstancer = GafferScene.Instancer()
+		sphereInstancer["in"].setInput( spherePlane["out"] )
+		sphereInstancer["prototypes"].setInput( sphere["out"] )
+		sphereInstancer["parent"].setValue( "/spheres" )
+
+		# Make a bunch of lights
+
+		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
+		lightPlane = GafferScene.Plane()
+		lightPlane["name"].setValue( "lights" )
+		lightPlane["divisions"].setValue( imath.V2i( 1, numLights / 2 - 1 ) )
+
+		lightInstancer = GafferScene.Instancer()
+		lightInstancer["in"].setInput( lightPlane["out"] )
+		lightInstancer["prototypes"].setInput( light["out"] )
+		lightInstancer["parent"].setValue( "/lights" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphereInstancer["out"] )
+		group["in"][1].setInput( lightInstancer["out"] )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( group["out"] )
+		attributes["filter"].setInput( groupFilter["out"] )
+
+		attributes["attributes"]["linkedLights"]["enabled"].setValue( lightInclusions is not None )
+		attributes["attributes"]["linkedLights"]["value"].setValue( lightInclusions or "" )
+		attributes["attributes"]["linkedLights:exclusions"]["enabled"].setValue( lightExclusions is not None )
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( lightExclusions or "" )
+
+		attributes["attributes"]["shadowedLights"]["enabled"].setValue( shadowInclusions is not None )
+		attributes["attributes"]["shadowedLights"]["value"].setValue( shadowInclusions or "" )
+		attributes["attributes"]["shadowedLights:exclusions"]["enabled"].setValue( shadowExclusions is not None )
+		attributes["attributes"]["shadowedLights:exclusions"]["value"].setValue( shadowExclusions or "" )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( attributes["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+
+		# See how quickly we can output those links
+
+		if not timeUpdate :
+			with GafferTest.TestRunner.PerformanceScope() :
+				controller.update()
+		else :
+			controller.update()
+
+		# Sanity check that we did output links as expected.
+
+		capturedSphere = renderer.capturedObject( "/group/spheres/instances/sphere/0" )
+		self.assertEqual( len( capturedSphere.capturedLinks( "lights" ) ), numLights - 1 )
+		if shadowInclusions is not None :
+			self.assertEqual( len( capturedSphere.capturedLinks( "shadowedLights" ) ), numLights - 1 )
+		else :
+			self.assertIsNone( capturedSphere.capturedLinks( "shadowedLights" ) )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 1 )
+		self.assertEqual( capturedSphere.numLinkEdits( "shadowedLights" ), 1 )
+
+		# Update an unrelated attribute and check that no additional linking was performed.
+
+		attributes["attributes"]["doubleSided"]["enabled"].setValue( True )
+
+		if timeUpdate :
+			with GafferTest.TestRunner.PerformanceScope() :
+				controller.update()
+		else :
+			controller.update()
+
+		self.assertEqual( len( capturedSphere.capturedLinks( "lights" ) ), numLights - 1 )
+		self.assertEqual( capturedSphere.numLinkEdits( "lights" ), 1 )
+		self.assertEqual( capturedSphere.numLinkEdits( "shadowedLights" ), 1 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testLightLinkOnlyInclusionsPerformance( self ) :
+
+		self.linkingPerformanceTest( "defaultLights - /group/lights/instances/light/0" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testLightLinkOnlyInclusionsUpdatePerformance( self ) :
+
+		self.linkingPerformanceTest( "defaultLights - /group/lights/instances/light/0", timeUpdate = True )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testLightLinkExclusionsPerformance( self ) :
+
+		self.linkingPerformanceTest( "defaultLights", "/group/lights/instances/light/0" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testLightLinkExclusionsUpdatePerformance( self ) :
+
+		self.linkingPerformanceTest( "defaultLights", "/group/lights/instances/light/0", timeUpdate = True )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testLightAndShadowLinkOnlyInclusionsPerformance( self ) :
+
+		self.linkingPerformanceTest( "defaultLights - /group/lights/instances/light/0", shadowInclusions = "__lights - /group/lights/instances/light/1" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testLightAndShadowLinkOnlyInclusionsUpdatePerformance( self ) :
+
+		self.linkingPerformanceTest( "defaultLights - /group/lights/instances/light/0", shadowInclusions = "__lights - /group/lights/instances/light/1", timeUpdate = True )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testLightAndShadowLinkExclusionsPerformance( self ) :
+
+		self.linkingPerformanceTest( "defaultLights", "/group/lights/instances/light/0", "__lights", "/group/lights/instances/light/1" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testLightAndShadowLinkExclusionsUpdatePerformance( self ) :
+
+		self.linkingPerformanceTest( "defaultLights", "/group/lights/instances/light/0", "__lights", "/group/lights/instances/light/1", timeUpdate = True )
 
 	def testDeformingLight( self ) :
 

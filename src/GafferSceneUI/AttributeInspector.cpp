@@ -198,6 +198,7 @@ Gaffer::ValuePlugPtr attributePlug( const Gaffer::CompoundDataPlug *parentPlug, 
 
 static InternedString g_lightMuteAttributeName( "light:mute" );
 static InternedString g_filteredLightsAttributeName( "filteredLights");
+static InternedString g_filteredLightsExclusionsAttributeName( "filteredLights:exclusions");
 
 IE_CORE_DEFINERUNTIMETYPED( AttributeInspector )
 
@@ -295,6 +296,10 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 		if( m_attribute == g_filteredLightsAttributeName )
 		{
 			return lightFilter->filteredLightsPlug();
+		}
+		if( m_attribute == g_filteredLightsExclusionsAttributeName )
+		{
+			return lightFilter->filteredLightsExclusionsPlug();
 		}
 		return nullptr;
 	}

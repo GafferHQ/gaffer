@@ -114,8 +114,18 @@ class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 
 		pass
 
+	@unittest.skip( "Light linking not supported" )
+	def testLightLinkingWithExclusions( self ) :
+
+		pass
+
 	@unittest.skip( "Shadow linking not supported" )
 	def testShadowLinking( self ) :
+
+		pass
+
+	@unittest.skip( "Shadow linking not supported" )
+	def testShadowLinkingExclusions( self ) :
 
 		pass
 

@@ -1288,6 +1288,9 @@ namespace
 
 InternedString g_lights( "__lights" );
 InternedString g_linkedLights( "linkedLights" );
+InternedString g_linkedLightsExclusions( "linkedLights:exclusions" );
+const std::string g_linkedLightsDefaultValue( "defaultLights" );
+const std::string g_emptyString;
 
 template<typename AttributesPredicate>
 struct AttributesFinder
@@ -1369,6 +1372,25 @@ IECore::PathMatcher findAttributes( const ScenePlug *scene, const AttributesPred
 	return result;
 }
 
+std::string linkedLightsExpression( const CompoundObject *attributes )
+{
+	auto *linkedLightsAttribute = attributes->member<StringData>( g_linkedLights );
+	const string &linkedLights = linkedLightsAttribute ? linkedLightsAttribute->readable() : g_linkedLightsDefaultValue;
+	if( linkedLights.find_first_not_of( " \t\n\r" ) == std::string::npos )
+	{
+		return linkedLights;
+	}
+
+	auto *excludedLightsAttribute = attributes->member<StringData>( g_linkedLightsExclusions );
+	const string &excludedLights = excludedLightsAttribute ? excludedLightsAttribute->readable() : g_emptyString;
+	if( excludedLights.find_first_not_of( " \t\n\r" ) == std::string::npos )
+	{
+		return linkedLights;
+	}
+
+	return fmt::format( "({}) - ({})", linkedLights, excludedLights );
+}
+
 } // namespace
 
 IECore::PathMatcher GafferScene::SceneAlgo::linkedObjects( const ScenePlug *scene, const ScenePlug::ScenePath &light )
@@ -1406,8 +1428,7 @@ GAFFERSCENE_API IECore::PathMatcher GafferScene::SceneAlgo::linkedObjects( const
 	IECore::PathMatcher result = findAttributes(
 		scene,
 		[&queryCache] ( const CompoundObject *fullAttributes ) {
-			auto *linkedLights = fullAttributes->member<StringData>( g_linkedLights );
-			return queryCache.get( linkedLights ? linkedLights->readable() : "defaultLights" );
+			return queryCache.get( linkedLightsExpression( fullAttributes ) );
 		}
 	);
 
@@ -1418,9 +1439,7 @@ GAFFERSCENE_API IECore::PathMatcher GafferScene::SceneAlgo::linkedObjects( const
 IECore::PathMatcher GafferScene::SceneAlgo::linkedLights( const ScenePlug *scene, const ScenePlug::ScenePath &object )
 {
 	IECore::ConstCompoundObjectPtr attributes = scene->fullAttributes( object );
-	auto *linkedLightsAttribute = attributes->member<StringData>( g_linkedLights );
-	const string linkedLights = linkedLightsAttribute ? linkedLightsAttribute->readable() : "defaultLights";
-	IECore::PathMatcher linkedPaths = SetAlgo::evaluateSetExpression( linkedLights, scene );
+	IECore::PathMatcher linkedPaths = SetAlgo::evaluateSetExpression( linkedLightsExpression( attributes.get() ), scene );
 	return linkedPaths.intersection( scene->set( g_lights )->readable() );
 }
 
@@ -1432,8 +1451,7 @@ IECore::PathMatcher GafferScene::SceneAlgo::linkedLights( const ScenePlug *scene
 
 	auto functor = [&resultMutex, &result, &processed] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
 		IECore::ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
-		auto *linkedLightsAttribute = attributes->member<StringData>( g_linkedLights );
-		const string linkedLights = linkedLightsAttribute ? linkedLightsAttribute->readable() : "defaultLights";
+		const string linkedLights = linkedLightsExpression( attributes.get() );
 		if( processed.insert( linkedLights ).second )
 		{
 			ScenePlug::GlobalScope globalScope( Context::current() );

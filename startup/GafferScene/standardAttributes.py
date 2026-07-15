@@ -201,6 +201,28 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"attribute:linkedLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights never to be linked to this object, even when they are
+		included by the `linkedLights` attribute. Accepts a set expression
+		or a space separated list of lights.
+
+		> Tip : Since `linkedLights` defaults to \"defaultLights\",
+		> exclusions take effect even when no `linkedLights`
+		> attribute has been created.
+		""",
+		"category" : "Standard",
+		"label" : "Linked Lights Exclusions",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True
+
+	},
+
 	"attribute:shadowedLights" : {
 
 		"defaultValue" : "__lights",
@@ -211,6 +233,28 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"category" : "Standard",
 		"label" : "Shadowed Lights",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True,
+
+	},
+
+	"attribute:shadowedLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights that never cast shadows from this object, even when they are
+		included by the `shadowedLights` attribute. Accepts a set expression or
+		a space separated list of lights.
+
+		> Tip : Since `shadowedLights` defaults to \"__lights\", exclusions
+		> take effect even when no `shadowedLights` attribute has been
+		> created.
+		""",
+		"category" : "Standard",
+		"label" : "Shadowed Lights Exclusions",
 		"layout:section" : "Light Linking",
 
 		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
@@ -230,7 +274,26 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"category" : "Standard",
 		"label" : "Filtered Lights",
-		"layout:section" : "Light Linking",
+		"layout:section" : "Light Filters",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True,
+
+	},
+
+	"attribute:filteredLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights that are never filtered by this light filter, even when they
+		are included by the `filteredLights` attribute. Accepts a set expression
+		or a space separated list of lights. Has no effect unless `filteredLights`
+		specifies lights to be filtered.
+		""",
+		"category" : "Standard",
+		"label" : "Filtered Lights Exclusions",
+		"layout:section" : "Light Filters",
 
 		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
 		"ui:scene:acceptsSetExpression" : True,

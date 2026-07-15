@@ -10,11 +10,21 @@ Improvements
 ------------
 
 - PrimitiveQuery : Added `primitive` output [^2].
+- StandardAttributes :
+  - Added `linkedLights:exclusions` and `shadowedLights:exclusions` attributes, specifying lights that never illuminate or cast shadows from an object.
+  - Added `filteredLights:exclusions` attribute, specifying lights that are never filtered by a light filter.
+  - Moved `filteredLights` and `filteredLights:exclusions` to a new "Light Filters" section in the NodeEditor and AttributeEditor.
+- LightFilter, ArnoldLightFilter, RenderManLightFilter : Added `filteredLightsExclusions` plug.
 
 Fixes
 -----
 
 - RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files [^1].
+
+Documentation
+-------------
+
+- Light Linking : Updated to describe use of the `linkedLights:exclusions` attribute.
 
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 [^2]: Improvement to a feature introduced in `1.7.0.0a3`, so should be omitted from final `1.7.0.0` release notes.
