@@ -108,10 +108,10 @@ def __nodeContextMenu( graphEditor, nodeList, menuDefinition ) :
 	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, nodeList, menuDefinition )
 	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, nodeList, menuDefinition )
 	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
 
 def __singleNodeContextMenu( graphEditor, node, menuDefinition ) :
 
-	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.AnnotationsUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferSceneUI.CryptomatteUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
