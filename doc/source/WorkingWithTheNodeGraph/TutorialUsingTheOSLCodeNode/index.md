@@ -1,7 +1,7 @@
 Tutorial: Using The OSLCode Node
 ================================
 
-Gaffer allows the creation of networks of predefined [OSL][1] shaders to be used in renderering and image and geometry processing, without any coding required. But sometimes the shader you want doesn't exist, or it's easier to express your ideas through a few lines of code. In these situations, the OSLCode node allows OSL source code to be entered directly, to create new shaders on the fly.
+Gaffer allows the creation of networks of predefined [OSL][1] shaders to be used in rendering and image and geometry processing, without any coding required. But sometimes the shader you want doesn't exist, or it's easier to express your ideas through a few lines of code. In these situations, the OSLCode node allows OSL source code to be entered directly, to create new shaders on the fly.
 
 A one line shader
 -----------------
@@ -14,7 +14,7 @@ We'll start by adding some parameters (inputs and outputs) for the shader.
 
 - Click on the upper ![](images/plus.png "Plus") and choose "Float" from the menu. This creates an input parameter which takes a floating point number.
 - Double click the "Input1" label that appears, and rename the parameter to `width`.
-- Enter the value `0.025` into the width field.
+- Enter the value `0.1` into the width field.
 - Click on the lower ![](images/plus.png "Plus") and choose "Color" from the menu. This creates an output color parameter.
 - Double click the "Output1" label, and rename the parameter to "stripes".
 
@@ -23,8 +23,10 @@ We'll start by adding some parameters (inputs and outputs) for the shader.
 We can now enter any OSL code we want to generate the output from the input. Start by entering the following :
 
 ```
-stripes = aastep( 0, sin( v * M_PI / width ) )
+stripes = aastep( 0, sin( P.y * M_PI / width ) )
 ```
+
+![](images/stripesShader.png "Stripes shader")
 
 Now hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to update the shader. The Viewer will update to show a shader ball with the shader on it, and adjusting the width parameter will update the render interactively.
 
@@ -46,10 +48,12 @@ Let's add a bit of color and some wobble to our shader, to demonstrate a few mor
 Now update the code :
 
 ```
-float vv = v + 0.05 * pnoise( u * 20, 4 );
+float vv = P.y + 0.2 * pnoise( P.x * 3, 4 );
 float m = aastep( 0, sin( vv * M_PI / width ) );
 stripes = mix( color1, color2, m );
 ```
+
+![](images/coloredStripesShader.png "Stripes shader")
 
 And as before, hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to update the shader.
 
@@ -65,6 +69,6 @@ OSL resources
 This short tutorial has only scratched the surface of what can be done with Open Shading Language. The following resources are a good place to learn more :
 
 - The [language specification](https://open-shading-language.readthedocs.io)
-- The [OSL mailing list](https://groups.google.com/forum/#!forum/osl-dev)
+- The [OSL mailing list](https://lists.aswf.io/g/osl-dev/)
 
-[1]: https://github.com/imageworks/OpenShadingLanguage
+[1]: https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
