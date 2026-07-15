@@ -332,20 +332,23 @@ class GraphEditor( GafferUI.Editor ) :
 			)
 
 	@classmethod
-	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendContentsMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
 		menuDefinition.append( "/FocusDivider", { "divider" : True } )
 		menuDefinition.append( "/Focus", {
-			"command" : functools.partial( graphEditor.scriptNode().setFocus, node ),
-			"active" : not node.isSame( graphEditor.scriptNode().getFocus() ),
+			"command" : functools.partial( graphEditor.scriptNode().setFocus, nodeList[0] ),
+			"active" : len( nodeList ) == 1 and not nodeList[0].isSame( graphEditor.scriptNode().getFocus() ),
 			"shortCut" : "Ctrl+`"
 		} )
 
-		if not GraphEditor.__childrenViewable( node ) :
+		if not any( GraphEditor.__childrenViewable( n ) for n in nodeList ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
-		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
+		menuDefinition.append( "/Show Contents...", {
+			"command" : functools.partial( cls.__acquireNodes, nodeList ),
+			"active" : all( GraphEditor.__childrenViewable( n ) for n in nodeList )
+		} )
 
 	__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 	## Returns a signal which is emitted whenever a node is double clicked.
@@ -847,6 +850,12 @@ class GraphEditor( GafferUI.Editor ) :
 		with Gaffer.UndoScope( plugs[0].ancestor( Gaffer.ScriptNode ) ) :
 			for p in plugs :
 				p.setValue( value )
+
+	@classmethod
+	def __acquireNodes( cls, nodeList ) :
+
+		for n in nodeList :
+			cls.acquire( n )
 
 	@staticmethod
 	def __childrenViewable( node ) :
