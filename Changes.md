@@ -15,6 +15,7 @@ Improvements
   - Added `filteredLights:exclusions` attribute, specifying lights that are never filtered by a light filter.
   - Moved `filteredLights` and `filteredLights:exclusions` to a new "Light Filters" section in the NodeEditor and AttributeEditor.
 - LightFilter, ArnoldLightFilter, RenderManLightFilter : Added `filteredLightsExclusions` plug.
+- SceneWriter : Added `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES` environment variable. When set to a value of `1`, `ri:` prefixed attributes are written to USD in a format compatible with `hdPrman`, for rendering with RenderMan in `usdview` and other Hydra-based applications [^1].
 
 Fixes
 -----
@@ -25,6 +26,11 @@ Documentation
 -------------
 
 - Light Linking : Updated to describe use of the `linkedLights:exclusions` attribute.
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.0.0a13.
 
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 [^2]: Improvement to a feature introduced in `1.7.0.0a3`, so should be omitted from final `1.7.0.0` release notes.
