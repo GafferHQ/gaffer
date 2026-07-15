@@ -164,6 +164,9 @@ if sys.platform == "win32" and "OSL_LOAD_DLLS_FROM_PATH" not in os.environ :
 # USD Setup
 # =========
 
+if "IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES" not in os.environ :
+	os.environ["IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES"] = "1"
+
 prependToPath( gafferRoot / "resources" / "IECoreUSD", "PXR_PLUGINPATH_NAME" )
 prependToPath( gafferRoot / "materialX", "PXR_MTLX_STDLIB_SEARCH_PATHS" )
 
