@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,12 +39,13 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.CopyPrimitiveVariables,
+	GafferScene.CopyObject,
 
 	"description",
 	"""
-	Copies primitive variables from a source scene, adding them to the objects
-	of the main input scene.
+	Copies objects from a source scene, replacing the filtered objects
+	in the input scene. Objects include geometry such as meshes and curves,
+	volumes, cameras etc.
 	""",
 
 	plugs = {
@@ -53,18 +54,7 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			The scene from which the primitive variables are copied.
-			""",
-
-		},
-
-		"primitiveVariables" : {
-
-			"description" :
-			"""
-			The names of the primitive variables to be copied. These should be
-			separated by spaces and can use Gaffer's standard wildcards
-			to match multiple variables.
+			The scene from which the object is copied.
 			""",
 
 		},
@@ -73,10 +63,10 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			The location in the source scene that primitive variables are copied from.
-			By default, variables are copied from the location equivalent to the one
+			The location in the source scene that the copy is copied from.
+			By default, objects are copied from the location equivalent to the one
 			they are being copied to. It is not an error if the location to be copied from
-			does not exist; instead, no variables are copied.
+			does not exist; instead, nothing is copied.
 			""",
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
@@ -85,23 +75,18 @@ Gaffer.Metadata.registerNode(
 
 		},
 
-		"prefix" : {
+		"adjustBounds" : {
 
 			"description" :
 			"""
-			A prefix applied to the names of the copied primitive variables.
+			Adjusts bounding boxes to account for the copied objects.
+
+			> Caution : Adjusting boundings boxes has a performance penalty.
+			> If you do not need accurate bounds or you know that the bounds
+			> will only change slightly, you may prefer to turn this off.
 			""",
 
 		},
-
-		"ignoreIncompatible" : {
-
-			"description" :
-			"""
-			Causes the node to not error when attempting to copy primitive variables from
-			the source object that are not compatible with the destination object.
-			""",
-		}
 
 	}
 

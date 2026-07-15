@@ -1,12 +1,23 @@
 1.7.x.x (relative to 1.7.0.0a6)
 =======
 
+Features
+--------
+
+- CopyObject : Added new node for copying objects from one scene to another.
+
+Improvements
+------------
+
+- PrimitiveQuery : Added `primitive` output [^2].
+
 Fixes
 -----
 
 - RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files [^1].
 
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
+[^2]: Improvement to a feature introduced in `1.7.0.0a3`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a6 (relative to 1.7.0.0a5)
 =========

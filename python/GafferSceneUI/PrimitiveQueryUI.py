@@ -143,6 +143,18 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"primitive" : {
+
+			"description" :
+			"""
+			The complete Primitive from the queried location, or a NullObject
+			if there is no primitive.
+			""",
+
+			"layout:section" : "Settings.Outputs",
+
+		},
+
 	}
 
 )

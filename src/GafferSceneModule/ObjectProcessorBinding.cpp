@@ -38,6 +38,7 @@
 
 #include "ObjectProcessorBinding.h"
 
+#include "GafferScene/CopyObject.h"
 #include "GafferScene/CopyPrimitiveVariables.h"
 #include "GafferScene/CurvesInterpolation.h"
 #include "GafferScene/CurvesTangents.h"
@@ -91,6 +92,7 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<DeleteObject>();
 	GafferBindings::DependencyNodeClass<UDIMQuery>();
 	GafferBindings::DependencyNodeClass<Wireframe>();
+	GafferBindings::DependencyNodeClass<CopyObject>();
 	GafferBindings::DependencyNodeClass<CopyPrimitiveVariables>();
 	GafferBindings::DependencyNodeClass<MeshNormals>();
 	GafferBindings::DependencyNodeClass<MeshTessellate>();

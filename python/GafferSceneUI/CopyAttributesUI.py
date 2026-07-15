@@ -79,6 +79,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"pathPlugValueWidget:placeholderText" : "${scene:path}",
 			"scenePathPlugValueWidget:scene" : "source",
 
 		},

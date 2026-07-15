@@ -201,6 +201,7 @@ enum TypeId
 	CurvesTangentsTypeId = 120156,
 	PrimitiveQueryTypeId = 120157,
 	SceneStatsTypeId = 120158,
+	CopyObjectTypeId = 120159,
 
 	LastTypeId = 120999
 };

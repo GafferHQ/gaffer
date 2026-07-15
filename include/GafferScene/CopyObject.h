@@ -36,60 +36,41 @@
 
 #pragma once
 
-#include "GafferScene/Export.h"
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/FilteredSceneProcessor.h"
 
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API PrimitiveQuery : public Gaffer::ComputeNode
+class GAFFERSCENE_API CopyObject : public FilteredSceneProcessor
 {
 
 	public :
 
-		explicit PrimitiveQuery( const std::string &name = defaultName<PrimitiveQuery>() );
-		~PrimitiveQuery() override;
+		explicit CopyObject( const std::string &name=defaultName<CopyObject>() );
+		~CopyObject() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::PrimitiveQuery, PrimitiveQueryTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::CopyObject, CopyObjectTypeId, FilteredSceneProcessor );
 
-		Gaffer::BoolPlug *enabledPlug() override;
-		const Gaffer::BoolPlug *enabledPlug() const override;
+		GafferScene::ScenePlug *sourcePlug();
+		const GafferScene::ScenePlug *sourcePlug() const;
 
-		ScenePlug *scenePlug();
-		const ScenePlug *scenePlug() const;
+		Gaffer::StringPlug *sourceLocationPlug();
+		const Gaffer::StringPlug *sourceLocationPlug() const;
 
-		Gaffer::StringPlug *locationPlug();
-		const Gaffer::StringPlug *locationPlug() const;
-
-		Gaffer::StringPlug *typePlug();
-		const Gaffer::StringPlug *typePlug() const;
-
-		Gaffer::IntPlug *uniformPlug();
-		const Gaffer::IntPlug *uniformPlug() const;
-
-		Gaffer::IntPlug *vertexPlug();
-		const Gaffer::IntPlug *vertexPlug() const;
-
-		Gaffer::IntPlug *varyingPlug();
-		const Gaffer::IntPlug *varyingPlug() const;
-
-		Gaffer::IntPlug *faceVaryingPlug();
-		const Gaffer::IntPlug *faceVaryingPlug() const;
-
-		Gaffer::ObjectPlug *primitivePlug();
-		const Gaffer::ObjectPlug *primitivePlug() const;
+		Gaffer::BoolPlug *adjustBoundsPlug();
+		const Gaffer::BoolPlug *adjustBoundsPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+		void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
+
+		void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 	private :
 
@@ -97,6 +78,6 @@ class GAFFERSCENE_API PrimitiveQuery : public Gaffer::ComputeNode
 
 };
 
-IE_CORE_DECLAREPTR( PrimitiveQuery )
+IE_CORE_DECLAREPTR( CopyObject )
 
-} // GafferScene
+} // namespace GafferScene

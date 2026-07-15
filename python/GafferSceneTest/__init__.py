@@ -201,6 +201,7 @@ from .CurvesTangentsTest import CurvesTangentsTest
 from .PrimitiveQueryTest import PrimitiveQueryTest
 from .SceneStatsTest import SceneStatsTest
 from .PointInstancerAlgoTest import PointInstancerAlgoTest
+from .CopyObjectTest import CopyObjectTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
