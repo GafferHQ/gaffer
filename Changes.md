@@ -1,10 +1,20 @@
 1.6.x.x (relative to 1.6.20.1)
 =======
 
+Improvements
+------------
+
+- SceneWriter : Added `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES` environment variable. When set to a value of `1`, `ri:` prefixed attributes are written to USD in a format compatible with `hdPrman`, for rendering with RenderMan in `usdview` and other Hydra-based applications.
+
 Fixes
 -----
 
 - RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.7.0.
 
 1.6.20.1 (relative to 1.6.20.0)
 ========
