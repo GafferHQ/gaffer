@@ -168,6 +168,7 @@ from .MatchPatternPathFilterWidget import MatchPatternPathFilterWidget
 from .FileSequencePathFilterWidget import FileSequencePathFilterWidget
 from .BusyWidget import BusyWidget
 from .ColorChooser import ColorChooser
+from .ColorChooser import _ColorField
 from .ColorChooserDialogue import ColorChooserDialogue
 from .MessageWidget import MessageWidget, MessageSummaryWidget
 from .NotificationMessageHandler import NotificationMessageHandler

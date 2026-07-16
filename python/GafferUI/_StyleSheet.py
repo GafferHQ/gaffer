@@ -1547,6 +1547,7 @@ _styleSheet = string.Template(
 	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"] > QFrame,
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] > QFrame,
 	*[gafferClass="GafferSceneUI.ImageSelectionToolUI._StatusWidget"],
+	*[gafferClass="GafferSceneUI.PaintToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI._SceneViewInspector"] > QFrame
 	{
 		background: rgba( 42, 42, 42, 240 );
