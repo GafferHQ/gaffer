@@ -349,6 +349,15 @@
        y2="232.44189"
        gradientUnits="userSpaceOnUse"
        spreadMethod="reflect" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient33700"
+       id="linearGradient2691"
+       x1="353.31528"
+       y1="1838.9854"
+       x2="373.69522"
+       y2="1838.9854"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -2776,6 +2785,14 @@
          y="1774"
          inkscape:label="gafferImageUIColorInspectorTool"
          sodipodi:insensitive="true" />
+      <rect
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         id="gafferSceneUIPaintTool"
+         width="25"
+         height="25"
+         x="352"
+         y="1774"
+         inkscape:label="gafferSceneUIPaintTool" />
     </g>
     <g
        id="g3414"
@@ -6013,6 +6030,13 @@
            d="m 338.24023,1777.2637 c -0.33848,0.016 -0.66358,0.1491 -0.91796,0.4043 l -1.82422,1.83 -0.76758,-0.7695 c -0.42287,-0.4242 -1.05565,-0.4242 -1.47852,0 l -0.74023,0.7422 -1.11133,1.1133 5.97461,5.9394 1.10938,-1.1132 0.74023,-0.6895 c 0.42287,-0.4242 0.42287,-1.0621 0,-1.4863 l -0.71289,-0.7149 1.82226,-1.83 c 0.58145,-0.5833 0.52884,-1.5376 -0.10546,-2.1739 l -0.74024,-0.7422 c -0.35679,-0.3579 -0.81285,-0.5304 -1.24805,-0.5097 z"
            transform="matrix(1.8918453,0,0,1.8859029,-594.75997,-3338.2085)" />
       </g>
+      <ellipse
+         style="fill:url(#linearGradient2691);fill-opacity:1.0;stroke:#3c3c3c"
+         id="path2661"
+         cx="363.50525"
+         cy="1838.9854"
+         rx="9.6899815"
+         ry="5.761611" />
     </g>
     <g
        id="referenceNode"
