@@ -229,6 +229,7 @@ from . import VisibilityQueryUI
 from . import PrimitiveVariableTypeUI
 from . import PointInstancerQueryUI
 from . import PrimitiveVariablePaintUI
+from . import PaintToolUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

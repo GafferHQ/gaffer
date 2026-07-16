@@ -7,6 +7,7 @@ Features
 - PythonEditor : Added `mcpEnabled` setting, allowing an AI assistant or large language model to interact with Gaffer. Models can execute arbitrary Python and screenshot the UI or capture the output of image nodes for feedback.
 - `gaffer mcp` : Added application to allow AI assistants and large language models to launch and control a headless Gaffer session.
 - PrimitiveVariablePaint : Added node for partially modifying primitive variable values.
+- PaintTool : Added vertex paint tool that can be used to paint colors and masks into vertex primitive variables.
 
 Improvements
 ------------
