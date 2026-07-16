@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.0.0a7)
 =======
 
+Features
+--------
 
+- RenderMan : Added support for RenderMan 27.3.
 
 1.7.0.0a7 (relative to 1.7.0.0a6)
 =========
