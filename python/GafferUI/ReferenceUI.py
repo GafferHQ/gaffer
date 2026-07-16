@@ -172,13 +172,12 @@ def _load( node, filePath, parentWindow ) :
 # GraphEditor node context menu
 ##########################################################################
 
-def __duplicateAsBox( graphEditor, nodeList ) :
+def __duplicateAsBox( graphGadget, nodeList ) :
 
 	script = nodeList[0].scriptNode()
 	with Gaffer.UndoScope( script ) :
 
 		script.selection().clear()
-		graphGadget = graphEditor.graphGadget()
 		for node in nodeList :
 			box = Gaffer.Box( node.getName() + "Copy" )
 			# We don't want to parent the box to `script` until it is
@@ -191,7 +190,7 @@ def __duplicateAsBox( graphEditor, nodeList ) :
 			with GafferUI.ErrorDialogue.ErrorHandler(
 				title = "Errors Occurred During Loading",
 				closeLabel = "Oy vey",
-				parentWindow = graphEditor.ancestor( GafferUI.Window ),
+				parentWindow = GafferUI.ScriptWindow.acquire( graphGadget.getRoot().scriptNode(), createIfNecessary = False ),
 			) :
 				sp = IECore.SearchPath( os.environ.get( "GAFFER_REFERENCE_PATHS", "" ) )
 				temporaryScript.executeFile( sp.find( str( node.fileName() ) ), parent = box, continueOnError = True )
@@ -212,7 +211,7 @@ def __graphEditorNodeContextMenu( graphEditor, nodeList, menuDefinition ) :
 	menuDefinition.append(
 		"/Duplicate as Box",
 		{
-			"command" : functools.partial( __duplicateAsBox, graphEditor, nodeList ),
+			"command" : functools.partial( __duplicateAsBox, graphEditor.graphGadget(), nodeList ),
 			"active" : all( isinstance( n, Gaffer.Reference ) and bool( n.fileName() ) for n in nodeList ),
 		}
 	)
