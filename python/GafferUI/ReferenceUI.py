@@ -172,48 +172,49 @@ def _load( node, filePath, parentWindow ) :
 # GraphEditor node context menu
 ##########################################################################
 
-def __duplicateAsBox( graphEditor, node ) :
+def __duplicateAsBox( graphEditor, nodeList ) :
 
-	script = node.scriptNode()
+	script = nodeList[0].scriptNode()
 	with Gaffer.UndoScope( script ) :
 
-		box = Gaffer.Box( node.getName() + "Copy" )
-		# We don't want to parent the box to `script` until it is
-		# fully loaded (we don't want to emit signals in an intermediate
-		# state). But we need a ScriptNode to be able to perform the loading,
-		# so we use a temporary script for that.
-		temporaryScript = Gaffer.ScriptNode()
-		temporaryScript.addChild( box )
-
-		with GafferUI.ErrorDialogue.ErrorHandler(
-			title = "Errors Occurred During Loading",
-			closeLabel = "Oy vey",
-			parentWindow = graphEditor.ancestor( GafferUI.Window ),
-		) :
-			sp = IECore.SearchPath( os.environ.get( "GAFFER_REFERENCE_PATHS", "" ) )
-			temporaryScript.executeFile( sp.find( str( node.fileName() ) ), parent = box, continueOnError = True )
-
-		node.parent().addChild( box )
-
-		graphGadget = graphEditor.graphGadget()
-		graphGadget.getLayout().positionNode(
-			graphGadget, box, fallbackPosition = graphGadget.getNodePosition( node )
-		)
-
 		script.selection().clear()
-		script.selection().add( box )
+		graphGadget = graphEditor.graphGadget()
+		for node in nodeList :
+			box = Gaffer.Box( node.getName() + "Copy" )
+			# We don't want to parent the box to `script` until it is
+			# fully loaded (we don't want to emit signals in an intermediate
+			# state). But we need a ScriptNode to be able to perform the loading,
+			# so we use a temporary script for that.
+			temporaryScript = Gaffer.ScriptNode()
+			temporaryScript.addChild( box )
 
-def __graphEditorNodeContextMenu( graphEditor, node, menuDefinition ) :
+			with GafferUI.ErrorDialogue.ErrorHandler(
+				title = "Errors Occurred During Loading",
+				closeLabel = "Oy vey",
+				parentWindow = graphEditor.ancestor( GafferUI.Window ),
+			) :
+				sp = IECore.SearchPath( os.environ.get( "GAFFER_REFERENCE_PATHS", "" ) )
+				temporaryScript.executeFile( sp.find( str( node.fileName() ) ), parent = box, continueOnError = True )
 
-	if not isinstance( node, Gaffer.Reference ) :
+			node.parent().addChild( box )
+
+			graphGadget.getLayout().positionNode(
+				graphGadget, box, fallbackPosition = graphGadget.getNodePosition( node )
+			)
+
+			script.selection().add( box )
+
+def __graphEditorNodeContextMenu( graphEditor, nodeList, menuDefinition ) :
+
+	if not any( isinstance( n, Gaffer.Reference ) for n in nodeList ) :
 		return
 
 	menuDefinition.append(
 		"/Duplicate as Box",
 		{
-			"command" : functools.partial( __duplicateAsBox, graphEditor, node ),
-			"active" : bool( node.fileName() ),
+			"command" : functools.partial( __duplicateAsBox, graphEditor, nodeList ),
+			"active" : all( isinstance( n, Gaffer.Reference ) and bool( n.fileName() ) for n in nodeList ),
 		}
 	)
 
-GafferUI.GraphEditor.nodeContextMenuSignal().connect( __graphEditorNodeContextMenu )
+GafferUI.GraphEditor.nodeContextMenuSignal( True ).connect( __graphEditorNodeContextMenu )

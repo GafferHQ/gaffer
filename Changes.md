@@ -6,6 +6,11 @@ Features
 
 - QuantizePrimitiveVariables : Added new node for quantizing the values of primitive variables.
 
+Improvements
+------------
+
+- GraphEditor : Changed node context menu items to operate on multiple nodes where possible (#2783).
+
 Fixes
 -----
 
