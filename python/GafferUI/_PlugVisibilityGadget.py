@@ -95,7 +95,7 @@ GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMe
 # GraphEditor context menu
 ##########################################################################
 
-def __hideDisconnectedWalk( gadget ) :
+def __hideUnconnectedWalk( gadget ) :
 
 	if isinstance( gadget, GafferUI.Nodule ) :
 
@@ -104,7 +104,7 @@ def __hideDisconnectedWalk( gadget ) :
 		if ( plug.direction() == plug.Direction.In and plug.getInput() ) or ( plug.direction() == plug.Direction.Out and len( plug.outputs() ) > 0 ) :
 			return True
 
-		if any( __hideDisconnectedWalk( g ) for g in gadget.children() ) :
+		if any( __hideUnconnectedWalk( g ) for g in gadget.children() ) :
 			return True
 
 		if (
@@ -117,9 +117,9 @@ def __hideDisconnectedWalk( gadget ) :
 
 		return False
 
-	return sum( __hideDisconnectedWalk( c ) for c in gadget.children() ) > 0
+	return sum( __hideUnconnectedWalk( c ) for c in gadget.children() ) > 0
 
-def __hideDisconnected( graphGadget, nodeList ) :
+def __hideUnconnected( graphGadget, nodeList ) :
 
 	with Gaffer.UndoScope( graphGadget.getRoot().scriptNode() ) :
 		for node in nodeList :
@@ -127,18 +127,23 @@ def __hideDisconnected( graphGadget, nodeList ) :
 			if nodeGadget is None :
 				continue
 
-			__hideDisconnectedWalk( nodeGadget )
+			__hideUnconnectedWalk( nodeGadget )
+
+def __canHideUnconnectedPlugs( nodeList ) :
+
+	nodeReadOnly = any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList )
+	plugReadOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for n in nodeList for p in Gaffer.Plug.RecursiveRange( n ) )
+
+	return not nodeReadOnly and not plugReadOnly and all( __nodeHasVisibilityGadget( n ) for n in nodeList )
 
 def __editorKeyPress( editor, event ) :
 
 	selection = editor.scriptNode().selection()
-	if (
-		event.key == "Slash" and
-		event.modifiers == event.Modifiers.None_ and
-		not any( Gaffer.MetadataAlgo.readOnly( n ) for n in selection ) and
-		all( __nodeHasVisibilityGadget( n ) for n in selection )
-	) :
-		__hideDisconnected( editor.graphGadget(), editor.scriptNode().selection() )
+	if event.key == "Slash" and event.modifiers == event.Modifiers.None_ and __canHideUnconnectedPlugs( selection ) :
+		__hideUnconnected( editor.graphGadget(), selection )
+		return True
+
+	return False
 
 def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 
@@ -150,14 +155,13 @@ def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 	graphGadget = graphEditor.graphGadget()
 	for node in nodeList :
 		if plugNodulesWalk( graphGadget.nodeGadget( node ) ) :
-			readOnly = any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList )
 
 			menuDefinition.append(
 				"/Connections/Hide Unconnected Plugs",
 				{
-					"command" : functools.partial( __hideDisconnected, graphGadget, nodeList ),
+					"command" : functools.partial( __hideUnconnected, graphGadget, nodeList ),
 					"shortCut" : "/",
-					"active" : not readOnly and all( __nodeHasVisibilityGadget( n ) for n in nodeList ),
+					"active" : __canHideUnconnectedPlugs( nodeList ),
 				}
 			)
 			return
