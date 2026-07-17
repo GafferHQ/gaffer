@@ -38,17 +38,17 @@
 
 #include "PrimitiveVariablesBinding.h"
 
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferScene/CollectPrimitiveVariables.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
 #include "GafferScene/MapOffset.h"
 #include "GafferScene/MapProjection.h"
-#include "GafferScene/PrimitiveVariables.h"
-#include "GafferScene/ResamplePrimitiveVariables.h"
-#include "GafferScene/CollectPrimitiveVariables.h"
 #include "GafferScene/PrimitiveVariableExists.h"
-#include "GafferScene/ShufflePrimitiveVariables.h"
+#include "GafferScene/PrimitiveVariables.h"
 #include "GafferScene/PrimitiveVariableTweaks.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/ResamplePrimitiveVariables.h"
+#include "GafferScene/ShufflePrimitiveVariables.h"
 
 using namespace GafferScene;
 
