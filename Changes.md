@@ -10,6 +10,7 @@ Improvements
 ------------
 
 - GraphEditor : - Added <kbd>C</kbd> shortcut for setting node colors.
+- SceneView : Added keyboard shortcut <kbd>;</kbd> to toggle between the lookthrough (camera / light) view and the free (perspective / top / front / side) cameras. <kbd>Ctrl</kbd> + click on the toolbar camera icon will perform the same toggle.
 
 Fixes
 -----

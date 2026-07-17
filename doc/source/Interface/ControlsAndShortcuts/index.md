@@ -239,6 +239,7 @@ Light Tool                           | {kbd}`A`
 Light Position Tool                  | {kbd}`D`
 Visualiser Tool                      | {kbd}`L`
 Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
+Toggle camera / free view            | {kbd}`;`
 
 ### 3D scenes ###
 
