@@ -220,6 +220,7 @@ from . import MeshLightUI
 from . import AttributeProcessorUI
 from . import CurvesTangentsUI
 from . import CopyObjectUI
+from . import QuantizePrimitiveVariablesUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

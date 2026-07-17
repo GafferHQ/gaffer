@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.0.0a8)
 =======
 
+Features
+--------
 
+- QuantizePrimitiveVariables : Added new node for quantizing the values of primitive variables.
 
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========
