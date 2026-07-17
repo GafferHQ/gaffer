@@ -131,7 +131,13 @@ def __hideDisconnected( graphGadget, nodeList ) :
 
 def __editorKeyPress( editor, event ) :
 
-	if event.key == "Bar" and event.modifiers == event.modifiers.Shift :
+	selection = editor.scriptNode().selection()
+	if (
+		event.key == "Slash" and
+		event.modifiers == event.Modifiers.None_ and
+		not any( Gaffer.MetadataAlgo.readOnly( n ) for n in selection ) and
+		all( __nodeHasVisibilityGadget( n ) for n in selection )
+	) :
 		__hideDisconnected( editor.graphGadget(), editor.scriptNode().selection() )
 
 def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
@@ -150,7 +156,7 @@ def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 				"/Connections/Hide Unconnected Plugs",
 				{
 					"command" : functools.partial( __hideDisconnected, graphGadget, nodeList ),
-					"shortCut" : "|",
+					"shortCut" : "/",
 					"active" : not readOnly and all( __nodeHasVisibilityGadget( n ) for n in nodeList ),
 				}
 			)
