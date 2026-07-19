@@ -46,6 +46,8 @@
 
 #include "boost/noncopyable.hpp"
 
+#include <optional>
+#include <set>
 #include <thread>
 
 namespace IECoreRenderMan
@@ -131,6 +133,7 @@ class Globals : public boost::noncopyable
 		riley::RenderTargetId m_renderTarget;
 		riley::Extent m_renderTargetExtent;
 		riley::RenderViewId m_renderView;
+		std::optional<std::set<std::string>> m_renderViewLightGroups;
 
 		struct InteractiveRenderThread;
 		std::unique_ptr<InteractiveRenderThread> m_interactiveRenderThread;
