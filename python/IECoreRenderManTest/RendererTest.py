@@ -3248,6 +3248,451 @@ class RendererTest( GafferTest.TestCase ) :
 					"user:__materialid", [ expectedID ]
 				)
 
+	def testLayerPerLightGroupOutputs( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		beautyFileName = self.temporaryDirectory() / "beauty.exr"
+		renderer.output(
+			"perLightGroupRGBA",
+			IECoreScene.Output(
+				str( beautyFileName ), "exr", "rgba",
+				{
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		diffuseFileName = self.temporaryDirectory() / "diffuse.exr"
+		renderer.output(
+			"perLightGroupLPE",
+			IECoreScene.Output(
+				str( diffuseFileName ), "exr", "lpe C<RD>[<L.>O]",
+				{
+					"layerName" : "directDiffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "PxrDiffuse" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		lightGroups = {
+			"red" : imath.Color3f( 1, 0, 0 ),
+			"green" : imath.Color3f( 0, 1, 0 ),
+			"blue" : imath.Color3f( 0, 0, 1 ),
+		}
+
+		lights = [
+			renderer.light(
+				f"/light/{group}", None,
+				renderer.attributes( IECore.CompoundObject( {
+					"ri:light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"PxrDomeLight", "ri:light",
+								{ "lightGroup" : group, "lightColor" : color }
+							),
+						},
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+				} ) )
+			)
+			for group, color in lightGroups.items()
+		]
+
+		renderer.render()
+		del sphere, lights
+		del renderer
+
+		# The original layers should be accompanied by an additional
+		# layer for each light group.
+
+		beautyImage = OpenImageIO.ImageBuf( str( beautyFileName ) )
+		self.assertEqual(
+			set( beautyImage.spec().channelnames ),
+			set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in lightGroups for c in "rgb" }
+		)
+
+		diffuseImage = OpenImageIO.ImageBuf( str( diffuseFileName ) )
+		self.assertEqual(
+			set( diffuseImage.spec().channelnames ),
+			{ f"directDiffuse.{c}" for c in "rgb" } |
+			{ f"directDiffuse_{g}.{c}" for g in lightGroups for c in "rgb" }
+		)
+
+		# Each light group layer should only contain illumination from its own
+		# group, and the group layers should sum to the beauty.
+
+		channelIndices = { c : i for i, c in enumerate( beautyImage.spec().channelnames ) }
+		midPixel = beautyImage.getpixel( 320, 240 )
+
+		for group, color in lightGroups.items() :
+			for channel, value in zip( "rgb", color ) :
+				groupValue = midPixel[channelIndices[f"RGBA_{group}.{channel}"]]
+				if value == 0 :
+					self.assertAlmostEqual( groupValue, 0, delta = 0.001 )
+				else :
+					self.assertGreater( groupValue, 0.2 )
+
+		for channel in "rgb" :
+			self.assertAlmostEqual(
+				midPixel[channelIndices[channel.upper()]],
+				sum( midPixel[channelIndices[f"RGBA_{g}.{channel}"]] for g in lightGroups ),
+				delta = 0.01
+			)
+
+	def testLayerPerLightGroupIgnoresLPEWithExplicitGroup( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		fileName = self.temporaryDirectory() / "keyDiffuse.exr"
+		renderer.output(
+			"explicitGroup",
+			IECoreScene.Output(
+				str( fileName ), "exr", "lpe C<RD>[<L.'key'>O]",
+				{
+					"layerName" : "keyDiffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		light = renderer.light(
+			"/light", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "rim" }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+		del light
+		del renderer
+
+		# If the LPE already specifies a light group, then
+		# `layerPerLightGroup` should be ignored with a warning.
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].message, "Ignoring \"layerPerLightGroup\" parameter on output \"explicitGroup\", because its LPE already specifies a light group." )
+
+		image = OpenImageIO.ImageBuf( str( fileName ) )
+		self.assertEqual( set( image.spec().channelnames ), { "keyDiffuse.r", "keyDiffuse.g", "keyDiffuse.b" } )
+
+	def testLayerPerLightGroupIgnoresIncompatibleLPE( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		fileName = self.temporaryDirectory() / "emission.exr"
+		renderer.output(
+			"emission",
+			IECoreScene.Output(
+				str( fileName ), "exr", "lpe CO",
+				{
+					"layerName" : "emission",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		light = renderer.light(
+			"/light", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "rim" }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+		del light
+		del renderer
+
+		# The emission LPE doesn't contain `L` or `<L.>`, so `layerPerLightGroup`
+		# should be ignored with a warning.
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].message, "Ignoring \"layerPerLightGroup\" parameter on output \"emission\", because its LPE doesn't contain \"L\" or \"<L.>\"." )
+
+		image = OpenImageIO.ImageBuf( str( fileName ) )
+		self.assertEqual( set( image.spec().channelnames ), { "emission.r", "emission.g", "emission.b" } )
+
+	def testLayerPerLightGroupOutputsIgnoreInvalidLights( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test", "ieDisplay", "rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "invalidLightGroupTest",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		invalidLight = renderer.light(
+			"/invalidLight", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"NotALight", "ri:light",
+							{ "lightGroup" : "bad" }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		validLight = renderer.light(
+			"/validLight", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "good" }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "invalidLightGroupTest" )
+		self.assertEqual(
+			set( image.keys() ),
+			set( "RGBA" ) | { f"RGBA_good.{c}" for c in "RGB" }
+		)
+
+		del invalidLight, validLight
+		del renderer
+
+	def testInteractiveLightGroupEdits( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test", "ieDisplay", "rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "lightGroupTest",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		def channelNames() :
+
+			image = IECoreImage.ImageDisplayDriver.storedImage( "lightGroupTest" )
+			return set( image.keys() ) if image is not None else set()
+
+		def lightAttributes( lightGroup ) :
+
+			return renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDistantLight", "ri:light",
+							{ "lightGroup" : lightGroup }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+
+		keyLight = renderer.light( "/light/key", None, lightAttributes( "first" ) )
+
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_first.{c}" for c in "RGB" }
+			)
+		)
+
+		renderer.pause()
+		keyLight.attributes( lightAttributes( "key" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_key.{c}" for c in "RGB" }
+			)
+		)
+
+		# Adding a light without a light group shouldn't change the layers.
+
+		renderer.pause()
+		fillLight = renderer.light( "/light/fill", None, lightAttributes( "" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_key.{c}" for c in "RGB" }
+			)
+		)
+
+		# Editing the new light's light group should only affect its layer.
+
+		renderer.pause()
+		fillLight.attributes( lightAttributes( "second" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "second" ) for c in "RGB" }
+			)
+		)
+
+		renderer.pause()
+		fillLight.attributes( lightAttributes( "fill" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "fill" ) for c in "RGB" }
+			)
+		)
+
+		# Add a third light with another light group.
+
+		renderer.pause()
+		fillLight2 = renderer.light( "/light/fill2", None, lightAttributes( "third" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "fill", "third" ) for c in "RGB" }
+			)
+		)
+
+		# Edit the third light's lightgroup to combine it with the existing fill group.
+
+		renderer.pause()
+		fillLight2.attributes( lightAttributes( "fill" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "fill" ) for c in "RGB" }
+			)
+		)
+
+		# Deleting a light in the fill group should keep the fill layer, as there
+		# is still another light in that group.
+
+		renderer.pause()
+		del fillLight
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "fill" ) for c in "RGB" }
+			)
+		)
+
+		# Deleting the remaining light in the fill group should remove the layer.
+
+		renderer.pause()
+		del fillLight2
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				set( "RGBA" ) | { f"RGBA_key.{c}" for c in "RGB" }
+			)
+		)
+
+		# Editing the only light in the key group to remove its light group should remove
+		# the key layer.
+
+		renderer.pause()
+		keyLight.attributes( lightAttributes( "" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual( channelNames(), set( "RGBA" ) )
+		)
+
+		renderer.pause()
+		del keyLight
+		renderer.render()
+
+		# Deleting the light with a now empty light group shouldn't affect RGBA.
+
+		self.assertEventually(
+			lambda : self.assertEqual( channelNames(), set( "RGBA" ) )
+		)
+
+		renderer.pause()
+
+		del renderer
+
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )

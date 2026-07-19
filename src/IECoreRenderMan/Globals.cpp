@@ -64,6 +64,7 @@ const string g_renderManPrefix( "ri:" );
 const IECore::InternedString g_cameraOption( "camera" );
 const IECore::InternedString g_checkpointIntervalOption( "ri:checkpoint:interval" );
 const IECore::InternedString g_layerName( "layerName" );
+const IECore::InternedString g_layerPerLightGroup( "layerPerLightGroup" );
 const IECore::InternedString g_sampleMotionOption( "sampleMotion" );
 const IECore::InternedString g_frameOption( "frame" );
 const IECore::InternedString g_integratorOption( "ri:integrator" );
@@ -166,6 +167,69 @@ ListType idToList( std::remove_pointer_t<decltype( ListType::ids )> &id )
 }
 
 const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene::ShaderNetwork();
+
+IECoreScene::OutputPtr lightGroupOutput( const IECore::InternedString &name, const IECoreScene::Output *output, const std::string &lightGroup )
+{
+	string lpe;
+	if( output->getData() == "rgb" || output->getData() == "rgba" )
+	{
+		lpe = "C[DS]*[<L.>O]";
+	}
+	else
+	{
+		vector<string> tokens;
+		StringAlgo::tokenize( output->getData(), ' ', tokens );
+		if( tokens.size() == 2 && tokens[0] == "lpe" )
+		{
+			lpe = tokens[1];
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because data \"{}\" is not \"rgb\", \"rgba\" or an lpe.", name.string(), output->getData() )
+			);
+			return nullptr;
+		}
+	}
+
+	if( lpe.find( "L'" ) != string::npos || lpe.find( "L.'" ) != string::npos )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "RenderManRenderer",
+			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+		);
+		return nullptr;
+	}
+
+	const string group = fmt::format( "<L.'{}'>", lightGroup );
+	if( lpe.find( "<L.>" ) != string::npos )
+	{
+		boost::replace_all( lpe, "<L.>", group );
+	}
+	else if( lpe.find( "L" ) != string::npos )
+	{
+		boost::replace_all( lpe, "L", group );
+	}
+	else
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "RenderManRenderer",
+			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
+		);
+		return nullptr;
+	}
+
+	const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
+
+	CompoundDataPtr parameters = output->parametersData()->copy();
+	parameters->writable()[g_layerName] = new StringData(
+		fmt::format( "{}_{}", ( layerName.empty() ? "RGBA" : layerName ), lightGroup )
+	);
+	parameters->writable().erase( g_layerPerLightGroup );
+
+	return new IECoreScene::Output( output->getName(), output->getType(), "lpe " + lpe, parameters );
+}
 
 } // namespace
 
@@ -774,6 +838,17 @@ void Globals::updateRenderView()
 	updateDisplayFilter();
 	updateSampleFilter();
 
+	// If outputs were made automatically from light groups, then the render view
+	// must be rebuilt when the light groups in the scene change.
+
+	if(
+		m_renderView != riley::RenderViewId::InvalidId() &&
+		m_renderViewLightGroups && *m_renderViewLightGroups != m_session->lightGroups()
+	)
+	{
+		deleteRenderView();
+	}
+
 	// If we still have a render view, then it is valid for
 	// `m_outputs`, and all we need to do is update the camera and
 	// resolution.
@@ -815,6 +890,7 @@ void Globals::updateRenderView()
 
 	std::unordered_map<std::string, DisplayDefinition> displayDefinitions;
 	vector<riley::RenderOutputId> renderTargetOutputs;
+	m_renderViewLightGroups.reset();
 
 	for( const auto &[name, output] : m_outputs )
 	{
@@ -878,6 +954,26 @@ void Globals::updateRenderView()
 			beauty ? renderTargetOutputs.begin() : renderTargetOutputs.end(),
 			renderOutputs.begin(), renderOutputs.end()
 		);
+
+		if( parameter<bool>( output->parameters(), g_layerPerLightGroup, false ) )
+		{
+			if( !m_renderViewLightGroups )
+			{
+				m_renderViewLightGroups = m_session->lightGroups();
+			}
+
+			for( const auto &lightGroup : *m_renderViewLightGroups )
+			{
+				ConstOutputPtr groupOutput = lightGroupOutput( name, output.get(), lightGroup );
+				if( !groupOutput )
+				{
+					break;
+				}
+				const vector<riley::RenderOutputId> &groupRenderOutputs = acquireRenderOutputs( groupOutput.get() );
+				display.outputs.insert( display.outputs.end(), groupRenderOutputs.begin(), groupRenderOutputs.end() );
+				renderTargetOutputs.insert( renderTargetOutputs.end(), groupRenderOutputs.begin(), groupRenderOutputs.end() );
+			}
+		}
 	}
 
 	m_renderTarget = m_session->riley->CreateRenderTarget(

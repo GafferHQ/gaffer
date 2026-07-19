@@ -5,6 +5,7 @@ Features
 --------
 
 - VisibilityQuery : Added a node for querying the visibility of a particular scene location.
+- RenderMan : Added `layerPerLightGroup` parameter to outputs. Enabling this adds a layer to the output for each light group in the scene.
 
 Improvements
 ------------
