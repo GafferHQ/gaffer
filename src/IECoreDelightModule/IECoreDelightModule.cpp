@@ -36,10 +36,24 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "IECoreDelight/ShaderNetworkAlgo.h"
 
 using namespace boost::python;
 using namespace IECoreDelight;
+
+namespace
+{
+
+IECore::CompoundObjectPtr convertUSDMeshLightAttributesWrapper( const IECore::CompoundObject &attributes, bool copy )
+{
+	IECorePython::ScopedGILRelease r;
+	IECore::ConstCompoundObjectPtr result = ShaderNetworkAlgo::convertUSDMeshLightAttributes( &attributes );
+	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundObject>( result );
+}
+
+}
 
 BOOST_PYTHON_MODULE( _IECoreDelight )
 {
@@ -49,5 +63,6 @@ BOOST_PYTHON_MODULE( _IECoreDelight )
 	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
 
 	def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
+	def( "convertUSDMeshLightAttributes", &convertUSDMeshLightAttributesWrapper, ( arg_( "_copy" ) = true ) );
 
 }
