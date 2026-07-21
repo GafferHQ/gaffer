@@ -61,7 +61,7 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 		if isinstance( self.__textWidget, GafferUI.TextWidget ) :
 			self.__textWidget.grabFocus()
 		else :
-			self.__textWidget.setFocussed( True )
+			self.__textWidget.setFocused( True )
 
 		button = self.waitForButton( **kw )
 		if button is self.__confirmButton :
