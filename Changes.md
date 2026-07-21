@@ -5,6 +5,7 @@ Features
 --------
 
 - QuantizePrimitiveVariables : Added new node for quantizing the values of primitive variables.
+- LightLinkingEditor : Added a new editor UI for inspecting and editing light links.
 
 Fixes
 -----
