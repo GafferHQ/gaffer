@@ -163,7 +163,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 			if isinstance( textWidget, GafferUI.TextWidget ) :
 				textWidget.grabFocus()
 			else : # MultiLineTextWidget
-				textWidget.setFocussed( True )
+				textWidget.setFocused( True )
 			textWidget._qtWidget().activateWindow()
 
 	def plugValueWidget( self ) :
