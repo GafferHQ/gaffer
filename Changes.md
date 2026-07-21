@@ -26,6 +26,7 @@ Improvements
 ------------
 
 - SceneWriter : Added `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES` environment variable. When set to a value of `1`, `ri:` prefixed attributes are written to USD in a format compatible with `hdPrman`, for rendering with RenderMan in `usdview` and other Hydra-based applications.
+- Cycles : Added support for the existing `automaticInstancing` attribute.
 
 Fixes
 -----

@@ -797,6 +797,7 @@ IECore::InternedString g_deformationBlurSegmentsAttributeName( "deformationBlurS
 IECore::InternedString g_displayColorAttributeName( "render:displayColor" );
 IECore::InternedString g_lightAttributeName( "light" );
 IECore::InternedString g_muteLightAttributeName( "light:mute" );
+IECore::InternedString g_automaticInstancingAttributeName( "gaffer:automaticInstancing" );
 // Cycles Attributes
 IECore::InternedString g_cclVisibilityAttributeName( "cycles:visibility" );
 IECore::InternedString g_useHoldoutAttributeName( "cycles:use_holdout" );
@@ -933,6 +934,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_assetName = attributeValue<std::string>( g_cryptomatteAssetAttributeName, attributes, m_assetName );
 			m_isCausticsCaster = attributeValue<bool>( g_isCausticsCasterAttributeName, attributes, m_isCausticsCaster );
 			m_isCausticsReceiver = attributeValue<bool>( g_isCausticsReceiverAttributeName, attributes, m_isCausticsReceiver );
+			m_automaticInstancing = attributeValue<bool>( g_automaticInstancingAttributeName, attributes, true );
 
 			// Surface shader
 			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
@@ -1212,7 +1214,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// Returns true if the given geometry can be instanced.
 		bool canInstanceGeometry( const IECore::Object *object ) const
 		{
-			if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) )
+			if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) || !m_automaticInstancing )
 			{
 				return false;
 			}
@@ -1398,6 +1400,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		bool m_isCausticsCaster;
 		bool m_isCausticsReceiver;
 		bool m_muteLight;
+		bool m_automaticInstancing;
 
 		using CustomAttributes = ccl::vector<ccl::ParamValue>;
 		CustomAttributes m_custom;
