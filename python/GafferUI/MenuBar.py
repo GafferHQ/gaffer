@@ -157,7 +157,7 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 	def eventFilter( self, qObject, qEvent ) :
 
 		# Qt bubbles up these shortcut override events from
-		# the focussed widget to the top of the hierarchy,
+		# the focused widget to the top of the hierarchy,
 		# at each level asking "Do you want to process this
 		# keypress yourself before I use it as a shortcut at
 		# some other scope?". This gives us the opportunity

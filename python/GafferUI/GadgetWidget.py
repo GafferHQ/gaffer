@@ -285,7 +285,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	def __keyPress( self, widget, event ) :
 
 		# we get given keypresses before the graphicsview does, so we
-		# need to make sure we don't stop them going to a focussed overlay widget.
+		# need to make sure we don't stop them going to a focused overlay widget.
 		if self._qtWidget().scene().focusItem() is not None :
 			if self._qtWidget().scene().focusItem().widget().focusWidget() is not None :
 				return False

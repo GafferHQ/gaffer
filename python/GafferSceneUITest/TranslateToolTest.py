@@ -1307,7 +1307,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		view["in"].setInput( script["plane"]["out"] )
 		self.assertEqual( tool.handlesTransform().translation(), imath.V3f( 1, 0, 0 ) )
 
-		# Still looking at the Plane, but now with the TimeWarp focussed.
+		# Still looking at the Plane, but now with the TimeWarp focused.
 		# We now have a "pinned" context, looking at the Plane from the
 		# point of view of the TimeWarp.
 

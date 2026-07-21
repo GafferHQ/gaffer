@@ -635,7 +635,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	# and MultiLineTextWidget provide their own methods for this but these
 	# don't apply generally so they should be replaced. Currently I'm favouring
 	# simple setFocus( widget ) and getFocus() class methods on the Widget class -
-	# since there can be only one focussed widget at a time it doesn't really make
+	# since there can be only one focused widget at a time it doesn't really make
 	# sense for it to be a property of each widget.
 	@classmethod
 	def focusChangedSignal( cls ) :

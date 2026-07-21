@@ -282,7 +282,7 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertEqual( l.plugValueWidget( s["n"]["s"] ).enabled(), True )
 		self.assertEqual( l.plugValueWidget( s["n"]["s2"] ).enabled(), True )
 
-		# When a node is focussed, the layout should use the tracked context
+		# When a node is focused, the layout should use the tracked context
 		# instead of the script context.
 
 		s["stringIO"] = GafferTest.StringInOutNode()

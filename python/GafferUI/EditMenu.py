@@ -101,7 +101,7 @@ def scope( menu ) :
 	graphEditor = None
 
 	if isinstance( scriptWindow.getLayout(), GafferUI.CompoundEditor ) :
-		graphEditor = scriptWindow.getLayout().editor( GafferUI.GraphEditor, focussedOnly = False )
+		graphEditor = scriptWindow.getLayout().editor( GafferUI.GraphEditor, focusedOnly = False )
 
 	if graphEditor is not None :
 		parent = graphEditor.graphGadget().getRoot()
