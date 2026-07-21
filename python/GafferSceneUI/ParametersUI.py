@@ -37,27 +37,28 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Parameters,
 
 	"description",
-	"""
+	_("""
 	Modifies the parameters of cameras and procedurals.
 	Existing parameters can be tweaked and new parameters be added.
-	""",
+	"""),
 
 	plugs = {
 
 		"parameters" : {
 
 			"description" :
-			"""
+			_("""
 			The parameters to be added - any number of arbitrary
 			parameters may be specified here using either the user
 			interface or the CompoundDataPlug API.
-			""",
+			"""),
 
 		}
 

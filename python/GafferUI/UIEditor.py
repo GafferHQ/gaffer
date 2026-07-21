@@ -47,6 +47,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 from . import MetadataWidget
 
 ## The UIEditor class allows the user to edit the interfaces for nodes.
@@ -71,17 +72,17 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		with self.__tabbedContainer :
 
 			# Node tab
-			with GafferUI.ListContainer( spacing = 4, borderWidth = 8, parenting = { "label" : "Node" } ) as self.__nodeTab :
+			with GafferUI.ListContainer( spacing = 4, borderWidth = 8, parenting = { "label" : _("Node") } ) as self.__nodeTab :
 
 				with _Row() :
 
-					_Label( "Name" )
+					_Label( _("Name") )
 
 					self.__nodeNameWidget = GafferUI.NameWidget( None )
 
 				with _Row() :
 
-					_Label( "Description", parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
+					_Label( _("Description"), parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
 
 					self.__nodeMetadataWidgets.append(
 						MetadataWidget.MultiLineStringMetadataWidget( key = "description" )
@@ -89,7 +90,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 				with _Row() :
 
-					_Label( "Documentation URL" )
+					_Label( _("Documentation URL") )
 
 					self.__nodeMetadataWidgets.append(
 						MetadataWidget.StringMetadataWidget( key = "documentation:url" )
@@ -97,7 +98,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 				with _Row() :
 
-					_Label( "Color" )
+					_Label( _("Color") )
 
 					self.__nodeMetadataWidgets.append(
 						MetadataWidget.ColorSwatchMetadataWidget( key = "nodeGadget:color", defaultValue = imath.Color3f( 0.4 ) )
@@ -105,13 +106,13 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 				with _Row() as self.__iconRow :
 
-					_Label( "Icon" )
+					_Label( _("Icon") )
 
 					self.__nodeMetadataWidgets.append(
 						MetadataWidget.FileSystemPathMetadataWidget( key = "icon" )
 					)
 
-					GafferUI.Label( "Scale" )
+					GafferUI.Label( _("Scale") )
 
 					scaleWidget = MetadataWidget.NumericMetadataWidget( key = "iconScale", defaultValue = 1.5 )
 					scaleWidget.numericWidget()._qtWidget().setMaximumWidth( 60 )
@@ -119,7 +120,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 				with _Row() as self.__plugAddButtons :
 
-					_Label( "Plug Creators" )
+					_Label( _("Plug Creators") )
 
 					for side in ( "Top", "Bottom", "Left", "Right" ) :
 						GafferUI.Label( side )
@@ -129,7 +130,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 						) )
 
 			# Plugs tab
-			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) as self.__plugTab :
+			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : _("Plugs") } ) as self.__plugTab :
 
 				self.__plugListing = _PlugListing()
 				self.__plugListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__plugListingSelectionChanged ) )
@@ -179,7 +180,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 		menuDefinition.append( "/UIEditorDivider", { "divider" : True } )
 		menuDefinition.append(
-			"/Set Color...",
+			"/" + _("Set Color..."),
 			{
 				"command" : functools.partial( cls.__setColor, node = node ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
@@ -192,7 +193,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			if nodeGadgetTypes == { "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" } :
 				nodeGadgetType = Gaffer.Metadata.value( node, "nodeGadget:type" ) or "GafferUI::StandardNodeGadget"
 				menuDefinition.append(
-					"/Show Name",
+					"/" + _("Show Name"),
 					{
 						"command" : functools.partial( cls.__setNameVisible, node ),
 						"checkBox" : nodeGadgetType == "GafferUI::StandardNodeGadget",
@@ -210,7 +211,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		menuDefinition.append( "/Edit UI Divider", { "divider" : True } )
 
 		menuDefinition.append(
-			"/Edit UI...",
+			"/" + _("Edit UI..."),
 			{
 				"command" : functools.partial( GafferUI.UIEditor.acquire, node ),
 				"active" : (
@@ -377,7 +378,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			return
 
 	menuDefinition.append( "/EditUIDivider", { "divider" : True } )
-	menuDefinition.append( "/Edit UI...",
+	menuDefinition.append( "/" + _("Edit UI..."),
 		{
 			"command" : functools.partial( __editPlugUI, node, plug ),
 			"active" : not Gaffer.MetadataAlgo.readOnly( plug )
@@ -952,23 +953,23 @@ class _PlugListing( GafferUI.Widget ) :
 
 		m = IECore.MenuDefinition()
 
-		m.append( "/Add Plug/Bool", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.BoolPlug ) } )
-		m.append( "/Add Plug/Float", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.FloatPlug ) } )
-		m.append( "/Add Plug/Int", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.IntPlug ) } )
-		m.append( "/Add Plug/NumericDivider", { "divider" : True } )
+		m.append( "/" + _("Add Plug") + "/" + _("Bool"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.BoolPlug ) } )
+		m.append( "/" + _("Add Plug") + "/" + _("Float"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.FloatPlug ) } )
+		m.append( "/" + _("Add Plug") + "/" + _("Int"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.IntPlug ) } )
+		m.append( "/" + _("Add Plug") + "/NumericDivider", { "divider" : True } )
 
-		m.append( "/Add Plug/String", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.StringPlug ) } )
-		m.append( "/Add Plug/StringDivider", { "divider" : True } )
+		m.append( "/" + _("Add Plug") + "/" + _("String"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.StringPlug ) } )
+		m.append( "/" + _("Add Plug") + "/StringDivider", { "divider" : True } )
 
-		m.append( "/Add Plug/V2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2iPlug ) } )
-		m.append( "/Add Plug/V3i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3iPlug ) } )
-		m.append( "/Add Plug/V2f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2fPlug ) } )
-		m.append( "/Add Plug/V3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3fPlug  ) } )
-		m.append( "/Add Plug/VectorDivider", { "divider" : True } )
+		m.append( "/" + _("Add Plug") + "/" + _("V2i"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2iPlug ) } )
+		m.append( "/" + _("Add Plug") + "/" + _("V3i"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3iPlug ) } )
+		m.append( "/" + _("Add Plug") + "/" + _("V2f"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2fPlug ) } )
+		m.append( "/" + _("Add Plug") + "/" + _("V3f"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3fPlug  ) } )
+		m.append( "/" + _("Add Plug") + "/VectorDivider", { "divider" : True } )
 
-		m.append( "/Add Plug/Color3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color3fPlug ) } )
-		m.append( "/Add Plug/Color4f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color4fPlug ) } )
-		m.append( "/Add Plug/ColorDivider", { "divider" : True } )
+		m.append( "/" + _("Add Plug") + "/" + _("Color3f"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color3fPlug ) } )
+		m.append( "/" + _("Add Plug") + "/" + _("Color4f"), { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color4fPlug ) } )
+		m.append( "/" + _("Add Plug") + "/ColorDivider", { "divider" : True } )
 
 		for label, plugType in [
 			( "Float", Gaffer.FloatVectorDataPlug ),
@@ -987,11 +988,11 @@ class _PlugListing( GafferUI.Widget ) :
 					}
 				)
 			else :
-				m.append( "/Add Plug/Array/" + label, { "divider" : True } )
+				m.append( "/" + _("Add Plug") + "/" + _("Array") + label, { "divider" : True } )
 
 		m.append( "/Add Plug Divider", { "divider" : True } )
 
-		m.append( "/Add Section", { "command" : Gaffer.WeakMethod( self.__addSection ) } )
+		m.append( "/" + _("Add Section"), { "command" : Gaffer.WeakMethod( self.__addSection ) } )
 
 		return m
 
@@ -1111,14 +1112,14 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 			with GafferUI.ListContainer( spacing = 4 ) as self.__editingColumn :
 
-				GafferUI.Label( "Name" )
+				GafferUI.Label( _("Name") )
 
 				self.__nameWidget = GafferUI.TextWidget()
 				self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameEditingFinished ) )
 
 				GafferUI.Spacer( imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 
-				GafferUI.Label( "Value" )
+				GafferUI.Label( _("Value") )
 
 		# We make a UI for editing preset values by copying the plug
 		# onto this node and then making a PlugValueWidget for it.
@@ -1341,54 +1342,54 @@ class _PlugEditor( GafferUI.Widget ) :
 
 			with _Row() :
 
-				_Label( "Name" )
+				_Label( _("Name") )
 
 				self.__nameWidget = GafferUI.NameWidget( None )
 
 			with _Row() :
 
-				_Label( "Label" )
+				_Label( _("Label") )
 				self.__metadataWidgets["label"] = MetadataWidget.StringMetadataWidget( key = "label", acceptEmptyString = False )
 
 			with _Row() :
 
-				_Label( "Description", parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
+				_Label( _("Description"), parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
 				self.__metadataWidgets["description"] = MetadataWidget.MultiLineStringMetadataWidget( key = "description" )
 				self.__metadataWidgets["description"].textWidget().setFixedLineHeight( 10 )
 
 			with _Row() :
 
-				_Label( "Widget" )
+				_Label( _("Widget") )
 
 				self.__widgetMenu = GafferUI.MenuButton(
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__widgetMenuDefinition ) )
 				)
 
-			with GafferUI.Collapsible( "Presets", collapsed = True ) :
+			with GafferUI.Collapsible( _("Presets"), collapsed = True ) :
 
 				with _Row() :
 
 					_Label( "" )
 					self.__presetsEditor = _PresetsEditor()
 
-			with GafferUI.Collapsible( "Widget Settings", collapsed = True ) :
+			with GafferUI.Collapsible( _("Widget Settings"), collapsed = True ) :
 
 				self.__widgetSettingsContainer = GafferUI.ListContainer( spacing = 4 )
 
-			with GafferUI.Collapsible( "Graph Editor", collapsed = True ) :
+			with GafferUI.Collapsible( _("Graph Editor"), collapsed = True ) :
 
 				with GafferUI.ListContainer( spacing = 4 ) as self.__graphEditorSection :
 
 					with _Row() :
 
-						_Label( "Gadget" )
+						_Label( _("Gadget") )
 						self.__gadgetMenu = GafferUI.MenuButton(
 							menu = GafferUI.Menu( Gaffer.WeakMethod( self.__gadgetMenuDefinition ) )
 						)
 
 					with _Row() :
 
-						_Label( "Position" )
+						_Label( _("Position") )
 						self.__metadataWidgets["noduleLayout:section"] = MetadataWidget.MenuMetadataWidget(
 							key = "noduleLayout:section",
 							labelsAndValues = [
@@ -1402,12 +1403,12 @@ class _PlugEditor( GafferUI.Widget ) :
 
 					with _Row() :
 
-						_Label( "Color" )
+						_Label( _("Color") )
 						self.__metadataWidgets["nodule:color"] = MetadataWidget.ColorSwatchMetadataWidget( key = "nodule:color", defaultValue = imath.Color3f( 0.4 ) )
 
 					with _Row() :
 
-						_Label( "Connection Color" )
+						_Label( _("Connection Color") )
 						self.__metadataWidgets["connectionGadget:color"] = MetadataWidget.ColorSwatchMetadataWidget( key = "connectionGadget:color", defaultValue = imath.Color3f( 0.125 ) )
 
 		self.__plug = None
@@ -1631,14 +1632,14 @@ class _SectionEditor( GafferUI.Widget ) :
 
 			with _Row() :
 
-				_Label( "Name" )
+				_Label( _("Name") )
 
 				self.__nameWidget = GafferUI.TextWidget()
 				self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameWidgetEditingFinished ) )
 
 			with _Row() :
 
-				_Label( "Summary", parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
+				_Label( _("Summary"), parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
 
 				self.__summaryMetadataWidget = MetadataWidget.MultiLineStringMetadataWidget( key = "" )
 

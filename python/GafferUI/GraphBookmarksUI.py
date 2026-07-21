@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Public methods
@@ -52,7 +53,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		menuDefinition.append( "/GraphBookmarksDivider", { "divider" : True } )
 
 	menuDefinition.append(
-		"/Bookmarked",
+		"/" + _("Bookmarked"),
 		{
 			"checkBox" : Gaffer.MetadataAlgo.getBookmarked( node ),
 			"command" : functools.partial( __setBookmarked, node ),
@@ -62,7 +63,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 
 	for i in range( 1, 10 ) :
 		menuDefinition.append(
-			"/Numeric Bookmark/%s" % i,
+			"/" + _("Numeric Bookmark") + "/%s" % i,
 			{
 				"command" : functools.partial( __assignNumericBookmark, node, i ),
 				"shortCut" : "Ctrl+%i" % i,
@@ -71,7 +72,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		)
 
 	menuDefinition.append(
-		"/Numeric Bookmark/Remove",
+		"/" + _("Numeric Bookmark") + "/" + _("Remove"),
 		{
 			"command" : functools.partial( __assignNumericBookmark, node, 0 ),
 			"shortCut" : "Ctrl+0",
@@ -109,7 +110,7 @@ def appendPlugContextMenuDefinitions( graphEditor, plug, menuDefinition ) :
 				bookmarkPlug = outPlug if inPlug.isSame( plug ) else inPlug
 				label += "/"  + bookmarkPlug.relativeName( bookmark )
 			menuDefinition.append(
-				"/Connect Bookmark/" + label,
+				"/" + _("Connect Bookmark") + "/" + label,
 				{
 					"command" : functools.partial( __connect, inPlug, outPlug ),
 					"active" : not outPlug.isSame( inPlug.getInput() ) and not Gaffer.MetadataAlgo.readOnly( inPlug )
@@ -132,7 +133,7 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
 	script = editor.scriptNode()
 
-	menuDefinition.append( "/NumericBookmarkDivider", { "divider" : True, "label" : "Follow Numeric Bookmark" } )
+	menuDefinition.append( "/NumericBookmarkDivider", { "divider" : True, "label" : _("Follow Numeric Bookmark") } )
 
 	for i in range( 1, 10 ) :
 		bookmarkNode = Gaffer.MetadataAlgo.getNumericBookmark( script, i )
@@ -275,9 +276,9 @@ def __findBookmark( editor, bookmarks = None ) :
 			menuDefinition.append( path, { "command" : command } )
 
 	if not len( bookmarks ) :
-		menuDefinition.append( "/No bookmarks available", { "active" : False, "searchText" : "" } )
+		menuDefinition.append( "/" + _("No bookmarks available"), { "active" : False, "searchText" : "" } )
 
-	editor.__findBookmarksMenu = GafferUI.Menu( menuDefinition, title = "Find Bookmark", searchable = True )
+	editor.__findBookmarksMenu = GafferUI.Menu( menuDefinition, title = _("Find Bookmark"), searchable = True )
 	editor.__findBookmarksMenu.popup()
 
 def __assignNumericBookmark( node, numericBookmark ) :

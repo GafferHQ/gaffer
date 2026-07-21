@@ -37,54 +37,55 @@
 
 import Gaffer
 import GafferVDB
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferVDB.VolumeScatter,
 
 	"description",
-	"""
+	_("""
 	Scatter points according the voxel values of a VDB grid.
-	""",
+	"""),
 
 	plugs = {
 
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name given to the PointsPrimitive -
 			this will be placed under the location specified by
 			"destination".
-			""",
+			"""),
 
 		},
 
 		"grid" : {
 
 			"description" :
-			"""
+			_("""
 			Name of grid in VDBObject in which points will be scattered.
-			""",
+			"""),
 
 		},
 
 		"density" : {
 
 			"description" :
-			"""
+			_("""
 			This density is multiplied with the value of the grid to produce a number of points per unit volume.
-			""",
+			"""),
 		},
 
 		"pointType" : {
 
 			"description" :
-			"""
+			_("""
 			The render type of the points. This defaults to
 			"gl:point" so that the points are rendered in a
 			lightweight manner in the viewport.
-			""",
+			"""),
 
 			"preset:GL Point" : "gl:point",
 			"preset:Particle" : "particle",
@@ -100,7 +101,7 @@ Gaffer.Metadata.registerNode(
 		"destination" : {
 
 			"description" :
-			"""
+			_("""
 			The location where the points primitives will be placed in the output scene.
 			When the destination is evaluated, the `${scene:path}` variable holds
 			the location of the source mesh, so the default value parents the points
@@ -108,16 +109,16 @@ Gaffer.Metadata.registerNode(
 
 			> Tip : `${scene:path}/..` may be used to place the points alongside the
 			> source mesh.
-			""",
+			"""),
 
 		},
 
 		"parent" : {
 
 			"description" :
-			"""
+			_("""
 			This plug has been deprecated in favour of using a filter to select the volume.
-			"""
+			""")
 		},
 
 	}

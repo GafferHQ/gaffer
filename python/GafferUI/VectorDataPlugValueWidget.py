@@ -41,6 +41,8 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI import i18n as _i18n
+from GafferUI.i18n import _
 
 # Supported plug metadata :
 #
@@ -63,10 +65,13 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		dataPlugs = self.__dataPlugs()
 		if len( dataPlugs ) > 1 :
 			self.__dataWidget.setHeader( [
-				Gaffer.Metadata.value( p, "vectorDataPlugValueWidget:header" ) or IECore.CamelCase.toSpaced( p.getName() )
+				_( Gaffer.Metadata.value( p, "vectorDataPlugValueWidget:header" ) or IECore.CamelCase.toSpaced( p.getName() ) )
 				for p in dataPlugs
 			] )
-			self.__dataWidget.setToolTips( [ Gaffer.Metadata.value( p, "description" ) or "" for p in dataPlugs ] )
+			self.__dataWidget.setToolTips( [
+				_( Gaffer.Metadata.value( p, "description" ) ) if _i18n.translateTooltips() and Gaffer.Metadata.value( p, "description" ) else Gaffer.Metadata.value( p, "description" ) or ""
+				for p in dataPlugs
+			] )
 
 		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 

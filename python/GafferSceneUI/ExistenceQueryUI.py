@@ -36,33 +36,34 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ExistenceQuery,
 
 	"description",
-	"""
+	_("""
 	Queries the existence of a specified location in a scene.
-	""",
+	"""),
 
 	plugs = {
 
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query.
-			"""
+			""")
 
 		},
 
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The location to query for existence.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -73,9 +74,9 @@ Gaffer.Metadata.registerNode(
 		"exists" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs true if the specified location exists, otherwise false.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 
@@ -84,9 +85,9 @@ Gaffer.Metadata.registerNode(
 		"closestAncestor" : {
 
 			"description" :
-			"""
+			_("""
 			Path to the closest ancestor that exists.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 

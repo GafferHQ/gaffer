@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferDispatch
 
 from GafferUI.PlugValueWidget import sole
@@ -142,7 +143,7 @@ class _StatusColumn( GafferUI.PathColumn ) :
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "Status" )
+		return GafferUI.PathColumn.CellData( value = _("Status") )
 
 class _RunningTimeColumn( GafferUI.PathColumn ) :
 
@@ -161,7 +162,7 @@ class _RunningTimeColumn( GafferUI.PathColumn ) :
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "Running Time" )
+		return GafferUI.PathColumn.CellData( value = _("Running Time") )
 
 class _CPUUsageColumn( GafferUI.PathColumn ) :
 
@@ -172,12 +173,12 @@ class _CPUUsageColumn( GafferUI.PathColumn ) :
 		return GafferUI.PathColumn.CellData(
 			value = f"{cpu:.2f}" if cpu is not None else "---",
 			sortValue = cpu if cpu is not None else 0.0,
-			toolTip = "CPU usage for current batch"
+			toolTip = _("CPU usage for current batch")
 		)
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "CPU" )
+		return GafferUI.PathColumn.CellData( value = _("CPU") )
 
 class _MemoryUsageColumn( GafferUI.PathColumn ) :
 
@@ -188,12 +189,12 @@ class _MemoryUsageColumn( GafferUI.PathColumn ) :
 		return GafferUI.PathColumn.CellData(
 			value = "{:.2f}GB".format( memory / (1024 ** 3) ) if memory is not None else "---",
 			sortValue = IECore.UInt64Data( memory if memory is not None else 0 ),
-			toolTip = "Memory usage for current batch"
+			toolTip = _("Memory usage for current batch")
 		)
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "Memory" )
+		return GafferUI.PathColumn.CellData( value = _("Memory") )
 
 class LocalJobs( GafferUI.Editor ) :
 
@@ -212,9 +213,9 @@ class LocalJobs( GafferUI.Editor ) :
 					_LocalJobsPath( jobPool ),
 					columns = (
 						_StatusColumn(),
-						GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
-						GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
-						GafferUI.PathListingWidget.StandardColumn( "Start Time", "localDispatcher:startTime" ),
+						GafferUI.PathListingWidget.StandardColumn( _("Name"), "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+						GafferUI.PathListingWidget.StandardColumn( _("Id"), "localDispatcher:id" ),
+						GafferUI.PathListingWidget.StandardColumn( _("Start Time"), "localDispatcher:startTime" ),
 						_RunningTimeColumn(),
 						_CPUUsageColumn(),
 						_MemoryUsageColumn(),
@@ -226,34 +227,34 @@ class LocalJobs( GafferUI.Editor ) :
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=5 ) :
 					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
-					self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
+					self.__killButton = GafferUI.Button( _("Kill Selected Jobs") )
 					self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
-					self.__removeButton = GafferUI.Button( "Remove Selected Jobs" )
+					self.__removeButton = GafferUI.Button( _("Remove Selected Jobs") )
 					self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ) )
 
 			with GafferUI.TabbedContainer() :
 
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Log" } ) as self.__messagesTab :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : _("Log") } ) as self.__messagesTab :
 					self.__messageWidget = GafferUI.MessageWidget( toolbars = True, follow = True, role = GafferUI.MessageWidget.Role.Log )
 					self.__messageWidget._qtWidget().setMinimumHeight( 150 )
 
-				with GafferUI.ScrolledContainer( parenting = { "label"  : "Properties" } ) :
+				with GafferUI.ScrolledContainer( parenting = { "label"  : _("Properties") } ) :
 
 					grid = GafferUI.GridContainer( spacing = 10, borderWidth = 10 )
 					with grid.nextRow() :
-						GafferUI.Label( "Frame Range" )
+						GafferUI.Label( _("Frame Range") )
 						self.__propertiesFrameRange = GafferUI.Label( textSelectable = True )
 
 					with grid.nextRow() :
-						GafferUI.Label( "Job Directory" )
+						GafferUI.Label( _("Job Directory") )
 						self.__propertiesJobDirectory = GafferUI.Label( textSelectable = True )
 
 					with grid.nextRow() :
-						GafferUI.Label( "Environment Command" )
+						GafferUI.Label( _("Environment Command") )
 						self.__propertiesEnvironmentCommand = GafferUI.Label( textSelectable = True )
 
 					with grid.nextRow() :
-						GafferUI.Label( "Start Time" )
+						GafferUI.Label( _("Start Time") )
 						self.__propertiesStartTime = GafferUI.Label( textSelectable = True )
 
 		# Connecting to the JobPool and Job signals allows us to update our PathListingWidget

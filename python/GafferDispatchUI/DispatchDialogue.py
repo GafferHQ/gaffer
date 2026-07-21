@@ -48,6 +48,7 @@ import Gaffer
 import GafferDispatch
 
 import GafferUI
+from GafferUI.i18n import _
 
 ## A dialogue which can be used to dispatch tasks
 class DispatchDialogue( GafferUI.Dialogue ) :
@@ -62,7 +63,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 	__dispatchDialogueMenuDefinition = None
 
 	## \todo `tasks` should be a list of TaskPlugs instead of a list of nodes.
-	def __init__( self, tasks, dispatchers, nodesToShow, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	def __init__( self, tasks, dispatchers, nodesToShow, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title=_("Dispatch Tasks"), sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 
@@ -105,7 +106,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				with GafferUI.ListContainer() as dispatcherTab :
 
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=2, borderWidth=4 ) as dispatcherMenuColumn :
-						GafferUI.Label( "<h4>Dispatcher</h4>" )
+						GafferUI.Label( "<h4>" + _("Dispatcher") + "</h4>" )
 						self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 						self.__dispatchersMenu.append( [ x.getName() for x in self.__dispatchers ] )
 						self.__dispatchersMenu.setSelection( [ self.__dispatchers[0].getName() ] )
@@ -113,11 +114,11 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 						dispatcherMenuColumn.setVisible( len(self.__dispatchers) > 1 )
 
 					self.__dispatcherFrame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None_, borderWidth=0 )
-					self.__tabs.setLabel( dispatcherTab, "Dispatcher" )
+					self.__tabs.setLabel( dispatcherTab, _("Dispatcher") )
 
 				with GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None_, borderWidth=4 ) as contextTab :
 					GafferUI.PlugValueWidget.create( self.__script["variables"] )
-					self.__tabs.setLabel( contextTab, "Context Variables" )
+					self.__tabs.setLabel( contextTab, _("Context Variables") )
 
 		# build a ui element for progress feedback and messages
 		with GafferUI.ListContainer( spacing = 4 ) as self.__progressUI :
@@ -128,7 +129,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				self.__progressIconFrame = GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None_, parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center } )
 				self.__progressLabel = GafferUI.Label( parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center } )
 
-			with GafferUI.Collapsible( "Details", collapsed = True, parenting = { "expand" : True } ) as self.__messageCollapsible :
+			with GafferUI.Collapsible( _("Details"), collapsed = True, parenting = { "expand" : True } ) as self.__messageCollapsible :
 				self.__messageWidget = GafferUI.MessageWidget( toolbars = True )
 				# connect to the collapsible state change so we can increase the window
 				# size when the details pane is first shown.
@@ -136,17 +137,17 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 			GafferUI.Spacer( imath.V2i( 0 ) )
 
-		self.__backButton = self._addButton( "Back" )
+		self.__backButton = self._addButton( _("Back") )
 		self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateSettings ) )
 
-		self.__primaryButton = self._addButton( "Dispatch" )
+		self.__primaryButton = self._addButton( _("Dispatch") )
 
 		self.__setDispatcher( dispatchers[0] )
 
 		self.__initiateSettings( self.__primaryButton )
 
 	@staticmethod
-	def createWithDefaultDispatchers( tasks, nodesToShow, defaultDispatcherType=None, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title="Dispatch Tasks", sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
+	def createWithDefaultDispatchers( tasks, nodesToShow, defaultDispatcherType=None, postDispatchBehaviour=PostDispatchBehaviour.Confirm, title=_("Dispatch Tasks"), sizeMode=GafferUI.Window.SizeMode.Manual, **kw ) :
 
 		defaultType = defaultDispatcherType if defaultDispatcherType else GafferDispatch.Dispatcher.getDefaultDispatcherType()
 		dispatcherTypes = list(GafferDispatch.Dispatcher.registeredDispatchers())
@@ -213,7 +214,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setEnabled( False )
 		self.__backButton.setVisible( False )
 
-		self.__primaryButton.setText( "Dispatch" )
+		self.__primaryButton.setText( _("Dispatch") )
 		self.__primaryButton.setEnabled( True )
 		self.__primaryButton.setVisible( True )
 		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateDispatch ), scoped = True )
@@ -224,7 +225,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 	def __initiateDispatch( self, button ) :
 
 		self.__progressIconFrame.setChild( GafferUI.BusyWidget() )
-		self.__progressLabel.setText( "<h3>Dispatching...</h3>" )
+		self.__progressLabel.setText( "<h3>" + _("Dispatching...") + "</h3>" )
 
 		self.__backButton.setVisible( False )
 		self.__backButton.setEnabled( False )
@@ -264,7 +265,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 	def __initiateErrorDisplay( self, exceptionInfo ) :
 
 		self.__progressIconFrame.setChild( GafferUI.Image( "failure.png" ) )
-		self.__progressLabel.setText( "<h3>Failed</h3>" )
+		self.__progressLabel.setText( "<h3>" + _("Failed") + "</h3>" )
 
 		self.__messageCollapsible.setCollapsed( False )
 
@@ -290,7 +291,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setVisible( True )
 		self.__backButton._qtWidget().setFocus()
 
-		self.__primaryButton.setText( "Quit" )
+		self.__primaryButton.setText( _("Quit") )
 		self.__primaryButton.setEnabled( True )
 		self.__primaryButton.setVisible( True )
 		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ), scoped = True )
@@ -313,7 +314,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 			GafferUI.Image( "successWarning.png" if problems else "success.png" )
 		)
 
-		completionMessage = "Completed"
+		completionMessage = _("Completed")
 		if problems :
 			completionMessage += " with " + " and ".join( problems )
 			self.__messageCollapsible.setCollapsed( False )
@@ -325,7 +326,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setEnabled( True )
 		self.__backButton.setVisible( True )
 
-		self.__primaryButton.setText( "Close" )
+		self.__primaryButton.setText( _("Close") )
 		self.__primaryButton.setEnabled( True )
 		self.__primaryButton.setVisible( True )
 		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ), scoped = True )

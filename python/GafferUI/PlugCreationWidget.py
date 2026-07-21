@@ -44,6 +44,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 ## Supports the following metadata registered to the parent node or plug :
 #
 # - `plugCreationWidget:includedTypes` : Filters the types of plugs which
@@ -74,7 +76,7 @@ class PlugCreationWidget( GafferUI.Widget ) :
 				image = "plus.png",
 				hasFrame = False,
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
-				toolTip = "Click to add plugs",
+				toolTip = _("Click to add plugs"),
 				immediate = True,
 			)
 
@@ -260,7 +262,7 @@ class PlugCreationWidget( GafferUI.Widget ) :
 			self.plugCreationMenuSignal()( result, self )
 
 		if not result.size() :
-			result.append( "/All Types Excluded", { "active" : False } )
+			result.append( "/" + _("All Types Excluded"), { "active" : False } )
 
 		return result
 
@@ -321,7 +323,7 @@ class PlugCreationWidget( GafferUI.Widget ) :
 			plug.setName( plug.typeName().rpartition( ":" )[2] )
 
 		if plug is None or not plugCreationWidget.__plugTypeIncluded( type( plug ) ) :
-			GafferUI.PopupWindow.showWarning( "Unsupported data type", parent = plugCreationWidget )
+			GafferUI.PopupWindow.showWarning( _("Unsupported data type"), parent = plugCreationWidget )
 			return
 
 		plugCreationWidget.createPlug( plug )
@@ -337,7 +339,7 @@ class PlugCreationWidget( GafferUI.Widget ) :
 			plug = plug["value"]
 
 		if not plugCreationWidget.__plugTypeIncluded( type( plug ) ) :
-			GafferUI.PopupWindow.showWarning( "Unsupported type", parent = plugCreationWidget )
+			GafferUI.PopupWindow.showWarning( _("Unsupported type"), parent = plugCreationWidget )
 			return
 
 		plugCreationWidget.createPlug( plug.createCounterpart( dragDropEvent.data.getName(), Gaffer.Plug.Direction.In ), name = name )

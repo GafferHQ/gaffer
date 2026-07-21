@@ -36,25 +36,26 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Shape,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which draw a shape over the input image.
-	""",
+	"""),
 
 	plugs = {
 
 		"shadow" : {
 
 			"description" :
-			"""
+			_("""
 			Enables the rendering of a drop shadow which can be coloured, offset and
 			blurred.
-			""",
+			"""),
 
 			"layout:section" : "Shadow",
 
@@ -63,9 +64,9 @@ Gaffer.Metadata.registerNode(
 		"shadowColor" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of the shadow.
-			""",
+			"""),
 
 			"layout:section" : "Shadow",
 
@@ -74,9 +75,9 @@ Gaffer.Metadata.registerNode(
 		"shadowOffset" : {
 
 			"description" :
-			"""
+			_("""
 			The offset of the shadow, measured in pixels.
-			""",
+			"""),
 
 			"layout:section" : "Shadow",
 
@@ -85,9 +86,9 @@ Gaffer.Metadata.registerNode(
 		"shadowBlur" : {
 
 			"description" :
-			"""
+			_("""
 			A blur applied to the shadow, measured in pixels.
-			""",
+			"""),
 
 			"layout:section" : "Shadow",
 

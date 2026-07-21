@@ -39,29 +39,30 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.OpenImageIOReader,
 
 	"description",
-	"""
+	_("""
 	Utility node which reads image files from disk using OpenImageIO.
 	All file types supported by OpenImageIO are supported by the
 	OpenImageIOReader.
-	""",
+	"""),
 
 	plugs = {
 
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the file to be read. File sequences with
 			arbitrary padding may be specified using the '#' character
 			as a placeholder for the frame numbers. If this file sequence
 			format is used, then missingFrameMode will be activated.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -75,11 +76,11 @@ Gaffer.Metadata.registerNode(
 		"refreshCount" : {
 
 			"description" :
-			"""
+			_("""
 			May be incremented to force a reload if the file has
 			changed on disk - otherwise old contents may still
 			be loaded via Gaffer's cache.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.RefreshPlugValueWidget",
 			"layout:label" : "",
@@ -90,14 +91,14 @@ Gaffer.Metadata.registerNode(
 		"missingFrameMode" : {
 
 			"description" :
-			"""
+			_("""
 			Determines how missing frames are handled when the input
 			fileName is a file sequence (uses the '#' character).
 			The default behaviour is to throw an exception, but it
 			can also hold the last valid frame in the sequence, or
 			return a black image which matches the data window and
 			display window of the previous valid frame in the sequence.
-			""",
+			"""),
 
 			"preset:Error" : GafferImage.OpenImageIOReader.MissingFrameMode.Error,
 			"preset:Black" : GafferImage.OpenImageIOReader.MissingFrameMode.Black,
@@ -110,11 +111,11 @@ Gaffer.Metadata.registerNode(
 		"availableFrames" : {
 
 			"description" :
-			"""
+			_("""
 			An output of the available frames for the given file sequence.
 			Returns an empty vector when the input fileName is not a file
 			sequence, even if it has a file-sequence-like structure.
-			""",
+			"""),
 
 			## \todo: consider making this visible using a TextWidget with
 			## FrameList syntax (e.g. "1-100x5")
@@ -124,17 +125,17 @@ Gaffer.Metadata.registerNode(
 
 		"channelInterpretation" : {
 			"description" :
-			"Documented in ImageReader, where it is exposed to users."
+			_("Documented in ImageReader, where it is exposed to users.")
 		},
 
 		"fileValid" : {
 
 			"description" :
-			"""
+			_("""
 			Whether or not the files exists and can be read into memory,
 			value calculated per frame if an image sequence. MissingFrameMode
 			does not change the behaviour of this plug.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 

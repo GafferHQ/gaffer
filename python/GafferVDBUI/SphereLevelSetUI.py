@@ -36,60 +36,61 @@
 
 import Gaffer
 import GafferVDB
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferVDB.SphereLevelSet,
 
 	"description",
-	"""
+	_("""
 	Creates a sphere level set.
-	""",
+	"""),
 
 	plugs = {
 
 		"grid" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the sphere levelset grid in the created VDB object.
-			"""
+			""")
 
 		},
 
 		"radius" : {
 
 			"description" :
-			"""
+			_("""
 			Sphere radius in object space units.
-			"""
+			""")
 
 		},
 
 		"center" : {
 
 			"description" :
-			"""
+			_("""
 			Local center of the sphere level set in object space.
-			"""
+			""")
 
 		},
 
 		"voxelSize" : {
 
 			"description" :
-			"""
+			_("""
 			Size of the voxels in the created sphere levelset. Smaller voxel results in more detail but higher memory usage.
-			"""
+			""")
 
 		},
 
 		"halfWidth" : {
 
 			"description" :
-			"""
+			_("""
 			Width of the signed distance field in voxels.
-			"""
+			""")
 
 		},
 

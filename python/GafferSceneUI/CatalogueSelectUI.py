@@ -36,6 +36,7 @@
 import IECore
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 def __imageNames( plug ) :
 	node = plug.node()
@@ -68,16 +69,16 @@ Gaffer.Metadata.registerNode(
 	GafferScene.CatalogueSelect,
 
 	"description",
-	"Finds an image in a directly connected Catalogue by name.",
+	_("Finds an image in a directly connected Catalogue by name."),
 
 	plugs = {
 
 		"imageName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the image to extract.
-			""",
+			"""),
 
 			"presetNames" : __imagePresetNames,
 			"presetValues" : __imagePresetValues,

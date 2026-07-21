@@ -39,6 +39,7 @@ import IECore
 import IECoreScene
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 import GafferOSL
 
@@ -90,9 +91,9 @@ class _PrimitiveVariablesFooter( GafferUI.PlugValueWidget ) :
 					hasFrame = False,
 					menu = GafferUI.Menu(
 						Gaffer.WeakMethod( self.__menuDefinition ),
-						title = "Add Input"
+						title = _("Add Input")
 					),
-					toolTip = "Add Input"
+					toolTip = _("Add Input")
 				)
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
@@ -164,11 +165,11 @@ Gaffer.Metadata.registerNode(
 	GafferOSL.OSLObject,
 
 	"description",
-	"""
+	_("""
 	Executes OSL shaders to perform object processing. Use the shaders from
 	the OSL/ObjectProcessing menu to read primitive variables from the input
 	object and then write primitive variables back to it.
-	""",
+	"""),
 
 	"plugAdderOptions", IECore.CompoundData( _primitiveVariableNamesOptions ),
 
@@ -183,7 +184,7 @@ Gaffer.Metadata.registerNode(
 		"primitiveVariables" : {
 
 			"description" :
-			"""
+			_("""
 			Define primitive varibles to output by adding child plugs and connecting
 			corresponding OSL shaders.  Supported plug types are :
 
@@ -196,7 +197,7 @@ Gaffer.Metadata.registerNode(
 
 			If you want to add multiple outputs at once, you can also add a closure plug,
 			which can accept a connection from an OSLCode with a combined output closure.
-			""",
+			"""),
 			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLObjectUI._PrimitiveVariablesFooter",
 			"layout:customWidget:footer:index" : -1,
 			"nodule:type" : "GafferUI::CompoundNodule",
@@ -243,11 +244,11 @@ Gaffer.Metadata.registerNode(
 		"interpolation" : {
 
 			"description" :
-			"""
+			_("""
 			The interpolation type of the primitive variables created by this node.
 			For instance, Uniform interpolation means that the shader is run once per face on a mesh, allowing it to output primitive variables with a value per face.
 			All non-constant input primitive variables are resampled to match the selected interpolation so that they can be accessed from the shader.
-			""",
+			"""),
 
 			"preset:Uniform" : IECoreScene.PrimitiveVariable.Interpolation.Uniform,
 			"preset:Vertex" : IECoreScene.PrimitiveVariable.Interpolation.Vertex,
@@ -261,41 +262,41 @@ Gaffer.Metadata.registerNode(
 		"useTransform" : {
 
 			"description" :
-			"""
+			_("""
 			Makes the object's transform available to OSL, so that you can use OSL functions that convert
 			from object to world space.
-			""",
+			"""),
 
 		},
 
 		"useAttributes" : {
 
 			"description" :
-			"""
+			_("""
 			Makes the Gaffer attributes at the object's location available to OSL through the getattribute
 			function.  Once this is on, you can use OSL nodes such as InFloat or InString to retrieve the
 			attribute values.
-			""",
+			"""),
 
 		},
 
 		"source" : {
 
 			"description" :
-			"""
+			_("""
 			The input scene which provides the locations to be referenced by the `sourceLocations`
 			plugs.
-			"""
+			""")
 
 		},
 
 		"sourceLocations" : {
 
 			"description" :
-			"""
+			_("""
 			Defines additional scene locations to be made accessible via the `pointcloud_search()`,
 			`pointcloud_get()` and `transform()` OSL functions.
-			""",
+			"""),
 
 			"layout:section" : "Source Locations",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
@@ -320,10 +321,10 @@ Gaffer.Metadata.registerNode(
 		"sourceLocations.*.name" : {
 
 			"description" :
-			"""
+			_("""
 			The name to give to the location. This is how it will be referred to from OSL
 			in the `pointcloud_search()`, `pointcloud_get()` and `transform()` functions.
-			""",
+			"""),
 
 			"label" : "",
 			"layout:activator" : "isEnabled",
@@ -334,9 +335,9 @@ Gaffer.Metadata.registerNode(
 		"sourceLocations.*.enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables the location for access in OSL.
-			""",
+			"""),
 
 			"label" : "",
 			"boolPlugValueWidget:displayMode" : "switch",
@@ -346,10 +347,10 @@ Gaffer.Metadata.registerNode(
 		"sourceLocations.*.location" : {
 
 			"description" :
-			"""
+			_("""
 			The location to be made accessible from OSL. This must exist in the
 			`source` scene.
-			""",
+			"""),
 
 			"label" : "",
 			"layout:activator" : "isEnabled",
@@ -361,11 +362,11 @@ Gaffer.Metadata.registerNode(
 		"sourceLocations.*.pointCloud" : {
 
 			"description" :
-			"""
+			_("""
 			Makes the location accessible via the `pointcloud_search()` and
 			`pointcloud_get()` OSL functions. The location should contain a primitive
 			with at least a position ('P') primitive variable.
-			""",
+			"""),
 
 			"label" : "",
 			"layout:activator" : "isEnabled",
@@ -375,9 +376,9 @@ Gaffer.Metadata.registerNode(
 		"sourceLocations.*.transform" : {
 
 			"description" :
-			"""
+			_("""
 			Makes the location's transform accessible via the `transform()` OSL functions.
-			""",
+			"""),
 
 			"label" : "",
 			"layout:activator" : "isEnabled",
@@ -388,14 +389,14 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissingSourceLocations" : {
 
 			"description" :
-			"""
+			_("""
 			Determines whether a missing source location will trigger an error
 			(the default) or be ignored. When a missing source is ignored, the
 			`pointcloud_search()` and `pointcloud_get()` OSL functions will
 			return `0`, allowing the shader to handle the problem itself.
-			""",
+			"""),
 
-			"label" : "Ignore Missing Source",
+			"label" : _("Ignore Missing Source"),
 
 		},
 
@@ -414,12 +415,12 @@ class _SourceLocationsHeader( GafferUI.ListContainer ) :
 		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		with self :
-			GafferUI.Label( "<h4><b>Name</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+			GafferUI.Label( _("<h4><b>Name</b></h4>") )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 			GafferUI.Spacer( imath.V2i( 25, 2 ), maximumSize = imath.V2i( 25, 2 ) )
-			GafferUI.Label( "<h4><b>Location</b></h4>" )
+			GafferUI.Label( _("<h4><b>Location</b></h4>") )
 			GafferUI.Spacer( imath.V2i( 0 ) )
-			GafferUI.Label( "<h4><b>Pointcloud</b></h4>" )._qtWidget().setFixedWidth( 100 )
-			GafferUI.Label( "<h4><b>Transform</b></h4>" )._qtWidget().setFixedWidth( 100 )
+			GafferUI.Label( _("<h4><b>Pointcloud</b></h4>") )._qtWidget().setFixedWidth( 100 )
+			GafferUI.Label( _("<h4><b>Transform</b></h4>") )._qtWidget().setFixedWidth( 100 )
 
 class _SourceLocationsFooter( GafferUI.PlugValueWidget ) :
 

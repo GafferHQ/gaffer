@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -46,28 +47,28 @@ Gaffer.Metadata.registerNode(
 	GafferScene.CopyOptions,
 
 	"description",
-	"""
+	_("""
 	A node which copies options from a source scene.
-	""",
+	"""),
 
 	plugs = {
 
 		"options" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the options to be copied. Names should be
 			separated by spaces and can use Gaffer's standard wildcards.
-			""",
+			"""),
 
 		},
 
 		"source" : {
 
 			"description" :
-			"""
+			_("""
 			The source of the options to be copied.
-			""",
+			"""),
 
 		},
 	}

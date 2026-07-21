@@ -37,6 +37,7 @@
 import Gaffer
 import GafferScene
 import IECoreScene
+from GafferUI.i18n import _
 
 
 ## To deprecate the uTangent and vTangent we hide them and feed in the new plugs.
@@ -54,9 +55,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.MeshTangents,
 
 	"description",
-	"""
+	_("""
 	Adds surface tangent primitive variables to the mesh based on either UV or topology information.
-	""",
+	"""),
 
 	"layout:activator:uvActivator", lambda parent : parent["mode"].getValue() == int(GafferScene.MeshTangents.Mode.UV),
 	"layout:activator:uvDeactivator", lambda parent : parent["mode"].getValue() != int(GafferScene.MeshTangents.Mode.UV),
@@ -68,13 +69,13 @@ Gaffer.Metadata.registerNode(
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			The style of how to calculate the Tangents.
 			(UV) calculates the tangents based on the gradient of the the corresponding UVs
 			(FirstEdge) defines the vector to the first neighbor as tangent and the bitangent orthogonal to tangent and normal
 			(TwoEdges) defines the vector between the first two neighbors as tangent and the bitangent orthogonal to tangent and normal
 			(PrimitiveCentroid) points the tangent towards the primitive centroid and the bitangent orthogonal to tangent and normal
-			""",
+			"""),
 
 			"preset:UV" : GafferScene.MeshTangents.Mode.UV,
 			"preset:FirstEdge" : GafferScene.MeshTangents.Mode.FirstEdge,
@@ -86,78 +87,78 @@ Gaffer.Metadata.registerNode(
 
 		"orthogonal" : {
 			"description" :
-			"""
+			_("""
 			Adjusts vTangent to be orthogonal to the uTangent.
-			""",
+			"""),
 		},
 
 		"leftHanded" : {
 			"description" :
-			"""
+			_("""
 			Make the local coordinate frame left handed
-			""",
+			"""),
 			"layout:activator" : "leftHandedActivator",
 		},
 
 		"position" : {
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable which contains the position data used to calculate tangents & binormals.
 			For example 'Pref' would compute tangents using the reference positions (if defined)
-			""",
+			"""),
 			"layout:section" : "Settings.Input",
 		},
 
 		"normal" : {
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable which contains the normals used to calculate tangents & binormals.
-			""",
+			"""),
 			"layout:section" : "Settings.Input",
 			"layout:activator" : "uvDeactivator",
 		},
 
 		"uvSet" : {
 			"description" :
-			"""
+			_("""
 			Name of the UV set primitive variable used to calculate uTangent & vTangent.
-			""",
+			"""),
 			"layout:section" : "Settings.Input",
 			"layout:activator" : "uvActivator",
 		},
 
 		"uTangent" : {
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable which will contain the uTangent data.
-			""",
+			"""),
 			"layout:section" : "Settings.Output",
 			"layout:activator" : "uvActivator",
 		},
 
 		"vTangent" : {
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable which will contain the vTangent data.
-			""",
+			"""),
 			"layout:section" : "Settings.Output",
 			"layout:activator" : "uvActivator",
 		},
 
 		"tangent" : {
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable which will contain the tangent data.
-			""",
+			"""),
 			"layout:section" : "Settings.Output",
 			"layout:activator" : "uvDeactivator",
 		},
 
 		"biTangent" : {
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable which will contain the biTangent data.
-			""",
+			"""),
 			"layout:section" : "Settings.Output",
 			"layout:activator" : "uvDeactivator",
 		}

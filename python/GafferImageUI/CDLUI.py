@@ -39,61 +39,62 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.CDL,
 
 	"description",
-	"""
+	_("""
 	Applies color transformations provided by
 	OpenColorIO via an OCIO CDLTransform.
-	""",
+	"""),
 
 	plugs = {
 
 		"slope" : {
 
 			"description" :
-			"""
+			_("""
 			Slope for the ASC CDL color correction formula.
-			""",
+			"""),
 
 		},
 
 		"offset" : {
 
 			"description" :
-			"""
+			_("""
 			Offset for the ASC CDL color correction formula.
-			""",
+			"""),
 
 		},
 
 		"power" : {
 
 			"description" :
-			"""
+			_("""
 			Power for the ASC CDL color correction formula.
-			""",
+			"""),
 
 		},
 
 		"saturation" : {
 
 			"description" :
-			"""
+			_("""
 			Saturation from the v1.2 release of the ASC CDL color correction formula.
-			""",
+			"""),
 
 		},
 
 		"direction" : {
 
 			"description" :
-			"""
+			_("""
 			The direction to perform the color transformation.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Forward" : GafferImage.OpenColorIOTransform.Direction.Forward,

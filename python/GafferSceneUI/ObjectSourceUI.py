@@ -37,33 +37,34 @@
 import Gaffer
 import GafferScene
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ObjectSource,
 
 	"description",
-	"""
+	_("""
 	A node which produces scenes with exactly one object in them.
-	""",
+	"""),
 
 	plugs = {
 
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the object in the output scene.
-			""",
+			"""),
 
 		},
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			The transform applied to the object.
-			""",
+			"""),
 
 			"layout:section" : "Transform",
 
@@ -72,10 +73,10 @@ Gaffer.Metadata.registerNode(
 		"sets" : {
 
 			"description" :
-			"""
+			_("""
 			A list of sets to include the object in. The
 			names should be separated by spaces.
-			""",
+			"""),
 
 		},
 

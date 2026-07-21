@@ -41,13 +41,14 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferSceneUI
+from GafferUI.i18n import _
 
 def __toolTip( tool ) :
 
 	mode = tool["mode"].getValue()
 	result = None
 	if mode == GafferSceneUI.LightPositionTool.Mode.Shadow :
-		result = "Hold 'Shift' + 'V' to place shadow pivot\nHold 'V' to place shadow target"
+		result = "Hold 'Shift' + 'V' to place shadow pivot" + "\n" + "Hold 'V' to place shadow target"
 	elif mode == GafferSceneUI.LightPositionTool.Mode.Highlight :
 		result = "Hold 'V' to place highlight target"
 	else :
@@ -60,9 +61,9 @@ Gaffer.Metadata.registerNode(
 	GafferSceneUI.LightPositionTool,
 
 	"description",
-	"""
+	_("""
 	Tool for placing lights.
-	""",
+	"""),
 
 	"viewer:shortCut", "D",
 	"order", 7,
@@ -75,14 +76,14 @@ Gaffer.Metadata.registerNode(
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			The method to use for placing the light.
 
 			- Shadow : Places the light so that it casts a shadow from the pivot point
 			onto the target point.
 			- Highlight : Places the light so that it creates a specular highlight at
 			the target point.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 

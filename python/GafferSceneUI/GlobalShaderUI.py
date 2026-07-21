@@ -36,27 +36,28 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.GlobalShader,
 
 	"description",
-	"""
+	_("""
 	Assigns global shaders such as background and atmosphere shaders.
 	This node is an abstract base class, so it can not be used directly -
 	instead use the nodes derived from it.
-	""",
+	"""),
 
 	plugs = {
 
 		"shader" : {
 
 			"description" :
-			"""
+			_("""
 			The shader to be assigned. This will be stored as an
 			option within the scene globals.
-			""",
+			"""),
 
 			"noduleLayout:section" : "left",
 			"nodule:type" : "GafferUI::StandardNodule",

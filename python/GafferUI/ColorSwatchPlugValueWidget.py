@@ -45,6 +45,7 @@ import Gaffer
 import GafferUI
 from GafferUI.PlugValueWidget import sole
 from GafferUI.ColorChooserPlugValueWidget import saveDefaultOptions
+from GafferUI.i18n import _
 
 class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -265,10 +266,10 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
 	def __colorChooserOptionsMenu( self, colorChooser, menuDefinition ) :
 
-		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": "Defaults" } )
+		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": _("Defaults") } )
 
 		menuDefinition.append(
-			"/Save Default Dialogue Layout",
+			"/" + _("Save Default Dialogue Layout"),
 			{
 				"command": functools.partial(
 					saveDefaultOptions,

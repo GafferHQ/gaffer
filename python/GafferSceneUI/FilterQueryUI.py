@@ -36,16 +36,17 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.FilterQuery,
 
 	"description",
-	"""
+	_("""
 	Queries a filter for a particular location in a scene
 	and outputs the results.
-	""",
+	"""),
 
 	# Work around StandardNodeGadget layout bug that would
 	# place the `filter` nodule inside the frame.
@@ -56,18 +57,18 @@ Gaffer.Metadata.registerNode(
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query the filter for.
-			""",
+			"""),
 
 		},
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter to query.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
 			"noduleLayout:section" : "right",
@@ -77,12 +78,12 @@ Gaffer.Metadata.registerNode(
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene to query the filter at.
 
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -93,9 +94,9 @@ Gaffer.Metadata.registerNode(
 		"exactMatch" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs `True` if the filter matches the location, and `False` otherwise.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 
@@ -104,10 +105,10 @@ Gaffer.Metadata.registerNode(
 		"descendantMatch" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs `True` if the filter matches a descendant of the location,
 			and `False` otherwise.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 
@@ -116,10 +117,10 @@ Gaffer.Metadata.registerNode(
 		"ancestorMatch" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs `True` if the filter matches an ancestor of the location,
 			and `False` otherwise.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 
@@ -128,10 +129,10 @@ Gaffer.Metadata.registerNode(
 		"closestAncestor" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the location of the first ancestor matched by the filter.
 			In the case of an exact match, this will be the location itself.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 

@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 ## A function suitable as the postCreator in a NodeMenu.append() call. It
 # sets the rectangle area relative to the input format.
@@ -62,67 +63,67 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Rectangle,
 
 	"description",
-	"""
+	_("""
 	Renders a rectangle with adjustable line width, corner radius,
 	drop shadow and transform.
-	""",
+	"""),
 
 	plugs = {
 
 		"color" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of the rectangle.
-			""",
+			"""),
 
 		},
 
 		"area" : {
 
 			"description" :
-			"""
+			_("""
 			The area of the rectangle before the transform is applied.
-			""",
+			"""),
 
 		},
 
 		"lineWidth" : {
 
 			"description" :
-			"""
+			_("""
 			The width of the outline, measured in pixels.
-			""",
+			"""),
 
 		},
 
 		"cornerRadius" : {
 
 			"description" :
-			"""
+			_("""
 			Used to give the rectangle rounded corners. A radius of
 			0 gives square corners.
-			""",
+			"""),
 
 		},
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			Transformation applied to the rectangle.
-			""",
+			"""),
 
 		},
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			A transformation applied to the rectangle. The translate and
 			pivot values are specified in pixels, and the rotate value is
 			specified in degrees.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Transform",

@@ -36,48 +36,49 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ShuffleRenderPasses,
 
 	"description",
-	"""
+	_("""
 	Shuffles render passes, allowing them to be copied and/or renamed.
 
 	An additional context variable `${source}` can be used on the destination plugs
 	to insert the name of each source render pass. For example, to prefix all render
 	passes with `test_` set the source to `*` and the destination to `test_${source}`.
-	""",
+	"""),
 
 	plugs = {
 
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The input scene.
-			""",
+			"""),
 
 		},
 
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The processed output scene.
-			""",
+			"""),
 
 		},
 
 		"shuffles" : {
 
 			"description" :
-			"""
+			_("""
 			The definition of the shuffling to be performed - an
 			arbitrary number of render pass edits can be made by adding
 			ShufflePlugs as children of this plug.
-			""",
+			"""),
 
 		},
 

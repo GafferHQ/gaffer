@@ -45,29 +45,30 @@ from GafferUI.PlugValueWidget import sole
 from . import OpenColorIOTransformUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageReader,
 
 	"description",
-	"""
+	_("""
 	Reads image files from disk using OpenImageIO. All file
 	types supported by OpenImageIO are supported by the ImageReader
 	and all channel data will be converted to linear using OpenColorIO.
-	""",
+	"""),
 
 	plugs = {
 
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the file to be read. File sequences with
 			arbitrary padding may be specified using the '#' character
 			as a placeholder for the frame numbers. If this file sequence
 			format is used, then missingFrameMode will be activated.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -81,11 +82,11 @@ Gaffer.Metadata.registerNode(
 		"refreshCount" : {
 
 			"description" :
-			"""
+			_("""
 			May be incremented to force a reload if the file has
 			changed on disk - otherwise old contents may still
 			be loaded via Gaffer's cache.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.RefreshPlugValueWidget",
 			"layout:label" : "",
@@ -96,14 +97,14 @@ Gaffer.Metadata.registerNode(
 		"missingFrameMode" : {
 
 			"description" :
-			"""
+			_("""
 			Determines how missing frames are handled when the input
 			fileName is a file sequence (uses the '#' character).
 			The default behaviour is to throw an exception, but it
 			can also hold the last valid frame in the sequence, or
 			return a black image which matches the data window and
 			display window of the previous valid frame in the sequence.
-			""",
+			"""),
 
 			"preset:Error" : GafferImage.ImageReader.MissingFrameMode.Error,
 			"preset:Black" : GafferImage.ImageReader.MissingFrameMode.Black,
@@ -116,13 +117,13 @@ Gaffer.Metadata.registerNode(
 		"start" : {
 
 			"description" :
-			"""
+			_("""
 			Masks frames which preceed the specified start frame.
 			The default is to treat them based on the MissingFrameMode,
 			but they can also be clamped to the start frame, or
 			return a black image which matches the data window
 			and display window of the start frame.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layoutPlugValueWidget:orientation" : "horizontal",
@@ -134,9 +135,9 @@ Gaffer.Metadata.registerNode(
 		"start.mode" : {
 
 			"description" :
-			"""
+			_("""
 			The mode used detemine the mask behaviour for the start frame.
-			""",
+			"""),
 
 			"preset:None" : GafferImage.ImageReader.FrameMaskMode.None_,
 			"preset:Black Outside" : GafferImage.ImageReader.FrameMaskMode.BlackOutside,
@@ -150,9 +151,9 @@ Gaffer.Metadata.registerNode(
 		"start.frame" : {
 
 			"description" :
-			"""
+			_("""
 			The start frame of the masked range.
-			""",
+			"""),
 
 			"presetNames" : lambda plug : IECore.StringVectorData( [ str(x) for x in plug.node()["__oiioReader"]["availableFrames"].getValue() ] ),
 			"presetValues" : lambda plug : plug.node()["__oiioReader"]["availableFrames"].getValue(),
@@ -165,13 +166,13 @@ Gaffer.Metadata.registerNode(
 		"end" : {
 
 			"description" :
-			"""
+			_("""
 			Masks frames which follow the specified end frame.
 			The default is to treat them based on the MissingFrameMode,
 			but they can also be clamped to the end frame, or
 			return a black image which matches the data window
 			and display window of the end frame.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layoutPlugValueWidget:orientation" : "horizontal",
@@ -183,9 +184,9 @@ Gaffer.Metadata.registerNode(
 		"end.mode" : {
 
 			"description" :
-			"""
+			_("""
 			The mode used detemine the mask behaviour for the end frame.
-			""",
+			"""),
 
 			"preset:None" : GafferImage.ImageReader.FrameMaskMode.None_,
 			"preset:Black Outside" : GafferImage.ImageReader.FrameMaskMode.BlackOutside,
@@ -199,9 +200,9 @@ Gaffer.Metadata.registerNode(
 		"end.frame" : {
 
 			"description" :
-			"""
+			_("""
 			The end frame of the masked range.
-			""",
+			"""),
 
 			"presetNames" : lambda plug : IECore.StringVectorData( [ str(x) for x in plug.node()["__oiioReader"]["availableFrames"].getValue() ] ),
 			"presetValues" : lambda plug : plug.node()["__oiioReader"]["availableFrames"].getValue(),
@@ -214,12 +215,12 @@ Gaffer.Metadata.registerNode(
 		"colorSpace" : {
 
 			"description" :
-			"""
+			_("""
 			The colour space of the input image, used to convert the input to
 			the working space. When set to `Automatic`, the colour space is
 			determined automatically using the function registered with
 			`ImageReader::setDefaultColorSpaceFunction()`.
-			""",
+			"""),
 
 			"presetNames" : OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues" : OpenColorIOTransformUI.colorSpacePresetValues,
@@ -234,7 +235,7 @@ Gaffer.Metadata.registerNode(
 		"channelInterpretation" : {
 
 			"description" :
-			"""
+			_("""
 			Controls how we create channels based on the contents of the file.  Unfortunately,
 			some software, such as Nuke, does not produce EXR files which follow the EXR specification,
 			so the mode "Default" uses heuristics to guess what the channels mean.
@@ -247,7 +248,7 @@ Gaffer.Metadata.registerNode(
 			and just uses the channel names directly from the file.
 
 			"Legacy" mode matches Gaffer <= 0.61 behaviour for compatibility reasons - it should not be used.
-			""",
+			"""),
 
 			"preset:Legacy" : GafferImage.ImageReader.ChannelInterpretation.Legacy,
 			"preset:Default" : GafferImage.ImageReader.ChannelInterpretation.Default,
@@ -260,10 +261,10 @@ Gaffer.Metadata.registerNode(
 		"availableFrames" : {
 
 			"description" :
-			"""
+			_("""
 			A list of the available frames for the current file sequence.
 			Empty when the input `fileName` is not a file sequence.
-			""",
+			"""),
 
 			"layout:section" : "Frames",
 			"plugValueWidget:type" : "GafferImageUI.ImageReaderUI._AvailableFramesPlugValueWidget",
@@ -272,7 +273,7 @@ Gaffer.Metadata.registerNode(
 
 		"fileValid" : {
 			"description" :
-			"""
+			_("""
 			Whether or not the files exists and can be read into memory,
 			value calculated per frame if an image sequence. Behaviour changes
 			if a frame mask of ClampToFrame or Black is selected, if outside
@@ -281,7 +282,7 @@ Gaffer.Metadata.registerNode(
 			> Note : When the file is not valid, the image will also contain a `fileValid`
 			> metadata value of `False`. This can be easier to access from downstream
 			> nodes than the `fileValid` plug itself.
-			""",
+			"""),
 
 			"layout:section" : "Frames",
 
@@ -328,7 +329,7 @@ class _ColorSpacePlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 		if self.menuButton().getText() == "Automatic" :
 			automaticSpace = sole( v["automaticSpace"] for v in values )
 			if automaticSpace != "" :
-				self.menuButton().setText( "Automatic ({})".format( automaticSpace or "---" ) )
+				self.menuButton().setText( _("Automatic ({})").format( automaticSpace or "---" ) )
 
 	def _auxiliaryPlugs( self, plug ) :
 

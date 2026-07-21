@@ -36,25 +36,26 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Warp,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which apply warps to the input image.
-	""",
+	"""),
 
 	plugs = {
 
 		"boundingMode" : {
 
 			"description" :
-			"""
+			_("""
 			The method used when accessing pixels outside the
 			input data window.
-			""",
+			"""),
 
 			"preset:Black" : GafferImage.Sampler.BoundingMode.Black,
 			"preset:Clamp" : GafferImage.Sampler.BoundingMode.Clamp,
@@ -66,14 +67,14 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter used to perform the resampling. The name
 			of any OIIO filter may be specified, but this UI
 			only exposes a limited range of 5 options which perform
 			well for warping, ordered from softest to sharpest. Plus
 			the extra "bilinear" mode which is lower quality, but
 			fast.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
@@ -89,12 +90,12 @@ Gaffer.Metadata.registerNode(
 		"useDerivatives" : {
 
 			"description" :
-			"""
+			_("""
 			Whether accurate filter sizes should be computed that take into account the amount
 			of distortion in the size and shape of pixels.  Should have minimal impact on warps
 			that mostly preserve the size of pixels, but could have a large impact if there is
 			heavy distortion.  Fixes problems with aliasing, at the cost of some extra calculations.
-			""",
+			"""),
 
 			"userDefault" : False,
 			"layout:activator" : lambda plug : plug.node()["filter"].getValue() != "bilinear",

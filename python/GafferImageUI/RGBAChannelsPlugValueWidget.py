@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 
 from GafferUI.PlugValueWidget import sole
@@ -161,7 +162,7 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 		if not rgbaChannels :
-			result.append( "/No channels available", { "active" : False } )
+			result.append( "/" + _("No channels available"), { "active" : False, "label" : _("No channels available") } )
 			return result
 
 		for text, value in rgbaChannels.items() :

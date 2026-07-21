@@ -41,16 +41,17 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.ContextVariableTweaks,
 
 	"description",
-	"""
+	_("""
 	Makes modifications to context variables. Tweaks are applied to context variables coming
 	from downstream nodes, resulting in different values given to upstream nodes.
-	""",
+	"""),
 
 	"layout:section:Settings.Tweaks:collapsed", False,
 
@@ -59,10 +60,10 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissing" : {
 
 			"description" :
-			"""
+			_("""
 			Ignores tweaks targeting missing context variables. When off, missing context
 			variables cause the node to error, unless the tweak mode is `CreateIfMissing`.
-			""",
+			"""),
 			"nodule:type" : "",
 
 		},
@@ -70,11 +71,11 @@ Gaffer.Metadata.registerNode(
 		"tweaks" : {
 
 			"description" :
-			"""
+			_("""
 			The tweaks to be made to the context variables. Arbitrary numbers of user defined
 			tweaks may be added as children of this plug via the user interface, or
 			using the ContextVariableTweaks API via python.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Tweaks",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",

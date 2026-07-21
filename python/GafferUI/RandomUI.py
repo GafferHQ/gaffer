@@ -40,13 +40,14 @@ import imath
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Random,
 
 	"description",
-	"""
+	_("""
 	Generates repeatable random values from a seed. This can be
 	very useful for the procedural generation of variation.
 	Numeric or colour values may be generated.
@@ -54,7 +55,7 @@ Gaffer.Metadata.registerNode(
 	The random values are generated from a seed and a Context
 	Variable - to get useful variation either the seed or the
 	value of the Context Variable must be varied too.
-	""",
+	"""),
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"auxiliaryNodeGadget:label", "r",
@@ -65,26 +66,26 @@ Gaffer.Metadata.registerNode(
 		"seed" : {
 
 			"description" :
-			"""
+			_("""
 			Seed for the random number generator. Different seeds
 			produce different random numbers. When controlling two
 			different properties using the same Context Variable,
 			different seeds may be used to ensure that the generated
 			values are different.
-			""",
+			"""),
 
 		},
 
 		"seedVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The most important plug for achieving interesting variation.
 			Should be set to the name of a Context Variable which will
 			be different for each evaluation of the node. Good examples
 			are "scene:path" to generate a different value per scene
 			location, or "frame" to generate a different value per frame.
-			""",
+			"""),
 
 			"preset:Time" : "frame",
 			"preset:Scene Location" : "scene:path",
@@ -94,59 +95,59 @@ Gaffer.Metadata.registerNode(
 		"floatRange" : {
 
 			"description" :
-			"""
+			_("""
 			The minimum and maximum values that will be generated for the
 			outFloat plug.
-			""",
+			"""),
 
 		},
 
 		"baseColor" : {
 
 			"description" :
-			"""
+			_("""
 			Used as the basis for the random colours generated for the
 			outColor plug. All colours start with this value and then
 			have a random HSV variation applied, using the ranges specified
 			below.
-			""",
+			"""),
 
 		},
 
 		"hue" : {
 
 			"description" :
-			"""
+			_("""
 			The +- range over which the hue of the base colour is varied.
-			""",
+			"""),
 
 		},
 
 		"saturation" : {
 
 			"description" :
-			"""
+			_("""
 			The +- range over which the saturation of the base colour is varied.
-			""",
+			"""),
 
 		},
 
 		"value" : {
 
 			"description" :
-			"""
+			_("""
 			The +- range over which the value of the base colour is varied.
-			""",
+			"""),
 
 		},
 
 		"outFloat" : {
 
 			"description" :
-			"""
+			_("""
 			Random floating point output derived from seed, Context Variable
 			and float range plugs.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs",
 
@@ -155,10 +156,10 @@ Gaffer.Metadata.registerNode(
 		"outColor" : {
 
 			"description" :
-			"""
+			_("""
 			Random colour output derived from seed, Context Variable, base
 			colour, hue, saturation and value plugs.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs",
 
@@ -254,7 +255,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if input is None and plugValueWidget._editable() :
 		menuDefinition.prepend( "/RandomiseDivider", { "divider" : True } )
 		menuDefinition.prepend(
-			"/Randomise...",
+			"/" + _("Randomise..."),
 			{
 				"command" : functools.partial( __createRandom, plug ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( plug ),

@@ -39,15 +39,16 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ShaderAssignment,
 
 	"description",
-	"""
+	_("""
 	Assigns shaders to objects.
-	""",
+	"""),
 
 	"layout:activator:labelOverride", lambda node : not node["label"].isSetToDefault(),
 
@@ -56,9 +57,9 @@ Gaffer.Metadata.registerNode(
 		"shader" : {
 
 			"description" :
-			"""
+			_("""
 			The shader to be assigned.
-			""",
+			"""),
 
 			"noduleLayout:section" : "left",
 			"nodule:type" : "GafferUI::StandardNodule",
@@ -68,10 +69,10 @@ Gaffer.Metadata.registerNode(
 		"label" : {
 
 			"description" :
-			"""
+			_("""
 			A label for the shader to be assigned. If this is empty, the node
 			connected to the `shader` plug will be used instead.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"layout:visibilityActivator" : "labelOverride",

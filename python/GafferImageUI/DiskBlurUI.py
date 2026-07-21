@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 
 Gaffer.Metadata.registerNode(
@@ -45,31 +46,31 @@ Gaffer.Metadata.registerNode(
 	GafferImage.DiskBlur,
 
 	"description",
-	"""
+	_("""
 	A special disk blur node which efficiently supports large radius blurs, and allows for a
 	variable radius. Works by rendering each input pixel as a disk in the output, using special
 	acceleration structures that make rendering large disks fast. Suitable as a building block
 	for focal blur.
-	""",
+	"""),
 
 	plugs = {
 
 		"radius" : {
 
 			"description" :
-			"""
+			_("""
 			The radius of the disk to blur by in pixels.
-			""",
+			"""),
 
 		},
 
 		"radiusChannel" : {
 
 			"description" :
-			"""
+			_("""
 			An optional input image channel which defines a blur radius per pixel, allowing the radius to be
 			varied across the image. The per-pixel radius is multiplied with the main radius control.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 			"channelPlugValueWidget:extraChannels" : IECore.StringVectorData( [ "" ] ),
 			"channelPlugValueWidget:extraChannelLabels" : IECore.StringVectorData( [ "None" ] ),
@@ -78,11 +79,11 @@ Gaffer.Metadata.registerNode(
 		"approximationThreshold" : {
 
 			"description" :
-			"""
+			_("""
 			The maximum acceptable error caused by omitting anti-aliasing for a particular disk. Since very
 			large disks often contribute very little to each individual output pixel, omitting anti-aliasing
 			for them can provide a substantial speed improvement.
-			""",
+			"""),
 			"layout:section" : "Advanced"
 
 		},
@@ -90,10 +91,10 @@ Gaffer.Metadata.registerNode(
 		"maxRadius" : {
 
 			"description" :
-			"""
+			_("""
 			An upper limit on the disk radius (`radiusChannel * radius`). Larger disks will be clamped to this
 			size. Used to accelerate rendering, so higher-than-necessary settings may reduce speed.
-			""",
+			"""),
 
 		},
 
@@ -118,7 +119,7 @@ Gaffer.Metadata.registerNode(
 		"layerBoundaries" : {
 
 			"description" :
-			"""
+			_("""
 			Defines a series of layers which are alpha-composited to generate the final image. Each layer
 			contains all the disks within a specific radius range, allowing "foreground" disks to occlude
 			"background" disks. Intended for use in approximating focal blur.
@@ -131,7 +132,7 @@ Gaffer.Metadata.registerNode(
 
 			> Tip : The FocalBlur node provides a simpler and more intuitive method for defining occlusion
 			layers (it uses the DiskBlur node internally).
-			""",
+			"""),
 
 			"layout:section" : "Advanced"
 

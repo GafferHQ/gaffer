@@ -38,25 +38,26 @@ import IECore
 
 import Gaffer
 import GafferArnold
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldVDB,
 
 	"description",
-	"""
+	_("""
 	Creates an external procedural for rendering
 	VDB volumes in Arnold.
-	""",
+	"""),
 
 	plugs = {
 
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the VDB file to be loaded.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -70,37 +71,37 @@ Gaffer.Metadata.registerNode(
 		"grids" : {
 
 			"description" :
-			"""
+			_("""
 			A space separated list of grids to be loaded and made available as
 			channels in the volume shader.
-			""",
+			"""),
 
 		},
 
 		"velocityGrids" : {
 
 			"description" :
-			"""
+			_("""
 			A space separated list of grids used to be used to generate motion
 			blur. Should either contain a single vector grid or 3 float grids.
-			"""
+			""")
 
 		},
 
 		"velocityScale" : {
 
 			"description" :
-			"""
+			_("""
 			A scale factor applied to the velocity grids, to either increase
 			or decrease motion blur.
-			""",
+			"""),
 
 		},
 
 		"stepSize" : {
 
 			"description" :
-			"""
+			_("""
 			The ray marching step size. This should be small enough to capture
 			the smallest details in the volume. Values which are too large will
 			cause aliasing artifacts, and values which are too small will cause
@@ -108,20 +109,20 @@ Gaffer.Metadata.registerNode(
 			size to be calculated automatically based on the resolution of the
 			VDB file. The step scale can then be used to make relative adjustments
 			on top of this automatic size.
-			""",
+			"""),
 
 		},
 
 		"stepScale" : {
 
 			"description" :
-			"""
+			_("""
 			A multiplier applied to the step size. This is most useful when the
 			step size is computed automatically. Typically stepScale would be
 			increased above 1 to give improved render times when it is known that
 			the VDB file doesn't have a lot of fine detail at the voxel level -
 			a value of 4 might be a good starting point for such a file.
-			""",
+			"""),
 
 		},
 

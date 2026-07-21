@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 
@@ -58,15 +59,15 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 
 	names = Gaffer.MetadataAlgo.annotationTemplates( userOnly = True )
 	if not names :
-		append( "/Annotate...", "user" )
+		append( "/" + _("Annotate..."), "user" )
 	else :
 		for name in names :
 			append(
-				"/Annotate/{}...".format( IECore.CamelCase.toSpaced( name ) ),
+				"/" + _("Annotate") + "/{}...".format( IECore.CamelCase.toSpaced( name ) ),
 				name
 			)
-		menuDefinition.append( "/Annotate/Divider", { "divider" : True } )
-		append( "/Annotate/User...", "user" )
+		menuDefinition.append( "/" + _("Annotate") + "/Divider", { "divider" : True } )
+		append( "/" + _("Annotate") + "/" + _("User..."), "user" )
 
 def __annotate( node, name, menu ) :
 
@@ -172,7 +173,7 @@ def __contextMenu( menuDefinition, annotation, persistent ) :
 
 	node, name = annotation
 	menuDefinition.append(
-		"/Copy",
+		"/" + _("Copy"),
 		{
 			"command" : functools.partial( __copyAnnotation, node, name ),
 			"active" : persistent
@@ -301,9 +302,9 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 
 		self._setWidget( layout )
 
-		self.__cancelButton = self._addButton( "Cancel" )
-		self.__removeButton = self._addButton( "Remove" )
-		self.__annotateButton = self._addButton( "Annotate" )
+		self.__cancelButton = self._addButton( _("Cancel") )
+		self.__removeButton = self._addButton( _("Remove") )
+		self.__annotateButton = self._addButton( _("Annotate") )
 
 		self.__updateButtonStatus()
 
@@ -367,7 +368,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 			if isinstance( graphComponent, Gaffer.ValuePlug ) and hasattr( graphComponent, "getValue" ) :
 				relativeName = graphComponent.relativeName( self.__node )
 				menuDefinition.append(
-					"/Insert Plug Value/{}".format( "/".join( menuLabel( n ) for n in relativeName.split( "." ) ) ),
+					"/" + _("Insert Plug Value") + "/{}".format( "/".join( menuLabel( n ) for n in relativeName.split( "." ) ) ),
 					{
 						"command" : functools.partial( Gaffer.WeakMethod( self.__textWidget.insertText ), f"{{{relativeName}}}" ),
 					}
@@ -379,7 +380,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 		walkPlugs( self.__node )
 
 		if not menuDefinition.size() :
-			menuDefinition.append( "/Insert Plug Value/No plugs available", { "active" : False } )
+			menuDefinition.append( "/" + _("Insert Plug Value") + "/" + _("No plugs available"), { "active" : False } )
 
 		self.__popupMenu = GafferUI.Menu( menuDefinition )
 		self.__popupMenu.popup( parent = self )

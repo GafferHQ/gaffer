@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Grade,
 
 	"description",
-	"""
+	_("""
 	Performs a simple per-channel colour grading operation
 	as follows :
 
@@ -52,97 +53,97 @@ Gaffer.Metadata.registerNode(
 
 	See the descriptions for individual plug for a slightly
 	more practical explanation of the formula.
-	""",
+	"""),
 
 	plugs = {
 
 		"blackPoint" : {
 
 			"description" :
-			"""
+			_("""
 			The input colour which is considered to be
 			"black". This colour is remapped to the
 			lift value in the output image.
-			""",
+			"""),
 
 		},
 
 		"whitePoint" : {
 
 			"description" :
-			"""
+			_("""
 			The input colour which is considered to be
 			"white". This colour is remapped to the
 			gain value in the output image.
-			""",
+			"""),
 
 		},
 
 		"lift" : {
 
 			"description" :
-			"""
+			_("""
 			The colour that input pixels at the blackPoint
 			become in the output image. This can be thought
 			of as lifting the darker values of the image.
-			""",
+			"""),
 
 		},
 
 		"gain" : {
 
 			"description" :
-			"""
+			_("""
 			The colour that input pixels at the whitePoint
 			become in the output image. This can be thought
 			of as defining the lighter values of the image.
-			""",
+			"""),
 
 		},
 
 		"multiply" : {
 
 			"description" :
-			"""
+			_("""
 			An additional multiplier on the output values.
-			""",
+			"""),
 
 		},
 
 		"offset" : {
 
 			"description" :
-			"""
+			_("""
 			An additional offset added to the output values.
-			""",
+			"""),
 
 		},
 
 		"gamma" : {
 
 			"description" :
-			"""
+			_("""
 			A gamma correction applied after all the remapping
 			defined above.
-			""",
+			"""),
 
 		},
 
 		"blackClamp" : {
 
 			"description" :
-			"""
+			_("""
 			Clamps input values so they don't go below 0.
-			""",
+			"""),
 
 		},
 
 		"whiteClamp" : {
 
 			"description" :
-			"""
+			_("""
 			Clamps output values so they don't go above 1.
-			""",
+			"""),
 
 		},
 

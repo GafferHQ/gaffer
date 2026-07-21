@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 
@@ -50,9 +51,9 @@ Gaffer.Metadata.registerNode(
 	GafferSceneUI.TransformTool,
 
 	"description",
-	"""
+	_("""
 	Base class for tools that edit object transforms.
-	""",
+	"""),
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
@@ -106,7 +107,7 @@ class _TargetTipWidget( GafferUI.Frame ) :
 	def __plugSet( self, *unused ) :
 
 		label = Gaffer.Metadata.value( self.__tool, "ui:transformTool:toolTip" ) or ""
-		self.__tipLabel.setText( label )
+		self.__tipLabel.setText( "\n".join( _( line ) for line in label.split( "\n" ) ) if label else "" )
 
 		if not label :
 			self.__innerFrame.setVisible( False )
@@ -157,7 +158,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 		for s in toolSelection :
 			if result :
 				result += "\n"
-			result += "- Transforming {0} using {1}".format( s.path(), s.editTarget().relativeName( script ) )
+			result += "- " + _("Transforming {0} using {1}").format( s.path(), s.editTarget().relativeName( script ) )
 
 		return result
 
@@ -179,7 +180,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 			editTargets = { s.editTarget() for s in toolSelection if s.editable() }
 			warnings = { s.warning() for s in toolSelection if s.warning() }
 			if not warnings and not self.__tool.selectionEditable() :
-				warnings = { "Selection not editable" }
+				warnings = { _("Selection not editable") }
 
 			# Update info row to show what we're editing
 
@@ -187,7 +188,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 				self.__infoRow.setVisible( False )
 			elif len( editTargets ) == 1 :
 				self.__infoRow.setVisible( True )
-				self.__infoLabel.setText( "Editing " )
+				self.__infoLabel.setText( _("Editing ") )
 				editTarget = Gaffer.MetadataAlgo.firstViewableNode( next( iter( editTargets ) ) )
 				numComponents = _distance(
 					editTarget.commonAncestor( toolSelection[0].scene() ),
@@ -199,7 +200,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 				self.__nameLabel.setGraphComponent( editTarget )
 			else :
 				self.__infoRow.setVisible( True )
-				self.__infoLabel.setText( "Editing {0} transforms".format( len( editTargets ) ) )
+				self.__infoLabel.setText( _("Editing {0} transforms").format( len( editTargets ) ) )
 				self.__nameLabel.setGraphComponent( None )
 
 			# Update warning row
@@ -209,7 +210,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 					self.__warningLabel.setText( next( iter( warnings ) ) )
 					self.__warningLabel.setToolTip( "" )
 				else :
-					self.__warningLabel.setText( "{} warnings".format( len( warnings ) ) )
+					self.__warningLabel.setText( _("{} warnings").format( len( warnings ) ) )
 					self.__warningLabel.setToolTip( "\n".join( "- " + w for w in warnings ) )
 				self.__warningRow.setVisible( True )
 			else :
@@ -219,7 +220,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 			self.__infoRow.setVisible( True )
 			self.__warningRow.setVisible( False )
-			self.__infoLabel.setText( "Select something to transform" )
+			self.__infoLabel.setText( _("Select something to transform") )
 			self.__nameLabel.setGraphComponent( None )
 
 	def __buttonDoubleClick( self, widget, event ) :

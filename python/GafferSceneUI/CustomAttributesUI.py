@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 import GafferScene
 import GafferSceneUI
@@ -49,14 +50,14 @@ Gaffer.Metadata.registerNode(
 	GafferScene.CustomAttributes,
 
 	"description",
-	"""
+	_("""
 	Applies arbitrary user-defined attributes to locations in the scene. Note
 	that for most common cases the StandardAttributes or renderer-specific
 	attributes nodes should be preferred, as they provide predefined sets of
 	attributes with customised user interfaces. The CustomAttributes node is
 	of most use when needing to set an attribute not supported by the
 	specialised nodes.
-	""",
+	"""),
 
 	plugs = {
 
@@ -210,7 +211,7 @@ def __addFromPathsMenuDefinition( menu, paths ) :
 
 	if not len( result.items() ) :
 		result.append(
-			"/No Attributes Found", { "active" : False }
+			"/No Attributes Found", { "active" : False, "label" : _("No Attributes Found") }
 		)
 		return result
 
@@ -267,7 +268,7 @@ def __attributesDropHandler( widget, dragDropEvent ) :
 
 	attributes = __filteredAttributes( widget, dragDropEvent )
 	if not attributes :
-		GafferUI.PopupWindow.showWarning( "Attributes added already", parent = widget )
+		GafferUI.PopupWindow.showWarning( _("Attributes added already"), parent = widget )
 
 	with Gaffer.UndoScope( widget.plugParent().ancestor( Gaffer.ScriptNode ) ) :
 		for name, value in attributes.items() :

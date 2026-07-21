@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -48,7 +49,7 @@ Gaffer.Metadata.registerNode(
 	GafferScene.ImageScatter,
 
 	"description",
-	"""
+	_("""
 	Scatters points across an image, using pixel values to control the density
 	of the points. Arbitrary image channels may be converted to additional
 	primitive variables on the points, and point width may also be driven by an
@@ -57,7 +58,7 @@ Gaffer.Metadata.registerNode(
 	> Note : Only the area of the `displayWindow` is considered. To
 	> include overscan pixels, use a Crop node to extend the display
 	> window.
-	""",
+	"""),
 
 	plugs = {
 
@@ -70,9 +71,9 @@ Gaffer.Metadata.registerNode(
 		"image" : {
 
 			"description" :
-			"""
+			_("""
 			The image used to drive the point scattering process.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 
@@ -81,9 +82,9 @@ Gaffer.Metadata.registerNode(
 		"view" : {
 
 			"description" :
-			"""
+			_("""
 			The view within the image to be used by the scattering process.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
 			"layout:divider" : True,
@@ -93,21 +94,21 @@ Gaffer.Metadata.registerNode(
 		"density" : {
 
 			"description" :
-			"""
+			_("""
 			The overall density of the scattered points, defined in points
 			per pixel.
-			"""
+			""")
 
 		},
 
 		"densityChannel" : {
 
 			"description" :
-			"""
+			_("""
 			The image channel used to modulate the density of the scattered points.
 			Black pixels will receive no points and white pixels will receive the
 			full amount as defined by the `density` plug.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 			"channelPlugValueWidget:imagePlugName" : "image",
@@ -117,7 +118,7 @@ Gaffer.Metadata.registerNode(
 		"primitiveVariables" : {
 
 			"description" :
-			"""
+			_("""
 			The image channels to be converted to primitive variables on
 			the points. The chosen channels are converted using the
 			following rules :
@@ -125,7 +126,7 @@ Gaffer.Metadata.registerNode(
 			- The main `RGB` channels are converted to a colour primitive variable called `Cs`.
 			- `<layerName>.RGB` channels are converted to a colour primitive variable called `<layerName>`.
 			- Other channels are converted to individual float primitive variables.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
@@ -134,19 +135,19 @@ Gaffer.Metadata.registerNode(
 		"width" : {
 
 			"description" :
-			"""
+			_("""
 			The width of the points. If `widthChannel` is used as well, then this acts as
 			a multiplier on the channel values.
-			"""
+			""")
 
 		},
 
 		"widthChannel" : {
 
 			"description" :
-			"""
+			_("""
 			The channel used to provide per-point width values for the points.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 			"channelPlugValueWidget:imagePlugName" : "image",
