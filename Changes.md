@@ -1,7 +1,18 @@
 1.6.x.x (relative to 1.6.21.0)
 =======
 
+Fixes
+-----
 
+- SceneWriter : Fixed bug writing shader assignments with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1`.
+- SceneReader :
+  - Fixed bug reading shader assignments with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1`.
+  - Fixed bug reading legacy attributes with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.7.1.
 
 1.6.21.0 (relative to 1.6.20.1)
 ========
