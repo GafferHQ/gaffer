@@ -6,6 +6,11 @@ Features
 
 - LightLinkingEditor : Added a new editor UI for inspecting and editing light links.
 
+Fixes
+-----
+
+- LightEditor : Fixed bug preventing the "Copy Path" menu item from appearing when the current selection contained locations not shown in the LightEditor.
+
 1.7.0.0a10 (relative to 1.7.0.0a9)
 ==========
 
