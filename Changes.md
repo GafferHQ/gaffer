@@ -1,5 +1,10 @@
-1.7.x.x (relative to 1.7.0.0a7)
+1.7.x.x (relative to 1.7.0.0a8)
 =======
+
+
+
+1.7.0.0a8 (relative to 1.7.0.0a7)
+=========
 
 Features
 --------
