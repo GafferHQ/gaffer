@@ -9,7 +9,9 @@ Features
 Improvements
 ------------
 
-- GraphEditor : Changed node context menu items to operate on multiple nodes where possible (#2783).
+- GraphEditor :
+  - Changed node context menu items to operate on multiple nodes where possible (#2783).
+  - Added drag & drop from LightEditor and AttributeEditor. Dropping a location navigates to the node that created the location.
 
 Fixes
 -----
