@@ -89,8 +89,8 @@ class LocationNameColumn : public StandardPathColumn
 
 		IE_CORE_DECLAREMEMBERPTR( LocationNameColumn )
 
-		LocationNameColumn()
-			:	StandardPathColumn( "Name", "name" )
+		LocationNameColumn( PathColumn::SizeMode sizeMode )
+			:	StandardPathColumn( "Name", "name", sizeMode )
 		{
 		}
 
@@ -377,7 +377,7 @@ void GafferSceneUIModule::bindLightEditor()
 {
 
 	IECorePython::RefCountedClass<LocationNameColumn, GafferUI::StandardPathColumn>( "_LightEditorLocationNameColumn" )
-		.def( init<>() )
+		.def( init<PathColumn::SizeMode>( arg_( "sizeMode" ) = PathColumn::Default ) )
 	;
 
 	IECorePython::RefCountedClass<MuteColumn, GafferSceneUI::Private::InspectorColumn>( "_LightEditorMuteColumn" )

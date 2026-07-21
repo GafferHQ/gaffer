@@ -554,6 +554,19 @@
 
 		},
 
+		"lightLinkingEditor" : {
+
+			"options" : {
+				"validatePixelAlignment" : True,
+			},
+
+			"ids" : [
+				"link",
+				"unlink",
+			],
+
+		},
+
 	},
 
 	"ids" : [

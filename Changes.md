@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.0.0a10)
 =======
 
+Features
+--------
+
+- LightLinkingEditor : Added a new editor UI for inspecting and editing light links.
+
 Fixes
 -----
 

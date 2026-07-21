@@ -53,6 +53,7 @@ from .LightEditor import LightEditor
 from .SetEditor import SetEditor
 from .RenderPassEditor import RenderPassEditor
 from .AttributeEditor import AttributeEditor
+from .LightLinkingEditor import LightLinkingEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
 from . import _InspectorColumn

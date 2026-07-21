@@ -65,7 +65,7 @@ def connectToEditor( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
 		editor.keyPressSignal().connect( __viewerKeyPress )
-	elif isinstance( editor, GafferSceneUI.HierarchyView ) or isinstance( editor, GafferSceneUI.LightEditor ) :
+	elif isinstance( editor, ( GafferSceneUI.HierarchyView, GafferSceneUI.LightEditor, GafferSceneUI.LightLinkingEditor ) ) :
 		editor.keyPressSignal().connect( __hierarchyViewKeyPress )
 	elif isinstance( editor, GafferUI.NodeEditor ) :
 		editor.keyPressSignal().connect( __nodeEditorKeyPress )
