@@ -11,6 +11,7 @@ Fixes
 -----
 
 - FocalBlur : Fixed issue with excess alpha near depth discontinuities. This resulted in small bright edges near silhouettes where there is a sharp change in depth.
+- LightEditor : Fixed bug preventing the "Copy Path" menu item from appearing when the current selection contained locations not shown in the LightEditor.
 
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========
