@@ -6,6 +6,21 @@ Features
 
 - RenderMan : Added support for RenderMan 27.3.
 
+Fixes
+-----
+
+- SceneWriter : Fixed bug writing shader assignments with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1` [^1].
+- SceneReader :
+  - Fixed bug reading shader assignments with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1` [^1].
+  - Fixed bug reading legacy attributes with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1` [^1].
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.0.0a14.
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
+
 1.7.0.0a7 (relative to 1.7.0.0a6)
 =========
 
