@@ -6,6 +6,11 @@ Features
 
 - QuantizePrimitiveVariables : Added new node for quantizing the values of primitive variables.
 
+Fixes
+-----
+
+- FocalBlur : Fixed issue with excess alpha near depth discontinuities. This resulted in small bright edges near silhouettes where there is a sharp change in depth.
+
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========
 
