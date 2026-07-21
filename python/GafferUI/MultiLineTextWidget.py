@@ -251,25 +251,25 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	## \todo Should this be at the Widget level?
 	# QWidgets aren't focussable by default so it's
-	# up for debate. setFocussed( True ) could make
+	# up for debate. setFocused( True ) could make
 	# them focussable, but then the question is should
-	# setFocussed( False ) make them unfocussable again?
+	# setFocused( False ) make them unfocussable again?
 	# Or maybe the first connection to keyPressSignal() should
 	# make them focussable?
 	## \todo If we don't move this to Widget, then
 	# at least make TextWidget match this interface (it
 	# currently has grabFocus())
-	def setFocussed( self, focussed ) :
+	def setFocused( self, focused ) :
 
-		if focussed == self.getFocussed() :
+		if focused == self.getFocused() :
 			return
 
-		if focussed :
+		if focused :
 			self._qtWidget().setFocus()
 		else :
 			self._qtWidget().clearFocus()
 
-	def getFocussed( self ) :
+	def getFocused( self ) :
 
 		return self._qtWidget().hasFocus()
 
@@ -408,7 +408,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			return False
 
 		if self.__dropText( event.data ) is not None :
-			self.setFocussed( True )
+			self.setFocused( True )
 			return True
 
 		return False
@@ -422,7 +422,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	def __dragLeave( self, widget, event ) :
 
-		self.setFocussed( False )
+		self.setFocused( False )
 
 	def __drop( self, widget, event ) :
 
