@@ -93,10 +93,10 @@ class CompoundEditor( GafferUI.Editor ) :
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
 
 	# Returns the editor of the specified type that the user is most likely to
-	# be interested in. If `focussedOnly` is true, only editors with the keyboard
+	# be interested in. If `focusedOnly` is true, only editors with the keyboard
 	# focus are considered. If `visibleOnly` is true, only visible editors are
 	# considered. Returns None if no suitable editor can be found.
-	def editor( self, type = GafferUI.Editor, focussedOnly = False, visibleOnly = False ) :
+	def editor( self, type = GafferUI.Editor, focusedOnly = False, visibleOnly = False ) :
 
 		candidates = []
 
@@ -112,7 +112,7 @@ class CompoundEditor( GafferUI.Editor ) :
 			windowFocusWidget = GafferUI.Widget._owner( window._qtWidget().focusWidget() )
 			hasWindowFocus = editor == windowFocusWidget or editor.isAncestorOf( windowFocusWidget )
 
-			if focussedOnly and not ( windowIsActive and hasWindowFocus ) :
+			if focusedOnly and not ( windowIsActive and hasWindowFocus ) :
 				continue
 
 			candidates.append( {
