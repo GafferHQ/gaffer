@@ -809,6 +809,11 @@ void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, 
 {
 	shader->parameters()[name] = new typename DataTraits<T>::DataType( parameterValue( usdShader, usdName, defaultValue ) );
 
+	if( !network )
+	{
+		return;
+	}
+
 	if( ShaderNetwork::Parameter input = network->input( { shaderHandle, usdName } ) )
 	{
 		if( name != usdName )
@@ -830,6 +835,8 @@ const InternedString g_BSDFParameter( "BSDF" );
 const InternedString g_castShadowParameter( "cast_shadow" );
 const InternedString g_clearcoatParameter( "clearcoat" );
 const InternedString g_clearcoatRoughnessParameter( "clearcoatRoughness" );
+const InternedString g_closure1Parameter( "closure1" );
+const InternedString g_closure2Parameter( "closure2" );
 const InternedString g_coatRoughnessParameter( "coat_roughness" );
 const InternedString g_coatWeightParameter( "coat_weight" );
 const InternedString g_colorParameter( "color" );
@@ -873,6 +880,7 @@ const InternedString g_resultParameter( "result" );
 const InternedString g_rgbParameter( "rgb" );
 const InternedString g_rotationParameter( "rotation" );
 const InternedString g_scaleParameter( "scale" );
+const InternedString g_strengthParameter( "strength" );
 const InternedString g_roughnessParameter( "roughness" );
 const InternedString g_shadowEnableParameter( "shadow:enable" );
 const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
@@ -914,7 +922,50 @@ const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
 const InternedString g_USDRayVisibilityBlindDataKey( "__USDRayVisibility" );
 
+const InternedString g_closureOutput( "closure" );
+const InternedString g_emissionOutput( "emission" );
+const InternedString g_isDiffuseRayOutput( "is_diffuse_ray" );
+const InternedString g_vectorOutput( "vector" );
+
 const string g_cyclesNamespace( "cycles:" );
+
+const std::vector<InternedString> g_lightShaderAttributeNames = {
+	"cycles:light",
+	"light"
+};
+
+const std::vector<InternedString> g_surfaceShaderAttributeNames = {
+	"cycles:surface",
+	"osl:surface",
+	"osl:shader",
+	"surface"
+};
+
+/// \todo This is copied from `IECoreCyclesPreview/Renderer`. Should
+/// it be shared in some way?
+IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
+
+	ShaderNetworkPtr result = new ShaderNetwork;
+
+	const InternedString geometryHandle = result->addShader(
+		"geometry", new Shader( "geometry" )
+	);
+	const InternedString vectorMathHandle = result->addShader(
+		"vectorMath", new Shader(
+			"vector_math", "shader",
+			{
+				{ "math_type", new StringData( "dot_product" ) }
+			}
+		)
+	);
+
+	result->addConnection( { { geometryHandle, "normal" }, { vectorMathHandle, "vector1" } } );
+	result->addConnection( { { geometryHandle, "incoming" }, { vectorMathHandle, "vector2" } } );
+	result->setOutput( { vectorMathHandle, "value" } );
+
+	return result;
+
+} ();
 
 void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
@@ -1230,6 +1281,76 @@ void convertUSDUVTextures( ShaderNetwork *network )
 	}
 }
 
+template<typename T>
+T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
+{
+	T *t = IECore::runTimeCast<T>( v );
+	if( t )
+	{
+		return t;
+	}
+
+	IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", fmt::format( "Expected {} but got {} for {} \"{}\".", T::staticTypeName(), v->typeName(), type, name.c_str() ) );
+	return nullptr;
+}
+
+template<typename T>
+const T *attribute( const IECore::CompoundObject::ObjectMap &attributes, IECore::InternedString name )
+{
+	auto it = attributes.find( name );
+	if( it == attributes.end() )
+	{
+		return nullptr;
+	}
+
+	return reportedCast<const T>( it->second.get(), "attribute", name );
+}
+
+using ShaderNetworkAttributePair = pair<IECore::InternedString, const IECoreScene::ShaderNetwork *>;
+ShaderNetworkAttributePair shaderNetworkAttribute( const vector<IECore::InternedString> &attributeNames, const IECore::CompoundObject::ObjectMap &attributes )
+{
+	for( const auto &name : attributeNames )
+	{
+		if( const auto *shaderNetwork = attribute<IECoreScene::ShaderNetwork>( attributes, name ) )
+		{
+			return { name, shaderNetwork };
+		}
+	}
+	return { IECore::InternedString(), nullptr };
+}
+
+std::pair<ShaderNetwork::Parameter, ShaderNetwork::Parameter> surfaceGlowParameters( const ShaderNetwork *shaderNetwork )
+{
+	ShaderNetwork::Parameter emissionColorParameter;
+	ShaderNetwork::Parameter emissionColorInput;
+
+	if( !shaderNetwork )
+	{
+		return { emissionColorParameter, emissionColorInput };
+	}
+
+	for( const auto &[handle, shader] : shaderNetwork->shaders() )
+	{
+		if( shader->getName() == "principled_bsdf" )
+		{
+			emissionColorParameter = { handle, "emission_color" };
+			break;
+		}
+		else if( shader->getName() == "emission" )
+		{
+			emissionColorParameter = { handle, "color" };
+			break;
+		}
+	}
+
+	if( emissionColorParameter )
+	{
+		emissionColorInput = shaderNetwork->input( emissionColorParameter );
+	}
+
+	return { emissionColorParameter, emissionColorInput };
+}
+
 } // namespace
 
 void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNetwork )
@@ -1429,4 +1550,116 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 	}
 
 	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
+}
+
+ConstCompoundObjectPtr IECoreCycles::ShaderNetworkAlgo::convertUSDMeshLightAttributes( const CompoundObject *attributes )
+{
+	const auto [lightAttribute, lightNetwork] = shaderNetworkAttribute( g_lightShaderAttributeNames, attributes->members() );
+	if( !lightNetwork )
+	{
+		return attributes;
+	}
+
+	const Shader *lightShader = lightNetwork->outputShader();
+	if( !lightShader || lightShader->getName() != "MeshLight" )
+	{
+		return attributes;
+	}
+
+	CompoundObjectPtr result = attributes->copy();
+
+	const auto [surfaceAttribute, surfaceNetwork] = [&attributes, &result]
+	{
+		const auto attr = shaderNetworkAttribute( g_surfaceShaderAttributeNames, attributes->members() );
+		if( !attr.second )
+		{
+			result->members()[g_surfaceShaderAttributeNames.front()] = std::move( g_facingRatio->copy() );
+			return ShaderNetworkAttributePair{
+				g_surfaceShaderAttributeNames.front(),
+				result->member<ShaderNetwork>( g_surfaceShaderAttributeNames.front() )
+			};
+		}
+		return attr;
+	}();
+
+	ShaderNetworkPtr newSurfaceNetwork = surfaceNetwork->copy();
+
+	ShaderPtr lightPathShader = new Shader( "light_path", "shader" );
+	const InternedString lightPathShaderHandle = newSurfaceNetwork->addShader( InternedString( "lightPath" ), std::move( lightPathShader ) );
+
+	ShaderPtr emissionShader = new Shader( "emission", "shader" );
+
+	/// \todo The first two parameter here are kind of dummies that should never have connections
+	/// to transfer from the USD to Cycles shader. Is there a clearer way to transfer these settings?
+	transferUSDLightParameters( nullptr, InternedString( "" ), lightShader, emissionShader.get() );
+
+	const float intensity = parameterValue( lightShader->parameters(), g_intensityParameter, 1.f );
+	const float exposure = parameterValue( lightShader->parameters(), g_exposureParameter, 0.f );
+	emissionShader->parameters()[g_strengthParameter] = new FloatData( intensity * pow( 2.f, exposure ) );
+
+	emissionShader->parameters().erase( g_castShadowParameter );
+	emissionShader->parameters().erase( g_exposureParameter );
+	emissionShader->parameters().erase( g_intensityParameter );
+	emissionShader->parameters().erase( g_normalizeParameter );
+	emissionShader->parameters().erase( g_useMISParameter );
+
+	DataPtr visibilityData;
+	auto visibilityIterator = emissionShader->blindData()->readable().find( g_USDRayVisibilityBlindDataKey );
+	if( visibilityIterator != emissionShader->blindData()->readable().end() )
+	{
+		visibilityData = visibilityIterator->second;
+		emissionShader->blindData()->writable().erase( visibilityIterator );
+	}
+
+	const Color3f lightColor = parameterValue( emissionShader.get(), g_colorParameter, Color3f( 1.f ) );
+
+	const auto &[emissionColorParameter, emissionColorInput] = surfaceGlowParameters( newSurfaceNetwork.get() );
+	if( emissionColorParameter )
+	{
+		const Color3f surfaceColor = emissionColorParameter ? parameterValue( surfaceNetwork->getShader( emissionColorParameter.shader ), emissionColorParameter.name, Color3f( 0.f ) ) : Color3f( 1.f );
+		emissionShader->parameters()[g_colorParameter] = new Color3fData( lightColor * surfaceColor );
+	}
+
+	const InternedString emissionShaderHandle = newSurfaceNetwork->addShader( InternedString( "emission" ), std::move( emissionShader ) );
+
+	ShaderPtr mixShader = new Shader( "mix_closure", "cycles:surface" );
+	if( visibilityData )
+	{
+		mixShader->blindData()->writable()[g_USDRayVisibilityBlindDataKey] = visibilityData;
+	}
+	const InternedString mixShaderHandle = newSurfaceNetwork->addShader( InternedString( "mixShader" ), std::move( mixShader ) );
+
+	const ShaderNetwork::Parameter originalOutputParameter = newSurfaceNetwork->getOutput();
+
+	newSurfaceNetwork->setOutput( { mixShaderHandle, g_closureOutput } );
+	newSurfaceNetwork->addConnection( { { lightPathShaderHandle, g_isDiffuseRayOutput }, { mixShaderHandle, g_facParameter } } );
+	newSurfaceNetwork->addConnection( { originalOutputParameter, { mixShaderHandle, g_closure1Parameter } } );
+	newSurfaceNetwork->addConnection( { { emissionShaderHandle, g_emissionOutput }, { mixShaderHandle, g_closure2Parameter } } );
+
+	if( emissionColorInput && lightColor != Color3f( 0.f ) )
+	{
+		ShaderNetwork::Parameter textureDestination = { emissionShaderHandle, g_colorParameter };
+		if( lightColor != Color3f( 1.f ) )
+		{
+			ShaderPtr tintShader = new Shader(
+				"vector_math",
+				"shader",
+				{
+					{ g_vector2Parameter, new Color3fData( lightColor ) },
+					{ g_mathTypeParameter, new StringData( "multiply" ) }
+				}
+			);
+			InternedString tintHandle = newSurfaceNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
+			newSurfaceNetwork->addConnection( { { tintHandle, g_vectorOutput }, { emissionShaderHandle, g_colorParameter } } );
+			textureDestination = { tintHandle, g_vector1Parameter };
+		}
+		newSurfaceNetwork->addConnection( { emissionColorInput, textureDestination } );
+	}
+
+	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( newSurfaceNetwork.get() );
+
+	result->members()[surfaceAttribute] = std::move( newSurfaceNetwork );
+	result->members().erase( lightAttribute );
+
+	return result;
 }

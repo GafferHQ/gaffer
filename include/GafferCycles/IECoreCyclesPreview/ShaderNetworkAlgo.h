@@ -96,6 +96,10 @@ IECORECYCLES_API IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreS
 /// caling `convertLight()` and `convertLightShader()`.
 IECORECYCLES_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
 
+/// Returns a new set of attributes conforming to the USD specification. `defaultSurface` is a shader
+/// network to use if there is not one assigned.
+IECORECYCLES_API IECore::ConstCompoundObjectPtr convertUSDMeshLightAttributes( const IECore::CompoundObject *attributes );
+
 } // namespace ShaderNetworkAlgo
 
 } // namespace IECoreCycles
