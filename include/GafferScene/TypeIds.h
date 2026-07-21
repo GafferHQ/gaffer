@@ -202,6 +202,7 @@ enum TypeId
 	PrimitiveQueryTypeId = 120157,
 	SceneStatsTypeId = 120158,
 	CopyObjectTypeId = 120159,
+	QuantizePrimitiveVariablesTypeId = 120160,
 
 	LastTypeId = 120999
 };

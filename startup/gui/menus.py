@@ -279,6 +279,7 @@ nodeMenu.append( "/Scene/Object/Copy Primitive Variables", GafferScene.CopyPrimi
 nodeMenu.append( "/Scene/Object/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables, searchText = "DeletePrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Shuffle Primitive Variables", GafferScene.ShufflePrimitiveVariables, searchText = "ShufflePrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Resample Primitive Variables", GafferScene.ResamplePrimitiveVariables, searchText = "ResamplePrimitiveVariables" )
+nodeMenu.append( "/Scene/Object/Quantize Primitive Variables", GafferScene.QuantizePrimitiveVariables, searchText = "QuantizePrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Collect Primitive Variables", GafferScene.CollectPrimitiveVariables, searchText = "CollectPrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Primitive Variable Tweaks", GafferScene.PrimitiveVariableTweaks, searchText = "PrimitiveVariableTweaks" )
 nodeMenu.append( "/Scene/Object/Orientation", GafferScene.Orientation )
