@@ -187,7 +187,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if section == "Favourites" :
 			optionLabel = Gaffer.Metadata.value( "option:" + optionName, "label" )
 		else :
-			optionLabel = Gaffer.Metadata.value( "option:" + optionName, f"columnLayout:label" ) or Gaffer.Metadata.value( "option:" + optionName, "label" )
+			optionLabel = Gaffer.Metadata.value( "option:" + optionName, "columnLayout:label" ) or Gaffer.Metadata.value( "option:" + optionName, "label" )
 
 		if not columnName :
 			columnName = optionLabel or optionName.split( ":" )[-1]
