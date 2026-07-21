@@ -369,10 +369,26 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.x.x (relative to 1.6.21.0)
+1.6.x.x (relative to 1.6.21.1)
 =======
 
 
+
+1.6.21.1 (relative to 1.6.21.0)
+========
+
+Fixes
+-----
+
+- SceneWriter : Fixed bug writing shader assignments with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1`.
+- SceneReader :
+  - Fixed bug reading shader assignments with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1`.
+  - Fixed bug reading legacy attributes with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.7.1.
 
 1.6.21.0 (relative to 1.6.20.1)
 ========
