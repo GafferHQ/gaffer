@@ -423,5 +423,46 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
 			self.assertEqual( mh.messages[0].message, "Prototype `/instancer/prototypes/missing` does not exist for instancer `/instancer`." )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testFlattenWithPrimitivePrototype( self ) :
+
+		prototype = GafferScene.Sphere()
+
+		prototypeGroup = GafferScene.Group()
+		prototypeGroup["name"].setValue( "prototypes" )
+		prototypeGroup["in"][0].setInput( prototype["out"] )
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "prototypes/sphere" ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		pointInstancerNode = GafferScene.ObjectToScene()
+		pointInstancerNode["object"].setValue( pointInstancer )
+		pointInstancerNode["name"].setValue( "instancer" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( pointInstancerNode["out"] )
+		parent["children"][0].setInput( prototypeGroup["out"] )
+		parent["parent"].setValue( "/instancer" )
+
+		with Gaffer.Context() as context :
+
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/instancer" )
+			pointInstancer = parent["out"]["object"].getValue()
+			self.assertEqual( pointInstancer, pointInstancerNode["object"].getValue() )
+
+			flattened = GafferScene.Private.PointInstancerAlgo.flatten(
+				pointInstancer, GafferScene.Private.RendererAlgo.RenderOptions(), parent["out"]
+			)
+
+			self.assertTrue( isinstance( flattened, IECoreScene.PointInstancer ) )
+			self.assertTrue( flattened.arePrimitiveVariablesValid() )
+			self.assertEqual( flattened.numPoints, 1 )
+			self.assertEqual(
+				list( flattened["prototypeRoots"].data ),
+				[ "prototypes/sphere" ]
+			)
+
 if __name__ == "__main__":
 	unittest.main()

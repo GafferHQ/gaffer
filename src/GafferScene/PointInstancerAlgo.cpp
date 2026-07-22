@@ -241,7 +241,7 @@ FlattenedPrototype flattenedPrototype( const Private::RendererAlgo::RenderOption
 			ScenePlug::ScenePath relativePath( path.begin() + fullRootPath.size(), path.end() );
 			// Note : `PrototypeLocation::index` is filled later.
 			return PrototypeLocation{
-				rootPath + ScenePlug::pathToString( relativePath ),
+				relativePath.size() ? rootPath + ScenePlug::pathToString( relativePath ) : rootPath,
 				flattenedTransform( scene, path, fullRootPath.size() )
 			};
 		},
