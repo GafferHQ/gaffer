@@ -342,7 +342,11 @@ IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECor
 	const size_t hiddenPointOffset = std::numeric_limits<size_t>::max(); // Sentinel to indicate a point has been hidden.
 	for( size_t pointIndex = 0; pointIndex < prototypeIndex.size(); ++pointIndex )
 	{
-		if( visibilityQuery.visible( pointIndex ) )
+		if(
+			prototypeIndex[pointIndex] >= 0 &&
+			(size_t)prototypeIndex[pointIndex] < flattenedPrototypes.size() &&
+			visibilityQuery.visible( pointIndex )
+		)
 		{
 			pointOffsets[pointIndex] = numFlattenedPoints;
 			numFlattenedPoints += flattenedPrototypes[prototypeIndex[pointIndex]].size();
