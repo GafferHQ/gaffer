@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
 
 class _ViewableChildrenPathFilter( Gaffer.PathFilter ) :
 
@@ -221,21 +222,29 @@ class GraphEditor( GafferUI.Editor ) :
 		__append( destinationPlug, "Destination Node" )
 
 	__nodeContextMenuSignal = Gaffer.Signals.Signal3()
+	__multiNodeContextMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
 	# node in the graph. Slots may connect to this signal to edit the
-	# menu definition on the fly - the signature for the signal is
-	# ( graphEditor, node, menuDefinition ) and the menu definition should just be
-	# edited in place. Typically you would add slots to this signal
-	# as part of a startup script.
-	@classmethod
-	def nodeContextMenuSignal( cls ) :
+	# menu definition on the fly. If `multiNode` is `False`, the signature
+	# for the signal is ( graphEditor, node, menuDefinition ).
+	# Otherwise the signature is ( graphEditor, nodeList, menuDefinition ).
+	# The menu is built by first emitting the multi-node signal then the
+	# single node signal with the same `menuDefinition`.
+	# For both, the menu definition should just be edited in place. Typically
+	# you would add slots to this signal as part of a startup script.
 
+	# \todo Deprecate the single node signal in version `1.8` and remove it in `1.9`.
+	@classmethod
+	def nodeContextMenuSignal( cls, multiNode = False ) :
+
+		if multiNode :
+			return cls.__multiNodeContextMenuSignal
 		return cls.__nodeContextMenuSignal
 
 	## May be used from a slot attached to nodeContextMenuSignal() to install some
 	# standard menu items for modifying the connection visibility for a node.
 	@classmethod
-	def appendConnectionVisibilityMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendConnectionVisibilityMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
 		def plugDirectionsWalk( gadget ) :
 
@@ -248,86 +257,98 @@ class GraphEditor( GafferUI.Editor ) :
 
 			return result
 
-		plugDirections = plugDirectionsWalk( graphEditor.graphGadget().nodeGadget( node ) )
+		nodePlugDirections = [ plugDirectionsWalk( graphEditor.graphGadget().nodeGadget( n ) ) for n in nodeList ]
+		plugDirections = set().union( *nodePlugDirections )
 		if not plugDirections :
 			return
 
-		readOnly = Gaffer.MetadataAlgo.readOnly( node )
+		readOnly = any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList )
+		allNodesHavePlugs = all( len( n ) > 0 for n in nodePlugDirections )
+		active = not readOnly and allNodesHavePlugs
 
 		menuDefinition.append( "/ConnectionVisibilityDivider", { "divider" : True } )
 
 		if Gaffer.Plug.Direction.In in plugDirections :
+			value = sole( cls.__getNodeInputConnectionsVisible( graphEditor.graphGadget(), n ) for n in nodeList )
 			menuDefinition.append(
 				"/Connections/Show Input Connections",
 				{
-					"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
-					"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
-					"active" : not readOnly,
+					"checkBox" : ( value or False ) and active,
+					"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), nodeList ),
+					"active" : active,
 				}
 			)
 
 		if Gaffer.Plug.Direction.Out in plugDirections :
+			value = sole( cls.__getNodeOutputConnectionsVisible( graphEditor.graphGadget(), n ) for n in nodeList )
 			menuDefinition.append(
 				"/Connections/Show Output Connections",
 				{
-					"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
-					"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
-					"active" : not readOnly
+					"checkBox" : ( value or False ) and active,
+					"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), nodeList ),
+					"active" : active,
 				}
 			)
 
 		if Gaffer.Plug.Direction.In in plugDirections :
+			value = sole( cls.__getNoduleLabelsVisible( n, "input" ) for n in nodeList )
 			menuDefinition.append(
 				"/Connections/Show Input Labels",
 				{
-					"checkBox" : functools.partial( cls.__getNoduleLabelsVisible, node, "input" ),
-					"command" : functools.partial( cls.__setNoduleLabelsVisible, node, "input" ),
-					"active" : not readOnly,
+					"checkBox" : ( value or False ) and active,
+					"command" : functools.partial( cls.__setNoduleLabelsVisible, nodeList, "input" ),
+					"active" : active,
 				}
 			)
 
 		if Gaffer.Plug.Direction.Out in plugDirections :
+			value = sole( cls.__getNoduleLabelsVisible( n, "output" ) for n in nodeList )
 			menuDefinition.append(
 				"/Connections/Show Output Labels",
 				{
-					"checkBox" : functools.partial( cls.__getNoduleLabelsVisible, node, "output" ),
-					"command" : functools.partial( cls.__setNoduleLabelsVisible, node, "output" ),
-					"active" : not readOnly,
+					"checkBox" : ( value or False ) and active,
+					"command" : functools.partial( cls.__setNoduleLabelsVisible, nodeList, "output" ),
+					"active" : active,
 				}
 			)
 
 	## May be used from a slot attached to nodeContextMenuSignal() to install a
 	# standard menu item for modifying the enabled state of a node.
 	@classmethod
-	def appendEnabledPlugMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendEnabledPlugMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
-		enabledPlug = cls.__enabledPlugForEditing( node )
-		if enabledPlug is not None :
+		enabledPlugs = [ cls.__enabledPlugForEditing( node ) for node in nodeList ]
+		if any( p is not None for p in enabledPlugs ) :
+			value = sole( p.getValue() for p in enabledPlugs if p is not None )
+			active = all( enabledPlugs ) and all( p.settable() and not Gaffer.MetadataAlgo.readOnly( p ) for p in enabledPlugs )
 			menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 			menuDefinition.append(
 				"/Enabled",
 				{
-					"command" : functools.partial( cls.__setValue, enabledPlug ),
-					"checkBox" : enabledPlug.getValue(),
-					"active" : enabledPlug.settable() and not Gaffer.MetadataAlgo.readOnly( enabledPlug )
+					"command" : functools.partial( cls.__setValue, enabledPlugs ),
+					"checkBox" : ( value or False ) and active,
+					"active" : active
 				}
 			)
 
 	@classmethod
-	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendContentsMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
 		menuDefinition.append( "/FocusDivider", { "divider" : True } )
 		menuDefinition.append( "/Focus", {
-			"command" : functools.partial( graphEditor.scriptNode().setFocus, node ),
-			"active" : not node.isSame( graphEditor.scriptNode().getFocus() ),
+			"command" : functools.partial( graphEditor.scriptNode().setFocus, nodeList[0] ),
+			"active" : len( nodeList ) == 1 and not nodeList[0].isSame( graphEditor.scriptNode().getFocus() ),
 			"shortCut" : "Ctrl+`"
 		} )
 
-		if not GraphEditor.__childrenViewable( node ) :
+		if not any( GraphEditor.__childrenViewable( n ) for n in nodeList ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
-		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
+		menuDefinition.append( "/Show Contents...", {
+			"command" : functools.partial( cls.__acquireNodes, nodeList ),
+			"active" : all( GraphEditor.__childrenViewable( n ) for n in nodeList )
+		} )
 
 	__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 	## Returns a signal which is emitted whenever a node is double clicked.
@@ -430,8 +451,13 @@ class GraphEditor( GafferUI.Editor ) :
 					if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
 						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget )
 					if nodeGadget is not None :
+						selection = self.scriptNode().selection()
+						nodeList = list( selection ) if nodeGadget.node() in selection else [nodeGadget.node()]
+						self.nodeContextMenuSignal( True )( self, nodeList, overrideMenuDefinition )
+
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
-						overrideMenuTitle = nodeGadget.node().getName()
+
+						overrideMenuTitle = ( "{} Nodes".format( len( nodeList ) ) ) if len( nodeList ) > 1 else nodeList[0].getName()
 
 				if len( overrideMenuDefinition.items() ) :
 					menuDefinition = overrideMenuDefinition
@@ -788,10 +814,11 @@ class GraphEditor( GafferUI.Editor ) :
 		return not graphGadget.getNodeInputConnectionsMinimised( node )
 
 	@classmethod
-	def __setNodeInputConnectionsVisible( cls, graphGadget, node, value ) :
+	def __setNodeInputConnectionsVisible( cls, graphGadget, nodeList, value ) :
 
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			graphGadget.setNodeInputConnectionsMinimised( node, not value )
+		with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
+			for node in nodeList :
+				graphGadget.setNodeInputConnectionsMinimised( node, not value )
 
 	@classmethod
 	def __getNoduleLabelsVisible( cls, node, direction ) :
@@ -799,10 +826,11 @@ class GraphEditor( GafferUI.Editor ) :
 		return Gaffer.Metadata.value( node, f"nodeGadget:{direction}NoduleLabelsVisible" ) or False
 
 	@classmethod
-	def __setNoduleLabelsVisible( cls, node, direction, value ) :
+	def __setNoduleLabelsVisible( cls, nodeList, direction, value ) :
 
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.Metadata.registerValue( node, f"nodeGadget:{direction}NoduleLabelsVisible", value )
+		with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
+			for node in nodeList :
+				Gaffer.Metadata.registerValue( node, f"nodeGadget:{direction}NoduleLabelsVisible", value )
 
 	@classmethod
 	def __getNodeOutputConnectionsVisible( cls, graphGadget, node ) :
@@ -810,16 +838,24 @@ class GraphEditor( GafferUI.Editor ) :
 		return not graphGadget.getNodeOutputConnectionsMinimised( node )
 
 	@classmethod
-	def __setNodeOutputConnectionsVisible( cls, graphGadget, node, value ) :
+	def __setNodeOutputConnectionsVisible( cls, graphGadget, nodeList, value ) :
 
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			graphGadget.setNodeOutputConnectionsMinimised( node, not value )
+		with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
+			for node in nodeList :
+				graphGadget.setNodeOutputConnectionsMinimised( node, not value )
 
 	@classmethod
-	def __setValue( cls, plug, value ) :
+	def __setValue( cls, plugs, value ) :
 
-		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-			plug.setValue( value )
+		with Gaffer.UndoScope( plugs[0].ancestor( Gaffer.ScriptNode ) ) :
+			for p in plugs :
+				p.setValue( value )
+
+	@classmethod
+	def __acquireNodes( cls, nodeList ) :
+
+		for n in nodeList :
+			cls.acquire( n )
 
 	@staticmethod
 	def __childrenViewable( node ) :

@@ -419,31 +419,39 @@ GafferUI.NodeGadget.registerNodeGadget( GafferScene.Cryptomatte, __nodeGadget )
 # GraphEditor context menu
 ##########################################################################
 
-def __selectAffected( node, context ) :
+def __selectAffected( nodeList, context ) :
 
-	if not isinstance( node, GafferScene.Cryptomatte ) :
-		return
+	pathMatcherResult = IECore.PathMatcher()
 
-	scene = node["manifestScene"]
+	for node in nodeList :
 
-	with context :
-		pathMatcher = IECore.PathMatcher()
-		for path in node["matteNames"].getValue() :
-			if path[0] != '<' and path[-1] != '>' :
-				pathMatcher.addPath( path )
+		if not isinstance( node, GafferScene.Cryptomatte ) :
+			continue
 
-		pathMatcherResult = IECore.PathMatcher()
-		GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, pathMatcherResult )
+		scene = node["manifestScene"]
+
+		with context :
+			pathMatcher = IECore.PathMatcher()
+			for path in node["matteNames"].getValue() :
+				if path[0] != '<' and path[-1] != '>' :
+					pathMatcher.addPath( path )
+
+			nodeMatches = IECore.PathMatcher()
+			GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, nodeMatches )
+			pathMatcherResult.addPaths( nodeMatches )
 
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( node.scriptNode(), pathMatcherResult )
 
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 
-	if not isinstance( node, GafferScene.Cryptomatte ) :
+	if not any( isinstance( n, GafferScene.Cryptomatte ) for n in nodeList ) :
 		return
 
 	menuDefinition.append( "/CryptomatteDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.context() ) } )
+	menuDefinition.append( "/Select Affected Objects", {
+		"command" : functools.partial( __selectAffected, nodeList, graphEditor.context() ),
+		"active" : all( isinstance( n, GafferScene.Cryptomatte ) for n in nodeList )
+	} )
 
 ##########################################################################
 # NodeEditor tool menu

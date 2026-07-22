@@ -6,10 +6,21 @@ Features
 
 - QuantizePrimitiveVariables : Added new node for quantizing the values of primitive variables.
 
+Improvements
+------------
+
+- GraphEditor : Changed node context menu items to operate on multiple nodes where possible (#2783).
+
 Fixes
 -----
 
 - FocalBlur : Fixed issue with excess alpha near depth discontinuities. This resulted in small bright edges near silhouettes where there is a sharp change in depth.
+- Filter : Fixed bug with `Select affected objects` where only the relevant locations from one scene connected to the filter would be included in the selection instead of from all scenes connected to the filter.
+
+API
+---
+
+- GraphEditor : Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
 
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========
@@ -75,6 +86,7 @@ Build
 
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 [^2]: Improvement to a feature introduced in `1.7.0.0a3`, so should be omitted from final `1.7.0.0` release notes.
+
 
 1.7.0.0a6 (relative to 1.7.0.0a5)
 =========

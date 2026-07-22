@@ -43,16 +43,17 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
 
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 
 	def append( menuPath, name ) :
 
 		menuDefinition.append(
 			menuPath,
 			{
-				"command" : functools.partial( __annotate, node, name ),
-				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+				"command" : functools.partial( __annotate, nodeList, name ),
+				"active" : not any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList ),
 			}
 		)
 
@@ -68,9 +69,9 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		menuDefinition.append( "/Annotate/Divider", { "divider" : True } )
 		append( "/Annotate/User...", "user" )
 
-def __annotate( node, name, menu ) :
+def __annotate( nodeList, name, menu ) :
 
-	dialogue = __AnnotationsDialogue( node, name )
+	dialogue = __AnnotationsDialogue( nodeList, name )
 	dialogue.wait( parentWindow = menu.ancestor( GafferUI.Window ) )
 
 # A signal emitted when a popup menu for an annotation is about to be shown.
@@ -119,7 +120,7 @@ def __buttonDoubleClick( editorWeakRef, annotationsGadget, event ) :
 
 		node, name = annotation
 
-		__annotate( node, name, editorWeakRef() )
+		__annotate( [node], name, editorWeakRef() )
 
 		return True
 
@@ -260,15 +261,15 @@ class _AnnotationsCompleter( GafferUI.CodeWidget.Completer ) :
 
 class __AnnotationsDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, node, name ) :
+	def __init__( self, nodeList, name ) :
 
 		GafferUI.Dialogue.__init__( self, "Annotate" )
 
-		self.__node = node
+		self.__nodeList = nodeList
 		self.__name = name
 
 		template = Gaffer.MetadataAlgo.getAnnotationTemplate( name )
-		annotation = Gaffer.MetadataAlgo.getAnnotation( node, name ) or template
+		annotation = Gaffer.MetadataAlgo.getAnnotation( self.__nodeList[-1], self.__name ) or template
 
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as layout :
 
@@ -276,8 +277,8 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 				text = annotation.text() if annotation else "",
 				placeholderText = "Tip : Use {plugName} to include plug values",
 			)
-			self.__textWidget.setHighlighter( _AnnotationsHighlighter( node ) )
-			self.__textWidget.setCompleter( _AnnotationsCompleter( node ) )
+			self.__textWidget.setHighlighter( _AnnotationsHighlighter( nodeList[-1] ) )
+			self.__textWidget.setCompleter( _AnnotationsCompleter( nodeList[-1] ) )
 			self.__textWidget.setWrapMode( self.__textWidget.WrapMode.WordOrCharacter )
 			self.__textWidget.textChangedSignal().connect(
 				Gaffer.WeakMethod( self.__updateButtonStatus )
@@ -313,18 +314,20 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 		if button is self.__cancelButton or button is None :
 			return
 
-		with Gaffer.UndoScope( self.__node.scriptNode() ) :
+		with Gaffer.UndoScope( self.__nodeList[0].scriptNode() ) :
 			if button is self.__removeButton :
-				Gaffer.MetadataAlgo.removeAnnotation( self.__node, self.__name )
+				for node in self.__nodeList :
+					Gaffer.MetadataAlgo.removeAnnotation( node, self.__name )
 			else :
-				Gaffer.MetadataAlgo.addAnnotation(
-					self.__node, self.__name,
-					self.__makeAnnotation()
-				)
+				for node in self.__nodeList :
+					Gaffer.MetadataAlgo.addAnnotation(
+						node, self.__name,
+						self.__makeAnnotation()
+					)
 
 	def __updateButtonStatus( self, *unused ) :
 
-		existingAnnotation = Gaffer.MetadataAlgo.getAnnotation( self.__node, self.__name )
+		existingAnnotation = Gaffer.MetadataAlgo.getAnnotation( self.__nodeList[-1], self.__name )
 		newAnnotation = self.__makeAnnotation()
 
 		self.__cancelButton.setEnabled( newAnnotation != existingAnnotation )
@@ -365,7 +368,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 				return
 
 			if isinstance( graphComponent, Gaffer.ValuePlug ) and hasattr( graphComponent, "getValue" ) :
-				relativeName = graphComponent.relativeName( self.__node )
+				relativeName = graphComponent.relativeName( self.__nodeList[-1] )
 				menuDefinition.append(
 					"/Insert Plug Value/{}".format( "/".join( menuLabel( n ) for n in relativeName.split( "." ) ) ),
 					{
@@ -376,7 +379,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 				for plug in Gaffer.Plug.InputRange( graphComponent ) :
 					walkPlugs( plug )
 
-		walkPlugs( self.__node )
+		walkPlugs( self.__nodeList[-1] )
 
 		if not menuDefinition.size() :
 			menuDefinition.append( "/Insert Plug Value/No plugs available", { "active" : False } )

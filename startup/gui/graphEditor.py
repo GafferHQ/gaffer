@@ -97,20 +97,24 @@ def __nodeDoubleClick( graphEditor, node ) :
 
 GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick )
 
-def __nodeContextMenu( graphEditor, node, menuDefinition ) :
+def __acquireNodeEditors( nodeList ) :
 
-	menuDefinition.append( "/Edit...", { "command" : functools.partial( GafferUI.NodeEditor.acquire, node, floating = True ) } )
+	for n in nodeList :
+		GafferUI.NodeEditor.acquire( n, floating = True )
 
-	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.AnnotationsUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferSceneUI.CryptomatteUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
+def __nodeContextMenu( graphEditor, nodeList, menuDefinition ) :
 
-GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu )
+	menuDefinition.append( "/Edit...", { "command" : functools.partial( __acquireNodeEditors, nodeList ) } )
+	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.AnnotationsUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferSceneUI.CryptomatteUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+
+GafferUI.GraphEditor.nodeContextMenuSignal( True ).connect( __nodeContextMenu )
 
 def __plugContextMenu( graphEditor, plug, menuDefinition ) :
 
