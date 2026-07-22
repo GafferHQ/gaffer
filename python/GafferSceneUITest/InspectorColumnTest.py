@@ -791,5 +791,47 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		with self.assertRaises( IECore.Cancelled ) :
 			column.cellData( path, canceller )
 
+	def testInvalidPathsInSelection( self ) :
+
+		a = Gaffer.ApplicationRoot()
+		s = Gaffer.ScriptNode()
+		a["scripts"]["testScript"] = s
+		self.__testScene( s )
+
+		w = GafferUI.PathListingWidget(
+			GafferScene.ScenePath( s["parent"]["out"], Gaffer.Context(), "/" ),
+			columns = [
+				GafferSceneUI.Private.InspectorColumn( GafferSceneUI.Private.AttributeInspector( s["parent"]["out"], None, "test:string" ) ),
+			],
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+
+		e = InspectorColumnTest.TestEditor( s )
+		e.addPathListing( w )
+
+		# Ensure a selection that contains paths not represented by this
+		# PathListingWidget does not error, and instead only returns data
+		# for the valid paths.
+
+		w.setSelection( [ IECore.PathMatcher( [ "/sphere", "/notAPath" ] ) ] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+
+		self.assertEqual(
+			GafferSceneUI._InspectorColumn._dataFromPathListingOrReason( w ),
+			IECore.StringData( "sphere" )
+		)
+
+		# A selection that only contains paths not represented by this
+		# PathListingWidget should be treated as no selection.
+
+		w.setSelection( [ IECore.PathMatcher( [ "/notAPath" ] ) ] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+
+		self.assertEqual(
+			GafferSceneUI._InspectorColumn._dataFromPathListingOrReason( w ),
+			"No selection"
+		)
+
 if __name__ == "__main__":
 	unittest.main()

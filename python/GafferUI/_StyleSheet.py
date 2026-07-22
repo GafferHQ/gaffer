@@ -1309,6 +1309,7 @@ _styleSheet = string.Template(
 	*[gafferClass="GafferSceneUI.AttributeEditor"] QTreeView::item,
 	*[gafferClass="GafferSceneUI.SceneInspector"] QTreeView::item,
 	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.LightLinkingEditor"] QTreeView::item,
 	*[gafferClass="GafferSceneUI.SetEditor"] QTreeView::item {
 		height: 20px;
 		padding-top: 0px;

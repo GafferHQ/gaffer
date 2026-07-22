@@ -974,10 +974,9 @@ def __orderedSelection( pathListing ) :
 		for path in selection.paths() :
 			rows.setdefault( path, [] ).append( column )
 
-	matrix = []
-	orderedPaths = pathListing.visualOrder( IECore.PathMatcher( list( rows.keys() ) ) )
-	for path, columns in sorted( rows.items(), key = lambda item : orderedPaths.index( item[0] ) ) :
-		matrix.append( ( path, columns ) )
+	matrix = [
+		( path, rows[path] ) for path in pathListing.visualOrder( IECore.PathMatcher( list( rows.keys() ) ) )
+	]
 
 	return matrix
 
