@@ -510,5 +510,30 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 				[ imath.V3f( 1 ) ]
 			)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testFlattenWithoutPrototypes( self ) :
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+
+		pointInstancerNode = GafferScene.ObjectToScene()
+		pointInstancerNode["object"].setValue( pointInstancer )
+		pointInstancerNode["name"].setValue( "instancer" )
+
+		with Gaffer.Context() as context :
+
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/instancer" )
+			pointInstancer = pointInstancerNode["out"]["object"].getValue()
+
+			flattened = GafferScene.Private.PointInstancerAlgo.flatten(
+				pointInstancer, GafferScene.Private.RendererAlgo.RenderOptions(), pointInstancerNode["out"]
+			)
+
+			self.assertTrue( isinstance( flattened, IECoreScene.PointInstancer ) )
+			self.assertTrue( flattened.arePrimitiveVariablesValid() )
+			self.assertEqual( flattened.numPoints, 1 )
+			self.assertNotIn( "prototypeRoots", flattened )
+			self.assertEqual( flattened, pointInstancer )
+
 if __name__ == "__main__":
 	unittest.main()
