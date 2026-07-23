@@ -975,6 +975,56 @@ class SceneView::FPS : public Signals::Trackable
 
 };
 
+class SceneView::FrameTime : public Signals::Trackable
+{
+
+	public :
+
+		FrameTime( SceneView *view )
+			:	m_view( view ), m_gadget( new FPSGadget( Imath::V3f( 5.0f, 50.0f, 0.0f ), true ) )
+		{
+			ValuePlugPtr plug = new ValuePlug( "frameTime" );
+			view->addChild( plug );
+
+			plug->addChild( new BoolPlug( "visible", Plug::In, false ) );
+
+			view->viewportGadget()->setChild( "__frameTime", m_gadget );
+
+			view->plugDirtiedSignal().connect( boost::bind( &FrameTime::plugDirtied, this, ::_1 ) );
+
+			update();
+		}
+
+		Gaffer::ValuePlug *plug()
+		{
+			return m_view->getChild<Gaffer::ValuePlug>( "frameTime" );
+		}
+
+		const Gaffer::ValuePlug *plug() const
+		{
+			return m_view->getChild<Gaffer::ValuePlug>( "frameTime" );
+		}
+
+	private :
+
+		void plugDirtied( Gaffer::Plug *plug )
+		{
+			if( plug == this->plug() )
+			{
+				update();
+			}
+		}
+
+		void update()
+		{
+			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
+		}
+
+		SceneView *m_view;
+		FPSGadgetPtr m_gadget;
+
+};
+
 //////////////////////////////////////////////////////////////////////////
 // SceneView::Camera implementation
 //////////////////////////////////////////////////////////////////////////
@@ -1979,6 +2029,7 @@ SceneView::SceneView( ScriptNodePtr scriptNode )
 	new Grid( this );
 	m_gnomon.reset( new Gnomon( this ) );
 	m_fps.reset( new FPS( this ) );
+	m_frameTime.reset( new FrameTime( this ) );
 
 	[[maybe_unused]] auto displayTransform = new DisplayTransform( this );
 	assert( displayTransform->parent() == this );

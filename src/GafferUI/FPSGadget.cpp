@@ -45,8 +45,8 @@ using namespace GafferUI;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FPSGadget );
 
-FPSGadget::FPSGadget( Imath::V3f defaultPosition )
-	:	Gadget( defaultName<FPSGadget>() )
+FPSGadget::FPSGadget( Imath::V3f defaultPosition, bool showFrameTime )
+	:	Gadget( defaultName<FPSGadget>() ), m_showFrameTime( showFrameTime )
 {
 	Imath::M44f m;
 	m.setTranslation( defaultPosition );
@@ -98,13 +98,38 @@ void FPSGadget::renderLayer( Gadget::Layer layer, const Style *style, Gadget::Re
 	// size of m_timeBuffer.
 	float averageFrameTime = elapsed / ( ( m_timeBuffer.size() - 1 ) * 1000000.0f );
 
+	float standardDeviation = 0.0f;
+	if( m_showFrameTime )
+	{
+		for( auto it = m_timeBuffer.begin(); ; it++ )
+		{
+			auto nIt = next( it );
+			if( nIt == m_timeBuffer.end() )
+			{
+				break;
+			}
+
+			float frameTime = std::chrono::duration_cast< std::chrono::microseconds >( *nIt - *it ).count() / 1000000.0f;
+			standardDeviation += sqrtf( ( frameTime - averageFrameTime ) * ( frameTime - averageFrameTime ) );
+		}
+
+		standardDeviation /= ( m_timeBuffer.size() - 1 );
+	}
+
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 	ViewportGadget::RasterScope rasterScope( viewportGadget );
 
 	glMultMatrixf( getTransform().getValue() );
 	glScalef( 8.0f, -8.0f, 8.0f );
 
-	style->renderText( Style::LabelText, fmt::format( "{:.1f} FPS", ( 1.0f / averageFrameTime ) ) );
+	if( m_showFrameTime )
+	{
+		style->renderText( Style::LabelText, fmt::format( "{:.1f} ms, {:.1f} stddev", 1000.0f * averageFrameTime, 1000.0f * standardDeviation ) );
+	}
+	else
+	{
+		style->renderText( Style::LabelText, fmt::format( "{:.1f} FPS", ( 1.0f / averageFrameTime ) ) );
+	}
 }
 
 unsigned FPSGadget::layerMask() const
