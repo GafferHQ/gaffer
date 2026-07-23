@@ -10,6 +10,7 @@ Fixes
 -----
 
 - LightEditor : Fixed bug preventing the "Copy Path" menu item from appearing when the current selection contained locations not shown in the LightEditor.
+- PathListingWidget : Paths dragged from a PathListingWidget now preserve the order in which they are displayed.
 
 1.7.0.0a10 (relative to 1.7.0.0a9)
 ==========
