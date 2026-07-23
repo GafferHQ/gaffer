@@ -775,7 +775,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if selection[0].match( str( path ) ) & IECore.PathMatcher.Result.ExactMatch :
 			GafferUI.Pointer.setCurrent( self.__dragPointer )
-			return IECore.StringVectorData( selection[0].paths() )
+			return IECore.StringVectorData( self.visualOrder( selection[0] ) )
 
 		index = self.__indexAt( event.line.p0 )
 		if index is not None :
