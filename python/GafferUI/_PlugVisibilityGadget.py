@@ -66,6 +66,21 @@ def __nodeHasVisibilityGadget( node ) :
 				return True
 	return False
 
+def __hidablePlugs( node ) :
+
+	result = []
+	for plug in Gaffer.Plug.RecursiveRange( node ) :
+		if (
+			not __hasVisibilityGadget( plug ) or
+			not Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) or
+			Gaffer.Metadata.value( plug, "nodule:type" ) == "" or
+			Gaffer.Metadata.value( plug, "noduleLayout:visible" ) == False
+		) :
+			continue
+		result.append( plug )
+
+	return result
+
 def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	if not __hasVisibilityGadget( plug ) or not Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) :
@@ -132,7 +147,8 @@ def __hideUnconnected( graphGadget, nodeList ) :
 def __canHideUnconnectedPlugs( nodeList ) :
 
 	nodeReadOnly = any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList )
-	plugReadOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for n in nodeList for p in Gaffer.Plug.RecursiveRange( n ) )
+	hidablePlugs = [ p for n in nodeList for p in __hidablePlugs( n ) ]
+	plugReadOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for p in hidablePlugs )
 
 	return not nodeReadOnly and not plugReadOnly and all( __nodeHasVisibilityGadget( n ) for n in nodeList )
 
