@@ -50,7 +50,7 @@ class GAFFERTEST_API MultiplyNode : public Gaffer::ComputeNode
 
 	public :
 
-		MultiplyNode( const std::string &name=defaultName<MultiplyNode>(), bool brokenAffects = false );
+		MultiplyNode( const std::string &name=defaultName<MultiplyNode>(), bool brokenAffects = false, bool serialiseThrows = false );
 		~MultiplyNode() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferTest::MultiplyNode, MultiplyNodeTypeId, Gaffer::ComputeNode );
@@ -66,6 +66,8 @@ class GAFFERTEST_API MultiplyNode : public Gaffer::ComputeNode
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
+		void checkSerialise() const;
+
 	protected :
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -74,6 +76,7 @@ class GAFFERTEST_API MultiplyNode : public Gaffer::ComputeNode
 	private :
 
 		bool m_brokenAffects;
+		bool m_serialiseThrows;
 		static size_t g_firstPlugIndex;
 
 };

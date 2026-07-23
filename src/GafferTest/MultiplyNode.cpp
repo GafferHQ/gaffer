@@ -45,8 +45,8 @@ GAFFER_NODE_DEFINE_TYPE( MultiplyNode )
 
 size_t MultiplyNode::g_firstPlugIndex = 0;
 
-MultiplyNode::MultiplyNode( const std::string &name, bool brokenAffects )
-	:	ComputeNode( name ), m_brokenAffects( brokenAffects )
+MultiplyNode::MultiplyNode( const std::string &name, bool brokenAffects, bool serialiseThrows )
+	:	ComputeNode( name ), m_brokenAffects( brokenAffects ), m_serialiseThrows( serialiseThrows )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "op1" ) );
@@ -86,6 +86,14 @@ Gaffer::IntPlug *MultiplyNode::productPlug()
 const Gaffer::IntPlug *MultiplyNode::productPlug() const
 {
 	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+void MultiplyNode::checkSerialise() const
+{
+	if( m_serialiseThrows )
+	{
+		throw IECore::Exception( "Testing failure during serialise" );
+	}
 }
 
 void MultiplyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
