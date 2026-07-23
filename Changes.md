@@ -14,6 +14,13 @@ Fixes
 - LightEditor : Fixed bug preventing the "Copy Path" menu item from appearing when the current selection contained locations not shown in the LightEditor.
 - PathListingWidget : Paths dragged from a PathListingWidget now preserve the order in which they are displayed.
 
+API
+---
+
+- SetExpressionAlgo : Added `remove` [^1].
+
+[^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
+
 1.7.0.0a10 (relative to 1.7.0.0a9)
 ==========
 
