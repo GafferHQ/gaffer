@@ -764,7 +764,86 @@ class SetExpressionAlgoTest( GafferTest.TestCase ) :
 				testPaths.removePaths( Gaffer.SetExpressionAlgo.evaluateSetExpression( exclusions, s ) )
 				self.assertEqual( Gaffer.SetExpressionAlgo.evaluateSetExpression( excluded, s ), testPaths )
 
-	def testIncludeAndExcludeSelf( self ) :
+	def testRemove( self ) :
+
+		for base, removals, result in [
+			( "", "", "" ),
+			( "A", "", "A" ),
+			( "", "A", "" ),
+			( "A", "A", "" ),
+			( "A", "B", "A" ),
+			( "A A", "A", "" ),
+
+			( "A B", "A", "B" ),
+			( "A B", "B", "A" ),
+			( "A B", "A B", "" ),
+			( "A B", "B A", "" ),
+			( "A B B", "B", "A" ),
+			( "A B C", "B", "A C" ),
+			( "A B C", "A C", "B" ),
+			( "A B C", "A B C", "" ),
+			( "A B C", "D", "A B C" ),
+
+			( "/a /b", "/a", "/b" ),
+			( "A /b", "/b", "A" ),
+			( "A /b", "A", "/b" ),
+
+			# `-`, `in` and `containing` only remove from their left-hand side.
+			( "A - B", "A", "" ),
+			( "A - B", "B", "A - B" ),
+			( "A - B", "C", "A - B" ),
+			( "A B - C", "A", "B - C" ),
+			( "A B - C", "B", "A" ),
+			( "A B - C", "C", "A B - C" ),
+			( "(A B) - C", "A", "B - C" ),
+			( "(A B) - C", "B", "A - C" ),
+			( "(A B) - C", "C", "(A B) - C" ),
+			( "(A B) - C", "A B", "" ),
+			( "(A B) - (C D)", "A", "B - (C D)" ),
+			( "(A B) - (C D)", "C", "(A B) - (C D)" ),
+			( "(A B) - (C D)", "A B", "" ),
+
+			( "A in B", "A", "" ),
+			( "A in B", "B", "A in B" ),
+			( "A in B", "C", "A in B" ),
+			( "(A B) in C", "A", "B in C" ),
+			( "(A B) in C", "B", "A in C" ),
+			( "(A B) in C", "C", "(A B) in C" ),
+			( "(A B) in C", "A B", "" ),
+
+			( "A containing B", "A", "" ),
+			( "A containing B", "B", "A containing B" ),
+			( "(A B) containing C", "A", "B containing C" ),
+			( "(A B) containing C", "B", "A containing C" ),
+			( "(A B) containing C", "C", "(A B) containing C" ),
+			( "(A B) containing C", "A B", "" ),
+
+			( "A & B", "A", "" ),
+			( "A & B", "B", "" ),
+			( "A & B", "C", "A & B" ),
+			( "A & B", "A B", "" ),
+			( "A & B", "A & B", "" ),
+			( "A & B C", "A", "C" ),
+			( "A & B C", "C", "A & B" ),
+			( "A & B C", "A B", "C" ),
+			( "A & B C", "A & B", "C" ),
+
+			# Wildcard tokens are matched literally.
+			( "A A*", "A", "A*" ),
+			( "A A*", "A*", "A" ),
+			( "A*", "A", "A*" ),
+
+		] :
+			with self.subTest( base = base, removals = removals, result = result ) :
+
+				removed = Gaffer.SetExpressionAlgo.remove( base, removals )
+				self.assertEqual( removed, result )
+				# The new set expression should be already simplified.
+				self.assertEqual( removed, Gaffer.SetExpressionAlgo.simplify( removed ) )
+				# Removing `removals` a second time should result in no change to the expression.
+				self.assertEqual( removed, Gaffer.SetExpressionAlgo.remove( removed, removals ) )
+
+	def testIncludeExcludeAndRemoveSelf( self ) :
 
 		for expression in (
 			"",
@@ -801,3 +880,4 @@ class SetExpressionAlgoTest( GafferTest.TestCase ) :
 			with self.subTest( expression = expression ) :
 				self.assertEqual( Gaffer.SetExpressionAlgo.exclude( expression, expression ), "" )
 				self.assertEqual( Gaffer.SetExpressionAlgo.include( expression, expression ), Gaffer.SetExpressionAlgo.simplify( expression ) )
+				self.assertEqual( Gaffer.SetExpressionAlgo.remove( expression, expression ), "" )
