@@ -75,8 +75,15 @@ struct DataStoreSerialisationTracker : public Signals::Trackable
 	DataStoreSerialisationTracker( Serialisation &serialisation, const std::filesystem::path &targetPath )
 		: m_scriptPath( targetPath )
 	{
-
-		serialisation.postSerialisationSignal().connect( boost::bind( &DataStoreSerialisationTracker::finishSerialisation, this, ::_1, ::_2 ) );
+		// Our handling of the postSerialisation signal is really part of the serialisation finishing.
+		// It must always run ( so that the DataStoreSerialisationTracker instance gets cleaned up ),
+		// and it could potentially fail ( if the user has done something naughty like deleting our
+		// source data stores from disk ), in which case it will throw an exception, and this should
+		// be treated the same as the serialisation being cancelled before we reach the postSerialisation
+		// signal.
+		// We don't yet have anything else using the postSerialisation signal, but if there is something
+		// else, it should come after us, so we use a connectFront.
+		serialisation.postSerialisationSignal().connectFront( boost::bind( &DataStoreSerialisationTracker::finishSerialisation, this, ::_1, ::_2 ) );
 	}
 
 	void finishSerialisation( const Serialisation *serialisation, bool success )

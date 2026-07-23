@@ -317,11 +317,8 @@ class DataStoreTest( GafferTest.TestCase ) :
 
 		s["fileName"].setValue( self.temporaryDirectory() / "test2.gfr" )
 
-		with IECore.CapturingMessageHandler() as mh :
+		with self.assertRaisesRegex( IECore.Exception, 'Unable to save entry "a" on "ScriptNode.dataStore" - no live value, but cannot find on disk in directory ".*".' ) :
 			s.save()
-
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertRegex( mh.messages[0].message, 'Unable to save entry "a" on "ScriptNode.dataStore" - no live value, but cannot find on disk in directory ".*"' )
 
 	def testSaveFails( self ):
 
