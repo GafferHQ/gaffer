@@ -12,6 +12,7 @@ Improvements
 - GraphEditor :
   - Changed node context menu items to operate on multiple nodes where possible (#2783).
   - Added drag & drop from LightEditor and AttributeEditor. Dropping a location navigates to the node that created the location.
+  - Added context menu item and keyboard shortcut, <kbd>/</kbd>, for hiding all of a node's disconnected input plugs.
 
 Fixes
 -----

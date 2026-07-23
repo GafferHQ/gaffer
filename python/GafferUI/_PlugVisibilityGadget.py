@@ -58,6 +58,29 @@ def __hasVisibilityGadget( plug ) :
 		if parent is None or isinstance( parent, Gaffer.Node ) :
 			return False
 
+def __nodeHasVisibilityGadget( node ) :
+
+	for p in Gaffer.Plug.RecursiveRange( node ) :
+		for key in Gaffer.Metadata.registeredValues( p ) :
+			if key.endswith( ":gadgetType" ) and Gaffer.Metadata.value( p, key ) == "GafferUI.PlugVisibilityGadget" :
+				return True
+	return False
+
+def __hidablePlugs( node ) :
+
+	result = []
+	for plug in Gaffer.Plug.RecursiveRange( node ) :
+		if (
+			not __hasVisibilityGadget( plug ) or
+			not Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) or
+			Gaffer.Metadata.value( plug, "nodule:type" ) == "" or
+			Gaffer.Metadata.value( plug, "noduleLayout:visible" ) == False
+		) :
+			continue
+		result.append( plug )
+
+	return result
+
 def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
 	if not __hasVisibilityGadget( plug ) or not Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) :
@@ -82,3 +105,78 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 	)
 
 GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )
+
+##########################################################################
+# GraphEditor context menu
+##########################################################################
+
+def __hideUnconnectedWalk( gadget ) :
+
+	if isinstance( gadget, GafferUI.Nodule ) :
+
+		plug = gadget.plug()
+
+		if ( plug.direction() == plug.Direction.In and plug.getInput() ) or ( plug.direction() == plug.Direction.Out and len( plug.outputs() ) > 0 ) :
+			return True
+
+		if any( __hideUnconnectedWalk( g ) for g in gadget.children() ) :
+			return True
+
+		if (
+			not Gaffer.MetadataAlgo.readOnly( plug ) and
+			__hasVisibilityGadget( plug ) and
+			Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) and
+			Gaffer.Metadata.value( plug, "noduleLayout:visible" ) != False
+		) :
+			Gaffer.Metadata.registerValue( plug, "noduleLayout:visible", False )
+
+		return False
+
+	return sum( __hideUnconnectedWalk( c ) for c in gadget.children() ) > 0
+
+def __hideUnconnected( graphGadget, nodeList ) :
+
+	with Gaffer.UndoScope( graphGadget.getRoot().scriptNode() ) :
+		for node in nodeList :
+			nodeGadget = graphGadget.nodeGadget( node )
+			if nodeGadget is None :
+				continue
+
+			__hideUnconnectedWalk( nodeGadget )
+
+def __canHideUnconnectedPlugs( nodeList ) :
+
+	nodeReadOnly = any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList )
+	hidablePlugs = [ p for n in nodeList for p in __hidablePlugs( n ) ]
+	plugReadOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for p in hidablePlugs )
+
+	return not nodeReadOnly and not plugReadOnly and all( __nodeHasVisibilityGadget( n ) for n in nodeList )
+
+def __editorKeyPress( editor, event ) :
+
+	selection = editor.scriptNode().selection()
+	if event.key == "Slash" and event.modifiers == event.Modifiers.None_ and __canHideUnconnectedPlugs( selection ) :
+		__hideUnconnected( editor.graphGadget(), selection )
+		return True
+
+	return False
+
+def __appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
+
+	if all( __nodeHasVisibilityGadget( n ) for n in nodeList ) :
+		menuDefinition.append(
+			"/Connections/Hide Unconnected Plugs",
+			{
+				"command" : functools.partial( __hideUnconnected, graphEditor.graphGadget(), nodeList ),
+				"shortCut" : "/",
+				"active" : __canHideUnconnectedPlugs( nodeList ),
+			}
+		)
+		return
+
+def __connectToGraphEditor( editor ) :
+
+	editor.keyPressSignal().connect( __editorKeyPress )
+
+GafferUI.GraphEditor.nodeContextMenuSignal( True ).connect( __appendNodeContextMenuDefinitions )
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __connectToGraphEditor )
