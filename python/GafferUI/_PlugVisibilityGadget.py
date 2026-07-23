@@ -163,24 +163,16 @@ def __editorKeyPress( editor, event ) :
 
 def __appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 
-	def plugNodulesWalk( gadget ) :
-		if isinstance( gadget, GafferUI.Nodule ) :
-			return True
-		return any( plugNodulesWalk( c ) for c in gadget.children() )
-
-	graphGadget = graphEditor.graphGadget()
-	for node in nodeList :
-		if plugNodulesWalk( graphGadget.nodeGadget( node ) ) :
-
-			menuDefinition.append(
-				"/Connections/Hide Unconnected Plugs",
-				{
-					"command" : functools.partial( __hideUnconnected, graphGadget, nodeList ),
-					"shortCut" : "/",
-					"active" : __canHideUnconnectedPlugs( nodeList ),
-				}
-			)
-			return
+	if all( __nodeHasVisibilityGadget( n ) for n in nodeList ) :
+		menuDefinition.append(
+			"/Connections/Hide Unconnected Plugs",
+			{
+				"command" : functools.partial( __hideUnconnected, graphEditor.graphGadget(), nodeList ),
+				"shortCut" : "/",
+				"active" : __canHideUnconnectedPlugs( nodeList ),
+			}
+		)
+		return
 
 def __connectToGraphEditor( editor ) :
 
