@@ -881,3 +881,12 @@ class SetExpressionAlgoTest( GafferTest.TestCase ) :
 				self.assertEqual( Gaffer.SetExpressionAlgo.exclude( expression, expression ), "" )
 				self.assertEqual( Gaffer.SetExpressionAlgo.include( expression, expression ), Gaffer.SetExpressionAlgo.simplify( expression ) )
 				self.assertEqual( Gaffer.SetExpressionAlgo.remove( expression, expression ), "" )
+
+	def testEmptyAndWhitespaceEdits( self ) :
+
+		for expression in ( "", "A", "A B", "A - B", "A & B", "A in B" ) :
+			for edit in ( "", " ", "\t", "\n", " \t\n " ) :
+				with self.subTest( expression = expression, edit = edit ) :
+					self.assertEqual( Gaffer.SetExpressionAlgo.include( expression, edit ), expression )
+					self.assertEqual( Gaffer.SetExpressionAlgo.exclude( expression, edit ), expression )
+					self.assertEqual( Gaffer.SetExpressionAlgo.remove( expression, edit ), expression )

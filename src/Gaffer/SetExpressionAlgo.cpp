@@ -983,6 +983,12 @@ ExpressionAst excludeExpression( const ExpressionAst &ast, const ExpressionAst &
 	// before we subtract `exclusions` from `ast` and simplify. This ensures the exclusions
 	// remain on the right-hand side of the final expression after simplification.
 	ExpressionAst simplifiedExclusions = simplifyExpression( exclusions );
+	if( boost::get<Nil>( &simplifiedExclusions ) )
+	{
+		// Nothing to exclude. Return the simplified input ast instead of the invalid "filteredAst - Nil".
+		return simplifyExpression( ast );
+	}
+
 	ExpressionAst filteredAst = boost::apply_visitor( RemovalVisitor( simplifiedExclusions ), simplifyExpression( ast ) );
 
 	if( boost::get<Nil>( &filteredAst ) )
