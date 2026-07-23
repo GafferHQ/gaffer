@@ -48,57 +48,13 @@ import GafferTest
 
 class CopyFilesTest( GafferTest.TestCase ) :
 
-	@classmethod
-	def setUpClass( cls ) :
-
-		GafferTest.TestCase.setUpClass()
-
-		if sys.platform == "darwin" :
-			cls.__ramDisk = pathlib.Path( "/Volumes/GafferTest" )
-			assert( not cls.__ramDisk.exists() )
-			image = subprocess.check_output( [ "hdiutil", "attach", "-nomount", "ram://1024" ] ).strip()
-			subprocess.check_call( [ "diskutil", "erasevolume", "HFS+", "GafferTest", image ] )
-		elif sys.platform == "linux" :
-			cls.__ramDisk = pathlib.Path( "/dev/shm/GafferTest" )
-			assert( not cls.__ramDisk.exists() )
-			cls.__ramDisk.mkdir()
-		else :
-			cls.__ramDisk = None
-
-	@classmethod
-	def tearDownClass( cls ) :
-
-		GafferTest.TestCase.tearDownClass()
-
-		if sys.platform == "darwin" :
-			subprocess.check_call( [ "hdiutil", "detach", cls.__ramDisk ] )
-		elif sys.platform == "linux" :
-			shutil.rmtree( cls.__ramDisk )
-
-	def setUp( self ) :
-
-		GafferTest.TestCase.setUp( self )
-
-		if self.__ramDisk is not None :
-			self.__temporaryRAMDirectory = pathlib.Path( self.__ramDisk ) / "copyFilesTest"
-			self.__temporaryRAMDirectory.mkdir()
-		else :
-			self.__temporaryRAMDirectory = None
-
-	def tearDown( self ) :
-
-		GafferTest.TestCase.tearDown( self )
-
-		if self.__temporaryRAMDirectory is not None :
-			shutil.rmtree( self.__temporaryRAMDirectory )
-
 	def __sourceDirectories( self ) :
 
 		# We run every test with two different source directories, with one
-		# of them being on a RAM-based filesystem. This gives us test coverage
+		# of them being on a different mount. This gives us test coverage
 		# for the inability of `filesystem::rename()` to move files between file
 		# systems.
-		return [ self.temporaryDirectory() ] + [ self.__temporaryRAMDirectory ] if self.__temporaryRAMDirectory is not None else []
+		return [ self.temporaryDirectory() ] + [ self.alternateMountTemporaryDirectory() ] if self.alternateMountTemporaryDirectory() is not None else []
 
 	def testMissingDestinationDirectory( self ) :
 
