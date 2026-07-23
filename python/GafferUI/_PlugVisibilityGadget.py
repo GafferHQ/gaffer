@@ -161,7 +161,7 @@ def __editorKeyPress( editor, event ) :
 
 	return False
 
-def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
+def __appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 
 	def plugNodulesWalk( gadget ) :
 		if isinstance( gadget, GafferUI.Nodule ) :
@@ -182,7 +182,9 @@ def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 			)
 			return
 
-def connectToGraphEditor( editor ) :
+def __connectToGraphEditor( editor ) :
 
-	assert( isinstance( editor, GafferUI.GraphEditor ) )
 	editor.keyPressSignal().connect( __editorKeyPress )
+
+GafferUI.GraphEditor.nodeContextMenuSignal( True ).connect( __appendNodeContextMenuDefinitions )
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __connectToGraphEditor )
