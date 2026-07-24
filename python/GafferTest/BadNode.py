@@ -41,9 +41,11 @@ import Gaffer
 
 class BadNode( Gaffer.ComputeNode ) :
 
-	def __init__( self, name="BadNode" ) :
+	def __init__( self, name="BadNode", serialiseThrows = False ) :
 
 		Gaffer.ComputeNode.__init__( self, name )
+
+		self.__serialiseThrows = serialiseThrows
 
 		self.addChild( Gaffer.IntPlug( "in1", Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.IntPlug( "in2", Gaffer.Plug.Direction.In ) )
@@ -86,5 +88,16 @@ class BadNode( Gaffer.ComputeNode ) :
 			# bad - don't do anything
 			pass
 
+	def checkSerialise( self ):
+		if self.__serialiseThrows:
+			raise Exception( "Testing failure during serialise" )
+
 
 IECore.registerRunTimeTyped( BadNode, "GafferTest::BadNode" )
+
+class BadNodeSerialiser( Gaffer.NodeSerialiser ) :
+	def constructor( self, graphComponent, serialisation ) :
+		graphComponent.checkSerialise()
+		return super( BadNodeSerialiser, self ).constructor( graphComponent, serialisation )
+
+Gaffer.Serialisation.registerSerialiser( BadNode, BadNodeSerialiser() )

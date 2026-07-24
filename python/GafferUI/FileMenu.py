@@ -235,6 +235,10 @@ def save( menu ) :
 		# thread, which is problematic for any connected UIs on the main
 		# thread. So instead we use `serialiseToFile()` and manage
 		# `unsavedChanges` ourselves.
+		# \todo : One significant advantage if we were able to actually call script.save() here
+		# is that we could then add a script.saveAs() as well, and use that to enforce that
+		# script["fileName"] needs to be set before saveAs.
+		# Maybe it would be easier to address this if unsavedChanges was metadata rather than a plug?
 		result = dialogue.waitForBackgroundTask( functools.partial( script.serialiseToFile, script["fileName"].getValue() ), parentWindow = scriptWindow )
 		if not isinstance( result, Exception ) :
 			script["unsavedChanges"].setValue( False )
@@ -260,13 +264,18 @@ def saveAs( menu ) :
 		path += ".gfr"
 
 	dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
+
+	prevFileName = script["fileName"].getValue()
+	script["fileName"].setValue( path )
 	result = dialogue.waitForBackgroundTask( functools.partial( script.serialiseToFile, path ), parentWindow = scriptWindow )
 
 	if not isinstance( result, Exception ) :
-		script["fileName"].setValue( path )
 		script["unsavedChanges"].setValue( False )
 		application = script.ancestor( Gaffer.ApplicationRoot )
 		addRecentFile( application, path )
+	else:
+		script["fileName"].setValue( prevFileName )
+
 
 ## A function suitable as the command for a File/Revert To Saved menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.

@@ -147,20 +147,32 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter ),
 		m_protectParentNamespace( Context::current()->get<bool>( "serialiser:protectParentNamespace", true ) )
 {
-	IECorePython::ScopedGILLock gilLock;
-	walk( parent, parentName, acquireSerialiser( parent ), Context::current()->canceller() );
-
-	if( Context::current()->get<bool>( "serialiser:includeParentMetadata", false ) )
+	try
 	{
-		if( const Node *node = runTimeCast<const Node>( parent ) )
+		IECorePython::ScopedGILLock gilLock;
+		walk( parent, parentName, acquireSerialiser( parent ), Context::current()->canceller() );
+
+		if( Context::current()->get<bool>( "serialiser:includeParentMetadata", false ) )
 		{
-			m_postScript += metadataSerialisation( node, parentName, *this );
-		}
-		else if( const Plug *plug = runTimeCast<const Plug>( parent ) )
-		{
-			m_postScript += metadataSerialisation( plug, parentName, *this );
+			if( const Node *node = runTimeCast<const Node>( parent ) )
+			{
+				m_postScript += metadataSerialisation( node, parentName, *this );
+			}
+			else if( const Plug *plug = runTimeCast<const Plug>( parent ) )
+			{
+				m_postScript += metadataSerialisation( plug, parentName, *this );
+			}
 		}
 	}
+	catch( ... )
+	{
+		// Signal that serialisation failed
+		m_postSerialisationSignal( this, false );
+		throw;
+	}
+
+	// Signal that serialisation succeeded
+	m_postSerialisationSignal( this, true );
 }
 
 const Gaffer::GraphComponent *Serialisation::parent() const
@@ -510,6 +522,12 @@ IECore::ObjectPtr Serialisation::objectFromBase64( const std::string &base64 )
 	MemoryIndexedIOPtr io = new MemoryIndexedIO( buffer, {}, IECore::IndexedIO::Read );
 	return Object::load( io, "o" );
 }
+
+Serialisation::PostSerialisationSignal &Serialisation::postSerialisationSignal()
+{
+	return m_postSerialisationSignal;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Serialisation::Serialiser

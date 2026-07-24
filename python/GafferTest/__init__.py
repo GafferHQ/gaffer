@@ -164,6 +164,7 @@ from .CollectTest import CollectTest
 from .ProcessTest import ProcessTest
 from .PatternMatchTest import PatternMatchTest
 from .SetExpressionAlgoTest import SetExpressionAlgoTest
+from .DataStoreTest import DataStoreTest
 
 from .IECorePreviewTest import *
 
