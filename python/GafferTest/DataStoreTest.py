@@ -50,24 +50,6 @@ import GafferTest
 
 class DataStoreTest( GafferTest.TestCase ) :
 
-	def setUp( self ):
-		GafferTest.TestCase.setUp( self )
-
-		self.__altMountTemporaryDirectory = None
-
-	def tearDown( self ):
-		GafferTest.TestCase.tearDown( self )
-
-		if self.__altMountTemporaryDirectory is not None :
-			shutil.rmtree( self.__altMountTemporaryDirectory )
-
-	def altMountTemporaryDirectory( self ):
-		# Set up a temp directory in /dev/shm, which should be a separate mount, allowing us to test the case
-		# where hardlinking fails.
-		if self.__altMountTemporaryDirectory is None:
-			self.__altMountTemporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest", dir = "/dev/shm" ) )
-		return self.__altMountTemporaryDirectory
-
 	def setupComparison( self, s ) :
 		s["dataStore"] = Gaffer.DataStore()
 		s["compareBox"] = Gaffer.Box()
@@ -685,7 +667,7 @@ class DataStoreTest( GafferTest.TestCase ) :
 		self.assertEqual( orig["b"]["dataStore"].getEntry( "b" ), IECore.StringData( "bb" ) )
 		self.assertEqual( orig["b"]["dataStore"].getEntry( "c" ), IECore.StringData( "cc" ) )
 
-	@unittest.skipIf( not os.path.exists( "/dev/shm" ), "No /dev/shm, can't test linking across different mounts." )
+	@unittest.skipIf( GafferTest.TestCase.alternateMount() is None, "Cannot find directory with alternate mount on this OS, can't test linking across different mounts" )
 	def testHardLinkFailure( self ):
 
 		s = Gaffer.ScriptNode()
@@ -696,7 +678,7 @@ class DataStoreTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
-		s["fileName"].setValue( self.altMountTemporaryDirectory() / "test.gfr" )
+		s["fileName"].setValue( self.alternateMountTemporaryDirectory() / "test.gfr" )
 
 		# Saving as a new file on a different mount will mean we can't use hardlinks, so we should get a warning.
 		with IECore.CapturingMessageHandler() as mh :
@@ -712,7 +694,7 @@ class DataStoreTest( GafferTest.TestCase ) :
 		# But everything should still work
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( self.altMountTemporaryDirectory() / "test.gfr" )
+		s["fileName"].setValue( self.alternateMountTemporaryDirectory() / "test.gfr" )
 		s.load()
 
 		self.assertEqual( s["dataStore"].getEntry( "a" ), IECore.IntData( 7 ) )
