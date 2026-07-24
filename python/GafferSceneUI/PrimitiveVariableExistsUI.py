@@ -53,7 +53,7 @@ Gaffer.Metadata.registerNode(
 			"description" : "The scene to look for variables in.",
 		},
 		"primitiveVariable" : {
-			"description" : "The name of the primitive vairable to check for.",
+			"description" : "The name of the primitive variable to check for.",
 			"nodule:type" : "",
 		},
 		"out" : {

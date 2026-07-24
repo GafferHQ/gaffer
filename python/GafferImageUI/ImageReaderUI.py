@@ -118,7 +118,7 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			Masks frames which preceed the specified start frame.
+			Masks frames which precede the specified start frame.
 			The default is to treat them based on the MissingFrameMode,
 			but they can also be clamped to the start frame, or
 			return a black image which matches the data window
@@ -136,7 +136,7 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			The mode used detemine the mask behaviour for the start frame.
+			The mode used determine the mask behaviour for the start frame.
 			""",
 
 			"preset:None" : GafferImage.ImageReader.FrameMaskMode.None_,
@@ -185,7 +185,7 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			The mode used detemine the mask behaviour for the end frame.
+			The mode used determine the mask behaviour for the end frame.
 			""",
 
 			"preset:None" : GafferImage.ImageReader.FrameMaskMode.None_,

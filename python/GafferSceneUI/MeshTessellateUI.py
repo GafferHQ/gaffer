@@ -50,7 +50,7 @@ Gaffer.Metadata.registerNode(
 	Tessellates meshes according to their subdivision scheme, converting them into higher polygon meshes
 	which follow the limit surface - usually the smooth regular quads of a Catmull-Clark scheme.
 
-	Can be used similiarly to "subdivide" or "smooth" features in other packages, with one distinction:
+	Can be used similarly to "subdivide" or "smooth" features in other packages, with one distinction:
 	because it puts output points directly on the limit surface, using the tessellated result as a subdiv
 	surface again will result in the surface shrinking. Tessellation gives the most accurate possible result
 	for a given number of divisions in one step, but is not appropriate for doing repeated operations on

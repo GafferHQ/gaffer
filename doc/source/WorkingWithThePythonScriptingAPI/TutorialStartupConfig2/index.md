@@ -91,7 +91,7 @@ To add a bookmark to a category, we acquire all of the application's the bookmar
     bookmarks.add( "Pictures", picturesPath )
 ```
 
-This should bookmark your `~/Pictures` direcotry for all image node file browsers. Try testing it:
+This should bookmark your `~/Pictures` directory for all image node file browsers. Try testing it:
 
 1. Create a Catalogue node.
 2. In the Node Editor, In the _Images_ tab, click ![](images/pathChooser.png "file browser").

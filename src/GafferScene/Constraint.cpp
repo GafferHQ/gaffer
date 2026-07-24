@@ -494,7 +494,7 @@ void computePrimitiveVertexLocalFrame( const IECoreScene::Primitive& primitive, 
 	{
 		if( throwOnError )
 		{
-			throw IECore::InvalidArgumentException( "Gaffer::Contraint : Primitive has no Vertex \"P\" primitive variable." );
+			throw IECore::InvalidArgumentException( "Gaffer::Constraint : Primitive has no Vertex \"P\" primitive variable." );
 		}
 		else
 		{
@@ -529,7 +529,7 @@ void computeMeshVertexLocalFrame( const IECoreScene::MeshPrimitive& primitive, I
 	{
 		if( throwOnError )
 		{
-			throw IECore::InvalidArgumentException( "Gaffer::Contraint : MeshPrimitive has no Vertex \"P\" primitive variable." );
+			throw IECore::InvalidArgumentException( "Gaffer::Constraint : MeshPrimitive has no Vertex \"P\" primitive variable." );
 		}
 		else
 		{
@@ -677,7 +677,7 @@ void computeMeshUVLocalFrame( const IECoreScene::MeshPrimitive& primitive, Imath
 	{
 		if( throwOnError )
 		{
-			throw IECore::InvalidArgumentException( "Gaffer::Contraint : MeshPrimitive has no Vertex \"P\" primitive variable." );
+			throw IECore::InvalidArgumentException( "Gaffer::Constraint : MeshPrimitive has no Vertex \"P\" primitive variable." );
 		}
 		else
 		{
