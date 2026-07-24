@@ -88,34 +88,33 @@ struct DataStoreSerialisationTracker : public Signals::Trackable
 
 	void finishSerialisation( const Serialisation *serialisation, bool success )
 	{
-		if( success )
+		TrackersMap::accessor mapEntry;
+		g_serialisationTrackers.find( mapEntry, serialisation );
+		if( !mapEntry->second )
 		{
-			try
-			{
-				// A set of data store entry values, identified by their hashes, that have been saved
-				// during this serialisation
-				std::unordered_set< IECore::MurmurHash > usedDataHashes;
-
-				for( auto node : m_nodesToSave )
-				{
-					node->save( m_scriptPath, serialisation->parent(), usedDataHashes );
-				}
-
-				DataStore::finaliseDirectory( m_scriptPath, serialisation->parent(), usedDataHashes );
-			}
-			catch( ... )
-			{
-				// Annoying that we don't have a `finally` block - we need to free ourselves
-				// even if there's an exception
-				g_serialisationTrackers.erase( serialisation );
-				throw;
-			}
+			throw IECore::Exception( "DataStoreSerialisationTracker accounting has gone wrong, this should never happen" );
 		}
 
-		// It's a bit weird to be freeing this instancing from inside a member function, but as
-		// long as we don't access any members after we run this and trigger the free, it should
-		// be safe.
-		g_serialisationTrackers.erase( serialisation );
+		// This tracker should be destructed, now that the corresponding Serialisation is finished.
+		// Take ownership of our own entry in the g_serialisationTrackers map as a local variable,
+		// so that we will be freed as soon as this function exits.
+		std::unique_ptr<DataStoreSerialisationTracker> keepAlive = std::move( mapEntry->second );
+		g_serialisationTrackers.erase( mapEntry );
+
+		if( success )
+		{
+			// A set of data store entry values, identified by their hashes, that have been saved
+			// during this serialisation
+			std::unordered_set< IECore::MurmurHash > usedDataHashes;
+
+			for( auto node : m_nodesToSave )
+			{
+				node->save( m_scriptPath, serialisation->parent(), usedDataHashes );
+			}
+
+			DataStore::finaliseDirectory( m_scriptPath, serialisation->parent(), usedDataHashes );
+		}
+
 	}
 
 	std::filesystem::path m_scriptPath;
@@ -124,11 +123,12 @@ struct DataStoreSerialisationTracker : public Signals::Trackable
 
 	// We associate a SerialisationTracker with each serialisation that writes any DataStores. It tracks values
 	// that have been written, and triggers cleanup of unused values when the serialisation finishes.
-	static tbb::concurrent_hash_map< const Serialisation*, DataStoreSerialisationTracker > g_serialisationTrackers;
+	using TrackersMap = tbb::concurrent_hash_map< const Serialisation*, std::unique_ptr<DataStoreSerialisationTracker> >;
+	static TrackersMap g_serialisationTrackers;
 
 };
 
-tbb::concurrent_hash_map< const Serialisation*, DataStoreSerialisationTracker > DataStoreSerialisationTracker::g_serialisationTrackers;
+DataStoreSerialisationTracker::TrackersMap DataStoreSerialisationTracker::g_serialisationTrackers;
 
 class DataStoreSerialiser : public NodeSerialiser
 {
@@ -147,15 +147,15 @@ class DataStoreSerialiser : public NodeSerialiser
 		{
 			std::filesystem::path targetPath = *targetPathString;
 
-			tbb::concurrent_hash_map< const Serialisation*, GafferModule::DataStoreSerialisationTracker >::accessor tracker;
-			GafferModule::DataStoreSerialisationTracker::g_serialisationTrackers.emplace(
-				tracker,
-				std::piecewise_construct,
-				std::forward_as_tuple(&serialisation),
-				std::forward_as_tuple(serialisation, targetPath )
-			);
+			DataStoreSerialisationTracker::TrackersMap::accessor tracker;
+			if( GafferModule::DataStoreSerialisationTracker::g_serialisationTrackers.emplace(
+				tracker, &serialisation, nullptr
+			) )
+			{
+				tracker->second = std::make_unique<DataStoreSerialisationTracker>( serialisation, targetPath );
+			}
 
-			tracker->second.m_nodesToSave.insert( node );
+			tracker->second->m_nodesToSave.insert( node );
 		}
 		else
 		{
