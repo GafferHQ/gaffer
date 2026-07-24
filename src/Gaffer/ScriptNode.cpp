@@ -377,7 +377,9 @@ ScriptNode::ScriptNode( const std::string &name )
 
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
-	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
+	plugSetSignal().connect( boost::bind( &ScriptNode::plugSetOrInputChanged, this, ::_1, false ) );
+	plugInputChangedSignal().connect( boost::bind( &ScriptNode::plugSetOrInputChanged, this, ::_1, true ) );
+
 	m_context->changedSignal().connect( boost::bind( &ScriptNode::contextChanged, this, ::_1, ::_2 ) );
 }
 
@@ -980,7 +982,7 @@ void ScriptNode::updateContextVariables()
 	}
 }
 
-void ScriptNode::plugSet( Plug *plug )
+void ScriptNode::plugSetOrInputChanged( const Plug *plug, bool inputChanged )
 {
 	if( plug == frameStartPlug() )
 	{
@@ -1000,7 +1002,15 @@ void ScriptNode::plugSet( Plug *plug )
 	{
 		context()->setFramesPerSecond( framesPerSecondPlug()->getValue() );
 	}
-	else if( plug == variablesPlug() )
+	else if(
+		// `plugSetSignal` propagates to ancestors of the plug that was set,
+		// so by operating only on the ancestor we minimise the number of context
+		// edits we make.
+		plug == variablesPlug() ||
+		// `plugInputChangedSignal` is emitted only for the plug whose input
+		// changed, so we must update for any plug below `variablesPlug()`.
+		( inputChanged && variablesPlug()->isAncestorOf( plug ) )
+	)
 	{
 		updateContextVariables();
 	}
