@@ -159,12 +159,12 @@ class TestCase( unittest.TestCase ) :
 
 		unittest.TestCase.tearDownClass()
 
-		if not cls.__alternateMount is None:
+		if not TestCase.__alternateMount is None:
 			if sys.platform == "darwin" :
-				subprocess.check_call( [ "hdiutil", "detach", cls.__alternateMount ] )
+				subprocess.check_call( [ "hdiutil", "detach", TestCase.__alternateMount ] )
 			elif sys.platform == "linux" :
-				shutil.rmtree( cls.__alternateMount )
-			cls.__alternateMount = None
+				shutil.rmtree( TestCase.__alternateMount )
+			TestCase.__alternateMount = None
 
 	## Registers a message that will be ignored if it is emitted during the
 	# test run, instead of triggering a failure.
@@ -184,23 +184,23 @@ class TestCase( unittest.TestCase ) :
 
 	@classmethod
 	def alternateMount( cls ) :
-		if cls.__alternateMount is None:
+		if TestCase.__alternateMount is None:
 			if sys.platform == "darwin" :
-				cls.__alternateMount = pathlib.Path( "/Volumes/GafferTest" )
-				assert( not cls.__alternateMount.exists() )
+				TestCase.__alternateMount = pathlib.Path( "/Volumes/GafferTest" )
+				assert( not TestCase.__alternateMount.exists() )
 				image = subprocess.check_output( [ "hdiutil", "attach", "-nomount", "ram://1024" ] ).strip()
 				subprocess.check_call( [ "diskutil", "erasevolume", "HFS+", "GafferTest", image ] )
 			elif sys.platform == "linux" :
-				cls.__alternateMount = pathlib.Path( "/dev/shm/GafferTest" )
-				assert( not cls.__alternateMount.exists() )
-				cls.__alternateMount.mkdir()
+				TestCase.__alternateMount = pathlib.Path( "/dev/shm/GafferTest" )
+				assert( not TestCase.__alternateMount.exists() )
+				TestCase.__alternateMount.mkdir()
 			else :
 				# We haven't yet figured out a way to create a ram disk on Windows without adding
 				# more dependencies ( or a mechanism other than a ram disk to create a directory
 				# that we can't create hard links into )
 				pass
 
-		return cls.__alternateMount
+		return TestCase.__alternateMount
 
 	## Returns a path to a directory the test may use for temporary
 	# storage. This directory is on a different physical disk than the regular temporaryDirectory(),
@@ -211,8 +211,8 @@ class TestCase( unittest.TestCase ) :
 	def alternateMountTemporaryDirectory( self ) :
 
 		if self.__alternateMountTemporaryDirectory is None :
-			if not self.alternateMount() is None :
-				self.__alternateMountTemporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest", dir = self.alternateMount()  ) )
+			if not TestCase.alternateMount() is None :
+				self.__alternateMountTemporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest", dir = TestCase.alternateMount()  ) )
 
 		return self.__alternateMountTemporaryDirectory
 
