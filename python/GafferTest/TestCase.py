@@ -187,13 +187,13 @@ class TestCase( unittest.TestCase ) :
 		if TestCase.__alternateMount is None:
 			if sys.platform == "darwin" :
 				TestCase.__alternateMount = pathlib.Path( "/Volumes/GafferTest" )
-				assert( not TestCase.__alternateMount.exists() )
-				image = subprocess.check_output( [ "hdiutil", "attach", "-nomount", "ram://1024" ] ).strip()
-				subprocess.check_call( [ "diskutil", "erasevolume", "HFS+", "GafferTest", image ] )
+				if not TestCase.__alternateMount.exists():
+					image = subprocess.check_output( [ "hdiutil", "attach", "-nomount", "ram://1024" ] ).strip()
+					subprocess.check_call( [ "diskutil", "erasevolume", "HFS+", "GafferTest", image ] )
 			elif sys.platform == "linux" :
 				TestCase.__alternateMount = pathlib.Path( "/dev/shm/GafferTest" )
-				assert( not TestCase.__alternateMount.exists() )
-				TestCase.__alternateMount.mkdir()
+				if not TestCase.__alternateMount.exists():
+					TestCase.__alternateMount.mkdir()
 			else :
 				# We haven't yet figured out a way to create a ram disk on Windows without adding
 				# more dependencies ( or a mechanism other than a ram disk to create a directory
