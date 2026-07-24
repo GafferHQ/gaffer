@@ -36,9 +36,7 @@
 ##########################################################################
 
 import unittest
-import sys
 import weakref
-import gc
 import os
 import pathlib
 import shutil
