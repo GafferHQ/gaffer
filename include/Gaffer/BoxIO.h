@@ -57,7 +57,7 @@ IE_CORE_FORWARDDECLARE( Switch )
 
 /// Utility node for representing plug promotion
 /// graphically in the GraphEditor. Note that this has
-/// no special priviledges or meaning in the Box API;
+/// no special privileges or meaning in the Box API;
 /// it is merely a convenience for the user.
 ///
 /// In terms of structure, BoxIO is much like

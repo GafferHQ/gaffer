@@ -1386,9 +1386,9 @@ OSL::ShadingSystem *acquireShadingSystem( ShadingEngine::TextureOrigin textureOr
 	// `g_shadingSystem->attribute( "llvm_jit_fma", 1 );`
 	// This is a small improvement in performance ( I couldn't detect a change in my test ),
 	// with the downside that the floating point rounding is slightly different.  The
-	// small difference in rounding is actully more likely to be better than to be worse, so
+	// small difference in rounding is actually more likely to be better than to be worse, so
 	// it all sounds pretty good ... except that the slight difference in rounding may vary
-	// between architectures ... this could be pretty bad for a facility with a heterogenous
+	// between architectures ... this could be pretty bad for a facility with a heterogeneous
 	// farm ... getting a subtle flicker because frames that hit out of date farm blades
 	// render ever-so-slightly darker is not much fun.
 

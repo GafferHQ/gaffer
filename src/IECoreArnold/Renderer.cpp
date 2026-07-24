@@ -2355,7 +2355,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		using CustomAttributes = boost::container::flat_map<AtString, IECore::ConstDataPtr>;
 		CustomAttributes m_custom;
 
-		// The original attributes we were contructed from. We stash
+		// The original attributes we were constructed from. We stash
 		// these so that they can be inherited manually when expanding
 		// procedurals.
 		/// \todo Instead of storing this, can be instead copy/update
@@ -3433,7 +3433,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		/// \todo The base class currently makes a new shader cache
 		/// and a new instance cache. Can we share with the parent
 		/// renderer instead?
-		/// \todo Pass through the parent message hander so we can redirect
+		/// \todo Pass through the parent message handler so we can redirect
 		/// IECore::msg message handlers here.
 		ProceduralRenderer( AtNode *procedural, IECore::ConstCompoundObjectPtr attributesToInherit )
 			:	ArnoldRendererBase( nullNodeDeleter, AiNodeGetUniverse( procedural ), procedural ),
@@ -4674,7 +4674,7 @@ class ArnoldGlobals
 				{
 
 					// Check that parameters match with the existing driver, so we can use the same
-					// driver for both ouptuts
+					// driver for both outputs
 					IECore::CompoundDataMap &existingParameters = existingDriver->second->writable();
 
 					// We never conflict on "preserve_layer_names" - we just turn it on if any output

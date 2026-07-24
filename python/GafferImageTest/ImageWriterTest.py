@@ -675,7 +675,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
-		# now theres a file and an image, we get some output
+		# now there's a file and an image, we get some output
 		constant = GafferImage.Constant()
 		writer["in"].setInput( constant["out"] )
 		self.assertNotEqual( writer.hash( c ), IECore.MurmurHash() )

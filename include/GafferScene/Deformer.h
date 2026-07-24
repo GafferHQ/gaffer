@@ -79,7 +79,7 @@ class GAFFERSCENE_API Deformer : public ObjectProcessor
 		/// > accessed by `adjustBounds()`.
 		virtual bool adjustBounds() const;
 
-		/// If `computeProcessedObjectBound()` is overridden, this must be overriden
+		/// If `computeProcessedObjectBound()` is overridden, this must be overridden
 		/// to return true for any plugs it uses. Unlike other affects methods, overrides
 		/// should _not_ call the base class implementation.
 		virtual bool affectsProcessedObjectBound( const Gaffer::Plug *input ) const;

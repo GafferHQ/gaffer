@@ -106,7 +106,7 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 			for i, label in enumerate( labels ) :
 
 				label = "All" if label == "*" else label
-				# Replace preceeding .* with "All "
+				# Replace preceding .* with "All "
 				label = re.sub( r"^\*\.", "All ", label )
 				# Replace trailing .* with " All"
 				label = re.sub( r"\.\*$", " All", label )
@@ -220,7 +220,7 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 				else :
 					Gaffer.Metadata.registerValue( plug, self.__customMetadataName, True )
 
-# Because channel masks can contain arbitary match patterns,
+# Because channel masks can contain arbitrary match patterns,
 # there are multiple ways of expressing the same thing - for
 # instance, "R G B" is equivalent to "[RGB]". The _CanonicalValue
 # class normalises such patterns for ease of editing.

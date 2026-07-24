@@ -264,7 +264,7 @@ inline int addHalfScanlinesToHorizAccum(
 		accumBuffer[ ( ( p.y + yDir * i ) << ImagePlug::tileSizeLog2() ) + p.x + inner + 1 ] -= normalizedValue;
 	}
 
-	// If there is part of the left quadrant that is vaild within this y range, but the left of this tile
+	// If there is part of the left quadrant that is valid within this y range, but the left of this tile
 	// cut it off, that means it has already on at the left edge of this tile - it may be a candidate for
 	// the vertical accumulation buffer.
 	if( leftMinIndex > minIndex )
@@ -336,7 +336,7 @@ inline void addEdgeFalloff(
 			int dx = x - centerX;
 			// This sqrt definitely has performance a cost, and for any sizeable radius, the error from
 			// just applying a linear blend from innerRadius**2 to outerRadius**2 instead of doing an actual
-			// sqrt would be neglible. But doing it correctly with a sqrt makes the normalization math a bit
+			// sqrt would be negligible. But doing it correctly with a sqrt makes the normalization math a bit
 			// cleaner, and it makes this node more canonically correct, and the performance loss isn't
 			// significant as long as approximationThreshold is set reasonably ( since then most large
 			// disks won't be anti-aliased at all ).
@@ -457,7 +457,7 @@ void renderTinyDisk(
 // about inlining or register spilling or something. We know that all the really performance important
 // stuff is inside this function, so the hypothesis is that by preventing this function from being
 // inlined, we allow the compiler to examine the really important stuff inside this function in
-// isolation. This hopefully allows the compiler to make better decisions, and reduces the likelyhood
+// isolation. This hopefully allows the compiler to make better decisions, and reduces the likelihood
 // that unrelated changes elsewhere in the code will change how this code is optimized.
 //
 // I'm seeing a consistent ~5% improvement across testPerfLarge, testPerfMedium and testPerfSmall just
@@ -1517,7 +1517,7 @@ IECore::ConstObjectVectorPtr DiskBlur::computeScanlinesLUT( const Gaffer::Contex
 
 	while( true )
 	{
-		// The current rate that area is increasing in this piecewise linear segement depends on
+		// The current rate that area is increasing in this piecewise linear segment depends on
 		// how many pixels are currently in the queue of active contributors.
 		int curSlope = queueStart - queueStop;
 
@@ -1855,7 +1855,7 @@ IECore::ConstObjectVectorPtr DiskBlur::computeLayerWeights( const Imath::V2i &ti
 	vertAccumBuffer.resize( ImagePlug::tileSize(), 0.0 );
 
 	// Render the alpha channel separately for every layer
-	// Doing this serially would be disasterous for performance if multiple channels of the same tile are
+	// Doing this serially would be disastrous for performance if multiple channels of the same tile are
 	// accessed in parallel - while one channel does the work, the others would be stuck. We could somewhat
 	// alleviate this by doing this loop in parallel. However, lots of existing nodes already have terrible
 	// performance when accessing multiple channels in parallel ( ie. ColorProcessor accesses the input

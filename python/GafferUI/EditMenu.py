@@ -282,7 +282,7 @@ def rename( menu ) :
 	# user entering an invalid name.
 	# \todo : This could be improved with some combination of a public validator
 	# API, sanitising node names in `GraphComponent::setName` and relaxing
-	# `GraphComponent` name contraints.
+	# `GraphComponent` name constraints.
 	from GafferUI.NameWidget import _Validator
 	textWidget = d._getWidget()._qtWidget()
 	textWidget.setValidator( _Validator( textWidget ) )

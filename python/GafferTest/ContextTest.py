@@ -688,7 +688,7 @@ class ContextTest( GafferTest.TestCase ) :
 		zeroHash2 = context.variableHash( "foo" )
 		self.assertNotEqual( zeroHash1, zeroHash2 )
 
-		# Check the intial value again
+		# Check the initial value again
 		context["foo"] = 1
 		self.assertEqual( context.variableHash( "foo" ), initialHash )
 

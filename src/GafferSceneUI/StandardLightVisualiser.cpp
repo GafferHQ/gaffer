@@ -65,7 +65,7 @@ using namespace GafferSceneUI::Private::LightVisualiserAlgo;
 using namespace IECoreGLPreview;
 
 //////////////////////////////////////////////////////////////////////////
-// Utility methods. We define these in an anonymouse namespace rather
+// Utility methods. We define these in an anonymous namespace rather
 // than clutter up the header with private methods.
 //////////////////////////////////////////////////////////////////////////
 

@@ -699,7 +699,7 @@ class GnomonGadget : public GafferUI::Gadget
 			// the bottom left corner of the viewport.
 			//
 			// first we compose a new projection matrix with the orthographic
-			// projection and a post-projection transform that moves eveything
+			// projection and a post-projection transform that moves everything
 			// into the corner.
 
 			glMatrixMode( GL_PROJECTION );

@@ -101,7 +101,7 @@ ScenePlug::ScenePath closestExistingPath( const ScenePlug *scene, const ScenePlu
 }
 
 // InternedString compares by pointer address by default, which will give differing
-// results betweeen processes. Comparing by string value gives an alphabetical ordering
+// results between processes. Comparing by string value gives an alphabetical ordering
 // we can rely on.
 bool internedStringValueLess( const InternedString &a, const InternedString &b )
 {

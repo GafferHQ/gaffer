@@ -1079,7 +1079,7 @@ class LayoutEngine
 			const V3f dstTangent = !dstNodule ? defaultDstTangent : dstNodeGadget->connectionTangent( dstNodule );
 			V3f srcTangent = !srcNodule ? -1.0f * defaultDstTangent : srcNodeGadget->connectionTangent( srcNodule );
 
-			// Ajust tangent if the auxiliary connection is represented by a
+			// Adjust tangent if the auxiliary connection is represented by a
 			// StandardConnectionGadget and has a dstNodule.
 			// \todo: Inverse case needs handling once we draw those connections correctly.
 			if( dstNodule && !srcNodule )

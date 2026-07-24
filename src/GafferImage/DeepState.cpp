@@ -1198,7 +1198,7 @@ void DeepState::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				);
 			}
 
-			// Both SampleMerge and pruneSamples don't know the exact size of thier outputs
+			// Both SampleMerge and pruneSamples don't know the exact size of their outputs
 			// beforehand.  We deal with this either by using push_back to expand a vector,
 			// or working in a worst case sized vector.  We don't want to do unnecessary
 			// allocations, but we also don't want to cache vectors that are larger than

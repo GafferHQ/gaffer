@@ -560,7 +560,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t2["filter"].setInput( tc1["filter"] )
 
 		# The blur doesn't do anything except
-		# break concatentation. Check that tc2
+		# break concatenation. Check that tc2
 		# is practically identical to t2 for
 		# a range of transforms.
 

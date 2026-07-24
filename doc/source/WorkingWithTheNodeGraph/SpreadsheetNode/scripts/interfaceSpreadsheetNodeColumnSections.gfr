@@ -107,7 +107,7 @@ Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["tr
 Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["translate1"]["value"]["x"], 'nodule:color', imath.Color3f( 0.246700004, 0.376199991, 0.469999999 ) )
 Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["translate1"]["value"]["y"], 'nodule:color', imath.Color3f( 0.246700004, 0.376199991, 0.469999999 ) )
 Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["translate1"]["value"]["z"], 'nodule:color', imath.Color3f( 0.246700004, 0.376199991, 0.469999999 ) )
-Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["transformBlur"]["value"], 'description', 'Whether or not transform motion is taken into\naccount in the renderered image. To specify the\nnumber of transform segments to use for each\nobject in the scene, use a StandardAttributes node\nwith appropriate filters.' )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["transformBlur"]["value"], 'description', 'Whether or not transform motion is taken into\naccount in the rendered image. To specify the\nnumber of transform segments to use for each\nobject in the scene, use a StandardAttributes node\nwith appropriate filters.' )
 Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["transformBlur"]["value"], 'label', 'Transform' )
 __children["Spreadsheet"]["__uiPosition"].setValue( imath.V2f( 14.7354708, 8.14100552 ) )
 __children["point_light"]["transform"]["translate"].setInput( __children["Spreadsheet"]["out"]["translate"] )

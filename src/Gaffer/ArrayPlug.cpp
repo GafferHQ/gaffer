@@ -76,7 +76,7 @@ ArrayPlug::ArrayPlug( const std::string &name, Direction direction, ConstPlugPtr
 	{
 		// We're being constructed during execution of a legacy serialisation
 		// (nobody else is allowed to pass a null `elementPrototype`). Arrange
-		// to recover our protoype when the first element is added.
+		// to recover our prototype when the first element is added.
 		childAddedSignal().connect( boost::bind( &ArrayPlug::childAdded, this ) );
 		return;
 	}

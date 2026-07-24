@@ -228,8 +228,8 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 		boost::split( layerTokens, part, boost::is_any_of(".") );
 		if( layerTokens.size() == 1 )
 		{
-			// There are no period seperators in the part name.  We've seen a few examples
-			// of underscore seperators used in part names, so try that
+			// There are no period separators in the part name.  We've seen a few examples
+			// of underscore separators used in part names, so try that
 			boost::split( layerTokens, part, boost::is_any_of("_") );
 			partUnderscoreSplit = layerTokens.size() > 1;
 		}
@@ -242,7 +242,7 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 			// because they are alternate names for the default layer - Nuke puts channels
 			// from the default layer in layers named "rgba", "depth", or "other", depending
 			// on the channel name.  If a token matches the view name, we assume it's a view
-			// token, and can be removed ( we represent views seperately ).
+			// token, and can be removed ( we represent views separately ).
 			std::string lower = boost::algorithm::to_lower_copy( i);
 			return lower == "main" || lower == "rgb" || lower == "rgba" || lower == "other"
 				|| ( lower == "depth" && baseName == "Z" )
@@ -284,7 +284,7 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 	}
 	else if( partUnderscoreSplit )
 	{
-		// It doesn't really make sense to split on underscores, they're not really layer seperators, but
+		// It doesn't really make sense to split on underscores, they're not really layer separators, but
 		// we have seen some software that uses underscores in the part names.  This is actually totally fair
 		// according to the spec, since part names don't actually mean anything - it would load fine with
 		// channelInterpretation = Specification.  But it would go wrong in the Default heuristic mode, because

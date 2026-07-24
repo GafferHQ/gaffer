@@ -63,7 +63,7 @@ Gaffer::ValuePlug::CachePolicy FlatImageProcessor::computeCachePolicy( const Gaf
 	const ImagePlug *imagePlug = output->parent<ImagePlug>();
 	if( imagePlug && output == imagePlug->sampleOffsetsPlug() )
 	{
-		// This plug is faster to compute than to retreive from cache
+		// This plug is faster to compute than to retrieve from cache
 		return ValuePlug::CachePolicy::Uncached;
 	}
 	return ImageProcessor::computeCachePolicy( output );

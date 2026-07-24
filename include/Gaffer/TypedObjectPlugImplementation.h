@@ -39,7 +39,7 @@
 /// in a public header it is #included in TypedObjectPlug.cpp, and the relevant template
 /// classes are explicitly instantiated there. This prevents a host of problems to do with
 /// the definition of the same symbols in multiple object files. Additional TypedObjectPlug
-/// instantations may be created in similar .cpp files in other libraries.
+/// instantiations may be created in similar .cpp files in other libraries.
 
 namespace Gaffer
 {

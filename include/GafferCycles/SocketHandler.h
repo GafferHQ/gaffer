@@ -42,7 +42,7 @@
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "graph/node.h"
 IECORE_POP_DEFAULT_VISIBILITY
-#undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
+#undef fmix // OpenImageIO's farmhash interferes with IECore::MurmurHash
 
 namespace GafferCycles
 {

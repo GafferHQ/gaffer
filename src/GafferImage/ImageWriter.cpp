@@ -1370,7 +1370,7 @@ void setImageSpecDataWindow( ImageSpec &spec, Imath::Box2i &dataWindow, const Im
 	}
 }
 
-// Remove leading, trailing, or repeated dot seperators
+// Remove leading, trailing, or repeated dot separators
 std::string cleanExcessDots( std::string name )
 {
 	auto last = std::unique( name.begin(), name.end(), []( char a, char b ) {
@@ -2091,7 +2091,7 @@ void ImageWriter::execute() const
 		{
 			if( parts.size() > 1 )
 			{
-				throw IECore::Exception( "If you want to write single part multi-view, you must write all channnels to the same part - when writing multi-part files, write different views to different parts" );
+				throw IECore::Exception( "If you want to write single part multi-view, you must write all channels to the same part - when writing multi-part files, write different views to different parts" );
 			}
 
 			std::vector< const char* > rawPtrNames;

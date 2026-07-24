@@ -648,7 +648,7 @@ void processTileIndices( Sampler &sampler, const V2i &radius, const Box2i &tileB
 
 			Imath::Box2i rescanBound( p + V2i( -radius ), p + V2i( radius.x + 1, -radius.y + 1 ) );
 
-			// Now we rescan the image to find where the rank occured
+			// Now we rescan the image to find where the rank occurred
 			// In case there are multiple instances of an identical value,
 			// we take whichever one is closest to the center.
 			//

@@ -344,7 +344,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# > Note : `os.set_blocking( False )` is not a good solution because :
 			# >  1. It is not available on Windows until Python 3.12.
 			# >  2. If we interleave sleeping and reading on one thread, processes
-			# >     with a lot of output are artifically slowed by the sleeps.
+			# >     with a lot of output are artificially slowed by the sleeps.
 
 			def handleOutput( stream, messageContext, messageHandler ) :
 
