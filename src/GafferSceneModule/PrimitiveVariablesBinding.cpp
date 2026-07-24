@@ -48,10 +48,52 @@
 #include "GafferScene/PrimitiveVariables.h"
 #include "GafferScene/PrimitiveVariableTweaks.h"
 #include "GafferScene/QuantizePrimitiveVariables.h"
+#include "GafferScene/RandomPrimitiveVariable.h"
 #include "GafferScene/ResamplePrimitiveVariables.h"
 #include "GafferScene/ShufflePrimitiveVariables.h"
 
+using namespace GafferBindings;
 using namespace GafferScene;
+
+namespace
+{
+
+void setupBinding( RandomPrimitiveVariable &n, Gaffer::ValuePlug &p )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	n.setup( &p );
+}
+
+class RandomPrimitiveVariableSerialiser : public NodeSerialiser
+{
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		auto valuesPlug = static_cast<const RandomPrimitiveVariable *>( graphComponent )->choicesValuesPlug();
+		if( !valuesPlug )
+		{
+			// `setup()` hasn't been called yet.
+			return result;
+		}
+
+		if( result.size() )
+		{
+			result += "\n";
+		}
+
+		// Add a call to `setup()` to recreate the plugs.
+
+		const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( valuesPlug );
+		result += identifier + ".setup( " + plugSerialiser->constructor( valuesPlug, serialisation ) + " )\n";
+
+		return result;
+	}
+
+};
+
+} // namespace
 
 void GafferSceneModule::bindPrimitiveVariables()
 {
@@ -78,4 +120,20 @@ void GafferSceneModule::bindPrimitiveVariables()
 		;
 	}
 
+	{
+		GafferBindings::DependencyNodeClass<RandomPrimitiveVariable> randomClass;
+		boost::python::scope s = randomClass;
+
+		boost::python::enum_<RandomPrimitiveVariable::Distribution>( "Distribution" )
+			.value( "UniformInt", RandomPrimitiveVariable::Distribution::UniformInt )
+			.value( "UniformFloat", RandomPrimitiveVariable::Distribution::UniformFloat )
+			.value( "Gaussian", RandomPrimitiveVariable::Distribution::Gaussian )
+			.value( "WeightedChoice", RandomPrimitiveVariable::Distribution::WeightedChoice )
+			.value( "HollowSphere", RandomPrimitiveVariable::Distribution::HollowSphere )
+		;
+
+		randomClass.def( "setup", &setupBinding );
+
+		Serialisation::registerSerialiser( RandomPrimitiveVariable::staticTypeId(), new RandomPrimitiveVariableSerialiser );
+	}
 }
