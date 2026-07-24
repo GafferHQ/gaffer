@@ -166,7 +166,7 @@ __dispatchScript(
 	]
 )
 
-# Task: animation of adjusting the Aperture Offset in the Node Editor, and the corresponding changes to the camera's frustrum in the Viewer
+# Task: animation of adjusting the Aperture Offset in the Node Editor, and the corresponding changes to the camera's frustum in the Viewer
 ## TODO: Automate `images/taskApertureOffset.gif` when these tools become available:
 # - KB/M recording and simulated playback
 

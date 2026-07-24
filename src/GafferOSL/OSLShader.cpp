@@ -369,7 +369,7 @@ bool find3DelightSplineParametersFromPositions(
 		return false;
 	}
 
-	// 3Delight's naming convention seems extremly loose, which makes it hard to
+	// 3Delight's naming convention seems extremely loose, which makes it hard to
 	// group the related spline parameters. Maybe it would be better to group based
 	// on the "maya_attribute" metadata, which on every 3Delight shader with a spline
 	// is set to <something>_Position, except ramp.oso, where it's set to

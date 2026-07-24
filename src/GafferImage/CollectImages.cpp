@@ -106,7 +106,7 @@ class MappingData : public IECore::Data
 					// Duplicate channel names could arise for several reasons :
 					//
 					// - The user entered the same layer name twice.
-					// - Names overlap due to complex hierachical naming, such as a layer named `A` with
+					// - Names overlap due to complex hierarchical naming, such as a layer named `A` with
 					//   a channel named `B.R` and a layer named `A.B` with a channel named `R`.
 					// - `addLayerPrefix` is off, but the input channels do not have a suitable
 					//   prefix of their own.

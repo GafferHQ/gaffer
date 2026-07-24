@@ -483,7 +483,7 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		# assertMeshesPraticallyEqual confirms our values all end up correct, but doesn't check how the
 		# indices are shared - we can check this manually by confirming that uv indices for the
 		# tessellated copy end up the same as the indices for the tessellated original, just all shifted
-		# by a constant offset, ensuring they end up indepedent.
+		# by a constant offset, ensuring they end up independent.
 		uvSize = len( tessellated["uv"].data )
 		self.assertEqual(
 			list( dupedTessellated["uv"].indices ),
@@ -576,7 +576,7 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 		)
 
 		# With no boundary interpolation, and 9 input quads, we discard all boundary quads, and only
-		# tesselate the middle
+		# tessellate the middle
 		self.assertEqual(
 			MeshAlgo.tessellateMesh(
 				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 3 ) ),
@@ -602,7 +602,7 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 			self.assertNotIn( tessUv, fvliResults )
 			fvliResults.append( tessUv )
 
-		# Similiarly for the `triangleSubdivisionRule`, just confirm that it does something.
+		# Similarly for the `triangleSubdivisionRule`, just confirm that it does something.
 		self.assertNotEqual(
 			MeshAlgo.tessellateMesh( generalMesh, 1 ),
 			MeshAlgo.tessellateMesh( generalMesh, 1, triangleSubdivisionRule = "smooth" )

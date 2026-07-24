@@ -73,7 +73,7 @@ GAFFER_API bool dependsOnCompute( const ValuePlug *plug );
 template<typename Predicate>
 std::invoke_result_t<Predicate, Plug *> findDestination( Plug *plug, Predicate &&predicate );
 
-/// Visits the plug and its inputs, returing the first `predicate( plug )` result which
+/// Visits the plug and its inputs, returning the first `predicate( plug )` result which
 /// evaluates to `true`.
 template<typename Predicate>
 std::invoke_result_t<Predicate, Plug *> findSource( Plug *plug, Predicate &&predicate );

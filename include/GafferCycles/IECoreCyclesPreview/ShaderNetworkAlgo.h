@@ -80,7 +80,7 @@ IECORECYCLES_API bool hasOSL( const ccl::Shader *cshader );
 //
 // We represent lights as a `IECoreScene::ShaderNetwork`, where the output shader defines the light and
 // each parameter can have input shaders. We support "virtual" parameters for `intensity`, `exposure` and `color`,
-// combinining them in to the single `strength` parameter in Cycles. Where these parameters have input connections,
+// combining them in to the single `strength` parameter in Cycles. Where these parameters have input connections,
 // we instead combine them into a Cycles shader suitable for providing emission to the `shader` socket.
 
 // Converts all non-connected light parameters on to the provided `cyclesLight` node.
@@ -93,7 +93,7 @@ IECORECYCLES_API void convertLight( const IECoreScene::ShaderNetwork *light, ccl
 IECORECYCLES_API IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreScene::ShaderNetwork *light );
 
 /// Converts any UsdLuxLights into native Cycles shaders. This should be done before
-/// caling `convertLight()` and `convertLightShader()`.
+/// calling `convertLight()` and `convertLightShader()`.
 IECORECYCLES_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
 
 } // namespace ShaderNetworkAlgo

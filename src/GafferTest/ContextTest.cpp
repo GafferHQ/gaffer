@@ -191,7 +191,7 @@ void GafferTest::testEditableScope()
 // at the expected rate, the chance of a full collision across all 4 should be infinitesimal
 // ( we don't want to check for collisions in the whole 128 bit hash, since it would take years
 // for one to occur randomly )
-// "mode" switches betwen 4 modes for creating contexts:
+// "mode" switches between 4 modes for creating contexts:
 //   0 :  1 entry with a single increment int
 //   1 :  40 fixed strings, plus a single incrementing int
 //   2 :  20 random floats

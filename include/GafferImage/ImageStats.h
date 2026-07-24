@@ -106,7 +106,7 @@ class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
 		Gaffer::ObjectPlug *tileStatsPlug();
 		const Gaffer::ObjectPlug *tileStatsPlug() const;
 
-		// Combined stats, before they get broken out into 3 seperate plugs
+		// Combined stats, before they get broken out into 3 separate plugs
 		Gaffer::ObjectPlug *allStatsPlug();
 		const Gaffer::ObjectPlug *allStatsPlug() const;
 

@@ -145,7 +145,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	# protected to encourage non-reliance on knowledge of the Qt backend.
 	#
 	# If a current parent has been defined using the `with` syntax described above,
-	# the parenting argument may be passed as a dictionay of optional keywords for the
+	# the parenting argument may be passed as a dictionary of optional keywords for the
 	# automatic `parent.addChild()` call.
 	def __init__( self, topLevelWidget, *, toolTip="", parenting = None, displayTransform = None ) :
 
@@ -643,7 +643,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		cls.__ensureFocusChangedConnection()
 		return cls.__focusChangedSignal
 
-	## Returns the tooltip to be displayed. This may be overriden
+	## Returns the tooltip to be displayed. This may be overridden
 	# by derived classes to provide sensible default behaviour, but
 	# allow custom behaviour when setToolTip( nonEmptyString ) has
 	# been called.

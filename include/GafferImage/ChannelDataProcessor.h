@@ -77,8 +77,8 @@ class GAFFERIMAGE_API ChannelDataProcessor : public ImageProcessor
 		/// @param context The context that the channel data is being requested for.
 		/// @param parent The parent image plug that the output is being processed for.
 		/// @param channelIndex An index in the range of 0-3 which indicates whether the channel to be processed is R, G, B or A.
-		///                     It is useful for querying Color4f plugs for the value that coresponds to the channel being processed.
-		/// @param outData The tile where the result of the operation should be written. It is initialized with the coresponding tile data from inPlug() which should be used as the input data.
+		///                     It is useful for querying Color4f plugs for the value that corresponds to the channel being processed.
+		/// @param outData The tile where the result of the operation should be written. It is initialized with the corresponding tile data from inPlug() which should be used as the input data.
 		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, IECore::FloatVectorDataPtr outData ) const = 0;
 
 		void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;

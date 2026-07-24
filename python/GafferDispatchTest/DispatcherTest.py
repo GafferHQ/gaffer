@@ -785,7 +785,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		expectedText = "n1 on 2;n2 on 2;n1 on 4;n2 on 4;n1 on 6;n2 on 6;n3 on 2;n3 on 4;n3 on 6;n4 on 2;n4 on 4;n4 on 6;"
 		self.assertEqual( text, expectedText )
 
-		# dispatch again with differnt batch sizes
+		# dispatch again with different batch sizes
 		s["n1"]["dispatcher"]["batchSize"].setValue( 2 )
 		s["n2"]["dispatcher"]["batchSize"].setValue( 5 )
 		fileName.unlink()
@@ -1060,7 +1060,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 					# and they need to be preTasks of our preExecute task
 					# only, since that is the topmost branch of our internal
 					# task graph. We also need to use a Context which
-					# does not contain our internal preExecute entry, incase
+					# does not contain our internal preExecute entry, in case
 					# that has meaning for any of our external preTasks.
 					customContext = Gaffer.Context( context )
 					del customContext["selfExecutingNode:preExecute"]

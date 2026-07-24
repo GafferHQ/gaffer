@@ -3077,7 +3077,7 @@ void Instancer::PrototypeScope::setPrototype( const EngineData *engine, const Sc
 	assert( branchPath->size() >= 2 );
 
 	// We pass in m_prototypePath as the storage to prototypeRoot() - it may or may not be set,
-	// becaues prototypeRoot can sometimes just return a pointer without needing to do any allocation.
+	// because prototypeRoot can sometimes just return a pointer without needing to do any allocation.
 	m_prototypePath.resize( 0 );
 	const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( (*branchPath)[1], *sourcePath, m_prototypePath );
 

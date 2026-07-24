@@ -47,7 +47,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 // Cycles (for ustring)
 #include "util/param.h"
 #include "util/version.h"
-#undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
+#undef fmix // OpenImageIO's farmhash interferes with IECore::MurmurHash
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "fmt/format.h"

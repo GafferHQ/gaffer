@@ -1370,7 +1370,7 @@ void setImageSpecDataWindow( ImageSpec &spec, Imath::Box2i &dataWindow, const Im
 	}
 }
 
-// Remove leading, trailing, or repeated dot seperators
+// Remove leading, trailing, or repeated dot separators
 std::string cleanExcessDots( std::string name )
 {
 	auto last = std::unique( name.begin(), name.end(), []( char a, char b ) {

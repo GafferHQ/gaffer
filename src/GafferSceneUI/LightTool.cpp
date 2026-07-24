@@ -1096,14 +1096,14 @@ class LightToolHandle : public Handle
 		// The following protected methods are used by derived classes to implement
 		// handle-specific behavior.
 
-		// May be overriden to update internal state when the scene location the handle
+		// May be overridden to update internal state when the scene location the handle
 		// is attached to changes.
 		virtual void handlePathChanged()
 		{
 
 		}
 
-		// May be overriden to clean up internal state after a drag.
+		// May be overridden to clean up internal state after a drag.
 		virtual bool handleDragEndInternal()
 		{
 			return false;
@@ -1160,11 +1160,11 @@ class LightToolHandle : public Handle
 			return result;
 		}
 
-		// Must be overriden to set the tooltip position in gadget space based
+		// Must be overridden to set the tooltip position in gadget space based
 		// on `eventLine` from a `DragDropEvent` or `ButtonEvent`.
 		virtual void updateTooltipPosition( const LineSegment3f &eventLine ) = 0;
 
-		// Must be overriden to make edits to the inspections in `handleDragMove()`.
+		// Must be overridden to make edits to the inspections in `handleDragMove()`.
 		virtual bool handleDragMoveInternal( const GafferUI::DragDropEvent &event ) = 0;
 
 		// Must be overridden to add `IECoreGL` components to `rootGroup` in `renderHandle()`.

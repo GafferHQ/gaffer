@@ -1957,7 +1957,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# Now set `matrix` via the official route.
 		o.transform( imath.M44f().translate( imath.V3f( 4, 5, 6 ) ) )
 		# And remove the dodgy custom attribute. If it's not implemented
-		# carefuly, the code for removing attributes could reset the
+		# carefully, the code for removing attributes could reset the
 		# matrix, which is definitely not what we want.
 		o.attributes( r.attributes( IECore.CompoundObject( {} ) ) )
 
@@ -3638,7 +3638,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( self.__allNodes( universe, nodeEntryName = "ginstance" ) ), len( attributeVariants ) )
 
 		instanceSharers = [
-			# All the same because camera visibility is on, and user attributes arent' relevant.
+			# All the same because camera visibility is on, and user attributes aren't relevant.
 			( "defaultAttributes", "cameraOnAttributes", "userAttributes", "userAttributes2" ),
 			# All the same because camera visibility is off.
 			( "cameraOffAttributes", "cameraOffUserAttributes" ),

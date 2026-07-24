@@ -672,7 +672,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# with an A channel, and a "depth" subimage with a Z channel.
 		# The standard would expect this to be loaded with channel names like "RGBA.A" and "depth.Z",
 		# but in practice, applications expect these default layers to be loaded as the standard layer
-		# names, so we conform to this pratical expection, and just name the channels R, G, B, A, and Z
+		# names, so we conform to this practical expectation, and just name the channels R, G, B, A, and Z
 		# The test file was created with this command
 		# > oiiotool --create 4x4 3 --addc 0.1,0.2,0.3 --attrib "oiio:subimagename" rgb -create 4x4 1 --chnames A --addc 0.4 --attrib "oiio:subimagename" RGBA -create 4x4 1 --chnames Z --addc 4.2 --attrib "oiio:subimagename" depth --siappendall -o multipartDefaultChannels.exr
 

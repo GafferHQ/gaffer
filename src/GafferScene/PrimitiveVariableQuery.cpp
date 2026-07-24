@@ -533,7 +533,7 @@ void PrimitiveVariableQuery::compute( Gaffer::ValuePlug* const output, const Gaf
 		}
 		else if( valuePlug && ( valuePlug->isAncestorOf( output ) || output == valuePlug ) )
 		{
-			// NOTE : set the query's output value plug. variable data may be indexed. only expand when neccessary
+			// NOTE : set the query's output value plug. variable data may be indexed. only expand when necessary
 
 			if( resultVariable.data )
 			{

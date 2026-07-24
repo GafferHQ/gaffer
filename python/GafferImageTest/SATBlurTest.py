@@ -250,7 +250,7 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 		# Many of our image sources set the pixels outside the data window to black anyway, so there would
 		# be no error introduced by reading pixels outside the data window, but this is incorrect.
 		# We can test this using a Constant as a source, which sets the pixels for all tiles to a constant,
-		# indepedent of the data window.
+		# independent of the data window.
 
 
 		constant = GafferImage.Constant()

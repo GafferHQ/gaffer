@@ -86,7 +86,7 @@ class GAFFERDISPATCH_API FileList : public Gaffer::ComputeNode
 			// Lists all files individually, even if they belong to a sequence.
 			Files,
 			// Collects files into frame sequences, listing only the sequences.
-			// Files not in a sequence are ommitted.
+			// Files not in a sequence are omitted.
 			Sequences,
 			// Outputs sequences where possible, with non-sequence files listed
 			// individually.

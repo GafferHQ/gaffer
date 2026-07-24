@@ -735,7 +735,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		}
 
 		// If m_planarMovement is true, we are doing a 2D view with a fixed scaling
-		// between world units and pixels, independ of viewport resolution
+		// between world units and pixels, independent of viewport resolution
 		// ( and m_sourceCamera will be null ).
 		bool m_planarMovement;
 		bool m_tumblingEnabled;

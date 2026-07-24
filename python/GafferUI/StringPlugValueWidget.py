@@ -106,7 +106,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if value is None and len( values ) :
 			placeHolder = "---"
 			# Mixed values require interaction before we commit the widget
-			# value to the plugs. This prevents mixed values being overriden
+			# value to the plugs. This prevents mixed values being overridden
 			# by the empty string in the widget when it loses focus.
 			self.__editRequiresInteraction = True
 		else :
