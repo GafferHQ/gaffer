@@ -310,7 +310,7 @@ class DataStoreTest( GafferTest.TestCase ) :
 		s["dataStore"].setEntry( "a", IECore.IntData( 77 ) )
 
 		# Add a node that will fail to serialise. Because it is added after the DataStore,
-		# the DataStore will be serialised
+		# the DataStore will be serialised before this triggers an exception.
 		s["badSerialise"] = GafferTest.BadNode( "badSerialise", True )
 
 		with self.assertRaisesRegex( IECore.Exception, 'Testing failure during serialise' ) :
