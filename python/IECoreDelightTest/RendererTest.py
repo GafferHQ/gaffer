@@ -1547,6 +1547,97 @@ class RendererTest( GafferTest.TestCase ) :
 
 		return { "P": p, "P.indices": pIndices, "N": n, "N.indices": nIndices }
 
+	def testUSDMeshLight( self ) :
+
+		for surfaceShader in [ None, IECoreScene.Shader( "dlPrincipled.oso", "osl:surface", {} ) ] :
+
+			with self.subTest( surfaceShader = surfaceShader ) :
+
+				r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"3Delight",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+					str( self.temporaryDirectory() / "test.nsia" ),
+				)
+
+				attributes = IECore.CompoundObject(
+					{
+						"light" : IECoreScene.ShaderNetwork(
+							{
+								"lightHandle" : IECoreScene.Shader( "MeshLight", "light", { "exposure" : 2.0 } )
+							},
+							output = "lightHandle"
+						)
+					}
+				)
+				if surfaceShader is not None :
+					attributes["osl:surface"] = IECoreScene.ShaderNetwork(
+						{ "surfaceHandle" : surfaceShader },
+						output = "surfaceHandle",
+					)
+
+				r.light(
+					"testMeshLight",
+					IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) ),
+					r.attributes( attributes )
+				).transform( imath.M44f().translate( imath.V3f( 1.0, 2.0, 3.0 ) ) * imath.M44f().rotate( IECore.degreesToRadians( imath.V3f( 10.0, 20.0, 30.0 ) ) ) )
+
+				r.render()
+
+				del r
+
+				nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+				cubeProperties = {
+					"P" : [ imath.V3f( -0.5, -0.5, -0.5 ), imath.V3f( 0.5, -0.5, -0.5 ), imath.V3f( 0.5, 0.5, -0.5 ), imath.V3f( -0.5, 0.5, -0.5 ), imath.V3f( 0.5, -0.5, 0.5 ), imath.V3f( 0.5, 0.5, 0.5 ), imath.V3f( -0.5, -0.5, 0.5 ), imath.V3f( -0.5, 0.5, 0.5 ) ],
+					"P.indices" : [ 3, 2, 1, 0, 1, 2, 5, 4, 4, 5, 7, 6, 6, 7, 3, 0, 2, 3, 7, 5, 0, 1, 4, 6 ],
+					"N" : [ imath.V3f( 0, 0, 1 ), imath.V3f( 0, 0, -1 ), imath.V3f( 0, 1, 0 ), imath.V3f( 0, -1, 0 ), imath.V3f( 1, 0, 0 ), imath.V3f( -1, 0, 0 ) ],
+					"N.indices" : [ 1, 1, 1, 1, 4, 4, 4, 4, 0, 0, 0, 0, 5, 5, 5, 5, 2, 2, 2, 2, 3, 3, 3, 3 ],
+				}
+
+				self.__assertLightSettings(
+					nsi,
+					[
+						(
+							"MeshLight:light",
+							imath.V3f( 1.0, 2.0, 3.0 ),
+							imath.V3f( 10.0, 20.0, 30.0 ),
+							"mesh",
+							cubeProperties,
+							"areaLight.oso",
+							{ "exposure" : 2.0 },
+							{ "exposure" : 2.0 },
+						)
+					]
+				)
+
+				# Not a light, but we can make use of the assertion nontheless
+				self.__assertLightSettings(
+					nsi,
+					[
+						(
+							"MeshLight:surface",
+							imath.V3f( 1.0, 2.0, 3.0 ),
+							imath.V3f( 10.0, 20.0, 30.0 ),
+							"mesh",
+							cubeProperties,
+							"Constant.oso" if surfaceShader is None else surfaceShader.name,
+							{},
+							{},
+						)
+					]
+				)
+
+				for k, v in nsi.items() :
+					if k.startswith( "attributes:" ) and not k.endswith( ":usdMeshLight" ) :
+						self.assertEqual( v["visibility.shadow"], 0 )
+					if k.startswith( "attributes:" ) and k.endswith( ":usdMeshLight" ) :
+						self.assertEqual( v["visibility.camera"], 0 )
+						self.assertEqual( v["visibility.reflection"], 0 )
+						self.assertEqual( v["visibility.refraction"], 0 )
+						self.assertEqual( v["visibility.shadow"], 1 )
+						self.assertEqual( v["visibility.specular"], 0 )
+
+
 	def testOutputLayerNames( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(

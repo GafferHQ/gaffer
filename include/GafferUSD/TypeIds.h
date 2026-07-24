@@ -46,6 +46,7 @@ enum TypeId
 	USDAttributesTypeId = 119101,
 	USDShaderTypeId = 119102,
 	USDLightTypeId = 119103,
+	USDMeshLightTypeId = 119104,
 
 	LastTypeId = 119199
 

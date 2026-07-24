@@ -868,8 +868,19 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_assetName( "" ),
 				m_lightGroup( "" ),
 				m_isCausticsCaster( false ),
-				m_isCausticsReceiver( false )
+				m_isCausticsReceiver( false ),
+				m_isUSDMeshLight( false )
 		{
+			if( auto light = attributes->member<ShaderNetwork>( g_lightAttributeName ) )
+			{
+				if( light->outputShader()->getName() == "MeshLight" )
+				{
+					m_isUSDMeshLight = true;
+				}
+			}
+			ConstCompoundObjectPtr modifiedAttributes = ShaderNetworkAlgo::convertUSDMeshLightAttributes( attributes );
+			attributes = modifiedAttributes.get();
+
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
 			updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
 			updateVisibility( g_glossyVisibilityAttributeName,       (int)ccl::PATH_RAY_GLOSSY,         attributes );
@@ -1215,6 +1226,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_volume.clipping ? m_volume.clipping.value() : 0.001f;
 		}
 
+		bool isUSDMeshLight() const
+		{
+			return m_isUSDMeshLight;
+		}
+
 	private :
 
 		void updateVisibility( const IECore::InternedString &name, int rayType, const IECore::CompoundObject *attributes )
@@ -1367,6 +1383,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		bool m_isCausticsCaster;
 		bool m_isCausticsReceiver;
 		bool m_muteLight;
+		bool m_isUSDMeshLight;
 
 		using CustomAttributes = ccl::vector<ccl::ParamValue>;
 		CustomAttributes m_custom;
@@ -2557,7 +2574,21 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
-			ObjectInterfacePtr result = new CyclesLight( m_scene, name, m_nodeDeleter.get() );
+			auto typedAttributes = static_cast<const CyclesAttributes *>( attributes );
+			ObjectInterfacePtr result;
+			if( typedAttributes->isUSDMeshLight() )
+			{
+				SharedGeometryPtr geometry = m_geometryCache->get( samples, times, attributes, name );
+				if( !geometry )
+				{
+					return nullptr;
+				}
+				result = new CyclesObject( m_scene, geometry, name, frame(), &m_lightLinker, m_nodeDeleter.get() );
+			}
+			else
+			{
+				result = new CyclesLight( m_scene, name, m_nodeDeleter.get() );
+			}
 			result->attributes( attributes );
 			return result;
 		}
