@@ -36,7 +36,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/Serialisation.h"
 
 #include "GafferTest/ComputeNodeTest.h"
 #include "GafferTest/ContextTest.h"
@@ -59,18 +58,6 @@
 using namespace boost::python;
 using namespace GafferTest;
 using namespace GafferTestModule;
-
-class MultiplyNodeSerialiser : public GafferBindings::NodeSerialiser
-{
-	public :
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, GafferBindings::Serialisation &serialisation ) const override
-		{
-			const MultiplyNode *node = static_cast<const MultiplyNode *>( graphComponent );
-			node->checkSerialise();
-			return NodeSerialiser::constructor( graphComponent, serialisation );
-		}
-
-};
 
 static void testConcurrentAccessToDifferentInstancesWrapper()
 {
@@ -100,16 +87,13 @@ BOOST_PYTHON_MODULE( _GafferTest )
 {
 
 	GafferBindings::DependencyNodeClass<MultiplyNode>()
-		.def( init<const char *, bool, bool>(
+		.def( init<const char *, bool>(
 				(
 					boost::python::arg_( "name" ),
-					boost::python::arg_( "brokenAffects" )=false,
-					boost::python::arg_( "serialiseThrows" )=false
+					boost::python::arg_( "brokenAffects" )=false
 				)
 			)
 		);
-
-	GafferBindings::Serialisation::registerSerialiser( MultiplyNode::staticTypeId(), new MultiplyNodeSerialiser );
 
 	def( "asFloat32", &asFloat32 );
 	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
