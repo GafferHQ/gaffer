@@ -134,7 +134,12 @@ def redo( menu ) :
 def cut( menu ) :
 
 	s = scope( menu )
-	with Gaffer.UndoScope( s.script ) :
+	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Error Occurred During Cut",
+		closeLabel = "OK",
+		parentWindow = s.scriptWindow
+	)
+	with Gaffer.UndoScope( s.script ), errorHandler :
 		s.script.cut( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Copy menu item. It must
@@ -142,7 +147,13 @@ def cut( menu ) :
 def copy( menu ) :
 
 	s = scope( menu )
-	s.script.copy( s.parent, s.script.selection() )
+
+	with GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Error Occurred During Copy",
+		closeLabel = "OK",
+		parentWindow = s.scriptWindow
+	) :
+		s.script.copy( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Paste menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.

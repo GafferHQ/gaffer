@@ -23,6 +23,7 @@ Fixes
 - ScriptNode :
   - Fixed context updates for `variables` plugs with an input connection.
   - Prevented invalid input connections to `variables` plugs. Connections from node outputs are considered invalid because they could create a circular dependency between context variables.
+- EditMenu : Added popup dialogue when errors occur during "cut" or "copy" operations.
 
 API
 ---
