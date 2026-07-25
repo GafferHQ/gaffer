@@ -85,6 +85,41 @@ def __clearPerformanceMonitor( menu ) :
 	del script.__performanceMonitor
 	Gaffer.MonitorAlgo.removePerformanceAnnotations( script )
 
+def __evaluateFocusNode( script ) :
+	import GafferImage
+	import GafferImageTest
+	import GafferScene
+	import GafferSceneTest
+
+	for i in script.focusSet():
+		for p in Gaffer.Plug.RecursiveOutputRange( i ) :
+			if p.isInstanceOf( GafferImage.ImagePlug ):
+				GafferImageTest.processTiles( p )
+				return
+			if p.isInstanceOf( GafferScene.ScenePlug ):
+				GafferSceneTest.traverseScene( p )
+				return
+
+	IECore.msg( IECore.Msg.Level.Error, "Performance Monitor", "No image or scene plug found to evaluate" )
+
+def __profileFocusNodeEvaluation( menu ) :
+
+	script = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	performanceMonitor = __performanceMonitor( menu )
+	if performanceMonitor:
+		del script.__performanceMonitor
+		Gaffer.MonitorAlgo.removePerformanceAnnotations( script )
+
+	__clearCaches( menu )
+
+	__startPerformanceMonitor( menu )
+
+	__evaluateFocusNode( script )
+
+	__stopPerformanceMonitor( menu )
+	imagePlug = None
+	scenePlug = None
+
 def __currentContextMonitor( menu ) :
 
 	# We store a monitor per script, so that we don't pollute
@@ -164,6 +199,19 @@ def __profilingSubMenu( menu ) :
 		{
 			"command" : __clearPerformanceMonitor,
 			"active" : performanceMonitor is not None and not performanceMonitor.__running
+		}
+	)
+	result.append(
+		"/Performance Monitor/Divider2",
+		{
+			"divider" : True,
+		}
+	)
+	result.append(
+		"/Performance Monitor/Profile Focus Node Evaluation",
+		{
+			"command" : __profileFocusNodeEvaluation,
+			"active" : not ( performanceMonitor and performanceMonitor.__running )
 		}
 	)
 
