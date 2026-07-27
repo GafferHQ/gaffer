@@ -46,6 +46,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Monitor.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -478,6 +479,24 @@ void ScriptNode::parentChanging( Gaffer::GraphComponent *newParent )
 	{
 		BackgroundTask::cancelAffectedTasks( this );
 	}
+}
+
+bool ScriptNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	if( !Node::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	auto inputValuePlug = IECore::runTimeCast<const ValuePlug>( inputPlug );
+	if( variablesPlug()->isAncestorOf( plug ) && inputValuePlug && PlugAlgo::dependsOnCompute( inputValuePlug ) )
+	{
+		// Can't drive context variables by values which themselves
+		// are context-sensitive.
+		return false;
+	}
+
+	return true;
 }
 
 bool ScriptNode::selectionSetAcceptor( const Set *s, const Set::Member *m )

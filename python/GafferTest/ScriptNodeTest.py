@@ -1862,5 +1862,25 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( script2.context()["variable1"], 3, )
 		self.assertEqual( script2.context()["variable2"], 3 )
 
+	def testCantConnectComputedOutputToContextVariable( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild(
+			Gaffer.NameValuePlug( "variable1", 1, name = "variable1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		script["add"] = GafferTest.AddNode()
+
+		self.assertFalse( script["variables"]["variable1"]["value"].acceptsInput( script["add"]["sum"] ) )
+
+	def testCantConnectNonValuePlugToContextVariable( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild(
+			Gaffer.NameValuePlug( "variable1", 1, name = "variable1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		script["node"] = Gaffer.Node()
+		script["node"]["user"]["plug"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertFalse( script["variables"]["variable1"]["value"].acceptsInput( script["node"]["user"]["plug"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

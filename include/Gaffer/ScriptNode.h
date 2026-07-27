@@ -292,6 +292,7 @@ class GAFFER_API ScriptNode : public Node
 	protected :
 
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
+		bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const override;
 
 	private :
 
