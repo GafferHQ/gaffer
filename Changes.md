@@ -12,6 +12,7 @@ Improvements
 - GraphEditor :
   - Changed node context menu items to operate on multiple nodes where possible (#2783).
   - Added drag & drop from LightEditor and AttributeEditor. Dropping a location navigates to the node that created the location.
+- RenderMan : Changed PxrCryptomatte's material output to use the name of the terminal shader, rather than a hash of the network. This is stable under animation. As before, the output can be customised by creating a `user:__materialid` attribute.
 
 Fixes
 -----
@@ -23,6 +24,11 @@ API
 ---
 
 - GraphEditor : Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
+
+Breaking Changes
+----------------
+
+- RenderMan : Changed the default values used for PxrCryptomatte's material output.
 
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========

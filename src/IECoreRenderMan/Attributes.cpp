@@ -195,12 +195,12 @@ IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
 		"toFloat3", new Shader( "PxrToFloat3" )
 	);
 	const InternedString constantHandle = result->addShader(
-		"constant", new Shader( "PxrConstant" )
+		"defaultFacingRatio", new Shader( "PxrConstant" )
 	);
 
 	result->addConnection( { { facingRatioHandle, "resultF" }, { toFloat3Handle, "input" } } );
 	result->addConnection( { { toFloat3Handle, "resultRGB" }, { constantHandle, "emitColor" } } );
-	result->setOutput( { "constant", "out" } );
+	result->setOutput( { "defaultFacingRatio", "out" } );
 
 	return result;
 
@@ -230,6 +230,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 	const auto [surfaceName, surface] = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames );
 	const auto [volumeName, volume] = shaderNetworkAttribute( attributes->members(), g_volumeAttributeNames );
 
+	InternedString materialId;
 	if( volume )
 	{
 		// We can only choose a single material - either a volume or a surface.
@@ -237,6 +238,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 		// volume shader, so if a volume shader is assigned then we use it for all
 		// geometry types.
 		m_material = materialCache->getMaterial( volume, volumeName, attributes );
+		materialId = volume->getOutput().shader;
 	}
 	else
 	{
@@ -246,6 +248,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 		// > volume as we don't know the right value for the `densityFloatPrimVar`
 		// > parameter.
 		m_material = materialCache->getMaterial( surface ? surface : g_facingRatio.get(), surface ? surfaceName : InternedString(), attributes );
+		materialId = surface ? surface->getOutput().shader : g_facingRatio->getOutput().shader;
 	}
 
 	const auto [displacementName, displacement] = shaderNetworkAttribute( attributes->members(), g_displacementAttributeNames );
@@ -264,13 +267,9 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, MaterialCache 
 		m_lightMaterial = materialCache->getMaterial( surface ? surface : g_black.get(), surface ? surfaceName : InternedString(), attributes );
 	}
 
-	if( surface )
-	{
-		// Set up material id for PxrCryptomatte. This can be overridden if desired
-		// by specifying it in `attributes`, in which case it will be set again below.
-		const string materialId = surface->Object::hash().toString();
-		m_instanceAttributes.SetString( g_userMaterialId, RtUString( materialId.c_str() ) );
-	}
+	// Set up material id for PxrCryptomatte. This can be overridden if desired
+	// by specifying it in `attributes`, in which case it will be set again below.
+	m_instanceAttributes.SetString( g_userMaterialId, RtUString( materialId.c_str() ) );
 
 	// Convert attributes into parameter lists for instances and prototypes, and
 	// calculate a hash for how the latter affects automatic instancing.

@@ -3035,6 +3035,55 @@ class RendererTest( GafferTest.TestCase ) :
 		del sphere
 		del renderer
 
+	def testMaterialID( self ) :
+
+		surfaceNetwork = IECoreScene.ShaderNetwork(
+			shaders = { "surfaceOutputHandle" : IECoreScene.Shader( "PxrConstant" ) },
+			output = ( "surfaceOutputHandle", "bxdf_out" ),
+		)
+
+		volumeNetwork = IECoreScene.ShaderNetwork(
+			shaders = { "volumeOutputHandle" : IECoreScene.Shader( "PxrVolume" ) },
+			output = ( "volumeOutputHandle", "out" ),
+		)
+
+		for surface, volume, materialID, expectedID in [
+			( surfaceNetwork, None, None, "surfaceOutputHandle" ),
+			( None, volumeNetwork, None, "volumeOutputHandle" ),
+			( surfaceNetwork, volumeNetwork, None, "volumeOutputHandle" ),
+			( None, None, None, "defaultFacingRatio" ),
+			( surfaceNetwork, volumeNetwork, "customID", "customID" ),
+		] :
+
+			with self.subTest( surface = surface is not None, volume = volume is not None, materialID = materialID ) :
+
+				with IECoreRenderManTest.RileyCapture() as capture :
+
+					renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+						self.renderer,
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+					)
+
+					attributes = IECore.CompoundObject()
+					if surface :
+						attributes["ri:surface"] = surfaceNetwork
+					if volume :
+						attributes["ri:volume"] = volumeNetwork
+					if materialID :
+						attributes["user:__materialid"] = IECore.StringData( materialID )
+
+					renderer.object(
+						"/sphere", IECoreScene.SpherePrimitive( 1 ),
+						renderer.attributes( attributes )
+					)
+
+					del renderer
+
+				self.__assertParameterEqual(
+					next( x for x in capture.json if x["method"] == "CreateGeometryInstance" )["attributes"]["params"],
+					"user:__materialid", [ expectedID ]
+				)
+
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
