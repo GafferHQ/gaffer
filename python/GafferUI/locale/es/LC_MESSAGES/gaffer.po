@@ -40,10 +40,10 @@ msgid "Save As..."
 msgstr "Guardar como..."
 
 msgid "Save script"
-msgstr "Guardar script"
+msgstr "Guardar fichero"
 
 msgid "Open script"
-msgstr "Abrir script"
+msgstr "Abrir fichero"
 
 msgid "Revert To Saved"
 msgstr "Revertir a guardado"
@@ -61,7 +61,7 @@ msgid "Import"
 msgstr "Importar"
 
 msgid "Import script"
-msgstr "Importar script"
+msgstr "Importar fichero"
 
 msgid "Settings..."
 msgstr "Configuración..."
@@ -71,6 +71,9 @@ msgstr "Configuración"
 
 msgid "Discard Unsaved Changes?"
 msgstr "¿Descartar cambios no guardados?"
+
+msgid "The file \"{}\" has unsaved changes. Do you want to discard them?"
+msgstr "El archivo \"{}\" tiene cambios sin guardar. ¿Deseas descartarlos?"
 
 msgid "There are unsaved changes which will be lost. Discard them and revert?"
 msgstr "Hay cambios no guardados que se perderán. ¿Descartarlos y revertir?"
@@ -1630,7 +1633,7 @@ msgid "Option Tweaks"
 msgstr "Ajustes de opciones"
 
 msgid "Set"
-msgstr "Conjunto"
+msgstr "Aplicar"
 
 msgid "Set Visualiser"
 msgstr "Visualizador de conjunto"
@@ -5979,8 +5982,14 @@ msgstr "Cambiar flotante"
 msgid "Switch Vector"
 msgstr "Cambiar vector"
 
-msgid "dl AOV Group Four"
-msgstr "dl grupo VAS cuatro"
+msgid "Dl AOV Group Four"
+msgstr "Dl grupo AOV cuatro"
+
+msgid "Mx Pack Color"
+msgstr "Mx empaquetar color"
+
+msgid "Mx Swizzle Color Float"
+msgstr "Mx redistribuir color flotante"
 
 msgid "emitter"
 msgstr "emisor"
@@ -6055,7 +6064,7 @@ msgid "Show Lights"
 msgstr "Mostrar luces"
 
 msgid "UI Display Transform"
-msgstr "Transformación de visualización de UI"
+msgstr "Transform. visual IU"
 
 msgid "A descriptive name for the job."
 msgstr "Nombre descriptivo para el trabajo."
@@ -14374,7 +14383,7 @@ msgid "Whether or not the autobump is visible to subsurface rays."
 msgstr "Indica si el autobump es visible a los rayos de subsuperficie o no."
 
 msgid "Choose how transform motion is interpolated. \"Linear\" produces classic linear vertex motion, \"RotateAboutOrigin\" produces curved arcs centred on the object's origin, and \"RotateAboutCenter\", the default, produces curved arcs centred on the object's bounding box middle."
-msgstr "Elige cómo se interpola el movimiento de transformación. "Linear" produce movimiento lineal clásico de vértices, "RotateAboutOrigin" produce rotación y escala alrededor del origen, y "RotateAboutCenter" produce rotación y escala alrededor del centro del cuadro delimitador."
+msgstr "Elige cómo se interpola el movimiento de transformación. \"Linear\" produce movimiento lineal clásico de vértices, \"RotateAboutOrigin\" produce rotación y escala alrededor del origen, y \"RotateAboutCenter\" produce rotación y escala alrededor del centro del cuadro delimitador."
 
 msgid "Flags the object as being opaque."
 msgstr "Marca el objeto como opaco."
@@ -14675,4 +14684,505 @@ msgstr " en {} nodos"
 
 msgid "Editing {}{}"
 msgstr "Editando {}{}"
+
+#: OSL shaders - conversions
+msgid "Color to Float"
+msgstr "Color a flotante"
+
+msgid "Color to Vector"
+msgstr "Color a vector"
+
+msgid "Float to Color"
+msgstr "Flotante a color"
+
+msgid "Float to Vector"
+msgstr "Flotante a vector"
+
+msgid "Vector to Color"
+msgstr "Vector a color"
+
+msgid "Vector to Float"
+msgstr "Vector a flotante"
+
+#: OSL shaders - misc
+msgid "Mandelbrot"
+msgstr "Mandelbrot"
+
+msgid "Metal"
+msgstr "Metal"
+
+msgid "Ubersurface"
+msgstr "Ubersuperficie"
+
+#: PathChooserDialogue / PathFilterWidget
+msgid "Show only .gfr files"
+msgstr "Mostrar solo archivos .gfr"
+
+msgid "Show only .grf files"
+msgstr "Mostrar solo archivos .grf"
+
+msgid "Show hidden files"
+msgstr "Mostrar archivos ocultos"
+
+msgid "Filter by {}..."
+msgstr "Filtrar por {}..."
+
+msgid "Filter..."
+msgstr "Filtrar..."
+
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Owner"
+msgstr "Propietario"
+
+#: ShaderUI / dialogue strings
+msgid "Shader Browser"
+msgstr "Explorador de shaders"
+
+msgid "No shaders to browse."
+msgstr "No hay shaders para explorar."
+
+#: LightEditor section tabs
+msgid "Main"
+msgstr "Principal"
+
+msgid "Contribution"
+msgstr "Contribución"
+
+msgid "Shape"
+msgstr "Forma"
+
+msgid "Visualisation"
+msgstr "Visualización"
+
+msgid "Transform"
+msgstr "Transformación"
+
+msgid "Geometry"
+msgstr "Geometría"
+
+msgid "Texture"
+msgstr "Textura"
+
+msgid "Shaping"
+msgstr "Forma de luz"
+
+msgid "Shadow"
+msgstr "Sombra"
+
+#: AttributeEditor section tabs
+msgid "Attributes"
+msgstr "Atributos"
+
+msgid "Motion Blur"
+msgstr "Desenfoque de movimiento"
+
+msgid "Light"
+msgstr "Luz"
+
+msgid "Light Linking"
+msgstr "Enlace de luces"
+
+msgid "Instancing"
+msgstr "Instanciación"
+
+msgid "All"
+msgstr "Todos"
+
+#: AnimationEditor labels
+msgid "Key"
+msgstr "Clave"
+
+msgid "Curve"
+msgstr "Curva"
+
+msgid "Frame"
+msgstr "Fotograma"
+
+msgid "Value"
+msgstr "Valor"
+
+msgid "Interpolation"
+msgstr "Interpolación"
+
+msgid "Tie Mode"
+msgstr "Modo de unión"
+
+msgid "Slope"
+msgstr "Pendiente"
+
+msgid "Scale"
+msgstr "Escala"
+
+#: LightEditor column headers (C++ InspectorColumn - _translate imprescindible)
+msgid "Cast Shadow"
+msgstr "Proyectar sombra"
+
+msgid "Use Diffuse"
+msgstr "Usar difuso"
+
+msgid "Use Glossy"
+msgstr "Usar brillo"
+
+msgid "Use Transmission"
+msgstr "Usar transmisión"
+
+msgid "Use Scatter"
+msgstr "Usar dispersión"
+
+msgid "Max Bounces"
+msgstr "Rebotes máx."
+
+msgid "Spot Angle"
+msgstr "Ángulo del foco"
+
+msgid "Spot Smooth"
+msgstr "Suavizado del foco"
+
+msgid "Is Sphere"
+msgstr "Es esfera"
+
+msgid "Lightgroup"
+msgstr "Grupo de luces"
+
+#: SceneInspector placeholder
+msgid "Select a location to inspect"
+msgstr "Selecciona una ubicación para inspeccionar"
+
+#: RenderPassEditor labels
+msgid "Render Pass"
+msgstr "Pase de render"
+
+msgid "Edit Target"
+msgstr "Destino de edición"
+
+msgid "No render pass is active"
+msgstr "No hay pase de render activo"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "maxTextureResolution"
+msgstr "Resolución máxima de textura"
+
+msgid "frustumScale"
+msgstr "Escala de frustum"
+
+msgid "drawingMode"
+msgstr "Modo de dibujo"
+
+msgid "frustum"
+msgstr "Frustum"
+
+#: AttributeEditor column labels
+msgid "Adaptive Error"
+msgstr "Error adaptativo"
+
+msgid "Adaptive Metric"
+msgstr "Métrica adaptativa"
+
+msgid "Adaptive Space"
+msgstr "Espacio adaptativo"
+
+msgid "Asset Name"
+msgstr "Nombre de recurso"
+
+msgid "Autobump"
+msgstr "Autobump"
+
+msgid "Automatic Instancing"
+msgstr "Instanciación automática"
+
+msgid "Bound"
+msgstr "Contorno"
+
+msgid "Bound Color"
+msgstr "Color de contorno"
+
+msgid "Camera"
+msgstr "Cámara"
+
+msgid "Clipping"
+msgstr "Recorte"
+
+msgid "Deformation Blur"
+msgstr "Desenfoque de deformación"
+
+msgid "Deformation Segments"
+msgstr "Segmentos de deformación"
+
+msgid "Dicing Scale"
+msgstr "Escala de subdivisión"
+
+msgid "Diffuse"
+msgstr "Difuso"
+
+msgid "Diffuse Reflection"
+msgstr "Reflexión difusa"
+
+msgid "Diffuse Transmission"
+msgstr "Transmisión difusa"
+
+msgid "Displacement Method"
+msgstr "Método de desplazamiento"
+
+msgid "Display Color"
+msgstr "Color de visualización"
+
+msgid "Double Sided"
+msgstr "Doble cara"
+
+msgid "Emission Sampling Method"
+msgstr "Método de muestreo de emisión"
+
+msgid "Filtered Lights"
+msgstr "Luces filtradas"
+
+msgid "GL Line Width"
+msgstr "Ancho de línea GL"
+
+msgid "GL Point Width"
+msgstr "Ancho de punto GL"
+
+msgid "Glossy"
+msgstr "Brillante"
+
+msgid "Hair"
+msgstr "Pelo"
+
+msgid "Heterogeneous Volume"
+msgstr "Volumen heterogéneo"
+
+msgid "Ignore Basis"
+msgstr "Ignorar base"
+
+msgid "Ignore Frustum"
+msgstr "Ignorar frustum"
+
+msgid "Is Caustics Caster"
+msgstr "Es emisor de cáusticas"
+
+msgid "Is Caustics Receiver"
+msgstr "Es receptor de cáusticas"
+
+msgid "Is Shadow Catcher"
+msgstr "Es receptor de sombras"
+
+msgid "Iterations"
+msgstr "Iteraciones"
+
+msgid "Kind"
+msgstr "Tipo"
+
+msgid "Light Drawing Mode"
+msgstr "Modo de dibujo de luz"
+
+msgid "Light Frustum Scale"
+msgstr "Escala de frustum de luz"
+
+msgid "Linked Lights"
+msgstr "Luces enlazadas"
+
+msgid "Matte"
+msgstr "Mate"
+
+msgid "Max Level"
+msgstr "Nivel máximo"
+
+msgid "Max Texture Resolution"
+msgstr "Resolución máxima de textura"
+
+msgid "Min Pixel Width"
+msgstr "Ancho mínimo de píxel"
+
+msgid "Mode"
+msgstr "Modo"
+
+msgid "Mute"
+msgstr "Silenciar"
+
+msgid "Object Space"
+msgstr "Espacio de objeto"
+
+msgid "Opaque"
+msgstr "Opaco"
+
+msgid "Outline"
+msgstr "Contorno exterior"
+
+msgid "Outline Color"
+msgstr "Color de contorno exterior"
+
+msgid "Outline Width"
+msgstr "Ancho de contorno exterior"
+
+msgid "Padding"
+msgstr "Relleno"
+
+msgid "Point Color"
+msgstr "Color de punto"
+
+msgid "Point Width"
+msgstr "Ancho de punto"
+
+msgid "Points"
+msgstr "Puntos"
+
+msgid "Precision"
+msgstr "Precisión"
+
+msgid "Purpose"
+msgstr "Propósito"
+
+msgid "Receive Shadows"
+msgstr "Recibir sombras"
+
+msgid "Reflection"
+msgstr "Reflexión"
+
+msgid "Refraction"
+msgstr "Refracción"
+
+msgid "SSS Set Name"
+msgstr "Nombre de conjunto SSS"
+
+msgid "Scatter"
+msgstr "Dispersión"
+
+msgid "Self Shadows"
+msgstr "Sombras propias"
+
+msgid "Shaded"
+msgstr "Sombreado"
+
+msgid "Shadow"
+msgstr "Sombra"
+
+msgid "Shadow Group"
+msgstr "Grupo de sombras"
+
+msgid "Shadowed Lights"
+msgstr "Luces con sombra"
+
+msgid "Shape Step Scale"
+msgstr "Escala de paso de forma"
+
+msgid "Shape Step Size"
+msgstr "Tamaño de paso de forma"
+
+msgid "Smooth Derivatives"
+msgstr "Derivadas suaves"
+
+msgid "Specular"
+msgstr "Especular"
+
+msgid "Specular Reflection"
+msgstr "Reflexión especular"
+
+msgid "Specular Transmission"
+msgstr "Transmisión especular"
+
+msgid "Step Size"
+msgstr "Tamaño de paso"
+
+msgid "Subdivide Polygons (Linear)"
+msgstr "Subdividir polígonos (lineal)"
+
+msgid "Subsurface"
+msgstr "Subsuperficie"
+
+msgid "Terminator Geometry Offset"
+msgstr "Desplazamiento geométrico del terminador"
+
+msgid "Terminator Shading Offset"
+msgstr "Desplazamiento de sombreado del terminador"
+
+msgid "Toon ID"
+msgstr "ID de toon"
+
+msgid "Transform Blur"
+msgstr "Desenfoque de transformación"
+
+msgid "Transform Segments"
+msgstr "Segmentos de transformación"
+
+msgid "Transform Type"
+msgstr "Tipo de transformación"
+
+msgid "Transmission"
+msgstr "Transmisión"
+
+msgid "Transparent Shadow"
+msgstr "Sombra transparente"
+
+msgid "UV Smoothing"
+msgstr "Suavizado UV"
+
+msgid "Use GL Lines"
+msgstr "Usar líneas GL"
+
+msgid "Use GL Points"
+msgstr "Usar puntos GL"
+
+msgid "Use Holdout"
+msgstr "Usar holdout"
+
+msgid "Velocity FPS"
+msgstr "FPS de velocidad"
+
+msgid "Velocity Outlier Threshold"
+msgstr "Umbral de valores atípicos de velocidad"
+
+msgid "Velocity Scale"
+msgstr "Escala de velocidad"
+
+msgid "Visible"
+msgstr "Visible"
+
+msgid "Volume"
+msgstr "Volumen"
+
+msgid "Volume Interpolation"
+msgstr "Interpolación de volumen"
+
+msgid "Volume Sampling"
+msgstr "Muestreo de volumen"
+
+msgid "Volume Step Rate"
+msgstr "Tasa de paso de volumen"
+
+msgid "Volume Step Scale"
+msgstr "Escala de paso de volumen"
+
+msgid "Volume Step Size"
+msgstr "Tamaño de paso de volumen"
+
+msgid "Wireframe"
+msgstr "Malla de alambre"
+
+msgid "Wireframe Color"
+msgstr "Color de malla de alambre"
+
+msgid "Wireframe Width"
+msgstr "Ancho de malla de alambre"
+
+#: Common column labels across panels
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Value"
+msgstr "Valor"
+
+msgid "Members"
+msgstr "Miembros"
+
+msgid "Selected"
+msgstr "Seleccionados"
+
+msgid "Node Name"
+msgstr "Nombre del nodo"
+
+msgid "Create a dispatcher to execute this node"
+msgstr "Crea un despachador para ejecutar este nodo"
 

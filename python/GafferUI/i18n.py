@@ -81,9 +81,13 @@ def translate( text ) :
 	This is the primary function used by consumer widgets (Menu, Window,
 	Label, PlugLayout, etc.) to translate UI strings at display time.
 	"""
+	if not text :
+		return text or ""
 	if _LANG == "en" :
 		return text
 	normalized = _normalize( text )
+	if not normalized :
+		return text
 	translated = _trans.gettext( normalized )
 	if translated != normalized :
 		return translated

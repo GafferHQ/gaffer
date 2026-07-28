@@ -40,6 +40,7 @@ import os
 import IECore
 import Gaffer
 import GafferSceneUI
+from GafferUI.i18n import translate as _translate
 
 # UsdLux lights
 
@@ -480,18 +481,30 @@ for attributeName in [
 
 # Register transform columns
 
-def transformColumn( scene, editScope, space, component ) :
+def transformColumn( scene, editScope, space, component, columnName ) :
 
 	inspector = GafferSceneUI.Private.TransformInspector( scene, editScope, space, component )
-	return GafferSceneUI.Private.InspectorColumn( inspector )
+	return GafferSceneUI.Private.InspectorColumn( inspector, _translate( columnName ) )
+
+__spaceNames = {
+	GafferSceneUI.Private.TransformInspector.Space.Local : "Local",
+	GafferSceneUI.Private.TransformInspector.Space.World : "World",
+}
+__componentNames = {
+	GafferSceneUI.Private.TransformInspector.Component.Translate : "Translate",
+	GafferSceneUI.Private.TransformInspector.Component.Rotate : "Rotate",
+	GafferSceneUI.Private.TransformInspector.Component.Scale : "Scale",
+	GafferSceneUI.Private.TransformInspector.Component.Shear : "Shear",
+}
 
 for space in GafferSceneUI.Private.TransformInspector.Space.values.values() :
 	for component in GafferSceneUI.Private.TransformInspector.Component.values.values() :
 		if component == GafferSceneUI.Private.TransformInspector.Component.Matrix :
 			continue
+		columnName = "{} {}".format( __spaceNames[space], __componentNames[component] )
 		GafferSceneUI.LightEditor.registerColumn(
 			"*",
 			f"{space}.{component}",
-			functools.partial( transformColumn, space = space, component = component ),
+			functools.partial( transformColumn, space = space, component = component, columnName = columnName ),
 			"Transform"
 		)

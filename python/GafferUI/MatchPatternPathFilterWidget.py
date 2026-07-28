@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
@@ -86,7 +87,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 				self.__enabledWidget.setToolTip( label )
 				label = label[:40] + '...'
 
-		self.__enabledWidget.setText( label )
+		self.__enabledWidget.setText( _translate( label ) )
 
 		invertEnabled = False
 		with IECore.IgnoredExceptions( KeyError ) :
@@ -158,9 +159,11 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 		propertyNameData = self.__propertyFilters().get( pathFilter.getPropertyName(), None )
 
-		self.__patternWidget.setPlaceholderText(
-			"Filter{}".format( ( " by " + propertyNameData.value + "..." ) if propertyNameData is not None else "..." )
-		)
+		if propertyNameData is not None :
+			placeholder = _translate( "Filter by {}..." ).format( _translate( propertyNameData.value ) )
+		else :
+			placeholder = _translate( "Filter..." )
+		self.__patternWidget.setPlaceholderText( placeholder )
 
 	def __propertyFilters( self ) :
 
