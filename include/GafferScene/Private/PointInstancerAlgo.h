@@ -46,7 +46,7 @@ namespace GafferScene::Private::PointInstancerAlgo
 {
 
 /// Returns a combined `SceneAlgo::hierarchyHash()` of all prototypes referenced by any PointInstancer
-/// at the current location. If there is no PointInstancer, returns an empty hash.
+/// at the current location. If there is no PointInstancer or it has no prototypes, returns an empty hash.
 GAFFERSCENE_API IECore::MurmurHash prototypesHash( const ScenePlug *scene );
 
 /// Generates the list of `Renderer::Prototypes` ready for passing to `Renderer::pointInstancer()`.
