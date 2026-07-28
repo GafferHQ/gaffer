@@ -93,12 +93,17 @@ IECore::MurmurHash Private::PointInstancerAlgo::prototypesHash( const ScenePlug 
 		return result;
 	}
 
+	auto prototypePaths = pointInstancer->getPrototypes();
+	if( !prototypePaths )
+	{
+		return result;
+	}
+
 	const auto &currentPath = Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 
 	const ThreadState &threadState = ThreadState::current();
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
-	auto prototypePaths = pointInstancer->getPrototypes();
 	using PrototypeRange = tbb::blocked_range<PrimitiveVariable::IndexedView<string>::Iterator>;
 
 	return tbb::parallel_deterministic_reduce(
@@ -236,7 +241,7 @@ FlattenedPrototype flattenedPrototype( const Private::RendererAlgo::RenderOption
 			ScenePlug::ScenePath relativePath( path.begin() + fullRootPath.size(), path.end() );
 			// Note : `PrototypeLocation::index` is filled later.
 			return PrototypeLocation{
-				rootPath + ScenePlug::pathToString( relativePath ),
+				relativePath.size() ? rootPath + ScenePlug::pathToString( relativePath ) : rootPath,
 				flattenedTransform( scene, path, fullRootPath.size() )
 			};
 		},
@@ -337,7 +342,11 @@ IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECor
 	const size_t hiddenPointOffset = std::numeric_limits<size_t>::max(); // Sentinel to indicate a point has been hidden.
 	for( size_t pointIndex = 0; pointIndex < prototypeIndex.size(); ++pointIndex )
 	{
-		if( visibilityQuery.visible( pointIndex ) )
+		if(
+			prototypeIndex[pointIndex] >= 0 &&
+			(size_t)prototypeIndex[pointIndex] < flattenedPrototypes.size() &&
+			visibilityQuery.visible( pointIndex )
+		)
 		{
 			pointOffsets[pointIndex] = numFlattenedPoints;
 			numFlattenedPoints += flattenedPrototypes[prototypeIndex[pointIndex]].size();
