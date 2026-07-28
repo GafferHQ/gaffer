@@ -12,6 +12,7 @@ Fixes
 - LightEditor : Fixed bug preventing the "Copy Path" menu item from appearing when the current selection contained locations not shown in the LightEditor.
 - PathListingWidget : Paths dragged from a PathListingWidget now preserve the order in which they are displayed.
 - SetExpressionAlgo : Fixed invalid set expressions returned by `exclude()` when the set expression to be excluded contains only whitespace [^1].
+- PlugLayout : `<layoutName>:width` metadata is now correctly reapplied to widgets with labels when a PlugLayout is rebuilt.
 
 API
 ---

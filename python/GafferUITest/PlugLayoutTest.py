@@ -411,3 +411,74 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
 		self.assertTrue( l.plugValueWidget( n["f"] ).visible() )
 		self.assertTrue( l.customWidget( "test" ).visible() )
+
+	def testWidthMetadata( self ) :
+
+		n = Gaffer.Node()
+		n["withLabel"] = Gaffer.IntPlug()
+		n["withoutLabel"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["withLabel"], "layout:width", 100 )
+		Gaffer.Metadata.registerValue( n["withoutLabel"], "layout:width", 100 )
+		Gaffer.Metadata.registerValue( n["withoutLabel"], "label", "" )
+
+		l = GafferUI.PlugLayout( n, orientation = GafferUI.ListContainer.Orientation.Horizontal )
+
+		withLabel = l.plugValueWidget( n["withLabel"] )
+		self.assertEqual( withLabel._qtWidget().minimumWidth(), 100 )
+		self.assertEqual( withLabel._qtWidget().maximumWidth(), 100 )
+
+		plugWidget = withLabel.ancestor( GafferUI.PlugWidget )
+		self.assertIsNotNone( plugWidget )
+		self.assertNotEqual( plugWidget._qtWidget().maximumWidth(), 100 )
+
+		withoutLabel = l.plugValueWidget( n["withoutLabel"] )
+		self.assertIsNone( withoutLabel.ancestor( GafferUI.PlugWidget ) )
+		self.assertEqual( withoutLabel._qtWidget().minimumWidth(), 100 )
+		self.assertEqual( withoutLabel._qtWidget().maximumWidth(), 100 )
+
+	def testWidthMetadataMaintainedByRelayout( self ) :
+
+		n = Gaffer.Node()
+		n["withLabel"] = Gaffer.IntPlug()
+		n["withoutLabel"] = Gaffer.IntPlug()
+		n["other"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["withLabel"], "layout:width", 100 )
+		Gaffer.Metadata.registerValue( n["withoutLabel"], "label", "" )
+
+		l = GafferUI.PlugLayout( n, orientation = GafferUI.ListContainer.Orientation.Horizontal )
+
+		withLabel = l.plugValueWidget( n["withLabel"] )
+		withLabelPlugWidget = withLabel.ancestor( GafferUI.PlugWidget )
+		self.assertIsNotNone( withLabelPlugWidget )
+
+		self.assertEqual( withLabel._qtWidget().minimumWidth(), 100 )
+		self.assertEqual( withLabel._qtWidget().maximumWidth(), 100 )
+
+		plugWidgetMin = withLabelPlugWidget._qtWidget().minimumWidth()
+		plugWidgetMax = withLabelPlugWidget._qtWidget().maximumWidth()
+		self.assertLess( plugWidgetMin, 100 )
+		self.assertGreater( plugWidgetMax, 100 )
+
+		# A width change on any plug causes an update of the entire PlugLayout,
+		# reusing the existing widgets. Ensure widths are applied to the same
+		# widgets they were applied to originally.
+
+		Gaffer.Metadata.registerValue( n["other"], "layout:width", 50 )
+		Gaffer.Metadata.registerValue( n["withoutLabel"], "layout:width", 50 )
+
+		self.assertIs( l.plugValueWidget( n["withLabel"] ), withLabel )
+		self.assertEqual( withLabel._qtWidget().minimumWidth(), 100 )
+		self.assertEqual( withLabel._qtWidget().maximumWidth(), 100 )
+		self.assertEqual( withLabelPlugWidget._qtWidget().minimumWidth(), plugWidgetMin )
+		self.assertEqual( withLabelPlugWidget._qtWidget().maximumWidth(), plugWidgetMax )
+
+		withoutLabel = l.plugValueWidget( n["withoutLabel"] )
+		self.assertIsNone( withoutLabel.ancestor( GafferUI.PlugWidget ) )
+		self.assertEqual( withoutLabel._qtWidget().minimumWidth(), 50 )
+		self.assertEqual( withoutLabel._qtWidget().maximumWidth(), 50 )
+
+		other = l.plugValueWidget( n["other"] )
+		self.assertEqual( other._qtWidget().minimumWidth(), 50 )
+		self.assertEqual( other._qtWidget().maximumWidth(), 50 )
