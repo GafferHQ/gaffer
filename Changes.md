@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.0.0a9)
 =======
 
+Fixes
+-----
 
+- MenuButton : Fixed immediate mode when the menu contained a single submenu.
 
 1.7.0.0a9 (relative to 1.7.0.0a8)
 =========

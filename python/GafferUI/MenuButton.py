@@ -119,6 +119,21 @@ class MenuButton( GafferUI.Button ) :
 
 		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferError" ) ) or False
 
+	def __immediateAction( self ) :
+
+		if not self.getImmediate() :
+			return None
+
+		# Build the top level menu so we can query its contents.
+		# We don't call `Menu._buildFully()` as that also builds
+		# submenus, which can be costly.
+		self.__menu._qtWidget().aboutToShow.emit()
+		actions = self.__menu._qtWidget().actions()
+		if len( actions ) != 1 or actions[0].menu() is not None :
+			return None
+
+		return actions[0]
+
 	def __buttonPress( self, widget, event ) :
 
 		# We show the menu on `buttonPress` rather than `clicked` as it
@@ -128,16 +143,11 @@ class MenuButton( GafferUI.Button ) :
 		if event.button != event.Buttons.Left or self.__menu is None :
 			return False
 
-		if self.getImmediate() :
-			# Build the top level menu so we can query its contents.
-			# We don't call `Menu._buildFully()` as that also builds
-			# submenus, which can be costly.
-			self.__menu._qtWidget().aboutToShow.emit()
-			if len( self.__menu._qtWidget().actions() ) == 1 :
-				# Only one item. Do nothing now, so we can trigger
-				# it directly in `__clicked()` (like a regular button
-				# press, which is enacted on release).
-				return False
+		if self.__immediateAction() is not None :
+			# Only one item, that we want to trigger immediately. Do nothing
+			# now, so we can trigger it directly in `__clicked()` (like a
+			# regular button press, which is enacted on release).
+			return False
 
 		b = self.bound()
 		self.__menu.popup(
@@ -149,11 +159,10 @@ class MenuButton( GafferUI.Button ) :
 
 	def __clicked( self, widget ) :
 
-		if self.getImmediate() :
-			actions = self.__menu._qtWidget().actions()
-			if len( actions ) == 1 :
-				actions[0].trigger()
-				return True
+		immediateAction = self.__immediateAction()
+		if immediateAction is not None :
+			immediateAction.trigger()
+			return True
 
 		return False
 
