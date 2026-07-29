@@ -36,6 +36,7 @@
 
 from Qt import QtCore
 
+from ._OutPlugTableModel import _OutPlugTableModel
 from ._PlugTableModel import _PlugTableModel
 
 class __PlugTableProxyModel( QtCore.QAbstractProxyModel ) :
@@ -62,9 +63,9 @@ class __PlugTableProxyModel( QtCore.QAbstractProxyModel ) :
 
 	def setSourceModel( self, model ) :
 
-		assert( isinstance( model, _PlugTableModel ) )
+		assert( isinstance( model, ( _PlugTableModel, _OutPlugTableModel ) ) )
 
-		# _PlugTableModel only emits modelReset and [header]DataChanged signals (for now)
+		# The source models only emit modelReset and [header]DataChanged signals (for now)
 		# so we can avoid the headache of remapping the plethora of row/column signals.
 
 		oldModel = self.sourceModel()
@@ -203,3 +204,9 @@ class CellsProxyModel( __PlugTableProxyModel ) :
 	def __init__( self, parent = None ) :
 
 		super( CellsProxyModel, self ).__init__( startRow = 1, startColumn = 2, parent = parent )
+
+class OutputsProxyModel( __PlugTableProxyModel ) :
+
+	def __init__( self, parent = None ) :
+
+		super( OutputsProxyModel, self ).__init__( rowCount = 1, parent = parent )
