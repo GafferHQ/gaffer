@@ -451,8 +451,10 @@ class GraphEditor( GafferUI.Editor ) :
 					if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
 						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget )
 					if nodeGadget is not None :
-						selection = self.scriptNode().selection()
-						nodeList = list( selection ) if nodeGadget.node() in selection else [nodeGadget.node()]
+						if nodeGadget.node() in self.scriptNode().selection() :
+							nodeList = [ node for node in self.scriptNode().selection() if self.graphGadget().nodeGadget( node ) is not None ]
+						else :
+							nodeList = [ nodeGadget.node() ]
 						self.nodeContextMenuSignal( True )( self, nodeList, overrideMenuDefinition )
 
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
