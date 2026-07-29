@@ -61,7 +61,7 @@ parser.add_argument(
 	"--outputFormat",
 	help = "A format string that specifies the output printed "
 		"by this script. May contain an {rmanTree} token that "
-		"will be subtituted with the installation location.",
+		"will be substituted with the installation location.",
 	default = "",
 )
 parser.add_argument(
