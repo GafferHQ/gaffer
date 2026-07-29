@@ -5,6 +5,8 @@ Fixes
 -----
 
 - Shuffle nodes : Fixed bug that disabled the "+" button if a shuffle plug had an input connection.
+- Arnold : Fixed crash with Arnold 7.5.2 when setting the `driver_exr` "compression" parameter, which was previously a string but is now a string array.
+- IECoreArnold::ParameterAlgo : Added support for setting an array parameter with a StringData or BoolData. This is treated as equivalent to setting the array parameter to a one element array.
 
 1.6.21.1 (relative to 1.6.21.0)
 ========
