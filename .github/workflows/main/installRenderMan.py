@@ -178,7 +178,7 @@ if os.name == "nt" :
 		],
 	)
 
-	installLocation = pathlib.Path( f"c:\Program Files\Pixar\RenderManProServer-{args.version}" )
+	installLocation = pathlib.Path( rf"c:\Program Files\Pixar\RenderManProServer-{args.version}" )
 
 else :
 
