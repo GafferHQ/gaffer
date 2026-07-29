@@ -41,6 +41,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 
 import requests
 
@@ -60,8 +61,14 @@ parser.add_argument(
 	"--outputFormat",
 	help = "A format string that specifies the output printed "
 		"by this script. May contain an {rmanTree} token that "
-		"will be subtituted with the installation location.",
+		"will be substituted with the installation location.",
 	default = "",
+)
+parser.add_argument(
+	"--maxAttempts",
+	help = "The maximum number of download attempts made.",
+	default = 5,
+	type = int,
 )
 args = parser.parse_args()
 
@@ -156,17 +163,45 @@ else :
 
 # Download.
 
-download = requests.get(
-	downloadURL,
-	downloadParameters,
-	cookies = cookies,
-	allow_redirects = True,
-	stream = True,
-)
-
 fileName = "RenderMan.msi" if os.name == "nt" else "RenderMan.rpm"
-with open( fileName, "wb" ) as outFile :
-	shutil.copyfileobj( download.raw, outFile )
+
+for attempt in range( args.maxAttempts ) :
+
+	try :
+
+		download = requests.get(
+			downloadURL,
+			downloadParameters,
+			cookies = cookies,
+			allow_redirects = True,
+			stream = True,
+			# This timeout causes the request to raise an exception if it hasn't received a response from
+			# the server within this number of seconds. It isn't a time limit on the download itself. If
+			# left unspecified, the request will never time out.
+			timeout = 60,
+		)
+		download.raise_for_status()
+
+		with open( fileName, "wb" ) as outFile :
+			shutil.copyfileobj( download.raw, outFile )
+
+		break
+
+	except requests.exceptions.RequestException as e :
+
+		if isinstance( e, requests.exceptions.HTTPError ) :
+			# Fail immediately for non-transient server error codes.
+			if e.response.status_code not in ( 500, 502, 503, 504 ) :
+				sys.stderr.write( f"Download failed with status {e.response.status_code}\n" )
+				raise
+
+		if attempt == args.maxAttempts - 1 :
+			sys.stderr.write( f"Download failed after {args.maxAttempts} attempts\n" )
+			raise
+
+		delay = 10 * 2 ** attempt
+		sys.stderr.write( f"Download failed ({e}). Retrying in {delay} seconds\n" )
+		time.sleep( delay )
 
 # Install.
 
@@ -180,7 +215,7 @@ if os.name == "nt" :
 		],
 	)
 
-	installLocation = pathlib.Path( f"c:\Program Files\Pixar\RenderManProServer-{args.version}" )
+	installLocation = pathlib.Path( rf"c:\Program Files\Pixar\RenderManProServer-{args.version}" )
 
 else :
 
