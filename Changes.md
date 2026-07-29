@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.21.1)
 =======
 
+Fixes
+-----
 
+- IECoreArnold::ParameterAlgo : Support setting an array parameter with a StringData or BoolData. This is treated as equivalent to setting the array parameter to a one element array. This fix is important for supporting Arnold 7.5.2, where the `driver_exr` compression parameter has been switched from a string to a string array, which causes a crash without this fix.
 
 1.6.21.1 (relative to 1.6.21.0)
 ========

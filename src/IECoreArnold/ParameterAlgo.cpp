@@ -588,9 +588,9 @@ AtArray *dataToArray( const IECore::Data *data, int aiType )
 	}
 
 
-	if( aiType == AI_TYPE_BOOLEAN )
+	if( aiType == AI_TYPE_BOOLEAN && IECore::runTimeCast<const BoolVectorData>( data ) )
 	{
-		// bools are a special case because of how the STL implements vector<bool>.
+		// bool vectors are a special case because of how the STL implements vector<bool>.
 		// Since the base for vector<bool> are not actual booleans, we need to manually
 		// convert to an AtArray here.
 		const vector<bool> &booleans = static_cast<const BoolVectorData *>( data )->readable();
@@ -601,7 +601,7 @@ AtArray *dataToArray( const IECore::Data *data, int aiType )
 		}
 		return array;
 	}
-	else if( aiType == AI_TYPE_STRING )
+	else if( aiType == AI_TYPE_STRING && IECore::runTimeCast<const StringVectorData>( data ) )
 	{
 		const vector<string> &strings = static_cast<const StringVectorData *>( data )->readable();
 		const vector<string>::size_type size = strings.size();
@@ -610,6 +610,20 @@ AtArray *dataToArray( const IECore::Data *data, int aiType )
 		{
 			AiArraySetStr( array, i, strings[i].c_str() );
 		}
+		return array;
+	}
+	else if( aiType == AI_TYPE_STRING && IECore::runTimeCast<const StringData>( data ) )
+	{
+		// The general case below using size() and address() handles setting an array from a
+		// scalar value. It makes sense that setting an array with a scalar value should
+		// result in a single element array, so we should support that for strings as well.
+		//
+		// This special case is not actually necessary ... the call to AiArrayConvert
+		// is actually able to handle a StringData, but I'm not sure why that works,
+		// so it seems safer to explicitly call AiArraySetStr with a char*.
+		const string &val = static_cast<const StringData *>( data )->readable();
+		AtArray *array = AiArrayAllocate( 1, 1, AI_TYPE_STRING );
+		AiArraySetStr( array, 0, val.c_str() );
 		return array;
 	}
 
