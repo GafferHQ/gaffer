@@ -30,6 +30,7 @@ API
 
 - GraphEditor : Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
 - Spreadsheet : Added support for `spreadsheet:outputRowVisible` metadata, which can be used to hide the output row.
+- TestCase : Added alternateMountTemporaryDirectory() for testing behaviour when moving files between directories on different filesystems.
 
 Breaking Changes
 ----------------
