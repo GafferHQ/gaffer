@@ -9,6 +9,11 @@ Features
 Fixes
 -----
 
+- Application : Fixed bug that prevented the use of `sys.executable` for launching a Python process. `sys.executable` now points to the included `python` executable instead of `gaffer` [^1].
+
+Fixes
+-----
+
 - MenuButton : Fixed immediate mode when the menu contained a single submenu.
 - RandomChoice : Fixed "Value/Weight" table headers when first setting up the node.
 - VectorDataPlugValueWidget : Fixed handling of custom header metadata when adding and removing columns.
@@ -58,6 +63,8 @@ Breaking Changes
 - ScriptNode : Changed preconditions for calling `serialiseToFile`. If the desired behaviour is that the ScriptNode in memory will be now be associated with the new file ( ie. a saveAs operation ), then the caller is responsible for setting `ScriptNode.fileNamePlug()` to the new file name before calling `serialiseToFile`.
 
 [^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
+
+[^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========

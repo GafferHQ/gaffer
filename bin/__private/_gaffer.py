@@ -425,10 +425,11 @@ if "PYTHONNOUSERSITE" not in os.environ :
 # Exec `__gaffer.py`
 # ==================
 
-args = [ sys.executable ] + sys.argv[1:]
+gafferExecutable = str( gafferRoot / "bin" / "__private" / ( "gaffer" + ( ".exe" if os.name == "nt" else "" ) ) )
+args = [ gafferExecutable ] + sys.argv[1:]
 
 if sys.platform != "win32" :
-	os.execv( sys.executable, args )
+	os.execv( gafferExecutable, args )
 else :
 	# On Windows, Python emulates `execv()` badly by launching another process
 	# (rather than replacing this one) and not even waiting for it to finish.
