@@ -25,6 +25,9 @@ Fixes
   - Fixed context updates for `variables` plugs with an input connection.
   - Prevented invalid input connections to `variables` plugs. Connections from node outputs are considered invalid because they could create a circular dependency between context variables.
 - EditMenu : Added popup dialogue when errors occur during "cut" or "copy" operations.
+- Shuffle nodes : Fixed bug that disabled the "+" button if a shuffle plug had an input connection [^1].
+- Arnold : Fixed crash with Arnold 7.5.2 when setting the `driver_exr` "compression" parameter, which was previously a string but is now a string array [^1].
+- IECoreArnold::ParameterAlgo : Added support for setting an array parameter with a StringData or BoolData. This is treated as equivalent to setting the array parameter to a one element array [^1].
 
 API
 ---
@@ -38,6 +41,8 @@ Breaking Changes
 
 - RenderMan : Changed the default values used for PxrCryptomatte's material output.
 - ScriptNode : Changed preconditions for calling `serialiseToFile`. If the desired behaviour is that the ScriptNode in memory will be now be associated with the new file ( ie. a saveAs operation ), then the caller is responsible for setting `ScriptNode.fileNamePlug()` to the new file name before calling `serialiseToFile`.
+
+[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========
@@ -411,10 +416,20 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.x.x (relative to 1.6.21.1)
+1.6.x.x (relative to 1.6.21.2)
 =======
 
 
+
+1.6.21.2 (relative to 1.6.21.1)
+========
+
+Fixes
+-----
+
+- Shuffle nodes : Fixed bug that disabled the "+" button if a shuffle plug had an input connection.
+- Arnold : Fixed crash with Arnold 7.5.2 when setting the `driver_exr` "compression" parameter, which was previously a string but is now a string array.
+- IECoreArnold::ParameterAlgo : Added support for setting an array parameter with a StringData or BoolData. This is treated as equivalent to setting the array parameter to a one element array.
 
 1.6.21.1 (relative to 1.6.21.0)
 ========

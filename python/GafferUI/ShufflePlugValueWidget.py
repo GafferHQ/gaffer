@@ -188,7 +188,10 @@ class ShufflesPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromEditable( self ) :
 
-		self.__addButton.setEnabled( self._editable() )
+		# Not using `_editable()` as it considers the whole plug to be non-editable if
+		# any child has an input connection, but that shouldn't prevent us adding a new
+		# child.
+		self.__addButton.setEnabled( self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
 
 	def __addButtonClicked( self, button ) :
 
