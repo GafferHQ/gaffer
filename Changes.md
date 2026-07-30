@@ -27,7 +27,13 @@ Fixes
 API
 ---
 
-- GraphEditor : Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
+- GraphEditor :
+  - Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
+  - Added per-instance signals in addition to existing class-level signals. These are accessed by calling the same methods as before, but from an instance (`graphEditorInstance.plugContextMenuSignal()`) rather than the class (`GraphEditor.plugContextMenuSignal()`) (#137). The following signals are available in this form :
+    - `plugContextMenuSignal()`
+    - `connectionContextMenuSignal()`
+    - `nodeContextMenuSignal()`
+    - `nodeDoubleClickSignal()`
 - Spreadsheet : Added support for `spreadsheet:outputRowVisible` metadata, which can be used to hide the output row.
 
 Breaking Changes

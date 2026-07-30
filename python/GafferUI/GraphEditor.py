@@ -36,6 +36,7 @@
 ##########################################################################
 
 import functools
+import types
 import imath
 
 import IECore
@@ -72,6 +73,25 @@ def _currentFrame( viewportGadget ) :
 	frame.extendBy( imath.V2f( rasterMax[0], rasterMax[1] ) )
 
 	return frame
+
+# Decorator equivalent to `@classmethod` if function is
+# called as `Class.foo()`, but also allows use as an instance
+# method if called as `instance.foo()`. We use this to aid
+# a transition from class-level signals to instance-level
+# signals.
+class _ClassOrInstanceMethod :
+
+	def __init__( self, function ) :
+
+		self.__function = function
+		functools.update_wrapper( self, function )
+
+	def __get__( self, instance, owner ) :
+
+		if instance is not None :
+			return types.MethodType( self.__function, instance )
+		else :
+			return types.MethodType( self.__function, owner )
 
 class GraphEditor( GafferUI.Editor ) :
 
@@ -134,6 +154,12 @@ class GraphEditor( GafferUI.Editor ) :
 		self.__nodeMenu = None
 		self.__readOnlyPopup = None
 
+		self.__plugContextMenuSignal = Gaffer.Signals.Signal3()
+		self.__connectionContextMenuSignal = Gaffer.Signals.Signal3()
+		self.__nodeContextMenuSignal = Gaffer.Signals.Signal3()
+		self.__multiNodeContextMenuSignal = Gaffer.Signals.Signal3()
+		self.__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
+
 	## Returns the internal GadgetWidget holding the GraphGadget.
 	def graphGadgetWidget( self ) :
 
@@ -174,10 +200,10 @@ class GraphEditor( GafferUI.Editor ) :
 	# menu definition on the fly - the signature for the signal is
 	# ( graphEditor, plug, menuDefinition ) and the menu definition should just be
 	# edited in place.
-	@classmethod
-	def plugContextMenuSignal( cls ) :
+	@_ClassOrInstanceMethod
+	def plugContextMenuSignal( classOrSelf ) :
 
-		return cls.__plugContextMenuSignal
+		return classOrSelf.__plugContextMenuSignal
 
 	__connectionContextMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
@@ -185,10 +211,10 @@ class GraphEditor( GafferUI.Editor ) :
 	# menu definition on the fly - the signature for the signal is
 	# ( graphEditor, destinationPlug, menuDefinition ) and the menu definition
 	# should just be edited in place.
-	@classmethod
-	def connectionContextMenuSignal( cls ) :
+	@_ClassOrInstanceMethod
+	def connectionContextMenuSignal( classOrSelf ) :
 
-		return cls.__connectionContextMenuSignal
+		return classOrSelf.__connectionContextMenuSignal
 
 	@classmethod
 	def appendConnectionNavigationMenuDefinitions( cls, graphEditor, destinationPlug, menuDefinition ) :
@@ -232,14 +258,13 @@ class GraphEditor( GafferUI.Editor ) :
 	# single node signal with the same `menuDefinition`.
 	# For both, the menu definition should just be edited in place. Typically
 	# you would add slots to this signal as part of a startup script.
-
 	# \todo Deprecate the single node signal in version `1.8` and remove it in `1.9`.
-	@classmethod
-	def nodeContextMenuSignal( cls, multiNode = False ) :
+	@_ClassOrInstanceMethod
+	def nodeContextMenuSignal( classOrSelf, multiNode = False ) :
 
 		if multiNode :
-			return cls.__multiNodeContextMenuSignal
-		return cls.__nodeContextMenuSignal
+			return classOrSelf.__multiNodeContextMenuSignal
+		return classOrSelf.__nodeContextMenuSignal
 
 	## May be used from a slot attached to nodeContextMenuSignal() to install some
 	# standard menu items for modifying the connection visibility for a node.
@@ -353,10 +378,10 @@ class GraphEditor( GafferUI.Editor ) :
 	__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 	## Returns a signal which is emitted whenever a node is double clicked.
 	# Slots should have the signature ( graphEditor, node ).
-	@classmethod
-	def nodeDoubleClickSignal( cls ) :
+	@_ClassOrInstanceMethod
+	def nodeDoubleClickSignal( classOrSelf ) :
 
-		return cls.__nodeDoubleClickSignal
+		return classOrSelf.__nodeDoubleClickSignal
 
 	## Ensures that the specified node has a visible GraphEditor viewing
 	# it, and returns that editor.
@@ -441,9 +466,11 @@ class GraphEditor( GafferUI.Editor ) :
 				overrideMenuTitle = None
 
 				if isinstance( gadgets[0], GafferUI.Nodule ) :
+					GraphEditor.plugContextMenuSignal()( self, gadgets[0].plug(), overrideMenuDefinition )
 					self.plugContextMenuSignal()( self, gadgets[0].plug(), overrideMenuDefinition )
 					overrideMenuTitle = gadgets[0].plug().relativeName( self.graphGadget().getRoot() )
 				elif isinstance( gadgets[0], GafferUI.ConnectionGadget ) :
+					GraphEditor.connectionContextMenuSignal()( self, gadgets[0].dstNodule().plug(), overrideMenuDefinition )
 					self.connectionContextMenuSignal()( self, gadgets[0].dstNodule().plug(), overrideMenuDefinition )
 					overrideMenuTitle = "-> " + gadgets[0].dstNodule().plug().relativeName( self.graphGadget().getRoot() )
 				else :
@@ -455,8 +482,10 @@ class GraphEditor( GafferUI.Editor ) :
 							nodeList = [ node for node in self.scriptNode().selection() if self.graphGadget().nodeGadget( node ) is not None ]
 						else :
 							nodeList = [ nodeGadget.node() ]
-						self.nodeContextMenuSignal( True )( self, nodeList, overrideMenuDefinition )
 
+						GraphEditor.nodeContextMenuSignal( True )( self, nodeList, overrideMenuDefinition )
+						self.nodeContextMenuSignal( True )( self, nodeList, overrideMenuDefinition )
+						GraphEditor.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
 
 						overrideMenuTitle = ( "{} Nodes".format( len( nodeList ) ) ) if len( nodeList ) > 1 else nodeList[0].getName()
@@ -601,7 +630,10 @@ class GraphEditor( GafferUI.Editor ) :
 
 		nodeGadget = self.__nodeGadgetAt( event.line.p1 )
 		if nodeGadget is not None :
-			return self.nodeDoubleClickSignal()( self, nodeGadget.node() )
+			return (
+				self.nodeDoubleClickSignal()( self, nodeGadget.node() ) or
+				GraphEditor.nodeDoubleClickSignal()( self, nodeGadget.node() )
+			)
 
 	def __dragEnter( self, widget, event ) :
 
