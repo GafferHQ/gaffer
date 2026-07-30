@@ -101,6 +101,32 @@ class ParameterAlgoTest( unittest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetUInt( a, 0 ), 12 )
 			self.assertEqual( arnold.AiArrayGetUInt( a, 1 ), 2147483649 )
 
+	def testVectorFromScalarData( self ) :
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			n = arnold.AiNode( universe, "imager_light_mixer" )
+
+			IECoreArnold.ParameterAlgo.setParameter( n, "layer_name", IECore.StringData( "testString" ) )
+			IECoreArnold.ParameterAlgo.setParameter( n, "layer_enable", IECore.BoolData( False ) )
+			IECoreArnold.ParameterAlgo.setParameter( n, "layer_intensity", IECore.FloatData( 0.42 ) )
+			IECoreArnold.ParameterAlgo.setParameter( n, "layer_tint", IECore.Color3fData( imath.Color3f( 7, 8, 9 ) ) )
+
+			a = arnold.AiNodeGetArray( n, "layer_name" )
+			self.assertEqual( arnold.AiArrayGetNumElements( a.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetStr( a, 0 ), "testString" )
+
+			a = arnold.AiNodeGetArray( n, "layer_enable" )
+			self.assertEqual( arnold.AiArrayGetNumElements( a.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetBool( a, 0 ), False )
+
+			a = arnold.AiNodeGetArray( n, "layer_intensity" )
+			self.assertEqual( arnold.AiArrayGetNumElements( a.contents ), 1 )
+			self.assertAlmostEqual( arnold.AiArrayGetFlt( a, 0 ), 0.42 )
+			a = arnold.AiNodeGetArray( n, "layer_tint" )
+			self.assertEqual( arnold.AiArrayGetNumElements( a.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetRGB( a, 0 ), arnold.ai_color.AtRGB(7, 8, 9) )
+
 	def testDoubleData( self ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
