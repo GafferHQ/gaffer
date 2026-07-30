@@ -203,7 +203,7 @@ namespace Gaffer
 /// process graph.
 ///
 /// In practice, such cyclic dependencies are rare, but not rare enough
-/// that we can neglect them completely. Our stragegy is therefore to
+/// that we can neglect them completely. Our strategy is therefore to
 /// perform collaboration wherever we can, but to replace it with one
 /// additional "redundant" process where collaboration would cause a
 /// cycle.

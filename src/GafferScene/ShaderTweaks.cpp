@@ -265,7 +265,7 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 			// It would be more efficient to search for and process tweak sources just in
 			// `inputNetwork` before merging it to `shaderNetwork` ... but this would require
 			// dealing with weird connections where the input node handle is relative to `shaderNetwork`,
-			// but the output handle is relative to `inputNetwork`. This can't currenty be done if there
+			// but the output handle is relative to `inputNetwork`. This can't currently be done if there
 			// are nodes in the two networks with the same name, which get uniquified during addShaders.
 			// This could be solved with an optional output unordered_map<oldHandle, newHandle>
 			// from addShaders(). For the moment, however, Doing this after merging simplifies all that.

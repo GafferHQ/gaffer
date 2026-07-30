@@ -114,7 +114,7 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			Controls tesselation of the sphere when type is Mesh.
+			Controls tessellation of the sphere when type is Mesh.
 			""",
 
 			"layout:activator" : "typeIsMesh",

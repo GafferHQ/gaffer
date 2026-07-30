@@ -432,7 +432,7 @@ struct PrimvarSetup
 	{
 		// NOTE : This would logically be an excellent place for using a vector type that doesn't force
 		// initialization for outData and outIndicesData - we need to allocate all the memory so that
-		// different threads can indepedently fill it.
+		// different threads can independently fill it.
 		//
 		// I haven't gone and done the podVectorResizeUninitialized trick here because I was unable to
 		// demonstrate any measurable performance improvement ( there's maybe something in the 0.3% range,
@@ -588,7 +588,7 @@ struct EdgeOwner
 
 // Store all the topological information needed to allocate and correctly connect up a primvar. This
 // is gathered on the first parallel pass, then used to allocate the outputs, and then used during the
-// final paralllel pass to put the output data in the right places.
+// final parallel pass to put the output data in the right places.
 //
 // All vertex primvars share the same topology, but each FaceVarying primvar needs its own.
 struct PrimvarTopology
@@ -1410,7 +1410,7 @@ MeshPrimitivePtr MeshAlgo::tessellateMesh(
 	// thread used will find one of those faces at the same time ( since the work for a regular face is
 	// trivially in comparison, every thread will rip through until it finds an irregular face ), so that
 	// one kind of irregular structure can be computed many times. The solution would be if we could do a
-	// pass where we collect the keys for each type of irregular face in the mesh, and then did a parrallel
+	// pass where we collect the keys for each type of irregular face in the mesh, and then did a parallel
 	// loop over those keys. OpenSubdiv is not set up to let us do that though, and this is much less of
 	// an issue on reasonable quad meshes than it is on spheres.
 	tbb::parallel_for(

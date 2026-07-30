@@ -144,7 +144,7 @@ IECore::ConstCompoundObjectPtr AttributeTweaks::computeProcessedAttributes( cons
 	result->members() = inputAttributes->members();
 
 	// We switch our source attributes depending on whether we are
-	// localising inherted attributes or just using the ones at the location
+	// localising inherited attributes or just using the ones at the location
 
 	const CompoundObject *source = inputAttributes;
 

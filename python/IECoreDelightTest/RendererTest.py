@@ -1788,7 +1788,7 @@ class RendererTest( GafferTest.TestCase ) :
 				pLength = 1
 
 				arraySplit = reArraySplit.match( pType )
-				# Currently it seems impossible to reprsent an array of arrays, i.e. an array
+				# Currently it seems impossible to represent an array of arrays, i.e. an array
 				# of float[2] arrays. We treat `float[2]` as it's own unique type.
 				if arraySplit is not None and pType != "float[2]" :
 					pLength = int( arraySplit.groupdict()["arrayLength"] )

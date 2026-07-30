@@ -69,7 +69,7 @@ namespace
 {
 
 // InternedString compares by pointer address by default, which will give differing
-// results betweeen processes. Comparing by string value gives an alphabetical ordering
+// results between processes. Comparing by string value gives an alphabetical ordering
 // we can rely on.
 bool internedStringValueLess( const InternedString &a, const InternedString &b )
 {
@@ -948,7 +948,7 @@ void MergeObjects::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 	}
 	else if( output == mergeLocationPlug() )
 	{
-		// Do a full evalution of the tree data.
+		// Do a full evaluation of the tree data.
 		// This is pretty expensive to trigger when someone could just be hashing childNames, and doesn't
 		// require a full evaluation, but doing this now allows us to do an early out and avoid putting
 		// entries in the value cache for locations that aren't being modified, and that's a noticeable

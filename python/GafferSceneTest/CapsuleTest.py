@@ -121,7 +121,7 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		# Expand the capsule, and check that it didn't bake the inherited attributes onto
-		# its contents. It is the responsibity of the Renderer itself to take care of attribute
+		# its contents. It is the responsibility of the Renderer itself to take care of attribute
 		# inheritance, ideally doing it "live", so that changes to inherited attributes don't
 		# require re-expansion of the capsule.
 

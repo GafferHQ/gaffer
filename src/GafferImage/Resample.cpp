@@ -760,7 +760,7 @@ int linearCombineSampledPixels(
 
 					// To find the linear weighting of this contribution to the output, we must include 3 factors:
 					// * the linearContribution stored in the sample
-					// * if it's an interpolated sample, we must substract off the fraction already output
+					// * if it's an interpolated sample, we must subtract off the fraction already output
 					// * and we must include occlusion from the output segments so far
 					float prevContribution = 0.0f;
 					if( curSamples[curIndex].type != DepthSamplePoint && curSamples[sourceIndex[i]].type >= DepthSampleInterpolated )
@@ -1609,7 +1609,7 @@ void Resample::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	if( hasArbitraryChannel )
 	{
 		result->contributionSupports.reserve( ImagePlug::tilePixels() );
-		// \todo - it's a noticable performance improvement to reserve contributionElements as well
+		// \todo - it's a noticeable performance improvement to reserve contributionElements as well
 		// here, but it's harder to find a good estimate for that.
 	}
 

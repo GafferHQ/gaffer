@@ -96,7 +96,7 @@ class GAFFER_API Monitor : public IECore::RefCounted
 		virtual void processFinished( const Process *process ) = 0;
 
 		/// Must return true if forceMonitoring will ever return true from this Monitor
-		/// \todo : In order to efficently support a monitor that only forces monitoring during
+		/// \todo : In order to efficiently support a monitor that only forces monitoring during
 		/// compute processes, we would need to make this specific to processType - this will
 		/// perhaps be easier if we switch to using a type id instead of a string.
 		virtual bool mightForceMonitoring();

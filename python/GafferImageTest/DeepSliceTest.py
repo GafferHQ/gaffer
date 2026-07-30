@@ -107,7 +107,7 @@ class DeepSliceTest( GafferImageTest.ImageTestCase ) :
 		# the given values, but the expected alpha and color values are computed based on the given
 		# expectedWeights, specifying the fraction of each sample that is taken.
 		# We could compute expectedWeights based some simple computations, but I think it makes it more
-		# obivous what we're testing to hardcode the expectedWeights for each test.
+		# obvious what we're testing to hardcode the expectedWeights for each test.
 		def sliceTest( nearClip, nearClipDepth, farClip, farClipDepth, expectedWeights ):
 			deepSlice["nearClip"]["enabled"].setValue( nearClip )
 			deepSlice["nearClip"]["value"].setValue( nearClipDepth )

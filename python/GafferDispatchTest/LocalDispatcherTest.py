@@ -1320,7 +1320,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		with open( environmentFile, encoding = "utf-8" ) as f :
 			childEnvironment = eval( compile( f.read(), "test.py", "eval" ) )
 
-		# We preseve mixed-case environment variables on all platforms.
+		# We preserve mixed-case environment variables on all platforms.
 		self.assertEqual( childEnvironment["gafferLocalDispatcherTestMIXEDcaseB"], "testTEST" )
 
 		if sys.platform == "win32" :

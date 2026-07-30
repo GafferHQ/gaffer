@@ -534,7 +534,7 @@ struct IEDisplay : public display::Display
 		const pxrcore::ParamList &params
 	) override
 	{
-		// Store the channel names, channel pointers, and buffer width, so that we will know how intepret
+		// Store the channel names, channel pointers, and buffer width, so that we will know how interpret
 		// the data when we receive a buffer update.
 		m_bufferWidth = width;
 

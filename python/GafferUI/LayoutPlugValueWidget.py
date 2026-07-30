@@ -64,7 +64,7 @@ class LayoutPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# claim to have a label when they don't, just as a convenient way of
 		# disabling the label that PlugLayout would add itself. Maybe we should
 		# ditch it entirely and just use `"label", ""` metadata to disable
-		# lables when we want to?
+		# labels when we want to?
 
 		return self.__orientation == GafferUI.ListContainer.Orientation.Vertical
 

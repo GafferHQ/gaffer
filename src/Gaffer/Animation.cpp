@@ -447,7 +447,7 @@ private:
 		//        f'(0) =                 c(t)
 		//        f'(1) = 3a(t) + 2b(t) + c(t)
 		//
-		//        when th == 1 floating point imprecision gives f'(1) as slighty less than 0.
+		//        when th == 1 floating point imprecision gives f'(1) as slightly less than 0.
 
 		assert( ( ct >= 0.0 ) && ( at3 + bt2 + ct >= ( ( th == 1.0 ) ? -1e-15 : 0.0 ) ) );
 

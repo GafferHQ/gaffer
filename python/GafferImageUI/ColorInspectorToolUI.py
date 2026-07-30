@@ -647,7 +647,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# in the UI.
 			self.__updateLabels( [ self.__pixel ] * 2, [ imath.Color4f( 0 ) ] * 2 )
 		else :
-			# Success. We have valid infomation to display.
+			# Success. We have valid information to display.
 			self.__updateLabels( backgroundResult[0], backgroundResult[1] )
 
 			for c in self.__colorValueWidgets:

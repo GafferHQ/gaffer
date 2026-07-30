@@ -1337,7 +1337,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		del sphereAttributes["attributes"][-1]
 
-		# We only get the attributes that are part of the source hierachy and not the dest hierarchy
+		# We only get the attributes that are part of the source hierarchy and not the dest hierarchy
 		parent["destination"].setValue( '/C/B1' )
 
 		self.assertEqual( attrsAsDict( "/C/B1/sphere" ), {

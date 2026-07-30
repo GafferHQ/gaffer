@@ -1323,7 +1323,7 @@ Gaffer.Metadata.registerValue( __children["ContactSheet"]["labelFormat"], 'layou
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["labelFormat"], 'layout:index', 19 )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["labelFormat"], 'label', 'Format' )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["labelFormat"], 'layout:activator', 'labelsAreEnabled' )
-Gaffer.Metadata.registerValue( __children["ContactSheet"]["labelFormat"], 'description', 'Defines the content of the label, using the following substitutions :\n\n- `{label}` : A label identifiying the source image, depending on the mode used. For instance, in Sequence mode the label is the frame number, and in Layers mode the label is the layer name.\n- `{input}` : The index of the source input.\n- `{metadataName}` : The name of any image metadata.' )
+Gaffer.Metadata.registerValue( __children["ContactSheet"]["labelFormat"], 'description', 'Defines the content of the label, using the following substitutions :\n\n- `{label}` : A label identifying the source image, depending on the mode used. For instance, in Sequence mode the label is the frame number, and in Layers mode the label is the layer name.\n- `{input}` : The index of the source input.\n- `{metadataName}` : The name of any image metadata.' )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["bordersEnabled"], 'nodule:type', '' )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["bordersEnabled"], 'layout:section', 'Settings.Borders' )
 Gaffer.Metadata.registerValue( __children["ContactSheet"]["bordersEnabled"], 'layout:index', 28 )

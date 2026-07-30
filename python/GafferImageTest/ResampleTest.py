@@ -652,7 +652,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 							sliceAfter["farClip"]["value"].setValue( depth )
 
 							# By slicing first, and then doing a 2D resize, we can compute a totally accurate
-							# reference. We only validate agains this on the top end, however, because
+							# reference. We only validate against this on the top end, however, because
 							# "curve shape discrepancy" can result in errors in the output of a deep Resample
 							# which we deem acceptable.
 							#

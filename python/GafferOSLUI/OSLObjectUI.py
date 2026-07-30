@@ -184,7 +184,7 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			Define primitive varibles to output by adding child plugs and connecting
+			Define primitive variables to output by adding child plugs and connecting
 			corresponding OSL shaders.  Supported plug types are :
 
 			- FloatPlug

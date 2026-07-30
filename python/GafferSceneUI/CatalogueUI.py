@@ -1070,7 +1070,7 @@ class ImageListing( GafferUI.PlugValueWidget ) :
 			images[currentIndex] = None  # Add placeholder so we don't mess with indices
 
 			if previous :
-				# Just insert after previous image to preserve odering of selected images
+				# Just insert after previous image to preserve ordering of selected images
 				newIndex = images.index( previous ) + 1
 			else :
 				newIndex = images.index( imageToReplace )

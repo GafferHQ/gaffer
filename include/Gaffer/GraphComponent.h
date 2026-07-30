@@ -252,7 +252,7 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 		/// before doing their own thing.
 		///
 		/// The rationale for not having this as a public signal is that
-		/// outside observers don't need the priviledge of knowing events
+		/// outside observers don't need the privilege of knowing events
 		/// beforehand - they should just react to them afterwards. The
 		/// rationale for having this as a virtual function rather than
 		/// a protected signal is that there is less overhead in the virtual

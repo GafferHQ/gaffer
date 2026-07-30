@@ -406,7 +406,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		customAttributes1["attributes"].addChild( Gaffer.NameValuePlug( 'bake:fileName', IECore.StringData( ( pathlib.Path( "${bakeDirectory}" ) / "complete" / "<AOV>" / "<AOV>.<UDIM>.exr" ).as_posix() ) ) )
 		customAttributes1["in"].setInput( collectScenes["out"] )
 
-		# Second vaiant: bake just 2 of the 4 meshes, leaving lots of holes that will need filling
+		# Second variant: bake just 2 of the 4 meshes, leaving lots of holes that will need filling
 		pruneFilter = GafferScene.PathFilter()
 		pruneFilter["paths"].setValue( IECore.StringVectorData( [ '/2', '/3' ] ) )
 

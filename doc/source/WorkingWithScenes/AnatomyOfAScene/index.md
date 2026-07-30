@@ -12,7 +12,7 @@ The structure of a scene can be broken down into two main areas:
 
 ## Scene hierarchy ##
 
-In common with most DCCs, Gaffer represents a 3D scene as a hierarchy or tree structure. We refer to positions within this tree as **locations**, specified by their path within the scene, e.g. `/world/city/building01`. Locations are arranged via parent-child relationships, such that `/world/city` is considered the parent of the child `/world/city/building01`. Do not confuse locations in the scene hierachy with nodes in the node graph; nodes **output** scenes, but are not part of them.
+In common with most DCCs, Gaffer represents a 3D scene as a hierarchy or tree structure. We refer to positions within this tree as **locations**, specified by their path within the scene, e.g. `/world/city/building01`. Locations are arranged via parent-child relationships, such that `/world/city` is considered the parent of the child `/world/city/building01`. Do not confuse locations in the scene hierarchy with nodes in the node graph; nodes **output** scenes, but are not part of them.
 
 ![](images/hierarchyView.png "The Hierarchy View with a location selected")
 

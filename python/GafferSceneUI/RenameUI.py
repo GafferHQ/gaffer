@@ -148,7 +148,7 @@ Gaffer.Metadata.registerNode(
 			captured patterns using Python's standard string formatting
 			syntax :
 
-			- `{0}` : The entire string matched by the regular expresion.
+			- `{0}` : The entire string matched by the regular expression.
 			- `{1}` : The 1st subgroup captured within `()` brackets by the `find` string.
 			- `{N}` : The Nth subgroup captured within `()` brackets by the `find` string.
 			- `{1:0>4}` : The 1st subgroup, aligned to the right and padded to width 4.

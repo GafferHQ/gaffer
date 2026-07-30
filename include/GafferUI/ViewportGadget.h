@@ -55,7 +55,7 @@ namespace GafferUI
 /// within a Widget UI via a GadgetWidget, and forwards all event signals it receives to
 /// its child gadgets, transforming the event from the 2D space of the widget to the 3D
 /// space of the gadget as it goes. The framing of the child gadgets is specified using a
-/// Camera, which may be specified both programatically and through user interaction.
+/// Camera, which may be specified both programmatically and through user interaction.
 class GAFFERUI_API ViewportGadget : public Gadget
 {
 

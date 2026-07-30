@@ -77,7 +77,7 @@ class GAFFERIMAGE_API ImageNode : public Gaffer::ComputeNode
 		/// When computing or hashing the channelData plug channelEnabled( channel ) is also called
 		/// to query if the particular channel is enabled or not.
 		///
-		/// Derived classes can overide one or both methods to return false if their plugs are in
+		/// Derived classes can override one or both methods to return false if their plugs are in
 		/// a state that makes the node produce no effect. This stops duplication of data in the
 		/// cache and improves performance and memory efficiency. It is guaranteed that the hash*()
 		/// methods below and compute*() methods below will never be called if enabled() is false,

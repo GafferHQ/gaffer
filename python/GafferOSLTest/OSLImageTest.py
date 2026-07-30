@@ -736,7 +736,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		# This box does the non-blocking slow calculation, followed by a blocking slow calculation.
 		# This ensures that tasks which do just the non-block calculation will start finishing while
 		# the blocking slow calculation is still running, allowing tbb to try running more threads
-		# on the blocking calcluation, realizing they can't run, and stealing tasks onto those threads
+		# on the blocking calculation, realizing they can't run, and stealing tasks onto those threads
 		# which can hit the Standard policy lock on the expression upstream and deadlock, unless the
 		# OSLImage isolates its threads correctly
 		expressionBox = Gaffer.Box()

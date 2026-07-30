@@ -620,7 +620,7 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Creates a seed context variable based on a hash of the instance ID, which could come
-			from the primitive varable specified in the `id` plug or otherwise the point index.
+			from the primitive variable specified in the `id` plug or otherwise the point index.
 			This integer is available to the upstream prototypes network, and might typically
 			be used with a Random node to randomise properties of the prototype.
 			""",

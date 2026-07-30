@@ -615,7 +615,7 @@ void AnnotationsGadget::schedulePlugValueSubstitutions( const Gaffer::Node *node
 		backgroundTaskSubject, [this, node, annotations] () {
 
 			// Get new render text for each annotation. Note : We can not access
-			// the Metatada API from a BackgroundTask, as it doesn't participate
+			// the Metadata API from a BackgroundTask, as it doesn't participate
 			// in cancellation.
 
 			bool cancelled = false;

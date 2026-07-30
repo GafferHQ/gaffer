@@ -1162,7 +1162,7 @@ class PathModel : public QAbstractItemModel
 		// We need to apply the updates and signal them to Qt on the main thread,
 		// for which we use `queueEdit()`.
 
-		// Arranges to peform a background update after a short delay.
+		// Arranges to perform a background update after a short delay.
 		void scheduleUpdate()
 		{
 			if( !m_rootPath || m_updateScheduled )

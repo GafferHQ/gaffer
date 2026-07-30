@@ -285,7 +285,7 @@ class _MessageSummaryPlugValueWidget( GafferUI.PlugValueWidget ) :
 # A utility window containing a render nodes message log
 ###############################################################################
 
-## TODO: This is awefully similar to numerous color picker windows, etc...
+## TODO: This is awfully similar to numerous color picker windows, etc...
 # we ideally could do with a GafferUI.PlugWindow or similar.
 class _MessagesWindow( GafferUI.Window ) :
 

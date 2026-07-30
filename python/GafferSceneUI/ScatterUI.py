@@ -131,7 +131,7 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Primitive variables to sample from the source mesh and output on the generated points.
-			Supports a Gaffer match pattern, with multiple space seperated variable names, optionally
+			Supports a Gaffer match pattern, with multiple space separated variable names, optionally
 			using `*` as a wildcard.
 			""",
 

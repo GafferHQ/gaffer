@@ -277,7 +277,7 @@ IECore::ConstObjectPtr ImageScatter::computeSource( const Context *context ) con
 	Sampler densitySampler( imagePlug(), densityChannel, displayWindow, Sampler::Clamp );
 	densitySampler.populate(); // Multithread the population of image tiles
 
-	// Point distribution is designed for samping within a unit square, so we
+	// Point distribution is designed for sampling within a unit square, so we
 	// offset and scale to fit that to our input image.
 	const float scale = std::max( outputArea.size().x, outputArea.size().y );
 	const V2i offset = displayWindow.min;

@@ -148,7 +148,7 @@ class gui( Gaffer.Application ) :
 		from Qt import QtWidgets
 		clipboard = QtWidgets.QApplication.clipboard()
 		try :
-			self.__ignoreQtClipboardContentsChanged = True # avoid triggering an unecessary copy back in __qtClipboardContentsChanged
+			self.__ignoreQtClipboardContentsChanged = True # avoid triggering an unnecessary copy back in __qtClipboardContentsChanged
 			clipboard.setText( str( data ) )
 		finally :
 			self.__ignoreQtClipboardContentsChanged = False

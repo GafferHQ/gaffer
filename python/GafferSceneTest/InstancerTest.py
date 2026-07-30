@@ -1709,7 +1709,7 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 		self.assertEqual( instancer["out"].attributes( "/object/instances/sphere/-5" )["intAttr"].value, -5 )
 		self.assertEqual( instancer["out"].attributes( "/object/instances/cube/-10" )["intAttr"].value, -10 )
 
-		# We want to fully support int64 typed ids, but for reasons of backwards compatiblity and OSL support,
+		# We want to fully support int64 typed ids, but for reasons of backwards compatibility and OSL support,
 		# we're still using int32 for the seed context variable, so these ids get wrapped around even in raw seeds
 		# mode.
 		self.assertEqual( instancer["out"].attributes( "/object/instances/sphere/8000000001" )["intAttr"].value, -589934591 )

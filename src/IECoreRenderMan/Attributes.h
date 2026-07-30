@@ -52,7 +52,7 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		~Attributes() override;
 
 		/// Returns a hash of everything in `prototypeParamList()`, to be
-		/// used by GeometryPrototypeCache when automaticaly deduplicating
+		/// used by GeometryPrototypeCache when automatically deduplicating
 		/// objects. Returns `std::nullopt` if automatic instancing is
 		/// turned off.
 		/// \todo Should we have different hashes for different object types,

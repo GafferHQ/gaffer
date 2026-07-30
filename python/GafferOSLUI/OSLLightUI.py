@@ -121,7 +121,7 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			Arbitary parameters which specify the features of the "Geometry"
+			Arbitrary parameters which specify the features of the "Geometry"
 			shape type.
 			""",
 

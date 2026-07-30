@@ -139,7 +139,7 @@ class ArnoldAPIScope
 			return m_sharedUniverse;
 		}
 
-		// Called to initalise the Arnold API on first use.
+		// Called to initialise the Arnold API on first use.
 		// We then keep the API alive until shutdown, as
 		// starting and stopping it has overhead we want to
 		// avoid.

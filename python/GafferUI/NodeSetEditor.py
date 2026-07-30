@@ -175,7 +175,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 	## Called when the contents of getNodeSet() have changed and need to be
 	# reflected in the UI - so must be implemented by derived classes to update
-	# their UI appropriately. Updates are performed lazily to avoid unecessary
+	# their UI appropriately. Updates are performed lazily to avoid unnecessary
 	# work, but any pending updates can be performed immediately by calling
 	# _doPendingUpdate().
 	#

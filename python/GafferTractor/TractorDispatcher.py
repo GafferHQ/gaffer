@@ -52,7 +52,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		self["envKey"] = Gaffer.StringPlug()
 		self["startPaused"] = Gaffer.BoolPlug()
 
-	## Decribes the Gaffer task associated with a particular Tractor task.
+	## Describes the Gaffer task associated with a particular Tractor task.
 	@dataclasses.dataclass
 	class TaskData :
 

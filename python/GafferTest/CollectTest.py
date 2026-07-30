@@ -265,7 +265,7 @@ class CollectTest( GafferTest.TestCase ) :
 		script["initialised"].addInput( Gaffer.IntPlug( "c", defaultValue = 2, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		serialisation = script.serialise()
-		self.assertEqual( serialisation.count( "addChild" ), 2 ) # One for each node, but none for the inputs and ouputs
+		self.assertEqual( serialisation.count( "addChild" ), 2 ) # One for each node, but none for the inputs and outputs
 
 		script2 = Gaffer.ScriptNode()
 		script2.execute( serialisation )

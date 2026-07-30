@@ -248,7 +248,7 @@ class MergeMeshesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( freezeBefore["out"].object( "/bigCube/smallCube" ), freezeAfter["out"].object( "/bigCube" ) )
 
 
-	# Compute the bound we expect for the given sources tranformed to the given destination.
+	# Compute the bound we expect for the given sources transformed to the given destination.
 	# childBoundPlug may be set to the output plug without making this test overly circular -
 	# we don't depend on the bound at this location, only at child locations
 	def referenceBound( self, destPath, sources, inPlug, childBoundPlug ):

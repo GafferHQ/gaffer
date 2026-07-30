@@ -176,11 +176,11 @@ BoxIO::BoxIO( Plug::Direction direction, const std::string &name )
 	:	Node( name ), m_direction( direction )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	// Must not accept inputs because the name is syncronised with the promoted
+	// Must not accept inputs because the name is synchronised with the promoted
 	// plug name and must therefore not be context-varying.
 	addChild( new StringPlug( "name", Plug::In, direction == Plug::In ? "in" : "out", Plug::Default & ~Plug::AcceptsInputs ) );
 
-	// Connect to the signals we need to syncronise the namePlug() value
+	// Connect to the signals we need to synchronise the namePlug() value
 	// with the name of the promotedPlug().
 	plugSetSignal().connect( boost::bind( &BoxIO::plugSet, this, ::_1 ) );
 	plugInputChangedSignal().connect( boost::bind( &BoxIO::plugInputChanged, this, ::_1 ) );

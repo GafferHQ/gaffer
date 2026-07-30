@@ -386,7 +386,7 @@ vec2 query = vec2( 0.0 );
 ivec2 iP = ivec2( fragmentuv / pixelWidth );
 
 // Minimum number of texel fetches to give us a reasonable looking 2 pixel border.
-// In a 5x5 neighbourhood, we sample the following texels for the neighourhood query
+// In a 5x5 neighbourhood, we sample the following texels for the neighbourhood query
 // and the centre value:
 //
 //  QQQ

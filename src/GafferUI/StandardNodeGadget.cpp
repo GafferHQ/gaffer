@@ -632,7 +632,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	{
 		// four containers for nodules - one each for the top, bottom, left and right.
 		// these contain spacers at either end to prevent nodules being placed in
-		// the corners of the node gadget, and also to guarantee a minimim width for the
+		// the corners of the node gadget, and also to guarantee a minimum width for the
 		// vertical containers and a minimum height for the horizontal ones.
 
 		LinearContainerPtr topNoduleContainer = new LinearContainer( "topNoduleContainer", LinearContainer::X );

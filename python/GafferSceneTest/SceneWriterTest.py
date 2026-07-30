@@ -232,7 +232,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		writer["fileName"].setValue( self.temporaryDirectory() / "test.scc" )
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
-		# now theres a file and a scene, we get some output
+		# now there's a file and a scene, we get some output
 		plane = GafferScene.Plane()
 		writer["in"].setInput( plane["out"] )
 		self.assertNotEqual( writer.hash( c ), IECore.MurmurHash() )

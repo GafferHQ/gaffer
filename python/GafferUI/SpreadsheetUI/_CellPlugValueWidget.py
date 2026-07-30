@@ -141,7 +141,7 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# Not all value widgets support multiple plugs yet,
 		# so we need to be a little careful here.
 		if len( plugs ) == 1 :
-			# Ensure maximum compatability
+			# Ensure maximum compatibility
 			w = creator( next( iter( plugs ) ) )
 		else :
 			try :

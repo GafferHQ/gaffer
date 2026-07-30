@@ -57,7 +57,7 @@ from Gaffer._NodeAlgo import *
 # "en masse" form can be useful where metadata is computed dynamically
 # and the available presets will vary from instance to instance of a node.
 #
-# For a compound plug, it is considered to have a preset availiable if all
+# For a compound plug, it is considered to have a preset available if all
 # child plugs have the same preset available
 def presets( plug ) :
 	if not hasattr( plug, "setValue" ):

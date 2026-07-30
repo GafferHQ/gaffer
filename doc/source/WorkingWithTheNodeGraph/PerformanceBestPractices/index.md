@@ -1,6 +1,6 @@
 # Performance Best Practices #
 
-As with most VFX processes and software, a Gaffer node graph is subject to performance considerations. Both its stucture and the expressions and statements that go into it can result in undesirably slow evaluation. Since the cause(s) of a slow graph might not be immediately apparent, developing a basic understanding of how Gaffer evaluates graphs, as well as the complexity pitfalls users commonly encounter, will help you ensure optimum performance.
+As with most VFX processes and software, a Gaffer node graph is subject to performance considerations. Both its structure and the expressions and statements that go into it can result in undesirably slow evaluation. Since the cause(s) of a slow graph might not be immediately apparent, developing a basic understanding of how Gaffer evaluates graphs, as well as the complexity pitfalls users commonly encounter, will help you ensure optimum performance.
 
 Here we will discuss the performance implications of various choices you might make in your Gaffer graphs, and provide some guidelines for keeping them running smoothly.
 

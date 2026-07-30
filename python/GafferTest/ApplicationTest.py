@@ -133,7 +133,7 @@ class ApplicationTest( GafferTest.TestCase ) :
 			for line in childEnvironment.split( "\n" )
 		}
 
-		# We preseve mixed-case environment variables on all platforms.
+		# We preserve mixed-case environment variables on all platforms.
 		self.assertEqual( childEnvironment["gafferApplicationTestMIXEDcaseB"], "testTEST" )
 
 		if sys.platform == "win32" :

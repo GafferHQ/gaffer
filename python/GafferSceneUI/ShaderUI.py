@@ -916,7 +916,7 @@ class _ShaderDialogue( _ShaderDialogueBase ) :
 #   currently support that. And the value would need to be a Python expression which we
 #   `eval()`, which isn't ideal.
 # - Allow `layout:visibilityActivator` metadata to be registered to `{shaderType}:{shaderName}:{parameterName}
-#   parameter targest, with values referencing the names of activators registered above. Forward
+#   parameter targets, with values referencing the names of activators registered above. Forward
 #   this to `Shader.parameters.*` plugs.
 # - Convert `.args` conditional visibility into expressions suitable for use in the above and
 #   register them as metadata.

@@ -1077,7 +1077,7 @@ class _MessageTableView( GafferUI.Widget ) :
 
 	def __copySelectedRows( self ) :
 
-		# TODO only slected, can we get something for free from QT?
+		# TODO only selected, can we get something for free from QT?
 
 		messageIndices = self.__selectedMessageIndices()
 		text = self.__plainTextForMessages( messageIndices )

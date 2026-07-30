@@ -722,7 +722,7 @@ void LightPositionTool::updateHandles( float rasterScale )
 
 	// The user can control the distance along the line from target
 	// to pivot, and the rotation around the Z-axis. Any variance from those
-	// contraints invalidates the stored parameters.
+	// constraints invalidates the stored parameters.
 
 	const M44f transform = s.scene()->fullTransform( s.path() ) * sceneToTransform;
 	const V3f p = transform.translation();

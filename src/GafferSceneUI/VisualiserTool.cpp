@@ -594,7 +594,7 @@ auto stringFromValue = []( auto &&value ) -> std::string
 class UniformPLocator : public PrimitiveVariableProcessor
 {
 	/// A node hardcoded for resampling the `P` variable to a location suitable for representing the center of a face.
-	/// Peforming this operation as a node allows us to use Gaffer's usual plug caching to store the result
+	/// Performing this operation as a node allows us to use Gaffer's usual plug caching to store the result
 	/// of the computation, rather than using a separate cache just for this.
 	public :
 		UniformPLocator( const std::string &name = defaultName<UniformPLocator>() ) : PrimitiveVariableProcessor( name, IECore::PathMatcher::NoMatch )
@@ -810,7 +810,7 @@ class VisualiserGadget : public Gadget
 		}
 
 		/// Renders the color visualiser for the given `ViewportGadget`. In general, each visualiser
-		/// is reponsible for determining if it should be drawn for the given `mode`. Objects may
+		/// is responsible for determining if it should be drawn for the given `mode`. Objects may
 		/// have different data types for the same variable name, so a visualiser's suitability may
 		/// vary per-object.
 		void renderColorVisualiser( const ViewportGadget *viewportGadget, VisualiserTool::Mode mode ) const
@@ -882,7 +882,7 @@ class VisualiserGadget : public Gadget
 			//
 			// NOTE : use polygon offset to ensure that any discrepancies between the transform
 			//        from object to clip space do not cause z-fighting. This is necessary as
-			//        the shader uses an object to clip matrix which may give slighly different
+			//        the shader uses an object to clip matrix which may give slightly different
 			//        depth results to the transformation used in the IECoreGL renderer.
 			GLint blendEqRgb;
 			GLint blendEqAlpha;
@@ -1474,7 +1474,7 @@ class VisualiserGadget : public Gadget
 				//        may be multiple vertices in the IECoreGL mesh for each vertex in the IECore mesh.
 				//        To get the correct polygon offset we need to draw the mesh using the same
 				//        OpenGL draw call as the Viewer used so we must draw the IECoreGL mesh. So
-				//        we need to search for the (posibly multiple) vertices that correspond to each
+				//        we need to search for the (possibly multiple) vertices that correspond to each
 				//        original vertex. If any of these IECoreGL mesh vertices are visible we display
 				//        the IECore mesh vertex id. To accelerate the search we build a multi map keyed
 				//        on vertex position. This assumes that the triangulation and/or conversion to
@@ -1588,7 +1588,7 @@ class VisualiserGadget : public Gadget
 
 				glUseProgram( m_vertexLabelShader->program() );
 
-				// Draw points and ouput visibility to storage buffer
+				// Draw points and output visibility to storage buffer
 
 				glBindBuffer( GL_ARRAY_BUFFER, pBuffer->buffer() );
 				glVertexAttribPointer(
@@ -1658,7 +1658,7 @@ class VisualiserGadget : public Gadget
 						{
 							// Transform vertex position to raster space and do manual scissor test
 							//
-							// NOTE : visibility pass encorporates scissor test which culls most
+							// NOTE : visibility pass incorporates scissor test which culls most
 							//        vertices however some will slip through as visibility pass
 							//        draws "fat" points. bounds test is cheap.
 

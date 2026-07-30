@@ -131,7 +131,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# no input scene produces no effect
 		self.assertEqual( s["render"].hash( c ), IECore.MurmurHash() )
 
-		# now theres an scene to render, we get some output
+		# now there's an scene to render, we get some output
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 		self.assertNotEqual( s["render"].hash( c ), IECore.MurmurHash() )
 
