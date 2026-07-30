@@ -292,6 +292,7 @@ class GAFFER_API ScriptNode : public Node
 	protected :
 
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
+		bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const override;
 
 	private :
 
@@ -364,7 +365,7 @@ class GAFFER_API ScriptNode : public Node
 		boost::container::flat_set<IECore::InternedString> m_currentVariables;
 
 		void updateContextVariables();
-		void plugSet( Plug *plug );
+		void plugSetOrInputChanged( const Plug *plug, bool inputChanged );
 		void contextChanged( const Context *context, const IECore::InternedString &name );
 
 		static size_t g_firstPlugIndex;

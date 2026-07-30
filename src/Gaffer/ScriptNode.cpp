@@ -46,6 +46,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Monitor.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -377,7 +378,9 @@ ScriptNode::ScriptNode( const std::string &name )
 
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
-	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
+	plugSetSignal().connect( boost::bind( &ScriptNode::plugSetOrInputChanged, this, ::_1, false ) );
+	plugInputChangedSignal().connect( boost::bind( &ScriptNode::plugSetOrInputChanged, this, ::_1, true ) );
+
 	m_context->changedSignal().connect( boost::bind( &ScriptNode::contextChanged, this, ::_1, ::_2 ) );
 }
 
@@ -476,6 +479,24 @@ void ScriptNode::parentChanging( Gaffer::GraphComponent *newParent )
 	{
 		BackgroundTask::cancelAffectedTasks( this );
 	}
+}
+
+bool ScriptNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	if( !Node::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	auto inputValuePlug = IECore::runTimeCast<const ValuePlug>( inputPlug );
+	if( variablesPlug()->isAncestorOf( plug ) && inputValuePlug && PlugAlgo::dependsOnCompute( inputValuePlug ) )
+	{
+		// Can't drive context variables by values which themselves
+		// are context-sensitive.
+		return false;
+	}
+
+	return true;
 }
 
 bool ScriptNode::selectionSetAcceptor( const Set *s, const Set::Member *m )
@@ -980,7 +1001,7 @@ void ScriptNode::updateContextVariables()
 	}
 }
 
-void ScriptNode::plugSet( Plug *plug )
+void ScriptNode::plugSetOrInputChanged( const Plug *plug, bool inputChanged )
 {
 	if( plug == frameStartPlug() )
 	{
@@ -1000,7 +1021,15 @@ void ScriptNode::plugSet( Plug *plug )
 	{
 		context()->setFramesPerSecond( framesPerSecondPlug()->getValue() );
 	}
-	else if( plug == variablesPlug() )
+	else if(
+		// `plugSetSignal` propagates to ancestors of the plug that was set,
+		// so by operating only on the ancestor we minimise the number of context
+		// edits we make.
+		plug == variablesPlug() ||
+		// `plugInputChangedSignal` is emitted only for the plug whose input
+		// changed, so we must update for any plug below `variablesPlug()`.
+		( inputChanged && variablesPlug()->isAncestorOf( plug ) )
+	)
 	{
 		updateContextVariables();
 	}

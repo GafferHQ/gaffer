@@ -20,6 +20,9 @@ Fixes
 
 - FocalBlur : Fixed issue with excess alpha near depth discontinuities. This resulted in small bright edges near silhouettes where there is a sharp change in depth.
 - Filter : Fixed bug with `Select affected objects` where only the relevant locations from one scene connected to the filter would be included in the selection instead of from all scenes connected to the filter.
+- ScriptNode :
+  - Fixed context updates for `variables` plugs with an input connection.
+  - Prevented invalid input connections to `variables` plugs. Connections from node outputs are considered invalid because they could create a circular dependency between context variables.
 
 API
 ---
