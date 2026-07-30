@@ -610,6 +610,7 @@ nodeMenu.append( "/Utility/Context Query", Gaffer.ContextQuery, searchText = "Co
 nodeMenu.append( "/Utility/Collect", Gaffer.Collect )
 nodeMenu.append( "/Utility/Pattern Match", Gaffer.PatternMatch, searchText = "PatternMatch" )
 nodeMenu.append( "/Utility/File List", GafferDispatch.FileList, searchText = "FileList" )
+nodeMenu.append( "/Utility/Data Store", Gaffer.DataStore, searchText = "DataStore" )
 
 ## Miscellaneous UI
 ###########################################################################

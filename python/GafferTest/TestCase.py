@@ -67,6 +67,7 @@ class TestCase( unittest.TestCase ) :
 	def setUp( self ) :
 
 		self.__temporaryDirectory = None
+		self.__alternateMountTemporaryDirectory = None
 		self.__messagesToIgnore = set()
 
 		# Set up a capturing message handler so that `tearDown()` can assert
@@ -137,12 +138,41 @@ class TestCase( unittest.TestCase ) :
 
 			shutil.rmtree( self.__temporaryDirectory )
 
+		if self.__alternateMountTemporaryDirectory is not None :
+			# For the moment, just do the simple version here. I assume we'd only need to do the
+			# complicated stuff we do for __temporaryDirectory if we were putting non-writable files in it.
+			shutil.rmtree( self.__alternateMountTemporaryDirectory )
+
+
 		IECore.MessageHandler.setDefaultHandler( self.__defaultMessageHandler )
 
 		for message in self.__failureMessageHandler.messages :
 			message = "{} : {} : {}".format( IECore.Msg.levelAsString( message.level ), message.context, message.message )
 			if message not in self.__messagesToIgnore :
 				self.fail( f"Unexpected message : {message}" )
+
+	@classmethod
+	def setUpClass( cls ) :
+
+		unittest.TestCase.setUpClass()
+
+		cls.__alternateMountRootDirectory = None
+
+
+	@classmethod
+	def tearDownClass( cls ) :
+
+		unittest.TestCase.tearDownClass()
+
+		if not cls.__alternateMountRootDirectory is None:
+			if sys.platform == "darwin" :
+				subprocess.check_call( [ "hdiutil", "detach", cls.__alternateMountRootDirectory ] )
+			elif sys.platform == "linux" :
+				shutil.rmtree( cls.__alternateMountRootDirectory )
+			elif sys.platform == "win32" :
+				subprocess.check_call( [ "net", "share", "gafferTestLocalShare", "/delete" ] )
+				shutil.rmtree( cls.__windowsMountSource )
+			cls.__alternateMountRootDirectory = None
 
 	## Registers a message that will be ignored if it is emitted during the
 	# test run, instead of triggering a failure.
@@ -159,6 +189,40 @@ class TestCase( unittest.TestCase ) :
 			self.__temporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest" ) )
 
 		return self.__temporaryDirectory
+
+	@classmethod
+	def __alternateMount( cls ) :
+		if cls.__alternateMountRootDirectory is None:
+			if sys.platform == "darwin" :
+				cls.__alternateMountRootDirectory = pathlib.Path( "/Volumes/GafferTest" )
+				assert( not cls.__alternateMountRootDirectory.exists() )
+				image = subprocess.check_output( [ "hdiutil", "attach", "-nomount", "ram://1024" ] ).strip()
+				subprocess.check_call( [ "diskutil", "erasevolume", "HFS+", "GafferTest", image ] )
+			elif sys.platform == "linux" :
+				cls.__alternateMountRootDirectory = pathlib.Path( "/dev/shm/GafferTest" )
+				assert( not cls.__alternateMountRootDirectory.exists() )
+				cls.__alternateMountRootDirectory.mkdir()
+			elif sys.platform == "win32" :
+				cls.__windowsMountSource = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest" ) )
+				subprocess.check_call( [ "net", "share", "gafferTestLocalShare=" + str( cls.__windowsMountSource ), "/grant:Everyone,FULL" ] )
+				cls.__alternateMountRootDirectory = pathlib.Path( "//localhost/gafferTestLocalShare" )
+			else :
+				raise IECore.Exception( "Unknown platform " + sys.platform )
+
+		return cls.__alternateMountRootDirectory
+
+	## Returns a path to a directory the test may use for temporary
+	# storage. This directory is on a different physical disk than the regular temporaryDirectory(),
+	# allowing for testing situations where we can't rename or hardlink files ( currently achieved
+	# by using a RAM disk on Mac and Linux, and a net share on Windows ).
+	# This will be cleaned up automatically after the test has been run.
+	def alternateMountTemporaryDirectory( self ) :
+
+		if self.__alternateMountTemporaryDirectory is None :
+			if not self.__alternateMount() is None :
+				self.__alternateMountTemporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest", dir = self.__alternateMount()  ) )
+
+		return self.__alternateMountTemporaryDirectory
 
 	## Returns a context manager that sets the locale
 	# on enter and restores it on exit.

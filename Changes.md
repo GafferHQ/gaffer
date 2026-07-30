@@ -5,6 +5,7 @@ Features
 --------
 
 - QuantizePrimitiveVariables : Added new node for quantizing the values of primitive variables.
+- DataStore : Added new node for storing large data alongside a Gaffer script, which is more efficient than storing large data inside the script file. Data is stored on the DataStore node by calling setEntry, instead of setting plug values. This node will be used as a basis of future tools that create data within Gaffer ( such as paint tools ).
 
 Improvements
 ------------
@@ -23,17 +24,20 @@ Fixes
 - ScriptNode :
   - Fixed context updates for `variables` plugs with an input connection.
   - Prevented invalid input connections to `variables` plugs. Connections from node outputs are considered invalid because they could create a circular dependency between context variables.
+- EditMenu : Added popup dialogue when errors occur during "cut" or "copy" operations.
 
 API
 ---
 
 - GraphEditor : Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
 - Spreadsheet : Added support for `spreadsheet:outputRowVisible` metadata, which can be used to hide the output row.
+- TestCase : Added alternateMountTemporaryDirectory() for testing behaviour when moving files between directories on different filesystems.
 
 Breaking Changes
 ----------------
 
 - RenderMan : Changed the default values used for PxrCryptomatte's material output.
+- ScriptNode : Changed preconditions for calling `serialiseToFile`. If the desired behaviour is that the ScriptNode in memory will be now be associated with the new file ( ie. a saveAs operation ), then the caller is responsible for setting `ScriptNode.fileNamePlug()` to the new file name before calling `serialiseToFile`.
 
 1.7.0.0a8 (relative to 1.7.0.0a7)
 =========

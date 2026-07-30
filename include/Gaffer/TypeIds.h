@@ -155,6 +155,8 @@ enum TypeId
 	Box2fVectorDataPlugTypeId = 118109,
 	PatternMatchTypeId = 118110,
 	Int64VectorDataPlugTypeId = 118111,
+	DataStoreTypeId = 118112,
+	DataStoreSetEntryActionTypeId = 118113,
 
 	LastTypeId = 118799
 
