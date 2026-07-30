@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import itertools
 
 import Gaffer
 import GafferUI
@@ -42,43 +43,93 @@ import GafferUI
 # This file adds context menu items associated with the PlugVisibilityGadget,
 # the rest of which is implemented in `src/GafferUI/PlugVisibilityGadget.cpp`.
 
-def __setPlugMetadata( plug, key, value ) :
+def __hide( plugs ) :
 
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.Metadata.registerValue( plug, key, value )
+	with Gaffer.UndoScope( next( iter( plugs ) ).ancestor( Gaffer.ScriptNode ) ) :
+		for plug in plugs :
+			Gaffer.Metadata.registerValue( plug, "noduleLayout:visible", False )
 
-def __hasVisibilityGadget( plug ) :
+def __managedPlugs( parent ) :
 
-	parent = plug.parent()
-	while True :
-		for key in Gaffer.Metadata.registeredValues( parent ) :
-			if key.endswith( ":gadgetType" ) and Gaffer.Metadata.value( parent, key ) == "GafferUI.PlugVisibilityGadget" :
-				return True
-		parent = parent.parent()
-		if parent is None or isinstance( parent, Gaffer.Node ) :
-			return False
+	for key in Gaffer.Metadata.registeredValues( parent ) :
+		if key.endswith( ":gadgetType" ) and Gaffer.Metadata.value( parent, key ) == "GafferUI.PlugVisibilityGadget" :
+			return [
+				p for p in Gaffer.Metadata.plugsWithMetadata( parent, "plugVisibilityGadget:showable" )
+				if Gaffer.Metadata.value( p, "plugVisibilityGadget:showable" )
+			]
+
+	result = []
+	for child in Gaffer.GraphComponent.Range( parent ) :
+		result.extend( __managedPlugs( child ) )
+
+	return result
+
+def __unconnected( plug ) :
+
+	if plug.direction() == plug.Direction.In :
+		return plug.getInput() is None and all( p.getInput() is None for p in Gaffer.Plug.RecursiveRange( plug ) )
+	else :
+		return len( plug.outputs() ) == 0 and all( len( p.outputs() ) == 0 for p in Gaffer.Plug.RecursiveRange( plug ) )
+
+def __visible( plug ) :
+
+	return Gaffer.Metadata.value( plug, "noduleLayout:visible" ) != False and Gaffer.Metadata.value( plug, "nodule:type" ) != ""
 
 def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 
-	if not __hasVisibilityGadget( plug ) or not Gaffer.Metadata.value( plug, "plugVisibilityGadget:showable" ) :
+	if plug not in __managedPlugs( plug.node() ) :
 		return
 
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/HideDivider", { "divider" : True } )
 
-	if plug.direction() == plug.Direction.In :
-		numConnections = 1 if plug.getInput() else 0
-	else :
-		numConnections = len( plug.outputs() )
-
 	menuDefinition.append(
 
 		"/Hide",
 		{
-			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
-			"active" : numConnections == 0 and not Gaffer.MetadataAlgo.readOnly( plug ),
+			"command" : functools.partial( __hide, [ plug ] ),
+			"active" : __unconnected( plug ) and not Gaffer.MetadataAlgo.readOnly( plug ),
 		}
 
 	)
 
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )
+def __graphEditorKeyPress( editor, event ) :
+
+	assert( isinstance( editor, GafferUI.GraphEditor ) )
+	if event.key == "Slash" and event.modifiers == event.Modifiers.None_ :
+
+		nodes = [ n for n in editor.scriptNode().selection() if n.parent() == editor.graphGadget().getRoot() ]
+		toHide = []
+		for node in nodes :
+			toHide.extend( [ p for p in __managedPlugs( node ) if __unconnected( p ) and __visible( p ) ] )
+
+		if toHide and not any( Gaffer.MetadataAlgo.readOnly( p ) for p in toHide ) :
+			__hide( toHide )
+
+		return True
+
+	return False
+
+def __graphEditorNodeContextMenu( graphEditor, nodeList, menuDefinition ) :
+
+	managedPlugs = [ __managedPlugs( node ) for node in nodeList ]
+	if all( managedPlugs ) :
+		toHide = [ p for p in itertools.chain( *managedPlugs ) if __unconnected( p ) and __visible( p ) ]
+		menuDefinition.append(
+			"/Connections/Hide Unconnected Plugs",
+			{
+				"command" : functools.partial( __hide, toHide ),
+				"shortCut" : "/",
+				"active" : len( toHide ) and not any( Gaffer.MetadataAlgo.readOnly( p ) for p in toHide ),
+			}
+		)
+		return
+
+def connectToEditor( editor ) :
+
+	if not isinstance( editor, GafferUI.GraphEditor ) :
+		return
+
+	editor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )
+	editor.nodeContextMenuSignal( True ).connect( __graphEditorNodeContextMenu )
+	editor.keyPressSignal().connect( __graphEditorKeyPress )
