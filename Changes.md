@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.21.1)
 =======
 
+Fixes
+-----
 
+- Shuffle nodes : Fixed bug that disabled the "+" button if a shuffle plug had an input connection.
 
 1.6.21.1 (relative to 1.6.21.0)
 ========
