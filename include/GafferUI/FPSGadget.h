@@ -49,7 +49,7 @@ class GAFFERUI_API FPSGadget : public Gadget
 
 	public :
 
-		explicit FPSGadget( Imath::V3f defaultPosition = Imath::V3f( 5.0f, 50.0f, 0.0f ) );
+		explicit FPSGadget( Imath::V3f defaultPosition = Imath::V3f( 5.0f, 50.0f, 0.0f ), bool showFrameTime = false );
 		~FPSGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::FPSGadget, FPSGadgetTypeId, Gadget );
@@ -60,6 +60,7 @@ class GAFFERUI_API FPSGadget : public Gadget
 		Imath::Box3f renderBound() const override;
 
 	private :
+		const bool m_showFrameTime;
 		mutable std::list< std::chrono::time_point<std::chrono::high_resolution_clock> > m_timeBuffer;
 };
 

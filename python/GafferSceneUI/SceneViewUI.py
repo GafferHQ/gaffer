@@ -327,6 +327,12 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"frameTime" : {
+
+			"plugValueWidget:type" : "",
+
+		},
+
 		"displayTransform.soloChannel" : {
 
 			# The `RGBAL`` shortcuts conflict with shortcuts used for
@@ -1175,11 +1181,31 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/Show FPS",
 			{
 				"checkBox" : self.getPlug().node()["fps"]["visible"].getValue(),
-				"command" : self.getPlug().node()["fps"]["visible"].setValue,
+				"command" : Gaffer.WeakMethod( self.__setShowFPS )
+			}
+		)
+
+		m.append(
+			"/Show Frame Time",
+			{
+				"checkBox" : self.getPlug().node()["frameTime"]["visible"].getValue(),
+				"command" : Gaffer.WeakMethod( self.__setShowFrameTime )
 			}
 		)
 
 		return m
+
+	def __setShowFPS( self, enable ):
+		self.getPlug().node()["fps"]["visible"].setValue( enable )
+		if enable:
+			self.getPlug().node()["frameTime"]["visible"].setValue( False )
+
+	def __setShowFrameTime( self, enable ):
+		self.getPlug().node()["frameTime"]["visible"].setValue( enable )
+		if enable:
+			self.getPlug().node()["fps"]["visible"].setValue( False )
+
+
 
 ##########################################################################
 # Context menu

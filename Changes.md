@@ -42,6 +42,7 @@ Features
 --------
 
 - RenderMan : Added support for RenderMan 27.3.
+- SceneView : Added frame time display.
 
 Fixes
 -----
