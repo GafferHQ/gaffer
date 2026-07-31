@@ -203,6 +203,7 @@ from .SceneStatsTest import SceneStatsTest
 from .PointInstancerAlgoTest import PointInstancerAlgoTest
 from .CopyObjectTest import CopyObjectTest
 from .QuantizePrimitiveVariablesTest import QuantizePrimitiveVariablesTest
+from .RandomPrimitiveVariableTest import RandomPrimitiveVariableTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

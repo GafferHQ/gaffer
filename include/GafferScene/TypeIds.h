@@ -203,6 +203,7 @@ enum TypeId
 	SceneStatsTypeId = 120158,
 	CopyObjectTypeId = 120159,
 	QuantizePrimitiveVariablesTypeId = 120160,
+	RandomPrimitiveVariableTypeId = 120161,
 
 	LastTypeId = 120999
 };

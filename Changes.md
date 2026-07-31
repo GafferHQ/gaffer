@@ -1,7 +1,17 @@
 1.7.x.x (relative to 1.7.0.0a9)
 =======
 
+Features
+--------
 
+- RandomPrimitiveVariable : Added new node for creating random per-face or per-vertex primitive variables with a variety of distributions.
+
+Fixes
+-----
+
+- MenuButton : Fixed immediate mode when the menu contained a single submenu.
+- RandomChoice : Fixed "Value/Weight" table headers when first setting up the node.
+- VectorDataPlugValueWidget : Fixed handling of custom header metadata when adding and removing columns.
 
 1.7.0.0a9 (relative to 1.7.0.0a8)
 =========
