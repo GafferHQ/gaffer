@@ -125,7 +125,7 @@ if [[ -n $GAFFER_DEBUG ]] ; then
 			export GAFFER_DEBUGGER="lldb -- "
 		fi
 	fi
-	exec $GAFFER_DEBUGGER $rootDir/bin/__private/gaffer "$rootDir/bin/__private/_gaffer.py" "$@"
+	exec $GAFFER_DEBUGGER $rootDir/bin/python "$rootDir/bin/__private/_gaffer.py" "$@"
 else
-	exec $rootDir/bin/__private/gaffer "$rootDir/bin/__private/_gaffer.py" "$@"
+	exec $rootDir/bin/python "$rootDir/bin/__private/_gaffer.py" "$@"
 fi

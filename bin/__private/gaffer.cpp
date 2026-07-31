@@ -64,16 +64,13 @@ namespace
 {
 
 template<typename T>
-int launchGaffer( int argc, T** argv, std::function<int( int, T** )> pyMain )
+int launchGaffer( int argc, T** argv )
 {
-	// Windows does not support process renaming or replacing a parent process with its child.
-	// We want all of our processes to be called `gaffer` (`gaffer.exe` on Windows) so we run
-	// this executable with `_gaffer.py` bootstrap script. We execute that script as-is and
-	// all other cases get `__gaffer.py` inserted into the argument list.
-	if( argc > 1 && std::filesystem::path( argv[1] ).filename() == std::filesystem::path( "_gaffer.py" ) )
-	{
-		return pyMain( argc, argv );
-	}
+	// This executable should be run after the environment is configured. The default launch
+	// script does that in `_gaffer.py`. We want all of our processes to be called `gaffer`
+	// (`gaffer.exe` on Windows). Windows does not support process renaming or replacing a
+	// parent process with its child, so this executable, rather than `python` is used to
+	// launch the Gaffer application (`__gaffer.py`).
 
 	std::vector<T *> modifiedArgv( argv, argv + argc );
 
@@ -83,7 +80,64 @@ int launchGaffer( int argc, T** argv, std::function<int( int, T** )> pyMain )
 	T *script = genericLaunchScriptPath.data();
 	modifiedArgv.insert( modifiedArgv.begin() + 1, script );
 
-	return pyMain( modifiedArgv.size(), modifiedArgv.data() );
+	PyStatus status;
+
+	PyConfig config;
+	PyConfig_InitPythonConfig( &config );
+
+	// `config.executable` is the source of Python's `sys.executable` value. We set
+	// that to `python` (in the exception handling block below) to allow subprocesses
+	// to be launched using `sys.executable` and not have to work around the automatic
+	// insertion of `__gaffer.py` done above.
+	std::filesystem::path pythonPath = exePath.parent_path().parent_path() / "python";
+#ifdef MS_WINDOWS
+	pythonPath.replace_extension( "exe" );
+#endif
+	std::wstring pythonPathString = pythonPath.wstring();
+
+	try
+	{
+		// `PyConfig_Set*Argv` takes care of Python's preconfiguration.
+		if constexpr( std::is_same_v<T, char> )
+		{
+			status = PyConfig_SetBytesArgv( &config, modifiedArgv.size(), modifiedArgv.data() );
+		}
+		else if constexpr( std::is_same_v<T, wchar_t> )
+		{
+			status = PyConfig_SetArgv( &config, modifiedArgv.size(), modifiedArgv.data() );
+		}
+		if( PyStatus_Exception( status ) )
+		{
+			throw std::runtime_error( "Error initializing command line arguments." );
+		}
+
+		status = PyConfig_SetString( &config, &config.executable, pythonPathString.data() );
+		if( PyStatus_Exception( status ) )
+		{
+			throw std::runtime_error( "Error initializing \"sys.executable\"." );
+		}
+
+		status = Py_InitializeFromConfig( &config );
+		if( PyStatus_Exception( status ) )
+		{
+			throw std::runtime_error( "Error initializing Python configuration." );
+		}
+	}
+	catch( const std::runtime_error &e )
+	{
+		std::string msg = std::string( e.what() ) + " : " + std::string( status.err_msg );
+		status.err_msg = msg.data();
+		PyConfig_Clear( &config );
+		if( PyStatus_IsExit( status ) )
+		{
+			return status.exitcode;
+		}
+		Py_ExitStatusException( status );
+	}
+
+	PyConfig_Clear( &config );
+
+	return Py_RunMain();
 
 }
 
@@ -106,12 +160,12 @@ int wmain( int argc, wchar_t **argv )
 		}
 	}
 
-	return launchGaffer<wchar_t>( argc, argv, Py_Main );
-	
+	return launchGaffer<wchar_t>( argc, argv );
+
 }
 #else
 int main( int argc, char **argv )
 {
-	return launchGaffer<char>( argc, argv, Py_BytesMain );
+	return launchGaffer<char>( argc, argv );
 }
 #endif
