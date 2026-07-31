@@ -524,6 +524,3 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		script2 = Gaffer.ScriptNode()
 		script2.execute( script.serialise() )
 		self.assertEqual( script2["attributes"]["extraAttributes"].getValue(), attributes )
-
-if __name__ == "__main__":
-	unittest.main()

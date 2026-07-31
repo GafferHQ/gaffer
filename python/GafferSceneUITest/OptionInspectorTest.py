@@ -1170,6 +1170,3 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.source(), tweak )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
 		self.assertEqual( inspection.value(), IECore.StringData( "/otherCamera" ) )
-
-if __name__ == "__main__" :
-	unittest.main()

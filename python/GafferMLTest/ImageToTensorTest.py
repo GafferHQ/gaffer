@@ -147,7 +147,3 @@ class ImageToTensorTest( GafferTest.TestCase ) :
 		self.assertIsInstance( imageToTensor["tensor"].getValue().asData(), IECore.FloatVectorData )
 		for i in range( 0, 3 ) :
 			self.assertAlmostEqual( imageToTensor["tensor"].getValue().asData()[i], color[i], delta = 0.005 )
-
-
-if __name__ == "__main__":
-	unittest.main()

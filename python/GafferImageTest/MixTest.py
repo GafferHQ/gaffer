@@ -689,6 +689,3 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 					Mix["mask"].setInput( mask["out"] )
 
 					self.assertImagesEqual( Mix["out"], ReferenceWithDataWindow["out"], maxDifference = 1e-7 )
-
-if __name__ == "__main__":
-	unittest.main()

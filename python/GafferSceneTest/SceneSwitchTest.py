@@ -231,6 +231,3 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		pv["value"].setValue( 3 )
 		self.assertIn( switch["out"]["object"], { x[0] for x in cs } )
 		self.assertIn( switch["out"]["bound"], { x[0] for x in cs } )
-
-if __name__ == "__main__":
-	unittest.main()

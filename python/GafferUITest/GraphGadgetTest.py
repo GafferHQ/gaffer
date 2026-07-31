@@ -1449,6 +1449,3 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 
 		script["switch"]["index"].setValue( 1 )
 		self.assertHighlighting( graphGadget, { "switch" : True, "add1" : False, "add2" : True } )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -406,6 +406,3 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( prune["out"].childNames( "/group"), IECore.InternedStringVectorData( [ "sphere" ] ) )
 		self.assertEqual( prune["out"].bound( "/" ), sphere["out"].bound( "/" ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -143,6 +143,3 @@ class EmptyTest( GafferImageTest.ImageTestCase ) :
 			e.affects( e["format"]["pixelAspect"] ),
 			[ e["out"]["format"] ],
 		)
-
-if __name__ == "__main__":
-	unittest.main()

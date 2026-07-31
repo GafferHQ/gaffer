@@ -3293,6 +3293,3 @@ class DispatcherTest( GafferTest.TestCase ) :
 			rootBatch.preTasks()[0].blindData()["name"].value,
 			"command 1"
 		)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -142,6 +142,3 @@ class LightToolTest( GafferUITest.TestCase ) :
 		del preRenderSlot[:]
 		while not len( preRenderSlot ) :
 			self.waitForIdle( 1000 )
-
-if __name__ == "__main__" :
-	unittest.main()

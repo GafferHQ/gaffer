@@ -78,6 +78,3 @@ class ScrolledContainerTest( GafferUITest.TestCase ) :
 		self.assertTrue( b.parent() is s )
 		self.assertTrue( s.getChild() is b )
 		self.assertEqual( len( l ), 0 )
-
-if __name__ == "__main__":
-	unittest.main()

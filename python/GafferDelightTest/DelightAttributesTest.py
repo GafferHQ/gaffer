@@ -89,6 +89,3 @@ class DelightAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "dl:matte", script["DelightAttributes"]["attributes"].keys() )
 		self.assertNotIn( "matte", script["DelightAttributes"]["attributes"].keys() )
 		self.assertEqual( script["DelightAttributes"]["attributes"]["dl:matte"]["value"].getValue(), True )
-
-if __name__ == "__main__":
-	unittest.main()

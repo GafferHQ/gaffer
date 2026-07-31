@@ -164,6 +164,3 @@ class ScriptWindowTest( GafferUITest.TestCase ) :
 		)
 
 		del application.root()["scripts"][0]
-
-if __name__ == "__main__":
-	unittest.main()

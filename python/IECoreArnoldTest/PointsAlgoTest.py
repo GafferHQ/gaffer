@@ -176,6 +176,3 @@ class PointsAlgoTest( unittest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeGetFlt( n, "motion_start" ), -0.25 )
 			self.assertEqual( arnold.AiNodeGetFlt( n, "motion_end" ), 0.25 )
-
-if __name__ == "__main__":
-	unittest.main()

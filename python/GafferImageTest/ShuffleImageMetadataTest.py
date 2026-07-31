@@ -65,6 +65,3 @@ class ShuffleImageMetadataTest( GafferImageTest.ImageTestCase ) :
 
 		shuffle["enabled"].setValue( False )
 		self.assertEqual( shuffle["out"].metadata(), shuffle["in"].metadata() )
-
-if __name__ == "__main__":
-	unittest.main()

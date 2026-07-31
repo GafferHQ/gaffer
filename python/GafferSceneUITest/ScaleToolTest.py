@@ -217,6 +217,3 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 
 		tool.scale( imath.V3f( 10 ) )
 		self.assertEqual( script["sphere"]["transform"]["scale"].getValue(), imath.V3f( 10 ) )
-
-if __name__ == "__main__":
-	unittest.main()

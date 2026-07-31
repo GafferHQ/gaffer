@@ -1482,6 +1482,3 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# We can also register `correspondingInput` metadata as a fallback.
 		Gaffer.Metadata.registerValue( f"osl:shader:{s}:f", "correspondingInput", "input" )
 		self.assertEqual( shader.correspondingInput( shader["out"]["f"] ), shader["parameters"]["input"] )
-
-if __name__ == "__main__":
-	unittest.main()

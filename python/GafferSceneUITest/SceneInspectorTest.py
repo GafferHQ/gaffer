@@ -602,6 +602,3 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		# That shouldn't prevent a subsequent evaluation from working.
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/Location" ] )
-
-if __name__ == "__main__":
-	unittest.main()

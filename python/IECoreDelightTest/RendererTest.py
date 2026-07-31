@@ -1908,6 +1908,3 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		return outputFileName.with_suffix("").as_posix()
-
-if __name__ == "__main__":
-	unittest.main()

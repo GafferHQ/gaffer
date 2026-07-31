@@ -47,6 +47,3 @@ class CyclesSceneGadgetTest( GafferSceneUITest.SceneGadgetTest ) :
 	# Tests are inherited from base class. We just need to
 	# override the renderer being used.
 	renderer = "Cycles"
-
-if __name__ == "__main__":
-	unittest.main()

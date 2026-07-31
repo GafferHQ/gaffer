@@ -483,6 +483,3 @@ class WindowTest( GafferUITest.TestCase ) :
 		self.assertTrue( window.close() )
 		self.assertEqual( len( preCloseCapturingSlot ), 1 )
 		self.assertEqual( len( closedSlot ), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

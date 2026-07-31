@@ -78,6 +78,3 @@ class ContextSanitiserTest( GafferSceneTest.SceneTestCase ) :
 				"scene:setName in context for Plane.out.object computeNode:hash",
 			]
 		)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -121,8 +121,3 @@ class HiddenFilePathFilterTest( GafferTest.TestCase ) :
 				[ visibleSequence.fileName ]
 			)
 		)
-
-
-
-if __name__ == "__main__":
-	unittest.main()

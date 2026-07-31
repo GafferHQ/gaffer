@@ -246,6 +246,3 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.source(), edit.translate )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
 		self.assertTrue( inspection.editable() )
-
-if __name__ == "__main__" :
-	unittest.main()

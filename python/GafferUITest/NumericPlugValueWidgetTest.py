@@ -196,6 +196,3 @@ class NumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		w.setPlug( None )
 		self.assertFalse( w.numericWidget().getEditable() )
-
-if __name__ == "__main__":
-	unittest.main()

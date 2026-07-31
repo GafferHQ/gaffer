@@ -183,6 +183,3 @@ class CompoundPathFilterTest( GafferTest.TestCase ) :
 
 		f = Gaffer.CompoundPathFilter( itertools.chain( [ f1 ], [ f2 ] ) )
 		self.assertFilterListsEqual( f.getFilters(), [ f1, f2 ] )
-
-if __name__ == "__main__":
-	unittest.main()

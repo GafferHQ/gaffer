@@ -3901,6 +3901,3 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		c = self._color4fAtUV( image, uv )
 		return imath.Color3f( c.r, c.g, c.b )
-
-if __name__ == "__main__":
-	unittest.main()

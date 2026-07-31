@@ -121,6 +121,3 @@ class ImageProcessorTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( len( n["in"] ), 2 )
 		self.assertEqual( n["in"].minSize(), 2 )
 		self.assertEqual( n["in"].maxSize(), Gaffer.ArrayPlug().maxSize() )
-
-if __name__ == "__main__":
-	unittest.main()

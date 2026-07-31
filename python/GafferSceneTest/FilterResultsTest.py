@@ -328,6 +328,3 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope():
 			filterResults["out"].getValue()
-
-if __name__ == "__main__":
-	unittest.main()

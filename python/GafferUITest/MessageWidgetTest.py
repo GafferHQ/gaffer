@@ -145,6 +145,3 @@ class MessageWidgetTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( w.messageCount( IECore.Msg.Level.Error ), 2 )
 		self.assertEqual( len( h.messages ), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

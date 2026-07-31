@@ -284,6 +284,3 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 
 		l["mute"]["enabled"].setValue( False )
 		self.assertNotIn( "light:mute", l["out"].attributes( "/light" ) )
-
-if __name__ == "__main__":
-	unittest.main()

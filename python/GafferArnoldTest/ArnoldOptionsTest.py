@@ -78,6 +78,3 @@ class ArnoldOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "ai:error_color_bad_pixel", script["ArnoldOptions"]["options"].keys() )
 		self.assertNotIn( "errorColorBadPixel", script["ArnoldOptions"]["options"].keys() )
 		self.assertEqual( script["ArnoldOptions"]["options"]["ai:error_color_bad_pixel"]["value"].getValue(), imath.Color3f( 0, 1, 1 ) )
-
-if __name__ == "__main__":
-	unittest.main()

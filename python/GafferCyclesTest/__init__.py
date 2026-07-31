@@ -46,7 +46,3 @@ from .CyclesAttributesTest import CyclesAttributesTest
 from .CyclesShaderBallTest import CyclesShaderBallTest
 
 from .IECoreCyclesPreviewTest import *
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

@@ -1182,6 +1182,3 @@ class PlugTest( GafferTest.TestCase ) :
 		dirtiedPlugs = set()
 		s["n1"]["p1"].setValue( 2 )
 		self.assertEqual( dirtiedPlugs, set( [ s["n1"]["p1"] ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

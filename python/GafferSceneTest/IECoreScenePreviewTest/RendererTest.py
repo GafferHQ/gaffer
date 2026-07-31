@@ -76,6 +76,3 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.create( "Test", GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive ),
 			GafferScene.Private.IECoreScenePreview.CapturingRenderer
 		)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -429,6 +429,3 @@ class PathTest( GafferTest.TestCase ) :
 
 		script["node"]["op1"].setValue( 10 )
 		self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
-
-if __name__ == "__main__":
-	unittest.main()

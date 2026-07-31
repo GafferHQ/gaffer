@@ -578,6 +578,3 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "userDefault" )
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op2", "userDefault" )
 		Gaffer.Metadata.deregisterValue( GafferTest.CompoundPlugNode, "p.s", "userDefault" )
-
-if __name__ == "__main__":
-	unittest.main()

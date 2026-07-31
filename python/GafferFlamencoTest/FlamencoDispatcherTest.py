@@ -177,6 +177,3 @@ class FlamencoDispatcherTest( GafferTest.TestCase ) :
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, r'Worker tag "nonExistentWorkerTag" does not exist.' ) :
 			script["dispatcher"]["task"].execute()
-
-if __name__ == "__main__":
-	unittest.main()

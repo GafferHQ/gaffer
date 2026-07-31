@@ -78,6 +78,3 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 				gadgetWidget.getViewportGadget().setPrimaryChild( imageGadget )
 				gadgetWidget.getViewportGadget().frame( imageGadget.bound() )
 				self.waitForIdle( 100 )
-
-if __name__ == "__main__":
-	unittest.main()

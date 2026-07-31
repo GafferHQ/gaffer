@@ -194,6 +194,3 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		del s["b"]
 
 		self.assertEqual( e.graphGadget().getRoot(), s )
-
-if __name__ == "__main__":
-	unittest.main()

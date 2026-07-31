@@ -219,6 +219,3 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		s["b"]["s"].setup( s["p"]["out"] )
 
 		s.execute( """script["b"]["s"]["in"][0].setInput( script["b"]["filter"] )""" )
-
-if __name__ == "__main__":
-	unittest.main()

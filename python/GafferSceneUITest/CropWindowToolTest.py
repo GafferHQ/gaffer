@@ -160,6 +160,3 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 
 
 		self.assertEqual( tool.status(), "Info: Editing <b>options.options.render:cropWindow.value</b>" )
-
-if __name__ == "__main__":
-	unittest.main()

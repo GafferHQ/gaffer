@@ -542,6 +542,3 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 				self.assertLess( edgeStats["max"].getValue()[i], maxEdge )
 				self.assertLess( refDiffStats["max"].getValue()[i], maxRefDiff )
 				self.assertLess( refDiffCoveredStats["max"].getValue()[i], maxMaskedDiff )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -449,6 +449,3 @@ class MeshAlgoTest( unittest.TestCase ) :
 			sharpnessArray = arnold.AiNodeGetArray( n, "crease_sharpness" )
 			for i, v in enumerate( [ 6, 6, 5 ] ) :
 				self.assertEqual( arnold.AiArrayGetFlt( sharpnessArray, i ), v )
-
-if __name__ == "__main__":
-	unittest.main()

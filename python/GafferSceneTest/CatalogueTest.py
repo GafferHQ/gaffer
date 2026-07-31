@@ -1259,6 +1259,3 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		catalogue["images"].reorderChildren( reversed( catalogue["images"].children() ) )
 		self.assertIn( catalogue["imageNames"], { x[0] for x in plugDirtiedSlot } )
 		assertImageNames( catalogue )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -86,6 +86,3 @@ class ChildSetTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( s ), 0 )
 		self.assertEqual( mirrorSet, set( s ) )
-
-if __name__ == "__main__":
-	unittest.main()

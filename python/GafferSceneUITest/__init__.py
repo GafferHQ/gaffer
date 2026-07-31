@@ -70,6 +70,3 @@ from .BasicInspectorTest import BasicInspectorTest
 from .VisibilityColumnTest import VisibilityColumnTest
 from .TransformInspectorTest import TransformInspectorTest
 from .PrimitiveVariableInspectorTest import PrimitiveVariableInspectorTest
-
-if __name__ == "__main__":
-	unittest.main()

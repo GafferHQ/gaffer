@@ -879,6 +879,3 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				shader1.blindData()[k], shader2.blindData()[k],
 				"{}(Blind Data = {})".format( message or "", k )
 			)
-
-if __name__ == "__main__":
-	unittest.main()

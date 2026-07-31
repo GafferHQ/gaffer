@@ -159,6 +159,3 @@ parent["Transform"]["transform"]["translate"] = imath.V3f( i )
 
 		self.assertEqual( collect["out"].globalsHash(), collect["in"].globalsHash() )
 		self.assertEqual( collect["out"].globals(), collect["in"].globals() )
-
-if __name__ == "__main__":
-	unittest.main()

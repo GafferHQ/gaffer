@@ -159,6 +159,3 @@ class FlatToDeepTest( GafferImageTest.ImageTestCase ) :
 			addDepth["zChannel"].setValue( "Z" )
 			self.assertNotEqual( newerZBackHash, addDepth["out"]["channelData"].hash() )
 			self.assertEqual( addDepth["out"]["channelData"].getValue(), IECore.FloatVectorData( [0.19] * tilePixels ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -219,6 +219,3 @@ class RenderManShaderUITest( GafferUITest.TestCase ) :
 		shader["parameters"]["mode"].setValue( 1 ) # Artistic
 		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["melanin"], "layout:visibilityActivator" ), False )
 		self.assertEqual( Gaffer.Metadata.value( shader["parameters"]["Color"], "layout:visibilityActivator" ), True )
-
-if __name__ == "__main__":
-	unittest.main()

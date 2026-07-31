@@ -59,6 +59,3 @@ class ConfigTest( GafferTest.TestCase ) :
 			)
 		except subprocess.CalledProcessError as e :
 			self.fail( e.output )
-
-if __name__ == "__main__":
-	unittest.main()

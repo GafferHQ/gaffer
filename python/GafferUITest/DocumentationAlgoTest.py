@@ -63,6 +63,3 @@ class DocumentationAlgoTest( GafferUITest.TestCase ) :
 			GafferUI.DocumentationAlgo.markdownToHTML( "~text~" ),
 			"<p><del>text</del></p>\n",
 		)
-
-if __name__ == "__main__":
-	unittest.main()

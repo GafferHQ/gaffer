@@ -449,6 +449,3 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			editWarning = "",
 			nonEditableReason = "{} is external to the script.".format( externalPrimitiveVariableTweaks.fullName() )
 		)
-
-if __name__ == "__main__" :
-	unittest.main()

@@ -116,6 +116,3 @@ class MeshNormalsTest( GafferSceneTest.SceneTestCase ) :
 				sortedVec.equalWithRelError( imath.V3f( 1, 1, 2 ).normalized(), 1e-7 ) or
 				sortedVec.equalWithRelError( imath.V3f( 1, 2, 2 ).normalized(), 1e-7 )
 			)
-
-if __name__ == "__main__":
-	unittest.main()

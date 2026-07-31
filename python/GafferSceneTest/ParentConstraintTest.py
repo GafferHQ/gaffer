@@ -2256,6 +2256,3 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 						0
 					) )
 				)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -761,6 +761,3 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				shader1.parameters[k], shader2.parameters[k],
 				"{}(Parameter = {})".format( message or "", k )
 			)
-
-if __name__ == "__main__" :
-	unittest.main()

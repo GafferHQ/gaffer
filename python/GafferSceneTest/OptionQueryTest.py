@@ -419,6 +419,3 @@ class OptionQueryTest( GafferSceneTest.SceneTestCase ):
 			context["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
 			self.assertTrue( query["out"][0]["exists"].getValue() )
 			self.assertEqual( query["out"][0]["value"].getValue(), "test" )
-
-if __name__ == "__main__":
-	unittest.main()

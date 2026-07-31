@@ -234,7 +234,3 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		self.assertImagesEqual( a["out"], b["out"], maxDifference = ( 0.0, 0.25 ) )
 		with self.assertRaisesRegex( AssertionError, "0.25 not less than or equal to 0.0 : Channel R" ) :
 			self.assertImagesEqual( a["out"], b["out"], maxDifference = ( -0.25, 0.0 ) )
-
-
-if __name__ == "__main__":
-	unittest.main()

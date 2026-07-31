@@ -90,6 +90,3 @@ class CyclesOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "cycles:session:samples", script["CyclesOptions"]["options"].keys() )
 		self.assertNotIn( "samples", script["CyclesOptions"]["options"].keys() )
 		self.assertEqual( script["CyclesOptions"]["options"]["cycles:session:samples"]["value"].getValue(), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

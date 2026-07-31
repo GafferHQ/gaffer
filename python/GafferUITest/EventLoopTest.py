@@ -286,6 +286,3 @@ class EventLoopTest( GafferUITest.TestCase ) :
 		self.__uiThreadCalledOnCorrectThread = False
 		self.__uiThreadResult = None
 		self.__executeOnUIThreadDuration = 10000
-
-if __name__ == "__main__":
-	unittest.main()

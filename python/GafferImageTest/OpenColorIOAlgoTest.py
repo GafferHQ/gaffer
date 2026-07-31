@@ -128,6 +128,3 @@ class OpenColorIOAlgoTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( a.getWorkingDir(), b.getWorkingDir() )
 		for av, bv in zip( a.getStringVars(), b.getStringVars() ) :
 			self.assertEqual( av, bv )
-
-if __name__ == "__main__":
-	unittest.main()

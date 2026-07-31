@@ -93,6 +93,3 @@ class DeleteViewsTest( GafferImageTest.ImageTestCase ) :
 		deleteViews["views"].setValue( "left" )
 
 		self.assertEqual( deleteViews["out"].viewNames(), IECore.StringVectorData( [ "left" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -1995,6 +1995,3 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		reRead["fileName"].setValue( testFile )
 
 		self.assertImagesEqual( r["out"], reRead["out"], ignoreMetadata = True )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -107,6 +107,3 @@ class DeleteFilesTest( GafferTest.TestCase ) :
 
 		node["files"].setValue( IECore.StringVectorData( [ "a" ] ) )
 		self.assertNotEqual( node["task"].hash(), IECore.MurmurHash() )
-
-if __name__ == "__main__":
-	unittest.main()

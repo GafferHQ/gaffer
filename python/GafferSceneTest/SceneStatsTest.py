@@ -317,6 +317,3 @@ class SceneStatsTest( GafferSceneTest.SceneTestCase ) :
 		for plug in Gaffer.ValuePlug.RecursiveRange( script2["stats"]["out"] ) :
 			if hasattr( plug, "getValue" ) :
 				self.assertEqual( plug.getValue(), script.descendant( plug.relativeName( script2 ) ).getValue() )
-
-if __name__ == "__main__" :
-	unittest.main()

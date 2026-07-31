@@ -1584,6 +1584,3 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.deregisterValue( Gaffer.Spreadsheet.RowsPlug, "default.*...", "test" )
 		Gaffer.Metadata.deregisterValue( Gaffer.Color3fPlug, "[rgb]", "test" )
 		Gaffer.Metadata.deregisterValue( Gaffer.TweakPlug, "value.[rg]", "test" )
-
-if __name__ == "__main__":
-	unittest.main()

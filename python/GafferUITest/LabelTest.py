@@ -83,6 +83,3 @@ class LabelTest( GafferUITest.TestCase ) :
 
 		w.setTextSelectable( False )
 		self.assertEqual( w.getTextSelectable(), False )
-
-if __name__ == "__main__":
-	unittest.main()

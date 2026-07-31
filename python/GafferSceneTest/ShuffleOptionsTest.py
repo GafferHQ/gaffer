@@ -105,6 +105,3 @@ class ShuffleOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "a", "b" ) )
 		self.assertScenesEqual( shuffle["in"], shuffle["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

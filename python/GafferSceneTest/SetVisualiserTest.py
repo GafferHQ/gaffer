@@ -297,6 +297,3 @@ class SetVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		f["paths"].setValue( IECore.StringVectorData( [ '...' ] ) )
 		node["filter"].setInput( f["out"] )
 		return f
-
-if __name__ == "__main__":
-	unittest.main()

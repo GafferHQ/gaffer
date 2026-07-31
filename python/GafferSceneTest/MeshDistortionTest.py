@@ -99,6 +99,3 @@ class MeshDistortionTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotIn( "distortion", mesh )
 		self.assertNotIn( "uvDistortion", mesh )
 		self.assertIn( "D", mesh )
-
-if __name__ == "__main__":
-	unittest.main()

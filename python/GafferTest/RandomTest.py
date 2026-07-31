@@ -170,6 +170,3 @@ class RandomTest( GafferTest.TestCase ) :
 	def testRandomPerf( self ) :
 
 		GafferTest.testRandomPerf()
-
-if __name__ == "__main__":
-	unittest.main()

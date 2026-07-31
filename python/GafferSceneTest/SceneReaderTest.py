@@ -826,6 +826,3 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].message, 'No file found for "/volume"' )
-
-if __name__ == "__main__":
-	unittest.main()

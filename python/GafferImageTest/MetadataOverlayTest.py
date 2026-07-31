@@ -47,6 +47,3 @@ class MetadataOverlayTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertTrue( node.enabledPlug().isSame( node["enabled"] ) )
 		self.assertTrue( node.correspondingInput( node["out"] ).isSame( node["in"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -150,6 +150,3 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotIn( "size", node["parameters"] )
 		self.assertIn( "width", node["parameters"] )
 		self.assertIn( "height", node["parameters"] )
-
-if __name__ == "__main__":
-	unittest.main()

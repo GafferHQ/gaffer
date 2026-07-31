@@ -176,6 +176,3 @@ class BoxPlugTest( GafferTest.TestCase ) :
 		self.assertIs( Gaffer.Box3fPlug.ValueType, imath.Box3f )
 		self.assertIs( Gaffer.Box3fPlug.PointType, imath.V3f )
 		self.assertIs( Gaffer.Box3fPlug.ChildType, Gaffer.V3fPlug )
-
-if __name__ == "__main__":
-	unittest.main()

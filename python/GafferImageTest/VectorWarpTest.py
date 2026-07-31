@@ -229,6 +229,3 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
 	def testDownsamplePerf( self ):
 		self.runPerfTest( 6000, 300, "cubic", True )
-
-if __name__ == "__main__":
-	unittest.main()

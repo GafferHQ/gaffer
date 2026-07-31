@@ -89,6 +89,3 @@ class DelightOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "dl:oversampling", script["DelightOptions"]["options"].keys() )
 		self.assertNotIn( "oversampling", script["DelightOptions"]["options"].keys() )
 		self.assertEqual( script["DelightOptions"]["options"]["dl:oversampling"]["value"].getValue(), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

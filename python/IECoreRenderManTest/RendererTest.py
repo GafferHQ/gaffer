@@ -3211,6 +3211,3 @@ class XPURendererTest( RendererTest ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].message, "No XPU device selected. Defaulting to CPU." )
-
-if __name__ == "__main__":
-	unittest.main()

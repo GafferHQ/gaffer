@@ -53,6 +53,3 @@ class ErrorDialogueTest( GafferUITest.TestCase ) :
 		del w
 
 		self.assertEqual( ww(), None )
-
-if __name__ == "__main__":
-	unittest.main()

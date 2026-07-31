@@ -516,6 +516,3 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 					self.assertEqual( name, desiredName )
 				else :
 					self.assertIsNone( annotation )
-
-if __name__ == "__main__":
-	unittest.main()

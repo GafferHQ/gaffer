@@ -201,6 +201,3 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -346,6 +346,3 @@ class UnencapsulateTest( GafferSceneTest.SceneTestCase ) :
 			# Check that we can cancel the compute.
 			backgroundTask.cancelAndWait()
 			self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
-
-if __name__ == "__main__":
-	unittest.main()

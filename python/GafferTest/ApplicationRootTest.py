@@ -150,6 +150,3 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		if self.__defaultPreferencesFile.exists() :
 			self.__defaultPreferencesFile.unlink()
-
-if __name__ == "__main__":
-	unittest.main()

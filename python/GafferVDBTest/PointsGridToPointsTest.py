@@ -86,6 +86,3 @@ class PointsGridToPointsTest( GafferVDBTest.VDBTestCase ) :
 
 		vdb = pointsGridToPoints["out"].object("/vdb")
 		self.assertTrue( isinstance( vdb, IECoreVDB.VDBObject) )
-
-if __name__ == "__main__":
-	unittest.main()

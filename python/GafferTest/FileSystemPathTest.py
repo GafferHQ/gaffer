@@ -584,6 +584,3 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 			securityDescriptor = GafferTest._WindowsUtils.getFileSecurity( filePath )
 			group, domain = securityDescriptor.group()
 			return group
-
-if __name__ == "__main__":
-	unittest.main()

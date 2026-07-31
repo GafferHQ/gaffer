@@ -196,6 +196,3 @@ class CopyFilesTest( GafferTest.TestCase ) :
 				self.assertFalse( sourceDirectory.exists() )
 
 				shutil.rmtree( destinationDir )
-
-if __name__ == "__main__":
-	unittest.main()

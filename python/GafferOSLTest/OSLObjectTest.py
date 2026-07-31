@@ -1424,6 +1424,3 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		oslObject["ignoreMissingSourceLocations"].setValue( True )
 		self.assertEqual( oslObject["out"].object( "/plane" )["pointCloudExists"].data[0], 0 )
-
-if __name__ == "__main__":
-	unittest.main()

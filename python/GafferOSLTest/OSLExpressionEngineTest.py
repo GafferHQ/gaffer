@@ -900,6 +900,3 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		s["n"]["user"]["test:i"].setValue( 1 )
 		self.assertEqual( s["n"]["user"]["test:o"].getValue(), 2 )
-
-if __name__ == "__main__":
-	unittest.main()

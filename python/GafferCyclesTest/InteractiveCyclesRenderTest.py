@@ -138,6 +138,3 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 			options["options"][name]["value"].setValue( value )
 
 		return options
-
-if __name__ == "__main__":
-	unittest.main()

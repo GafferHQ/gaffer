@@ -187,6 +187,3 @@ class FilterQueryTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( query["exactMatch"].getValue(), False )
 		self.assertEqual( query["closestAncestor"].getValue(), "" )
-
-if __name__ == "__main__":
-	unittest.main()

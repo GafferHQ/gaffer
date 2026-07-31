@@ -206,6 +206,3 @@ class ApplicationTest( GafferTest.TestCase ) :
 			[ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; assert( 'LD_PRELOAD' not in os.environ )" ],
 			universal_newlines = True, env = env
 		)
-
-if __name__ == "__main__":
-	unittest.main()

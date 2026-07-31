@@ -123,6 +123,3 @@ class ConnectionGadgetTest( GafferUITest.TestCase ) :
 		c2 = GafferUI.ConnectionGadget.create( ng1.nodule( n1["sum"] ), ng2.nodule( n2["op2"] ) )
 		self.assertTrue( isinstance( c2, GafferUI.StandardConnectionGadget ) )
 		self.assertEqual( c2.getToolTip( IECore.LineSegment3f() ), "myToolTip" )
-
-if __name__ == "__main__":
-	unittest.main()

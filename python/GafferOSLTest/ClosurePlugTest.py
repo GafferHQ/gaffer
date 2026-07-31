@@ -61,6 +61,3 @@ class ClosurePlugTest( GafferOSLTest.OSLTestCase ) :
 		dot = Gaffer.Dot()
 		dot.setup( Gaffer.Plug() )
 		self.assertFalse( closurePlug1.acceptsInput( dot["out"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

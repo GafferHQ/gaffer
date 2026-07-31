@@ -270,6 +270,3 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 		# Should not raise an exception
 		tool["mode"].setValue( GafferSceneUI.LightPositionTool.Mode.Highlight )
 		self.assertEqual( tool["mode"].getValue(), GafferSceneUI.LightPositionTool.Mode.Highlight )
-
-if __name__ == "__main__" :
-	unittest.main()

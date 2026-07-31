@@ -125,6 +125,3 @@ class GridTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( g1["out"].attributesHash( "/" ), g2["out"].attributesHash( "/" ) )
 		self.assertEqual( g1["out"].attributesHash( "/g1" ), g2["out"].attributesHash( "/g2" ) )
 		self.assertEqual( g1["out"].attributesHash( "/g1/centerLines" ), g2["out"].attributesHash( "/g2/centerLines" ) )
-
-if __name__ == "__main__":
-	unittest.main()

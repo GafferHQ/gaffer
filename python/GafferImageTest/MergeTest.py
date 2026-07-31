@@ -1111,6 +1111,3 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
 	def testMaxMismatchPerf( self ):
 		self.mergePerf( GafferImage.Merge.Operation.Max, True )
-
-if __name__ == "__main__":
-	unittest.main()

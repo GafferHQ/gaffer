@@ -144,6 +144,3 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 			time.sleep( 0.5 )
 			self.waitForIdle()
 			self.assertEqual( GafferImageUI.ImageGadget.tileUpdateCount(), 4 )
-
-if __name__ == "__main__":
-	unittest.main()

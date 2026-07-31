@@ -44,6 +44,3 @@ class FilteredRecursiveChildIteratorTest( GafferTest.TestCase ) :
 
 		# call through to c++ test.
 		GafferTest.testFilteredRecursiveChildIterator()
-
-if __name__ == "__main__":
-	unittest.main()

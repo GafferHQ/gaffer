@@ -71,6 +71,3 @@ class MapOffsetTest( GafferSceneTest.SceneTestCase ) :
 
 		for i, uv in enumerate( offset["out"].object( "/plane" )["uv"].data ) :
 			self.assertEqual( uv, imath.V2f( inputObject["uv"].data[i] + imath.V2f( 1.5, 3.5 ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -83,6 +83,3 @@ class AuxiliaryNodeGadgetTest( GafferUITest.TestCase ) :
 			eg = GafferUI.TextGadget( name )
 			g.setEdgeGadget( edge, eg )
 			self.assertTrue( g.getEdgeGadget( edge ) is None )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -842,6 +842,3 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testScanlineBlockPerformanceOffsetNegative( self ):
 		self.runPerfTest( False, True, imath.V2i( -1 ) )
-
-if __name__ == "__main__":
-	unittest.main()

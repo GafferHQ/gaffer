@@ -638,6 +638,3 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( script["Node"]["user"]["array"].direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( len( script["Node"]["user"]["array"] ), 1 )
 		self.assertIsInstance( script["Node"]["user"]["array"][0], Gaffer.IntPlug )
-
-if __name__ == "__main__":
-	unittest.main()

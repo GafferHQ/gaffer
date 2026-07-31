@@ -142,6 +142,3 @@ class TensorToMeshTest( GafferTest.TestCase ) :
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, "Invalid data type input for vertexIds tensor" ):
 			mesh = tensorToMesh["out"].object( "/tensorMesh" )
-
-if __name__ == "__main__":
-	unittest.main()

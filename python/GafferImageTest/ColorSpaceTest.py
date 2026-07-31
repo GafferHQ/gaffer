@@ -408,6 +408,3 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "color_picking" )
 			self.assertNotEqual( colorSpace["out"].channelData( "R", imath.V2i( 0 ) ), tile )
-
-if __name__ == "__main__":
-	unittest.main()

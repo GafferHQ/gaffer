@@ -503,6 +503,3 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		d = IECore.CompoundData()
 		with self.assertRaisesRegex( RuntimeError, "Not a ValuePlug" ) :
 			p.fillCompoundData( d )
-
-if __name__ == "__main__":
-	unittest.main()

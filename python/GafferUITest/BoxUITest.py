@@ -194,6 +194,3 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		p = Gaffer.PlugAlgo.promote( s["b"]["n"]["user"]["p"] )
 		self.assertNotEqual( Gaffer.Metadata.value( p, "layout:section" ), "SomeWeirdSection" )
-
-if __name__ == "__main__":
-	unittest.main()

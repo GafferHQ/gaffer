@@ -376,6 +376,3 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( median["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

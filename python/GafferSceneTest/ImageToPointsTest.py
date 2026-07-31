@@ -286,6 +286,3 @@ class ImageToPointsTest( GafferSceneTest.SceneTestCase ) :
 				imath.V3f( 0.5, 1.5, 0 ), imath.V3f( 1.5, 1.5, 0 ),
 			] )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

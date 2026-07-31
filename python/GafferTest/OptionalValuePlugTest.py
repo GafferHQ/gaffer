@@ -99,6 +99,3 @@ class OptionalValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( script2["node"]["user"]["p"]["enabled"].getValue(), script["node"]["user"]["p"]["enabled"].getValue() )
 		self.assertEqual( script2["node"]["user"]["p"]["value"].defaultValue(), script["node"]["user"]["p"]["value"].defaultValue() )
 		self.assertEqual( script2["node"]["user"]["p"]["value"].getValue(), script["node"]["user"]["p"]["value"].getValue() )
-
-if __name__ == "__main__":
-	unittest.main()

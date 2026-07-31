@@ -305,6 +305,3 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 				self.assertEqual( tileData[i], valueFunc( i ) )
 			else:
 				self.assertEqual( tileData[i], value )
-
-if __name__ == "__main__":
-	unittest.main()

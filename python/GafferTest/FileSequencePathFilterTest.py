@@ -296,6 +296,3 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 		for n in [ "singleFile.txt", "a.001.txt", "a.002.txt", "a.004.txt", "b.003.txt" ] :
 			with open( self.__dir / n, "w", encoding = "utf-8" ) as f :
 				f.write( "AAAA" )
-
-if __name__ == "__main__":
-	unittest.main()

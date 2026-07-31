@@ -177,6 +177,3 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 								self.fail( "Unhandled parameter type for {}".format( plug.getName() ) )
 
 						self.assertEqual( plug["value"].defaultValue(), paramDefault, plug.getName() )
-
-if __name__ == "__main__":
-	unittest.main()

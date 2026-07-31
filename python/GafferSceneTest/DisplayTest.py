@@ -395,6 +395,3 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 				self.assertNotEqual( t1[tileOriginTuple], t2[tileOriginTuple] )
 			else :
 				self.assertEqual( t1[tileOriginTuple], t2[tileOriginTuple] )
-
-if __name__ == "__main__":
-	unittest.main()

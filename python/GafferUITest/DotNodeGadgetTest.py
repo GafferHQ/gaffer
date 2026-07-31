@@ -168,7 +168,3 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["in"] ) ), imath.V3f( -1, 0, 0 ) )
 		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["out"] ) ), imath.V3f( 1, 0, 0 ) )
-
-
-if __name__ == "__main__":
-	unittest.main()

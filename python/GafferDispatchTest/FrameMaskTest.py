@@ -80,6 +80,3 @@ class FrameMaskTest( GafferTest.TestCase ) :
 			[ l.context.getFrame() for l in s["task"].log ],
 			IECore.FrameList.parse( s["d"]["frameRange"].getValue() ).asList()
 		)
-
-if __name__ == "__main__":
-	unittest.main()

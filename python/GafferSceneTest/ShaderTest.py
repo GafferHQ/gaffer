@@ -793,6 +793,3 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			shaderPlug.parameterSource( ( "TestShader", "c" ) )
 
 		self.assertNotIn( "scene:shader:outputParameter", monitor.combinedStatistics().variableNames() )
-
-if __name__ == "__main__":
-	unittest.main()

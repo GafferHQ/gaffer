@@ -55,6 +55,3 @@ class RenderPassShaderTest( GafferSceneTest.SceneTestCase ) :
 			r["usage"].setValue( usage )
 			r["renderer"].setValue( renderer )
 			self.assertTrue( "i" in r["out"]["globals"].getValue()[f"option:renderPass:shader:{usage}:{renderer}"].outputShader().parameters )
-
-if __name__ == "__main__":
-	unittest.main()

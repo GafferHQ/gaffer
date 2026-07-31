@@ -221,6 +221,3 @@ class TensorTest( GafferTest.TestCase ) :
 		tensor = GafferML.Tensor( IECore.IntVectorData( [ 1, 2 ] ) )
 		with self.assertRaisesRegex( RuntimeError, "location dimensions do not match shape size" ) :
 			tensor[0, 1]
-
-if __name__ == "__main__" :
-	unittest.main()

@@ -41,7 +41,3 @@ from .InferenceTest import InferenceTest
 from .ImageToTensorTest import ImageToTensorTest
 from .TensorToImageTest import TensorToImageTest
 from .TensorToMeshTest import TensorToMeshTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

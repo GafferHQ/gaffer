@@ -191,6 +191,3 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "render:displayColor", script["StandardAttributes"]["attributes"].keys() )
 		self.assertNotIn( "displayColor", script["StandardAttributes"]["attributes"].keys() )
 		self.assertEqual( script["StandardAttributes"]["attributes"]["render:displayColor"]["value"].getValue(), imath.Color3f( 0.1, 0.2, 0.3 ) )
-
-if __name__ == "__main__":
-	unittest.main()

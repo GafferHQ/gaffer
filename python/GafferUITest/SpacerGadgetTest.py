@@ -52,6 +52,3 @@ class SpacerGadgetTest( GafferUITest.TestCase ) :
 		self.assertFalse( s.acceptsChild( t ) )
 
 		self.assertRaises( RuntimeError, s.addChild, t )
-
-if __name__ == "__main__":
-	unittest.main()

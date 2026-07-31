@@ -83,6 +83,3 @@ class TaskMutexTest( GafferTest.TestCase ) :
 	def testCancellation( self ) :
 
 		GafferTest.testTaskMutexCancellation()
-
-if __name__ == "__main__":
-	unittest.main()

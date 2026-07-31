@@ -230,6 +230,3 @@ class LocaliseAttributesTest( GafferSceneTest.SceneTestCase ) :
 		localiseAttributes["__global"].setValue( True )
 		self.assertEqual( localiseAttributes["out"].globalsHash(), localiseAttributes["in"].globalsHash() )
 		self.assertEqual( localiseAttributes["out"].globals(), localiseAttributes["in"].globals() )
-
-if __name__ == "__main__":
-	unittest.main()

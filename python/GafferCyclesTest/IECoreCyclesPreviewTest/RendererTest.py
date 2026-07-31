@@ -3239,6 +3239,3 @@ class RendererTest( GafferTest.TestCase ) :
 						untiledImage = image
 					else :
 						self.assertFalse( OpenImageIO.ImageBufAlgo.compare( image, untiledImage, failthresh = 0, warnthresh = 0 ).error )
-
-if __name__ == "__main__":
-	unittest.main()

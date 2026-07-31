@@ -1425,6 +1425,3 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 		del cs[:]
 		standardAttributes["attributes"]["scene:visible"]["enabled"].setValue( True )
 		self.assertIn( query["value"], { x[0] for x in cs } )
-
-if __name__ == "__main__":
-	unittest.main()

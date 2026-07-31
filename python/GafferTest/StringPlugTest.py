@@ -443,6 +443,3 @@ class StringPlugTest( GafferTest.TestCase ) :
 	def testValueType( self ) :
 
 		self.assertIs( Gaffer.StringPlug.ValueType, str )
-
-if __name__ == "__main__":
-	unittest.main()

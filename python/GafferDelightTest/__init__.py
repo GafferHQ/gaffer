@@ -40,7 +40,3 @@ from .ModuleTest import ModuleTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
 from .DelightOptionsTest import DelightOptionsTest
 from .DelightAttributesTest import DelightAttributesTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

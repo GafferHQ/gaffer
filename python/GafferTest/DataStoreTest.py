@@ -834,6 +834,3 @@ class DataStoreTest( GafferTest.TestCase ) :
 		# But this didn't affect the current script, so it still isn't saved.
 		with self.assertRaisesRegex( IECore.Exception, 'Cannot copy, DataStore "ScriptNode.dataStore" is not saved yet.' ) :
 			s.serialise()
-
-if __name__ == "__main__":
-	unittest.main()

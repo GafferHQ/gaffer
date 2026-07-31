@@ -315,6 +315,3 @@ class ScatterTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["scatter"] = GafferScene.Scatter()
 		self.assertNotIn( "setInput", s.serialise() )
-
-if __name__ == "__main__":
-	unittest.main()

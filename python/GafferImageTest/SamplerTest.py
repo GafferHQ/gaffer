@@ -303,6 +303,3 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 
 									with self.subTest( dataWindow = dataWindow, region = region ):
 										GafferImageTest.validateVisitPixels( sampler, region )
-
-if __name__ == "__main__":
-	unittest.main()

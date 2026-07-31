@@ -148,6 +148,3 @@ class RenderManSampleFilterTest( GafferSceneTest.SceneTestCase ) :
 		node3["mode"].setValue( GafferRenderMan.RenderManSampleFilter.Mode.InsertFirst )
 		self.assertEqual( shaderName( node3["out"] ), "PxrSampleFilterCombiner" )
 		self.assertEqual( order( node3["out"] ), [ 3, 2, 1 ] )
-
-if __name__ == "__main__":
-	unittest.main()

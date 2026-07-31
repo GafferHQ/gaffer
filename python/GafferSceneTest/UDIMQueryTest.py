@@ -218,7 +218,3 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferTest.parallelGetValue( query["outInt"], 400, "iteration" )
-
-
-if __name__ == "__main__":
-	unittest.main()

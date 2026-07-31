@@ -124,6 +124,3 @@ class CollapsibleTest( GafferUITest.TestCase ) :
 		self.assertTrue( b.parent() is c )
 
 		self.assertEqual( len( l ), 0 )
-
-if __name__ == "__main__":
-	unittest.main()

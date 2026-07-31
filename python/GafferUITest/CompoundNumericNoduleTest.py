@@ -63,6 +63,3 @@ class CompoundNumericNoduleTest( GafferUITest.TestCase ) :
 		self.assertEqual( nodeGadget.nodule( node["color"]["r"] ), None )
 		self.assertEqual( nodeGadget.nodule( node["color"]["g"] ), None )
 		self.assertEqual( nodeGadget.nodule( node["color"]["b"] ), None )
-
-if __name__ == "__main__":
-	unittest.main()

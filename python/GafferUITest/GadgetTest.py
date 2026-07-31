@@ -390,6 +390,3 @@ class GadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( cs ), 1 )
 		self.assertIs( cs[0][1].sourceWidget, button1 )
 		self.assertIs( cs[0][1].destinationWidget, button2 )
-
-if __name__ == "__main__":
-	unittest.main()

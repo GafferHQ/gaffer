@@ -49,6 +49,3 @@ class DocumentationTest( GafferUITest.TestCase ) :
 			GafferDelight,
 			additionalTerminalPlugTypes = ( GafferScene.ScenePlug, )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

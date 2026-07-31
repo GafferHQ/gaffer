@@ -559,6 +559,3 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( subTree["out"] )
 		self.assertEqual( subTree["out"].set( "setA" ).value, IECore.PathMatcher( [ "/groupA" ] ) )
 		self.assertEqual( subTree["out"].set( "setB" ).value, IECore.PathMatcher( [ "/groupA/groupB", "/groupA/groupB/sphere" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

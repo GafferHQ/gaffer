@@ -69,6 +69,3 @@ class ArnoldAtmosphereTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( atmosphereOption, IECoreScene.ShaderNetwork )
 		self.assertEqual( atmosphereOption.outputShader().name, "atmosphere_volume" )
 		self.assertEqual( atmosphereOption.outputShader().parameters["density"].value, 0.25 )
-
-if __name__ == "__main__":
-	unittest.main()

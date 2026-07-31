@@ -168,6 +168,3 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		self.assertIsInstance( d["maximized"], bool )
 		self.assertIsInstance( d["screen"], int )
 		self.assertIsInstance( d["bound"], imath.Box2f )
-
-if __name__ == "__main__":
-	unittest.main()

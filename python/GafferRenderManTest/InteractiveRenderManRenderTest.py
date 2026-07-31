@@ -121,6 +121,3 @@ class InteractiveRenderManXPURenderTest( InteractiveRenderManRenderTest ) :
 	def setUp( self ) :
 
 		InteractiveRenderManRenderTest.setUp( self )
-
-if __name__ == "__main__":
-	unittest.main()

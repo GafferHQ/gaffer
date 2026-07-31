@@ -75,6 +75,3 @@ class RectangleTest( GafferImageTest.ImageTestCase ) :
 					self.assertEqual( v, 1 )
 				else :
 					self.assertEqual( v, 0 )
-
-if __name__ == "__main__":
-	unittest.main()

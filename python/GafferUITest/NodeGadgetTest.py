@@ -158,6 +158,3 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 		gadget = MyNodeGadget( node )
 
 		self.assertEqual( numSlotCalls, 1 )
-
-if __name__ == "__main__":
-	unittest.main()

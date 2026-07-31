@@ -63,6 +63,3 @@ class TensorPlugTest( GafferTest.TestCase ) :
 		script2.execute( script.serialise() )
 		self.assertIsInstance( script2["node"]["user"]["p"], GafferML.TensorPlug )
 		self.assertEqual( script2["node"]["user"]["p"].getValue(), GafferML.Tensor() )
-
-if __name__ == "__main__" :
-	unittest.main()

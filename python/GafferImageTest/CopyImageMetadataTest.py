@@ -166,6 +166,3 @@ class CopyImageMetadataTest( GafferImageTest.ImageTestCase ) :
 				context["image:channelName"] = c
 				self.assertEqual( i["out"]["channelData"].hash(), m["out"]["channelData"].hash() )
 				self.assertEqual( i["out"]["channelData"].getValue(), m["out"]["channelData"].getValue() )
-
-if __name__ == "__main__":
-	unittest.main()

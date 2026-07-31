@@ -74,6 +74,3 @@ class GlobalsSanitiserTest( GafferSceneTest.SceneTestCase ) :
 				"Globals options1.out.globals depends on Plane.out.attributes",
 			]
 		)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -229,6 +229,3 @@ class BoxIOTest( GafferTest.TestCase ) :
 
 		box["enabled"].setValue( True )
 		self.assertEqual( box["out"].getValue(), 3 )
-
-if __name__ == "__main__":
-	unittest.main()

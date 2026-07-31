@@ -1948,6 +1948,3 @@ class ReferenceTest( GafferTest.TestCase ) :
 		GafferTest.TestCase.tearDown( self )
 
 		GafferTest.StringInOutNode = self.__StringInOutNode
-
-if __name__ == "__main__":
-	unittest.main()

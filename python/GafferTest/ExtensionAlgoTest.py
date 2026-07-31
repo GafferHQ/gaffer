@@ -189,6 +189,3 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 		self.assertFalse( isinstance( node, Gaffer.SubGraph ) )
 
 		assertPassThrough( node )
-
-if __name__ == "__main__":
-	unittest.main()

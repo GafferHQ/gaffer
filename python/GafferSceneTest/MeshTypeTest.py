@@ -114,6 +114,3 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		n["enabled"].setValue( False )
 		self.assertIn( n["out"], { x[0] for x in cs } )
-
-if __name__ == "__main__":
-	unittest.main()

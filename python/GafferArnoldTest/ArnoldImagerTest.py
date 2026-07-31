@@ -126,6 +126,3 @@ class ArnoldImagerTest( GafferSceneTest.SceneTestCase ) :
 
 		node3["mode"].setValue( GafferArnold.ArnoldImager.Mode.InsertFirst )
 		self.assertEqual( order( node3["out"] ), [ 3, 2, 1 ] )
-
-if __name__ == "__main__":
-	unittest.main()

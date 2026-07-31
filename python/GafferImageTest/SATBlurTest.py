@@ -601,6 +601,3 @@ class SATBlurTest( GafferImageTest.ImageTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( satBlur["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

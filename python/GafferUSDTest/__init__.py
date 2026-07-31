@@ -41,7 +41,3 @@ from .USDShaderTest import USDShaderTest
 from .USDLightTest import USDLightTest
 from ._PointInstancerAdaptorTest import _PointInstancerAdaptorTest
 from .PromotePointInstancesTest import PromotePointInstancesTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

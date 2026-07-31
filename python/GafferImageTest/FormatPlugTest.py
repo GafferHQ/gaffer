@@ -263,6 +263,3 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( p.getValue(), f2 )
 		self.assertEqual( p.defaultValue(), f2 )
 		self.assertTrue( p.isSetToDefault() )
-
-if __name__ == "__main__":
-	unittest.main()

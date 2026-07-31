@@ -519,6 +519,3 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 			return result
 		else :
 			return imath.Color4f( *pixel ) if len( pixel ) == 4 else imath.Color4f( *pixel, 0.0 )
-
-if __name__ == "__main__":
-	unittest.main()

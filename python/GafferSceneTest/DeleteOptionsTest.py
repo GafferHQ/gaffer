@@ -99,6 +99,3 @@ class DeleteOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		deleteOptions["invertNames"].setValue( True )
 		self.assertTrue( deleteOptions["out"]["globals"] in set( e[0] for e in cs ) )
-
-if __name__ == "__main__":
-	unittest.main()

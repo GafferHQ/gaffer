@@ -1378,6 +1378,3 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
 		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
-
-if __name__ == "__main__" :
-	unittest.main()

@@ -118,7 +118,3 @@ class BreadCrumbsWidgetTest( GafferUITest.TestCase ) :
 		t.setText( "xyz/" )
 		self.assertEqual( t.getText(), "xyz/" )
 		self.assertEqual( str( path ), "/" )
-
-
-if __name__ == "__main__" :
-	unittest.main()

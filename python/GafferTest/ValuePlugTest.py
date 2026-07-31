@@ -1058,6 +1058,3 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		GafferTest.TestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__originalCacheMemoryLimit )
-
-if __name__ == "__main__":
-	unittest.main()

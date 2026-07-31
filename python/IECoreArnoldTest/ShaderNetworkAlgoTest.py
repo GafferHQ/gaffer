@@ -1395,6 +1395,3 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
 			self.assertEqual( len( nodes ), 0 )
-
-if __name__ == "__main__":
-	unittest.main()

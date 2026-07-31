@@ -719,6 +719,3 @@ class PrimitiveVariableQueryTest( GafferSceneTest.SceneTestCase ):
 		query["queries"][0]["name"].setValue( "testLengthTwo" )
 		self.assertEqual( query["out"][0]["exists"].getValue(), True )
 		self.assertTrue( query["out"][0]["value"].getValue(), -1 )
-
-if __name__ == "__main__":
-	unittest.main()

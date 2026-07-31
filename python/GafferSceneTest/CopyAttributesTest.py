@@ -235,6 +235,3 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( copy["out"], sphereAttributes["out"] )
 		prune["filter"].setInput( sphereFilter["out"] )
 		self.assertScenesEqual( copy["out"], sphere["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

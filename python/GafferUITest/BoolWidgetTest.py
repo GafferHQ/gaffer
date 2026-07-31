@@ -134,6 +134,3 @@ class BoolWidgetTest( GafferUITest.TestCase ) :
 		w.setState( w.State.Indeterminate )
 		w._qtWidget().click()
 		self.assertIs( w.getState(), True )
-
-if __name__ == "__main__":
-	unittest.main()

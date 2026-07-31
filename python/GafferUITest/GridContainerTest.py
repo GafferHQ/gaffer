@@ -397,6 +397,3 @@ class GridContainerTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( grid[0,4].getText(), "Row 4 Column 0-1" )
 		self.assertEqual( grid[1,4].getText(), "Row 4 Column 0-1" )
-
-if __name__ == "__main__":
-	unittest.main()

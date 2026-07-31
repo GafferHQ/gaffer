@@ -61,6 +61,3 @@ class TaskPlugTest( GafferTest.TestCase ) :
 		dot = Gaffer.Dot()
 		dot.setup( Gaffer.Plug() )
 		self.assertFalse( taskPlug1.acceptsInput( dot["out"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

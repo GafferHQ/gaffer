@@ -2253,6 +2253,3 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		controller.update()
 
 		self.assertTrue( renderer.capturedObject( "/instancer" ).isSame( capture ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -1106,6 +1106,3 @@ class MergeMeshesTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope():
 			GafferSceneTest.traverseScene( mergeMeshes["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

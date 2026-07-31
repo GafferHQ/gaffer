@@ -86,6 +86,3 @@ class VisualiserTest( GafferTest.TestCase ) :
 				self.assertEqual( f.category, GafferScene.IECoreScenePreview.Visualisation.Category.Frustum )
 				self.assertEqual( f.affectsFramingBound, False )
 				self.assertEqual( f.colorSpace, colorSpace )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -606,6 +606,3 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 		rename["out"].set( "setA" )
 		Gaffer.ValuePlug.clearCache()
 		rename["out"].set( "setA" )
-
-if __name__ == "__main__":
-	unittest.main()

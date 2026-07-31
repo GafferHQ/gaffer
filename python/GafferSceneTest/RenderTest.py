@@ -1590,6 +1590,3 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def _createOptions( self ) :
 
 		return GafferScene.CustomOptions()
-
-if __name__ == "__main__":
-	unittest.main()

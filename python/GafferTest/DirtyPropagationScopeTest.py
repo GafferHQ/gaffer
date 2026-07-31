@@ -59,6 +59,3 @@ class DirtyPropagationScopeTest( GafferTest.TestCase ) :
 			n["op2"].setValue( 21 )
 
 		self.assertEqual( len( [ x[0] for x in cs if x[0].isSame( n["sum"] ) ] ), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

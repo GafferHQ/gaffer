@@ -74,6 +74,3 @@ class RenderManIntegratorTest( GafferSceneTest.SceneTestCase ) :
 
 		node = GafferRenderMan.RenderManIntegrator()
 		self.assertFalse( node["shader"].acceptsInput( shader["out"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

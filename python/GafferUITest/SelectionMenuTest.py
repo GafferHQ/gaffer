@@ -117,6 +117,3 @@ class SelectionMenuTest( GafferUITest.TestCase ) :
 
 			self.assertIsInstance( s.getCurrentItem(), str )
 			self.assertIsInstance( s.getItem( 0 ), str )
-
-if __name__ == "__main__":
-	unittest.main()

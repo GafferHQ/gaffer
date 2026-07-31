@@ -524,6 +524,3 @@ class RotateToolTest( GafferUITest.TestCase ) :
 				0.0001
 			)
 		)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -175,6 +175,3 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 			{ ( m.level, m.context, m.message ) for m in mh.messages },
 			{ ( IECore.Msg.Level.Error, "GLWidget", "Draw Exception" ) }
 		)
-
-if __name__ == "__main__":
-	unittest.main()

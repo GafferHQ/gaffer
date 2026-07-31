@@ -5384,6 +5384,3 @@ class RendererTest( GafferTest.TestCase ) :
 		for name in names :
 			node = arnold.AiNodeLookUpByName( universe, name )
 			self.assertNotEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "ginstance" )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -93,6 +93,3 @@ class FilterPlugTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( p.match( c["out"] ), IECore.PathMatcher.Result.ExactMatch )
 			f["paths"].setValue( IECore.StringVectorData( [ "/other" ] ) )
 			self.assertEqual( p.match( c["out"] ), IECore.PathMatcher.Result.NoMatch )
-
-if __name__ == "__main__":
-	unittest.main()

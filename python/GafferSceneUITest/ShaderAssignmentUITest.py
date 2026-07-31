@@ -65,6 +65,3 @@ class ShaderAssignmentUITest( GafferUITest.TestCase ) :
 
 		self.assertEqual( boxGadget.connectionTangent( boxGadget.nodule( box["in"] ) ), imath.V3f( 0, 1, 0 ) )
 		self.assertEqual( boxGadget.connectionTangent( boxGadget.nodule( box["shader"] ) ), imath.V3f( -1, 0, 0 ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -489,6 +489,3 @@ class DeepSliceTest( GafferImageTest.ImageTestCase ) :
 					self.assertImagesEqual(
 						sampleCountsInput["out"], sampleCountsNearMiddleFar["out"], maxDifference = (0,2)
 					)
-
-if __name__ == "__main__":
-	unittest.main()

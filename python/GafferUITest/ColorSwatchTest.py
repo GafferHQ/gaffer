@@ -54,6 +54,3 @@ class ColorSwatchTest( GafferUITest.TestCase ) :
 		c.setColor( imath.Color3f( 1, 2, 3 ) )
 
 		self.assertEqual( c.getColor(), imath.Color3f( 1, 2, 3 ) )
-
-if __name__ == "__main__":
-	unittest.main()

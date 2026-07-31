@@ -101,6 +101,3 @@ class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 		# Or override it entirely.
 		v["stepSize"].setValue( 0.01 )
 		self.assertAlmostEqual( v["out"].object( "/volume" ).parameters()["step_size"].value, 0.04 )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -370,6 +370,3 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 		setQuery["location"].setValue( "/" )
 		self.assertEqual( setQuery["matches"].getValue(), IECore.StringVectorData( [ "A" ] ) )
 		self.assertEqual( setQuery["firstMatch"].getValue(), "A" )
-
-if __name__ == "__main__":
-	unittest.main()

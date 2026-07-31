@@ -215,7 +215,3 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testUIPerfWithBlur( self ) :
 		self.runInteractive( True, True, 1000 )
-
-
-if __name__ == "__main__":
-	unittest.main()

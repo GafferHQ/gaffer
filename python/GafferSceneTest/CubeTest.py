@@ -198,6 +198,3 @@ class CubeTest( GafferSceneTest.SceneTestCase ) :
 		s["c"] = GafferScene.Cube()
 
 		ss = s.serialise()
-
-if __name__ == "__main__":
-	unittest.main()
