@@ -1079,6 +1079,48 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del renderer
 
+	def testComponentConnections( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		fileName = str( self.temporaryDirectory() / "test.exr" )
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				fileName,
+				"exr",
+				"rgba",
+				{
+				},
+			)
+		)
+
+		renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"attribute" : IECoreScene.Shader( "PxrAttribute", "osl:shader", { "defaultFloat" : 0.5 } ),
+						"output" : IECoreScene.Shader( "PxrConstant", "ri:surface", { "emitColor" : imath.Color3f( 0.25, 1, 0.75 ) } ),
+					},
+					connections = [
+						( ( "attribute", "resultRGB.r" ), ( "output", "emitColor.g" ) ),
+					],
+					output = "output",
+				),
+			} ) )
+		).transform( imath.M44f().translate( imath.V3f( 0, 0, -3 ) ) )
+
+		renderer.render()
+		del renderer
+
+		image = OpenImageIO.ImageBuf( fileName )
+		self.assertEqual( image.getpixel( 320, 240, 0 ), ( 0.25, 0.5, 0.75, 1.0 ) )
+
 	def testConnectionToOSLShader( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(

@@ -13,9 +13,12 @@ Fixes
 - MenuButton : Fixed immediate mode when the menu contained a single submenu.
 - RandomChoice : Fixed "Value/Weight" table headers when first setting up the node.
 - VectorDataPlugValueWidget : Fixed handling of custom header metadata when adding and removing columns.
-- RenderMan : Fixed handling of `treatAsPoint` and `treatAsLine` UsdLuxLight parameters. These are now ignored, matching the behaviour of `hdPrman`.
+- RenderMan :
+  - Fixed handling of `treatAsPoint` and `treatAsLine` UsdLuxLight parameters. These are now ignored, matching the behaviour of `hdPrman`.
+  - Fixed handling of connections between floats and color/vector components [^2].
 
 [^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
+[^2]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a9 (relative to 1.7.0.0a8)
 =========
@@ -438,7 +441,10 @@ Build
 1.6.x.x (relative to 1.6.21.2)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed handling of connections between floats and color/vector components.
 
 1.6.21.2 (relative to 1.6.21.1)
 ========
