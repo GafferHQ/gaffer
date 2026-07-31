@@ -155,6 +155,3 @@ class FormatQueryTest( GafferImageTest.ImageTestCase ) :
 		checkerBoard["size"].setInput( formatQuery["size"] )
 
 		GafferImage.ImageAlgo.tiles( checkerBoard["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

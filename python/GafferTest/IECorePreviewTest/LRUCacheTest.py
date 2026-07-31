@@ -227,6 +227,3 @@ class LRUCacheTest( GafferTest.TestCase ) :
 		for policy in [ "serial", "parallel", "taskParallel" ] :
 			with self.subTest( policy = policy ) :
 				GafferTest.testLRUCacheSetIfUncached( policy )
-
-if __name__ == "__main__":
-	unittest.main()

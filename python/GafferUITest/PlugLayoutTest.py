@@ -411,7 +411,3 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
 		self.assertTrue( l.plugValueWidget( n["f"] ).visible() )
 		self.assertTrue( l.customWidget( "test" ).visible() )
-
-
-if __name__ == "__main__":
-	unittest.main()

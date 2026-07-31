@@ -120,6 +120,3 @@ class RenderManLightTest( GafferSceneTest.SceneTestCase ) :
 
 		light["attributes"]["ri:visibility:camera"]["value"].setValue( 0 )
 		self.assertEqual( light["out"].attributes( "/light" )["ri:visibility:camera"], IECore.IntData( 0 ) )
-
-if __name__ == "__main__":
-	unittest.main()

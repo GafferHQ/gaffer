@@ -136,6 +136,3 @@ class CopyViewsTest( GafferImageTest.ImageTestCase ) :
 			"source2view1", "source2view3"
 		] ) )
 		self.assertEqual( copyViews["out"].dataWindow( "undeclared" ).max(), imath.V2i( 0, 10 ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -534,6 +534,3 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( flattened.numPoints, 1 )
 			self.assertNotIn( "prototypeRoots", flattened )
 			self.assertEqual( flattened, pointInstancer )
-
-if __name__ == "__main__":
-	unittest.main()

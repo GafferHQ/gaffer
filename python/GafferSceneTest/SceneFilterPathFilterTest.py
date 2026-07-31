@@ -94,6 +94,3 @@ class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		self.assertEqual( len( path.children() ), 251001 )
-
-if __name__ == "__main__":
-	unittest.main()

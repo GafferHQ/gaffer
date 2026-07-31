@@ -217,6 +217,3 @@ class MapProjectionTest( GafferSceneTest.SceneTestCase ) :
 
 		with self.assertRaisesRegex( RuntimeError, r'Position primitive variable "uv" on object "/group/cube" should be V3fVectorData \(but is V2fVectorData\)' ) :
 			projection["out"].object( "/group/cube" )
-
-if __name__ == "__main__":
-	unittest.main()

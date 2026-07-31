@@ -56,6 +56,3 @@ class ShaderBallTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = GafferScene.ShaderBall()
 		self.assertFalse( "setInput" in s.serialise() )
-
-if __name__ == "__main__":
-	unittest.main()

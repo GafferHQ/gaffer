@@ -349,6 +349,3 @@ class CameraAlgoTest( unittest.TestCase ) :
 							self.assertGreater( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.01 )
 						else :
 							self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.0 )
-
-if __name__ == "__main__":
-	unittest.main()

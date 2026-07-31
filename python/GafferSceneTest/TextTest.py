@@ -99,6 +99,3 @@ class TextTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "out.bound" in [ x[0].relativeName( x[0].node() ) for x in s ] )
 		self.assertFalse( "out.childNames" in [ x[0].relativeName( x[0].node() ) for x in s ] )
 		self.assertFalse( "out.transform" in [ x[0].relativeName( x[0].node() ) for x in s ] )
-
-if __name__ == "__main__":
-	unittest.main()

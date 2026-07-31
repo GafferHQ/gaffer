@@ -172,6 +172,3 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "test_paramA" in outputs["outputs"][0]["parameters"] )
 
 		self.assertEqual( outputs["out"]["globals"].getValue()["output:test"], output )
-
-if __name__ == "__main__":
-	unittest.main()

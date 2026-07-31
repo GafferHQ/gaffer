@@ -235,6 +235,3 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( unionFilter["out"].getValue(), IECore.PathMatcher.Result.ExactMatch )
 			c["scene:path"] = IECore.InternedStringVectorData( [ "b" ] )
 			self.assertEqual( unionFilter["out"].getValue(), IECore.PathMatcher.Result.NoMatch )
-
-if __name__ == "__main__":
-	unittest.main()

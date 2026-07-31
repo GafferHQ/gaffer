@@ -121,6 +121,3 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def _createGobo( self ) :
 
 		self.skipTest( "Light filters not supported" )
-
-if __name__ == "__main__":
-	unittest.main()

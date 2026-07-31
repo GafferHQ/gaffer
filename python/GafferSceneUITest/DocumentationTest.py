@@ -50,6 +50,3 @@ class DocumentationTest( GafferUITest.TestCase ) :
 			GafferScene,
 			additionalTerminalPlugTypes = ( GafferScene.ScenePlug, Gaffer.CompoundDataPlug.MemberPlug, GafferImage.ImagePlug )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -90,6 +90,3 @@ class FilteredSceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 
 		s["enabled"].setValue( False )
 		self.assertEqual( s["out"].attributes( "/plane" ).keys(), [] )
-
-if __name__ == "__main__":
-	unittest.main()

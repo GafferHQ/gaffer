@@ -1073,6 +1073,3 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		# Make sure that our default heuristics don't mess that up.
 		reader["channelInterpretation"].setValue( reader.ChannelInterpretation.Default )
 		self.assertEqual( reader["out"].channelNames(), IECore.StringVectorData( [ "R", "G", "B", "A", "id", "instanceID" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

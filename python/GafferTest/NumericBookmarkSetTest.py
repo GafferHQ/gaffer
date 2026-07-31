@@ -147,6 +147,3 @@ class NumericBookmarkSetTest( GafferTest.TestCase ) :
 
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["a"] )
 		self.assertEqual( callbackFailures["added"], 0 )
-
-if __name__ == "__main__":
-	unittest.main()

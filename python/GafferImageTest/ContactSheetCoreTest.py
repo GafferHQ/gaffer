@@ -275,6 +275,3 @@ class ContactSheetCoreTest( GafferImageTest.ImageTestCase ) :
 		refMerge["in"][1].setInput( constant["out"] )
 
 		self.assertImagesEqual( contactSheet["out"], refMerge["out"], maxDifference = 0.0000003 )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -66,6 +66,3 @@ class ProgressBarTest( GafferUITest.TestCase ) :
 
 		b.setText( "woteva" )
 		self.assertEqual( b.getText(), "woteva" )
-
-if __name__ == "__main__":
-	unittest.main()

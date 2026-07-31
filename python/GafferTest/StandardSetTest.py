@@ -471,6 +471,3 @@ class StandardSetTest( GafferTest.TestCase ) :
 
 		del s
 		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
-
-if __name__ == "__main__":
-	unittest.main()

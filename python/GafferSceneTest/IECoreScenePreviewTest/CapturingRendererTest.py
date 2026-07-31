@@ -531,6 +531,3 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		)
 
 		CapturingRendererTest.assertRendersMatch( rendererA, rendererB, expandProcedurals = True )
-
-if __name__ == "__main__":
-	unittest.main()

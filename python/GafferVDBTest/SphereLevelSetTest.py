@@ -117,6 +117,3 @@ class SphereLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		self.assertAlmostEqual( lhs.max()[0], lhs.max()[0] )
 		self.assertAlmostEqual( lhs.max()[1], lhs.max()[1] )
 		self.assertAlmostEqual( lhs.max()[2], lhs.max()[2] )
-
-if __name__ == "__main__":
-	unittest.main()

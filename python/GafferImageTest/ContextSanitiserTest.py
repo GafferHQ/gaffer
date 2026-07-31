@@ -77,6 +77,3 @@ class ContextSanitiserTest( GafferImageTest.ImageTestCase ) :
 				'image:channelName in context for Constant.out.sampleOffsets computeNode:compute'
 			]
 		)
-
-if __name__ == "__main__":
-	unittest.main()

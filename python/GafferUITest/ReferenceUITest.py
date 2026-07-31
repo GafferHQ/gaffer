@@ -89,7 +89,3 @@ class ReferenceUITest( GafferUITest.TestCase ) :
 
 		self.assertFalse( Gaffer.MetadataAlgo.readOnly( s["a1"] ) )
 		self.assertFalse( Gaffer.MetadataAlgo.readOnly( s["a1"]["p1"] ) )
-
-
-if __name__ == "__main__":
-	unittest.main()

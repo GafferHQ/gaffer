@@ -85,6 +85,3 @@ class ArnoldAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "ai:visibility:camera", script["ArnoldAttributes"]["attributes"].keys() )
 		self.assertNotIn( "cameraVisibility", script["ArnoldAttributes"]["attributes"].keys() )
 		self.assertEqual( script["ArnoldAttributes"]["attributes"]["ai:visibility:camera"]["value"].getValue(), False )
-
-if __name__ == "__main__":
-	unittest.main()

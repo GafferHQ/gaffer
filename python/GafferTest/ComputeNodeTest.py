@@ -770,6 +770,3 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( pm.plugStatistics( n1["sum"] ).computeCount, 1 )
 		self.assertEqual( pm.plugStatistics( n2["sum"] ).computeCount, 0 )
-
-if __name__ == "__main__":
-	unittest.main()

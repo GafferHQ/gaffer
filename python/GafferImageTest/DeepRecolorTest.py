@@ -123,7 +123,3 @@ class DeepRecolorTest( GafferImageTest.ImageTestCase ) :
 		for i in range( 4 ):
 			self.assertLessEqual( m[i], 0.5 )
 			self.assertLessEqual( a[i], 0.0003 )
-
-
-if __name__ == "__main__":
-	unittest.main()

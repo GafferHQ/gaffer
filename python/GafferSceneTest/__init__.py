@@ -207,7 +207,3 @@ from .RandomPrimitiveVariableTest import RandomPrimitiveVariableTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

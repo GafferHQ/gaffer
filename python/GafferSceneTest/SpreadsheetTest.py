@@ -92,6 +92,3 @@ class SpreadsheetTest( GafferSceneTest.SceneTestCase ) :
 				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 				row["name"].setValue( rowName )
 				self.assertEqual( s["out"]["v"].getValue(), match )
-
-if __name__ == "__main__":
-	unittest.main()

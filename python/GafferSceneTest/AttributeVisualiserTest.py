@@ -200,6 +200,3 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 				visualiser["out"].attributes( "/child" )["gl:surface"].outputShader().parameters["Cs"].value,
 				value,
 			)
-
-if __name__ == "__main__":
-	unittest.main()

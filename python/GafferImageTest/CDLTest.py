@@ -217,6 +217,3 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( mainCDLSampler["color"].getValue(), main["color"].getValue() )
 		self.assertNotEqual( diffuseCDLSampler["color"].getValue(), diffuse["color"].getValue() )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -87,6 +87,3 @@ class WeakMethodTest( GafferTest.TestCase ) :
 		del a
 
 		self.assertEqual( wm(), 20 )
-
-if __name__ == "__main__":
-	unittest.main()

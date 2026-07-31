@@ -370,6 +370,3 @@ class FramingConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint["target"].setValue( "/cube" )
 
 		self.assertEqual( constraint["out"].fullTransform( "/plane" ), constraint["in"].fullTransform( "/plane" ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -154,6 +154,3 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNone( capsule.context().canceller() )
 		self.assertIn( "test", capsule.context() )
 		self.assertEqual( capsule.context()["test"], 1 )
-
-if __name__ == "__main__":
-	unittest.main()

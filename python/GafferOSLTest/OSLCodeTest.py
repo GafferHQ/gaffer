@@ -448,6 +448,3 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		result = oslCode.attributes()["osl:shader"].outputShader().name
 		self.assertTrue( pathlib.Path( result ).with_suffix( ".oso" ).is_file() )
 		return result
-
-if __name__ == "__main__":
-	unittest.main()

@@ -78,6 +78,3 @@ class DeleteObjectTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object", "bound" } )
 		self.assertSceneHashesEqual( plane["out"], deleteObject["out"], checks = self.allSceneChecks - { "object", "bound" } )
-
-if __name__ == "__main__":
-	unittest.main()

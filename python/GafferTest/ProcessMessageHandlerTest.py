@@ -127,6 +127,3 @@ class ProcessMessageHandlerTest( GafferTest.TestCase ) :
 				self.assertEqual( capturingMessageHandler.messages[1].level, IECore.MessageHandler.Level.Debug )
 				self.assertEqual( capturingMessageHandler.messages[1].context, "Gaffer::Process" )
 				self.assertEqual( capturingMessageHandler.messages[1].message, "[ plug: 'ScriptNode.Expression.__execute', path: '/a/b/c' ]" )
-
-if __name__ == "__main__":
-	unittest.main()

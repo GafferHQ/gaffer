@@ -1737,6 +1737,3 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			edit = edit,
 			fallbackDescription = ""
 		)
-
-if __name__ == "__main__":
-	unittest.main()

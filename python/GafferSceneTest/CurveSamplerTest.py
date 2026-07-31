@@ -124,6 +124,3 @@ class CurveSamplerTest( GafferSceneTest.SceneTestCase ) :
 			__sampleCurves( 0, 1.01 ), # v out of range
 			( imath.V3f( 0, 0, 0 ), False )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

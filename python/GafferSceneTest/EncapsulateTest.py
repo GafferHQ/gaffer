@@ -311,6 +311,3 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		encapsulate["filter"].setInput( pathFilter["out"] )
 
 		self.assertScenesRenderSame( encapsulate["in"], encapsulate["out"], expandProcedurals = True, ignoreLinks = True )
-
-if __name__ == "__main__":
-	unittest.main()

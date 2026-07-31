@@ -212,6 +212,3 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 
 		g1.setVisible( False )
 		self.assertEqual( c.bound(), imath.Box3f( imath.V3f( -4, -0.5, 0 ), imath.V3f( 4, 0.5, 0 ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

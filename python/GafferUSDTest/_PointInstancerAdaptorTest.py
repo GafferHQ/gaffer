@@ -303,6 +303,3 @@ class _PointInstancerAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		pointInstancerAdaptor["renderer"].setValue( "Arnold" )
 
 		self.assertScenesEqual( pointInstancerAdaptor["out"], pointInstancerAdaptor["in"] )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -844,6 +844,3 @@ class RenderPassTypeAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube" }, casters = "/group/groupA/cube" )
 				assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube", "/group/groupA/sphere" }, casters = "/group/groupA" )
 				assertReflectionCaster( renderer, shaderAttribute, { "/group/groupA/cube", "/group/groupB/cube" }, casters = "CUBE" )
-
-if __name__ == "__main__":
-	unittest.main()

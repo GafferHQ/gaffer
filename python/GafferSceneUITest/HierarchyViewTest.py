@@ -127,6 +127,3 @@ class HierarchyViewTest( GafferUITest.TestCase ) :
 
 		HierarchyView.setNodeSet( Gaffer.StandardSet( { script["group"] } ) )
 		assertExpectedState()
-
-if __name__ == "__main__":
-	unittest.main()

@@ -122,6 +122,3 @@ class ShuffleRenderPassesTest( GafferSceneTest.SceneTestCase ) :
 				context["renderPass"] = destination
 				self.assertEqual( shuffle["__sourceName"].getValue(), source )
 				self.assertEqual( shuffle["out"].globals()["option:test:sourceName"].value, source )
-
-if __name__ == "__main__":
-	unittest.main()

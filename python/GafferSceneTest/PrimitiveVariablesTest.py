@@ -107,6 +107,3 @@ class PrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( o["myFirstData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Point )
 		self.assertEqual( o["mySecondData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Vector )
 		self.assertEqual( o["myThirdData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Normal )
-
-if __name__ == "__main__":
-	unittest.main()

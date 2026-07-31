@@ -99,6 +99,3 @@ class BoolPlugValueWidgetTest( GafferUITest.TestCase ) :
 		script["n"]["user"]["p"].setInput( None )
 		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
 		self.assertFalse( w.boolWidget().getErrored() )
-
-if __name__ == "__main__":
-	unittest.main()

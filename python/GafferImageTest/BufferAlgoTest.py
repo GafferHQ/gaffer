@@ -164,6 +164,3 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 			),
 			imath.V2i( 5, 9 )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

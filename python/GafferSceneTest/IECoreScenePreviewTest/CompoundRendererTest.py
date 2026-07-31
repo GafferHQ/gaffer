@@ -158,6 +158,3 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 			self.assertEqual( prototypes[0].samples, prototype.samples )
 			self.assertEqual( prototypes[0].times, prototype.times )
 			self.assertEqual( prototypes[0].attributes.attributes(), coreAttributes2 )
-
-if __name__ == "__main__":
-	unittest.main()

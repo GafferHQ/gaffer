@@ -764,6 +764,3 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 			node["in"].addChild( bar )
 
 		self.assertIn( node["out"], { x[0] for x in dirtiedSlot } )
-
-if __name__ == "__main__":
-	unittest.main()

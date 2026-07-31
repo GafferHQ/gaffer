@@ -42,6 +42,3 @@ class ModuleTest( GafferTest.TestCase ) :
 
 		self.assertModuleDoesNotImportUI( "GafferDispatch" )
 		self.assertModuleDoesNotImportUI( "GafferDispatchTest" )
-
-if __name__ == "__main__":
-	unittest.main()

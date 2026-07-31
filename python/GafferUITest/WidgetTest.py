@@ -620,6 +620,3 @@ class WidgetTest( GafferUITest.TestCase ) :
 		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 10, 10 ), QtCore.QPoint( 10, 10 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
 
 		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
-
-if __name__ == "__main__":
-	unittest.main()

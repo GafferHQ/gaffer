@@ -105,6 +105,3 @@ class DeleteContextVariablesTest( GafferTest.TestCase ) :
 		dirtied = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
 		d["variables"].setValue( "a" )
 		self.assertIn( d["out"], [ p[0] for p in dirtied ] )
-
-if __name__ == "__main__":
-	unittest.main()

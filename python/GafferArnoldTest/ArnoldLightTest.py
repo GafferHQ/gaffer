@@ -131,6 +131,3 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 				network.Connection( ( "ColorRamp", "c" ), ( network.getOutput().shader, "color" ) )
 			]
 		)
-
-if __name__ == "__main__":
-	unittest.main()

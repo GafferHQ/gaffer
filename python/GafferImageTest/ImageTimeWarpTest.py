@@ -174,6 +174,3 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( c, t )
 		self.assertEqual( cHash, tHash )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -125,6 +125,3 @@ class PointsTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue(
 			p["out"].object( "/camera", _copy = False ).isSame( c["out"].object( "/camera", _copy = False ) )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

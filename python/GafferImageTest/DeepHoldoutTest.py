@@ -186,6 +186,3 @@ class DeepHoldoutTest( GafferImageTest.ImageTestCase ) :
 		self.assertIn( "out.channelData", dirtiedPlugs )
 		self.assertIn( "__flattened.channelNames", dirtiedPlugs )
 		del cs[:]
-
-if __name__ == "__main__":
-	unittest.main()

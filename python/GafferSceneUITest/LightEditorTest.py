@@ -879,7 +879,3 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertNotIn( "A", columnNames )
 		self.assertNotIn( "Y", columnNames )
 		self.assertNotIn( "Z", columnNames )
-
-
-if __name__ == "__main__" :
-	unittest.main()

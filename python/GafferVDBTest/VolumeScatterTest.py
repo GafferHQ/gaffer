@@ -129,6 +129,3 @@ class VolumeScatterTest( GafferVDBTest.VDBTestCase ) :
 
 		with self.assertRaisesRegex( RuntimeError, "VolumeScatter does not yet support level sets" ) :
 			vs['out'].object( "/vdb/scatter" )
-
-if __name__ == "__main__":
-	unittest.main()

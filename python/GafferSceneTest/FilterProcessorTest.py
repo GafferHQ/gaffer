@@ -94,6 +94,3 @@ class FilterProcessorTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["Box"]["UnionFilter"]["in"][2].getValue(), IECore.PathMatcher.Result.NoMatch )
 
 		self.assertEqual( s["Box"]["ShaderAssignment"]["filter"].getInput(), s["Box"]["UnionFilter"]["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

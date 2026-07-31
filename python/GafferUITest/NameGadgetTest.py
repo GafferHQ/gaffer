@@ -55,6 +55,3 @@ class NameGadgetTest( GafferUITest.TestCase ) :
 
 		n.setName( "somethingElse" )
 		self.assertEqual( g.getText(), n.getName() )
-
-if __name__ == "__main__":
-	unittest.main()

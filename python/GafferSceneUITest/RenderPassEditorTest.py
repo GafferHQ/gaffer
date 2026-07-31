@@ -543,6 +543,3 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 			[ ( "A", None ), ( "B", 0 ), ( "C", 0 ), ( "D", 0 ), ( "E", 1 ) ],
 			[ "B", "C", "D", "E", "A" ]
 		)
-
-if __name__ == "__main__" :
-	unittest.main()

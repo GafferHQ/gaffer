@@ -732,6 +732,3 @@ class TweakPlugTest( GafferTest.TestCase ) :
 				else :
 					self.assertFalse( plug.applyTweak( data ) )
 					self.assertIsNone( data["v"] )
-
-if __name__ == "__main__":
-	unittest.main()

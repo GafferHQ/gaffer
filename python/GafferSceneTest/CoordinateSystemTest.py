@@ -72,6 +72,3 @@ class CoordinateSystemTest( GafferSceneTest.SceneTestCase ) :
 		c["name"].setValue( "yupyup" )
 		self.assertIn( c["out"]["childNames"], [ p[0] for p in dirtied ] )
 		self.assertIn( c["out"]["set"], [ p[0] for p in dirtied ] )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -80,6 +80,3 @@ class ShaderPlugTest( GafferSceneTest.SceneTestCase ) :
 
 		shaderPlug = GafferScene.ShaderPlug()
 		self.assertFalse( shaderPlug.acceptsInput( contextVariables["out"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

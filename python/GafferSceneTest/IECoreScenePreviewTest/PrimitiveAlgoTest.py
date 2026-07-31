@@ -725,7 +725,3 @@ class PrimitiveAlgoTest( GafferTest.TestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			PrimitiveAlgo.mergePrimitives( meshes )
-
-
-if __name__ == "__main__":
-	unittest.main()

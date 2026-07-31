@@ -57,7 +57,3 @@ from .ArnoldImagerTest import ArnoldImagerTest
 from .USDLightTest import USDLightTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
 from .USDProceduralTest import USDProceduralTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

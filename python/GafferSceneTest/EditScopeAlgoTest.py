@@ -2136,6 +2136,3 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		s2.execute( s.serialise() )
 
 		self.assertFalse( GafferScene.SceneAlgo.visible( s2["editScope"]["out"], "/plane" ) )
-
-if __name__ == "__main__":
-	unittest.main()

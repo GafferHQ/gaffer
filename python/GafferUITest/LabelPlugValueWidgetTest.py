@@ -148,6 +148,3 @@ class LabelPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferUI.LabelPlugValueWidget._hasUserValue( spreadsheet["rows" ] )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -51,6 +51,3 @@ class ModuleTest( GafferUITest.TestCase ) :
 		self.assertRaises( AttributeError, getattr, GafferUI, "uuid" )
 		self.assertRaises( AttributeError, getattr, GafferUI, "IECore" )
 		self.assertRaises( AttributeError, getattr, GafferUI, "Gaffer" )
-
-if __name__ == "__main__":
-	unittest.main()

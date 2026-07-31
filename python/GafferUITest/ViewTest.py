@@ -154,6 +154,3 @@ class ViewTest( GafferUITest.TestCase ) :
 		script2 = Gaffer.ScriptNode()
 		script2["node"] = GafferTest.AddNode()
 		self.assertFalse( view["in"].acceptsInput( script2["node"]["sum"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

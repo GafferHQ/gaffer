@@ -104,6 +104,3 @@ class DataToTensorTest( GafferTest.TestCase ) :
 		node["shape"].setValue( IECore.Int64VectorData( [ 1, 1, 1, 6 ] ) )
 		tensor = node["tensor"].getValue()
 		self.assertEqual( tensor.shape(), [ 1, 1, 1, 6 ] )
-
-if __name__ == "__main__" :
-	unittest.main()

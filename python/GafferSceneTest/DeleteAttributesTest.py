@@ -151,6 +151,3 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
 		self.assertEqual( deleteAttributes["out"].attributes( "/plane" ), IECore.CompoundObject() )
-
-if __name__ == "__main__":
-	unittest.main()

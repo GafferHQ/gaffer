@@ -126,6 +126,3 @@ class OpenColorIOContextTest( GafferImageTest.ImageTestCase ) :
 			GafferImage.ImageAlgo.tiles( ocioContext["out"] )
 
 		self.assertNotIn( "ocio", " ".join( monitor.combinedStatistics().variableNames() ) )
-
-if __name__ == "__main__":
-	unittest.main()

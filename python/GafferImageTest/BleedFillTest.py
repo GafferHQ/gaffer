@@ -129,6 +129,3 @@ class BleedFillTest( GafferImageTest.ImageTestCase ) :
 				'__children["bleedFill"] = GafferImage.BleedFill( "bleedFill" )',
 				'__children["bleedFill"]["expandDataWindow"].setValue( True )',
 			], relevantSerialise )
-
-if __name__ == "__main__":
-	unittest.main()

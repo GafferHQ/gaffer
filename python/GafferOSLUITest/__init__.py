@@ -39,6 +39,3 @@ from .OSLShaderUITest import OSLShaderUITest
 from .OSLCodeUITest import OSLCodeUITest
 from .NodeUITest import NodeUITest
 from .HighlighterTest import HighlighterTest
-
-if __name__ == "__main__":
-	unittest.main()

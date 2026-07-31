@@ -97,6 +97,3 @@ class MonitorAlgoTest( GafferTest.TestCase ) :
 				Gaffer.Metadata.registeredValues( node, Gaffer.Metadata.RegistrationTypes.Instance ),
 				[]
 			)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -149,6 +149,3 @@ class DeleteRenderPassesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( plane["out"], deletePasses["out"] )
 		self.assertSceneHashesEqual( plane["out"], deletePasses["out"], checks = self.allSceneChecks - { "globals" } )
-
-if __name__ == "__main__":
-	unittest.main()

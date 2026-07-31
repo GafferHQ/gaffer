@@ -65,6 +65,3 @@ class PatternMatchTest( GafferTest.TestCase ) :
 		self.assertTrue( node["match"].getValue() )
 		node["enabled"].setValue( False )
 		self.assertFalse( node["match"].getValue() )
-
-if __name__ == "__main__":
-	unittest.main()

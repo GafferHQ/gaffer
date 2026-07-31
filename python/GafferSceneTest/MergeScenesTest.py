@@ -499,6 +499,3 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 			list( merge["out"].setNames() ),
 			[ "set{}".format( i ) for i in range( 0, merge["in"].maxSize() ) ]
 		)
-
-if __name__ == "__main__":
-	unittest.main()

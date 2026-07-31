@@ -285,6 +285,3 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( GafferUI.Gadget.idleSignal().numSlots(), numSlots + 1 )
 		del view
 		self.assertEqual( GafferUI.Gadget.idleSignal().numSlots(), numSlots )
-
-if __name__ == "__main__":
-	unittest.main()

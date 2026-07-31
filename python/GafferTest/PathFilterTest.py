@@ -130,6 +130,3 @@ class PathFilterTest( GafferTest.TestCase ) :
 		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ], userData = ud )
 		self.assertEqual( pathFilter.userData(), ud )
 		self.assertFalse( pathFilter.userData() is ud )
-
-if __name__ == "__main__":
-	unittest.main()

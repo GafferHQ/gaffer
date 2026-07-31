@@ -320,6 +320,3 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 		s3 = Gaffer.ScriptNode()
 		s3.execute( s2.serialise() )
 		assertFlags( s3 )
-
-if __name__ == "__main__":
-	unittest.main()

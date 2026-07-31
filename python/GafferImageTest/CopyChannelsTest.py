@@ -176,6 +176,3 @@ class CopyChannelsTest( GafferImageTest.ImageTestCase ) :
 		del cs[:]
 		copy["channels"].setValue( "diffuse.R" )
 		self.assertTrue( copy["out"]["channelNames"] in [ x[0] for x in cs ] )
-
-if __name__ == "__main__":
-	unittest.main()

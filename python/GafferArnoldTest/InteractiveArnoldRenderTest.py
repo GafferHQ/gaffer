@@ -1076,6 +1076,3 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		gobo.loadShader( "gobo" )
 
 		return gobo, gobo["parameters"]["slidemap"]
-
-if __name__ == "__main__":
-	unittest.main()

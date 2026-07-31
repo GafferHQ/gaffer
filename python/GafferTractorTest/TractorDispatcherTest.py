@@ -412,6 +412,3 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		with unittest.mock.patch( "GafferTractor.tractorAPI", side_effect = ImportError() ) :
 			with self.assertRaisesRegex( RuntimeError, "Tractor API not found" ) :
 				script["dispatcher"]["task"].execute()
-
-if __name__ == "__main__":
-	unittest.main()

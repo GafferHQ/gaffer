@@ -155,6 +155,3 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 		GafferImageTest.ImageTestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__previousCacheMemoryLimit )
-
-if __name__ == "__main__":
-	unittest.main()

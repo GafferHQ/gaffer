@@ -102,6 +102,3 @@ class RenderManOptionsTest( GafferSceneTest.SceneTestCase ) :
 					node["options"][option]["value"].defaultValue(),
 					Gaffer.Metadata.value( f"option:{option}", "defaultValue" )
 				)
-
-if __name__ == "__main__":
-	unittest.main()

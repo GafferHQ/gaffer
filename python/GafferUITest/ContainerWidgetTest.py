@@ -155,6 +155,3 @@ class ContainerWidgetTest( GafferUITest.TestCase ) :
 			widget = TestWidget()
 
 		self.assertIs( widget.parent(), container )
-
-if __name__ == "__main__":
-	unittest.main()

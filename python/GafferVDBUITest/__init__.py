@@ -36,6 +36,3 @@
 
 from .DocumentationTest import DocumentationTest
 from .NodeUITest import NodeUITest
-
-if __name__ == "__main__":
-	unittest.main()

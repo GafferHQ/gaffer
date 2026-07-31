@@ -128,6 +128,3 @@ class MirrorTest( GafferImageTest.ImageTestCase ) :
 		mirror["vertical"].setValue( True )
 
 		self.assertRaisesDeepNotSupported( mirror )
-
-if __name__ == "__main__":
-	unittest.main()

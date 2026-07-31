@@ -375,6 +375,3 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 
 		with self.assertRaisesRegex( ValueError, "Default value must not be None" ) :
 			Gaffer.ObjectPlug()
-
-if __name__ == "__main__":
-	unittest.main()

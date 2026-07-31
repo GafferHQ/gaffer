@@ -91,6 +91,3 @@ class ShaderUITest( GafferUITest.TestCase ) :
 
 		path.setFromString( "/output/color" )
 		self.assertEqual( path.property( "shader:inputs" ), { "nested/texture" } )
-
-if __name__ == "__main__":
-	unittest.main()

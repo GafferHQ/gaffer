@@ -243,6 +243,3 @@ class DictPathTest( GafferTest.TestCase ) :
 
 		path.setFromString( "/d/e" )
 		self.assertEqual( path.property( "myDict:value" ), 40 )
-
-if __name__ == "__main__":
-	unittest.main()

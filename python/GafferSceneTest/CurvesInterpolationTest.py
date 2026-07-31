@@ -147,6 +147,3 @@ class CurvesInterpolationTest( GafferSceneTest.SceneTestCase ) :
 		interpolation["basis"]["value"].setValue( IECore.StandardCubicBasis.BSpline )
 
 		self.assertEqual( interpolation["out"].object( "/object" ).basis(), IECore.CubicBasisf.bSpline() )
-
-if __name__ == "__main__":
-	unittest.main()

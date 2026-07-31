@@ -1582,6 +1582,3 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( sourceContext.getFrame(), 11 )
 		self.assertIsNotNone( sourceContext.canceller() )
-
-if __name__ == "__main__":
-	unittest.main()

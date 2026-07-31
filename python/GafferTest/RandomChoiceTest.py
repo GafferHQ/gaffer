@@ -201,6 +201,3 @@ class RandomChoiceTest( GafferTest.TestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferTest.parallelGetValue( node["out"], 100000, "seed" )
-
-if __name__ == "__main__":
-	unittest.main()

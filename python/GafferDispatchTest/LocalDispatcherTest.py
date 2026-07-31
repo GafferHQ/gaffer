@@ -1376,7 +1376,3 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		with open( self.temporaryDirectory() / "boxedScriptName.txt", "r" ) as inFile :
 			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )
-
-
-if __name__ == "__main__":
-	unittest.main()

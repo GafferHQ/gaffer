@@ -591,6 +591,3 @@ class CollectTest( GafferTest.TestCase ) :
 
 		for i in range( maxIterations ) :
 			self.assertEqual( depth( result[i] ), i )
-
-if __name__ == "__main__":
-	unittest.main()

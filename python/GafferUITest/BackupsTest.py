@@ -236,6 +236,3 @@ class BackupsTest( GafferUITest.TestCase ) :
 			l2 = f2.readlines()
 
 		self.assertEqual( l1, l2 )
-
-if __name__ == "__main__":
-	unittest.main()

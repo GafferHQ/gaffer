@@ -221,7 +221,3 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 		o["offset"].setValue( imath.V2i( -100, -100 ) )
 
 		self.assertTrue( o["out"]["dataWindow"].getValue().isEmpty() )
-
-
-if __name__ == "__main__":
-	unittest.main()

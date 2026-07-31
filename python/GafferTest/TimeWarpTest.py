@@ -155,6 +155,3 @@ class TimeWarpTest( GafferTest.TestCase ) :
 
 			n["enabled"].setValue( False )
 			self.assertEqual( n.inPlugContext().getFrame(), 10 )
-
-if __name__ == "__main__":
-	unittest.main()

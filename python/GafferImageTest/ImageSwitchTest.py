@@ -164,6 +164,3 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 		) )
 
 		self.assertEqual( script["switch"]["out"].channelData( "R", imath.V2i( 0 ) )[0], 0 )
-
-if __name__ == "__main__":
-	unittest.main()

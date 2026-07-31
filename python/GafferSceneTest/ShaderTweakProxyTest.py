@@ -207,7 +207,3 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		# Using a proxy in a shader assignment is invalid
 		with self.assertRaisesRegex( Gaffer.ProcessException, "ShaderTweakProxy only works with ShaderTweaks" ):
 			assignment["out"].attributes( "/plane" )
-
-
-if __name__ == "__main__":
-	unittest.main()

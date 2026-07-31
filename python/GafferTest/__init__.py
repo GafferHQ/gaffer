@@ -167,7 +167,3 @@ from .SetExpressionAlgoTest import SetExpressionAlgoTest
 from .DataStoreTest import DataStoreTest
 
 from .IECorePreviewTest import *
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

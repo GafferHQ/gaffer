@@ -53,6 +53,3 @@ class FormatPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		self.assertTrue( isinstance( w, GafferUI.PlugValueWidget ) )
 		self.assertTrue( w.getPlug().isSame( s["n"]["format"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

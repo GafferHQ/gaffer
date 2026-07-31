@@ -66,6 +66,3 @@ class DocumentationTest( GafferUITest.TestCase ) :
 		script.load()
 
 		self.assertNodeIsDocumented( script["ViewerSettings"], additionalTerminalPlugTypes = ( GafferScene.ScenePlug, ) )
-
-if __name__ == "__main__":
-	unittest.main()

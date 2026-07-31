@@ -858,6 +858,3 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( resample["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

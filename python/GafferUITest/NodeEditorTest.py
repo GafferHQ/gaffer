@@ -154,6 +154,3 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 		s.selection().remove( s["n1"] )
 
 		self.assertEqual( e.nodeUI(), None )
-
-if __name__ == "__main__":
-	unittest.main()

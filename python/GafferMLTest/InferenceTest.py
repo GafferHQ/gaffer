@@ -167,6 +167,3 @@ class InferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( inference["in"][0].getInput().isSame( dataToTensor1["tensor"] ) )
 		self.assertTrue( inference["in"][1].getInput().isSame( dataToTensor2["tensor"] ) )
 		self.assertTrue( destinationPlug.getInput().isSame( inference["out"][0] ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -420,6 +420,3 @@ class CropTest( GafferImageTest.ImageTestCase ) :
 		del cs[:]
 		constant["color"]["r"].setValue( 0.2 )
 		self.assertIn( crop["out"]["dataWindow"], { x[0] for x in cs } )
-
-if __name__ == "__main__":
-	unittest.main()

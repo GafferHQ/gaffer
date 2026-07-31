@@ -67,6 +67,3 @@ class ReverseWindingTest( GafferSceneTest.SceneTestCase ) :
 
 		m1 = reverseWinding["out"].object( "/plane" )
 		self.assertEqual( m0, m1 )
-
-if __name__ == "__main__":
-	unittest.main()

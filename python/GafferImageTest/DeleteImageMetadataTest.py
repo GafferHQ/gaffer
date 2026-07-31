@@ -95,6 +95,3 @@ class DeleteImageMetadataTest( GafferImageTest.ImageTestCase ) :
 
 		m["invertNames"].setValue( False )
 		self.assertTrue( m["out"]["metadata"] in set( e[0] for e in cs ) )
-
-if __name__ == "__main__":
-	unittest.main()

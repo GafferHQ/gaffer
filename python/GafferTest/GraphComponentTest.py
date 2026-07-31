@@ -1257,6 +1257,3 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertNotIn( "gc1", g["c2"] )
 		self.assertIsNone( g["c2"].getChild( "gc1alias" ) )
 		self.assertIsNone( g["c2"].getChild( "gc1" ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -379,6 +379,3 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		result = set( GafferScene.SetAlgo.evaluateSetExpression( expression, scenePlug ).paths() )
 		self.assertEqual( result, set( expectedContents ) )
-
-if __name__ == "__main__":
-	unittest.main()

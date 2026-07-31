@@ -212,6 +212,3 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 
 		self.assertIsInstance( graphEditor1.plugContextMenuSignal, types.MethodType )
 		self.assertIsInstance( GafferUI.GraphEditor.plugContextMenuSignal, types.MethodType )
-
-if __name__ == "__main__":
-	unittest.main()

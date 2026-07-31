@@ -1057,6 +1057,3 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :
 			Gaffer.Metadata.deregisterValue( n, "metadataAlgoTest" )
-
-if __name__ == "__main__":
-	unittest.main()

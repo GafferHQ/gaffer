@@ -703,6 +703,3 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 			assignment["out"].attributes( "/sphere" )["test:surface"].outputShader().parameters["i"],
 			IECore.IntData( 2 )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

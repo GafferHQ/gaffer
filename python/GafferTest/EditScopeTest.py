@@ -188,6 +188,3 @@ class EditScopeTest( GafferTest.TestCase ) :
 		self.assertEqual( p2["variables"][0]["name"].getValue(), p["variables"][0]["name"].getValue() )
 		self.assertEqual( p2["variables"][0]["value"].getValue(), p["variables"][0]["value"].getValue() )
 		self.assertEqual( s2["e"]["out"].getValue(), s["e"]["out"].getValue() )
-
-if __name__ == "__main__":
-	unittest.main()

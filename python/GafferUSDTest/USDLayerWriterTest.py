@@ -447,6 +447,3 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( compositionFileName )
 		self.assertScenesEqual( primitiveVariables["out"], reader["out"], checks = self.allSceneChecks - { "sets" } )
-
-if __name__ == "__main__":
-	unittest.main()

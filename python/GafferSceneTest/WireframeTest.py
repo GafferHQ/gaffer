@@ -189,6 +189,3 @@ class WireframeTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferSceneTest.traverseScene( wireframe["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

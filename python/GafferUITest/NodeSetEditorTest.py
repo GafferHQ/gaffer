@@ -103,6 +103,3 @@ class NodeSetEditorTest( GafferUITest.TestCase ) :
 		ne2.setNodeSet( n1 )
 		self.assertEqual( ne1.getNodeSet(), signalData['ne1nodeSetMirror'] )
 		self.assertEqual( ne2.getNodeSet(), signalData['ne2nodeSetMirror'] )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -182,6 +182,3 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 
 		w = GafferUI.MultiLineTextWidget( placeholderText = "test" )
 		self.assertEqual( w.getPlaceholderText(), "test" )
-
-if __name__ == "__main__":
-	unittest.main()

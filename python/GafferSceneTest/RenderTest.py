@@ -1652,6 +1652,3 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			shuffle["shuffles"].addChild( shufflePlug )
 
 		return shuffle
-
-if __name__ == "__main__":
-	unittest.main()

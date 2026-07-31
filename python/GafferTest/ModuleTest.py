@@ -48,6 +48,3 @@ class ModuleTest( GafferTest.TestCase ) :
 
 		self.assertTrue( Gaffer.rootPath().is_absolute() )
 		self.assertEqual( Gaffer.rootPath(), Gaffer.rootPath().resolve() )
-
-if __name__ == "__main__":
-	unittest.main()

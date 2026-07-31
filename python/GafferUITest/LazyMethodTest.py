@@ -180,6 +180,3 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 		self.LazyWidget.setTextLazily.flush( w )
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( w.getText(), "t" )
-
-if __name__ == "__main__":
-	unittest.main()

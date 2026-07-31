@@ -113,6 +113,3 @@ class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 		) )
 
 		self.assertEqual( s["n"]["out"].bound( "/cube" ), imath.Box3f( imath.V3f( -2.5 ), imath.V3f( 2.5 ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

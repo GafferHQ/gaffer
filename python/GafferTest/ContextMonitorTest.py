@@ -132,6 +132,3 @@ class ContextMonitorTest( GafferTest.TestCase ) :
 		self.assertEqual( hashes.get( context2.variableHash( "test" ) ), 1 ) # Just a hash
 
 		self.assertEqual( statistics.variableHashes( "nonExistentVariable" ), {} )
-
-if __name__ == "__main__":
-	unittest.main()

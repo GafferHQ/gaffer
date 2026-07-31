@@ -128,6 +128,3 @@ class VisualiserAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertTrue( "__never_supported__" in mh.messages[0].message )
 		self.assertIsNone( convertedNetwork )
-
-if __name__ == "__main__":
-	unittest.main()

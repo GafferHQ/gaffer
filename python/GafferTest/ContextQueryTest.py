@@ -318,6 +318,3 @@ class ContextQueryTest( GafferTest.TestCase ):
 		self.assertEqual( str( scriptNode["target"]["c"].getInput() ), str( q["out"][1]["value"] ) )
 		self.assertIsNone( scriptNode["target"]["b1"].getInput() )
 		self.assertEqual( str( scriptNode["target"]["b2"].getInput() ), str( q["out"][1]["exists"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -104,6 +104,3 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 
 		self.waitForIdle()
 		self.assertIsNone( weakWidget() )
-
-if __name__ == "__main__":
-	unittest.main()

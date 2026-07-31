@@ -167,7 +167,3 @@ class MeshTessellateTest( GafferSceneTest.SceneTestCase ) :
 			tessellate["triangleSubdivisionRule"].setValue( tsr )
 			self.assertNodeCorrect( tessellate, "object" )
 			self.assertEqual( tessellate["out"].object("/object"), defaultTessellate["out"].object("/object") )
-
-
-if __name__ == "__main__":
-	unittest.main()

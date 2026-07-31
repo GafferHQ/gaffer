@@ -994,6 +994,3 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader = GafferArnold.ArnoldShader()
 		shader.loadShader( "standard_volume" )
 		self.assertEqual( shader["type"].getValue(), "ai:volume" )
-
-if __name__ == "__main__":
-	unittest.main()

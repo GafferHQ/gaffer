@@ -106,6 +106,3 @@ class LightToCameraTest( GafferSceneTest.SceneTestCase ) :
 			set( lc["out"].set( "__cameras" ).value.paths() ),
 			set( [ "/group/camera", "/group/spot1", "/group/distant1", "/group/env1" ] )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

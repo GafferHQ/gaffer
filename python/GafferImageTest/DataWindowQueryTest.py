@@ -112,6 +112,3 @@ class DataWindowQueryTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( dataWindowQuery["dataWindow"].getValue(), smallBox )
 		self.assertEqual( dataWindowQuery["center"].getValue(), smallBoxFloat.center() )
 		self.assertEqual( dataWindowQuery["size"].getValue(), smallBox.size() )
-
-if __name__ == "__main__" :
-	unittest.main()

@@ -183,6 +183,3 @@ class PathColumnTest( GafferUITest.TestCase ) :
 
 		self.assertIs( column, columnCreated )
 		self.assertEqual( column.member, "postInitValue" )
-
-if __name__ == "__main__":
-	unittest.main()

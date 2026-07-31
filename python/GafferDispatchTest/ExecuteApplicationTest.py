@@ -371,6 +371,3 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		validate( framesMode = GafferDispatch.PythonCommand.FramesMode.Sequence )
 		validate( framesMode = GafferDispatch.PythonCommand.FramesMode.Single )
-
-if __name__ == "__main__":
-	unittest.main()

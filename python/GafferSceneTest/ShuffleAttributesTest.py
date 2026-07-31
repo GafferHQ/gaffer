@@ -244,6 +244,3 @@ class ShuffleAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		s = GafferScene.ShuffleAttributes()
 		self.assertEqual( s["filter"].defaultValue(), IECore.PathMatcher.Result.NoMatch )
-
-if __name__ == "__main__":
-	unittest.main()

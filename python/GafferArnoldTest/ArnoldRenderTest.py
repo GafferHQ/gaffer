@@ -1769,6 +1769,3 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		options["options"]["ai:AA_samples"]["value"].setValue( 3 )
 
 		return options
-
-if __name__ == "__main__":
-	unittest.main()

@@ -340,6 +340,3 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 				"specular.R", "specular.G", "specular.B", "specular.A",
 			] )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

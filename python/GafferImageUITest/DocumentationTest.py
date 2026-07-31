@@ -48,6 +48,3 @@ class DocumentationTest( GafferUITest.TestCase ) :
 			GafferImage,
 			additionalTerminalPlugTypes = ( GafferImage.ImagePlug, GafferImage.FormatPlug )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

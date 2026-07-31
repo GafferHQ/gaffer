@@ -350,6 +350,3 @@ class ScriptNodeAlgoTest( GafferUITest.TestCase ) :
 			GafferSceneUI.ScriptNodeAlgo.getVisibleSetBookmark( s2, "serialisationTest" ),
 			v
 		)
-
-if __name__ == "__main__":
-	unittest.main()

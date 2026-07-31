@@ -383,6 +383,3 @@ class ListContainerTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( v.size().y, l1.size().y + l2.size().y )
 		self.assertEqual( l2._qtWidget().pos().y(), l1.size().y )
-
-if __name__ == "__main__":
-	unittest.main()

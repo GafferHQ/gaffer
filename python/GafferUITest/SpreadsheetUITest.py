@@ -1105,6 +1105,3 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		Gaffer.PlugAlgo.promote( b["s"]["out"] )
 		widget = GafferUI.SpreadsheetUI._RowsPlugValueWidget( b["rows"] )
 		self.assertIsNotNone( widget._RowsPlugValueWidget__outputsTable )
-
-if __name__ == "__main__":
-	unittest.main()
