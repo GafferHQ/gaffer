@@ -1,7 +1,10 @@
 1.6.x.x (relative to 1.6.21.2)
 =======
 
+Fixes
+-----
 
+- RenderMan : Fixed handling of connections between floats and color/vector components.
 
 1.6.21.2 (relative to 1.6.21.1)
 ========
