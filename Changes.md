@@ -10,13 +10,10 @@ Fixes
 -----
 
 - Application : Fixed bug that prevented the use of `sys.executable` for launching a Python process. `sys.executable` now points to the included `python` executable instead of `gaffer` [^1].
-
-Fixes
------
-
 - MenuButton : Fixed immediate mode when the menu contained a single submenu.
 - RandomChoice : Fixed "Value/Weight" table headers when first setting up the node.
 - VectorDataPlugValueWidget : Fixed handling of custom header metadata when adding and removing columns.
+- RenderMan : Fixed handling of `treatAsPoint` and `treatAsLine` UsdLuxLight parameters. These are now ignored, matching the behaviour of `hdPrman`.
 
 1.7.0.0a9 (relative to 1.7.0.0a8)
 =========

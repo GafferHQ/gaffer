@@ -395,9 +395,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 				IECoreScene.Shader(
 					"PxrSphereLight", "light",
-					expectedLightParameters( {
-						"areaNormalize" : True,
-					} )
+					expectedLightParameters( {} )
 				),
 
 			],
@@ -413,9 +411,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 				IECoreScene.Shader(
 					"PxrCylinderLight", "light",
-					expectedLightParameters( {
-						"areaNormalize" : True,
-					} )
+					expectedLightParameters( {} )
 				),
 
 			],
@@ -547,8 +543,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			IECoreScene.Shader( "DistantLight", "light", { "angle" : 2.0 } ) : imath.M44f(),
 			IECoreScene.Shader( "DomeLight", "light", {} ) : imath.M44f(),
 			IECoreScene.Shader( "CylinderLight", "light", { "length" : 2.0, "radius" : 4.0 } ) : imath.M44f().scale( imath.V3f( 2.0, 8.0, 8.0 ) ),
-			IECoreScene.Shader( "SphereLight", "light", { "treatAsPoint" : True } ) : imath.M44f().scale( imath.V3f( 0.002 ) ),
-			IECoreScene.Shader( "CylinderLight", "light", { "treatAsLine" : True } ) : imath.M44f().scale( imath.V3f( 1.0, 0.002, 0.002 ) ),
+			IECoreScene.Shader( "SphereLight", "light", { "treatAsPoint" : True } ) : imath.M44f().scale( imath.V3f( 1.0 ) ),
+			IECoreScene.Shader( "CylinderLight", "light", { "treatAsLine" : True } ) : imath.M44f().scale( imath.V3f( 1.0 ) ),
 
 		}.items() :
 			with self.subTest() :
