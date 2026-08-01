@@ -7,6 +7,7 @@ Fixes
 - RenderMan :
   - Fixed handling of connections between floats and color/vector components.
   - Fixed bug preventing attributes from being deleted from lights during an interactive render.
+- GafferImage::VectorWarp : Fixed crash with pixel offsets much larger than any reasonable image.
 
 1.6.21.2 (relative to 1.6.21.1)
 ========

@@ -92,6 +92,13 @@ struct VectorWarp::Engine : public Warp::Engine
 				return black;
 			}
 
+			// As part of implementing inputPixel, we are required to clamp the result so
+			// that we don't go near pixels that can't be represented as integers.
+			result = V2f(
+				std::min( 10000000.0f, std::max( -10000000.0f, result.x ) ),
+				std::min( 10000000.0f, std::max( -10000000.0f, result.y ) )
+			);
+
 			return result;
 		}
 	}
