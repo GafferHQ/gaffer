@@ -102,6 +102,16 @@ else
 	prependToPath "$rootDir/lib" DYLD_FRAMEWORK_PATH
 fi
 
+# GL dispatch fix for OFX + EGL device rendering on RDP/X-without-NVIDIA.
+# Qt's GLX init loads libGLX_mesa.so.0 whose gl* exports capture symbol
+# bindings for late-loaded modules (GafferOFX, .ofx plugins), breaking GL
+# under NVIDIA-EGL device contexts.  Preloading GLVND's libGL.so.1 puts
+# the per-thread dispatch stub first in scope so worker-thread EGL contexts
+# and UI-thread GLX contexts both dispatch correctly.
+if [[ `uname` = "Linux" ]] ; then
+	prependToPath "libGL.so.1" LD_PRELOAD
+fi
+
 if [[ `uname` = "Darwin" ]] ; then
 	# Changes in Python 3.11 cause `sys.exec_prefix` to not be set correctly
 	# on macOS when Python is run from a symlink (like we do from $rootDir/bin).

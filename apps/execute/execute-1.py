@@ -44,6 +44,7 @@ import imath
 import IECore
 
 import Gaffer
+import GafferOFX
 
 class execute( Gaffer.Application ) :
 
@@ -122,6 +123,8 @@ class execute( Gaffer.Application ) :
 		)
 
 	def _run( self, args ) :
+
+		GafferOFX.Host.findOFXPlugins()
 
 		scriptNode = Gaffer.ScriptNode()
 		scriptNode["fileName"].setValue( pathlib.Path( args["script"].value ).absolute() )

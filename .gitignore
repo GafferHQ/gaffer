@@ -1,9 +1,13 @@
 *.*~
 *.dylib
 *.os
+*.o
 *.moc
 *.pyc
 *.swp
+*.swo
+*.swm
+*.swn
 *.so
 *.tmp
 *.desktop
@@ -31,3 +35,4 @@ bin/__private/*.o
 
 # clang compile commands
 compile_commands.json
+GafferOFXPluginCache.xml

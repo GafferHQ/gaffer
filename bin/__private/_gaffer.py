@@ -343,6 +343,19 @@ def setUpRenderMan() :
 
 setUpRenderMan()
 
+# OpenFX Setup
+# ============
+
+def setUpOFX() :
+
+	if "OFX_ROOT" not in os.environ :
+		return
+
+	ofxRoot = pathlib.Path( os.environ["OFX_ROOT"] )
+	appendToPath( ofxRoot / "lib", libraryPath )
+
+setUpOFX()
+
 # 3rd Party Extension Setup
 # =========================
 
