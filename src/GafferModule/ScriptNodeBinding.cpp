@@ -62,6 +62,8 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
 
+#include <limits>
+
 #include "fmt/format.h"
 
 #include <memory>
@@ -178,6 +180,11 @@ boost::python::object executionDict( ScriptNodePtr script, NodePtr parent )
 
 	result["script"] = boost::python::object( script );
 	result["parent"] = boost::python::object( parent );
+
+	// inf and nan are used by IECore.repr() for imath types
+	// containing infinity/NaN values (e.g. V2d(-inf, inf)).
+	result["inf"] = boost::python::object( std::numeric_limits<double>::infinity() );
+	result["nan"] = boost::python::object( std::numeric_limits<double>::quiet_NaN() );
 
 	return std::move( result );
 }
