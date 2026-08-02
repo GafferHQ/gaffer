@@ -325,6 +325,12 @@ options.Add(
 	"",
 )
 
+options.Add(
+	"OFX_ROOT",
+	"The directory in which the OpenFX library is installed. Used to build GafferOFX",
+	"",
+)
+
 # general variables
 
 options.Add(
@@ -795,21 +801,12 @@ else:
 
 commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( os.path.pathsep.join( [ "$BUILD_DIR/python" ] + split( commandEnv["LOCATE_DEPENDENCY_PYTHONPATH"] ) ) )
 
-if commandEnv["ASAN"] :
-	# Our `buildExtensions` target runs Gaffer, and when we've build that
-	# with ASan we need to load the ASan library in order to be able to
-	# run it.
-	commandEnv["ENV"]["LD_PRELOAD"] = commandEnv["ASAN_LIB"]
-	# ASan detects loads of memory leaks in Python, so turn leak detection off.
-	commandEnv["ENV"]["ASAN_OPTIONS"] = "detect_leaks=0"
-
-# Set up the environment variables that the Gaffer wrapper will use to
-# populate paths used to support third-party software.
 for option, envVar in {
 	"ARNOLD_ROOT" : "ARNOLD_ROOT",
 	"DELIGHT_ROOT" : "DELIGHT",
 	"ONNX_ROOT" : "ONNX_ROOT",
 	"RENDERMAN_ROOT" : "RMANTREE",
+	"OFX_ROOT" : "OFX_ROOT",
 }.items() :
 	if commandEnv[option] != "" :
 		commandEnv["ENV"][envVar] = commandEnv[option]
@@ -1235,6 +1232,34 @@ libraries = {
 		"requiredOptions" : [ "ONNX_ROOT" ],
 	},
 
+	"GafferOFX" : {
+		"envAppends" : {
+			"CXXFLAGS" : [ systemIncludeArgument, "$OFX_ROOT/include/openfx", systemIncludeArgument, "$OFX_ROOT/include/openfx/HostSupport" ],
+			"CPPDEFINES" : [ "OFX_SUPPORTS_OPENGLRENDER" ],
+			"LIBPATH" : [ "$OFX_ROOT/lib" ],
+			"LIBS" : [ "Gaffer", "GafferImage", "OfxGafferHost", "GL", "EGL", "X11", "expat" ],
+		},
+		"pythonEnvAppends" : {
+			"CXXFLAGS" : [ systemIncludeArgument, "$OFX_ROOT/include/openfx", systemIncludeArgument, "$OFX_ROOT/include/openfx/HostSupport" ],
+			"CPPDEFINES" : [ "OFX_SUPPORTS_OPENGLRENDER" ],
+			"LIBS" : [ "GafferBindings", "GafferImage", "GafferOFX", "OfxGafferHost", "GL", "EGL", "X11", "expat" ],
+		},
+		"requiredOptions" : [ "OFX_ROOT" ],
+	},
+
+	"GafferOFXTest" : {
+		"requiredOptions" : [ "OFX_ROOT" ],
+		"additionalFiles" : glob.glob( "python/GafferOFXTest/plugins/*" )
+	},
+
+	"GafferOFXUI" : {
+		"requiredOptions" : [ "OFX_ROOT" ],
+	},
+
+	"GafferOFXUITest" : {
+		"requiredOptions" : [ "OFX_ROOT" ],
+	},
+
 	"IECoreArnold" : {
 		"envAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ] if env["PLATFORM"] != "win32" else [ "$ARNOLD_ROOT/bin", "$ARNOLD_ROOT/lib" ],
@@ -1649,12 +1674,12 @@ for library in ( "GafferUI", ) :
 
 if env["PLATFORM"] == "win32" :
 
-	for library in ( "Gaffer", "GafferCycles", ) :
+	for library in ( "Gaffer", "GafferCycles", "GafferOFX" ) :
 
 		libraries[library].setdefault( "envAppends", {} )
 		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32" ] )
 
-	for library in ( "GafferCycles", ) :
+	for library in ( "GafferCycles", "GafferOFX" ) :
 
 		libraries[library].setdefault( "pythonEnvAppends", {} )
 		libraries[library]["pythonEnvAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32" ] )
@@ -1668,6 +1693,9 @@ else :
 
 	libraries["IECoreRenderMan"]["envAppends"]["LIBS"].extend( [ "dl" ] )
 	libraries["GafferCycles"]["envAppends"]["LIBS"].extend( [ "dl" ] )
+	libraries["GafferOFX"]["envAppends"]["LIBS"].extend( [ "dl" ] )
+	libraries["GafferOFX"]["envAppends"]["LIBS"].append( "GLEW$GLEW_LIB_SUFFIX" )
+	libraries["GafferOFX"]["pythonEnvAppends"]["LIBS"].append( "GLEW$GLEW_LIB_SUFFIX" )
 
 # Optionally add vTune requirements
 
