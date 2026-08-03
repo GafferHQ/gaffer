@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import types
 import unittest
 import weakref
 
@@ -194,6 +195,23 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		del s["b"]
 
 		self.assertEqual( e.graphGadget().getRoot(), s )
+
+	def testPlugContextMenuSignal( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		graphEditor1 = GafferUI.GraphEditor( script )
+		graphEditor2 = GafferUI.GraphEditor( script )
+
+		self.assertIsNot( graphEditor1.plugContextMenuSignal(), graphEditor2.plugContextMenuSignal() )
+		self.assertIsNot( GafferUI.GraphEditor.plugContextMenuSignal(), graphEditor1.plugContextMenuSignal() )
+		self.assertIsNot( GafferUI.GraphEditor.plugContextMenuSignal(), graphEditor2.plugContextMenuSignal() )
+
+		self.assertIs( graphEditor1.plugContextMenuSignal(), graphEditor1.plugContextMenuSignal() )
+		self.assertIs( graphEditor2.plugContextMenuSignal(), graphEditor2.plugContextMenuSignal() )
+
+		self.assertIsInstance( graphEditor1.plugContextMenuSignal, types.MethodType )
+		self.assertIsInstance( GafferUI.GraphEditor.plugContextMenuSignal, types.MethodType )
 
 if __name__ == "__main__":
 	unittest.main()
