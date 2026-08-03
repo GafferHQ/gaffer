@@ -283,6 +283,11 @@ _styleSheet = string.Template(
 		padding: 5px 8px 5px 8px;
 	}
 
+	QMenuBar QToolButton#qt_menubar_ext_button {
+		qproperty-icon: url(:/pathListingList.png);
+		qproperty-iconSize: 10px 10px;
+	}
+
 	#gafferMenuBarWidgetContainer {
 		background-color: $backgroundDarkest;
 	}
