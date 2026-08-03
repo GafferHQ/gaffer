@@ -981,14 +981,23 @@ class _HistoryWidget( GafferUI.Widget ) :
 
 	def moveHistoryIndex( self, delta ) :
 
-		if self.__historyIndex + delta < 0 or self.__historyIndex + delta >= len( self.__history ) :
+		if delta == 0 or self.__historyIndex + delta < 0 or self.__historyIndex + delta >= len( self.__history ) :
 			return
+
+		i = self.__historyIndex + delta
+		while self.__history[i][0].parent() is None :
+			i += -1 if delta < 0 else 1
+			if i < 0 or i >= len( self.__history ) :
+				GafferUI.PopupWindow.showWarning(
+					"All nodes in history have been removed.",
+					parent = self.__backButton if delta < 0 else self.__forwardButton
+				)
+				return
 
 		self.__history[self.__historyIndex] = ( self.__history[self.__historyIndex][0], _currentFrame( self.__graphGadget.parent() ) )
 
-		self.__historyIndex += delta
+		self.__historyIndex = i
 
-		# \todo Where do we go if the node has been deleted?
 		graphEditor = self.ancestor( GafferUI.GraphEditor )
 		assert( graphEditor is not None )
 		rootNode = self.__history[self.__historyIndex][0]
@@ -1049,6 +1058,8 @@ class _HistoryWidget( GafferUI.Widget ) :
 		menuDefinition = IECore.MenuDefinition()
 		prefix = "/"
 		for counter, i in enumerate( historyRange ) :
+			if self.__history[i][0].parent() is None :
+				continue
 			menuDefinition.append(
 				prefix + str( counter ),
 				{
@@ -1061,8 +1072,11 @@ class _HistoryWidget( GafferUI.Widget ) :
 				prefix = "/More/"
 				menuDefinition.append( "/Divider", { "divider" : True } )
 
-		self.__historyPopup = GafferUI.Menu( menuDefinition )
-		self.__historyPopup.popup( popupParent, position = imath.V2i( popupParent.bound().min().x, popupParent.bound().max().y ) )
+		if menuDefinition.size() :
+			self.__historyPopup = GafferUI.Menu( menuDefinition )
+			self.__historyPopup.popup( popupParent, position = imath.V2i( popupParent.bound().min().x, popupParent.bound().max().y ) )
+		else :
+			GafferUI.PopupWindow.showWarning( "All nodes in history have been removed.", parent = popupParent )
 
 	def __updateHistoryButtonsEnabled( self ) :
 
