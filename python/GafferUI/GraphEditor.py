@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import enum
 import functools
 import types
 import imath
@@ -556,10 +557,10 @@ class GraphEditor( GafferUI.Editor ) :
 
 			return True
 		elif event.key == "BracketLeft" and not event.modifiers :
-			self.__historyWidget.moveHistoryIndex( -1 )
+			self.__historyWidget.moveHistoryIndex( self.__historyWidget.Direction.Back )
 			return True
 		elif event.key == "BracketRight" and not event.modifiers :
-			self.__historyWidget.moveHistoryIndex( 1 )
+			self.__historyWidget.moveHistoryIndex( self.__historyWidget.Direction.Forward )
 			return True
 
 		return False
@@ -966,61 +967,60 @@ class _HistoryWidget( GafferUI.Widget ) :
 		with self.__row :
 			self.__backButton = GafferUI.Button( "", "historyBack.png", hasFrame = False, toolTip = "Go back. [<kbd>[</kbd>]<br>Right-click for history menu." )
 			self.__forwardButton = GafferUI.Button( "", "historyForward.png", hasFrame = False, toolTip = "Go forward. [<kbd>]</kbd>]<br>Right-click for history menu." )
-			self.__backButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__backButtonPressed ) )
-			self.__backButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__backButtonPressed ) )
-			self.__forwardButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__forwardButtonPressed ) )
-			self.__forwardButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__forwardButtonPressed ) )
+			self.__backButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPressed ) )
+			self.__backButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonPressed ) )
+			self.__forwardButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPressed ) )
+			self.__forwardButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonPressed ) )
 
-		# A list of tuples of the form `( rootNode, frame )`. A frame value of `None`
-		# indicates framing to fit all child nodes.
-		self.__history = [ ( self.__scriptNode, None ) ]
+		# A list of tuples of the form `( rootNode, frame, scoped rootNode.parentChangedSignal() connection )`.
+		# A frame value of `None` indicates framing to fit all child nodes.
+		self.__history = [ ( self.__scriptNode, None, None ) ]
 		self.__historyIndex = 0
 		self.__historyPopup = None
 
 		self.__updateHistoryButtonsEnabled()
 
-	def moveHistoryIndex( self, delta ) :
+	Direction = enum.Enum( "Direction", [ "Forward", "Back" ] )
 
-		if self.__historyIndex + delta < 0 or self.__historyIndex + delta >= len( self.__history ) :
-			return
+	# Moves forwards or backwards in the history. Returns `True`
+	# on success and `False` if there was nothing to navigate to.
+	def moveHistoryIndex( self, direction ) :
 
-		self.__history[self.__historyIndex] = ( self.__history[self.__historyIndex][0], _currentFrame( self.__graphGadget.parent() ) )
+		assert( isinstance( direction, self.Direction ) )
+		nextIndex = next( self.__navigableHistoryIndices( direction ), None )
+		if nextIndex is not None :
+			self.__setHistoryIndex( nextIndex )
+			return True
 
-		self.__historyIndex += delta
+		return False
 
-		# \todo Where do we go if the node has been deleted?
-		graphEditor = self.ancestor( GafferUI.GraphEditor )
-		assert( graphEditor is not None )
-		rootNode = self.__history[self.__historyIndex][0]
-		if rootNode.isSame( self.__scriptNode ) or self.__scriptNode.isAncestorOf( rootNode ) :
-			with Gaffer.Signals.BlockedConnection( self.__rootChangedConnection ) :
-				# We're blocking `__rootChangedConnection` so we don't append to history.
-				# That connection also handles framing, so we need to take care of that here.
-				self.__frame()
-				self.__graphGadget.setRoot( rootNode )
+	def __buttonPressed( self, button, event ) :
+
+		direction = self.Direction.Forward if button is self.__forwardButton else self.Direction.Back
+
+		if event.buttons == event.Buttons.Left :
+			self.moveHistoryIndex( direction )
+		elif event.buttons == event.Buttons.Right :
+			self.__showHistoryPopup( direction, button )
+
+	def __historyNodeParentChanged( self, child, oldParent ) :
 
 		self.__updateHistoryButtonsEnabled()
 
-	def __backButtonPressed( self, button, event ) :
+	def __createHistoryEntry( self, node ) :
 
-		if event.buttons == event.Buttons.Left :
-			self.moveHistoryIndex( -1 )
-		elif event.buttons == event.Buttons.Right :
-			self.__showHistoryPopup( range( self.__historyIndex - 1, -1, -1 ), button )
-
-	def __forwardButtonPressed( self, button, event ) :
-
-		if event.buttons == event.Buttons.Left :
-			self.moveHistoryIndex( 1 )
-		elif event.buttons == event.Buttons.Right :
-			self.__showHistoryPopup( range( self.__historyIndex + 1, len( self.__history ), 1 ), button )
+		return (
+			node,
+			_currentFrame( self.__graphGadget.parent() ),
+			node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__historyNodeParentChanged ), scoped = True )
+		)
 
 	def __rootChanged( self, graphGadget, previousRoot ) :
 
 		self.__history = self.__history[:self.__historyIndex + 1]
-		self.__history[self.__historyIndex] = ( self.__history[self.__historyIndex][0], _currentFrame( self.__graphGadget.parent() ) )
+		self.__history[self.__historyIndex]  = self.__createHistoryEntry( self.__history[self.__historyIndex][0] )
 
-		self.__history.append( ( graphGadget.getRoot(), None ) )
+		self.__history.append( ( graphGadget.getRoot(), None, None ) )
 		self.__historyIndex += 1
 		self.__frame()
 		self.__updateHistoryButtonsEnabled()
@@ -1030,7 +1030,7 @@ class _HistoryWidget( GafferUI.Widget ) :
 		rootNode = self.__history[self.__historyIndex][0]
 		frame = None
 		for i in range( self.__historyIndex, -1, -1 ) :
-			historyNode, historyFrame = self.__history[i]
+			historyNode, historyFrame, parentChangedConnection = self.__history[i]
 			if historyNode.isSame( rootNode ) and historyFrame is not None :
 				frame = historyFrame
 				break
@@ -1044,20 +1044,57 @@ class _HistoryWidget( GafferUI.Widget ) :
 		else :
 			graphEditor.frame( graphEditor.graphGadget().getRoot().children( Gaffer.Node ) )
 
-	def __showHistoryPopup(self, historyRange, popupParent ) :
+	def __setHistoryIndex( self, index ) :
+
+		if index < 0 or index >= len( self.__history ) or index == self.__historyIndex :
+			return
+
+		self.__history[self.__historyIndex] = self.__createHistoryEntry( self.__history[self.__historyIndex][0] )
+
+		self.__historyIndex = index
+
+		graphEditor = self.ancestor( GafferUI.GraphEditor )
+		assert( graphEditor is not None )
+		rootNode = self.__history[self.__historyIndex][0]
+		if rootNode.isSame( self.__scriptNode ) or self.__scriptNode.isAncestorOf( rootNode ) :
+			with Gaffer.Signals.BlockedConnection( self.__rootChangedConnection ) :
+				# We're blocking `__rootChangedConnection` so we don't append to history.
+				# That connection also handles framing, so we need to take care of that here.
+				self.__frame()
+				self.__graphGadget.setRoot( rootNode )
+
+		self.__updateHistoryButtonsEnabled()
+
+	def __navigableHistoryIndices( self, direction ) :
+
+		increment = 1 if direction == self.Direction.Forward else -1
+		i = previousI = self.__historyIndex
+		while i >= 0 and i < len( self.__history ) :
+			if (
+				# Node not deleted
+				( self.__history[i][0].scriptNode() is not None ) and
+				# Node different from previous yield
+				( not self.__history[i][0].isSame( self.__history[previousI][0] ) )
+			) :
+				previousI = i
+				yield i
+			i += increment
+
+	def __showHistoryPopup(self, direction, popupParent ) :
 
 		menuDefinition = IECore.MenuDefinition()
 		prefix = "/"
-		for counter, i in enumerate( historyRange ) :
+
+		for counter, i in enumerate( self.__navigableHistoryIndices( direction ) ) :
 			menuDefinition.append(
-				prefix + str( counter ),
+				f"{prefix}{counter}",
 				{
 					"label" : ( "/" + self.__history[i][0].relativeName( self.__scriptNode ).replace( ".", "/" ) ) if not self.__history[i][0].isSame( self.__scriptNode ) else "/",
-					"command" : functools.partial( Gaffer.WeakMethod( self.moveHistoryIndex ), i - self.__historyIndex ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setHistoryIndex ), i ),
 				}
 			)
 
-			if counter == 10 :
+			if counter == 11 :
 				prefix = "/More/"
 				menuDefinition.append( "/Divider", { "divider" : True } )
 
@@ -1066,5 +1103,9 @@ class _HistoryWidget( GafferUI.Widget ) :
 
 	def __updateHistoryButtonsEnabled( self ) :
 
-		self.__backButton.setEnabled( self.__historyIndex > 0 )
-		self.__forwardButton.setEnabled( self.__historyIndex < ( len( self.__history ) - 1 ) )
+		self.__backButton.setEnabled(
+			next( self.__navigableHistoryIndices( self.Direction.Back ), None ) is not None
+		)
+		self.__forwardButton.setEnabled(
+			next( self.__navigableHistoryIndices( self.Direction.Forward ), None ) is not None
+		)
