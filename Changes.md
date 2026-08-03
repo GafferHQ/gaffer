@@ -16,6 +16,7 @@ Fixes
 - RenderMan :
   - Fixed handling of `treatAsPoint` and `treatAsLine` UsdLuxLight parameters. These are now ignored, matching the behaviour of `hdPrman`.
   - Fixed handling of connections between floats and color/vector components [^2].
+  - Fixed bug preventing attributes from being deleted from lights during an interactive render [^2].
 
 [^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 [^2]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
@@ -444,7 +445,9 @@ Build
 Fixes
 -----
 
-- RenderMan : Fixed handling of connections between floats and color/vector components.
+- RenderMan :
+  - Fixed handling of connections between floats and color/vector components.
+  - Fixed bug preventing attributes from being deleted from lights during an interactive render.
 
 1.6.21.2 (relative to 1.6.21.1)
 ========

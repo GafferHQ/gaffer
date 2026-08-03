@@ -1509,6 +1509,22 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
 		)
 
+		# Mute the light again.
+
+		s["l"]["mute"]["value"].setValue( True )
+
+		self.assertEventually(
+			lambda : self.assertEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
+
+		# This time, unmute the light by removing the attribute.
+
+		s["l"]["mute"]["enabled"].setValue( False )
+
+		self.assertEventually(
+			lambda : self.assertNotEqual( self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0 )
+		)
+
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testDeleteLightShader( self ) :

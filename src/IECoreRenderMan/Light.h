@@ -86,9 +86,9 @@ class Light : public IECoreScenePreview::Renderer::ObjectInterface
 		ConstAttributesPtr m_attributes;
 		/// Used to keep geometry prototype alive as long as we need it.
 		ConstGeometryPrototypePtr m_geometryPrototype;
-		/// Combination of `m_attributes->instanceAttributes()` and
-		/// "grouping:membership" attribute used to implement light linking.
-		RtParamList m_allAttributes;
+		/// Attributes in addition to those received from the scene. Currently
+		/// just the "grouping:membership" attribute used to implement light linking.
+		RtParamList m_extraAttributes;
 		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedFilters;
 		RtUString m_shadowSubset;
