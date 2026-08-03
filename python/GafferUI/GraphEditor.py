@@ -1046,7 +1046,6 @@ class _HistoryWidget( GafferUI.Widget ) :
 
 	def __showHistoryPopup(self, historyRange, popupParent ) :
 
-		graphEditor = self.ancestor( GafferUI.GraphEditor )
 		menuDefinition = IECore.MenuDefinition()
 		prefix = "/"
 		for counter, i in enumerate( historyRange ) :
