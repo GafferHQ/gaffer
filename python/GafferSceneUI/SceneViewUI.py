@@ -554,6 +554,7 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				if result :
 					result += "\n\n"
 				result += "## Actions\n\n"
+				result += "- Click to open shading menu.\n"
 				result += "- <kbd>Ctrl</kbd> + click to toggle shading to `{}`\n".format( self.__shadingModeToggle if self.getPlug().isSetToDefault() else "Default" )
 
 			return result
