@@ -2617,6 +2617,85 @@ class RendererTest( GafferTest.TestCase ) :
 			"grouping:membership", [ "shadowGroup0 groupA groupB" ]
 		)
 
+	def testRemoveLightAttributes( self ) :
+
+		with IECoreRenderManTest.RileyCapture() as capture :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				self.renderer,
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+			)
+
+			lightShader = IECoreScene.ShaderNetwork(
+				shaders = { "output" : IECoreScene.Shader( "PxrRectLight", "ri:light" ) },
+				output = "output",
+			)
+
+			light = renderer.light(
+				"light", None,
+				renderer.attributes( IECore.CompoundObject( {
+					"ri:light" : lightShader,
+					"user:test" : IECore.IntData( 10 ),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+				} ) )
+			)
+
+			# Remove the "user:test" attribute and add "light:mute"
+			self.assertTrue(
+				light.attributes(
+					renderer.attributes( IECore.CompoundObject( {
+						"ri:light" : lightShader,
+						"ri:visibility:camera" : IECore.BoolData( False ),
+						"light:mute" : IECore.BoolData( True ),
+					} ) )
+				)
+			)
+
+			# Remove "light:mute" and update "ri:visibility:camera"
+			self.assertTrue(
+				light.attributes(
+					renderer.attributes( IECore.CompoundObject( {
+						"ri:light" : lightShader,
+						"ri:visibility:camera" : IECore.BoolData( True ),
+					} ) )
+				)
+			)
+
+			# Remove "ri:visibility:camera"
+			self.assertTrue(
+				light.attributes(
+					renderer.attributes( IECore.CompoundObject( {
+						"ri:light" : lightShader,
+					} ) )
+				)
+			)
+
+			del light
+			del renderer
+
+		self.__assertParameterEqual(
+			next( x for x in capture.json if x["method"] == "CreateLightInstance" )["attributes"]["params"],
+			"user:test", [ 10 ]
+		)
+
+		modifications = [
+			x for x in capture.json
+			if x["method"] == "ModifyLightInstance" and x["attributes"] is not None
+		]
+
+		self.assertEqual( len( modifications ), 3 )
+		self.__assertNotInParameters( modifications[0]["attributes"]["params"], "user:test" )
+		self.__assertParameterEqual( modifications[0]["attributes"]["params"], "visibility:camera", [ 0 ] )
+		self.__assertParameterEqual( modifications[0]["attributes"]["params"], "lighting:mute", [ 1 ] )
+
+		self.__assertNotInParameters( modifications[1]["attributes"]["params"], "user:test" )
+		self.__assertParameterEqual( modifications[1]["attributes"]["params"], "visibility:camera", [ 1 ] )
+		self.__assertNotInParameters( modifications[1]["attributes"]["params"], "lighting:mute" )
+
+		self.__assertNotInParameters( modifications[2]["attributes"]["params"], "user:test" )
+		self.__assertNotInParameters( modifications[2]["attributes"]["params"], "visibility:camera" )
+		self.__assertNotInParameters( modifications[2]["attributes"]["params"], "lighting:mute" )
+
 	def testShaderSubstitutions( self ) :
 
 		with IECoreRenderManTest.RileyCapture() as capture :
