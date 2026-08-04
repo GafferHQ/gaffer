@@ -2211,6 +2211,12 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	{
 		m_sceneGadget->setPaused( true );
 	}
+	else if( event.key == "Semicolon" )
+	{
+		BoolPlug *lookThroughPlug = cameraPlug()->getChild<BoolPlug>( "lookThroughEnabled" );
+		lookThroughPlug->setValue( !lookThroughPlug->getValue() );
+		return true;
+	}
 
 	return false;
 }

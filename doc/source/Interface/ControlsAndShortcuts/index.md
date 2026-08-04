@@ -176,6 +176,12 @@ Jump to bookmarked node              | Hover cursor over editor, {kbd}`Ctrl` + {
 Assign numeric bookmark              | {kbd}`Ctrl` + {kbd}`1` … {kbd}`9`
 Remove numeric bookmark              | {kbd}`Ctrl` + {kbd}`0`
 
+### Node Appearance ###
+
+Action                               | Control or shortcut
+-------------------------------------|--------------------
+Set node color                       | {kbd}`C`
+
 ## Node Editor ##
 
 
@@ -233,6 +239,7 @@ Light Tool                           | {kbd}`A`
 Light Position Tool                  | {kbd}`D`
 Visualiser Tool                      | {kbd}`L`
 Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
+Toggle camera / free view            | {kbd}`;`
 
 ### 3D scenes ###
 

@@ -202,6 +202,11 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Defines the camera used to view the scene.
+
+			## Actions
+
+			- Click to open camera menu.
+			- <kbd>Ctrl</kbd> + click to toggle between camera and free view.
 			""",
 
 			"plugValueWidget:type" : "GafferSceneUI.SceneViewUI._CameraPlugValueWidget",
@@ -549,6 +554,7 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				if result :
 					result += "\n\n"
 				result += "## Actions\n\n"
+				result += "- Click to open shading menu.\n"
 				result += "- <kbd>Ctrl</kbd> + click to toggle shading to `{}`\n".format( self.__shadingModeToggle if self.getPlug().isSetToDefault() else "Default" )
 
 			return result
@@ -883,6 +889,9 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
 
+		self.__menuButton.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__menuButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+
 	def setHighlighted( self, highlighted ) :
 
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
@@ -1064,6 +1073,23 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.setHighlighted( False )
 		self.__lookThrough( event.data[0] )
 		return True
+
+	def __buttonPress( self, widget, event ) :
+
+		if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.Control :
+
+			self.getPlug()["lookThroughEnabled"].setValue( not self.getPlug()["lookThroughEnabled"].getValue() )
+			return True
+
+		return False
+
+	def __buttonDoubleClick( self, widget, event ) :
+
+		if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.Control :
+			# Prevent menu from opening when Control is held.
+			return True
+
+		return False
 
 	def __setMenu( self, setName, currentLookThrough ) :
 

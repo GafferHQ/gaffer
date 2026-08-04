@@ -184,6 +184,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			{
 				"command" : functools.partial( cls.__setColor, nodeList = nodeList ),
 				"active" : not any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList ),
+				"shortCut" : "C",
 			}
 		)
 
@@ -275,6 +276,14 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			lambda plug : widgetClass( key, target=plug, defaultValue=defaultValue )
 		)
 
+	@classmethod
+	def connectToEditor( cls, editor ) :
+
+		if not isinstance( editor, GafferUI.GraphEditor ) :
+			return
+
+		editor.keyPressSignal().connect( Gaffer.WeakMethod( cls.__graphEditorKeyPress ) )
+
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
@@ -345,6 +354,15 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
 				for node in nodeList :
 					Gaffer.Metadata.registerValue( node, "nodeGadget:color", color )
+
+	@classmethod
+	def __graphEditorKeyPress( cls, graphEditor, event ) :
+
+		selection = [ n for n in graphEditor.scriptNode().selection() if n.parent() == graphEditor.graphGadget().getRoot() ]
+		if event.key == "C" and event.modifiers == event.Modifiers.None_ :
+			if not any( Gaffer.MetadataAlgo.readOnly( n ) for n in selection ) :
+				cls.__setColor( graphEditor, selection )
+			return True
 
 	@staticmethod
 	def __setNameVisible( nodeList, nameVisible ) :
