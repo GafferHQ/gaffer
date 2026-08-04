@@ -446,6 +446,11 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( reader["out"] )
 
+		if self.renderer.startswith( "RenderMan" ) :
+			shuffle = self.__renderManShuffle()
+			shuffle["in"].setInput( reader["out"] )
+			sampler["image"].setInput( shuffle["out"] )
+
 		sampler["pixel"].setValue( imath.V2f( 320, 370 ) )
 		self.assertEqual( sampler["color"]["r"].getValue(), 0 )
 		self.assertGreater( sampler["color"]["g"].getValue(), 0.02 )
@@ -524,6 +529,11 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( reader["out"] )
+
+		if self.renderer.startswith( "RenderMan" ) :
+			shuffle = self.__renderManShuffle()
+			shuffle["in"].setInput( reader["out"] )
+			sampler["image"].setInput( shuffle["out"] )
 
 		sampler["pixel"].setValue( imath.V2f( 320, 370 ) )
 		self.assertEqual( sampler["color"]["r"].getValue(), 0 )
@@ -622,6 +632,11 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( reader["out"] )
+
+		if self.renderer.startswith( "RenderMan" ) :
+			shuffle = self.__renderManShuffle()
+			shuffle["in"].setInput( reader["out"] )
+			sampler["image"].setInput( shuffle["out"] )
 
 		for x, expectedColor in {
 			47 : imath.Color4f( 0, 0, 0, 1 ),
@@ -727,6 +742,11 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( reader["out"] )
+
+		if self.renderer.startswith( "RenderMan" ) :
+			shuffle = self.__renderManShuffle()
+			shuffle["in"].setInput( reader["out"] )
+			sampler["image"].setInput( shuffle["out"] )
 
 		for x, expectedColor in {
 			47 : imath.Color4f( 0, 0, 0, 1 ),
@@ -1192,6 +1212,11 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( reader["out"] )
 
+		if self.renderer.startswith( "RenderMan" ) :
+			shuffle = self.__renderManShuffle()
+			shuffle["in"].setInput( reader["out"] )
+			sampler["image"].setInput( shuffle["out"] )
+
 		for position, expectedColor in [
 			( imath.V2f( 186, 234 ), imath.Color4f( 1, 0, 0, 1 ) ),
 			( imath.V2f( 484, 234 ), imath.Color4f( 0, 1, 0, 1 ) ),
@@ -1448,6 +1473,11 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( reader["out"] )
 
+		if self.renderer.startswith( "RenderMan" ) :
+			shuffle = self.__renderManShuffle()
+			shuffle["in"].setInput( reader["out"] )
+			sampler["image"].setInput( shuffle["out"] )
+
 		for centre in [
 			imath.V2f( 183, 378 ),
 			imath.V2f( 462, 382 ),
@@ -1544,6 +1574,11 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( reader["out"] )
 
+		if self.renderer.startswith( "RenderMan" ) :
+			shuffle = self.__renderManShuffle()
+			shuffle["in"].setInput( reader["out"] )
+			sampler["image"].setInput( shuffle["out"] )
+
 		for x in range( 1, 638 ) :
 
 			# Assert there's an instance where we expect it,
@@ -1590,6 +1625,33 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def _createOptions( self ) :
 
 		return GafferScene.CustomOptions()
+
+	def __renderManShuffle( self ) :
+
+		## \todo This workaround has been added to avoid failures in CI.
+		# Bafflingly, what seems to be happening is that after a certain
+		# number of renders, RenderMan's EXR driver generates bogus channel
+		# names for a single render and then recovers. For CI to pass, we
+		# resort to looking for either set of channel names. We've reported
+		# this upstream, so hopefully we can revert to the standard channel
+		# names one day.
+		shuffle = GafferImage.Shuffle()
+		shuffle["missingSourceMode"].setValue( shuffle.MissingSourceMode.Ignore )
+
+		for src, dst in [
+			( "Ci.R", "R" ),
+			( "Ci.G", "G" ),
+			( "Ci.B", "B" ),
+		] :
+			shufflePlug = Gaffer.ShufflePlug( f"shuffle{dst}" )
+			shufflePlug["source"].setValue( src )
+			shufflePlug["destination"].setValue( dst )
+			shufflePlug["deleteSource"].setValue( True )
+			shufflePlug["replaceDestination"].setValue( False )
+
+			shuffle["shuffles"].addChild( shufflePlug )
+
+		return shuffle
 
 if __name__ == "__main__":
 	unittest.main()
