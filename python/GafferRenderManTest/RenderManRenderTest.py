@@ -46,6 +46,7 @@ import IECoreRenderMan
 import Gaffer
 import GafferTest
 import GafferScene
+import GafferOSL
 import GafferRenderMan
 import GafferSceneTest
 
@@ -134,6 +135,15 @@ class RenderManRenderTest( GafferSceneTest.RenderTest ) :
 		light = GafferRenderMan.RenderManLight()
 		light.loadShader( "PxrDistantLight" )
 		return light, light["parameters"]["lightColor"]
+
+	def _createColorAttributeReader( self, attributeName ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "PxrAttribute" )
+		shader["parameters"]["varname"].setValue( attributeName )
+		shader["parameters"]["type"].setValue( "color" )
+
+		return shader, shader["out"]["resultRGB"]
 
 	def _cameraVisibilityAttribute( self ) :
 

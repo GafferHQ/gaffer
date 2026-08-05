@@ -39,10 +39,132 @@
 #include "Loader.h"
 #include "Transform.h"
 
+#include "IECore/DataAlgo.h"
+#include "IECore/TypeTraits.h"
+#include "IECore/VectorTypedData.h"
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreRenderMan;
+
+namespace
+{
+
+struct ParameterSetter
+{
+
+	GeometricData::Interpretation interpretation = GeometricData::Interpretation::None;
+
+	void operator()( RtParamList &paramList, RtUString name, int value ) const
+	{
+		paramList.SetInteger( name, value );
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, float value ) const
+	{
+		paramList.SetFloat( name, value );
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, const std::string &value ) const
+	{
+		paramList.SetString( name, RtUString( value.c_str() ) );
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, InternedString value ) const
+	{
+		paramList.SetString( name, RtUString( value.c_str() ) );
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, const Imath::Color3f &value ) const
+	{
+		paramList.SetColor( name, RtColorRGB( value.getValue() ) );
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, const Imath::V2i &value ) const
+	{
+		paramList.SetIntegerArray( name, value.getValue(), 2 );
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, const Imath::V2f &value ) const
+	{
+		paramList.SetFloatArray( name, value.getValue(), 2 );
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, const Imath::V3f &value ) const
+	{
+		switch( interpretation )
+		{
+			case GeometricData::Vector :
+				paramList.SetVector( name, reinterpret_cast<const RtVector3 &>( value ) );
+				break;
+			case GeometricData::Normal :
+				paramList.SetNormal( name, reinterpret_cast<const RtVector3 &>( value ) );
+				break;
+			case GeometricData::Point :
+				paramList.SetPoint( name, reinterpret_cast<const RtVector3 &>( value ) );
+				break;
+			default :
+				paramList.SetFloatArray( name, value.getValue(), 3 );
+		}
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, const Imath::M44f &value ) const
+	{
+		paramList.SetMatrix( name, reinterpret_cast<const pxrcore::Matrix4x4 &>( value ) );
+	}
+
+	void operator()( RtParamList &paramList, RtUString name, const Imath::M44d &value ) const
+	{
+		const Imath::M44f m( value );
+		paramList.SetMatrix( name, pxrcore::Matrix4x4( m.x ) );
+	}
+
+};
+
+using InstanceAttributeFunction = std::function<void ( size_t pointIndex, RtParamList &attributes )>;
+
+vector<InstanceAttributeFunction> createInstanceAttributeFunctions( const PointInstancer *instancer )
+{
+	vector<InstanceAttributeFunction> result;
+
+	for( const auto &[name, primitiveVariable] : instancer->instanceAttributes() )
+	{
+		IECore::dispatch(
+
+			primitiveVariable.data.get(),
+
+			[&]( auto typedData ) -> void {
+
+				using DataType = remove_const_t<remove_pointer_t<decltype( typedData )>>;
+				if constexpr( TypeTraits::IsVectorTypedData<DataType>::value )
+				{
+					using ElementType = typename DataType::ValueType::value_type;
+					if constexpr( std::is_invocable_v<ParameterSetter, RtParamList &, RtUString, ElementType> )
+					{
+						PrimitiveVariable::IndexedView<ElementType> indexedView( primitiveVariable );
+						ParameterSetter setter;
+						if constexpr( TypeTraits::IsGeometricTypedData<DataType>::value )
+						{
+							setter.interpretation = typedData->getInterpretation();
+						}
+						RtUString userName( ( "user:" + name ).c_str() );
+						InstanceAttributeFunction f = [userName, indexedView, setter] ( size_t pointIndex, RtParamList &attributes ) {
+							setter( attributes, userName, indexedView[pointIndex] );
+						};
+						result.push_back( f );
+					}
+				}
+
+			}
+
+		);
+	}
+
+	return result;
+}
+
+} // namespace
 
 PointInstancerCache::PointInstancer::~PointInstancer()
 {
@@ -83,6 +205,7 @@ PointInstancerCache::ConstPointInstancerPtr PointInstancerCache::get(
 
 		result->m_prototypeGeometries.reserve( prototypes.size() );
 		result->m_prototypeAttributes.reserve( prototypes.size() );
+		vector<RtParamList> prototypeInstanceAttributes; prototypeInstanceAttributes.reserve( prototypes.size() );
 		for( size_t prototypeIndex = 0; prototypeIndex < prototypes.size(); ++prototypeIndex )
 		{
 			const auto &prototype = prototypes[prototypeIndex];
@@ -93,6 +216,7 @@ PointInstancerCache::ConstPointInstancerPtr PointInstancerCache::get(
 					/* messageContext = */ fmt::format( "{}:prototype{}", messageContext, prototypeIndex )
 				)
 			);
+			prototypeInstanceAttributes.push_back( result->m_prototypeAttributes.back()->instanceAttributes() );
 		}
 
 		result->group = new GeometryPrototype(
@@ -107,6 +231,8 @@ PointInstancerCache::ConstPointInstancerPtr PointInstancerCache::get(
 		}
 
 		auto prototypeIndices = samples[0]->getPrototypeIndex();
+
+		auto attributeFunctions = createInstanceAttributeFunctions( samples[0].get() );
 
 		IECoreScenePreview::Renderer::TransformSamples transformSamples;
 		transformSamples.resize( samples.size() );
@@ -124,6 +250,11 @@ PointInstancerCache::ConstPointInstancerPtr PointInstancerCache::get(
 				continue;
 			}
 
+			for( const auto &f : attributeFunctions )
+			{
+				f( instanceIndex, prototypeInstanceAttributes[prototypeIndex] );
+			}
+
 			/// \todo Investigate `Riley::CreateGeometryInstances()` (plural) to see if
 			/// it offers any performance advantage.
 			result->m_instances.push_back(
@@ -131,7 +262,7 @@ PointInstancerCache::ConstPointInstancerPtr PointInstancerCache::get(
 					riley::UserId(), result->group->id(), result->m_prototypeGeometries[prototypeIndex]->id(),
 					result->m_prototypeAttributes[prototypeIndex]->material()->id(), riley::CoordinateSystemList(),
 					AnimatedTransform( transformSamples, sampleTimes ),
-					result->m_prototypeAttributes[prototypeIndex]->instanceAttributes()
+					prototypeInstanceAttributes[prototypeIndex]
 				)
 			);
 		}
