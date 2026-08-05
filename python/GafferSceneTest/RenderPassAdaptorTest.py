@@ -495,30 +495,7 @@ class RenderPassAdaptorTest( GafferSceneTest.SceneTestCase ) :
 	def __colorAtUV( self, image, uv ) :
 
 		pixel = image.getpixel( int( uv.x * (image.spec().width - 1) ), int( uv.y * (image.spec().height - 1) ) )
-
-		## \todo This workaround has been added to avoid failures in CI.
-		# Bafflingly, what seems to be happening is that after a certain
-		# number of renders, RenderMan's EXR driver generates bogus channel
-		# names for a single render and then recovers. For CI to pass, we
-		# resort to looking for either set of channel names. We've reported
-		# this upstream, so hopefully we can revert to the standard channel
-		# names one day.
-		if self.renderer.startswith( "RenderMan" ) :
-			channelNames = [
-				( "R", "Ci.r" ),
-				( "G", "Ci.g" ),
-				( "B", "Ci.b" ),
-				( "A", "a" ),
-			]
-			result = imath.Color4f( 0 )
-			for index, names in enumerate( channelNames ) :
-				for name in names :
-					if name in image.spec().channelnames :
-						result[index] = pixel[image.spec().channelnames.index(name)]
-
-			return result
-		else :
-			return imath.Color4f( *pixel ) if len( pixel ) == 4 else imath.Color4f( *pixel, 0.0 )
+		return imath.Color4f( *pixel ) if len( pixel ) == 4 else imath.Color4f( *pixel, 0.0 )
 
 if __name__ == "__main__":
 	unittest.main()
