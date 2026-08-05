@@ -111,6 +111,3 @@ class OutputDriverTest( unittest.TestCase ) :
 			set( image.keys() ),
 			{ "diffuseLayer.{}".format( c ) for c in "RGBA" }
 		)
-
-if __name__ == "__main__":
-	unittest.main()

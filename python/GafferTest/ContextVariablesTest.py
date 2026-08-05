@@ -215,6 +215,3 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		c["in"].setInput( n["product"] )
 
 		GafferTest.parallelGetValue( c["out"], 1000000, "iter" )
-
-if __name__ == "__main__":
-	unittest.main()

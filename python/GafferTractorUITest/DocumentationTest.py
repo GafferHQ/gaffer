@@ -54,6 +54,3 @@ class DocumentationTest( GafferUITest.TestCase ) :
 		# Also test GafferDispatch because we add plugs to
 		# TaskNodes.
 		self.assertNodesAreDocumented( GafferDispatch )
-
-if __name__ == "__main__":
-	unittest.main()

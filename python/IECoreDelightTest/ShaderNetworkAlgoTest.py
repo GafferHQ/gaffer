@@ -554,6 +554,3 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 		self.assertEqual( texture.name, "__usd/__usdUVTexture" )
 		self.assertEqual( texture.parameters["file"].value, "test.UDIM.png" )
 		self.assertEqual( texture.parameters["file_meta_colorspace"].value, "sRGB" )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -3409,6 +3409,3 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
 		GafferScene.SceneAlgo.deregisterRenderAdaptor( "Test" )
-
-if __name__ == "__main__":
-	unittest.main()

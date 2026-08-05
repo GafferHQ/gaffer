@@ -54,6 +54,3 @@ class ArnoldAOVShaderTest( GafferSceneTest.SceneTestCase ) :
 		a["shader"].setInput( s["out"] )
 
 		self.assertEqual( a["out"]["globals"].getValue()["option:ai:aov_shader:test"].outputShader().name, "aov_write_rgb" )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -82,6 +82,3 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 class XPURenderPassAdaptorTest( RenderPassAdaptorTest ) :
 
 	renderer = "RenderManXPU"
-
-if __name__ == "__main__":
-	unittest.main()

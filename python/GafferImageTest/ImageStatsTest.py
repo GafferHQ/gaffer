@@ -385,6 +385,3 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( math.isinf( stats["max"][0].getValue() ) )
 		self.assertTrue( math.isinf( stats["min"][0].getValue() ) )
 		self.assertTrue( math.isinf( stats["average"][0].getValue() ) )
-
-if __name__ == "__main__":
-	unittest.main()

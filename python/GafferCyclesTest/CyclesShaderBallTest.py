@@ -45,6 +45,3 @@ class CyclesShaderBallTest( GafferSceneTest.SceneTestCase ) :
 
 		n = GafferCycles.CyclesShaderBall()
 		self.assertSceneValid( n["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

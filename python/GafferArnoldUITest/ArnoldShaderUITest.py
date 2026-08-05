@@ -230,6 +230,3 @@ root["SceneWriter"].execute()
 		Gaffer.Metadata.registerValue( "ai:surface:standard_surface:aov_id1", "userDefault", "id_1" )
 
 		self.assertEqual( Gaffer.Metadata.value( surface["parameters"]["aov_id1"], "userDefault" ), "id_1" )
-
-if __name__ == "__main__":
-	unittest.main()

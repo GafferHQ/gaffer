@@ -1252,6 +1252,3 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		points = engine.shade( self.rectanglePoints() )
 		self.assertEqual( points["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 1, 0.5, 0.25 ) ] * 100 ) )
-
-if __name__ == "__main__":
-	unittest.main()

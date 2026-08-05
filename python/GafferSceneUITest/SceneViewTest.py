@@ -497,6 +497,3 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		backgroundTask = Gaffer.BackgroundTask( script["fileName"], task )
 		GafferSceneUI.SceneView( script )
 		backgroundTask.cancelAndWait()
-
-if __name__ == "__main__":
-	unittest.main()

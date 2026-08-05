@@ -177,6 +177,3 @@ class ArnoldColorManagerTest( GafferSceneTest.SceneTestCase ) :
 
 			colorManager["enabled"].setValue( True )
 			assertColorManager( adaptor["out"], "explicitConfig.ocio", "explicitLinearSpace", "explicitNarrowSpace" )
-
-if __name__ == "__main__":
-	unittest.main()

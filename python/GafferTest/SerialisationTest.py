@@ -323,6 +323,3 @@ class SerialisationTest( GafferTest.TestCase ) :
 		serialisation.addModule( "MyModule" )
 
 		self.assertEqual( serialisation.result().count( "import MyModule" ), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

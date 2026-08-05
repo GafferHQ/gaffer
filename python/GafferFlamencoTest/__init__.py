@@ -36,7 +36,3 @@
 
 from .FlamencoDispatcherTest import FlamencoDispatcherTest
 from .ModuleTest import ModuleTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

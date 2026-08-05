@@ -408,6 +408,3 @@ class NodeTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].context, "Emitting signal" )
 		self.assertIn( "Bad slot", mh.messages[0].message )
 		self.assertEqual( len( cs ), 1 )
-
-if __name__ == "__main__" :
-	unittest.main()

@@ -519,6 +519,3 @@ class DiskBlurTest( GafferImageTest.ImageTestCase ) :
 			for maxRadius in [ 1000, 1001, 1002, 1003, 1004 ]:
 				diskBlur["maxRadius"].setValue( maxRadius )
 				GafferImageTest.processTiles( diskBlur["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

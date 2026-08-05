@@ -180,6 +180,3 @@ class NoduleLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( topLayout.customGadget( "test" ).isSame( gadget ) )
 		self.assertEqual( topLayout.bound(), topLayoutBound )
 		self.assertLess( gadget.transformedBound().center().x, nodule.transformedBound().center().x )
-
-if __name__ == "__main__":
-	unittest.main()

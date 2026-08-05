@@ -552,6 +552,3 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		) )
 
 		pythonCommand["task"].execute()
-
-if __name__ == "__main__":
-	unittest.main()

@@ -189,6 +189,3 @@ class MultiSelectionMenuTest( GafferUITest.TestCase ) :
 		w.setEnabledItems( ["A", "B"] )
 		self.assertTrue( "A" in w.getEnabledItems() )
 		self.assertTrue( "B" in w.getEnabledItems() )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -95,6 +95,3 @@ class PrimitiveQueryTest( GafferSceneTest.SceneTestCase ) :
 		query["scene"].setInput( camera["out"] )
 		query["location"].setValue( "/camera" )
 		assertDefaults()
-
-if __name__ == "__main__" :
-	unittest.main()

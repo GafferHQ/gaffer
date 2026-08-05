@@ -179,6 +179,3 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 
 		c = CatalogueUI.ContextVariableColumn( "Layer", [ "subLayer", "layer" ], "X"  )
 		self.assertEqual( c.cellData( path, None ).value, "X" )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -489,6 +489,3 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "presetNames" )
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "presetValues" )
-
-if __name__ == "__main__":
-	unittest.main()

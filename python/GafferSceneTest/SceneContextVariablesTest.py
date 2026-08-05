@@ -103,6 +103,3 @@ class SceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 				{ "scene:path", "scene:setName", "scene:filter:inputScene" }
 			)
 		)
-
-if __name__ == "__main__":
-	unittest.main()

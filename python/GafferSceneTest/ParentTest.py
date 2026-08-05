@@ -1376,6 +1376,3 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			'attr:/C/B1/A1': 'test',
 			'attr:override': '/C/B1/A1',
 		} )
-
-if __name__ == "__main__":
-	unittest.main()

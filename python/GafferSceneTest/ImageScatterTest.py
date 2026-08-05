@@ -179,6 +179,3 @@ class ImageScatterTest( GafferSceneTest.SceneTestCase ) :
 				IECore.FloatVectorData( [ 0.5 * 0.5 ] * points.numPoints )
 			)
 		)
-
-if __name__ == "__main__":
-	unittest.main()

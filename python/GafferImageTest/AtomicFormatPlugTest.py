@@ -118,6 +118,3 @@ class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 			allHashes.add( p.hash().toString() )
 
 		self.assertEqual( len( allHashes ), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

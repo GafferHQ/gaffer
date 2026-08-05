@@ -1137,6 +1137,3 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 				graphGadget.nodeGadget( script["backdrop2"] ).transformedBound()
 			)
 		)
-
-if __name__ == "__main__":
-	unittest.main()

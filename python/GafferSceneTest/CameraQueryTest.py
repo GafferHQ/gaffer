@@ -633,6 +633,3 @@ class CameraQueryTest( GafferSceneTest.SceneTestCase ):
 		# even if the query is of a mismatched type.
 		self.assertEqual( query["out"][0]["source"].getValue(), GafferScene.CameraQuery.Source.Camera )
 		self.assertEqual( query["out"][0]["value"].getValue(), "" )
-
-if __name__ == "__main__":
-	unittest.main()

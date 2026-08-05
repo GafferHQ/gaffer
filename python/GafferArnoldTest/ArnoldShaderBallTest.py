@@ -45,6 +45,3 @@ class ArnoldShaderBallTest( GafferSceneTest.SceneTestCase ) :
 
 		n = GafferArnold.ArnoldShaderBall()
 		self.assertSceneValid( n["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -118,6 +118,3 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 		self.assertEqual( mh.messages[0].context, "EventSignalCombiner", IECore.Msg.Level.Error )
 		self.assertIn( "Exception", mh.messages[0].message )
 		self.assertIn( "oops", mh.messages[0].message )
-
-if __name__ == "__main__":
-	unittest.main()

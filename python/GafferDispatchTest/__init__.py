@@ -62,7 +62,3 @@ from .FileListTest import FileListTest
 from .DeleteFilesTest import DeleteFilesTest
 from .CopyFilesTest import CopyFilesTest
 from .RenameFilesTest import RenameFilesTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

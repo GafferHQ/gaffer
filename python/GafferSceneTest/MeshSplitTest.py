@@ -397,6 +397,3 @@ class MeshSplitTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			split["out"].childNames( "/object" )
-
-if __name__ == "__main__":
-	unittest.main()

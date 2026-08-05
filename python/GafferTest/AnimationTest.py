@@ -4162,6 +4162,3 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		# check that in tangent slope of third key that is now unconstrained is tied correctly to its opposite tangent
 		self.assertEqual( ti3.getSlope(), 60 )
-
-if __name__ == "__main__":
-	unittest.main()

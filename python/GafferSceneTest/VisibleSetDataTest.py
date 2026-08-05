@@ -109,6 +109,3 @@ class VisibleSetDataTest( GafferSceneTest.SceneTestCase ) :
 		c = Gaffer.Context()
 		c["v"] = d
 		self.assertEqual( c["v"], d )
-
-if __name__ == "__main__":
-	unittest.main()

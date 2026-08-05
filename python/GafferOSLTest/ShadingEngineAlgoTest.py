@@ -134,6 +134,3 @@ class ShadingEngineAlgoTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( c["R"], IECore.FloatVectorData( u ) )
 		self.assertEqual( c["G"], IECore.FloatVectorData( v ) )
 		self.assertEqual( c["B"], IECore.FloatVectorData( b ) )
-
-if __name__ == "__main__":
-	unittest.main()

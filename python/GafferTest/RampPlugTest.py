@@ -694,6 +694,3 @@ class RampPlugTest( GafferTest.TestCase ) :
 		computedInput = GafferTest.AddNode()
 		plug.pointPlug( 0 )["x"].setInput( computedInput["sum"] )
 		self.assertFalse( plug.isSetToDefault() )
-
-if __name__ == "__main__":
-	unittest.main()

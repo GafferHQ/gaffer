@@ -493,6 +493,3 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( isolate["out"] )
 		self.assertTrue( isolate["out"].exists( "/sphere" ) )
-
-if __name__ == "__main__":
-	unittest.main()

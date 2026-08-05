@@ -68,6 +68,3 @@ class USDProceduralTest( GafferSceneTest.SceneTestCase ) :
 				self.assertTrue( name in s["out"].childNames( "/" ) )
 				self.assertIsInstance( s["out"].object( f"/{name}" ), IECoreScene.ExternalProcedural )
 				self.assertIn( "filename", s["out"].object( f"/{name}" ).parameters() )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -85,6 +85,3 @@ class FrameTest( GafferUITest.TestCase ) :
 		self.assertTrue( b.parent() is f )
 		self.assertTrue( f.getChild() is b )
 		self.assertEqual( len( l ), 0 )
-
-if __name__ == "__main__":
-	unittest.main()

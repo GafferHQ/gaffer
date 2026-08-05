@@ -474,7 +474,3 @@ class RenderManShaderTest( GafferSceneTest.SceneTestCase ) :
 					# This will raise an unexpected error, which is treated as a test failure,
 					# if the `correspondingInput` metadata returns a plug that does not exist.
 					shader.correspondingInput( o )
-
-
-if __name__ == "__main__":
-	unittest.main()

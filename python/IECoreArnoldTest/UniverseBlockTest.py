@@ -129,6 +129,3 @@ class UniverseBlockTest( unittest.TestCase ) :
 		self.assertNotIn( "is already installed", output )
 		self.assertNotIn( "Node entry does not exist", output )
 		self.assertIn( "ieDisplay", output )
-
-if __name__ == "__main__":
-	unittest.main()

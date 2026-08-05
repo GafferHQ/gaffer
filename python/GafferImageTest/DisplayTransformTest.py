@@ -263,6 +263,3 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 			GafferImage.OpenColorIOAlgo.addVariable( context, "CDL", "rec709.spi1d" )
 			GafferImage.OpenColorIOAlgo.addVariable( context, "LUT", "cineon.spi1d" )
 			self.assertImagesEqual( defaultDisplayTransform["out"], explicitDisplayTransform["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

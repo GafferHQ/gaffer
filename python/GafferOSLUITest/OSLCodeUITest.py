@@ -91,6 +91,3 @@ class OSLCodeUITest( GafferOSLTest.OSLTestCase ) :
 		GafferUI.NodeUI.create( script["node"] )
 		GafferUI.NodeGadget.create( script["node"] )
 		GafferUI.GraphGadget( script )
-
-if __name__ == "__main__":
-	unittest.main()

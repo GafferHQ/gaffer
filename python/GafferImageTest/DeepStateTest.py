@@ -1026,6 +1026,3 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 		deleteChannels["channels"].setValue( "[Z]" ) # Removing just Z has the same effect
 
 		self.__assertDeepStateProcessing( deleteChannels["out"], referenceFlatten["out"], [ 0, 0, 0, 10 ], [ 0, 0, 0, 10 ], 100, 0.45 )
-
-if __name__ == "__main__":
-	unittest.main()

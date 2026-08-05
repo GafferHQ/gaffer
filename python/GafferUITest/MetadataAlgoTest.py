@@ -115,6 +115,3 @@ class MetadataAlgoTest( GafferUITest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( s["b"]["e"], Gaffer.Box ), s["b"] )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( s["b"]["e"]["b"]["a"]["op1"], Gaffer.Box ), s["b"] )
 		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( s["b"]["e"]["b"]["a"]["op1"], Gaffer.Node ), s["b"] )
-
-if __name__ == "__main__":
-	unittest.main()

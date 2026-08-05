@@ -117,6 +117,3 @@ class NumericWidgetTest( GafferUITest.TestCase ) :
 			w._qtWidget().setText( text )
 			self.assertEqual( w.getValue(), expected )
 			self.assertIsInstance( w.getValue(), type_ )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -1007,6 +1007,3 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		GafferSceneTest.traverseScene( duplicate3["out"] )
 		with GafferTest.TestRunner.PerformanceScope():
 			GafferScene.Private.RendererAlgo.outputObjects( duplicate3["out"], renderOptions, renderSets, GafferScene.Private.RendererAlgo.LightLinks( renderer ), renderer, "/", GafferScene.RenderManifest() )
-
-if __name__ == "__main__":
-	unittest.main()

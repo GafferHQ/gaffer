@@ -181,6 +181,3 @@ class EditorTest( GafferUITest.TestCase ) :
 
 		task = Gaffer.BackgroundTask( script["node"]["product"], f )
 		task.wait()
-
-if __name__ == "__main__":
-	unittest.main()

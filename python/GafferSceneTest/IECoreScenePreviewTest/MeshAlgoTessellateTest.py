@@ -649,6 +649,3 @@ class MeshAlgoTessellateTest( GafferTest.TestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			MeshAlgo.tessellateMesh( sphere, 1 )
-
-if __name__ == "__main__":
-	unittest.main()

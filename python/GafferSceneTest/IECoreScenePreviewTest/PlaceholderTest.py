@@ -121,6 +121,3 @@ class PlaceholderTest( GafferTest.TestCase ) :
 		self.assertEqual( o.getBound(), o2.getBound() )
 		self.assertEqual( o.getMode(), o2.getMode() )
 		self.assertEqual( o, o2 )
-
-if __name__ == "__main__":
-	unittest.main()

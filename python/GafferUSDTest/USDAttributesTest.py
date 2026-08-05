@@ -84,6 +84,3 @@ class USDAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "usd:kind", script["USDAttributes"]["attributes"].keys() )
 		self.assertNotIn( "kind", script["USDAttributes"]["attributes"].keys() )
 		self.assertEqual( script["USDAttributes"]["attributes"]["usd:kind"]["value"].getValue(), "group" )
-
-if __name__ == "__main__":
-	unittest.main()

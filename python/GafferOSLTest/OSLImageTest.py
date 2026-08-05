@@ -1012,6 +1012,3 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( testEval("R"), [ 1000, 1000, 929, 946, 795, 830, 750, 637, 797, 363, 614, 170, 214, 54, 0, 0 ])
 		self.assertEqual( testEval("G"), [ 250, 750, 239, 597, 230, 320, 300, 265, 457, 446, 652, 652, 882, 882, 1000, 1000 ] )
 		self.assertEqual( testEval("B"), [ 700, 700, 684, 666, 642, 608, 518, 632, 308, 742, 253, 697, 345, 505, 400, 400 ] )
-
-if __name__ == "__main__":
-	unittest.main()

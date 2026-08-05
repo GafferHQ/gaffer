@@ -189,6 +189,3 @@ class MatchPatternPathFilterTest( GafferTest.TestCase ) :
 
 		pb.setFilter( Gaffer.MatchPatternPathFilter( [ "c*" ], leafOnly = False ) )
 		self.assertEqual( set( [ str( c ) for c in pb.children() ] ), set( [ "/b/c" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

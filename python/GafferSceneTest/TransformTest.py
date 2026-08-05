@@ -388,6 +388,3 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( t["out"] )
 		self.assertEqual( t["out"].bound( "/" ), imath.Box3f( imath.V3f( 0.5 ), imath.V3f( 1.5 ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

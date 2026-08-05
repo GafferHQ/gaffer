@@ -76,6 +76,3 @@ class BoxIOUITest( GafferUITest.TestCase ) :
 		)
 		self.assertEqual( Gaffer.Metadata.value( promoted, "nodule:color" ), newColor )
 		self.assertEqual( Gaffer.Metadata.value( box["BoxOut"]["__out"], "nodule:color" ), newColor )
-
-if __name__ == "__main__":
-	unittest.main()

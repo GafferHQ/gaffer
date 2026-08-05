@@ -199,6 +199,3 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 		with open( self.temporaryDirectory() / "substitutionsTest.txt" ) as inFile :
 			self.assertEqual( inFile.readlines()[0].strip(), "1 2 3")
-
-if __name__ == "__main__":
-	unittest.main()

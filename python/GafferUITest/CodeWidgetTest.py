@@ -111,6 +111,3 @@ class CodeWidgetTest( GafferUITest.TestCase ) :
 		)
 
 		self.assertEqual( completer.completions( "node." ), [] )
-
-if __name__ == "__main__":
-	unittest.main()

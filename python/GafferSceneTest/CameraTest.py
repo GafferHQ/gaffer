@@ -252,6 +252,3 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		script2.execute( script.serialise() )
 		self.assertEqual( script2["box"]["renderSettingOverrides"].keys(), script["box"]["renderSettingOverrides"].keys() )
 		self.assertTrue( Gaffer.PlugAlgo.isPromoted( script2["box"]["camera"]["renderSettingOverrides"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

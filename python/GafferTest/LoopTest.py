@@ -341,6 +341,3 @@ class LoopTest( GafferTest.TestCase ) :
 		iteration = loop.previousIteration( loop["previous"] )
 		self.assertTrue( iteration[0].isSame( loop["in"] ) )
 		self.assertNotIn( "loop:index", iteration[1] )
-
-if __name__ == "__main__":
-	unittest.main()

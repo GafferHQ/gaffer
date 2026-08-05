@@ -190,7 +190,3 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 		inf["multiply"].setValue( imath.Color4f( float( "nan" ) ) )
 		self.assertTrue( math.isnan( sampler["color"].getValue()[0] ) )
-
-
-if __name__ == "__main__":
-	unittest.main()

@@ -173,6 +173,3 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].getValue(), c["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )
-
-if __name__ == "__main__":
-	unittest.main()

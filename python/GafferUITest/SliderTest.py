@@ -183,6 +183,3 @@ class SliderTest( GafferUITest.TestCase ) :
 
 		s = GafferUI.Slider( 2, min = 0, max = 1 )
 		self.assertEqual( s.getValue(), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

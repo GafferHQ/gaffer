@@ -114,6 +114,3 @@ class ImageLoopTest( GafferImageTest.ImageTestCase ) :
 		with script.context() :
 
 			self.assertAlmostEqual( script["sampler"]["color"]["r"].getValue(), .4 )
-
-if __name__ == "__main__":
-	unittest.main()

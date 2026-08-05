@@ -146,6 +146,3 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 		node["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
 		node["visualiserAttributes"]["maxTextureResolution"]["value"].setValue( 512 )
 		self.assertEqual( node["out"].attributes( "/light" )["gl:visualiser:maxTextureResolution"].value, 512 )
-
-if __name__ == "__main__":
-	unittest.main()

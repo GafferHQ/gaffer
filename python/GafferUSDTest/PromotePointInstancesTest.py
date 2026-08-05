@@ -284,8 +284,3 @@ class PromotePointInstancesTest( GafferSceneTest.SceneTestCase ) :
 			promotePointInstances["out"].attributes( "/promotedInstances" ),
 			IECore.CompoundObject({'foo':IECore.StringData( 'test' )})
 		)
-
-
-
-if __name__ == "__main__":
-	unittest.main()

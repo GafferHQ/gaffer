@@ -162,6 +162,3 @@ class OSLShaderUITest( GafferOSLTest.OSLTestCase ) :
 		Gaffer.Metadata.deregisterValue( "osl:shader:ObjectProcessing/InFloat:name", "userDefault" )
 		Gaffer.Metadata.deregisterValue( "osl:shader:ObjectProcessing/InFloat:defaultValue", "userDefault" )
 		Gaffer.Metadata.deregisterValue( "osl:shader:Pattern/ColorRamp:ramp.interpolation", "userDefault" )
-
-if __name__ == "__main__":
-	unittest.main()

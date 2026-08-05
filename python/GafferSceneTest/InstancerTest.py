@@ -3708,7 +3708,3 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 			)
 		except subprocess.CalledProcessError as e :
 			self.fail( e.output )
-
-
-if __name__ == "__main__":
-	unittest.main()

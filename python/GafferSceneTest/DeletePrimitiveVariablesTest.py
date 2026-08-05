@@ -92,6 +92,3 @@ class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		d["names"].setValue( "*" )
 		self.assertEqual( d["out"].object( "/plane" ).keys(), [] )
-
-if __name__ == "__main__":
-	unittest.main()

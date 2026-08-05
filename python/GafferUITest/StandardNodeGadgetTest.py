@@ -366,6 +366,3 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 			# crash when `Node::errorSignal()` is emitted by our metadata
 			# function.
 			GafferUI.StandardNodeGadget( node )
-
-if __name__ == "__main__":
-	unittest.main()

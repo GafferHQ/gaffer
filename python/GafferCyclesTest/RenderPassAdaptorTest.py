@@ -74,6 +74,3 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 		options["options"]["cycles:session:samples"]["enabled"].setValue( True )
 		options["options"]["cycles:session:samples"]["value"].setValue( 16 )
 		return options
-
-if __name__ == "__main__":
-	unittest.main()

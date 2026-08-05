@@ -148,6 +148,3 @@ class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
 			a["out"].attributes( "/sphere" )["ai:disp_height"],
 			IECore.FloatData( 5 )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

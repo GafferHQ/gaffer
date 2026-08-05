@@ -487,6 +487,3 @@ class TaskNodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( log ), 3 )
 		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["n3"]["internalTask"], s["n2"] ] )
-
-if __name__ == "__main__":
-	unittest.main()

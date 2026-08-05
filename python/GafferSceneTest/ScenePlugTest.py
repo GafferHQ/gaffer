@@ -292,6 +292,3 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( p.globalsHash(), p["globals"].hash() )
 		self.assertEqual( p.setNamesHash(), p["setNames"].hash() )
-
-if __name__ == "__main__":
-	unittest.main()

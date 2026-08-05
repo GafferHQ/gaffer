@@ -553,6 +553,3 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 
 		self.assertEqual( query["out"][0]["value"].getValue(), 3 )
 		self.assertEqual( query["out"][1]["value"].getValue(), imath.Color3f( 0.6, 0.7, 0.8 ) )
-
-if __name__ == "__main__":
-	unittest.main()

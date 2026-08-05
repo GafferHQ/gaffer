@@ -273,6 +273,3 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 		with Gaffer.Context( context, canceller ) :
 			with self.assertRaises( IECore.Cancelled ) :
 				inspector.inspect()
-
-if __name__ == "__main__":
-	unittest.main()

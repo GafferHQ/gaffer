@@ -145,6 +145,3 @@ class OpenColorIOConfigPlugTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( ocioContext["CDL"], "shot003" )
 			hashes.add( GafferImage.OpenColorIOAlgo.currentConfigAndContextHash() )
 			self.assertEqual( len( hashes ), 3 )
-
-if __name__ == "__main__":
-	unittest.main()

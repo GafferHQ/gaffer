@@ -353,6 +353,3 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 			with self.subTest( i = i ) :
 				with self.assertRaisesRegex( RuntimeError, "division by zero" ):
 					GafferSceneTest.traverseScene( duplicate["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

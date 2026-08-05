@@ -65,6 +65,3 @@ class NodeBindingTest( GafferTest.TestCase ) :
 
 		self.assertEqual( m.getName(), "a" )
 		self.assertIsInstance( m["a"], Gaffer.IntPlug )
-
-if __name__ == "__main__":
-	unittest.main()

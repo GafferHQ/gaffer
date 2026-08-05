@@ -873,6 +873,3 @@ class PrimitiveVariableTweaksTest( GafferSceneTest.SceneTestCase ):
 		self.assertScenesEqual( tweak["out"], tweak["in"], checks = { "bound" } )
 		self.assertSceneHashesEqual( tweak["out"], tweak["in"], checks = { "bound" } )
 		self.assertEqual( tweak["out"].bound( "/sphere" ), imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 )  ) )
-
-if __name__ == "__main__":
-	unittest.main()

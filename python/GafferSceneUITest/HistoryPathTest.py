@@ -906,6 +906,3 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 						self.assertIsInstance( children[2].contextProperty( "history:context" ), Gaffer.Context )
 						self.assertEqual( children[2].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
 						self.assertNotIn( "test", children[2].contextProperty( "history:context" ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -860,7 +860,3 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, 'Could not parse shader parameter: "{{{"' ):
 			tweaks["tweaks"][0]["name"].setValue( "{{{" )
 			tweaks["out"].attributes( "/plane" )
-
-
-if __name__ == "__main__":
-	unittest.main()

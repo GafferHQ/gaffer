@@ -232,6 +232,3 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		layout2 = layouts.create( "MissingEditor2", script )
 		self.assertIsInstance( layout2, GafferUI.Editor )
 		self.assertEqual( layout2.getTitle(), "Nonexistent Editor" )
-
-if __name__ == "__main__":
-	unittest.main()

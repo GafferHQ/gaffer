@@ -101,6 +101,3 @@ class FormatDataTest( GafferImageTest.ImageTestCase ) :
 
 	def testEditableScopeForFormat( self ) :
 		GafferImageTest.testEditableScopeForFormat()
-
-if __name__ == "__main__":
-	unittest.main()

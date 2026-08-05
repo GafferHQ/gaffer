@@ -47,6 +47,3 @@ class NodeUITest( GafferUITest.TestCase ) :
 	def testLifetimes( self ) :
 
 		self.assertNodeUIsHaveExpectedLifetime( GafferML )
-
-if __name__ == "__main__":
-	unittest.main()

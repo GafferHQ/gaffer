@@ -801,6 +801,3 @@ class SetExpressionAlgoTest( GafferTest.TestCase ) :
 			with self.subTest( expression = expression ) :
 				self.assertEqual( Gaffer.SetExpressionAlgo.exclude( expression, expression ), "" )
 				self.assertEqual( Gaffer.SetExpressionAlgo.include( expression, expression ), Gaffer.SetExpressionAlgo.simplify( expression ) )
-
-if __name__ == "__main__":
-	unittest.main()

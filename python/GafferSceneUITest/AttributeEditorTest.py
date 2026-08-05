@@ -78,6 +78,3 @@ class AttributeEditorTest( GafferUITest.TestCase ) :
 				self.assertIn( attribute, columnAttributes )
 			else :
 				self.assertNotIn( attribute, columnAttributes )
-
-if __name__ == "__main__":
-	unittest.main()

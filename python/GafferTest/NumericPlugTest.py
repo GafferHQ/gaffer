@@ -514,6 +514,3 @@ class NumericPlugTest( GafferTest.TestCase ) :
 
 		self.assertIs( Gaffer.IntPlug.ValueType, int )
 		self.assertIs( Gaffer.FloatPlug.ValueType, float )
-
-if __name__ == "__main__":
-	unittest.main()

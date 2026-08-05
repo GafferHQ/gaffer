@@ -223,6 +223,3 @@ class DotTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.value( s2["d"]["in"], "test" ), 1 )
 		self.assertEqual( Gaffer.Metadata.value( s2["d"]["out"], "test" ), 2 )
-
-if __name__ == "__main__":
-	unittest.main()

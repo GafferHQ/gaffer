@@ -98,6 +98,3 @@ class PopupWindowTest( GafferUITest.TestCase ) :
 		# QWidget.
 		b = Gaffer.ParallelAlgo.callOnBackgroundThread( None, gc.collect )
 		b.wait()
-
-if __name__ == "__main__":
-	unittest.main()

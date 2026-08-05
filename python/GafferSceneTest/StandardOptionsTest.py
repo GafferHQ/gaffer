@@ -143,6 +143,3 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "render:camera", script["StandardOptions"]["options"].keys() )
 		self.assertNotIn( "renderCamera", script["StandardOptions"]["options"].keys() )
 		self.assertEqual( script["StandardOptions"]["options"]["render:camera"]["value"].getValue(), "test" )
-
-if __name__ == "__main__":
-	unittest.main()

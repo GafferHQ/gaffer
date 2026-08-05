@@ -77,6 +77,3 @@ class DocumentationTest( GafferUITest.TestCase ) :
 
 		self.assertExampleFilesExist()
 		self.assertExampleFilesDontReferenceUnstablePaths()
-
-if __name__ == "__main__":
-	unittest.main()

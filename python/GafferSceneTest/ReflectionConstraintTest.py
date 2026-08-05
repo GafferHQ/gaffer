@@ -168,6 +168,3 @@ class ReflectionConstraintTest( GafferSceneTest.SceneTestCase ) :
 		matrix2.extractEulerXYZ( rotation2 )
 
 		self.assertEqual( rotation1, rotation2 )
-
-if __name__ == "__main__":
-	unittest.main()

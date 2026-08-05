@@ -224,6 +224,3 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 		direction = aim["out"].fullTransform( "/group/constrained" ).multDirMatrix( aim["aim"].getValue() )
 		expectedDirection = aim["targetOffset"].getValue() + targetTranslate - constrainedTranslate
 		self.assertAlmostEqual( direction.normalized().dot( expectedDirection.normalized() ), 1, 6 )
-
-if __name__ == "__main__":
-	unittest.main()

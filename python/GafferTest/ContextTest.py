@@ -842,6 +842,3 @@ class ContextTest( GafferTest.TestCase ) :
 			expected.addPath( "/a" * i )
 
 		self.assertEqual( context["test"], expected )
-
-if __name__ == "__main__":
-	unittest.main()

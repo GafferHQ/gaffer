@@ -37,7 +37,3 @@
 from .RileyCapture import RileyCapture
 from .RendererTest import RendererTest, XPURendererTest
 from .ShaderNetworkAlgoTest import ShaderNetworkAlgoTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

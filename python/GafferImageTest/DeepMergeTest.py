@@ -391,7 +391,3 @@ class DeepMergeTest( GafferImageTest.ImageTestCase ) :
 					data[-1] += 1
 
 		return IECore.IntVectorData( data )
-
-
-if __name__ == "__main__":
-	unittest.main()

@@ -515,6 +515,3 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		scene = IECoreScene.SceneCache( writer["fileName"].getValue(), IECore.IndexedIO.Read )
 		self.assertEqual( scene.readAttribute( "gaffer:globals", 1 ), writer["in"].globals() )
-
-if __name__ == "__main__":
-	unittest.main()

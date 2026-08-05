@@ -70,6 +70,3 @@ class StatsApplicationTest( GafferTest.TestCase ) :
 
 		self.assertIn( "valueOne 1", o )
 		self.assertIn( "valueTwo 2", o )
-
-if __name__ == "__main__":
-	unittest.main()

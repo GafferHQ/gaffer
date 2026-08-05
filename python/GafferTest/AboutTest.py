@@ -57,7 +57,3 @@ class AboutTest( GafferTest.TestCase ) :
 
 			if "source" in d :
 				self.assertTrue( urllib.request.urlopen( d["source"] ) )
-
-
-if __name__ == "__main__":
-	unittest.main()

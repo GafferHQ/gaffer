@@ -161,6 +161,3 @@ class RenderManifestTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( r2.size(), 5 )
 		self.assertEqual( r2.idForPath( "x" ), 5 )
 		self.assertEqual( r2.pathForID( 5 ), "/x" )
-
-if __name__ == "__main__":
-	unittest.main()

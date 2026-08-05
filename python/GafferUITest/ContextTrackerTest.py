@@ -1182,6 +1182,3 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].message, 'Unexpected context variable "ui:foo". Should you be using ScriptNodeAlgo or Metadata instead?' )
-
-if __name__ == "__main__":
-	unittest.main()

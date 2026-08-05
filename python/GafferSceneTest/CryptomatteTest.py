@@ -498,6 +498,3 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 		# And check that we can still find the manifest from this new metadata.
 		self.assertEqual( script["cryptomatte"]["manifestScene"].childNames( "/" ), IECore.InternedStringVectorData( [ "GAFFERBOT", "cow", "cow1" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

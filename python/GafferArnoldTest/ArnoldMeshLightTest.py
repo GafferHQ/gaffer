@@ -165,6 +165,3 @@ class ArnoldMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		l["enabled"].setValue( False )
 		self.assertScenesEqual( p["out"], l["out"] )
 		self.assertSceneHashesEqual( p["out"], l["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

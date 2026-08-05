@@ -183,6 +183,3 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		deleteSets["in"].setInput( cube["out"] )
 
 		self.assertEqual( deleteSets["out"].setHash( "test" ), cube["out"].setHash( "test" ) )
-
-if __name__ == "__main__":
-	unittest.main()

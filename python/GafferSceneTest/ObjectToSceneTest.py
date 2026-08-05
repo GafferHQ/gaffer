@@ -61,6 +61,3 @@ class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( p["out"] )
 		self.assertEqual( p["out"].object( "/object" ),  IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -2 ), imath.V2f( 2 ) ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

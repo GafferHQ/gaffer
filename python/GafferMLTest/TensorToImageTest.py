@@ -169,7 +169,3 @@ class TensorToImageTest( GafferImageTest.ImageTestCase ) :
 		] :
 			imageToTensor["tensorElementType"].setValue( t )
 			self.assertImagesEqual( tensorToImage["out"], image["out"], maxDifference = 5e-4 )
-
-
-if __name__ == "__main__":
-	unittest.main()

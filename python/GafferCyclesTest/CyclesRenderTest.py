@@ -84,6 +84,3 @@ class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 	def testInstanceIDOutput( self ) :
 
 		pass
-
-if __name__ == "__main__":
-	unittest.main()

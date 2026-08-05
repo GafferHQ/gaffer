@@ -853,6 +853,3 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		GafferSceneTest.SceneTestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__originalCacheMemoryLimit )
-
-if __name__ == "__main__":
-	unittest.main()

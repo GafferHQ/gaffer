@@ -53,6 +53,3 @@ class SwitchNodeGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.NodeGadget.create( s["n"] )
 		self.assertTrue( isinstance( g, GafferUI.StandardNodeGadget ) )
 		self.assertTrue( type( g ) is GafferUI.StandardNodeGadget )
-
-if __name__ == "__main__":
-	unittest.main()

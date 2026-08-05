@@ -338,7 +338,3 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			return [int(text) if text.isdigit() else text for text in pythonRegex.split(s)]
 		permutationsPython = sorted( permutations, key = pythonNaturalSortKey )
 		self.assertEqual( permutationsGaffer, permutationsPython )
-
-
-if __name__ == "__main__":
-	unittest.main()

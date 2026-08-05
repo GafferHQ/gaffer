@@ -352,6 +352,3 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( r["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

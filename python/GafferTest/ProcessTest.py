@@ -428,6 +428,3 @@ class ProcessTest( GafferTest.TestCase ) :
 				GafferTest.runTestProcess( plug, 0, dependencies )
 
 		self.assertEqual( monitor.plugStatistics( plug ).computeCount, sum( branchFactor ** d for d in range( 0, maxDepth + 1 ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

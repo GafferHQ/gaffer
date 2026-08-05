@@ -766,6 +766,3 @@ class BoxTest( GafferTest.TestCase ) :
 		# far too costly and the answer can be determined on the C++ side anyway.
 		node = CastChecker()
 		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( node["out"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

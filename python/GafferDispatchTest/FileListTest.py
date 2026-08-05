@@ -240,6 +240,3 @@ class FileListTest( GafferTest.TestCase ) :
 			node["out"].getValue(),
 			IECore.StringVectorData( [ filePath.as_posix(), sequencePathA.as_posix(), sequencePathB.as_posix() ] )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

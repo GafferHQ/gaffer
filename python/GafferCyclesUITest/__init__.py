@@ -37,6 +37,3 @@
 from .DocumentationTest import DocumentationTest
 from .NodeUITest import NodeUITest
 from .CyclesSceneGadgetTest import CyclesSceneGadgetTest
-
-if __name__ == "__main__":
-	unittest.main()

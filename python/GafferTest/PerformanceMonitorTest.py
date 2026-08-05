@@ -249,6 +249,3 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 		# where the monitor is active, so we don't expect
 		# to capture any.
 		self.assertEqual( len( m.allStatistics() ), 0 )
-
-if __name__ == "__main__":
-	unittest.main()

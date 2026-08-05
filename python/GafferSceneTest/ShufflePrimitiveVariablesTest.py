@@ -140,6 +140,3 @@ class ShufflePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		restoreP["shuffles"][0]["enabled"].setValue( False )
 		self.assertScenesEqual( restoreP["out"], copy["out"], checks = { "bound" } )
 		self.assertSceneHashesEqual( restoreP["out"], copy["out"], checks = { "bound" } )
-
-if __name__ == "__main__":
-	unittest.main()

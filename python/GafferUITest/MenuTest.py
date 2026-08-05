@@ -288,6 +288,3 @@ class MenuTest( GafferUITest.TestCase ) :
 			self.assertRegex( message.message, "Captured variable .* creates cyclic reference back to Menu." )
 
 		label.menu = None # Break cycles
-
-if __name__ == "__main__":
-	unittest.main()

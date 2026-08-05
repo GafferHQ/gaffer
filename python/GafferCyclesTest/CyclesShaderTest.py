@@ -107,6 +107,3 @@ class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( shader["parameters"]["size"].defaultValue(), 0.0 )
 		self.assertIsInstance( shader["parameters"]["normalize"], Gaffer.BoolPlug )
 		self.assertEqual( shader["parameters"]["normalize"].defaultValue(), True )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -673,6 +673,3 @@ class SwitchTest( GafferTest.TestCase ) :
 		GafferTest.TestCase.tearDown( self )
 
 		self.__inputPlugs = []
-
-if __name__ == "__main__":
-	unittest.main()

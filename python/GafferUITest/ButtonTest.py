@@ -112,6 +112,3 @@ class ButtonTest( GafferUITest.TestCase ) :
 	def testUnknownConstructorArguments( self ) :
 
 		self.assertRaises( TypeError, GafferUI.Button, notAnArgument = 1 )
-
-if __name__ == "__main__":
-	unittest.main()

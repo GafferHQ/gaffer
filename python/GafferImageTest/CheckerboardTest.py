@@ -228,6 +228,3 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 		self.assertGreater( stats["max"].getValue()[0], 0 ) # Should produce some change
 		self.assertLess( stats["max"].getValue()[0], 1e-4 ) # But nothing visible
 		self.assertLess( stats["average"].getValue()[0], 1e-6 )
-
-if __name__ == "__main__":
-	unittest.main()

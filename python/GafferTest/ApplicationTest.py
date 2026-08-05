@@ -210,6 +210,3 @@ class ApplicationTest( GafferTest.TestCase ) :
 	def testSysExecutable( self ) :
 
 		self.assertEqual( sys.executable, str( Gaffer.rootPath() / "bin" / ( "python" + ( ".exe" if os.name == "nt" else "" ) ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

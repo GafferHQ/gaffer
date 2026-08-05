@@ -145,6 +145,3 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( t["out"].transform( "/plane" ), imath.M44f() )
 		self.assertEqual( t["out"].bound( "/plane" ), imath.Box3f( imath.V3f( 0.5, 1.5, 3 ), imath.V3f( 1.5, 2.5, 3 ) ) )
 		self.assertEqual( t["out"].object( "/plane" ).bound(), imath.Box3f( imath.V3f( 0.5, 1.5, 3 ), imath.V3f( 1.5, 2.5, 3 ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

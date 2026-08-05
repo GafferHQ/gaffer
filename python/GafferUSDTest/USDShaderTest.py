@@ -265,6 +265,3 @@ class USDShaderTest( GafferSceneTest.SceneTestCase ) :
 		shaderAssignment["shader"].setInput( shader["out"]["displacement"] )
 		self.assertEqual( shaderAssignment["out"].attributes( "/sphere" ).keys(), [ "displacement" ] )
 		self.assertIsInstance( shaderAssignment["out"].attributes( "/sphere" )["displacement"], IECoreScene.ShaderNetwork )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -341,6 +341,3 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 
 		self.__current = None
 		GafferUITest.TestCase.tearDown( self )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -93,6 +93,3 @@ class OutputRedirectionTest( GafferTest.TestCase ) :
 			for j in range( 0, 100 ) :
 				self.assertEqual( perThreadOuts[i][j], "OUT %d %d" % ( i, j ) )
 				self.assertEqual( perThreadErrs[i][j], "ERR %d %d" % ( i, j ) )
-
-if __name__ == "__main__":
-	unittest.main()

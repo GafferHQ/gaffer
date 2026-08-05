@@ -1881,6 +1881,3 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		script["node"] = Gaffer.Node()
 		script["node"]["user"]["plug"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		self.assertFalse( script["variables"]["variable1"]["value"].acceptsInput( script["node"]["user"]["plug"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

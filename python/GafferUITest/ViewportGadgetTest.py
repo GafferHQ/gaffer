@@ -448,6 +448,3 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.Back ) ), set( [b] ) )
 		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.MidFront ) ), set( [c,d] ) )
 		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 50, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.MidFront ) ), set( [d] ) )
-
-if __name__ == "__main__":
-	unittest.main()

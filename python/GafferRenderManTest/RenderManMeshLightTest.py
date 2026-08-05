@@ -104,6 +104,3 @@ class RenderManMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		light["cameraVisibility"]["value"].setValue( False )
 		attributes = light["out"].attributes( "/sphere" )
 		self.assertEqual( attributes["ri:visibility:camera"], IECore.BoolData( False ) )
-
-if __name__ == "__main__":
-	unittest.main()

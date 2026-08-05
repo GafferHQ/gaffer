@@ -288,6 +288,3 @@ class ClosestPointSamplerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "sampled:P", sampler["out"].object( "/plane" ) )
 		prune["filter"].setInput( sphereFilter["out"] )
 		self.assertNotIn( "sampled:P", sampler["out"].object( "/plane" ) )
-
-if __name__ == "__main__":
-	unittest.main()

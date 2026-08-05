@@ -143,6 +143,3 @@ class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 	def testCropWindow( self ) :
 
 		pass
-
-if __name__ == "__main__":
-	unittest.main()

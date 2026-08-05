@@ -614,6 +614,3 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		t2["enabled"].setValue( False )
 		self.assertEqual( t3["out"]["dataWindow"].getValue().min().x, 20 )
-
-if __name__ == "__main__":
-	unittest.main()

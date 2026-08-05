@@ -78,6 +78,3 @@ class VisibilityColumnTest( GafferUITest.TestCase ) :
 
 		with self.assertRaises( IECore.Cancelled ) :
 			column.cellData( path, canceller )
-
-if __name__ == "__main__":
-	unittest.main()

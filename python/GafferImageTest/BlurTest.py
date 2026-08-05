@@ -197,6 +197,3 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 		expectedReader["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "blurRange.exr" )
 
 		self.assertImagesEqual( finalCrop["out"], expectedReader["out"], maxDifference = 0.00001, ignoreMetadata = True )
-
-if __name__ == "__main__":
-	unittest.main()

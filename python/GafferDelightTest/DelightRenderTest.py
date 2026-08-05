@@ -91,6 +91,3 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 		options["options"]["dl:oversampling"]["value"].setValue( 16 )
 
 		return options
-
-if __name__ == "__main__":
-	unittest.main()

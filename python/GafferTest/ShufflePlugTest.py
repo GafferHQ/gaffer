@@ -513,6 +513,3 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 		# from "toto" to "toto"
 		plug[0]["destination"].setValue( "toto" )
 		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources ), IECore.CompoundData( { "toto" : 20 } ) )
-
-if __name__ == "__main__":
-	unittest.main()

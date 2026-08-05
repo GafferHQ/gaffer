@@ -187,6 +187,3 @@ class SceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 		string["in"].setValue( "x" )
 		self.assertNotEqual( processor["in"].attributes( "/plane" ), processor["out"].attributes( "/plane" ) )
 		self.assertNotEqual( processor["in"].attributesHash( "/plane" ), processor["out"].attributesHash( "/plane" ) )
-
-if __name__ == "__main__":
-	unittest.main()

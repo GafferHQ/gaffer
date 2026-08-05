@@ -173,6 +173,3 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Plane()
 		a = p.affects( p["enabled"] )
 		self.assertTrue( p["out"]["set"] in a )
-
-if __name__ == "__main__":
-	unittest.main()

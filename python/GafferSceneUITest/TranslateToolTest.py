@@ -1314,6 +1314,3 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		with GafferUITest.ContextTrackerTest.UpdateHandler() :
 			script.setFocus( script["timeWarp"] )
 		self.assertEqual( tool.handlesTransform().translation(), imath.V3f( 11, 0, 0 ) )
-
-if __name__ == "__main__":
-	unittest.main()

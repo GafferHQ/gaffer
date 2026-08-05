@@ -138,6 +138,3 @@ class ThreadMonitorTest( GafferTest.TestCase ) :
 					sum( threadMonitor.plugStatistics( random["outFloat"] ).values() ),
 					1 if processType == "computeNode:compute" else 5
 				)
-
-if __name__ == "__main__":
-	unittest.main()

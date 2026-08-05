@@ -907,6 +907,3 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		for setName, path in setDefinitions.items() :
 			inspection = self.__inspect( setNode["out"], path, setName )
 			self.assertEqual( inspection.source(), spreadsheet["rows"].row( setName )["cells"] )
-
-if __name__ == "__main__" :
-	unittest.main()

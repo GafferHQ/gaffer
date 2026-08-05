@@ -259,6 +259,3 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 		self.assertIsNone( w() )
 		self.assertEqual( out, [] )
 		self.assertEqual( err, [] )
-
-if __name__ == "__main__":
-	unittest.main()

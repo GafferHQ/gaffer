@@ -154,6 +154,3 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 			s["dispatcher"]["task"].execute()
 
 		self.assertEqual( s["l"].log[0].context["test"], "test.0100.cob" )
-
-if __name__ == "__main__":
-	unittest.main()

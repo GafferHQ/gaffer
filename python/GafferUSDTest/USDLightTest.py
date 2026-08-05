@@ -214,6 +214,3 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( light["parameters"]["texture:format"], Gaffer.StringPlug )
 		self.assertEqual( light["parameters"]["texture:format"].defaultValue(), "automatic" )
 		self.assertTrue( light["parameters"]["texture:format"].isSetToDefault() )
-
-if __name__ == "__main__":
-	unittest.main()

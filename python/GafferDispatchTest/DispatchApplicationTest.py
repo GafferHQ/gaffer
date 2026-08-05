@@ -347,6 +347,3 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 
 		self.waitForCommand( f"gaffer dispatch -script {self.__scriptFileName} -tasks switch" )
 		self.assertTrue( self.__outputTextFile.exists() )
-
-if __name__ == "__main__":
-	unittest.main()

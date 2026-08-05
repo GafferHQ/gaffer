@@ -94,6 +94,3 @@ class ArnoldCameraShadersTest( GafferSceneTest.SceneTestCase ) :
 		cameraShaders["enabled"].setValue( False )
 		self.assertNotIn( "ai:filtermap", cameraShadersAssignment["out"].attributes( "/group/camera" ) )
 		self.assertNotIn( "ai:uv_remap", cameraShadersAssignment["out"].attributes( "/group/camera" ) )
-
-if __name__ == "__main__":
-	unittest.main()

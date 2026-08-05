@@ -82,6 +82,3 @@ class RenderManAttributesTest( GafferSceneTest.SceneTestCase ) :
 					node["attributes"][attribute]["value"].defaultValue(),
 					Gaffer.Metadata.value( f"attribute:{attribute}", "defaultValue" )
 				)
-
-if __name__ == "__main__":
-	unittest.main()

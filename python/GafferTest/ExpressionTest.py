@@ -1739,6 +1739,3 @@ class ExpressionTest( GafferTest.TestCase ) :
 		# recurse to an upstream compute for `e1`, which has the same hash. If we don't have a
 		# mechanism for handling it, this will deadlock.
 		script["n"]["user"]["p4"].getValue()
-
-if __name__ == "__main__":
-	unittest.main()

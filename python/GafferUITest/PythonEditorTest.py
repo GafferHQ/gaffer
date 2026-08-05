@@ -100,6 +100,3 @@ class PythonEditorTest( GafferUITest.TestCase ) :
 
 		del editor
 		self.assertIsNone( weakEditor() )
-
-if __name__ == "__main__":
-	unittest.main()

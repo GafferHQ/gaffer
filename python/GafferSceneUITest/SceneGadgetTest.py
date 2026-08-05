@@ -776,6 +776,3 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		GafferUITest.TestCase.tearDown( self )
 
 		IECoreGL.CachedConverter.defaultCachedConverter().setMaxMemory( self.__cachedConverterMaxMemory )
-
-if __name__ == "__main__":
-	unittest.main()

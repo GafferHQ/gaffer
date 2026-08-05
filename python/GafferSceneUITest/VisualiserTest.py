@@ -78,6 +78,3 @@ class VisualiserTest( GafferUITest.TestCase ) :
 		cameraBound = renderer.command( "gl:queryBound", {} )
 
 		self.assertEqual( cameraBound, expectedBodyBound )
-
-if __name__ == "__main__":
-	unittest.main()

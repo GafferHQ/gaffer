@@ -261,6 +261,3 @@ class NameSwitchTest( GafferTest.TestCase ) :
 		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "C" ] ) )
 		switch["in"][2]["enabled"].setValue( True )
 		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "C", "B" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

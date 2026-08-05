@@ -309,6 +309,3 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue(
 			{ x[0] for x in cs }.issuperset( { prune["filter"], isolate["filter"] } )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

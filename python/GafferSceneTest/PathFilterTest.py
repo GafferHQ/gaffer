@@ -399,6 +399,3 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotIn( "scene:filter:inputScene", contextMonitor.combinedStatistics().variableNames() )
 		self.assertNotIn( "scene:path", contextMonitor.combinedStatistics().variableNames() )
-
-if __name__ == "__main__":
-	unittest.main()

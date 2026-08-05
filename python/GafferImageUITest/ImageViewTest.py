@@ -91,6 +91,3 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		view = GafferImageUI.ImageView( script )
 		self.assertIsInstance( view.imageGadget(), GafferImageUI.ImageGadget )
 		self.assertTrue( view.viewportGadget().isAncestorOf( view.imageGadget() ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -78,6 +78,3 @@ class GadgetWidgetTest( GafferUITest.TestCase ) :
 		gadgetWidget.setViewportGadget( viewportGadget2 )
 		self.assertEqual( viewportGadget1.renderRequestSignal().numSlots(), 0 )
 		self.assertEqual( viewportGadget2.renderRequestSignal().numSlots(), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

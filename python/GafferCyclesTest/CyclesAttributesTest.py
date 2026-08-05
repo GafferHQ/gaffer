@@ -88,6 +88,3 @@ class CyclesAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "cycles:asset_name", script["CyclesAttributes"]["attributes"].keys() )
 		self.assertNotIn( "assetName", script["CyclesAttributes"]["attributes"].keys() )
 		self.assertEqual( script["CyclesAttributes"]["attributes"]["cycles:asset_name"]["value"].getValue(), "test" )
-
-if __name__ == "__main__":
-	unittest.main()

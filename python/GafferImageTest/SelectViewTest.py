@@ -120,7 +120,3 @@ class SelectViewTest( GafferImageTest.ImageTestCase ) :
 			GafferImage.ImageAlgo.image( selectView["out"], "default" ),
 			GafferImage.ImageAlgo.image( constant2["out"], "default" )
 		)
-
-
-if __name__ == "__main__":
-	unittest.main()

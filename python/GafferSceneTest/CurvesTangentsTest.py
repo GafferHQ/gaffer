@@ -304,6 +304,3 @@ class CurvesTangentsTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			node["out"].object( "/object" )
-
-if __name__ == "__main__" :
-	unittest.main()

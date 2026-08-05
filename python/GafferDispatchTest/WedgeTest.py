@@ -410,6 +410,3 @@ class WedgeTest( GafferTest.TestCase ) :
 				script["dispatcher"] = self.__dispatcher()
 				script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
 				script["dispatcher"]["task"].execute()
-
-if __name__ == "__main__":
-	unittest.main()

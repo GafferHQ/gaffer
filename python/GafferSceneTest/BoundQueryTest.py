@@ -464,6 +464,3 @@ class BoundQueryTest( GafferSceneTest.SceneTestCase ):
 		self.assertTrue( bq["bound"]["max"].getValue().equalWithAbsError( b.max(), 0.000001 ) )
 		self.assertTrue( bq["center"].getValue().equalWithAbsError( b.center(), 0.000001 ) )
 		self.assertTrue( bq["size"].getValue().equalWithAbsError( b.size(), 0.000001 ) )
-
-if __name__ == "__main__":
-	unittest.main()

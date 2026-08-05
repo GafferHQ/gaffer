@@ -633,6 +633,3 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		m = ( ( s2m * grm ).inverse() * ( s1m * grm ) ).inverse()
 		imath.M44f.extractScaling( m, s )
 		self.assertTrue( tq["scale"].getValue().equalWithAbsError( s, 0.000001 ) )
-
-if __name__ == "__main__":
-	unittest.main()

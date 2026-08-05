@@ -269,6 +269,3 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["tweaks"].addChild( testTweak )
 
 		self.assertEqual( tweaks["out"].attributes( "/plane" )["linkedLights"], IECore.StringData( "defaultLights" ) )
-
-if __name__ == "__main__" :
-	unittest.main()

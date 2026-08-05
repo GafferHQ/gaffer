@@ -203,6 +203,3 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
 		self.assertIn( "test", tweaks["out"].object( "/camera" ).parameters() )
 		self.assertEqual( tweaks["out"].object( "/camera" ).parameters()["test"], IECore.IntData( 10 ) )
-
-if __name__ == "__main__":
-	unittest.main()

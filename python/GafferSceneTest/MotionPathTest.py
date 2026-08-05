@@ -553,6 +553,3 @@ class MotionPathTest( GafferSceneTest.SceneTestCase ) :
 
 		# the curve should represent our modifications
 		assertCurveValid()
-
-if __name__ == "__main__":
-	unittest.main()

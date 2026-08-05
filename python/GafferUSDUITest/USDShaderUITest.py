@@ -54,6 +54,3 @@ class USDShaderUITest( GafferUITest.TestCase ) :
 			Gaffer.Metadata.value( node["parameters"]["opacityMode"], "presetNames" ),
 			IECore.StringVectorData( [ "transparent", "presence" ] )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

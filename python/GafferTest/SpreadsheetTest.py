@@ -1245,6 +1245,3 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		r["name"].setInput( n["user"]["stringVector"] )
 
 		self.assertEqual( s["rows"].row( "a b c" ), r )
-
-if __name__ == "__main__":
-	unittest.main()

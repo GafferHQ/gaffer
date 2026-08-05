@@ -56,6 +56,3 @@ class StandardNodeUITest( GafferUITest.TestCase ) :
 
 		self.assertTrue( isinstance( u.plugValueWidget( n["c"]["i"] ), GafferUI.PlugValueWidget ) )
 		self.assertTrue( u.plugValueWidget( n["c"]["i"] ).getPlug().isSame( n["c"]["i"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -140,6 +140,3 @@ class CopyObjectTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( copy["out"].bound( "/" ), cube["out"].bound( "/" ) )
 		self.assertEqual( copy["out"].bound( "/group" ), cube["out"].bound( "/" ) )
 		self.assertEqual( copy["out"].bound( "/group/sphere" ), cube["out"].bound( "/" ) )
-
-if __name__ == "__main__":
-	unittest.main()

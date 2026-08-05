@@ -312,6 +312,3 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( inspectionContext["scene:path"], GafferScene.ScenePlug.stringToPath( "/plane/bogus" ) )
 		self.assertIn( "foo", inspectionContext )
 		self.assertEqual( inspectionContext["foo"], 123 )
-
-if __name__ == "__main__":
-	unittest.main()
