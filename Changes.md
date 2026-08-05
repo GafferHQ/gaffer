@@ -25,6 +25,11 @@ Fixes
   - Fixed handling of connections between floats and color/vector components [^2].
   - Fixed bug preventing attributes from being deleted from lights during an interactive render [^2].
 
+Build
+-----
+
+- Cortex : Updated to version 10.7.0.0.
+
 [^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 [^2]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
