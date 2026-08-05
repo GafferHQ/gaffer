@@ -66,7 +66,7 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			The input Primitive. This must already have `prototypeRoots` and
-			`protoypeIndex` primitive variables in the format required of a
+			`prototypeIndex` primitive variables in the format required of a
 			PointInstancer.
 			""",
 
@@ -106,7 +106,7 @@ Gaffer.Metadata.registerNode(
 			- `{name}` : The original prototype name before variation.
 			- `{timeOffset}` : The time offset.
 			- `{contextVariable}` : The value of a context variable.
-			- `{hash}` : A hash value that uniquely idenfies the protoype.
+			- `{hash}` : A hash value that uniquely identifies the prototype.
 
 			> Note : Each prototype must have a unique name. If the time offset or any context variable is omitted from the format, the hash will be appended automatically to maintain this constraint.
 			"""

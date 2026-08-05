@@ -743,7 +743,7 @@ IECore::ConstObjectPtr PointInstancerCore::computePrototypeMap() const
 			auto [hashIt, hashInserted] = hashToPrototypeIndex.insert( { h, orderedNames.size() } );
 			if( hashInserted )
 			{
-				// First time we've encounted this prototype variant.
+				// First time we've encountered this prototype variant.
 				// Generate a unique name and add it to the PrototypeMap.
 
 				const string prototypeName = formatter.name( prototypeBaseNames[inPrototypeIndex], pointIndex, h );
