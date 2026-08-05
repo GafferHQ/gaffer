@@ -38,7 +38,6 @@
 import pathlib
 import inspect
 import unittest
-import subprocess
 import threading
 
 import arnold
