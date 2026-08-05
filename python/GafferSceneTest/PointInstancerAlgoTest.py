@@ -211,6 +211,18 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ), imath.V3f( 1, 0, 0 ) ] ) )
 		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 1 ] ) )
 		pointInstancer.setPrototypes( IECore.StringVectorData( [ "prototypes/prototype1", "prototypes/prototype2" ] ) )
+		pointInstancer["intPrimitiveVariable"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ 1, 2 ] )
+		)
+		pointInstancer["stringPrimitiveVariable"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.StringVectorData( [ "apple", "pear" ] )
+		)
+		pointInstancer["v3fPrimitiveVariable"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.V3fVectorData( [ imath.V3f( 0 ), imath.V3f( 1 ) ], IECore.GeometricData.Interpretation.Normal )
+		)
 
 		pointInstancerNode = GafferScene.ObjectToScene()
 		pointInstancerNode["object"].setValue( pointInstancer )
@@ -254,6 +266,13 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 					imath.V3f( 1, 0, 0 ),
 					imath.V3f( 1, 0, 0 ),
 				]
+			)
+
+			self.assertEqual( flattened["intPrimitiveVariable"].data, IECore.IntVectorData( [ 1, 1, 1, 2, 2 ] ) )
+			self.assertEqual( flattened["stringPrimitiveVariable"].data, IECore.StringVectorData( [ "apple", "apple", "apple", "pear", "pear" ] ) )
+			self.assertEqual(
+				flattened["v3fPrimitiveVariable"].data,
+				IECore.V3fVectorData( [ imath.V3f( 0 ), imath.V3f( 0 ), imath.V3f( 0 ), imath.V3f( 1 ), imath.V3f( 1 ) ], IECore.GeometricData.Interpretation.Normal )
 			)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
