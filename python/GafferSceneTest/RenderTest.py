@@ -1591,6 +1591,100 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 				sampler["pixel"].setValue( imath.V2f( x, y ) )
 				self.assertEqualWithAbsError( sampler["color"]["a"].getValue(), 0, 0.005 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerInstanceAttributes( self ) :
+
+		if not self.pointInstancerSupported :
+			raise unittest.SkipTest( "PointInstancer not supported" )
+
+		script = Gaffer.ScriptNode()
+
+		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancer.setPosition(
+			IECore.V3fVectorData( [
+				imath.V3f( -1, 0, 0 ), imath.V3f( 1, 0, 0 ),
+			] )
+		)
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 0 ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "./sphere" ] ) )
+		pointInstancer["myColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.Color3fVectorData( [ imath.Color3f( 1, 0, 0 ), imath.Color3f( 0, 1, 0 ) ] )
+		)
+
+		script["pointInstancer"] = GafferScene.ObjectToScene()
+		script["pointInstancer"]["name"].setValue( "instancer" )
+		script["pointInstancer"]["object"].setValue( pointInstancer )
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["radius"].setValue( 0.5 )
+
+		script["attributeReader"], attributeReaderOut = self._createColorAttributeReader( "myColor" )
+		script["constantShader"], colorPlug, constantShaderOut = self._createConstantShader()
+		colorPlug.setInput( attributeReaderOut )
+
+		script["shaderAssignment"] = GafferScene.ShaderAssignment()
+		script["shaderAssignment"]["in"].setInput( script["sphere"]["out"] )
+		script["shaderAssignment"]["shader"].setInput( constantShaderOut )
+
+		script["prototypeParent"] = GafferScene.Parent()
+		script["prototypeParent"]["in"].setInput( script["pointInstancer"]["out"] )
+		script["prototypeParent"]["children"][0].setInput( script["shaderAssignment"]["out"] )
+		script["prototypeParent"]["parent"].setValue( "/instancer" )
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["prototypeParent"]["out"] )
+		script["parent"]["children"][0].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		imagePath = self.temporaryDirectory() / "test.exr"
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"rgba"
+			)
+		)
+
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( imagePath )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( reader["out"] )
+
+		script["render"]["task"].execute()
+
+		for centre, expectedColor in [
+			[ imath.V2f( 180, 240 ), imath.Color4f( 1, 0, 0, 1 ) ],
+			[ imath.V2f( 456, 240 ), imath.Color4f( 0, 1, 0, 1 ) ],
+		] :
+
+			with self.subTest( centre = centre ) :
+
+				# Assert there's an instance where we expect it.
+				sampler["pixel"].setValue( centre )
+				self.assertEqual( sampler["color"].getValue(), expectedColor )
+
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a constant surface shader loaded, along
 	# with the plug for the colour parameter and the output plug to be connected
@@ -1611,6 +1705,13 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	# node with a distant light loaded, along with the plug for the colour
 	# parameter.
 	def _createDistantLight( self ) :
+
+		raise NotImplementedError
+
+	# Should be implemented by derived classes to return a Shader node
+	# which will read the requested attribute, along with the output plug
+	# from that node.
+	def _createColorAttributeReader( self, attributeName ) :
 
 		raise NotImplementedError
 

@@ -2804,6 +2804,15 @@ class PointInstancerCache : public IECore::RefCounted
 			AiNodeSetArray( instancerNode.get(), g_instanceVisibilityArnoldString, visibilityArray );
 			AiNodeSetArray( instancerNode.get(), g_instanceShaderArnoldString, shaderArray );
 
+			// Add instance attributes
+
+			for( const auto &[name, primitiveVariable] : samples[0]->instanceAttributes() )
+			{
+				string prefixedName = "instance_" + name;
+				IECore::ConstDataPtr data = primitiveVariable.expandedData();
+				ParameterAlgo::setParameter( instancerNode.get(), AtString( prefixedName.c_str() ), data.get() );
+			}
+
 			AiNodeSetByte( instancerNode.get(), g_visibilityArnoldString, 0 );
 
 			return std::make_shared<InstancerNodes>( InstancerNodes{
