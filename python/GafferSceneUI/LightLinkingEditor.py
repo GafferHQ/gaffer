@@ -82,9 +82,18 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 			self["__lightsAndFiltersSetFilter"] = GafferScene.SetFilter()
 			self["__lightsAndFiltersSetFilter"]["setExpression"].setValue( "__lights __lightFilters" )
 
-			self["__onlyObjects"] = GafferScene.Prune()
-			self["__onlyObjects"]["in"].setInput( self["__filteredIn"] )
-			self["__onlyObjects"]["filter"].setInput( self["__lightsAndFiltersSetFilter"]["out"] )
+			self["__filteredObjects"] = GafferScene.Prune()
+			self["__filteredObjects"]["in"].setInput( self["__filteredIn"] )
+			self["__filteredObjects"]["filter"].setInput( self["__lightsAndFiltersSetFilter"]["out"] )
+
+			self["__deleteContextVariables"] = Gaffer.DeleteContextVariables()
+			self["__deleteContextVariables"].setup( self["__adaptedIn"] )
+			self["__deleteContextVariables"]["in"].setInput( self["__adaptedIn"] )
+			self["__deleteContextVariables"]["variables"].setValue( "collect:value collect:index" )
+
+			self["__isolateObjects"] = GafferScene.Prune()
+			self["__isolateObjects"]["in"].setInput( self["__deleteContextVariables"]["out"] )
+			self["__isolateObjects"]["filter"].setInput( self["__lightsAndFiltersSetFilter"]["out"] )
 
 			self["__lightsHierarchyFilter"] = GafferSceneUI.SceneEditor._HierarchyFilter()
 			self["__lightsHierarchyFilter"]["in"].setInput( self["__isolateLightsLinkedToSelection"]["out"] )
@@ -93,7 +102,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 			self["__lightFiltersSetFilter"]["setExpression"].setValue( "__lightFilters" )
 
 			self["__isolateLightFilters"] = GafferScene.Isolate()
-			self["__isolateLightFilters"]["in"].setInput( self["__adaptedIn"] )
+			self["__isolateLightFilters"]["in"].setInput( self["__deleteContextVariables"]["out"] )
 			self["__isolateLightFilters"]["filter"].setInput( self["__lightFiltersSetFilter"]["out"] )
 
 			self["__lightFilterHierarchyFilter"] = GafferSceneUI.SceneEditor._HierarchyFilter()
@@ -104,11 +113,6 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 			Gaffer.PlugAlgo.promoteWithName( self["__lightFilterHierarchyFilter"]["filter"], "lightFiltersFilter" )
 			Gaffer.PlugAlgo.promoteWithName( self["__lightFilterHierarchyFilter"]["setFilter"], "lightFiltersSetFilter" )
-
-			self["__deleteContextVariables"] = Gaffer.DeleteContextVariables()
-			self["__deleteContextVariables"].setup( self["__adaptedIn"] )
-			self["__deleteContextVariables"]["in"].setInput( self["__adaptedIn"] )
-			self["__deleteContextVariables"]["variables"].setValue( "collect:value collect:index" )
 
 			self["__linkedLightsAttributeQuery"] = GafferScene.AttributeQuery()
 			self["__linkedLightsAttributeQuery"].setup( Gaffer.StringPlug() )
@@ -141,11 +145,11 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 			self["__objectsExistenceQuery"] = GafferScene.ExistenceQuery()
 			self["__objectsExistenceQuery"]["location"].setValue( "${collect:value}" )
-			self["__objectsExistenceQuery"]["scene"].setInput( self["__onlyObjects"]["out"] )
+			self["__objectsExistenceQuery"]["scene"].setInput( self["__isolateObjects"]["out"] )
 
 			self["__lightFiltersExistenceQuery"] = GafferScene.ExistenceQuery()
 			self["__lightFiltersExistenceQuery"]["location"].setValue( "${collect:value}" )
-			self["__lightFiltersExistenceQuery"]["scene"].setInput( self["__lightFilterHierarchyFilter"]["out"] )
+			self["__lightFiltersExistenceQuery"]["scene"].setInput( self["__isolateLightFilters"]["out"] )
 
 			self["__inclusionsSwitch"] = Gaffer.Switch()
 			self["__inclusionsSwitch"].setup( Gaffer.StringPlug() )
@@ -301,7 +305,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 						self.__shadowedLightsExclusionsColumn = self.__attributeColumn( "shadowedLights:exclusions", self.settings()["__adaptedIn"], self.settings()["editScope"] )
 
 						self.__objectsPathListing = GafferUI.PathListingWidget(
-							GafferScene.ScenePath( self.settings()["__onlyObjects"]["out"], self.context(), "/" ),
+							GafferScene.ScenePath( self.settings()["__filteredObjects"]["out"], self.context(), "/" ),
 							columns = [
 								GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch ),
 								self.__linkedLightsColumn,
@@ -420,7 +424,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 		self.__linkedToSelectionFilterPaths = IECore.PathMatcher()
 
-		self.settings()["__onlyObjects"].plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__objectsPlugDirtied ) )
+		self.settings()["__filteredObjects"].plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__objectsPlugDirtied ) )
 
 		Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
 
@@ -591,7 +595,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 	def __objectsPlugDirtied( self, plug ) :
 
-		if plug == self.settings()["__onlyObjects"]["out"]["attributes"] :
+		if plug == self.settings()["__filteredObjects"]["out"]["attributes"] :
 			self.__lazyUpdateLinkedLightsSetFilter()
 
 	def __columnContextMenuSignal( self, column, pathListing, menuDefinition ) :
