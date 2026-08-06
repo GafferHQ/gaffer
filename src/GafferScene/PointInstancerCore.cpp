@@ -217,18 +217,24 @@ struct NameFormatter
 
 		// Parse custom formatter into `m_parts`.
 
-		unordered_set<string> usedContextVariables;
-		bool usedName = false;
-		bool usedTimeOffset = false;
-		bool usedHash = false;
-
 		const regex r( "\\{[^}]*\\}" );
 
 		sregex_iterator matchIt( format.begin(), format.end(), r );
 		sregex_iterator matchEnd;
 
+		if( matchIt == matchEnd )
+		{
+			m_parts.push_back( format + "_" );
+			m_parts.push_back( SpecialPart::Hash );
+			return;
+		}
+
+		unordered_set<string> usedContextVariables;
+		bool usedName = false;
+		bool usedTimeOffset = false;
+		bool usedHash = false;
+
 		ssub_match suffix;
-		std::string result;
 		for( ; matchIt != matchEnd; ++matchIt )
 		{
 			if( matchIt->prefix().length() )

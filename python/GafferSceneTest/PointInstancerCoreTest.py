@@ -279,6 +279,7 @@ class PointInstancerCoreTest( GafferSceneTest.SceneTestCase ) :
 			# Incomplete names get the hash appended automatically.
 			"{name}" : [ f"cube_{hash0}", f"cube_{hash1}" ],
 			"{name}_{varA}" : [ f"cube_0_{hash0}", f"cube_1_{hash1}" ],
+			"prototype" : [ f"prototype_{hash0}", f"prototype_{hash1}" ],
 		}.items() :
 
 			with self.subTest( format = format ) :
