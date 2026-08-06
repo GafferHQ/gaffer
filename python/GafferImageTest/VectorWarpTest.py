@@ -117,6 +117,44 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 
 		GafferImageTest.processTiles( vectorWarp["out"] )
 
+	def testIntegerOverflow( self ) :
+
+		constantBig = GafferImage.Constant()
+		constantBig["format"].setValue( GafferImage.Format( 1, 1, 1.000 ) )
+
+		constantBackground = GafferImage.Constant()
+		constantBackground["format"].setValue( GafferImage.Format( 100, 100, 1.000 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( constantBig["out"] )
+		merge["in"][1].setInput( constantBackground["out"] )
+
+		vectorWarp = GafferImage.VectorWarp()
+		vectorWarp["in"].setInput( merge["out"] )
+		vectorWarp["vector"].setInput( merge["out"] )
+		vectorWarp["useDerivatives"].setValue( False )
+		vectorWarp["vectorMode"].setValue( GafferImage.VectorWarp.VectorMode.Relative )
+		vectorWarp["vectorUnits"].setValue( GafferImage.VectorWarp.VectorUnits.Pixels )
+
+		# Test a bunch of bogus values for a warp that would be outside the bounds
+		# of representable integers if we didn't clamp them.
+
+		for offsetX, offsetY in [
+			( 1e10, 1e10 ),
+			( -1e10, 1e10 ),
+			( 1e10, -1e10 ),
+			( -1e10, -1e10 ),
+			( 0, 1e10 ),
+			( 0, -1e10 ),
+			( 1e10, 0 ),
+			( -1e10, 0 )
+		]:
+			constantBig["color"].setValue( imath.Color4f( offsetX, offsetY, 0, 1 ) )
+
+			# We aren't concerned about what values we get for these ridiculous values,
+			# we just want to make sure it doesn't crash
+			GafferImageTest.processTiles( vectorWarp["out"] )
+
 	def testWarpImage( self ):
 		dotGridReader = GafferImage.ImageReader()
 		dotGridReader["fileName"].setValue( self.imagesPath() / "dotGrid.300.exr" )
