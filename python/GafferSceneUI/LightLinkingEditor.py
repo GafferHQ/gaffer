@@ -318,10 +318,10 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 						with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-							self.__linkSelectedButton = GafferUI.Button( image = "plus.png", toolTip = "Link", hasFrame = False )
+							self.__linkSelectedButton = GafferUI.Button( image = "link.png", toolTip = "Link", hasFrame = False )
 							self.__linkSelectedButton.clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__linkSelected ), True ) )
 
-							self.__unlinkSelectedButton = GafferUI.Button( image = "minus.png", toolTip = "Unlink", hasFrame = False )
+							self.__unlinkSelectedButton = GafferUI.Button( image = "unlink.png", toolTip = "Unlink", hasFrame = False )
 							self.__unlinkSelectedButton.clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__linkSelected ), False ) )
 
 							GafferUI.PlugLayout(
@@ -375,10 +375,10 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 						with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-							self.__filterSelectedButton = GafferUI.Button( image = "plus.png", toolTip = "Link", hasFrame = False )
+							self.__filterSelectedButton = GafferUI.Button( image = "link.png", toolTip = "Link", hasFrame = False )
 							self.__filterSelectedButton.clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__filterSelected ), True ) )
 
-							self.__unfilterSelectedButton = GafferUI.Button( image = "minus.png", toolTip = "Unlink", hasFrame = False )
+							self.__unfilterSelectedButton = GafferUI.Button( image = "unlink.png", toolTip = "Unlink", hasFrame = False )
 							self.__unfilterSelectedButton.clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__filterSelected ), False ) )
 
 							GafferUI.PlugLayout(
@@ -861,7 +861,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 			self.__unfilterSelectedButton.setEnabled( not nonEditableReason )
 			self.__unfilterSelectedButton.setToolTip( nonEditableReason if nonEditableReason else f"Click to unassign the selected light filters from the selected {target}" )
 
-		self.__statusLabel.setText( nonEditableReason or f"Use the plus and minus buttons to link and unlink the selected {target} and locations" )
+		self.__statusLabel.setText( nonEditableReason or f"Use the buttons to link or unlink the selected {target} and locations" )
 
 	def __linkSelected( self, link, *unused ) :
 
