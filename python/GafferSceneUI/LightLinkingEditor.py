@@ -273,7 +273,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 						self.__statusLabel = GafferUI.Label( "" )
 						# Ensure a long status text doesn't enforce the minimum width of this side of the SplitContainer.
 						self.__statusLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
-						GafferUI.Spacer( size = imath.V2i( 1, 24 ), maximumSize = imath.V2i( 1, 24 ) )
+						GafferUI.Spacer( size = imath.V2i( 1, 22 ), maximumSize = imath.V2i( 1, 22 ) )
 
 				with GafferUI.TabbedContainer() as self.__objectsAndLightFiltersTabbedContainer :
 
@@ -324,6 +324,8 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 							self.__unlinkSelectedButton = GafferUI.Button( image = "unlink.png", toolTip = "Unlink", hasFrame = False )
 							self.__unlinkSelectedButton.clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__linkSelected ), False ) )
 
+							GafferUI.Spacer( size = imath.V2i( 1, 22 ), maximumSize = imath.V2i( 1, 22 ) )
+
 							GafferUI.PlugLayout(
 								self.settings(),
 								orientation = GafferUI.ListContainer.Orientation.Horizontal,
@@ -335,8 +337,6 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 								orientation = GafferUI.ListContainer.Orientation.Horizontal,
 								rootSection = "Attribute",
 							)
-
-							GafferUI.Spacer( size = imath.V2i( 1, 24 ) )
 
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4, parenting = { "label" : "Light Filters" } ) :
 
@@ -381,13 +381,13 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 							self.__unfilterSelectedButton = GafferUI.Button( image = "unlink.png", toolTip = "Unlink", hasFrame = False )
 							self.__unfilterSelectedButton.clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__filterSelected ), False ) )
 
+							GafferUI.Spacer( size = imath.V2i( 1, 22 ), maximumSize = imath.V2i( 1, 22 ) )
+
 							GafferUI.PlugLayout(
 								self.settings(),
 								orientation = GafferUI.ListContainer.Orientation.Horizontal,
 								rootSection = "Mode",
 							)
-
-							GafferUI.Spacer( size = imath.V2i( 1, 24 ) )
 
 			self.__lightsSelectionChangedConnection = self.__lightsPathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__lightsSelectionChanged )
