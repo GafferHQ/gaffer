@@ -35,7 +35,6 @@
 ##########################################################################
 
 import math
-import unittest
 
 import imath
 
@@ -319,6 +318,3 @@ class PointInstancerCoreTest( GafferSceneTest.SceneTestCase ) :
 		core["timeOffset"].setValue( "timeOffset" )
 		with self.assertRaisesRegex( Gaffer.ProcessException, r".*Prototype index 1 out of range \(on point 0\)" ) :
 			core["outPoints"].getValue()
-
-if __name__ == "__main__":
-	unittest.main()
