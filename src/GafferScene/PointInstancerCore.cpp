@@ -192,7 +192,7 @@ struct NameFormatter
 
 	NameFormatter(
 		const std::string &format, const ContextVariableCreators &contextVariables,
-		const optional<PrimitiveVariable::IndexedView<float>> &timeOffsets
+		const PrimitiveVariable::IndexedView<float> &timeOffsets
 	)
 		:	m_timeOffsets( timeOffsets )
 	{
@@ -308,7 +308,7 @@ struct NameFormatter
 								result += baseName;
 								break;
 							case SpecialPart::TimeOffset :
-								result += safeFormat( m_timeOffsets ? (*m_timeOffsets)[pointIndex] : 0.0f );
+								result += safeFormat( m_timeOffsets ? m_timeOffsets[pointIndex] : 0.0f );
 								break;
 							case SpecialPart::Hash :
 								result += hash.toString();
@@ -334,7 +334,7 @@ struct NameFormatter
 
 	private :
 
-		const optional<PrimitiveVariable::IndexedView<float>> &m_timeOffsets;
+		const PrimitiveVariable::IndexedView<float> &m_timeOffsets;
 
 		enum class SpecialPart
 		{
@@ -367,6 +367,53 @@ struct PrototypeMap : public IECore::Data
 };
 
 IE_CORE_DECLAREPTR( PrototypeMap )
+
+bool isVertexEquivalent( const PrimitiveVariable &variable, const Primitive *primitive )
+{
+	if( variable.interpolation == PrimitiveVariable::Vertex )
+	{
+		return true;
+	}
+	if(
+		variable.interpolation == PrimitiveVariable::Varying &&
+		primitive->variableSize( PrimitiveVariable::Varying ) == primitive->variableSize( PrimitiveVariable::Vertex )
+	)
+	{
+		// For many primitive types, Vertex and Varying are equivalent, and we
+		// often receive Varying primitive variables out of other DCCs.
+		return true;
+	}
+
+	return false;
+}
+
+template<typename T>
+PrimitiveVariable::IndexedView<typename T::ValueType::value_type> vertexVariable( const IECoreScene::Primitive *primitive, const std::string &name )
+{
+	using ResultType = PrimitiveVariable::IndexedView<typename T::ValueType::value_type>;
+
+	const auto it = primitive->variables.find( name );
+	if( it == primitive->variables.end() )
+	{
+		return ResultType();
+	}
+
+	const auto *data = IECore::runTimeCast<const T>( it->second.data.get() );
+	if( !data )
+	{
+		throw IECore::Exception( fmt::format( "PrimitiveVariable \"{}\" has wrong type ({} but should be {})", name, it->second.data->typeName(), T::staticTypeName() ) );
+	}
+
+	if( !isVertexEquivalent( it->second, primitive ) )
+	{
+		throw IECore::Exception( fmt::format( "PrimitiveVariable \"{}\" has invalid interpolation (expected Vertex or equivalent Varying)", name ) );
+	}
+
+	return ResultType(
+		data->readable(),
+		it->second.indices ? &it->second.indices->readable() : nullptr
+	);
+}
 
 } // namespace
 
@@ -653,8 +700,8 @@ IECore::ConstObjectPtr PointInstancerCore::computePrototypeMap() const
 		return result;
 	}
 
-	auto prototypeIndex = primitive->variableIndexedView<IntVectorData>( "prototypeIndex" );
-	auto timeOffset = primitive->variableIndexedView<FloatVectorData>( timeOffsetPlug()->getValue() );
+	auto prototypeIndex = vertexVariable<IntVectorData>( primitive, "prototypeIndex" );
+	auto timeOffset = vertexVariable<FloatVectorData>( primitive, timeOffsetPlug()->getValue() );
 
 	// We might be collecting prototypes that happen to have the same name,
 	// for example `/path/to/sphere` and `/path/to/another/sphere`. Start
@@ -688,9 +735,8 @@ IECore::ConstObjectPtr PointInstancerCore::computePrototypeMap() const
 		{
 			continue;
 		}
-		if( primitive->variableSize( primitiveVariable.interpolation ) != numPoints )
+		if( !isVertexEquivalent( primitiveVariable, primitive ) )
 		{
-			IECore::msg( IECore::Msg::Warning, "PointInstancerCore", "PrimitiveVariable \"{}\" has the wrong size", name );
 			continue;
 		}
 		unique_ptr<ContextVariableCreator> creator = makeContextVariableCreator( name, primitiveVariable );
@@ -726,7 +772,7 @@ IECore::ConstObjectPtr PointInstancerCore::computePrototypeMap() const
 		for( size_t pointIndex = 0; pointIndex < numPoints; ++pointIndex )
 		{
 			MurmurHash h;
-			const int inPrototypeIndex = prototypeIndex ? (*prototypeIndex)[pointIndex] : 0;
+			const int inPrototypeIndex = prototypeIndex ? prototypeIndex[pointIndex] : 0;
 			if( inPrototypeIndex < 0 || (size_t)inPrototypeIndex >= prototypes->size() )
 			{
 				throw IECore::Exception( fmt::format(
@@ -738,7 +784,7 @@ IECore::ConstObjectPtr PointInstancerCore::computePrototypeMap() const
 			h.append( inPrototypeIndex );
 			if( timeOffset )
 			{
-				h.append( (*timeOffset)[pointIndex] );
+				h.append( timeOffset[pointIndex] );
 			}
 			for( const auto &[name, creator] : contextVariableCreators )
 			{
@@ -755,7 +801,7 @@ IECore::ConstObjectPtr PointInstancerCore::computePrototypeMap() const
 				PrototypeMap::Prototype &prototype = result->map[prototypeName];
 				assert( prototype.location.empty() ); // Should not have created this already.
 				prototype.location = (*prototypes)[inPrototypeIndex];
-				prototype.timeOffset = timeOffset ? (*timeOffset)[pointIndex] : 0.0f;
+				prototype.timeOffset = timeOffset ? timeOffset[pointIndex] : 0.0f;
 				if( contextVariableCreators.size() )
 				{
 					prototype.contextVariables = new CompoundData;

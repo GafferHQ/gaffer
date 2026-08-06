@@ -175,7 +175,7 @@ class PointInstancerCoreTest( GafferSceneTest.SceneTestCase ) :
 			IECore.FloatVectorData( [ 0.0, 1.5 ] )
 		)
 		points["varB"] = IECoreScene.PrimitiveVariable(
-			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECoreScene.PrimitiveVariable.Interpolation.Varying,
 			IECore.IntVectorData( [ 3, 4 ] )
 		)
 		points["varC"] = IECoreScene.PrimitiveVariable(
@@ -205,6 +205,31 @@ class PointInstancerCoreTest( GafferSceneTest.SceneTestCase ) :
 
 		points = core["outPoints"].getValue()
 		self.assertEqual( points["prototypeIndex"].data, IECore.IntVectorData( [ 0, 1 ] ) )
+
+	def testContextVariablesMustBeVertexOrVarying( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		points["prototypeRoots"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.StringVectorData( [ "/path/to/cube" ] )
+		)
+		points["varA"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.FloatVectorData( [ 0.0, 1.5 ] )
+		)
+
+		core = GafferScene.PointInstancerCore()
+		core["inPoints"].setValue( points )
+		core["contextVariables"].setValue( "var*" )
+
+		# `varA` is ignored because it isn't Vertex or Varying. Even though
+		# it currently has the right number of values, that would change if
+		# the point count changed.
+
+		self.assertEqual( list( core["prototypeNames"].getValue() ), [ "cube" ] )
+
+		core["prototypeSelector"].setValue( "cube" )
+		self.assertEqual( core["prototypeContext"].getValue(), IECore.CompoundData() )
 
 	def testPrototypeNamesUniqueWithContextVariables( self ) :
 
