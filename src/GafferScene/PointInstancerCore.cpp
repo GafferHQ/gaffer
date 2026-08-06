@@ -49,7 +49,6 @@
 #include "IECore/VectorTypedData.h"
 
 #include "boost/iterator/function_output_iterator.hpp"
-#include "boost/lexical_cast.hpp"
 
 #include "fmt/format.h"
 
@@ -772,8 +771,6 @@ IECore::ConstObjectPtr PointInstancerCore::computePrototypeMap() const
 		}
 		result->updatedPrototypeIndex = new IntVectorData( std::move( newPrototypeIndex ) );
 	}
-
-	result->orderedNames = new StringVectorData( std::move( orderedNames ) );
 
 	return result;
 }
