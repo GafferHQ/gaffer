@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import imath
 
 import IECore
@@ -423,6 +421,3 @@ class PointInstancerTest( GafferSceneTest.SceneTestCase ) :
 			set( instancer["out"].object( "/plane" ).keys() ),
 			{ "P", "prototypeRoots", "prototypeIndex", "uv" },
 		)
-
-if __name__ == "__main__":
-	unittest.main()
