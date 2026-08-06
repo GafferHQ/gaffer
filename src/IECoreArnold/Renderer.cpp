@@ -3645,6 +3645,8 @@ const IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" )
 const IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
 const IECore::InternedString g_reportFileNameOptionName( "ai:reportFileName" );
 const IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
+const IECore::InternedString g_sceneWriteBinaryOptionName( "ai:scene_write:binary" );
+const IECore::InternedString g_sceneWriteOpenProcsOptionName( "ai:scene_write:open_procs" );
 const IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" );
 const IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
 const IECore::InternedString g_textureAutoGenerateOptionName( "ai:texture_auto_generate_tx" );
@@ -4078,6 +4080,30 @@ class ArnoldGlobals
 				// updating the drivers every time we render, so we don't need to flag anything here.
 				return;
 			}
+			else if( name == g_sceneWriteBinaryOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_binary = std::nullopt;
+				}
+				else if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( value, "option", name ) )
+				{
+					m_binary = d->readable();
+				}
+				return;
+			}
+			else if( name == g_sceneWriteOpenProcsOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_openProcs = std::nullopt;
+				}
+				else if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( value, "option", name ) )
+				{
+					m_openProcs = d->readable();
+				}
+				return;
+			}
 			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
 			{
 				m_aovShaders.erase( name );
@@ -4281,6 +4307,8 @@ class ArnoldGlobals
 					unique_ptr<AtParamValueMap, decltype(&AiParamValueMapDestroy)> params(
 						AiParamValueMap(), AiParamValueMapDestroy
 					);
+					AiParamValueMapSetBool( params.get(), AtString( "binary" ), m_binary.value_or( true ) );
+					AiParamValueMapSetBool( params.get(), AtString( "open_procs" ), m_openProcs.value_or( false ) );
 					AiSceneWrite( m_universeBlock->universe(), m_fileName.c_str(), params.get() );
 					break;
 				}
@@ -4836,6 +4864,8 @@ class ArnoldGlobals
 		std::optional<int> m_aaSeed;
 		bool m_enableProgressiveRender;
 		std::optional<int> m_progressiveMinAASamples;
+		std::optional<bool> m_binary;
+		std::optional<bool> m_openProcs;
 		ShaderCachePtr m_shaderCache;
 		FilterCache m_filterCache;
 

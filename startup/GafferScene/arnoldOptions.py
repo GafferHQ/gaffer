@@ -1033,6 +1033,34 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"option:ai:scene_write:binary" : {
+
+		"defaultValue" : True,
+		"description" :
+		"""
+		Enable binary encoding in `.ass` files. Arrays will be written in a format that is more
+		compact but can't be read with a text editor.
+		""",
+
+		"layout:section" : "Scene Description",
+		"label" : "Binary",
+
+	},
+
+	"option:ai:scene_write:open_procs" : {
+
+		"defaultValue" : False,
+		"description" :
+		"""
+		Procedurals will be expanded before writing. Because procedurals are used internally by Gaffer,
+		this setting is required when writing Gaffer scenes that make any use of encapsulation. It will
+		also expand any other procedurals, such as USD procedurals.
+		""",
+
+		"layout:section" : "Scene Description",
+		"label" : "Open Procs",
+
+	},
 } )
 
 Gaffer.Metadata.registerValue( "option:ai:*", "category", "Arnold" )

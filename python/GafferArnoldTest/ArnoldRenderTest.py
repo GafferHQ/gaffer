@@ -1451,6 +1451,52 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			# node to have been created for ours.
 			self.assertIsNone( arnold.AiNodeLookUpByName( universe, "/coordinateSystem" ) )
 
+	def testSceneDescriptionOptions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["cube"] = GafferScene.Cube()
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/cube' ] ) )
+
+		s["encapsulate"] = GafferScene.Encapsulate()
+		s["encapsulate"]["in"].setInput( s["cube"]["out"] )
+		s["encapsulate"]["filter"].setInput( s["pathFilter"]["out"] )
+
+		s["options"] = GafferArnold.ArnoldOptions()
+		s["options"]["in"].setInput( s["encapsulate"]["out"] )
+
+		s["render"] = GafferScene.Render()
+		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
+
+		s["render"]["task"].execute()
+
+		# Since the cube is encapsulated, we won't see it in the output
+		with open( self.temporaryDirectory() / "test.ass", "r", encoding = "utf-8" ) as f :
+			self.assertFalse( "vidxs" in f.read() )
+
+		s["options"]["options"]["ai:scene_write:open_procs"]["enabled"].setValue( True )
+		s["options"]["options"]["ai:scene_write:open_procs"]["value"].setValue( True )
+
+		s["render"]["task"].execute()
+
+		# With open_procs set, we now see the cube data
+		with open( self.temporaryDirectory() / "test.ass", "r", encoding = "utf-8" ) as f :
+			self.assertTrue( " vidxs 24 1 b85UINT\n" + r"B$$-0*%<hl0%s\>:$$?K4%XA/5%s@u/" in f.read() )
+
+		s["options"]["options"]["ai:scene_write:binary"]["enabled"].setValue( True )
+		s["options"]["options"]["ai:scene_write:binary"]["value"].setValue( False )
+
+		s["render"]["task"].execute()
+
+		# Turning off binary gets us plain text vertex data
+		with open( self.temporaryDirectory() / "test.ass", "r", encoding = "utf-8" ) as f :
+			self.assertTrue( "vidxs 24 1 UINT\n  3 2 1 0 1 2 5 4 4 5 7 6 6 7 3 0 2 3 7 5 0 1 4 6" in f.read() )
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testInstancerPerf( self ) :
 
