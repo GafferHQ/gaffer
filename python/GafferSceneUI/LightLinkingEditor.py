@@ -875,15 +875,6 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 		self.__editSelectedLightLinks( link, "filteredLights", self.settings()["mode"].getValue() == "replace" )
 
-	@staticmethod
-	def __applyEdit( inspection, value, warnings ) :
-
-		value = IECore.StringData( value )
-		if inspection.canEdit( value ) :
-			inspection.edit( value )
-		else :
-			warnings.add( inspection.nonEditableReason( value ) )
-
 	## \todo Add equivalent linking actions to the SceneView "Light Links" context menu.
 	def __editSelectedLightLinks( self, link, attribute, replaceExisting = False ) :
 
@@ -909,43 +900,59 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 		else :
 			targets = self.__selectedSetNames()
 
-		path = pathListing.getPath().copy()
+		rootPath = pathListing.getPath()
+		path = rootPath.copy()
+		edits = []
 		warnings = set()
 		with self.context() :
 
+			for pathString in pathsToEdit :
+				path.setFromString( pathString )
+				if not path.isValid() :
+					continue
+
+				inclusionsInspection = inclusionsColumn.inspect( path )
+				if replaceExisting and link :
+					inclusions = ""
+				else :
+					inclusions = inclusionsInspection.value()
+					inclusions = inclusions.value if inclusions is not None else ""
+
+				exclusionsInspection = exclusionsColumn.inspect( path )
+				if replaceExisting and not link :
+					exclusions = ""
+				else :
+					exclusions = exclusionsInspection.value()
+					exclusions = exclusions.value if exclusions is not None else ""
+
+				if link :
+					newInclusions = Gaffer.SetExpressionAlgo.include( inclusions, " ".join( targets ) )
+					newExclusions = Gaffer.SetExpressionAlgo.exclude( exclusions, " ".join( targets ) )
+				else :
+					newInclusions = Gaffer.SetExpressionAlgo.remove( inclusions, " ".join( targets ) )
+					newExclusions = Gaffer.SetExpressionAlgo.include( exclusions, " ".join( targets ) )
+
+				if newInclusions != inclusions :
+					value = IECore.StringData( newInclusions )
+					if inclusionsInspection.canEdit( value ) :
+						edits.append( ( inclusionsInspection, value ) )
+					else :
+						warnings.add( f"{inclusionsColumn.headerData( rootPath ).value} : {inclusionsInspection.nonEditableReason( value )}" )
+
+				if newExclusions != exclusions :
+					value = IECore.StringData( newExclusions )
+					if exclusionsInspection.canEdit( value ) :
+						edits.append( ( exclusionsInspection, value ) )
+					else :
+						warnings.add( f"{exclusionsColumn.headerData( rootPath ).value} : {exclusionsInspection.nonEditableReason( value )}" )
+
+			if warnings :
+				GafferUI.PopupWindow.showWarning( "<br>".join( sorted( warnings ) ), parent = self )
+				return
+
 			with Gaffer.UndoScope( self.scriptNode() ) :
-
-				for pathString in pathsToEdit :
-					path.setFromString( pathString )
-
-					inclusionsInspection = inclusionsColumn.inspect( path )
-					if replaceExisting and link :
-						inclusions = ""
-					else :
-						inclusions = inclusionsInspection.value()
-						inclusions = inclusions.value if inclusions is not None else ""
-
-					exclusionsInspection = exclusionsColumn.inspect( path )
-					if replaceExisting and not link :
-						exclusions = ""
-					else :
-						exclusions = exclusionsInspection.value()
-						exclusions = exclusions.value if exclusions is not None else ""
-
-					if link :
-						newInclusions = Gaffer.SetExpressionAlgo.include( inclusions, " ".join( targets ) )
-						newExclusions = Gaffer.SetExpressionAlgo.exclude( exclusions, " ".join( targets ) )
-					else :
-						newInclusions = Gaffer.SetExpressionAlgo.remove( inclusions, " ".join( targets ) )
-						newExclusions = Gaffer.SetExpressionAlgo.include( exclusions, " ".join( targets ) )
-
-					if newExclusions != exclusions :
-						self.__applyEdit( exclusionsInspection, newExclusions, warnings )
-					if newInclusions != inclusions :
-						self.__applyEdit( inclusionsInspection, newInclusions, warnings )
-
-		if warnings :
-			GafferUI.PopupWindow.showWarning( "<br>".join( sorted( warnings ) ), parent = self )
+				for inspection, value in edits :
+					inspection.edit( value )
 
 GafferUI.Editor.registerType( "LightLinkingEditor", LightLinkingEditor )
 
