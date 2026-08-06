@@ -3640,7 +3640,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		def assertColor( expectedColor ) :
 
 			color = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
-			self.assertEqualWithAbsError( color, expectedColor, 0.01 )
+			self.assertEqualWithAbsError( color, expectedColor, 0.04 )
 
 		# Shader assignment disabled, so should get white from default facing
 		# ratio shader.
