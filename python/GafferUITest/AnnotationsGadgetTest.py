@@ -449,10 +449,11 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 			# Remove annotations while the background task runs.
 			for i in range( 0, numAnnotations ) :
 				Gaffer.MetadataAlgo.removeAnnotation( script["node"], f"test{i}" )
-			self.assertEqual( gadget.annotationText( script["node"], "test0" ), "" )
 
 			# And wait for the task to complete.
 			callHandler.assertCalled()
+
+		self.assertEqual( gadget.annotationText( script["node"], "test0" ), "" )
 
 	def testAnnotationAt( self ) :
 
