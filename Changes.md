@@ -28,6 +28,11 @@ Fixes
 [^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 [^2]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
 
+Breaking Changes
+----------------
+
+- PlugValueWidgetTest : Removed `waitForUpdate()` method. Use `WidgetUpdateHandler` instead.
+
 1.7.0.0a9 (relative to 1.7.0.0a8)
 =========
 

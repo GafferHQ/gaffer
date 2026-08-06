@@ -246,59 +246,61 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		script["node"]["rgbaPlug"] = Gaffer.Color4fPlug()
 		script["node"]["rgbaPlug"].setValue( imath.Color4f( 0.1 ) )
 
-		rgbWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug"] )
-		rgbWidget.setColorChooserVisible( True )
-		rgbaWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbaPlug"] )
-		rgbaWidget.setColorChooserVisible( True )
+		with GafferUITest.PlugValueWidgetTest.WidgetUpdateHandler() as handler :
 
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( rgbWidget._ColorPlugValueWidget__colorChooser )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( rgbaWidget._ColorPlugValueWidget__colorChooser )
+			rgbWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug"] )
+			rgbWidget.setColorChooserVisible( True )
+			rgbaWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbaPlug"] )
+			rgbaWidget.setColorChooserVisible( True )
 
-		# Default state
-		for c in "rgbhsvtmi" :
-			self.assertTrue( self.__sliderFromWidget( rgbWidget, c ).getVisible() )
-			self.assertTrue( self.__sliderFromWidget( rgbaWidget, c ).getVisible() )
-		self.assertTrue( self.__sliderFromWidget( rgbaWidget, "a" ).getVisible() )
-		self.assertEqual( self.__getStaticComponent( rgbWidget ), "v" )
-		self.assertEqual( self.__getStaticComponent( rgbaWidget ), "v" )
-		self.assertTrue( self.__getColorFieldVisibility( rgbWidget ) )
-		self.assertTrue( self.__getColorFieldVisibility( rgbaWidget ) )
-		self.assertTrue( self.__getDynamicSliderBackgrounds( rgbWidget ) )
-		self.assertTrue( self.__getDynamicSliderBackgrounds( rgbaWidget ) )
+			handler.waitForUpdate( rgbWidget._ColorPlugValueWidget__colorChooser )
+			handler.waitForUpdate( rgbaWidget._ColorPlugValueWidget__colorChooser )
 
-		# Modify `rgbWidget`
+			# Default state
+			for c in "rgbhsvtmi" :
+				self.assertTrue( self.__sliderFromWidget( rgbWidget, c ).getVisible() )
+				self.assertTrue( self.__sliderFromWidget( rgbaWidget, c ).getVisible() )
+			self.assertTrue( self.__sliderFromWidget( rgbaWidget, "a" ).getVisible() )
+			self.assertEqual( self.__getStaticComponent( rgbWidget ), "v" )
+			self.assertEqual( self.__getStaticComponent( rgbaWidget ), "v" )
+			self.assertTrue( self.__getColorFieldVisibility( rgbWidget ) )
+			self.assertTrue( self.__getColorFieldVisibility( rgbaWidget ) )
+			self.assertTrue( self.__getDynamicSliderBackgrounds( rgbWidget ) )
+			self.assertTrue( self.__getDynamicSliderBackgrounds( rgbaWidget ) )
 
-		self.__setVisibleComponents( rgbWidget, "rgbhsv" )
-		self.__setStaticComponent( rgbWidget, "g" )
-		self.__setColorFieldVisibility( rgbWidget, False )
-		self.__setDynamicSliderBackgrounds( rgbWidget, False )
+			# Modify `rgbWidget`
 
-		# Save defaults
-		colorChooser = self.__colorChooserFromWidget( rgbWidget )
-		saveDefaultOptions( colorChooser, "colorChooser:inline:" )
+			self.__setVisibleComponents( rgbWidget, "rgbhsv" )
+			self.__setStaticComponent( rgbWidget, "g" )
+			self.__setColorFieldVisibility( rgbWidget, False )
+			self.__setDynamicSliderBackgrounds( rgbWidget, False )
 
-		del rgbWidget
-		del rgbaWidget
+			# Save defaults
+			colorChooser = self.__colorChooserFromWidget( rgbWidget )
+			saveDefaultOptions( colorChooser, "colorChooser:inline:" )
 
-		# Both color types get the same value
-		rgbWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug"] )
-		rgbWidget.setColorChooserVisible( True )
-		rgbaWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbaPlug"] )
-		rgbaWidget.setColorChooserVisible( True )
+			del rgbWidget
+			del rgbaWidget
 
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( rgbWidget._ColorPlugValueWidget__colorChooser )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( rgbaWidget._ColorPlugValueWidget__colorChooser )
+			# Both color types get the same value
+			rgbWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbPlug"] )
+			rgbWidget.setColorChooserVisible( True )
+			rgbaWidget = GafferUI.ColorPlugValueWidget( script["node"]["rgbaPlug"] )
+			rgbaWidget.setColorChooserVisible( True )
 
-		for c in "rgbhsv" :
-			self.assertTrue( self.__sliderFromWidget( rgbWidget, c ).getVisible() )
-			self.assertTrue( self.__sliderFromWidget( rgbaWidget, c ).getVisible() )
-		for c in "tmi" :
-			self.assertFalse( self.__sliderFromWidget( rgbWidget, c ).getVisible() )
-			self.assertFalse( self.__sliderFromWidget( rgbaWidget, c ).getVisible() )
-		self.assertTrue( self.__sliderFromWidget( rgbaWidget, "a" ).getVisible() )
-		self.assertEqual( self.__getStaticComponent( rgbWidget ), "g" )
-		self.assertEqual( self.__getStaticComponent( rgbaWidget ), "g" )
-		self.assertFalse( self.__getColorFieldVisibility( rgbWidget ) )
-		self.assertFalse( self.__getColorFieldVisibility( rgbaWidget ) )
-		self.assertFalse( self.__getDynamicSliderBackgrounds( rgbWidget ) )
-		self.assertFalse( self.__getDynamicSliderBackgrounds( rgbaWidget ) )
+			handler.waitForUpdate( rgbWidget._ColorPlugValueWidget__colorChooser )
+			handler.waitForUpdate( rgbaWidget._ColorPlugValueWidget__colorChooser )
+
+			for c in "rgbhsv" :
+				self.assertTrue( self.__sliderFromWidget( rgbWidget, c ).getVisible() )
+				self.assertTrue( self.__sliderFromWidget( rgbaWidget, c ).getVisible() )
+			for c in "tmi" :
+				self.assertFalse( self.__sliderFromWidget( rgbWidget, c ).getVisible() )
+				self.assertFalse( self.__sliderFromWidget( rgbaWidget, c ).getVisible() )
+			self.assertTrue( self.__sliderFromWidget( rgbaWidget, "a" ).getVisible() )
+			self.assertEqual( self.__getStaticComponent( rgbWidget ), "g" )
+			self.assertEqual( self.__getStaticComponent( rgbaWidget ), "g" )
+			self.assertFalse( self.__getColorFieldVisibility( rgbWidget ) )
+			self.assertFalse( self.__getColorFieldVisibility( rgbaWidget ) )
+			self.assertFalse( self.__getDynamicSliderBackgrounds( rgbWidget ) )
+			self.assertFalse( self.__getDynamicSliderBackgrounds( rgbaWidget ) )
