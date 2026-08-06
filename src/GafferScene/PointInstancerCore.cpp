@@ -690,7 +690,7 @@ IECore::ConstObjectPtr PointInstancerCore::computePrototypeMap() const
 		}
 		if( primitive->variableSize( primitiveVariable.interpolation ) != numPoints )
 		{
-			IECore::msg( IECore::Msg::Warning, "PrimitiveVariable \"{}\" has the wrong size", name );
+			IECore::msg( IECore::Msg::Warning, "PointInstancerCore", "PrimitiveVariable \"{}\" has the wrong size", name );
 			continue;
 		}
 		unique_ptr<ContextVariableCreator> creator = makeContextVariableCreator( name, primitiveVariable );
