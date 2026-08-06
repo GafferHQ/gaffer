@@ -43,6 +43,8 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
+from GafferUI import i18n as _i18n
 
 from Qt import QtWidgets
 
@@ -59,7 +61,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=8, spacing=4 ) as self.__header :
 
 				# NameLabel with a fixed formatter, to be used as a drag source.
-				self.__nameLabel = GafferUI.NameLabel( None, formatter = lambda graphComponents : "<h4>Node Name</h4>" )
+				self.__nameLabel = GafferUI.NameLabel( None, formatter = lambda graphComponents : "<h4>" + _("Node Name") + "</h4>" )
 				# NameWidget to allow editing of the name.
 				self.__nameWidget = GafferUI.NameWidget( None )
 
@@ -137,7 +139,8 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		self.__nameLabel.setGraphComponent( node )
 		self.__nameWidget.setGraphComponent( node )
-		self.__typeLabel.setText( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
+		typeName = node.typeName().rpartition( ":" )[-1]
+		self.__typeLabel.setText( "<h4>" + _i18n.getNodeLabel( typeName, node ) + "</h4>" )
 
 		toolTip = "# " + node.typeName().rpartition( ":" )[2]
 		description = Gaffer.Metadata.value( node, "description" )
@@ -152,7 +155,24 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 	def _titleFormat( self ) :
 
-		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
+		result = GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
+
+		# Insert translated type name before the instance name bracket
+		node = self._lastAddedNode()
+		if node is not None and _i18n.translateNodeNames() :
+			typeName = node.typeName().rpartition( ":" )[-1]
+			translated = _i18n.getNodeLabel( typeName, node )
+			spaced = _i18n._camelToSpaced( typeName )
+			if translated != spaced :
+				# Insert " – TranslatedType" before the " [" bracket
+				for i, item in enumerate( result ) :
+					if isinstance( item, str ) and item.strip() == "[" :
+						result.insert( i, " \u2013 " + translated )
+						break
+				else :
+					result.append( " \u2013 " + translated )
+
+		return result
 
 	def __infoButtonClicked( self, *unused ) :
 
@@ -169,7 +189,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		url = Gaffer.Metadata.value( node, "documentation:url" )
 		result.append(
-			"/Documentation...",
+			"/" + _("Documentation..."),
 			{
 				"active" : bool( url ),
 				"command" : functools.partial( GafferUI.showURL, url ),
@@ -182,7 +202,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		result.append( "/DocumentationDivider", { "divider" : True } )
 
 		result.append(
-			"/Revert to Defaults",
+			"/" + _("Revert to Defaults"),
 			{
 				"command" : Gaffer.WeakMethod( self.__revertToDefaults ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( self.nodeUI().node() ),
@@ -191,7 +211,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		readOnly = Gaffer.MetadataAlgo.getReadOnly( self.nodeUI().node() )
 		result.append(
-			"/Unlock" if readOnly else "/Lock",
+			"/" + _("Unlock") if readOnly else "/" + _("Lock"),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnly ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( self.nodeUI().node().parent() ),

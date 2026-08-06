@@ -44,22 +44,24 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 ## Appends items to the IECore.MenuDefinition object passed to build a File menu containing
 # standard open/save/revert/etc
 def appendDefinitions( menuDefinition, prefix="" ) :
 
-	menuDefinition.append( prefix + "/New", { "command" : new, "shortCut" : "Ctrl+N" } )
-	menuDefinition.append( prefix + "/Open...", { "command" : open, "shortCut" : "Ctrl+O" } )
-	menuDefinition.append( prefix + "/Open Recent", { "subMenu" : openRecent } )
+	menuDefinition.append( prefix + "/New", { "command" : new, "shortCut" : "Ctrl+N", "label" : _( "New" ) } )
+	menuDefinition.append( prefix + "/Open...", { "command" : open, "shortCut" : "Ctrl+O", "label" : _( "Open..." ) } )
+	menuDefinition.append( prefix + "/Open Recent", { "subMenu" : openRecent, "label" : _( "Open Recent" ) } )
 	menuDefinition.append( prefix + "/OpenDivider", { "divider" : True } )
-	menuDefinition.append( prefix + "/Save", { "command" : save, "shortCut" : "Ctrl+S" } )
-	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs, "shortCut" : "Shift+Ctrl+S" } )
-	menuDefinition.append( prefix + "/Revert To Saved", { "command" : revertToSaved, "active" : __revertToSavedAvailable } )
+	menuDefinition.append( prefix + "/Save", { "command" : save, "shortCut" : "Ctrl+S", "label" : _( "Save" ) } )
+	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs, "shortCut" : "Shift+Ctrl+S", "label" : _( "Save As..." ) } )
+	menuDefinition.append( prefix + "/Revert To Saved", { "command" : revertToSaved, "active" : __revertToSavedAvailable, "label" : _( "Revert To Saved" ) } )
 	menuDefinition.append( prefix + "/SaveDivider", { "divider" : True } )
-	menuDefinition.append( prefix + "/Export Selection...", { "command" : exportSelection, "active" : __selectionAvailable } )
-	menuDefinition.append( prefix + "/Import...", { "command" : importFile } )
+	menuDefinition.append( prefix + "/Export Selection...", { "command" : exportSelection, "active" : __selectionAvailable, "label" : _( "Export Selection..." ) } )
+	menuDefinition.append( prefix + "/Import...", { "command" : importFile, "label" : _( "Import..." ) } )
 	menuDefinition.append( prefix + "/ImportExportDivider", { "divider" : True } )
-	menuDefinition.append( prefix + "/Settings...", { "command" : showSettings } )
+	menuDefinition.append( prefix + "/Settings...", { "command" : showSettings, "label" : _( "Settings..." ) } )
 
 ## A function suitable as the command for a File/New menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.
@@ -79,7 +81,7 @@ def open( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	path, bookmarks = __pathAndBookmarks( scriptWindow )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open", valid=True, leaf=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title=_( "Open script" ), confirmLabel=_( "Open" ), valid=True, leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -104,10 +106,10 @@ def __addScript( application, fileName, dialogueParentWindow = None, asNew = Fal
 		recoveryFileName = backups.recoveryFile( fileName )
 		if recoveryFileName :
 			dialogue = GafferUI.ConfirmationDialogue(
-				title = "Backup Available",
-				message = "A more recent backup is available. Open backup instead?",
-				confirmLabel = "Open Backup",
-				cancelLabel = "Open",
+				title = _( "Backup Available" ),
+				message = _( "A more recent backup is available. Open backup instead?" ),
+				confirmLabel = _( "Open Backup" ),
+				cancelLabel = _( "Open" ),
 			)
 			useBackup = dialogue.waitForConfirmation( parentWindow = dialogueParentWindow )
 			if useBackup is None :
@@ -119,7 +121,7 @@ def __addScript( application, fileName, dialogueParentWindow = None, asNew = Fal
 	script = Gaffer.ScriptNode()
 	script["fileName"].setValue( recoveryFileName or fileName )
 
-	dialogue = GafferUI.BackgroundTaskDialogue( "Loading" )
+	dialogue = GafferUI.BackgroundTaskDialogue( _( "Loading" ) )
 	result = dialogue.waitForBackgroundTask( functools.partial( script.load, continueOnError = True, ), dialogueParentWindow )
 	if isinstance( result, IECore.Cancelled ) :
 		return
@@ -184,7 +186,7 @@ def openRecent( menu ) :
 				}
 			)
 	else :
-		result.append( "/None Available", { "active" : False } )
+		result.append( "/" + _("None Available"), { "active" : False, "label" : _( "None Available" ) } )
 
 	return result
 
@@ -229,7 +231,7 @@ def save( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	if script["fileName"].getValue() :
-		dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
+		dialogue = GafferUI.BackgroundTaskDialogue( _( "Saving File" ) )
 		# Really we want to call `script.save()` here, but that would
 		# create an edit to the `unsavedChanges` plug from the background
 		# thread, which is problematic for any connected UIs on the main
@@ -249,7 +251,7 @@ def saveAs( menu ) :
 	script = scriptWindow.scriptNode()
 	path, bookmarks = __pathAndBookmarks( scriptWindow )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save", leaf=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title=_( "Save script" ), confirmLabel=_( "Save" ), leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -259,7 +261,7 @@ def saveAs( menu ) :
 	if not path.endswith( ".gfr" ) :
 		path += ".gfr"
 
-	dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
+	dialogue = GafferUI.BackgroundTaskDialogue( _( "Saving File" ) )
 	result = dialogue.waitForBackgroundTask( functools.partial( script.serialiseToFile, path ), parentWindow = scriptWindow )
 
 	if not isinstance( result, Exception ) :
@@ -275,18 +277,17 @@ def revertToSaved( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 
 	dialogue = GafferUI.ConfirmationDialogue(
-		title = "Discard Unsaved Changes?",
-		message = "There are unsaved changes which will be lost."
-			"Discard them and revert?",
-		confirmLabel = "Revert",
-		cancelLabel = "Cancel",
+		title = _( "Discard Unsaved Changes?" ),
+		message = _( "There are unsaved changes which will be lost. Discard them and revert?" ),
+		confirmLabel = _( "Revert" ),
+		cancelLabel = _( "Cancel" ),
 	)
 	if not dialogue.waitForConfirmation( parentWindow = scriptWindow ) :
 		return
 
 	with GafferUI.ErrorDialogue.ErrorHandler(
-		title = "Errors Occurred During Loading",
-		closeLabel = "Oy vey",
+		title = _( "Errors Occurred During Loading" ),
+		closeLabel = _( "Oy vey" ),
 		parentWindow = scriptWindow
 	) :
 		scriptWindow.scriptNode().load( continueOnError = True )
@@ -316,7 +317,7 @@ def exportSelection( menu ) :
 			assert( node.parent().isAncestorOf( parent ) )
 			parent = node.parent()
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title=_( "Export selection" ), confirmLabel=_( "Export" ), leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scriptWindow )
 
 	if not path :
@@ -326,7 +327,7 @@ def exportSelection( menu ) :
 	if not path.endswith( ".gfr" ) :
 		path += ".gfr"
 
-	dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
+	dialogue = GafferUI.BackgroundTaskDialogue( _( "Saving File" ) )
 	dialogue.waitForBackgroundTask( functools.partial( script.serialiseToFile, path, parent, script.selection() ), parentWindow = scriptWindow )
 
 ## A function suitable as the command for a File/Import File... menu item. It must be invoked from a menu which
@@ -336,15 +337,15 @@ def importFile( menu ) :
 	scope = GafferUI.EditMenu.scope( menu )
 	path, bookmarks = __pathAndBookmarks( scope.scriptWindow )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import", valid=True, leaf=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title=_( "Import script" ), confirmLabel=_( "Import" ), valid=True, leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = scope.scriptWindow )
 
 	if path is None :
 		return
 
 	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
-		title = "Errors Occurred During Loading",
-		closeLabel = "Oy vey",
+		title = _( "Errors Occurred During Loading" ),
+		closeLabel = _( "Oy vey" ),
 		parentWindow = scope.scriptWindow
 	)
 
@@ -386,7 +387,7 @@ def showSettings( menu ) :
 			break
 
 	if settingsWindow is None :
-		settingsWindow = GafferUI.Window( "Settings", borderWidth=8 )
+		settingsWindow = GafferUI.Window( _( "Settings" ), borderWidth=8 )
 		settingsWindow._settingsEditor = True
 		settingsWindow.setChild( GafferUI.NodeUI.create( scriptWindow.scriptNode() ) )
 		scriptWindow.addChildWindow( settingsWindow )

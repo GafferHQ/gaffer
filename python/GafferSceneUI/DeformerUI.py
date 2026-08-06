@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
@@ -46,13 +47,13 @@ Gaffer.Metadata.registerNode(
 		"adjustBounds" : {
 
 			"description" :
-			"""
+			_("""
 			Adjusts bounding boxes to account for the changes made to the object.
 
 			> Caution : Adjusting boundings boxes has a performance penalty.
 			> If you do not need accurate bounds or you know that the bounds
 			> will only change slightly, you may prefer to turn this off.
-			""",
+			"""),
 
 			"layout:index" : -1,
 

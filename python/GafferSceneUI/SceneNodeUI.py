@@ -39,16 +39,17 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.SceneNode,
 
 	"description",
-	"""
+	_("""
 	The base type for all nodes which are capable of generating a
 	hierarchical scene.
-	""",
+	"""),
 
 	plugs = {
 
@@ -61,9 +62,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The output scene.
-			""",
+			"""),
 
 		},
 
@@ -71,10 +72,10 @@ Gaffer.Metadata.registerNode(
 		"enabled" : {
 
 			"description" :
-			"""
+			_("""
 			The on/off state of the node. When it is off, the node outputs
 			an empty scene.
-			""",
+			"""),
 
 		},
 

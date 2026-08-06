@@ -36,52 +36,53 @@
 
 import Gaffer
 import GafferVDB
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferVDB.LevelSetToMesh,
 
 	"description",
-	"""
+	_("""
 	Converts a level set VDB object to a mesh primitive.
-	""",
+	"""),
 
 	plugs = {
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter used to choose the vdbs to be converted. Source locations are
 			pruned from the output scene, unless they are reused as part of a destination location
 			(or a separate source scene is connected).
-			"""
+			""")
 
 		},
 
 		"source" : {
 
 			"description" :
-			"""
+			_("""
 			An optional alternate scene to provide the vdbs to be converted. When connected :
 
 			- The `filter` chooses locations to be merged from the `source` scene rather than then `in` scene.
 			- Source locations are not pruned from the output scene.
-			"""
+			""")
 
 		},
 
 		"destination" : {
 
 			"description" :
-			"""
+			_("""
 			By default, vdbs will be replaced with a mesh in place, using the destination `${scene:path}`.
 			The destination can be modified to change where the outputs are placed. If multiple filtered locations
 			have the same destination, the vdbs will be merged into one mesh.
 
 			The destination location will be created if it doesn't exist already. If the name overlaps
 			with an existing location that isn't filtered, the name will get a suffix.
-			""",
+			"""),
 
 		},
 
@@ -97,28 +98,28 @@ Gaffer.Metadata.registerNode(
 		"grid" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the level set grid to create a mesh primitive from.
-			"""
+			""")
 
 		},
 
 		"isoValue" : {
 
 			"description" :
-			"""
+			_("""
 			Value which defines the isosurface to convert to a mesh primitive.
 			Usually this is set to zero but setting a small positive number will generate a dilated mesh and negative will create an eroded mesh.
-			"""
+			""")
 
 		},
 
 		"adaptivity" : {
 
 			"description" :
-			"""
+			_("""
 			Adaptively generate fewer polygons from level set. 0 - uniform meshing, 1 - maximum level of adaptivity.
-			"""
+			""")
 
 		}
 

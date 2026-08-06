@@ -36,51 +36,52 @@
 
 import Gaffer
 import GafferVDB
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferVDB.MeshToLevelSet,
 
 	"description",
-	"""
+	_("""
 	Converts a mesh primitive to a level set VDB object.
-	""",
+	"""),
 
 	plugs = {
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The filter used to choose the meshes to be converted. Source locations are
 			pruned from the output scene, unless they are reused as part of a destination location
 			(or a separate source scene is connected).
-			"""
+			""")
 		},
 
 		"source" : {
 
 			"description" :
-			"""
+			_("""
 			An optional alternate scene to provide the meshes to be converted. When connected :
 
 			- The `filter` chooses locations to be merged from the `source` scene rather than then `in` scene.
 			- Source locations are not pruned from the output scene.
-			"""
+			""")
 
 		},
 
 		"destination" : {
 
 			"description" :
-			"""
+			_("""
 			By default, meshes will be replaced with a level set in place, using the destination `${scene:path}`.
 			The destination can be modified to change where the outputs are placed. If multiple filtered locations
 			have the same destination, the meshes will be merged into one level set.
 
 			The destination location will be created if it doesn't exist already. If the name overlaps
 			with an existing location that isn't filtered, the name will get a suffix.
-			""",
+			"""),
 
 		},
 
@@ -94,36 +95,36 @@ Gaffer.Metadata.registerNode(
 		"grid" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the level set grid to create in the VDB object.
-			"""
+			""")
 
 		},
 
 		"voxelSize" : {
 
 			"description" :
-			"""
+			_("""
 			Size of the voxel in the level set grid. Smaller voxel sizes will increase resolution, take more memory & longer to process.
-			"""
+			""")
 
 		},
 
 		"exteriorBandwidth" : {
 
 			"description" :
-			"""
+			_("""
 			Defines the exterior width of the level set in voxel units.
-			"""
+			""")
 
 		},
 
 		"interiorBandwidth" : {
 
 			"description" :
-			"""
+			_("""
 			Defines the interior width of the level set in voxel units.
-			"""
+			""")
 
 		},
 

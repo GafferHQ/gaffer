@@ -42,13 +42,14 @@ import GafferScene
 import GafferSceneUI
 
 from Qt import QtGui
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.RenderPasses,
 
 	"description",
-	"""
+	_("""
 	Appends render passes to the scene globals.
 
 	Render passes can be used to define named variations of a scene.
@@ -65,20 +66,20 @@ Gaffer.Metadata.registerNode(
 
 	> Tip : The list of render passes is stored in the `renderPass:names`
 	> option in the scene globals.
-	""",
+	"""),
 
 	plugs = {
 
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			The names of render passes to be created.
 
 			> Tip : If any of the specified names already exist, they
 			> will be removed from their existing position in the list
 			> and appended to the end.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.RenderPassesUI._RenderPassVectorDataPlugValueWidget",
 

@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 
@@ -84,8 +85,8 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 
 		self._setWidget( column )
 
-		self.__continueButton = self._addButton( "Continue" )
-		self.__cancelButton = self._addButton( "Cancel" )
+		self.__continueButton = self._addButton( _("Continue") )
+		self.__cancelButton = self._addButton( _("Cancel") )
 		# Make it impossible to accidentally cancel by hitting `Enter`.
 		self.__cancelButton._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
 		self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__cancelClicked ) )
@@ -106,7 +107,7 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 		self.__errorImage.setVisible( False )
 		self.__messageWidget.setVisible( False )
 		self.__continueButton.setVisible( False )
-		self.__cancelButton.setText( "Cancel" )
+		self.__cancelButton.setText( _("Cancel") )
 		self.__cancelButton.setVisible( True )
 		self.__cancelButton.setEnabled( True )
 
@@ -127,7 +128,7 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 		# Deal with cancellation.
 
 		if isinstance( self.__backgroundResult, IECore.Cancelled ) :
-			if self.__cancelButton.getText() == "Cancelling..." :
+			if self.__cancelButton.getText() == _("Cancelling...") :
 				return self.__backgroundResult
 			else :
 				# Unexpected cancellation. This means a bug somewhere.
@@ -143,7 +144,7 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 		errors = self.__messageWidget.messageCount( IECore.Msg.Level.Error )
 		warnings = self.__messageWidget.messageCount( IECore.Msg.Level.Warning )
 		if warnings or errors :
-			self.__label.setText( "<b>Error</b>" if errors else "<b>Warning</b>" )
+			self.__label.setText( "<b>" + _("Error") + "</b>" if errors else "<b>" + _("Warning") + "</b>" )
 			self.__busyWidget.setVisible( False )
 			self.__errorImage.setVisible( True )
 			self.__messageWidget.setVisible( True )
@@ -187,7 +188,7 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 	def __cancel( self ) :
 
 		self.__backgroundTask.cancel()
-		self.__cancelButton.setText( "Cancelling..." )
+		self.__cancelButton.setText( _("Cancelling...") )
 		self.__cancelButton.setEnabled( False )
 
 	def __cancelClicked( self, *unused ) :

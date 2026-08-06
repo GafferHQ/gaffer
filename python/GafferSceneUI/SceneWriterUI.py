@@ -40,29 +40,30 @@ import IECoreScene
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.SceneWriter,
 
 	"description",
-	"""
+	_("""
 	Writes scenes to cache files on disk. Gaffer's native file format is the .scc
 	(SceneCache) format provided by Cortex, but other formats may be supported by
 	registering a new implementation of Cortex's abstract SceneInterface.
-	""",
+	"""),
 
 	plugs = {
 
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the file to be written. Note that unlike
 			image sequences, many scene formats write animation into
 			a single file, so using # characters to specify a frame
 			number is generally not necessary.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -75,9 +76,9 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to be written.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 
@@ -86,9 +87,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			A direct pass-through of the input scene.
-			""",
+			"""),
 
 		},
 

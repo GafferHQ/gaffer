@@ -37,30 +37,31 @@
 import Gaffer
 import GafferUI
 import GafferDispatch
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.FrameMask,
 
 	"description",
-	"""
+	_("""
 	Masks upstream tasks so that they will only be executed for
 	a subset of the Dispatcher's frame range.
-	""",
+	"""),
 
 	plugs = {
 
 		"mask" : {
 
 			"description" :
-			"""
+			_("""
 			The subset of frames that will be executed by upstream tasks.
 			Any frames not included here will be ignored, regardless
 			of the dispatcher's frame range.
 
 			> Note : This can only remove frames. To add frames, edit the
 			> settings on the Dispatcher.
-			""",
+			"""),
 
 		},
 

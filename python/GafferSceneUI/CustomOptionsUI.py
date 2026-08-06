@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 
@@ -49,24 +50,24 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 
-	"""
+	_("""
 	Applies arbitrary user-defined options to the root of the scene. Note
 	that for most common cases the StandardOptions or renderer-specific options
 	nodes should be preferred, as they provide predefined sets of options with customised
 	user interfaces. The CustomOptions node is of most use when needing to set am
 	option not supported by the specialised nodes.
-	""",
+	"""),
 
 	plugs = {
 
 		"options" : {
 
 			"description" :
-			"""
+			_("""
 			The options to be applied - arbitrary numbers of user defined options may be added
 			as children of this plug via the user interface, or using the CompoundDataPlug API via
 			python.
-			""",
+			"""),
 
 			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 			"compoundDataPlugValueWidget:editable" : True,
@@ -84,11 +85,11 @@ Gaffer.Metadata.registerNode(
 		"prefix" : {
 
 			"description" :
-			"""
+			_("""
 			A prefix applied to the name of each option. For example, a prefix
 			of "myCategory:" and a name of "test" will create an option named
 			"myCategory:test".
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 
@@ -132,7 +133,7 @@ def __addFromGlobalsMenuDefinition( menu ) :
 
 	if not len( result.items() ) :
 		result.append(
-			"/No Options Found", { "active" : False }
+			"/No Options Found", { "active" : False, "label" : _("No Options Found") }
 		)
 		return result
 
@@ -182,7 +183,7 @@ def __optionsDropHandler( widget, dragDropEvent ) :
 
 	options = __filteredOptions( widget, dragDropEvent )
 	if not options :
-		GafferUI.PopupWindow.showWarning( "Options added already", parent = widget )
+		GafferUI.PopupWindow.showWarning( _("Options added already"), parent = widget )
 
 	with Gaffer.UndoScope( widget.plugParent().ancestor( Gaffer.ScriptNode ) ) :
 		for name, value in options.items() :

@@ -39,15 +39,16 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.FilterProcessor,
 
 	"description",
-	"""
+	_("""
 	The base type for all filters which operate using one or more input filters.
-	""",
+	"""),
 
 	plugs = {
 
@@ -55,10 +56,10 @@ Gaffer.Metadata.registerNode(
 		"enabled" : {
 
 			"description" :
-			"""
+			_("""
 			The on/off state of the filter. When it is off, the
 			result of the first input is passed through unchanged.
-			""",
+			"""),
 
 		},
 

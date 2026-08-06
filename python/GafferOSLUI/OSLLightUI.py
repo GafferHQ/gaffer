@@ -40,15 +40,16 @@ import IECore
 
 import Gaffer
 import GafferOSL
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLLight,
 
 	"description",
-	"""
+	_("""
 	Creates lights by assigning an emissive OSL shader to some simple geometry.
-	""",
+	"""),
 
 	"layout:activator:shapeHasRadius", lambda node : node["shape"].getValue() != node.Shape.Geometry,
 	"layout:activator:shapeIsGeometry", lambda node : node["shape"].getValue() == node.Shape.Geometry,
@@ -64,10 +65,10 @@ Gaffer.Metadata.registerNode(
 		"shaderName" : {
 
 			"description" :
-			"""
+			_("""
 			The OSL shader to be assigned to the light
 			geometry.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -76,13 +77,13 @@ Gaffer.Metadata.registerNode(
 		"shape" : {
 
 			"description" :
-			"""
+			_("""
 			The shape of the light. Typically, disks
 			should be used with spotlight shaders and spheres
 			should be used with point light shaders. The "Geometry"
 			shape allows the use of custom geometry specific to a
 			particular renderer.
-			""",
+			"""),
 
 			"preset:Disk" : GafferOSL.OSLLight.Shape.Disk,
 			"preset:Sphere" : GafferOSL.OSLLight.Shape.Sphere,
@@ -95,10 +96,10 @@ Gaffer.Metadata.registerNode(
 		"radius" : {
 
 			"description" :
-			"""
+			_("""
 			The radius of the disk or sphere shape. Has no effect for
 			other shapes.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "shapeHasRadius",
 
@@ -107,11 +108,11 @@ Gaffer.Metadata.registerNode(
 		"geometryType" : {
 
 			"description" :
-			"""
+			_("""
 			The type of geometry to create when shape is set
 			to "Geometry". This should contain the name of a geometry
 			type specific to the renderer being used.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "shapeIsGeometry",
 
@@ -120,10 +121,10 @@ Gaffer.Metadata.registerNode(
 		"geometryBound" : {
 
 			"description" :
-			"""
+			_("""
 			The bounding box of the geometry. Only relevant when the
 			shape is set to "Geometry".
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "shapeIsGeometry",
 
@@ -132,10 +133,10 @@ Gaffer.Metadata.registerNode(
 		"geometryParameters" : {
 
 			"description" :
-			"""
+			_("""
 			Arbitary parameters which specify the features of the "Geometry"
 			shape type.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Geometry",
 			"layout:visibilityActivator" : "shapeIsGeometry",
@@ -156,7 +157,7 @@ def __parameterMetadata( plug, key ) :
 
 for key in [
 	"description",
-	"label",
+	_("label"),
 	"noduleLayout:label",
 	"layout:divider",
 	"layout:section",

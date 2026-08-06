@@ -45,6 +45,7 @@ import Gaffer
 import GafferUI
 import GafferImage
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -55,14 +56,14 @@ Gaffer.Metadata.registerNode(
 	GafferScene.OpenGLShader,
 
 	"description",
-	"""
+	_("""
 	Loads GLSL shaders for use in the viewer and the OpenGLRender node.
 	GLSL shaders are loaded from *.frag and *.vert files in directories
 	specified by the IECOREGL_SHADER_PATHS environment variable.
 
 	Use the ShaderAssignment node to assign shaders to objects in the
 	scene.
-	""",
+	"""),
 
 	plugs = {
 

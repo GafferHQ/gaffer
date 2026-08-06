@@ -43,6 +43,7 @@ import GafferUI
 import GafferImage
 
 import PyOpenColorIO
+from GafferUI.i18n import _
 
 def __colorSpaceMenuHelper( plug, config = None ) :
 
@@ -96,20 +97,20 @@ Gaffer.Metadata.registerNode(
 	GafferImage.OpenColorIOTransform,
 
 	"description",
-	"""
+	_("""
 	Applies color transformations provided by
 	OpenColorIO.
-	""",
+	"""),
 
 	plugs = {
 
 		"context" : {
 
 			"description" :
-			"""
+			_("""
 			> Warning : Deprecated - please use the `OpenColorIOContext`
 			> node instead.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:customWidget:addButton:widgetType" : "GafferUI.PlugCreationWidget",

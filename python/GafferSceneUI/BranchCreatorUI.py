@@ -38,6 +38,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -48,9 +49,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.BranchCreator,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes creating a new branch in the scene hierarchy.
-	""",
+	"""),
 
 	"layout:activator:filterNotConnected", lambda node : node["filter"].getInput() is None,
 	"layout:activator:parentInUse", lambda node : node["parent"].getInput() is not None or node["parent"].getValue() != "",
@@ -88,9 +89,9 @@ Gaffer.Metadata.registerNode(
 		"copySourceAttributes" : {
 
 			"description" :
-			"""
+			_("""
 			Copies attributes to newly created destination locations to match the attributes at the source location.
-			""",
+			"""),
 			"layout:activator" : "nonDefaultDestination",
 			"layout:index" : -1,
 

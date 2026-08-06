@@ -36,43 +36,44 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Constant,
 
 	"description",
-	"""
+	_("""
 	Outputs an image of a constant flat colour.
-	""",
+	"""),
 
 	plugs = {
 
 		"format" : {
 
 			"description" :
-			"""
+			_("""
 			The resolution and aspect ratio of the image.
-			""",
+			"""),
 
 		},
 
 		"color" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of the image.
-			""",
+			"""),
 
 		},
 
 		"layer" : {
 
 			"description" :
-			"""
+			_("""
 			The layer to generate. The output channels will
 			be named ( layer.R, layer.G, layer.B and layer.A ).
-			""",
+			"""),
 			"stringPlugValueWidget:placeholderText" : "[RGBA]",
 
 		}

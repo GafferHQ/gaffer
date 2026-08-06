@@ -39,6 +39,8 @@ import functools
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 def __applyChildVisibility( plug, visible ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
@@ -69,7 +71,7 @@ def __plugContextMenuSignal( graphEditor, plug, menuDefinition ) :
 
 	if len( nodule ) > 0 :
 		menuDefinition.append(
-			"/Collapse {} Components".format( childNames ),
+			"/" + _("Collapse {} Components").format( childNames ),
 			{
 				"command" : functools.partial( __applyChildVisibility, plug, False ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( plug ),
@@ -77,7 +79,7 @@ def __plugContextMenuSignal( graphEditor, plug, menuDefinition ) :
 		)
 	else :
 		menuDefinition.append(
-			"/Expand {} Components".format( childNames ),
+			"/" + _("Expand {} Components").format( childNames ),
 			{
 				"command" : functools.partial( __applyChildVisibility, plug, True ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( plug )

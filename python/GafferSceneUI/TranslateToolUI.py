@@ -38,15 +38,16 @@ import IECore
 
 import Gaffer
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.TranslateTool,
 
 	"description",
-	"""
+	_("""
 	Tool for editing object translation.
-	""",
+	"""),
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
@@ -60,12 +61,12 @@ Gaffer.Metadata.registerNode(
 		"orientation" : {
 
 			"description" :
-			"""
+			_("""
 			The space used to define the orientation of the XYZ
 			translation handles. Note that this is independent
 			of the space setting on a Transform node - each
 			setting can be mixed and matched freely.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
