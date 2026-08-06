@@ -109,6 +109,10 @@ Gaffer.Metadata.registerNode(
 			- `{hash}` : A hash value that uniquely identifies the prototype.
 
 			> Note : Each prototype must have a unique name. If the time offset or any context variable is omitted from the format, the hash will be appended automatically to maintain this constraint.
+
+			> Note : Special rules apply when formatting floating point values such as the time offset.
+			> The '.' and '-' characters are not legal in USD identifiers, so to produce names that are
+			> compatible with USD they are replaced with '_' and 'n' respectively.
 			"""
 
 		},
