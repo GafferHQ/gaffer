@@ -81,6 +81,15 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 		shader.loadShader( "Surface/Constant" )
 		return shader, shader["parameters"]["Cs"], shader["out"]["out"]
 
+	def _createColorAttributeReader( self, attributeName ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "dlPrimitiveAttribute" )
+		shader["parameters"]["attribute_name"].setValue( attributeName )
+		shader["parameters"]["attribute_type"].setValue( 1 ) # color
+
+		return shader, shader["out"]["o_color"]
+
 	def _createOptions( self ) :
 
 		# Improve anti-aliasing for motion-blur tests.

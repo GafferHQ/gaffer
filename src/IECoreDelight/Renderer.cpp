@@ -1401,6 +1401,15 @@ class PointInstancerCache : public IECore::RefCounted
 			ParameterList parameters;
 			parameters.add( "modelindices", prototypeIndex.get() );
 
+			vector<ConstDataPtr> instanceAttributeData;
+			for( const auto &[name, value] : samples[0]->instanceAttributes() )
+			{
+				ConstDataPtr d = value.expandedData();
+				parameters.add( name.c_str(), d.get() );
+				// Keep alive until `NSISetAttribute()` call.
+				instanceAttributeData.push_back( d );
+			}
+
 			NSISetAttribute( m_context, handle, parameters.size(), parameters.data() );
 
 			// Convert prototypes and connect to `sourcemodels` attribute.

@@ -49,7 +49,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.7.0.0a14/cortex-10.7.0.0a14-{platform}-{vfxPlatform}.{extension}"
+defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.7.0.0/cortex-10.7.0.0-{platform}-{vfxPlatform}.{extension}"
 
 # Parse command line arguments.
 
@@ -85,8 +85,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 archiveURL = args.archiveURL.format(
-	## \todo Rename "macos-arm64" Cortex release to "macos" to match GafferDependencies.
-	platform = { "darwin" : "macos-arm64", "win32" : "windows" }.get( sys.platform, "linux" ),
+	platform = { "darwin" : "macos", "win32" : "windows" }.get( sys.platform, "linux" ),
 	vfxPlatform = args.vfxPlatform,
 	extension = "tar.gz" if sys.platform != "win32" else "zip"
 )

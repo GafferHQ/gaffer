@@ -38,7 +38,6 @@
 import pathlib
 import inspect
 import unittest
-import subprocess
 import threading
 
 import arnold
@@ -1795,6 +1794,13 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		light = GafferArnold.ArnoldLight()
 		light.loadShader( "distant_light" )
 		return light, light["parameters"]["color"]
+
+	def _createColorAttributeReader( self, attributeName ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "user_data_rgb" )
+		shader["parameters"]["attribute"].setValue( attributeName )
+		return shader, shader["out"]
 
 	def _cameraVisibilityAttribute( self ) :
 

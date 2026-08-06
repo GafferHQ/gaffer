@@ -38,6 +38,7 @@
 
 #include "GafferScene/SceneAlgo.h"
 
+#include "IECore/DataAlgo.h"
 #include "IECore/NullObject.h"
 
 #include "Imath/ImathMatrixAlgo.h"
@@ -266,6 +267,47 @@ FlattenedPrototype flattenedPrototype( const Private::RendererAlgo::RenderOption
 	return result;
 }
 
+struct FlattenedPrimitiveVariable
+{
+	using FlattenFunction = std::function<void ( size_t sourceIndex, size_t flattenedIndex, size_t numFlattenedPoints )>;
+	DataPtr data;
+	FlattenFunction flattenFunction;
+};
+
+FlattenedPrimitiveVariable createFlattenedPrimitiveVariable( const PrimitiveVariable &primitiveVariable, size_t flattenedSize )
+{
+	FlattenedPrimitiveVariable result;
+	IECore::dispatch(
+
+		primitiveVariable.data.get(),
+
+		[&]( auto typedData ) -> void {
+
+			using DataType = remove_const_t<remove_pointer_t<decltype( typedData )>>;
+
+			if constexpr( TypeTraits::IsVectorTypedData<DataType>::value )
+			{
+				typename DataType::Ptr flattenedData = new DataType;
+				flattenedData->writable().resize( flattenedSize );
+				result.data = flattenedData;
+				if constexpr( TypeTraits::IsGeometricTypedData<DataType>::value )
+				{
+					flattenedData->setInterpretation( typedData->getInterpretation() );
+				}
+
+				using ElementType = typename DataType::ValueType::value_type;
+				PrimitiveVariable::IndexedView<ElementType> indexedView( primitiveVariable );
+
+				result.flattenFunction = [indexedView, &out=flattenedData->writable()] ( size_t sourceIndex, size_t flattenedIndex, size_t numFlattenedPoints ) {
+					std::fill( out.begin() + flattenedIndex, out.begin() + flattenedIndex + numFlattenedPoints, indexedView[sourceIndex] );
+				};
+			}
+		}
+
+	);
+	return result;
+}
+
 } // namespace
 
 IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECoreScene::PointInstancer *instancer, const RendererAlgo::RenderOptions &renderOptions, const ScenePlug *scene )
@@ -380,6 +422,17 @@ IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECor
 	auto &flattenedOrientation = flattenedOrientationData->writable();
 	flattenedOrientation.resize( numFlattenedPoints );
 
+	vector<FlattenedPrimitiveVariable::FlattenFunction> primitiveVariableFunctions;
+	for( const auto &[name, primitiveVariable] : instancer->instanceAttributes() )
+	{
+		FlattenedPrimitiveVariable f = createFlattenedPrimitiveVariable( primitiveVariable, numFlattenedPoints );
+		if( f.data )
+		{
+			primitiveVariableFunctions.push_back( f.flattenFunction );
+			result->variables[name] = PrimitiveVariable( primitiveVariable.interpolation, f.data );
+		}
+	}
+
 	// Fill the vertex data, parallelising across points.
 
 	PointInstancer::TransformQuery transformQuery( *instancer );
@@ -397,6 +450,7 @@ IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECor
 				{
 					continue;
 				}
+
 				size_t flattenedPointIndex = pointOffsets[pointIndex];
 				for( const auto &location : flattenedPrototypes[prototypeIndex[pointIndex]] )
 				{
@@ -410,6 +464,16 @@ IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECor
 					flattenedOrientation[flattenedPointIndex] = extractQuat( m );
 
 					flattenedPointIndex++;
+				}
+
+				for( const auto &f : primitiveVariableFunctions )
+				{
+					/// \todo Investigate the `std::function` call overhead,
+					/// which we are paying for each source point. We might be
+					/// faster dispatching per primitive variable instead, but
+					/// then we would need a different approach to the
+					/// threading.
+					f( pointIndex, pointOffsets[pointIndex], flattenedPrototypes[prototypeIndex[pointIndex]].size() );
 				}
 			}
 
