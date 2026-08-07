@@ -1011,6 +1011,7 @@ Gaffer.Metadata.registerNode(
 
 			"label" : "",
 			"plugValueWidget:type" : "GafferSceneUI.SceneEditor._SetFilterPlugValueWidget",
+			"setFilterPlugValueWidget:excludedSetNames" : IECore.StringVectorData( [ "__lights", "__lightFilters", "__cameras", "__coordinateSystems" ] ),
 			"layout:section" : "Lights"
 
 		},
@@ -1043,6 +1044,12 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"stringPlugValueWidget:placeholderText" : "Filter Objects...",
+
+		},
+
+		"setFilter" : {
+
+			"setFilterPlugValueWidget:excludedSetNames" : IECore.StringVectorData( [ "__lights", "__lightFilters", "defaultLights" ] ),
 
 		},
 
@@ -1086,6 +1093,7 @@ Gaffer.Metadata.registerNode(
 
 			"label" : "",
 			"plugValueWidget:type" : "GafferSceneUI.SceneEditor._SetFilterPlugValueWidget",
+			"setFilterPlugValueWidget:excludedSetNames" : IECore.StringVectorData( [ "__lights", "__lightFilters", "__cameras", "__coordinateSystems", "defaultLights" ] ),
 			"layout:section" : "LightFilters"
 
 		},
