@@ -6,6 +6,11 @@ Features
 
 - LightLinkingEditor : Added a new editor UI for inspecting and editing light links.
 
+Improvements
+------------
+
+- HierarchyView, AttributeEditor : The set filter menu now only shows the "Cameras", "Coordinate Systems", "Lights", and "Light Filters" menu items when their equivalent sets are present in the scene.
+
 Fixes
 -----
 
