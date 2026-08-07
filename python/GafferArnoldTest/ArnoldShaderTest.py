@@ -443,7 +443,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( n["type"].getValue(), "ai:light" )
 
 		self.assertTrue( "exposure" in n["parameters"] )
-		self.assertTrue( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
+		self.assertEqual( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
 
 	def testColorParameterMetadata( self ) :
 
