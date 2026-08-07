@@ -47,6 +47,7 @@
 #include "GafferScene/Isolate.h"
 #include "GafferScene/MergeScenes.h"
 #include "GafferScene/Parent.h"
+#include "GafferScene/PointInstancerCore.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/Rename.h"
 #include "GafferScene/Scatter.h"
@@ -131,6 +132,7 @@ void GafferSceneModule::bindHierarchy()
 	GafferBindings::DependencyNodeClass<Unencapsulate>();
 	GafferBindings::DependencyNodeClass<Rename>();
 	GafferBindings::DependencyNodeClass<MeshSplit>();
+	GafferBindings::DependencyNodeClass<PointInstancerCore>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<MergeScenes>();
