@@ -99,6 +99,8 @@ Gaffer.Metadata.registerNode(
 
 		"prototypeFormat" : {
 
+			# > Note : When updating this description, be sure to update
+			# > `PointInstancer.prototypeFormat` to match.
 			"description" :
 			"""
 			A format specification used to customise the name of each prototype based on its context variables and time offset. The following format tokens are available :
