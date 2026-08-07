@@ -146,42 +146,40 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 				errorCondition.notify()
 		script["errorNode"].errorSignal().connect( error )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
+		graphGadget = GafferUI.GraphGadget( script )
+		gadget = graphGadget.annotationsGadget()
 
-			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget.annotationsGadget()
+		# Value must be computed in background, so initially we expect a placeholder
+		self.assertEqual( gadget.annotationText( script["node"] ), "test : ---" )
 
-			# Value must be computed in background, so initially we expect a placeholder
-			self.assertEqual( gadget.annotationText( script["node"] ), "test : ---" )
+		# But if we wait for the background update we should get some updated text.
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "test : 0" )
 
-			# But if we wait for the background update we should get some updated text.
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "test : 0" )
+		# Same applies when the plug is dirtied. We expect a placeholder first.
+		script["node"]["op1"].setValue( 1 )
+		self.assertEqual( gadget.annotationText( script["node"] ), "test : ---" )
 
-			# Same applies when the plug is dirtied. We expect a placeholder first.
-			script["node"]["op1"].setValue( 1 )
-			self.assertEqual( gadget.annotationText( script["node"] ), "test : ---" )
+		# Then we get the real value when the computation is done.
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "test : 1" )
 
-			# Then we get the real value when the computation is done.
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "test : 1" )
+		# And when the plug is dirtied by an upstream change we again expect
+		# placeholder text at first.
+		script["node"]["op1"].setInput( script["errorNode"]["out3"] )
+		self.assertEqual( gadget.annotationText( script["node"] ), "test : ---" )
 
-			# And when the plug is dirtied by an upstream change we again expect
-			# placeholder text at first.
-			script["node"]["op1"].setInput( script["errorNode"]["out3"] )
-			self.assertEqual( gadget.annotationText( script["node"] ), "test : ---" )
+		# But this time we don't expect to get updated text, because the computation
+		# will error.
+		with errorCondition :
+			errorCondition.wait()
 
-			# But this time we don't expect to get updated text, because the computation
-			# will error.
-			with errorCondition :
-				errorCondition.wait()
+		# Handle UI thread calls made by StandardNodeGadget to show errors,
+		# and assert that there are no more calls.
+		self.uiThreadCallHandler.assertCalled()
+		self.uiThreadCallHandler.assertCalled()
 
-			# Handle UI thread calls made by StandardNodeGadget to show errors,
-			# and assert that there are no more calls.
-			callHandler.assertCalled()
-			callHandler.assertCalled()
-
-			callHandler.assertDone()
+		self.uiThreadCallHandler.assertDone()
 
 		self.assertEqual( gadget.annotationText( script["node"] ), "test : ---" )
 
@@ -222,56 +220,54 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "{sum}" ) )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
+		graphGadget = GafferUI.GraphGadget( script )
+		viewportGadget = GafferUI.ViewportGadget( graphGadget )
+		gadget = graphGadget.annotationsGadget()
 
-			graphGadget = GafferUI.GraphGadget( script )
-			viewportGadget = GafferUI.ViewportGadget( graphGadget )
-			gadget = graphGadget.annotationsGadget()
+		# Value must be computed in background, so initially we expect a placeholder
+		self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			# Value must be computed in background, so initially we expect a placeholder
-			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+		# Wait for compute to start, and make a graph edit to cancel it.
+		waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
+		script["node"]["op2"].setValue( 2 )
 
-			# Wait for compute to start, and make a graph edit to cancel it.
-			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
-			script["node"]["op2"].setValue( 2 )
+		# We expect a call on the UI thread to re-dirty the annotation.
 
-			# We expect a call on the UI thread to re-dirty the annotation.
+		renderRequests = GafferTest.CapturingSlot( viewportGadget.renderRequestSignal() )
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( len( renderRequests ), 1 )
+		self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			renderRequests = GafferTest.CapturingSlot( viewportGadget.renderRequestSignal() )
-			callHandler.assertCalled()
-			self.assertEqual( len( renderRequests ), 1 )
-			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+		# A new background task should have been launched to compute the
+		# text again. If we let the expression run to completion then we
+		# should get the final text.
+		waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
+		GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.set()
 
-			# A new background task should have been launched to compute the
-			# text again. If we let the expression run to completion then we
-			# should get the final text.
-			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
-			GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.set()
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "4" )
 
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "4" )
+		# Try one more time. But this time do the cancellation by
+		# modifying a completely unrelated plug.
 
-			# Try one more time. But this time do the cancellation by
-			# modifying a completely unrelated plug.
+		script["node"]["op2"].setValue( 3 )
+		self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+		waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
 
-			script["node"]["op2"].setValue( 3 )
-			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
-			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
+		script["node2"]["op1"].setValue( 1 ) # Cancels
 
-			script["node2"]["op1"].setValue( 1 ) # Cancels
+		renderRequests = GafferTest.CapturingSlot( viewportGadget.renderRequestSignal() )
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( len( renderRequests ), 1 )
+		self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			renderRequests = GafferTest.CapturingSlot( viewportGadget.renderRequestSignal() )
-			callHandler.assertCalled()
-			self.assertEqual( len( renderRequests ), 1 )
-			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+		waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
+		GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.set()
 
-			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
-			GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.set()
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "6" )
 
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "6" )
-
-			callHandler.assertDone()
+		self.uiThreadCallHandler.assertDone()
 
 	def testContextSensitiveText( self ) :
 
@@ -279,27 +275,25 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		script["node"] = GafferTest.FrameNode()
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "{output}" ) )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
+		graphGadget = GafferUI.GraphGadget( script )
+		gadget = graphGadget.annotationsGadget()
 
-			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget.annotationsGadget()
+		# Value must be computed in background, so initially we expect a placeholder
+		self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			# Value must be computed in background, so initially we expect a placeholder
-			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+		# But if we wait for the background update we should get some updated text.
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "1" )
 
-			# But if we wait for the background update we should get some updated text.
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "1" )
+		# Same applies when the context is changed. We expect a placeholder first.
+		script.context().setFrame( 10 )
+		self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			# Same applies when the context is changed. We expect a placeholder first.
-			script.context().setFrame( 10 )
-			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+		# Then we get the real value when the computation is done.
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "10" )
 
-			# Then we get the real value when the computation is done.
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "10" )
-
-			callHandler.assertDone()
+		self.uiThreadCallHandler.assertDone()
 
 	def testContextTracking( self ) :
 
@@ -313,31 +307,29 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 
 		script.setFocus( script["timeWarp"] )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
+		graphGadget = GafferUI.GraphGadget( script )
+		gadget = graphGadget.annotationsGadget()
 
-			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget.annotationsGadget()
+		# Value must be computed in background, so initially we expect a placeholder
+		self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			# Value must be computed in background, so initially we expect a placeholder
-			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+		# But if we wait for the background update we should get some updated text.
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "1" )
 
-			# But if we wait for the background update we should get some updated text.
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "1" )
+		# Same applies when the TimeWarp is changed. First we wait for the
+		# ContextTracker to update, and then we get the placeholder text
+		# when the annotation update starts.
+		script["timeWarp"]["offset"].setValue( 10 )
+		self.waitForIdle()
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			# Same applies when the TimeWarp is changed. First we wait for the
-			# ContextTracker to update, and then we get the placeholder text
-			# when the annotation update starts.
-			script["timeWarp"]["offset"].setValue( 10 )
-			self.waitForIdle()
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
+		# Then we get the real value when the computation is done.
+		self.uiThreadCallHandler.assertCalled()
+		self.assertEqual( gadget.annotationText( script["node"] ), "11" )
 
-			# Then we get the real value when the computation is done.
-			callHandler.assertCalled()
-			self.assertEqual( gadget.annotationText( script["node"] ), "11" )
-
-			callHandler.assertDone()
+		self.uiThreadCallHandler.assertDone()
 
 	def testSubstitutedTextRenderRequests( self ) :
 
@@ -384,24 +376,22 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "{sum}" ) )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
+		graphGadget = GafferUI.GraphGadget( script )
+		gadget = graphGadget.annotationsGadget()
 
-			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget.annotationsGadget()
+		# Value must be computed in background, so initially we expect a placeholder.
+		self.assertEqual( gadget.annotationText( script["node"], "user" ), "---" )
 
-			# Value must be computed in background, so initially we expect a placeholder.
-			self.assertEqual( gadget.annotationText( script["node"], "user" ), "---" )
+		# Wait for the UI thread call that will be scheduled to update the gadget.
+		call = self.uiThreadCallHandler.receive()
+		# But then delete our references to the gadget _before_ we execute
+		# the call. This simulates a user removing a GraphEditor while the
+		# AnnotationsGadget is still updating. If we don't handle lifetimes
+		# well, then this could crash.
+		del graphGadget, gadget
+		call()
 
-			# Wait for the UI thread call that will be scheduled to update the gadget.
-			call = callHandler.receive()
-			# But then delete our references to the gadget _before_ we execute
-			# the call. This simulates a user removing a GraphEditor while the
-			# AnnotationsGadget is still updating. If we don't handle lifetimes
-			# well, then this could crash.
-			del graphGadget, gadget
-			call()
-
-			callHandler.assertDone()
+		self.uiThreadCallHandler.assertDone()
 
 	def testRemoveNodeWhileBackgroundThreadRuns( self ) :
 
@@ -410,24 +400,22 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "test", Gaffer.MetadataAlgo.Annotation( "{sum}" ) )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
+		graphGadget = GafferUI.GraphGadget( script )
+		gadget = graphGadget.annotationsGadget()
 
-			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget.annotationsGadget()
+		# Value must be computed in background, so initially we expect a placeholder
+		self.assertEqual( gadget.annotationText( script["node"], "test" ), "---" )
 
-			# Value must be computed in background, so initially we expect a placeholder
-			self.assertEqual( gadget.annotationText( script["node"], "test" ), "---" )
+		# Wait for the UI thread call that will be scheduled to update the gadget.
+		call = self.uiThreadCallHandler.receive()
+		# But then delete the node _before_ we execute the call. This
+		# simulates a user deleting a node while the AnnotationsGadget is
+		# still updating. If we don't handle lifetimes well, then this could
+		# crash.
+		del script["node"]
+		call()
 
-			# Wait for the UI thread call that will be scheduled to update the gadget.
-			call = callHandler.receive()
-			# But then delete the node _before_ we execute the call. This
-			# simulates a user deleting a node while the AnnotationsGadget is
-			# still updating. If we don't handle lifetimes well, then this could
-			# crash.
-			del script["node"]
-			call()
-
-			callHandler.assertDone()
+		self.uiThreadCallHandler.assertDone()
 
 	def testRemoveAnnotationWhileBackgroundThreadRuns( self ) :
 
@@ -438,20 +426,18 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		for i in range( 0, numAnnotations ) :
 			Gaffer.MetadataAlgo.addAnnotation( script["node"], f"test{i}", Gaffer.MetadataAlgo.Annotation( "{sum}" ) )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
+		graphGadget = GafferUI.GraphGadget( script )
+		gadget = graphGadget.annotationsGadget()
 
-			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget.annotationsGadget()
+		# Value must be computed in background, so initially we expect a placeholder
+		self.assertEqual( gadget.annotationText( script["node"], "test0" ), "---" )
 
-			# Value must be computed in background, so initially we expect a placeholder
-			self.assertEqual( gadget.annotationText( script["node"], "test0" ), "---" )
+		# Remove annotations while the background task runs.
+		for i in range( 0, numAnnotations ) :
+			Gaffer.MetadataAlgo.removeAnnotation( script["node"], f"test{i}" )
 
-			# Remove annotations while the background task runs.
-			for i in range( 0, numAnnotations ) :
-				Gaffer.MetadataAlgo.removeAnnotation( script["node"], f"test{i}" )
-
-			# And wait for the task to complete.
-			callHandler.assertCalled()
+		# And wait for the task to complete.
+		self.uiThreadCallHandler.assertCalled()
 
 		self.assertEqual( gadget.annotationText( script["node"], "test0" ), "" )
 

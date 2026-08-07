@@ -818,11 +818,10 @@ class ContextTrackerTest( GafferUITest.TestCase ) :
 		# the background task.
 
 		with ContextTrackerTest.expressionStartedCondition :
-			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
-				script["node"]["op1"].setValue( 1 )
-				handler.assertCalled() # Handle UI thread call made when background task detects cancellation.
-				self.waitForIdle() # Handle idle event used to restart update.
-				ContextTrackerTest.expressionStartedCondition.wait()
+			script["node"]["op1"].setValue( 1 )
+			self.uiThreadCallHandler.assertCalled() # Handle UI thread call made when background task detects cancellation.
+			self.waitForIdle() # Handle idle event used to restart update.
+			ContextTrackerTest.expressionStartedCondition.wait()
 
 		# Again, the update won't have completed because the expression is stuck.
 		self.assertFalse( tracker.isTracked( script["node"] ) )

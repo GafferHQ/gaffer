@@ -25,6 +25,11 @@ Fixes
   - Fixed handling of connections between floats and color/vector components [^2].
   - Fixed bug preventing attributes from being deleted from lights during an interactive render [^2].
 
+API
+---
+
+- GafferUITest.TestCase : Added `uiThreadCallHandler` member. This should be used by any tests which need to handle calls to the UI thread.
+
 Build
 -----
 

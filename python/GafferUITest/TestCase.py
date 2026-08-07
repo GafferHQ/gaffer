@@ -83,6 +83,13 @@ class TestCase( GafferTest.TestCase ) :
 			"Viewport display is likely to show banding - please resolve graphics driver issue."
 		)
 
+		self.uiThreadCallHandler = GafferTest.ParallelAlgoTest.UIThreadCallHandler()
+		self.uiThreadCallHandler.__enter__()
+		## \todo We could call `self.uiThreadCallHandler.assertDone()` here, so
+		# that `__exit__()` checks that the tests are calling `assertCalled()`
+		# appropriately. That will likely mean fixing a few tests.
+		self.addCleanup( self.uiThreadCallHandler.__exit__, None, None, None )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
