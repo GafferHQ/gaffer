@@ -1414,9 +1414,8 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		# to wait for it to finish.
 		contextTracker = GafferUI.ContextTracker.acquireForFocus( graphGadget.getRoot().scriptNode() )
 		if contextTracker.updatePending() :
-			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as uiCallHandler :
-				self.waitForIdle()
-				uiCallHandler.assertCalled()
+			self.waitForIdle()
+			self.uiThreadCallHandler.assertCalled()
 
 		actualState = {
 			k : not graphGadget.nodeGadget( graphGadget.getRoot()[k] ).getContents().getDimmed()
