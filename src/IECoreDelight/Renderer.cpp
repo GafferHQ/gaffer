@@ -695,6 +695,17 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 			:	m_handle( context, "attributes:" + attributes->Object::hash().toString(), ownership, "attributes", {} ),
 				m_lightMute( false ), m_hash( attributes->Object::hash() )
 		{
+			bool isUSDMeshLight = false;
+			if( auto light = attributes->member<ShaderNetwork>( g_USDLightAttributeName ) )
+			{
+				if( light->outputShader() && light->outputShader()->getName() == "MeshLight" )
+				{
+					isUSDMeshLight = true;
+				}
+			}
+			ConstCompoundObjectPtr modifiedAttributes = IECoreDelight::ShaderNetworkAlgo::convertUSDMeshLightAttributes( attributes );
+			attributes = modifiedAttributes.get();
+
 			for( const auto &attributeName : g_surfaceShaderAttributeNames )
 			{
 				m_surfaceShader = shader(attributeName, attributes, shaderCache );
@@ -722,11 +733,14 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 			}
 
-			if( auto o = attributes->member<const Object>( g_USDLightAttributeName ) )
+			if( !isUSDMeshLight )
 			{
-				if( auto shaderNetwork = reportedCast<const ShaderNetwork>( o, "attribute", g_USDLightAttributeName ) )
+				if( auto o = attributes->member<const Object>( g_USDLightAttributeName ) )
 				{
-					m_usdLightShader = shaderNetwork;
+					if( auto shaderNetwork = reportedCast<const ShaderNetwork>( o, "attribute", g_USDLightAttributeName ) )
+					{
+						m_usdLightShader = shaderNetwork;
+					}
 				}
 			}
 

@@ -43,8 +43,8 @@ if sys.version_info[0] < 3 :
 else :
     from urllib.request import urlretrieve
 
-delightVersion="2.9.150"
-delightDirectory="free/release/2025-02-20-zHEr1XyV"
+delightVersion="2.9.210"
+delightDirectory="free/release/2026-09-18-LmsCwgps"
 
 baseUrl = "https://3delight-downloads.s3-us-east-2.amazonaws.com"
 
@@ -122,6 +122,3 @@ elif sys.platform == "win32":
     archiveFileName, headers = urlretrieve( url )
 
     subprocess.check_call( [ archiveFileName, "/VERYSILENT", "/DIR=3delight" ] )
-
-
-

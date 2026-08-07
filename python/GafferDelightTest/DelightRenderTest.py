@@ -82,6 +82,19 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 		shader.loadShader( "Surface/Constant" )
 		return shader, shader["parameters"]["Cs"], shader["out"]["out"]
 
+	def _createDiffuseShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "dlPrincipled" )
+		shader["parameters"]["specular_level"].setValue( 0.0 )
+		return shader, shader["parameters"]["i_color"], shader["out"]["outColor"]
+
+	def _createEmissiveShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "dlConstant" )
+		return shader, shader["parameters"]["i_color"], shader["out"]["outColor"]
+
 	def _createColorAttributeReader( self, attributeName ) :
 
 		shader = GafferOSL.OSLShader()
@@ -101,3 +114,9 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 		options["options"]["dl:oversampling"]["value"].setValue( 16 )
 
 		return options
+
+	def _createCheckerShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "checker" )
+		return shader, shader["parameters"]["color1"], shader["parameters"]["color2"], shader["out"]["outColor"]
