@@ -150,6 +150,10 @@ class PointInstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			list( instancer["out"].object( "/points" ).getPrototypeIndex() ), [ 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0 ]
 		)
+		instancer["prototypeIndexSeed"].setValue( 1 )
+		self.assertEqual(
+			list( instancer["out"].object( "/points" ).getPrototypeIndex() ), [ 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1 ]
+		)
 
 		instancer["prototypeIndexMode"].setValue( instancer.PrototypeIndexMode.PrimitiveVariable )
 		self.assertFalse( instancer["out"].object( "/points" ).getPrototypeIndex() )
