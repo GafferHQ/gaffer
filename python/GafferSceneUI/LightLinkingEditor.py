@@ -154,16 +154,16 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 			self["__inclusionsSwitch"] = Gaffer.Switch()
 			self["__inclusionsSwitch"].setup( Gaffer.StringPlug() )
 			self["__inclusionsSwitch"]["in"].resize( 2 )
-			self["__inclusionsSwitch"]["in"][0].setInput( self["__linkedLightsAttributeQuery"]["value"] )
-			self["__inclusionsSwitch"]["in"][1].setInput( self["__filteredLightsAttributeQuery"]["value"] )
-			self["__inclusionsSwitch"]["index"].setInput( self["__lightFiltersExistenceQuery"]["exists"] )
+			self["__inclusionsSwitch"]["in"][0].setInput( self["__filteredLightsAttributeQuery"]["value"] )
+			self["__inclusionsSwitch"]["in"][1].setInput( self["__linkedLightsAttributeQuery"]["value"] )
+			self["__inclusionsSwitch"]["index"].setInput( self["__objectsExistenceQuery"]["exists"] )
 
 			self["__exclusionsSwitch"] = Gaffer.Switch()
 			self["__exclusionsSwitch"].setup( Gaffer.StringPlug() )
 			self["__exclusionsSwitch"]["in"].resize( 2 )
-			self["__exclusionsSwitch"]["in"][0].setInput( self["__excludedLightsAttributeQuery"]["value"] )
-			self["__exclusionsSwitch"]["in"][1].setInput( self["__excludedFilteredLightsAttributeQuery"]["value"] )
-			self["__exclusionsSwitch"]["index"].setInput( self["__lightFiltersExistenceQuery"]["exists"] )
+			self["__exclusionsSwitch"]["in"][0].setInput( self["__excludedFilteredLightsAttributeQuery"]["value"] )
+			self["__exclusionsSwitch"]["in"][1].setInput( self["__excludedLightsAttributeQuery"]["value"] )
+			self["__exclusionsSwitch"]["index"].setInput( self["__objectsExistenceQuery"]["exists"] )
 
 			# This Switch acts as an or of __lightFiltersExistenceQuery.exists and __objectsExistenceQuery.exists
 			# enabling __collect when either are true.
