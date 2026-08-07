@@ -394,16 +394,16 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 							)
 
 			self.__lightsSelectionChangedConnection = self.__lightsPathListing.selectionChangedSignal().connect(
-				Gaffer.WeakMethod( self.__lightsSelectionChanged )
+				Gaffer.WeakMethod( self.__selectionChanged )
 			)
 			self.__setsPathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__setsSelectionChanged )
 			)
 			self.__objectsSelectionChangedConnection = self.__objectsPathListing.selectionChangedSignal().connect(
-				Gaffer.WeakMethod( self.__objectsOrLightFiltersSelectionChanged )
+				Gaffer.WeakMethod( self.__selectionChanged )
 			)
 			self.__lightFiltersSelectionChangedConnection = self.__lightFiltersPathListing.selectionChangedSignal().connect(
-				Gaffer.WeakMethod( self.__objectsOrLightFiltersSelectionChanged )
+				Gaffer.WeakMethod( self.__selectionChanged )
 			)
 
 			self.__lightsAndSetsTabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
@@ -421,8 +421,6 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
 		)
-
-		self.__linkedToSelectionFilterPaths = IECore.PathMatcher()
 
 		self.settings()["__filteredObjects"].plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__objectsPlugDirtied ) )
 
@@ -508,76 +506,73 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 		self.__transferSelectionFromScriptNode()
 
-	def __lightsSelectionChanged( self, pathListing ) :
-
-		assert( pathListing is self.__lightsPathListing )
-
-		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
-			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection() )
-
-		with Gaffer.Signals.BlockedConnection( self.__objectsSelectionChangedConnection ) :
-			self.__objectsPathListing.setSelection(
-				[pathListing.getSelection()] + [IECore.PathMatcher()] * ( len( self.__objectsPathListing.getColumns() ) - 1 ), scrollToFirst = False
-			)
-		with Gaffer.Signals.BlockedConnection( self.__lightFiltersSelectionChangedConnection ) :
-			self.__lightFiltersPathListing.setSelection(
-				[pathListing.getSelection()] + [IECore.PathMatcher()] * ( len( self.__lightFiltersPathListing.getColumns() ) - 1 ), scrollToFirst = False
-			)
-
-		self.__updateButtonStatus()
-
 	def __setsSelectionChanged( self, pathListing ) :
 
 		self.__updateButtonStatus()
 
-	def __objectsOrLightFiltersSelectionChanged( self, pathListing ) :
+	def __selectionChanged( self, pathListing ) :
 
-		assert( pathListing in ( self.__objectsPathListing, self.__lightFiltersPathListing ) )
+		assert( pathListing in ( self.__lightsPathListing, self.__objectsPathListing, self.__lightFiltersPathListing ) )
 
-		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
-			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), pathListing.getSelection()[0] )
-
-		with Gaffer.Signals.BlockedConnection( self.__lightsSelectionChangedConnection ) :
-			self.__lightsPathListing.setSelection( pathListing.getSelection()[0], scrollToFirst = False )
-
-		if pathListing == self.__objectsPathListing :
+		## \todo Ideally we'd allow Ctrl-click to still accumulate rather than clear the other's selection.
+		if pathListing is self.__objectsPathListing :
 			with Gaffer.Signals.BlockedConnection( self.__lightFiltersSelectionChangedConnection ) :
-				self.__lightFiltersPathListing.setSelection(
-					[pathListing.getSelection()[0]] + [IECore.PathMatcher()] * ( len( self.__lightFiltersPathListing.getColumns() ) - 1 ), scrollToFirst = False
-				)
-		else :
+				self.__lightFiltersPathListing.setSelection( [IECore.PathMatcher()] * ( len( self.__lightFiltersPathListing.getColumns() ) ) )
+		elif pathListing is self.__lightFiltersPathListing :
 			with Gaffer.Signals.BlockedConnection( self.__objectsSelectionChangedConnection ) :
-				self.__objectsPathListing.setSelection(
-					[pathListing.getSelection()[0]] + [IECore.PathMatcher()] * ( len( self.__objectsPathListing.getColumns() ) - 1 ), scrollToFirst = False
-				)
+				self.__objectsPathListing.setSelection( [IECore.PathMatcher()] * ( len( self.__objectsPathListing.getColumns() ) ) )
 
-		# Accumulate selection across all columns so selecting
-		# only cells in non-name columns doesn't cause the filter
-		# to clear.
-		selection = IECore.PathMatcher()
-		for s in pathListing.getSelection() :
-			selection.addPaths( s )
+		combinedSelection = self.__lightsPathListing.getSelection()
+		combinedSelection.addPaths( self.__objectsPathListing.getSelection()[0] )
+		combinedSelection.addPaths( self.__lightFiltersPathListing.getSelection()[0] )
+		with Gaffer.Signals.BlockedConnection( self.__selectedPathsChangedConnection ) :
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), combinedSelection )
 
-		self.__linkedToSelectionFilterPaths = selection
-		self.__lazyUpdateLinkedLightsSetFilter()
+		if pathListing is not self.__lightsPathListing :
+			self.__lazyUpdateLinkedLightsSetFilter()
+
 		self.__updateButtonStatus()
+
+	def __partitionedSelection( self ) :
+
+		selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() )
+		if selection.isEmpty() or self.scene() is None :
+			return IECore.PathMatcher(), IECore.PathMatcher(), IECore.PathMatcher()
+
+		with self.context() :
+			lights = self.settings()["__adaptedIn"].set( "__lights" ).value
+			lightFilters = self.settings()["__adaptedIn"].set( "__lightFilters" ).value
+
+		lightSelection = lights.intersection( selection )
+		selection.removePaths( lightSelection )
+		lightFilterSelection = lightFilters.intersection( selection )
+		selection.removePaths( lightFilterSelection )
+
+		# Include ancestors of lights and lightFilters in their selections
+		for path in selection.paths() :
+			if lightFilters.match( path ) & IECore.PathMatcher.Result.DescendantMatch :
+				lightFilterSelection.addPath( path )
+			if lights.match( path ) & IECore.PathMatcher.Result.DescendantMatch :
+				lightSelection.addPath( path )
+
+		return lightSelection, selection, lightFilterSelection
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromScriptNode( self ) :
 
-		selectedPaths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( self.scriptNode() )
+		lights, objects, lightFilters = self.__partitionedSelection()
+
 		with Gaffer.Signals.BlockedConnection( self.__lightsSelectionChangedConnection ) :
-			self.__lightsPathListing.setSelection( selectedPaths, scrollToFirst = True )
+			self.__lightsPathListing.setSelection( lights, scrollToFirst = True )
 		with Gaffer.Signals.BlockedConnection( self.__objectsSelectionChangedConnection ) :
 			self.__objectsPathListing.setSelection(
-				[selectedPaths] + [IECore.PathMatcher()] * ( len( self.__objectsPathListing.getColumns() ) - 1 ), scrollToFirst = True
+				[objects] + [IECore.PathMatcher()] * ( len( self.__objectsPathListing.getColumns() ) - 1 ), scrollToFirst = True
 			)
 		with Gaffer.Signals.BlockedConnection( self.__lightFiltersSelectionChangedConnection ) :
 			self.__lightFiltersPathListing.setSelection(
-				[selectedPaths] + [IECore.PathMatcher()] * ( len( self.__lightFiltersPathListing.getColumns() ) - 1 ), scrollToFirst = True
+				[lightFilters] + [IECore.PathMatcher()] * ( len( self.__lightFiltersPathListing.getColumns() ) - 1 ), scrollToFirst = True
 			)
 
-		self.__linkedToSelectionFilterPaths = selectedPaths
 		self.__updateLinkedLightsSetFilter()
 		self.__updateButtonStatus()
 
@@ -591,7 +586,15 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 		if not self.settings()["onlyLinkedToSelection"].getValue() or self.scene() is None :
 			return
 
-		self.settings()["__collect"]["contextValues"].setValue( IECore.StringVectorData( self.__linkedToSelectionFilterPaths.paths() ) )
+		selection = IECore.PathMatcher()
+		for pathListing in ( self.__objectsPathListing, self.__lightFiltersPathListing ) :
+			# Accumulate selection across all columns so selecting
+			# only cells in non-name columns doesn't cause the filter
+			# to clear.
+			for s in pathListing.getSelection() :
+				selection.addPaths( s )
+
+		self.settings()["__collect"]["contextValues"].setValue( IECore.StringVectorData( selection.paths() ) )
 
 	def __objectsPlugDirtied( self, plug ) :
 
@@ -723,9 +726,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 			)
 
 		if not isinstance( result, Exception ) :
-			self.__objectsPathListing.setSelection(
-				[result] + ( [IECore.PathMatcher()] * ( len( self.__objectsPathListing.getColumns() ) - 1 ) ), scrollToFirst = True
-			)
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), result )
 
 	def __selectLinkedLights( self, *unused ) :
 
@@ -742,7 +743,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 			)
 
 		if not isinstance( result, Exception ) :
-			self.__lightsPathListing.setSelection( result, scrollToFirst = True )
+			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), result )
 
 	def __selectedSetNames( self ) :
 
@@ -839,7 +840,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 		if self.__objectsAndLightFiltersTabbedContainer.getCurrent() == self.__objectsColumn :
 
-			objectsSelected = len( self.__objectsPathListing.visualOrder( self.__objectsPathListing.getSelection()[0] ) ) > 0
+			objectsSelected = not self.__objectsPathListing.getSelection()[0].isEmpty()
 			selection = objectsSelected and len( self.__selectedLights() ) > 0
 
 			if not selection :
@@ -853,7 +854,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 
 		else :
 
-			objectsSelected = len( self.__lightFiltersPathListing.visualOrder( self.__lightFiltersPathListing.getSelection()[0] ) ) > 0
+			objectsSelected = not self.__lightFiltersPathListing.getSelection()[0].isEmpty()
 			selection = objectsSelected and len( self.__selectedLights() ) > 0
 
 			if not selection :
@@ -891,7 +892,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 			inclusionsColumn = self.__filteredLightsColumn
 			exclusionsColumn = self.__filteredLightsExclusionsColumn
 
-		pathsToEdit = pathListing.visualOrder( pathListing.getSelection()[0] )
+		pathsToEdit = pathListing.getSelection()[0].paths()
 		if not pathsToEdit :
 			return
 
