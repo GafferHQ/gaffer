@@ -24,6 +24,8 @@ Fixes
   - Fixed handling of `treatAsPoint` and `treatAsLine` UsdLuxLight parameters. These are now ignored, matching the behaviour of `hdPrman`.
   - Fixed handling of connections between floats and color/vector components [^2].
   - Fixed bug preventing attributes from being deleted from lights during an interactive render [^2].
+- MeshNormals : Fixed bug that created an unnamed PrimitiveVariable if the `normal` plug was set to "" [^2].
+- VectorWarp : Fixed crash with pixel offsets much larger than any reasonable image [^2].
 
 Build
 -----
@@ -458,16 +460,22 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.x.x (relative to 1.6.21.2)
+1.6.x.x (relative to 1.6.21.3)
 =======
+
+
+
+1.6.21.3 (relative to 1.6.21.2)
+========
 
 Fixes
 -----
 
+- MeshNormals : Fixed bug that created an unnamed PrimitiveVariable if the `normal` plug was set to "".
 - RenderMan :
   - Fixed handling of connections between floats and color/vector components.
   - Fixed bug preventing attributes from being deleted from lights during an interactive render.
-- GafferImage::VectorWarp : Fixed crash with pixel offsets much larger than any reasonable image.
+- VectorWarp : Fixed crash with pixel offsets much larger than any reasonable image.
 
 1.6.21.2 (relative to 1.6.21.1)
 ========

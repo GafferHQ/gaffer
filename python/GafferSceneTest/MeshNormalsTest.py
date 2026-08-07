@@ -116,3 +116,17 @@ class MeshNormalsTest( GafferSceneTest.SceneTestCase ) :
 				sortedVec.equalWithRelError( imath.V3f( 1, 1, 2 ).normalized(), 1e-7 ) or
 				sortedVec.equalWithRelError( imath.V3f( 1, 2, 2 ).normalized(), 1e-7 )
 			)
+
+	def testEmptyString( self ) :
+
+		cube = GafferScene.Cube()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		meshNormals = GafferScene.MeshNormals()
+		meshNormals["in"].setInput( cube["out"] )
+		meshNormals["filter"].setInput( cubeFilter["out"] )
+		meshNormals["normal"].setValue( "" )
+
+		self.assertEqual( meshNormals["out"].object( "/cube" ), meshNormals["in"].object( "/cube" ) )
