@@ -55,19 +55,19 @@ class BoolPlugValueWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.boolWidget().getState(), False )
 
 		n["user"]["p1"].setValue( True )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
+		self.waitForPlugValueWidgetUpdate( w )
 		self.assertEqual( w.boolWidget().getState(), True )
 
 		w.setPlugs( n["user"].children() )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
+		self.waitForPlugValueWidgetUpdate( w )
 		self.assertEqual( w.boolWidget().getState(), w.boolWidget().State.Indeterminate )
 
 		n["user"]["p2"].setValue( True )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
+		self.waitForPlugValueWidgetUpdate( w )
 		self.assertEqual( w.boolWidget().getState(), True )
 
 		w.setPlugs( [] )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
+		self.waitForPlugValueWidgetUpdate( w )
 		self.assertEqual( w.boolWidget().getState(), w.boolWidget().State.Indeterminate )
 
 	def testInitialValue( self ) :
@@ -78,7 +78,7 @@ class BoolPlugValueWidgetTest( GafferUITest.TestCase ) :
 		for v in ( True, False ) :
 			n["user"]["p"].setValue( v )
 			w = GafferUI.BoolPlugValueWidget( n["user"]["p"] )
-			GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
+			self.waitForPlugValueWidgetUpdate( w )
 			self.assertEqual( w.boolWidget().getState(), v )
 
 	def testErrorHandling( self ) :
@@ -93,9 +93,9 @@ class BoolPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		script["b"] = GafferTest.BadNode()
 		script["n"]["user"]["p"].setInput( script["b"]["out3"] )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
+		self.waitForPlugValueWidgetUpdate( w )
 		self.assertTrue( w.boolWidget().getErrored() )
 
 		script["n"]["user"]["p"].setInput( None )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
+		self.waitForPlugValueWidgetUpdate( w )
 		self.assertFalse( w.boolWidget().getErrored() )

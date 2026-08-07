@@ -120,6 +120,16 @@ class TestCase( GafferTest.TestCase ) :
 		GafferUI.EventLoop.addIdleCallback( f )
 		GafferUI.EventLoop.mainEventLoop().start()
 
+	def waitForPlugValueWidgetUpdate( self, widget ) :
+
+		# Updates are done lazily, so we need to flush any pending updates.
+		widget._PlugValueWidget__callUpdateFromValues.flush( widget )
+
+		# And updates for computed values are done in the background, so we
+		# need to wait until they're done.
+		if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in widget.getPlugs() ) :
+			self.uiThreadCallHandler.assertCalled()
+
 	def assertExampleFilesExist( self ) :
 
 		examples = GafferUI.Examples.registeredExamples()

@@ -48,19 +48,6 @@ import GafferUITest
 
 class PlugValueWidgetTest( GafferUITest.TestCase ) :
 
-	@staticmethod
-	def waitForUpdate( widget ) :
-
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
-
-			# Updates are done lazily, so we need to flush any pending updates.
-			widget._PlugValueWidget__callUpdateFromValues.flush( widget )
-
-			# And updates for computed values are done in the background, so we
-			# need to wait until they're done.
-			if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in widget.getPlugs() ) :
-				handler.assertCalled()
-
 	def testContext( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -72,7 +59,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.context(), s.context() )
 
 		s.context().setFrame( 10 )
-		self.waitForUpdate( w )
+		self.waitForPlugValueWidgetUpdate( w )
 		self.assertEqual( w.numericWidget().getValue(), 10 )
 		self.assertEqual( w.context(), s.context() )
 
@@ -279,19 +266,19 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		# Changing the context shouldn't trigger an update, because the
 		# plug value isn't computed.
 		script.context().setFrame( 2 )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 1 )
 
 		# Changing the plug should trigger an update.
 		widget.setPlug( script["add"]["op2"] )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 2 )
 		self.assertEqual( widget.updateContexts[1], script.context() )
 
 		# Changing the context still shouldn't trigger an update, because the
 		# plug value isn't computed.
 		script.context().setFrame( 3 )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 2 )
 
 		# Changing the plug again should trigger an update again. This time we
@@ -299,7 +286,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		# one when it completes. This is because the plug's value is computed
 		# and we don't want to block the UI thread with computes.
 		widget.setPlug( script["add"]["sum"] )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 4 )
 		self.assertEqual( widget.updateContexts[2], script.context() )
 		self.assertEqual( widget.updateContexts[3], script.context() )
@@ -307,7 +294,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		# And now changing the context should trigger an update, since computed
 		# values may be context-sensitive.
 		script.context().setFrame( 4 )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 6 )
 		self.assertEqual( widget.updateContexts[4], script.context() )
 		self.assertEqual( widget.updateContexts[5], script.context() )
@@ -399,7 +386,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		# Editor not viewing anything yet, so we just use the default
 		# script context.
 
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 2 ) # One at the start of the background update, and one on completion
 		self.assertEqual( widget.updateContexts[1], script.context() )
 
@@ -407,7 +394,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		# tracked for it.
 
 		editor.settings()["in"].setInput( script["node"]["sum"] )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 4 )
 		self.assertEqual( widget.updateContexts[3], contextTracker.context( script["node"] ) )
 		self.assertIn( "testVariable", widget.updateContexts[3] )
@@ -416,7 +403,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		# has been tracked for that.
 
 		editor.settings()["in"].setInput( script["contextVariables"]["out"] )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 6 )
 		self.assertEqual( widget.updateContexts[5], contextTracker.context( script["contextVariables"] ) )
 		self.assertNotIn( "testVariable", widget.updateContexts[5] )
@@ -450,7 +437,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		# to indicate the start of the background update and one when
 		# it finishes.
 		window.setVisible( True )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 		self.assertEqual( widget.updateCount, 2 )
 		self.assertEqual( widget.updateContexts[-1], script.context() )
 
@@ -460,7 +447,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		contextTracker = GafferUI.ContextTracker.acquireForFocus( script )
 		with GafferUITest.ContextTrackerTest.UpdateHandler() as h :
 			script.setFocus( script["contextVariables0"] )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 
 		self.assertEqual( widget.updateCount, 4 )
 		self.assertEqual( widget.updateContexts[-1], contextTracker.context( script["add"]["sum"] ) )
@@ -478,7 +465,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		with GafferUITest.ContextTrackerTest.UpdateHandler() as h :
 			script.setFocus( script["contextVariables2"] )
-		self.waitForUpdate( widget )
+		self.waitForPlugValueWidgetUpdate( widget )
 
 		self.assertEqual( widget.updateCount, 6 )
 		self.assertEqual( widget.updateContexts[-1], contextTracker.context( script["add"]["sum"] ) )
