@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- MeshNormals : Fixed bug that created an unnamed PrimitiveVariable if the `normal` plug was set to "".
 - RenderMan :
   - Fixed handling of connections between floats and color/vector components.
   - Fixed bug preventing attributes from being deleted from lights during an interactive render.
