@@ -895,11 +895,7 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 		if not pathsToEdit :
 			return
 
-		if self.__lightsAndSetsTabbedContainer.getCurrent() == self.__lightsColumn :
-			targets = self.__selectedLights()
-		else :
-			targets = self.__selectedSetNames()
-
+		targets = self.__selectedLights()
 		rootPath = pathListing.getPath()
 		path = rootPath.copy()
 		edits = []
