@@ -24,6 +24,7 @@ Fixes
   - Fixed handling of `treatAsPoint` and `treatAsLine` UsdLuxLight parameters. These are now ignored, matching the behaviour of `hdPrman`.
   - Fixed handling of connections between floats and color/vector components [^2].
   - Fixed bug preventing attributes from being deleted from lights during an interactive render [^2].
+- GraphEditor : Fixed bug with history back and forward buttons when a node in the history has been deleted (#7071) [^1].
 
 Build
 -----
