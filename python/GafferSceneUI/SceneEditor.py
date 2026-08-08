@@ -324,6 +324,9 @@ SceneEditor._HierarchyFilter = _HierarchyFilter
 # _SetFilterPlugValueWidget
 # =========================
 
+# Supported plug metadata :
+#
+#  - "setFilterPlugValueWidget:excludedSetNames" : A list of set names that shouldn't be shown in the menu.
 class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -341,6 +344,7 @@ class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__lastNonDefaultValue = None
 		self.__availableSetNames = []
+		self.__excludedSetNames = set()
 
 	def _auxiliaryPlugs( self, plug ) :
 
@@ -376,14 +380,17 @@ class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__button.setImage( "setFilter{}.png".format( "On" if value else "Off" ) )
 		self.__availableSetNames = values[0]["setNames"]
 
+	def _updateFromMetadata( self ) :
+
+		self.__excludedSetNames = set( Gaffer.Metadata.value( self.getPlug(), "setFilterPlugValueWidget:excludedSetNames" ) or [] )
+
 	def __setsMenuDefinition( self ) :
 
 		m = IECore.MenuDefinition()
 
-		availableSets = set( self.__availableSetNames )
-
-		builtInSets = { "__lights", "__lightFilters", "__cameras", "__coordinateSystems" }
+		availableSets = set( self.__availableSetNames ) - self.__excludedSetNames
 		selectedSets = set( self.getPlug().getValue().split() )
+		builtInSets = { "__lights", "__lightFilters", "__cameras", "__coordinateSystems" } & ( availableSets | selectedSets )
 
 		m.append(
 			"/Enabled", {
@@ -397,6 +404,11 @@ class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		m.append( "/EnabledDivider", { "divider" : True } )
+
+		if not ( availableSets | selectedSets ) :
+
+			m.append( "/No sets available", { "active" : False } )
+			return m
 
 		def item( setName ) :
 
@@ -422,7 +434,7 @@ class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for s in sorted( availableSets | selectedSets ) :
 			if s in builtInSets :
 				continue
-			if not haveDivider :
+			if builtInSets and not haveDivider :
 				m.append( "/BuiltInDivider", { "divider" : True } )
 				haveDivider = True
 			m.append( "/" + pathFn( s ), item( s ) )

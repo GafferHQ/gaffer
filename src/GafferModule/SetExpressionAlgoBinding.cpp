@@ -128,6 +128,7 @@ void bindSetExpressionAlgo()
 	def( "simplify", &Gaffer::SetExpressionAlgo::simplify );
 	def( "include", &Gaffer::SetExpressionAlgo::include );
 	def( "exclude", &Gaffer::SetExpressionAlgo::exclude );
+	def( "remove", &Gaffer::SetExpressionAlgo::remove );
 }
 
 } // namespace GafferModule

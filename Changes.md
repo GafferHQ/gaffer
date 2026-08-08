@@ -1,7 +1,30 @@
 1.7.x.x (relative to 1.7.0.0a10)
 =======
 
+Features
+--------
 
+- LightLinkingEditor : Added a new editor UI for inspecting and editing light links.
+
+Improvements
+------------
+
+- HierarchyView, AttributeEditor : The set filter menu now only shows the "Cameras", "Coordinate Systems", "Lights", and "Light Filters" menu items when their equivalent sets are present in the scene.
+
+Fixes
+-----
+
+- LightEditor : Fixed bug preventing the "Copy Path" menu item from appearing when the current selection contained locations not shown in the LightEditor.
+- PathListingWidget : Paths dragged from a PathListingWidget now preserve the order in which they are displayed.
+- SetExpressionAlgo : Fixed invalid set expressions returned by `exclude()` when the set expression to be excluded contains only whitespace [^1].
+- PlugLayout : `<layoutName>:width` metadata is now correctly reapplied to widgets with labels when a PlugLayout is rebuilt.
+
+API
+---
+
+- SetExpressionAlgo : Added `remove` [^1].
+
+[^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a10 (relative to 1.7.0.0a9)
 ==========

@@ -91,5 +91,11 @@ GAFFER_API std::string include( const std::string &setExpression, const std::str
 /// the result simplified. Returns "" if `setExpression` is empty or would simplify
 /// to an empty expression.
 GAFFER_API std::string exclude( const std::string &setExpression, const std::string &exclusions );
+/// Returns a set expression with `removals` removed from `setExpression` and the
+/// result simplified. Unlike `exclude()`, which both removes and subtracts `exclusions`,
+/// `remove()` only removes the matching operations. For example `remove( "A B C", "B" )`
+/// returns `"A C"` rather than `"A C - B"`. Returns "" if `setExpression` is empty
+/// or would simplify to an empty expression.
+GAFFER_API std::string remove( const std::string &setExpression, const std::string &removals );
 
 } // namespace Gaffer::SetExpressionAlgo

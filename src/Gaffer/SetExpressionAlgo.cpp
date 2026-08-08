@@ -540,16 +540,12 @@ struct SimplifyVisitor
 };
 
 // Removes the ops in `removalsAst` from the visited AST.
-/// \todo This could be exposed as
-/// SetExpressionAlgo::remove( const std::string &setExpression, const std::string &removals )`
-/// to provide a more robust way of performing operations such as drag-and-drop removal of
-/// set names in SetFilterUI or _InspectorColumn. When doing this we'd likely want a mode
-/// that does not remove from the RHS of Difference ops, as this currently does.
 struct RemovalVisitor
 {
 	using result_type = ExpressionAst;
 
-	RemovalVisitor( const ExpressionAst &removalsAst )
+	RemovalVisitor( const ExpressionAst &removalsAst, bool removeFromDifferenceRHS = true )
+		: m_removeFromDifferenceRHS( removeFromDifferenceRHS )
 	{
 		std::vector<ExpressionAst> ops;
 		collectOperands( removalsAst, Union, ops );
@@ -580,7 +576,7 @@ struct RemovalVisitor
 			return Nil{};
 		}
 
-		if( expr.op == Containing || expr.op == In )
+		if( expr.op == Containing || expr.op == In || ( expr.op == Difference && !m_removeFromDifferenceRHS ) )
 		{
 			// Removals only affect the left side of these operations.
 			return BinaryOp( filteredLeft, expr.op, expr.right );
@@ -637,6 +633,7 @@ struct RemovalVisitor
 		}
 
 		boost::container::flat_set<ExpressionAst> m_removals;
+		bool m_removeFromDifferenceRHS;
 
 };
 
@@ -986,6 +983,12 @@ ExpressionAst excludeExpression( const ExpressionAst &ast, const ExpressionAst &
 	// before we subtract `exclusions` from `ast` and simplify. This ensures the exclusions
 	// remain on the right-hand side of the final expression after simplification.
 	ExpressionAst simplifiedExclusions = simplifyExpression( exclusions );
+	if( boost::get<Nil>( &simplifiedExclusions ) )
+	{
+		// Nothing to exclude. Return the simplified input ast instead of the invalid "filteredAst - Nil".
+		return simplifyExpression( ast );
+	}
+
 	ExpressionAst filteredAst = boost::apply_visitor( RemovalVisitor( simplifiedExclusions ), simplifyExpression( ast ) );
 
 	if( boost::get<Nil>( &filteredAst ) )
@@ -995,6 +998,15 @@ ExpressionAst excludeExpression( const ExpressionAst &ast, const ExpressionAst &
 	}
 
 	return simplifyExpression( BinaryOp( filteredAst, Difference, simplifiedExclusions ) );
+}
+
+ExpressionAst removeExpression( const ExpressionAst &ast, const ExpressionAst &removals )
+{
+	ExpressionAst filteredAst = boost::apply_visitor(
+		RemovalVisitor( simplifyExpression( removals ), /* removeFromDifferenceRHS = */ false ), simplifyExpression( ast )
+	);
+
+	return simplifyExpression( filteredAst );
 }
 
 } // namespace
@@ -1063,6 +1075,21 @@ std::string exclude( const std::string &setExpression, const std::string &exclus
 	expressionToAST( exclusions, exclusionsAst );
 
 	return boost::apply_visitor( AstSerialiser{}, excludeExpression( ast, exclusionsAst ) );
+}
+
+std::string remove( const std::string &setExpression, const std::string &removals )
+{
+	if( removals == "" )
+	{
+		return setExpression;
+	}
+
+	ExpressionAst ast;
+	ExpressionAst removalsAst;
+	expressionToAST( setExpression, ast );
+	expressionToAST( removals, removalsAst );
+
+	return boost::apply_visitor( AstSerialiser{}, removeExpression( ast, removalsAst ) );
 }
 
 } // namespace SetExpressionAlgo

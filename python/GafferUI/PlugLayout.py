@@ -319,8 +319,10 @@ class PlugLayout( GafferUI.Widget ) :
 				self.__widgets[item] = widget
 			else :
 				widget = self.__widgets[item]
-				if self.__itemMetadataValue( item, "width" ) :
-					widget._qtWidget().setFixedWidth( self.__itemMetadataValue( item, "width" ) )
+				self.__setWidthFromMetadata(
+					widget.plugValueWidget() if isinstance( widget, GafferUI.PlugWidget ) else widget,
+					item
+				)
 
 			if widget is None :
 				continue
