@@ -201,18 +201,24 @@ class TestCase( unittest.TestCase ) :
 			raise TypeError( "assertEventually requires a callable" )
 
 		start = time.time()
-		lastError = None
+		errors = []
 
-		while time.time() - start < timeout :
+		while True :
 			try :
 				fn()
 				return
 			except AssertionError as e :
-				lastError = e
-				delayFn( interval )
+				elapsed = time.time() - start
+				errors.append( ( elapsed, e ) )
+				if elapsed >= timeout :
+					break
+				delayFn( min( interval, timeout - elapsed ) )
 				interval *= 2.0
 
-		raise AssertionError( f"Timed out after {timeout}s : {lastError}" )
+		attempts = "\n".join( f"{timestamp:8.2f}s : {error}" for timestamp, error in errors )
+		raise AssertionError(
+			f"Timed out after {elapsed:.2f}s : {errors[-1][1]}\n\nAttempts:\n{attempts}"
+		)
 
 	## Attempts to ensure that the hashes for a node
 	# are reasonable by jiggling around input values
