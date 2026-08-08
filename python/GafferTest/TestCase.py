@@ -203,16 +203,19 @@ class TestCase( unittest.TestCase ) :
 		start = time.time()
 		lastError = None
 
-		while time.time() - start < timeout :
+		while True :
 			try :
 				fn()
 				return
 			except AssertionError as e :
+				elapsed = time.time() - start
 				lastError = e
-				delayFn( interval )
+				if elapsed >= timeout :
+					break
+				delayFn( min( interval, timeout - elapsed ) )
 				interval *= 2.0
 
-		raise AssertionError( f"Timed out after {timeout}s : {lastError}" )
+		raise AssertionError( f"Timed out after {elapsed:.2f}s : {lastError}" )
 
 	## Attempts to ensure that the hashes for a node
 	# are reasonable by jiggling around input values
