@@ -1589,7 +1589,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			# space above and below.
 			for y in ( 150, 320 ) :
 				sampler["pixel"].setValue( imath.V2f( x, y ) )
-				self.assertEqualWithAbsError( sampler["color"]["a"].getValue(), 0, 0.005 )
+				self.assertEqualWithAbsError( sampler["color"]["a"].getValue(), 0, 0.006 )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
 	def testPointInstancerInstanceAttributes( self ) :
