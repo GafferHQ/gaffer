@@ -137,7 +137,6 @@ Gaffer.Metadata.registerNode(
 			# for the case where they get promoted to a box
 			# individually.
 			"noduleLayout:section" : "left",
-			"nodule:type" : "",
 
 		},
 
