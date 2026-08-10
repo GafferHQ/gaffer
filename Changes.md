@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.0.0a10)
 =======
 
+Fixes
+-----
 
+- MenuBar : Made the main window menu extension button more visible. This button is shown when the window is not wide enough to show all menu items.
 
 1.7.0.0a10 (relative to 1.7.0.0a9)
 ==========
