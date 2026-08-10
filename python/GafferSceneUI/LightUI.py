@@ -71,6 +71,10 @@ def __parameterMetadata( plug, key ) :
 		key
 	)
 
+# Sensible default value for `nodule:type`, since the majority of light
+# parameters do not support shader connections.
+Gaffer.Metadata.registerValue( "light:*:*", "nodule:type", "" )
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Light,
@@ -154,7 +158,6 @@ Gaffer.Metadata.registerNode(
 			# for the case where they get promoted to a box
 			# individually.
 			"noduleLayout:section" : "left",
-			"nodule:type" : "",
 
 		},
 
