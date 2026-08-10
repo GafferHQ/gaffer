@@ -65,10 +65,6 @@ def __parameterMetadata( plug, key ) :
 
 	node = plug.node()
 	shader = node.getChild( "__shader" )
-	if shader is None :
-		## \todo Refactor Light base class to require the usage
-		# of an internal Shader node.
-		return None
 
 	return Gaffer.Metadata.value(
 		shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( node["parameters"] ),
