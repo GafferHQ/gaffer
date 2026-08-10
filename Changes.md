@@ -5,6 +5,7 @@ Fixes
 -----
 
 - MenuBar : Made the main window menu extension button more visible. This button is shown when the window is not wide enough to show all menu items.
+- LightUI : Fixed `nodule:type` metadata lookups. Previously these ignored metadata registered to `light:{name}:{parameterName}`.
 
 1.7.0.0a10 (relative to 1.7.0.0a9)
 ==========

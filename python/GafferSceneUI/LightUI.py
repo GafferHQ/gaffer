@@ -65,15 +65,15 @@ def __parameterMetadata( plug, key ) :
 
 	node = plug.node()
 	shader = node.getChild( "__shader" )
-	if shader is None :
-		## \todo Refactor Light base class to require the usage
-		# of an internal Shader node.
-		return None
 
 	return Gaffer.Metadata.value(
 		shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( node["parameters"] ),
 		key
 	)
+
+# Sensible default value for `nodule:type`, since the majority of light
+# parameters do not support shader connections.
+Gaffer.Metadata.registerValue( "light:*:*", "nodule:type", "" )
 
 Gaffer.Metadata.registerNode(
 
@@ -148,6 +148,7 @@ Gaffer.Metadata.registerNode(
 			"presetNames" : functools.partial( __parameterMetadata, key = "presetNames" ),
 			"presetValues" : functools.partial( __parameterMetadata, key = "presetValues" ),
 			"nodule:type" : functools.partial( __parameterMetadata, key = "nodule:type" ),
+			"noduleLayout:label" : functools.partial( __parameterMetadata, key = "noduleLayout:label" ),
 			"noduleLayout:visible" : functools.partial( __parameterMetadata, key = "noduleLayout:visible" ),
 			"labelPlugValueWidget:icon" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:icon" ),
 			"labelPlugValueWidget:iconToolTip" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:iconToolTip" ),
@@ -158,7 +159,6 @@ Gaffer.Metadata.registerNode(
 			# for the case where they get promoted to a box
 			# individually.
 			"noduleLayout:section" : "left",
-			"nodule:type" : "",
 
 		},
 
