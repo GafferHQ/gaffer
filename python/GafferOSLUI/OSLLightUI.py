@@ -133,26 +133,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-# Defer parameter metadata lookups to the internal shader
-# node.
-
-def __parameterMetadata( plug, key ) :
-
-	node = plug.node()
-	return Gaffer.Metadata.value( node["__shader"]["parameters"].descendant( plug.relativeName( node["parameters"] ) ), key )
-
-for key in [
-	"description",
-	"label",
-	"noduleLayout:label",
-	"layout:divider",
-	"layout:section",
-	"presetNames",
-	"presetValues",
-	"plugValueWidget:type",
-	"nodule:type",
-	"noduleLayout:visible",
-	"noduleLayout:label",
-] :
-	Gaffer.Metadata.registerValue( GafferOSL.OSLLight, "parameters.*", key, functools.partial( __parameterMetadata, key = key ) )

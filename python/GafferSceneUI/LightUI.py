@@ -148,6 +148,7 @@ Gaffer.Metadata.registerNode(
 			"presetNames" : functools.partial( __parameterMetadata, key = "presetNames" ),
 			"presetValues" : functools.partial( __parameterMetadata, key = "presetValues" ),
 			"nodule:type" : functools.partial( __parameterMetadata, key = "nodule:type" ),
+			"noduleLayout:label" : functools.partial( __parameterMetadata, key = "noduleLayout:label" ),
 			"noduleLayout:visible" : functools.partial( __parameterMetadata, key = "noduleLayout:visible" ),
 			"labelPlugValueWidget:icon" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:icon" ),
 			"labelPlugValueWidget:iconToolTip" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:iconToolTip" ),
