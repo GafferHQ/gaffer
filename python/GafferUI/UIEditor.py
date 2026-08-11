@@ -360,7 +360,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 		selection = [ n for n in graphEditor.scriptNode().selection() if n.parent() == graphEditor.graphGadget().getRoot() ]
 		if event.key == "C" and event.modifiers == event.Modifiers.None_ :
-			if not any( Gaffer.MetadataAlgo.readOnly( n ) for n in selection ) :
+			if selection and not any( Gaffer.MetadataAlgo.readOnly( n ) for n in selection ) :
 				cls.__setColor( graphEditor, selection )
 			return True
 
