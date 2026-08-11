@@ -1,3 +1,11 @@
+1.7.x.x (relative to 1.7.0.0)
+=======
+
+Improvements
+------------
+
+- SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
+
 1.7.0.0 (relative to 1.6.21.4)
 =======
 
