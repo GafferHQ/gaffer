@@ -261,7 +261,7 @@ def __dropLocationData( event ) :
 			scene = sourceEditor.view()["in"].getInput()
 	elif isinstance(
 		sourceEditor,
-		( GafferSceneUI.HierarchyView, GafferSceneUI.LightEditor, GafferSceneUI.AttributeEditor )
+		( GafferSceneUI.HierarchyView, GafferSceneUI.LightEditor, GafferSceneUI.AttributeEditor, GafferSceneUI.LightLinkingEditor )
 	) :
 		scene = sourceEditor.settings()["in"].getInput()
 
