@@ -335,16 +335,16 @@ Inspector::ResultPtr Inspector::inspect() const
 	if( !result->m_editors )
 	{
 		std::string formatString;
-		if( !result->m_source )
-		{
-			formatString = "No editable source found in history.";
-		}
-		else if( result->m_editScope && !result->m_editScopeInHistory )
+		if( result->m_editScope && !result->m_editScopeInHistory )
 		{
 			formatString = fmt::format(
 				"The target edit scope {} is not in the scene history.",
 				result->editScope()->relativeName( result->editScope()->scriptNode() )
 			);
+		}
+		else if( !result->m_source )
+		{
+			formatString = "No editable source found in history.";
 		}
 		else if( !result->m_editScope )
 		{
