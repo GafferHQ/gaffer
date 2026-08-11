@@ -152,7 +152,7 @@ Object                                   |Linked lights
 
 ### Light linking basics ###
 
-> _Help_ > _Examples_ > _Lighting_ > _Light Linking Basics (Arnold)_
+> _Help_ > _Examples_ > _Lighting_ > _Light Linking Basics_
 
 ![](images/exampleLightLinkingBasics.png "Example: Light linking basics")
 
