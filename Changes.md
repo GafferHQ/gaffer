@@ -15,6 +15,7 @@ Fixes
 - PathListingWidget : Paths dragged from a PathListingWidget now preserve the order in which they are displayed.
 - SetExpressionAlgo : Fixed invalid set expressions returned by `exclude()` when the set expression to be excluded contains only whitespace [^1].
 - PlugLayout : `<layoutName>:width` metadata is now correctly reapplied to widgets with labels when a PlugLayout is rebuilt.
+- GraphEditor : Fixed bug with history back and forward buttons when a node in the history has been deleted (#7071) [^1].
 
 API
 ---
