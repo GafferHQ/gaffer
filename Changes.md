@@ -16,6 +16,7 @@ Fixes
 - SetExpressionAlgo : Fixed invalid set expressions returned by `exclude()` when the set expression to be excluded contains only whitespace [^1].
 - PlugLayout : `<layoutName>:width` metadata is now correctly reapplied to widgets with labels when a PlugLayout is rebuilt.
 - GraphEditor : Fixed bug with history back and forward buttons when a node in the history has been deleted (#7071) [^1].
+- Cycles : Fixed potential interactive rendering errors caused by scene edits being made before the render has paused.
 
 API
 ---

@@ -2451,6 +2451,8 @@ IECore::InternedString g_dicingCameraOptionName( "cycles:dicing_camera" );
 // Cryptomatte
 IECore::InternedString g_cryptomatteDepthOptionName( "cycles:film:cryptomatte_depth");
 
+const string g_renderPausedStatus( "Rendering Paused" );
+
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
 
 class CyclesRenderer final : public IECoreScenePreview::Renderer
@@ -2650,10 +2652,32 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		void pause() override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-			if( m_rendering )
+			if( !m_rendering || m_renderType != Interactive )
 			{
-				m_session->set_pause( true );
+				return;
 			}
+
+			m_session->set_pause( true );
+
+			// m_session->set_pause() requests an eventual pause, but doesn't block until the render
+			// has actually paused. Our workaround is to monitor the session until it reports that
+			// the render has paused or has been cancelled.
+			string status, subStatus;
+			const auto timeout = std::chrono::steady_clock::now() + std::chrono::seconds( 30 );
+			while( std::chrono::steady_clock::now() < timeout )
+			{
+				m_session->progress.get_status( status, subStatus );
+				if( status == g_renderPausedStatus || m_session->progress.get_cancel() )
+				{
+					return;
+				}
+				std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+			}
+
+			IECore::msg(
+				IECore::Msg::Warning, "CyclesRenderer::pause",
+				"Timed out waiting for Cycles to pause render (last status \"{}\")", status
+			);
 		}
 
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
@@ -3202,9 +3226,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// `set_output_driver()`, because otherwise the rendering threads
 			// may try to send data to an output driver that was just destroyed
 			// on the main thread.
-			/// \todo `Renderer::pause()` really shouldn't return until after
-			/// the PathTrace has been cancelled, so we shouldn't need to worry
-			/// about that here.
 			m_session->reset( m_session->params, m_bufferParams );
 
 			film->set_cryptomatte_passes( crypto );
