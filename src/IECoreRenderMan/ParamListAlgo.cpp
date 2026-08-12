@@ -50,6 +50,11 @@ using namespace IECore;
 namespace
 {
 
+const bool g_legacyTextureCoordinates = [] () {
+	const char *c = getenv( "IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR" );
+	return c && !strcmp( c, "1" );
+}();
+
 struct ParameterConverter
 {
 
@@ -196,6 +201,13 @@ RtDataType IECoreRenderMan::ParamListAlgo::dataType( IECore::GeometricData::Inte
 			return RtDataType::k_normal;
 		case GeometricData::Point :
 			return RtDataType::k_point;
+		case GeometricData::UV :
+			// This is what we end up with when loading `texCoord3f` from USD.
+			// It should be treated as pure floats so that the values don't
+			// get transformed at all, but at least one pipeline is dependent
+			// on them being treated as points for use as `__Pref`.
+			/// \todo Remove the legacy behaviour.
+			return g_legacyTextureCoordinates ? RtDataType::k_point : RtDataType::k_float;
 		default :
 			return RtDataType::k_float;
 	}

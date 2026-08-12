@@ -39,6 +39,7 @@ import os
 import time
 import unittest
 import random
+import subprocess
 
 import imath
 
@@ -1235,6 +1236,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testGeometricInterpretation( self ) :
 
+		legacy = os.environ.get( "IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR", "0" ) == "1"
+
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -1336,8 +1339,12 @@ class RendererTest( GafferTest.TestCase ) :
 		assertExpectedPrimVar( "vertexNormal", dataTypes["normal"], 1, False )
 		assertExpectedPrimVar( "constantFloat3", dataTypes["float"], 3, True )
 		assertExpectedPrimVar( "vertexFloat3", dataTypes["float"], 3, True )
-		assertExpectedPrimVar( "constantTextureCoordinate", dataTypes["float"], 3, True )
-		assertExpectedPrimVar( "vertexTextureCoordinate", dataTypes["float"], 3, True )
+		if legacy :
+			assertExpectedPrimVar( "constantTextureCoordinate", dataTypes["point"], 1, False )
+			assertExpectedPrimVar( "vertexTextureCoordinate", dataTypes["point"], 1, False )
+		else :
+			assertExpectedPrimVar( "constantTextureCoordinate", dataTypes["float"], 3, True )
+			assertExpectedPrimVar( "vertexTextureCoordinate", dataTypes["float"], 3, True )
 
 		instance = next(
 			x for x in capture.json if x["method"] == "CreateGeometryInstance"
@@ -1356,8 +1363,30 @@ class RendererTest( GafferTest.TestCase ) :
 		assertExpectedAttribute( "user:normalArray", dataTypes["normal"], 3, True )
 		assertExpectedAttribute( "user:float3", dataTypes["float"], 3, True )
 		assertExpectedAttribute( "user:float3Array", dataTypes["float"], 15, True )
-		assertExpectedAttribute( "user:textureCoordinate", dataTypes["float"], 3, True )
-		assertExpectedAttribute( "user:textureCoordinateArray", dataTypes["float"], 15, True )
+		if legacy :
+			assertExpectedAttribute( "user:textureCoordinate", dataTypes["point"], 1, False )
+			assertExpectedAttribute( "user:textureCoordinateArray", dataTypes["point"], 5, True )
+		else :
+			assertExpectedAttribute( "user:textureCoordinate", dataTypes["float"], 3, True )
+			assertExpectedAttribute( "user:textureCoordinateArray", dataTypes["float"], 15, True )
+
+	def testLegacyGeometricInterpretation( self ) :
+
+		# Launch test above in environment to trigger legacy behaviour
+		# (unless we're in a legacy environment, in which case test clean
+		# behaviour).
+
+		legacy = os.environ.get( "IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR", "0" ) == "1"
+		env = os.environ.copy()
+		env["IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR"] = "0" if legacy else "1"
+
+		try :
+			subprocess.check_output(
+				[ "gaffer" if os.name != "nt" else "gaffer.cmd", "test", "IECoreRenderManTest.RendererTest.testGeometricInterpretation" ],
+				env = env, stderr = subprocess.STDOUT
+			)
+		except subprocess.CalledProcessError as e :
+			self.fail( e.output )
 
 	def testSubdivInterpolatedBoundary( self ) :
 
