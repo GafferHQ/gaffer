@@ -50,6 +50,11 @@ using namespace IECore;
 namespace
 {
 
+const bool g_legacyTextureCoordinates = [] () {
+	const char *c = getenv( "IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR" );
+	return c && !strcmp( c, "1" );
+}();
+
 struct ParameterConverter
 {
 
@@ -95,20 +100,17 @@ struct ParameterConverter
 
 	void operator()( const V3fData *data, RtUString name, RtParamList &paramList ) const
 	{
-		switch( data->getInterpretation() )
-		{
-			case GeometricData::Vector :
-				paramList.SetVector( name, reinterpret_cast<const RtVector3 &>( data->readable() ) );
-				break;
-			case GeometricData::Normal :
-				paramList.SetNormal( name, reinterpret_cast<const RtVector3 &>( data->readable() ) );
-				break;
-			case GeometricData::Point :
-				paramList.SetPoint( name, reinterpret_cast<const RtVector3 &>( data->readable() ) );
-				break;
-			default :
-				paramList.SetFloatArray( name, data->readable().getValue(), 3 );
-		}
+		const RtDataType type = IECoreRenderMan::ParamListAlgo::dataType( data->getInterpretation() );
+		paramList.SetParam(
+			{
+				name, type, RtDetailType::k_constant,
+				/* length = */ type == RtDataType::k_float ? 3u : 1u,
+				/* array = */ type == RtDataType::k_float,
+				/* motion = */ false,
+				/* deduplicated = */ false
+			},
+			data->readable().getValue()
+		);
 	}
 
 	void operator()( const M44fData *data, RtUString name, RtParamList &paramList ) const
@@ -159,20 +161,17 @@ struct ParameterConverter
 
 	void operator()( const V3fVectorData *data, RtUString name, RtParamList &paramList ) const
 	{
-		switch( data->getInterpretation() )
-		{
-			case GeometricData::Vector :
-				paramList.SetVectorArray( name, reinterpret_cast<const RtVector3 *>( data->readable().data() ), data->readable().size() );
-				break;
-			case GeometricData::Normal :
-				paramList.SetNormalArray( name, reinterpret_cast<const RtVector3 *>( data->readable().data() ), data->readable().size() );
-				break;
-			case GeometricData::Point :
-				paramList.SetPointArray( name, reinterpret_cast<const RtVector3 *>( data->readable().data() ), data->readable().size() );
-				break;
-			default :
-				paramList.SetFloatArray( name, data->readable().front().getValue(), 3 * data->readable().size() );
-		}
+		const RtDataType type = IECoreRenderMan::ParamListAlgo::dataType( data->getInterpretation() );
+		paramList.SetParam(
+			{
+				name, type, RtDetailType::k_constant,
+				/* length = */ (uint32_t)data->readable().size() * (type == RtDataType::k_float ? 3 : 1),
+				/* array = */ true,
+				/* motion = */ false,
+				/* deduplicated = */ false
+			},
+			data->readable().front().getValue()
+		);
 	}
 
 	void operator()( const Data *data, RtUString name, RtParamList &paramList ) const
@@ -191,6 +190,28 @@ struct ParameterConverter
 //////////////////////////////////////////////////////////////////////////
 // Public API
 //////////////////////////////////////////////////////////////////////////
+
+RtDataType IECoreRenderMan::ParamListAlgo::dataType( IECore::GeometricData::Interpretation interpretation )
+{
+	switch( interpretation )
+	{
+		case GeometricData::Vector :
+			return RtDataType::k_vector;
+		case GeometricData::Normal :
+			return RtDataType::k_normal;
+		case GeometricData::Point :
+			return RtDataType::k_point;
+		case GeometricData::UV :
+			// This is what we end up with when loading `texCoord3f` from USD.
+			// It should be treated as pure floats so that the values don't
+			// get transformed at all, but at least one pipeline is dependent
+			// on them being treated as points for use as `__Pref`.
+			/// \todo Remove the legacy behaviour.
+			return g_legacyTextureCoordinates ? RtDataType::k_point : RtDataType::k_float;
+		default :
+			return RtDataType::k_float;
+	}
+}
 
 void IECoreRenderMan::ParamListAlgo::convertParameter( const RtUString &name, const Data *data, RtParamList &paramList )
 {
