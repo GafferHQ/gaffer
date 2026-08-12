@@ -36,6 +36,8 @@
 
 import unittest
 
+import imath
+
 import GafferCycles
 import GafferSceneTest
 
@@ -49,6 +51,15 @@ class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 		shader = GafferCycles.CyclesShader()
 		shader.loadShader( "diffuse_bsdf" )
 		return shader, shader["parameters"]["color"], shader["out"]["BSDF"]
+
+	def _createEmissiveShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "principled_bsdf" )
+		shader["parameters"]["base_color"].setValue( imath.Color3f( 0.0 ) )
+		shader["parameters"]["specular_ior_level"].setValue( 0.0 )
+		shader["parameters"]["emission_strength"].setValue( 1.0 )
+		return shader, shader["parameters"]["emission_color"], shader["out"]["BSDF"]
 
 	def _createPointLight( self ) :
 
@@ -80,6 +91,12 @@ class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 		options["options"]["cycles:session:samples"]["value"].setValue( 8 )
 
 		return options
+
+	def _createCheckerShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "checker_texture" )
+		return shader, shader["parameters"]["color1"], shader["parameters"]["color2"], shader["out"]["color"]
 
 	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our Cycles backend" )
 	def testInstanceIDOutput( self ) :
