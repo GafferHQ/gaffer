@@ -6,7 +6,7 @@ Features
 
 - USDMeshLight :
   - Added node to add necessary attributes to geometry to convert to a USDMeshLight.
-  - Added Arnold, RenderMan and 3Delight rendering.
+  - Added Arnold, RenderMan, 3Delight and Cycles rendering.
 
 Improvements
 ------------
