@@ -94,21 +94,6 @@ RtDetailType detail( IECoreScene::PrimitiveVariable::Interpolation interpolation
 	}
 }
 
-RtDataType dataType( IECore::GeometricData::Interpretation interpretation )
-{
-	switch( interpretation )
-	{
-		case GeometricData::Vector :
-			return RtDataType::k_vector;
-		case GeometricData::Normal :
-			return RtDataType::k_normal;
-		case GeometricData::Point :
-			return RtDataType::k_point;
-		default :
-			return RtDataType::k_float;
-	}
-}
-
 struct PrimitiveVariableConverter
 {
 
@@ -148,7 +133,7 @@ struct PrimitiveVariableConverter
 
 	void operator()( const V3fData *data, RtUString name, const PrimitiveVariable &primitiveVariable, RtPrimVarList &primVarList, unsigned sampleIndex=0 ) const
 	{
-		const RtDataType type = dataType( data->getInterpretation() );
+		const RtDataType type = IECoreRenderMan::ParamListAlgo::dataType( data->getInterpretation() );
 		primVarList.SetParam(
 			{
 				name,
@@ -241,7 +226,7 @@ struct PrimitiveVariableConverter
 
 	void operator()( const V3fVectorData *data, RtUString name, const PrimitiveVariable &primitiveVariable, RtPrimVarList &primVarList, unsigned sampleIndex=0 ) const
 	{
-		const RtDataType type = dataType( data->getInterpretation() );
+		const RtDataType type = IECoreRenderMan::ParamListAlgo::dataType( data->getInterpretation() );
 		emit(
 			data,
 			{
