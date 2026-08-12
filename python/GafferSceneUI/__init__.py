@@ -223,6 +223,8 @@ from . import CurvesTangentsUI
 from . import CopyObjectUI
 from . import QuantizePrimitiveVariablesUI
 from . import RandomPrimitiveVariableUI
+from . import PointInstancerCoreUI
+from . import PointInstancerUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

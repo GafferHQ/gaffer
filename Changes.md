@@ -5,6 +5,10 @@ Features
 --------
 
 - LightLinkingEditor : Added a new editor UI for inspecting and editing light links.
+- PointInstancer : Added new node for creating PointInstancer objects (#6810). This has the following benefits over the old Instancer node :
+  - Prototypes and points that are editable downstream.
+  - Export to USD.
+  - Faster rendering.
 
 Fixes
 -----
