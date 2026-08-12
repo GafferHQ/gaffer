@@ -546,8 +546,19 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *s
 		m_assetName( "" ),
 		m_lightGroup( "" ),
 		m_isCausticsCaster( false ),
-		m_isCausticsReceiver( false )
+		m_isCausticsReceiver( false ),
+		m_isUSDMeshLight( false )
 {
+	if( auto light = attributes->member<IECoreScene::ShaderNetwork>( g_lightAttributeName ) )
+	{
+		if( light->outputShader() && light->outputShader()->getName() == "MeshLight" )
+		{
+			m_isUSDMeshLight = true;
+		}
+	}
+	IECore::ConstCompoundObjectPtr modifiedAttributes = ShaderNetworkAlgo::convertUSDMeshLightAttributes( attributes );
+	attributes = modifiedAttributes.get();
+
 	updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
 	updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
 	updateVisibility( g_glossyVisibilityAttributeName,       (int)ccl::PATH_RAY_GLOSSY,         attributes );
@@ -840,6 +851,11 @@ int Attributes::getVolumePrecision() const
 float Attributes::getVolumeClipping() const
 {
 	return m_volume.clipping ? m_volume.clipping.value() : 0.001f;
+}
+
+bool Attributes::isUSDMeshLight() const
+{
+	return m_isUSDMeshLight;
 }
 
 void Attributes::updateVisibility( const IECore::InternedString &name, int rayType, const IECore::CompoundObject *attributes )
