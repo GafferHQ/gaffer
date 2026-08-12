@@ -57,13 +57,24 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	@staticmethod
 	def sendImage( image, catalogue, extraParameters = {}, waitForSave = True, close = True ) :
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
-			result = GafferSceneTest.DisplayTest.Driver.sendImage( image, GafferScene.Catalogue.displayDriverServer().portNumber(), extraParameters, close = close )
-			if catalogue["directory"].getValue() and waitForSave :
-				# When the image has been received, the Catalogue will
-				# save it to disk on a background thread, and we need
-				# to wait for that to complete.
+		result = GafferSceneTest.DisplayTest.Driver.sendImage( image, GafferScene.Catalogue.displayDriverServer().portNumber(), extraParameters, close = False )
+
+		if close :
+
+			# We always do the closing ourselves, because we need to manage
+			# the UI thread call triggered by the Catalogue saving the
+			# image.
+			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
+
+				result.close( withCallHandler = False )
 				h.assertCalled()
+
+				if catalogue["directory"].getValue() and waitForSave :
+					# When the image has been received, the Catalogue will
+					# save it to disk on a background thread, and we need
+					# to wait for that to complete.
+					h.assertCalled()
+
 				h.assertDone()
 
 		return result
