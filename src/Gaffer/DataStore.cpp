@@ -239,11 +239,13 @@ public:
 			if( std::filesystem::exists( m_recycleBinDirectory ) )
 			{
 				throw IECore::Exception( fmt::format(
-					"Cannot save DataStore, old recycle bin found for this file. There are two possible causes: "
+					"Cannot clean up after saving DataStore, old recycle bin found for this file."
+					"There are two possible causes: "
 					"either this file was written by another Gaffer process which is still open ( you should "
 					"close it before trying to save here to avoid possible data loss ), or the previous Gaffer "
 					"to write this file crashed without cleaning up ( In this case, you should "
-					"manually delete the recycle bin folder {} )",
+					"manually delete the recycle bin folder {} )."
+					"In the meantime, cleaning up out of date caches has been halted to avoid losing data.",
 					m_recycleBinDirectory
 				) );
 			}
