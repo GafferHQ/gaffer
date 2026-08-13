@@ -26,7 +26,7 @@ Gaffer is officially supported and tested on **Linux** (RHEL/Rocky/AlmaLinux 9) 
 
 [![CI](https://github.com/GafferHQ/gaffer/workflows/CI/badge.svg)](https://github.com/GafferHQ/gaffer/actions?query=workflow%3ACI)
 
-Gaffer targets the [VFX Reference Platform](https://vfxplatform.com). We are currently on **CY2024**. Aside from general platform development packages, we specifically require the following tools that may not be installed by default on your system. Without these, you will not be able to build Gaffer.
+Gaffer targets the [VFX Reference Platform](https://vfxplatform.com). We are currently on **CY2025**. Aside from general platform development packages, we specifically require the following tools that may not be installed by default on your system. Without these, you will not be able to build Gaffer.
 
 > **Note:** From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on Linux, refer to the [Podman setup](https://github.com/GafferHQ/build/blob/main/Containerfile) we use for building automatic releases.
 
@@ -124,10 +124,10 @@ Please see the project's [contribution guidelines](CONTRIBUTING.md).
 
 ## Copyright and license ##
 
-© 2011–2025 John Haddon. All rights reserved.
+© 2011–2026 John Haddon. All rights reserved.
 
-© 2011–2025 Image Engine Design Inc. All rights reserved.
+© 2011–2026 Image Engine Design Inc. All rights reserved.
 
-© 2011–2025 Cinesite VFX Ltd. All rights reserved.
+© 2011–2026 Cinesite VFX Ltd. All rights reserved.
 
 Distributed under the [BSD license](LICENSE).
