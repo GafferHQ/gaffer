@@ -19,14 +19,16 @@ Fixes
 - PathListingWidget : Paths dragged from a PathListingWidget now preserve the order in which they are displayed.
 - SetExpressionAlgo : Fixed invalid set expressions returned by `exclude()` when the set expression to be excluded contains only whitespace [^1].
 - PlugLayout : `<layoutName>:width` metadata is now correctly reapplied to widgets with labels when a PlugLayout is rebuilt.
-- GraphEditor : Fixed bug with history back and forward buttons when a node in the history has been deleted (#7071) [^1].
+- GraphEditor :
+  - Fixed bug with history back and forward buttons when a node in the history has been deleted (#7071) [^1].
+  - Fixed error when pressing <kbd>C</kbd> with no nodes selected [^1].
 
 API
 ---
 
 - SetExpressionAlgo : Added `remove` [^1].
 
-[^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
+[^1]: Improvement to a feature introduced in `1.7.0.0ax`, so should be omitted from final `1.7.0.0` release notes.
 
 1.7.0.0a10 (relative to 1.7.0.0a9)
 ==========
