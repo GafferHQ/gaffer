@@ -273,7 +273,7 @@ class TestCase( unittest.TestCase ) :
 				return
 			except AssertionError as e :
 				elapsed = time.time() - start
-				errors.append( ( elapsed, e ) )
+				errors.append( ( elapsed, f"{e}" ) )
 				if elapsed >= timeout :
 					break
 				delayFn( min( interval, timeout - elapsed ) )
