@@ -69,6 +69,6 @@ class StandardNodeToolbarTest( GafferUITest.TestCase ) :
 
 			toolbar = GafferUI.StandardNodeToolbar( node )
 			widget = toolbar._StandardNodeToolbar__layout.plugValueWidget( plug )
-			GafferUITest.PlugValueWidgetTest.waitForUpdate( widget )
+			self.waitForPlugValueWidgetUpdate( widget )
 			self.assertEqual( widget.updateCount, 1 )
 			self.assertEqual( widget.updateContexts[0], script.context() )

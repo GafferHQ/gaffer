@@ -59,6 +59,18 @@ Fixes
 - MeshNormals : Fixed bug that created an unnamed PrimitiveVariable if the `normal` plug was set to "" [^2].
 - VectorWarp : Fixed crash with pixel offsets much larger than any reasonable image [^2].
 
+API
+---
+
+- GafferUITest.TestCase :
+  - Added `uiThreadCallHandler` member. This should be used by any tests which need to handle calls to the UI thread.
+  - Added `waitForPlugValueWidgetUpdate()` method.
+
+Breaking Changes
+----------------
+
+- PlugValueWidgetTest : Removed `waitForUpdate()` method. Use `GafferUITest.TestCase.waitForPlugValueWidgetUpdate()` instead.
+
 Build
 -----
 

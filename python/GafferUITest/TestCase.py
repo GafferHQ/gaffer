@@ -83,6 +83,13 @@ class TestCase( GafferTest.TestCase ) :
 			"Viewport display is likely to show banding - please resolve graphics driver issue."
 		)
 
+		self.uiThreadCallHandler = GafferTest.ParallelAlgoTest.UIThreadCallHandler()
+		self.uiThreadCallHandler.__enter__()
+		## \todo We could call `self.uiThreadCallHandler.assertDone()` here, so
+		# that `__exit__()` checks that the tests are calling `assertCalled()`
+		# appropriately. That will likely mean fixing a few tests.
+		self.addCleanup( self.uiThreadCallHandler.__exit__, None, None, None )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
@@ -112,6 +119,16 @@ class TestCase( GafferTest.TestCase ) :
 
 		GafferUI.EventLoop.addIdleCallback( f )
 		GafferUI.EventLoop.mainEventLoop().start()
+
+	def waitForPlugValueWidgetUpdate( self, widget ) :
+
+		# Updates are done lazily, so we need to flush any pending updates.
+		widget._PlugValueWidget__callUpdateFromValues.flush( widget )
+
+		# And updates for computed values are done in the background, so we
+		# need to wait until they're done.
+		if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in widget.getPlugs() ) :
+			self.uiThreadCallHandler.assertCalled()
 
 	def assertExampleFilesExist( self ) :
 
