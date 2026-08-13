@@ -49,25 +49,27 @@ class NumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 		n["i"]= Gaffer.IntPlug()
 		n["f"] = Gaffer.FloatPlug()
 
-		w = GafferUI.NumericPlugValueWidget( n["i"] )
-		self.assertTrue( w.getPlug().isSame( n["i"] ) )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertTrue( isinstance( w.numericWidget().getValue(), int ) )
+		with GafferUITest.PlugValueWidgetTest.WidgetUpdateHandler() as handler :
 
-		w.setPlug( n["f"] )
-		self.assertTrue( w.getPlug().isSame( n["f"] ) )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertTrue( isinstance( w.numericWidget().getValue(), float ) )
+			w = GafferUI.NumericPlugValueWidget( n["i"] )
+			self.assertTrue( w.getPlug().isSame( n["i"] ) )
+			handler.waitForUpdate( w )
+			self.assertTrue( isinstance( w.numericWidget().getValue(), int ) )
 
-		w = GafferUI.NumericPlugValueWidget( plugs = [] )
-		self.assertEqual( w.getPlug(), None )
-		self.assertEqual( w.numericWidget().getEditable(), False )
+			w.setPlug( n["f"] )
+			self.assertTrue( w.getPlug().isSame( n["f"] ) )
+			handler.waitForUpdate( w )
+			self.assertTrue( isinstance( w.numericWidget().getValue(), float ) )
 
-		w.setPlug( n["f"] )
-		self.assertTrue( w.getPlug().isSame( n["f"] ) )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertTrue( isinstance( w.numericWidget().getValue(), float ) )
-		self.assertEqual( w.numericWidget().getEditable(), True )
+			w = GafferUI.NumericPlugValueWidget( plugs = [] )
+			self.assertEqual( w.getPlug(), None )
+			self.assertEqual( w.numericWidget().getEditable(), False )
+
+			w.setPlug( n["f"] )
+			self.assertTrue( w.getPlug().isSame( n["f"] ) )
+			handler.waitForUpdate( w )
+			self.assertTrue( isinstance( w.numericWidget().getValue(), float ) )
+			self.assertEqual( w.numericWidget().getEditable(), True )
 
 	def testEditMultiplePlugs( self ) :
 
@@ -75,25 +77,27 @@ class NumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 		n["user"]["i1"] = Gaffer.IntPlug()
 		n["user"]["i2"] = Gaffer.IntPlug()
 
-		w = GafferUI.NumericPlugValueWidget( n["user"].children() )
-		self.assertEqual( w.getPlugs(), { n["user"]["i1"], n["user"]["i2"] } )
+		with GafferUITest.PlugValueWidgetTest.WidgetUpdateHandler() as handler :
 
-		n["user"]["i1"].setValue( 2 )
-		n["user"]["i2"].setValue( 2 )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertEqual( w.numericWidget().getText(), "2" )
+			w = GafferUI.NumericPlugValueWidget( n["user"].children() )
+			self.assertEqual( w.getPlugs(), { n["user"]["i1"], n["user"]["i2"] } )
 
-		n["user"]["i1"].setValue( 1 )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertEqual( w.numericWidget().getText(), "" )
-		self.assertEqual( w.numericWidget()._qtWidget().placeholderText(), "---" )
+			n["user"]["i1"].setValue( 2 )
+			n["user"]["i2"].setValue( 2 )
+			handler.waitForUpdate( w )
+			self.assertEqual( w.numericWidget().getText(), "2" )
 
-		w.numericWidget().setValue( 10 )
-		self.assertEqual( n["user"]["i1"].getValue(), 10 )
-		self.assertEqual( n["user"]["i2"].getValue(), 10 )
+			n["user"]["i1"].setValue( 1 )
+			handler.waitForUpdate( w )
+			self.assertEqual( w.numericWidget().getText(), "" )
+			self.assertEqual( w.numericWidget()._qtWidget().placeholderText(), "---" )
 
-		Gaffer.MetadataAlgo.setReadOnly( n["user"]["i1"], True )
-		self.assertFalse( w.numericWidget().getEditable() )
+			w.numericWidget().setValue( 10 )
+			self.assertEqual( n["user"]["i1"].getValue(), 10 )
+			self.assertEqual( n["user"]["i2"].getValue(), 10 )
+
+			Gaffer.MetadataAlgo.setReadOnly( n["user"]["i1"], True )
+			self.assertFalse( w.numericWidget().getEditable() )
 
 	def testChangeToMixedPlugsDoesntOverwriteExistingPlugValues( self ) :
 
@@ -103,19 +107,21 @@ class NumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 		n["user"]["i1"].setValue( 1 )
 		n["user"]["i2"].setValue( 2 )
 
-		w = GafferUI.NumericPlugValueWidget( n["user"]["i1"] )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertEqual( w.numericWidget().getText(), "1" )
-		self.assertEqual( w.numericWidget()._qtWidget().placeholderText(), "" )
+		with GafferUITest.PlugValueWidgetTest.WidgetUpdateHandler() as handler :
 
-		w.setPlugs( n["user"].children() )
-		self.assertEqual( w.getPlugs(), { n["user"]["i1"], n["user"]["i2"] } )
+			w = GafferUI.NumericPlugValueWidget( n["user"]["i1"] )
+			handler.waitForUpdate( w )
+			self.assertEqual( w.numericWidget().getText(), "1" )
+			self.assertEqual( w.numericWidget()._qtWidget().placeholderText(), "" )
 
-		self.assertEqual( n["user"]["i1"].getValue(), 1 )
-		self.assertEqual( n["user"]["i2"].getValue(), 2 )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertEqual( w.numericWidget().getText(), "" )
-		self.assertEqual( w.numericWidget()._qtWidget().placeholderText(), "---" )
+			w.setPlugs( n["user"].children() )
+			self.assertEqual( w.getPlugs(), { n["user"]["i1"], n["user"]["i2"] } )
+
+			self.assertEqual( n["user"]["i1"].getValue(), 1 )
+			self.assertEqual( n["user"]["i2"].getValue(), 2 )
+			handler.waitForUpdate( w )
+			self.assertEqual( w.numericWidget().getText(), "" )
+			self.assertEqual( w.numericWidget()._qtWidget().placeholderText(), "---" )
 
 	def testMixedOrInvalidValuesPreservesExisting( self ) :
 
@@ -125,23 +131,25 @@ class NumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 		n["user"]["i1"].setValue( 1 )
 		n["user"]["i2"].setValue( 2 )
 
-		w = GafferUI.NumericPlugValueWidget( n["user"]["i1"] )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertEqual( w.numericWidget().getValue(), 1 )
+		with GafferUITest.PlugValueWidgetTest.WidgetUpdateHandler() as handler :
 
-		w.numericWidget().setText( "" )
-		w.numericWidget()._qtWidget().editingFinished.emit()
+			w = GafferUI.NumericPlugValueWidget( n["user"]["i1"] )
+			handler.waitForUpdate( w )
+			self.assertEqual( w.numericWidget().getValue(), 1 )
 
-		self.assertEqual( n["user"]["i1"].getValue(), 1 )
+			w.numericWidget().setText( "" )
+			w.numericWidget()._qtWidget().editingFinished.emit()
 
-		w = GafferUI.NumericPlugValueWidget( n["user"].children() )
-		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
-		self.assertEqual( w.numericWidget().getText(), "" )
+			self.assertEqual( n["user"]["i1"].getValue(), 1 )
 
-		w.numericWidget()._qtWidget().editingFinished.emit()
+			w = GafferUI.NumericPlugValueWidget( n["user"].children() )
+			handler.waitForUpdate( w )
+			self.assertEqual( w.numericWidget().getText(), "" )
 
-		self.assertEqual( n["user"]["i1"].getValue(), 1 )
-		self.assertEqual( n["user"]["i2"].getValue(), 2 )
+			w.numericWidget()._qtWidget().editingFinished.emit()
+
+			self.assertEqual( n["user"]["i1"].getValue(), 1 )
+			self.assertEqual( n["user"]["i2"].getValue(), 2 )
 
 	def testFixedCharacterWidth( self ) :
 
