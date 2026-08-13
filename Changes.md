@@ -1,80 +1,33 @@
-1.7.x.x (relative to 1.7.0.0a10)
+1.7.0.0 (relative to 1.6.21.4)
 =======
 
 Features
 --------
 
+- Cycles : Updated to version 5.1.0.
+- RenderMan : Added support for RenderMan 27.3.
 - LightLinkingEditor : Added a new editor UI for inspecting and editing light links.
+- SceneInspector : Added Statistics tab with aggregated geometry statistics for the entire scene.
 - PointInstancer : Added new node for creating PointInstancer objects (#6810). This has the following benefits over the old Instancer node :
   - Prototypes and points that are editable downstream.
   - Export to USD.
   - Faster rendering.
-
-Fixes
------
-
-- MenuBar : Made the main window menu extension button more visible. This button is shown when the window is not wide enough to show all menu items.
-- LightUI : Fixed `nodule:type` metadata lookups. Previously these ignored metadata registered to `light:{name}:{parameterName}`.
-- LightEditor : Fixed bug preventing the "Copy Path" menu item from appearing when the current selection contained locations not shown in the LightEditor.
-- PathListingWidget : Paths dragged from a PathListingWidget now preserve the order in which they are displayed.
-- SetExpressionAlgo : Fixed invalid set expressions returned by `exclude()` when the set expression to be excluded contains only whitespace [^1].
-- PlugLayout : `<layoutName>:width` metadata is now correctly reapplied to widgets with labels when a PlugLayout is rebuilt.
-- GraphEditor :
-  - Fixed bug with history back and forward buttons when a node in the history has been deleted (#7071) [^1].
-  - Fixed error when pressing <kbd>C</kbd> with no nodes selected [^1].
-
-API
----
-
-- SetExpressionAlgo : Added `remove` [^1].
-
-[^1]: Improvement to a feature introduced in `1.7.0.0ax`, so should be omitted from final `1.7.0.0` release notes.
-
-1.7.0.0a10 (relative to 1.7.0.0a9)
-==========
-
-Features
---------
-
+- FlamencoDispatcher : Added a new node for sending tasks to Blender's [Flamenco](https://flamenco.blender.org) render farm manager.
+- CurvesPrimitive : Added `Pinned` wrap mode in addition to the existing `Periodic` and `NonPeriodic` modes. This conveniently interpolates CatmullRom and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
+- CurvesInterpolation : Added node for modifying CurvesPrimitive `basis` and `wrap`. This includes the ability to convert curves with `Pinned` wrap to `NonPeriodic`, adding the appropriate "phantom" points to maintain curve shape.
+- CurvesTangents : Added node for computing tangents on CurvesPrimitives (#6166).
+- PrimitiveQuery : Added a new node for querying a primitive's type and variable sizes.
+- FileList : Added node for listing matching files.
+- DeleteFiles : Added node for deleting files.
+- CopyFiles : Added node for copying files.
+- RenameFiles : Added node for renaming files.
 - RandomPrimitiveVariable : Added new node for creating random per-face or per-vertex primitive variables with a variety of distributions.
-- ArnoldOptions : Added new "Scene Description" options to control how Arnold archive files are written. "Binary" can be disabled to produce human readable files, and "Open Procs" expands procedurals, making it possible to write Gaffer scenes that use encapsulation.
-
-Improvements
-------------
-
-- GraphEditor : Added <kbd>C</kbd> shortcut for setting node colors.
-- SceneView : Added keyboard shortcut <kbd>;</kbd> to toggle between the lookthrough (camera / light) view and the free (perspective / top / front / side) cameras. <kbd>Ctrl</kbd> + click on the toolbar camera icon will perform the same toggle.
-
-Fixes
------
-
-- Application : Fixed bug that prevented the use of `sys.executable` for launching a Python process. `sys.executable` now points to the included `python` executable instead of `gaffer` [^1].
-- MenuButton : Fixed immediate mode when the menu contained a single submenu.
-- RandomChoice : Fixed "Value/Weight" table headers when first setting up the node.
-- VectorDataPlugValueWidget : Fixed handling of custom header metadata when adding and removing columns.
-- RenderMan :
-  - Fixed handling of `treatAsPoint` and `treatAsLine` UsdLuxLight parameters. These are now ignored, matching the behaviour of `hdPrman`.
-  - Fixed handling of connections between floats and color/vector components [^2].
-  - Fixed bug preventing attributes from being deleted from lights during an interactive render [^2].
-- MeshNormals : Fixed bug that created an unnamed PrimitiveVariable if the `normal` plug was set to "" [^2].
-- VectorWarp : Fixed crash with pixel offsets much larger than any reasonable image [^2].
-
-Build
------
-
-- Cortex : Updated to version 10.7.0.0.
-
-[^1]: Improvement to a feature introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
-[^2]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
-
-1.7.0.0a9 (relative to 1.7.0.0a8)
-=========
-
-Features
---------
-
 - QuantizePrimitiveVariables : Added new node for quantizing the values of primitive variables.
+- CopyObject : Added new node for copying objects from one scene to another.
+- SceneStats : Added a new node for computing aggregate scene statistics.
+- DeleteGrids : Added node for deleting grids from locations containing OpenVDB volumes.
 - DataStore : Added new node for storing large data alongside a Gaffer script, which is more efficient than storing large data inside the script file. Data is stored on the DataStore node by calling setEntry, instead of setting plug values. This node will be used as a basis of future tools that create data within Gaffer.
+- Graph Editor : Added location bar for navigation through Boxes and References. Text and button interactions can be used to navigate the node hierarchy. Forward and back buttons are provided to step through the history (#6008).
 
 Improvements
 ------------
@@ -83,282 +36,20 @@ Improvements
   - Changed node context menu items to operate on multiple nodes where possible (#2783).
   - Added drag & drop from LightEditor and AttributeEditor. Dropping a location navigates to the node that created the location.
   - Added context menu item and keyboard shortcut, <kbd>/</kbd>, for hiding all of a node's unconnected plugs.
+  - Added <kbd>C</kbd> shortcut for setting node colors.
 - RenderMan : Changed PxrCryptomatte's material output to use the name of the terminal shader, rather than a hash of the network. This is stable under animation. As before, the output can be customised by creating a `user:__materialid` attribute.
 - SpreadsheetUI : Added "Output" row, showing the output value computed for each column. Cells in this row can be left-dragged to connect the column to a plug, or middle-dragged to transfer the current value.
-
-Fixes
------
-
-- FocalBlur : Fixed issue with excess alpha near depth discontinuities. This resulted in small bright edges near silhouettes where there is a sharp change in depth.
-- Filter : Fixed bug with `Select affected objects` where only the relevant locations from one scene connected to the filter would be included in the selection instead of from all scenes connected to the filter.
-- ScriptNode :
-  - Fixed context updates for `variables` plugs with an input connection.
-  - Prevented invalid input connections to `variables` plugs. Connections from node outputs are considered invalid because they could create a circular dependency between context variables.
-- EditMenu : Added popup dialogue when errors occur during "cut" or "copy" operations.
-- Shuffle nodes : Fixed bug that disabled the "+" button if a shuffle plug had an input connection [^1].
-- Arnold : Fixed crash with Arnold 7.5.2 when setting the `driver_exr` "compression" parameter, which was previously a string but is now a string array [^1].
-- IECoreArnold::ParameterAlgo : Added support for setting an array parameter with a StringData or BoolData. This is treated as equivalent to setting the array parameter to a one element array [^1].
-
-API
----
-
-- GraphEditor :
-  - Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
-  - Added per-instance signals in addition to existing class-level signals. These are accessed by calling the same methods as before, but from an instance (`graphEditorInstance.plugContextMenuSignal()`) rather than the class (`GraphEditor.plugContextMenuSignal()`) (#137). The following signals are available in this form :
-    - `plugContextMenuSignal()`
-    - `connectionContextMenuSignal()`
-    - `nodeContextMenuSignal()`
-    - `nodeDoubleClickSignal()`
-- Spreadsheet : Added support for `spreadsheet:outputRowVisible` metadata, which can be used to hide the output row.
-- TestCase : Added alternateMountTemporaryDirectory() for testing behaviour when moving files between directories on different filesystems.
-
-Breaking Changes
-----------------
-
-- RenderMan : Changed the default values used for PxrCryptomatte's material output.
-- ScriptNode : Changed preconditions for calling `serialiseToFile`. If the desired behaviour is that the ScriptNode in memory will be now be associated with the new file ( ie. a saveAs operation ), then the caller is responsible for setting `ScriptNode.fileNamePlug()` to the new file name before calling `serialiseToFile`.
-
-[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
-
-1.7.0.0a8 (relative to 1.7.0.0a7)
-=========
-
-Features
---------
-
-- RenderMan : Added support for RenderMan 27.3.
-
-Fixes
------
-
-- SceneWriter : Fixed bug writing shader assignments with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1` [^1].
-- SceneReader :
-  - Fixed bug reading shader assignments with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1` [^1].
-  - Fixed bug reading legacy attributes with `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=1` [^1].
-
-Build
------
-
-- Cortex : Updated to version 10.7.0.0a14.
-
-[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
-
-1.7.0.0a7 (relative to 1.7.0.0a6)
-=========
-
-Features
---------
-
-- CopyObject : Added new node for copying objects from one scene to another.
-
-Improvements
-------------
-
-- PrimitiveQuery : Added `primitive` output [^2].
+- Viewer : Added keyboard shortcut <kbd>;</kbd> to toggle between the lookthrough (camera / light) view and the free (perspective / top / front / side) cameras. <kbd>Ctrl</kbd> + click on the toolbar camera icon will perform the same toggle.
+- ArnoldOptions : Added new "Scene Description" options to control how Arnold archive files are written. "Binary" can be disabled to produce human readable files, and "Open Procs" expands procedurals, making it possible to write Gaffer scenes that use encapsulation.
 - StandardAttributes :
   - Added `linkedLights:exclusions` and `shadowedLights:exclusions` attributes, specifying lights that never illuminate or cast shadows from an object.
   - Added `filteredLights:exclusions` attribute, specifying lights that are never filtered by a light filter.
   - Moved `filteredLights` and `filteredLights:exclusions` to a new "Light Filters" section in the NodeEditor and AttributeEditor.
 - LightFilter, ArnoldLightFilter, RenderManLightFilter : Added `filteredLightsExclusions` plug.
-- SceneWriter : Defaulted to writing RenderMan attributes in a format compatible with `hdPrman`, for rendering in `usdview` and other Hydra-based applications.
-
-Fixes
------
-
-- RenderMan : Fixed handling of V3f data with non-geometric interpretation. Common sources include `float3` primvars and attributes loaded from USD files [^1].
-
-Documentation
--------------
-
-- Light Linking : Updated to describe use of the `linkedLights:exclusions` attribute.
-
-Breaking Changes
-----------------
-
-- SceneWriter : Changed writing of `ri:` prefixed attributes to USD. Set `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=0` to revert to the default behaviour from Gaffer 1.6.
-
-Build
------
-
-- Cortex : Updated to version 10.7.0.0a13.
-
-[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
-[^2]: Improvement to a feature introduced in `1.7.0.0a3`, so should be omitted from final `1.7.0.0` release notes.
-
-
-1.7.0.0a6 (relative to 1.7.0.0a5)
-=========
-
-Features
---------
-
-- SceneStats : Added a new node for computing aggregate scene statistics.
-- SceneInspector : Added Statistics tab with aggregated geometry statistics for the entire scene.
-
-Improvements
-------------
-
+- SceneWriter :
+  - Defaulted to writing RenderMan attributes in a format compatible with `hdPrman`, for rendering in `usdview` and other Hydra-based applications.
+  - Defaulted to writing OSL shaders in a format compatible with `hdPrman`, for rendering in `usdview` and other Hydra-based applications.
 - Outputs : Added output presets for RenderMan's NPR AOVs.
-- SceneWriter : Defaulted to writing OSL shaders in a format compatible with `hdPrman`, for rendering in `usdview` and other Hydra-based applications.
-
-Fixes
------
-
-- Arnold :
-  - Fixed fallback to a facing ratio shader when a shader is removed during an interactive render.
-  - Fixed crash attempting to render with a shader that doesn't exist.
-- Viewer : Fixed regression introduced in 1.6.16.0 that prevented visualisation of the renderer-specific camera visibility and matte attributes authored by the Render Pass Editor's render adaptors [^1].
-- RenderMan :
-  - Fixed `R10043` warning when using PxrDisplace [^1].
-  - Fixed automatic creation of required AOVs for PxrStylized filters in XPU [^1].
-- Catalogue : Fixed errors caused by undoing an image deletion or snapshot.
-- Gaffer module : Fixed bug preventing `environment()` from returning environment variables modified after startup on macOS.
-
-API
----
-
-- DictPath : Added support for subclassing, without the need to override `copy()` or `_children()`.
-- PlugCreationGadget : Added counterpart to PlugCreationWidget, allowing plugs to be created easily in the GraphEditor.
-- PlugVisibilityGadget : Added gadget for managing plug visibility in the GraphEditor.
-
-Breaking Changes
-----------------
-
-- ShaderUI : Removed PlugAdder. Use `GafferUI.PlugVisibilityGadget` instead.
-- SceneWriter : Changed writing of OSL shaders to USD. Set `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=0` to revert to the default behaviour from Gaffer 1.6.
-- Catalogue : Removed support for image order metadata from versions prior to 1.4.0.0. In the unlikely event this is needed, reorder and resave from Gaffer 1.6.
-
-Build
------
-
-- Fixed errors building `gaffer` executable on macOS [^2].
-
-[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
-[^2]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
-
-1.7.0.0a5 (relative to 1.7.0.0a4)
-=========
-
-Fixes
------
-
-- NodeEditor : Fixed redundant updates when editing private plugs, such as when repositioning the currently viewed node in the Graph Editor.
-- RenderPassEditor : Fixed errors displaying presets while editing the `type` column [^1].
-- RenderMan : Fixed potential hang when updating the Visible Set immediately after starting an interactive render with `useVisibleSet` enabled [^1].
-- NodeGadgetBinding : Fixed linking errors when using NodeGadgetClass. Clients should link to the new `GafferUIBindings` shared library [^1].
-
-API
----
-
-- ShadingEngine : Added `TextureOrigin` enum, to allow emulation of renderers whose texture origin is at the top left rather than bottom left.
-
-Breaking Changes
-----------------
-
-- RenderPassTypeAdaptorUI : Removed `renderPassTypePresetNames()` and `renderPassTypePresetValues()`.
-- OpenImageIO : Removed source compatibility for versions prior to 3.
-- OpenShadingLanguage : Removed source compatibility for versions prior to 1.14.
-
-[^1]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
-
-1.7.0.0a4 (relative to 1.7.0.0a3)
-=========
-
-Improvements
-------------
-
-- SceneWriter : Added `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS` environment variable. When set to a value of `1`, OSL shaders are written to USD in a format compatible with `hdPrman`, for rendering with RenderMan in `usdview` and other Hydra-based applications. [^1]
-
-Fixes
------
-
-- ShadingEngine : Fixed handling of shaders when an `.oso` file does exist, but `Shader::getType()` does not match `osl:*`. Examples include Pxr shaders loaded from USD files. [^1]
-
-Build
------
-
-- Cortex : Updated to version 10.7.0.0a12.
-
-[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
-
-1.7.0.0a3 (relative to 1.7.0.0a2)
-=========
-
-Features
---------
-
-- FlamencoDispatcher : Added a new node for sending tasks to Blender's [Flamenco](https://flamenco.blender.org) render farm manager.
-- PrimitiveQuery : Added a new node for querying a primitive's type and variable sizes.
-- FileList : Added node for listing matching files.
-- DeleteFiles : Added node for deleting files.
-- CopyFiles : Added node for copying files.
-- RenameFiles : Added node for renaming files.
-
-Fixes
------
-
-- SceneInspector : Fixed Interpolation field for primitive variables that don't exist. Previously it said "Invalid", and now it shows nothing.
-- Renderer API : Added missing `Renderer.inl` header file.
-- NodeGadget : Fixed usage of `instanceCreatedSignal()` with NodeGadgets implemented in Python [^1].
-
-API
----
-
-- Image : Added `updateImage()` method.
-
-Build
------
-
-- Cortex : Updated to version 10.7.0.0a11.
-
-Breaking Changes
-----------------
-
-- SceneReader : Removed `./` prefix from relative prototype paths loaded from USD files.
-- Instancer : Defaulted `GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS` to `1`, as required by SceneReader's updated handling of relative USD prototypes. The environment variable may be removed in future.
-
-[^1]: Fix for bug introduced in `1.7.0.0a1`, so should be omitted from final `1.7.0.0` release notes.
-
-1.7.0.0a2 (relative to 1.7.0.0a1)
-=========
-
-Features
---------
-
-- DeleteGrids : Added node for deleting grids from locations containing OpenVDB volumes.
-
-Fixes
------
-
-- RenderMan :
-  - Fixed PxrDisplace shader assignments, which now target the `ri:displacement` attribute rather than `osl:displacement`. This renders as before in Gaffer, but is more compatible with other applications when exported to USD.
-  - Fixed handling of multiple intervals in `ri:checkpoint:interval` option. Intervals may be separated by spaces or commas. [^1]
-- Dispatcher : [^1]
-  - Fixed `Context has no variable named...` error when dispatching an isolated task with a `StringPlug` script variable containing a frame substitution.
-  - Fixed unnecessary baking of values for ScriptNode variables plugs without input connections.
-
-[^1]: Included in `1.6.x.x`, so should be omitted from final `1.7.0.0` release notes.
-
-Breaking Changes
-----------------
-
-- RenderMan : PxrDisplace now assigns as an `ri:displacement` attribute rather than `osl:displacement`.
-
-1.7.0.0a1 (relative to 1.6.19.1)
-=========
-
-Features
---------
-
-- Cycles : Updated to version 5.1.0.
-- CurvesPrimitive : Added `Pinned` wrap mode in addition to the existing `Periodic` and `NonPeriodic` modes. This conveniently interpolates CatmullRom
-and BSpline curves to their endpoints automatically, without manual management of duplicate endpoints or "phantom vertices".
-- CurvesInterpolation : Added node for modifying CurvesPrimitive `basis` and `wrap`. This includes the ability to convert curves with `Pinned` wrap to `NonPeriodic`, adding the appropriate "phantom" points to maintain curve shape.
-- CurvesTangents : Added node for computing tangents on CurvesPrimitives (#6166).
-
-Improvements
-------------
-
 - AttributeTweaks, AttributeVisualiser, ShaderAssignment, ShaderTweaks, ShuffleAttributes : Added `global` plug, to allow global attributes to be processed instead of using `filter` to process per-location attributes.
 - ShaderTweaks :
   - Added tweaking of integrators, background shaders, atmosphere shaders and render pass shaders.
@@ -367,7 +58,7 @@ Improvements
 - InteractiveRender : Added `useVisibleSet` plug. When on, only the scene locations contained in the Visible Set will be rendered.
 - Application :
   - Applications now run using a dedicated `gaffer` executable instead of `python`. This means the root process is now called `gaffer` on all platforms. The `bin/gaffer` (Linux) and `bin/gaffer.cmd` (Windows) launch scripts should still be used as before (#6654).
-  - Set the main thread stack limit to 4MB on Windows (#6809).
+  - Increased the main thread stack limit to 4MB on Windows (#6809).
   - Matched TBB worker thread stack limit to the limit for the main thread. On Linux, this can be configured with `ulimit -s`.
 - CyclesAttributes : Added `cycles:adaptive_space` attribute.
 - CyclesOptions : Added `cycles:integrator:volume_ray_marching` option.
@@ -380,13 +71,36 @@ Improvements
 - OSLCode : The OSL shader is now compiled on demand, rather than every time the node is edited. This avoids many redundant attempts at recompilation when loading nodes with many parameters.
 - ArnoldMeshLight, RenderManMeshLight : Added support for deformation motion blur (#6869). In the case of RenderMan, this only affects the camera-visible mesh, since RenderMan doesn't yet support deformation for the light itself.
 - TweakPlug : Added `SetExpressionInclude` and `SetExpressionExclude` modes for tweaking set expressions.
-- Graph Editor :
-  - Added location bar for navigation through Boxes and References. Text and button interactions can be used to navigate the node hierarchy.
-  - Added forward and back buttons to step through the history.
 
 Fixes
 -----
 
+- MenuBar : Made the main window menu extension button more visible. This button is shown when the window is not wide enough to show all menu items.
+- LightUI : Fixed `nodule:type` metadata lookups. Previously these ignored metadata registered to `light:{name}:{parameterName}`.
+- LightEditor :
+  - Fixed bug preventing the "Copy Path" menu item from appearing when the current selection contained locations not shown in the LightEditor.
+  - Fixed context used to compute the solo column header icon, this now uses the correct context with respect to the focus node.
+- PathListingWidget : Paths dragged from a PathListingWidget now preserve the order in which they are displayed.
+- PlugLayout : `<layoutName>:width` metadata is now correctly reapplied to widgets with labels when a PlugLayout is rebuilt.
+- MenuButton : Fixed immediate mode when the menu contained a single submenu.
+- RandomChoice : Fixed "Value/Weight" table headers when first setting up the node.
+- VectorDataPlugValueWidget : Fixed handling of custom header metadata when adding and removing columns.
+- RenderMan :
+  - Fixed handling of `treatAsPoint` and `treatAsLine` UsdLuxLight parameters. These are now ignored, matching the behaviour of `hdPrman`.
+  - Fixed PxrDisplace shader assignments, which now target the `ri:displacement` attribute rather than `osl:displacement`. This renders as before in Gaffer, but is more compatible with other applications when exported to USD.
+- FocalBlur : Fixed issue with excess alpha near depth discontinuities. This resulted in small bright edges near silhouettes where there is a sharp change in depth.
+- Filter : Fixed bug with `Select affected objects` where only the relevant locations from one scene connected to the filter would be included in the selection instead of from all scenes connected to the filter.
+- ScriptNode :
+  - Fixed context updates for `variables` plugs with an input connection.
+  - Prevented invalid input connections to `variables` plugs. Connections from node outputs are considered invalid because they could create a circular dependency between context variables.
+- EditMenu : Added popup dialogue when errors occur during "cut" or "copy" operations.
+- Arnold :
+  - Fixed fallback to a facing ratio shader when a shader is removed during an interactive render.
+  - Fixed crash attempting to render with a shader that doesn't exist.
+- Catalogue : Fixed errors caused by undoing an image deletion or snapshot.
+- Gaffer module : Fixed bug preventing `environment()` from returning environment variables modified after startup on macOS.
+- NodeEditor : Fixed redundant updates when editing private plugs, such as when repositioning the currently viewed node in the Graph Editor.
+- SceneInspector : Fixed Interpolation field for primitive variables that don't exist. Previously it said "Invalid", and now it shows nothing.
 - RenderController : Fixed bug where repeatedly setting the same VisibleSet could cause unnecessary updates.
 - UI : Fixed failure to cancel background computations when more than one UI element was waiting for the same result. This could result in the UI becoming unresponsive until the computation was complete.
 - BackgroundMethod : Fixed bug that allowed unwanted background computations to continue when a widget was hidden.
@@ -404,12 +118,25 @@ Fixes
 - CyclesLight, ArnoldLight, LightFilter : Fixed potential hang when loading shaders (GIL management bug in `loadShader()` binding).
 - StandardNodeGadget : Fixed crash caused by the node emitting `errorSignal()` while the gadget is undergoing construction.
 - Shader : Fixed hash for output plugs.
-- LightEditor : Fixed context used to compute the solo column header icon, this now uses the correct context with respect to the focus node.
 - NodeGadget : Fixed potential hang calling `create()` from Python.
 
 API
 ---
 
+- GraphEditor :
+  - Added an optional argument to `nodeContextMenuSignal()` to request a signal that will pass a list of nodes to the handler, rather than a single node. This can be used to register menu items that will act on multiple nodes.
+  - Added per-instance signals in addition to existing class-level signals. These are accessed by calling the same methods as before, but from an instance (`graphEditorInstance.plugContextMenuSignal()`) rather than the class (`GraphEditor.plugContextMenuSignal()`) (#137). The following signals are available in this form :
+    - `plugContextMenuSignal()`
+    - `connectionContextMenuSignal()`
+    - `nodeContextMenuSignal()`
+    - `nodeDoubleClickSignal()`
+- Spreadsheet : Added support for `spreadsheet:outputRowVisible` metadata, which can be used to hide the output row.
+- TestCase : Added alternateMountTemporaryDirectory() for testing behaviour when moving files between directories on different filesystems.
+- DictPath : Added support for subclassing, without the need to override `copy()` or `_children()`.
+- PlugCreationGadget : Added counterpart to PlugCreationWidget, allowing plugs to be created easily in the GraphEditor.
+- PlugVisibilityGadget : Added gadget for managing plug visibility in the GraphEditor.
+- ShadingEngine : Added `TextureOrigin` enum, to allow emulation of renderers whose texture origin is at the top left rather than bottom left.
+- Image : Added `updateImage()` method.
 - SubGraph : Clarified via documentation that SubGraph is _not_ intended as a base class for custom nodes. Nodes should derive from DependencyNode
   or some other base class instead.
 - Metadata : `ValueFunctions` now receive a `target` parameter. This is particularly useful when registering a function against a wildcard pattern.
@@ -429,6 +156,20 @@ API
 Breaking Changes
 ----------------
 
+- RenderMan :
+  - Changed the default values used for PxrCryptomatte's material output.
+  - PxrDisplace now assigns as an `ri:displacement` attribute rather than `osl:displacement`.
+- ScriptNode : Changed preconditions for calling `serialiseToFile`. If the desired behaviour is that the ScriptNode in memory will be now be associated with the new file ( ie. a saveAs operation ), then the caller is responsible for setting `ScriptNode.fileNamePlug()` to the new file name before calling `serialiseToFile`.
+- SceneWriter :
+  - Changed writing of `ri:` prefixed attributes to USD. Set `IECOREUSD_WRITE_CONFORMANT_RENDERMAN_ATTRIBUTES=0` to revert to the default behaviour from Gaffer 1.6.
+  - Changed writing of OSL shaders to USD. Set `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=0` to revert to the default behaviour from Gaffer 1.6.
+- ShaderUI : Removed PlugAdder. Use `GafferUI.PlugVisibilityGadget` instead.
+- Catalogue : Removed support for image order metadata from versions prior to 1.4.0.0. In the unlikely event this is needed, reorder and resave from Gaffer 1.6.
+- RenderPassTypeAdaptorUI : Removed `renderPassTypePresetNames()` and `renderPassTypePresetValues()`.
+- OpenImageIO : Removed source compatibility for versions prior to 3.
+- OpenShadingLanguage : Removed source compatibility for versions prior to 1.14.
+- SceneReader : Removed `./` prefix from relative prototype paths loaded from USD files.
+- Instancer : Defaulted `GAFFERSCENE_INSTANCER_EXPLICIT_ABSOLUTE_PATHS` to `1`, as required by SceneReader's updated handling of relative USD prototypes. The environment variable may be removed in future.
 - Arnold : Removed support for Arnold 7.3.
 - RenderMan : Removed support for RenderMan 27.1.
 - ValuePlug :
@@ -465,11 +206,16 @@ Breaking Changes
 - OSLCode : Removed `shaderCompiledSignal()`.
 - PathColumn : Changed `headerData()` signature.
 
+Documentation
+-------------
+
+- Light Linking : Updated to describe use of the `linkedLights:exclusions` attribute.
+
 Build
 -----
 
 - Boost : Updated to version 1.85.0.
-- Cortex : Updated to version 10.7.0.0a10.
+- Cortex : Updated to version 10.7.0.0.
 - Cycles : Updated to version 5.1.0.
 - Embree : Updated to version 4.4.0.
 - Imath : Updated to version 3.1.12.
