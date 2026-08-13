@@ -1,7 +1,10 @@
 1.6.21.x (relative to 1.6.21.4)
 ========
 
+Fixes
+-----
 
+- LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
 
 1.6.21.4 (relative to 1.6.21.3)
 ========
