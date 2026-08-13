@@ -35,11 +35,14 @@
 #pragma once
 
 #include "IECore/CompoundData.h"
+#include "IECore/GeometricTypedData.h"
 
 #include "RiTypesHelper.h"
 
 namespace IECoreRenderMan::ParamListAlgo
 {
+
+RtDataType dataType( IECore::GeometricData::Interpretation interpretation );
 
 void convertParameter( const RtUString &name, const IECore::Data *data, RtParamList &paramList );
 void convertParameters( const IECore::CompoundDataMap &parameters, RtParamList &paramList );

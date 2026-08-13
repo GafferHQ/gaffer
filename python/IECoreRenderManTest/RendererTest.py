@@ -40,6 +40,7 @@ import time
 import unittest
 import random
 import itertools
+import subprocess
 
 import imath
 
@@ -1236,6 +1237,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testGeometricInterpretation( self ) :
 
+		legacy = os.environ.get( "IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR", "0" ) == "1"
+
 		with IECoreRenderManTest.RileyCapture() as capture :
 
 			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -1276,6 +1279,14 @@ class RendererTest( GafferTest.TestCase ) :
 				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 				IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 4, IECore.GeometricData.Interpretation.Numeric )
 			)
+			mesh["constantTextureCoordinate"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.UV )
+			)
+			mesh["vertexTextureCoordinate"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 4, IECore.GeometricData.Interpretation.UV )
+			)
 
 			attributes = IECore.CompoundObject( {
 				"user:point" : IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point ),
@@ -1286,6 +1297,8 @@ class RendererTest( GafferTest.TestCase ) :
 				"user:normalArray" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 3, IECore.GeometricData.Interpretation.Normal ),
 				"user:float3" : IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Numeric ),
 				"user:float3Array" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 5, IECore.GeometricData.Interpretation.Numeric ),
+				"user:textureCoordinate" : IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.UV ),
+				"user:textureCoordinateArray" : IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 5, IECore.GeometricData.Interpretation.UV ),
 			} )
 
 			renderer.object(
@@ -1327,6 +1340,12 @@ class RendererTest( GafferTest.TestCase ) :
 		assertExpectedPrimVar( "vertexNormal", dataTypes["normal"], 1, False )
 		assertExpectedPrimVar( "constantFloat3", dataTypes["float"], 3, True )
 		assertExpectedPrimVar( "vertexFloat3", dataTypes["float"], 3, True )
+		if legacy :
+			assertExpectedPrimVar( "constantTextureCoordinate", dataTypes["point"], 1, False )
+			assertExpectedPrimVar( "vertexTextureCoordinate", dataTypes["point"], 1, False )
+		else :
+			assertExpectedPrimVar( "constantTextureCoordinate", dataTypes["float"], 3, True )
+			assertExpectedPrimVar( "vertexTextureCoordinate", dataTypes["float"], 3, True )
 
 		instance = next(
 			x for x in capture.json if x["method"] == "CreateGeometryInstance"
@@ -1345,6 +1364,30 @@ class RendererTest( GafferTest.TestCase ) :
 		assertExpectedAttribute( "user:normalArray", dataTypes["normal"], 3, True )
 		assertExpectedAttribute( "user:float3", dataTypes["float"], 3, True )
 		assertExpectedAttribute( "user:float3Array", dataTypes["float"], 15, True )
+		if legacy :
+			assertExpectedAttribute( "user:textureCoordinate", dataTypes["point"], 1, False )
+			assertExpectedAttribute( "user:textureCoordinateArray", dataTypes["point"], 5, True )
+		else :
+			assertExpectedAttribute( "user:textureCoordinate", dataTypes["float"], 3, True )
+			assertExpectedAttribute( "user:textureCoordinateArray", dataTypes["float"], 15, True )
+
+	def testLegacyGeometricInterpretation( self ) :
+
+		# Launch test above in environment to trigger legacy behaviour
+		# (unless we're in a legacy environment, in which case test clean
+		# behaviour).
+
+		legacy = os.environ.get( "IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR", "0" ) == "1"
+		env = os.environ.copy()
+		env["IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR"] = "0" if legacy else "1"
+
+		try :
+			subprocess.check_output(
+				[ "gaffer" if os.name != "nt" else "gaffer.cmd", "test", "IECoreRenderManTest.RendererTest.testGeometricInterpretation" ],
+				env = env, stderr = subprocess.STDOUT
+			)
+		except subprocess.CalledProcessError as e :
+			self.fail( e.output )
 
 	def testSubdivInterpolatedBoundary( self ) :
 

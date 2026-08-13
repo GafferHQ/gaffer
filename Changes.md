@@ -493,7 +493,10 @@ Build
 1.6.x.x (relative to 1.6.21.3)
 =======
 
+Fixes
+-----
 
+- RenderMan : Added `IECORERENDERMAN_LEGACY_TEXTURECOORDINATE_BEHAVIOUR` environment variable, as a partial opt-out from the bugfix introduced in 1.6.21.0. Setting the variable to a value of `1` causes USD `texCoord3f` primitive variables to be exported to RenderMan as `point` rather than `float[3]`, as they were prior to 1.6.21.0. This is not correct, but allows folks who have been authoring `__Pref` as `texCoord3f` to temporarily continue to work as before.
 
 1.6.21.3 (relative to 1.6.21.2)
 ========
