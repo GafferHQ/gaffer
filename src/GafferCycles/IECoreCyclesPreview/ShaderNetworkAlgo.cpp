@@ -875,6 +875,7 @@ const InternedString g_normalParameter( "normal" );
 const InternedString g_normalizeParameter( "normalize" );
 const InternedString g_occlusionParameter( "occlusion" );
 const InternedString g_opacityParameter( "opacity" );
+const InternedString g_opacityModeParameter( "opacityMode" );
 const InternedString g_opacityThresholdParameter( "opacityThreshold" );
 const InternedString g_parametricParameter( "parametric" );
 const InternedString g_positionParameter( "position");
@@ -905,9 +906,11 @@ const InternedString g_texMappingScaleParameter( "tex_mapping__scale" );
 const InternedString g_texMappingYMappingParameter( "tex_mapping__y_mapping" );
 const InternedString g_texMappingZMappingParameter( "tex_mapping__z_mapping" );
 const InternedString g_translationParameter( "translation" );
+const InternedString g_transmissionWeightParameter( "transmission_weight" );
 const InternedString g_treatAsPointParameter( "treatAsPoint" );
 const InternedString g_useDiffuseParameter( "use_diffuse" );
 const InternedString g_useGlossyParameter( "use_glossy" );
+const InternedString g_useClampParameter( "use_clamp" );
 const InternedString g_useMISParameter( "use_mis" );
 const InternedString g_useSpecularWorkflowParameter( "useSpecularWorkflow" );
 const InternedString g_UVParameter( "UV" );
@@ -1291,6 +1294,7 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			// with a little compare/multiply network.
 
 			float opacity = parameterValue( shader.get(), g_opacityParameter, 1.0f );
+			const string opacityMode = parameterValue( shader.get(), g_opacityModeParameter, string( "transparent" ) );
 			const float opacityThreshold = parameterValue( shader.get(), g_opacityThresholdParameter, 0.0f );
 			if( const ShaderNetwork::Parameter opacityInput = shaderNetwork->input( { handle, g_opacityParameter } ) )
 			{
@@ -1309,17 +1313,35 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 					shaderNetwork->removeConnection( ShaderNetwork::Connection( opacityInput, { handle, g_opacityParameter } ) );
 					shaderNetwork->addConnection( ShaderNetwork::Connection( { multiplyHandle, g_valueParameter }, { handle, g_alphaParameter } ) );
 				}
-				else
+				else if( opacityMode == string( "presence" ) )
 				{
 					transferUSDParameter( shaderNetwork, handle, shader.get(), g_opacityParameter, newShader.get(), g_alphaParameter, 1.0f );
 				}
+				else
+				{
+					shaderNetwork->removeConnection( ShaderNetwork::Connection( opacityInput, { handle, g_opacityParameter } ) );
+				}
+
+				if( opacityMode == string( "transparent" ) )
+				{
+					ShaderPtr invertShader = new Shader( "math", "cycles:shader" );
+					invertShader->parameters()[g_value1Parameter] = new FloatData( 1.0f );
+					invertShader->parameters()[g_mathTypeParameter] = new StringData( "subtract" );
+					invertShader->parameters()[g_useClampParameter] = new BoolData( true );
+					const InternedString invertHandle = shaderNetwork->addShader( handle.string() + "OpacityInvert", std::move( invertShader ) );
+					shaderNetwork->addConnection( ShaderNetwork::Connection( opacityInput, { invertHandle, g_value2Parameter } ) );
+					shaderNetwork->addConnection( ShaderNetwork::Connection( { invertHandle, g_valueParameter }, { handle, g_transmissionWeightParameter } ) );
+				}
+			}
+			else if( opacityMode == string( "transparent" ) )
+			{
+				newShader->parameters()[g_transmissionWeightParameter] = new FloatData( 1.0f - opacity );
 			}
 			else
 			{
 				opacity = opacity > opacityThreshold ? opacity : 0.0f;
+				newShader->parameters()[g_alphaParameter] = new FloatData( opacity );
 			}
-
-			newShader->parameters()[g_alphaParameter] = new FloatData( opacity );
 
 			// Normal.
 			/// \todo Convert normal parameters once we have a solution for Cycles'
