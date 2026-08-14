@@ -1685,6 +1685,126 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 				sampler["pixel"].setValue( centre )
 				self.assertEqual( sampler["color"].getValue(), expectedColor )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerIDOutput( self ) :
+
+		if not self.pointInstancerSupported :
+			raise unittest.SkipTest( "PointInstancer not supported" )
+
+		script = Gaffer.ScriptNode()
+
+		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancer.setPosition(
+			IECore.V3fVectorData( [
+				imath.V3f( -1, 0, 0 ), imath.V3f( 0, 0, 0 ), imath.V3f( 1, 0, 0 ),
+			] )
+		)
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 0, 0 ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "./sphere" ] ) )
+
+		script["pointInstancer"] = GafferScene.ObjectToScene()
+		script["pointInstancer"]["name"].setValue( "instancer" )
+		script["pointInstancer"]["object"].setValue( pointInstancer )
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["radius"].setValue( 0.5 )
+
+		script["prototypeParent"] = GafferScene.Parent()
+		script["prototypeParent"]["in"].setInput( script["pointInstancer"]["out"] )
+		script["prototypeParent"]["children"][0].setInput( script["sphere"]["out"] )
+		script["prototypeParent"]["parent"].setValue( "/instancer" )
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["prototypeParent"]["out"] )
+		script["parent"]["children"][0].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		imagePath = self.temporaryDirectory() / "testID.exr"
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				(self.temporaryDirectory() / "beauty.exr").as_posix(), "exr", "rgba", {}
+			)
+		)
+		script["outputs"].addOutput(
+			"instanceID",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"float instanceID",
+				{
+					"layerName" : "instanceID",
+					"filter" : "closest",
+				},
+			)
+		)
+
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+
+		script["render"]["task"].execute()
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( imagePath )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( reader["out"] )
+		sampler["channels"].setValue( IECore.StringVectorData( [ "instanceID" ] * 4 ) )
+		sampler["interpolate"].setValue( False )
+
+		for pixel, expectedID in {
+			imath.V2f( 184, 228 ) : 0,
+			imath.V2f( 320, 228 ) : 1,
+			imath.V2f( 458, 228 ) : 2,
+		}.items() :
+
+			sampler["pixel"].setValue( pixel )
+			id = sampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			id = struct.pack( "f", id )
+			id = struct.unpack( "I", id )[0]
+
+			self.assertEqual( id, expectedID + 1 )
+
+		# Repeat, but with custom IDs
+
+		pointInstancer.setID( IECore.Int64VectorData( [ 12, 11, 10 ] ) )
+		script["pointInstancer"]["object"].setValue( pointInstancer )
+		script["render"]["task"].execute()
+		reader["refreshCount"].setValue( 1 )
+
+		for pixel, expectedID in {
+			imath.V2f( 184, 228 ) : 12,
+			imath.V2f( 320, 228 ) : 11,
+			imath.V2f( 458, 228 ) : 10,
+		}.items() :
+
+			sampler["pixel"].setValue( pixel )
+			id = sampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			id = struct.pack( "f", id )
+			id = struct.unpack( "I", id )[0]
+
+			self.assertEqual( id, expectedID + 1 )
+
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a constant surface shader loaded, along
 	# with the plug for the colour parameter and the output plug to be connected

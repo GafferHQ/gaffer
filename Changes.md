@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- PointInstancer : Integrated with the `instanceID` AOV.
 - SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
 
 Fixes

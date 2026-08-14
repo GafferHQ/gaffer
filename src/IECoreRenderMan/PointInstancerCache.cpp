@@ -51,6 +51,8 @@ using namespace IECoreRenderMan;
 namespace
 {
 
+const RtUString g_userInstanceID( "user:instanceID" );
+
 struct ParameterSetter
 {
 
@@ -231,7 +233,7 @@ PointInstancerCache::ConstPointInstancerPtr PointInstancerCache::get(
 		}
 
 		auto prototypeIndices = samples[0]->getPrototypeIndex();
-
+		auto ids = samples[0]->getID();
 		auto attributeFunctions = createInstanceAttributeFunctions( samples[0].get() );
 
 		IECoreScenePreview::Renderer::TransformSamples transformSamples;
@@ -250,9 +252,18 @@ PointInstancerCache::ConstPointInstancerPtr PointInstancerCache::get(
 				continue;
 			}
 
+			// OK to update this in place, because every instance will replace the values
+			// for the previous one (we set the same params for each instance).
+			RtParamList &instanceAttributes = prototypeInstanceAttributes[prototypeIndex];
+
+			const uint32_t id = ( ids ? ids[instanceIndex] : instanceIndex ) + 1;
+			float bitcastID;
+			memcpy( &bitcastID, &id, 4 );
+			instanceAttributes.SetFloat( g_userInstanceID, bitcastID );
+
 			for( const auto &f : attributeFunctions )
 			{
-				f( instanceIndex, prototypeInstanceAttributes[prototypeIndex] );
+				f( instanceIndex, instanceAttributes );
 			}
 
 			/// \todo Investigate `Riley::CreateGeometryInstances()` (plural) to see if
@@ -262,7 +273,7 @@ PointInstancerCache::ConstPointInstancerPtr PointInstancerCache::get(
 					riley::UserId(), result->group->id(), result->m_prototypeGeometries[prototypeIndex]->id(),
 					result->m_prototypeAttributes[prototypeIndex]->material()->id(), riley::CoordinateSystemList(),
 					AnimatedTransform( transformSamples, sampleTimes ),
-					prototypeInstanceAttributes[prototypeIndex]
+					instanceAttributes
 				)
 			);
 		}
