@@ -496,7 +496,7 @@ def __keyPress( column, pathListing, event ) :
 	return False
 
 __originalDragPointer = None
-__DropMode = enum.Enum( "__DropMode", [ "Add", "Remove", "Replace", "NotEditable" ] )
+__DropMode = enum.Enum( "__DropMode", [ "Add", "Remove", "Replace", "SetExpressionInclude", "SetExpressionRemove", "NotEditable" ] )
 
 def __dragEnter( column, path, pathListing, event ) :
 
@@ -543,9 +543,9 @@ def __dragMove( column, path, pathListing, event ) :
 def __updatePointer( column, path, inspection, event ) :
 
 	dropMode = __dropMode( column, path, inspection, event )
-	if dropMode == __DropMode.Add :
+	if dropMode in ( __DropMode.Add, __DropMode.SetExpressionInclude ) :
 		GafferUI.Pointer.setCurrent( "add" )
-	elif dropMode == __DropMode.Remove :
+	elif dropMode in ( __DropMode.Remove, __DropMode.SetExpressionRemove ) :
 		GafferUI.Pointer.setCurrent( "remove" )
 	elif dropMode == __DropMode.NotEditable :
 		GafferUI.Pointer.setCurrent( "notEditable" )
@@ -554,13 +554,17 @@ def __updatePointer( column, path, inspection, event ) :
 
 def __dropMode( column, path, inspection, event ) :
 
-	if isinstance( inspection.value(), IECore.StringData ) and (
-		__cellMetadata( column, path, "ui:scene:acceptsSetNames" ) or __cellMetadata( column, path, "ui:scene:acceptsSetExpression" )
-	)  :
-		if event.modifiers == event.Modifiers.Shift :
-			return __DropMode.Add if __updatable( inspection ) else __DropMode.NotEditable
-		elif event.modifiers == event.Modifiers.Control :
-			return __DropMode.Remove if __updatable( inspection ) else __DropMode.NotEditable
+	if isinstance( inspection.value(), IECore.StringData ) :
+		if __cellMetadata( column, path, "ui:scene:acceptsSetExpression" ) :
+			if event.modifiers == event.Modifiers.Shift :
+				return __DropMode.SetExpressionInclude
+			elif event.modifiers == event.Modifiers.Control :
+				return __DropMode.SetExpressionRemove
+		if __cellMetadata( column, path, "ui:scene:acceptsSetNames" ) :
+			if event.modifiers == event.Modifiers.Shift :
+				return __DropMode.Add if __updatable( inspection ) else __DropMode.NotEditable
+			elif event.modifiers == event.Modifiers.Control :
+				return __DropMode.Remove if __updatable( inspection ) else __DropMode.NotEditable
 	elif isinstance( inspection.value(), IECore.StringVectorData ) :
 		if event.modifiers == event.Modifiers.Shift :
 			return __DropMode.Add
@@ -596,7 +600,7 @@ def __drop( column, path, pathListing, event ) :
 		return True
 
 	if __dropMode( column, path, inspection, event ) == __DropMode.NotEditable :
-		GafferUI.PopupWindow.showWarning( "Cannot modify set expressions containing operators with drag and drop.", parent = pathListing )
+		GafferUI.PopupWindow.showWarning( "Cannot modify values containing operators with drag and drop.", parent = pathListing )
 		return True
 
 	data = __dropData( column, path, inspection, event )
@@ -621,6 +625,10 @@ def __dropData( column, path, inspection, event ) :
 	mode = __dropMode( column, path, inspection, event )
 	if mode == __DropMode.Replace or not isinstance( inspection.value(), ( IECore.StringData, IECore.StringVectorData ) ) :
 		return data
+	elif mode == __DropMode.SetExpressionInclude :
+		return IECore.StringData( Gaffer.SetExpressionAlgo.include( inspection.value().value, data.value ) )
+	elif mode == __DropMode.SetExpressionRemove :
+		return IECore.StringData( Gaffer.SetExpressionAlgo.remove( inspection.value().value, data.value ) )
 
 	strings = set( inspection.value().value.split( " " ) if isinstance( inspection.value(), IECore.StringData ) else inspection.value() )
 	updateData = event.data.value.split( " " ) if isinstance( event.data, IECore.StringData ) else event.data

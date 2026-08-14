@@ -2,6 +2,24 @@
 =======
 
 
+1.7.x.x (relative to 1.7.0.0)
+=======
+
+Improvements
+------------
+
+- SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
+
+Fixes
+-----
+
+- LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
+- AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
+
+Documentation
+-------------
+
+- Light Linking : Updated the Light Linking Basics example to use USD lights and shaders so it is now applicable to Cycles and RenderMan as well as Arnold.
 
 1.7.0.0 (relative to 1.6.21.4)
 =======
@@ -246,7 +264,11 @@ Build
 1.6.21.x (relative to 1.6.21.4)
 ========
 
+Fixes
+-----
 
+- LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
+- AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
 
 1.6.21.4 (relative to 1.6.21.3)
 ========

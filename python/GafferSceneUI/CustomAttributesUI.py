@@ -190,11 +190,12 @@ def __addFromPathsMenuDefinition( menu, paths ) :
 	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
 	node = plugCreationWidget.plugParent().node()
 
-	attributes = {}
-	for path in paths :
-		attr = node["in"].fullAttributes( path, withGlobalAttributes = True )
-		attributes.update( attr )
-	existingNames = { plug["name"].getValue() for plug in plugCreationWidget.plugParent() }
+	with plugCreationWidget.context():
+		attributes = {}
+		for path in paths :
+			attr = node["in"].fullAttributes( path, withGlobalAttributes = True )
+			attributes.update( attr )
+		existingNames = { plug["name"].getValue() for plug in plugCreationWidget.plugParent() }
 
 	attributes = dict( sorted( attributes.items() ) )
 
