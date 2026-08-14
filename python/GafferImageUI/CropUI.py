@@ -40,6 +40,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 ## A function suitable as the postCreator in a NodeMenu.append() call. It
 # sets the area for the node to cover the entire format.
@@ -57,11 +58,11 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Crop,
 
 	"description",
-	"""
+	_("""
 	Modifies the Data and/or Display Window, in a way that is
 	either user-defined, or can be driven by the existing Data
 	or Display Window.
-	""",
+	"""),
 
 	"layout:activator:areaSourceIsArea", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Area,
 	"layout:activator:areaSourceIsFormat", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Format,
@@ -73,7 +74,7 @@ Gaffer.Metadata.registerNode(
 		"areaSource" : {
 
 			"description" :
-			"""
+			_("""
 			The source of the area to crop to.
 
 			- Area : A user-defined area specified by the `area` plug.
@@ -84,7 +85,7 @@ Gaffer.Metadata.registerNode(
 			  of the input image. For flat images, this means pixels
 			  with a non-zero value in at least one channel, and for deep images
 			  it means pixels with at least one sample.
-			""",
+			"""),
 
 			"preset:Area" : GafferImage.Crop.AreaSource.Area,
 			"preset:Format" : GafferImage.Crop.AreaSource.Format,
@@ -99,11 +100,11 @@ Gaffer.Metadata.registerNode(
 		"area" : {
 
 			"description" :
-			"""
+			_("""
 			The custom area to set the Data/Display Window to.
 			This plug is only used if 'Area Source' is set to
 			Area.
-			""",
+			"""),
 
 			"layout:activator" : "areaSourceIsArea",
 
@@ -112,11 +113,11 @@ Gaffer.Metadata.registerNode(
 		"format" : {
 
 			"description" :
-			"""
+			_("""
 			The Format to use as the area to set the Data/Display
 			Window to. This plug is only used if 'Area Source' is
 			set to Format.
-			""",
+			"""),
 
 			"layout:activator" : "areaSourceIsFormat",
 
@@ -125,13 +126,13 @@ Gaffer.Metadata.registerNode(
 		"formatCenter" : {
 
 			"description" :
-			"""
+			_("""
 			Whether to center the output image (based on the
 			existing display window) inside the new display
 			window format. This plug is only used if
 			'Area Source' is set to Format, and 'Affect Display
 			Window' it checked.
-			""",
+			"""),
 
 			"layout:activator" : "areaSourceIsFormatAndAffectDisplayWindowIsOn",
 			"layout:divider" : True
@@ -141,31 +142,31 @@ Gaffer.Metadata.registerNode(
 		"affectDataWindow" : {
 
 			"description" :
-			"""
+			_("""
 			Whether to intersect the defined area with the input Data
 			Window. It will never pad black onto the Data Window, it
 			will only ever reduce the existing Data Window.
-			""",
+			"""),
 
 		},
 
 		"affectDisplayWindow" : {
 
 			"description" :
-			"""
+			_("""
 			Whether to assign a new Display Window based on the defined
 			area.
-			""",
+			"""),
 
 		},
 
 		"resetOrigin" : {
 
 			"description" :
-			"""
+			_("""
 			Shifts the cropped image area back to the origin, so that
 			the bottom left of the display window is at ( 0, 0 ).
-			""",
+			"""),
 
 			"layout:activator" : "affectDisplayWindowIsOn",
 

@@ -37,15 +37,16 @@
 import IECore
 import Gaffer
 import GafferCycles
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferCycles.CyclesShaderBall,
 
 	"description",
-	"""
+	_("""
 	Generates scenes suitable for rendering shader balls with Cycles.
-	""",
+	"""),
 
 	"layout:activator:deviceIncludesCPU", lambda node : IECore.StringAlgo.matchMultiple( "CPU", node["device"]["value"].getValue(), ),
 
@@ -54,10 +55,10 @@ Gaffer.Metadata.registerNode(
 		"environment" : {
 
 			"description" :
-			"""
+			_("""
 			An environment map used for lighting. Should be in latlong
 			format.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -69,21 +70,21 @@ Gaffer.Metadata.registerNode(
 		"device" : {
 
 			"description" :
-			"""
+			_("""
 			The device to render the shader ball on.
-			""",
+			"""),
 
 		},
 
 		"threads" : {
 
 			"description" :
-			"""
+			_("""
 			The number of threads used by Cycles to render the
 			shader ball. A value of 0 uses all cores, and negative
 			values reserve cores for other uses - to be used by
 			the rest of the UI for instance.
-			""",
+			"""),
 
 			"layout:activator" : "deviceIncludesCPU",
 

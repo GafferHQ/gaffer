@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 
 from GafferUI.PlugValueWidget import sole
@@ -77,7 +78,7 @@ class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__availableViews = sorted( set().union( *[ v["availableViews"] for v in values ] ) )
 
 		if self.__currentValue == "" :
-			self.__menuButton.setText( "(Current Context)" )
+			self.__menuButton.setText( _("(Current Context)") )
 		elif self.__currentValue is None :
 			self.__menuButton.setText( "---" )
 		elif self.__currentValue in self.__availableViews :
@@ -86,7 +87,7 @@ class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__menuButton.setText(
 				"{}{}".format(
 					self.__currentValue,
-					" (invalid)" if GafferImage.ImagePlug.defaultViewName not in self.__availableViews else " (default)"
+					_(" (invalid)") if GafferImage.ImagePlug.defaultViewName not in self.__availableViews else _(" (default)")
 				)
 			)
 

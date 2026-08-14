@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferDispatch
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.TaskContextProcessor,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which modify the Context in which
 	upstream tasks are dispatched.
-	""",
+	"""),
 
 )

@@ -36,39 +36,40 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.VectorWarp,
 
 	"description",
-	"""
+	_("""
 	Warps an input image onto a set of UVs provided
 	by a second image, effectively applying a texture
 	map to the UV image.
-	""",
+	"""),
 
 	plugs = {
 
 		"vector" : {
 
 			"description" :
-			"""
+			_("""
 			The UV image. The R and G channel are used to provide
 			the U and V values, and these determine the source pixel
 			in the main input image. A UV values of ( 0, 0 ) corresponds
 			to the bottom left corner of the input image, and ( 1, 1 )
 			corresponds to the top right corner.
-			"""
+			""")
 
 		},
 		"vectorMode" : {
 
 			"description" :
-			"""
+			_("""
 			Do vectors specify absolute positions in the source image, or relative
 			offsets from the current pixel to the pixel in the source image.
-			""",
+			"""),
 			"preset:Absolute" : GafferImage.VectorWarp.VectorMode.Absolute,
 			"preset:Relative" : GafferImage.VectorWarp.VectorMode.Relative,
 
@@ -78,10 +79,10 @@ Gaffer.Metadata.registerNode(
 		"vectorUnits" : {
 
 			"description" :
-			"""
+			_("""
 			Are vectors measured in pixels, or as fractions of the input image display
 			window ranging from 0 to 1.
-			""",
+			"""),
 			"preset:Pixels" : GafferImage.VectorWarp.VectorUnits.Pixels,
 			"preset:Screen" : GafferImage.VectorWarp.VectorUnits.Screen,
 

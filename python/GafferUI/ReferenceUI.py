@@ -41,20 +41,21 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Reference,
 
 	"description",
-	"""
+	_("""
 	References a node network stored in another file. This can be used
 	to share resources among scripts, build powerful non-linear workflows,
 	and as the basis for custom asset management.
 
 	To generate a file to be referenced, build a network inside a Box
 	node and then export it for referencing.
-	""",
+	"""),
 
 	"icon", "referenceNode.png",
 
@@ -105,17 +106,17 @@ class _FileNameWidget( GafferUI.Widget ) :
 
 		with row :
 
-			label = GafferUI.Label( "File", horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right )
+			label = GafferUI.Label( _("File"), horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right )
 			label._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 
 			self.__textWidget = GafferUI.TextWidget( node.fileName().as_posix() if node.fileName() is not None else "", editable = False )
 
 			loadButton = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
-			loadButton.setToolTip( "Load" )
+			loadButton.setToolTip( _("Load") )
 			loadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__loadClicked ) )
 
 			self.__reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
-			self.__reloadButton.setToolTip( "Reload" )
+			self.__reloadButton.setToolTip( _("Reload") )
 			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadClicked ) )
 
 		node.referenceLoadedSignal().connect( Gaffer.WeakMethod( self.__referenceLoaded ) )
@@ -155,7 +156,7 @@ def _waitForFileName( initialFilePath=None, parentWindow=None ) :
 
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title = "Load reference", confirmLabel = "Load", valid = True, leaf = True, bookmarks = bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title = _("Load reference"), confirmLabel = _("Load"), valid = True, leaf = True, bookmarks = bookmarks )
 	path = dialogue.waitForPath( parentWindow = parentWindow )
 
 	if not path :
@@ -165,7 +166,7 @@ def _waitForFileName( initialFilePath=None, parentWindow=None ) :
 
 def _load( node, filePath, parentWindow ) :
 
-	with GafferUI.ErrorDialogue.ErrorHandler( title = "Errors Occurred During Loading", closeLabel = "Oy vey", parentWindow = parentWindow ) :
+	with GafferUI.ErrorDialogue.ErrorHandler( title = _("Errors Occurred During Loading"), closeLabel = "Oy vey", parentWindow = parentWindow ) :
 		node.load( filePath )
 
 ##########################################################################
@@ -186,7 +187,7 @@ def __duplicateAsBox( graphEditor, node ) :
 		temporaryScript.addChild( box )
 
 		with GafferUI.ErrorDialogue.ErrorHandler(
-			title = "Errors Occurred During Loading",
+			title = _("Errors Occurred During Loading"),
 			closeLabel = "Oy vey",
 			parentWindow = graphEditor.ancestor( GafferUI.Window ),
 		) :
@@ -209,7 +210,7 @@ def __graphEditorNodeContextMenu( graphEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append(
-		"/Duplicate as Box",
+		"/" + _("Duplicate as Box"),
 		{
 			"command" : functools.partial( __duplicateAsBox, graphEditor, node ),
 			"active" : bool( node.fileName() ),

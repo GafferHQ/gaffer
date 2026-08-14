@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 import GafferImageUI
 
@@ -87,10 +88,10 @@ Gaffer.Metadata.registerNode(
 		"view" : {
 
 			"description" :
-			"""
+			_("""
 			Chooses view to display from a multi-view image.  The "default" view is used for normal images
 			that don't have specific views.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
 			"toolbarLayout:width" : 125,
@@ -108,11 +109,11 @@ Gaffer.Metadata.registerNode(
 		"compare.mode" : {
 
 			"description" :
-			"""
+			_("""
 			Enables a comparison mode to view two images at once - they can be composited under or over, or
 			subtracted for a difference view.  Or replace mode just shows the front image, which is useful
 			in combination with the Wipe tool.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._CompareModePlugValueWidget",
 
@@ -126,10 +127,10 @@ Gaffer.Metadata.registerNode(
 		"compare.wipe" : {
 
 			"description" :
-			"""
+			_("""
 			Enables a wipe tool to hide part of the image, for comparing with the background image.
 			Hotkey W.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._CompareWipePlugValueWidget",
 
@@ -138,9 +139,9 @@ Gaffer.Metadata.registerNode(
 		"compare.image" : {
 
 			"description" :
-			"""
+			_("""
 			The image to compare with.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._CompareImageWidget",
 
@@ -160,9 +161,9 @@ Gaffer.Metadata.registerNode(
 		"channels" : {
 
 			"description" :
-			"""
+			_("""
 			Chooses an RGBA layer or an auxiliary channel to display.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ImageViewUI._ChannelsPlugValueWidget",
 			"toolbarLayout:width" : 175,
@@ -214,6 +215,7 @@ class _ImageView_ViewPlugValueWidget( GafferImageUI.ViewPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = previousValue ),
 				"shortCut" : "Ctrl+[" if self.__ctrlModifier else "[",
 				"active" : previousValue is not None and previousValue != currentValue,
+				"label" : _("Previous"),
 			}
 		)
 
@@ -224,6 +226,7 @@ class _ImageView_ViewPlugValueWidget( GafferImageUI.ViewPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = nextValue ),
 				"shortCut" : "Ctrl+]" if self.__ctrlModifier else "]",
 				"active" : nextValue is not None and nextValue != currentValue,
+				"label" : _("Next"),
 			}
 		)
 
@@ -318,6 +321,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = previousValue ),
 				"shortCut" : "PgUp",
 				"active" : previousValue is not None and previousValue != currentValue,
+				"label" : _("Previous"),
 			}
 		)
 
@@ -328,6 +332,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = nextValue ),
 				"shortCut" : "PgDown",
 				"active" : nextValue is not None and nextValue != currentValue,
+				"label" : _("Next"),
 			}
 		)
 
@@ -338,6 +343,7 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = firstValue ),
 				"shortCut" : "Ctrl+PgUp",
 				"active" : firstValue is not None and firstValue != currentValue,
+				"label" : _("First"),
 			}
 		)
 
@@ -498,7 +504,7 @@ class _StateWidget( GafferUI.Widget ) :
 		paused = self.__imageGadgets[0].getPaused()
 		self.__button.setImage( "viewPause.png" if not paused else "viewPaused.png" )
 		self.__busyWidget.setBusy( self.__imageGadgets[0].state() == GafferImageUI.ImageGadget.State.Running )
-		self.__button.setToolTip( "Viewer updates suspended, click to resume" if paused else "Click to suspend viewer updates [esc]" )
+		self.__button.setToolTip( _("Viewer updates suspended, click to resume") if paused else _("Click to suspend viewer updates [esc]") )
 
 
 
@@ -594,7 +600,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			image = "compareModeNone.png",
 			menu = GafferUI.Menu(
 				Gaffer.WeakMethod( self.__menuDefinition ),
-				title = "Compare Mode",
+				title = _("Compare Mode"),
 			)
 		)
 		self.__button._qtWidget().setMaximumWidth( 25 )
@@ -672,7 +678,8 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/Match Display Windows",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__toggleMatchDisplayWindows ), value ),
-				"checkBox" : self.getPlug().parent()["matchDisplayWindows"].getValue()
+				"checkBox" : self.getPlug().parent()["matchDisplayWindows"].getValue(),
+				"label" : _("Match Display Windows"),
 			}
 		)
 
@@ -866,45 +873,47 @@ class _CompareImageWidget( GafferUI.Frame ) :
 
 		m = IECore.MenuDefinition()
 
-		m.append( "/Catalogue Divider", { "divider" : True, "label" : "Follow Catalogue Output" } )
+		m.append( "/Catalogue Divider", { "divider" : True, "label" : _("Follow Catalogue Output") } )
 		for i in Gaffer.NodeAlgo.presets( self.__node["compare"]["catalogueOutput"] ):
-			m.append( "/CatalogueOutput{}".format( i ), {
+			m.append( "/" + _("CatalogueOutput{}").format( i ), {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__followCatalogueOutput ), i ),
 				"checkBox" : self.__catalogueOutput == i,
 				"label" : i,
 			} )
-		m.append( "/Pin Divider", { "divider" : True, "label" : "Pin" } )
+		m.append( "/Pin Divider", { "divider" : True, "label" : _("Pin") } )
 
 		selection = self.__scriptNode.selection()
 
 		if len(selection) == 0 :
-			label = "Pin To Nothing"
+			label = _("Pin To Nothing")
 		elif len(selection) == 1 :
-			label = "Pin %s" % selection[0].getName()
+			label = _("Pin %s") % selection[0].getName()
 		else :
-			label = "Pin %d Selected Nodes" % len(selection)
+			label = _("Pin %d Selected Nodes") % len(selection)
 
-		m.append( "/Pin Node Selection", {
+		m.append( "/" + _("Pin Node Selection"), {
 			"command" : Gaffer.WeakMethod( self.__pinToNodeSelection ),
 			"label" : label,
 			"shortCut" : "p"
 		} )
 
-		m.append( "/Follow Divider", { "divider" : True, "label" : "Follow" } )
+		m.append( "/Follow Divider", { "divider" : True, "label" : _("Follow") } )
 
-		m.append( "/Focus Node", {
+		m.append( "/" + _("Focus Node"), {
 			"command" : Gaffer.WeakMethod( self.__followFocusNode ),
 			"checkBox" : self.__nodeSet.isSame( self.__scriptNode.focusSet() ),
-			"shortCut" : "`"
+			"shortCut" : "`",
+			"label" : _("Focus Node"),
 		} )
 
-		m.append( "/Node Selection", {
+		m.append( "/" + _("Node Selection"), {
 			"command" : Gaffer.WeakMethod( self.__followNodeSelection ),
 			"checkBox" : self.__nodeSet.isSame( selection ),
-			"shortCut" : "n"
+			"shortCut" : "n",
+			"label" : _("Node Selection"),
 		} )
 
-		m.append( "/NumericBookmarkDivider", { "divider" : True, "label" : "Follow Numeric Bookmark" } )
+		m.append( "/NumericBookmarkDivider", { "divider" : True, "label" : _("Follow Numeric Bookmark") } )
 
 		for i in range( 1, 10 ) :
 			bookmarkNode = Gaffer.MetadataAlgo.getNumericBookmark( self.__scriptNode, i )
@@ -912,13 +921,13 @@ class _CompareImageWidget( GafferUI.Frame ) :
 			if bookmarkNode is not None :
 				title += " : %s" % bookmarkNode.getName()
 			isCurrent = isinstance( self.__nodeSet, Gaffer.NumericBookmarkSet ) and self.__nodeSet.getBookmark() == i
-			m.append( "/NumericBookMark{}".format( i ), {
+			m.append( "/" + _("NumericBookMark{}").format( i ), {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__followBookmark ), i ),
 				"checkBox" : isCurrent,
 				"label" : title,
 			} )
 
-		self.__pinningMenu = GafferUI.Menu( m, title = "Comparison Image" )
+		self.__pinningMenu = GafferUI.Menu( m, title = _("Comparison Image") )
 
 		buttonBound = self.__icon.bound()
 		self.__pinningMenu.popup(

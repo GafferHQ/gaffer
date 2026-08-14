@@ -37,13 +37,14 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.RenderPassWedge,
 
 	"description",
-	"""
+	_("""
 	Causes upstream nodes to be dispatched multiple times in a range
 	of contexts, each time with a different value for the `renderPass`
 	context variable. Each value of `renderPass` is the name of a
@@ -73,16 +74,16 @@ Gaffer.Metadata.registerNode(
 	Adaptors should be registered using a client value of "RenderPassWedge" - for example :
 
 	`GafferScene.SceneAlgo.registerRenderAdaptor( "MyConditionalPassAdaptor", adaptorCreationFunction, client = "RenderPassWedge" )`
-	""",
+	"""),
 
 	plugs = {
 
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The input scene containing the render passes to wedge.
-			""",
+			"""),
 			"nodule:type" : "GafferUI::StandardNodule",
 
 		},
@@ -90,14 +91,14 @@ Gaffer.Metadata.registerNode(
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the render passes to be wedged.
 
 			> Note : Render pass names are queried at the
 			> script's start frame to ensure they do not vary
 			> over time and to prevent scenes with expensive
 			> globals from slowing task dispatch.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferSceneUI.RenderPassWedgeUI._PassNamesWidget",
 
 		},
@@ -105,9 +106,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			A direct pass-through of the input scene.
-			""",
+			"""),
 
 		},
 

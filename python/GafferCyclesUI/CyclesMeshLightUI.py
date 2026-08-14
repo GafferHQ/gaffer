@@ -38,6 +38,7 @@ import functools
 
 import Gaffer
 import GafferCycles
+from GafferUI.i18n import _
 
 def __shaderMetadata( plug, name ) :
 
@@ -48,21 +49,21 @@ Gaffer.Metadata.registerNode(
 	GafferCycles.CyclesMeshLight,
 
 	"description",
-	"""
+	_("""
 	Turns mesh primitives into Cycles mesh lights by assigning
 	an emission shader, turning off all visibility except for camera rays,
 	and adding the meshes to the default lights set.
-	""",
+	"""),
 
 	plugs = {
 
 		"cameraVisibility" : {
 
 			"description" :
-			"""
+			_("""
 			Whether or not the mesh light is visible to camera
 			rays.
-			""",
+			"""),
 
 			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
@@ -71,9 +72,9 @@ Gaffer.Metadata.registerNode(
 		"lightGroup" : {
 
 			"description" :
-			"""
+			_("""
 			The light group that the mesh light will contribute to.
-			""",
+			"""),
 
 			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
@@ -82,10 +83,10 @@ Gaffer.Metadata.registerNode(
 		"parameters" : {
 
 			"description" :
-			"""
+			_("""
 			The parameters of the Cycles emission shader that
 			is applied to the meshes.
-			""",
+			"""),
 
 			## \todo Extend the Metadata API so we can register a provider for "*",
 			# which can automatically transfer all internal metadata.
@@ -99,10 +100,10 @@ Gaffer.Metadata.registerNode(
 		"parameters.*" : {
 
 			"description" :
-			"""
+			_("""
 			Refer to Cycles's documentation of the emission
 			shader.
-			""",
+			"""),
 
 			"nodule:type" : functools.partial( __shaderMetadata, name = "nodule:type" ),
 			"noduleLayout:section" : functools.partial( __shaderMetadata, name = "noduleLayout:section" ),
@@ -116,12 +117,12 @@ Gaffer.Metadata.registerNode(
 		"defaultLight" : {
 
 			"description" :
-			"""
+			_("""
 			Whether this light illuminates all geometry by default. When
 			toggled, the light will be added to the \"defaultLights\" set, which
 			can be referenced in set expressions and manipulated by downstream
 			nodes.
-			""",
+			"""),
 
 			"layout:section" : "Light Linking",
 

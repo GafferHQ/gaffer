@@ -37,30 +37,31 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageTransform,
 
 	"description",
-	"""
+	_("""
 	Scales, rotates and translates an image within its display window.
 	Note that although the format is not changed, the data window is
 	expanded to include the portions of the image which have been
 	transformed outside of the display window, and these out-of-frame
 	pixels can still be used by downstream nodes.
-	""",
+	"""),
 
 	plugs = {
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			The transformation to be applied to the image. The translate
 			and pivot values are specified in pixels, and the rotate
 			value is specified in degrees.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -69,11 +70,11 @@ Gaffer.Metadata.registerNode(
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The pixel filter used when transforming the image. Each
 			filter provides different tradeoffs between sharpness and
 			the danger of aliasing or ringing.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
@@ -87,23 +88,23 @@ Gaffer.Metadata.registerNode(
 
 		"invert" : {
 			"description" :
-			"""
+			_("""
 			Apply the inverse transformation to the image.
-			"""
+			""")
 		},
 
 		"concatenate" : {
 
 			"description" :
 
-			"""
+			_("""
 			Combines the processing for a series of ImageTransforms so that
 			transformation and filtering is only applied once. This gives better
 			image quality and performance.
 
 			> Note : When concatenation is in effect, the filter settings on upstream
 			> ImageTransforms are ignored.
-			""",
+			"""),
 
 			"layout:section" : "Node",
 			"layout:index" : -1,

@@ -45,6 +45,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Internal utilities
@@ -194,30 +195,30 @@ Gaffer.Metadata.registerNode(
 	GafferScene.PrimitiveVariableQuery,
 
 	"description",
-	"""
+	_("""
 	Queries primitive variables at a scene location, creating an output for
 	each primitive variable.
-	""",
+	"""),
 
 	plugs = {
 
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query the primitive variable from.
-			""",
+			"""),
 
 		},
 
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene to query the primitive variable at.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -228,13 +229,13 @@ Gaffer.Metadata.registerNode(
 		"queries" : {
 
 			"description" :
-			"""
+			_("""
 			The primitive variables to be queried - arbitrary numbers of primitive
 			variables may be added as children of this plug via the user interface,
 			or via python. Each child is a `NameValuePlug` whose `name` plug is the
 			name of the primitive variable to query, and whose `value` plug is the
 			default value to use if the primitive variable can not be retrieved.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -248,37 +249,37 @@ Gaffer.Metadata.registerNode(
 		"queries.*" : {
 
 			"description" :
-			"""
+			_("""
 			A pair of primitive variable name to query and default value.
-			""",
+			"""),
 
 		},
 
 		"queries.*.name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable to query.
-			""",
+			"""),
 
 		},
 
 		"queries.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			The value to output if the primitive variable does not exist.
-			""",
+			"""),
 
 		},
 
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -293,9 +294,9 @@ Gaffer.Metadata.registerNode(
 		"out.*" : {
 
 			"description" :
-			"""
+			_("""
 			The result of the query.
-			""",
+			"""),
 
 			"label" : functools.partial( __getLabel, parentPlug = ""),
 
@@ -308,9 +309,9 @@ Gaffer.Metadata.registerNode(
 		"out.*.exists" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs true if the primitive variable exists, otherwise false.
-			""",
+			"""),
 
 			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
@@ -319,10 +320,10 @@ Gaffer.Metadata.registerNode(
 		"out.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the value of the primitive variable, or the default value if
 			the primitive variable does not exist.
-			""",
+			"""),
 
 		},
 
@@ -335,10 +336,10 @@ Gaffer.Metadata.registerNode(
 		"out.*.type" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the type of the primitive variable data, or empty string if
 			the primitive variable does not exist.
-			""",
+			"""),
 
 			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "type" ),
 
@@ -347,10 +348,10 @@ Gaffer.Metadata.registerNode(
 		"out.*.interpolation" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the interpolation of the primitive variable, or `Invalid` if
 			the primitive variable does not exist.
-			""",
+			"""),
 
 			"preset:Invalid" : IECoreScene.PrimitiveVariable.Interpolation.Invalid,
 			"preset:Constant" : IECoreScene.PrimitiveVariable.Interpolation.Constant,
@@ -494,7 +495,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
+		menuDefinition.append( "/" + _("Delete"), { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 def __deletePlug( plug ) :
 

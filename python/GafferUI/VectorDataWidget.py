@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 from GafferUI.ColorSwatch import _Checker
 from ._TableView import _TableView
 
@@ -457,8 +458,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		m = IECore.MenuDefinition()
 
-		m.append( "/Select All", { "command" : Gaffer.WeakMethod( self.__selectAll ) } )
-		m.append( "/Clear Selection", { "command" : Gaffer.WeakMethod( self.__clearSelection ) } )
+		m.append( "/Select All", { "command" : Gaffer.WeakMethod( self.__selectAll ), "label" : _("Select All") } )
+		m.append( "/Clear Selection", { "command" : Gaffer.WeakMethod( self.__clearSelection ), "label" : _("Clear Selection") } )
 
 		if self.getEditable() and self.getSizeEditable() :
 
@@ -467,7 +468,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 				"/Delete Selected Rows",
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__removeRows ), selectedRows ),
-					"shortCut" : "Backspace, Delete"
+					"shortCut" : "Backspace, Delete",
+					"label" : _("Delete Selected Rows"),
 				}
 			)
 

@@ -39,16 +39,17 @@ import functools
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Animation,
 
 	"description",
-	"""
+	_("""
 	Generates keyframed animation to be applied to plugs
 	on other nodes.
-	""",
+	"""),
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"auxiliaryNodeGadget:label", "a",
@@ -59,11 +60,11 @@ Gaffer.Metadata.registerNode(
 		"curves" : {
 
 			"description" :
-			"""
+			_("""
 			Stores animation curves. Rather than access
 			these directly, prefer to use the Animation::acquire()
 			method.
-			""",
+			"""),
 
 		},
 
@@ -71,22 +72,22 @@ Gaffer.Metadata.registerNode(
 
 )
 
-Gaffer.Metadata.registerValue( "Animation.Interpolation.Constant", "description", "Curve span has in key's value." )
-Gaffer.Metadata.registerValue( "Animation.Interpolation.ConstantNext", "description", "Curve span has out key's value." )
-Gaffer.Metadata.registerValue( "Animation.Interpolation.Linear", "description", "Curve span is linearly interpolated between values of in key and out key." )
-Gaffer.Metadata.registerValue( "Animation.Interpolation.Cubic", "description", "Curve span is smoothly interpolated between values of in key and out key using tangent slope." )
-Gaffer.Metadata.registerValue( "Animation.Interpolation.Bezier", "description", "Curve span is smoothly interpolated between values of in key and out key using tangent slope and scale." )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.Constant", "description", _("Curve span has in key's value.") )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.ConstantNext", "description", _("Curve span has out key's value.") )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.Linear", "description", _("Curve span is linearly interpolated between values of in key and out key.") )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.Cubic", "description", _("Curve span is smoothly interpolated between values of in key and out key using tangent slope.") )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.Bezier", "description", _("Curve span is smoothly interpolated between values of in key and out key using tangent slope and scale.") )
 
-Gaffer.Metadata.registerValue( "Animation.Extrapolation.Constant", "description", "Curve is extended as a flat line." )
-Gaffer.Metadata.registerValue( "Animation.Extrapolation.Linear", "description", "Curve is extended as a line with slope matching tangent in direction of extrapolation." )
-Gaffer.Metadata.registerValue( "Animation.Extrapolation.Cycle", "description", "Curve is repeated indefinitely." )
-Gaffer.Metadata.registerValue( "Animation.Extrapolation.CycleOffset", "description", "Curve is repeated indefinitely with each repetition offset in value to preserve continuity." )
-Gaffer.Metadata.registerValue( "Animation.Extrapolation.CycleFlop", "description", "Curve is repeated indefinitely with each repetition mirrored in time." )
-Gaffer.Metadata.registerValue( "Animation.Extrapolation.CycleFlip", "description", "Curve is repeated indefinitely with each repetition inverted in value and offset to preserve continuity." )
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.Constant", "description", _("Curve is extended as a flat line.") )
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.Linear", "description", _("Curve is extended as a line with slope matching tangent in direction of extrapolation.") )
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.Cycle", "description", _("Curve is repeated indefinitely.") )
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.CycleOffset", "description", _("Curve is repeated indefinitely with each repetition offset in value to preserve continuity.") )
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.CycleFlop", "description", _("Curve is repeated indefinitely with each repetition mirrored in time.") )
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.CycleFlip", "description", _("Curve is repeated indefinitely with each repetition inverted in value and offset to preserve continuity.") )
 
-Gaffer.Metadata.registerValue( "Animation.TieMode.Manual", "description", "Tangent slope and scale can be independently adjusted." )
-Gaffer.Metadata.registerValue( "Animation.TieMode.Slope", "description", "Tangent slopes are kept equal." )
-Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", "Tangent slopes are kept equal and scales are kept proportional." )
+Gaffer.Metadata.registerValue( "Animation.TieMode.Manual", "description", _("Tangent slope and scale can be independently adjusted.") )
+Gaffer.Metadata.registerValue( "Animation.TieMode.Slope", "description", _("Tangent slopes are kept equal.") )
+Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", _("Tangent slopes are kept equal and scales are kept proportional.") )
 
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
@@ -230,7 +231,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			if k is not None and math.fabs( context.getTime() - k.getTime() ) * context.getFramesPerSecond() < 0.5
 		]
 		menuDefinition.prepend(
-			"/Remove Key",
+			"/" + _("Remove Key"),
 			{
 				"command" : functools.partial(
 					__removeKey,
@@ -242,7 +243,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		)
 
 	menuDefinition.prepend(
-		"/Set Key",
+		"/" + _("Set Key"),
 		{
 			"command" : functools.partial(
 				__setKey,

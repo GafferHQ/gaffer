@@ -36,34 +36,35 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Cube,
 
 	"description",
-	"""
+	_("""
 	Produces scenes containing a cube.
-	""",
+	"""),
 
 	plugs = {
 
 		"dimensions" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the cube.
-			""",
+			"""),
 
 		},
 
 		"divisions" : {
 
 			"description" :
-			"""
+			_("""
 			The number of subdivisions of the cube in the
 			X, Y and Z directions.
-			""",
+			"""),
 
 		},
 

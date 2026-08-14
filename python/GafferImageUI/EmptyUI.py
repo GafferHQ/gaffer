@@ -36,24 +36,25 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Empty,
 
 	"description",
-	"""
+	_("""
 	Outputs an empty deep image with 0 samples per pixel.
-	""",
+	"""),
 
 	plugs = {
 
 		"format" : {
 
 			"description" :
-			"""
+			_("""
 			The resolution and aspect ratio of the image.
-			""",
+			"""),
 
 		},
 

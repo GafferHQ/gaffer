@@ -36,19 +36,20 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.MeshSegments,
 
 	"description",
-	"""
+	_("""
 	Creates a uniform primitive variable of integer indices indicating which
 	connected segment each face belongs to.  May create segments based on
 	what is connected in the mesh's topology, or based on an indexed
 	primitive variable ( for example, you may segment based on which faces
 	share UVs in order to segment into UV islands ).
-	""",
+	"""),
 
 	"layout:section:Settings.Inputs:collapsed", False,
 	"layout:section:Settings.Outputs:collapsed", False,
@@ -59,7 +60,7 @@ Gaffer.Metadata.registerNode(
 		"connectivity" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable which will determine the segmentation.
 			You may specify an empty string, or any vertex primitive variable to use
 			the vertex topology to determine segments, or use an indexed face-varying
@@ -68,17 +69,17 @@ Gaffer.Metadata.registerNode(
 			Uniform and constant primitive variables are also supported for consistency,
 			but they just output which faces have the same uniform value, or put all
 			faces in one segment.
-			""",
+			"""),
 			"layout:section" : "Settings.Inputs"
 		},
 
 		"segment" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the uniform primitive variable which will be created to hold
 			the segment index for each face.
-			""",
+			"""),
 			"layout:section" : "Settings.Outputs"
 		},
 

@@ -40,6 +40,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 __all__ = []
 
@@ -48,7 +49,7 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Display,
 
 	"description",
-	"""
+	_("""
 	Interactively displays images as they are rendered.
 
 	This node runs a server on a background thread,
@@ -57,19 +58,19 @@ Gaffer.Metadata.registerNode(
 	output to the Display node, use an Outputs node with
 	an Interactive output configured to render to the
 	same port as is specified on the Display node.
-	""",
+	"""),
 
 	plugs = {
 
 		"port" : {
 
 			"description" :
-			"""
+			_("""
 			The port number on which to run the display server.
 			Outputs which specify this port number will appear
 			in this node - use multiple nodes with different
 			port numbers to receive multiple images at once.
-			""",
+			"""),
 
 		},
 

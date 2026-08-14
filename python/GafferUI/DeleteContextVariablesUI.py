@@ -35,24 +35,25 @@
 ##########################################################################
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.DeleteContextVariables,
 
 	"description",
-	"""
+	_("""
 	Removes variables from the Context so that they won't be visible to upstream nodes.
-	""",
+	"""),
 
 	plugs = {
 
 		"variables" : {
 
 			"description" :
-			"""
+			_("""
 			The variables to be deleted.
-			""",
+			"""),
 
 			"nodule:type" : "",
 

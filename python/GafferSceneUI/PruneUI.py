@@ -36,37 +36,38 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Prune,
 
 	"description",
-	"""
+	_("""
 	A node for removing whole branches from the scene hierarchy.
-	""",
+	"""),
 
 	plugs = {
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			Filter to specify the branches to prune. The specified
 			locations and all locations below them will be removed from
 			the scene.
-			""",
+			"""),
 
 		},
 
 		"adjustBounds" : {
 
 			"description" :
-			"""
+			_("""
 			Computes new tightened bounding boxes taking into account
 			the removed locations. This can be an expensive operation -
 			turn on with care.
-			""",
+			"""),
 
 		},
 

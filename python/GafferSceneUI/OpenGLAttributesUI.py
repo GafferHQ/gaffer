@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -56,10 +57,10 @@ def __drawingSummary( plug ) :
 
 		values = []
 		if plug["gl:primitive:"+name]["enabled"].getValue() :
-			values.append( "On" if plug["gl:primitive:" + name]["value"].getValue() else "Off" )
+			values.append( _("On") if plug["gl:primitive:" + name]["value"].getValue() else _("Off") )
 		name = { "points" : "point" }.get( name, name )
 		if name != "solid" and plug["gl:primitive:" + name + "Color"]["enabled"].getValue() :
-			values.append( "Color" )
+			values.append( _("Color") )
 		if name not in ( "solid", "bound" ) and plug["gl:primitive:" + name + "Width"]["enabled"].getValue() :
 			values.append( "%0gpx" % plug["gl:primitive:" + name + "Width"]["value"].getValue() )
 
@@ -72,9 +73,9 @@ def __pointsPrimitivesSummary( plug ) :
 
 	info = []
 	if plug["gl:pointsPrimitive:useGLPoints"]["enabled"].getValue() :
-		info.append( "Points On" if plug["gl:pointsPrimitive:useGLPoints"]["value"].getValue() else "Points Off" )
+		info.append( _("Points") + " " + _("On") if plug["gl:pointsPrimitive:useGLPoints"]["value"].getValue() else _("Points") + " " + _("Off") )
 	if plug["gl:pointsPrimitive:glPointWidth"]["enabled"].getValue() :
-		info.append( "Width %0gpx" % plug["gl:pointsPrimitive:glPointWidth"]["value"].getValue() )
+		info.append( _("Width %0gpx") % plug["gl:pointsPrimitive:glPointWidth"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -82,11 +83,11 @@ def __curvesPrimitivesSummary( plug ) :
 
 	info = []
 	if plug["gl:curvesPrimitive:useGLLines"]["enabled"].getValue() :
-		info.append( "Lines On" if plug["gl:curvesPrimitive:useGLLines"]["value"].getValue() else "Lines Off" )
+		info.append( _("Lines") + " " + _("On") if plug["gl:curvesPrimitive:useGLLines"]["value"].getValue() else _("Lines") + " " + _("Off") )
 	if plug["gl:curvesPrimitive:glLineWidth"]["enabled"].getValue() :
-		info.append( "Width %0gpx" % plug["gl:curvesPrimitive:glLineWidth"]["value"].getValue() )
+		info.append( _("Width %0gpx") % plug["gl:curvesPrimitive:glLineWidth"]["value"].getValue() )
 	if plug["gl:curvesPrimitive:ignoreBasis"]["enabled"].getValue() :
-		info.append( "Basis Ignored" if plug["gl:curvesPrimitive:ignoreBasis"]["value"].getValue() else "Basis On" )
+		info.append( _("Basis Ignored") if plug["gl:curvesPrimitive:ignoreBasis"]["value"].getValue() else _("Basis On") )
 
 	return ", ".join( info )
 
@@ -95,10 +96,10 @@ Gaffer.Metadata.registerNode(
 	GafferScene.OpenGLAttributes,
 
 	"description",
-	"""
+	_("""
 	Applies attributes to modify the appearance of objects in
 	the viewport and in renders done by the OpenGLRender node.
-	""",
+	"""),
 
 	plugs = {
 

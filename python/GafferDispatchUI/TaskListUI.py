@@ -36,25 +36,26 @@
 
 import Gaffer
 import GafferDispatch
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.TaskList,
 
 	"description",
-	"""
+	_("""
 	Used to collect tasks for dispatching all at once.
-	""",
+	"""),
 
 	plugs = {
 
 		"sequence" : {
 
 			"description" :
-			"""
+			_("""
 			Don't allow any tasks which depend on this list to run until all frames
 			of the tasks in this list have run.
-			""",
+			"""),
 		},
 	}
 
