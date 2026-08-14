@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 from ._StyleSheet import _styleSheet
 
 from Qt import QtCore
@@ -645,7 +646,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		assert( isinstance( toolTip, str ) )
 
-		self._qtWidget().setToolTip( toolTip )
+		self._qtWidget().setToolTip( _translate( toolTip ) )
 
 		if toolTip :
 			# Qt does have a default event handler for tooltips,

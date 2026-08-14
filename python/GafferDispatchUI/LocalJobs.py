@@ -44,6 +44,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferDispatch
+from GafferUI.i18n import translate as _translate
 
 from GafferUI.PlugValueWidget import sole
 
@@ -142,7 +143,7 @@ class _StatusColumn( GafferUI.PathColumn ) :
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "Status" )
+		return GafferUI.PathColumn.CellData( value = _translate( "Status" ) )
 
 class _RunningTimeColumn( GafferUI.PathColumn ) :
 
@@ -161,7 +162,7 @@ class _RunningTimeColumn( GafferUI.PathColumn ) :
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "Running Time" )
+		return GafferUI.PathColumn.CellData( value = _translate( "Running Time" ) )
 
 class _CPUUsageColumn( GafferUI.PathColumn ) :
 
@@ -177,7 +178,7 @@ class _CPUUsageColumn( GafferUI.PathColumn ) :
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "CPU" )
+		return GafferUI.PathColumn.CellData( value = _translate( "CPU" ) )
 
 class _MemoryUsageColumn( GafferUI.PathColumn ) :
 
@@ -193,7 +194,7 @@ class _MemoryUsageColumn( GafferUI.PathColumn ) :
 
 	def headerData( self, canceller ) :
 
-		return GafferUI.PathColumn.CellData( value = "Memory" )
+		return GafferUI.PathColumn.CellData( value = _translate( "Memory" ) )
 
 class LocalJobs( GafferUI.Editor ) :
 
@@ -212,9 +213,9 @@ class LocalJobs( GafferUI.Editor ) :
 					_LocalJobsPath( jobPool ),
 					columns = (
 						_StatusColumn(),
-						GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
-						GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
-						GafferUI.PathListingWidget.StandardColumn( "Start Time", "localDispatcher:startTime" ),
+						GafferUI.PathListingWidget.StandardColumn( _translate( "Name" ), "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+						GafferUI.PathListingWidget.StandardColumn( _translate( "Id" ), "localDispatcher:id" ),
+						GafferUI.PathListingWidget.StandardColumn( _translate( "Start Time" ), "localDispatcher:startTime" ),
 						_RunningTimeColumn(),
 						_CPUUsageColumn(),
 						_MemoryUsageColumn(),
