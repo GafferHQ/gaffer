@@ -6,6 +6,12 @@ Improvements
 
 - SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
 
+Fixes
+-----
+
+- LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
+- AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
+
 Documentation
 -------------
 
@@ -254,7 +260,11 @@ Build
 1.6.21.x (relative to 1.6.21.4)
 ========
 
+Fixes
+-----
 
+- LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
+- AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
 
 1.6.21.4 (relative to 1.6.21.3)
 ========

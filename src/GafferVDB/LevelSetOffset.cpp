@@ -135,7 +135,7 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 		openvdb::tools::LevelSetFilter<openvdb::FloatGrid, openvdb::FloatGrid, Interrupter> filter( *newFloatGrid, &interrupter );
 		filter.offset( offsetPlug()->getValue() );
 	}
-	else if ( openvdb::DoubleGrid::ConstPtr doubleGrid = openvdb::GridBase::constGrid<openvdb::DoubleGrid>( newGrid ) )
+	else if ( openvdb::DoubleGrid::ConstPtr doubleGrid = openvdb::GridBase::constGrid<openvdb::DoubleGrid>( gridBase ) )
 	{
 		openvdb::DoubleGrid::Ptr newDoubleGrid = openvdb::GridBase::grid<openvdb::DoubleGrid>( doubleGrid->deepCopyGrid() );
 		newGrid = newDoubleGrid;
@@ -144,7 +144,7 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 	}
 	else
 	{
-		throw IECore::Exception( fmt::format( "Unable to Offset LevelSet grid: '{}' with type: {}", gridName, newGrid->type() ) );
+		throw IECore::Exception( fmt::format( "Unable to Offset LevelSet grid: '{}' with type: {}", gridName, gridBase->type() ) );
 	}
 
 	// If the interrupter has stopped the VDB operation, throw
