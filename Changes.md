@@ -6,6 +6,11 @@ Improvements
 
 - SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
 
+Documentation
+-------------
+
+- Light Linking : Updated the Light Linking Basics example to use USD lights and shaders so it is now applicable to Cycles and RenderMan as well as Arnold.
+
 1.7.0.0 (relative to 1.6.21.4)
 =======
 
