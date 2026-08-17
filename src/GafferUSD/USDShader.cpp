@@ -58,6 +58,7 @@
 #include "pxr/usd/usdLux/boundableLightBase.h"
 #include "pxr/usd/usdLux/nonboundableLightBase.h"
 #include "pxr/usd/usdLux/meshLightAPI.h"
+#include "pxr/usd/usdLux/tokens.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 
@@ -352,15 +353,15 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	// for renderer-specific light extensions.
 
 	std::string shaderType = "surface";
-	const TfToken apiNameToken( shaderName != "MeshLight" ? shaderName : "MeshLightAPI" );
+	const TfToken schemaName = shaderName != "MeshLight" ? TfToken( shaderName ) : UsdLuxTokens->MeshLightAPI;
 
 	UsdSchemaRegistry &schemaRegistry = UsdSchemaRegistry::GetInstance();
 	std::vector<const UsdPrimDefinition *> primDefinitions;
 	std::vector<TfToken> autoAppliedPropertyNames;
 
-	auto primDefinition = apiNameToken == TfToken( "MeshLightAPI" ) ?
-		schemaRegistry.FindAppliedAPIPrimDefinition( TfToken( "MeshLightAPI" ) ) :
-		schemaRegistry.FindConcretePrimDefinition( apiNameToken )
+	auto primDefinition = schemaName == UsdLuxTokens->MeshLightAPI ?
+		schemaRegistry.FindAppliedAPIPrimDefinition( UsdLuxTokens->MeshLightAPI ) :
+		schemaRegistry.FindConcretePrimDefinition( schemaName )
 	;
 	if( primDefinition )
 	{
@@ -370,7 +371,7 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		// represent them using OptionalValuePlugs.
 		for( const auto &[apiSchema, autoAppliedTo] : schemaRegistry.GetAutoApplyAPISchemas() )
 		{
-			if( std::find( autoAppliedTo.begin(), autoAppliedTo.end(), apiNameToken ) != autoAppliedTo.end() )
+			if( std::find( autoAppliedTo.begin(), autoAppliedTo.end(), schemaName ) != autoAppliedTo.end() )
 			{
 				auto apiDefinition = schemaRegistry.FindAppliedAPIPrimDefinition( apiSchema );
 				autoAppliedPropertyNames.insert(
@@ -380,7 +381,7 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 			}
 		}
 
-		const TfType schemaType = schemaRegistry.GetTypeFromName( apiNameToken );
+		const TfType schemaType = schemaRegistry.GetTypeFromName( schemaName );
 		if( schemaType.IsA<UsdLuxBoundableLightBase>() || schemaType.IsA<UsdLuxNonboundableLightBase>() )
 		{
 			shaderType = "light";
