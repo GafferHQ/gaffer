@@ -678,7 +678,6 @@ namespace
 // surfaces), we support "light" attributes as well for compatibility with
 // other renderers and some specific workflows in Gaffer.
 std::array<std::string, 4> g_surfaceShaderAttributeNames = { "osl:light", "light", "osl:surface", "surface" };
-std::array<std::string, 2> g_USDMeshLightAttributeNames = { "light", "osl:light" };
 std::array<std::string, 2> g_USDMeshLightSurfaceShaderAttributeNames = { "osl:surface", "surface" };
 std::array<std::string, 2> g_volumeShaderAttributeNames = { "osl:volume", "volume" };
 std::array<std::string, 2> g_displacementShaderAttributeNames = { "osl:displacement", "displacement" };
@@ -704,18 +703,15 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				m_lightMute( false ), m_hash( attributes->Object::hash() )
 		{
 			bool isUSDMeshLight = false;
-			for( const auto &attributeName : g_USDMeshLightAttributeNames )
+
+			if( auto usdLightNetwork = attributes->member<ShaderNetwork>( g_USDLightAttributeName ) )
 			{
-				if( auto usdLightNetwork = attributes->member<ShaderNetwork>( attributeName ) )
+				if( const Shader *shader = usdLightNetwork->outputShader() )
 				{
-					if( const Shader *shader = usdLightNetwork->outputShader() )
+					if( shader->getName() == "MeshLight" )
 					{
-						if( shader->getName() == "MeshLight" )
-						{
-							m_USDMeshLightHandle = DelightHandle( context, "attributes:" + attributes->Object::hash().toString() + ":usdMeshLight", ownership, "attributes", {} );
-							isUSDMeshLight = true;
-							break;
-						}
+						m_USDMeshLightHandle = DelightHandle( context, "attributes:" + attributes->Object::hash().toString() + ":usdMeshLight", ownership, "attributes", {} );
+						isUSDMeshLight = true;
 					}
 				}
 			}
