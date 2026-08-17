@@ -857,6 +857,11 @@ std::pair<ShaderNetwork::Parameter, ShaderNetwork::Parameter> surfaceGlowParamet
 			incandescenceParameter = { handle, g_incandescenceParameter };
 			break;
 		}
+		else if( shader->getName() == "dlStandard" )
+		{
+			incandescenceParameter = { handle, g_emissionColorParameter };
+			break;
+		}
 	}
 
 	if( incandescenceParameter )
