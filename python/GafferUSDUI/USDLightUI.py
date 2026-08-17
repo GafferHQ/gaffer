@@ -77,13 +77,19 @@ Gaffer.Metadata.registerNode(
 
 def __renderer( key ) :
 
-	for rendererTarget in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "optionPrefix" ) :
-		renderer = rendererTarget[9:]  # Trim off "renderer:"
-		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
-		prefix = "arnold:" if renderer == "Arnold" else Gaffer.Metadata.value( rendererTarget, "optionPrefix" )
+	keyElements = key.split( ":" )
 
-		if key.split( ":" )[2] == prefix.rstrip( ":" ) :
-			return renderer
+	# `key` has the form `light:MeshLight:parameter` or `light:MeshLight:renderer:parameter` where `renderer`
+	# itself may have `:` in it. Any `keyElements` length over 3 therefore indicates a schema add-on which
+	# may be from a renderer.
+	if len( keyElements ) > 3 :
+		for rendererTarget in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "optionPrefix" ) :
+			renderer = rendererTarget[9:]  # Trim off "renderer:"
+			# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
+			prefix = "arnold:" if renderer == "Arnold" else Gaffer.Metadata.value( rendererTarget, "optionPrefix" )
+
+			if keyElements[2] == prefix.rstrip( ":" ) :
+				return renderer
 
 	return None
 
