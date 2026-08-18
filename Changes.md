@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.0.0)
 =======
 
+Features
+--------
+
+- LevelSetSmooth : Added a new node for smoothing OpenVDB level sets.
+
 Improvements
 ------------
 
