@@ -312,6 +312,7 @@ const AtString g_funcPtrArnoldString( "funcptr" );
 const AtString g_ginstanceArnoldString( "ginstance" );
 const AtString g_ignoreMotionBlurArnoldString( "ignore_motion_blur" );
 const AtString g_inputArnoldString( "input" );
+const AtString g_instanceIDArnoldString( "instance_cortex:instanceID" );
 const AtString g_instanceMatrixArnoldString( "instance_matrix" );
 const AtString g_instanceShaderArnoldString( "instance_shader" );
 const AtString g_instanceVisibilityArnoldString( "instance_visibility" );
@@ -2803,6 +2804,21 @@ class PointInstancerCache : public IECore::RefCounted
 			AiNodeSetArray( instancerNode.get(), g_nodeIndexesArnoldString, indexArray );
 			AiNodeSetArray( instancerNode.get(), g_instanceVisibilityArnoldString, visibilityArray );
 			AiNodeSetArray( instancerNode.get(), g_instanceShaderArnoldString, shaderArray );
+
+			// Convert IDs
+
+			auto ids = samples[0]->getID();
+			auto idsArray = AiArrayAllocate( samples[0]->getNumPoints(), 1, AI_TYPE_FLOAT );
+			for( size_t instanceIndex = 0, e = samples[0]->getNumPoints(); instanceIndex < e; ++instanceIndex )
+			{
+				// Offset by one to distinguish from background.
+				const uint32_t id = ( ids ? ids[instanceIndex] : instanceIndex ) + 1;
+				float bitcastID;
+				memcpy( &bitcastID, &id, 4 );
+				AiArraySetFlt( idsArray, instanceIndex, bitcastID );
+			}
+			AiNodeDeclare( instancerNode.get(), g_instanceIDArnoldString, "constant ARRAY FLOAT" );
+			AiNodeSetArray( instancerNode.get(), g_instanceIDArnoldString, idsArray );
 
 			// Add instance attributes
 

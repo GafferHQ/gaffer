@@ -1401,6 +1401,19 @@ class PointInstancerCache : public IECore::RefCounted
 			ParameterList parameters;
 			parameters.add( "modelindices", prototypeIndex.get() );
 
+			auto idView = samples[0]->getID();
+			FloatVectorDataPtr idData = new FloatVectorData;
+			vector<float> &ids = idData->writable();
+			ids.reserve( samples[0]->getNumPoints() );
+			for( size_t i = 0, e = samples[0]->getNumPoints(); i < e; ++i )
+			{
+				const uint32_t id = ( idView ? idView[i] : i ) + 1;
+				float bitcastID;
+				memcpy( &bitcastID, &id, 4 );
+				ids.push_back( bitcastID );
+			}
+			parameters.add( "cortexInstanceID", idData.get() );
+
 			vector<ConstDataPtr> instanceAttributeData;
 			for( const auto &[name, value] : samples[0]->instanceAttributes() )
 			{

@@ -422,6 +422,17 @@ IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECor
 	auto &flattenedOrientation = flattenedOrientationData->writable();
 	flattenedOrientation.resize( numFlattenedPoints );
 
+	Int64VectorDataPtr flattenedIDData;
+	vector<int64_t> *flattenedID = nullptr;
+	auto id = instancer->getID();
+	if( id )
+	{
+		flattenedIDData = new Int64VectorData();
+		result->setID( flattenedIDData );
+		flattenedID = &flattenedIDData->writable();
+		flattenedID->resize( numFlattenedPoints );
+	}
+
 	vector<FlattenedPrimitiveVariable::FlattenFunction> primitiveVariableFunctions;
 	for( const auto &[name, primitiveVariable] : instancer->instanceAttributes() )
 	{
@@ -462,6 +473,11 @@ IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECor
 					V3f discardedShear( 0 );
 					extractAndRemoveScalingAndShear( m, flattenedScale[flattenedPointIndex], discardedShear );
 					flattenedOrientation[flattenedPointIndex] = extractQuat( m );
+
+					if( flattenedID )
+					{
+						(*flattenedID)[flattenedPointIndex] = id[pointIndex];
+					}
 
 					flattenedPointIndex++;
 				}
