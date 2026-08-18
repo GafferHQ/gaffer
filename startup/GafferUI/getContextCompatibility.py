@@ -34,13 +34,18 @@
 #
 ##########################################################################
 
+import warnings
+
 import GafferUI
 
+## \todo Remove in Gaffer 1.9
 def getContext( self ) :
 
-	## \todo Emit DeprecationWarning here once 1.6 is released,
-	# and we can expect most client code to have access to the
-	# `context()` method introduced in 1.5.
+	warnings.warn(
+		"The `getContext()` method is deprecated. Use the `context()` method instead.",
+		DeprecationWarning,
+		2
+	)
 	return self.context()
 
 GafferUI.PlugValueWidget.getContext = getContext
