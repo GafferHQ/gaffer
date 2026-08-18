@@ -9,6 +9,11 @@ Breaking Changes
   - Removed deprecated `_plugConnections()` method. Use `_blockedUpdateFromValues()` instead.
   - Removed support for calling deprecated `_updateFromPlug()` and `_updateFromPlugs()` methods. Implement
     `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead.
+- Dispatcher :
+  - Removed deprecated support for additional `nodes` argument in slots connected to PreDispatchSignal,
+    DispatchSignal and PostDispatchSignal.
+  - Removed deprecated support for passing `script` and `context` arguments to `frameRange()` method.
+    Use `with script.context()` instead.
 
 1.7.x.x (relative to 1.7.0.0)
 =======
