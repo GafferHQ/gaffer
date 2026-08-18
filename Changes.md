@@ -1,6 +1,10 @@
 1.x.x.x (relative to 1.7.x.x)
 =======
 
+Breaking Changes
+----------------
+
+- OpenColorIOConfigPlugUI : Removed deprecated `connect()` method. Use `connectToApplication()` instead.
 
 1.7.x.x (relative to 1.7.0.0)
 =======
