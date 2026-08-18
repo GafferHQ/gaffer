@@ -162,7 +162,7 @@ boost::python::object info( boost::python::object o )
 		result[it->c_str()] = propertyToPython( a );
 	}
 
-	return std::move( result );
+	return result;
 }
 
 template<typename T>
