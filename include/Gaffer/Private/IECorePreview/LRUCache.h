@@ -36,7 +36,6 @@
 
 #include "IECore/Canceller.h"
 
-#include "boost/function.hpp"
 #include "boost/noncopyable.hpp"
 #include "boost/variant.hpp"
 
@@ -105,9 +104,9 @@ class LRUCache : private boost::noncopyable
 		/// when given the key. It should throw a descriptive exception if it can't get the data for
 		/// any reason. Cancellation support requires that `IECore::Canceller::check( canceller )`
 		/// is called periodically.
-		using GetterFunction = boost::function<Value ( const GetterKey &key, Cost &cost, const IECore::Canceller *canceller )>;
+		using GetterFunction = std::function<Value ( const GetterKey &key, Cost &cost, const IECore::Canceller *canceller )>;
 		/// The optional RemovalCallback is called whenever an item is discarded from the cache.
-		using RemovalCallback = boost::function<void ( const Key &key, const Value &data )>;
+		using RemovalCallback = std::function<void ( const Key &key, const Value &data )>;
 
 		LRUCache( GetterFunction getter, Cost maxCost, RemovalCallback removalCallback = RemovalCallback(), bool cacheErrors = true );
 		virtual ~LRUCache();
