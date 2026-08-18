@@ -299,16 +299,17 @@ def __locationDrop( target, event, graphEditor = None ) :
 		sourceScene = GafferScene.SceneAlgo.source( dropLocationData["scene"], dropLocationData["path"] )
 
 	if sourceScene is not None :
+		sourceNode = Gaffer.MetadataAlgo.firstViewableNode( sourceScene )
 		if isinstance( target, GafferUI.GraphGadget ) :
-			target.setRoot( sourceScene.node().parent() )
+			target.setRoot( sourceNode.parent() )
 			## \todo The `frame()` method should probably be on the GraphGadget itself, and the `at`
 			# functionality should be made public.
 			graphEditor()._GraphEditor__frame(
-				[ sourceScene.node() ],
+				[ sourceNode ],
 				at = imath.V2f( GafferUI.Widget.mousePosition( relativeTo = graphEditor() ) )
 			)
 		else :
 			assert( isinstance( target, GafferUI.NodeEditor ) )
-			target.setNodeSet( Gaffer.StandardSet( [ sourceScene.node() ] ) )
+			target.setNodeSet( Gaffer.StandardSet( [ sourceNode ] ) )
 
 	return True
