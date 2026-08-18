@@ -72,10 +72,13 @@ def connectToEditor( editor ) :
 		editor.keyPressSignal().connect( __hierarchyViewKeyPress )
 	elif isinstance( editor, GafferUI.NodeEditor ) :
 		editor.keyPressSignal().connect( __nodeEditorKeyPress )
-	elif isinstance( editor, GafferUI.GraphEditor ) :
-		editor.graphGadget().dragEnterSignal().connect( __graphGadgetDragEnter )
-		editor.graphGadget().dragLeaveSignal().connect( __graphGadgetDragLeave )
-		editor.graphGadget().dropSignal().connect( functools.partial( __graphGadgetDrop, graphEditor = weakref.ref( editor ) ) )
+		editor.dragEnterSignal().connect( __locationDragEnter )
+		editor.dragLeaveSignal().connect( __locationDragLeave )
+		editor.dropSignal().connect( __locationDrop )
+	elif isinstance( editor, ( GafferUI.GraphEditor ) ) :
+		editor.graphGadget().dragEnterSignal().connect( __locationDragEnter )
+		editor.graphGadget().dragLeaveSignal().connect( __locationDragLeave )
+		editor.graphGadget().dropSignal().connect( functools.partial( __locationDrop, graphEditor = weakref.ref( editor ) ) )
 
 ##########################################################################
 # Internal implementation
@@ -258,7 +261,7 @@ def __dropLocationData( event ) :
 		"context" : sourceEditor.context(),
 	}
 
-def __graphGadgetDragEnter( graphGadget, event ) :
+def __locationDragEnter( target, event ) :
 
 	if __dropLocationData( event ) is None :
 		return False
@@ -266,26 +269,27 @@ def __graphGadgetDragEnter( graphGadget, event ) :
 	GafferUI.Pointer.setCurrent( "targetObjects" )
 	return True
 
-def __graphGadgetDragLeave( graphGadget, event ) :
+def __locationDragLeave( target, event ) :
 
-	if __dropLocationData( event ) is not None :
-		if event.destinationWidget is None :
-			# Hack to restore (what we assume to have been) the original
-			# drag pointer. We don't do this when another widget has
-			# accepted the drag, because it would clobber any pointer
-			# change they made in `dragEnter`. But of course that means
-			# that if another widget _has_ accepted the drag but hasn't
-			# changed the pointer themselves (maybe they use highlighting
-			# instead), they will be stuck with the wrong pointer.
-			## \todo This is far too fragile. We need to manage
-			# pointer restoration at a higher level, in Widget.py's
-			# _EventFilter (and ViewportGadget's handlers).
-			GafferUI.Pointer.setCurrent( "objects" )
-		return True
+	if __dropLocationData( event ) is None :
+		return False
 
-	return False
+	if event.destinationWidget is None :
+		# Hack to restore (what we assume to have been) the original
+		# drag pointer. We don't do this when another widget has
+		# accepted the drag, because it would clobber any pointer
+		# change they made in `dragEnter`. But of course that means
+		# that if another widget _has_ accepted the drag but hasn't
+		# changed the pointer themselves (maybe they use highlighting
+		# instead), they will be stuck with the wrong pointer.
+		## \todo This is far too fragile. We need to manage
+		# pointer restoration at a higher level, in Widget.py's
+		# _EventFilter (and ViewportGadget's handlers).
+		GafferUI.Pointer.setCurrent( "objects" )
 
-def __graphGadgetDrop( graphGadget, event, graphEditor ) :
+	return True
+
+def __locationDrop( target, event, graphEditor = None ) :
 
 	dropLocationData = __dropLocationData( event )
 	if dropLocationData is None :
@@ -295,12 +299,16 @@ def __graphGadgetDrop( graphGadget, event, graphEditor ) :
 		sourceScene = GafferScene.SceneAlgo.source( dropLocationData["scene"], dropLocationData["path"] )
 
 	if sourceScene is not None :
-		graphGadget.setRoot( sourceScene.node().parent() )
-		## \todo The `frame()` method should probably be on the GraphGadget itself, and the `at`
-		# functionality should be made public.
-		graphEditor()._GraphEditor__frame(
-			[ sourceScene.node() ],
-			at = imath.V2f( GafferUI.Widget.mousePosition( relativeTo = graphEditor() ) )
-		)
+		if isinstance( target, GafferUI.GraphGadget ) :
+			target.setRoot( sourceScene.node().parent() )
+			## \todo The `frame()` method should probably be on the GraphGadget itself, and the `at`
+			# functionality should be made public.
+			graphEditor()._GraphEditor__frame(
+				[ sourceScene.node() ],
+				at = imath.V2f( GafferUI.Widget.mousePosition( relativeTo = graphEditor() ) )
+			)
+		else :
+			assert( isinstance( target, GafferUI.NodeEditor ) )
+			target.setNodeSet( Gaffer.StandardSet( [ sourceScene.node() ] ) )
 
 	return True
