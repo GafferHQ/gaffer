@@ -73,6 +73,9 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		# \todo Remove this when we use the `shaderType:shaderName:parameter` pattern
+		# for accessing shader metadata everywhere. Currently we get metadata registered
+		# directly to plugs (via `GafferScene.MeshLightUI`).
 		"parameters.arnold:*" : {
 
 			"description" : "Refer to Arnold's documentation for further details.",
