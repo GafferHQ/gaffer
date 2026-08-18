@@ -255,7 +255,7 @@ def __dropLocationData( event ) :
 	return {
 		"path" : event.data[0],
 		"scene" : scene,
-		"context" : sourceEditor.getContext(),
+		"context" : sourceEditor.context(),
 	}
 
 def __graphGadgetDragEnter( graphGadget, event ) :
