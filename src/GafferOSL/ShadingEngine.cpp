@@ -763,7 +763,7 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 
 	public :
 
-		GafferBatchedRendererServices<WidthT>( OSL::TextureSystem *textureSystem )
+		GafferBatchedRendererServices( OSL::TextureSystem *textureSystem )
 			:	OSL::BatchedRendererServices<WidthT>( textureSystem )
 		{
 		}
