@@ -6,7 +6,7 @@ Features
 
 - VisibilityQuery : Added a node for querying the visibility of a particular scene location.
 - PrimitiveVariableType : Added a node for changing the type and interpretation of primitive variables (#7111).
-- RenderMan : Added `layerPerLightGroup` parameter to outputs. Enabling this adds a layer to the output for each light group in the scene.
+- RenderMan : Added `layerPerLightGroup` parameter to outputs. Enabling this causes the output to consist of a layer for each light group in the scene. Any lights that do not have a light group defined will be added to a `default` layer.
 
 Improvements
 ------------
