@@ -1119,7 +1119,6 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		relativePosition2 = relativePosition( script["bottomNode2"], script["backdrop2"] )
 
 		graphGadget.getLayout().layoutNodes( graphGadget )
-		graphGadget.getLayout().layoutNodes( graphGadget ) ## TODO : REMOVE ME!!!!
 
 		self.assertEqual( relativePosition( script["bottomNode1"], script["backdrop1"] ), relativePosition1 )
 		self.assertEqual( relativePosition( script["bottomNode2"], script["backdrop2"] ), relativePosition2 )
