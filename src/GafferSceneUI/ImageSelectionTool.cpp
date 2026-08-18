@@ -116,7 +116,7 @@ std::tuple< bool, Imath::V2f, Imath::V2f > effectiveWipePlane( const ImageGadget
 {
 	if( !imageGadget->getWipeEnabled() )
 	{
-		return std::make_tuple( false, V2f(), V2f() );
+		return std::make_tuple( false, V2f( 0 ), V2f( 1, 0 ) );
 	}
 
 	float radians = imageGadget->getWipeAngle() * M_PI / 180.0f;
