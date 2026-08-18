@@ -57,6 +57,8 @@
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usdLux/boundableLightBase.h"
 #include "pxr/usd/usdLux/nonboundableLightBase.h"
+#include "pxr/usd/usdLux/meshLightAPI.h"
+#include "pxr/usd/usdLux/tokens.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 
@@ -351,12 +353,17 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	// for renderer-specific light extensions.
 
 	std::string shaderType = "surface";
-	const TfToken shaderNameToken( shaderName );
+	const TfToken schemaName = shaderName != "MeshLight" ? TfToken( shaderName ) : UsdLuxTokens->MeshLightAPI;
 
 	UsdSchemaRegistry &schemaRegistry = UsdSchemaRegistry::GetInstance();
 	std::vector<const UsdPrimDefinition *> primDefinitions;
 	std::vector<TfToken> autoAppliedPropertyNames;
-	if( auto primDefinition = schemaRegistry.FindConcretePrimDefinition( shaderNameToken ) )
+
+	auto primDefinition = schemaName == UsdLuxTokens->MeshLightAPI ?
+		schemaRegistry.FindAppliedAPIPrimDefinition( UsdLuxTokens->MeshLightAPI ) :
+		schemaRegistry.FindConcretePrimDefinition( schemaName )
+	;
+	if( primDefinition )
 	{
 		primDefinitions.push_back( primDefinition );
 		// The main prim definition contains properties from auto-applied API schemas, but doesn't
@@ -364,7 +371,7 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		// represent them using OptionalValuePlugs.
 		for( const auto &[apiSchema, autoAppliedTo] : schemaRegistry.GetAutoApplyAPISchemas() )
 		{
-			if( std::find( autoAppliedTo.begin(), autoAppliedTo.end(), shaderNameToken ) != autoAppliedTo.end() )
+			if( std::find( autoAppliedTo.begin(), autoAppliedTo.end(), schemaName ) != autoAppliedTo.end() )
 			{
 				auto apiDefinition = schemaRegistry.FindAppliedAPIPrimDefinition( apiSchema );
 				autoAppliedPropertyNames.insert(
@@ -374,12 +381,17 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 			}
 		}
 
-		const TfType schemaType = schemaRegistry.GetTypeFromName( shaderNameToken );
+		const TfType schemaType = schemaRegistry.GetTypeFromName( schemaName );
 		if( schemaType.IsA<UsdLuxBoundableLightBase>() || schemaType.IsA<UsdLuxNonboundableLightBase>() )
 		{
 			shaderType = "light";
 			primDefinitions.push_back( schemaRegistry.FindAppliedAPIPrimDefinition( TfToken( "ShadowAPI" ) ) );
 			primDefinitions.push_back( schemaRegistry.FindAppliedAPIPrimDefinition( TfToken( "ShapingAPI" ) ) );
+		}
+		else if( schemaType.IsA<UsdLuxMeshLightAPI>() )
+		{
+			shaderType = "light";
+			primDefinitions.push_back( schemaRegistry.FindAppliedAPIPrimDefinition( TfToken( "ShadowAPI" ) ) );
 		}
 	}
 

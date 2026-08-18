@@ -339,6 +339,48 @@ T parameterValue( const Shader *shader, InternedString parameterName, const T &d
 	return defaultValue;
 }
 
+template<typename T>
+T *attributeCast( const IECore::RunTimeTyped *v, const IECore::InternedString &name )
+{
+	if( !v )
+	{
+		return nullptr;
+	}
+
+	T *t = IECore::runTimeCast<T>( v );
+	if( t )
+	{
+		return t;
+	}
+
+	IECore::msg( IECore::Msg::Warning, "IECoreDelight::ShaderNetworkAlgo", fmt::format( "Expected {} but got {} for attribute \"{}\".", T::staticTypeName(), v->typeName(), name.c_str() ) );
+	return nullptr;
+}
+
+template<typename T>
+const T *attribute( const CompoundObject::ObjectMap &attributes, IECore::InternedString name )
+{
+	auto it = attributes.find( name );
+	if( it == attributes.end() )
+	{
+		return nullptr;
+	}
+
+	return attributeCast<const T>( it->second.get(), name );
+}
+
+std::pair<InternedString, const IECoreScene::ShaderNetwork *> shaderNetworkAttribute( const CompoundObject::ObjectMap &attributes, const std::vector<InternedString> &attributeNames )
+{
+	for( const auto &name : attributeNames )
+	{
+		if( const auto *shaderNetwork = attribute<IECoreScene::ShaderNetwork>( attributes, name ) )
+		{
+			return { name, shaderNetwork };
+		}
+	}
+	return { InternedString(), nullptr };
+}
+
 //////////////////////////////////////////////////////////////////////////
 // USD conversion code
 //////////////////////////////////////////////////////////////////////////
@@ -437,6 +479,7 @@ const InternedString g_fileParameter( "file" );
 const InternedString g_fileMetaColorSpaceParameter( "file_meta_colorspace" );
 const InternedString g_gParameter( "g" );
 const InternedString g_heightParameter( "height" );
+const InternedString g_incandescenceParameter( "incandescence" );
 const InternedString g_inParameter( "in" );
 const InternedString g_input1Parameter( "input1" );
 const InternedString g_input2XParameter( "input2X" );
@@ -456,6 +499,7 @@ const InternedString g_multiplyOutputParameter( "out" );
 const InternedString g_nameParameter( "name" );
 const InternedString g_normalParameter( "normal" );
 const InternedString g_normalizeParameter( "normalize" );
+const InternedString g_normalizeAreaParameter( "normalize_area" );
 const InternedString g_opacityParameter( "opacity" );
 const InternedString g_opacityThresholdParameter( "opacityThreshold" );
 const InternedString g_outParameter( "out" );
@@ -499,6 +543,10 @@ const InternedString g_dlEnvSpecularParameter( "specular_contribution" );
 const InternedString g_dlNormalizeParameter( "normalize_area" );
 const InternedString g_dlSpecularParameter( "reflection_contribution" );
 const InternedString g_dlTextureFileParameter( "textureFile" );
+
+const InternedString g_emptyString( "" );
+const std::vector<InternedString> g_lightAttributeNames = { "osl:light", "light" };
+const std::vector<InternedString> g_surfaceAttributeNames = { "osl:surface", "surface" };
 
 const float g_defaultAngle = 0.53f;
 const float g_defaultLength = 1.f;
@@ -778,6 +826,52 @@ void convertUSDUVTextures( ShaderNetwork *network )
 	}
 }
 
+std::pair<ShaderNetwork::Parameter, ShaderNetwork::Parameter> surfaceGlowParameters( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	ShaderNetwork::Parameter incandescenceParameter;
+	ShaderNetwork::Parameter incandescenceInput;
+	if( !shaderNetwork )
+	{
+		return { incandescenceParameter, incandescenceInput };
+	}
+
+	for( const auto &[handle, shader] : shaderNetwork->shaders() )
+	{
+		if(
+			shader->getName() == "_3DelightGlass" ||
+			shader->getName() == "_3DelightMaterial" ||
+			shader->getName() == "anisotropic" ||
+			shader->getName() == "blinn" ||
+			shader->getName() == "dl3DelightMaterial" ||
+			shader->getName() == "dlConstant" ||
+			shader->getName() == "dlGlass" ||
+			shader->getName() == "dlPrincipled" ||
+			shader->getName() == "dlStandard" ||
+			shader->getName() == "dlSubstance" ||
+			shader->getName() == "dlToon" ||
+			shader->getName() == "lambert" ||
+			shader->getName() == "material3Delight" ||
+			shader->getName() == "material3DelightGlass"
+		)
+		{
+			incandescenceParameter = { handle, g_incandescenceParameter };
+			break;
+		}
+		else if( shader->getName() == "dlStandard" )
+		{
+			incandescenceParameter = { handle, g_emissionColorParameter };
+			break;
+		}
+	}
+
+	if( incandescenceParameter )
+	{
+		incandescenceInput = shaderNetwork->input( incandescenceParameter );
+	}
+
+	return { incandescenceParameter, incandescenceInput };
+}
+
 }  // namespace
 
 namespace IECoreDelight
@@ -1015,6 +1109,109 @@ void convertUSDShaders( ShaderNetwork *shaderNetwork )
 			replaceUSDShader( shaderNetwork, handle, std::move( newShader ) );
 		}
 	}
+}
+
+ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attributes )
+{
+	const auto &[lightAttribute, lightNetwork] = shaderNetworkAttribute( attributes->members(), g_lightAttributeNames );
+	if( !lightNetwork )
+	{
+		return attributes;
+	}
+
+	const Shader *outputShader = lightNetwork->outputShader();
+	if( !outputShader || outputShader->getName() != "MeshLight" )
+	{
+		return attributes;
+	}
+
+	CompoundObjectPtr result = attributes->copy();
+
+	ShaderNetworkPtr newLightShaderNetwork = lightNetwork->copy();
+	const ShaderNetwork *surfaceNetwork = shaderNetworkAttribute( attributes->members(), g_surfaceAttributeNames ).second;
+
+	const auto &[incandescenceParameter, incandescenceInput] = surfaceGlowParameters( surfaceNetwork );
+
+	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
+	const Shader *lightOutputShader = lightNetwork->outputShader();
+
+	ShaderPtr newLightShader = new Shader( "areaLight", "osl:light" );
+	transferUSDLightParameters( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
+	transferUSDParameter( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, g_normalizeParameter, newLightShader.get(), g_normalizeAreaParameter, false );
+
+	// The potential light inputs are in the first row of this matrix.
+	// The potential surface inputs are in the first column.
+	// The cells are the resulting mesh light color / input.
+	// C = light color x surface color. If 0 or 1 in parenthesis, it means it's known to be that value.
+	// TINT = A multiply shader combining the surface and light colors.
+	// Light / Emission Tex = the texture is connected directly without tint.
+	//                         | LightColor 0 | LightColor 0-1 | LightColor 1  | LightColor Textured
+	// EmissionColor 0         |      C(0)    |       C(0)     |     C(0)      |       C(0)
+	// EmissionColor 0-1       |      C(0)    |       C        |     C         |       TINT
+	// EmissionColor 1         |      C(0)    |       C        |     C(1)      |     Light Tex
+	// EmissionColor Textured  |      C(0)    |      TINT      |  Emission Tex |       TINT
+
+	const Color3f lightColor = parameterValue( newLightShader.get(), g_dlColorParameter, Color3f( 1.f ) );
+	const Color3f emissionColor = incandescenceParameter ? parameterValue( surfaceNetwork->getShader( incandescenceParameter.shader ), incandescenceParameter.name, Color3f( 0.f ) ) : Color3f( 0.f );
+	if( incandescenceParameter )
+	{
+		newLightShader->parameters()[g_dlColorParameter] = new Color3fData( emissionColor * lightColor );
+	}
+
+	InternedString tintHandle;
+	const ShaderNetwork::Parameter meshLightColorParameter = { lightOutputParameter.shader, g_colorParameter };
+	const ShaderNetwork::Parameter meshLightColorInput = lightNetwork->input( meshLightColorParameter );
+	const ShaderNetwork::Parameter dlMeshLightColorParameter = { lightOutputParameter.shader, g_dlColorParameter };
+	// Remove the input to the light color. We will add it back later if needed.
+	removeInput( newLightShaderNetwork.get(), meshLightColorParameter );
+
+	if( incandescenceInput && ( lightColor != Color3f( 0.f ) || meshLightColorInput ) )
+	{
+		ShaderNetworkPtr glowNetwork = surfaceNetwork->copy();
+		glowNetwork->setOutput( incandescenceInput );
+		IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( glowNetwork.get() );
+		ShaderNetwork::Parameter newGlowColorInput = IECoreScene::ShaderNetworkAlgo::addShaders( newLightShaderNetwork.get(), glowNetwork.get(), /* connections = */ true );
+
+		if( lightColor != Color3f( 1.f ) || meshLightColorInput )
+		{
+			ShaderPtr tintShader = new Shader( "Maths/MultiplyColor", "osl:shader", { { "b", new Color3fData( lightColor ) } } );
+			tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
+
+			newLightShaderNetwork->addConnection( { newGlowColorInput, { tintHandle, "a" } } );
+			newLightShaderNetwork->addConnection( { { tintHandle, "out" }, dlMeshLightColorParameter } );
+		}
+		else
+		{
+			newLightShaderNetwork->addConnection( { newGlowColorInput, dlMeshLightColorParameter } );
+		}
+	}
+
+	if( meshLightColorInput && ( emissionColor != Color3f( 0.f ) || incandescenceInput ) )
+	{
+		if( emissionColor != Color3f( 1.f ) || incandescenceInput )
+		{
+			if( tintHandle == g_emptyString )
+			{
+				ShaderPtr tintShader = new Shader( "Maths/MultiplyColor", "osl:shader", { { "a", new Color3fData( emissionColor ) } } );
+				tintHandle = newLightShaderNetwork->addShader( InternedString( "tint" ), std::move( tintShader ) );
+
+				newLightShaderNetwork->addConnection( { { tintHandle, "out" }, dlMeshLightColorParameter } );
+			}
+
+			newLightShaderNetwork->addConnection( { meshLightColorInput, { tintHandle, "b" } } );
+		}
+		else
+		{
+			newLightShaderNetwork->addConnection( { meshLightColorInput, dlMeshLightColorParameter } );
+		}
+	}
+
+	replaceUSDShader( newLightShaderNetwork.get(), lightOutputParameter.shader, std::move( newLightShader ) );
+	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( newLightShaderNetwork.get() );
+
+	result->members()[lightAttribute] = std::move( newLightShaderNetwork );
+
+	return result;
 }
 
 ShaderNetworkPtr preprocessedNetwork( const ShaderNetwork *shaderNetwork )

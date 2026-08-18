@@ -96,6 +96,9 @@ IECORECYCLES_API IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreS
 /// calling `convertLight()` and `convertLightShader()`.
 IECORECYCLES_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
 
+/// Returns a modified set of attributes conforming to the USDMeshLight specification.
+IECORECYCLES_API IECore::ConstCompoundObjectPtr convertUSDMeshLightAttributes( const IECore::CompoundObject *attributes );
+
 } // namespace ShaderNetworkAlgo
 
 } // namespace IECoreCycles
