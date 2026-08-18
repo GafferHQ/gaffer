@@ -5,6 +5,10 @@ Breaking Changes
 ----------------
 
 - OpenColorIOConfigPlugUI : Removed deprecated `connect()` method. Use `connectToApplication()` instead.
+- PlugValueWidget :
+  - Removed deprecated `_plugConnections()` method. Use `_blockedUpdateFromValues()` instead.
+  - Removed support for calling deprecated `_updateFromPlug()` and `_updateFromPlugs()` methods. Implement
+    `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead.
 
 1.7.x.x (relative to 1.7.0.0)
 =======

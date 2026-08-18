@@ -312,62 +312,6 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( widget.updateContexts[4], script.context() )
 		self.assertEqual( widget.updateContexts[5], script.context() )
 
-	class LegacyUpdateCountPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-		def __init__( self, plugs, **kw ) :
-
-			self.updateCount = 0
-			self.updateContexts = []
-
-			GafferUI.PlugValueWidget.__init__( self, GafferUI.Label( "" ), plugs, **kw )
-
-			self._updateFromPlugs()
-
-		def _updateFromPlugs( self ) :
-
-			self.updateCount += 1
-			self.updateContexts.append( self.context() )
-
-	def testLegacyUpdates( self ) :
-
-		script = Gaffer.ScriptNode()
-		script["add"] = GafferTest.AddNode()
-
-		with warnings.catch_warnings() :
-
-			warnings.simplefilter( "ignore", DeprecationWarning )
-
-			# Should do one update during construction.
-			widget = self.LegacyUpdateCountPlugValueWidget( script["add"]["op1"] )
-			self.assertEqual( widget.updateCount, 1 )
-			self.assertEqual( widget.updateContexts[0], script.context() )
-
-			# And shouldn't update when the context changes
-			# because the value is static.
-			script.context().setFrame( 2 )
-			self.assertEqual( widget.updateCount, 1 )
-
-			# Changing the plug should cause an update.
-			widget.setPlug( script["add"]["op2"] )
-			self.assertEqual( widget.updateCount, 2 )
-			self.assertEqual( widget.updateContexts[1], script.context() )
-
-			# But the value is still static, so changing the
-			# context should have no effect.
-			script.context().setFrame( 3 )
-			self.assertEqual( widget.updateCount, 2 )
-
-			# Changing the plug again should cause an update again.
-			widget.setPlug( script["add"]["sum"] )
-			self.assertEqual( widget.updateCount, 3 )
-			self.assertEqual( widget.updateContexts[2], script.context() )
-
-			# And now changing the context does cause an update, because
-			# the plug's value is computed.
-			script.context().setFrame( 4 )
-			self.assertEqual( widget.updateCount, 4 )
-			self.assertEqual( widget.updateContexts[3], script.context() )
-
 	def testContextForEditorSettings( self ) :
 
 		script = Gaffer.ScriptNode()
