@@ -14,6 +14,7 @@ Breaking Changes
     DispatchSignal and PostDispatchSignal.
   - Removed deprecated support for passing `script` and `context` arguments to `frameRange()` method.
     Use `with script.context()` instead.
+- TractorDispatcher : Removed deprecated support for `preSpoolSignal` slots without `taskData` arguments.
 
 1.7.x.x (relative to 1.7.0.0)
 =======
