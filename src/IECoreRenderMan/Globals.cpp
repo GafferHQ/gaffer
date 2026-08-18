@@ -168,29 +168,35 @@ ListType idToList( std::remove_pointer_t<decltype( ListType::ids )> &id )
 
 const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene::ShaderNetwork();
 
-IECoreScene::OutputPtr lightGroupOutput( const IECore::InternedString &name, const IECoreScene::Output *output, const std::string &lightGroup )
+const string g_lightGroupArg = "lightGroup";
+
+string lightGroupFormatString( const IECore::InternedString &name, const IECoreScene::Output *output )
 {
-	string lpe;
-	if( output->getData() == "rgb" || output->getData() == "rgba" )
+	const string lpe = [&output]() -> string
 	{
-		lpe = "C[DS]*[<L.>O]";
-	}
-	else
-	{
-		vector<string> tokens;
-		StringAlgo::tokenize( output->getData(), ' ', tokens );
-		if( tokens.size() == 2 && tokens[0] == "lpe" )
+		if( output->getData() == "rgb" || output->getData() == "rgba" )
 		{
-			lpe = tokens[1];
+			return "C[DS]*[<L.>O]";
 		}
 		else
 		{
-			IECore::msg(
-				IECore::Msg::Warning, "RenderManRenderer",
-				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because data \"{}\" is not \"rgb\", \"rgba\" or an lpe.", name.string(), output->getData() )
-			);
-			return nullptr;
+			vector<string> tokens;
+			StringAlgo::tokenize( output->getData(), ' ', tokens );
+			if( tokens.size() == 2 && tokens[0] == "lpe" )
+			{
+				return tokens[1];
+			}
 		}
+		return "";
+	}();
+
+	if( lpe.empty() )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "RenderManRenderer",
+			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because data \"{}\" is not \"rgb\", \"rgba\" or an lpe.", name.string(), output->getData() )
+		);
+		return "";
 	}
 
 	if( lpe.find( "L'" ) != string::npos || lpe.find( "L.'" ) != string::npos )
@@ -199,17 +205,21 @@ IECoreScene::OutputPtr lightGroupOutput( const IECore::InternedString &name, con
 			IECore::Msg::Warning, "RenderManRenderer",
 			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
 		);
-		return nullptr;
+		return "";
 	}
 
-	const string group = fmt::format( "<L.'{}'>", lightGroup );
+	string result = lpe;
+	boost::replace_all( result, "{", "{{" );
+	boost::replace_all( result, "}", "}}" );
+
+	const string lightGroupBrackets = "<L.'{" + g_lightGroupArg + "}'>";
 	if( lpe.find( "<L.>" ) != string::npos )
 	{
-		boost::replace_all( lpe, "<L.>", group );
+		boost::replace_all( result, "<L.>", lightGroupBrackets );
 	}
 	else if( lpe.find( "L" ) != string::npos )
 	{
-		boost::replace_all( lpe, "L", group );
+		boost::replace_all( result, "L", lightGroupBrackets );
 	}
 	else
 	{
@@ -217,8 +227,15 @@ IECoreScene::OutputPtr lightGroupOutput( const IECore::InternedString &name, con
 			IECore::Msg::Warning, "RenderManRenderer",
 			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
 		);
-		return nullptr;
+		return "";
 	}
+
+	return result;
+}
+
+IECoreScene::ConstOutputPtr lightGroupOutput( const std::string &lightGroupFormatString, const IECoreScene::Output *output, const std::string &lightGroup )
+{
+	const string lpe = fmt::format( lightGroupFormatString, fmt::arg( g_lightGroupArg.c_str(), lightGroup ) );
 
 	const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
 
@@ -896,8 +913,25 @@ void Globals::updateRenderView()
 	{
 		// Render outputs.
 
-		const vector<riley::RenderOutputId> &renderOutputs = acquireRenderOutputs( output.get());
-		if( renderOutputs.empty() )
+		string lightGroupFormatTemplate;
+
+		if( parameter<bool>( output->parameters(), g_layerPerLightGroup, false ) )
+		{
+			lightGroupFormatTemplate = lightGroupFormatString( name, output.get() );
+			if( !lightGroupFormatTemplate.empty() )
+			{
+				if( !m_renderViewLightGroups )
+				{
+					m_renderViewLightGroups = m_session->lightGroups();
+				}
+				assert( m_renderViewLightGroups->size() );  // We always have at least `default` light group.
+			}
+		}
+
+		ConstOutputPtr firstOutput = lightGroupFormatTemplate.empty() ? output : lightGroupOutput( lightGroupFormatTemplate, output.get(), *(m_renderViewLightGroups->begin()) );
+
+		const vector<riley::RenderOutputId> &firstRenderOutputs = acquireRenderOutputs( firstOutput.get());
+		if( firstRenderOutputs.empty() )
 		{
 			IECore::msg( IECore::Msg::Warning, "RenderManRenderer", fmt::format( "Ignoring unsupported output {}", name.c_str() ) );
 			continue;
@@ -916,7 +950,10 @@ void Globals::updateRenderView()
 			int asRGBA = 0;
 			display.driverParamList.GetInteger( RtUString( "asrgba" ), asRGBA );
 			const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
-			if( layerName.empty() || output->getData() == "rgb" || output->getData() == "rgba" )
+			if(
+				lightGroupFormatTemplate.empty() &&
+				( layerName.empty() || output->getData() == "rgb" || output->getData() == "rgba" )
+			)
 			{
 				asRGBA = 1;
 			}
@@ -943,32 +980,24 @@ void Globals::updateRenderView()
 		// the beauty first - it is the only one to have two render outputs (the second
 		// one being for alpha).
 
-		const bool beauty = renderOutputs.size() == 2;
+		const bool beauty = lightGroupFormatTemplate.empty() && firstRenderOutputs.size() == 2;
 
 		display.outputs.insert(
 			beauty ? display.outputs.begin() : display.outputs.end(),
-			renderOutputs.begin(), renderOutputs.end()
+			firstRenderOutputs.begin(), firstRenderOutputs.end()
 		);
 
 		renderTargetOutputs.insert(
 			beauty ? renderTargetOutputs.begin() : renderTargetOutputs.end(),
-			renderOutputs.begin(), renderOutputs.end()
+			firstRenderOutputs.begin(), firstRenderOutputs.end()
 		);
 
-		if( parameter<bool>( output->parameters(), g_layerPerLightGroup, false ) )
+		if( !lightGroupFormatTemplate.empty() )
 		{
-			if( !m_renderViewLightGroups )
+			// We already added the first element above, start with the second.
+			for( auto it = std::next( m_renderViewLightGroups->begin() ), eIt = m_renderViewLightGroups->end(); it != eIt; ++it )
 			{
-				m_renderViewLightGroups = m_session->lightGroups();
-			}
-
-			for( const auto &lightGroup : *m_renderViewLightGroups )
-			{
-				ConstOutputPtr groupOutput = lightGroupOutput( name, output.get(), lightGroup );
-				if( !groupOutput )
-				{
-					break;
-				}
+				ConstOutputPtr groupOutput = lightGroupOutput( lightGroupFormatTemplate, output.get(), *it );
 				const vector<riley::RenderOutputId> &groupRenderOutputs = acquireRenderOutputs( groupOutput.get() );
 				display.outputs.insert( display.outputs.end(), groupRenderOutputs.begin(), groupRenderOutputs.end() );
 				renderTargetOutputs.insert( renderTargetOutputs.end(), groupRenderOutputs.begin(), groupRenderOutputs.end() );

@@ -3250,18 +3250,26 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testLayerPerLightGroupOutputs( self ) :
 
+		messageHandler = IECore.CapturingMessageHandler()
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			self.renderer,
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
 		)
 
 		beautyFileName = self.temporaryDirectory() / "beauty.exr"
 		renderer.output(
+			"RGBA",
+			IECoreScene.Output( str( beautyFileName ), "exr", "rgba" )
+		)
+
+		beautyLayersFileName = self.temporaryDirectory() / "beautyLayers.exr"
+		renderer.output(
 			"perLightGroupRGBA",
 			IECoreScene.Output(
-				str( beautyFileName ), "exr", "rgba",
+				str( beautyLayersFileName ), "exr", "rgba",
 				{
-					"layerPerLightGroup" : True,
+					"layerPerLightGroup" : True
 				}
 			)
 		)
@@ -3273,6 +3281,18 @@ class RendererTest( GafferTest.TestCase ) :
 				str( diffuseFileName ), "exr", "lpe C<RD>[<L.>O]",
 				{
 					"layerName" : "directDiffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		bracketFileName = self.temporaryDirectory() / "bracket.exr"
+		renderer.output(
+			"bracketLPE",
+			IECoreScene.Output(
+				str( bracketFileName ), "exr", "lpe C.{0,2}[LO]",
+				{
+					"layerName" : "bracket",
 					"layerPerLightGroup" : True,
 				}
 			)
@@ -3321,42 +3341,153 @@ class RendererTest( GafferTest.TestCase ) :
 		del sphere, lights
 		del renderer
 
-		# The original layers should be accompanied by an additional
-		# layer for each light group.
+		self.assertEqual( len( messageHandler.messages ), 0 )
 
 		beautyImage = OpenImageIO.ImageBuf( str( beautyFileName ) )
 		self.assertEqual(
 			set( beautyImage.spec().channelnames ),
-			set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in lightGroups for c in "rgb" }
+			set( "RGBA" )
+		)
+
+		# The original layers should be replaced by a layer for each light group and a default layer.
+
+		lightLayers = { k : ( v, imath.Color3f( 0.0 ) ) for k, v in lightGroups.items() }
+		lightLayers["default"] = ( imath.Color3f( 0.0 ), imath.Color3f( 1.0 ) )
+
+		beautyLayersImage = OpenImageIO.ImageBuf( str( beautyLayersFileName ) )
+		self.assertEqual(
+			set( beautyLayersImage.spec().channelnames ),
+			{ f"RGBA_{g}.{c}" for g in lightLayers for c in "rgb" }
 		)
 
 		diffuseImage = OpenImageIO.ImageBuf( str( diffuseFileName ) )
 		self.assertEqual(
 			set( diffuseImage.spec().channelnames ),
-			{ f"directDiffuse.{c}" for c in "rgb" } |
-			{ f"directDiffuse_{g}.{c}" for g in lightGroups for c in "rgb" }
+			{ f"directDiffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
 		)
 
 		# Each light group layer should only contain illumination from its own
 		# group, and the group layers should sum to the beauty.
 
-		channelIndices = { c : i for i, c in enumerate( beautyImage.spec().channelnames ) }
-		midPixel = beautyImage.getpixel( 320, 240 )
+		layerChannelIndices = { c : i for i, c in enumerate( beautyLayersImage.spec().channelnames ) }
+		layersMidPixel = beautyLayersImage.getpixel( 320, 240 )
 
 		for group, color in lightGroups.items() :
 			for channel, value in zip( "rgb", color ) :
-				groupValue = midPixel[channelIndices[f"RGBA_{group}.{channel}"]]
+				groupValue = layersMidPixel[layerChannelIndices[f"RGBA_{group}.{channel}"]]
 				if value == 0 :
 					self.assertAlmostEqual( groupValue, 0, delta = 0.001 )
 				else :
 					self.assertGreater( groupValue, 0.2 )
 
 		for channel in "rgb" :
+			# default layer has no color on sphere
+			self.assertEqual( layersMidPixel[layerChannelIndices[f"RGBA_default.{channel}"]], 0 )
+
+		channelIndices = { c : i for i, c in enumerate( beautyImage.spec().channelnames ) }
+		midPixel = beautyImage.getpixel( 320, 240 )
+		topLeftPixel = beautyImage.getpixel( 0, 0 )
+
+		layersTopLeftPixel = beautyLayersImage.getpixel( 0, 0 )
+
+		for channel in "rgb" :
 			self.assertAlmostEqual(
 				midPixel[channelIndices[channel.upper()]],
-				sum( midPixel[channelIndices[f"RGBA_{g}.{channel}"]] for g in lightGroups ),
+				sum( layersMidPixel[layerChannelIndices[f"RGBA_{g}.{channel}"]] for g in lightLayers ),
 				delta = 0.01
 			)
+			self.assertAlmostEqual(
+				topLeftPixel[channelIndices[channel.upper()]],
+				sum( layersTopLeftPixel[layerChannelIndices[f"RGBA_{g}.{channel}"]] for g in lightLayers ),
+				delta = 0.01
+			)
+
+	def testLayerPerLightGroupLightWithoutGroup( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		beautyLayersFileName = self.temporaryDirectory() / "beautyLayers.exr"
+		renderer.output(
+			"perLightGroupRGBA",
+			IECoreScene.Output(
+				str( beautyLayersFileName ), "exr", "rgba",
+				{
+					"layerPerLightGroup" : True
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "PxrDiffuse" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		lightGroups = [
+			( "red", "red", imath.Color3f( 1, 0, 0 ) ),
+			( "green", "", imath.Color3f( 0, 1, 0 ) ),
+			( "blue", "", imath.Color3f( 0, 0, 1 ) ),
+		]
+
+		lights = [
+			renderer.light(
+				f"/light/{lightName}", None,
+				renderer.attributes( IECore.CompoundObject( {
+					"ri:light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"PxrDomeLight", "ri:light",
+								{ "lightGroup" : group, "lightColor" : color }
+							),
+						},
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+				} ) )
+			)
+			for lightName, group, color in lightGroups
+		]
+
+		renderer.render()
+		del sphere, lights
+		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
+
+		beautyLayersImage = OpenImageIO.ImageBuf( str( beautyLayersFileName ) )
+		self.assertEqual(
+			set( beautyLayersImage.spec().channelnames ),
+			{ f"RGBA_{g}.{c}" for g in [ "red", "default" ] for c in "rgb" }
+		)
+
+		expectedColorPerLayer = {}
+		for lightName, group, color in lightGroups :
+			expectedColorPerLayer[group] = expectedColorPerLayer.get( group, imath.Color3f( 0 ) ) + color
+
+		layerChannelIndices = { c : i for i, c in enumerate( beautyLayersImage.spec().channelnames ) }
+		layersMidPixel = beautyLayersImage.getpixel( 320, 240 )
+
+		for group, color in expectedColorPerLayer.items() :
+			group = group or "default"
+			for channel, value in zip( "rgb", color ) :
+				groupValue = layersMidPixel[layerChannelIndices[f"RGBA_{group}.{channel}"]]
+				if value == 0 :
+					self.assertAlmostEqual( groupValue, 0, delta = 0.001 )
+				else :
+					self.assertGreater( groupValue, 0.2 )
 
 	def testLayerPerLightGroupIgnoresLPEWithExplicitGroup( self ) :
 
@@ -3448,7 +3579,7 @@ class RendererTest( GafferTest.TestCase ) :
 		del renderer
 
 		# The emission LPE doesn't contain `L` or `<L.>`, so `layerPerLightGroup`
-		# should be ignored with a warning.
+		# should be ignored with a warning and there is no default group.
 
 		self.assertEqual( len( messageHandler.messages ), 1 )
 		self.assertEqual( messageHandler.messages[0].message, "Ignoring \"layerPerLightGroup\" parameter on output \"emission\", because its LPE doesn't contain \"L\" or \"<L.>\"." )
@@ -3509,10 +3640,13 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].message, "Unable to find shader \"NotALight\"." )
+
 		image = IECoreImage.ImageDisplayDriver.storedImage( "invalidLightGroupTest" )
 		self.assertEqual(
 			set( image.keys() ),
-			set( "RGBA" ) | { f"RGBA_good.{c}" for c in "RGB" }
+			{ f"RGBA_good.{c}" for c in "RGB" } | { f"RGBA_default.{c}" for c in "RGB" }
 		)
 
 		del invalidLight, validLight
@@ -3520,9 +3654,12 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testInteractiveLightGroupEdits( self ) :
 
+		messageHandler = IECore.CapturingMessageHandler()
+
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			self.renderer,
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = messageHandler
 		)
 
 		renderer.output(
@@ -3563,7 +3700,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_first.{c}" for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "first", "default" ) for c in "RGB" }
 			)
 		)
 
@@ -3574,11 +3711,11 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_key.{c}" for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "key", "default" ) for c in "RGB" }
 			)
 		)
 
-		# Adding a light without a light group shouldn't change the layers.
+		# Adding a light without a light group keeps the default layer.
 
 		renderer.pause()
 		fillLight = renderer.light( "/light/fill", None, lightAttributes( "" ) )
@@ -3587,7 +3724,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_key.{c}" for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "key", "default" ) for c in "RGB" }
 			)
 		)
 
@@ -3600,7 +3737,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "second" ) for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "key", "second", "default" ) for c in "RGB" }
 			)
 		)
 
@@ -3611,7 +3748,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "fill" ) for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "key", "fill", "default" ) for c in "RGB" }
 			)
 		)
 
@@ -3624,7 +3761,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "fill", "third" ) for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "key", "fill", "third", "default" ) for c in "RGB" }
 			)
 		)
 
@@ -3637,7 +3774,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "fill" ) for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "key", "fill", "default" ) for c in "RGB" }
 			)
 		)
 
@@ -3651,7 +3788,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_{g}.{c}" for g in ( "key", "fill" ) for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "key", "fill", "default" ) for c in "RGB" }
 			)
 		)
 
@@ -3664,34 +3801,44 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEventually(
 			lambda : self.assertEqual(
 				channelNames(),
-				set( "RGBA" ) | { f"RGBA_key.{c}" for c in "RGB" }
+				{ f"RGBA_{g}.{c}" for g in ( "key", "default" ) for c in "RGB" }
 			)
 		)
 
 		# Editing the only light in the key group to remove its light group should remove
-		# the key layer.
+		# the key layer leave only the default layer.
 
 		renderer.pause()
 		keyLight.attributes( lightAttributes( "" ) )
 		renderer.render()
 
 		self.assertEventually(
-			lambda : self.assertEqual( channelNames(), set( "RGBA" ) )
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_default.{c}" for c in "RGB" }
+			)
 		)
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
 
 		renderer.pause()
 		del keyLight
 		renderer.render()
 
-		# Deleting the light with a now empty light group shouldn't affect RGBA.
+		# Deleting the light with a now empty light group still leaves the default layer.
 
 		self.assertEventually(
-			lambda : self.assertEqual( channelNames(), set( "RGBA" ) )
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_default.{c}" for c in "RGB" }
+			)
 		)
 
 		renderer.pause()
 
 		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
 
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 

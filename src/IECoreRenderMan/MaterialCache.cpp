@@ -48,6 +48,8 @@ using namespace IECoreRenderMan;
 namespace
 {
 
+const RtUString g_default( "default" );
+const RtUString g_lightGroup( "lightGroup" );
 const RtUString g_shadowSubset( "shadowSubset" );
 
 } // namespace
@@ -114,10 +116,21 @@ ConstLightShaderPtr MaterialCache::getLightShader( const IECoreScene::ShaderNetw
 	auto convert = [&] {
 
 		std::vector<riley::ShadingNode> nodes = ShaderNetworkAlgo::convert( network );
-		if( nodes.size() && !shadowSubset.Empty() )
+		if( nodes.size() )
 		{
-			nodes.back().params.SetString( g_shadowSubset, shadowSubset );
+			if( !shadowSubset.Empty() )
+			{
+				nodes.back().params.SetString( g_shadowSubset, shadowSubset );
+			}
+
+			RtUString lightGroup;
+			nodes.back().params.GetString( g_lightGroup, lightGroup );
+			if( lightGroup.Empty() )
+			{
+				nodes.back().params.SetString( g_lightGroup, g_default );
+			}
 		}
+
 		std::vector<riley::ShadingNode> filterNodes;
 		if( lightFilter )
 		{
