@@ -447,6 +447,7 @@ if env["BUILD_CACHEDIR"] != "" :
 # POSIX configuration
 ###########################################################################################
 
+gccVersion = None
 if env["PLATFORM"] != "win32" :
 
 	# DISPLAY and HOME are essential for running gaffer when generating
@@ -937,6 +938,10 @@ basePythonEnv.Append(
 	],
 
 )
+
+if gccVersion is not None and gccVersion >= [ 14, 0 ] :
+	# Avoid errors caused by `boost::python`.
+	basePythonEnv.Append( CXXFLAGS = [ "-Wno-error=maybe-uninitialized" ] )
 
 ###############################################################################################
 # Arnold configuration
