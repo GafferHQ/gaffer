@@ -107,7 +107,8 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>, public Dependency
 						boost::python::list pythonOutputs = boost::python::extract<boost::python::list>( r );
 						for( boost::python::ssize_t i = 0, e = boost::python::len( pythonOutputs ); i < e; ++i )
 						{
-							const Gaffer::Plug &p = boost::python::extract<const Gaffer::Plug &>( pythonOutputs[i] );
+							boost::python::extract<const Gaffer::Plug &> extractor( pythonOutputs[i] );
+							const Gaffer::Plug &p = extractor();
 							outputs.push_back( &p );
 						}
 						return;
