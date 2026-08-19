@@ -199,11 +199,14 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 		return "";
 	}
 
-	if( lpe.find( "L'" ) != string::npos || lpe.find( "L.'" ) != string::npos )
+	const size_t lastPrefixSeparatorPosition = lpe.find_last_of( ';' );
+	const size_t lpeStart = lastPrefixSeparatorPosition == string::npos ? 0 : lastPrefixSeparatorPosition + 1;
+
+	if( lpeStart >= lpe.size() )
 	{
 		IECore::msg(
 			IECore::Msg::Warning, "RenderManRenderer",
-			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because data \"{}\" only contains prefixes.", name.string(), output->getData() )
 		);
 		return "";
 	}
@@ -212,22 +215,46 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 	boost::replace_all( result, "{", "{{" );
 	boost::replace_all( result, "}", "}}" );
 
-	const string lightGroupBrackets = "<L.'{" + g_lightGroupArg + "}'>";
-	if( lpe.find( "<L.>" ) != string::npos )
+	if( lpe[lpeStart] == 'C' )
 	{
-		boost::replace_all( result, "<L.>", lightGroupBrackets );
-	}
-	else if( lpe.find( "L" ) != string::npos )
-	{
-		boost::replace_all( result, "L", lightGroupBrackets );
+		const string lightGroupBrackets = "<L.'{" + g_lightGroupArg + "}'>";
+		if( lpe.find( "L'" ) != string::npos || lpe.find( "L.'" ) != string::npos )
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+			);
+			return "";
+		}
+
+		if( lpe.find( "<L.>" ) != string::npos )
+		{
+			boost::replace_all( result, "<L.>", lightGroupBrackets );
+		}
+		else if( lpe.find( "L" ) != string::npos )
+		{
+			boost::replace_all( result, "L", lightGroupBrackets );
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
+			);
+			return "";
+		}
 	}
 	else
 	{
-		IECore::msg(
-			IECore::Msg::Warning, "RenderManRenderer",
-			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
-		);
-		return "";
+		if( lpe.find( "_" ) != string::npos )
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+			);
+			return "";
+		}
+		result += "_{" + g_lightGroupArg + "}";
 	}
 
 	return result;
