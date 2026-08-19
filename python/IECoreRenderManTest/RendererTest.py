@@ -3298,6 +3298,42 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		shortNameDiffuseFileName = self.temporaryDirectory() / "shortNameDiffuse.exr"
+		renderer.output(
+			"perLightGroupShortNameLPE",
+			IECoreScene.Output(
+				str( shortNameDiffuseFileName ), "exr", "lpe diffuse",
+				{
+					"layerName" : "diffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		prefixedDiffuseFileName = self.temporaryDirectory() / "prefixedDiffuse.exr"
+		renderer.output(
+			"perLightGroupLPEPrefixed",
+			IECoreScene.Output(
+				str( prefixedDiffuseFileName ), "exr", "lpe unoccluded;noclamp;nothruput;C<RD>[<L.>O]",
+				{
+					"layerName" : "directDiffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		shortNamePrefixedDiffuseFileName = self.temporaryDirectory() / "shortNamePrefixedDiffuse.exr"
+		renderer.output(
+			"perLightGroupShortNameLPEPrefixed",
+			IECoreScene.Output(
+				str( shortNamePrefixedDiffuseFileName ), "exr", "lpe unoccluded;noclamp;nothruput;diffuse",
+				{
+					"layerName" : "diffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
 		sphere = renderer.object(
 			"sphere",
 			IECoreScene.SpherePrimitive(),
@@ -3364,6 +3400,24 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual(
 			set( diffuseImage.spec().channelnames ),
 			{ f"directDiffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
+		)
+
+		diffuseShortNameImage = OpenImageIO.ImageBuf( str( shortNameDiffuseFileName ) )
+		self.assertEqual(
+			set( diffuseShortNameImage.spec().channelnames ),
+			{ f"diffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
+		)
+
+		prefixedDiffuseImage = OpenImageIO.ImageBuf( str( prefixedDiffuseFileName ) )
+		self.assertEqual(
+			set( prefixedDiffuseImage.spec().channelnames ),
+			{ f"directDiffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
+		)
+
+		prefixedDiffuseShortNameImage = OpenImageIO.ImageBuf( str( shortNamePrefixedDiffuseFileName ) )
+		self.assertEqual(
+			set( prefixedDiffuseShortNameImage.spec().channelnames ),
+			{ f"diffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
 		)
 
 		# Each light group layer should only contain illumination from its own
@@ -3510,6 +3564,18 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		shortNameFileName = self.temporaryDirectory() / "shortNameDiffuse.exr"
+		renderer.output(
+			"explicitShortNameGroup",
+			IECoreScene.Output(
+				str( shortNameFileName ), "exr", "lpe diffuse_key",
+				{
+					"layerName" : "diffuse",
+					"layerPerLightGroup" : True
+				}
+			)
+		)
+
 		light = renderer.light(
 			"/light", None,
 			renderer.attributes( IECore.CompoundObject( {
@@ -3532,11 +3598,20 @@ class RendererTest( GafferTest.TestCase ) :
 		# If the LPE already specifies a light group, then
 		# `layerPerLightGroup` should be ignored with a warning.
 
-		self.assertEqual( len( messageHandler.messages ), 1 )
-		self.assertEqual( messageHandler.messages[0].message, "Ignoring \"layerPerLightGroup\" parameter on output \"explicitGroup\", because its LPE already specifies a light group." )
+		self.assertEqual( len( messageHandler.messages ), 2 )
+		self.assertEqual(
+			set( i.message for i in messageHandler.messages ),
+			{
+				"Ignoring \"layerPerLightGroup\" parameter on output \"explicitGroup\", because its LPE already specifies a light group.",
+				"Ignoring \"layerPerLightGroup\" parameter on output \"explicitShortNameGroup\", because its LPE already specifies a light group.",
+			}
+		)
 
 		image = OpenImageIO.ImageBuf( str( fileName ) )
 		self.assertEqual( set( image.spec().channelnames ), { "keyDiffuse.r", "keyDiffuse.g", "keyDiffuse.b" } )
+
+		image = OpenImageIO.ImageBuf( str( shortNameFileName ) )
+		self.assertEqual( set( image.spec().channelnames ), { "diffuse.r", "diffuse.g", "diffuse.b" } )
 
 	def testLayerPerLightGroupIgnoresIncompatibleLPE( self ) :
 
