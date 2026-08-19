@@ -37,7 +37,6 @@
 import unittest
 import unittest.mock
 import inspect
-import warnings
 
 import imath
 
@@ -122,28 +121,6 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 			script["dispatcher"]["task"].execute()
 
 		self.assertTrue( taskDataChecked )
-
-	def testPreSpoolSignalCompatibility( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["n"] = GafferDispatchTest.LoggingTaskNode()
-
-		spooled = []
-		def f( dispatcher, job ) :
-
-			spooled.append( ( dispatcher, job ) )
-
-		# Connecting a function which doesn't have the additional `taskData` argument.
-		with warnings.catch_warnings() :
-			warnings.simplefilter( "ignore", DeprecationWarning )
-			c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f, scoped = True )
-
-		dispatcher = self.__dispatcher()
-		dispatcher["tasks"][0].setInput( s["n"]["task"] )
-		dispatcher["task"].execute()
-
-		self.assertEqual( len( spooled ), 1 )
-		self.assertTrue( spooled[0][0] is dispatcher )
 
 	def testJobScript( self ) :
 

@@ -302,14 +302,6 @@ def connectToApplication( application ) :
 	application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 	GafferUI.ScriptWindow.instanceCreatedSignal().connect( __scriptWindowCreated )
 
-## \deprecated. Use `connectToApplication()` instead.
-def connect( script ) :
-
-	GafferUI.View.DisplayTransform.registerDisplayTransform(
-		"__default__", __defaultViewDisplayTransformCreator
-	)
-	__scriptAdded( script.parent(), script )
-
 def __scriptAdded( container, script ) :
 
 	hadPlug = GafferImage.OpenColorIOConfigPlug.acquireDefaultConfigPlug( script, createIfNecessary = False )

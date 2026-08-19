@@ -54,11 +54,6 @@ import GafferUI
 # these methods to update the UI to reflect the plug state. Subclasses
 # may also override `setPlugs()` to perform any necessary bookkeeping of
 # their own.
-#
-# > Note : For backwards compatibility, PlugValueWidget will also call
-# > `_updateFromPlug()` or `_updateFromPlugs()` methods if they are
-# > defined by a subclass. This is deprecated, and will be removed in
-# > a future version.
 class PlugValueWidget( GafferUI.Widget ) :
 
 	class MultiplePlugsError( ValueError ) : pass
@@ -286,9 +281,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# Sanity check `_valuesForUpdate` override.
 		assert( isinstance( inspect.getattr_static( self, "_valuesForUpdate" ), staticmethod ) )
 
-		# Trigger initial updates in the derived class. Note : we're not calling
-		# `__callLegacyUpdateMethods()` because the legacy API required the
-		# most-derived class to do the first update manually.
+		# Trigger initial updates in the derived class.
 		self._updateFromMetadata()
 		self._updateFromEditable()
 		self.__callUpdateFromValues()
@@ -387,17 +380,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 				return False
 
 		return True
-
-	## \deprecated
-	def _plugConnections( self ) :
-
-		warnings.warn( "`PlugValueWidget._plugConnections()` is deprecated. Use `_blockedUpdateFromValues()` instead", DeprecationWarning, 2 )
-
-		return (
-			self.__plugDirtiedConnections +
-			self.__plugInputChangedConnections +
-			self.__plugMetadataChangedConnections
-		)
 
 	## Called to convert the specified value into something
 	# suitable for passing to a plug.setValue() call. Returns
@@ -533,30 +515,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return menuDefinition
 
-	def __callLegacyUpdateMethods( self ) :
-
-		# Originally, PlugValueWidget used an `_updateFromPlug()` method to
-		# perform _all_ updates in one shot. Later, we added support for
-		# representing multiple plugs in one widget, and the function was
-		# renamed to `_updateFromPlugs()` (plural). Both methods are now
-		# deprecated in favour of the more granular updates provided by
-		# `_updateFromMetadata()`, `_updateFromValues()` etc. But we still
-		# support calling them if they exist.
-
-		for methodName in ( "_updateFromPlugs", "_updateFromPlug" ) :
-			updateMethod = getattr( self, methodName, None )
-			if updateMethod is not None :
-				warnings.warn( f"`PlugValueWidget.{methodName}()` is deprecated. Implement `_updateFromValues()`, `_updateFromMetadata()` and `_updateFromEditable()` instead", DeprecationWarning, 2 )
-				updateMethod()
-				return
-
 	@GafferUI.LazyMethod()
 	def __callUpdateFromValues( self ) :
 
 		if self.__class__._updateFromValues is PlugValueWidget._updateFromValues :
 			# No override for `_updateFromValues()`, so no point doing all the work
-			# of calling it. Assume the subclass must be implementing the legacy
-			# `_updateFromPlug()` method instead.
+			# of calling it.
 			return
 
 		with self.context() :
@@ -618,7 +582,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def __plugDirtied( self, plug ) :
 
 		if plug in self.__plugs :
-			self.__callLegacyUpdateMethods()
 			self.__callUpdateFromValues()
 
 	def __auxiliaryPlugDirtied( self, plug ) :
@@ -646,8 +609,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 			if Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, plug, key ) :
 				editableChanged = True
 
-		if metadataChanged or editableChanged :
-			self.__callLegacyUpdateMethods()
 		if metadataChanged :
 			self._updateFromMetadata()
 		if editableChanged :
@@ -657,7 +618,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		for p in self.__plugs :
 			if Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, nodeTypeId, key, node ) :
-				self.__callLegacyUpdateMethods()
 				self._updateFromEditable()
 				return
 
@@ -671,7 +631,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 			return
 
 		self.__lastTrackedContext = context
-		self.__callLegacyUpdateMethods()
 		self.__callUpdateFromValues()
 
 	def __setPlugsInternal( self, plugs, callUpdateMethods ) :
@@ -735,7 +694,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__updateContextConnection()
 
 		if callUpdateMethods :
-			self.__callLegacyUpdateMethods()
 			self._updateFromMetadata()
 			self._updateFromEditable()
 			self.__callUpdateFromValues()

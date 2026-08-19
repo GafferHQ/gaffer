@@ -36,11 +36,9 @@
 
 import os
 import subprocess
-import unittest
 import functools
 import itertools
 import time
-import warnings
 import inspect
 
 import IECore
@@ -230,62 +228,6 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( postCs ), 1 )
 		self.assertTrue( postCs[0][0].isSame( s["dispatcher"] ) )
 		self.assertEqual( postCs[0][1], True )
-
-	def testLegacyDispatcherSignals( self ) :
-
-		# Test legacy slots that expect an additional `nodes` argument.
-
-		preDispatchCalls = []
-		def preDispatch( dispatcher, nodes ) :
-
-			nonlocal preDispatchCalls
-			preDispatchCalls.append( [ dispatcher, nodes ] )
-
-		dispatchCalls = []
-		def dispatch( dispatcher, nodes ) :
-
-			nonlocal dispatchCalls
-			dispatchCalls.append( [ dispatcher, nodes ] )
-
-		postDispatchCalls = []
-		def postDispatch( dispatcher, nodes, success ) :
-
-			nonlocal postDispatchCalls
-			postDispatchCalls.append( [ dispatcher, nodes, success ] )
-
-		with warnings.catch_warnings() :
-
-			warnings.simplefilter( "ignore", DeprecationWarning )
-
-			preDispatchConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect(
-				preDispatch, scoped = True
-			)
-			dispatchConnection = GafferDispatch.Dispatcher.dispatchSignal().connect(
-				dispatch, scoped = True
-			)
-			postDispatchConnection = GafferDispatch.Dispatcher.postDispatchSignal().connect(
-				postDispatch, scoped = True
-			)
-
-		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingTaskNode()
-
-		s["dispatcher"] = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
-		s["dispatcher"]["task"].execute()
-
-		self.assertEqual( len( preDispatchCalls ), 1 )
-		self.assertTrue( preDispatchCalls[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( preDispatchCalls[0][1], [ s["n1"] ] )
-
-		self.assertEqual( len( dispatchCalls ), 1 )
-		self.assertTrue( dispatchCalls[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( dispatchCalls[0][1], [ s["n1"] ] )
-
-		self.assertEqual( len( postDispatchCalls ), 1 )
-		self.assertTrue( postDispatchCalls[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( postDispatchCalls[0][1], [ s["n1"] ] )
-		self.assertEqual( postDispatchCalls[0][2], True )
 
 	def testCancelDispatch( self ) :
 
@@ -996,42 +938,6 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( s["n1"].log ), len( frameList.asList() ) )
 		self.assertEqual( [ l.context.getFrame() for l in s["n1"].log ], binaryFrames.asList() )
-
-	def testLegacyFrameRange( self ) :
-
-		# This tests the compatibility shim that allows the `frameRange()`
-		# method to be passed the old `script` and `context` arguments.
-
-		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		script = Gaffer.ScriptNode()
-
-		with Gaffer.Context() as context :
-
-			# These values from the current context should be ignored,
-			# because the old method ignored convention and passed a
-			# separate context in.
-			context["frameRange:start"] = 1000
-			context["frameRange:end"] = 2000
-			context.setFrame( 100 )
-
-			# This is the context we pass in. It's not the current context.
-			# But it was used to provide the "current" frame.
-			context2 = Gaffer.Context()
-			context["frameRange:start"] = 2000
-			context["frameRange:end"] = 3000
-			context2.setFrame( 200 )
-
-			with warnings.catch_warnings() :
-
-				warnings.simplefilter( "ignore", DeprecationWarning )
-
-				dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
-				self.assertEqual( dispatcher.frameRange( script, context2 ).asList(), [ 200 ] )
-
-				# But hilariously, despite now having _two_ potential contexts to define a frame
-				# range, the old method wouldn't use either. Instead it used the script directly.
-				dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
-				self.assertEqual( dispatcher.frameRange( script, context2 ).asList(), list( range( 1, 101 ) ) )
 
 	def testPreTasksOverride( self ) :
 
