@@ -50,5 +50,6 @@ from . import SphereLevelSetUI
 from . import PointsToLevelSetUI
 from . import VolumeScatterUI
 from . import VDBInspector
+from . import LevelSetSmoothUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDBUI" )

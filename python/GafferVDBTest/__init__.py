@@ -44,3 +44,4 @@ from .SphereLevelSetTest import SphereLevelSetTest
 from .PointsToLevelSetTest import PointsToLevelSetTest
 from .VolumeScatterTest import VolumeScatterTest
 from .DeleteGridsTest import DeleteGridsTest
+from .LevelSetSmoothTest import LevelSetSmoothTest

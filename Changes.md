@@ -19,16 +19,23 @@ Breaking Changes
 1.7.x.x (relative to 1.7.0.0)
 =======
 
+Features
+--------
+
+- LevelSetSmooth : Added a new node for smoothing OpenVDB level sets.
+
 Improvements
 ------------
 
 - SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
+- NodeEditor : Scene locations can now be dropped to pin the editor to their source node. Locations may be dragged from the Viewer, AttributeEditor, LightEditor, HierarchyView and LightLinkingEditor.
 
 Fixes
 -----
 
 - LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
 - AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
+- GraphEditor : Stopped drag & dropped scene locations from navigating to private internal nodes.
 
 Documentation
 -------------
