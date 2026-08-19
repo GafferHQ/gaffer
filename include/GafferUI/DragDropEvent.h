@@ -53,10 +53,10 @@ struct GAFFERUI_API DragDropEvent : public ButtonEvent
 	explicit DragDropEvent(
 		Buttons button = None,
 		Buttons buttons = None,
-		const IECore::LineSegment3f &Line=IECore::LineSegment3f(),
+		const IECore::LineSegment3f &line = IECore::LineSegment3f( Imath::V3f( 0 ), Imath::V3f( 0 ) ),
 		Modifiers m = ModifiableEvent::None
 	)
-		:	ButtonEvent( button, buttons, Line, 0, m ), sourceGadget( nullptr ), data( nullptr ), destinationGadget( nullptr ), dropResult( false )
+		:	ButtonEvent( button, buttons, line, 0, m ), sourceGadget( nullptr ), data( nullptr ), destinationGadget( nullptr ), dropResult( false )
 	{
 	};
 

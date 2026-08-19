@@ -69,11 +69,11 @@ struct GAFFERUI_API ButtonEvent : public ModifiableEvent
 	explicit ButtonEvent(
 		Buttons button_ = None,
 		Buttons buttons_ = None,
-		const IECore::LineSegment3f &Line=IECore::LineSegment3f(),
+		const IECore::LineSegment3f &line = IECore::LineSegment3f( Imath::V3f( 0 ), Imath::V3f( 0 ) ),
 		float w = 0.0f,
 		Modifiers m = ModifiableEvent::None
 	)
-		:	ModifiableEvent( m ), button( button_ ), buttons( buttons_ ), line( Line ), wheelRotation( w )
+		:	ModifiableEvent( m ), button( button_ ), buttons( buttons_ ), line( line ), wheelRotation( w )
 	{
 	};
 

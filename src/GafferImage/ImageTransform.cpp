@@ -607,7 +607,7 @@ unsigned ImageTransform::operation( Imath::M33f &matrix, Imath::M33f &resampleMa
 		matrix = inTransformPlug()->getValue() * matrix;
 	}
 
-	V2f scale, translate;
+	V2f scale( 1 ), translate( 0 );
 	float shear = 0, rotate = 0;
 	extractSHRT( matrix, scale, shear, rotate, translate );
 

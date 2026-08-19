@@ -1066,7 +1066,7 @@ const GafferScene::SceneAlgo::History *Inspector::HistoryPath::history( const IE
 	{
 		return nullptr;
 	}
-	size_t index;
+	size_t index = std::numeric_limits<size_t>::max();
 	if( std::from_chars( s.data(), s.data() + s.size(), index ).ptr != s.data() + s.size() )
 	{
 		return nullptr;

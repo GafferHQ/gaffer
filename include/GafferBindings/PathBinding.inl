@@ -101,7 +101,8 @@ Gaffer::ContextPtr contextProperty( const T &p, const IECore::InternedString &na
 template<typename T>
 boost::python::object info( boost::python::object o )
 {
-	const T &p = boost::python::extract<const T &>( o );
+	boost::python::extract<const T &> e( o );
+	const T &p = e;
 	if( !p.isValid() )
 	{
 		return boost::python::object();
@@ -161,7 +162,7 @@ boost::python::object info( boost::python::object o )
 		result[it->c_str()] = propertyToPython( a );
 	}
 
-	return std::move( result );
+	return result;
 }
 
 template<typename T>

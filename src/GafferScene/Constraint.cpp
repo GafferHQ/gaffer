@@ -169,7 +169,7 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 
 		float c = 1.f;
 
-		Imath::V2f vp;
+		Imath::V2f vp( 0 ); // Initialisation only to silence compiler. `n >= 3` so loop always runs.
 		for( int j = 1; j < n; ++j )
 		{
 			vp = uvs( ( i + n - j ) % n );
@@ -177,7 +177,7 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 			c += 1.f;
 		}
 
-		Imath::V2f vn;
+		Imath::V2f vn( 0 ); // Initialisation only to silence compiler. `n >= 3` so loop always runs.
 		for( int j = 1; j < n; ++j )
 		{
 			vn = uvs( ( i + j ) % n );
