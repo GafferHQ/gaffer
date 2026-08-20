@@ -50,7 +50,9 @@
 
 #include "fmt/format.h"
 
+#include <algorithm>
 #include <condition_variable>
+#include <string_view>
 
 using namespace std;
 using namespace IECore;
@@ -92,6 +94,8 @@ const vector<InternedString> g_rejectedOutputFilterParameters = {
 	"filter",
 	"filterwidth"
 };
+
+const string g_defaultLightGroupLayer = "default";
 
 // These must be kept in sync with `startup/GafferScene/renderManOptions.py`
 // See that file for a fuller explanation of this mess.
@@ -169,6 +173,7 @@ ListType idToList( std::remove_pointer_t<decltype( ListType::ids )> &id )
 const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene::ShaderNetwork();
 
 const string g_lightGroupArg = "lightGroup";
+const string g_emissionArg = "emission";
 
 string lightGroupFormatString( const IECore::InternedString &name, const IECoreScene::Output *output )
 {
@@ -211,31 +216,72 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 		return "";
 	}
 
-	string result = lpe;
-	boost::replace_all( result, "{", "{{" );
-	boost::replace_all( result, "}", "}}" );
+	string result;
 
 	if( lpe[lpeStart] == 'C' )
 	{
 		const string lightGroupBrackets = "<L.'{" + g_lightGroupArg + "}'>";
-		if( lpe.find( "L'" ) != string::npos || lpe.find( "L.'" ) != string::npos )
+		const string emissionBrackets = "{" + g_emissionArg + "}";
+
+		result = lpe.substr( 0, lpeStart + 1 );
+
+		bool inQuotes = false;
+		bool madeSubstitution = false;
+
+		for( size_t i = lpeStart + 1, eI = lpe.size(); i < eI; ++i )
 		{
-			IECore::msg(
-				IECore::Msg::Warning, "RenderManRenderer",
-				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
-			);
-			return "";
+			if(
+				(
+					( i + 2 <= eI && string_view( lpe.data() + i, 2 ) == "L\'" ) ||
+					( i + 3 <= eI && string_view( lpe.data() + i, 3 ) == "L.\'" )
+				) &&
+				!inQuotes
+			)
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "RenderManRenderer",
+					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+				);
+				return "";
+			}
+
+			if( lpe[i] == '\'' )
+			{
+				result += lpe[i];
+				inQuotes = !inQuotes;
+			}
+			else if( i + 4 <= eI && string_view( lpe.data() + i, 4 ) == "<L.>" && !inQuotes )
+			{
+				result += lightGroupBrackets;
+				madeSubstitution = true;
+				i += 3;
+			}
+			else if( lpe[i] == 'L' && !inQuotes )
+			{
+				result += lightGroupBrackets;
+				madeSubstitution = true;
+			}
+			else if( lpe[i] == 'O' && !inQuotes )
+			{
+				// Add a token to allow `lightGroupOutput` to conditionally
+				// add the emission (O) token.
+				result += emissionBrackets;
+			}
+			else if( lpe[i] == '{' && !inQuotes )
+			{
+				result += "{{";
+			}
+			else if( lpe[i] == '}' && !inQuotes )
+			{
+				result += "}}";
+			}
+			else
+			{
+				result += lpe[i];
+			}
 		}
 
-		if( lpe.find( "<L.>" ) != string::npos )
-		{
-			boost::replace_all( result, "<L.>", lightGroupBrackets );
-		}
-		else if( lpe.find( "L" ) != string::npos )
-		{
-			boost::replace_all( result, "L", lightGroupBrackets );
-		}
-		else
+		if( !madeSubstitution )
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "RenderManRenderer",
@@ -254,7 +300,7 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 			);
 			return "";
 		}
-		result += "_{" + g_lightGroupArg + "}";
+		result = lpe + "_{" + g_lightGroupArg + "}";
 	}
 
 	return result;
@@ -262,7 +308,11 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 
 IECoreScene::ConstOutputPtr lightGroupOutput( const std::string &lightGroupFormatString, const IECoreScene::Output *output, const std::string &lightGroup )
 {
-	const string lpe = fmt::format( lightGroupFormatString, fmt::arg( g_lightGroupArg.c_str(), lightGroup ) );
+	const string lpe = fmt::format(
+		lightGroupFormatString,
+		fmt::arg( g_lightGroupArg.c_str(), lightGroup ),
+		fmt::arg( g_emissionArg.c_str(), lightGroup == g_defaultLightGroupLayer ? "O" : "" )
+	);
 
 	const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
 
