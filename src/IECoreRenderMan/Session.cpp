@@ -265,7 +265,11 @@ riley::LightShaderId Session::createLightShader( const riley::ShadingNetwork &li
 {
 	riley::LightShaderId result = riley->CreateLightShader( riley::UserId(), light, lightFilter );
 
-	if( result != riley::LightShaderId::InvalidId() && light.nodeCount )
+	const RtUString type = light.nodeCount ? light.nodes[light.nodeCount-1].name : RtUString();
+
+	// PxrPortalLight takes its light group from the dome light it's associated with
+	// in `updatePortals()`.
+	if( result != riley::LightShaderId::InvalidId() && !type.Empty() && type != g_pxrPortalLightUStr )
 	{
 		RtUString lightGroup;
 		light.nodes[light.nodeCount-1].params.GetString( g_lightGroupUStr, lightGroup );
@@ -276,7 +280,6 @@ riley::LightShaderId Session::createLightShader( const riley::ShadingNetwork &li
 		}
 	}
 
-	RtUString type = light.nodeCount ? light.nodes[light.nodeCount-1].name : RtUString();
 	if( type == g_pxrDomeLightUStr || type == g_pxrPortalLightUStr )
 	{
 		LightShaderInfo &lightShaderInfo = m_domeAndPortalShaders[result.AsUInt32()];
