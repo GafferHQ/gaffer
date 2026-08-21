@@ -4154,6 +4154,116 @@ class RendererTest( GafferTest.TestCase ) :
 					else :
 						self.assertGreater( channelValue, 0.2 )
 
+	def testLayerPerLightGroupPortal( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		beautyLayersFileName = self.temporaryDirectory() / "beautyLayers.exr"
+		renderer.output(
+			"perLightGroupRGBA",
+			IECoreScene.Output(
+				str( beautyLayersFileName ), "exr", "rgba",
+				{
+					"layerPerLightGroup" : True
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "PxrDiffuse" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		lightDome = renderer.light(
+			"/light/dome", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "dome", "lightColor" : imath.Color3f( 1, 0, 0 ), "intensity" : 100.0 }
+						)
+					},
+					output = "output"
+				),
+				"ri:visibility:camera" : IECore.BoolData( False ),
+			} ) )
+		)
+
+		frontPortal = renderer.light(
+			"/light/frontPortal", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = { "output" : IECoreScene.Shader(
+						"PxrPortalLight", "ri:light",
+						{ "lightGroup" : "bogusPortal" }
+					) },
+					output = "output"
+				),
+				"ri:visibility:camera" : IECore.BoolData( True ),
+			} ) )
+		)
+		frontPortal.transform( imath.M44f().translate( imath.V3f( 0, 0, -3 ) ).rotate( imath.V3f( 0, math.pi, 0 ) ).scale( imath.V3f( 10.0 )) )
+
+		backPortal = renderer.light(
+			"/light/backPortal", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = { "output" : IECoreScene.Shader(
+						"PxrPortalLight", "ri:light",
+						{ "lightGroup" : "bogusPortal2" }
+					) },
+					output = "output"
+				),
+				"ri:visibility:camera" : IECore.BoolData( True ),
+			} ) )
+		)
+		backPortal.transform( imath.M44f().translate( imath.V3f( 0, 0, 3 ) ) )
+
+		renderer.render()
+		del sphere, lightDome, frontPortal, backPortal
+		del renderer
+
+		beautyLayersImage = OpenImageIO.ImageBuf( str( beautyLayersFileName ) )
+		self.assertEqual(
+			set( beautyLayersImage.spec().channelnames ),
+			{ f"RGBA_{g}.{c}" for g in ( "dome", "default" ) for c in "rgb" }
+		)
+
+		layerChannelIndices = { c : i for i, c in enumerate( beautyLayersImage.spec().channelnames ) }
+		layersMidPixel = beautyLayersImage.getpixel( 320, 240 )
+		layersTopLeftPixel = beautyLayersImage.getpixel( 0, 0 )
+
+		# Illuminated from the back portal
+		self.assertGreater( layersMidPixel[layerChannelIndices["RGBA_dome.r"]], 0.2 )
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_dome.g"]], 0.0, delta = 0.001 )
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_dome.b"]], 0.0, delta = 0.001 )
+		# And black in the background.
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_dome.r"]], 0, delta = 0.001 )
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_dome.g"]], 0, delta = 0.001 )
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_dome.b"]], 0, delta = 0.001 )
+
+		# Default layer gets nothing on the sphere.
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_default.r"]], 0.0, delta = 0.001 )
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_default.g"]], 0.0, delta = 0.001 )
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_default.b"]], 0.0, delta = 0.001 )
+		# And emission from the front portal.
+		self.assertGreater( layersTopLeftPixel[layerChannelIndices["RGBA_default.r"]], 0.2 )
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_default.g"]], 0, delta = 0.001 )
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_default.b"]], 0, delta = 0.001 )
+
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
