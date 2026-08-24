@@ -604,6 +604,24 @@ class Shader::NetworkBuilder
 			{
 				hashSplineParameterComponentConnections< SplinefColor4fPlug >( (const SplinefColor4fPlug*)parameter, h );
 			}
+			else if ( (Gaffer::TypeId)parameter->typeId() == ArrayPlugTypeId )
+			{
+				int i = 0; 
+				for ( Plug::InputIterator it( parameter ); !it.done(); ++it, ++i )
+				{
+					hashParameterComponentConnections( it->get(), h );
+				}
+			}
+			else
+			{
+				OptionalScopedContext parameterContext;
+				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter, parameterContext );
+				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				{
+					parameterHashForPlug( effectiveParameter, h );
+					h.append( parameter->getName() );
+				}
+			}
 		}
 
 		template< typename T >
@@ -694,6 +712,7 @@ class Shader::NetworkBuilder
 			}
 			else
 			{
+				// handling of array children that do not have components
 				OptionalScopedContext parameterContext;
 				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter, parameterContext );
 				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
