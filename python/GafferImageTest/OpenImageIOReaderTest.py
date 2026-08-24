@@ -71,10 +71,17 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testInternalImageSpaceConversion( self ) :
 
-		r = IECore.Reader.create( str( self.negativeDataWindowFileName ) )
-		image = r.read()
-		exrDisplayWindow = image.displayWindow
-		exrDataWindow = image.dataWindow
+		imageSpec = OpenImageIO.ImageInput.open( str( self.negativeDataWindowFileName ) ).spec()
+
+		exrDisplayWindow = imath.Box2i(
+			imath.V2i( imageSpec.full_x, imageSpec.full_y ),
+			imath.V2i( imageSpec.full_x + imageSpec.full_width - 1, imageSpec.full_y + imageSpec.full_height - 1 ),
+		)
+
+		exrDataWindow = imath.Box2i(
+			imath.V2i( imageSpec.x, imageSpec.y ),
+			imath.V2i( imageSpec.x + imageSpec.width - 1, imageSpec.y + imageSpec.height - 1 ),
+		)
 
 		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )
