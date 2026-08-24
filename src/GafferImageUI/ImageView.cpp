@@ -62,7 +62,6 @@
 #include "IECoreGL/Shader.h"
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/Texture.h"
-#include "IECoreGL/TextureLoader.h"
 #include "IECoreGL/ToGLTextureConverter.h"
 
 #include "IECore/NullObject.h"

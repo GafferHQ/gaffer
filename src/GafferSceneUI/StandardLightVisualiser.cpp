@@ -47,7 +47,6 @@
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/SpherePrimitive.h"
-#include "IECoreGL/TextureLoader.h"
 #include "IECoreGL/ToGLMeshConverter.h"
 
 #include "IECoreScene/MeshPrimitive.h"
