@@ -851,9 +851,12 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 		renderer.render()
 
-		image = IECoreImage.ImageReader( str( fileName ) ).read()
-		self.assertEqual( image.dataWindow, imath.Box2i( imath.V2i( 500, 250 ), imath.V2i( 1499, 749 ) ) )
-		self.assertEqual( image.displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 1999, 999 ) ) )
+		imageSpec = OpenImageIO.ImageInput.open( str( fileName ) ).spec()
+		self.assertEqual( ( imageSpec.x, imageSpec.y ), ( 500, 250 ) )
+		self.assertEqual( ( imageSpec.width, imageSpec.height ), ( 1000, 500 ) )
+
+		self.assertEqual( ( imageSpec.full_x, imageSpec.full_y ), ( 0, 0 ) )
+		self.assertEqual( ( imageSpec.full_width, imageSpec.full_height ), ( 2000, 1000 ) )
 
 	def testPointsWithNormals( self ) :
 
