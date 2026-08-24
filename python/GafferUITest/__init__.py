@@ -135,6 +135,7 @@ from .AnnotationsGadgetTest import AnnotationsGadgetTest
 from .PopupWindowTest import PopupWindowTest
 from .ColorChooserTest import ColorChooserTest
 from .ContextTrackerTest import ContextTrackerTest
+from .ArrayDataWidgetTest import ArrayDataWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

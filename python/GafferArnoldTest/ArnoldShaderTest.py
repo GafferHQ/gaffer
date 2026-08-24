@@ -989,5 +989,29 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 			ignoreBlindData = True
 		)
 
+	def testArrayConnections ( self ):
+
+		ramp = GafferArnold.ArnoldShader("ramp")
+		ramp.loadShader( "ramp_rgb" )
+		ramp['parameters']['position'].resize(2)
+		ramp['parameters']['color'].resize(2)
+		ramp['parameters']['interpolation'].resize(2)
+
+		userDataRgb = GafferArnold.ArnoldShader()
+		userDataRgb.loadShader("user_data_rgb")
+
+		userDataFloat = GafferArnold.ArnoldShader()
+		userDataFloat.loadShader( "user_data_float" )
+
+		ramp['parameters']['position'][1].setInput(userDataFloat['out'])
+		ramp['parameters']['color'][1].setInput(userDataRgb['out'])
+
+		n = ramp.attributes()
+
+		self.assertTrue( ramp["parameters"]["color"][1].acceptsInput( userDataRgb["out"] ) )
+		self.assertTrue( ramp["parameters"]["position"][1].acceptsInput( userDataFloat["out"] ) )
+		# 3 RGB connections and 1 float connection
+		self.assertTrue(len(n["ai:surface"].inputConnections("ramp")) == 4)
+
 if __name__ == "__main__":
 	unittest.main()
