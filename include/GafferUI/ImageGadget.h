@@ -39,8 +39,6 @@
 
 #include "GafferUI/Gadget.h"
 
-#include "IECoreGL/TextureLoader.h"
-
 #include "IECoreImage/ImagePrimitive.h"
 
 namespace IECoreGL

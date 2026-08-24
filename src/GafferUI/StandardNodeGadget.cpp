@@ -60,6 +60,8 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "IECoreGL/Texture.h"
+
 #include "IECore/MessageHandler.h"
 
 #include "Imath/ImathBoxAlgo.h"

@@ -40,7 +40,6 @@
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreGL/Texture.h"
-#include "IECoreGL/TextureLoader.h"
 #include "IECoreGL/ToGLTextureConverter.h"
 
 #include "IECore/Exception.h"
