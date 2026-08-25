@@ -668,7 +668,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 				r"\(Permission denied\)" if os.name != "nt" else r"\(No such file or directory\)"
 			)
 		) :
-			GafferImage.ImageAlgo.image( s["c"]["out"] )
+			GafferImageTest.processTiles( s["c"]["out"] )
 
 	def testDeleteKeepsOrder( self ) :
 

@@ -51,7 +51,6 @@ class SelectViewTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 
-
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( self.__rgbFilePath )
 		constant1 = GafferImage.Constant()
@@ -77,18 +76,11 @@ class SelectViewTest( GafferImageTest.ImageTestCase ) :
 		selectView = GafferImage.SelectView()
 		selectView["in"].setInput( createViews["out"] )
 
-
 		self.assertEqual( selectView["out"].viewNames(), IECore.StringVectorData( [ "default" ] ) )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( selectView["out"], "default" ),
-			GafferImage.ImageAlgo.image( reader["out"], "default" )
-		)
+		self.assertImagesEqual( selectView["out"], reader["out"] )
 
 		selectView["view"].setValue( "right" )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( selectView["out"], "default" ),
-			GafferImage.ImageAlgo.image( constant1["out"], "default" )
-		)
+		self.assertImagesEqual( selectView["out"], constant1["out"] )
 
 		selectView["view"].setValue( "undeclared" )
 		with self.assertRaisesRegex( Gaffer.ProcessException, ".*View does not exist \"undeclared\""):
@@ -98,25 +90,13 @@ class SelectViewTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( selectView["out"].viewNames(), IECore.StringVectorData( [ "default" ] ) )
 		selectView["view"].setValue( "left" )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( selectView["out"], "default" ),
-			GafferImage.ImageAlgo.image( reader["out"], "default" )
-		)
+		self.assertImagesEqual( selectView["out"], reader["out"] )
 
 		selectView["view"].setValue( "right" )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( selectView["out"], "default" ),
-			GafferImage.ImageAlgo.image( constant1["out"], "default" )
-		)
+		self.assertImagesEqual( selectView["out"], constant1["out"] )
 
 		selectView["view"].setValue( "default" )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( selectView["out"], "default" ),
-			GafferImage.ImageAlgo.image( constant2["out"], "default" )
-		)
+		self.assertImagesEqual( selectView["out"], constant2["out"] )
 
 		selectView["view"].setValue( "undeclared" )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( selectView["out"], "default" ),
-			GafferImage.ImageAlgo.image( constant2["out"], "default" )
-		)
+		self.assertImagesEqual( selectView["out"], constant2["out"] )

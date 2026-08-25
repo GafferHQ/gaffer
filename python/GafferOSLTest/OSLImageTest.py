@@ -88,7 +88,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		# we haven't connected the shader yet, so the node should act as a pass through
 
-		self.assertEqual( GafferImage.ImageAlgo.image( image["out"] ), GafferImage.ImageAlgo.image( shuffle["out"] ) )
+		self.assertImagesEqual( image["out"], shuffle["out"], ignoreChannelNamesOrder = True )
 
 		# that should all change when we hook up a shader
 
@@ -129,7 +129,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 				"out.channelData", "__affectedChannels", "out.channelNames", "out"
 		] )
 
-		inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
+		inputTiles = GafferImage.ImageAlgo.tiles( shuffle["out"] )
 
 		with Gaffer.ContextMonitor( image["__shading"] ) as monitor :
 			self.assertEqual( image["out"].channelNames(), IECore.StringVectorData( [ "A", "B", "G", "R", "unchangedR" ] ) )
@@ -148,12 +148,12 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		# Should only need one shading evaluate for all channels
 		self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 1 )
 
-		outputImage = GafferImage.ImageAlgo.image( image["out"] )
+		outputTiles = GafferImage.ImageAlgo.tiles( image["out"] )
 
-		self.assertNotEqual( inputImage, outputImage )
-		self.assertEqual( outputImage["R"], inputImage["B"] )
-		self.assertEqual( outputImage["G"], inputImage["G"] )
-		self.assertEqual( outputImage["B"], inputImage["R"] )
+		self.assertNotEqual( inputTiles, outputTiles )
+		self.assertEqual( outputTiles["R"], inputTiles["B"] )
+		self.assertEqual( outputTiles["G"], inputTiles["G"] )
+		self.assertEqual( outputTiles["B"], inputTiles["R"] )
 
 		# changes in the shader network should signal more dirtiness
 
@@ -170,14 +170,14 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		] )
 
 
-		inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
-		outputImage = GafferImage.ImageAlgo.image( image["out"] )
+		inputTiles = GafferImage.ImageAlgo.tiles( shuffle["out"] )
+		outputTiles = GafferImage.ImageAlgo.tiles( image["out"] )
 
-		self.assertEqual( outputImage["R"], inputImage["R"] )
-		self.assertEqual( outputImage["G"], inputImage["R"] )
-		self.assertEqual( outputImage["B"], inputImage["R"] )
-		self.assertEqual( outputImage["A"], inputImage["A"] )
-		self.assertEqual( outputImage["unchangedR"], inputImage["unchangedR"] )
+		self.assertEqual( outputTiles["R"], inputTiles["R"] )
+		self.assertEqual( outputTiles["G"], inputTiles["R"] )
+		self.assertEqual( outputTiles["B"], inputTiles["R"] )
+		self.assertEqual( outputTiles["A"], inputTiles["A"] )
+		self.assertEqual( outputTiles["unchangedR"], inputTiles["unchangedR"] )
 
 		image["in"].setInput( None )
 		checkDirtiness( [
@@ -279,12 +279,13 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		image["in"].setInput( reader["out"] )
 		image["shader"].setInput( imageShader["out"]["out"] )
 
-		inputImage = GafferImage.ImageAlgo.image( reader["out"] )
-		outputImage = GafferImage.ImageAlgo.image( image["out"] )
+		inputTiles = GafferImage.ImageAlgo.tiles( reader["out"] )
+		outputTiles = GafferImage.ImageAlgo.tiles( image["out"] )
 
-		self.assertEqual( outputImage["R"], IECore.FloatVectorData( [ 0 ] * inputImage["R"].size() ) )
-		self.assertEqual( outputImage["G"], inputImage["G"] )
-		self.assertEqual( outputImage["B"], inputImage["B"] )
+		self.assertEqual( outputTiles["G"], inputTiles["G"] )
+		self.assertEqual( outputTiles["B"], inputTiles["B"] )
+		for tile in outputTiles["R"] :
+			self.assertEqual( tile, IECore.FloatVectorData( [ 0 ] * GafferImage.ImagePlug.tileSize() ** 2 ) )
 
 	def testPassThrough( self ) :
 
@@ -428,14 +429,21 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		oslImageDeep["channels"]["channel"]["value"].setInput( multiplyAlpha["out"]["out"] )
 
-		outImage = GafferImage.ImageAlgo.image( postFlatten["out"] )
-		size = outImage.dataWindow.size() + imath.V2i( 1 )
-		i = 0
-		for y in range( size.y ):
-			for x in range( size.x ):
-				self.assertAlmostEqual( outImage["R"][i], (x + 0.5) / size.x * outImage["A"][i], places = 5 )
-				self.assertAlmostEqual( outImage["G"][i], (size.y - y - 0.5) / size.y * outImage["A"][i], places = 5 )
-				i += 1
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( postFlatten["out"] )
+
+		size = postFlatten["out"].dataWindow().size()
+		for y in range( size.y ) :
+			for x in range( size.x ) :
+				sampler["pixel"].setValue( imath.V2f( x + 0.5, y + 0.5 ) )
+				self.assertAlmostEqual(
+					sampler["color"]["r"].getValue(),
+					(x + 0.5) / size.x * sampler["color"]["a"].getValue(), places = 5
+				)
+				self.assertAlmostEqual(
+					sampler["color"]["g"].getValue(),
+					(y + 0.5) / size.y * sampler["color"]["a"].getValue(), places = 5
+				)
 
 	def testGlobals( self ) :
 
@@ -538,7 +546,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		oslImage["shader"].setInput( outImage["out"]["out"] )
 
 		with Gaffer.PerformanceMonitor() as pm :
-			GafferImage.ImageAlgo.image( oslImage["out"] )
+			GafferImageTest.processTiles( oslImage["out"] )
 
 		# Because the shader doesn't use any input channels,
 		# the OSLImage node shouldn't have needed to pull on
@@ -580,26 +588,33 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 	def testAllTypes( self ) :
 
 		i = GafferOSL.OSLImage()
-		i["defaultFormat"].setValue( GafferImage.Format( imath.Box2i( imath.V2i(0), imath.V2i( 5 ) ) ) )
+		i["defaultFormat"].setValue(
+			GafferImage.Format(
+				imath.Box2i( imath.V2i( 0 ), imath.V2i( GafferImage.ImagePlug.tileSize() ) )
+			)
+		)
 
 		i["channels"].addChild( Gaffer.NameValuePlug( "", imath.Color3f(1,3,5) ) )
 		i["channels"].addChild( Gaffer.NameValuePlug( "testFloat", 42.42 ) )
 		i["channels"].addChild( Gaffer.NameValuePlug( "testColor", imath.Color3f(12,13,14) ) )
 
-		image = GafferImage.ImageAlgo.image( i['out'] )
-
-		self.assertEqual( image["R"], IECore.FloatVectorData( [1]*25 ) )
-		self.assertEqual( image["G"], IECore.FloatVectorData( [3]*25 ) )
-		self.assertEqual( image["B"], IECore.FloatVectorData( [5]*25 ) )
-		self.assertEqual( image["testFloat"], IECore.FloatVectorData( [42.42]*25 ) )
-		self.assertEqual( image["testColor.R"], IECore.FloatVectorData( [12]*25 ) )
-		self.assertEqual( image["testColor.G"], IECore.FloatVectorData( [13]*25 ) )
-		self.assertEqual( image["testColor.B"], IECore.FloatVectorData( [14]*25 ) )
+		numPixels = GafferImage.ImagePlug.tileSize() ** 2
+		self.assertEqual( i["out"].channelData( "R", imath.V2i( 0 ) ), IECore.FloatVectorData( [1] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "G", imath.V2i( 0 ) ), IECore.FloatVectorData( [3] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "B", imath.V2i( 0 ) ), IECore.FloatVectorData( [5] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "testFloat", imath.V2i( 0 ) ), IECore.FloatVectorData( [42.42] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "testColor.R", imath.V2i( 0 ) ), IECore.FloatVectorData( [12] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "testColor.G", imath.V2i( 0 ) ), IECore.FloatVectorData( [13] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "testColor.B", imath.V2i( 0 ) ), IECore.FloatVectorData( [14] * numPixels ) )
 
 	def testClosure( self ) :
 
 		i = GafferOSL.OSLImage()
-		i["defaultFormat"].setValue( GafferImage.Format( imath.Box2i( imath.V2i(0), imath.V2i( 5 ) ) ) )
+		i["defaultFormat"].setValue(
+			GafferImage.Format(
+				imath.Box2i( imath.V2i( 0 ), imath.V2i( GafferImage.ImagePlug.tileSize() ) )
+			)
+		)
 		i["channels"].addChild( Gaffer.NameValuePlug( "testClosure", GafferOSL.ClosurePlug() ) )
 
 		code = GafferOSL.OSLCode( "OSLCode" )
@@ -608,11 +623,11 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		i["channels"][0]["value"].setInput( code["out"]["output1"] )
 
-		image = GafferImage.ImageAlgo.image( i['out'] )
-		self.assertEqual( image["blah.R"], IECore.FloatVectorData( [0.1]*25 ) )
-		self.assertEqual( image["blah.G"], IECore.FloatVectorData( [0.2]*25 ) )
-		self.assertEqual( image["blah.B"], IECore.FloatVectorData( [0.3]*25 ) )
-		self.assertEqual( image["foo"], IECore.FloatVectorData( [0.5]*25 ) )
+		numPixels = GafferImage.ImagePlug.tileSize() ** 2
+		self.assertEqual( i["out"].channelData( "blah.R", imath.V2i( 0 ) ), IECore.FloatVectorData( [0.1] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "blah.G", imath.V2i( 0 ) ), IECore.FloatVectorData( [0.2] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "blah.B", imath.V2i( 0 ) ), IECore.FloatVectorData( [0.3] * numPixels ) )
+		self.assertEqual( i["out"].channelData( "foo", imath.V2i( 0 ) ), IECore.FloatVectorData( [0.5] * numPixels ) )
 
 	def testUndo( self ) :
 
@@ -660,7 +675,6 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( oslImage["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 5, 5 ) ) )
 		self.assertEqual( oslImage["out"]["format"].getValue().getDisplayWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 5, 5 ) ) )
-		self.assertEqual( GafferImage.ImageAlgo.image( oslImage["out"] )["G"], IECore.FloatVectorData( [0.6] * 25 ) )
 
 		oslImage["in"].setInput( constant["out"] )
 
@@ -670,7 +684,6 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i(0), imath.V2i( 4 ) ) ) )
 		self.assertEqual( oslImage["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 4, 4 ) ) )
 		self.assertEqual( oslImage["out"]["format"].getValue().getDisplayWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 4, 4 ) ) )
-		self.assertEqual( GafferImage.ImageAlgo.image( oslImage["out"] )["G"], IECore.FloatVectorData( [0.6] * 16 ) )
 
 	# Extreme example of doing something very expensive in OSLImage
 	def mandelbrotNode( self ):
@@ -815,11 +828,11 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value" ), True, "channel" ) )
 		oslImage["channels"]["channel"]["value"].setInput( floatToColor["out"]["c"] )
 
-		GafferImage.ImageAlgo.image( constant["out"] )
+		GafferImageTest.processTiles( constant["out"] )
 
 		# Run the fastest possible OSLImage on lots of tiles, to highlight any constant overhead
 		with GafferTest.TestRunner.PerformanceScope() :
-			GafferImage.ImageAlgo.image( oslImage["out"] )
+			GafferImageTest.processTiles( oslImage["out"] )
 
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1)
 	def testCollaboratePerf( self ) :
@@ -850,7 +863,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		resize["filter"].setValue( 'box' )
 
 		with GafferTest.TestRunner.PerformanceScope() :
-			GafferImage.ImageAlgo.image( resize["out"] )
+			GafferImageTest.processTiles( resize["out"] )
 
 	def testOSLSplineMatch( self ):
 

@@ -92,13 +92,13 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 			with script.context() :
 
 				script.context().setFrame( f )
-				c0 = GafferImage.ImageAlgo.image( script["constant"]["out"], viewName = "default" )
+				c0 = GafferImage.ImageAlgo.tiles( script["constant"]["out"], viewName = "default" )
 				c0Hash = GafferImage.ImageAlgo.imageHash( script["constant"]["out"], viewName = "default" )
-				t = GafferImage.ImageAlgo.image( script["timeWarp"]["out"], viewName = "default" )
+				t = GafferImage.ImageAlgo.tiles( script["timeWarp"]["out"], viewName = "default" )
 				tHash = GafferImage.ImageAlgo.imageHash( script["timeWarp"]["out"], viewName = "default" )
 
 				script.context().setFrame( f + 1 )
-				c1 = GafferImage.ImageAlgo.image( script["constant"]["out"], viewName = "default" )
+				c1 = GafferImage.ImageAlgo.tiles( script["constant"]["out"], viewName = "default" )
 				c1Hash = GafferImage.ImageAlgo.imageHash( script["constant"]["out"], viewName = "default" )
 
 			self.assertEqual( c1, t )
@@ -155,9 +155,9 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 
 		with script.context() :
 
-			c = GafferImage.ImageAlgo.image( script["constant"]["out"], viewName = "default" )
+			c = GafferImage.ImageAlgo.tiles( script["constant"]["out"], viewName = "default" )
 			cHash = GafferImage.ImageAlgo.imageHash( script["constant"]["out"], viewName = "default" )
-			t = GafferImage.ImageAlgo.image( script["timeWarp"]["out"], viewName = "default" )
+			t = GafferImage.ImageAlgo.tiles( script["timeWarp"]["out"], viewName = "default" )
 			tHash = GafferImage.ImageAlgo.imageHash( script["timeWarp"]["out"], viewName = "default" )
 
 		self.assertNotEqual( c, t )
@@ -167,9 +167,9 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 
 		with script.context() :
 
-			c = GafferImage.ImageAlgo.image( script["constant"]["out"], viewName = "default" )
+			c = GafferImage.ImageAlgo.tiles( script["constant"]["out"], viewName = "default" )
 			cHash = GafferImage.ImageAlgo.imageHash( script["constant"]["out"], viewName = "default" )
-			t = GafferImage.ImageAlgo.image( script["timeWarp"]["out"], viewName = "default" )
+			t = GafferImage.ImageAlgo.tiles( script["timeWarp"]["out"], viewName = "default" )
 			tHash = GafferImage.ImageAlgo.imageHash( script["timeWarp"]["out"], viewName = "default" )
 
 		self.assertEqual( c, t )

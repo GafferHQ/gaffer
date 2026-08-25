@@ -65,12 +65,12 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		o["fileName"].setValue( self.lut )
 		o["interpolation"].setValue( GafferImage.LUT.Interpolation.Linear )
 
-		forward = GafferImage.ImageAlgo.image( o["out"] )
-		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), forward )
+		forward = GafferImage.ImageAlgo.tiles( o["out"] )
+		self.assertNotEqual( GafferImage.ImageAlgo.tiles( n["out"] ), forward )
 
 		o["direction"].setValue( GafferImage.OpenColorIOTransform.Direction.Inverse )
-		inverse = GafferImage.ImageAlgo.image( o["out"] )
-		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), inverse )
+		inverse = GafferImage.ImageAlgo.tiles( o["out"] )
+		self.assertNotEqual( GafferImage.ImageAlgo.tiles( n["out"] ), inverse )
 		self.assertNotEqual( forward, inverse )
 
 	def testBadFileName( self ) :
@@ -92,7 +92,7 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		o["in"].setInput( n["out"] )
 		o["fileName"].setValue( self.lut )
 
-		image = GafferImage.ImageAlgo.image( o["out"] )
+		image = GafferImage.ImageAlgo.tiles( o["out"] )
 
 		log = []
 		def loggingFunction( message ) :
@@ -103,7 +103,7 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 			o["interpolation"].setValue( GafferImage.LUT.Interpolation.Tetrahedral )
 			# Bad interpolations fall back to the default interpolation, but
 			# also emit a warning message.
-			self.assertEqual( GafferImage.ImageAlgo.image( o["out"] ), image )
+			self.assertEqual( GafferImage.ImageAlgo.tiles( o["out"] ), image )
 		finally :
 			PyOpenColorIO.ResetToDefaultLoggingFunction()
 
@@ -128,7 +128,7 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 
 		o["fileName"].setValue( self.lut )
 
-		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
+		self.assertImagesNotEqual( n["out"], o["out"] )
 
 		o["enabled"].setValue( False )
 
