@@ -134,7 +134,9 @@ vector<InstanceAttributeFunction> createInstanceAttributeFunctions( const PointI
 
 			primitiveVariable.data.get(),
 
-			[&]( auto typedData ) -> void {
+			/// \todo Drop explicit capture of structured bindings
+			/// when we're on C++20.
+			[&, &name=name, &primitiveVariable=primitiveVariable]( auto typedData ) -> void {
 
 				using DataType = remove_const_t<remove_pointer_t<decltype( typedData )>>;
 				if constexpr( TypeTraits::IsVectorTypedData<DataType>::value )

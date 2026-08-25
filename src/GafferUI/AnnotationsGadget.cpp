@@ -52,6 +52,7 @@
 
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/Selector.h"
+#include "IECoreGL/Texture.h"
 #include "IECoreGL/ToGLCameraConverter.h"
 
 #include "boost/algorithm/string/predicate.hpp"
