@@ -67,7 +67,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o["inputSpace"].setValue( "scene_linear" )
 		o["outputSpace"].setValue( "color_picking" )
 
-		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
+		self.assertImagesNotEqual( n["out"], o["out"] )
 
 	def testHashPassThrough( self ) :
 
@@ -83,7 +83,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o["inputSpace"].setValue( "scene_linear" )
 		o["outputSpace"].setValue( "color_picking" )
 
-		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
+		self.assertImagesNotEqual( n["out"], o["out"] )
 
 		o["enabled"].setValue( False )
 

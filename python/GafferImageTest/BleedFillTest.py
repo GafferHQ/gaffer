@@ -74,13 +74,10 @@ class BleedFillTest( GafferImageTest.ImageTestCase ) :
 		# Test passthrough
 		bleedFill["enabled"].setValue( False )
 
-		self.assertEqual( GafferImage.ImageAlgo.imageHash( bleedFill["out"] ), GafferImage.ImageAlgo.imageHash( c["out"] ) )
-		self.assertEqual( GafferImage.ImageAlgo.image( bleedFill["out"] ), GafferImage.ImageAlgo.image( c["out"] ) )
+		self.assertImageHashesEqual( bleedFill["out"], c["out"] )
+		self.assertImagesEqual( bleedFill["out"], c["out"] )
 
 		bleedFill["enabled"].setValue( True )
-
-		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( bleedFill["out"] ), GafferImage.ImageAlgo.imageHash( c["out"] ) )
-		self.assertNotEqual( GafferImage.ImageAlgo.image( bleedFill["out"] ), GafferImage.ImageAlgo.image( c["out"] ) )
 
 		def sample( position ) :
 			sampler = GafferImage.Sampler(

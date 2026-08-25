@@ -703,10 +703,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w"] = GafferImage.ImageWriter()
 		s["w"]["in"].setInput( s["c"]["out"] )
 
-		ci = GafferImage.ImageAlgo.image( s["c"]["out"] )
-		wi = GafferImage.ImageAlgo.image( s["w"]["out"] )
-
-		self.assertEqual( ci, wi )
+		self.assertImagesEqual( s["w"]["out"], s["c"]["out"] )
 
 	def testPassThroughSerialisation( self ) :
 

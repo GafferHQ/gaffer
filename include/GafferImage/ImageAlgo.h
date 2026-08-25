@@ -183,12 +183,7 @@ void parallelGatherTiles(
 /// prefer to process just one tile at a time, but useful for testing and interoperability.
 /// If the view is not specified, it must be set in the current Context.
 
-/// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
-/// coordinate system will be converted to the OpenEXR and Cortex specification
-/// and have it's origin in the top left of it's display window with the positive
-/// Y axis pointing downwards rather than Gaffer's internal representation where
-/// the origin is in the bottom left of the display window with the Y axis
-/// ascending towards the top of the display window.
+/// \deprecated
 GAFFERIMAGE_API IECoreImage::ImagePrimitivePtr image( const ImagePlug *imagePlug, const std::string *viewName = nullptr );
 
 /// Return a hash that will vary if any aspect of the return from image( ... ) varies

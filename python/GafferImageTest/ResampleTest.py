@@ -219,8 +219,8 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		r["filter"].setValue( "sinc" )
 		r["in"].setInput( c["out"] )
 
-		i = GafferImage.ImageAlgo.image( r["out"] )
-		self.assertEqual( i["R"], IECore.FloatVectorData( [ 1.0 ] * 400 * 400 ) )
+		for tile in GafferImage.ImageAlgo.tiles( r["out"] )["R"] :
+			self.assertEqual( tile, IECore.FloatVectorData( [ 1.0 ] * GafferImage.ImagePlug.tileSize() ** 2 ) )
 
 	def testExpandDataWindow( self ) :
 

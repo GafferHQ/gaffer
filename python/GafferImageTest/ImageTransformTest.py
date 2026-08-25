@@ -66,7 +66,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t["filter"].setValue( "blackman-harris" )
 
 		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( t["out"] ), GafferImage.ImageAlgo.imageHash( t["in"] ) )
-		self.assertNotEqual( GafferImage.ImageAlgo.image( t["out"] ), GafferImage.ImageAlgo.image( t["in"] ) )
+		self.assertImagesNotEqual( t["out"], t["in"] )
 
 	def testTilesWithSameInputTiles( self ) :
 

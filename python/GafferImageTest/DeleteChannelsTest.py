@@ -156,12 +156,10 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		d["mode"].setValue( d.Mode.Keep )
 		d["channels"].setValue( "R" )
 
-		ri = GafferImage.ImageAlgo.image( r["out"] )
-		di = GafferImage.ImageAlgo.image( d["out"] )
+		self.assertEqual( set( r["out"].channelNames() ), { "R", "G", "B", "A" } )
+		self.assertEqual( d["out"].channelNames(), IECore.StringVectorData( [ "R" ] ) )
 
-		self.assertEqual( set( ri.keys() ), set( [ "R", "G", "B", "A" ] ) )
-		self.assertEqual( di.keys(), [ "R" ] )
-		self.assertEqual( di["R"], ri["R"] )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( d["out"] )["R"], GafferImage.ImageAlgo.tiles( r["out"] )["R"] )
 
 	def testPassThrough( self ) :
 

@@ -56,7 +56,7 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 		g["in"].setInput( c["out"] )
 		g["multiply"].setValue( imath.Color3f( 0.4, 0.5, 0.6 ) )
 
-		gradedImage = GafferImage.ImageAlgo.image( g["out"] )
+		gradedImage = GafferImage.ImageAlgo.tiles( g["out"] )
 
 		# not enough for both images - will cause cache thrashing
 		Gaffer.ValuePlug.setCacheMemoryLimit( 2 * g["out"].channelData( "R", imath.V2i( 0 ) ).memoryUsage() )
@@ -66,7 +66,7 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 		def grader() :
 
 			try :
-				images.append( GafferImage.ImageAlgo.image( g["out"], viewName = "default" ) )
+				images.append( GafferImage.ImageAlgo.tiles( g["out"], viewName = "default" ) )
 			except Exception as e :
 				exceptions.append( e )
 

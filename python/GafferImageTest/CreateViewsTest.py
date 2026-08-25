@@ -77,14 +77,8 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		createViews["views"]["view1"]["value"].setInput( constant1["out"] )
 
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "left", "right" ] ) )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "left" ),
-			GafferImage.ImageAlgo.image( reader["out"], "default" )
-		)
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "right" ),
-			GafferImage.ImageAlgo.image( constant1["out"], "default" )
-		)
+		self.__assertViewsEqual( createViews["out"], "left", reader["out"], "default" )
+		self.__assertViewsEqual( createViews["out"], "right", constant1["out"], "default" )
 
 		serialised = script.serialise()
 		deserialise = Gaffer.ScriptNode()
@@ -92,24 +86,14 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( createViews["out"], deserialise["CreateViews"]["out"] )
 
-
 		createViews["views"].resize( 3 )
 		createViews["views"][2]["name"].setValue( "blah" )
 		createViews["views"][2]["value"].setInput( constant2["out"] )
 
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "left", "right", "blah" ] ) )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "left" ),
-			GafferImage.ImageAlgo.image( reader["out"], "default" )
-		)
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "right" ),
-			GafferImage.ImageAlgo.image( constant1["out"], "default" )
-		)
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "blah" ),
-			GafferImage.ImageAlgo.image( constant2["out"], "default" )
-		)
+		self.__assertViewsEqual( createViews["out"], "left", reader["out"], "default" )
+		self.__assertViewsEqual( createViews["out"], "right", constant1["out"], "default" )
+		self.__assertViewsEqual( createViews["out"], "blah", constant2["out"], "default" )
 
 		serialised = script.serialise()
 		deserialise = Gaffer.ScriptNode()
@@ -126,46 +110,26 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "left", "right", "blah" ] ) )
 
 		# Test duplicate names
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "left" ),
-			GafferImage.ImageAlgo.image( reader["out"], "default" )
-		)
+		self.__assertViewsEqual( createViews["out"], "left", reader["out"], "default" )
 		createViews["views"]["view2"]["name"].setValue( "left" )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "left" ),
-			GafferImage.ImageAlgo.image( constant2["out"], "default" )
-		)
+		self.__assertViewsEqual( createViews["out"], "left", constant2["out"], "default" )
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "left", "right" ] ) )
 
 		# Test default view supplies defaults
 		createViews["views"]["view0"]["name"].setValue( "default" )
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "default", "right", "left" ] ) )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "default" ),
-			GafferImage.ImageAlgo.image( reader["out"], "default" )
-		)
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "undeclared" ),
-			GafferImage.ImageAlgo.image( reader["out"], "default" )
-		)
+		self.__assertViewsEqual( createViews["out"], "default", reader["out"], "default" )
+		self.__assertViewsEqual( createViews["out"], "undeclared", reader["out"], "default" )
+
 		createViews["views"]["view2"]["name"].setValue( "default" )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "undeclared" ),
-			GafferImage.ImageAlgo.image( constant2["out"], "default" )
-		)
+		self.__assertViewsEqual( createViews["out"], "undeclared", constant2["out"], "default" )
 		createViews["views"]["view2"]["name"].setValue( "blah" )
 
 		# Test removing view
 		del createViews["views"]["view0"]
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "right", "blah" ] ) )
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "right" ),
-			GafferImage.ImageAlgo.image( constant1["out"], "default" )
-		)
-		self.assertEqual(
-			GafferImage.ImageAlgo.image( createViews["out"], "blah" ),
-			GafferImage.ImageAlgo.image( constant2["out"], "default" )
-		)
+		self.__assertViewsEqual( createViews["out"], "right", constant1["out"], "default" )
+		self.__assertViewsEqual( createViews["out"], "blah", constant2["out"], "default" )
 
 		serialised = script.serialise()
 		deserialise = Gaffer.ScriptNode()
@@ -251,3 +215,15 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		script2.execute( script.serialise() )
 
 		assertLoadedOK( script2 )
+
+	def __assertViewsEqual( self, imageA, viewA, imageB, viewB ) :
+
+		selectA = GafferImage.SelectView()
+		selectA["in"].setInput( imageA )
+		selectA["view"].setValue( viewA )
+
+		selectB = GafferImage.SelectView()
+		selectB["in"].setInput( imageB )
+		selectB["view"].setValue( viewB )
+
+		self.assertImagesEqual( selectA["out"], selectB["out"] )
