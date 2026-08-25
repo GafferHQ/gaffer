@@ -40,6 +40,7 @@
 
 #include "IECore/DataAlgo.h"
 #include "IECore/NullObject.h"
+#include "IECore/TypeTraits.h"
 
 #include "Imath/ImathMatrixAlgo.h"
 

@@ -51,6 +51,7 @@
 #include "IECore/DataAlgo.h"
 #include "IECore/NullObject.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/TypeTraits.h"
 
 #include "boost/bind.hpp"
 

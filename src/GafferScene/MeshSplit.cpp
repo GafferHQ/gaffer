@@ -46,6 +46,7 @@
 #include "IECore/DataAlgo.h"
 #include "IECore/NullObject.h"
 #include "IECore/StringAlgo.h"
+#include "IECore/TypeTraits.h"
 
 #include "fmt/compile.h"
 #include "fmt/core.h"

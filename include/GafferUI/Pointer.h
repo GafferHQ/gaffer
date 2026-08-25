@@ -40,7 +40,7 @@
 
 #include "GafferUI/Export.h"
 
-#include "IECoreImage/ImagePrimitive.h"
+#include "Imath/ImathVec.h"
 
 namespace GafferUI
 {
