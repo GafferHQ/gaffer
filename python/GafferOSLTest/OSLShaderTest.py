@@ -999,25 +999,26 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		image = GafferOSL.OSLImage()
 		image["in"].setInput( constant["out"] )
-
 		image["shader"].setInput( n["out"]["out"] )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( image["out"] )
 
 		for interpolation in [
 			IECore.RampInterpolation.Linear,
 			IECore.RampInterpolation.CatmullRom,
 			IECore.RampInterpolation.BSpline,
 			IECore.RampInterpolation.MonotoneCubic
-			]:
+		] :
 
 			n["parameters"]["colorSpline"].setValue( IECore.RampfColor3f( points, interpolation ) )
+			evaluator = n['parameters']['colorSpline'].getValue().evaluator()
 
-			oslSamples = list( reversed( GafferImage.ImageAlgo.image( image['out'] )["R"] ) )
-
-			s = n['parameters']['colorSpline'].getValue().evaluator()
-			cortexSamples = [ s( ( i + 0.5 ) / numSamples )[0] for i in range( numSamples ) ]
-
-			for a, b in zip( oslSamples, cortexSamples ):
-				self.assertAlmostEqual( a, b, places = 4 )
+			for i in range( 0, numSamples ) :
+				sampler["pixel"].setValue( imath.V2f( 0.5, i + 0.5 ) )
+				oslSample = sampler["color"]["r"].getValue()
+				cortexSample = evaluator( ( i + 0.5 ) / numSamples )[0]
+				self.assertAlmostEqual( oslSample, cortexSample, places = 4 )
 
 	def testArrays( self ) :
 

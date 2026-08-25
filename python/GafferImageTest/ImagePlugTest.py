@@ -174,10 +174,10 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		with Gaffer.Context( Gaffer.Context.current() ) as c :
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
-			self.assertEqual( GafferImage.ImageAlgo.image( constant["out"] ).displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 99, 199 ) ) )
+			self.assertEqual( constant["out"].format(), GafferImage.Format( 100, 200 ) )
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 300 ) )
-			self.assertEqual( GafferImage.ImageAlgo.image( constant["out"] ).displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 299 ) ) )
+			self.assertEqual( constant["out"].format(), GafferImage.Format( 200, 300 ) )
 
 	def testGlobalConvenienceMethods( self ) :
 

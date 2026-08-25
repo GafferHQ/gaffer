@@ -128,13 +128,44 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertIn( "B", channelNames )
 		self.assertIn( "A", channelNames )
 
-		image = GafferImage.ImageAlgo.image( n["out"] )
-		self.assertEqual( image.blindData(), IECore.CompoundData( dict(expectedMetadata) ) )
+		self.assertEqual( n["out"].metadata(), expectedMetadata )
 
-		image2 = IECore.Reader.create( str( self.fileName ) ).read()
-		image.blindData().clear()
-		image2.blindData().clear()
-		self.assertEqual( image, image2 )
+		self.__assertEqualToImageBuf( n["out"], OpenImageIO.ImageBuf( str( self.fileName ) ) )
+
+	def __assertEqualToImageBuf( self, image, imageBuf ) :
+
+		# ImageBuf has inverted Y axis system compared to us.
+		# Account for that when comparing data and display windows.
+
+		spec = imageBuf.spec()
+		exrDisplayWindow = imath.Box2i(
+			imath.V2i( spec.full_x, spec.full_y ),
+			imath.V2i( spec.full_x + spec.full_width - 1, spec.full_y + spec.full_height - 1 ),
+		)
+
+		exrDataWindow = imath.Box2i(
+			imath.V2i( spec.x, spec.y ),
+			imath.V2i( spec.x + spec.width - 1, spec.y + spec.height - 1 ),
+		)
+
+		format = image.format()
+		self.assertEqual( format.toEXRSpace( format.getDisplayWindow() ), exrDisplayWindow )
+		self.assertEqual( format.toEXRSpace( image.dataWindow() ), exrDataWindow )
+
+		# Compare channel names.
+
+		self.assertEqual( set( image.channelNames() ), set( spec.channelnames ) )
+
+		# Compare pixels.
+
+		for channelIndex, channelName in enumerate( spec.channelnames ) :
+			sampler = GafferImage.Sampler( image, channelName, image.dataWindow() )
+			for y in range( exrDataWindow.min().y, exrDataWindow.max().y ) :
+				for x in range( exrDataWindow.min().x, exrDataWindow.max().x ) :
+					self.assertEqual(
+						imageBuf.getpixel( x, y, 0 )[channelIndex],
+						sampler.sample( x, format.fromEXRSpace( y ) )
+					)
 
 	def testNegativeDisplayWindowRead( self ) :
 
@@ -145,11 +176,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( f.getDisplayWindow(), imath.Box2i( imath.V2i( -5, -5 ), imath.V2i( 21, 21 ) ) )
 		self.assertEqual( d, imath.Box2i( imath.V2i( 2, -14 ), imath.V2i( 36, 20 ) ) )
 
-		expectedImage = IECore.Reader.create( str( self.negativeDisplayWindowFileName ) ).read()
-		outImage = GafferImage.ImageAlgo.image( n["out"] )
-		expectedImage.blindData().clear()
-		outImage.blindData().clear()
-		self.assertEqual( expectedImage, outImage )
+		self.__assertEqualToImageBuf( n["out"], OpenImageIO.ImageBuf( str( self.negativeDisplayWindowFileName ) ) )
 
 	def testNegativeDataWindow( self ) :
 
@@ -164,15 +191,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertIn( "G", channelNames )
 		self.assertIn( "B", channelNames )
 
-		image = GafferImage.ImageAlgo.image( n["out"] )
-		image2 = IECore.Reader.create( str( self.negativeDataWindowFileName ) ).read()
-
-		op = IECoreImage.ImageDiffOp()
-		res = op(
-			imageA = image,
-			imageB = image2
-		)
-		self.assertFalse( res.value )
+		self.__assertEqualToImageBuf( n["out"], OpenImageIO.ImageBuf( str( self.negativeDataWindowFileName ) ) )
 
 	def testTileSize( self ) :
 
@@ -212,13 +231,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.offsetDataWindowFileName )
 
-		image = GafferImage.ImageAlgo.image( n["out"] )
-		image2 = IECore.Reader.create( str( self.offsetDataWindowFileName ) ).read()
-
-		image.blindData().clear()
-		image2.blindData().clear()
-
-		self.assertEqual( image, image2 )
+		self.__assertEqualToImageBuf( n["out"], OpenImageIO.ImageBuf( str( self.offsetDataWindowFileName ) ) )
 
 	def testJpgRead( self ) :
 
@@ -252,16 +265,16 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( testFile )
-		image1 = GafferImage.ImageAlgo.image( reader["out"] )
+		tiles1 = GafferImage.ImageAlgo.tiles( reader["out"] )
 
 		# even though we've change the image on disk, gaffer will
 		# still have the old one in its cache.
 		shutil.copyfile( self.offsetDataWindowFileName, testFile )
-		self.assertEqual( GafferImage.ImageAlgo.image( reader["out"] ), image1 )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( reader["out"] ), tiles1 )
 
 		# until we force a refresh
 		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
-		self.assertNotEqual( GafferImage.ImageAlgo.image( reader["out"] ), image1 )
+		self.assertNotEqual( GafferImage.ImageAlgo.tiles( reader["out"] ), tiles1 )
 
 	def testNonexistentFiles( self ) :
 

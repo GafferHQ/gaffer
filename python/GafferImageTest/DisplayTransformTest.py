@@ -57,7 +57,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.imageFile )
-		orig = GafferImage.ImageAlgo.image( n["out"] )
+		orig = GafferImage.ImageAlgo.tiles( n["out"] )
 
 		o = GafferImage.DisplayTransform()
 		o["in"].setInput( n["out"] )
@@ -67,16 +67,16 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		o["display"].setValue( config.getDefaultDisplay() )
 		o["view"].setValue( config.getDefaultView( config.getDefaultDisplay() ) )
 
-		transform1 = GafferImage.ImageAlgo.image( o["out"] )
+		transform1 = GafferImage.ImageAlgo.tiles( o["out"] )
 		self.assertNotEqual( orig, transform1 )
 
 		o["view"].setValue( "Un-tone-mapped" )
-		transform2 = GafferImage.ImageAlgo.image( o["out"] )
+		transform2 = GafferImage.ImageAlgo.tiles( o["out"] )
 		self.assertNotEqual( orig, transform2 )
 		self.assertNotEqual( transform1, transform2 )
 
 		o["inputColorSpace"].setValue( "V-Log V-Gamut" )
-		transform3 = GafferImage.ImageAlgo.image( o["out"] )
+		transform3 = GafferImage.ImageAlgo.tiles( o["out"] )
 		self.assertNotEqual( orig, transform3 )
 		self.assertNotEqual( transform1, transform3 )
 		self.assertNotEqual( transform2, transform3 )
@@ -98,7 +98,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		o["view"].setValue( config.getDefaultView( config.getDefaultDisplay() ) )
 
-		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
+		self.assertImagesNotEqual( n["out"], o["out"] )
 
 		o["enabled"].setValue( False )
 

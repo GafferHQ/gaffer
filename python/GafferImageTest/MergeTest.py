@@ -536,7 +536,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		merge["in"][0].setInput( r["out"] )
 		merge["in"][1].setInput( o["out"] )
-		GafferImage.ImageAlgo.image( merge["out"] )
+		GafferImage.ImageAlgo.tiles( merge["out"] )
 
 	def testPassthroughs( self ) :
 

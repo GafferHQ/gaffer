@@ -176,16 +176,16 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( testFile )
-		image1 = GafferImage.ImageAlgo.image( reader["out"] )
+		image1 = GafferImage.ImageAlgo.tiles( reader["out"] )
 
 		# even though we've change the image on disk, gaffer will
 		# still have the old one in its cache.
 		shutil.copyfile( self.jpgFileName, testFile )
-		self.assertEqual( GafferImage.ImageAlgo.image( reader["out"] ), image1 )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( reader["out"] ), image1 )
 
 		# until we force a refresh
 		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
-		self.assertNotEqual( GafferImage.ImageAlgo.image( reader["out"] ), image1 )
+		self.assertNotEqual( GafferImage.ImageAlgo.tiles( reader["out"] ), image1 )
 
 	def testNonexistentFiles( self ) :
 
@@ -404,7 +404,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			# format and data window still match
 			self.assertEqual( reader["out"]["format"].getValue(), oiio["out"]["format"].getValue() )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), oiio["out"]["dataWindow"].getValue() )
-			self.assertNotEqual( GafferImage.ImageAlgo.image( reader["out"] ), GafferImage.ImageAlgo.image( oiio["out"] ) )
+			self.assertImagesNotEqual( reader["out"], oiio["out"] )
 			# the metadata and channel names are at the defaults
 			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
@@ -425,7 +425,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			context = Gaffer.Context( Gaffer.Context.current() )
 			context.setFrame( holdFrame )
 			with context :
-				holdImage = GafferImage.ImageAlgo.image( reader["out"] )
+				holdImage = GafferImage.ImageAlgo.tiles( reader["out"] )
 				holdFormat = reader["out"]["format"].getValue()
 				holdDataWindow = reader["out"]["dataWindow"].getValue()
 				holdMetadata = reader["out"]["metadata"].getValue()
@@ -437,7 +437,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( reader["out"]["metadata"].getValue(), holdMetadata )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), holdChannelNames )
 			self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), holdTile )
-			self.assertEqual( GafferImage.ImageAlgo.image( reader["out"] ), holdImage )
+			self.assertEqual( GafferImage.ImageAlgo.tiles( reader["out"] ), holdImage )
 
 		reader["start"]["frame"].setValue( 4 )
 		reader["end"]["frame"].setValue( 7 )

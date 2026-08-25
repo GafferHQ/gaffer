@@ -54,38 +54,38 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.imageFile )
-		orig = GafferImage.ImageAlgo.image( n["out"] )
+		orig = GafferImage.ImageAlgo.tiles( n["out"] )
 
 		o = GafferImage.CDL()
 		o["in"].setInput( n["out"] )
 
-		self.assertEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
+		self.assertImagesEqual( n["out"], o["out"] )
 
 		o['slope'].setValue( imath.Color3f( 1, 2, 3 ) )
 
-		slope = GafferImage.ImageAlgo.image( o["out"] )
+		slope = GafferImage.ImageAlgo.tiles( o["out"] )
 		self.assertNotEqual( orig, slope )
 
 		o["offset"].setValue( imath.Color3f( 1, 2, 3 ) )
-		offset = GafferImage.ImageAlgo.image( o["out"] )
+		offset = GafferImage.ImageAlgo.tiles( o["out"] )
 		self.assertNotEqual( orig, offset )
 		self.assertNotEqual( slope, offset )
 
 		o["power"].setValue( imath.Color3f( 1, 2, 3 ) )
-		power = GafferImage.ImageAlgo.image( o["out"] )
+		power = GafferImage.ImageAlgo.tiles( o["out"] )
 		self.assertNotEqual( orig, power )
 		self.assertNotEqual( slope, power )
 		self.assertNotEqual( offset, power )
 
 		o["saturation"].setValue( 0.5 )
-		saturation = GafferImage.ImageAlgo.image( o["out"] )
+		saturation = GafferImage.ImageAlgo.tiles( o["out"] )
 		self.assertNotEqual( orig, saturation )
 		self.assertNotEqual( slope, saturation )
 		self.assertNotEqual( offset, saturation )
 		self.assertNotEqual( power, saturation )
 
 		o["direction"].setValue( GafferImage.OpenColorIOTransform.Direction.Inverse ) # inverse
-		inverse = GafferImage.ImageAlgo.image( o["out"] )
+		inverse = GafferImage.ImageAlgo.tiles( o["out"] )
 		self.assertNotEqual( orig, inverse )
 		self.assertNotEqual( slope, inverse )
 		self.assertNotEqual( offset, inverse )
@@ -105,7 +105,7 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		o['slope'].setValue( imath.Color3f( 1, 2, 3 ) )
 
-		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
+		self.assertImagesNotEqual( n["out"], o["out"] )
 
 		o["enabled"].setValue( False )
 
