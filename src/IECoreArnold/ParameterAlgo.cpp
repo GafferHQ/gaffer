@@ -560,6 +560,7 @@ int parameterType( IECore::TypeId dataType, bool &array )
 			return AI_TYPE_VECTOR2;
 		case V3fVectorDataTypeId :
 		case V3iVectorDataTypeId :
+		case V3dVectorDataTypeId :
 			array = true;
 			return AI_TYPE_VECTOR;
 		case M44fVectorDataTypeId :
@@ -621,6 +622,12 @@ AtArray *dataToArray( const IECore::Data *data, int aiType )
 		AtArray *array = AiArrayAllocate( 1, 1, AI_TYPE_STRING );
 		AiArraySetStr( array, 0, val.c_str() );
 		return array;
+	}
+	else if( aiType == AI_TYPE_VECTOR && IECore::runTimeCast<const V3dVectorData>( data ) )
+	{
+		const auto &v3dVector = static_cast<const V3dVectorData *>( data )->readable();
+		vector<Imath::V3f> v3fVector( v3dVector.begin(), v3dVector.end() );
+		return AiArrayConvert( v3fVector.size(), 1, aiType, v3fVector.data() );
 	}
 
 	return AiArrayConvert( size( data ), 1, aiType, address( data ) );
