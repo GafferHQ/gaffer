@@ -46,8 +46,6 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
 
-#include "IECoreImage/ImagePrimitive.h"
-
 namespace GafferImage
 {
 

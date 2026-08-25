@@ -36,7 +36,11 @@
 
 #include "GafferUI/Pointer.h"
 
+#include "IECore/Exception.h"
+
 #include "fmt/format.h"
+
+#include <map>
 
 using namespace GafferUI;
 
