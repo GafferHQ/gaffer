@@ -972,8 +972,6 @@ class RendererTest( GafferTest.TestCase ) :
 			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
-		os.environ["OSL_SHADER_PATHS"] += os.pathsep + ( pathlib.Path( __file__ ).parent / "shaders" ).as_posix()
-
 		s = self.__compileShader( pathlib.Path( __file__ ).parent / "shaders" / "delightSplineParameters.osl" )
 
 		network = IECoreScene.ShaderNetwork(
