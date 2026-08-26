@@ -35,7 +35,7 @@
 ##########################################################################
 
 import os
-import unittest
+import unittest.mock
 import collections
 import pathlib
 
@@ -1082,15 +1082,16 @@ class ReferenceTest( GafferTest.TestCase ) :
 		searchPathA = os.pathsep.join( [boxPathA.as_posix(), boxPathB.as_posix()] )
 		searchPathB = os.pathsep.join( [boxPathB.as_posix(), boxPathA.as_posix()] )
 
-		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathA
 		s["r"] = Gaffer.Reference()
 
-		s["r"].load(referenceFile)
+		with unittest.mock.patch.dict( os.environ, { "GAFFER_REFERENCE_PATHS" : searchPathA } ) :
+			s["r"].load(referenceFile)
+
 		self.assertEqual( s["r"].fileName(), referenceFile )
 		self.assertEqual( s["r"]["p"].getValue(), "a" )
 
-		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathB
-		s["r"].load( referenceFile )
+		with unittest.mock.patch.dict( os.environ, { "GAFFER_REFERENCE_PATHS" : searchPathB } ) :
+			s["r"].load( referenceFile )
 		self.assertEqual( s["r"].fileName(), referenceFile )
 		self.assertEqual( s["r"]["p"].getValue(), "b" )
 
