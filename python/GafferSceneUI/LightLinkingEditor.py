@@ -551,11 +551,8 @@ class LightLinkingEditor( GafferSceneUI.SceneEditor ) :
 		selection.removePaths( lightFilterSelection )
 
 		# Include ancestors of lights and lightFilters in their selections
-		for path in selection.paths() :
-			if lightFilters.match( path ) & IECore.PathMatcher.Result.DescendantMatch :
-				lightFilterSelection.addPath( path )
-			if lights.match( path ) & IECore.PathMatcher.Result.DescendantMatch :
-				lightSelection.addPath( path )
+		lightFilterSelection.addPaths( selection.containing( lightFilters ) )
+		lightSelection.addPaths( selection.containing( lights ) )
 
 		return lightSelection, selection, lightFilterSelection
 
