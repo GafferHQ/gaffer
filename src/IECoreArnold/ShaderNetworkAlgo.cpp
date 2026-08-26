@@ -101,18 +101,26 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 		nodeName += ":" + outputParameter.shader.string();
 	}
 
-	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
+	const AtString shaderName( shader->getName().c_str() );
+
+	const bool isOSLShader =
+		// If the type says it's OSL, then it's definitely OSL.
+		boost::starts_with( shader->getType(), "osl:" ) ||
+		// But we're trying to wean ourselves off `Shader::getType()`,
+		// as it doesn't round-trip through USD. In this case use
+		// some heuristics : if it's not an Arnold shader then assume
+		// it's OSL.
+		( !boost::starts_with( shader->getType(), "ai:" ) && !AiNodeEntryLookUp( shaderName ) )
+	;
+
 	if( isOSLShader )
 	{
 		node = nodeCreator( g_oslArnoldString, AtString( nodeName.c_str() ) );
-		AiNodeSetStr( node, g_shaderNameArnoldString, AtString( shader->getName().c_str() ) );
+		AiNodeSetStr( node, g_shaderNameArnoldString, shaderName );
 	}
 	else
 	{
-		node = nodeCreator(
-			AtString( shader->getName().c_str() ),
-			AtString( nodeName.c_str() )
-		);
+		node = nodeCreator( shaderName, AtString( nodeName.c_str() ) );
 		if( node && AiNodeEntryGetNameAtString( AiNodeGetNodeEntry( node ) ) == g_oslArnoldString )
 		{
 			// Need to set the `code` parameter on `osl` shaders _before_ we try to set

@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import pathlib
 import inspect
 import unittest
@@ -1012,6 +1013,66 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			handler.waitFor( 0.1 ) #Just need to let the catalogue update
 
 			self.assertEqual( self.__color4fAtUV( catalogue, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0.5, 0.5, 1 ) )
+
+	def testUSDConformantOSLShaders( self ) :
+
+		# Render a simple constant OSL shader.
+
+		constant = GafferOSL.OSLShader()
+		constant.loadShader( "Surface/Constant" )
+		constant["parameters"]["Cs"].setValue( imath.Color3f( 1, 0.5, 0.25 ) )
+
+		ball = GafferArnold.ArnoldShaderBall()
+		ball["shader"].setInput( constant["out"] )
+
+		imagePath = self.temporaryDirectory() / "test.exr"
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput(
+			"beauty",
+			IECoreScene.Output( imagePath.as_posix(), "exr", "rgba", {} )
+		)
+		outputs["in"].setInput( ball["out"] )
+
+		render = GafferScene.Render()
+		render["in"].setInput( outputs["out"] )
+		render["renderer"].setValue( "Arnold" )
+		render["task"].execute()
+
+		# Check the result is as expected.
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( imagePath )
+		self.assertEqual( self.__color4fAtUV( imageReader, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0.5, 0.25, 1 ) )
+
+		# Write the scene to USD, losing the "osl:" type
+		# prefix in the process.
+
+		sceneWriter = GafferScene.SceneWriter()
+		sceneWriter["in"].setInput( ball["out"] )
+		sceneWriter["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+
+		os.environ["IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS"] = "1"
+		sceneWriter["task"].execute()
+
+		# Render using the USD.
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setInput( sceneWriter["fileName"] )
+
+		outputs["in"].setInput( sceneReader["out"] )
+		# Make sure the shader is on the path. The wrapper would have done
+		# this for us if IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS was set at
+		# the time it ran.
+		os.environ["OSL_SHADER_PATHS"] = "{}{}{}".format(
+			os.environ["OSL_SHADER_PATHS"], os.pathsep, Gaffer.rootPath() / "shaders" / "Surface"
+		)
+		render["task"].execute()
+
+		# Check we still managed to find the right shader.
+
+		imageReader["refreshCount"].setValue( 1 )
+		self.assertEqual( self.__color4fAtUV( imageReader, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0.5, 0.25, 1 ) )
 
 	def testDefaultLightsMistakesDontForceLinking( self ) :
 
