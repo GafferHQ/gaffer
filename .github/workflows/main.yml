@@ -294,14 +294,14 @@ jobs:
         RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
         RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
         RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
-      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'Windows' }}
 
     - name: Build against RenderMan 26.4
       run: |
         scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
       env:
         PYTHONUTF8: 1
-      if: ${{ env.RMANTREE != '' }}
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' }}
 
     - name: Test against RenderMan 26.4
       # See comments for RenderMan 27.1.
