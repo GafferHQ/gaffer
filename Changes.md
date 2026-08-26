@@ -12,6 +12,7 @@ Improvements
 - SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
 - NodeEditor : Scene locations can now be dropped to pin the editor to their source node. Locations may be dragged from the Viewer, AttributeEditor, LightEditor, HierarchyView and LightLinkingEditor.
 - Arnold : Added support for V3dVectorData primitive variables. These are converted to float vectors, since Arnold does not support doubles.
+- SceneReader : Added support for reading `P3d` and `N3d` GeomParams from Alembic files.
 
 Fixes
 -----
@@ -24,6 +25,11 @@ API
 ---
 
 - ImageAlgo : Deprecated `image()` method. This will be removed in Gaffer 1.8.
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.1.0.
 
 Documentation
 -------------
