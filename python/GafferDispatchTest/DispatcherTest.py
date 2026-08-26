@@ -42,6 +42,7 @@ import itertools
 import time
 import warnings
 import inspect
+import unittest.mock
 
 import IECore
 
@@ -113,8 +114,6 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		GafferDispatch.Dispatcher.registerDispatcher( "testDispatcher", functools.partial( create, self.temporaryDirectory() ) )
 
-		self.__emptyTasksOmitted = os.environ.get( "GAFFERDISPATCH_OMIT_EMPTY_TASKS" )
-
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
@@ -123,11 +122,6 @@ class DispatcherTest( GafferTest.TestCase ) :
 		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcherWithCustomPlugs" )
 
 		Gaffer.Metadata.deregisterValue( GafferDispatch.TaskList, "dispatcher:allowIsolation" )
-
-		if self.__emptyTasksOmitted is not None :
-			os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = self.__emptyTasksOmitted
-		elif "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
-			del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
 
 	def testBadJobDirectory( self ) :
 
@@ -3054,13 +3048,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			with self.subTest( omit = omit ) :
 
-				if omit is None :
-					if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
-						del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
-				else :
-					os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = str( int( omit ) )
+				with unittest.mock.patch.dict( os.environ ) as patchedEnviron :
 
-				script["dispatcher"]["task"].execute()
+					if omit is None :
+						if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in patchedEnviron :
+							del patchedEnviron["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+					else :
+						patchedEnviron["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = str( int( omit ) )
+
+					script["dispatcher"]["task"].execute()
+
 				rootBatch = script["dispatcher"].lastDispatch
 				self.assertIsNone( rootBatch.plug() )
 
@@ -3225,13 +3222,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			with self.subTest( omit = omit ) :
 
-				if omit is None :
-					if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
-						del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
-				else :
-					os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = str( int( omit ) )
+				with unittest.mock.patch.dict( os.environ ) as patchedEnviron :
 
-				script["dispatcher"]["task"].execute()
+					if omit is None :
+						if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in patchedEnviron :
+							del patchedEnviron["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+					else :
+						patchedEnviron["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = str( int( omit ) )
+
+					script["dispatcher"]["task"].execute()
+
 				rootBatch = script["dispatcher"].lastDispatch
 				self.assertIsNone( rootBatch.plug() )
 

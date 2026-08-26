@@ -172,17 +172,13 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 	def testSearchPaths( self ) :
 
-		standardShaderPaths = os.environ["OSL_SHADER_PATHS"]
-		try:
-			s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "types.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "types.osl" )
 
-			os.environ["OSL_SHADER_PATHS"] = str( pathlib.Path( s ).parent )
-			n = GafferOSL.OSLShader()
+		n = GafferOSL.OSLShader()
+		with unittest.mock.patch.dict( os.environ, { "OSL_SHADER_PATHS" : str( pathlib.Path( s ).parent ) } ) :
 			n.loadShader( pathlib.Path( s ).name )
 
-			self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
-		finally:
-			os.environ["OSL_SHADER_PATHS"] = standardShaderPaths
+		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
 
 	def testNoConnectionToParametersPlug( self ) :
 
@@ -916,15 +912,11 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "PxrSplineParameters.osl" )
 		n = GafferOSL.OSLShader()
 
-		# Temporarily override the shader paths while loading this shader ( if we load with an explicit
+		# Temporarily override the shader paths while loading this shader (if we load with an explicit
 		# file path, it won't be considered a PRMan shader, and the PRMan style splines won't load
-		# properly )
-		origShaderPaths = os.environ["OSL_SHADER_PATHS"]
-		try:
-			os.environ["OSL_SHADER_PATHS"] = str( pathlib.Path( s ).parent )
+		# properly).
+		with unittest.mock.patch.dict( os.environ, { "OSL_SHADER_PATHS" : str( pathlib.Path( s ).parent ) } ) :
 			n.loadShader( "PxrSplineParameters" )
-		finally:
-			os.environ["OSL_SHADER_PATHS"] = origShaderPaths
 
 		self.assertEqual(
 			n["parameters"].keys(),

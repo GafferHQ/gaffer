@@ -51,19 +51,6 @@ import GafferOSLTest
 
 class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
-	def setUp( self ) :
-
-		GafferOSLTest.OSLTestCase.setUp( self )
-
-		# Arrange to restore GAFFEROSL_CODE_DIRECTORY env-var, so tests
-		# are free to modify it temporarily.
-
-		oslCodeDir = os.environ.get( "GAFFEROSL_CODE_DIRECTORY" )
-		if oslCodeDir :
-			self.addCleanup( os.environ.__setitem__, "GAFFEROSL_CODE_DIRECTORY", oslCodeDir )
-		else :
-			self.addCleanup( os.environ.__delitem__, "GAFFEROSL_CODE_DIRECTORY" )
-
 	def testPlugTypes( self ) :
 
 		oslCode = GafferOSL.OSLCode()
@@ -337,16 +324,18 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		# Make an OSL shader in a specific code directory.
 
-		os.environ["GAFFEROSL_CODE_DIRECTORY"] = ( self.temporaryDirectory() / "codeDirectoryA" ).as_posix()
+		with unittest.mock.patch.dict( os.environ, { "GAFFEROSL_CODE_DIRECTORY" : ( self.temporaryDirectory() / "codeDirectoryA" ).as_posix() } ) :
 
-		s = Gaffer.ScriptNode()
+			s = Gaffer.ScriptNode()
 
-		s["o"] = GafferOSL.OSLCode()
-		s["o"]["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["o"]["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["o"]["code"].setValue( "o = i * color( u, v, 0 );")
+			s["o"] = GafferOSL.OSLCode()
+			s["o"]["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["o"]["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["o"]["code"].setValue( "o = i * color( u, v, 0 );")
 
-		self.assertTrue( self.__osoFileName( s["o"] ).startswith( os.environ["GAFFEROSL_CODE_DIRECTORY"] ) )
+			self.assertTrue( self.__osoFileName( s["o"] ).startswith( os.environ["GAFFEROSL_CODE_DIRECTORY"] ) )
+
+			shutil.rmtree( os.environ["GAFFEROSL_CODE_DIRECTORY"] )
 
 		# Now simulate the loading of that script in a different environment,
 		# with a different code directory.
@@ -354,8 +343,6 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		scriptFileName = self.temporaryDirectory() / "test.gfr"
 		s["fileName"].setValue( scriptFileName )
 		s.save()
-
-		shutil.rmtree( os.environ["GAFFEROSL_CODE_DIRECTORY"] )
 
 		env = os.environ.copy()
 		env["GAFFEROSL_CODE_DIRECTORY"] = ( self.temporaryDirectory() / "codeDirectoryB" ).as_posix()
@@ -404,27 +391,28 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 	def testShaderNotCompiledForEveryParameterAddition( self ) :
 
 		directory = self.temporaryDirectory() / "oslCode"
-		os.environ["GAFFEROSL_CODE_DIRECTORY"] = directory.as_posix()
 		self.assertFalse( directory.exists() )
 
-		# Shader is only generated when we ask for it.
+		with unittest.mock.patch.dict( os.environ, { "GAFFEROSL_CODE_DIRECTORY" : directory.as_posix() } ) :
 
-		oslCode = GafferOSL.OSLCode()
-		oslCode["parameters"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		self.assertFalse( directory.exists() )
+			# Shader is only generated when we ask for it.
 
-		self.__osoFileName( oslCode )
-		self.assertTrue( directory.exists() )
-		self.assertEqual( len( list( directory.iterdir() ) ), 1 )
+			oslCode = GafferOSL.OSLCode()
+			oslCode["parameters"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			self.assertFalse( directory.exists() )
 
-		# And is only regenerated when we ask for it again.
+			self.__osoFileName( oslCode )
+			self.assertTrue( directory.exists() )
+			self.assertEqual( len( list( directory.iterdir() ) ), 1 )
 
-		oslCode["parameters"]["j"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		oslCode["parameters"]["k"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		self.assertEqual( len( list( directory.iterdir() ) ), 1 )
+			# And is only regenerated when we ask for it again.
 
-		self.__osoFileName( oslCode )
-		self.assertEqual( len( list( directory.iterdir() ) ), 2 )
+			oslCode["parameters"]["j"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			oslCode["parameters"]["k"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			self.assertEqual( len( list( directory.iterdir() ) ), 1 )
+
+			self.__osoFileName( oslCode )
+			self.assertEqual( len( list( directory.iterdir() ) ), 2 )
 
 	def testMetadataDoesntThrowOnCodingError( self ) :
 
