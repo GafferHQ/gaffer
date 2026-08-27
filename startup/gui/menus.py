@@ -284,6 +284,7 @@ nodeMenu.append( "/Scene/Object/Quantize Primitive Variables", GafferScene.Quant
 nodeMenu.append( "/Scene/Object/Collect Primitive Variables", GafferScene.CollectPrimitiveVariables, searchText = "CollectPrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Primitive Variable Tweaks", GafferScene.PrimitiveVariableTweaks, searchText = "PrimitiveVariableTweaks" )
 nodeMenu.append( "/Scene/Object/Random Primitive Variable", GafferScene.RandomPrimitiveVariable, searchText = "RandomPrimitiveVariable" )
+nodeMenu.append( "/Scene/Object/Primitive Variable Type", GafferScene.PrimitiveVariableType, searchText = "PrimitiveVariableType" )
 nodeMenu.append( "/Scene/Object/Orientation", GafferScene.Orientation )
 nodeMenu.append( "/Scene/Object/Mesh Type", GafferScene.MeshType, searchText = "MeshType" )
 nodeMenu.append( "/Scene/Object/Points Type", GafferScene.PointsType, searchText = "PointsType" )

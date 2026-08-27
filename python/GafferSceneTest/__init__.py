@@ -207,6 +207,7 @@ from .RandomPrimitiveVariableTest import RandomPrimitiveVariableTest
 from .PointInstancerCoreTest import PointInstancerCoreTest
 from .PointInstancerTest import PointInstancerTest
 from .VisibilityQueryTest import VisibilityQueryTest
+from .PrimitiveVariableTypeTest import PrimitiveVariableTypeTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

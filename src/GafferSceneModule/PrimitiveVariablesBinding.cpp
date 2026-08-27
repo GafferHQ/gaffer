@@ -47,6 +47,7 @@
 #include "GafferScene/PrimitiveVariableExists.h"
 #include "GafferScene/PrimitiveVariables.h"
 #include "GafferScene/PrimitiveVariableTweaks.h"
+#include "GafferScene/PrimitiveVariableType.h"
 #include "GafferScene/QuantizePrimitiveVariables.h"
 #include "GafferScene/RandomPrimitiveVariable.h"
 #include "GafferScene/ResamplePrimitiveVariables.h"
@@ -135,5 +136,28 @@ void GafferSceneModule::bindPrimitiveVariables()
 		randomClass.def( "setup", &setupBinding );
 
 		Serialisation::registerSerialiser( RandomPrimitiveVariable::staticTypeId(), new RandomPrimitiveVariableSerialiser );
+	}
+
+	{
+		boost::python::scope s = GafferBindings::DependencyNodeClass<PrimitiveVariableType>();
+
+		boost::python::enum_<PrimitiveVariableType::ElementType>( "ElementType" )
+			.value( "UChar", PrimitiveVariableType::ElementType::UChar )
+			.value( "Int", PrimitiveVariableType::ElementType::Int )
+			.value( "UInt", PrimitiveVariableType::ElementType::UInt )
+			.value( "Int64", PrimitiveVariableType::ElementType::Int64 )
+			.value( "UInt64", PrimitiveVariableType::ElementType::UInt64 )
+			.value( "Half", PrimitiveVariableType::ElementType::Half )
+			.value( "Float", PrimitiveVariableType::ElementType::Float )
+			.value( "Double", PrimitiveVariableType::ElementType::Double )
+			.value( "V2i", PrimitiveVariableType::ElementType::V2i )
+			.value( "V2f", PrimitiveVariableType::ElementType::V2f )
+			.value( "V2d", PrimitiveVariableType::ElementType::V2d )
+			.value( "V3i", PrimitiveVariableType::ElementType::V3i )
+			.value( "V3f", PrimitiveVariableType::ElementType::V3f )
+			.value( "V3d", PrimitiveVariableType::ElementType::V3d )
+			.value( "Color3f", PrimitiveVariableType::ElementType::Color3f )
+			.value( "Color4f", PrimitiveVariableType::ElementType::Color4f )
+		;
 	}
 }
