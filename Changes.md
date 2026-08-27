@@ -15,6 +15,7 @@ Breaking Changes
   - Removed deprecated support for passing `script` and `context` arguments to `frameRange()` method.
     Use `with script.context()` instead.
 - TractorDispatcher : Removed deprecated support for `preSpoolSignal` slots without `taskData` arguments.
+- ImageAlgo : Removed `image()` method.
 
 1.7.x.x (relative to 1.7.0.0)
 =======

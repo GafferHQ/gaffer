@@ -59,8 +59,10 @@
 #include "fmt/format.h"
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferImage;
 using namespace GafferScene;
 
 GAFFER_NODE_DEFINE_TYPE( OpenGLShader );
@@ -74,6 +76,88 @@ IECore::InternedString g_glGeometrySource( "glGeometrySource" );
 IECore::InternedString g_glNamespacedGeometrySource( "gl:geometrySource" );
 IECore::InternedString g_glFragmentSource( "glFragmentSource" );
 IECore::InternedString g_glNamespacedFragmentSource( "gl:fragmentSource" );
+
+CompoundDataPtr textureParameterValue( const GafferImage::ImagePlug *image )
+{
+	// Find the subset of channels supported by `IECoreGL::ToGLTextureConverter`.
+
+	static std::array<std::string, 5> g_validChannelNames = { "R", "G", "B", "A", "Y" };
+
+	vector<string> textureChannelNames;
+	ConstStringVectorDataPtr imageChannelNames = image->channelNames();
+	for( const auto &channelName : imageChannelNames->readable() )
+	{
+		if( std::find( g_validChannelNames.begin(), g_validChannelNames.end(), channelName ) != g_validChannelNames.end() )
+		{
+			textureChannelNames.push_back( channelName );
+		}
+	}
+
+	if( textureChannelNames.empty() )
+	{
+		return nullptr;
+	}
+
+	// Get data and display windows, and prep CompoundData in format
+	// accepted by ToGLTextureConverter.
+
+	const auto dataWindow = image->dataWindow();
+	if( BufferAlgo::empty( dataWindow ) )
+	{
+		return nullptr;
+	}
+
+	const auto format = image->format();
+
+	CompoundDataPtr result = new CompoundData;
+	result->writable()["displayWindow"] = new Box2iData( format.toEXRSpace( format.getDisplayWindow() ) );
+	const auto cortexDataWindow = format.toEXRSpace( dataWindow );
+	result->writable()["dataWindow"] = new Box2iData( cortexDataWindow );
+
+	const size_t numPixels = dataWindow.size().x * dataWindow.size().y;
+
+	CompoundDataPtr channelsData = new CompoundData;
+	for( const auto &channelName : textureChannelNames )
+	{
+		FloatVectorDataPtr channelData = new FloatVectorData;
+		channelData->writable().resize( numPixels, 1.0f );
+		channelsData->writable()[channelName] = channelData;
+	}
+	result->writable()["channels"] = channelsData;
+
+	// Fill in channel data.
+
+	ImageAlgo::parallelProcessTiles(
+
+		image, textureChannelNames,
+
+		[&] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin ) {
+
+			const Imath::Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) );
+			const Imath::Box2i validTileBound = BufferAlgo::intersection( tileBound, dataWindow );
+
+			IECore::ConstFloatVectorDataPtr tileData = imagePlug->channelDataPlug()->getValue();
+			FloatVectorData *channelData = channelsData->member<FloatVectorData>( channelName );
+
+			for( int y = validTileBound.min.y; y < validTileBound.max.y; y++ )
+			{
+				size_t tileIndex = BufferAlgo::index( V2i( validTileBound.min.x, y ), tileBound );
+				size_t channelIndex = ( format.toEXRSpace( y ) - cortexDataWindow.min.y ) * dataWindow.size().x + ( validTileBound.min.x - cortexDataWindow.min.x );
+				std::copy(
+					tileData->readable().begin() + tileIndex,
+					tileData->readable().begin() + tileIndex + validTileBound.size().x,
+					channelData->writable().begin() + channelIndex
+				);
+			}
+
+		},
+
+		dataWindow
+
+	);
+
+	return result;
+}
 
 } // namespace
 
@@ -203,19 +287,9 @@ void OpenGLShader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::Mur
 
 IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug ) const
 {
-	if( const GafferImage::ImagePlug *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
+	if( auto *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
 	{
-		IECoreImage::ImagePrimitivePtr image = GafferImage::ImageAlgo::image( imagePlug );
-		if( image )
-		{
-			CompoundDataPtr value = new CompoundData;
-			value->writable()["displayWindow"] = new Box2iData( image->getDisplayWindow() );
-			value->writable()["dataWindow"] = new Box2iData( image->getDataWindow() );
-			CompoundDataPtr channelData = new CompoundData( CompoundDataMap( image->channels.begin(), image->channels.end() ) );
-			value->writable()["channels"] = channelData;
-			return value;
-		}
-		return nullptr;
+		return textureParameterValue( imagePlug );
 	}
 	else
 	{

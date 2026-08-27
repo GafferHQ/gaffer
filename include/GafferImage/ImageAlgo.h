@@ -183,9 +183,6 @@ void parallelGatherTiles(
 /// prefer to process just one tile at a time, but useful for testing and interoperability.
 /// If the view is not specified, it must be set in the current Context.
 
-/// \deprecated
-GAFFERIMAGE_API IECoreImage::ImagePrimitivePtr image( const ImagePlug *imagePlug, const std::string *viewName = nullptr );
-
 /// Return a hash that will vary if any aspect of the return from image( ... ) varies
 GAFFERIMAGE_API IECore::MurmurHash imageHash( const ImagePlug *imagePlug, const std::string *viewName = nullptr );
 

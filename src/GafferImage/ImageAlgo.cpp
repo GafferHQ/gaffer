@@ -55,52 +55,6 @@ using namespace GafferImage;
 namespace
 {
 
-class CopyTile
-{
-
-	public :
-
-		CopyTile(
-				const vector<float *> &imageChannelData,
-				const vector<string> &channelNames,
-				const Imath::Box2i &dataWindow
-			) :
-				m_imageChannelData( imageChannelData ),
-				m_channelNames( channelNames ),
-				m_dataWindow( dataWindow )
-		{}
-
-		void operator()( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin )
-		{
-			const Imath::Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) );
-			const Imath::Box2i b = BufferAlgo::intersection( tileBound, m_dataWindow );
-
-			const size_t imageStride = m_dataWindow.size().x;
-			const size_t tileStrideSize = sizeof(float) * b.size().x;
-
-			const int channelIndex = std::find( m_channelNames.begin(), m_channelNames.end(), channelName ) - m_channelNames.begin();
-			float *channelBegin = m_imageChannelData[channelIndex];
-
-			IECore::ConstFloatVectorDataPtr tileData = imagePlug->channelDataPlug()->getValue();
-			const float *tileDataBegin = &(tileData->readable()[0]);
-
-			for( int y = b.min.y; y < b.max.y; y++ )
-			{
-				const float *tilePtr = tileDataBegin + ( y - tileOrigin.y ) * ImagePlug::tileSize() + ( b.min.x - tileOrigin.x );
-				float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( 1 + y - m_dataWindow.min.y ) ) * imageStride + ( b.min.x - m_dataWindow.min.x );
-				std::memcpy( channelPtr, tilePtr, tileStrideSize );
-			}
-		}
-
-	private :
-
-		const vector<float *> &m_imageChannelData;
-		const vector<string> &m_channelNames;
-		const Imath::Box2i &m_dataWindow;
-
-};
-
-
 // \todo : We likely need to come up with a better general way of iterating tiles, which could
 // translate back and forth from a tileOrigin to a flat index.  This potentially be used in
 // parallelProcessTiles, and could potentially be public so that code that uses tiles() would
@@ -277,66 +231,6 @@ std::vector<std::string> ImageAlgo::sortedChannelNames( const std::vector<std::s
 	} );
 
 	return result;
-}
-
-IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *imagePlug, const std::string *viewName )
-{
-	GafferImage::ImagePlug::ViewScope viewScope( Gaffer::Context::current() );
-	if( viewName )
-	{
-		viewScope.setViewName( viewName );
-	}
-	if( !viewIsValid( viewScope.context(), imagePlug->viewNames()->readable() ) )
-	{
-		throw IECore::Exception(
-			"ImageAlgo::image() : No view \"" +
-			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) + "\""
-		);
-	}
-
-	if( imagePlug->deepPlug()->getValue() )
-	{
-		throw IECore::Exception( "ImageAlgo::image() only works on flat image data ");
-	}
-
-	Format format = imagePlug->formatPlug()->getValue();
-	Imath::Box2i dataWindow = imagePlug->dataWindowPlug()->getValue();
-	Imath::Box2i newDataWindow( Imath::V2i( 0 ) );
-
-	if( !BufferAlgo::empty( dataWindow ) )
-	{
-		newDataWindow = format.toEXRSpace( dataWindow );
-	}
-	else
-	{
-		dataWindow = newDataWindow;
-	}
-
-	Imath::Box2i newDisplayWindow = format.toEXRSpace( format.getDisplayWindow() );
-
-	IECoreImage::ImagePrimitivePtr result = new IECoreImage::ImagePrimitive( newDataWindow, newDisplayWindow );
-
-	IECore::ConstCompoundDataPtr metadata = imagePlug->metadataPlug()->getValue();
-	result->blindData()->Object::copyFrom( metadata.get() );
-
-	IECore::ConstStringVectorDataPtr channelNamesData = imagePlug->channelNamesPlug()->getValue();
-	const vector<string> &channelNames = channelNamesData->readable();
-
-	vector<float *> imageChannelData;
-	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
-	{
-		IECore::FloatVectorDataPtr cd = new IECore::FloatVectorData;
-		vector<float> &c = cd->writable();
-		c.resize( result->channelSize(), 0.0f );
-		result->channels[*it] = cd;
-		imageChannelData.push_back( &(c[0]) );
-	}
-
-	CopyTile copyTile( imageChannelData, channelNames, dataWindow );
-	ImageAlgo::parallelProcessTiles( imagePlug, channelNames, copyTile, dataWindow );
-
-	return result;
-
 }
 
 IECore::MurmurHash GafferImage::ImageAlgo::imageHash( const ImagePlug *imagePlug, const std::string *viewName )

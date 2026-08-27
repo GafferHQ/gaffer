@@ -150,7 +150,6 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( crop["out"]["dataWindow"].getValue(), imath.Box2i() )
 
 		GafferImageTest.processTiles( crop["out"] )
-		GafferImage.ImageAlgo.image( crop["out"] )
 		GafferImage.ImageAlgo.imageHash( crop["out"] )
 
 	def testLayerNames( self ) :

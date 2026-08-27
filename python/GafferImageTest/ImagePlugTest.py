@@ -203,21 +203,6 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( metadata["out"].metadata( _copy = False ).isSame( metadata["out"]["metadata"].getValue( _copy = False ) ) )
 		self.assertEqual( metadata["out"].metadataHash(), metadata["out"]["metadata"].hash() )
 
-	def testImageDeepException( self ) :
-
-		constant1 = GafferImage.Constant()
-		constant1["color"].setValue( imath.Color4f( 1 ) )
-
-		constant2 = GafferImage.Constant()
-		constant2["color"].setValue( imath.Color4f( 1 ) )
-
-		merge = GafferImage.DeepMerge()
-		merge["in"][0].setInput( constant1["out"] )
-		merge["in"][1].setInput( constant2["out"] )
-
-		with self.assertRaises( RuntimeError ) :
-			GafferImage.ImageAlgo.image( merge["out"] )
-
 	def testBlackTile( self ) :
 
 		ts = GafferImage.ImagePlug.tileSize()
