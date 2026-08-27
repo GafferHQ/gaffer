@@ -309,6 +309,14 @@ class PlugLayout( GafferUI.Widget ) :
 		# sections.
 		rootSectionDepth = self.__rootSectionName.count( "." ) + 1 if self.__rootSectionName else 0
 		self.__rootSection.clear()
+
+		# Unparent existing accessory widgets from their previous _AccessoryRow.
+		# Accessories will be parented to their new row below, non-accessories
+		# must be unparented so Qt does not delete them along with the old row.
+		for widget in self.__widgets.values() :
+			if widget is not None and isinstance( widget.parent(), _AccessoryRow ) :
+				widget.parent().removeChild( widget )
+
 		for item in items :
 
 			if item not in self.__widgets :

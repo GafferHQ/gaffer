@@ -412,6 +412,67 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( l.plugValueWidget( n["f"] ).visible() )
 		self.assertTrue( l.customWidget( "test" ).visible() )
 
+	def testUpdateAccessoryMetadata( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.IntPlug()
+		n["b"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["b"], "layout:accessory", True )
+
+		l = GafferUI.PlugLayout( n )
+		a = l.plugValueWidget( n["a"] )
+		b = l.plugValueWidget( n["b"] )
+
+		for accessory in ( False, True ) :
+
+			Gaffer.Metadata.registerValue( n["b"], "layout:accessory", accessory )
+
+			self.assertIs( l.plugValueWidget( n["a"] ), a )
+			self.assertIs( l.plugValueWidget( n["b"] ), b )
+			self.assertTrue( l.isAncestorOf( a ) )
+			self.assertTrue( l.isAncestorOf( b ) )
+
+		Gaffer.Metadata.deregisterValue( n["b"], "layout:accessory" )
+
+		self.assertIs( l.plugValueWidget( n["a"] ), a )
+		self.assertIs( l.plugValueWidget( n["b"] ), b )
+		self.assertTrue( l.isAncestorOf( a ) )
+		self.assertTrue( l.isAncestorOf( b ) )
+
+	def testRemovePlugWithAccessory( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.IntPlug()
+		n["b"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["b"], "layout:accessory", True )
+
+		l = GafferUI.PlugLayout( n )
+		a = l.plugValueWidget( n["a"] )
+		b = l.plugValueWidget( n["b"] )
+
+		del( n["a"] )
+
+		self.assertIs( l.plugValueWidget( n["b"] ), b )
+		self.assertTrue( l.isAncestorOf( b ) )
+
+	def testHidePlugWithAccessory( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.IntPlug()
+		n["b"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["b"], "layout:accessory", True )
+
+		l = GafferUI.PlugLayout( n )
+		a = l.plugValueWidget( n["a"] )
+		b = l.plugValueWidget( n["b"] )
+
+		Gaffer.Metadata.registerValue( n["a"], "plugValueWidget:type", "" )
+
+		self.assertIs( l.plugValueWidget( n["b"] ), b )
+		self.assertTrue( l.isAncestorOf( b ) )
 
 if __name__ == "__main__":
 	unittest.main()
