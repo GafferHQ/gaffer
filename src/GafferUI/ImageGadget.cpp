@@ -189,31 +189,20 @@ IECoreGL::ConstTexturePtr textureGetter( const TextureCacheKey &key, size_t &cos
 	return texture;
 }
 
-const IECoreGL::Texture *loadTexture( IECore::ConstRunTimeTypedPtr &imageOrTextureOrFileName )
+const IECoreGL::Texture *loadTexture( IECore::ConstRunTimeTypedPtr &textureOrFileName )
 {
-	if( const Texture *texture = runTimeCast<const Texture>( imageOrTextureOrFileName.get() ) )
+	if( const Texture *texture = runTimeCast<const Texture>( textureOrFileName.get() ) )
 	{
 		return texture;
 	}
 
 	ConstTexturePtr texture;
-	if( const StringData *filename = runTimeCast<const StringData>( imageOrTextureOrFileName.get() ) )
+	if( const StringData *filename = runTimeCast<const StringData>( textureOrFileName.get() ) )
 	{
 		// Load texture from file
 		texture = ImageGadget::loadTexture( filename->readable() );
 	}
-	else if( const ImagePrimitive *image = runTimeCast<const ImagePrimitive>( imageOrTextureOrFileName.get() ) )
-	{
-		// Convert image to texture
-		ToGLTextureConverterPtr converter = new ToGLTextureConverter( image );
-		if( auto converted = boost::static_pointer_cast<Texture>( converter->convert() ) )
-		{
-			applyTextureParameters( converted.get(), ImageGadget::TextureParameters() );
-			texture = converted;
-		}
-	}
-
-	imageOrTextureOrFileName = texture;
+	textureOrFileName = texture;
 
 	return texture.get();
 }
@@ -237,15 +226,7 @@ ImageGadget::ImageGadget( const std::string &fileName )
 	static ImageBoundCache g_imageBoundCache( boundGetter, 10000 );
 	m_bound = g_imageBoundCache.get( fileName );
 
-	m_imageOrTextureOrFileName = new StringData( fileName );
-}
-
-ImageGadget::ImageGadget( IECoreImage::ConstImagePrimitivePtr image )
-	:	Gadget( defaultName<ImageGadget>() ), m_imageOrTextureOrFileName( image->copy() )
-{
-	const V2i pixelSize = image->getDisplayWindow().size() + V2i( 1 );
-	const V3f size( pixelSize.x, pixelSize.y, 0.0f );
-	m_bound = Box3f( -size/2.0f, size/2.0f );
+	m_textureOrFileName = new StringData( fileName );
 }
 
 ImageGadget::~ImageGadget()
@@ -265,7 +246,7 @@ void ImageGadget::renderLayer( Layer layer, const Style *style, RenderReason rea
 		return;
 	}
 
-	if( const Texture *texture = ::loadTexture( m_imageOrTextureOrFileName ) )
+	if( const Texture *texture = ::loadTexture( m_textureOrFileName ) )
 	{
 		Box2f b( V2f( m_bound.min.x, m_bound.min.y ), V2f( m_bound.max.x, m_bound.max.y ) );
 		style->renderImage( b, texture );

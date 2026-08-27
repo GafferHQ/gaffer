@@ -16,6 +16,7 @@ Breaking Changes
     Use `with script.context()` instead.
 - TractorDispatcher : Removed deprecated support for `preSpoolSignal` slots without `taskData` arguments.
 - ImageAlgo : Removed `image()` method.
+- ImageGadget : Removed constructor taking an `IECoreImage::ImagePrimitive`.
 
 1.7.x.x (relative to 1.7.0.0)
 =======
