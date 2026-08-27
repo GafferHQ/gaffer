@@ -13,6 +13,7 @@ Improvements
 - NodeEditor : Scene locations can now be dropped to pin the editor to their source node. Locations may be dragged from the Viewer, AttributeEditor, LightEditor, HierarchyView and LightLinkingEditor.
 - Arnold : Added support for V3dVectorData primitive variables. These are converted to float vectors, since Arnold does not support doubles.
 - SceneReader : Added support for reading `P3d` and `N3d` GeomParams from Alembic files.
+- UIEditor : Added `Inline` checkbox to the Widget Settings section for all widget types (#6523).
 
 Fixes
 -----

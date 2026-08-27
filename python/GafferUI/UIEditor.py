@@ -1833,6 +1833,6 @@ UIEditor.registerWidgetSetting(
 	"GafferUI.ButtonPlugValueWidget",
 	_ButtonCodeMetadataWidget,
 )
-UIEditor.registerWidgetMetadata( "Inline", "GafferUI.ButtonPlugValueWidget", "layout:accessory", False )
+UIEditor.registerWidgetMetadata( "Inline", "*", "layout:accessory", False )
 UIEditor.registerWidgetMetadata( "Allow Custom Values", "GafferUI.PresetsPlugValueWidget", "presetsPlugValueWidget:allowCustom", False )
 UIEditor.registerWidgetMetadata( "Divider", "*", "divider", False )
