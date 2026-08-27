@@ -49,6 +49,10 @@ shader splineParameters
 	float checkLinearSplinePositions[] = { 2, 2, 4, 4  },
 	string checkLinearSplineBasis = "linear",
 
+	color constDefaultValues[] = { 2, 2, 2, 2  },
+	float constDefaultPositions[] = { 2, 2, 2, 2  },
+	string constDefaultBasis = "constant",
+
 	output closure color out = 0
 )
 {

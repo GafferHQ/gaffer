@@ -38,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "AttributesBinding.h"
+#include "CatalogueBinding.h"
 #include "CoreBinding.h"
 #include "EditScopeAlgoBinding.h"
 #include "FilterBinding.h"
@@ -54,6 +55,7 @@
 #include "PrimitivesBinding.h"
 #include "RenderBinding.h"
 #include "RenderControllerBinding.h"
+#include "RenderManifestBinding.h"
 #include "SceneAlgoBinding.h"
 #include "ScenePathBinding.h"
 #include "SetAlgoBinding.h"
@@ -95,5 +97,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindQueries();
 	bindCryptomatte();
 	bindVisibleSet();
+	bindRenderManifest();
+	bindCatalogue();
 
 }

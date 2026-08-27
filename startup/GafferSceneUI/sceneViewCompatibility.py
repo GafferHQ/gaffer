@@ -34,24 +34,12 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferSceneUI
 
-def __sceneViewGetItemWrapper( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		if key == "lookThrough" :
-			return {
-				"enabled" : originalGetItem( self, "camera" )["lookThroughEnabled"],
-				"camera" : originalGetItem( self, "camera" )["lookThroughCamera"],
-			}
-
-		key = {
-			"baseState" : "drawingMode",
-		}.get( key, key )
-
-		return originalGetItem( self, key )
-
-	return getItem
-
-GafferSceneUI.SceneView.__getitem__ = __sceneViewGetItemWrapper( GafferSceneUI.SceneView.__getitem__ )
+Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "compatibility:childAlias:baseState", "drawingMode" )
+# Provides backwards compatibility by allowing access to "camera.lookThroughEnabled" plug using its old name
+# of "lookThrough.enabled", and "camera.lookThroughCamera" using its old name of "lookThrough.camera".
+Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "compatibility:childAlias:lookThrough", "camera" )
+Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "camera", "compatibility:childAlias:enabled", "lookThroughEnabled" )
+Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "camera", "compatibility:childAlias:camera", "lookThroughCamera" )

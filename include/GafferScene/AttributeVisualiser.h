@@ -39,7 +39,7 @@
 #include "GafferScene/AttributeProcessor.h"
 
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 
 namespace Gaffer
 {
@@ -81,8 +81,8 @@ class GAFFERSCENE_API AttributeVisualiser : public AttributeProcessor
 		Gaffer::FloatPlug *maxPlug();
 		const Gaffer::FloatPlug *maxPlug() const;
 
-		Gaffer::SplinefColor3fPlug *rampPlug();
-		const Gaffer::SplinefColor3fPlug *rampPlug() const;
+		Gaffer::RampfColor3fPlug *rampPlug();
+		const Gaffer::RampfColor3fPlug *rampPlug() const;
 
 		Gaffer::StringPlug *shaderTypePlug();
 		const Gaffer::StringPlug *shaderTypePlug() const;
@@ -96,8 +96,8 @@ class GAFFERSCENE_API AttributeVisualiser : public AttributeProcessor
 	protected :
 
 		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
-		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
+		void hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 	private :
 

@@ -34,13 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Workaround for this bug in GCC 4.8 :
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59483
-#include "boost/config.hpp"
-#if defined(BOOST_GCC) && BOOST_GCC < 40900
-	#define protected public
-#endif
-
 #include "GafferScene/MergeScenes.h"
 
 #include "GafferScene/SceneAlgo.h"
@@ -328,7 +321,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 		// each descendant location;
 		visit(
 			connectedInputs(),
-			[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
+			[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
 				if( scene->childNamesPlug()->getValue()->readable().size() )
 				{
 					result[index] = true;
@@ -370,7 +363,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 			// scenes.
 			visit(
 				parentActiveInputs,
-				[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
+				[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
 					if( scene->existsPlug()->getValue() )
 					{
 						result[index] = true;

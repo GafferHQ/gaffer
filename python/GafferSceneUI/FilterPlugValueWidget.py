@@ -64,7 +64,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 					verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 				)
-				label.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+				label.setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 
 				self.__menuButton = GafferUI.MenuButton()
 				self.__menuButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )

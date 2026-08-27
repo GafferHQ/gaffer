@@ -36,6 +36,7 @@
 
 #include "GafferScene/ShaderTweaks.h"
 
+#include "GafferScene/ClosurePlug.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderTweakProxy.h"
 
@@ -51,8 +52,11 @@
 #include "IECore/TypeTraits.h"
 #include "IECore/DataAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "fmt/format.h"
 
+#include <regex>
 #include <unordered_map>
 
 using namespace std;
@@ -178,7 +182,7 @@ void checkForCycle( const ShaderNetwork &network, const IECore::InternedString &
 	}
 }
 
-bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedString, IECoreScene::ShaderPtr> &modifiedShaders, const TweakPlug *tweakPlug, const ShaderNetwork *inputNetwork, const std::string &tweakLabel, const ShaderNetwork::Parameter &parameter, const IECoreScene::Shader *shader, TweakPlug::MissingMode missingMode, bool &removedConnections )
+bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedString, IECoreScene::ShaderPtr> &modifiedShaders, const TweakPlug *tweakPlug, const ShaderNetwork *inputNetwork, const std::string &tweakLabel, const ShaderNetwork::Parameter &parameter, const std::optional<std::string> &shaderTypeFilter, const IECoreScene::Shader *shader, TweakPlug::MissingMode missingMode, bool &removedConnections )
 {
 	if( !shader )
 	{
@@ -200,45 +204,54 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 		}
 	}
 
-	const TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
-
-	ShaderNetwork::Parameter originalInput = shaderNetwork->input( parameter );
-	if( originalInput )
+	if( shaderTypeFilter && shader->getName() != *shaderTypeFilter )
 	{
-		if( mode != TweakPlug::Mode::Replace )
-		{
-			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" when a previous connection exists", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
-		}
-		shaderNetwork->removeConnection( { originalInput, parameter } );
-		removedConnections = true;
+		return false;
 	}
+
+	const TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
+	const ShaderNetwork::Parameter originalInput = shaderNetwork->input( parameter );
 
 	if( inputNetwork )
 	{
+		if( originalInput )
+		{
+			shaderNetwork->removeConnection( { originalInput, parameter } );
+			removedConnections = true;
+		}
+
 		if( !inputNetwork->getOutput() )
 		{
 			// Nothing to connect
 			return false;
 		}
 
-		if( !shader->parametersData()->member<Data>( parameter.name ) )
+		if( mode == TweakPlug::Mode::Replace )
 		{
-			if( missingMode != TweakPlug::MissingMode::Ignore )
+			if( !shader->parametersData()->member<Data>( parameter.name ) )
 			{
-				throw IECore::Exception( fmt::format(
-					"Cannot apply tweak \"{}\" because shader \"{}\" does not have parameter \"{}\"",
-					tweakLabel, parameter.shader.string(), parameter.name.string()
-				) );
-			}
-			else
-			{
-				return false;
+				if( missingMode != TweakPlug::MissingMode::Ignore )
+				{
+					throw IECore::Exception( fmt::format(
+						"Cannot apply tweak \"{}\" because shader \"{}\" does not have parameter \"{}\"",
+						tweakLabel, parameter.shader.string(), parameter.name.string()
+					) );
+				}
+				else
+				{
+					return false;
+				}
 			}
 		}
-
-		if( mode != TweakPlug::Mode::Replace )
+		else if( mode == TweakPlug::Mode::Remove )
 		{
-			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" when inserting a connection", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
+			return false;
+		}
+		else if( mode != TweakPlug::Mode::Create )
+		{
+			/// \todo Might be nice to support CreateIfMissing too, but does "missing" refer to
+			/// the existence of the value or the connection in this case?
+			throw IECore::Exception( fmt::format( "Cannot apply tweak \"{}\" to \"{}.{}\" : Mode must be \"Replace\" or \"Create\" when inserting a connection", tweakLabel, parameter.shader.string(), parameter.name.string() ) );
 		}
 
 		const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
@@ -252,7 +265,7 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 			// It would be more efficient to search for and process tweak sources just in
 			// `inputNetwork` before merging it to `shaderNetwork` ... but this would require
 			// dealing with weird connections where the input node handle is relative to `shaderNetwork`,
-			// but the output handle is relative to `inputNetwork`. This can't currenty be done if there
+			// but the output handle is relative to `inputNetwork`. This can't currently be done if there
 			// are nodes in the two networks with the same name, which get uniquified during addShaders.
 			// This could be solved with an optional output unordered_map<oldHandle, newHandle>
 			// from addShaders(). For the moment, however, Doing this after merging simplifies all that.
@@ -301,14 +314,14 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 							}
 
 							// Regular tweak
-							auto modifiedShader = modifiedShaders.insert( { c.destination.shader, nullptr } );
-							if( modifiedShader.second )
+							IECoreScene::ShaderPtr &modifiedShader = modifiedShaders[c.destination.shader];
+							if( !modifiedShader )
 							{
-								modifiedShader.first->second = proxyConnectedShader->copy();
+								modifiedShader = proxyConnectedShader->copy();
 							}
 
-							const IECore::Data *origDestParameter = modifiedShader.first->second->parametersData()->member(c.destination.name, /* throwExceptions = */ true );
-							modifiedShader.first->second->parameters()[c.destination.name] = castDataToType( shader->parametersData()->member( parameter.name, /* throwExceptions = */ true ), origDestParameter );
+							const IECore::Data *origDestParameter = modifiedShader->parametersData()->member(c.destination.name, /* throwExceptions = */ true );
+							modifiedShader->parameters()[c.destination.name] = castDataToType( shader->parametersData()->member( parameter.name, /* throwExceptions = */ true ), origDestParameter );
 						}
 					}
 					else
@@ -325,28 +338,52 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 	else
 	{
 		// Regular tweak
-		auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
-		if( modifiedShader.second )
+
+		if( originalInput )
 		{
-			modifiedShader.first->second = shader->copy();
+			if( mode != TweakPlug::Mode::Replace && mode != TweakPlug::Mode::Create && mode != TweakPlug::Mode::Remove )
+			{
+				throw IECore::Exception( fmt::format(
+					"Cannot apply tweak \"{}\" to \"{}.{}\" : \"{}\" mode is not compatible with an existing input connection.",
+					tweakLabel, parameter.shader.string(), parameter.name.string(),
+					TweakPlug::modeToString( mode )
+				) );
+			}
+			else if( tweakPlug->valuePlug<ClosurePlug>() && mode != TweakPlug::Mode::Remove )
+			{
+				// ClosurePlug without an input. Leave the original connection alone.
+				return false;
+			}
+			else
+			{
+				// Remove connection in preparation for tweaking the value.
+				shaderNetwork->removeConnection( { originalInput, parameter } );
+				removedConnections = true;
+			}
+		}
+
+		IECoreScene::ShaderPtr &modifiedShader = modifiedShaders[parameter.shader];
+		if( !modifiedShader )
+		{
+			modifiedShader = shader->copy();
 		}
 
 		return tweakPlug->applyTweak(
 			[&parameter, &modifiedShader]( const std::string &valueName, const bool withFallback )
 			{
-				return modifiedShader.first->second->parametersData()->member( parameter.name );
+				return modifiedShader->parametersData()->member( parameter.name );
 			},
 			[&parameter, &modifiedShader]( const std::string &valueName, DataPtr newData )
 			{
 				if( newData )
 				{
-					modifiedShader.first->second->parameters()[parameter.name] = newData;
+					modifiedShader->parameters()[parameter.name] = newData;
 					return true;
 				}
 				else
 				{
 					return static_cast<bool>(
-						modifiedShader.first->second->parameters().erase( parameter.name )
+						modifiedShader->parameters().erase( parameter.name )
 					);
 				}
 			},
@@ -354,6 +391,13 @@ bool applyTweakInternal( ShaderNetwork *shaderNetwork, unordered_map<InternedStr
 		);
 	}
 }
+
+IECore::InternedString regexSubMatchToInterned( const std::ssub_match &subMatch )
+{
+	return IECore::InternedString( &( *subMatch.first ), subMatch.length() );
+}
+
+const std::string g_optionPrefix( "option:" );
 
 }  // namespace
 
@@ -422,41 +466,44 @@ bool ShaderTweaks::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 		tweaksPlug()->isAncestorOf( input ) ||
 		input == shaderPlug() ||
 		input == ignoreMissingPlug() ||
-		input == localisePlug()
+		input == localisePlug() ||
+		( input == inPlug()->globalsPlug() && !localisePlug()->isSetToDefault() )
 	;
 }
 
-void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ShaderTweaks::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( tweaksPlug()->children().empty() )
 	{
-		h = inPlug()->attributesPlug()->hash();
+		return;
 	}
-	else
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
+
+	shaderPlug()->hash( h );
+	tweaksPlug()->hash( h );
+	ignoreMissingPlug()->hash( h );
+	localisePlug()->hash( h );
+
+	for( auto &tweak : TweakPlug::Range( *tweaksPlug() ) )
 	{
-		AttributeProcessor::hashProcessedAttributes( path, context, h );
-		shaderPlug()->hash( h );
-		tweaksPlug()->hash( h );
-		ignoreMissingPlug()->hash( h );
-		localisePlug()->hash( h );
-
-		for( auto &tweak : TweakPlug::Range( *tweaksPlug() ) )
+		const auto shaderOutput = ::shaderOutput( tweak.get() );
+		if( shaderOutput.first )
 		{
-			const auto shaderOutput = ::shaderOutput( tweak.get() );
-			if( shaderOutput.first )
-			{
-				shaderOutput.first->attributesHash( shaderOutput.second, h );
-			}
+			shaderOutput.first->attributesHash( shaderOutput.second, h );
 		}
+	}
 
-		if( localisePlug()->getValue() )
+	if( localisePlug()->getValue() )
+	{
+		if( auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
 		{
-			h.append( inPlug()->fullAttributesHash( path ) );
+			h.append( inPlug()->fullAttributesHash( *path, /* withGlobalAttributes = */ true ) );
 		}
 	}
 }
 
-IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	const string shader = shaderPlug()->getValue();
 	if( shader.empty() )
@@ -485,8 +532,11 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 	ConstCompoundObjectPtr fullAttributes;
 	if( localisePlug()->getValue() )
 	{
-		fullAttributes = inPlug()->fullAttributes( path );
-		source = &fullAttributes->members();
+		if( auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
+		{
+			fullAttributes = inPlug()->fullAttributes( *path, /* withGlobalAttributes = */ true );
+			source = &fullAttributes->members();
+		}
 	}
 
 	for( const auto &attribute : *source )
@@ -507,6 +557,37 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 		{
 			out[attribute.first] = tweakedNetwork;
 		}
+	}
+
+	return result;
+}
+
+IECore::ConstCompoundObjectPtr ShaderTweaks::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	// This will have tweaks to `attribute:*` globals applied already.
+	ConstCompoundObjectPtr inputGlobals = AttributeProcessor::computeGlobals( context, parent );
+
+	// Now we want to add tweaks to `option:*` globals as well.
+
+	IECore::CompoundObjectPtr result = new CompoundObject;
+	IECore::CompoundObjectPtr optionsToProcess = new CompoundObject;
+
+	for( const auto &[name, value] : inputGlobals->members() )
+	{
+		if( boost::starts_with( name.string(), g_optionPrefix ) )
+		{
+			optionsToProcess->members()[name.string().substr( g_optionPrefix.size())] = value;
+		}
+		else
+		{
+			result->members()[name] = value;
+		}
+	}
+
+	IECore::ConstCompoundObjectPtr processedOptions = computeProcessedAttributes( context, optionsToProcess.get() );
+	for( const auto &[name, value] : processedOptions->members() )
+	{
+		result->members()[g_optionPrefix+name.string()] = value;
 	}
 
 	return result;
@@ -561,24 +642,55 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 
 		}
 
+		const static std::regex shaderTypeRegex( R"(([^{}]*)(\{shaderType=(.*)\})?\.(.*))" );
+
 		ShaderNetwork::Parameter parameter;
-		const size_t dotPos = name.find_last_of( '.' );
-		if( dotPos == string::npos )
+		std::optional<std::string> shaderTypeFilter;
+
+		std::smatch regexMatch;
+
+		// In order to be a valid expression for finding a shader parameter, it should match the regex, and have
+		// either a shader handle, or shaderType qualifier
+		if( std::regex_match( name, regexMatch, shaderTypeRegex ) && ( regexMatch[1].length() || regexMatch[2].length() ) )
 		{
-			parameter.shader = shaderNetwork->getOutput().shader;
-			parameter.name = name;
+			if( regexMatch[2].length() )
+			{
+				// Subgroup 3 is just the actual shader type
+				shaderTypeFilter = regexSubMatchToInterned( regexMatch[3] );
+			}
+
+			if( regexMatch[1].length() )
+			{
+				parameter.shader = regexSubMatchToInterned( regexMatch[1] );
+			}
+			else
+			{
+				// It's allowed to omit the handle when using a shaderType filter,
+				// in which case we want to match everything with the shaderType
+				parameter.shader = "*";
+			}
+			parameter.name = regexSubMatchToInterned( regexMatch[4] );
 		}
 		else
 		{
-			parameter.shader = InternedString( name.c_str(), dotPos );
-			parameter.name = InternedString( name.c_str() + dotPos + 1 );
+			// If we weren't able to parse it, the name should be a simple parameter name, which we
+			// find on the output shader. If there are any special tokens in the name at this point,
+			// something has gone wrong.
+			const static std::regex hasSyntax( R"([{}.])" );
+			if( std::regex_search( name, hasSyntax ) )
+			{
+				throw IECore::Exception( fmt::format( "Could not parse shader parameter: \"{}\"", name  ) );
+			}
+
+			parameter.shader = shaderNetwork->getOutput().shader;
+			parameter.name = name;
 		}
 
 		if( !IECore::StringAlgo::hasWildcards( parameter.shader.string() ) )
 		{
 			appliedTweaks |= applyTweakInternal(
 				shaderNetwork, modifiedShaders, tweakPlug.get(), inputNetwork,
-				name, parameter, nullptr,
+				name, parameter, shaderTypeFilter, nullptr,
 				missingMode, removedConnections
 			);
 		}
@@ -590,7 +702,7 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 				{
 					appliedTweaks |= applyTweakInternal(
 						shaderNetwork, modifiedShaders, tweakPlug.get(), inputNetwork,
-						name, { s.first, parameter.name }, s.second.get(),
+						name, { s.first, parameter.name }, shaderTypeFilter, s.second.get(),
 						TweakPlug::MissingMode::Ignore, removedConnections
 					);
 				}

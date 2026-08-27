@@ -96,6 +96,3 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( parameters.affects( p["name"] ), [ parameters["__processedObject"] ] )
 		self.assertEqual( parameters.affects( p["enabled"] ), [ parameters["__processedObject"] ] )
 		self.assertEqual( parameters.affects( p["value"] ), [ parameters["__processedObject"] ] )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -45,6 +45,8 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Monitor.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -247,6 +249,9 @@ const IECore::InternedString g_frameStart( "frameRange:start" );
 const IECore::InternedString g_frameEnd( "frameRange:end" );
 const IECore::InternedString g_framesPerSecond( "framesPerSecond" );
 
+const IECore::InternedString g_executionSourceFileContextName( "execution:sourceFile" );
+const IECore::InternedString g_serialiserTargetFileContextName( "serialiser:targetFile" );
+
 } // namespace
 
 class ScriptNode::FocusSet : public Gaffer::Set
@@ -376,7 +381,9 @@ ScriptNode::ScriptNode( const std::string &name )
 
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
-	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
+	plugSetSignal().connect( boost::bind( &ScriptNode::plugSetOrInputChanged, this, ::_1, false ) );
+	plugInputChangedSignal().connect( boost::bind( &ScriptNode::plugSetOrInputChanged, this, ::_1, true ) );
+
 	m_context->changedSignal().connect( boost::bind( &ScriptNode::contextChanged, this, ::_1, ::_2 ) );
 }
 
@@ -475,6 +482,24 @@ void ScriptNode::parentChanging( Gaffer::GraphComponent *newParent )
 	{
 		BackgroundTask::cancelAffectedTasks( this );
 	}
+}
+
+bool ScriptNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	if( !Node::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	auto inputValuePlug = IECore::runTimeCast<const ValuePlug>( inputPlug );
+	if( variablesPlug()->isAncestorOf( plug ) && inputValuePlug && PlugAlgo::dependsOnCompute( inputValuePlug ) )
+	{
+		// Can't drive context variables by values which themselves
+		// are context-sensitive.
+		return false;
+	}
+
+	return true;
 }
 
 bool ScriptNode::selectionSetAcceptor( const Set *s, const Set::Member *m )
@@ -702,7 +727,7 @@ void ScriptNode::copy( const Node *parent, const Set *filter )
 	ApplicationRoot *app = applicationRoot();
 	if( !app )
 	{
-		throw( "ScriptNode has no ApplicationRoot" );
+		throw IECore::Exception( "ScriptNode has no ApplicationRoot" );
 	}
 
 	std::string s = serialise( parent, filter );
@@ -720,7 +745,7 @@ void ScriptNode::paste( Node *parent, bool continueOnError )
 	ApplicationRoot *app = applicationRoot();
 	if( !app )
 	{
-		throw( "ScriptNode has no ApplicationRoot" );
+		throw IECore::Exception( "ScriptNode has no ApplicationRoot" );
 	}
 
 	IECore::ConstStringDataPtr s = IECore::runTimeCast<const IECore::StringData>( app->getClipboardContents() );
@@ -822,7 +847,7 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 
 void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const Node *parent, const Set *filter ) const
 {
-	std::string s = serialiseInternal( parent, filter );
+	std::string s = serialiseInternal( parent, filter, &fileName );
 
 	std::ofstream f( fileName.c_str() );
 	if( !f.good() )
@@ -840,26 +865,26 @@ void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const N
 
 bool ScriptNode::execute( const std::string &serialisation, Node *parent, bool continueOnError )
 {
-	return executeInternal( serialisation, parent, continueOnError, "" );
+	return executeInternal( serialisation, parent, continueOnError );
 }
 
 bool ScriptNode::executeFile( const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	const std::string serialisation = readFile( fileName );
-	return executeInternal( serialisation, parent, continueOnError, fileName.generic_string() );
+	return executeInternal( serialisation, parent, continueOnError, &fileName );
 }
 
 bool ScriptNode::load( bool continueOnError)
 {
 	DirtyPropagationScope dirtyScope;
 
-	const std::string fileName = fileNamePlug()->getValue();
+	const std::filesystem::path fileName = fileNamePlug()->getValue();
 	const std::string s = readFile( fileName );
 
 	deleteNodes();
 	variablesPlug()->clearChildren();
 
-	const bool result = executeInternal( s, nullptr, continueOnError, fileName );
+	const bool result = executeInternal( s, nullptr, continueOnError, &fileName );
 
 	UndoScope undoDisabled( this, UndoScope::Disabled );
 	unsavedChangesPlug()->setValue( false );
@@ -895,16 +920,31 @@ bool ScriptNode::importFile( const std::filesystem::path &fileName, Node *parent
 	return result;
 }
 
-std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter ) const
+std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter, const std::filesystem::path *filePath ) const
 {
 	if( !g_serialiseFunction )
 	{
 		throw IECore::Exception( "Serialisation not available - please link to libGafferBindings." );
 	}
+
+	Context::EditableScope scope( Context::current() );
+	if( ( !parent || parent == this ) && !filter )
+	{
+		static const bool includeParentMetadata = true;
+		scope.set( "serialiser:includeParentMetadata", &includeParentMetadata );
+	}
+
+	std::string filePathString;
+	if( filePath )
+	{
+		filePathString = filePath->generic_string();
+		scope.set( g_serialiserTargetFileContextName, &filePathString );
+	}
+
 	return g_serialiseFunction( parent ? parent : this, filter );
 }
 
-bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context )
+bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::filesystem::path *sourceFile )
 {
 	if( !g_executeFunction )
 	{
@@ -914,10 +954,30 @@ bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent
 	bool result = false;
 	bool wasExecuting = m_executing;
 
+
+	// As with `ScriptNodeBinding::serialise()`, we don't want to perform string
+	// substitutions. Removing the current Process from ThreadState ensures
+	// `StringPlug::getValue()` will not perform substitutions.
+	const Context *contextVariables = Context::current();
+	const Monitor::MonitorSet &monitors = Monitor::current();
+	const ThreadState defaultThreadState;
+	ThreadState::Scope defaultThreadStateScope( defaultThreadState );
+	Context::EditableScope contextScope( contextVariables );
+	Monitor::Scope monitorScope( monitors );
+	std::string sourceFileString;
+	if( sourceFile )
+	{
+		sourceFileString = sourceFile->generic_string();
+		contextScope.set<std::string>( g_executionSourceFileContextName, &sourceFileString );
+	}
+
 	m_executing = true;
 	try
 	{
-		result = g_executeFunction( this, serialisation, parent ? parent : this, continueOnError, context );
+		result = g_executeFunction(
+			this, serialisation, parent ? parent : this, continueOnError,
+			sourceFile ? sourceFile->generic_string() : ""
+		);
 	}
 	catch( ... )
 	{
@@ -961,7 +1021,7 @@ void ScriptNode::updateContextVariables()
 	}
 }
 
-void ScriptNode::plugSet( Plug *plug )
+void ScriptNode::plugSetOrInputChanged( const Plug *plug, bool inputChanged )
 {
 	if( plug == frameStartPlug() )
 	{
@@ -981,7 +1041,15 @@ void ScriptNode::plugSet( Plug *plug )
 	{
 		context()->setFramesPerSecond( framesPerSecondPlug()->getValue() );
 	}
-	else if( plug == variablesPlug() )
+	else if(
+		// `plugSetSignal` propagates to ancestors of the plug that was set,
+		// so by operating only on the ancestor we minimise the number of context
+		// edits we make.
+		plug == variablesPlug() ||
+		// `plugInputChangedSignal` is emitted only for the plug whose input
+		// changed, so we must update for any plug below `variablesPlug()`.
+		( inputChanged && variablesPlug()->isAncestorOf( plug ) )
+	)
 	{
 		updateContextVariables();
 	}

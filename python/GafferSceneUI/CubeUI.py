@@ -48,14 +48,24 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"dimensions" : [
+		"dimensions" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the cube.
 			""",
 
-		],
+		},
+
+		"divisions" : {
+
+			"description" :
+			"""
+			The number of subdivisions of the cube in the
+			X, Y and Z directions.
+			""",
+
+		},
 
 	}
 

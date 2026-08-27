@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import itertools
-
 import Gaffer
 import GafferUI
 import GafferImage
@@ -55,48 +53,48 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			The transformation to be applied to the image. The translate
 			and pivot values are specified in pixels, and the rotate
 			value is specified in degrees.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The pixel filter used when transforming the image. Each
 			filter provides different tradeoffs between sharpness and
 			the danger of aliasing or ringing.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		] + list( itertools.chain(
+		} | {
 
 			# Disk doesn't make much sense as a resizing filter, and also causes artifacts because
 			# its default width is small enough to fall into the gaps between pixels.
-			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() if x != "disk" ]
+			"preset:" + x.title() : x for x in GafferImage.FilterAlgo.filterNames() if x != "disk"
 
-		) ),
+		},
 
-		"invert" : [
-			"description",
+		"invert" : {
+			"description" :
 			"""
 			Apply the inverse transformation to the image.
 			"""
-		],
+		},
 
-		"concatenate" : [
+		"concatenate" : {
 
-			"description",
+			"description" :
 
 			"""
 			Combines the processing for a series of ImageTransforms so that
@@ -107,10 +105,10 @@ Gaffer.Metadata.registerNode(
 			> ImageTransforms are ignored.
 			""",
 
-			"layout:section", "Node",
-			"layout:index", -1,
+			"layout:section" : "Node",
+			"layout:index" : -1,
 
-		],
+		},
 
 	}
 

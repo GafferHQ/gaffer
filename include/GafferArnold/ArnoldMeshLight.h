@@ -39,12 +39,12 @@
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
 
-#include "GafferScene/FilteredSceneProcessor.h"
+#include "GafferScene/MeshLight.h"
 
 namespace GafferArnold
 {
 
-class GAFFERARNOLD_API ArnoldMeshLight : public GafferScene::FilteredSceneProcessor
+class GAFFERARNOLD_API ArnoldMeshLight : public GafferScene::MeshLight
 {
 
 	public :
@@ -52,11 +52,7 @@ class GAFFERARNOLD_API ArnoldMeshLight : public GafferScene::FilteredSceneProces
 		explicit ArnoldMeshLight( const std::string &name=defaultName<ArnoldMeshLight>() );
 		~ArnoldMeshLight() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldMeshLight, ArnoldMeshLightTypeId, FilteredSceneProcessor );
-
-	private :
-
-		static size_t g_firstPlugIndex;
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldMeshLight, ArnoldMeshLightTypeId, GafferScene::MeshLight );
 
 };
 

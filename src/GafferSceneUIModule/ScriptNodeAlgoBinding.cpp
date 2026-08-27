@@ -115,6 +115,28 @@ std::string getCurrentRenderPassWrapper( ScriptNode &script )
 	return getCurrentRenderPass( &script );
 }
 
+void addVisibleSetBookmarkWrapper( ScriptNode &script, const std::string &name, const GafferScene::VisibleSet &visibleSet, bool persistent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	addVisibleSetBookmark( &script, name, visibleSet, persistent );
+}
+
+void removeVisibleSetBookmarkWrapper( ScriptNode &script, const std::string &name )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	removeVisibleSetBookmark( &script, name );
+}
+
+list visibleSetBookmarksWrapper( const ScriptNode &script )
+{
+	list result;
+	for( const auto &n : visibleSetBookmarks( &script ) )
+	{
+		result.append( n );
+	}
+	return result;
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindScriptNodeAlgo()
@@ -137,4 +159,9 @@ void GafferSceneUIModule::bindScriptNodeAlgo()
 	def( "acquireRenderPassPlug", &acquireRenderPassPlugWrapper, ( arg( "script" ), arg( "createIfMissing" ) = true ) );
 	def( "setCurrentRenderPass", &setCurrentRenderPassWrapper );
 	def( "getCurrentRenderPass", &getCurrentRenderPassWrapper );
+
+	def( "addVisibleSetBookmark", &addVisibleSetBookmarkWrapper, ( arg( "script" ), arg( "name" ), arg( "visibleSet" ), arg( "persistent" ) = true ) );
+	def( "getVisibleSetBookmark", getVisibleSetBookmark, ( arg( "script" ), arg( "name" ) ) );
+	def( "removeVisibleSetBookmark", &removeVisibleSetBookmarkWrapper, ( arg( "script" ), arg( "name" ) ) );
+	def( "visibleSetBookmarks", &visibleSetBookmarksWrapper, ( arg( "script" ) ) );
 }

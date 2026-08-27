@@ -55,27 +55,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters" : [
+		"parameters" : {
 
-			"layout:index", -1, # Move after shape parameters
+			"layout:index" : -1, # Move after shape parameters
 
-		],
+		},
 
-		"shaderName" : [
+		"shape" : {
 
-			"description",
-			"""
-			The OSL shader to be assigned to the light
-			geometry.
-			""",
-
-			"plugValueWidget:type", "",
-
-		],
-
-		"shape" : [
-
-			"description",
+			"description" :
 			"""
 			The shape of the light. Typically, disks
 			should be used with spotlight shaders and spheres
@@ -84,100 +72,64 @@ Gaffer.Metadata.registerNode(
 			particular renderer.
 			""",
 
-			"preset:Disk", GafferOSL.OSLLight.Shape.Disk,
-			"preset:Sphere", GafferOSL.OSLLight.Shape.Sphere,
-			"preset:Geometry", GafferOSL.OSLLight.Shape.Geometry,
+			"preset:Disk" : GafferOSL.OSLLight.Shape.Disk,
+			"preset:Sphere" : GafferOSL.OSLLight.Shape.Sphere,
+			"preset:Geometry" : GafferOSL.OSLLight.Shape.Geometry,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"radius" : [
+		"radius" : {
 
-			"description",
+			"description" :
 			"""
 			The radius of the disk or sphere shape. Has no effect for
 			other shapes.
 			""",
 
-			"layout:visibilityActivator", "shapeHasRadius",
+			"layout:visibilityActivator" : "shapeHasRadius",
 
-		],
+		},
 
-		"geometryType" : [
+		"geometryType" : {
 
-			"description",
+			"description" :
 			"""
 			The type of geometry to create when shape is set
 			to "Geometry". This should contain the name of a geometry
 			type specific to the renderer being used.
 			""",
 
-			"layout:visibilityActivator", "shapeIsGeometry",
+			"layout:visibilityActivator" : "shapeIsGeometry",
 
-		],
+		},
 
-		"geometryBound" : [
+		"geometryBound" : {
 
-			"description",
+			"description" :
 			"""
 			The bounding box of the geometry. Only relevant when the
 			shape is set to "Geometry".
 			""",
 
-			"layout:visibilityActivator", "shapeIsGeometry",
+			"layout:visibilityActivator" : "shapeIsGeometry",
 
-		],
+		},
 
-		"geometryParameters" : [
+		"geometryParameters" : {
 
-			"description",
+			"description" :
 			"""
-			Arbitary parameters which specify the features of the "Geometry"
+			Arbitrary parameters which specify the features of the "Geometry"
 			shape type.
 			""",
 
-			"layout:section", "Settings.Geometry",
-			"layout:visibilityActivator", "shapeIsGeometry",
+			"layout:section" : "Settings.Geometry",
+			"layout:visibilityActivator" : "shapeIsGeometry",
 
-		],
-
-		"attributes" : [
-
-			"description",
-			"""
-			Arbitrary attributes which are applied to the light. Typical
-			uses include setting renderer specific visibility attributes
-			to hide the shape from the camera.
-			""",
-
-			"layout:section", "Settings.Attributes",
-
-		],
+		},
 
 	}
 
 )
-
-# Defer parameter metadata lookups to the internal shader
-# node.
-
-def __parameterMetadata( plug, key ) :
-
-	node = plug.node()
-	return Gaffer.Metadata.value( node["__shader"]["parameters"].descendant( plug.relativeName( node["parameters"] ) ), key )
-
-for key in [
-	"description",
-	"label",
-	"noduleLayout:label",
-	"layout:divider",
-	"layout:section",
-	"presetNames",
-	"presetValues",
-	"plugValueWidget:type",
-	"nodule:type",
-	"noduleLayout:visible",
-	"noduleLayout:label",
-] :
-	Gaffer.Metadata.registerValue( GafferOSL.OSLLight, "parameters.*", key, functools.partial( __parameterMetadata, key = key ) )

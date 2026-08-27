@@ -49,24 +49,24 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of metadata entries to be removed. This is a space separated
 			list of entry names, which accepts Gaffer's standard string wildcards.
 			""",
 
-		],
+		},
 
-		"invertNames" : [
+		"invertNames" : {
 
-			"description",
+			"description" :
 			"""
 			When on, matching names are kept, and non-matching names are removed.
 			""",
 
-		],
+		},
 
 	}
 

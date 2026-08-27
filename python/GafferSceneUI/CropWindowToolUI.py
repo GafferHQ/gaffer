@@ -135,7 +135,6 @@ class _StatusWidget( GafferUI.Frame ) :
 			return
 
 		status = self.__tool.status()
-		self.setVisible( bool(status) )
 
 		state, _, message = status.partition( ":" )
 

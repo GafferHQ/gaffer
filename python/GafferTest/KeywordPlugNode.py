@@ -50,4 +50,4 @@ class KeywordPlugNode( Gaffer.Node ) :
 		# format to be able to cope with that
 		self.addChild( Gaffer.IntPlug( "in", Gaffer.Plug.Direction.In ) )
 
-IECore.registerRunTimeTyped( KeywordPlugNode, typeName = "GafferTest::KeywordPlugNode" )
+IECore.registerRunTimeTyped( KeywordPlugNode, "GafferTest::KeywordPlugNode" )

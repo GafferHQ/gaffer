@@ -69,6 +69,3 @@ class BackdropNodeGadgetTest( GafferUITest.TestCase ) :
 			g.getBound(),
 			imath.Box2f( imath.V2f( -1, -2 ), imath.V2f( 3, 4 ) )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -51,44 +51,75 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Tool for displaying named primitive variables of type float, V2f or V3f as a colored overlay.
+	Tool for displaying object data.
 	""",
 
-	"viewer:shortCut", "O",
+	"viewer:shortCut", "L",
 	"viewer:shouldAutoActivate", False,
 	"order", 8,
 	"tool:exclusive", False,
 
+	"toolbarLayout:activator:modeIsColor", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.Color,
+	"toolbarLayout:activator:modeIsAuto", lambda node : node["mode"].getValue() == GafferSceneUI.VisualiserTool.Mode.Auto,
+
 	plugs = {
 
-		"dataName" : [
+		"dataName" : {
 
-			"description",
+			"description" :
 			"""
-			Specifies the name of the primitive variable to visualise. Variables of
+			The name of the data to visualise. Primitive variable names must be
+			prefixed by `primitiveVariable:`. For example, `primitiveVariable:uv`
+			would display the `uv` primitive variable. Primitive variables of
 			type int, float, V2f, Color3f or V3f can be visualised.
+
+			To visualise vertex indices instead of a primitive variable, use the
+			value `vertex:index`.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 150,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 150,
 
-			"plugValueWidget:type", "GafferSceneUI.VisualiserToolUI._DataNameChooser",
+			"plugValueWidget:type" : "GafferSceneUI.VisualiserToolUI._DataNameChooser",
 
-		],
-		"opacity" : [
+		},
+		"opacity" : {
 
-			"description",
+			"description" :
 			"""
 			The amount the visualiser will occlude the scene locations being visualised.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 100,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 45,
 
-		],
-		"valueMin" : [
+		},
+		"mode" : {
 
-			"description",
+			"description" :
+			"""
+			The method for displaying the data.
+
+			- Auto : Chooses the most appropriate mode based on the data and primitive type.
+			- Color : Values are remapped from the range `[valueMin, valueMax]` to `[0, 1]`.
+			- Color (Auto Range) : Float, integer, V2f and color data is displayed without
+			modification. Vector data is remapped from `[-1, 1]` to `[0, 1]`.
+			""",
+
+			"preset:Auto" : GafferSceneUI.VisualiserTool.Mode.Auto,
+			"preset:Color" : GafferSceneUI.VisualiserTool.Mode.Color,
+			"preset:Color (Auto Range)" : GafferSceneUI.VisualiserTool.Mode.ColorAutoRange,
+			"preset:Vertex Label" : GafferSceneUI.VisualiserTool.Mode.VertexLabel,
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 150,
+
+		},
+		"valueMin" : {
+
+			"description" :
 			"""
 			The minimum data channel value that will be mapped to 0.
 
@@ -96,13 +127,15 @@ Gaffer.Metadata.registerNode(
 			and second channels are used. For V3f data all three channels are used.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 175,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 175,
 
-		],
-		"valueMax" : [
+			"toolbarLayout:visibilityActivator" : "modeIsColor",
 
-			"description",
+		},
+		"valueMax" : {
+
+			"description" :
 			"""
 			The maximum data channel value that will be mapped to 1.
 
@@ -110,30 +143,74 @@ Gaffer.Metadata.registerNode(
 			and second channels are used. For V3f data all three channels are used.
 			""",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 175,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 175,
 
-		],
-		"size": [
+			"toolbarLayout:visibilityActivator" : "modeIsColor",
 
-			"description",
+		},
+		"size" : {
+
+			"description" :
 			"""
 			Specifies the size of the displayed text.
 			""",
 
-			"plugValueWidget:type", ""
+			"plugValueWidget:type" : ""
 
-		],
+		},
+		"vectorScale" : {
+
+			"description" :
+			"""
+			The scale factor to apply to vectors.
+			""",
+
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 45,
+
+			"toolbarLayout:visibilityActivator" : "modeIsAuto",
+
+		},
+
+		"vectorColor" : {
+
+			"description" :
+			"""
+			The colour to use for drawing vectors.
+			""",
+
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 175,
+
+			"toolbarLayout:visibilityActivator" : "modeIsAuto",
+			"colorPlugValueWidget:colorChooserButtonVisible" : False,
+
+			"plugValueWidget:type" : "GafferSceneUI.VisualiserToolUI._UntransformedColorWidget",
+
+		},
 
 	},
 )
 
+class _UntransformedColorWidget( GafferUI.ColorPlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		GafferUI.ColorPlugValueWidget.__init__( self, plugs, **kw )
+
+		self.setDisplayTransform( GafferUI.Widget.identityDisplayTransform )
+
 class _DataNameChooser( GafferUI.PlugValueWidget ) :
+
+	__primitiveVariablePrefix = "primitiveVariable:"
+	__primitiveVariablePrefixSize = len( __primitiveVariablePrefix )
+	__vertexIndexDataName = "vertex:index"
+	__uniformIndexDataName = "uniform:index"
 
 	def __init__( self, plug, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton(
-			text = plug.getValue(),
 			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		)
 
@@ -141,7 +218,17 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 
 	def _updateFromValues( self, values, exception ) :
 
-		self.__menuButton.setText( sole( values ) or "None" )
+		singleValue = sole( values )
+		text = "None"
+		if singleValue is not None :
+			if singleValue == self.__vertexIndexDataName :
+				text = "Vertex Index"
+			elif singleValue == self.__uniformIndexDataName :
+				text = "Face Index"
+			else :
+				text = self.__primitiveVariableFromDataName( singleValue )
+
+		self.__menuButton.setText( text )
 
 	def __menuDefinition( self ) :
 
@@ -158,14 +245,14 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 		with node.view().context() :
 			selection = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( scriptNode )
 
-			primVars = set()
+			primitiveVariables = set()
 
 			for path in selection.paths() :
 				if not scenePlug.exists( path ) :
 					continue
 
 				primitive = scenePlug.object( path )
-				if not isinstance( primitive, IECoreScene.MeshPrimitive ) :
+				if not isinstance( primitive, IECoreScene.Primitive ) :
 					continue
 
 				for v in primitive.keys() :
@@ -184,29 +271,51 @@ class _DataNameChooser( GafferUI.PlugValueWidget ) :
 							IECore.V2fVectorData,
 							IECore.Color3fVectorData,
 							IECore.V3fVectorData,
+							IECore.QuatfVectorData,
 						)
 					) :
 						continue
 
-					primVars.add( v )
+					primitiveVariables.add( v )
 
-		if len( primVars ) == 0 :
+		if len( primitiveVariables ) == 0 :
 			menuDefinition.append( "/None Available", { "active" : False } )
 
 		else :
-			for v in reversed( sorted( primVars ) ) :
+			for v in reversed( sorted( primitiveVariables ) ) :
 				menuDefinition.prepend(
 					"/" + v,
 					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), v ),
-						"checkBox" : self.getPlug().getValue() == v,
+						"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), self.__primitiveVariablePrefix + v ),
+						"checkBox" : self.__primitiveVariableFromDataName( self.getPlug().getValue() ) == v,
 					}
 				)
 
-		menuDefinition.prepend( "/PrimVarDivider", { "divider" : True, "label" : "Primitive Variables" } )
+		menuDefinition.prepend( "/PrimitiveVariableDivider", { "divider" : True, "label" : "Primitive Variables" } )
+
+		menuDefinition.append( "/Other", { "divider" : True, "label" : "Other" } )
+		menuDefinition.append(
+			"/Vertex Index",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName ), self.__vertexIndexDataName ),
+				"checkBox" : self.getPlug().getValue() == self.__vertexIndexDataName,
+			}
+		)
+		menuDefinition.append(
+			"/Face or Curve Index",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setDataName), self.__uniformIndexDataName ),
+				"checkBox" : self.getPlug().getValue() == self.__uniformIndexDataName,
+			}
+		)
 
 		return menuDefinition
 
 	def __setDataName( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
+
+	def __primitiveVariableFromDataName( self, name ) :
+
+		return name[self.__primitiveVariablePrefixSize:] if (
+			name.startswith( self.__primitiveVariablePrefix ) ) else ""

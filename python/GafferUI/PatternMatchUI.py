@@ -56,20 +56,20 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"string" : [
+		"string" : {
 
-			"description",
+			"description" :
 			"""
 			The string to be tested.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"pattern" : [
+		"pattern" : {
 
-			"description",
+			"description" :
 			"""
 			The pattern to match the string against. This can use any of
 			Gaffer's standard wildcards :
@@ -85,29 +85,29 @@ Gaffer.Metadata.registerNode(
 			| \\        | Escapes the next character                   |
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"enabled" : [
+		"enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Turns the node on and off. When off, `match` always outputs `false`.
 			""",
 
-		],
+		},
 
-		"match" : [
+		"match" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs `true` if the string matches the pattern, and `false` otherwise.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

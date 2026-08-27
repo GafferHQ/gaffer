@@ -74,6 +74,3 @@ class FilterTest( GafferSceneTest.SceneTestCase ) :
 		# will cause a failure if the filter leaks a context variable like
 		# `scene:path` into the evaluation of the scene globals.
 		attributes["out"].attributes( "/plane" )
-
-if __name__ == "__main__":
-	unittest.main()

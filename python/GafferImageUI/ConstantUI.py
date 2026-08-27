@@ -48,34 +48,34 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The resolution and aspect ratio of the image.
 			""",
 
-		],
+		},
 
-		"color" : [
+		"color" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of the image.
 			""",
 
-		],
+		},
 
-		"layer" : [
+		"layer" : {
 
-			"description",
+			"description" :
 			"""
 			The layer to generate. The output channels will
 			be named ( layer.R, layer.G, layer.B and layer.A ).
 			""",
-			"stringPlugValueWidget:placeholderText", "[RGBA]",
+			"stringPlugValueWidget:placeholderText" : "[RGBA]",
 
-		]
+		}
 
 	}
 

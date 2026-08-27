@@ -43,7 +43,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/multi_index/hashed_index.hpp"
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index_container.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
@@ -147,9 +147,9 @@ struct NameMapData : public IECore::Data
 		Names,
 		boost::multi_index::indexed_by<
 			// First index allows lookup using `inputName`.
-			boost::multi_index::hashed_unique<boost::multi_index::member<Names, IECore::InternedString, &Names::inputName>, InternedStringAddressHash>,
+			boost::multi_index::hashed_unique<boost::multi_index::key<&Names::inputName>, InternedStringAddressHash>,
 			// Second index allows lookup using `outputName`.
-			boost::multi_index::hashed_unique<boost::multi_index::member<Names, IECore::InternedString, &Names::outputName>, InternedStringAddressHash>
+			boost::multi_index::hashed_unique<boost::multi_index::key<&Names::outputName>, InternedStringAddressHash>
 		>
 	>;
 

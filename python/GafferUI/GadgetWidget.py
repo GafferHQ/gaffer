@@ -129,7 +129,19 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __enter( self, widget ) :
 
-		if not isinstance( QtWidgets.QApplication.focusWidget(), ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
+		focusWidget = QtWidgets.QApplication.focusWidget()
+
+		if (
+			isinstance( focusWidget, QtWidgets.QGraphicsView ) and
+			isinstance( nextWidget := focusWidget.scene().focusItem(), QtWidgets.QGraphicsProxyWidget )
+		) :
+			nextWidget = nextWidget.widget()
+			focusWidget = None
+			while nextWidget is not None and nextWidget != focusWidget :
+				focusWidget = nextWidget
+				nextWidget = nextWidget.focusWidget()
+
+		if not isinstance( focusWidget, ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
 			self._qtWidget().setFocus()
 
 		## \todo Widget.enterSignal() should be providing this
@@ -151,7 +163,12 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __leave( self, widget ) :
 
-		self._qtWidget().clearFocus()
+		focusWidget = QtWidgets.QApplication.focusWidget()
+		if self._qtWidget() == focusWidget :
+			if not isinstance( focusWidget.scene().focusItem(), QtWidgets.QGraphicsProxyWidget ) :
+				# Relinquish the focus we stole in `__enter`, unless the user has
+				# explicitly moved it to a specific widget in one of our overlays.
+				self._qtWidget().clearFocus()
 
 		p = self.mousePosition( relativeTo = self )
 		event = GafferUI.ButtonEvent(
@@ -201,6 +218,11 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __buttonDoubleClick( self, widget, event ) :
 
+		# We get given button double clicks before they're given to the overlay items,
+		# so we must ignore them so they can be used by the overlay.
+		if self._qtWidget().itemAt( event.line.p0.x, event.line.p0.y ) is not None :
+			return False
+
 		if not self._makeCurrent() :
 			return False
 
@@ -208,15 +230,15 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __mouseMove( self, widget, event ) :
 
+		# We get given mouse moves before they're given to the overlay items,
+		# so we must ignore them so they can be used by the overlay.
+		if self._qtWidget().itemAt( event.line.p0.x, event.line.p0.y ) is not None :
+			return False
+
 		if not self._makeCurrent() :
 			return False
 
-		self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
-
-		# we always return false so that any overlay items will get appropriate
-		# move/enter/leave events, otherwise highlighting for buttons etc can go
-		# awry.
-		return False
+		return self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
 
 	def __dragBegin( self, widget, event ) :
 
@@ -313,6 +335,9 @@ class _EventFilter( QtCore.QObject ) :
 
 			widget = GafferUI.Widget._owner( qObject )
 			assert( isinstance( widget, GadgetWidget ) )
+
+			if qObject.itemAt( qEvent.x(), qEvent.y() ) is not None :
+				return False
 
 			if not widget._makeCurrent() :
 				return False

@@ -246,4 +246,4 @@ That covers the most common methods and tasks when using Python to edit node gra
 
 - [The Python Editor](../ThePythonEditor/index.md)
 - [Node Reference](../../Reference/NodeReference/index.md)
-- [Python Editor Shorcuts](../../Interface/ControlsAndShortcuts/index.html#script-editor)
+- [Python Editor Shortcuts](../../Interface/ControlsAndShortcuts/index.html#python-editor)

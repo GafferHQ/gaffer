@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferTest
 
 class ModuleTest( GafferTest.TestCase ) :
@@ -43,5 +44,7 @@ class ModuleTest( GafferTest.TestCase ) :
 		self.assertModuleDoesNotImportUI( "Gaffer" )
 		self.assertModuleDoesNotImportUI( "GafferTest" )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testRootPath( self ) :
+
+		self.assertTrue( Gaffer.rootPath().is_absolute() )
+		self.assertEqual( Gaffer.rootPath(), Gaffer.rootPath().resolve() )

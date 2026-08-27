@@ -36,6 +36,8 @@
 
 #include "GafferUSD/USDLight.h"
 
+#include "GafferUSD/USDShader.h"
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
@@ -44,69 +46,11 @@ using namespace GafferUSD;
 
 GAFFER_NODE_DEFINE_TYPE( USDLight );
 
-size_t USDLight::g_firstPlugIndex = 0;
-
 USDLight::USDLight( const std::string &name )
-	:	GafferScene::Light( name )
+	:	GafferScene::Light( name, new USDShader() )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-
-	addChild( new USDShader( "__shader" ) );
-	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
-	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
-	shaderNode()->parametersPlug()->setInput( parametersPlug() );
-
-	shaderInPlug()->setInput( shaderNode()->outPlug() );
 }
 
 USDLight::~USDLight()
 {
-}
-
-USDShader *USDLight::shaderNode()
-{
-	return getChild<USDShader>( g_firstPlugIndex );
-}
-
-const USDShader *USDLight::shaderNode() const
-{
-	return getChild<USDShader>( g_firstPlugIndex );
-}
-
-GafferScene::ShaderPlug *USDLight::shaderInPlug()
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-const GafferScene::ShaderPlug *USDLight::shaderInPlug() const
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-void USDLight::loadShader( const std::string &shaderName, bool keepExistingValues )
-{
-	shaderNode()->loadShader( shaderName, keepExistingValues );
-	shaderNode()->typePlug()->setValue( "light" );
-	shaderInPlug()->setInput( shaderNode()->outPlug() );
-}
-
-void USDLight::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	Light::affects( input, outputs );
-
-	if( input == shaderInPlug() )
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
-}
-
-void USDLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( shaderInPlug()->attributesHash() );
-}
-
-IECoreScene::ConstShaderNetworkPtr USDLight::computeLight( const Gaffer::Context *context ) const
-{
-	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
-	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "light" );
 }

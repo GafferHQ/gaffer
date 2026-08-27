@@ -56,6 +56,9 @@ class GAFFERSCENE_API Cube : public ObjectSource
 		Gaffer::V3fPlug *dimensionsPlug();
 		const Gaffer::V3fPlug *dimensionsPlug() const;
 
+		Gaffer::V3iPlug *divisionsPlug();
+		const Gaffer::V3iPlug *divisionsPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

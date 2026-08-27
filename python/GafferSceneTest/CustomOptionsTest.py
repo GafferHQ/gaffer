@@ -221,6 +221,3 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 				"option:test3" : IECore.IntData( 3 )
 			} )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

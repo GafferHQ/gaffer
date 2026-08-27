@@ -38,9 +38,11 @@
 
 #include "GafferScene/Export.h"
 
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/Private/IECoreScenePreview/TypeIds.h"
 
 #include "IECoreScene/VisibleRenderable.h"
+
+#include "IECore/Version.h"
 
 namespace IECoreScenePreview
 {
@@ -61,7 +63,7 @@ class GAFFERSCENE_API Placeholder : public IECoreScene::VisibleRenderable
 
 		Placeholder( const Imath::Box3f &bound = Imath::Box3f(), const Placeholder::Mode mode = Placeholder::Mode::Default );
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Placeholder, GafferScene::PreviewPlaceholderTypeId, IECoreScene::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Placeholder, IECoreScenePreview::PreviewPlaceholderTypeId, IECoreScene::VisibleRenderable );
 
 		void setMode( Mode mode );
 		Mode getMode() const;
@@ -70,7 +72,9 @@ class GAFFERSCENE_API Placeholder : public IECoreScene::VisibleRenderable
 		const Imath::Box3f &getBound() const;
 
 		Imath::Box3f bound() const override;
-		void render( IECoreScene::Renderer *renderer ) const override;
+#if CORTEX_COMPATIBILITY_VERSION < MAKE_CORTEX_COMPATIBILITY_VERSION( 10, 6 )
+		void render( IECoreScene::Renderer *renderer ) const override {};
+#endif
 
 	private :
 

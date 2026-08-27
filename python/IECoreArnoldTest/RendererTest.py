@@ -38,6 +38,9 @@ import ctypes
 import json
 import os
 import pathlib
+import random
+import struct
+import subprocess
 import sys
 import time
 import unittest
@@ -49,7 +52,6 @@ import OpenImageIO
 
 import IECore
 import IECoreScene
-import IECoreImage
 import IECoreArnold
 
 import GafferTest
@@ -263,7 +265,13 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( shaders ), 4 )
 			shaderNames = [ arnold.AiNodeGetName( s ) for s in shaders ]
 			self.assertEqual( len( shaderNames ), 4 )
-			self.assertEqual( len( [ i for i in shaderNames if i.split(":")[-1] == "myHandle" ] ), 2 )
+			self.assertEqual( len( [ i for i in shaderNames if i.split(":")[1] == "myHandle" ] ), 2 )
+			for shaderName in shaderNames :
+				parts = shaderName.split( ":" )
+				self.assertEqual( len( parts ), 3 )
+				self.assertEqual( parts[0], "shader" )
+				self.assertTrue( parts[1] in shader1.shaders() or parts[1] in shader2.shaders() )
+				self.assertRegex( parts[2], "[a-f0-9]{32}" )
 
 	def testShaderConnections( self ) :
 
@@ -671,7 +679,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"testB",
 			IECoreScene.Output(
-				"beauty.exr",
+				"beautyWithAlpha.exr",
 				"exr",
 				"color B",
 				{
@@ -703,12 +711,12 @@ class RendererTest( GafferTest.TestCase ) :
 			outputs = arnold.AiNodeGetArray( options, "outputs" )
 			outputSet = set( arnold.AiArrayGetStr( outputs, i ) for i in range( 0, arnold.AiArrayGetNumElements( outputs ) ) )
 			self.assertEqual( outputSet, set( [
-				"A RGB ieCoreArnold:filter:testA ieCoreArnold:display:testA",
-				"B RGBA ieCoreArnold:filter:testB ieCoreArnold:display:testB",
-				"C FLOAT ieCoreArnold:filter:testC ieCoreArnold:display:testC",
-				"D INT ieCoreArnold:filter:testD ieCoreArnold:display:testD",
-				"E UINT ieCoreArnold:filter:testE ieCoreArnold:display:testE",
-				"F VECTOR ieCoreArnold:filter:testF ieCoreArnold:display:testF",
+				"A RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testA",
+				"B RGBA ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testB",
+				"C FLOAT ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testC",
+				"D INT ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testD",
+				"E UINT ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testE",
+				"F VECTOR ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testF",
 			] ) )
 
 	def testOutputFilters( self ) :
@@ -745,8 +753,112 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( filters ), 1 )
 			f = filters[0]
 
+			self.assertEqual( arnold.AiNodeGetName( f ), 'ieCoreArnold:filter:gaussian_filter1' )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
 			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
+	def testOutputFiltersMatching( self ):
+
+		# With matching parameters, we still just get one filter
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		r.output(
+			"test",
+			IECoreScene.Output(
+				"beauty.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : imath.V2f( 3.5 ),
+				}
+			)
+		)
+
+		r.output(
+			"test2",
+			IECoreScene.Output(
+				"beauty2.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : imath.V2f( 3.5 ),
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+			filters = self.__allNodes( universe, type = arnold.AI_NODE_FILTER )
+			# Ignore node created automatically by Arnold itself.
+			filters = [ f for f in filters if arnold.AiNodeGetName( f ) != "_forced_box_filter" ]
+
+			self.assertEqual( len( filters ), 1 )
+			f = filters[0]
+
+			self.assertEqual( arnold.AiNodeGetName( f ), 'ieCoreArnold:filter:gaussian_filter1' )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
+			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
+	def testOutputFiltersNotMatching( self ):
+
+		# With mismatched parameters, we get two filters
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		r.output(
+			"test",
+			IECoreScene.Output(
+				"beauty.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : imath.V2f( 3.5 ),
+				}
+			)
+		)
+
+		r.output(
+			"test2",
+			IECoreScene.Output(
+				"beauty2.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : imath.V2f( 1.5 ),
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+			filters = self.__allNodes( universe, type = arnold.AI_NODE_FILTER )
+			# Ignore node created automatically by Arnold itself.
+			filters = [ f for f in filters if arnold.AiNodeGetName( f ) != "_forced_box_filter" ]
+
+			self.assertEqual( len( filters ), 2 )
+
+			self.assertEqual( [ arnold.AiNodeGetName( f ) for f in filters ], [ 'ieCoreArnold:filter:gaussian_filter1',  'ieCoreArnold:filter:gaussian_filter2' ] )
+			self.assertEqual( [ arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ) for f in filters ], [ "gaussian_filter" ] * 2 )
+			self.assertEqual( set( [ arnold.AiNodeGetFlt( f, "width" ) for f in filters ] ), set( [ 3.5, 1.5 ] ) )
 
 	def testOutputLPEs( self ) :
 
@@ -769,7 +881,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"testWithAlpha",
 			IECoreScene.Output(
-				"beauty.exr",
+				"beautyWithAlpha.exr",
 				"exr",
 				"lpe C.*D.*",
 				{
@@ -790,8 +902,8 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
 			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
 			self.assertEqual( outputSet, set( [
-				"ieCoreArnold:lpe:test RGB ieCoreArnold:filter:test ieCoreArnold:display:test",
-				"ieCoreArnold:lpe:testWithAlpha RGBA ieCoreArnold:filter:testWithAlpha ieCoreArnold:display:testWithAlpha"
+				"ieCoreArnold:lpe:test RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:test",
+				"ieCoreArnold:lpe:testWithAlpha RGBA ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testWithAlpha"
 			] ) )
 
 			lpes = arnold.AiNodeGetArray( options, "light_path_expressions" )
@@ -801,6 +913,124 @@ class RendererTest( GafferTest.TestCase ) :
 				"ieCoreArnold:lpe:test C.*D.*",
 				"ieCoreArnold:lpe:testWithAlpha C.*D.*"
 			] ) )
+
+	def testCombinedOutputs( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		r.output(
+			"testA",
+			IECoreScene.Output(
+				"combined.exr",
+				"exr",
+				"color A",
+				{}
+			)
+		)
+
+		r.output(
+			"testB",
+			IECoreScene.Output(
+				"combined.exr",
+				"exr",
+				"color B",
+				{ "testParm" : 2 }
+			)
+		)
+
+		with self.assertRaisesRegex( RuntimeError, 'Mismatch in combined output driver for file name "combined.exr" : missing parameter "testParm"' ):
+			r.render()
+
+		r.output(
+			"testA",
+			IECoreScene.Output(
+				"combined.exr",
+				"exr",
+				"color A",
+				{ "testParm" : 2 }
+			)
+		)
+
+		r.output(
+			"testC",
+			IECoreScene.Output(
+				"single.exr",
+				"exr",
+				"color C",
+				{ "whatever" : 3 }
+			)
+		)
+
+		r.output(
+			"testD",
+			IECoreScene.Output(
+				"combined2.exr",
+				"exr",
+				"color D",
+				{ "testParm" : 4, "filter" : "catrom", "filterwidth" : 4 }
+			)
+		)
+
+		r.output(
+			"testE",
+			IECoreScene.Output(
+				"combined2.exr",
+				"exr",
+				"color E",
+				{ "testParm" : 4, "filter" : "box" }
+			)
+		)
+
+		r.output(
+			"testF",
+			IECoreScene.Output(
+				"combined2.exr",
+				"exr",
+				"color F",
+				{ "testParm" : 4, "filter" : "catrom" }
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			options = arnold.AiUniverseGetOptions( universe )
+			outputs = arnold.AiNodeGetArray( options, "outputs" )
+			outputSet = set( arnold.AiArrayGetStr( outputs, i ) for i in range( 0, arnold.AiArrayGetNumElements( outputs ) ) )
+			self.assertEqual( outputSet, set( [
+				"A RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testA,testB",
+				"B RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testA,testB",
+				"C RGB ieCoreArnold:filter:gaussian_filter1 ieCoreArnold:display:testC",
+				"D RGB ieCoreArnold:filter:catrom_filter1 ieCoreArnold:display:testD,testE,testF",
+				"E RGB ieCoreArnold:filter:box_filter1 ieCoreArnold:display:testD,testE,testF",
+				"F RGB ieCoreArnold:filter:catrom_filter2 ieCoreArnold:display:testD,testE,testF"
+			] ) )
+
+
+			driver1 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testA,testB" )
+			self.assertEqual( arnold.AiNodeGetStr( driver1, "filename" ), "combined.exr" )
+			self.assertEqual( arnold.AiNodeGetInt( driver1, "testParm" ), 2 )
+
+			driver2 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testC" )
+			self.assertEqual( arnold.AiNodeGetStr( driver2, "filename" ), "single.exr" )
+			self.assertEqual( arnold.AiNodeGetInt( driver2, "whatever" ), 3 )
+
+			driver3 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:testD,testE,testF" )
+			self.assertEqual( arnold.AiNodeGetStr( driver3, "filename" ), "combined2.exr" )
+
+			filter1 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:gaussian_filter1" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter1 ) ), "gaussian_filter" )
+
+			filter2 = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:filter:catrom_filter1" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filter2 ) ), "catrom_filter" )
 
 	def testMultipleCameras( self ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -848,17 +1078,25 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 
 		worldToCameraKey = "worldtocamera"
-		if hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206 :
+		if OpenImageIO.VERSION >= 20206 :
 			worldToCameraKey = "worldToCamera"
 
-		for i in range( 3 ):
-			image = IECoreImage.ImageReader( str( self.temporaryDirectory() / f"beauty{i}.exr" ) ).read()
-			self.assertEqual( image.blindData()[worldToCameraKey].value,
-				imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 ) )
+		for i in range( 3 ) :
+			imageInput = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / f"beauty{i}.exr" ) )
+			imageSpec = imageInput.spec()
+			imageInput.close()
+			self.assertEqual(
+				imageSpec[worldToCameraKey],
+				( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 )
+			)
 
-		image = IECoreImage.ImageReader( str( self.temporaryDirectory() / "diffuse2.exr" ) ).read()
-		self.assertEqual( image.blindData()[worldToCameraKey].value,
-			imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 ) )
+		imageInput = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "diffuse2.exr" ) )
+		imageSpec = imageInput.spec()
+		imageInput.close()
+		self.assertEqual(
+			imageSpec[worldToCameraKey],
+			( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 )
+		)
 
 	def testCameraMesh( self ) :
 
@@ -1006,7 +1244,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Check that we can read the metadata using OpenImageIO.
 
-		imageSpec = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) ).spec()
+		imageFile = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) )
+		imageSpec = imageFile.spec()
+		imageFile.close()
 		# We can preserve some types.
 		self.assertEqual( imageSpec.getattribute( "foo" ), "bar" )
 		self.assertEqual( imageSpec.get_string_attribute( "emptyString" ), "" )
@@ -1023,6 +1263,41 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( imageSpec.getattribute( "vec3f" ), "(1 2 3)" )
 		self.assertEqual( imageSpec.getattribute( "color3f" ), "(1 2 3)" )
 		self.assertEqual( imageSpec.getattribute( "color4f" ), "(1 2 3 4)" )
+
+	def testExrMetadataMergedWithExplicitCustomAttributes( self ) :
+
+		# Write an output with custom header metadata of various types.
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		r.output(
+			"exrDataTest",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "beauty.exr" ),
+				"exr",
+				"rgba",
+				{
+					"header:foo" : IECore.StringData( "bar" ),
+					"header:vec3i" : IECore.V3iData( imath.V3i( 1, 2, 3 ) ),
+					"custom_attributes" : IECore.StringVectorData( [ "string 'fromCustom' 'blah'", "int 'fromCust' 7" ] ),
+				}
+			)
+		)
+
+		r.render()
+
+		# Check that we can read the metadata using OpenImageIO.
+
+		imageFile = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) )
+		imageSpec = imageFile.spec()
+		imageFile.close()
+		self.assertEqual( imageSpec.getattribute( "fromCustom" ), "blah" )
+		self.assertEqual( imageSpec.getattribute( "fromCust" ), 7 )
+		self.assertEqual( imageSpec.getattribute( "foo" ), "bar" )
+		self.assertEqual( imageSpec.getattribute( "vec3i" ), "(1 2 3)" )
 
 	def testInstancing( self ) :
 
@@ -1180,6 +1455,80 @@ class RendererTest( GafferTest.TestCase ) :
 				universe,
 				"polyAdaptiveSubdivideLinearAttributes1",
 				"polyAdaptiveSubdivideLinearAttributes2",
+			)
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerInstancing( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		pointInstancer1 = IECoreScene.PointInstancer( 1 )
+		pointInstancer1.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer1.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		pointInstancer2 = pointInstancer1.copy()
+		pointInstancer2.setPosition( IECore.V3fVectorData( [ imath.V3f( 1 ) ] ) )
+
+		attributes1 = renderer.attributes( IECore.CompoundObject() )
+
+		noInstanceAttributes = renderer.attributes(
+			IECore.CompoundObject( {
+				"gaffer:automaticInstancing" : IECore.BoolData( 0 ),
+			} )
+		)
+
+		prototype1 = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[ IECoreScene.SpherePrimitive() ], [ 0.0 ], attributes1
+		)
+
+		prototype2 = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[ IECoreScene.SpherePrimitive( 2 ) ], [ 0.0 ], attributes1
+		)
+
+		renderer.pointInstancer( "instancer1_attributes1_prototype1_A", [ pointInstancer1 ], [ 0.0 ], [ prototype1 ], attributes1 )
+		renderer.pointInstancer( "instancer1_attributes1_prototype1_B", [ pointInstancer1 ], [ 0.0 ], [ prototype1 ], attributes1 )
+
+		renderer.pointInstancer( "instancer2_attributes1_prototype1_A", [ pointInstancer2 ], [ 0.0 ], [ prototype1 ], attributes1 )
+		renderer.pointInstancer( "instancer2_attributes1_prototype1_B", [ pointInstancer2 ], [ 0.0 ], [ prototype1 ], attributes1 )
+
+		renderer.pointInstancer( "instancer1_noInstancing_A", [ pointInstancer1 ], [ 0.0 ], [ prototype1 ], noInstanceAttributes )
+		renderer.pointInstancer( "instancer1_noInstancing_B", [ pointInstancer1 ], [ 0.0 ], [ prototype1 ], noInstanceAttributes )
+
+		renderer.render()
+		del attributes1, noInstanceAttributes, prototype1, prototype2
+		del renderer
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
+			numGInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numInstancers = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "instancer" ] )
+
+			self.assertEqual( numInstancers, 4 )
+			self.assertEqual( numGInstances, 4 )
+
+			self.__assertInstanced(
+				universe,
+				"instancer1_attributes1_prototype1_A",
+				"instancer1_attributes1_prototype1_B",
+			)
+
+			self.__assertInstanced(
+				universe,
+				"instancer2_attributes1_prototype1_A",
+				"instancer2_attributes1_prototype1_B",
+			)
+
+			self.__assertNotInstanced(
+				universe,
+				"instancer1_noInstancing_A",
+				"instancer1_noInstancing_B",
 			)
 
 	def testTransformTypeAttribute( self ) :
@@ -1608,7 +1957,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# Now set `matrix` via the official route.
 		o.transform( imath.M44f().translate( imath.V3f( 4, 5, 6 ) ) )
 		# And remove the dodgy custom attribute. If it's not implemented
-		# carefuly, the code for removing attributes could reset the
+		# carefully, the code for removing attributes could reset the
 		# matrix, which is definitely not what we want.
 		o.attributes( r.attributes( IECore.CompoundObject( {} ) ) )
 
@@ -1840,6 +2189,57 @@ class RendererTest( GafferTest.TestCase ) :
 
 				self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_uv_smoothing" ), uvSmoothing or "pin_corners" )
 
+	def testPointlessPrimitives( self ) :
+
+		pointlessMesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		del pointlessMesh["P"]
+
+		for primitive in (
+			pointlessMesh,
+			IECoreScene.PointsPrimitive( 10 ),
+			IECoreScene.CurvesPrimitive( IECore.IntVectorData( [ 4 ] ) ),
+		) :
+
+			with self.subTest( type = primitive.typeName() ) :
+
+				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"Arnold",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+				)
+
+				renderer.output(
+					"test",
+					IECoreScene.Output(
+						str( self.temporaryDirectory() / "beauty.exr" ),
+						"exr",
+						"rgba",
+						{
+						}
+					)
+				)
+
+				with IECore.CapturingMessageHandler() as mh :
+
+					objectInterface = renderer.object(
+						"/pointless", primitive,
+						renderer.attributes( IECore.CompoundObject() )
+					)
+
+					self.assertEqual( len( mh.messages ), 1 )
+					self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+					self.assertEqual( mh.messages[0].context, "/pointless" )
+					self.assertEqual( mh.messages[0].message, 'Primitive does not have "P" primitive variable of interpolation type Vertex.' )
+
+				renderer.render()
+
+				renderer.pause()
+				# This would crash Arnold if we had given it a shape without
+				# any points (tested in 7.3.7.0).
+				objectInterface.link( "lights", None )
+
+				del objectInterface
+				del renderer
+
 	def testMeshLight( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -1968,58 +2368,58 @@ class RendererTest( GafferTest.TestCase ) :
 					"osl:shader",
 					{ "scale" : 10.0 }
 				),
-				"splineHandle" : IECoreScene.Shader(
-					"Pattern/ColorSpline",
+				"rampHandle" : IECoreScene.Shader(
+					"Pattern/ColorRamp",
 					"osl:shader",
 					{
-						"spline" : IECore.SplinefColor3f(
-							IECore.CubicBasisf.bSpline(),
+						"ramp" : IECore.RampfColor3f(
 							[
 								( 0, imath.Color3f( 0 ) ),
 								( 0.25, imath.Color3f( 0.25 ) ),
 								( 0.5, imath.Color3f( 0.5 ) ),
 								( 1, imath.Color3f( 1 ) ),
-							]
+							],
+							IECore.RampInterpolation.BSpline
 						),
 					}
 				),
-				"floatSplineHandle" : IECoreScene.Shader(
-					"Pattern/FloatSpline",
+				"floatRampHandle" : IECoreScene.Shader(
+					"Pattern/FloatRamp",
 					"osl:shader",
 					{
-						"spline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"ramp" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
 								( 1, 0.5 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
 					}
 				),
-				"splineWithInputsHandle" : IECoreScene.Shader(
-					"Pattern/ColorSpline",
+				"rampWithInputsHandle" : IECoreScene.Shader(
+					"Pattern/ColorRamp",
 					"osl:shader",
 					{
-						"spline" : IECore.SplinefColor3f(
-							IECore.CubicBasisf.catmullRom(),
+						"ramp" : IECore.RampfColor3f(
 							[
 								( 0, imath.Color3f( 0 ) ),
 								( 0.25, imath.Color3f( 0.25 ) ),
 								( 0.5, imath.Color3f( 0.5 ) ),
 								( 1, imath.Color3f( 1 ) ),
-							]
+							],
+							IECore.RampInterpolation.CatmullRom
 						),
 					}
 				),
 				"output" : IECoreScene.Shader( "switch_rgba", "ai:surface" ),
 			},
 			connections = [
-				( ( "splineHandle", "c" ), ( "output", "input1" ) ),
+				( ( "rampHandle", "c" ), ( "output", "input1" ) ),
 				( ( "noiseHandle", "n" ), ( "output", "input2" ) ),
-				( ( "floatSplineHandle", "c" ), ( "output", "input3" ) ),
-				( ( "splineWithInputsHandle", "c" ), ( "output", "input4" ) ),
-				( ( "globalsHandle", "globalP" ), ( "splineWithInputsHandle", "spline[0].y" ) ),
-				( ( "globalsHandle", "globalV" ), ( "splineWithInputsHandle", "spline[3].y.g" ) ),
+				( ( "floatRampHandle", "c" ), ( "output", "input3" ) ),
+				( ( "rampWithInputsHandle", "c" ), ( "output", "input4" ) ),
+				( ( "globalsHandle", "globalP" ), ( "rampWithInputsHandle", "ramp[0].y" ) ),
+				( ( "globalsHandle", "globalV" ), ( "rampWithInputsHandle", "ramp[3].y.g" ) ),
 			],
 			output = ( "output", "out" ),
 		)
@@ -2039,76 +2439,95 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
-			self.assertTrue( str( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ) in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
+			self.assertTrue( ( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ).as_posix() in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
 			switch = arnold.AiNodeGetPtr( n, "shader" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( switch ) ), "switch_rgba" )
 
-			spline = arnold.AiNodeGetLink( switch, "input1" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( spline, "shadername" ), "Pattern/ColorSpline" )
-			self.assertEqual( arnold.AiNodeGetStr( spline, "param_splineBasis" ), "bspline" )
+			ramp = arnold.AiNodeGetLink( switch, "input1" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( ramp ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( ramp, "shadername" ), "Pattern/ColorRamp" )
+			self.assertEqual( arnold.AiNodeGetStr( ramp, "param_rampBasis" ), "bspline" )
 
-			splinePositions = arnold.AiNodeGetArray( spline, "param_splinePositions" )
-			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 0 ), 0 )
-			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 1 ), 0.25 )
-			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 2 ), 0.5 )
-			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 3 ), 1 )
+			rampPositions = arnold.AiNodeGetArray( ramp, "param_rampPositions" )
+			self.assertEqual( arnold.AiArrayGetFlt( rampPositions, 0 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampPositions, 1 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampPositions, 2 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampPositions, 3 ), 0.25 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampPositions, 4 ), 0.5 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampPositions, 5 ), 1 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampPositions, 6 ), 1 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampPositions, 7 ), 1 )
 
-			splineValues = arnold.AiNodeGetArray( spline, "param_splineValues" )
-			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 0 ), arnold.AtRGB( 0, 0, 0 ) )
-			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 1 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
-			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 2 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
-			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 1, 1, 1 ) )
+			rampValues = arnold.AiNodeGetArray( ramp, "param_rampValues" )
+			self.assertEqual( arnold.AiArrayGetRGB( rampValues, 0 ), arnold.AtRGB( 0, 0, 0 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( rampValues, 1 ), arnold.AtRGB( 0, 0, 0 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( rampValues, 2 ), arnold.AtRGB( 0, 0, 0 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( rampValues, 3 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( rampValues, 4 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( rampValues, 5 ), arnold.AtRGB( 1, 1, 1 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( rampValues, 6 ), arnold.AtRGB( 1, 1, 1 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( rampValues, 7 ), arnold.AtRGB( 1, 1, 1 ) )
 
-			floatSpline = arnold.AiNodeGetLink( switch, "input3" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( floatSpline ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( floatSpline, "shadername" ), "Pattern/FloatSpline" )
-			self.assertEqual( arnold.AiNodeGetStr( floatSpline, "param_splineBasis" ), "linear" )
+			floatRamp = arnold.AiNodeGetLink( switch, "input3" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( floatRamp ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( floatRamp, "shadername" ), "Pattern/FloatRamp" )
+			self.assertEqual( arnold.AiNodeGetStr( floatRamp, "param_rampBasis" ), "linear" )
 
-			floatSplinePositions = arnold.AiNodeGetArray( floatSpline, "param_splinePositions" )
-			self.assertEqual( arnold.AiArrayGetFlt( floatSplinePositions, 0 ), 0 )
-			self.assertEqual( arnold.AiArrayGetFlt( floatSplinePositions, 1 ), 0 )
-			self.assertEqual( arnold.AiArrayGetFlt( floatSplinePositions, 2 ), 1 )
-			self.assertEqual( arnold.AiArrayGetFlt( floatSplinePositions, 3 ), 1 )
+			floatRampPositions = arnold.AiNodeGetArray( floatRamp, "param_rampPositions" )
+			self.assertEqual( arnold.AiArrayGetFlt( floatRampPositions, 0 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatRampPositions, 1 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatRampPositions, 2 ), 1 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatRampPositions, 3 ), 1 )
 
-			floatSplineValues = arnold.AiNodeGetArray( floatSpline, "param_splineValues" )
-			self.assertEqual( arnold.AiArrayGetFlt( floatSplineValues, 0 ), 0.25 )
-			self.assertEqual( arnold.AiArrayGetFlt( floatSplineValues, 1 ), 0.25 )
-			self.assertEqual( arnold.AiArrayGetFlt( floatSplineValues, 2 ), 0.5 )
-			self.assertEqual( arnold.AiArrayGetFlt( floatSplineValues, 3 ), 0.5 )
+			floatRampValues = arnold.AiNodeGetArray( floatRamp, "param_rampValues" )
+			self.assertEqual( arnold.AiArrayGetFlt( floatRampValues, 0 ), 0.25 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatRampValues, 1 ), 0.25 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatRampValues, 2 ), 0.5 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatRampValues, 3 ), 0.5 )
 
 			noise = arnold.AiNodeGetLink( switch, "input2" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 			self.assertEqual( arnold.AiNodeGetFlt( noise, "param_scale" ), 10.0 )
 
-			splineWithInputs = arnold.AiNodeGetLink( switch, "input4" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splineWithInputs ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( splineWithInputs, "shadername" ), "Pattern/ColorSpline" )
-			self.assertEqual( arnold.AiNodeGetStr( splineWithInputs, "param_splineBasis" ), "catmull-rom" )
+			rampWithInputs = arnold.AiNodeGetLink( switch, "input4" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( rampWithInputs ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( rampWithInputs, "shadername" ), "Pattern/ColorRamp" )
+			self.assertEqual( arnold.AiNodeGetStr( rampWithInputs, "param_rampBasis" ), "catmull-rom" )
 
-			splineWithInputsPositions = arnold.AiNodeGetArray( splineWithInputs, "param_splinePositions" )
-			self.assertEqual( arnold.AiArrayGetFlt( splineWithInputsPositions, 0 ), 0 )
-			self.assertEqual( arnold.AiArrayGetFlt( splineWithInputsPositions, 1 ), 0.25 )
-			self.assertEqual( arnold.AiArrayGetFlt( splineWithInputsPositions, 2 ), 0.5 )
-			self.assertEqual( arnold.AiArrayGetFlt( splineWithInputsPositions, 3 ), 1 )
+			rampWithInputsPositions = arnold.AiNodeGetArray( rampWithInputs, "param_rampPositions" )
+			self.assertEqual( arnold.AiArrayGetFlt( rampWithInputsPositions, 0 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampWithInputsPositions, 1 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampWithInputsPositions, 2 ), 0.25 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampWithInputsPositions, 3 ), 0.5 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampWithInputsPositions, 4 ), 1 )
+			self.assertEqual( arnold.AiArrayGetFlt( rampWithInputsPositions, 5 ), 1 )
 
-			splineWithInputsAdapter = arnold.AiNodeGetLink( splineWithInputs, "param_splineValues" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splineWithInputsAdapter ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( splineWithInputsAdapter, "shadername" ), "Utility/__ColorToArray" )
-			self.assertEqual( arnold.AiNodeGetRGB( splineWithInputsAdapter, "param_in1" ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
-			self.assertEqual( arnold.AiNodeGetRGB( splineWithInputsAdapter, "param_in2" ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
+			rampWithInputsAdapter = arnold.AiNodeGetLink( rampWithInputs, "param_rampValues" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( rampWithInputsAdapter ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( rampWithInputsAdapter, "shadername" ), "Utility/__ColorToArray" )
+			self.assertEqual( arnold.AiNodeGetRGB( rampWithInputsAdapter, "param_in2" ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( rampWithInputsAdapter, "param_in3" ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 
-			globalPInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in0" )
-			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "shadername" ), "Utility/Globals" )
+			globalPInput0 = arnold.AiNodeGetLink( rampWithInputsAdapter, "param_in0" )
+			self.assertEqual( arnold.AiNodeGetStr( globalPInput0, "shadername" ), "Utility/Globals" )
 
-			componentAdapterInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in3" )
-			self.assertEqual( arnold.AiNodeGetStr( componentAdapterInput, "shadername" ), "MaterialX/mx_pack_color" )
-			globalVInput = arnold.AiNodeGetLink( componentAdapterInput, "param_in2" )
-			self.assertEqual( arnold.AiNodeGetStr( globalVInput, "shadername" ), "Utility/Globals" )
+			globalPInput1 = arnold.AiNodeGetLink( rampWithInputsAdapter, "param_in1" )
+			self.assertEqual( arnold.AiNodeGetStr( globalPInput1, "shadername" ), "Utility/Globals" )
+
+			componentAdapterInput4 = arnold.AiNodeGetLink( rampWithInputsAdapter, "param_in4" )
+			self.assertEqual( arnold.AiNodeGetStr( componentAdapterInput4, "shadername" ), "MaterialX/mx_pack_color" )
+			globalVInput4 = arnold.AiNodeGetLink( componentAdapterInput4, "param_in2" )
+			self.assertEqual( arnold.AiNodeGetStr( globalVInput4, "shadername" ), "Utility/Globals" )
+
+			componentAdapterInput5 = arnold.AiNodeGetLink( rampWithInputsAdapter, "param_in5" )
+			self.assertEqual( arnold.AiNodeGetStr( componentAdapterInput5, "shadername" ), "MaterialX/mx_pack_color" )
+			globalVInput5 = arnold.AiNodeGetLink( componentAdapterInput5, "param_in2" )
+			self.assertEqual( arnold.AiNodeGetStr( globalVInput5, "shadername" ), "Utility/Globals" )
+
 
 	def testPureOSLShaders( self ) :
 
@@ -2256,6 +2675,49 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertEqual( arnold.AiArrayGetNumElements( a.contents ), len( sets ) )
 				for i in range( 0, arnold.AiArrayGetNumElements( a.contents ) ) :
 					self.assertEqual( arnold.AiArrayGetStr( a, i ), sets[i] )
+
+	def testCurvesWrap( self ) :
+
+		Wrap = IECoreScene.CurvesPrimitive.Wrap
+		for basis, wrap, expectedWrap, expectedWarning in [
+			( IECore.CubicBasisf.catmullRom(), Wrap.Pinned, "pinned", None ),
+			( IECore.CubicBasisf.bSpline(), Wrap.Pinned, "pinned", None ),
+			( IECore.CubicBasisf.linear(), Wrap.Pinned, "nonperiodic", None ),
+			( IECore.CubicBasisf.linear(), Wrap.Periodic, "nonperiodic", "Arnold does not implement periodic wrap. Using nonperiodic instead." ),
+			( IECore.CubicBasisf.linear(), Wrap.NonPeriodic, "nonperiodic", None ),
+		] :
+
+			with self.subTest( basis = basis, wrap = wrap ) :
+
+				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"Arnold",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+					str( self.temporaryDirectory() / "test.ass" )
+				)
+
+				curves = IECoreScene.CurvesPrimitive(
+					IECore.IntVectorData( [ 4 ] ), basis, wrap, IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 4 ) ] )
+				)
+
+				with IECore.CapturingMessageHandler() as messageHandler :
+					renderer.object( "curves", curves, renderer.attributes( IECore.CompoundObject() ) )
+
+				renderer.render()
+				del renderer
+
+				with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+					arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+					curves = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "curves" ), "node" )
+					self.assertEqual( arnold.AiNodeGetStr( curves, "wrap_mode" ), expectedWrap )
+
+					if expectedWarning is not None :
+						self.assertEqual( len( messageHandler.messages ), 1 )
+						self.assertEqual( messageHandler.messages[0].level, IECore.Msg.Level.Warning )
+						self.assertEqual( messageHandler.messages[0].message, expectedWarning )
+					else :
+						self.assertEqual( len( messageHandler.messages ), 0 )
 
 	def testCurvesAttributes( self ) :
 
@@ -2804,6 +3266,11 @@ class RendererTest( GafferTest.TestCase ) :
 						seed or frame or 1
 					)
 
+					self.assertEqual(
+						arnold.AiNodeGetFlt( options, "frame" ),
+						frame or 1
+					)
+
 	def testLogDirectoryCreation( self ) :
 
 		# Directory for log file should be made automatically if
@@ -2836,7 +3303,14 @@ class RendererTest( GafferTest.TestCase ) :
 		# error message.
 
 		( self.temporaryDirectory() / "readOnly" ).mkdir()
-		( self.temporaryDirectory() / "readOnly" ).chmod( 444 )
+		if os.name != "nt" :
+			( self.temporaryDirectory() / "readOnly" ).chmod( 444 )
+		else :
+			subprocess.check_call(
+				[ "icacls", self.temporaryDirectory() / "readOnly", "/deny", "Users:(OI)(CI)(W)" ],
+				stdout = subprocess.DEVNULL,
+				stderr = subprocess.STDOUT
+			)
 
 		with IECore.CapturingMessageHandler() as mh :
 			r.option( "ai:log:filename", IECore.StringData( ( self.temporaryDirectory() / "readOnly" / "nested" / "log.txt" ).as_posix() ) )
@@ -2844,8 +3318,12 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
-		self.assertTrue( "Permission denied" in mh.messages[0].message )
+		self.assertIn(
+			"Permission denied" if os.name != "nt" else "Access is denied",
+			mh.messages[0].message
+		)
 
+	@unittest.skipIf( os.name == "nt", "Log file can't be deleted on Windows because it is still in use until the process finishes.")
 	def testStatsAndLog( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -2887,7 +3365,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with open( self.temporaryDirectory() / "test" / "test_stats.json", "r", encoding = "utf-8" ) as statsHandle:
 			stats = json.load( statsHandle )["render 0000"]
-			self.assertTrue( "microseconds" in stats["scene creation time"] )
 			self.assertTrue( "microseconds" in stats["frame time"] )
 			self.assertTrue( "peak CPU memory used" in stats )
 
@@ -3099,10 +3576,8 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "/procedural", SphereProcedural( color = internalColor ), colorAttributes( r, color = inheritedColor ) )
 		r.render()
 
-		image = IECoreImage.ImageReader( outputFileName ).read()
-		dimensions = image.dataWindow.size() + imath.V2i( 1 )
-		centreIndex = dimensions.x * int( dimensions.y * 0.5 ) + int( dimensions.x * 0.5 )
-		color = imath.Color3f( image["R"][centreIndex], image["G"][centreIndex], image["B"][centreIndex] )
+		image = OpenImageIO.ImageBuf( outputFileName )
+		color = imath.Color3f( image.getpixel( image.spec().width // 2, image.spec().height // 2 )[:3] )
 		self.assertEqual( color, internalColor or inheritedColor )
 
 	def testProceduralShaderInheritance( self ) :
@@ -3163,7 +3638,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( self.__allNodes( universe, nodeEntryName = "ginstance" ) ), len( attributeVariants ) )
 
 		instanceSharers = [
-			# All the same because camera visibility is on, and user attributes arent' relevant.
+			# All the same because camera visibility is on, and user attributes aren't relevant.
 			( "defaultAttributes", "cameraOnAttributes", "userAttributes", "userAttributes2" ),
 			# All the same because camera visibility is off.
 			( "cameraOffAttributes", "cameraOffUserAttributes" ),
@@ -3292,10 +3767,8 @@ class RendererTest( GafferTest.TestCase ) :
 			del renderer
 
 			# We should find the curves visible in the centre pixel.
-			image = IECoreImage.ImageReader( outputFileName ).read()
-			dimensions = image.dataWindow.size() + imath.V2i( 1 )
-			centreIndex = dimensions.x * int( dimensions.y * 0.5 ) + int( dimensions.x * 0.5 )
-			color = imath.Color3f( image["R"][centreIndex], image["G"][centreIndex], image["B"][centreIndex] )
+			image = OpenImageIO.ImageBuf( outputFileName )
+			color = imath.Color3f( image.getpixel( image.spec().width // 2, image.spec().height // 2 )[:3] )
 			self.assertEqual( color, imath.Color3f( 1 ) )
 
 	def testProceduralCancellation( self ) :
@@ -3804,7 +4277,7 @@ class RendererTest( GafferTest.TestCase ) :
 					),
 					"lensEffects" : IECoreScene.Shader(
 						"imager_lens_effects", "ai:imager",
-						{ "bloom_radius" : 5 },
+						{ "vignetting" : 0.5 },
 					),
 				},
 				connections = [
@@ -3844,7 +4317,7 @@ class RendererTest( GafferTest.TestCase ) :
 					arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( lensEffects ) ),
 					"imager_lens_effects",
 				)
-				self.assertEqual( arnold.AiNodeGetInt( lensEffects, "bloom_radius" ), 5 )
+				self.assertEqual( arnold.AiNodeGetFlt( lensEffects, "vignetting" ), 0.5 )
 
 				exposure = arnold.AiNodeGetPtr( lensEffects, "input" )
 				self.assertIsNotNone( exposure )
@@ -3903,7 +4376,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		fileName = str( self.temporaryDirectory() / "testID.exr" )
-		r.output( "testID", IECoreScene.Output( fileName, "exr", "uint id", { "filter" : "closest" } ) )
+		r.output( "testID", IECoreScene.Output( fileName, "exr", "float id", { "filter" : "closest" } ) )
 
 		o = r.object(
 			"/sphere",
@@ -3916,10 +4389,13 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.render()
 
-		imageReader = IECoreImage.ImageReader( fileName )
-		data = imageReader.readChannel( "Y", raw = True )
-		self.assertIsInstance( data, IECore.UIntVectorData )
-		self.assertEqual( data[len(data)//2], 101 )
+		image = OpenImageIO.ImageBuf( fileName )
+		pixelVal = image.getpixel( image.spec().width // 2, image.spec().height // 2 )
+
+		# Reinterpret float as int.
+		id = struct.pack( "f", pixelVal[0] )
+		id = struct.unpack( "I", id )[0]
+		self.assertEqual( id, 101 )
 
 	def testReplaceID( self ) :
 
@@ -3940,7 +4416,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
 		node = arnold.AiNodeLookUpByName( universe, "/sphere" )
-		self.assertEqual( arnold.AiNodeGetUInt( node, "cortex:id" ), 2 )
+
+		# Reinterpret float as int.
+		id = struct.pack( "f", arnold.AiNodeGetFlt( node, "cortex:id" ) )
+		id = struct.unpack( "I", id )[0]
+		self.assertEqual( id, 2 )
 
 		del o
 		del r
@@ -3976,16 +4456,49 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.render()
 
-		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		beautyImage = OpenImageIO.ImageBuf( beautyFileName )
 		self.assertEqual(
-			set( beautyImage.keys() ),
+			set( beautyImage.spec().channelnames ),
 			{ "beauty.{}".format( c ) for c in "RGBA" }
 		)
 
-		diffuseImage = IECore.Reader.create( diffuseFileName ).read()
+		diffuseImage = OpenImageIO.ImageBuf( diffuseFileName )
 		self.assertEqual(
-			set( diffuseImage.keys() ),
+			set( diffuseImage.spec().channelnames ),
 			{ "diffuse.{}".format( c ) for c in "RGB" }
+		)
+
+	def testOutputMergeMixedLayerNames( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		fileName = str( self.temporaryDirectory() / "combined.exr" )
+		r.output(
+			"whatABeauty", IECoreScene.Output(
+				fileName, "exr", "rgba",
+				{
+				}
+			)
+		)
+
+		r.output(
+			"diffuseLPE", IECoreScene.Output(
+				fileName, "exr", "lpe C<RD>.*",
+				{
+					"layerName" : "diffuse",
+				}
+			)
+		)
+
+		r.render()
+
+		image = OpenImageIO.ImageBuf( fileName )
+		self.assertEqual(
+			set( image.spec().channelnames ),
+			set( [ "diffuse.{}".format( c ) for c in "RGB" ] + list( "RGBA" ) )
 		)
 
 	def testLightGroupOutputs( self ) :
@@ -4045,15 +4558,15 @@ class RendererTest( GafferTest.TestCase ) :
 		# belong in it.
 		lightGroups.append( "default" )
 
-		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		beautyImage = OpenImageIO.ImageBuf( beautyFileName )
 		self.assertEqual(
-			set( beautyImage.keys() ),
+			set( beautyImage.spec().channelnames ),
 			{ "RGBA_{}.{}".format( g, c ) for g in lightGroups for c in "RGBA" }
 		)
 
-		diffuseImage = IECore.Reader.create( diffuseFileName ).read()
+		diffuseImage = OpenImageIO.ImageBuf( diffuseFileName )
 		self.assertEqual(
-			set( diffuseImage.keys() ),
+			set( diffuseImage.spec().channelnames ),
 			{ "diffuse_{}.{}".format( g, c ) for g in lightGroups for c in "RGB" }
 		)
 
@@ -4104,11 +4617,86 @@ class RendererTest( GafferTest.TestCase ) :
 		# belong in it.
 		lightGroups.append( "default" )
 
-		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		beautyImage = OpenImageIO.ImageBuf( beautyFileName )
 		self.assertEqual(
-			set( beautyImage.keys() ),
+			set( beautyImage.spec().channelnames ),
 			{ "beauty_{}.{}".format( g, c ) for g in lightGroups for c in "RGBA" }
 		)
+
+	@staticmethod
+	def _renderCombinedEXR( fileName ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		if random.choice( [ True, False ] ) :
+			# The bug that motivated this test was that output order was
+			# non-deterministic, being based on InternedString ordering (which
+			# is based on memory location). Randomising the order the strings
+			# are created in increases the probability of that bug being
+			# triggered.
+			IECore.InternedString( "diffuseLPE" )
+
+		r.output(
+			"whatABeauty", IECoreScene.Output(
+				fileName, "exr", "rgba",
+				{
+					"multipart" : True,
+				}
+			)
+		)
+
+		r.output(
+			"diffuseLPE", IECoreScene.Output(
+				fileName, "exr", "lpe C<RD>.*",
+				{
+					"layerName" : "diffuse",
+					"multipart" : True,
+				}
+			)
+		)
+
+		r.output(
+			"albedo", IECoreScene.Output(
+				fileName, "exr", "color albedo",
+				{
+					"multipart" : True,
+				}
+			)
+		)
+
+		r.render()
+
+	def testOutputOrderIsStable( self ) :
+
+		env = os.environ.copy()
+		if sys.platform == "linux" :
+			# Preload `libstdc++` before `libai`. Otherwise Arnold plugins can resolve
+			# symbols for `operator delete` and `operator new` from `libai`, which has
+			# its own internal allocator and exports the symbols from it. If plugins
+			# resolve the Arnold symbols then mismatches may occur where they allocate
+			# something with the standard allocator and then try to delete it with the
+			# Arnold one.
+			env["LD_PRELOAD"] = "libstdc++.so.6"
+
+		for i in range( 0, 10 ) :
+
+			fileName = ( self.temporaryDirectory() / f"test{i}.exr" ).as_posix()
+			subprocess.check_call(
+				[ "python", "-c", f"import IECoreArnoldTest; IECoreArnoldTest.RendererTest._renderCombinedEXR( '{fileName}' )" ],
+				env = env
+			)
+
+			# We want the RGBA channels first, because some apps will show the
+			# first part of a multipart file by default. After that, we sort
+			# alphabetically.
+			image = OpenImageIO.ImageInput.open( fileName )
+			self.assertEqual(
+				image.spec().channelnames + image.spec( 1 ).channelnames + image.spec( 2 ).channelnames,
+				( "R", "G", "B", "A", "albedo.R", "albedo.G", "albedo.B", "diffuse.R", "diffuse.G", "diffuse.B" )
+			)
 
 	def testNamedOutputParameter( self ) :
 
@@ -4211,16 +4799,13 @@ class RendererTest( GafferTest.TestCase ) :
 			mix = arnold.AiNodeGetLink( range, "input" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mix ) ), "mix_rgba" )
 
-			# Before Arnold 7.2.3.0, the `state_float` doesn't have multiple outputs.
-			if [ int( x ) for x in arnold.AiGetVersion()[:3] ] >= [ 7, 2, 3 ] :
-
-				outputIndex = ctypes.c_int()
-				outputComponent = ctypes.c_int()
-				stateFloat = arnold.AiNodeGetLinkOutput( standardSurface, "base", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
-				stateFloatNodeEntry = arnold.AiNodeGetNodeEntry( stateFloat )
-				self.assertEqual( arnold.AiNodeEntryGetName( stateFloatNodeEntry ), "state_float" )
-				self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( stateFloatNodeEntry, outputIndex.value ) ), "sx" )
-				self.assertEqual( outputComponent.value, -1 )
+			outputIndex = ctypes.c_int()
+			outputComponent = ctypes.c_int()
+			stateFloat = arnold.AiNodeGetLinkOutput( standardSurface, "base", ctypes.byref( outputIndex ), ctypes.byref( outputComponent ) )
+			stateFloatNodeEntry = arnold.AiNodeGetNodeEntry( stateFloat )
+			self.assertEqual( arnold.AiNodeEntryGetName( stateFloatNodeEntry ), "state_float" )
+			self.assertEqual( arnold.AiParamGetName( arnold.AiNodeEntryGetOutput( stateFloatNodeEntry, outputIndex.value ) ), "sx" )
+			self.assertEqual( outputComponent.value, -1 )
 
 	def testOSLOutParameter( self ) :
 
@@ -4550,6 +5135,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		assertCameraParameter( renderer, "/camera1" )
 
+		renderer.pause()
 		del camera1, plane
 		del renderer
 
@@ -4798,6 +5384,3 @@ class RendererTest( GafferTest.TestCase ) :
 		for name in names :
 			node = arnold.AiNodeLookUpByName( universe, name )
 			self.assertNotEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "ginstance" )
-
-if __name__ == "__main__":
-	unittest.main()

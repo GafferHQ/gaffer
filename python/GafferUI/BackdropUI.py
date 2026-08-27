@@ -92,43 +92,43 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"title" : [
+		"title" : {
 
-			"description",
+			"description" :
 			"""
 			The title for the backdrop - this will be displayed at
 			the top of the backdrop.
 			""",
 
-			"stringPlugValueWidget:continuousUpdate", True,
+			"stringPlugValueWidget:continuousUpdate" : True,
 
-		],
+		},
 
-		"scale" : [
+		"scale" : {
 
-			"description",
+			"description" :
 			"""
 			Controls the size of the backdrop text.
 			""",
 
-		],
+		},
 
-		"description" : [
+		"description" : {
 
-			"description",
+			"description" :
 			"""
 			Text describing the contents of the backdrop -
 			this will be displayed below the title.
 			""",
 
-			"plugValueWidget:type", "GafferUI.MultiLineStringPlugValueWidget",
-			"multiLineStringPlugValueWidget:continuousUpdate", True,
+			"plugValueWidget:type" : "GafferUI.MultiLineStringPlugValueWidget",
+			"multiLineStringPlugValueWidget:continuousUpdate" : True,
 
-		],
+		},
 
-		"depth" : [
+		"depth" : {
 
-			"description",
+			"description" :
 			"""
 			Determines the drawing order of overlapping backdrops.
 
@@ -137,13 +137,12 @@ Gaffer.Metadata.registerNode(
 			> this is not desirable.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Back", -1,
-			"preset:Middle", 0,
-			"preset:Front", 1,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Back" : -1,
+			"preset:Middle" : 0,
+			"preset:Front" : 1,
 
-
-		],
+		},
 
 	}
 

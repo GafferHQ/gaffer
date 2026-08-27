@@ -46,6 +46,7 @@ import IECore
 
 import Gaffer
 from . import _GafferUI
+from ._HeaderView import _HeaderView
 from ._StyleSheet import _styleColors
 import GafferUI
 
@@ -158,9 +159,15 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
 		self.__dragPointer = "paths"
-
+		self.__dragBeginIndex = None
+		self.__currentDragColumn = None
+		self.__currentDragPath = None
 		self.__path = None
 
 		self.setDisplayMode( displayMode )
@@ -324,7 +331,10 @@ class PathListingWidget( GafferUI.Widget ) :
 			return
 
 		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
-		self._qtWidget().updateColumnWidths()
+		# Do an initial resize of column widths, to make sure we're at least
+		# fitting the available space. This will be refined once we get results
+		# from the asynchronous updates.
+		self._qtWidget().updateColumnWidths( columnsChanged = True )
 
 	def getColumns( self ) :
 
@@ -389,6 +399,9 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return selection
 
+	def visualOrder( self, paths ) :
+
+		return _GafferUI._pathListingWidgetVisualOrder( GafferUI._qtAddress( self._qtWidget() ), paths )
 
 	## \deprecated
 	def getSelectedPaths( self ) :
@@ -535,7 +548,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __selectionChanged( self ) :
 
-		self._qtWidget().update()
+		self._qtWidget().viewport().update()
 		self.selectionChangedSignal()( self )
 
 	def __pathChanged( self, path ) :
@@ -725,6 +738,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if self.__updateSelectionInButtonRelease :
 			self.__singleSelect( index )
+			self.__updateSelectionInButtonRelease = False
 			return True
 		else :
 			return self.getColumns()[index.column()].buttonReleaseSignal()(
@@ -761,13 +775,14 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if selection[0].match( str( path ) ) & IECore.PathMatcher.Result.ExactMatch :
 			GafferUI.Pointer.setCurrent( self.__dragPointer )
-			return IECore.StringVectorData( selection[0].paths() )
+			return IECore.StringVectorData( self.visualOrder( selection[0] ) )
 
 		index = self.__indexAt( event.line.p0 )
 		if index is not None :
 			value = self.getColumns()[index.column()].cellData( path ).value
 			if value is not None :
 				GafferUI.Pointer.setCurrent( "values" )
+				self.__dragBeginIndex = QtCore.QPersistentModelIndex( index )
 
 				return value
 
@@ -776,6 +791,81 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
+		self.__dragBeginIndex = None
+		self.__currentDragColumn = None
+		self.__currentDragPath = None
+
+	def __dragEnter( self, widget, event ) :
+
+		column = self.columnAt( event.line.p0 )
+		if column is None :
+			return False
+
+		# The header is represented in drag events as an empty Path. \todo Should this be handled by `pathAt()`?
+		path = self.pathAt( event.line.p0 ) if event.line.p0.y > self._qtWidget().header().height() else Gaffer.Path()
+		if path is None :
+			return False
+
+		if column.dragEnterSignal()( column, path, self, event ) :
+			self.__currentDragColumn = column
+			self.__currentDragPath = path
+			self.__setHighlightedIndex( self.__indexAt( event.line.p0 ) )
+			return True
+
+	def __dragMove( self, widget, event ) :
+
+		column = self.columnAt( event.line.p0 )
+		path = self.pathAt( event.line.p0 ) if event.line.p0.y > self._qtWidget().header().height() else Gaffer.Path()
+		columnOrPathChanged = ( column, path ) != ( self.__currentDragColumn, self.__currentDragPath )
+		if columnOrPathChanged and self.__currentDragColumn is not None and self.__currentDragPath is not None :
+			self.__setHighlightedIndex( None )
+			self.__currentDragColumn.dragLeaveSignal()( self.__currentDragColumn, self.__currentDragPath, self, event )
+			self.__currentDragColumn = None
+			self.__currentDragPath = None
+
+		if column is None or path is None :
+			return False
+
+		index = self.__indexAt( event.line.p0 )
+		# Prevent moving back to the same index the drag began from
+		if index is not None and index == self.__dragBeginIndex :
+			return False
+
+		if columnOrPathChanged :
+			if column.dragEnterSignal()( column, path, self, event ) :
+				if index is not None :
+					self.__setHighlightedIndex( index )
+				self.__currentDragColumn = column
+				self.__currentDragPath = path
+				return True
+		else :
+			# We've moved within the same column and path
+			return column.dragMoveSignal()( column, path, self, event )
+
+		return False
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__setHighlightedIndex( None )
+
+		if self.__currentDragColumn is not None and self.__currentDragPath is not None :
+			return self.__currentDragColumn.dragLeaveSignal()( self.__currentDragColumn, self.__currentDragPath, self, event )
+
+		return False
+
+	def __drop( self, widget, event ) :
+
+		self.__setHighlightedIndex( None )
+
+		column = self.columnAt( event.line.p0 )
+		if column is None :
+			return False
+
+		path = self.pathAt( event.line.p0 ) if event.line.p0.y > self._qtWidget().header().height() else Gaffer.Path()
+		if path is None :
+			return False
+
+		return column.dropSignal()( column, path, self, event )
 
 	def __contextMenu( self, widget ) :
 
@@ -929,6 +1019,10 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return self.__selectionMode == self.SelectionMode.Rows or self.__selectionMode == self.SelectionMode.Cells
 
+	def __setHighlightedIndex( self, index ) :
+
+		self._qtWidget().setHighlightedIndex( index )
+
 # Private implementation - a QTreeView with some specific size behaviour,
 # and knowledge of how to draw our PathMatcher selection.
 class _TreeView( QtWidgets.QTreeView ) :
@@ -937,6 +1031,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.__init__( self )
 
+		self.setHeader( _HeaderView( QtCore.Qt.Horizontal, self ) )
 		# Our `sizeHint()` depends on the header's size, so we need to
 		# ask for a geometry update any time it changes.
 		self.header().geometriesChanged.connect( self.updateGeometry )
@@ -959,12 +1054,31 @@ class _TreeView( QtWidgets.QTreeView ) :
 		# offsets to the ideal sizes made by the user
 		self.__columnWidthAdjustments = collections.defaultdict( int )
 
-		self.__currentEventModifiers = QtCore.Qt.NoModifier
+		self.__highlightedIndex = None
+
+	def setHighlightedIndex( self, index ) :
+
+		self.__highlightedIndex = QtCore.QPersistentModelIndex( index ) if index is not None else None
+		self.viewport().update()
 
 	def setModel( self, model ) :
 
+		# We expect to use one model for our entire lifetime. If we didn't
+		# we'd need to disconnect from the old model below.
+		assert( self.model() is None )
+
 		QtWidgets.QTreeView.setModel( self, model )
 
+		# Arrange to update column widths automatically based on the model
+		# contents. This isn't straightforward, because the contents are
+		# computed asynchronously - even the header text.
+		#
+		# To start, we adjust the widths to accommodate the header contents
+		# as soon as they are available. Typically this update is very
+		# quick, and gives us a reasonable layout almost immediately.
+		model.headerUpdateFinished.connect( self.updateColumnWidths )
+		# Next, we adjust again to accommodate the cell contents when
+		# we've finished a full update.
 		## \todo We may want more granular behaviour on model update.
 		# Currently column widths are updated when a location is
 		# expanded for the first time and requires a model update.
@@ -1025,15 +1139,19 @@ class _TreeView( QtWidgets.QTreeView ) :
 		else :
 			return parentIndex
 
-	def updateColumnWidths( self ) :
+	def updateColumnWidths( self, columnsChanged = False ) :
 
 		self.__recalculatingColumnWidths = True
+		originalHeaderLength = self.header().length()
 
 		header = self.header()
 		numColumnsToResize = header.count()
 		stretchLastColumn = self._shouldStretchLastColumn()
 		if stretchLastColumn :
 			numColumnsToResize -= 1 # leave the last section alone, as it's expandable
+
+		if columnsChanged :
+			self.__lastColumnWidth = 0
 
 		columns = self.__getColumns()
 		columnWidthsChanged = False
@@ -1051,16 +1169,23 @@ class _TreeView( QtWidgets.QTreeView ) :
 					header.resizeSection( i, adjustedWidth )
 					columnWidthsChanged = True
 
-		if columnWidthsChanged :
-			# an update to column widths can require resizing columns configured to stretch
-			# to make use of any change in available space
-			self.__resizeStretchColumns()
+		if columnWidthsChanged or columnsChanged :
+			# The space available for stretch columns may have changed, so
+			# adjust them to fit.
+			self.__resizeStretchColumns( columnsChanged )
 
 		if stretchLastColumn :
 			# finally, resize the last column to make use of any remaining available width
 			self.__resizeLastColumnToAvailableWidth()
 
 		self.__recalculatingColumnWidths = False
+
+		if self.header().length() != originalHeaderLength :
+			# You might think that `header.geometriesChanged()` would be emitted
+			# for this change in size, but it isn't. So we call `updateGeometry()`
+			# directly ourselves. That triggers a layout update to account for the
+			# fact that our `sizeHint()` will have changed.
+			self.updateGeometry()
 
 	def keyPressEvent( self, event ) :
 
@@ -1093,6 +1218,11 @@ class _TreeView( QtWidgets.QTreeView ) :
 		for i in range( 1, header.count() ) :
 			x = header.sectionViewportPosition( i ) - 1
 			painter.drawLine( x, 0, x, height )
+
+		if self.__highlightedIndex is not None and self.__highlightedIndex.isValid() :
+
+			painter.setPen( QtGui.QColor( *(_styleColors["brightColor"]) ) )
+			painter.drawRect( self.visualRect( self.__highlightedIndex ) )
 
 	def drawRow( self, painter, option, index ) :
 
@@ -1214,7 +1344,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		header.resizeSection( lastColumn, adjustedWidth )
 		self.__recalculatingColumnWidths = False
 
-	def __resizeStretchColumns( self ) :
+	def __resizeStretchColumns( self, columnsChanged = False ) :
 
 		header = self.header()
 		availableWidth = self.viewport().width()
@@ -1223,6 +1353,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		columns = self.__getColumns()
 		stretchLastColumn = self._shouldStretchLastColumn()
+
 		for i in range( 0, header.count() ) :
 			if (
 				columns[i].getSizeMode() == GafferUI.PathColumn.SizeMode.Stretch or
@@ -1240,8 +1371,12 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		weight = 1.0 / len( columnsToStretch )
 		for c in columnsToStretch :
-			if stretchColumnWidth > 0 :
-				# preserve any existing column proportions
+			if stretchColumnWidth > 0 and not columnsChanged :
+				# preserve any existing column proportions when resizing
+				# existing columns if the columns haven't changed. If
+				# the columns have changed then we're better off equally
+				# assigning the available space rather than preserving any
+				# existing header widths.
 				weight = header.sectionSize( c ) / stretchColumnWidth
 
 			## \todo A very small resize with multiple stretch columns can result in the

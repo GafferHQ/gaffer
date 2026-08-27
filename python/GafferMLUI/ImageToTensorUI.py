@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferML
 
@@ -53,31 +55,31 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"image" : [
+		"image" : {
 
-			"description",
+			"description" :
 			"""
 			The image to be converted.
 			""",
 
-		],
+		},
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			The image view to take the tensor data from.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
 
-			"noduleLayout:visible", False,
+			"noduleLayout:visible" : False,
 
-		],
+		},
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			The list of channels to convert. Channels are added to the
 			tensor in the order specified, so can be shuffled by changing
@@ -86,33 +88,47 @@ Gaffer.Metadata.registerNode(
 			conventions.
 			""",
 
-			"noduleLayout:visible", False,
+			"noduleLayout:visible" : False,
 
-		],
+		},
 
-		"interleaveChannels" : [
+		"interleaveChannels" : {
 
-			"description",
+			"description" :
 			"""
 			Interleaves the channel data, so that all channels for a single
 			pixel are adjacent in memory. Whether or not this is needed depends
 			on the input requirements of the model the tensor is used with.
 			""",
 
-			"noduleLayout:visible", False,
+			"noduleLayout:visible" : False,
 
-		],
+		},
 
-		"tensor" : [
+		"tensorElementType" : {
 
-			"description",
+			"description" :
+			"""
+			The type to use for the output tensor elements. Should be chosen to
+			match the requirements of the model used in the Inference node.
+			""",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Float" : GafferML.Tensor.ElementType.Float,
+			"preset:Float16" : GafferML.Tensor.ElementType.Float16,
+			"preset:BFloat16" : GafferML.Tensor.ElementType.BFloat16,
+
+		},
+
+		"tensor" : {
+
+			"description" :
 			"""
 			The output tensor.
 			""",
 
-			"layout:visibilityActivator", lambda plug : False,
+			"layout:visibilityActivator" : lambda plug : False,
 
-		],
+		},
 
 	}
 )

@@ -72,7 +72,7 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script["planeSet"]["in"].setInput( script["group"]["out"] )
 
 		script["attributes"] = GafferScene.StandardAttributes()
-		script["attributes"]["attributes"]["visibility"]["enabled"].setValue( True )
+		script["attributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 		script["attributes"]["in"].setInput( script["planeSet"]["out"] )
 
 		script["setFilter"] = GafferScene.SetFilter()
@@ -219,6 +219,3 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		s["b"]["s"].setup( s["p"]["out"] )
 
 		s.execute( """script["b"]["s"]["in"][0].setInput( script["b"]["filter"] )""" )
-
-if __name__ == "__main__":
-	unittest.main()

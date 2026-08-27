@@ -204,7 +204,7 @@ class BackgroundMethod( object ) :
 		if not widget.visible() :
 			currentCall = getattr( widget, method.__name__ + "__CurrentCall", None )
 			if currentCall is not None :
-				currentCall.backgroundTask.cancel()
+				currentCall.backgroundTask.cancelAndWait()
 				if currentCall.backgroundTask.status() == Gaffer.BackgroundTask.Status.Cancelled :
 					# Because we catch `IECore.Cancelled` ourselves in `backgroundFunction`,
 					# the only way a Cancelled status can occur is if the cancellation

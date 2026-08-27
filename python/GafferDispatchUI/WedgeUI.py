@@ -77,20 +77,20 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"variable" : [
+		"variable" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the Context Variable defined by the wedge.
 			This should be used in upstream expressions to apply the
 			wedged value to specific nodes.
 			""",
 
-		],
+		},
 
-		"indexVariable" : [
+		"indexVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The name of an index Context Variable defined by the wedge.
 			This is assigned values starting at 0 and incrementing for
@@ -104,11 +104,11 @@ Gaffer.Metadata.registerNode(
 			wedged renders.
 			""",
 
-		],
+		},
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to define the range of values used by
 			the wedge. It is possible to define numeric or color
@@ -116,48 +116,48 @@ Gaffer.Metadata.registerNode(
 			strings.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Float Range", int( GafferDispatch.Wedge.Mode.FloatRange ),
-			"preset:Int Range", int( GafferDispatch.Wedge.Mode.IntRange ),
-			"preset:Color Range", int( GafferDispatch.Wedge.Mode.ColorRange ),
-			"preset:Float List", int( GafferDispatch.Wedge.Mode.FloatList ),
-			"preset:Int List", int( GafferDispatch.Wedge.Mode.IntList ),
-			"preset:String List", int( GafferDispatch.Wedge.Mode.StringList ),
+			"preset:Float Range" : int( GafferDispatch.Wedge.Mode.FloatRange ),
+			"preset:Int Range" : int( GafferDispatch.Wedge.Mode.IntRange ),
+			"preset:Color Range" : int( GafferDispatch.Wedge.Mode.ColorRange ),
+			"preset:Float List" : int( GafferDispatch.Wedge.Mode.FloatList ),
+			"preset:Int List" : int( GafferDispatch.Wedge.Mode.IntList ),
+			"preset:String List" : int( GafferDispatch.Wedge.Mode.StringList ),
 
-		],
+		},
 
 		# Float Ramge
 
-		"floatMin" : [
+		"floatMin" : {
 
-			"description",
+			"description" :
 			"""
 			The smallest value of the wedge range when the
 			mode is set to "Float Range". Has no effect in
 			other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsFloatRange",
+			"layout:visibilityActivator" : "modeIsFloatRange",
 
-		],
+		},
 
-		"floatMax" : [
+		"floatMax" : {
 
-			"description",
+			"description" :
 			"""
 			The largest allowable value of the wedge range
 			when the mode is set to "Float Range". Has no
 			effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsFloatRange",
+			"layout:visibilityActivator" : "modeIsFloatRange",
 
-		],
+		},
 
-		"floatSteps" : [
+		"floatSteps" : {
 
-			"description",
+			"description" :
 			"""
 			The number of steps in the value range
 			defined when in "Float Range" mode. The
@@ -166,41 +166,41 @@ Gaffer.Metadata.registerNode(
 			other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsFloatRange",
+			"layout:visibilityActivator" : "modeIsFloatRange",
 
-		],
+		},
 
 		# Int Range
 
-		"intMin" : [
+		"intMin" : {
 
-			"description",
+			"description" :
 			"""
 			The smallest value of the wedge range when the
 			mode is set to "Int Range". Has no effect in
 			other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsIntRange",
+			"layout:visibilityActivator" : "modeIsIntRange",
 
-		],
+		},
 
-		"intMax" : [
+		"intMax" : {
 
-			"description",
+			"description" :
 			"""
 			The largest allowable value of the wedge range
 			when the mode is set to "Int Range". Has no
 			effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsIntRange",
+			"layout:visibilityActivator" : "modeIsIntRange",
 
-		],
+		},
 
-		"intStep" : [
+		"intStep" : {
 
-			"description",
+			"description" :
 			"""
 			The step between successive values when the
 			mode is set to "Int Range". Values are
@@ -211,28 +211,28 @@ Gaffer.Metadata.registerNode(
 			be used at all. Has no effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsIntRange",
+			"layout:visibilityActivator" : "modeIsIntRange",
 
-		],
+		},
 
 		# Color Range
 
-		"ramp" : [
+		"ramp" : {
 
-			"description",
+			"description" :
 			"""
 			The range of colours used when the mode
 			is set to "Colour Range". Has no effect in
 			other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsColorRange",
+			"layout:visibilityActivator" : "modeIsColorRange",
 
-		],
+		},
 
-		"colorSteps" : [
+		"colorSteps" : {
 
-			"description",
+			"description" :
 			"""
 			The number of steps in the wedge range
 			defined when in "Colour Range" mode. The
@@ -241,48 +241,49 @@ Gaffer.Metadata.registerNode(
 			other modes.
 			""",
 
-			"label", "Steps",
-			"layout:visibilityActivator", "modeIsColorRange",
+			"label" : "Steps",
+			"layout:visibilityActivator" : "modeIsColorRange",
 
-		],
+		},
 
 		# Lists
 
-		"floats" : [
+		"floats" : {
 
-			"description",
+			"description" :
 			"""
 			The list of values used when in "Float List"
 			mode. Has no effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsFloatList",
+			"layout:visibilityActivator" : "modeIsFloatList",
 
-		],
+		},
 
-		"ints" : [
+		"ints" : {
 
-			"description",
+			"description" :
 			"""
 			The list of values used when in "Int List"
 			mode. Has no effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsIntList",
+			"layout:visibilityActivator" : "modeIsIntList",
 
-		],
+		},
 
-		"strings" : [
+		"strings" : {
 
-			"description",
+			"description" :
 			"""
 			The list of values used when in "String List"
 			mode. Has no effect in other modes.
 			""",
 
-			"layout:visibilityActivator", "modeIsStringList",
+			"layout:visibilityActivator" : "modeIsStringList",
+			"ui:acceptsFileList" : True,
 
-		],
+		},
 
 	}
 
@@ -292,13 +293,15 @@ Gaffer.Metadata.registerNode(
 # Preview widgets
 ##########################################################################
 
-class _ValuesPreview( GafferUI.Widget ) :
+class _ValuesPreview( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, previewWidget, node, **kw ) :
 
 		self.__grid = GafferUI.GridContainer( spacing = 4 )
 
-		GafferUI.Widget.__init__( self, self.__grid, **kw )
+		# Passing the `task` plug means that we are updated when we
+		# want to be, because it depends on all the Wedge inputs.
+		GafferUI.PlugValueWidget.__init__( self, self.__grid, node["task"], **kw )
 
 		self.__grid[0,0] =  GafferUI.Spacer(
 			imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ),
@@ -308,25 +311,21 @@ class _ValuesPreview( GafferUI.Widget ) :
 
 		previewWidget.setToolTip( "The values generated by the wedge" )
 
-		self.__node = node
-		node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
-	def node( self ) :
-
-		return self.__node
-
-	def _update( self ) :
-
-		raise NotImplementedError
-
-	@GafferUI.LazyMethod()
-	def __updateLazily( self ) :
-
-		self._update()
-
-	def __plugDirtied( self, plug ) :
-
-		self.__updateLazily()
+		assert( len( plugs ) == 1 )
+		plug = next( iter( plugs ) )
+		try :
+			# It's a little bit cheeky that we claim to be displaying the `task`
+			# plug but actually call the `values()` method here. The downside is
+			# that PlugValueWidget doesn't know we might be launching a compute,
+			# so we'll be called on the UI thread. The best way of fixing that
+			# might be to have Wedge use an internal ComputeNode or Expression
+			# to generate the values on an internal plug that we pull on.
+			return plug.node().values()
+		except :
+			return []
 
 class _NumericValuesPreview( _ValuesPreview ) :
 
@@ -335,23 +334,12 @@ class _NumericValuesPreview( _ValuesPreview ) :
 		self.__textWidget = GafferUI.MultiLineTextWidget( editable = False )
 		_ValuesPreview.__init__( self, self.__textWidget, node, **kw )
 
-		self._update()
-
-	def _update( self ) :
-
-		with self.node().scriptNode().context() :
-
-			try :
-				values = self.node().values()
-			except Exception as e :
-				self.__textWidget.setText( str( e ) )
-				return
+	def _updateFromValues( self, values, exception ) :
 
 		if len( values ) and isinstance( values[0], float ) :
 			values = [ GafferUI.NumericWidget.valueToString( v ) for v in values ]
 		else :
 			values = [ str( v ) for v in values ]
-
 		self.__textWidget.setText( ", ".join( values ) )
 
 class _ColorValuesPreview( _ValuesPreview ) :
@@ -363,18 +351,10 @@ class _ColorValuesPreview( _ValuesPreview ) :
 
 		_ValuesPreview.__init__( self, self.__row, node, **kw )
 
-		self._update()
-
-	def _update( self ) :
-
-		with self.node().scriptNode().context() :
-			try :
-				values = self.node().values()
-			except :
-				return
+	def _updateFromValues( self, values, exception ) :
 
 		if not len( values ) or not isinstance( values[0], imath.Color3f ) :
-			return
+			values = [ imath.Color4f( 0, 0, 0, 0 ) ]
 
 		for i in range( 0, max( len( values ), len( self.__row ) ) ) :
 
@@ -392,4 +372,4 @@ class _ColorValuesPreview( _ValuesPreview ) :
 					swatch._qtWidget().setMinimumSize( 0, 12 )
 					self.__row.append( swatch )
 
-				swatch.setColor( values[i])
+				swatch.setColor( values[i] )

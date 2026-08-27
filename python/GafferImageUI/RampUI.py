@@ -63,65 +63,65 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The resolution and aspect ratio of the image.
 			""",
 
-		],
+		},
 
-		"ramp" : [
+		"ramp" : {
 
-			"description",
+			"description" :
 			"""
 			The gradient of colour used to draw the ramp.
 			""",
 
-		],
+		},
 
-		"startPosition" : [
+		"startPosition" : {
 
-			"description",
+			"description" :
 			"""
 			2d position for the start of the ramp color interpolation.
 			""",
 
-		],
+		},
 
-		"endPosition" : [
+		"endPosition" : {
 
-			"description",
+			"description" :
 			"""
 			2d position for the end of the ramp color interpolation.
 			""",
 
-		],
+		},
 
-		"layer" : [
+		"layer" : {
 
-			"description",
+			"description" :
 			"""
 			The layer to generate. The output channels will
 			be named ( layer.R, layer.G, layer.B and layer.A ).
 			""",
-			"stringPlugValueWidget:placeholderText", "[RGBA]",
-		],
+			"stringPlugValueWidget:placeholderText" : "[RGBA]",
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			A transformation applied to the entire ramp.
 			The translate and pivot values are specified in pixels,
 			and the rotate value is specified in degrees.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Transform",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Transform",
 
-		],
+		},
 
 	}
 

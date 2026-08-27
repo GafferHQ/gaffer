@@ -41,6 +41,7 @@ from collections import deque
 import shlex
 import pathlib
 import os
+import struct
 import subprocess
 import math
 
@@ -53,8 +54,8 @@ import IECoreScene
 import IECoreDelight
 import IECoreVDB
 
-import GafferTest
 import GafferScene
+import GafferTest
 
 class RendererTest( GafferTest.TestCase ) :
 
@@ -135,6 +136,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		i = OpenImageIO.ImageInput.open( os.path.join( self.temporaryDirectory(), "multipart.exr" ) )
 		subimages = i.spec().getattribute("oiio:subimages")
+		i.close()
 		del i
 
 		self.assertEqual( subimages, 2 )
@@ -315,8 +317,6 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.object( "testPlane", mesh, renderer.attributes( IECore.CompoundObject() ) )
 		renderer.render()
 		del renderer
-
-		print( self.temporaryDirectory() / "test.nsia" )
 
 		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
 
@@ -609,6 +609,51 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertInNSI( '"pixelaspectratio" "float" 1 1', nsi )
 		self.__assertInNSI( '"clippingrange" "double" 2 [ 0.25 10 ]', nsi )
 		self.__assertInNSI( '"shutterrange" "double" 2 [ 0 1 ]', nsi )
+
+	def testCameraDepthOfField( self ) :
+
+		for depthOfField in [ True, False, None ] :
+			for fStop in [ 0.0, 2.5 ] :
+				with self.subTest( depthOfField = depthOfField, fStop = fStop ) :
+					r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+						"3Delight",
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+						str( self.temporaryDirectory() / "test.nsia" ),
+					)
+
+					r.camera(
+						"testCamera",
+						IECoreScene.Camera(
+							parameters = {
+								"resolution" : imath.V2i( 2000, 1000 ),
+								"projection" : "perspective",
+								"aperture" : imath.V2f( 6, 6 ),
+								"focalLength" : 5.0,
+								"focusDistance" : 10.0,
+								"fStop" : fStop,
+							} | ( { "depthOfField" : depthOfField } if depthOfField is not None else {} )
+						)
+					)
+
+					r.option( "camera", IECore.StringData( "testCamera" ) )
+
+					r.render()
+					del r
+
+					nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
+
+					self.__assertInNSI( '"fov" "float" 1 90', nsi )
+					self.__assertInNSI( '"resolution" "int[2]" 1 [ 2000 1000 ]', nsi )
+					if depthOfField and fStop > 0 :
+						self.__assertInNSI( '"depthoffield.enable" "int" 1 1', nsi )
+						self.__assertInNSI( f'"depthoffield.fstop" "double" 1 {fStop}', nsi )
+						self.__assertInNSI( '"depthoffield.focallength" "double" 1 0.5', nsi )
+						self.__assertInNSI( '"depthoffield.focaldistance" "double" 1 10', nsi )
+					else :
+						self.__assertNotInNSI( '"depthoffield.enable" "int" 1 1', nsi )
+						self.__assertNotInNSI( f'"depthoffield.fstop" "double" 1 {fStop}', nsi )
+						self.__assertNotInNSI( '"depthoffield.focallength" "double" 1 0.5', nsi )
+						self.__assertNotInNSI( '"depthoffield.focaldistance" "double" 1 10', nsi )
 
 	def testObjectInstancing( self ) :
 
@@ -918,7 +963,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def test3DelightSplineParameters( self ) :
 
-		# Converting from OSL parameters to Gaffer spline parameters is
+		# Converting from OSL parameters to Gaffer ramp parameters is
 		# tested in GafferOSLTest.OSLShaderTest
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -937,63 +982,49 @@ class RendererTest( GafferTest.TestCase ) :
 					s,
 					"osl:shader",
 					{
-						"floatSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"floatSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
 								( 0, 0.25 ),
 								( 1, 0.75 ),
 								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"colorSpline" : IECore.SplinefColor3f(
-							IECore.CubicBasisf.bSpline(),
+						"colorSpline" : IECore.RampfColor3f(
 							[
 								( 0, imath.Color3f( 0.25 ) ),
-								( 0, imath.Color3f( 0.25 ) ),
-								( 0, imath.Color3f( 0.25 ) ),
 								( 1, imath.Color3f( 0.75 ) ),
-								( 1, imath.Color3f( 0.75 ) ),
-								( 1, imath.Color3f( 0.75 ) ),
-							]
+							],
+							IECore.RampInterpolation.BSpline
 						),
-						"dualInterpolationSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"dualInterpolationSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"trimmedFloatSpline" : IECore.Splineff(
-							IECore.CubicBasisf.catmullRom(),
+						"trimmedFloatSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.CatmullRom
 						),
-						"mayaSpline" : IECore.Splineff(
-							IECore.CubicBasisf.linear(),
+						"mayaSpline" : IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
-						"inconsistentNameSpline": IECore.Splineff(
-							IECore.CubicBasisf.bSpline(),
+						"inconsistentNameSpline": IECore.Rampff(
 							[
 								( 0, 0.25 ),
-								( 0, 0.25 ),
-								( 0, 0.25 ),
 								( 1, 0.75 ),
-								( 1, 0.75 ),
-								( 1, 0.75 ),
-							]
+							],
+							IECore.RampInterpolation.BSpline
 						),
 					}
 				),
@@ -1048,9 +1079,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "colorSplineValues", shader )
 		self.assertNotIn( "colorSplineBasis", shader )
 
-		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
-		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
-		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1 ] )
 
 		self.assertNotIn( "dualInterpolationSplinePositions", shader )
 		self.assertNotIn( "dualInterpolationSplineValues", shader )
@@ -1066,9 +1097,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "trimmedFloatSplineValues", shader )
 		self.assertNotIn( "trimmedFloatSplineBasis", shader )
 
-		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
-		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
-		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1 ] )
 
 		self.assertNotIn( "mayaSplinePositions", shader )
 		self.assertNotIn( "maysSplineValues", shader )
@@ -1082,7 +1113,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertNotIn( "inconsistentNameSplineValues", shader )
 		self.assertNotIn( "inconsistentNameSplineBasis", shader )
 
-	def testGafferSplineParameters( self ) :
+	def testGafferRampParameters( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
@@ -1092,27 +1123,27 @@ class RendererTest( GafferTest.TestCase ) :
 
 		network = IECoreScene.ShaderNetwork(
 			shaders = {
-				"splineHandle" : IECoreScene.Shader(
-					"Pattern/ColorSpline",
+				"rampHandle" : IECoreScene.Shader(
+					"Pattern/ColorRamp",
 					"osl:shader",
 					{
-						"spline" : IECore.SplinefColor3f(
-							IECore.CubicBasisf.linear(),
+						"ramp" : IECore.RampfColor3f(
 							[
 								( 0, imath.Color3f( 1, 0, 0 ) ),
 								( 0, imath.Color3f( 1, 0, 0 ) ),
 								( 1, imath.Color3f( 0, 0, 1 ) ),
 								( 1, imath.Color3f( 0, 0, 1 ) ),
-							]
+							],
+							IECore.RampInterpolation.Linear
 						),
 					}
 				),
 				"constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:surface", {} )
 			},
 			connections = [
-				( ( "splineHandle", "" ), ( "constHandle", "Cs" ) ),
+				( ( "rampHandle", "" ), ( "constHandle", "Cs" ) ),
 			],
-			output = "splineHandle"
+			output = "rampHandle"
 		)
 
 		o = r.object(
@@ -1131,9 +1162,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( shaders ), 1 )
 		shader = shaders[next( iter( shaders ) )]
 
-		self.assertEqual( shader["splinePositions"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["rampPositions"], [ 0, 0, 0, 1, 1, 1 ] )
 		self.assertEqual(
-			shader["splineValues"],
+			shader["rampValues"],
 			[
 				imath.Color3f( 1, 0, 0 ),
 				imath.Color3f( 1, 0, 0 ),
@@ -1143,7 +1174,7 @@ class RendererTest( GafferTest.TestCase ) :
 				imath.Color3f( 0, 0, 1 )
 			]
 		)
-		self.assertEqual( shader["splineBasis"], "linear" )
+		self.assertEqual( shader["rampBasis"], "linear" )
 
 	def testUVCoordShaderInserted( self ) :
 
@@ -1598,6 +1629,88 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertIn( k, nsi["outputLayer:test"] )
 				self.assertEqual( nsi["outputLayer:test"][k], v )
 
+	def testIDAdaptors( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		r.output(
+			"id",
+			IECoreScene.Output(
+				( self.temporaryDirectory() / "id.exr" ).as_posix(),
+				"exr",
+				"float id"
+			)
+		)
+
+		r.output(
+			"instanceID",
+			IECoreScene.Output(
+				( self.temporaryDirectory() / "instanceID.exr" ).as_posix(),
+				"exr",
+				"float instanceID"
+			)
+		)
+
+		r.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 100, 100 ),
+					"projection" : "orthographic",
+					"aperture" : imath.V2f( 3, 3 ),
+				}
+			)
+		)
+
+		r.option( "camera", IECore.StringData( "testCamera" ) )
+
+		m = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) )
+
+		cubeParams = [
+			( 7, 3, -1, -1 ),
+			( 8, 6, 1, -1 ),
+			( 9, 15, -1, 1 ),
+			( 10, 42, 1, 1 ),
+		]
+
+		for ident, instanceIdent, x, y in cubeParams:
+			handle = r.object( "object" + str( ident ), m, r.attributes( IECore.CompoundObject() ) )
+			handle.assignID( ident )
+			handle.assignInstanceID( instanceIdent )
+			handle.transform( imath.M44f().translate( imath.V3f( x * 0.5, y * 0.5, 0 ) ) )
+
+		r.render()
+		del r
+
+		image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "id.exr" ) )
+		self.assertEqual( len( image.spec().channelnames ), 1 )
+
+		for ident, instanceIdent, x, y in cubeParams:
+			# `ImageBuf.getchannel()` seems to have an incorrect Python binding
+			# so we use `getpixel()`.
+			raw = image.getpixel( 50 + x * 10, 50 - y * 10 )[0]
+
+			# Reinterpret float as int.
+			readID = struct.pack( "f", raw )
+			readID = struct.unpack( "I", readID )[0]
+
+			self.assertEqual( readID, ident )
+
+		image = OpenImageIO.ImageBuf( str( self.temporaryDirectory() / "instanceID.exr" ) )
+		self.assertEqual( len( image.spec().channelnames ), 1 )
+
+		for ident, instanceIdent, x, y in cubeParams:
+			raw = image.getpixel( 50 + x * 10, 50 - y * 10 )[0]
+
+			# Reinterpret float as int.
+			readID = struct.pack( "f", raw )
+			readID = struct.unpack( "I", readID )[0]
+
+			self.assertEqual( readID, instanceIdent )
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
 	# so we build a simple dictionary-based node graph for now.
@@ -1675,7 +1788,7 @@ class RendererTest( GafferTest.TestCase ) :
 				pLength = 1
 
 				arraySplit = reArraySplit.match( pType )
-				# Currently it seems impossible to reprsent an array of arrays, i.e. an array
+				# Currently it seems impossible to represent an array of arrays, i.e. an array
 				# of float[2] arrays. We treat `float[2]` as it's own unique type.
 				if arraySplit is not None and pType != "float[2]" :
 					pLength = int( arraySplit.groupdict()["arrayLength"] )
@@ -1795,6 +1908,3 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		return outputFileName.with_suffix("").as_posix()
-
-if __name__ == "__main__":
-	unittest.main()

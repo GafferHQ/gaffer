@@ -355,6 +355,7 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 	def testSetRespectsRootName( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		collect1 = GafferScene.CollectScenes()
 		collect1["in"].setInput( light["out"] )
@@ -561,6 +562,3 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		for i in range( 0, 100 ) :
 			Gaffer.ValuePlug.clearHashCache()
 			self.assertEqual( collect["out"].setHash( "A" ), h )
-
-if __name__ == "__main__":
-	unittest.main()

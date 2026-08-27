@@ -53,189 +53,187 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 		for useClosure in [ False, True ]:
-
-			getRed = GafferOSL.OSLShader()
-			getRed.loadShader( "ImageProcessing/InChannel" )
-			getRed["parameters"]["channelName"].setValue( "R" )
-
-			getGreen = GafferOSL.OSLShader()
-			getGreen.loadShader( "ImageProcessing/InChannel" )
-			getGreen["parameters"]["channelName"].setValue( "G" )
-
-			getBlue = GafferOSL.OSLShader()
-			getBlue.loadShader( "ImageProcessing/InChannel" )
-			getBlue["parameters"]["channelName"].setValue( "B" )
-
-			floatToColor = GafferOSL.OSLShader()
-			floatToColor.loadShader( "Conversion/FloatToColor" )
-			floatToColor["parameters"]["r"].setInput( getBlue["out"]["channelValue"] )
-			floatToColor["parameters"]["g"].setInput( getGreen["out"]["channelValue"] )
-			floatToColor["parameters"]["b"].setInput( getRed["out"]["channelValue"] )
-
-			reader = GafferImage.ImageReader()
-			reader["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr" )
-
-			shuffle = GafferImage.Shuffle()
-			shuffle["in"].setInput( reader["out"] )
-			shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "unchangedR" ) )
-
-			image = GafferOSL.OSLImage()
-			image["in"].setInput( shuffle["out"] )
-
-			# we haven't connected the shader yet, so the node should act as a pass through
-
-			self.assertEqual( GafferImage.ImageAlgo.image( image["out"] ), GafferImage.ImageAlgo.image( shuffle["out"] ) )
-
-			# that should all change when we hook up a shader
-
-			if useClosure:
-
-				outRGB = GafferOSL.OSLShader()
-				outRGB.loadShader( "ImageProcessing/OutLayer" )
-				outRGB["parameters"]["layerColor"].setInput( floatToColor["out"]["c"] )
-
-				imageShader = GafferOSL.OSLShader()
-				imageShader.loadShader( "ImageProcessing/OutImage" )
-				imageShader["parameters"]["in0"].setInput( outRGB["out"]["layer"] )
-
-				image["channels"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug(), "testClosure" ) )
-
-			else:
-
-				image["channels"].addChild( Gaffer.NameValuePlug( "", imath.Color3f(), "testColor" ) )
-
-			cs = GafferTest.CapturingSlot( image.plugDirtiedSignal() )
-
-			def checkDirtiness( expected):
-				self.assertEqual( [ i[0].fullName() for i in cs ], [ "OSLImage." + i for i in expected ] )
-				del cs[:]
-
-			if useClosure:
-				image["channels"]["testClosure"]["value"].setInput( imageShader["out"]["out"] )
-				channelsDirtied = ["channels.testClosure.value", "channels.testClosure"]
-			else:
-				image["channels"]["testColor"]["value"].setInput( floatToColor["out"]["c"] )
-				channelsDirtied = [
-					"channels.testColor.value.r", "channels.testColor.value.g", "channels.testColor.value.b",
-					"channels.testColor.value", "channels.testColor"
-				]
-
-			checkDirtiness( channelsDirtied + [
-					"channels", "__shader", "__shading",
-					"__affectedChannels", "out.channelNames", "out.channelData", "out"
-			] )
-
-			inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
-
-			with Gaffer.ContextMonitor( image["__shading"] ) as monitor :
-				self.assertEqual( image["out"].channelNames(), IECore.StringVectorData( [ "A", "B", "G", "R", "unchangedR" ] ) )
-				# Evaluating channel names only requires evaluating the shading plug if we have a closure
-				self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 1 if useClosure else 0 )
-
-				# Channels we don't touch should be passed through unaltered
-				for channel, changed in [('B',True), ('G',True), ('R',True), ('A',False), ('unchangedR',False) ]:
-					self.assertEqual(
-						image["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ) ==
-						shuffle["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ),
-						not changed
-					)
-					image["out"].channelData( channel, imath.V2i( 0, 0 ) )
-
-			# Should only need one shading evaluate for all channels
-			self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 1 )
-
-			outputImage = GafferImage.ImageAlgo.image( image["out"] )
-
-			self.assertNotEqual( inputImage, outputImage )
-			self.assertEqual( outputImage["R"], inputImage["B"] )
-			self.assertEqual( outputImage["G"], inputImage["G"] )
-			self.assertEqual( outputImage["B"], inputImage["R"] )
-
-			# changes in the shader network should signal more dirtiness
-
-			getGreen["parameters"]["channelName"].setValue( "R" )
-			checkDirtiness( channelsDirtied + [
-					"channels", "__shader", "__shading",
-					"__affectedChannels", "out.channelNames", "out.channelData", "out"
-			] )
-
-			floatToColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
-			checkDirtiness( channelsDirtied + [
-					"channels", "__shader", "__shading",
-					"__affectedChannels", "out.channelNames", "out.channelData", "out"
-			] )
+			with self.subTest( useClosure = useClosure ):
+				self.runTest( useClosure )
 
 
-			inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
-			outputImage = GafferImage.ImageAlgo.image( image["out"] )
+	def runTest( self, useClosure ):
+		getRed = GafferOSL.OSLShader()
+		getRed.loadShader( "ImageProcessing/InChannel" )
+		getRed["parameters"]["channelName"].setValue( "R" )
 
-			self.assertEqual( outputImage["R"], inputImage["R"] )
-			self.assertEqual( outputImage["G"], inputImage["R"] )
-			self.assertEqual( outputImage["B"], inputImage["R"] )
-			self.assertEqual( outputImage["A"], inputImage["A"] )
-			self.assertEqual( outputImage["unchangedR"], inputImage["unchangedR"] )
+		getGreen = GafferOSL.OSLShader()
+		getGreen.loadShader( "ImageProcessing/InChannel" )
+		getGreen["parameters"]["channelName"].setValue( "G" )
 
-			image["in"].setInput( None )
-			checkDirtiness( [
-					'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-					'out.viewNames', '__shading', '__affectedChannels',
-					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
-			] )
+		getBlue = GafferOSL.OSLShader()
+		getBlue.loadShader( "ImageProcessing/InChannel" )
+		getBlue["parameters"]["channelName"].setValue( "B" )
 
-			image["defaultFormat"]["displayWindow"]["max"]["x"].setValue( 200 )
-			checkDirtiness( [
-					'defaultFormat.displayWindow.max.x', 'defaultFormat.displayWindow.max', 'defaultFormat.displayWindow', 'defaultFormat',
-					'__defaultIn.format', '__defaultIn.dataWindow', '__defaultIn', '__shading', '__affectedChannels',
-					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out'
-			] )
+		floatToColor = GafferOSL.OSLShader()
+		floatToColor.loadShader( "Conversion/FloatToColor" )
+		floatToColor["parameters"]["r"].setInput( getBlue["out"]["channelValue"] )
+		floatToColor["parameters"]["g"].setInput( getGreen["out"]["channelValue"] )
+		floatToColor["parameters"]["b"].setInput( getRed["out"]["channelValue"] )
 
-			constant = GafferImage.Constant()
-			image["in"].setInput( constant["out"] )
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr" )
 
-			checkDirtiness( [
-					'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-					'out.viewNames', '__shading', '__affectedChannels',
-					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
-			] )
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( reader["out"] )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "unchangedR" ) )
 
-			image["in"].setInput( shuffle["out"] )
-			if useClosure:
-				outRGB["parameters"]["layerName"].setValue( "newLayer" )
-			else:
-				image["channels"][0]["name"].setValue( "newLayer" )
+		image = GafferOSL.OSLImage()
+		image["in"].setInput( shuffle["out"] )
 
-			self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
-				[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
-			) )
+		# we haven't connected the shader yet, so the node should act as a pass through
 
-			for channel in ['B', 'G', 'R', 'A', 'unchangedR' ]:
+		self.assertEqual( GafferImage.ImageAlgo.image( image["out"] ), GafferImage.ImageAlgo.image( shuffle["out"] ) )
+
+		# that should all change when we hook up a shader
+
+		if useClosure:
+
+			outRGB = GafferOSL.OSLShader()
+			outRGB.loadShader( "ImageProcessing/OutLayer" )
+			outRGB["parameters"]["layerColor"].setInput( floatToColor["out"]["c"] )
+
+			imageShader = GafferOSL.OSLShader()
+			imageShader.loadShader( "ImageProcessing/OutImage" )
+			imageShader["parameters"]["in0"].setInput( outRGB["out"]["layer"] )
+
+			image["channels"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug(), "testClosure" ) )
+
+		else:
+
+			image["channels"].addChild( Gaffer.NameValuePlug( "", imath.Color3f(), "testColor" ) )
+
+		cs = GafferTest.CapturingSlot( image.plugDirtiedSignal() )
+
+		def checkDirtiness( expected):
+			self.assertEqual( [ i[0].fullName() for i in cs ], [ "OSLImage." + i for i in expected ] )
+			del cs[:]
+
+		if useClosure:
+			image["channels"]["testClosure"]["value"].setInput( imageShader["out"]["out"] )
+			channelsDirtied = ["channels.testClosure.value", "channels.testClosure"]
+		else:
+			image["channels"]["testColor"]["value"].setInput( floatToColor["out"]["c"] )
+			channelsDirtied = [
+				"channels.testColor.value.r", "channels.testColor.value.g", "channels.testColor.value.b",
+				"channels.testColor.value", "channels.testColor"
+			]
+
+		checkDirtiness( channelsDirtied + [
+				"channels", "__shader", "__shading",
+				"out.channelData", "__affectedChannels", "out.channelNames", "out"
+		] )
+
+		inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
+
+		with Gaffer.ContextMonitor( image["__shading"] ) as monitor :
+			self.assertEqual( image["out"].channelNames(), IECore.StringVectorData( [ "A", "B", "G", "R", "unchangedR" ] ) )
+			# Evaluating channel names does a special shader evaluate that doesn't evaluate the shading plug
+			self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 0 )
+
+			# Channels we don't touch should be passed through unaltered
+			for channel, changed in [('B',True), ('G',True), ('R',True), ('A',False), ('unchangedR',False) ]:
 				self.assertEqual(
-					image["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ),
-					shuffle["out"].channelDataHash( channel, imath.V2i( 0, 0 ) )
+					image["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ) ==
+					shuffle["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ),
+					not changed
 				)
-				self.assertEqual(
-					image["out"].channelData( channel, imath.V2i( 0, 0 ) ),
-					shuffle["out"].channelData( channel, imath.V2i( 0, 0 ) )
-				)
+				image["out"].channelData( channel, imath.V2i( 0, 0 ) )
 
-			crop = GafferImage.Crop()
-			crop["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 0, 0 ) ) )
-			crop["in"].setInput( shuffle["out"] )
+		# Should only need one shading evaluate for all channels
+		self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 1 )
 
-			image["in"].setInput( crop["out"] )
+		outputImage = GafferImage.ImageAlgo.image( image["out"] )
 
-			if useClosure:
-				# When using closures, we can't find out about the new channels being added if the datawindow is
-				# empty
-				self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
-					[ "A", "B", "G", "R", "unchangedR" ]
-				) )
-			else:
-				self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
-					[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
-				) )
+		self.assertNotEqual( inputImage, outputImage )
+		self.assertEqual( outputImage["R"], inputImage["B"] )
+		self.assertEqual( outputImage["G"], inputImage["G"] )
+		self.assertEqual( outputImage["B"], inputImage["R"] )
+
+		# changes in the shader network should signal more dirtiness
+
+		getGreen["parameters"]["channelName"].setValue( "R" )
+		checkDirtiness( channelsDirtied + [
+				"channels", "__shader", "__shading",
+				"out.channelData", "__affectedChannels", "out.channelNames", "out"
+		] )
+
+		floatToColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
+		checkDirtiness( channelsDirtied + [
+				"channels", "__shader", "__shading",
+				"out.channelData", "__affectedChannels", "out.channelNames", "out"
+		] )
 
 
+		inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
+		outputImage = GafferImage.ImageAlgo.image( image["out"] )
+
+		self.assertEqual( outputImage["R"], inputImage["R"] )
+		self.assertEqual( outputImage["G"], inputImage["R"] )
+		self.assertEqual( outputImage["B"], inputImage["R"] )
+		self.assertEqual( outputImage["A"], inputImage["A"] )
+		self.assertEqual( outputImage["unchangedR"], inputImage["unchangedR"] )
+
+		image["in"].setInput( None )
+		checkDirtiness( [
+				'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
+				'out.viewNames', '__shading',
+				'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets',
+				'__affectedChannels', 'out.channelNames',
+				'out'
+		])
+
+		image["defaultFormat"]["displayWindow"]["max"]["x"].setValue( 200 )
+		checkDirtiness( [
+				'defaultFormat.displayWindow.max.x', 'defaultFormat.displayWindow.max', 'defaultFormat.displayWindow', 'defaultFormat',
+				'__defaultIn.format', '__defaultIn.dataWindow', '__defaultIn', '__shading',
+				'out.channelData', 'out.format', 'out.dataWindow', 'out'
+		] )
+
+		constant = GafferImage.Constant()
+		image["in"].setInput( constant["out"] )
+
+		checkDirtiness( [
+				'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
+				'out.viewNames', '__shading',
+				'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets',
+				'__affectedChannels', 'out.channelNames', 'out'
+		] )
+
+		image["in"].setInput( shuffle["out"] )
+		if useClosure:
+			outRGB["parameters"]["layerName"].setValue( "newLayer" )
+		else:
+			image["channels"][0]["name"].setValue( "newLayer" )
+
+		self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
+			[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
+		) )
+
+		for channel in ['B', 'G', 'R', 'A', 'unchangedR' ]:
+			self.assertEqual(
+				image["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ),
+				shuffle["out"].channelDataHash( channel, imath.V2i( 0, 0 ) )
+			)
+			self.assertEqual(
+				image["out"].channelData( channel, imath.V2i( 0, 0 ) ),
+				shuffle["out"].channelData( channel, imath.V2i( 0, 0 ) )
+			)
+
+		crop = GafferImage.Crop()
+		crop["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 0, 0 ) ) )
+		crop["in"].setInput( shuffle["out"] )
+
+		image["in"].setInput( crop["out"] )
+
+		self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
+			[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
+		) )
 
 	def testAcceptsShaderSwitch( self ) :
 
@@ -738,7 +736,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		# This box does the non-blocking slow calculation, followed by a blocking slow calculation.
 		# This ensures that tasks which do just the non-block calculation will start finishing while
 		# the blocking slow calculation is still running, allowing tbb to try running more threads
-		# on the blocking calcluation, realizing they can't run, and stealing tasks onto those threads
+		# on the blocking calculation, realizing they can't run, and stealing tasks onto those threads
 		# which can hit the Standard policy lock on the expression upstream and deadlock, unless the
 		# OSLImage isolates its threads correctly
 		expressionBox = Gaffer.Box()
@@ -858,9 +856,10 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		g = GafferOSL.OSLShader()
 		g.loadShader( "Utility/Globals" )
-		colorSpline = GafferOSL.OSLShader()
-		colorSpline.loadShader( "Pattern/ColorSpline" )
-		colorSpline["parameters"]["x"].setInput( g["out"]["globalU"] )
+		colorRamp = GafferOSL.OSLShader()
+		colorRamp.loadShader( "Pattern/ColorRamp" )
+		colorRamp["parameters"]["direction"].setValue( "custom" )
+		colorRamp["parameters"]["x"].setInput( g["out"]["globalU"] )
 
 		# Values chosen to trigger a precision issue with OSL's splineinverse on a constant basis
 		# if it is not avoided.  The values have also been selected a little to avoid showing
@@ -871,8 +870,8 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		#  * The values are chosen so that the discontinuities in "constant" mode don't lie
 		#    directly on a pixel center - if they did, it's comes down solely to floating point
 		#    precision which side we lie on.
-		colorSpline["parameters"]["spline"].setValue(
-			Gaffer.SplineDefinitionfColor3f(
+		colorRamp["parameters"]["ramp"].setValue(
+			IECore.RampfColor3f(
 				(
 					( 0.1580, imath.Color3f( 0.71, 0.21, 0.39 ) ),
 					( 0.2249, imath.Color3f( 0, 0.30, 0 ) ),
@@ -884,28 +883,29 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 					( 0.4607, imath.Color3f( 0.71, 0.21, 0.39 ) ),
 					( 0.5996, imath.Color3f( 0, 1, 1 ) ),
 					( 0.9235, imath.Color3f( 1, 0.25, 0.25 ) )
-				), Gaffer.SplineDefinitionInterpolation.Constant
+				), IECore.RampInterpolation.Constant
 			)
 		)
 
 		oslImage = GafferOSL.OSLImage( "OSLImage" )
 		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value" ), True, "channel" ) )
-		oslImage["channels"]["channel"]["value"].setInput( colorSpline["out"]["c"] )
+		oslImage["channels"]["channel"]["value"].setInput( colorRamp["out"]["c"] )
 		oslImage["defaultFormat"].setValue( GafferImage.Format( 3000, 64, 1.000 ) )
 
-		for i in Gaffer.SplineDefinitionInterpolation.names.values():
-			colorSpline["parameters"]["spline"]["interpolation"].setValue( i )
-			cortexSpline = colorSpline["parameters"]["spline"].getValue().spline()
-			samplers = [
-				GafferImage.Sampler( oslImage["out"], c, imath.Box2i( imath.V2i( 0 ), imath.V2i( 3000, 1 ) ) )
-				for c in [ "R", "G", "B" ]
-			]
-			for x in range( 3000 ):
-				result = cortexSpline( ( x + 0.5 ) / 3000.0 )
-				for c in range(3):
-					self.assertAlmostEqual( samplers[c].sample( x, 0 ), result[c], places = 3 )
+		for i in IECore.RampInterpolation.names.values():
+			with self.subTest( interpolation = i ):
+				colorRamp["parameters"]["ramp"]["interpolation"].setValue( i )
+				cortexRamp = colorRamp["parameters"]["ramp"].getValue().evaluator()
+				samplers = [
+					GafferImage.Sampler( oslImage["out"], c, imath.Box2i( imath.V2i( 0 ), imath.V2i( 3000, 1 ) ) )
+					for c in [ "R", "G", "B" ]
+				]
+				for x in range( 3000 ):
+					result = cortexRamp( ( x + 0.5 ) / 3000.0 )
+					for c in range(3):
+						self.assertAlmostEqual( samplers[c].sample( x, 0 ), result[c], places = 3 )
 
-	def testOSLSplineConnections( self ):
+	def testOSLRampConnections( self ):
 
 		g = GafferOSL.OSLShader()
 		g.loadShader( "Utility/Globals" )
@@ -915,17 +915,17 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		invertU["parameters"]["a"].setValue( 1.0 )
 		invertU["parameters"]["b"].setInput( g["out"]["globalU"] )
 
-		floatSpline = GafferOSL.OSLShader()
-		floatSpline.loadShader( "Pattern/FloatSpline" )
-		floatSpline["parameters"]["x"].setInput( g["out"]["globalV"] )
-		floatSpline['parameters']['spline'].setValue( Gaffer.SplineDefinitionff( ( ( 1/8, 0 ), ( 3/8, 0 ), ( 5/8, 1 ), ( 7/8, 1 )), Gaffer.SplineDefinitionInterpolation.Constant ) )
-		floatSpline["parameters"]["spline"]["p1"]["y"].setInput( invertU["out"]["out"] )
-		floatSpline["parameters"]["spline"]["p2"]["y"].setInput( g["out"]["globalU"] )
+		floatRamp = GafferOSL.OSLShader()
+		floatRamp.loadShader( "Pattern/FloatRamp" )
+		floatRamp["parameters"]["x"].setInput( g["out"]["globalV"] )
+		floatRamp['parameters']['ramp'].setValue( IECore.Rampff( ( ( 1/8, 0 ), ( 3/8, 0 ), ( 5/8, 1 ), ( 7/8, 1 )), IECore.RampInterpolation.Constant ) )
+		floatRamp["parameters"]["ramp"]["p1"]["y"].setInput( invertU["out"]["out"] )
+		floatRamp["parameters"]["ramp"]["p2"]["y"].setInput( g["out"]["globalU"] )
 
 		oslImage = GafferOSL.OSLImage()
 		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value" ), True, "channel" ) )
 		oslImage["defaultFormat"].setValue( GafferImage.Format( 2, 8, 1.000 ) )
-		oslImage["channels"]["channel"]["value"].setInput( floatSpline["out"]["c"] )
+		oslImage["channels"]["channel"]["value"].setInput( floatRamp["out"]["c"] )
 
 		def testEval( channelName ):
 			d = oslImage['out'].channelData( channelName, imath.V2i( 0 ) )
@@ -936,50 +936,56 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( testEval("R"), [0, 0, 0, 0, 0, 0, 750, 250, 750, 250, 250, 750, 250, 750, 1000, 1000] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
+		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.Linear )
 		self.assertEqual( testEval("R"), [0, 0, 188, 62, 562, 188, 625, 375, 375, 625, 438, 812, 812, 938, 1000, 1000] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.CatmullRom )
+		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.CatmullRom )
 		self.assertEqual( testEval("R"), [0, 0, 232, 54, 648, 170, 684, 363, 316, 637, 352, 830, 768, 946, 1000, 1000] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.BSpline )
+		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.BSpline )
 		self.assertEqual( testEval("R"), [0, 0, 187, 63, 476, 205, 540, 392, 460, 608, 524, 795, 813, 937, 1000, 1000] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
-		with self.assertRaisesRegex( Exception, "Cannot support monotone cubic interpolation for splines with inputs, for plug OSLShader.parameters.s" ):
+		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.MonotoneCubic )
+		with IECore.CapturingMessageHandler() as mh :
 			testEval( "R" )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message,
+			"Cannot connect adaptors to ramp when using monotoneCubic interpolation: OSLShader2.ramp[1].y"
+		)
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 
 		# Make connections to outermost control points ( this will require duplicating connections to the
 		# duplicated end points )
-		floatSpline["parameters"]["spline"]["p0"]["y"].setInput( invertU["out"]["out"] )
-		floatSpline["parameters"]["spline"]["p1"]["y"].setInput( None )
-		floatSpline["parameters"]["spline"]["p2"]["y"].setInput( None )
-		floatSpline["parameters"]["spline"]["p3"]["y"].setInput( g["out"]["globalU"] )
+		floatRamp["parameters"]["ramp"]["p0"]["y"].setInput( invertU["out"]["out"] )
+		floatRamp["parameters"]["ramp"]["p1"]["y"].setInput( None )
+		floatRamp["parameters"]["ramp"]["p2"]["y"].setInput( None )
+		floatRamp["parameters"]["ramp"]["p3"]["y"].setInput( g["out"]["globalU"] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Constant )
+		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.Constant )
 
 		self.assertEqual( testEval("R"), [750, 250, 750, 250, 750, 250, 0, 0, 0, 0, 1000, 1000, 1000, 1000, 250, 750])
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
+		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.Linear )
 		self.assertEqual( testEval("R"), [750, 250, 562, 188, 188, 62, 250, 250, 750, 750, 812, 938, 438, 812, 250, 750] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.CatmullRom )
+		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.CatmullRom )
 		self.assertEqual( testEval("R"), [750, 250, 500, 143, 68, -23, 168, 191, 832, 809, 932, 1023, 500, 857, 250, 750] )
 
-		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.BSpline )
+		floatRamp["parameters"]["ramp"]["interpolation"].setValue( IECore.RampInterpolation.BSpline )
 		self.assertEqual( testEval("R"), [750, 250, 563, 188, 309, 149, 368, 335, 632, 665, 691, 851, 437, 812, 250, 750] )
 
 		# Now test color connections
-		colorSpline = GafferOSL.OSLShader()
-		colorSpline.loadShader( "Pattern/ColorSpline" )
-		colorSpline["parameters"]["x"].setInput( g["out"]["globalV"] )
+		colorRamp = GafferOSL.OSLShader()
+		colorRamp.loadShader( "Pattern/ColorRamp" )
+		colorRamp["parameters"]["x"].setInput( g["out"]["globalV"] )
 
-		colorSpline['parameters']['spline'].setValue( Gaffer.SplineDefinitionfColor3f(
+		colorRamp['parameters']['ramp'].setValue( IECore.RampfColor3f(
 			(
 				( 1/8, imath.Color3f(0, 1, 0.4) ), ( 3/8, imath.Color3f(0.25, 0.75, 0.5) ),
 				( 5/8, imath.Color3f(0.75, 0.25, 0.6) ), ( 7/8, imath.Color3f(1, 0, 0.7) )
 			),
-			Gaffer.SplineDefinitionInterpolation.CatmullRom
+			IECore.RampInterpolation.CatmullRom
 		) )
 
 		floatToColor = GafferOSL.OSLShader()
@@ -988,24 +994,21 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		floatToColor["parameters"]["g"].setValue( 0.55 )
 		floatToColor["parameters"]["b"].setInput( g["out"]["globalU"] )
 
-		colorSpline["parameters"]["spline"]["p1"]["y"].setInput( floatToColor["out"]["c"] )
-		colorSpline["parameters"]["spline"]["p3"]["y"]["g"].setInput( g["out"]["globalU"] )
+		colorRamp["parameters"]["ramp"]["p1"]["y"].setInput( floatToColor["out"]["c"] )
+		colorRamp["parameters"]["ramp"]["p3"]["y"]["g"].setInput( g["out"]["globalU"] )
 
-		oslImage["channels"]["channel"]["value"].setInput( colorSpline["out"]["c"] )
+		oslImage["channels"]["channel"]["value"].setInput( colorRamp["out"]["c"] )
 
 		self.assertEqual( testEval("R"), [0, 0, 214, 54, 614, 170, 797, 363, 750, 637, 795, 830, 929, 946, 1000, 1000])
 		self.assertEqual( testEval("G"), [1000, 1000, 882, 882, 652, 652, 457, 446, 300, 265, 230, 320, 239, 597, 250, 750] )
 		self.assertEqual( testEval("B"), [400, 400, 345, 505, 253, 697, 308, 742, 518, 632, 642, 608, 684, 666, 700, 700] )
 
 		# Modify x value ordering to make sure that control point sorting is working
-		colorSpline["parameters"]["spline"]["p0"]["x"].setValue( 7/8 )
-		colorSpline["parameters"]["spline"]["p1"]["x"].setValue( 5/8 )
-		colorSpline["parameters"]["spline"]["p2"]["x"].setValue( 3/8 )
-		colorSpline["parameters"]["spline"]["p3"]["x"].setValue( 1/8 )
+		colorRamp["parameters"]["ramp"]["p0"]["x"].setValue( 7/8 )
+		colorRamp["parameters"]["ramp"]["p1"]["x"].setValue( 5/8 )
+		colorRamp["parameters"]["ramp"]["p2"]["x"].setValue( 3/8 )
+		colorRamp["parameters"]["ramp"]["p3"]["x"].setValue( 1/8 )
 
 		self.assertEqual( testEval("R"), [ 1000, 1000, 929, 946, 795, 830, 750, 637, 797, 363, 614, 170, 214, 54, 0, 0 ])
 		self.assertEqual( testEval("G"), [ 250, 750, 239, 597, 230, 320, 300, 265, 457, 446, 652, 652, 882, 882, 1000, 1000 ] )
 		self.assertEqual( testEval("B"), [ 700, 700, 684, 666, 642, 608, 518, 632, 308, 742, 253, 697, 345, 505, 400, 400 ] )
-
-if __name__ == "__main__":
-	unittest.main()

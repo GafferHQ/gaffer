@@ -50,8 +50,10 @@ using namespace IECoreDelight;
 namespace
 {
 
-bool convert( const IECoreScenePreview::Geometry *geometry, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScenePreview::Geometry *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle )
 {
+	const IECoreScenePreview::Geometry *geometry = samples[0];
+
 	if( geometry->getType() != "dl:environment" )
 	{
 		return false;

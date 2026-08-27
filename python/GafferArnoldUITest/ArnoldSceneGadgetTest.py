@@ -34,17 +34,16 @@
 #
 ##########################################################################
 
+import sys
 import unittest
 
 import GafferTest
 import GafferSceneUITest
 
 @unittest.skipIf( GafferTest.inCI(), "Insufficient OpenGL features - need GLSL 330" )
+@unittest.skipIf( sys.platform == "darwin", "ArnoldSceneGadget is not supported on macOS" )
 class ArnoldSceneGadgetTest( GafferSceneUITest.SceneGadgetTest ) :
 
 	# Tests are inherited from base class. We just need to
 	# override the renderer being used.
 	renderer = "Arnold"
-
-if __name__ == "__main__":
-	unittest.main()

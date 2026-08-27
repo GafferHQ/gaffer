@@ -34,21 +34,9 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferScene
 
-def __instancerGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		if key == "instances" :
-			key = "prototypes"
-		elif key == "index" :
-			key = "prototypeIndex"
-		elif key == "encapsulateInstanceGroups" :
-			key = "encapsulate"
-
-		return originalGetItem( self, key )
-
-	return getItem
-
-GafferScene.Instancer.__getitem__ = __instancerGetItem( GafferScene.Instancer.__getitem__ )
+Gaffer.Metadata.registerValue( GafferScene.Instancer, "compatibility:childAlias:instances", "prototypes" )
+Gaffer.Metadata.registerValue( GafferScene.Instancer, "compatibility:childAlias:index", "prototypeIndex" )
+Gaffer.Metadata.registerValue( GafferScene.Instancer, "compatibility:childAlias:encapsulateInstanceGroups", "encapsulate" )

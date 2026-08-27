@@ -40,9 +40,12 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 #include "GafferSceneUI/Private/AttributeInspector.h"
+#include "GafferSceneUI/Private/BasicInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
 #include "GafferSceneUI/Private/SetMembershipInspector.h"
+#include "GafferSceneUI/Private/TransformInspector.h"
 #include "GafferSceneUI/Private/OptionInspector.h"
+#include "GafferSceneUI/Private/PrimitiveVariableInspector.h"
 
 #include "GafferBindings/PathBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -67,9 +70,10 @@ GafferSceneUI::Private::Inspector::ResultPtr inspectWrapper( const GafferSceneUI
 	return inspector.inspect();
 }
 
-IECore::ObjectPtr valueWrapper( const GafferSceneUI::Private::Inspector::Result &result )
+IECore::ObjectPtr valueWrapper( const GafferSceneUI::Private::Inspector::Result &result, bool useFallbacks )
 {
-	return result.value() ? result.value()->copy() : nullptr;
+	const IECore::Object *v = result.value( useFallbacks );
+	return v ? v->copy() : nullptr;
 }
 
 Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Result &result, bool createIfNecessary )
@@ -84,15 +88,16 @@ void disableEditWrapper( GafferSceneUI::Private::Inspector::Result &result )
 	return result.disableEdit();
 }
 
-bool editSetMembershipWrapper(
-	const GafferSceneUI::Private::SetMembershipInspector &inspector,
-	const GafferSceneUI::Private::Inspector::Result &inspection,
-	const GafferScene::ScenePlug::ScenePath &path,
-	GafferScene::EditScopeAlgo::SetMembership setMembership
-)
+bool canEditWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object *value )
+{
+	std::string reason;
+	return result.canEdit( value, reason );
+}
+
+void editWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object *value )
 {
 	ScopedGILRelease gilRelease;
-	return inspector.editSetMembership( &inspection, path, setMembership );
+	result.edit( value );
 }
 
 struct DirtiedSlotCaller
@@ -110,6 +115,39 @@ struct DirtiedSlotCaller
 	}
 };
 
+BasicInspectorPtr constructBasicInspector( const Gaffer::ValuePlugPtr &plug, const Gaffer::PlugPtr &editScope, object valueFunction, const std::string &type, const std::string &name )
+{
+	auto valueFunctionPtr = std::shared_ptr<boost::python::object>(
+		new boost::python::object( valueFunction ),
+		[]( boost::python::object *o ) {
+			// Custom deleter. We must hold the GIL when deleting Python
+			// objects.
+			IECorePython::ScopedGILLock gilLock;
+			delete o;
+		}
+	);
+
+	return new BasicInspector(
+		plug.get(), editScope,
+		[valueFunctionPtr] ( const ValuePlug *plug )
+		{
+			IECorePython::ScopedGILLock giLock;
+			try
+			{
+				IECore::ConstObjectPtr result = extract<IECore::ConstObjectPtr>(
+					(*valueFunctionPtr)( ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) )
+				);
+				return result;
+			}
+			catch( const error_already_set & )
+			{
+				IECorePython::ExceptionAlgo::translatePythonException();
+			}
+		},
+		type, name
+	);
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindInspector()
@@ -120,7 +158,7 @@ void GafferSceneUIModule::bindInspector()
 	scope privateScope( privateModule );
 
 	{
-		scope inspectorScope = RefCountedClass<Inspector, IECore::RefCounted>( "Inspector" )
+		scope inspectorScope = RunTimeTypedClass<Inspector>( "Inspector" )
 			.def( "name", &Inspector::name, return_value_policy<copy_const_reference>() )
 			.def( "inspect", &inspectWrapper )
 			.def( "dirtiedSignal", &Inspector::dirtiedSignal, return_internal_reference<1>() )
@@ -132,18 +170,20 @@ void GafferSceneUIModule::bindInspector()
 		PathClass<Inspector::HistoryPath>();
 
 		scope resultScope = RefCountedClass<Inspector::Result, IECore::RefCounted>( "Result" )
-			.def( "value", &valueWrapper )
+			.def( "value", &valueWrapper, ( arg( "useFallbacks" ) = true ) )
 			.def( "source", &Inspector::Result::source, return_value_policy<CastToIntrusivePtr>() )
 			.def( "editScope", &Inspector::Result::editScope, return_value_policy<CastToIntrusivePtr>() )
 			.def( "sourceType", &Inspector::Result::sourceType )
 			.def( "fallbackDescription", &Inspector::Result::fallbackDescription, return_value_policy<copy_const_reference>() )
 			.def( "editable", &Inspector::Result::editable )
-			.def( "nonEditableReason", &Inspector::Result::nonEditableReason )
+			.def( "nonEditableReason", &Inspector::Result::nonEditableReason, ( arg( "value" ) = object() ) )
 			.def( "acquireEdit", &acquireEditWrapper, ( arg( "createIfNecessary" ) = true ) )
 			.def( "editWarning", &Inspector::Result::editWarning )
 			.def( "canDisableEdit", &Inspector::Result::canDisableEdit )
 			.def( "nonDisableableReason", &Inspector::Result::nonDisableableReason )
 			.def( "disableEdit", &disableEditWrapper )
+			.def( "canEdit", &canEditWrapper )
+			.def( "edit", &editWrapper, ( arg( "value") ) )
 		;
 
 		enum_<Inspector::Result::SourceType>( "SourceType" )
@@ -151,19 +191,11 @@ void GafferSceneUIModule::bindInspector()
 			.value( "EditScope", Inspector::Result::SourceType::EditScope )
 			.value( "Downstream", Inspector::Result::SourceType::Downstream )
 			.value( "Other", Inspector::Result::SourceType::Other )
-			.value( "Fallback", Inspector::Result::SourceType::Fallback )
+			.value( "External", Inspector::Result::SourceType::External )
 		;
 	}
 
-	RefCountedClass<ParameterInspector, Inspector>( "ParameterInspector" )
-		.def(
-			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const ShaderNetwork::Parameter &>(
-				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ) )
-			)
-		)
-	;
-
-	RefCountedClass<AttributeInspector, Inspector>( "AttributeInspector" )
+	RunTimeTypedClass<AttributeInspector>( "AttributeInspector" )
 		.def(
 			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const std::string &>(
 				( arg( "scene" ), arg( "editScope" ), arg( "attribute" ), arg( "name" ) = "" )
@@ -171,20 +203,79 @@ void GafferSceneUIModule::bindInspector()
 		)
 	;
 
-	RefCountedClass<SetMembershipInspector, Inspector>( "SetMembershipInspector" )
+	RunTimeTypedClass<ParameterInspector>( "ParameterInspector" )
+		.def(
+			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const ShaderNetwork::Parameter &, const bool>(
+				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ), arg( "inheritAttributes" ) = false )
+			)
+		)
+		.def( "parameter", &ParameterInspector::parameter, return_value_policy<copy_const_reference>() )
+		.def( "connectionSource", &ParameterInspector::connectionSource )
+		.staticmethod( "connectionSource" )
+	;
+
+	RunTimeTypedClass<SetMembershipInspector>( "SetMembershipInspector" )
 		.def(
 			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString>(
 				( arg( "scene" ), arg( "editScope" ), arg( "setName" ) )
 			)
 		)
-		.def( "editSetMembership", &editSetMembershipWrapper)
 	;
 
-	RefCountedClass<OptionInspector, Inspector>( "OptionInspector" )
+	RunTimeTypedClass<OptionInspector>( "OptionInspector" )
 		.def(
 			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString>(
 				( arg( "scene" ), arg( "editScope" ), arg( "option" ) )
 			)
 		)
 	;
+
+	RunTimeTypedClass<BasicInspector>( "BasicInspector" )
+		.def( "__init__", make_constructor(
+			constructBasicInspector, default_call_policies(),
+			( arg( "plug" ), arg( "editScope" ), arg( "valueFunction" ), arg( "type" ) = "", arg( "name" ) = "" )
+		) )
+	;
+
+	{
+		scope scope = RunTimeTypedClass<TransformInspector>( "TransformInspector" )
+			.def(
+				init<const ScenePlugPtr &, const PlugPtr &, TransformInspector::Space, TransformInspector::Component>(
+					( arg( "scene" ), arg( "editScope" ), arg( "space" ), arg( "component") )
+				)
+			)
+		;
+
+		enum_<TransformInspector::Space>( "Space" )
+			.value( "Local", TransformInspector::Space::Local )
+			.value( "World", TransformInspector::Space::World )
+		;
+
+		enum_<TransformInspector::Component>( "Component" )
+			.value( "Matrix", TransformInspector::Component::Matrix )
+			.value( "Translate", TransformInspector::Component::Translate )
+			.value( "Rotate", TransformInspector::Component::Rotate )
+			.value( "Scale", TransformInspector::Component::Scale )
+			.value( "Shear", TransformInspector::Component::Shear )
+		;
+	}
+
+	{
+		scope scope = RunTimeTypedClass<PrimitiveVariableInspector>( "PrimitiveVariableInspector" )
+			.def(
+				init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, PrimitiveVariableInspector::Property, const std::string &>(
+					( arg( "scene" ), arg( "editScope" ), arg( "attribute" ), arg( "property" ), arg( "name" ) = "" )
+				)
+			)
+		;
+
+		enum_<PrimitiveVariableInspector::Property>( "Property" )
+			.value( "Interpolation", PrimitiveVariableInspector::Property::Interpolation )
+			.value( "Type", PrimitiveVariableInspector::Property::Type )
+			.value( "Interpretation", PrimitiveVariableInspector::Property::Interpretation )
+			.value( "Data", PrimitiveVariableInspector::Property::Data )
+			.value( "Indices", PrimitiveVariableInspector::Property::Indices )
+		;
+	}
+
 }

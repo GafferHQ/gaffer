@@ -36,6 +36,7 @@
 
 import math
 import os
+import sys
 import time
 import unittest
 import random
@@ -52,6 +53,8 @@ import GafferUI
 import GafferUITest
 import GafferScene
 import GafferSceneUI
+
+import Qt
 
 class SceneGadgetTest( GafferUITest.TestCase ) :
 
@@ -144,8 +147,9 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			# to get into the buffers.
 			timeout = time.time() + 1
 			while time.time() < timeout :
-				self.waitForIdle()
+				self.waitForIdle( 10 )
 
+	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	def testObjectVisibility( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -172,14 +176,14 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
-		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["a"]["attributes"]["visibility"]["value"].setValue( False )
+		s["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( False )
 
 		self.waitForRender( sg )
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 
-		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["a"]["attributes"]["visibility"]["value"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		s["a"]["attributes"]["scene:visible"]["value"].setValue( True )
 
 		self.waitForRender( sg )
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
@@ -286,6 +290,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			s["p"]["dimensions"]["x"].setValue( i )
 			self.waitForIdle( 10 )
 
+	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
 	def testExceptionsDuringCompute( self ) :
 
 		# Make this scene
@@ -448,10 +453,9 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			[]
 		)
 
-	@unittest.skipIf(
-		os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "" ) == "gcc9",
-		"The gcc9 container does not support floating point depth buffers."
-	)
+	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
+	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
+	@unittest.skipIf( sys.platform == "darwin", "Depth buffer issues on macOS" )
 	def testObjectAtLine( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -579,6 +583,8 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.setSelectionMask( None )
 		self.assertEqual( sg.getSelectionMask(), None )
 
+	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
+	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	def testSelectionMask( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -705,10 +711,9 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		return origin + direction * t
 
-	@unittest.skipIf(
-		os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "" ) == "gcc9",
-		"The gcc9 container does not support floating point depth buffers."
-	)
+	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
+	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
+	@unittest.skipIf( sys.platform == "darwin", "Depth buffer issues on macOS" )
 	def testNormalAt( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -771,6 +776,3 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		GafferUITest.TestCase.tearDown( self )
 
 		IECoreGL.CachedConverter.defaultCachedConverter().setMaxMemory( self.__cachedConverterMaxMemory )
-
-if __name__ == "__main__":
-	unittest.main()

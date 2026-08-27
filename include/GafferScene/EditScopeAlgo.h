@@ -67,6 +67,13 @@ GAFFERSCENE_API void setPruned( Gaffer::EditScope *scope, const IECore::PathMatc
 GAFFERSCENE_API bool getPruned( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
 GAFFERSCENE_API const Gaffer::GraphComponent *prunedReadOnlyReason( const Gaffer::EditScope *scope );
 
+// Visibility
+// ==========
+
+/// Edits the visibility of `path`. When `visible` is true, this prefers inheriting visibility by removing the `scene:visible` attribute.
+GAFFERSCENE_API void setVisibility( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool visible );
+GAFFERSCENE_API const Gaffer::GraphComponent *visibilityReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+
 // Transforms
 // ==========
 //
@@ -161,6 +168,10 @@ GAFFERSCENE_API void removeRenderPassOptionEdit( Gaffer::EditScope *scope, const
 GAFFERSCENE_API const Gaffer::GraphComponent *renderPassOptionEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option );
 
 GAFFERSCENE_API const Gaffer::GraphComponent *renderPassesReadOnlyReason( const Gaffer::EditScope *scope );
+/// Renames the render pass `oldName` to `newName` inside `scope`. Returns `true` if renaming occurred.
+GAFFERSCENE_API bool renameRenderPass( Gaffer::EditScope *scope, const std::string &oldName, const std::string &newName );
+/// Returns the reason why a render pass could not be renamed to `newName`.
+GAFFERSCENE_API std::optional<std::string> renameRenderPassNonEditableReason( const Gaffer::EditScope *scope, const std::string &newName );
 
 } // namespace EditScopeAlgo
 

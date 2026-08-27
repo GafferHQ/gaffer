@@ -79,8 +79,8 @@ class PathVectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		assert( widget is self.__dataWidget )
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			with self._blockedUpdateFromValues() :
+		with self._blockedUpdateFromValues() :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				self.getPlug().setValue( self.__dataWidget.getData()[0] )
 
 	def __pathChooserDialogueKeywords( self ) :

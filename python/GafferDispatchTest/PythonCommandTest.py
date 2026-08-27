@@ -81,11 +81,19 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		n["variables"].addChild( Gaffer.NameValuePlug( "testInt", 1 ) )
 		n["variables"].addChild( Gaffer.NameValuePlug( "testFloat", 2.5 ) )
 		n["variables"].addChild( Gaffer.NameValuePlug( "testColor", imath.Color3f( 1, 2, 3 ) ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testFloatVector", IECore.FloatVectorData( [ 6, 7 ] ) ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testCompoundObject", Gaffer.CompoundObjectPlug() ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testObject", Gaffer.ObjectPlug( defaultValue = IECore.NullObject() ) ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testObjectVector", Gaffer.ObjectVectorPlug() ) )
 		n["command"].setValue( inspect.cleandoc(
 			"""
 			self.testInt = variables["testInt"]
 			self.testFloat = variables["testFloat"]
 			self.testColor = variables["testColor"]
+			self.testFloatVector = variables["testFloatVector"]
+			self.testCompoundObject = variables["testCompoundObject"]
+			self.testObject = variables["testObject"]
+			self.testObjectVector = variables["testObjectVector"]
 			"""
 		) )
 
@@ -94,6 +102,26 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( n.testInt, 1 )
 		self.assertEqual( n.testFloat, 2.5 )
 		self.assertEqual( n.testColor, imath.Color3f( 1, 2, 3 ) )
+		self.assertEqual( n.testFloatVector, IECore.FloatVectorData( [ 6, 7 ] ) )
+		self.assertEqual( n.testCompoundObject, IECore.CompoundObject() )
+		self.assertEqual( n.testObject, IECore.NullObject() )
+		self.assertEqual( n.testObjectVector, IECore.ObjectVector() )
+
+	def testDisabledVariables( self ) :
+
+		n = GafferDispatch.PythonCommand()
+		n["variables"].addChild( Gaffer.NameValuePlug( "testEnabled", 1, defaultEnabled = True ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "testDisabled", 1, defaultEnabled = False ) )
+		n["variables"].addChild( Gaffer.NameValuePlug( "", 1 ) )
+		n["command"].setValue( inspect.cleandoc(
+			"""
+			assert( "testEnabled" in variables )
+			assert( "testDisabled" not in variables )
+			assert( "" not in variables )
+			"""
+		) )
+
+		n["task"].execute()
 
 	def testContextAccess( self ) :
 
@@ -471,5 +499,56 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( command.variablesStr, str( { "testKey" : "testValue" } ) )
 		self.assertEqual( command.variablesRepr, repr( { "testKey" : "testValue" } ) )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testIsolated( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["command"].setValue( inspect.cleandoc(
+			"""
+			with open( variables["fileName"], "w" ) as outFile :
+				outFile.write( str( variables["sum"] ) )
+			"""
+		) )
+		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "fileName", ( self.temporaryDirectory() / "pythonCommand.txt" ).as_posix(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["variables"].addChild( Gaffer.NameValuePlug( "sum", 2, "sum", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["variables"]["sum"]["value"] = 2 + 2' )
+
+		s["d"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CurrentFrame )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
+
+		with open( self.temporaryDirectory() / "pythonCommand.txt" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "4" )
+
+	def testScriptNodeExecute( self ) :
+
+		# PythonCommand that calls `ScriptNode.execute()` to add a plug to the script's
+		# `variables` plug. This in turn triggers `ScriptNode::plugSet()` to transfer
+		# the plug's value into the script's context. We _don't_ want any substitutions
+		# to be applied to the value at this point, which means `ScriptNode::execute()`
+		# must scope a ThreadState without the current PythonCommand's `Process`.
+
+		pythonCommand = GafferDispatch.PythonCommand()
+		pythonCommand["command"].setValue( inspect.cleandoc(
+			"""
+			import Gaffer
+			toExecute = '''
+			import Gaffer
+			parent["variables"].addChild( Gaffer.NameValuePlug( "test", "testing #", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+			'''
+			script = Gaffer.ScriptNode()
+			script.execute( toExecute )
+			assert( script.context()["test"] == "testing #" )
+			"""
+		) )
+
+		pythonCommand["task"].execute()

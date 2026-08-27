@@ -147,6 +147,3 @@ class VectorDataWidgetTest( GafferUITest.TestCase ) :
 			self.assertEqual( w.getData()[1][i][2], i )
 			self.assertEqual( w.getData()[1][i][3], i )
 			self.assertEqual( w.getData()[1][i], imath.Color4f( i, i, i, i ) )
-
-if __name__ == "__main__":
-	unittest.main()

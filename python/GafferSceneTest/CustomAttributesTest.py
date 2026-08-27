@@ -209,22 +209,22 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["a"] = GafferScene.StandardAttributes()
-		s["a"]["attributes"]["deformationBlur"]["enabled"].setValue( True )
-		s["a"]["attributes"]["deformationBlur"]["value"].setValue( False )
+		s["a"]["attributes"]["gaffer:deformationBlur"]["enabled"].setValue( True )
+		s["a"]["attributes"]["gaffer:deformationBlur"]["value"].setValue( False )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"] ] ) )
 
-		self.assertTrue( Gaffer.PlugAlgo.canPromote( b["a"]["attributes"]["deformationBlur"] ) )
-		self.assertFalse( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["deformationBlur"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.canPromote( b["a"]["attributes"]["gaffer:deformationBlur"] ) )
+		self.assertFalse( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["gaffer:deformationBlur"] ) )
 
-		p = Gaffer.PlugAlgo.promote( b["a"]["attributes"]["deformationBlur"] )
+		p = Gaffer.PlugAlgo.promote( b["a"]["attributes"]["gaffer:deformationBlur"] )
 
-		self.assertTrue( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["deformationBlur"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["gaffer:deformationBlur"] ) )
 
-		self.assertTrue( b["a"]["attributes"]["deformationBlur"].getInput().isSame( p ) )
-		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["name"].getInput().isSame( p["name"] ) )
-		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["enabled"].getInput().isSame( p["enabled"] ) )
-		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["value"].getInput().isSame( p["value"] ) )
+		self.assertTrue( b["a"]["attributes"]["gaffer:deformationBlur"].getInput().isSame( p ) )
+		self.assertTrue( b["a"]["attributes"]["gaffer:deformationBlur"]["name"].getInput().isSame( p["name"] ) )
+		self.assertTrue( b["a"]["attributes"]["gaffer:deformationBlur"]["enabled"].getInput().isSame( p["enabled"] ) )
+		self.assertTrue( b["a"]["attributes"]["gaffer:deformationBlur"]["value"].getInput().isSame( p["value"] ) )
 		self.assertEqual( p["enabled"].getValue(), True )
 		self.assertEqual( p["value"].getValue(), False )
 
@@ -397,7 +397,8 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		attributes = GafferScene.CustomAttributes()
 		cs = GafferTest.CapturingSlot( attributes.plugDirtiedSignal() )
 
-		# Adding or removing an attribute should dirty `out.attributes`
+		# Adding or removing an attribute should dirty `out.attributes`,
+		# but not `out.globals`.
 
 		attributes["attributes"].addChild(
 			Gaffer.NameValuePlug( "test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
@@ -407,6 +408,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		del cs[:]
 		del attributes["attributes"][0]
 		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+		self.assertNotIn( attributes["out"]["globals"], { x[0] for x in cs } )
 
 		# And although the Dynamic flag is currently required for proper serialisation
 		# of CustomAttributes nodes, its absence shouldn't prevent dirty propagation.
@@ -415,10 +417,12 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		del cs[:]
 		attributes["attributes"].addChild( Gaffer.NameValuePlug( "test2", 10 ) )
 		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+		self.assertNotIn( attributes["out"]["globals"], { x[0] for x in cs } )
 
 		del cs[:]
 		del attributes["attributes"][0]
 		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+		self.assertNotIn( attributes["out"]["globals"], { x[0] for x in cs } )
 
 	def testGlobalsDirtyPropagation( self ) :
 
@@ -431,9 +435,10 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( attributes["out"].globals(), IECore.CompoundObject() )
 
 		cs = GafferTest.CapturingSlot( attributes.plugDirtiedSignal() )
-		options["options"]["renderCamera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["enabled"].setValue( True )
 
 		self.assertIn( attributes["out"]["globals"], { x[0] for x in cs } )
+		self.assertNotIn( attributes["out"]["attributes"], { x[0] for x in cs } )
 		self.assertEqual( attributes["out"].globals(), IECore.CompoundObject( { "option:render:camera" : IECore.StringData( "" ) } ) )
 
 	def testLoadExtraAttributesFrom0_59( self ) :
@@ -519,6 +524,3 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		script2 = Gaffer.ScriptNode()
 		script2.execute( script.serialise() )
 		self.assertEqual( script2["attributes"]["extraAttributes"].getValue(), attributes )
-
-if __name__ == "__main__":
-	unittest.main()

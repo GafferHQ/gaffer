@@ -647,14 +647,13 @@ class ContextTest( GafferTest.TestCase ) :
 	def testCancellerLifetime( self ) :
 
 		canceller = IECore.Canceller()
-		context = Gaffer.Context( Gaffer.Context(), canceller )
-		cancellerWeakRef = weakref.ref( canceller )
+		self.assertEqual( canceller.refCount(), 1 )
 
-		del canceller
-		self.assertIsNotNone( cancellerWeakRef() )
+		context = Gaffer.Context( Gaffer.Context(), canceller )
+		self.assertEqual( canceller.refCount(), 2 )
 
 		del context
-		self.assertIsNone( cancellerWeakRef() )
+		self.assertEqual( canceller.refCount(), 1 )
 
 	def testOmitCanceller( self ) :
 
@@ -689,7 +688,7 @@ class ContextTest( GafferTest.TestCase ) :
 		zeroHash2 = context.variableHash( "foo" )
 		self.assertNotEqual( zeroHash1, zeroHash2 )
 
-		# Check the intial value again
+		# Check the initial value again
 		context["foo"] = 1
 		self.assertEqual( context.variableHash( "foo" ), initialHash )
 
@@ -843,6 +842,3 @@ class ContextTest( GafferTest.TestCase ) :
 			expected.addPath( "/a" * i )
 
 		self.assertEqual( context["test"], expected )
-
-if __name__ == "__main__":
-	unittest.main()

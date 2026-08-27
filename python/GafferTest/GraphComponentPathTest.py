@@ -86,6 +86,3 @@ class GraphComponentPathTest( GafferTest.TestCase ) :
 		child = p.children()[0]
 
 		self.assertTrue( isinstance( child.getFilter(), Gaffer.PathFilter ) )
-
-if __name__ == "__main__":
-	unittest.main()

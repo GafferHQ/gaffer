@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import math
 import os
 
 import IECore
@@ -351,6 +352,38 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		m.removeScalingAndShear()
 		self.assertEqual( v.getCameraTransform(), m )
 
+	def testFrame( self ) :
+
+		v = GafferUI.ViewportGadget()
+
+		self.assertEqual( v.getCameraTransform(), imath.M44f() )
+
+		# Rotate the camera
+		m = imath.M44f( 0,0,1,0, 0,1,0,0, -1,0,0,0, 0,0,0,1 )
+		v.setCameraTransform( m )
+		self.assertEqual( v.getCameraTransform(), m )
+
+		# Framing keeps the rotation
+		v.frame( imath.Box3f( imath.V3f( 11 ), imath.V3f( 13 ) ) )
+		translation = imath.M44f()
+		translation.translate( imath.V3f( 10.89, 12, 12 ) )
+		self.assertEqual( v.getCameraTransform(), m * translation )
+
+		# Trying to frame an infinite bounding box is ignored
+		v.frame( imath.Box3f( imath.V3f( 11 ), imath.V3f( math.inf ) ) )
+		self.assertEqual( v.getCameraTransform(), m * translation )
+
+		# Set the camera transform to something corrupt
+		badM = imath.M44f( math.nan,0,0,0, 0,math.nan,0,0, 0,0,math.nan,0, 0,0,0,1 )
+		v.setCameraTransform( badM )
+
+		# Framing an object will reset the camera transform to something reasonable, with a
+		# default orientation
+		v.frame( imath.Box3f( imath.V3f( 11 ), imath.V3f( 13 ) ) )
+
+		translation.setTranslation( imath.V3f( 12, 12, 13.11 ) )
+		self.assertEqual( v.getCameraTransform(), translation )
+
 	@unittest.skipIf( os.name == "nt", "Skip failing Windows tests temporarily" )
 	def testGadgetsAt( self ) :
 
@@ -415,6 +448,3 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.Back ) ), set( [b] ) )
 		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.MidFront ) ), set( [c,d] ) )
 		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 50, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.MidFront ) ), set( [d] ) )
-
-if __name__ == "__main__":
-	unittest.main()

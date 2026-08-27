@@ -36,6 +36,7 @@
 
 #include "GafferScene/ShaderPlug.h"
 
+#include "GafferScene/ScenePlug.h"
 #include "GafferScene/Shader.h"
 
 #include "Gaffer/BoxIO.h"
@@ -99,10 +100,14 @@ bool isParameterType( const Plug *plug )
 		case BoolPlugTypeId :
 			return true;
 		default :
-			// Use typeName query to avoid hard dependency on
-			// GafferOSL. It may be that we should move ClosurePlug
-			// to GafferScene anyway.
-			return plug->isInstanceOf( "GafferOSL::ClosurePlug" );
+			// Use `typeName()` query to avoid hard dependency on GafferOSL and
+			// GafferRenderMan. It may be that we should move ClosurePlug to
+			// GafferScene anyway, and give it an additional property to say what
+			// type of closure it is.
+			return
+				plug->isInstanceOf( "GafferOSL::ClosurePlug" ) ||
+				plug->isInstanceOf( "GafferRenderMan::BXDFPlug" )
+			;
 	}
 }
 
@@ -234,9 +239,8 @@ struct ShaderPlug::ShaderContext
 {
 
 	ConstContextPtr context;
-	std::optional<Context::Scope> scope;
+	std::optional<ScenePlug::GlobalScope> scope;
 	std::string outputParameter;
-	std::optional<Context::EditableScope> editableScope;
 
 };
 
@@ -333,16 +337,12 @@ const Gaffer::Plug *ShaderPlug::shaderOutPlug( ShaderContext &shaderContext ) co
 		return nullptr;
 	}
 
+	shaderContext.context = context;
+	shaderContext.scope.emplace( context.get() );
 	if( source != shaderOutPlug )
 	{
-		shaderContext.editableScope.emplace( context.get() );
 		shaderContext.outputParameter = source->relativeName( shaderOutPlug );
-		shaderContext.editableScope->set( Shader::g_outputParameterContextName, &shaderContext.outputParameter );
-	}
-	else if( context != Context::current() )
-	{
-		shaderContext.context = context;
-		shaderContext.scope.emplace( context.get() );
+		shaderContext.scope->set( Shader::g_outputParameterContextName, &shaderContext.outputParameter );
 	}
 
 	return source;

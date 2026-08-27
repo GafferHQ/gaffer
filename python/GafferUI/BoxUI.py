@@ -61,10 +61,12 @@ Gaffer.Metadata.registerNode(
 
 	"icon", "boxNode.png",
 
+	"ui:childNodesAreViewable", True,
+	## \todo Deprecate and remove in favour of `ui:childNodesAreViewable`.
 	"graphEditor:childrenViewable", True,
 
 	# Add a + button for creating new plugs in the Settings tab.
-	"layout:customWidget:addButton:widgetType", "GafferUI.UserPlugs.plugCreationWidget",
+	"layout:customWidget:addButton:widgetType", "GafferUI.PlugCreationWidget",
 	"layout:customWidget:addButton:section", "Settings",
 	"layout:customWidget:addButton:index", -2,
 
@@ -80,21 +82,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"deletable", True,
-			"renameable", True,
+			"deletable" : True,
+			"renameable" : True,
 
-		],
+		},
 
-		"user" : [
+		"user" : {
 
 			# Disable the + button added by NodeUI, since
 			# we want users to use the button in the Settings
 			# tab instead.
-			"layout:customWidget:addButton:widgetType", "",
+			"layout:customWidget:addButton:widgetType" : "",
 
-		],
+		},
 
 	}
 
@@ -398,7 +400,7 @@ def __renamePlug( menu, plug ) :
 	# user entering an invalid name.
 	# \todo : This could be improved with some combination of a public validator
 	# API, sanitising node names in `GraphComponent::setName` and relaxing
-	# `GraphComponent` name contraints.
+	# `GraphComponent` name constraints.
 	from GafferUI.NameWidget import _Validator
 	textWidget = d._getWidget()._qtWidget()
 	textWidget.setValidator( _Validator( textWidget ) )

@@ -73,7 +73,7 @@ GafferOSL.OSLImage.__getitem__ = __oslReplaceShaderGetItem( GafferOSL.OSLImage._
 def __oslShaderGetItem( originalGetItem ) :
 
 	def getItem( self, key ) :
-		if key != "out":
+		if key != "out" or isinstance( self, GafferOSL.OSLCode ) :
 			return originalGetItem( self, key )
 
 		if originalGetItem( self, "name" ).getValue() not in [ "ObjectProcessing/OutObject", "ImageProcessing/OutImage" ]:

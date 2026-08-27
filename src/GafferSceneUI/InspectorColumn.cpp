@@ -35,10 +35,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferSceneUI/Private/InspectorColumn.h"
+#include "GafferSceneUI/Private/ParameterInspector.h"
 
 #include "GafferUI/PathColumn.h"
 
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
+
+#include "IECoreScene/ShaderNetwork.h"
 
 #include "IECore/CamelCase.h"
 #include "IECore/SimpleTypedData.h"
@@ -56,9 +60,13 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 { (int)Inspector::Result::SourceType::EditScope, new Color4fData( Imath::Color4f( 48, 100, 153, 150 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Other, nullptr },
-{ (int)Inspector::Result::SourceType::Fallback, nullptr },
+{ (int)Inspector::Result::SourceType::External, new Color4fData( Imath::Color4f( 121, 77, 56, 120 ) / 255.0f ) },
 };
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
+const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
+const StringDataPtr g_shaderConnectionIcon = new StringData( "sceneInspectorShaderConnection.png" );
+const InternedString g_shaderLabel( "label" );
+const InternedString g_shaderNodeName( "gaffer:nodeName" );
 
 }  // namespace
 
@@ -72,76 +80,92 @@ InspectorColumn::InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector
 }
 
 InspectorColumn::InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const CellData &headerData, PathColumn::SizeMode sizeMode )
-	:	PathColumn( sizeMode ), m_inspector( inspector ), m_headerData( headerData )
+	:	PathColumn( sizeMode ), m_inspector( inspector ), m_headerData( headerData ), m_contextProperty( "inspector:context" )
 {
-	m_inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
+	inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
 }
 
-GafferSceneUI::Private::Inspector *InspectorColumn::inspector() const
+InspectorColumn::InspectorColumn( IECore::InternedString inspectorProperty, const CellData &headerData, IECore::InternedString contextProperty, PathColumn::SizeMode sizeMode )
+	:	PathColumn( sizeMode ), m_inspector( inspectorProperty ), m_headerData( headerData ), m_contextProperty( contextProperty )
 {
-	return m_inspector.get();
+}
+
+GafferSceneUI::Private::ConstInspectorPtr InspectorColumn::inspector( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+{
+	if( auto i = std::get_if<InspectorPtr>( &m_inspector ) )
+	{
+		return *i;
+	}
+
+	return IECore::runTimeCast<const Inspector>( path.property( std::get<InternedString>( m_inspector ), canceller ) );
+}
+
+GafferSceneUI::Private::Inspector::ResultPtr InspectorColumn::inspect( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+{
+	ConstInspectorPtr i = inspector( path, canceller );
+	if( !i )
+	{
+		return nullptr;
+	}
+
+	ConstContextPtr context = inspectorContext( path, canceller );
+	if( !context )
+	{
+		return nullptr;
+	}
+
+	std::variant<std::monostate, Context::Scope, Context::EditableScope> scopedContext;
+	if( canceller )
+	{
+		scopedContext.emplace<Context::EditableScope>( context.get() ).setCanceller( canceller );
+	}
+	else
+	{
+		scopedContext.emplace<Context::Scope>( context.get() );
+	}
+
+	return i->inspect();
+}
+
+Gaffer::PathPtr InspectorColumn::historyPath( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+{
+	ConstInspectorPtr i = inspector( path, canceller );
+	if( !i )
+	{
+		return nullptr;
+	}
+
+	ConstContextPtr context = inspectorContext( path, canceller );
+	if( !context )
+	{
+		return nullptr;
+	}
+
+	std::variant<std::monostate, Context::Scope, Context::EditableScope> scopedContext;
+	if( canceller )
+	{
+		scopedContext.emplace<Context::EditableScope>( context.get() ).setCanceller( canceller );
+	}
+	else
+	{
+		scopedContext.emplace<Context::Scope>( context.get() );
+	}
+
+	return i->historyPath();
+}
+
+Gaffer::ConstContextPtr InspectorColumn::inspectorContext( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
+{
+	return path.contextProperty( m_contextProperty, canceller );
 }
 
 PathColumn::CellData InspectorColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	CellData result;
-
-	const ContextPtr inspectionContext = path.inspectionContext( canceller );
-	if( !inspectionContext )
-	{
-		return result;
-	}
-
-	Context::Scope scope( inspectionContext.get() );
-	Inspector::ConstResultPtr inspectorResult = m_inspector->inspect();
-	if( !inspectorResult )
-	{
-		return result;
-	}
-
-	result.value = runTimeCast<const IECore::Data>( inspectorResult->value() );
-	/// \todo Should PathModel create a decoration automatically when we
-	/// return a colour for `Role::Value`?
-	result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
-	if( !result.icon )
-	{
-		result.icon = runTimeCast<const Color4fData>( inspectorResult->value() );
-	}
-	result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
-	std::string toolTip;
-	if( inspectorResult->sourceType() == Inspector::Result::SourceType::Fallback )
-	{
-		toolTip = "Source : " + inspectorResult->fallbackDescription();
-		result.foreground = g_fallbackValueForegroundColor;
-	}
-	else if( const auto source = inspectorResult->source() )
-	{
-		toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
-	}
-
-	/// \todo Should we have the ability to create read-only columns?
-	if( inspectorResult->editable() )
-	{
-		toolTip += !toolTip.empty() ? "\n\n" : "";
-		if( runTimeCast<const IECore::BoolData>( result.value ) )
-		{
-			toolTip += "Double-click to toggle";
-		}
-		else
-		{
-			toolTip += "Double-click to edit";
-		}
-	}
-
-	if( !toolTip.empty() )
-	{
-		result.toolTip = new StringData( toolTip );
-	}
-
-	return result;
+	Inspector::ConstResultPtr inspectorResult = inspect( path, canceller );
+	return cellDataFromInspection( inspectorResult.get() );
 }
 
-PathColumn::CellData InspectorColumn::headerData( const IECore::Canceller *canceller ) const
+PathColumn::CellData InspectorColumn::headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const
 {
 	return m_headerData;
 }
@@ -168,4 +192,110 @@ IECore::ConstStringDataPtr InspectorColumn::headerValue( const std::string &colu
 		name = CamelCase::fromSpaced( name );
 	}
 	return new StringData( CamelCase::toSpaced( name ) );
+}
+
+PathColumn::CellData InspectorColumn::cellDataFromValue( const IECore::Object *value )
+{
+	if( auto connectionSource = ParameterInspector::connectionSource( value ) )
+	{
+		return CellData(
+			new StringData( connectionSource.shader.string() + "." + connectionSource.name.string() ),
+			g_shaderConnectionIcon
+		);
+	}
+	else if( const auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( value ) )
+	{
+		/// \todo We don't really want InspectorColumn to know about scene
+		/// types. At some point we should probably add a registry of converters
+		/// somewhere. Or perhaps if InspectorColumn moves to GafferUI, we would
+		/// just derive a specialisation from it in GafferSceneUI.
+		const IECoreScene::Shader *shader = shaderNetwork->outputShader();
+		if( !shader )
+		{
+			return CellData( g_missingOutputShader );
+		}
+		auto label = shader->blindData()->member<StringData>( g_shaderLabel );
+		auto nodeName = shader->blindData()->member<StringData>( g_shaderNodeName );
+		if( label && (!nodeName || label->readable() != nodeName->readable() ) )
+		{
+			// The Shader node creates `label` and `gaffer:nodeName` metadata
+			// with identical values. If the label is different it is because
+			// the user has provided something meaningful via the
+			// `ShaderAssignment.label` plug, so show that.
+			/// \todo Remove metadata creation from Shader.cpp and simplify the
+			/// logic here.
+			return CellData( label );
+		}
+		return CellData( new StringData( shader->getName() ) );
+	}
+	else if( const auto shader = runTimeCast<const IECoreScene::Shader>( value ) )
+	{
+		return CellData( new StringData( shader->getName() ) );
+	}
+	else if( const auto data = runTimeCast<const IECore::Data>( value ) )
+	{
+		CellData result( data );
+		/// \todo Should PathModel create a decoration automatically when we
+		/// return a colour for `Role::Value`?
+		result.icon = runTimeCast<const Color3fData>( data );
+		if( !result.icon )
+		{
+			result.icon = runTimeCast<const Color4fData>( data );
+		}
+		return result;
+	}
+
+	return CellData();
+}
+
+PathColumn::CellData InspectorColumn::cellDataFromInspection( const GafferSceneUI::Private::Inspector::Result *inspection ) const
+{
+	CellData result;
+	if( !inspection )
+	{
+		return result;
+	}
+
+	result = cellDataFromValue( inspection->value() );
+
+	result.background = g_sourceTypeColors.at( (int)inspection->sourceType() );
+	std::string toolTip;
+	if( inspection->fallbackDescription().size() )
+	{
+		toolTip = "Source : " + inspection->fallbackDescription();
+		result.foreground = g_fallbackValueForegroundColor;
+	}
+	else if( const auto source = MetadataAlgo::firstViewableNode( inspection->source() ) )
+	{
+		if( inspection->sourceType() != Inspector::Result::SourceType::External )
+		{
+			toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
+		}
+		else
+		{
+			const GraphComponent *settingsNode = source->ancestor( RunTimeTyped::typeIdFromTypeName( "GafferUI::Editor::Settings" ) );
+			toolTip = "External Source : " + source->relativeName( settingsNode );
+		}
+	}
+
+	/// \todo Should we have the ability to create read-only columns?
+	if( inspection->editable() )
+	{
+		toolTip += !toolTip.empty() ? "\n\n" : "";
+		if( runTimeCast<const IECore::BoolData>( result.value ) )
+		{
+			toolTip += "Double-click to toggle";
+		}
+		else
+		{
+			toolTip += "Double-click to edit";
+		}
+	}
+
+	if( !toolTip.empty() )
+	{
+		result.toolTip = new StringData( toolTip );
+	}
+
+	return result;
 }

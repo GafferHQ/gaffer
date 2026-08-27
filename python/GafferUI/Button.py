@@ -69,15 +69,6 @@ class Button( GafferUI.Widget ) :
 
 		self.__clickedSignal = GafferUI.WidgetSignal()
 
-		# buttons appear to totally ignore the etch-disabled-text stylesheet option,
-		# and we really don't like the etching. the only effective way of disabling it
-		# seems to be to apply this palette which makes the etched text transparent.
-		if Button.__palette is None :
-			Button.__palette = QtGui.QPalette( QtWidgets.QApplication.instance().palette( self._qtWidget() ) )
-			Button.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
-
-		self._qtWidget().setPalette( Button.__palette )
-
 		if highlightOnOver :
 			self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
 			self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )

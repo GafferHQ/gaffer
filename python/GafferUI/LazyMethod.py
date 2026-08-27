@@ -49,11 +49,12 @@ class LazyMethod( object ) :
 	# Using `deferUntilPlaybackStops` requires that the widget has a
 	# `scriptNode()` method that returns the appropriate ScriptNode from which
 	# to acquire a Playback object.
-	def __init__( self, deferUntilVisible = True, deferUntilIdle = True, deferUntilPlaybackStops = False, replacePendingCalls = True ) :
+	def __init__( self, deferUntilVisible = True, deferUntilIdle = True, deferUntilPlaybackStops = False, replacePendingCalls = True, deferUntilButtonRelease = False ) :
 
 		self.__deferUntilVisible = deferUntilVisible
 		self.__deferUntilIdle = deferUntilIdle
 		self.__deferUntilPlaybackStops = deferUntilPlaybackStops
+		self.__deferUntilButtonRelease = deferUntilButtonRelease
 		self.__replacePendingCalls = replacePendingCalls
 
 	# Called to return the decorated method.
@@ -108,6 +109,10 @@ class LazyMethod( object ) :
 					)
 				)
 
+			elif self.__deferUntilButtonRelease and GafferUI.Widget.currentButtons() :
+
+				GafferUI.EventLoop.addIdleCallback( functools.partial( self.__idleForButtonRelease, weakref.ref( widget ), method ) )
+
 			elif self.__deferUntilIdle :
 
 				GafferUI.EventLoop.addIdleCallback( functools.partial( self.__idle, weakref.ref( widget ), method ) )
@@ -153,6 +158,27 @@ class LazyMethod( object ) :
 
 	@classmethod
 	def __idle( cls, widgetWeakref, method ) :
+
+		widget = widgetWeakref()
+		if widget is None or not GafferUI._qtObjectIsValid( widget._qtWidget() ):
+			return
+
+		cls.__doPendingCalls( widget, method )
+
+		return False # Remove idle callback
+
+	@classmethod
+	def __idleForButtonRelease( cls, widgetWeakref, method ) :
+
+		# There's no global Qt signal for button releases that we can
+		# hook into, so for now we do a busy-wait until all buttons are
+		# released.
+		## \todo If a lot of clients use `deferUntilButtonRelease` then
+		# we should consider mechanisms for making this more efficient.
+
+		if GafferUI.Widget.currentButtons() :
+			# Get called again in a bit.
+			return True
 
 		widget = widgetWeakref()
 		if widget is None or not GafferUI._qtObjectIsValid( widget._qtWidget() ):

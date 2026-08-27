@@ -153,6 +153,8 @@ Unencapsulate::Unencapsulate( const std::string &name )
 	// See `BranchCreator::computeObject()`. Or perhaps we would never want to allow a
 	// different destination anyway?
 	destinationPlug()->setName( "__destination" );
+	copySourceAttributesPlug()->setName( "__copySourceAttributes" );
+
 	storeIndexOfNextChild( g_firstPlugIndex );
 }
 

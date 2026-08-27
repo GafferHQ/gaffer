@@ -34,7 +34,9 @@
 #
 ##########################################################################
 
+import ast
 import os
+import sys
 import time
 import subprocess
 import unittest
@@ -45,11 +47,11 @@ import GafferTest
 
 class ApplicationTest( GafferTest.TestCase ) :
 
-	def testTaskSchedulerInitDoesntSuppressExceptions( self ) :
+	def testTBBGlobalControlDoesntSuppressExceptions( self ) :
 
 		def f() :
 
-			with IECore.tbb_task_scheduler_init( IECore.tbb_task_scheduler_init.automatic ) :
+			with IECore.tbb_global_control( IECore.tbb_global_control.parameter.max_allowed_parallelism, IECore.hardwareConcurrency() ) :
 				raise Exception( "Woops!")
 
 		self.assertRaises( Exception, f )
@@ -60,23 +62,48 @@ class ApplicationTest( GafferTest.TestCase ) :
 			value = subprocess.check_output( [ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; print(os.environ['{}'])".format( v ) ], universal_newlines = True )
 			self.assertEqual( value.strip(), os.environ[v] )
 
-	@unittest.skipIf( os.name == "nt", "Process name is not controllable on Windows.")
+	@unittest.skipIf( GafferTest.inCI() and os.name == "nt", "Finding the Gaffer process is mysteriously failing in CI.")
 	def testProcessName( self ) :
 
-		process = subprocess.Popen( [ str( Gaffer.executablePath() ), "env", "sleep", "100" ] )
+		gafferExe = ( "gaffer" + ( ".exe" if os.name == "nt" else "" ) )
+		gaffer = str( Gaffer.executablePath( True ).parent / "__private" / gafferExe )
+		sleepCommand = "timeout" if os.name == "nt" else "sleep"
+		process = subprocess.Popen( [ str( Gaffer.executablePath() ), "env", sleepCommand, "100" ] )
 		try :
 			startTime = time.time()
 			while True :
 				time.sleep( 0.1 )
-				command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
-				name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
+				if os.name != "nt" :
+					command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
+					name = subprocess.check_output(
+						[ "ps", "-p", str( process.pid ), "-o", "comm=" ] + ( [ "-c" ] if sys.platform == "darwin" else [] ),
+						universal_newlines = True
+					).strip()
+				else :
+					# On Windows, `process` is the shell process (`cmd.exe`) that runs our `gaffer.exe _gaffer.py` process which finally runs
+					# `gaffer __gaffer.py`.
+					def childPid( pid ) :
+						return subprocess.check_output(
+							[ "powershell", "-c", f"Get-CIMInstance -ClassName win32_process -filter ParentProcessID={pid} | Select -ExpandProperty ProcessId" ],
+							universal_newlines = True
+						).strip()
+					gafferPid = childPid( childPid( process.pid ) )
+
+					command = subprocess.check_output(
+						[ "powershell", "-c", f"Get-WmiObject -query \'SELECT CommandLine FROM Win32_Process WHERE ProcessID={gafferPid}\' | Select -ExpandProperty CommandLine" ],
+						universal_newlines = True
+					).strip()
+					name = subprocess.check_output(
+						[ "powershell", "-c", f"Get-WmiObject -query \'SELECT Name FROM Win32_Process WHERE ProcessID={gafferPid}\' | Select -ExpandProperty Name" ],
+						universal_newlines = True
+					).strip()
 				try :
-					self.assertEqual( command, "gaffer env sleep 100" )
-					self.assertEqual( name, "gaffer" )
+					self.assertEqual( command, gaffer + f" env {sleepCommand} 100" )
+					self.assertEqual( name, gafferExe )
 
 				except self.failureException :
-					# It can take some time for gaffer to change its own process name, which varies
-					# based on the host's performance.
+					# It can take some time for the bootstrap `execv` call to replace the
+					# original process. That time depends on the host's performance.
 					# For that reason, we check until 3 seconds have passed before giving up.
 					if time.time() - startTime > 3.0 :
 						raise
@@ -87,6 +114,99 @@ class ApplicationTest( GafferTest.TestCase ) :
 		finally :
 			process.kill()
 
+	def testEnvironmentVariableCase( self ) :
 
-if __name__ == "__main__":
-	unittest.main()
+		# On Windows, the `os` module will screw this up, and create an all-upper-case
+		# environment variable instead. Still, we want to test that variables created
+		# this way are passed to child applications.
+		os.environ["gafferApplicationTestMIXEDcaseA"] = "testTEST"
+		self.addCleanup( os.environ.__delitem__, "gafferApplicationTestMIXEDcaseA" )
+
+		# If we bypass `os.environ`, then we can create a mixed-case variable even
+		# on Windows.
+		os.putenv( "gafferApplicationTestMIXEDcaseB", "testTEST" )
+		self.addCleanup( os.unsetenv, "gafferApplicationTestMIXEDcaseB" )
+
+		childEnvironment = subprocess.check_output( [ Gaffer.executablePath(), "env" ], text = True )
+		childEnvironment = {
+			line.partition( "=" )[0] : line.partition( "=" )[2]
+			for line in childEnvironment.split( "\n" )
+		}
+
+		# We preserve mixed-case environment variables on all platforms.
+		self.assertEqual( childEnvironment["gafferApplicationTestMIXEDcaseB"], "testTEST" )
+
+		if sys.platform == "win32" :
+			# Assert that Python botched this one as expected.
+			self.assertEqual( childEnvironment["GAFFERAPPLICATIONTESTMIXEDCASEA"], "testTEST" )
+			# Check standard variable that happens to be mixed case.
+			self.assertIn( "ProgramData", childEnvironment )
+		else :
+			# On Linux, everything actually makes sense.
+			self.assertEqual( childEnvironment["gafferApplicationTestMIXEDcaseA"], "testTEST" )
+
+	def testEnvironmentCleanup( self ) :
+
+		# The `LD_PRELOAD` additions made in `_gaffer.py` should be
+		# removed from the environment so that they are not inherited
+		# by subprocesses launched by Gaffer.
+
+		environments = {
+			"pythonNative" : os.environ,
+			"pythonCasePreserving" : Gaffer.environment(),
+			"subprocess" : ast.literal_eval(
+				subprocess.check_output( [ "python", "-c", "import os; print( dict( os.environ ) )" ], universal_newlines = True )
+			)
+		}
+
+		for source, environment in environments.items() :
+			with self.subTest( source = source ) :
+				self.assertNotIn( "libjemalloc", environment.get( "LD_PRELOAD", "" ) )
+				self.assertEqual(
+					[ k for k in environment.keys() if k.startswith( "__GAFFER_RESTORE_" ) ],
+					[]
+				)
+
+		# But any `LD_PRELOAD` from the environment Gaffer is called
+		# in should be passed through as normal.
+
+		env = Gaffer.environment()
+		env["LD_PRELOAD"] = "libc.so.6"
+
+		self.assertEqual(
+
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; print( os.environ['LD_PRELOAD'], end = '' )" ],
+				universal_newlines = True, env = env
+			),
+
+			env["LD_PRELOAD"],
+
+		)
+
+		# Even if it's just an empty string.
+
+		env["LD_PRELOAD"] = ""
+		self.assertEqual(
+
+			subprocess.check_output(
+				[ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; print( os.environ['LD_PRELOAD'], end = '' )" ],
+				universal_newlines = True, env = env
+			),
+
+			env["LD_PRELOAD"],
+
+		)
+
+		# If `LD_PRELOAD` wasn't set in the launch environment, then it
+		# shouldn't be set for subprocesses either.
+
+		del env["LD_PRELOAD"]
+		subprocess.check_call(
+			[ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; assert( 'LD_PRELOAD' not in os.environ )" ],
+			universal_newlines = True, env = env
+		)
+
+	def testSysExecutable( self ) :
+
+		self.assertEqual( sys.executable, str( Gaffer.rootPath() / "bin" / ( "python" + ( ".exe" if os.name == "nt" else "" ) ) ) )

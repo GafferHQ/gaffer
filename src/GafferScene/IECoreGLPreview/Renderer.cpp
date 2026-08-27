@@ -259,6 +259,8 @@ const IECoreGL::State &selectedPointsSceneState()
 	return *s;
 }
 
+const Color4f selectedColor( 0.466f, 0.612f, 0.741f, 1.0f );
+
 const IECoreGL::State &selectedDisplayState()
 {
 	static IECoreGL::StatePtr s;
@@ -268,7 +270,22 @@ const IECoreGL::State &selectedDisplayState()
 		s->add( new IECoreGL::Primitive::DrawPoints( false ), /* override = */ true );
 		s->add( new IECoreGL::Primitive::DrawSolid( false ), /* override = */ true );
 		s->add( new IECoreGL::Primitive::DrawWireframe( true ), /* override = */ true );
-		s->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ), /* override = */ true );
+		s->add( new IECoreGL::WireframeColorStateComponent( selectedColor ), /* override = */ true );
+	}
+	return *s;
+}
+
+const IECoreGL::State &selectedVisualiserDisplayState()
+{
+	static IECoreGL::StatePtr s;
+	if( !s )
+	{
+		s = new IECoreGL::State( false );
+		s->add( new IECoreGL::Primitive::DrawPoints( false ), /* override = */ true );
+		s->add( new IECoreGL::Primitive::DrawSolid( true ), /* override = */ true );
+		s->add( new IECoreGL::Primitive::DrawWireframe( true ), /* override = */ true );
+		s->add( new IECoreGL::WireframeColorStateComponent( selectedColor ), /* override = */ true );
+		s->add( new IECoreGL::Color( selectedColor ), /* override = */ true );
 	}
 	return *s;
 }
@@ -509,17 +526,12 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
-		void transform( const Imath::M44f &transform ) override
+		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
-			m_editQueue.push( [this, transform]() {
+			m_editQueue.push( [this, transform=samples.front()]() {
 				m_transform = transform;
 				m_transformSansScale = sansScalingAndShear( transform, false );
 			} );
-		}
-
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
-		{
-			transform( samples.front() );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -543,6 +555,12 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			// So we don't implement `assignID()` for now.
 			/// \todo Evaluate overhead of the more general ID mechanism, and
 			/// consider dropping the custom OpenGL one.
+		}
+
+		void assignInstanceID( uint32_t instanceID ) override
+		{
+			// The GL renderer doesn't support encapsulated instancers, so we have no
+			// need for instance ids.
 		}
 
 		Box3f transformedBound() const
@@ -604,7 +622,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( haveVisualisations )
 			{
 				IECoreGL::State::ScopedBinding selectionScope(
-					selectedDisplayState(), *currentState, isSelected && colorSpace == Visualisation::ColorSpace::Display
+					selectedVisualiserDisplayState(), *currentState, isSelected && colorSpace == Visualisation::ColorSpace::Display
 				);
 
 				Visualisation::Category categories = Visualisation::Category::Generic;
@@ -736,10 +754,10 @@ class OpenGLCamera : public OpenGLObject
 			}
 		}
 
-		void transform( const Imath::M44f &transform ) override
+		void transform(const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times) override
 		{
-			OpenGLObject::transform( transform );
-			editQueue().push( [this, transform]() {
+			OpenGLObject::transform( samples, times );
+			editQueue().push( [this, transform=samples.front()]() {
 				m_camera->setTransform( transform );
 			} );
 		}
@@ -821,6 +839,8 @@ IE_CORE_FORWARDDECLARE( OpenGLLightFilter )
 
 namespace
 {
+
+const std::string g_headerPrefix( "header:" );
 
 class OpenGLRenderer final : public IECoreScenePreview::Renderer
 {
@@ -919,7 +939,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
@@ -930,7 +950,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				openGLAttributes = new OpenGLAttributes( emptyAttributes.get() );
 			}
 
-			OpenGLCameraPtr result = new OpenGLCamera( name, camera, openGLAttributes, m_editQueue );
+			OpenGLCameraPtr result = new OpenGLCamera( name, samples.front().get(), openGLAttributes, m_editQueue );
 			m_editQueue.push( [this, result, name]() {
 				m_objects.push_back( result );
 				m_cameras[name] = result;
@@ -938,26 +958,27 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			OpenGLLightPtr result = new OpenGLLight( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
+			OpenGLLightPtr result = new OpenGLLight( name, samples.size() ? samples[0].get() : nullptr, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
 			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
 		}
 
-		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			OpenGLLightFilterPtr result = new OpenGLLightFilter( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
+			OpenGLLightFilterPtr result = new OpenGLLightFilter( name, samples.size() ? samples[0].get() : nullptr, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
 			m_editQueue.push( [this, result]() { m_objects.push_back( result ); } );
 			return result;
 		}
 
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override
 		{
+			const IECore::Object *object = samples.front().get();
 			if( !m_renderObjects && !runTimeCast<const IECoreScenePreview::Placeholder>( object ) )
 			{
 				return nullptr;
@@ -970,9 +991,9 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes ) override
 		{
-			return object( name, samples.front(), attributes );
+			return object( name, staticSamplesCast<IECore::ConstObjectPtr>( samples ), times, attributes );
 		}
 
 		void render() override
@@ -1237,6 +1258,14 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				{
 					IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", fmt::format( "Unsupported data format \"{}\".", data ) );
 					return;
+				}
+
+				for( const auto &[parameterName, parameterValue] : namedOutput.second->parameters() )
+				{
+					if( boost::starts_with( parameterName.string(), g_headerPrefix ) )
+					{
+						image->blindData()->writable()[parameterName.string().substr( g_headerPrefix.size() )] = parameterValue;
+					}
 				}
 
 				const string &type = namedOutput.second->getType();

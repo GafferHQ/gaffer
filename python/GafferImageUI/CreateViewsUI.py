@@ -58,60 +58,60 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"views" : [
-			"description",
+		"views" : {
+			"description" :
 			"Views to add.  In the case of multiple views with the same name, the last one will override.",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 2.0,
-			"noduleLayout:customGadget:addButton:gadgetType", "",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 2.0,
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferImageUI.CreateViewsUI._ViewsFooter",
-			"layout:customWidget:footer:index", -1,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferImageUI.CreateViewsUI._ViewsFooter",
+			"layout:customWidget:footer:index" : -1,
 
-		],
+		},
 
-		"views.*" : [
+		"views.*" : {
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"deletable", True,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"deletable" : True,
 
-		],
+		},
 
-		"views.*.name" : [
-			"description",
+		"views.*.name" : {
+			"description" :
 			"""
 			The name of the view to be created from this input. Usually "left" or "right" for a
 			stereo workflow, but can be any name, allowing arbitrary numbers of views to be created
 			in a single image stream.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"views.*.enabled" : [
-			"description",
+		"views.*.enabled" : {
+			"description" :
 			"""
 			Enables this view.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"views.*.value" : [
-			"description",
+		"views.*.value" : {
+			"description" :
 			"""
 			Provides the image to be used to create this view. The connected image should not itself
 			be a multi-view image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget",
-			"noduleLayout:label", lambda plug : plug.parent()["name"].getValue(),
+			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
+			"noduleLayout:label" : lambda plug : plug.parent()["name"].getValue(),
 
-		],
+		},
 
 	}
 

@@ -183,6 +183,3 @@ class RenderPassesTest( GafferSceneTest.SceneTestCase ) :
 		passes3["names"].setValue( IECore.StringVectorData( [ "a", "d", "g" ] ) )
 
 		self.assertEqual( passes3["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "b", "c", "e", "f", "a", "d", "g" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

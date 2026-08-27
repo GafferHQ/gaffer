@@ -55,18 +55,17 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		n1["op2"].setValue( 3 )
 
 		dirtied = GafferTest.CapturingSlot( n2.plugDirtiedSignal() )
-		set = GafferTest.CapturingSlot( n2.plugSetSignal() )
+		plugSet = GafferTest.CapturingSlot( n2.plugSetSignal() )
 		n2["op1"].setInput( n1["sum"] )
 
-		self.assertEqual( len( set ), 0 )
+		self.assertEqual( len( plugSet ), 0 )
 		self.assertEqual( len( dirtied ), 2 )
 		self.assertTrue( dirtied[0][0].isSame( n2["op1"] ) )
 		self.assertTrue( dirtied[1][0].isSame( n2["sum"] ) )
 
 		n2["op1"].setInput( None )
 
-		self.assertEqual( len( set ), 1 )
-		self.assertTrue( set[0][0].isSame( n2["op1"] ) )
+		self.assertEqual( len( plugSet ), 0 )
 		self.assertEqual( len( dirtied ), 4 )
 		self.assertTrue( dirtied[2][0].isSame( n2["op1"] ) )
 		self.assertTrue( dirtied[3][0].isSame( n2["sum"] ) )
@@ -728,5 +727,40 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].context, "Plug dirty propagation" )
 		self.assertRegex( mh.messages[0].message, r"Cycle detected between node.* and node.*" )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testDirtyPropagationAfterNameChangeBeforeParenting( self ) :
+
+		class ManyToOneDependencyNode( Gaffer.DependencyNode ) :
+
+			def __init__( self, name="CompoundPlugNode" ) :
+
+				Gaffer.DependencyNode.__init__( self, name )
+
+				self["in"] = Gaffer.Plug()  # All children of `in` affect
+				self["out"] = Gaffer.Plug() # `out`.
+
+			def affects( self, inputPlug ) :
+
+				outputs = Gaffer.DependencyNode.affects( self, inputPlug )
+
+				if inputPlug.parent().isSame( self["in"] ) :
+					outputs.append( self["out"] )
+
+				return outputs
+
+		IECore.registerRunTimeTyped( ManyToOneDependencyNode, "GafferTest::ManyToOneDependencyNode" )
+
+		node = ManyToOneDependencyNode()
+
+		dirtiedSlot = GafferTest.CapturingSlot( node.plugDirtiedSignal() )
+		with Gaffer.DirtyPropagationScope() :
+			node["in"]["foo"] = Gaffer.IntPlug()
+
+		self.assertIn( node["out"], { x[0] for x in dirtiedSlot } )
+
+		del dirtiedSlot[:]
+		with Gaffer.DirtyPropagationScope() :
+			bar = Gaffer.IntPlug()
+			bar.setName( "bar" )
+			node["in"].addChild( bar )
+
+		self.assertIn( node["out"], { x[0] for x in dirtiedSlot } )

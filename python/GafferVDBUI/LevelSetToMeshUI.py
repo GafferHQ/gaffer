@@ -34,34 +34,46 @@
 #
 ##########################################################################
 
-import GafferUI
+import Gaffer
 import GafferVDB
 
-GafferUI.Metadata.registerNode(
-	GafferVDB.LevelSetToMesh,
-	'description',
-	"""Converts a level set VDB object to a mesh primitive .""",
+Gaffer.Metadata.registerNode(
 
-	plugs={
-		"filter" : [
-			"description",
+	GafferVDB.LevelSetToMesh,
+
+	"description",
+	"""
+	Converts a level set VDB object to a mesh primitive.
+	""",
+
+	plugs = {
+
+		"filter" : {
+
+			"description" :
 			"""
 			The filter used to choose the vdbs to be converted. Source locations are
 			pruned from the output scene, unless they are reused as part of a destination location
 			(or a separate source scene is connected).
 			"""
-		],
-		"source" : [
-			"description",
+
+		},
+
+		"source" : {
+
+			"description" :
 			"""
 			An optional alternate scene to provide the vdbs to be converted. When connected :
 
 			- The `filter` chooses locations to be merged from the `source` scene rather than then `in` scene.
 			- Source locations are not pruned from the output scene.
 			"""
-		],
-		"destination" : [
-			"description",
+
+		},
+
+		"destination" : {
+
+			"description" :
 			"""
 			By default, vdbs will be replaced with a mesh in place, using the destination `${scene:path}`.
 			The destination can be modified to change where the outputs are placed. If multiple filtered locations
@@ -70,25 +82,45 @@ GafferUI.Metadata.registerNode(
 			The destination location will be created if it doesn't exist already. If the name overlaps
 			with an existing location that isn't filtered, the name will get a suffix.
 			""",
-		],
-		'grid' : [
-			'description',
+
+		},
+
+		# The inputs to LevelSetToMesh don't have primitive variables, so we can't sort by that.
+		# It doesn't really make sense to order the inputs to LevelSetToMesh anyway, since everything
+		# gets merged into a grid first anyway, the input order doesn't really affect the result.
+		# ( The default alphabetical sort is good enough to ensure a deterministic result for the sake
+		# of floating point precision ).
+		"sortKey" : { "plugValueWidget:type" : "" },
+		"sortPrimitiveVariable" : { "plugValueWidget:type" : "" },
+		"sortOrder" : { "plugValueWidget:type" : "" },
+
+		"grid" : {
+
+			"description" :
 			"""
 			Name of the level set grid to create a mesh primitive from.
 			"""
-		],
-		'isoValue' : [
-			'description',
+
+		},
+
+		"isoValue" : {
+
+			"description" :
 			"""
 			Value which defines the isosurface to convert to a mesh primitive.
 			Usually this is set to zero but setting a small positive number will generate a dilated mesh and negative will create an eroded mesh.
 			"""
-		],
-		'adaptivity' : [
-			'description',
+
+		},
+
+		"adaptivity" : {
+
+			"description" :
 			"""
 			Adaptively generate fewer polygons from level set. 0 - uniform meshing, 1 - maximum level of adaptivity.
 			"""
-		]
+
+		}
+
 	}
 )

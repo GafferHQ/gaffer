@@ -132,12 +132,13 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__mergeGroupId += 1
 		self.__lastChangedReason = reason
 
-		with Gaffer.UndoScope(
-			self.scriptNode(),
-			mergeGroup = "ColorPlugValueWidget%d%d" % ( id( self, ), self.__mergeGroupId )
-		) :
+		with self._blockedUpdateFromValues() :
 
-			with self._blockedUpdateFromValues() :
+			with Gaffer.UndoScope(
+				self.scriptNode(),
+				mergeGroup = "ColorPlugValueWidget%d%d" % ( id( self, ), self.__mergeGroupId )
+			) :
+
 				for plug in self.getPlugs() :
 					plug.setValue( self.__colorChooser.getColor() )
 

@@ -182,6 +182,7 @@ class ScatterTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Plane()
 		l = GafferSceneTest.TestLight()
+		l.loadShader( "simpleLight" )
 
 		g = GafferScene.Group()
 		g["in"][0].setInput( p["out"] )
@@ -314,6 +315,3 @@ class ScatterTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["scatter"] = GafferScene.Scatter()
 		self.assertNotIn( "setInput", s.serialise() )
-
-if __name__ == "__main__":
-	unittest.main()

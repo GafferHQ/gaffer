@@ -50,9 +50,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			Defines how the channels listed in the channels
 			plug are treated. Delete mode deletes the listed
@@ -60,16 +60,16 @@ Gaffer.Metadata.registerNode(
 			deleting all others.
 			""",
 
-			"preset:Delete", GafferImage.DeleteChannels.Mode.Delete,
-			"preset:Keep", GafferImage.DeleteChannels.Mode.Keep,
+			"preset:Delete" : GafferImage.DeleteChannels.Mode.Delete,
+			"preset:Keep" : GafferImage.DeleteChannels.Mode.Keep,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the channels to be deleted (or kept
 			if the mode is set to Keep). Names should be separated
@@ -77,9 +77,9 @@ Gaffer.Metadata.registerNode(
 			wildcards.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
-		],
+		},
 
 	}
 

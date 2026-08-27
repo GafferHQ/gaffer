@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2025, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,78 +37,23 @@
 import Gaffer
 import IECore
 
+Gaffer.SplineDefinitionInterpolation = IECore.RampInterpolation
 
-def __convertCortexSpline( spline, oldType, newType ):
-	if type( spline ) != oldType :
-		# Not the case we need to fix
-		return spline
-
-	interpolation = None
-	if spline.basis == type( spline.basis ).linear():
-		interpolation = Gaffer.SplineDefinitionInterpolation.Linear
-	elif spline.basis == type( spline.basis ).catmullRom():
-		interpolation = Gaffer.SplineDefinitionInterpolation.CatmullRom
-	elif spline.basis == eval( repr( type( spline.basis ).bSpline() ) ):
-		# Note that serialising the bSpline basis alters it slightly due to floating point precision,
-		# so we have to compare to altered version
-		interpolation = Gaffer.SplineDefinitionInterpolation.BSpline
-	else:
-		raise Exception( "Error setting " + newType.__name__ + "- Unrecognized basis: " + repr( spline.basis ) )
-
-	result = newType( spline.points(), interpolation )
-	if not result.trimEndPoints():
-		raise Exception( "Error setting " + newType.__name__ + "- Could not convert: " + repr( spline ) )
-
-	return result
+Gaffer.SplineDefinitionff = IECore.Rampff
+Gaffer.SplineDefinitionfColor3f = IECore.RampfColor3f
+Gaffer.SplineDefinitionfColor4f = IECore.RampfColor4f
 
 
+# There are two main places that may need this compatibility config for Ramp*Plug.
+# The first is the same as most of our compatibility configs: old Gaffer scripts
+# that were saved out with Spline*Plug.
+# The second is more obscure: python/Gaffer/ExtensionAlgo.py uses a __nodeTemplate
+# that adds a constructor to remove the dynamic flag from children of a Ramp*Plug.
+# Any custom nodes that were exported using ExtensionAlgo from Gaffer 1.6 or earlier
+# will have the "Spline*Plug" names baked, and will depend on this config. The long
+# term plan is to fix it so those Dynamic flags would never be set ... we probably
+# shouldn't remove this compatibility until after we sort that out.
 
-def __initWrapper( originalInit, defaultName, oldValueType, valueType ):
-
-	def init( self, name = defaultName, direction = Gaffer.Plug.Direction.In,
-		defaultValue = valueType(), flags = Gaffer.Plug.Flags.Default ):
-
-		originalInit( self, name, direction, __convertCortexSpline( defaultValue, oldValueType, valueType ), flags )
-
-	return init
-
-Gaffer.SplineffPlug.__init__ = __initWrapper( Gaffer.SplineffPlug.__init__, "SplineffPlug",
-	IECore.Splineff, Gaffer.SplineDefinitionff )
-Gaffer.SplinefColor3fPlug.__init__ = __initWrapper( Gaffer.SplinefColor3fPlug.__init__, "SplinefColor3fPlug",
-	IECore.SplinefColor3f, Gaffer.SplineDefinitionfColor3f )
-
-def __setValueWrapper( originalSetValue, oldValueType, valueType ):
-
-	def setValue( self, value ):
-
-		originalSetValue( self, __convertCortexSpline( value, oldValueType, valueType ) )
-
-	return setValue
-
-Gaffer.SplineffPlug.setValue = __setValueWrapper( Gaffer.SplineffPlug.setValue,
-	IECore.Splineff, Gaffer.SplineDefinitionff )
-Gaffer.SplinefColor3fPlug.setValue = __setValueWrapper( Gaffer.SplinefColor3fPlug.setValue,
-	IECore.SplinefColor3f, Gaffer.SplineDefinitionfColor3f )
-
-
-class __DummyIgnoreAllSetValuesRecursive( object ) :
-
-	def setValue( self, value ) :
-		pass
-
-	def __getitem__( self, item ) :
-		return self
-
-def __getitemWrapper( originalGetitem ):
-
-	def getItem( self, item ):
-
-		if item == "basis":
-			return __DummyIgnoreAllSetValuesRecursive()
-		else:
-			return originalGetitem( self, item )
-
-	return getItem
-
-Gaffer.SplineffPlug.__getitem__ = __getitemWrapper( Gaffer.SplineffPlug.__getitem__ )
-Gaffer.SplinefColor3fPlug.__getitem__ = __getitemWrapper( Gaffer.SplinefColor3fPlug.__getitem__ )
+Gaffer.SplineffPlug = Gaffer.RampffPlug
+Gaffer.SplinefColor3fPlug = Gaffer.RampfColor3fPlug
+Gaffer.SplinefColor4fPlug = Gaffer.RampfColor4fPlug

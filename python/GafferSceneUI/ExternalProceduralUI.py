@@ -55,38 +55,38 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The path to the external procedural or archive.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "procedurals",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:bookmarks" : "procedurals",
 
 
-		],
+		},
 
-		"bound" : [
+		"bound" : {
 
-			"description",
+			"description" :
 			"""
 			The bounding box of the external procedural or archive.
 			""",
 
-		],
+		},
 
 
-		"parameters" : [
+		"parameters" : {
 
-			"description",
+			"description" :
 			"""
 			An arbitrary set of parameters to be passed to the external procedural.
 			""",
 
-		],
+		},
 
 	}
 

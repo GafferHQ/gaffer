@@ -67,23 +67,23 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description", "Generated automatically - do not edit.",
-			"plugValueWidget:type", "",
+			"description" : "Generated automatically - do not edit.",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"type" : [
+		"type" : {
 
-			"description", "Generated automatically - do not edit.",
-			"plugValueWidget:type", "",
+			"description" : "Generated automatically - do not edit.",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"parameters" : [
+		"parameters" : {
 
-			"description",
+			"description" :
 			"""
 			The inputs to the shader. Any number of inputs may be created
 			by adding child plugs. Supported plug types and the corresponding
@@ -96,65 +96,65 @@ Gaffer.Metadata.registerNode(
 			- M44fPlug (`matrix`)
 			- StringPlug (`string`)
 			- ClosurePlug (`closure color`)
-			- SplinefColor3f ( triplet of `float [], color [], string` )
+			- RampfColor3fPlug ( triplet of `float [], color [], string` )
 			""",
 
-			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLCodeUI._ParametersFooter",
-			"layout:customWidget:footer:index", -1,
-			"layout:section", "Settings.Inputs",
+			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLCodeUI._ParametersFooter",
+			"layout:customWidget:footer:index" : -1,
+			"layout:section" : "Settings.Inputs",
 
-		],
+		},
 
-		"parameters.*" : [
+		"parameters.*" : {
 
-			"renameable", True,
-			"deletable", True,
+			"renameable" : True,
+			"deletable" : True,
 			# Since the names are used directly as variable names in the code,
 			# it's best to avoid any fancy label formatting for them.
-			"label", lambda plug : plug.getName(),
+			"label" : lambda plug : plug.getName(),
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The outputs from the shader. Any number of outputs may be created
 			by adding child plugs. Supported plug types are as for the input
-			parameters, with the exception of SplinefColor3f, which cannot be
+			parameters, with the exception of RampfColor3fPlug, which cannot be
 			used as an output.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLCodeUI._ParametersFooter",
-			"layout:customWidget:footer:index", -1,
-			"layout:section", "Settings.Outputs",
+			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLCodeUI._ParametersFooter",
+			"layout:customWidget:footer:index" : -1,
+			"layout:section" : "Settings.Outputs",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"renameable", True,
-			"deletable", True,
-			"label", lambda plug : plug.getName(),
+			"renameable" : True,
+			"deletable" : True,
+			"label" : lambda plug : plug.getName(),
 
-		],
+		},
 
-		"code" : [
+		"code" : {
 
-			"description",
+			"description" :
 			"""
 			The code for the body of the OSL shader. This should read from the
 			input parameters and write to the output parameters.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferOSLUI.OSLCodeUI._CodePlugValueWidget",
-			"layout:label", "",
-			"layout:section", "Settings.Code",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferOSLUI.OSLCodeUI._CodePlugValueWidget",
+			"layout:label" : "",
+			"layout:section" : "Settings.Code",
 
-		],
+		},
 
 	}
 
@@ -212,17 +212,15 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 
 			labelsAndConstructors.insert(
 				-1,
-				( "Color Spline",
+				( "Color Ramp",
 					functools.partial(
-						Gaffer.SplinefColor3fPlug,
-						defaultValue = IECore.SplinefColor3f(
-							IECore.CubicBasisf.catmullRom(),
+						Gaffer.RampfColor3fPlug,
+						defaultValue = IECore.RampfColor3f(
 							(
 								( 0, imath.Color3f( 0 ) ),
-								( 0, imath.Color3f( 0 ) ),
 								( 1, imath.Color3f( 1 ) ),
-								( 1, imath.Color3f( 1 ) ),
-							)
+							),
+							IECore.RampInterpolation.CatmullRom
 						)
 					)
 				)
@@ -305,7 +303,7 @@ class _CodePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if plug.parent() not in ( node["parameters"], node["out"] ) :
 			return None
 
-		if isinstance( plug, Gaffer.SplinefColor3fPlug ) :
+		if isinstance( plug, Gaffer.RampfColor3fPlug ) :
 			return "colorSpline( {0}Positions, {0}Values, {0}Basis, u )".format( plug.getName() )
 
 		return plug.getName()
@@ -321,20 +319,27 @@ class _ErrorWidget( GafferUI.Widget ) :
 		self.__messageWidget = GafferUI.MessageWidget()
 		GafferUI.Widget.__init__( self, self.__messageWidget, **kw )
 
+		self.__node = node
 		node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
-		node.shaderCompiledSignal().connect( Gaffer.WeakMethod( self.__shaderCompiled ) )
+		node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 
 		self.__messageWidget.setVisible( False )
 
 	def __error( self, plug, source, error ) :
 
+		if plug.isSame( self.__node["__shaderName"] ) :
+			Gaffer.ParallelAlgo.callOnUIThread( functools.partial( self.__displayError, error ) )
+
+	def __displayError( self, error ) :
+
 		self.__messageWidget.clear()
 		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Error, "Compilation error", error )
 		self.__messageWidget.setVisible( True )
 
-	def __shaderCompiled( self ) :
+	def __plugDirtied( self, plug ) :
 
-		self.__messageWidget.setVisible( False )
+		if plug.isSame( self.__node["__shaderName"] ) :
+			self.__messageWidget.setVisible( False )
 
 ##########################################################################
 # Plug menu

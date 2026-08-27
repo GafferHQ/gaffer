@@ -41,6 +41,30 @@ import GafferUI
 
 import GafferScene
 
+def __parameterUserDefault( plug ) :
+
+	lightFilter = plug.node()
+	result = Gaffer.Metadata.value(
+		"{}:{}:{}".format(
+			lightFilter["__shader"]["type"].getValue(),
+			lightFilter["__shader"]["name"].getValue(),
+			plug.relativeName( lightFilter["parameters"] )
+		),
+		"userDefault"
+	)
+	if result is None :
+		# \todo Remove this fallback when the `filter` suffix is removed
+		# from `GafferScene::LightFilter` internal shader.
+		result = Gaffer.Metadata.value(
+			"{}:filter:{}:{}".format(
+				lightFilter["__shader"]["type"].getValue(),
+				lightFilter["__shader"]["name"].getValue(),
+				plug.relativeName( lightFilter["parameters"] )
+			),
+			"userDefault"
+		)
+	return result
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.LightFilter,
@@ -52,57 +76,75 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"layout:index", 0,
+			"layout:index" : 0,
 
-		],
+		},
 
-		"filteredLights" : [
+		"filteredLights" : {
 
-			"description",
+			"description" :
 			"""
-			The lights that are being filtered. Accepts a SetExpression. You
-			might want to set it to 'defaultLights' to have the filter affect
-			all lights that haven't been excluded from that set.
+			The lights to be filtered by this light filter. Accepts a
+			set expression or a space separated list of lights. Use
+			\"defaultLights\" to refer to all lights that contribute
+			to illumination by default.
 			""",
 
-			"layout:index", 1,
-		],
+			"layout:index" : 1,
+		},
 
-		"sets" : [
+		"filteredLightsExclusions" : {
 
-			"layout:divider", True,
-			"layout:index", 3,
+			"description" :
+			"""
+			The lights that are never filtered by this light filter, even
+			when they are included by `filteredLights`. Accepts a set
+			expression or a space separated list of lights.
+			""",
 
-		],
+			"layout:index" : 2,
+		},
 
-		"parameters" : [
+		"sets" : {
 
-			"description",
+			"layout:divider" : True,
+			"layout:index" : 3,
+
+		},
+
+		"parameters" : {
+
+			"description" :
 			"""
 			The parameters of the light filter shader - these will vary based on the type.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
 
 
-		],
+		},
 
-		"parameters.*" : [
+		"parameters.*" : {
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
-			"nodule:type", "",
+			"noduleLayout:section" : "left",
 
-		],
+		},
+
+		"parameters..." : {
+
+			"userDefault" : __parameterUserDefault,
+
+		},
 
 	}
 
@@ -122,6 +164,7 @@ for key in [
 	"noduleLayout:label",
 	"layout:divider",
 	"layout:section",
+	"layout:accessory",
 	"presetNames",
 	"presetValues",
 	"plugValueWidget:type",

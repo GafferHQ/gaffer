@@ -101,7 +101,6 @@ from .DocumentationTest import DocumentationTest
 from .LazyMethodTest import LazyMethodTest
 from .BackgroundMethodTest import BackgroundMethodTest
 from .ReferenceUITest import ReferenceUITest
-from .CompoundDataPlugValueWidgetTest import CompoundDataPlugValueWidgetTest
 from .GraphGadgetTest import GraphGadgetTest
 from .MenuBarTest import MenuBarTest
 from .GadgetWidgetTest import GadgetWidgetTest
@@ -136,6 +135,5 @@ from .PopupWindowTest import PopupWindowTest
 from .ColorChooserTest import ColorChooserTest
 from .ContextTrackerTest import ContextTrackerTest
 from .ArrayDataWidgetTest import ArrayDataWidgetTest
-
-if __name__ == "__main__":
-	unittest.main()
+from .MetadataAlgoTest import MetadataAlgoTest
+from .BreadCrumbsWidgetTest import BreadCrumbsWidgetTest

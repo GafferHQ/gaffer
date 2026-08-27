@@ -69,6 +69,3 @@ class StatsApplicationTest( GafferTest.TestCase ) :
 		self.assertTrue( re.search( r"AddNode\s*2", o ) )
 		self.assertTrue( re.search( r"Box\s*1", o ) )
 		self.assertTrue( re.search( r"Total\s*3", o ) )
-
-if __name__ == "__main__":
-	unittest.main()

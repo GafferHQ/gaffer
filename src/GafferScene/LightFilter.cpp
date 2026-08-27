@@ -54,6 +54,7 @@ using namespace GafferScene;
 
 static IECore::InternedString g_lightFiltersSetName( "__lightFilters" );
 static IECore::InternedString g_filteredLightsAttributeName( "filteredLights" );
+static IECore::InternedString g_filteredLightsExclusionsAttributeName( "filteredLights:exclusions" );
 
 GAFFER_NODE_DEFINE_TYPE( LightFilter );
 
@@ -67,6 +68,7 @@ LightFilter::LightFilter( GafferScene::ShaderPtr shader, const std::string &name
 	shader->setName( "__shader" );
 	addChild( shader );
 	addChild( new StringPlug( "filteredLights" ) );
+	addChild( new StringPlug( "filteredLightsExclusions" ) );
 	addChild( new Plug( "parameters" ) );
 	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
@@ -82,7 +84,16 @@ void LightFilter::loadShader( const std::string &shaderName, bool keepExistingVa
 {
 	shaderNode()->loadShader( shaderName, keepExistingValues );
 	shaderPlug()->setInput( shaderNode()->outPlug() );
-	shaderNode()->attributeSuffixPlug()->setValue( "filter" );
+	/// \todo We don't really want an attribute suffix for _any_ light filters,
+	/// but historically we had one, so for now we are preserving that behaviour
+	/// for all but the new RenderManLightFilter. We should remove the suffix
+	/// and update the Arnold backend to use `ai:lightFilter` attributes directly.
+	/// We should also remove the fallback check for the "filter" suffix in
+	/// `LightFilterUI.py`.
+	if( strcmp( typeName(), "GafferRenderMan::RenderManLightFilter" ) )
+	{
+		shaderNode()->attributeSuffixPlug()->setValue( "filter" );
+	}
 }
 
 GafferScene::Shader *LightFilter::shaderNode()
@@ -105,31 +116,41 @@ const StringPlug *LightFilter::filteredLightsPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+StringPlug *LightFilter::filteredLightsExclusionsPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const StringPlug *LightFilter::filteredLightsExclusionsPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::Plug *LightFilter::parametersPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::Plug *LightFilter::parametersPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 3 );
 }
 
 ShaderPlug *LightFilter::shaderPlug()
 {
-	return getChild<ShaderPlug>( g_firstPlugIndex + 3 );
+	return getChild<ShaderPlug>( g_firstPlugIndex + 4 );
 }
 
 const ShaderPlug *LightFilter::shaderPlug() const
 {
-	return getChild<ShaderPlug>( g_firstPlugIndex + 3 );
+	return getChild<ShaderPlug>( g_firstPlugIndex + 4 );
 }
 
 void LightFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 
-	if( input == shaderPlug() || input == filteredLightsPlug() )
+	if( input == shaderPlug() || input == filteredLightsPlug() || input == filteredLightsExclusionsPlug() )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
@@ -155,6 +176,7 @@ void LightFilter::hashAttributes( const SceneNode::ScenePath &path, const Gaffer
 
 	h.append( shaderPlug()->attributesHash() );
 	filteredLightsPlug()->hash( h );
+	filteredLightsExclusionsPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr LightFilter::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -167,6 +189,11 @@ IECore::ConstCompoundObjectPtr LightFilter::computeAttributes( const SceneNode::
 	if( !filteredLights.empty() )
 	{
 		result->members()[g_filteredLightsAttributeName] = new IECore::StringData( filteredLights );
+	}
+	const std::string &filteredLightsExclusions = filteredLightsExclusionsPlug()->getValue();
+	if( !filteredLightsExclusions.empty() )
+	{
+		result->members()[g_filteredLightsExclusionsAttributeName] = new IECore::StringData( filteredLightsExclusions );
 	}
 
 	return result;

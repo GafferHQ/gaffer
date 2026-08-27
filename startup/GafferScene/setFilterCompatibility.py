@@ -39,14 +39,4 @@ import GafferScene
 
 # Provides backwards compatibility by allowing access to "setExpression" plug
 # using its old name of "set".
-def __setFilterGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		key = "setExpression" if key == "set" else key
-		return originalGetItem( self, key )
-
-	return getItem
-
-
-GafferScene.SetFilter.__getitem__ = __setFilterGetItem( GafferScene.SetFilter.__getitem__ )
+Gaffer.Metadata.registerValue( GafferScene.SetFilter, "compatibility:childAlias:set", "setExpression" )

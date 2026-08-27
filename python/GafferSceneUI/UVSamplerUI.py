@@ -50,19 +50,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"uv" : [
+		"uv" : {
 
-			"description",
+			"description" :
 			"""
 			The primitive variable that provides the UV positions to
 			sample on the source primitive.
 			""",
 
-			"layout:section", "Settings.Input",
+			"layout:section" : "Settings.Input",
 			# Put the Input section before the Output section
-			"layout:index", 2,
+			"layout:index" : 2,
 
-		],
+		},
 
 	}
 

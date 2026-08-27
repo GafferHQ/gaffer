@@ -82,6 +82,3 @@ class PrimitiveVariableExistsTest( GafferSceneTest.SceneTestCase ) :
 			script["PrimitiveVariableExists"]["primitiveVariable"].setValue( "Cs" )
 
 			self.assertEqual( script["PrimitiveVariableExists"]["out"].getValue(), True )
-
-if __name__ == "__main__":
-	unittest.main()

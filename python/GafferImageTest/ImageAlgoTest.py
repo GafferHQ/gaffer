@@ -144,12 +144,14 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 
 	def testParallelProcessEmptyDataWindow( self ) :
 
-		d = GafferImage.Display()
-		self.assertEqual( d["out"]["dataWindow"].getValue(), imath.Box2i() )
+		constant = GafferImage.Constant()
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), imath.Box2i() )
 
-		GafferImageTest.processTiles( d["out"] )
-		GafferImage.ImageAlgo.image( d["out"] )
-		GafferImage.ImageAlgo.imageHash( d["out"] )
+		GafferImageTest.processTiles( crop["out"] )
+		GafferImage.ImageAlgo.image( crop["out"] )
+		GafferImage.ImageAlgo.imageHash( crop["out"] )
 
 	def testLayerNames( self ) :
 
@@ -336,7 +338,3 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			return [int(text) if text.isdigit() else text for text in pythonRegex.split(s)]
 		permutationsPython = sorted( permutations, key = pythonNaturalSortKey )
 		self.assertEqual( permutationsGaffer, permutationsPython )
-
-
-if __name__ == "__main__":
-	unittest.main()

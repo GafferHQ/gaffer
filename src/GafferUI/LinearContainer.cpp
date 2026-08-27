@@ -56,7 +56,7 @@ LinearContainer::LinearContainer( const std::string &name, Orientation orientati
 	// We already initialised these values above, but that didn't perform any range checking,
 	// so we set them here as well. The reason we initialize them at all is so that the set
 	// methods will determine that the values are not changing, and therefore not call
-	// `dirty()` unecessarily.
+	// `dirty()` unnecessarily.
 	setOrientation( orientation );
 	setAlignment( alignment );
 	setSpacing( spacing );

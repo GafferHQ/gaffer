@@ -60,69 +60,64 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used to control which parts of the scene are
 			processed. A Filter node should be connected here.
 			""",
 
-			"layout:section", "Filter",
-			"noduleLayout:section", "right",
-			"layout:index", -3, # Just before the enabled plug,
-			"nodule:type", "GafferUI::StandardNodule",
-			"plugValueWidget:type", "GafferSceneUI.FilterPlugValueWidget",
+			"layout:section" : "Filter",
+			"noduleLayout:section" : "right",
+			"layout:index" : -3, # Just before the enabled plug,
+			"nodule:type" : "GafferUI::StandardNodule",
+			"plugValueWidget:type" : "GafferSceneUI.FilterPlugValueWidget",
 
-		],
+		},
 
 	},
 
 )
 
 ##########################################################################
-# Gadgets
-##########################################################################
-
-def __nodeGadget( node ) :
-
-	nodeGadget = GafferUI.StandardNodeGadget( node )
-	GafferSceneUI.PathFilterUI.addObjectDropTarget( nodeGadget )
-	GafferSceneUI.SetFilterUI.addSetDropTarget( nodeGadget )
-
-	return nodeGadget
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.FilteredSceneProcessor, __nodeGadget )
-
-##########################################################################
 # GraphEditor context menu
 ##########################################################################
 
-def __selectAffected( node ) :
-
-	if isinstance( node, GafferScene.FilteredSceneProcessor ) :
-		filter = node["filter"]
-		scenes = [ node["in"] ]
-	else :
-		filter = node
-		scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filter ) ]
-
-	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
+def __selectAffected( nodeList ) :
 
 	pathMatcher = IECore.PathMatcher()
-	for scene in scenes :
-		with GafferUI.ContextTracker.acquireForFocus( scene ).context( scene ) :
-			GafferScene.SceneAlgo.matchingPaths( filter, scene, pathMatcher )
 
-	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( node.scriptNode(), pathMatcher )
+	for node in nodeList :
+		if isinstance( node, GafferScene.FilteredSceneProcessor ) :
+			filter = node["filter"]
+			scenes = [ node["in"] ]
+		else :
+			filter = node
+			scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filter ) ]
 
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
+		scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
 
-	if not isinstance( node, ( GafferScene.FilteredSceneProcessor, GafferScene.Filter ) ) :
+
+		for scene in scenes :
+			sceneMatches = IECore.PathMatcher()
+			with GafferUI.ContextTracker.acquireForFocus( scene ).context( scene ) :
+				GafferScene.SceneAlgo.matchingPaths( filter, scene, sceneMatches )
+
+			pathMatcher.addPaths( sceneMatches )
+
+	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( nodeList[0].scriptNode(), pathMatcher )
+
+def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
+
+	if not any( isinstance( n, ( GafferScene.FilteredSceneProcessor, GafferScene.Filter ) ) for n in nodeList ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node ) } )
+	menuDefinition.append( "/Select Affected Objects", {
+		"command" : functools.partial( __selectAffected, nodeList ),
+		"active" : all( isinstance( n, ( GafferScene.FilteredSceneProcessor, GafferScene.Filter ) ) for n in nodeList )
+	} )
 
 ##########################################################################
 # NodeEditor tool menu

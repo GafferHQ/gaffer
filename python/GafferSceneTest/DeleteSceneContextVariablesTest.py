@@ -67,6 +67,3 @@ class DeleteSceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		d["variables"].setValue( "a" )
 		self.assertEqual( c["out"].attributes( "/plane" )["user:something"], IECore.StringData( "" ) )
-
-if __name__ == "__main__":
-	unittest.main()

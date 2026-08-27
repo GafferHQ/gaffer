@@ -32,7 +32,9 @@
 #
 ##########################################################################
 
+import os
 import pathlib
+import sys
 import time
 import unittest
 import subprocess
@@ -41,6 +43,8 @@ import IECoreImage
 
 class OutputDriverTest( unittest.TestCase ) :
 
+	@unittest.skipIf( os.name == "nt", "Kick not currently working on Windows.")
+	@unittest.skipIf( sys.platform == "darwin", "Kick not currently working on macOS." )
 	def testMergedDisplays( self ) :
 
 		server = IECoreImage.DisplayDriverServer( 1559 )
@@ -63,6 +67,8 @@ class OutputDriverTest( unittest.TestCase ) :
 		self.assertTrue( "direct_diffuse.G" in channelNames )
 		self.assertTrue( "direct_diffuse.B" in channelNames )
 
+	@unittest.skipIf( os.name == "nt", "Kick not currently working on Windows.")
+	@unittest.skipIf( sys.platform == "darwin", "Kick not currently working on macOS." )
 	def testVectorAndPointDisplays( self ) :
 
 		server = IECoreImage.DisplayDriverServer( 1559 )
@@ -88,6 +94,8 @@ class OutputDriverTest( unittest.TestCase ) :
 		self.assertTrue( "N.G" in channelNames )
 		self.assertTrue( "N.B" in channelNames )
 
+	@unittest.skipIf( os.name == "nt", "Kick not currently working on Windows.")
+	@unittest.skipIf( sys.platform == "darwin", "Kick not currently working on macOS." )
 	def testLayerName( self ) :
 
 		server = IECoreImage.DisplayDriverServer( 1559 )
@@ -103,6 +111,3 @@ class OutputDriverTest( unittest.TestCase ) :
 			set( image.keys() ),
 			{ "diffuseLayer.{}".format( c ) for c in "RGBA" }
 		)
-
-if __name__ == "__main__":
-	unittest.main()

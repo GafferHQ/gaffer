@@ -108,46 +108,51 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 
 				const std::string &capturedName() const;
 
-				const std::vector<IECore::ConstObjectPtr> &capturedSamples() const;
-				const std::vector<float> &capturedSampleTimes() const;
+				const ObjectSamples &capturedSamples() const;
+				const SampleTimes &capturedSampleTimes() const;
 
-				const std::vector<Imath::M44f> &capturedTransforms() const;
-				const std::vector<float> &capturedTransformTimes() const;
+				const std::vector<Prototype> &capturedPointInstancerPrototypes() const;
+
+				const TransformSamples &capturedTransforms() const;
+				const SampleTimes &capturedTransformTimes() const;
 
 				const CapturedAttributes *capturedAttributes() const;
-				std::vector< IECore::InternedString > capturedLinkTypes() const;
+				std::vector<IECore::InternedString> capturedLinkTypes() const;
 				const ObjectSet *capturedLinks( const IECore::InternedString &type ) const;
 
 				int numAttributeEdits() const;
 				int numLinkEdits( const IECore::InternedString &type ) const;
 
 				uint32_t id() const;
+				uint32_t instanceID() const;
 
 				/// Renderer interface
 				/// ==================
 
-				void transform( const Imath::M44f &transform ) override;
-				void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
+				void transform( const TransformSamples &samples, const SampleTimes &times ) override;
 				bool attributes( const AttributesInterface *attributes ) override;
 				void link( const IECore::InternedString &type, const ConstObjectSetPtr &objects ) override;
 				void assignID( uint32_t id ) override;
+				void assignInstanceID( uint32_t instanceID ) override;
 
 			private :
 
-				CapturedObject( CapturingRenderer *renderer, const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times );
+				CapturedObject( CapturingRenderer *renderer, const std::string &name, const IECoreScenePreview::Renderer::ObjectSamples &samples, const SampleTimes &times );
 
 				friend class CapturingRenderer;
 
 				CapturingRenderer *m_renderer;
 				const std::string m_name;
-				const std::vector<IECore::ConstObjectPtr> m_capturedSamples;
-				const std::vector<float> m_capturedSampleTimes;
-				std::vector<Imath::M44f> m_capturedTransforms;
-				std::vector<float> m_capturedTransformTimes;
+				ObjectSamples m_capturedSamples;
+				SampleTimes m_capturedSampleTimes;
+				std::vector<Prototype> m_capturedPointInstancerPrototypes;
+				TransformSamples m_capturedTransforms;
+				SampleTimes m_capturedTransformTimes;
 				ConstCapturedAttributesPtr m_capturedAttributes;
 				int m_numAttributeEdits;
 				std::unordered_map<IECore::InternedString, std::pair<ConstObjectSetPtr, int>> m_capturedLinks;
 				uint32_t m_id;
+				uint32_t m_instanceID;
 
 		};
 
@@ -163,12 +168,11 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override;
 		void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override;
 		AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override;
-		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override;
-		ObjectInterfacePtr camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override;
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
-		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
-		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr light( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr object( const std::string &name, const IECoreScenePreview::Renderer::ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes ) override;
 		void render() override;
 		void pause() override;
 

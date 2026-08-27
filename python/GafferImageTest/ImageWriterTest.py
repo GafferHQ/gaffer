@@ -49,7 +49,6 @@ import inspect
 import OpenImageIO
 
 import IECore
-import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -162,7 +161,15 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			{ 'value': 100, "maxError" : 0.05 },
 		]
 
-		self.__testExtension( "jpg", "jpeg", options = options, metadataToIgnore = [ "DocumentName", "HostComputer" ] )
+		metadataToIgnore = [ "DocumentName", "HostComputer" ]
+		if OpenImageIO.VERSION >= 30002 :
+			# OIIO stopped automatically writing these in version 3.0.2.0, but our
+			# reference image was written from an earlier version.
+			#
+			#  See https://github.com/AcademySoftwareFoundation/OpenImageIO/commit/bff3377d362ef8286abb8137cdb25dba1de60efc,
+			metadataToIgnore += [ "IPTC:OriginatingProgram", "IPTC:Creator" ]
+
+		self.__testExtension( "jpg", "jpeg", options = options, metadataToIgnore = metadataToIgnore )
 
 	def testTgaWrite( self ) :
 
@@ -533,7 +540,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			for metaName in expectedMetadata.keys() :
 				if metaName in metadataToIgnore :
 					continue
-				if metaName in ( "fileFormat", "dataType" ) :
+				if metaName in ( "filePath", "fileFormat", "dataType" ) :
 					# These are added on automatically by the ImageReader, and
 					# we can't expect them to be the same when converting between
 					# image formats.
@@ -545,7 +552,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			# reference images were written with an older OIIO that mistakenly read/writes
 			# this metadata. Note non-OIIO apps like RV do not read this metadata.
 			# See https://github.com/OpenImageIO/oiio/pull/2521 for an explanation
-			ignoreDataWindow = ext in ( "tif", "tiff" ) and hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206
+			ignoreDataWindow = ext in ( "tif", "tiff" ) and OpenImageIO.VERSION >= 20206
 
 			if not removeAlpha:
 				self.assertImagesEqual( expectedOutput["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
@@ -634,15 +641,21 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["task"].execute()
 
 		self.assertTrue( testFile.exists() )
-		i = IECore.Reader.create( str( testFile ) ).read()
+		imageInput = OpenImageIO.ImageInput.open( str( testFile ) )
+		roi = imageInput.spec().roi
+		imageInput.close()
 
-		# Cortex uses the EXR convention, which differs
+		oiioDisplayWindow = imath.Box2i(
+			imath.V2i( roi.xbegin, roi.ybegin ), imath.V2i( roi.xend - 1, roi.yend - 1 )
+		)
+
+		# OIIO uses the EXR convention, which differs
 		# from Gaffer's, so we use the conversion methods to
 		# check that the image windows are as expected.
 
 		self.assertEqual(
 			format.toEXRSpace( format.getDisplayWindow() ),
-			i.displayWindow
+			oiioDisplayWindow
 		)
 
 	def testHash( self ) :
@@ -662,7 +675,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
-		# now theres a file and an image, we get some output
+		# now there's a file and an image, we get some output
 		constant = GafferImage.Constant()
 		writer["in"].setInput( constant["out"] )
 		self.assertNotEqual( writer.hash( c ), IECore.MurmurHash() )
@@ -811,7 +824,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# reference images were written with an older OIIO that mistakenly read/writes
 		# this metadata. Note non-OIIO apps like RV do not read this metadata.
 		# See https://github.com/OpenImageIO/oiio/pull/2521 for an explanation
-		ignoreDataWindow = ext in ( "tif", "tiff" ) and hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206
+		ignoreDataWindow = ext in ( "tif", "tiff" ) and OpenImageIO.VERSION >= 20206
 
 		self.assertImagesEqual( misledWriter["in"], misledReader["out"], ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
 		self.assertImagesEqual( misledReader["out"], regularReader["out"], ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
@@ -831,6 +844,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		expectedMetadata["Artist"] = IECore.StringData( os.environ.get("USER") or os.environ["USERNAME"] ) #Linux or windows
 		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 		expectedMetadata["fileFormat"] = regularReaderMetadata["fileFormat"]
+		expectedMetadata["filePath"] = IECore.StringData( regularReaderMetadata["filePath"].value.replace( "regularMetadata", "misleadingMetadata" ) )
 		expectedMetadata["dataType"] = regularReaderMetadata["dataType"]
 
 		self.__addExpectedIPTCMetadata( regularReaderMetadata, expectedMetadata )
@@ -859,6 +873,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			if metaName == "DateTime" :
 				dateTimeDiff = datetime.datetime.strptime( str( regularReaderMetadata[metaName] ), "%Y:%m:%d %H:%M:%S" ) - datetime.datetime.strptime( str( misledReaderMetadata[metaName] ), "%Y:%m:%d %H:%M:%S" )
 				self.assertLessEqual( abs( dateTimeDiff ), datetime.timedelta( seconds=1 ) )
+			elif metaName == "filePath" :
+				pass # The file paths are different
 			else :
 				self.assertEqual( regularReaderMetadata[metaName], misledReaderMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
 
@@ -1959,5 +1975,23 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		imageReader["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		self.assertNotIn( "fileValid", imageReader["out"].metadata() )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testNoLineOrderCorruption( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__largeFilePath )
+
+		im = GafferImage.ImageMetadata()
+		im["metadata"].addChild( Gaffer.NameValuePlug( "openexr:lineOrder", "decreasingY" ) )
+		im["in"].setInput( r["out"] )
+
+		testFile = self.__testFile( "badLineOrder", "RGBA", "exr" )
+
+		w = GafferImage.ImageWriter()
+		w['fileName'].setValue( testFile )
+		w['in'].setInput( im['out'] )
+		w["task"].execute()
+
+		reRead = GafferImage.ImageReader()
+		reRead["fileName"].setValue( testFile )
+
+		self.assertImagesEqual( r["out"], reRead["out"], ignoreMetadata = True )

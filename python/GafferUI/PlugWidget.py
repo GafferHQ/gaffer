@@ -74,9 +74,7 @@ class PlugWidget( GafferUI.Widget ) :
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 		)
 
-		## \todo Decide how we allow this sort of tweak using the public
-		# interface. Perhaps we should have a SizeableContainer or something?
-		self.__label.label()._qtWidget().setFixedWidth( self.labelWidth() )
+		self.__label.setFixedWidth( self.labelWidth() )
 
 		if label is not None :
 			warnings.warn(

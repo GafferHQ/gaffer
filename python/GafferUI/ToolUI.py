@@ -54,12 +54,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"active" : [
+		"active" : {
 
-			"boolPlugValueWidget:displayMode", "tool",
-			"boolPlugValueWidget:image", __image,
+			"boolPlugValueWidget:displayMode" : "tool",
+			"boolPlugValueWidget:image" : __image,
 
-		],
+		},
 
 	}
 

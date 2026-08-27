@@ -36,6 +36,7 @@
 
 #include "GafferOSL/Spline.h"
 
+// Now deprecated in favour of ColorRamp
 shader ColorSpline
 (
 

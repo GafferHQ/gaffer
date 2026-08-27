@@ -260,6 +260,7 @@ Context::Context( const Context &other, CopyMode mode )
 	{
 		// We need ownership of the stored values so that we remain valid even
 		// if the source context is destroyed.
+		m_cancellerOwner = other.m_cancellerOwner;
 		m_allocMap.reserve( other.m_map.size() + 1 );
 		for( auto &i : other.m_map )
 		{
@@ -284,14 +285,15 @@ Context::Context( const Context &other, CopyMode mode )
 	}
 }
 
-Context::Context( const Context &other, const IECore::Canceller &canceller )
+Context::Context( const Context &other, const IECore::ConstCancellerPtr &canceller )
 	:	Context( other )
 {
 	if( m_canceller )
 	{
 		throw IECore::Exception( "Can't replace an existing Canceller" );
 	}
-	m_canceller = &canceller;
+	m_cancellerOwner = canceller;
+	m_canceller = m_cancellerOwner.get();
 }
 
 Context::Context( const Context &other, bool omitCanceller )
@@ -300,6 +302,7 @@ Context::Context( const Context &other, bool omitCanceller )
 	if( omitCanceller )
 	{
 		m_canceller = nullptr;
+		m_cancellerOwner = nullptr;
 	}
 }
 

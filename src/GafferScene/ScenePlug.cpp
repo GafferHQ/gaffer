@@ -45,8 +45,17 @@
 #include "IECore/NullObject.h"
 #include "IECore/StringAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 using namespace Gaffer;
 using namespace GafferScene;
+
+namespace
+{
+
+const std::string g_attributePrefix( "attribute:" );
+
+} // namespace
 
 GAFFER_PLUG_DEFINE_TYPE( ScenePlug );
 
@@ -430,7 +439,7 @@ IECore::ConstCompoundObjectPtr ScenePlug::attributes( const ScenePath &scenePath
 	return attributesPlug()->getValue();
 }
 
-IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath ) const
+IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath, bool withGlobalAttributes ) const
 {
 	PathScope pathScope( Context::current() );
 
@@ -444,12 +453,22 @@ IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath 
 		const IECore::CompoundObject::ObjectMap &aMembers = a->members();
 		for( IECore::CompoundObject::ObjectMap::const_iterator it = aMembers.begin(), eIt = aMembers.end(); it != eIt; it++ )
 		{
-			if( resultMembers.find( it->first ) == resultMembers.end() )
-			{
-				resultMembers.insert( *it );
-			}
+			resultMembers.insert( *it );
 		}
 		path.pop_back();
+	}
+
+	if( withGlobalAttributes )
+	{
+		IECore::ConstCompoundObjectPtr g = globals();
+		for( const auto &m : g->members() )
+		{
+			if( boost::starts_with( m.first.string(), g_attributePrefix ) )
+			{
+				const std::string attributeName = m.first.string().substr( g_attributePrefix.size() );
+				resultMembers.insert( { attributeName, m.second } );
+			}
+		}
 	}
 
 	return result;
@@ -519,7 +538,7 @@ IECore::MurmurHash ScenePlug::attributesHash( const ScenePath &scenePath ) const
 	return attributesPlug()->hash();
 }
 
-IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) const
+IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath, bool withGlobalAttributes ) const
 {
 	PathScope pathScope( Context::current() );
 
@@ -530,6 +549,11 @@ IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) c
 		pathScope.setPath( &path );
 		attributesPlug()->hash( result );
 		path.pop_back();
+	}
+
+	if( withGlobalAttributes )
+	{
+		result.append( globalsHash() );
 	}
 
 	return result;

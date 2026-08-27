@@ -36,7 +36,6 @@
 
 import IECore
 import IECoreScene
-import IECoreImage
 
 import Gaffer
 import GafferUI
@@ -56,19 +55,11 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		# for reading IECore.SceneInterface files (scc, lscc)
 		self.__script["SceneReader"] = GafferScene.SceneReader()
 
-		# for reading more generic single object files (cob, ptc, pdc, etc)
-		## \todo: can we unify all file input to SceneReader by creating a SceneInterface that makes
-		# single object scenes using Reader ops behind the scenes?
-		try :
-			self.__script["ObjectPreview"] = _ObjectPreview()
-		except ImportError :
-			pass
-
 		# display points and curves GL style rather than disks and ribbons
 		self.__script["OpenGLAttributes"] = GafferScene.OpenGLAttributes( "OpenGLAttributes" )
-		self.__script["OpenGLAttributes"]["attributes"]["pointsPrimitiveUseGLPoints"]["value"].setValue( 'forAll' )
-		self.__script["OpenGLAttributes"]["attributes"]["pointsPrimitiveUseGLPoints"]["enabled"].setValue( True )
-		self.__script["OpenGLAttributes"]["attributes"]["curvesPrimitiveUseGLLines"]["enabled"].setValue( True )
+		self.__script["OpenGLAttributes"]["attributes"]["gl:pointsPrimitive:useGLPoints"]["value"].setValue( 'forAll' )
+		self.__script["OpenGLAttributes"]["attributes"]["gl:pointsPrimitive:useGLPoints"]["enabled"].setValue( True )
+		self.__script["OpenGLAttributes"]["attributes"]["gl:curvesPrimitive:useGLLines"]["enabled"].setValue( True )
 
 		self.__script["camera"] = _Camera()
 		self.__script["camera"]["in"].setInput( self.__script["OpenGLAttributes"]["out"] )
@@ -96,19 +87,11 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		else :
 			ext = str(path).split( "." )[-1]
 
-		supported = set( GafferScene.SceneReader.supportedExtensions() )
-		if "ObjectPreview" in self.__script :
-			supported.update( IECore.Reader.supportedExtensions() )
-			# no reason to preview a single image as a 3D scene
-			supported.difference_update( IECore.Reader.supportedExtensions( IECoreImage.ImageReader.staticTypeId() ) )
-
-		return ext in supported
+		return ext in GafferScene.SceneReader.supportedExtensions()
 
 	def _updateFromPath( self ) :
 
 		self.__script["SceneReader"]["fileName"].setValue( "" )
-		if "ObjectPreview" in self.__script :
-			self.__script["ObjectPreview"]["fileName"].setValue( "" )
 
 		if not self.isValid() :
 			self.__script.selection().clear()
@@ -152,11 +135,6 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 				if numSamples > 1 :
 					startFrame = int( round( scene.boundSampleTime( 0 ) * 24.0 ) )
 					endFrame = int( round( scene.boundSampleTime( numSamples - 1 ) * 24.0 ) )
-
-		elif "ObjectPreview" in self.__script and ext in IECore.Reader.supportedExtensions() :
-
-			self.__script["ObjectPreview"]["fileName"].setValue( fileName )
-			outPlug = self.__script["ObjectPreview"]["out"]
 
 		self.__script["OpenGLAttributes"]["in"].setInput( outPlug )
 
@@ -218,8 +196,8 @@ class _Camera( Gaffer.Node ) :
 		self["cameraTranslate"]["filter"].setInput( self["cameraFilter"]["out"] )
 
 		self["options"] = GafferScene.StandardOptions()
-		self["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		self["options"]["options"]["renderCamera"]["value"].setValue( "/previewCamera" )
+		self["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		self["options"]["options"]["render:camera"]["value"].setValue( "/previewCamera" )
 		self["options"]["in"].setInput( self["cameraTranslate"]["out"] )
 
 		self["switch"] = Gaffer.Switch()
@@ -241,99 +219,54 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"toolbarLayout:section", "Top",
+			"toolbarLayout:section" : "Top",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"user" : [
+		"user" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"lookAt" : [
+		"lookAt" : {
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 
-		],
+		},
 
-		"depth" : [
+		"depth" : {
 
-			"numericPlugValueWidget:fixedCharacterWidth", 5,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
-		"angle" : [
+		"angle" : {
 
-			"numericPlugValueWidget:fixedCharacterWidth", 5,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
-		"elevation" : [
+		"elevation" : {
 
-			"numericPlugValueWidget:fixedCharacterWidth", 5,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
 	}
 
 )
-
-# Utility node for previewing single objects from a file or
-# sequence (cob, ptc, pdc, etc), as though they were a scene
-class _ObjectPreview( Gaffer.Node ) :
-
-	def __init__( self, name = "_ObjectPreview" ) :
-
-		Gaffer.Node.__init__( self, name )
-
-		import GafferCortex
-
-		self["fileName"] = Gaffer.StringPlug( defaultValue = "", substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
-		self["frameRate"] = Gaffer.FloatPlug( defaultValue = 24.0 )
-		self["samplesPerFrame"] = Gaffer.IntPlug( defaultValue = 1, minValue = 1 )
-
-		# single object scenes using Reader ops behind the scenes?
-		self["ObjectReader"] = GafferCortex.ObjectReader()
-		self["ObjectReaderExpression"] = Gaffer.Expression( "Expression" )
-		self["ObjectReaderExpression"].setExpression(
-'''
-import IECore
-
-fileName = parent['fileName']
-
-try :
-	sequence = IECore.FileSequence( fileName )
-	calc = IECore.OversamplesCalculator( frameRate = parent["frameRate"], samplesPerFrame = parent["samplesPerFrame"] )
-	if isinstance( sequence.frameList, IECore.FrameRange ) and sequence.frameList.step == 1 :
-		calc.setTicksPerSecond( 24 )
-
-	result = sequence.fileNameForFrame( calc.framesToTicks( context['frame'] ) )
-
-except :
-	result = fileName
-
-parent['ObjectReader']['fileName'] = result
-'''
-		)
-		self["ObjectToScene"] = GafferScene.ObjectToScene( "ObjectToScene" )
-		self["ObjectToScene"]["object"].setInput( self["ObjectReader"]["out"] )
-
-		self["out"] = GafferScene.ScenePlug( direction = Gaffer.Plug.Direction.Out )
-		self["out"].setInput( self["ObjectToScene"]["out"] )
-
-IECore.registerRunTimeTyped( _ObjectPreview )

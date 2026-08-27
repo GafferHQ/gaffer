@@ -52,29 +52,29 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"nearClip" : [
+		"nearClip" : {
 
-			"description",
+			"description" :
 			"""
 			Removes everything with Z less than the near clip depth.
 			""",
 
-		],
-		"nearClip.enabled" : [ "description", "Enables near clip." ],
-		"nearClip.value" : [ "description", "Depth for near clip." ],
-		"farClip" : [
+		},
+		"nearClip.enabled" : { "description" : "Enables near clip." },
+		"nearClip.value" : { "description" : "Depth for near clip." },
+		"farClip" : {
 
-			"description",
+			"description" :
 			"""
 			Removes everything with Z greater than or equal to the far clip depth.
 			""",
 
-		],
-		"farClip.enabled" : [ "description", "Enables far clip." ],
-		"farClip.value" : [ "description", "Depth for far clip." ],
-		"flatten" : [
+		},
+		"farClip.enabled" : { "description" : "Enables far clip." },
+		"farClip.value" : { "description" : "Depth for far clip." },
+		"flatten" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs a flat image, instead of output a deep image with any samples within the range.
 			Flattening as part of DeepSlice is up to 2X faster than flattening afterwards, and is
@@ -82,7 +82,7 @@ Gaffer.Metadata.registerNode(
 			scrubbing through depth.
 			""",
 
-		],
+		},
 	}
 
 )

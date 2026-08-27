@@ -56,11 +56,14 @@ class GAFFERSCENE_API LocaliseAttributes : public AttributeProcessor
 		Gaffer::StringPlug *attributesPlug();
 		const Gaffer::StringPlug *attributesPlug() const;
 
+		Gaffer::BoolPlug *includeGlobalAttributesPlug();
+		const Gaffer::BoolPlug *includeGlobalAttributesPlug() const;
+
 	protected :
 
 		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
-		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
+		void hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 	private :
 

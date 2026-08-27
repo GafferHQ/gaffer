@@ -289,6 +289,3 @@ class TypedPlugTest( GafferTest.TestCase ) :
 		self.assertIs( Gaffer.AtomicBox2fPlug.ValueType, imath.Box2f )
 		self.assertIs( Gaffer.AtomicBox2iPlug.ValueType, imath.Box2i )
 		self.assertIs( Gaffer.AtomicBox3fPlug.ValueType, imath.Box3f )
-
-if __name__ == "__main__":
-	unittest.main()

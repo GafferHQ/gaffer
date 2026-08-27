@@ -494,7 +494,7 @@ void computePrimitiveVertexLocalFrame( const IECoreScene::Primitive& primitive, 
 	{
 		if( throwOnError )
 		{
-			throw IECore::InvalidArgumentException( "Gaffer::Contraint : Primitive has no Vertex \"P\" primitive variable." );
+			throw IECore::InvalidArgumentException( "Gaffer::Constraint : Primitive has no Vertex \"P\" primitive variable." );
 		}
 		else
 		{
@@ -529,7 +529,7 @@ void computeMeshVertexLocalFrame( const IECoreScene::MeshPrimitive& primitive, I
 	{
 		if( throwOnError )
 		{
-			throw IECore::InvalidArgumentException( "Gaffer::Contraint : MeshPrimitive has no Vertex \"P\" primitive variable." );
+			throw IECore::InvalidArgumentException( "Gaffer::Constraint : MeshPrimitive has no Vertex \"P\" primitive variable." );
 		}
 		else
 		{
@@ -677,7 +677,7 @@ void computeMeshUVLocalFrame( const IECoreScene::MeshPrimitive& primitive, Imath
 	{
 		if( throwOnError )
 		{
-			throw IECore::InvalidArgumentException( "Gaffer::Contraint : MeshPrimitive has no Vertex \"P\" primitive variable." );
+			throw IECore::InvalidArgumentException( "Gaffer::Constraint : MeshPrimitive has no Vertex \"P\" primitive variable." );
 		}
 		else
 		{
@@ -979,7 +979,7 @@ void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 		// the SceneElementProcessor base class computing new bounds based on the new transforms that
 		// we produce. But since the base class declares an out.childBounds -> out.bound dependency,
 		// and SceneNode declares an out.transform -> out.childBounds dependency I think is redundant
-		// now (but probably wasn't orginally, because childBounds is relatively recent).
+		// now (but probably wasn't originally, because childBounds is relatively recent).
 		//
 		// I don't want to risk changing behaviour while working on something unrelated, so not actually
 		// removing it yet, just leaving a note for the next person to work on this.

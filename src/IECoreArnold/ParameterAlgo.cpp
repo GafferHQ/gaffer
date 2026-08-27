@@ -243,6 +243,17 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					AiNodeSetMatrix( node, name, reinterpret_cast<const AtMatrix &>( v.x ) );
 				}
 				break;
+			case AI_TYPE_CLOSURE :
+				if( auto data = runTimeCast<const StringData>( value ) )
+				{
+					// MtoA exports closures to USD as string attributes, along with
+					// an empty value. Ignore these rather than clog up the logs.
+					if( data->readable().empty() )
+					{
+						break;
+					}
+				}
+				[[fallthrough]];
 			default :
 			{
 				std::string nodeStr = AiNodeGetName( node );
@@ -577,9 +588,9 @@ AtArray *dataToArray( const IECore::Data *data, int aiType )
 	}
 
 
-	if( aiType == AI_TYPE_BOOLEAN )
+	if( aiType == AI_TYPE_BOOLEAN && IECore::runTimeCast<const BoolVectorData>( data ) )
 	{
-		// bools are a special case because of how the STL implements vector<bool>.
+		// bool vectors are a special case because of how the STL implements vector<bool>.
 		// Since the base for vector<bool> are not actual booleans, we need to manually
 		// convert to an AtArray here.
 		const vector<bool> &booleans = static_cast<const BoolVectorData *>( data )->readable();
@@ -590,8 +601,10 @@ AtArray *dataToArray( const IECore::Data *data, int aiType )
 		}
 		return array;
 	}
-	else if( aiType == AI_TYPE_STRING )
+	else if( aiType == AI_TYPE_STRING && IECore::runTimeCast<const StringVectorData>( data ) )
 	{
+		// string vectors should be setup using AiArraySetStr since we can't rely on the memory
+		// layout matching
 		const vector<string> &strings = static_cast<const StringVectorData *>( data )->readable();
 		const vector<string>::size_type size = strings.size();
 		AtArray *array = AiArrayAllocate( size, 1, AI_TYPE_STRING );
@@ -601,11 +614,19 @@ AtArray *dataToArray( const IECore::Data *data, int aiType )
 		}
 		return array;
 	}
+	else if( aiType == AI_TYPE_STRING && IECore::runTimeCast<const StringData>( data ) )
+	{
+		// Same thing when setting the string vector from a StringData
+		const string &val = static_cast<const StringData *>( data )->readable();
+		AtArray *array = AiArrayAllocate( 1, 1, AI_TYPE_STRING );
+		AiArraySetStr( array, 0, val.c_str() );
+		return array;
+	}
 
 	return AiArrayConvert( size( data ), 1, aiType, address( data ) );
 }
 
-AtArray *dataToArray( const std::vector<const IECore::Data *> &samples, int aiType )
+AtArray *dataToArray( const DataSamples &samples, int aiType )
 {
 	if( aiType == AI_TYPE_NONE )
 	{
@@ -623,7 +644,7 @@ AtArray *dataToArray( const std::vector<const IECore::Data *> &samples, int aiTy
 		AiArrayDestroy
 	);
 
-	for( vector<const IECore::Data *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+	for( auto it = samples.begin(); it != samples.end(); ++it )
 	{
 		if( (*it)->typeId() != samples.front()->typeId() )
 		{

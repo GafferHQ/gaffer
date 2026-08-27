@@ -40,7 +40,6 @@ __import__( "GafferDispatchUI" )
 
 from ._GafferImageUI import *
 
-from . import DisplayUI
 from .FormatPlugValueWidget import FormatPlugValueWidget
 from .ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 from .RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
@@ -97,9 +96,7 @@ from . import ErodeUI
 from . import DilateUI
 from . import ColorProcessorUI
 from . import MixUI
-from . import CatalogueUI
 from . import CollectImagesUI
-from . import CatalogueSelectUI
 from . import BleedFillUI
 from . import RectangleUI
 from . import FlatToDeepUI
@@ -126,5 +123,10 @@ from . import DeepSliceUI
 from . import ContactSheetCoreUI
 from . import ContactSheetUI
 from . import MetadataOverlayUI
+from . import ShuffleImageMetadataUI
+from . import ColorInspectorToolUI
+from . import DiskBlurUI
+from . import DataWindowQueryUI
+from . import SATBlurUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

@@ -75,9 +75,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:$OCIO", "" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:ACES 2.0 - CG Config", "${GAFFER_ROOT}/openColorIO/cg-config-v3.0.0_aces-v2.0_ocio-v2.4.ocio" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:ACES 2.0 - Studio Config", "${GAFFER_ROOT}/openColorIO/studio-config-v3.0.0_aces-v2.0_ocio-v2.4.ocio" )
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:ACES 1.3 - CG Config", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1" )
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:ACES 1.3 - Studio Config", "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1" )
-	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:Legacy (Gaffer 1.2)", "${GAFFER_ROOT}/openColorIO/config.ocio" )
 
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "presetsPlugValueWidget:allowCustom", True )
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "presetsPlugValueWidget:customWidgetType", "GafferUI.FileSystemPathPlugValueWidget" )
@@ -88,4 +89,5 @@ with IECore.IgnoredExceptions( ImportError ) :
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.color_space_linear", "userDefault", "${ocio:workingSpace}" )
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.color_space_linear", "preset:Working Space", "${ocio:workingSpace}" )
 
-	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.color_space_narrow", "userDefault", "matte_paint" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.color_space_narrow", "userDefault", "srgb_texture" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.color_space_narrow", "preset:Aliases/srgb_texture", "srgb_texture" )

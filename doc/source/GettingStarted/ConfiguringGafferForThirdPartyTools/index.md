@@ -4,7 +4,8 @@ Gaffer is compatible with the following commercial and open-source third-party t
 
 - [Arnold](https://www.arnoldrenderer.com/)
 - [Cycles](https://www.cycles-renderer.org/)
-- [3Delight](http://www.3delight.com/)
+- [3Delight](https://www.3delight.com/)
+- [RenderMan](https://renderman.pixar.com/)
 - [Tractor](https://renderman.pixar.com/tractor)
 
 Gaffer comes with Cycles, so it will require no additional configuration. For the rest of the tools in this list, you will need to set some additional environment variables.
@@ -18,7 +19,7 @@ Gaffer comes with Cycles, so it will require no additional configuration. For th
 
 ## Configuring Gaffer for Arnold ##
 
-For Gaffer to load the GafferArnold module, an `ARNOLD_ROOT` environment variable must point to the Arnold installation directory. Before you begin, make sure that Arnold is correctly installed and configured, and close any open instances of Gaffer.
+For Gaffer to load the GafferArnold module, the `ARNOLD_ROOT` environment variable must point to the Arnold installation directory. Before you begin, make sure that Arnold is correctly installed and configured.
 
 
 ### Arnold in Linux ###
@@ -89,7 +90,7 @@ The next time you start Gaffer, the Arnold nodes will be available from the node
 
 ## Configuring Gaffer for 3Delight ##
 
-For Gaffer to load the GafferDelight module, a `DELIGHT` environment variable must point to the 3Delight installation directory. Before you begin, make sure that 3Delight is correctly installed and configured, and close any open instances of Gaffer.
+For Gaffer to load the GafferDelight module, the `DELIGHT` environment variable must point to the 3Delight installation directory. Before you begin, make sure that 3Delight is correctly installed and configured.
 
 
 ### 3Delight in Linux ###
@@ -164,9 +165,59 @@ The next time you start Gaffer, the 3Delight nodes will be available from the no
 <!-- TODO: ![](images/delightNodes.png "Delight node menu") -->
 
 
+## Configuring Gaffer for RenderMan ##
+
+For Gaffer to load the GafferRenderMan module, the `RMANTREE` environment variable must point to the RenderMan installation directory. Before you begin, make sure that RenderMan is correctly installed and configured.
+
+
+### RenderMan in Linux ###
+
+> Note :
+> For this instruction, we will assume you have RenderMan !RENDERMAN_VERSION! installed to `!RENDERMAN_PATH_LINUX!`.
+
+To create the `RMANTREE` environment variable in Linux:
+
+1. Open `~/.bash_profile` with a text editor.
+
+2. Add the line `export RMANTREE=!RENDERMAN_PATH_LINUX!` and save.
+
+3. In a terminal, test that the variable is set:
+
+    ```bash
+    user@desktop ~ $ echo $RMANTREE
+    # !RENDERMAN_PATH_LINUX!
+    ```
+
+
+### RenderMan in Windows ###
+
+> Note :
+> For this instruction, we will assume you have RenderMan !RENDERMAN_VERSION! installed to `!RENDERMAN_PATH_WINDOWS!`.
+
+To create the `RMANTREE` environment variable in Windows:
+
+1. Open the Command Prompt (Start > Windows System > Command Prompt).
+
+2. Run the command `setx RMANTREE "!RENDERMAN_PATH_WINDOWS!"`.
+
+3. In a new Command Prompt window, test that the variable is set:
+
+    ```powershell
+    C:\Users\user> echo %RMANTREE%
+    # !RENDERMAN_PATH_WINDOWS!
+    ```
+
+
+### Verifying RenderMan is loaded ###
+
+The next time you start Gaffer, the RenderMan nodes will be available from the node creation menu (right-click inside the Graph Editor).
+
+<!-- TODO: ![](images/renderManNodes.png "RenderMan node menu") -->
+
+
 ## Configuring Gaffer for Tractor ##
 
-For Gaffer to interface with Tractor, the `PYTHONPATH` environment variable must contain the path to the Tractor python module. Before you begin, make sure that Tractor is correctly installed and configured, and close any open instances of Gaffer.
+For Gaffer to interface with Tractor, the `PYTHONPATH` environment variable must contain the path to the Tractor python module. Before you begin, make sure that Tractor is correctly installed and configured.
 
 
 ### Tractor in Linux ###

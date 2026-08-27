@@ -46,10 +46,11 @@
 #include "IECore/AngleConversion.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/Spline.h"
+#include "IECore/Ramp.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/unordered_map.hpp"
 
@@ -94,8 +95,8 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	// Create the AtNode for this shader output
 
-	string nodeName = name;
-	if( outputParameter != shaderNetwork->getOutput() )
+	string nodeName = boost::algorithm::replace_all_copy( name, "{shaderHandle}", outputParameter.shader.string() );
+	if( outputParameter != shaderNetwork->getOutput() && nodeName == name )
 	{
 		nodeName += ":" + outputParameter.shader.string();
 	}
@@ -135,11 +136,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	// Set the shader parameters
 
-	IECore::ConstCompoundDataPtr expandedParameters = IECoreScene::ShaderNetworkAlgo::expandSplineParameters(
-		shader->parametersData()
-	);
-
-	for( const auto &namedParameter : expandedParameters->readable() )
+	for( const auto &namedParameter : shader->parametersData()->readable() )
 	{
 		string parameterName;
 		if( isOSLShader )
@@ -454,9 +451,12 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 			return AiNode( universe, nodeType, nodeName, parentNode );
 		};
 		convertWalk( network->getOutput(), network.get(), name, nodeCreator, result, converted, nodeParameters );
-		for( const auto &kv : network->outputShader()->blindData()->readable() )
+		if( result.size() )
 		{
-			ParameterAlgo::setParameter( result.back(), AtString( kv.first.c_str() ), kv.second.get() );
+			for( const auto &kv : network->outputShader()->blindData()->readable() )
+			{
+				ParameterAlgo::setParameter( result.back(), AtString( kv.first.c_str() ), kv.second.get() );
+			}
 		}
 	}
 	return result;
@@ -691,6 +691,7 @@ const InternedString g_shadowColorParameter( "shadow:color" );
 const InternedString g_shadowColorArnoldParameter( "shadow_color" );
 const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
 const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
+const InternedString g_shapingIesFileParameter( "shaping:ies:file" );
 const InternedString g_shapingSoftnessParameter( "shaping:softness" );
 const InternedString g_sourceColorSpaceParameter( "sourceColorSpace" );
 const InternedString g_specularParameter( "specular" );
@@ -748,6 +749,15 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 
 void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
+	if( auto dFile = usdShader->parametersData()->member<StringData>( g_shapingIesFileParameter ) )
+	{
+		if( !dFile->readable().empty() )
+		{
+			shader->setName( "photometric_light" );
+			shader->parameters()[g_filenameParameter] = new StringData( dFile->readable() );
+			return;
+		}
+	}
 	if( auto d = usdShader->parametersData()->member<FloatData>( g_shapingConeAngleParameter ) )
 	{
 		shader->setName( "spot_light" );
@@ -761,19 +771,7 @@ void transferUSDShapingParameters( ShaderNetwork *network, InternedString shader
 		// - https://groups.google.com/u/1/g/usd-interest/c/Ybe4aroAKbc/m/0Ui3DKMyCgAJ, in
 		//   which folks take their best guess.
 		const float softness = parameterValue( usdShader, g_shapingConeSoftnessParameter, 0.0f );
-		if( softness > 1.0 )
-		{
-			// Houdini apparently has (or had?) its own interpretation of softness, with the "bar scene"
-			// containing lights with an angle of 20 degrees and a softness of 60! We have no idea how
-			// to interpret that, so punt for now.
-			/// \todo Hopefully things get more standardised and we can remove this, because the RenderMan
-			/// docs do imply that values above one are allowed.
-			IECore::msg( IECore::Msg::Warning, "transferUSDShapingParameters", "Ignoring `shaping:cone:softness` as it is greater than 1" );
-		}
-		else
-		{
-			shader->parameters()[g_penumbraAngleParameter] = new FloatData( d->readable() * 2.0f * softness );
-		}
+		shader->parameters()[g_penumbraAngleParameter] = new FloatData( d->readable() * 2.0f * softness );
 		// Same here.
 		shader->parameters()[g_cosinePowerParameter] = new FloatData( parameterValue( usdShader, g_shapingSoftnessParameter, 0.0f ) );
 	}
@@ -1162,91 +1160,27 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 // Substitutions
 //////////////////////////////////////////////////////////////////////////
 
-namespace
-{
-
-struct Substitution
-{
-	std::string name;
-	IECoreArnold::ShaderNetworkAlgo::SubstitutionHashFunction hash;
-	IECoreArnold::ShaderNetworkAlgo::SubstitutionFunction apply;
-};
-
-using Substitutions = std::vector<Substitution>;
-Substitutions &substitutions()
-{
-	static Substitutions g_substitutions;
-	return g_substitutions;
-}
-
-bool g_textureSubstitutionsRegistration = [] () {
-
-	IECoreArnold::ShaderNetworkAlgo::registerSubstitution(
-		"stringSubstitution",
-		// Hash
-		[] ( const IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash ) {
-			shaderNetwork->hashSubstitutions( attributes, hash );
-		},
-		// Apply
-		[] ( IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes ) {
-			shaderNetwork->applySubstitutions( attributes );
-		}
-	);
-
-	return true;
-} ();
-
-} // namespace
-
 namespace IECoreArnold::ShaderNetworkAlgo
 {
 
 void registerSubstitution( const std::string &name, SubstitutionHashFunction hashFunction, SubstitutionFunction substitutionFunction )
 {
-	// Replace existing substitution if it exists.
-	Substitutions &s = substitutions();
-	for( auto &x : s )
-	{
-		if( x.name == name )
-		{
-			x.hash = hashFunction;
-			x.apply = substitutionFunction;
-			return;
-		}
-	}
-	// Otherwise add new substitution.
-	s.push_back( { name, hashFunction, substitutionFunction } );
+	IECoreScene::ShaderNetworkAlgo::registerRenderAdaptor( name, hashFunction, substitutionFunction );
 }
 
 void deregisterSubstitution( const std::string &name )
 {
-	Substitutions &s = substitutions();
-	s.erase(
-		std::remove_if(
-			s.begin(),
-			s.end(),
-			[&] ( const Substitution &x ) {
-				return x.name == name;
-			}
-		),
-		s.end()
-	);
+	IECoreScene::ShaderNetworkAlgo::deregisterRenderAdaptor( name );
 }
 
 void hashSubstitutions( const IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes, IECore::MurmurHash &hash )
 {
-	for( const auto &x : substitutions() )
-	{
-		x.hash( shaderNetwork, attributeName, attributes, hash );
-	}
+	IECoreScene::ShaderNetworkAlgo::hashRenderAdaptors( shaderNetwork, attributeName, attributes, hash );
 }
 
 void applySubstitutions( IECoreScene::ShaderNetwork *shaderNetwork, InternedString attributeName, const IECore::CompoundObject *attributes )
 {
-	for( const auto &x : substitutions() )
-	{
-		x.apply( shaderNetwork, attributeName, attributes );
-	}
+	IECoreScene::ShaderNetworkAlgo::applyRenderAdaptors( shaderNetwork, attributeName, attributes );
 }
 
 } // namespace IECoreArnold::ShaderNetworkAlgo

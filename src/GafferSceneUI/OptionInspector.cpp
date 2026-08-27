@@ -157,17 +157,7 @@ OptionHistoryCache g_optionHistoryCache(
 		assert( canceller == Context::current()->canceller() );
 		cost = 1;
 		SceneAlgo::History::ConstPtr globalsHistory = g_historyCache.get( key, canceller );
-		if( auto h = SceneAlgo::optionHistory( globalsHistory.get(), key.option ) )
-		{
-			return h;
-		}
-		else
-		{
-			// The specific option doesn't exist. But we return the history for the
-			// whole CompoundObject so we get a chance to discover nodes that could
-			// _create_ the option.
-			return globalsHistory;
-		}
+		return SceneAlgo::optionHistory( globalsHistory.get(), key.option );
 	},
 	// Max cost
 	1000,
@@ -183,21 +173,16 @@ OptionHistoryCache g_optionHistoryCache(
 
 }  // namespace
 
+IE_CORE_DEFINERUNTIMETYPED( OptionInspector )
+
 OptionInspector::OptionInspector(
 	const GafferScene::ScenePlugPtr &scene,
 	const Gaffer::PlugPtr &editScope,
 	IECore::InternedString option
-) :
-Inspector( "option", option.string(), editScope ),
-m_scene( scene ),
-m_option( option )
+)
+	:	Inspector( { scene->globalsPlug() }, "option", option.string(), editScope ),
+		m_scene( scene ), m_option( option )
 {
-	m_scene->node()->plugDirtiedSignal().connect(
-		boost::bind( &OptionInspector::plugDirtied, this, ::_1 )
-	);
-
-	Metadata::plugValueChangedSignal().connect( boost::bind( &OptionInspector::plugMetadataChanged, this, ::_3, ::_4 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &OptionInspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
 }
 
 GafferScene::SceneAlgo::History::ConstPtr OptionInspector::history() const
@@ -251,10 +236,21 @@ Gaffer::ValuePlugPtr OptionInspector::source( const GafferScene::SceneAlgo::Hist
 	}
 	else if( auto optionTweaks = runTimeCast<OptionTweaks>( sceneNode ) )
 	{
+		ConstCompoundObjectPtr globals = optionTweaks->inPlug()->globalsPlug()->getValue();
 		for( const auto &tweak : TweakPlug::Range( *optionTweaks->tweaksPlug() ) )
 		{
 			if( tweak->namePlug()->getValue() == m_option.string() && tweak->enabledPlug()->getValue() )
 			{
+				if(
+					tweak->modePlug()->getValue() == TweakPlug::CreateIfMissing &&
+					globals->members().count( g_optionPrefix + m_option.string() )
+				)
+				{
+					// This `CreateIfMissing` tweak has not modified the scene as the
+					// option already exists upstream.
+					continue;
+				}
+
 				return tweak;
 			}
 		}
@@ -263,7 +259,7 @@ Gaffer::ValuePlugPtr OptionInspector::source( const GafferScene::SceneAlgo::Hist
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure OptionInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure OptionInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	// If our history's context contains a non-empty `renderPass` variable,
 	// we'll want to make a specific edit for that render pass.
@@ -336,52 +332,5 @@ Inspector::EditFunctionOrFailure OptionInspector::editFunction( Gaffer::EditScop
 				);
 			};
 		}
-	}
-}
-
-void OptionInspector::plugDirtied( Gaffer::Plug *plug )
-{
-	if( plug == m_scene->globalsPlug() )
-	{
-		dirtiedSignal()( this );
-	}
-}
-
-void OptionInspector::plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug )
-{
-	if( !plug )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-	nodeMetadataChanged( key, plug->node() );
-}
-
-void OptionInspector::nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node )
-{
-	if( !node )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-
-	EditScope *scope = targetEditScope();
-	if( !scope )
-	{
-		return;
-	}
-
-	if(
-		MetadataAlgo::readOnlyAffectedByChange( scope, node, key ) ||
-		( MetadataAlgo::readOnlyAffectedByChange( key ) && scope->isAncestorOf( node ) )
-	)
-	{
-		// Might affect `EditScopeAlgo::optionEditReadOnlyReason()`
-		// which we call in `editFunction()`.
-		/// \todo Can we ditch the signal processing and call `optionEditReadOnlyReason()`
-		/// just-in-time from `editable()`? In the past that wasn't possible
-		/// because editability changed the appearance of the UI, but it isn't
-		/// doing that currently.
-		dirtiedSignal()( this );
 	}
 }

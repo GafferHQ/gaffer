@@ -64,6 +64,3 @@ class CompoundNoduleTest( GafferUITest.TestCase ) :
 		Gaffer.Metadata.registerValue( arrayNode["in"], "compoundNodule:orientation", "y" )
 		size = nodule.bound().size()
 		self.assertTrue( size.y > size.x )
-
-if __name__ == "__main__":
-	unittest.main()

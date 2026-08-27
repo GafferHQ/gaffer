@@ -37,9 +37,23 @@
 
 #include "GafferScene/Options.h"
 
+#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/PlugAlgo.h"
+
+#include <boost/algorithm/string/replace.hpp>
+
 using namespace std;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
+
+namespace
+{
+
+const InternedString g_defaultValue( "defaultValue" );
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Options );
 
@@ -51,6 +65,21 @@ Options::Options( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "options" ) );
 	addChild( new CompoundObjectPlug( "extraOptions", Plug::In, new IECore::CompoundObject ) );
+}
+
+Options::Options( const std::string &name, const std::string &rendererPrefix )
+	:	Options( name )
+{
+	const string targetPattern = fmt::format( "option:{}:*", rendererPrefix );
+	for( const auto &target : Metadata::targetsWithMetadata( targetPattern, g_defaultValue ) )
+	{
+		if( auto valuePlug = MetadataAlgo::createPlugFromMetadata( "value", Plug::Direction::In, Plug::Flags::Default, target ) )
+		{
+			const std::string optionName = target.string().substr( 7 );
+			NameValuePlugPtr optionPlug = new NameValuePlug( optionName, valuePlug, false, boost::replace_all_copy( optionName, ".", "_" ) );
+			optionsPlug()->addChild( optionPlug );
+		}
+	}
 }
 
 Options::~Options()

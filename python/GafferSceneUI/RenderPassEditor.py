@@ -37,6 +37,7 @@
 import collections
 import functools
 import imath
+import inspect
 import os
 import traceback
 
@@ -53,6 +54,7 @@ from GafferUI.PlugValueWidget import sole
 from . import _GafferSceneUI
 
 from Qt import QtWidgets
+from Qt import QtCore
 
 class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
@@ -67,26 +69,30 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self["editScope"] = Gaffer.Plug()
 			self["displayGrouped"] = Gaffer.BoolPlug()
 
+			self["favouriteColumns"] = Gaffer.StringVectorDataPlug()
+
+			# We require two sets of render adaptors as each identify as a different client.
+			# The adaptors created by `RenderPassEditor._createRenderAdaptors()` masquerade as a
+			# RenderPassWedge in order to give RenderPassPath the ability to differentiate adaptor
+			# deleted or disabled render passes.
 			self["__adaptors"] = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
 			self["__adaptors"]["in"].setInput( self["in"] )
 
-			self["__adaptedIn"] = GafferScene.ScenePlug()
-			self["__adaptedIn"].setInput( self["__adaptors"]["out"] )
+			self["__filter"] = _Filter()
+			self["__filter"]["in"].setInput( self["__adaptors"]["out"] )
+			Gaffer.PlugAlgo.promote( self["__filter"]["filter"] )
+			Gaffer.PlugAlgo.promote( self["__filter"]["hideDisabled"] )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassEditor::Settings" )
+			self["__filteredIn"] = GafferScene.ScenePlug()
+			self["__filteredIn"].setInput( self["__filter"]["out"] )
+
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::RenderPassEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
 		GafferSceneUI.SceneEditor.__init__( self, mainColumn, scriptNode, **kw )
-
-		searchFilter = _GafferSceneUI._RenderPassEditor.SearchFilter()
-		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
-		disabledRenderPassFilter.userData()["UI"] = { "label" : "Hide Disabled", "toolTip" : "Hide render passes that are disabled for rendering" }
-		disabledRenderPassFilter.setEnabled( False )
-
-		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, disabledRenderPassFilter ] )
 
 		with mainColumn :
 
@@ -101,31 +107,41 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				GafferUI.PlugLayout(
 					self.settings(),
 					orientation = GafferUI.ListContainer.Orientation.Horizontal,
-					rootSection = "Grouping"
+					rootSection = "Filter"
 				)
-				GafferUI.Divider( orientation = GafferUI.Divider.Orientation.Vertical )
-
-				_SearchFilterWidget( searchFilter )
-				GafferUI.BasicPathFilterWidget( disabledRenderPassFilter )
 
 			self.__renderPassNameColumn = _GafferSceneUI._RenderPassEditor.RenderPassNameColumn()
 			self.__renderPassActiveColumn = _GafferSceneUI._RenderPassEditor.RenderPassActiveColumn()
+			self.__commonColumns = [
+				self.__renderPassNameColumn,
+				self.__renderPassActiveColumn,
+			]
+
 			self.__pathListing = GafferUI.PathListingWidget(
-				Gaffer.DictPath( {}, "/" ), # temp till we make an RenderPassPath
-				columns = [
-					self.__renderPassNameColumn,
-					self.__renderPassActiveColumn,
-				],
+				_GafferSceneUI._RenderPassEditor.RenderPassPath(
+					self.settings()["__filteredIn"], self.context(), "/", grouped = self.settings()["displayGrouped"].getValue()
+				),
+				columns = self.__commonColumns,
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
 
+			## \todo Provide public API for this in PathListingWidget, we currently use a different approach
+			# for header-only context menus in CatalogueUI.
+			self.__pathListing._qtWidget().header().setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+			self.__pathListing._qtWidget().header().customContextMenuRequested.connect( Gaffer.WeakMethod( self.__headerContextMenuRequested ) )
+			self.__pathListing._qtWidget().header().blockingSectionPressedSignal().connect( Gaffer.WeakMethod( self.__sectionPressed ) )
+			self.__pathListing._qtWidget().header().sectionMoved.connect( Gaffer.WeakMethod( self.__sectionMoved ) )
+			self.__pathListing._qtWidget().header().setFirstMovableSection( len( self.__commonColumns ) )
+
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-				self.__addButton = GafferUI.Button(
+				self.__addButton = GafferUI.MenuButton(
 					image = "plus.png",
-					hasFrame = False
+					hasFrame = False,
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addButtonMenuDefinition ) ),
+					immediate = True
 				)
 
 				self.__removeButton = GafferUI.Button(
@@ -135,7 +151,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
 			self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeButtonClicked ) )
 			Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ) )
 
@@ -143,19 +158,37 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
 			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
-			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
+			GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__pathListing )
+
+		self.__columnCache = {}
+		self.__ignoreSectionMoved = False
+		self.__stretchedFavouriteColumn = None
 
 		self._updateFromSet()
-		self.__setPathListingPath()
 		self.__updateColumns()
 		self.__updateButtonStatus()
 
 	__columnRegistry = collections.OrderedDict()
 
 	@classmethod
-	def registerOption( cls, groupKey, optionName, section = "Main", columnName = None ) :
+	def registerOption( cls, groupKey, optionName, section = "Main", columnName = None, index = None ) :
 
-		optionLabel = Gaffer.Metadata.value( "option:" + optionName, "label" )
+		GafferSceneUI.RenderPassEditor.registerColumn(
+			groupKey,
+			optionName,
+			cls.__optionColumnCreator( optionName, section, columnName ),
+			section,
+			index
+		)
+
+	@classmethod
+	def __optionColumnCreator( cls, optionName, section, columnName = None ) :
+
+		if section == "Favourites" :
+			optionLabel = Gaffer.Metadata.value( "option:" + optionName, "label" )
+		else :
+			optionLabel = Gaffer.Metadata.value( "option:" + optionName, "columnLayout:label" ) or Gaffer.Metadata.value( "option:" + optionName, "label" )
+
 		if not columnName :
 			columnName = optionLabel or optionName.split( ":" )[-1]
 
@@ -165,28 +198,95 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			## \todo PathListingWidget's PathModel should be handling this instead.
 			toolTip += GafferUI.DocumentationAlgo.markdownToHTML( optionDescription )
 
-		GafferSceneUI.RenderPassEditor.registerColumn(
-			groupKey,
-			optionName,
-			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
-				GafferSceneUI.Private.OptionInspector( scene, editScope, optionName ),
-				columnName,
-				toolTip
-			),
-			section
+		return lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
+			GafferSceneUI.Private.OptionInspector( scene, editScope, optionName ),
+			columnName,
+			toolTip
 		)
+
+	def __dropData( self, event ) :
+
+		optionNames = [
+			k for k in GafferSceneUI.SceneInspector.draggedOptions( event ).keys()
+			if k != "renderPass:names"
+		]
+
+		return optionNames if len( optionNames ) > 0 else None
+
+	def __columnHeaderDragEnter( self, column, path, pathListing, event ) :
+
+		if not path.isEmpty() :
+			return False
+
+		if not self.__currentSectionEditable() :
+			return False
+
+		if column is not None and self.__dropData( event ) is not None :
+			self.__pathListing._qtWidget().header().setHighlightedSectionDivider( max( len( self.__commonColumns ), self.__pathListing.getColumns().index( column ) ) )
+			self.__dragEnterPointer = GafferUI.Pointer.getCurrent()
+			GafferUI.Pointer.setCurrent( "plus" )
+			return True
+
+		return False
+
+	def __columnHeaderDragMove( self, column, path, pathListing, event ) :
+
+		if not path.isEmpty() :
+			return False
+
+		if not self.__currentSectionEditable() :
+			return False
+
+		if column is not None and self.__dropData( event ) is not None :
+			self.__pathListing._qtWidget().header().setHighlightedSectionDivider( max( len( self.__commonColumns ), self.__pathListing.getColumns().index( column ) ) )
+			GafferUI.Pointer.setCurrent( "plus" )
+		else :
+			self.__pathListing._qtWidget().header().setHighlightedSectionDivider( None )
+			GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
+
+		return True
+
+	def __columnHeaderDragLeave( self, column, path, pathListing, event ) :
+
+		if not path.isEmpty() :
+			return False
+
+		if self.__currentSectionEditable() :
+			self.__pathListing._qtWidget().header().setHighlightedSectionDivider( None )
+			GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
+
+		return True
+
+	def __columnHeaderDrop( self, column, path, pathListing, event ) :
+
+		if not path.isEmpty() :
+			return
+
+		if not self.__currentSectionEditable() :
+			return
+
+		self.__pathListing._qtWidget().header().setHighlightedSectionDivider( None )
+		GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
+
+		optionNames = self.__dropData( event )
+		if optionNames is None :
+			return
+
+		columnIndex = self.__pathListing.getColumns().index( column ) - len( self.__commonColumns ) if len( self.settings()["favouriteColumns"].getValue() ) > 0 else 0
+		for name in reversed( optionNames ) :
+			self.__favourite( "option:" + name, index = max( 0, columnIndex ) )
 
 	# Registers a column in the Render Pass Editor.
 	# `inspectorFunction` is a callable object of the form
 	# `inspectorFunction( scene, editScope )` returning a
 	# `GafferSceneUI.Private.InspectorColumn` object.
 	@classmethod
-	def registerColumn( cls, groupKey, columnKey, inspectorFunction, section = "Main" ) :
+	def registerColumn( cls, groupKey, columnKey, inspectorFunction, section = "Main", index = None ) :
 
 		sections = cls.__columnRegistry.setdefault( groupKey, collections.OrderedDict() )
 		section = sections.setdefault( section, collections.OrderedDict() )
 
-		section[columnKey] = inspectorFunction
+		section[columnKey] = ( inspectorFunction, index )
 
 	@classmethod
 	def deregisterColumn( cls, groupKey, columnKey, section = "Main" ) :
@@ -208,7 +308,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 	def addRenderPassButtonMenuSignal( cls ) :
 
 		if cls.__addRenderPassButtonMenuSignal is None :
-			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
+			cls.__addRenderPassButtonMenuSignal = Gaffer.Signals.Signal2(
+				Gaffer.Signals.CatchingCombiner( "RenderPassEditor Add Button menu" )
+			)
 
 		return cls.__addRenderPassButtonMenuSignal
 
@@ -264,17 +366,23 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		if any( not i.startswith( "ui:" ) for i in modifiedItems ) :
-			self.__setPathListingPath()
+		self.__lazyUpdateFromContext()
 
 	def _updateFromSettings( self, plug ) :
 
 		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
 			self.__updateColumns()
+		elif plug == self.settings()["favouriteColumns"] and self.__currentSectionEditable() :
+			self.__updateColumns()
 		elif plug == self.settings()["displayGrouped"] :
 			self.__displayGroupedChanged()
 		elif plug in ( self.settings()["in"], self.settings()["editScope"] ) :
 			self.__updateButtonStatus()
+
+	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
+	def __lazyUpdateFromContext( self ) :
+
+		self.__pathListing.getPath().setContext( self.context() )
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
@@ -284,22 +392,246 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		sectionColumns = []
 
-		for groupKey, sections in self.__columnRegistry.items() :
-			if IECore.StringAlgo.match( tabGroup, groupKey ) :
-				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+		if currentSection == "Favourites" :
+			for ( index, favouriteName ) in enumerate( self.settings()["favouriteColumns"].getValue() ) :
+				if favouriteName.startswith( "option:" ) :
+					sectionColumns.append( ( self.__acquireColumn( favouriteName, currentSection ), index ) )
+				else :
+					IECore.msg( IECore.Msg.Level.Warning, "RenderPassEditor", "Unknown favourite \"{}\". Option favourites should start with \"option:\".".format( favouriteName ) )
 
-		self.__pathListing.setColumns( [ self.__renderPassNameColumn, self.__renderPassActiveColumn ] + sectionColumns )
+			if len( sectionColumns ) == 0 :
+				# Include a blank spacer column when there are no favourites.
+				sectionColumns.append( ( GafferUI.StandardPathColumn( "", "", GafferUI.PathColumn.SizeMode.Stretch ), 0 ) )
+			elif self.__stretchedFavouriteColumn != sectionColumns[-1][0] :
+				# We don't want our _AdderColumn to automatically stretch,
+				# so stretch the second-to-last column instead, resetting any
+				# previously stretched column in the process.
+				if self.__stretchedFavouriteColumn is not None :
+					self.__stretchedFavouriteColumn.setSizeMode( GafferUI.PathColumn.SizeMode.Default )
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __setPathListingPath( self ) :
+				self.__stretchedFavouriteColumn = sectionColumns[-1][0]
+				self.__stretchedFavouriteColumn.setSizeMode( GafferUI.PathColumn.SizeMode.Stretch )
 
-		# We take a static copy of our current context for use in the RenderPassPath - this prevents the
-		# PathListing from updating automatically when the original context changes, and allows us to take
-		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-		# function until we are visible and playback has stopped.
-		contextCopy = Gaffer.Context( self.context() )
-		self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.settings()["__adaptedIn"], contextCopy, "/", filter = self.__filter, grouped = self.settings()["displayGrouped"].getValue() ) )
+			sectionColumns.append( ( self.__acquireColumn( _AdderColumn, currentSection ), -1 ) )
+		else :
+			for groupKey, sections in self.__columnRegistry.items() :
+				if IECore.StringAlgo.match( tabGroup, groupKey ) :
+					section = sections.get( currentSection or None, {} )
+					sectionColumns += [ ( self.__acquireColumn( c, currentSection ), index ) for ( c, index ) in section.values() ]
+
+		self.__pathListing.setColumns( self.__commonColumns + self.__orderedColumns( sectionColumns ) )
+		self.__pathListing._qtWidget().header().setSectionsMovable( currentSection == "Favourites" )
+
+	def __acquireColumn( self, columnCreator, section ) :
+
+		column = self.__columnCache.get( ( columnCreator, section ) )
+		if column is None :
+			columnKey = columnCreator
+			if isinstance( columnCreator, str ) and columnCreator.startswith( "option:" ) :
+				columnCreator = self.__optionColumnCreator( columnCreator[7:], section )
+
+			column = columnCreator( self.settings()["__adaptedIn"], self.settings()["editScope"] )
+			self.__columnCache[ ( columnKey, section ) ] = column
+
+			if section == "Favourites" :
+				column.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__columnHeaderDragEnter ) )
+				column.dragMoveSignal().connectFront( Gaffer.WeakMethod( self.__columnHeaderDragMove ) )
+				column.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__columnHeaderDragLeave ) )
+				column.dropSignal().connectFront( Gaffer.WeakMethod( self.__columnHeaderDrop ) )
+
+		return column
+
+	@staticmethod
+	def __orderedColumns( columnsAndIndices ) :
+
+		for i, ( column, index ) in enumerate( columnsAndIndices ) :
+			if index is not None :
+				# Negative indices are remapped to their absolute position in the column list.
+				columnsAndIndices[i] = ( column, index if index >= 0 else len( columnsAndIndices ) + index )
+
+		# As column indices may be sparse, we fill in the gaps with any unspecified indices before sorting.
+		availableIndices = iter( sorted( set( range( len( columnsAndIndices ) ) ) - { x[1] for x in columnsAndIndices } ) )
+		orderedColumns = sorted(
+			[ ( column, index if index is not None else next( availableIndices ) ) for column, index in columnsAndIndices ],
+			key = lambda x: x[1]
+		)
+
+		return [ x[0] for x in orderedColumns ]
+
+	def __favouriteColumn( self, column, favourite ) :
+
+		if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+			return
+
+		inspector = column.inspector( self.__pathListing.getPath() )
+		if isinstance( inspector, GafferSceneUI.Private.OptionInspector ) :
+			self.__favourite( "option:" + inspector.name(), favourite )
+
+	def __favourite( self, optionName, favourite = True, index = None ) :
+
+		favourites = list( self.settings()["favouriteColumns"].getValue() )
+		if favourite :
+			if optionName not in favourites :
+				if index is not None :
+					favourites.insert( index, optionName )
+				else :
+					favourites.append( optionName )
+		else :
+			favourites.remove( optionName )
+
+		self.settings()["favouriteColumns"].setValue( IECore.StringVectorData( favourites ) )
+
+	def __resetFavourites( self, userDefault = False ) :
+
+		if userDefault :
+			Gaffer.NodeAlgo.applyUserDefault( self.settings()["favouriteColumns"] )
+		else :
+			self.settings()["favouriteColumns"].setToDefault()
+
+	def __currentSectionEditable( self ) :
+
+		return self.settings()["section"].getValue() == "Favourites"
+
+	def __showOptionMenu( self ) :
+
+		m = IECore.MenuDefinition()
+
+		favourites = self.settings()["favouriteColumns"].getValue()
+
+		enabledOptionPrefixes = set( [ "render", "renderPass", "sampleMotion" ] )
+		for renderer in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "optionPrefix" ) :
+			if Gaffer.Metadata.value( renderer, "ui:enabled" ) is not False :
+				enabledOptionPrefixes.add( Gaffer.Metadata.value( renderer, "optionPrefix" ).rstrip( ":" ) )
+
+		for option in Gaffer.Metadata.targetsWithMetadata( "option:*", "defaultValue" ) :
+			if option.split( ":" )[1] not in enabledOptionPrefixes :
+				continue
+
+			category = Gaffer.Metadata.value( option, "category" ) or "Other"
+			section = ( Gaffer.Metadata.value( option, "layout:section" ) or "Other" ).replace( ".", "/" )
+			label = Gaffer.Metadata.value( option, "label" ) or option[7:]
+			m.append(
+				f"/{category}/{section}/{label}",
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__favourite ), option ),
+					"active" : option not in favourites,
+				}
+			)
+
+		self.__contextMenu = GafferUI.Menu( m )
+		self.__contextMenu.popup( parent = self )
+
+	def __headerContextMenuRequested( self, pos ) :
+
+		column = self.__pathListing.columnAt( imath.V2f( pos.x(), pos.y() ) )
+		if isinstance( column, _AdderColumn ) :
+			self.__showOptionMenu()
+			return
+
+		m = IECore.MenuDefinition()
+		userEditableSection = self.__currentSectionEditable()
+		if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+
+			if userEditableSection :
+				m.append(
+					"/Remove",
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__favouriteColumn ), column, False ),
+					}
+				)
+			else :
+				m.append(
+					"/Favourite",
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__favouriteColumn ), column ),
+						"checkBox" : "option:{}".format( column.inspector( self.__pathListing.getPath() ).name() ) in self.settings()["favouriteColumns"].getValue(),
+					}
+				)
+
+		if userEditableSection and column not in self.__commonColumns :
+
+			m.append(
+				"/Remove All",
+				{
+					"command" : Gaffer.WeakMethod( self.__resetFavourites ),
+				}
+			)
+
+			if Gaffer.NodeAlgo.hasUserDefault( self.settings()["favouriteColumns"] ) :
+
+				m.append( "/__resetFavouritesDivider", { "divider" : True } )
+				m.append(
+					"/Reset to Default",
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__resetFavourites ), True ),
+					}
+				)
+
+			m.append( "/__saveFavouritesDivider", { "divider" : True } )
+
+			m.append(
+				"/Save as Default",
+				{
+					"command" : Gaffer.WeakMethod( self.__saveFavourites ),
+				}
+			)
+
+		if m.size() :
+			self.__contextMenu = GafferUI.Menu( m )
+			self.__contextMenu.popup( parent = self )
+
+	def __saveFavourites( self ) :
+
+		favourites = self.settings()["favouriteColumns"].getValue()
+		Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "favouriteColumns", "userDefault", favourites )
+
+		with open( self.scriptNode().applicationRoot().preferencesLocation() / "__renderPassEditorFavourites.py", "w" ) as f :
+			f.writelines( inspect.cleandoc(
+				"""
+				# This file was automatically generated by Gaffer.
+				# Do not edit this file - it will be overwritten.
+
+				import Gaffer
+				import GafferSceneUI
+
+				import IECore
+
+				Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "favouriteColumns", "userDefault", {} )
+				""".format( repr( favourites ) )
+			) )
+
+	def __resetSectionOrder( self ) :
+
+		self.__ignoreSectionMoved = True
+
+		header = self.__pathListing._qtWidget().header()
+		for x in range( header.count() ) :
+			visualIndex = header.visualIndex( x )
+			if visualIndex != x :
+				header.moveSection( visualIndex, x )
+
+		self.__ignoreSectionMoved = False
+
+	def __sectionMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
+
+		if self.__ignoreSectionMoved :
+			return
+
+		firstMovableIndex = len( self.__commonColumns )
+		favourites = list( self.settings()["favouriteColumns"].getValue() )
+		if len( favourites ) > oldVisualIndex - firstMovableIndex :
+			favourites.insert( max( 0, newVisualIndex - firstMovableIndex ), favourites.pop( oldVisualIndex - firstMovableIndex ) )
+
+		self.settings()["favouriteColumns"].setValue( IECore.StringVectorData( favourites ) )
+		self.__resetSectionOrder()
+
+	def __sectionPressed( self, logicalIndex ) :
+
+		if isinstance( self.__pathListing.getColumns()[logicalIndex], _AdderColumn ) :
+			self.__showOptionMenu()
+			return True
+
+		return False
 
 	def __displayGroupedChanged( self ) :
 
@@ -326,7 +658,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 			selection[i] = remappedPaths
 
-		self.__setPathListingPath()
+		self.__pathListing.getPath().setGrouped( grouped )
 		self.__pathListing.setSelection( selection )
 
 	def __buttonDoubleClick( self, pathListing, event ) :
@@ -339,6 +671,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		if event.button == event.Buttons.Left :
 			column = pathListing.columnAt( event.line.p0 )
+			if column == self.__renderPassNameColumn :
+				if self.__canEditRenderPasses() and len( self.__selectedRenderPasses() ) == 1 :
+					self.__renameSelectedRenderPass()
+					return True
+
 			if column == self.__renderPassActiveColumn :
 				self.__setActiveRenderPass( pathListing )
 				return True
@@ -350,6 +687,11 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if event.modifiers == event.Modifiers.None_ :
 
 			if event.key == "Return" or event.key == "Enter" :
+				selectedRenderPasses = self.__selectedRenderPasses()
+				if self.__canEditRenderPasses() and len( selectedRenderPasses ) == 1 :
+					self.__renameSelectedRenderPass()
+					return True
+
 				selection = pathListing.getSelection()
 				if len( selection[1].paths() ) :
 					self.__setActiveRenderPass( pathListing )
@@ -375,13 +717,6 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		return list( result )
 
-	def __dragBegin( self, widget, event ) :
-
-		# Return render pass names rather than the path when dragging the Name column.
-		selection = self.__pathListing.getSelection()[0]
-		if not selection.isEmpty() :
-			return IECore.StringVectorData( self.__selectedRenderPasses() )
-
 	def __setActiveRenderPass( self, pathListing ) :
 
 		selectedPassNames = self.__selectedRenderPasses( columns = [ 1 ] )
@@ -391,12 +726,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		script = self.scriptNode()
 		if Gaffer.MetadataAlgo.readOnly( script ) :
-			with GafferUI.PopupWindow() as self.__popup :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Image( "warningSmall.png" )
-					GafferUI.Label( "<h4>The script is read-only.</h4>" )
-
-			self.__popup.popup( parent = self )
+			GafferUI.PopupWindow.showWarning( "The script is read-only.", parent = self )
 			return
 
 		with Gaffer.UndoScope( script ) :
@@ -415,6 +745,19 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		if columnIndex == 0 :
 			# Render pass operations
+
+			if menuDefinition.size() :
+				menuDefinition.append( "/__renderPassEditorRenameDivider", { "divider" : True } )
+
+			menuDefinition.append(
+				"Rename Selected Render Pass...",
+				{
+					"command" : Gaffer.WeakMethod( self.__renameSelectedRenderPass ),
+					"active" : self.__canEditRenderPasses() and len( self.__selectedRenderPasses() ) == 1
+				}
+			)
+
+			menuDefinition.append( "__DeleteDivider__", { "divider" : True } )
 
 			menuDefinition.append(
 				"Delete Selected Render Passes",
@@ -470,6 +813,63 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
 			renderPassesProcessor["names"].setValue( renderPasses )
+
+	def __warningPopup( self, title, message ) :
+
+		with GafferUI.PopupWindow() as self.__popup :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Image( "warningSmall.png" )
+					GafferUI.Label( "<h4>{}</h4>".format( title ) )
+				GafferUI.Label( message )
+
+		self.__popup.popup( parent = self )
+
+	def __renameSelectedRenderPass( self ) :
+
+		selectedRenderPasses = self.__selectedRenderPasses()
+		if len( selectedRenderPasses ) != 1 :
+			return
+
+		editScope = self.editScope()
+		if editScope is None :
+			return
+
+		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = False )
+		if renderPassesProcessor is None or selectedRenderPasses[0] not in renderPassesProcessor["names"].getValue() :
+			self.__warningPopup( "Unable to rename", "Pass was not created in {}.".format( editScope.relativeName( self.scriptNode() ) ) )
+			return
+
+		dialogue = _RenderPassCreationDialogue(
+			existingNames = [ x for x in self.__renderPassNames( self.settings()["in"] ) if x != selectedRenderPasses[0] ],
+			editScope = editScope,
+			title = "Rename Render Pass",
+			confirmLabel = "Rename",
+			actionDescription = "Rename render pass in",
+			defaultName = selectedRenderPasses[0],
+			message = "<h4>Renaming will only affect the current edit scope.</h4>\nReferences elsewhere in the node graph may need to be updated manually."
+		)
+
+		renderPassName = dialogue.waitForRenderPassName( parentWindow = self.ancestor( GafferUI.Window ) )
+		if renderPassName is not None and renderPassName != selectedRenderPasses[0] :
+
+			nonEditableReason = GafferScene.EditScopeAlgo.renameRenderPassNonEditableReason( editScope, renderPassName )
+			if nonEditableReason is not None :
+				self.__warningPopup( "Unable to rename", nonEditableReason )
+				return
+
+			with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+				GafferScene.EditScopeAlgo.renameRenderPass( editScope, selectedRenderPasses[0], renderPassName )
+
+			if self.settings()["displayGrouped"].getValue() :
+				renamedPath = GafferScene.ScenePlug.stringToPath( self.pathGroupingFunction()( renderPassName ) )
+				renamedPath.append( renderPassName )
+			else :
+				renamedPath = renderPassName
+
+			self.__pathListing.setSelection(
+				[ IECore.PathMatcher( [ renamedPath ] ) if i == 0 else IECore.PathMatcher() for i in range( len( self.__pathListing.getSelection() ) ) ]
+			)
 
 	def __disableRenderPasses( self, renderPasses, editScope ) :
 
@@ -566,25 +966,17 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if renderPassName :
 			self.__addRenderPass( renderPassName, editScope )
 
-	def __addButtonClicked( self, button ) :
+	def __addButtonMenuDefinition( self ) :
 
 		menuDefinition = IECore.MenuDefinition()
+		menuDefinition.append(
+			"Add...",
+			{
+				"command" : Gaffer.WeakMethod( self.__renderPassCreationDialogue )
+			}
+		)
 		self.addRenderPassButtonMenuSignal()( menuDefinition, self )
-
-		if menuDefinition.size() == 0 :
-			self.__renderPassCreationDialogue()
-		elif menuDefinition.size() == 1 :
-			_, item = menuDefinition.items()[0]
-			item.command()
-		else :
-			menuDefinition.prepend(
-				"Add...",
-				{
-					"command" : Gaffer.WeakMethod( self.__renderPassCreationDialogue )
-				}
-			)
-			self.__popupMenu = GafferUI.Menu( menuDefinition )
-			self.__popupMenu.popup( parent = self )
+		return menuDefinition
 
 	def __removeButtonClicked( self, button ) :
 
@@ -628,6 +1020,20 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 GafferUI.Editor.registerType( "RenderPassEditor", RenderPassEditor )
 
+class _AdderColumn( GafferUI.PathColumn ) :
+
+	def __init__( self, *args ) :
+
+		GafferUI.PathColumn.__init__( self )
+
+	def cellData( self, path, canceller ) :
+
+		return GafferUI.PathColumn.CellData( value = "", toolTip = "Click on the header to add columns." )
+
+	def headerData( self, rootPath, canceller ) :
+
+		return GafferUI.PathColumn.CellData( value = "", icon = IECore.CompoundData( { "state:normal" : "plus.png", "state:highlighted" : "plusHighlighted.png" } ), toolTip = "Click to add columns." )
+
 ##########################################################################
 # Metadata controlling the settings UI
 ##########################################################################
@@ -645,47 +1051,140 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"label", "",
+			"label" : "",
 
-		],
+		},
 
-		"tabGroup" : [
+		"tabGroup" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"layout:width", 100,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"layout:width" : 100,
 
-		],
+		},
 
-		"section" : [
+		"section" : {
 
-			"plugValueWidget:type", "GafferSceneUI.RenderPassEditor._SectionPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.RenderPassEditor._SectionPlugValueWidget",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 130,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width" : 130,
 
-		],
+		},
 
-		"displayGrouped" : [
+		"displayGrouped" : {
 
-			"description",
+			"description" :
 			"""
 			Click to toggle between list and grouped display of render passes.
 			""",
 
-			"layout:section", "Grouping",
-			"plugValueWidget:type", "GafferSceneUI.RenderPassEditor._ToggleGroupingPlugValueWidget",
+			"layout:section" : "Filter",
+			"layout:divider" : True,
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "pathListingTree.png",
+			"togglePlugValueWidget:image:off" : "pathListingList.png",
 
-		],
+		},
+
+		"filter" : {
+
+			"description" :
+			"""
+			Filters the displayed render passes. Accepts standard wildcards such as `*` and `?`.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix" : "search",
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"layout:section" : "Filter",
+
+		},
+
+		"hideDisabled" : {
+
+			"description" :
+			"""
+			Hides render passes that are disabled for rendering.
+			""",
+
+			"boolPlugValueWidget:labelVisible" : True,
+			"layout:section" : "Filter",
+
+		},
+
+		"favouriteColumns" : [
+
+			"plugValueWidget:type", "",
+
+		]
 
 	}
 
 )
+
+##########################################################################
+# _Filter node
+##########################################################################
+
+class _Filter( GafferScene.SceneProcessor ) :
+
+	def __init__( self, name = "_Filter" ) :
+
+		GafferScene.SceneProcessor.__init__( self, name )
+
+		self["filter"] = Gaffer.StringPlug()
+		self["hideDisabled"] = Gaffer.BoolPlug()
+
+		self["__keepFilteredPasses"] = GafferScene.DeleteRenderPasses()
+		self["__keepFilteredPasses"]["in"].setInput( self["in"] )
+		self["__keepFilteredPasses"]["enabled"].setInput( self["filter"] )
+		self["__keepFilteredPasses"]["mode"].setValue( GafferScene.DeleteRenderPasses.Mode.Keep )
+
+		self["__filterExpression"] = Gaffer.Expression()
+		self["__filterExpression"].setExpression(
+			"pattern = parent['filter'];"
+			"pattern = f'*{pattern}*' if not IECore.StringAlgo.hasWildcards( pattern ) else pattern;"
+			"parent['__keepFilteredPasses']['names'] = pattern;"
+		)
+
+		self["__adaptorEnabler"] = Gaffer.ContextVariables()
+		self["__adaptorEnabler"].setup( self["__keepFilteredPasses"]["out"] )
+		self["__adaptorEnabler"]["in"].setInput( self["__keepFilteredPasses"]["out"] )
+		self["__adaptorEnabler"]["variables"].addChild( Gaffer.NameValuePlug( "renderPassEditor:enableAdaptors", True ) )
+
+		self["__optionQuery"] = GafferScene.OptionQuery()
+		self["__optionQuery"]["scene"].setInput( self["__adaptorEnabler"]["out"] )
+		self["__optionQuery"].addQuery( Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ) )
+		self["__optionQuery"].addQuery( Gaffer.BoolPlug( defaultValue = True ) )
+		self["__optionQuery"]["queries"][0]["name"].setValue( "renderPass:names" )
+		self["__optionQuery"]["queries"][1]["name"].setValue( "renderPass:enabled" )
+
+		self["__collectEnabledPasses"] = Gaffer.Collect()
+		self["__collectEnabledPasses"]["contextVariable"].setValue( "renderPass" )
+		self["__collectEnabledPasses"]["contextValues"].setInput( self["__optionQuery"]["out"][0]["value"] )
+		self["__collectEnabledPasses"]["enabled"].setInput( self["__optionQuery"]["out"][1]["value"] )
+		self["__collectEnabledPasses"].addInput( Gaffer.StringPlug( "names", defaultValue = "${renderPass}" ) )
+
+		self["__keepEnabledPasses"] = GafferScene.DeleteRenderPasses()
+		self["__keepEnabledPasses"]["in"].setInput( self["__keepFilteredPasses"]["out"] )
+		self["__keepEnabledPasses"]["names"].setInput( self["__collectEnabledPasses"]["out"]["names"] )
+		self["__keepEnabledPasses"]["enabled"].setInput( self["hideDisabled"] )
+		self["__keepEnabledPasses"]["mode"].setValue( GafferScene.DeleteRenderPasses.Mode.Keep )
+
+		self["out"].setInput( self["__keepEnabledPasses"]["out"] )
+
+IECore.registerRunTimeTyped( _Filter, "GafferSceneUI::RenderPassEditor::_Filter" )
+
+##########################################################################
+# Widgets
+##########################################################################
 
 class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -737,10 +1236,16 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			tabGroup = self.getPlug().node()["tabGroup"].getValue()
 
+			tabNames = []
 			for groupKey, sections in RenderPassEditor._RenderPassEditor__columnRegistry.items() :
 				if IECore.StringAlgo.match( tabGroup, groupKey ) :
-					for section in sections.keys() :
-						self._qtWidget().addTab( section )
+					tabNames.extend( sections.keys() )
+			# Deduplicate sections while preserving order in case the same
+			# section has been registered to multiple matching groupKeys.
+			for name in list( dict.fromkeys( tabNames ) ) :
+				self._qtWidget().addTab( name )
+
+			self._qtWidget().addTab( "Favourites" )
 		finally :
 			self.__ignoreCurrentChanged = False
 
@@ -763,89 +1268,9 @@ class _Spacer( GafferUI.Spacer ) :
 
 RenderPassEditor._Spacer = _Spacer
 
-## \todo Should this be a new displayMode of BoolPlugValueWidget?
-class _ToggleGroupingPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plugs, **kw ) :
-
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
-
-		self.__groupingModeButton = GafferUI.Button( image = "pathListingList.png", hasFrame=False )
-		self.__groupingModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__groupingModeButtonClicked ) )
-		self.__row.append(
-			self.__groupingModeButton
-		)
-
-	def __groupingModeButtonClicked( self, button ) :
-
-		[ plug.setValue( not plug.getValue() ) for plug in self.getPlugs() ]
-
-	def _updateFromValues( self, values, exception ) :
-
-		self.__groupingModeButton.setImage( "pathListingTree.png" if all( values ) else "pathListingList.png" )
-
-RenderPassEditor._ToggleGroupingPlugValueWidget = _ToggleGroupingPlugValueWidget
-
-##########################################################################
-# _SearchFilterWidget
-##########################################################################
-
-class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
-
-	def __init__( self, pathFilter ) :
-
-		self.__patternWidget = GafferUI.TextWidget()
-		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
-
-		self.__patternWidget.setPlaceholderText( "Filter..." )
-
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
-		self.__patternWidget.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__patternWidget.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ) )
-		self.__patternWidget.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ) )
-
-		self._updateFromPathFilter()
-
-	def _updateFromPathFilter( self ) :
-
-		self.__patternWidget.setText( self.pathFilter().getMatchPattern() )
-
-	def __patternEditingFinished( self, widget ) :
-
-		self.pathFilter().setMatchPattern( self.__patternWidget.getText() )
-
-	def __dragEnter( self, widget, event ) :
-
-		if not isinstance( event.data, IECore.StringVectorData ) :
-			return False
-
-		if not len( event.data ) :
-			return False
-
-		self.__patternWidget.setHighlighted( True )
-
-		return True
-
-	def __dragLeave( self, widget, event ) :
-
-		self.__patternWidget.setHighlighted( False )
-
-		return True
-
-	def __drop( self, widget, event ) :
-
-		if isinstance( event.data, IECore.StringVectorData ) and len( event.data ) > 0 :
-			self.pathFilter().setMatchPattern( " ".join( sorted( event.data ) ) )
-
-		self.__patternWidget.setHighlighted( False )
-
-		return True
-
 class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, existingNames = [], editScope = None, title = "Add Render Pass", cancelLabel = "Cancel", confirmLabel = "Add", **kw ) :
+	def __init__( self, existingNames = [], editScope = None, title = "Add Render Pass", cancelLabel = "Cancel", confirmLabel = "Add", actionDescription = "Add render pass to", defaultName = "", message = "", **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
 
@@ -855,13 +1280,24 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 		with self.__column :
 			if editScope :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Label( "Add render pass to" )
+					GafferUI.Label( actionDescription )
 					editScopeColor = Gaffer.Metadata.value( editScope, "nodeGadget:color" )
 					if editScopeColor :
 						GafferUI.Image.createSwatch( editScopeColor )
 					GafferUI.Label( "<h4>{}</h4>".format( editScope.relativeName( editScope.ancestor( Gaffer.ScriptNode ) ) ) )
 
+			if message != "" :
+				lines = message.split( "\n" )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) :
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+						GafferUI.Image( "infoSmall.png" )
+						GafferUI.Label( "{}".format( lines[0] ) )
+					for line in lines[1:] :
+						GafferUI.Label( "{}".format( line ) )
+
 			self.__renderPassNameWidget = GafferSceneUI.RenderPassesUI.createRenderPassNameWidget()
+			if defaultName != "" :
+				self.__renderPassNameWidget.setRenderPassName( defaultName )
 
 		self._setWidget( self.__column )
 
@@ -907,44 +1343,48 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton.setImage( None if unique else "warningSmall.png" )
 		self.__confirmButton.setToolTip( "" if unique else "A render pass named '{}' already exists.".format( name ) )
 
-# Signal with custom result combiner to prevent bad
-# slots blocking the execution of others.
-class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
-
-	def __init__( self ) :
-
-		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
-
-	@staticmethod
-	def __combiner( results ) :
-
-		while True :
-			try :
-				next( results )
-			except StopIteration :
-				return
-			except Exception as e :
-				# Print message but continue to execute other slots
-				IECore.msg(
-					IECore.Msg.Level.Error,
-					"RenderPassEditor Add Button menu", traceback.format_exc()
-				)
-				# Remove circular references that would keep the widget in limbo.
-				e.__traceback__ = None
-
 class RenderPassChooserWidget( GafferUI.Widget ) :
 
 	def __init__( self, settingsNode, **kw ) :
 
-		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( settingsNode["__scriptNode"].getInput().node() )
-		self.__renderPassPlugValueWidget = _RenderPassPlugValueWidget(
-			renderPassPlug["value"],
-			showLabel = True
-		)
-		GafferUI.Widget.__init__( self, self.__renderPassPlugValueWidget, **kw )
+		self.__container = GafferUI.ListContainer()
+		GafferUI.Widget.__init__( self, self.__container, **kw )
+
+		self.__scriptNode = settingsNode["__scriptNode"].getInput().node()
+		self.__scriptNode["variables"].childAddedSignal().connect( Gaffer.WeakMethod( self.__updateWidget ) )
+		self.__scriptNode["variables"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__updateWidget ) )
+
+		self.__updateWidget()
+
+	def __updateWidget( self, *args ) :
+
+		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( self.__scriptNode, createIfMissing = False )
+
+		if renderPassPlug is not None :
+			widgets = self.__container[:]
+			if not widgets or not widgets[0].getPlug().isSame( renderPassPlug["value"] ) :
+				widgets = [ _RenderPassPlugValueWidget( renderPassPlug["value"], showLabel = True ) ]
+		else :
+			widgets = []
+
+		self.__container[:] = widgets
 
 RenderPassEditor.RenderPassChooserWidget = RenderPassChooserWidget
 
+# Supported metadata :
+#
+# - `renderPassPlugValueWidget:scene` : The name of a plug on the same node,
+#   used to provide the list of passes to choose from. If not specified, the
+#   focus node is used instead.
+# - `renderPassPlugValueWidget:searchable` : Boolean to toggle
+#   the search field. Defaults on.
+# - `renderPassPlugValueWidget:displayGrouped` : Boolean to toggle
+#   grouping into submenus. Defaults off.
+# - `renderPassPlugValueWidget:hideDisabled` : Boolean to toggle
+#   hiding of disabled passes. Defaults off.
+#
+## \todo We should probably move this to its own file and expose it
+# publicly as `GafferSceneUI.RenderPassPlugValueWidget`.
 class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## \todo We're cheekily reusing the Editor.Settings node here
@@ -962,40 +1402,37 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self["__adaptors"] = GafferSceneUI.RenderPassEditor._createRenderAdaptors()
 			self["__adaptors"]["in"].setInput( self["in"] )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassPlugValueWidget::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::RenderPassPlugValueWidget::Settings" )
+
+	__PassStatus = collections.namedtuple( "__PassStatus", [ "enabled", "adaptedEnabled" ] )
 
 	def __init__( self, plug, showLabel = False, **kw ) :
 
 		self.__settings = self.Settings()
 		self.__settings.setName( "RenderPassPlugValueWidgetSettings" )
-		self.__settings["__scriptNode"].setInput( plug.node().scriptNode()["fileName"] )
 
 		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__listContainer, plug, **kw )
+
+		self.__settings["__scriptNode"].setInput( self.scriptNode()["fileName"] )
 
 		with self.__listContainer :
 			if showLabel :
 				GafferUI.Label( "Render Pass" )
 			self.__busyWidget = GafferUI.BusyWidget( size = 18 )
 			self.__busyWidget.setVisible( False )
+			searchable = Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:searchable" )
 			self.__menuButton = GafferUI.MenuButton(
 				"",
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), searchable = searchable if searchable is not None else True ),
 				highlightOnOver = False
 			)
-			# Ignore the width in X so MenuButton width is limited by the overall width of the widget
-			self.__menuButton._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
 		self.__currentRenderPass = ""
+		# Maps from pass name to __PassStatus
 		self.__renderPasses = {}
-
-		self.__displayGrouped = False
-		self.__hideDisabled = False
-
-		self.__focusChangedConnection = plug.node().scriptNode().focusChangedSignal().connect(
-			Gaffer.WeakMethod( self.__focusChanged ), scoped = True
-		)
+		self.__updatePending = False
 
 		self.__updateSettingsInput()
 		self.__updateMenuButton()
@@ -1012,8 +1449,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.__currentRenderPass == "" :
 			return "No render pass is active."
 
-		if self.__currentRenderPass not in self.__renderPasses.get( "all", [] ) :
-			return "{} is not provided by the focus node.".format( self.__currentRenderPass )
+		if self.__currentRenderPass not in self.__renderPasses :
+			return "{} is not available.".format( self.__currentRenderPass )
 		else :
 			return "{} is the current render pass.".format( self.__currentRenderPass )
 
@@ -1035,18 +1472,12 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				adaptedRenderPassNames = globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() )
 				context["renderPassEditor:enableAdaptors"] = False
 				for renderPass in globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() ) :
-					renderPasses.setdefault( "all", [] ).append( renderPass )
 					context["renderPass"] = renderPass
+					context["renderPassEditor:enableAdaptors"] = False
+					enabled = globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value
 					context["renderPassEditor:enableAdaptors"] = True
-					if renderPass not in adaptedRenderPassNames :
-						# The render pass has been deleted by a render adaptor so present it as disabled
-						renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
-					elif globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
-						renderPasses.setdefault( "enabled", [] ).append( renderPass )
-					else :
-						context["renderPassEditor:enableAdaptors"] = False
-						if globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value :
-							renderPasses.setdefault( "adaptorDisabled", [] ).append( renderPass )
+					adaptedEnabled = renderPass in adaptedRenderPassNames and globalsPlug.getValue().get( "option:renderPass:enabled", IECore.BoolData( True ) ).value
+					renderPasses[renderPass] = _RenderPassPlugValueWidget.__PassStatus( enabled, adaptedEnabled )
 
 			result.append( {
 				"value" : plug.getValue(),
@@ -1058,23 +1489,51 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromValues( self, values, exception ) :
 
 		self.__currentRenderPass = sole( v["value"] for v in values )
-		self.__renderPasses = sole( v["renderPasses"] for v in values )
+		self.__renderPasses = sole( v["renderPasses"] for v in values ) or {}
+
+		# We're called with an empty set of values as a signal that a background
+		# update is starting.
+		self.__updatePending = exception is None and not len( values ) and self.getPlugs()
+		if not self.__updatePending :
+			self.__busyWidget.setVisible( False )
 
 		if self.__currentRenderPass is not None :
-			self.__busyWidget.setVisible( False )
 			self.__updateMenuButton()
+
+		if exception is not None and not isinstance( exception, Gaffer.ProcessException ) :
+			# A ProcessException indicates an error computing plug values, which
+			# we leave to the rest of the UI to report. Any other type of exception
+			# indicates a coding error, which we want to know about.
+			IECore.msg(
+				IECore.Msg.Level.Error, "_RenderPassPlugValueWidget",
+				"".join( traceback.format_exception( exception ) )
+			)
+
+	def _updateFromMetadata( self ) :
+
+		self.__updateSettingsInput()
 
 	def _updateFromEditable( self ) :
 
 		self.__menuButton.setEnabled( self._editable() )
 
+	def __getDisplayGrouped( self ) :
+
+		return any( Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:displayGrouped" ) for plug in self.getPlugs() )
+
 	def __setDisplayGrouped( self, grouped ) :
 
-		self.__displayGrouped = grouped
+		for plug in self.getPlugs() :
+			Gaffer.Metadata.registerValue( plug, "renderPassPlugValueWidget:displayGrouped", grouped )
+
+	def __getHideDisabled( self ) :
+
+		return any( Gaffer.Metadata.value( plug, "renderPassPlugValueWidget:hideDisabled" ) for plug in self.getPlugs() )
 
 	def __setHideDisabled( self, hide ) :
 
-		self.__hideDisabled = hide
+		for plug in self.getPlugs() :
+			Gaffer.Metadata.registerValue( plug, "renderPassPlugValueWidget:hideDisabled", hide )
 
 	def __menuDefinition( self ) :
 
@@ -1082,23 +1541,29 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/__RenderPassesDivider__", { "divider" : True, "label" : "Render Passes" } )
 
-		renderPasses = self.__renderPasses.get( "enabled", [] ) if self.__hideDisabled else self.__renderPasses.get( "all", [] )
+		if self.__getHideDisabled() :
+			renderPasses = [ name for name, status in self.__renderPasses.items() if status.adaptedEnabled ]
+		else :
+			renderPasses = self.__renderPasses.keys()
 
-		if self.__renderPasses is None :
-			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ) } )
+		if self.__updatePending :
+			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ), "searchable" : False } )
 		elif len( renderPasses ) == 0 :
-			result.append( "/No Render Passes Available", { "active" : False } )
+			if not self.__renderPasses :
+				result.append( "/No Render Passes Available", { "active" : False, "searchable" : False } )
+			else :
+				result.append( "/All Render Passes Disabled", { "active" : False, "searchable" : False } )
 		else :
 			groupingFn = GafferSceneUI.RenderPassEditor.pathGroupingFunction()
 			prefixes = IECore.PathMatcher()
-			if self.__displayGrouped :
+			if self.__getDisplayGrouped() :
 				for name in renderPasses :
 					prefixes.addPath( groupingFn( name ) )
 
 			for name in sorted( renderPasses ) :
 
 				prefix = "/"
-				if self.__displayGrouped :
+				if self.__getDisplayGrouped() :
 					if prefixes.match( name ) & IECore.PathMatcher.Result.ExactMatch :
 						prefix += name
 					else :
@@ -1119,7 +1584,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/None",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setCurrentRenderPass ), "" ),
-				"icon" : "activeRenderPass.png" if self.__currentRenderPass == "" else None,
+				"icon" : self.__activeRenderPassIcon() if self.__currentRenderPass == "" else None,
 			}
 		)
 
@@ -1128,18 +1593,20 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append(
 			"/Display Grouped",
 			{
-				"checkBox" : self.__displayGrouped,
+				"checkBox" : self.__getDisplayGrouped(),
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setDisplayGrouped ) ),
-				"description" : "Toggle grouped display of render passes."
+				"description" : "Toggle grouped display of render passes.",
+				"searchable" : False
 			}
 		)
 
 		result.append(
 			"/Hide Disabled",
 			{
-				"checkBox" : self.__hideDisabled,
+				"checkBox" : self.__getHideDisabled(),
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setHideDisabled ) ),
-				"description" : "Hide render passes disabled for rendering."
+				"description" : "Hide render passes disabled for rendering.",
+				"searchable" : False
 			}
 		)
 
@@ -1160,12 +1627,28 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if renderPass == "" :
 			return ""
 
-		if renderPass in self.__renderPasses.get( "adaptorDisabled", [] ) :
-			return "{} has been automatically disabled by a render adaptor.".format( renderPass )
-		elif renderPass not in self.__renderPasses.get( "enabled", [] ) :
-			return "{} has been disabled.".format( renderPass )
+		match self.__renderPasses[renderPass] : # `enabled`, `adaptedEnabled`
+			case ( True, True ) :
+				return ""
+			case ( True, False ) :
+				return f"{renderPass} has been automatically disabled by a render adaptor."
+			case ( False, False ) :
+				return f"{renderPass} has been disabled."
+			case ( False, True ) :
+				return f"{renderPass} has been automatically enabled by a render adaptor."
 
 		return ""
+
+	def __activeRenderPassIcon( self ) :
+
+		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( self.scriptNode(), createIfMissing = False )
+		if renderPassPlug is not None and renderPassPlug["value"] in self.getPlugs() :
+			# The plug is driving the main ScriptNode context, so use a nice
+			# "context yellow" icon to signify this.
+			return "activeRenderPass.png"
+		else :
+			# The plug is just any old plug, so use regular menu styling.
+			return "menuChecked.png"
 
 	def __renderPassIcon( self, renderPass, activeIndicator = False ) :
 
@@ -1173,32 +1656,52 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return None
 
 		if activeIndicator and renderPass == self.__currentRenderPass :
-			return "activeRenderPass.png"
-		elif renderPass not in self.__renderPasses.get( "all", [] ) :
+			return self.__activeRenderPassIcon()
+		elif renderPass not in self.__renderPasses :
 			return "warningSmall.png"
-		elif renderPass in self.__renderPasses.get( "enabled", [] ) :
-			return "renderPass.png"
-		elif renderPass in self.__renderPasses.get( "adaptorDisabled", [] ) :
-			return "adaptorDisabledRenderPass.png"
 		else :
-			return "disabledRenderPass.png"
+			match self.__renderPasses[renderPass] : # `enabled`, `adaptedEnabled`
+				case ( True, True ) :
+					return "renderPass.png"
+				case ( True, False ) :
+					return "adaptorDisabledRenderPass.png"
+				case ( False, False ) :
+					return "disabledRenderPass.png"
+				case ( False, True ) :
+					## \todo We don't have a different icon for this, but perhaps
+					# we should? One use case might be an adaptor that automatically
+					# adds variants of existing render passes.
+					return "renderPass.png"
 
 	def __updateMenuButton( self ) :
 
 		self.__menuButton.setText( self.__currentRenderPass or "None" )
 		self.__menuButton.setImage( self.__renderPassIcon( self.__currentRenderPass ) )
 
+	def __updateSettingsInput( self ) :
+
+		sceneMetadata = sole( Gaffer.Metadata.value( p, "renderPassPlugValueWidget:scene" ) for p in self.getPlugs() )
+		if sceneMetadata :
+			self.__focusChangedConnection = None
+			scenePlugs = [ p.node().descendant( sceneMetadata ) for p in self.getPlugs() ]
+			self.__settings["in"].setInput( next( p for p in scenePlugs if p is not None ) )
+		else :
+			self.__focusChangedConnection = self.scriptNode().focusChangedSignal().connect(
+				Gaffer.WeakMethod( self.__focusChanged ), scoped = True
+			)
+			self.__updateSettingsInputFromFocus()
+
 	def __focusChanged( self, scriptNode, node ) :
 
-		self.__updateSettingsInput()
+		self.__updateSettingsInputFromFocus()
 
-	def __updateSettingsInput( self ) :
+	def __updateSettingsInputFromFocus( self ) :
 
 		self.__settings["in"].setInput( self.__scenePlugFromFocus() )
 
 	def __scenePlugFromFocus( self ) :
 
-		focusNode = self.getPlug().node().scriptNode().getFocus()
+		focusNode = self.scriptNode().getFocus()
 
 		if focusNode is not None :
 			outputScene = next(
@@ -1213,7 +1716,8 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 				None
 			)
 			if outputImage is not None :
-				return GafferScene.SceneAlgo.sourceScene( outputImage )
+				with self.context() :
+					return GafferScene.SceneAlgo.sourceScene( outputImage )
 
 		return None
 

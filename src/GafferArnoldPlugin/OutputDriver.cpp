@@ -390,7 +390,7 @@ AI_EXPORT_LIB bool NodeLoader( int i, AtNodeLib *node )
 		node->output_type = AI_TYPE_NONE;
 		node->name = "ieDisplay";
 		node->methods = &nodeMethods;
-		sprintf( node->version, AI_VERSION );
+		snprintf( node->version, AI_MAXSIZE_VERSION, AI_VERSION );
 
 		return true;
 	}

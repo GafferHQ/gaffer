@@ -1,0 +1,23 @@
+#usda 1.0
+
+def ArnoldAlembic "ArnoldAlembic"
+{
+	asset arnold:filename = @cube.abc@
+	float arnold:frame = 1
+	float3[] extent = [(-0.1, -0.1, -0.1), (0.1, 0.1, 0.1)]
+}
+
+def ArnoldProceduralCustom "ArnoldProceduralCustom"
+{
+	string arnold:node_entry = "alembic"
+	asset arnold:filename = @cube.abc@
+	float arnold:frame = 1
+	float3[] extent = [(-0.2, -0.2, -0.2), (0.2, 0.2, 0.2)]
+}
+
+def ArnoldUsd "ArnoldUsd"
+{
+	asset arnold:filename = @cube.usda@
+	float arnold:frame = 1
+	float3[] extent = [(-0.3, -0.3, -0.3), (0.3, 0.3, 0.3)]
+}

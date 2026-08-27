@@ -73,10 +73,17 @@ const AtString g_numPointsArnoldString("num_points");
 const AtString g_orientationsArnoldString("orientations");
 const AtString g_orientedArnoldString("oriented");
 const AtString g_uvsArnoldString( "uvs" );
+const AtString g_wrapModeArnoldString( "wrap_mode" );
+const AtString g_pinnedArnoldString( "pinned" );
 
-ConstCurvesPrimitivePtr resampleCurves( const CurvesPrimitive *curves, const std::string &messageContext )
+ConstCurvesPrimitivePtr resampleVertexToVarying( const CurvesPrimitive *curves, const std::string &messageContext )
 {
-	if( curves->basis().standardBasis() == StandardCubicBasis::Linear )
+	if(
+		// For linear and pinned curves, Vertex and Varying both have the same
+		// `CurvesPrimitive::variableSize()`, so there is no need to resample
+		curves->basis().standardBasis() == StandardCubicBasis::Linear ||
+		CurvesAlgo::isPinned( curves )
+	)
 	{
 		return curves;
 	}
@@ -145,7 +152,7 @@ AtNode *convertCommon( const IECoreScene::CurvesPrimitive *curves, AtUniverse *u
 
 	AtNode *result = AiNode( universe, g_curvesArnoldString, AtString( nodeName.c_str() ), parentNode );
 
-	const std::vector<int> verticesPerCurve = curves->verticesPerCurve()->readable();
+	const std::vector<int> &verticesPerCurve = curves->verticesPerCurve()->readable();
 	AiNodeSetArray(
 		result,
 		g_numPointsArnoldString,
@@ -175,6 +182,28 @@ AtNode *convertCommon( const IECoreScene::CurvesPrimitive *curves, AtUniverse *u
 		// just accept the default
 	}
 
+	// Set wrap
+
+	switch( curves->wrap() )
+	{
+		case CurvesPrimitive::Wrap::Pinned :
+			if( CurvesAlgo::isPinned( curves ) )
+			{
+				AiNodeSetStr( result, g_wrapModeArnoldString, g_pinnedArnoldString );
+			}
+			// Pinning does not apply to this basis, but Arnold will error if
+			// we request it. The default `nonperiodic` is what we want anyway.
+			break;
+		case CurvesPrimitive::Wrap::Periodic :
+			// Arnold has an enum value for this, but hasn't implemented it, and
+			// errors if we use it. We prefer a warning to an error.
+			msg( IECore::Msg::Warning, messageContext, "Arnold does not implement periodic wrap. Using nonperiodic instead." );
+			break;
+		case CurvesPrimitive::Wrap::NonPeriodic :
+			// Arnold default. No need to set.
+			break;
+	}
+
 	// Add UVs and arbitrary user parameters
 
 	convertUVs( curves, result, messageContext );
@@ -186,45 +215,20 @@ AtNode *convertCommon( const IECoreScene::CurvesPrimitive *curves, AtUniverse *u
 
 }
 
-AtNode *convert( const IECoreScene::CurvesPrimitive *curves, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	// Arnold (and IECoreArnold::ShapeAlgo) does not support Vertex PrimitiveVariables for
-	// cubic CurvesPrimitives, so we resample the variables to Varying first.
-	ConstCurvesPrimitivePtr resampledCurves = ::resampleCurves( curves, messageContext );
-
-	AtNode *result = convertCommon( resampledCurves.get(), universe, nodeName, parentNode, messageContext );
-	ShapeAlgo::convertP( resampledCurves.get(), result, g_pointsArnoldString, messageContext );
-	ShapeAlgo::convertRadius( resampledCurves.get(), result, messageContext );
-
-	// Convert "N" to orientations
-
-	if( const V3fVectorData *n = resampledCurves.get()->variableData<V3fVectorData>( "N", PrimitiveVariable::Vertex ) )
-	{
-		AiNodeSetStr( result, g_modeArnoldString, g_orientedArnoldString );
-		AiNodeSetArray(
-			result,
-			g_orientationsArnoldString,
-			AiArrayConvert( n->readable().size(), 1, AI_TYPE_VECTOR, (void *)&( n->readable()[0] ) )
-		);
-	}
-
-	return result;
-}
-
-AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	// Arnold (and IECoreArnold::ShapeAlgo) does not support Vertex PrimitiveVariables for
-	// cubic CurvesPrimitives, so we resample the variables to Varying first.
-	std::vector<ConstCurvesPrimitivePtr> updatedSamples;
-	std::vector<const Primitive *> primitiveSamples;
+	// Arnold does not support Vertex PrimitiveVariables (see `ShapeAlgo::convertPrimitiveVariable()`),
+	// so we must resample unless Vertex and Varying have equivalent variable sizes.
+	IECoreScenePreview::Renderer::Samples<ConstCurvesPrimitivePtr> updatedSamples;
+	ShapeAlgo::PrimitiveSamples primitiveSamples;
 	// Also convert "N" to orientations
-	std::vector<const Data *> nSamples;
+	IECoreScenePreview::Renderer::Samples<const Data *> nSamples;
 	updatedSamples.reserve( samples.size() );
 	primitiveSamples.reserve( samples.size() );
 	nSamples.reserve( samples.size() );
 	for( const CurvesPrimitive *curves : samples )
 	{
-		ConstCurvesPrimitivePtr resampledCurves = ::resampleCurves( curves, messageContext );
+		ConstCurvesPrimitivePtr resampledCurves = ::resampleVertexToVarying( curves, messageContext );
 		updatedSamples.push_back( resampledCurves );
 		primitiveSamples.push_back( resampledCurves.get() );
 
@@ -236,7 +240,12 @@ AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &sample
 
 	AtNode *result = convertCommon( updatedSamples.front().get(), universe, nodeName, parentNode, messageContext );
 
-	ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString, messageContext );
+	if( !ShapeAlgo::convertP( primitiveSamples, result, g_pointsArnoldString, messageContext ) )
+	{
+		AiNodeDestroy( result );
+		return nullptr;
+	}
+
 	ShapeAlgo::convertRadius( primitiveSamples, result, messageContext );
 	if( nSamples.size() == samples.size() )
 	{
@@ -255,6 +264,6 @@ AtNode *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &sample
 	return result;
 }
 
-NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( ::convert, ::convert );
+NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( ::convert );
 
 } // namespace

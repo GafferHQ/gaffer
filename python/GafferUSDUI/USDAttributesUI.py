@@ -34,12 +34,8 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 import GafferUSD
-
-import pxr.Kind
 
 Gaffer.Metadata.registerNode(
 
@@ -51,65 +47,5 @@ Gaffer.Metadata.registerNode(
 	do not influence Gaffer's native behaviour in any way (in which
 	case they would belong on the StandardAttributes node).
 	""",
-
-	plugs = {
-
-		"attributes.purpose" : [
-
-			"description",
-			"""
-			Specifies the purpose of a location to be `default`, `render`,
-			`proxy` or `guide`. See the [USD documentation](https://graphics.pixar.com/usd/release/glossary.html#usdglossary-purpose)
-			for more details.
-
-			> Note : Gaffer doesn't assign any intrinsic meaning to USD's
-			> purpose. To control visibility using purpose, we recommend
-			> using an AttributeQuery and Expression to query `usd:purpose`
-			> and drive `StandardAttributes.visibility` appropriately.
-			>
-			> Also note that native proxy workflows can be built using
-			> Gaffer's contexts, such that proxy or render geometry can appear
-			> at the _same_ location in the scene hierarchy, depending on the
-			> value of a context variable. This has benefits when selecting
-			> and filtering objects.
-			""",
-
-		],
-
-		"attributes.purpose.value" : [
-
-			"preset:Default", "default",
-			"preset:Render", "render",
-			"preset:Proxy", "proxy",
-			"preset:Guide", "guide",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"attributes.kind" : [
-
-			"description",
-			"""
-			Specifies the kind of a location to be any of the values
-			from USD's kind registry. See the [USD documentation](https://graphics.pixar.com/usd/release/glossary.html#usdglossary-kind)
-			for more details.
-
-			> Note : Gaffer doesn't assign any intrinsic meaning to USD's
-			> kind.
-			""",
-
-		],
-
-		"attributes.kind.value" : [
-
-			"presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ),
-			"presetValues", IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ),
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-	}
 
 )

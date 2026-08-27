@@ -42,12 +42,12 @@ namespace GafferUSD
 enum TypeId
 {
 
-	USDLayerWriterTypeId = 110225,
-	USDAttributesTypeId = 110226,
-	USDShaderTypeId = 110227,
-	USDLightTypeId = 110228,
+	USDLayerWriterTypeId = 119100,
+	USDAttributesTypeId = 119101,
+	USDShaderTypeId = 119102,
+	USDLightTypeId = 119103,
 
-	LastTypeId = 110250,
+	LastTypeId = 119199
 
 };
 

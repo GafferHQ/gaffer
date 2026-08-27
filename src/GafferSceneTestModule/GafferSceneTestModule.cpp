@@ -39,6 +39,7 @@
 
 #include "GafferSceneTest/ContextSanitiser.h"
 #include "GafferSceneTest/CompoundObjectSource.h"
+#include "GafferSceneTest/GlobalsSanitiser.h"
 #include "GafferSceneTest/ScenePlugTest.h"
 #include "GafferSceneTest/TestLight.h"
 #include "GafferSceneTest/TestLightFilter.h"
@@ -65,11 +66,13 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 		.def( init<>() )
 	;
 
+	IECorePython::RefCountedClass<GlobalsSanitiser, Gaffer::Monitor>( "GlobalsSanitiser" )
+		.def( init<>() )
+	;
+
 	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
 	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>()
-		.def( "loadShader", &TestLight::loadShader )
-	;
+	GafferBindings::NodeClass<TestLight>();
 	GafferBindings::NodeClass<TestLightFilter>();
 
 	def( "traverseScene", &traverseSceneWrapper );

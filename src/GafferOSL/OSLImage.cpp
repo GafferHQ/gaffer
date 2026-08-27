@@ -209,7 +209,8 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		outputs.push_back( shadingPlug() );
 	}
 
-	if( input == shaderPlug() || input == shadingPlug() )
+
+	if( input == shaderPlug() || input == inPlug()->channelNamesPlug() )
 	{
 		// shaderPlug() is affected by all the children of channelsPlug due to connections
 		// made in updateChannels, so this implicitly catches any changes to the channelsPlug
@@ -288,14 +289,7 @@ void OSLImage::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *con
 
 		if( hasClosures )
 		{
-			const Box2i dataWindow = defaultedInPlug()->dataWindowPlug()->getValue();
-			if( !dataWindow.isEmpty() )
-			{
-				ImagePlug::ChannelDataScope channelDataScope( context );
-				Imath::V2i dataTileOrigin = ImagePlug::tileOrigin( dataWindow.min );
-				channelDataScope.setTileOrigin( &dataTileOrigin );
-				shadingPlug()->hash( h );
-			}
+			hashShadingWithoutChannelData( context, h );
 		}
 	}
 }
@@ -346,18 +340,10 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 		{
 			// If there are closures, then new names can be created during shading, and we have to actually
 			// run the shader
-			const Box2i dataWindow = defaultedInPlug()->dataWindowPlug()->getValue();
-			if( !dataWindow.isEmpty() )
+			ConstCompoundDataPtr shading = computeShadingWithoutChannelData( context );
+			for( CompoundDataMap::const_iterator it = shading->readable().begin(), eIt = shading->readable().end(); it != eIt; ++it )
 			{
-				ImagePlug::ChannelDataScope channelDataScope( context );
-				Imath::V2i dataTileOrigin = ImagePlug::tileOrigin( dataWindow.min );
-				channelDataScope.setTileOrigin( &dataTileOrigin );
-
-				ConstCompoundDataPtr shading = runTimeCast<const CompoundData>( shadingPlug()->getValue() );
-				for( CompoundDataMap::const_iterator it = shading->readable().begin(), eIt = shading->readable().end(); it != eIt; ++it )
-				{
-					result.insert( it->first );
-				}
+				result.insert( it->first );
 			}
 		}
 
@@ -647,6 +633,74 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get() );
 
 	// remove results that aren't suitable to become channels
+	for( CompoundDataMap::iterator it = result->writable().begin(); it != result->writable().end();  )
+	{
+		CompoundDataMap::iterator nextIt = it; nextIt++;
+		if( !runTimeCast<FloatVectorData>( it->second ) )
+		{
+			result->writable().erase( it );
+		}
+		it = nextIt;
+	}
+
+	return result;
+}
+
+void OSLImage::hashShadingWithoutChannelData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ConstShadingEnginePtr shadingEngine;
+	if( auto shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() ) )
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		shadingEngine = shader->shadingEngine();
+	}
+
+	if( !shadingEngine )
+	{
+		h = shadingPlug()->defaultValue()->hash();
+		return;
+	}
+
+	h.append( defaultedInPlug()->channelNamesHash() );
+
+	shadingEngine->hash( h );
+}
+
+IECore::ConstCompoundDataPtr OSLImage::computeShadingWithoutChannelData( const Gaffer::Context *context ) const
+{
+	ConstShadingEnginePtr shadingEngine;
+	if( auto shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() ) )
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		shadingEngine = shader->shadingEngine();
+	}
+
+	if( !shadingEngine )
+	{
+		return static_cast<const CompoundData *>( shadingPlug()->defaultValue() );
+	}
+
+	ConstStringVectorDataPtr channelNamesData = defaultedInPlug()->channelNames();
+
+	CompoundDataPtr shadingPoints = new CompoundData();
+
+	for( const auto &channelName : channelNamesData->readable() )
+	{
+		if( shadingEngine->needsAttribute( channelName ) )
+		{
+			shadingPoints->writable()[channelName] = new FloatVectorData( { 0.0f } );
+		}
+	}
+
+	shadingPoints->writable()["P"] = new V3fVectorData( { Imath::V3f( 0 ) } );
+	shadingPoints->writable()["u"] = new FloatVectorData( { 0.0f } );
+	shadingPoints->writable()["v"] = new FloatVectorData( { 0.0f } );
+
+
+	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get() );
+
+	// remove results that aren't suitable to become channels
+	// This is the main code that is copied with computeShading() - is it worth trying to share this?
 	for( CompoundDataMap::iterator it = result->writable().begin(); it != result->writable().end();  )
 	{
 		CompoundDataMap::iterator nextIt = it; nextIt++;

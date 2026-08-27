@@ -44,12 +44,13 @@
 #include "IECore/DataAlgo.h"
 #include "IECore/TypeTraits.h"
 
-#include <unordered_map>
-#include <numeric>
-
 #include "fmt/format.h"
 
 #include "tbb/parallel_for.h"
+
+#include <numeric>
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace IECoreScene;
 using namespace IECore;
@@ -103,6 +104,9 @@ constexpr bool supportsVectorTypedData()
 		std::is_same_v< T, IECore::SplinefColor3f > ||
 		std::is_same_v< T, IECore::SplinefColor4f > ||
 		std::is_same_v< T, IECore::Splinedd > ||
+		std::is_same_v< T, IECore::Rampff > ||
+		std::is_same_v< T, IECore::RampfColor3f > ||
+		std::is_same_v< T, IECore::RampfColor4f > ||
 		std::is_same_v< T, IECore::PathMatcher > ||
 		std::is_same_v< T, boost::posix_time::ptime>
 	);
@@ -790,7 +794,7 @@ public:
 	// This must be called after all calls to copyFromSource
 	void finalize()
 	{
-		result->setTopology( m_resultVerticesPerCurveData, result->basis(), result->periodic() );
+		result->setTopology( m_resultVerticesPerCurveData.get(), result->basis(), result->wrap() );
 	}
 
 	// Return an interpolation adequate to store data of either input interpolation
@@ -840,16 +844,16 @@ private:
 	{
 		const CurvesPrimitive *firstCurves = static_cast< const CurvesPrimitive * >( primitives[0].first );
 		CubicBasisf basis = firstCurves->basis();
-		bool periodic = firstCurves->periodic();
+		const CurvesPrimitive::Wrap wrap = firstCurves->wrap();
 
 		static const CubicBasisf invalidBasis( Imath::M44f( 0.0f ), 0 );
 
 		for( const auto & [prim, matrix] : primitives )
 		{
 			const CurvesPrimitive *curves = static_cast< const CurvesPrimitive * >( prim );
-			if( curves->periodic() != periodic )
+			if( curves->wrap() != wrap )
 			{
-				throw IECore::Exception( "Cannot merge periodic and non-periodic curves" );
+				throw IECore::Exception( "Cannot merge curves with mismatched wrap" );
 			}
 
 			if(
@@ -869,7 +873,7 @@ private:
 			basis = CubicBasisf::linear();
 		}
 
-		result->setTopology( result->verticesPerCurve(), basis, periodic );
+		result->setTopology( result->verticesPerCurve(), basis, wrap );
 	}
 
 	IntVectorDataPtr m_resultVerticesPerCurveData;
@@ -1364,6 +1368,7 @@ void PrimitiveAlgo::transformPrimitive(
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
+	std::unordered_set<const Data *> alreadyProcessedData;
 	for( const auto &[name, var] : primitive.variables )
 	{
 		Canceller::check( canceller );
@@ -1380,6 +1385,13 @@ void PrimitiveAlgo::transformPrimitive(
 			interp == GeometricData::Interpretation::Vector ||
 			interp == GeometricData::Interpretation::Normal
 		) )
+		{
+			continue;
+		}
+
+		// Multiple primitive variables can reference the same data,
+		// Make sure we only transform such data once.
+		if( !alreadyProcessedData.insert( var.data.get() ).second )
 		{
 			continue;
 		}

@@ -49,23 +49,21 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Converts objects to be used with the nodes in the
-	GafferScene module. Typically these objects would
-	come from a GafferCortex OpHolder node or ObjectReader
-	node.
+	GafferScene module.
 	""",
 
 	plugs = {
 
-		"object" : [
+		"object" : {
 
-			"description",
+			"description" :
 			"""
 			The object to be placed in the output scene.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
 	}
 

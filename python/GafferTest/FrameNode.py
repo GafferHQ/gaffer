@@ -66,4 +66,4 @@ class FrameNode( Gaffer.ComputeNode ) :
 
 		plug.setValue( context.getFrame() )
 
-IECore.registerRunTimeTyped( FrameNode, typeName = "GafferTest::FrameNode" )
+IECore.registerRunTimeTyped( FrameNode, "GafferTest::FrameNode" )

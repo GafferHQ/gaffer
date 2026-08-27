@@ -164,17 +164,7 @@ AttributeHistoryCache g_attributeHistoryCache(
 		assert( canceller == Context::current()->canceller() );
 		cost = 1;
 		SceneAlgo::History::ConstPtr attributesHistory = g_historyCache.get( key, canceller );
-		if( auto h = SceneAlgo::attributeHistory( attributesHistory.get(), key.attribute ) )
-		{
-			return h;
-		}
-		else
-		{
-			// The specific attribute doesn't exist. But we return the history for the
-			// whole CompoundObject so we get a chance to discover nodes that could
-			// _create_ the attribute.
-			return attributesHistory;
-		}
+		return SceneAlgo::attributeHistory( attributesHistory.get(), key.attribute, canceller );
 	},
 	// Max cost
 	1000,
@@ -208,6 +198,9 @@ Gaffer::ValuePlugPtr attributePlug( const Gaffer::CompoundDataPlug *parentPlug, 
 
 static InternedString g_lightMuteAttributeName( "light:mute" );
 static InternedString g_filteredLightsAttributeName( "filteredLights");
+static InternedString g_filteredLightsExclusionsAttributeName( "filteredLights:exclusions");
+
+IE_CORE_DEFINERUNTIMETYPED( AttributeInspector )
 
 AttributeInspector::AttributeInspector(
 	const GafferScene::ScenePlugPtr &scene,
@@ -215,17 +208,10 @@ AttributeInspector::AttributeInspector(
 	IECore::InternedString attribute,
 	const std::string &name,
 	const std::string &type
-) :
-Inspector( type, name == "" ? attribute.string() : name, editScope ),
-m_scene( scene ),
-m_attribute( attribute )
+)
+	:	Inspector( { scene->attributesPlug(), scene->globalsPlug() }, type, name == "" ? attribute.string() : name, editScope ),
+		m_scene( scene ), m_attribute( attribute )
 {
-	m_scene->node()->plugDirtiedSignal().connect(
-		boost::bind( &AttributeInspector::plugDirtied, this, ::_1 )
-	);
-
-	Metadata::plugValueChangedSignal().connect( boost::bind( &AttributeInspector::plugMetadataChanged, this, ::_3, ::_4 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &AttributeInspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
 }
 
 GafferScene::SceneAlgo::History::ConstPtr AttributeInspector::history() const
@@ -311,6 +297,10 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 		{
 			return lightFilter->filteredLightsPlug();
 		}
+		if( m_attribute == g_filteredLightsExclusionsAttributeName )
+		{
+			return lightFilter->filteredLightsExclusionsPlug();
+		}
 		return nullptr;
 	}
 
@@ -321,7 +311,7 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 
 	else if( auto attributes = runTimeCast<GafferScene::Attributes>( sceneNode ) )
 	{
-		if( !(attributes->filterPlug()->match( attributes->inPlug() ) & PathMatcher::ExactMatch ) )
+		if( attributes->globalPlug()->getValue() || !( attributes->filterPlug()->match( attributes->inPlug() ) & PathMatcher::ExactMatch ) )
 		{
 			return nullptr;
 		}
@@ -347,11 +337,12 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 
 	else if( auto attributeTweaks = runTimeCast<AttributeTweaks>( sceneNode ) )
 	{
-		if( !( attributeTweaks->filterPlug()->match( attributeTweaks->inPlug() ) & PathMatcher::ExactMatch ) )
+		if( attributeTweaks->globalPlug()->getValue() || !( attributeTweaks->filterPlug()->match( attributeTweaks->inPlug() ) & PathMatcher::ExactMatch ) )
 		{
 			return nullptr;
 		}
 
+		ConstCompoundObjectPtr attributes;
 		for( const auto &tweak : TweakPlug::Range( *attributeTweaks->tweaksPlug() ) )
 		{
 			if(
@@ -359,6 +350,24 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 				tweak->enabledPlug()->getValue()
 			)
 			{
+				if( tweak->modePlug()->getValue() == TweakPlug::CreateIfMissing )
+				{
+					if( !attributes )
+					{
+						ScenePlug::ScenePath currentPath( history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) );
+						attributes = attributeTweaks->localisePlug()->getValue() ?
+							attributeTweaks->inPlug()->fullAttributes( currentPath, /* withGlobalAttributes = */ true ) :
+							attributeTweaks->inPlug()->attributesPlug()->getValue();
+					}
+
+					if( attributes->members().count( m_attribute ) )
+					{
+						// This `CreateIfMissing` tweak has not modified the scene as the
+						// attribute already exists upstream.
+						continue;
+					}
+				}
+
 				return tweak;
 			}
 		}
@@ -367,7 +376,7 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure AttributeInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	InternedString attributeName = m_attribute;
 	if( auto attributeHistory = dynamic_cast<const SceneAlgo::AttributeHistory *>( history ) )
@@ -406,62 +415,47 @@ Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditS
 	}
 }
 
-void AttributeInspector::plugDirtied( Gaffer::Plug *plug )
+bool AttributeInspector::attributeExists( const bool inheritAttributes ) const
 {
-	if( plug == m_scene->attributesPlug() || plug == m_scene->globalsPlug() )
-	{
-		dirtiedSignal()( this );
-	}
-}
-
-void AttributeInspector::plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug )
-{
-	if( !plug )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-	nodeMetadataChanged( key, plug->node() );
-}
-
-void AttributeInspector::nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node )
-{
-	if( !node )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-
-	EditScope *scope = targetEditScope();
-	if( !scope )
-	{
-		return;
-	}
-
-	if(
-		MetadataAlgo::readOnlyAffectedByChange( scope, node, key ) ||
-		( MetadataAlgo::readOnlyAffectedByChange( key ) && scope->isAncestorOf( node ) )
-	)
-	{
-		// Might affect `EditScopeAlgo::attributeEditReadOnlyReason()`
-		// which we call in `editFunction()`.
-		/// \todo Can we ditch the signal processing and call `attributeEditReadOnlyReason()`
-		/// just-in-time from `editable()`? In the past that wasn't possible
-		/// because editability changed the appearance of the UI, but it isn't
-		/// doing that currently.
-		dirtiedSignal()( this );
-	}
-}
-
-bool AttributeInspector::attributeExists() const
-{
-
 	if( !m_scene->existsPlug()->getValue() )
 	{
 		return false;
 	}
 
 	ConstCompoundObjectPtr attributes = m_scene->attributesPlug()->getValue();
-	return attributes->member<Object>( m_attribute );
+	const Object *attr = attributes->member<Object>( m_attribute );
 
+	if( !inheritAttributes )
+	{
+		return attr;
+	}
+
+	if( attr )
+	{
+		return true;
+	}
+
+	const Context *c = Context::current();
+	ScenePlug::PathScope pathScope( c );
+
+	ScenePlug::ScenePath currentPath( c->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) );
+
+	// No need to check inheritance for immediate children of `/` as we
+	// don't allow attributes to be created at the root of the scene.
+	if( currentPath.size() > 1 )
+	{
+		currentPath.pop_back();  // We tested the original path above, start at the parent.
+		while( currentPath.size() )
+		{
+			pathScope.setPath( &currentPath );
+			IECore::ConstCompoundObjectPtr a = m_scene->attributesPlug()->getValue();
+			if( a->member<Object>( m_attribute ) )
+			{
+				return true;
+			}
+			currentPath.pop_back();
+		}
+	}
+
+	return false;
 }

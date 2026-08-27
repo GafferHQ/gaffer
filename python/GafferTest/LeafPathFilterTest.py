@@ -56,6 +56,3 @@ class LeafPathFilterTest( GafferTest.TestCase ) :
 
 		p.setFilter( Gaffer.LeafPathFilter() )
 		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/d" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

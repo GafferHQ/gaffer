@@ -56,42 +56,42 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"targetScene" : [
+		"targetScene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene containing the target location to which cameras are
 			pointed. If this is unconnected, the main input scene
 			is used instead.
 			""",
 
-		],
+		},
 
-		"target" : [
+		"target" : {
 
-			"description",
+			"description" :
 			"""
 			The scene location to which the cameras are pointed.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "targetScene in",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "targetScene in",
 
-		],
+		},
 
-		"ignoreMissingTarget" : [
+		"ignoreMissingTarget" : {
 
-			"description",
+			"description" :
 			"""
 			Causes the constraint to do nothing if the target location
 			doesn't exist in the scene, instead of erroring.
 			""",
-			"divider", True,
-		],
+			"divider" : True,
+		},
 
-		"boundMode" : [
+		"boundMode" : {
 
-			"description",
+			"description" :
 			"""
 			How the camera frustum is fit to the target. `Sphere` approximates the bounding
 			box of the target  with a sphere.  `Box` uses the actual bounding box, which
@@ -100,50 +100,50 @@ Gaffer.Metadata.registerNode(
 			turntable ).
 			""",
 
-			"preset:Box", "box",
-			"preset:Sphere", "sphere",
+			"preset:Box" : "box",
+			"preset:Sphere" : "sphere",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"padding" : [
+		"padding" : {
 
-			"description",
+			"description" :
 			"""
 			Add a border between the edge of the camera frustum and the target.
 			0.1 adds a 10% border.  Using negative padding moves the camera closer.
 			""",
-		],
+		},
 
-		"extendFarClip" : [
+		"extendFarClip" : {
 
-			"description",
+			"description" :
 			"""
 			If the target is larger than the current clipping planes, increase
 			the far clipping plane to enclose it.
 			""",
-			"divider", True,
-		],
+			"divider" : True,
+		},
 
-		"useTargetFrame" : [
+		"useTargetFrame" : {
 
-			"description",
+			"description" :
 			"""
 			Use a fixed frame to access the target at.  This can be used to produce a consistent
 			framing if the target has high-frequency animation you want to ignore.
 			""",
-		],
+		},
 
-		"targetFrame" : [
+		"targetFrame" : {
 
-			"description",
+			"description" :
 			"""
 			The frame used to access the target when `useTargetFrame` is set.
 			""",
 
-			"layout:activator", "useTargetFrame",
-		],
+			"layout:activator" : "useTargetFrame",
+		},
 	},
 
 )

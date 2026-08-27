@@ -75,8 +75,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.getPlugs() :
 			if result :
-				result += "\n"
-			result += "## Actions\n"
+				result += "\n\n"
+			result += "## Actions\n\n"
 			result += " - Cursor up/down or <kbd>Ctrl</kbd> + scroll wheel to increment/decrement\n"
 			result += " - Use `+`, `-`, `*`, `/` and `%` to perform simple maths\n"
 
@@ -173,9 +173,9 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setPlugValues( self, mergeGroup="" ) :
 
-		with Gaffer.UndoScope( self.scriptNode(), mergeGroup=mergeGroup ) :
+		with self._blockedUpdateFromValues() :
 
-			with self._blockedUpdateFromValues() :
+			with Gaffer.UndoScope( self.scriptNode(), mergeGroup=mergeGroup ) :
 
 				for plug in self.getPlugs() :
 
@@ -200,7 +200,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# they might not even emit `plugDirtiedSignal() if they happens to clamp to the same
 		# value as before. We block calls to `_updateFromValues()` while setting
 		# the value to avoid having to do the work twice if `plugDirtiedSignal()` _is_ emitted.
-		self._requestUpdateFromValues()
+		self._requestUpdateFromValues( lazy = False )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug, NumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntPlug, NumericPlugValueWidget )

@@ -67,51 +67,57 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"outputs" : [
+		"outputs" : {
 
-			"description",
+			"description" :
 			"""
 			The outputs defined by this node.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.OutputsUI.OutputsPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.OutputsUI.OutputsPlugValueWidget",
 
-		],
+		},
 
-		"outputs.*" : [
+		"outputs.*" : {
 
-			"plugValueWidget:type", "GafferSceneUI.OutputsUI.ChildPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.OutputsUI.ChildPlugValueWidget",
 
-		],
+		},
 
-		"outputs.*.parameters.quantize.value" : [
+		"outputs.*.parameters" : {
 
-			"description",
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
+
+		},
+
+		"outputs.*.parameters.quantize.value" : {
+
+			"description" :
 			"""
 			The bit depth of the image.
 			""",
 
-			"preset:8 bit", IECore.IntVectorData( [ 0, 255, 0, 255 ] ),
-			"preset:16 bit", IECore.IntVectorData( [ 0, 65535, 0, 65535 ] ),
-			"preset:Float", IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+			"preset:8 bit" : IECore.IntVectorData( [ 0, 255, 0, 255 ] ),
+			"preset:16 bit" : IECore.IntVectorData( [ 0, 65535, 0, 65535 ] ),
+			"preset:Float" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"outputs.*.fileName" : [
+		"outputs.*.fileName" : {
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:bookmarks", "image",
-			"path:leaf", True,
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:bookmarks" : "image",
+			"path:leaf" : True,
 
-		],
+		},
 
-		"outputs.*.active" : [
+		"outputs.*.active" : {
 
-			"boolPlugValueWidget:displayMode", "switch",
+			"boolPlugValueWidget:displayMode" : "switch",
 
-		],
+		},
 
 	}
 
@@ -261,7 +267,7 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.PlugWidget( self.getPlug()["fileName"] )
 				GafferUI.PlugWidget( self.getPlug()["type"] )
 				GafferUI.PlugWidget( self.getPlug()["data"] )
-				GafferUI.CompoundDataPlugValueWidget( self.getPlug()["parameters"] )
+				GafferUI.PlugValueWidget.create( self.getPlug()["parameters"] )
 				GafferUI.Divider( GafferUI.Divider.Orientation.Horizontal )
 
 		self.__detailsColumn.setVisible( visible )

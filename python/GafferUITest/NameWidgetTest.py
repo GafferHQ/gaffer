@@ -110,6 +110,3 @@ class NameWidgetTest( GafferUITest.TestCase ) :
 
 		noneWidget = GafferUI.NameWidget( graphComponent = None )
 		self.assertFalse( noneWidget.getEditable() )
-
-if __name__ == "__main__":
-	unittest.main()

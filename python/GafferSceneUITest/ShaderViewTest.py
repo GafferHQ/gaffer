@@ -204,7 +204,7 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 	def testCannotViewCatalogue( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"] = GafferScene.Catalogue()
 
 		view = GafferSceneUI.ShaderView( script )
 		self.assertFalse( view["in"].acceptsInput( script["catalogue"]["out"] ) )
@@ -285,6 +285,3 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( GafferUI.Gadget.idleSignal().numSlots(), numSlots + 1 )
 		del view
 		self.assertEqual( GafferUI.Gadget.idleSignal().numSlots(), numSlots )
-
-if __name__ == "__main__":
-	unittest.main()

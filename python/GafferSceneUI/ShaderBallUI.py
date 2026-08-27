@@ -50,27 +50,27 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shader" : [
+		"shader" : {
 
-			"description",
+			"description" :
 			"""
 			The shader to be rendered.
 			""",
 
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"resolution" : [
+		"resolution" : {
 
-			"description",
+			"description" :
 			"""
 			The resolution of the shader ball image, which
 			is always a square.
 			""",
 
-		],
+		},
 
 	}
 )

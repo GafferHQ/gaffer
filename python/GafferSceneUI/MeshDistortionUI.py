@@ -53,56 +53,56 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"position" : [
+		"position" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable which contains the deformed vertex
 			positions for the mesh.
 			""",
 
-		],
+		},
 
-		"referencePosition" : [
+		"referencePosition" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable which contains the undeformed vertex
 			positions for the mesh.
 			""",
 
-		],
+		},
 
-		"uvSet" : [
+		"uvSet" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable which contains the UV set used to
 			calculate UV distortion.
 			""",
 
-		],
+		},
 
-		"distortion" : [
+		"distortion" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable created to store the distortion
 			values. This will contain a float per vertex.
 			""",
 
-		],
+		},
 
-		"uvDistortion" : [
+		"uvDistortion" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable created to store the UV distortion
 			values. This will contain a V2f with separate distortion values for the
 			U and V directions.
 			""",
 
-		],
+		},
 
 	}
 

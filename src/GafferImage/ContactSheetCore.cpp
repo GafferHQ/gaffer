@@ -262,12 +262,12 @@ void ContactSheetCore::affects( const Gaffer::Plug *input, AffectedPlugsContaine
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
 
-	if( input == formatPlug() || input == tilesPlug() )
+	if( formatPlug()->isAncestorOf( input ) || input == tilesPlug() )
 	{
 		outputs.push_back( coveragePlug() );
 	}
 
-	if( input == tilesPlug() || input == tileVariablePlug() )
+	if( input == inPlug()->formatPlug() || input == tilesPlug() || input == tileVariablePlug() )
 	{
 		outputs.push_back( resampleMatrixPlug() );
 	}

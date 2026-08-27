@@ -52,54 +52,54 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"slope" : [
+		"slope" : {
 
-			"description",
+			"description" :
 			"""
 			Slope for the ASC CDL color correction formula.
 			""",
 
-		],
+		},
 
-		"offset" : [
+		"offset" : {
 
-			"description",
+			"description" :
 			"""
 			Offset for the ASC CDL color correction formula.
 			""",
 
-		],
+		},
 
-		"power" : [
+		"power" : {
 
-			"description",
+			"description" :
 			"""
 			Power for the ASC CDL color correction formula.
 			""",
 
-		],
+		},
 
-		"saturation" : [
+		"saturation" : {
 
-			"description",
+			"description" :
 			"""
 			Saturation from the v1.2 release of the ASC CDL color correction formula.
 			""",
 
-		],
+		},
 
-		"direction" : [
+		"direction" : {
 
-			"description",
+			"description" :
 			"""
 			The direction to perform the color transformation.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Forward", GafferImage.OpenColorIOTransform.Direction.Forward,
-			"preset:Inverse", GafferImage.OpenColorIOTransform.Direction.Inverse,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Forward" : GafferImage.OpenColorIOTransform.Direction.Forward,
+			"preset:Inverse" : GafferImage.OpenColorIOTransform.Direction.Inverse,
 
-		],
+		},
 
 	}
 

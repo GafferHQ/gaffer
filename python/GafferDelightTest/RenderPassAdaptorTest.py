@@ -75,6 +75,3 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 		shader = GafferOSL.OSLShader()
 		shader.loadShader( "Surface/Constant" )
 		return shader, shader["parameters"]["Cs"]
-
-if __name__ == "__main__":
-	unittest.main()

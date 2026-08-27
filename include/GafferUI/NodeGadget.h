@@ -64,6 +64,9 @@ class GAFFERUI_API NodeGadget : public Gadget
 		Gaffer::Node *node();
 		const Gaffer::Node *node() const;
 
+		/// Nodules and connections
+		/// =======================
+
 		/// Should be overridden by derived classes to return a nodule for
 		/// the plug if it has one, and 0 otherwise.
 		virtual Nodule *nodule( const Gaffer::Plug *plug );
@@ -83,12 +86,20 @@ class GAFFERUI_API NodeGadget : public Gadget
 		/// appropriate.
 		NoduleSignal &noduleRemovedSignal();
 
+		/// Registration and Creation
+		/// =========================
+
 		/// Creates a NodeGadget for the specified node. The type of
 		/// NodeGadget created can be controlled by registering a
 		/// "nodeGadget:type" metadata value for the node. Registering
 		/// "" suppresses creation of a NodeGadget, in which case
 		/// nullptr will be returned.
 		static NodeGadgetPtr create( Gaffer::NodePtr node );
+
+		using InstanceCreatedSignal = Gaffer::Signals::Signal<void ( NodeGadget * )>;
+		/// Signal emitted whenever a new NodeGadget is created. This provides
+		/// an opportunity for customisation.
+		static InstanceCreatedSignal &instanceCreatedSignal();
 
 		using NodeGadgetCreator = std::function<NodeGadgetPtr ( Gaffer::NodePtr )>;
 		/// Registers a named NodeGadget creator, optionally registering it as the default
@@ -133,5 +144,22 @@ class GAFFERUI_API NodeGadget : public Gadget
 };
 
 IE_CORE_DECLAREPTR( NodeGadget );
+
+/// Overload for the standard `intrusive_ptr_add_ref` defined in RefCounted.h.
+/// This allows us to emit `instanceCreatedSignal()` once the object is fully
+/// constructed and it is safe for slots (especially Python slots) to add
+/// additional references.
+///
+/// > Caution : This won't be called if you assign a new NodeGadget to
+/// > RefCountedPtr rather than NodeGadgetPtr. Don't do that!
+inline void intrusive_ptr_add_ref( NodeGadget *nodeGadget )
+{
+	const bool firstRef = nodeGadget->refCount() == 0;
+	nodeGadget->addRef();
+	if( firstRef )
+	{
+		NodeGadget::instanceCreatedSignal()( nodeGadget );
+	}
+}
 
 } // namespace GafferUI

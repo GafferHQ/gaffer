@@ -185,6 +185,3 @@ class PointsToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 			b4 = levelSetToMesh["out"].object( "/object" ).bound()
 
 		self.assertLess( b4.min().x, b3.min().x )
-
-if __name__ == "__main__":
-	unittest.main()

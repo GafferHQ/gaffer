@@ -40,6 +40,12 @@
 #include "boost/container/flat_set.hpp"
 #include "boost/noncopyable.hpp"
 
+#if __has_include( "tbb/version.h" )
+#include "tbb/version.h"
+#else
+#include "tbb/tbb_stddef.h"
+#endif
+
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
 
@@ -141,7 +147,11 @@ class TaskMutex : boost::noncopyable
 				/// work on behalf of `execute()` while waiting.
 				void acquire( TaskMutex &mutex, bool write = true, bool acceptWork = true )
 				{
+#if TBB_VERSION_MAJOR < 2021
 					tbb::internal::atomic_backoff backoff;
+#else
+					tbb::detail::atomic_backoff backoff;
+#endif
 					while( !acquireOr( mutex, write, [acceptWork]( bool workAvailable ){ return acceptWork; } ) )
 					{
 						backoff.pause();
@@ -188,12 +198,6 @@ class TaskMutex : boost::noncopyable
 					std::optional<tbb::task_group_status> status;
 					m_mutex->m_executionState->arena.execute(
 						[this, &fWrapper, &status] {
-							// Prior to TBB 2018 Update 3, `run_and_wait()` is buggy,
-							// causing calls to `wait()` on other threads to return
-							// immediately rather than do the work we want. Use
-							// `static_assert()` to ensure we never build with a buggy
-							// version.
-							static_assert( TBB_INTERFACE_VERSION >= 10003, "Minumum of TBB 2018 Update 3 required" );
 							status = m_mutex->m_executionState->taskGroup.run_and_wait( fWrapper );
 						}
 					);

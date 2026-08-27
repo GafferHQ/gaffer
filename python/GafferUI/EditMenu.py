@@ -55,7 +55,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
 	menuDefinition.append( prefix + "/Duplicate with Inputs", { "command" : duplicateWithInputs, "shortCut" : "Ctrl+D", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __mutableSelectionAvailable } )
-	menuDefinition.append( prefix + "/Rename", { "command" : rename, "shortCut" : "F2", "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Rename", { "command" : rename, "shortCut" : "F2", "active" : __renameAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
@@ -134,7 +134,12 @@ def redo( menu ) :
 def cut( menu ) :
 
 	s = scope( menu )
-	with Gaffer.UndoScope( s.script ) :
+	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Error Occurred During Cut",
+		closeLabel = "OK",
+		parentWindow = s.scriptWindow
+	)
+	with Gaffer.UndoScope( s.script ), errorHandler :
 		s.script.cut( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Copy menu item. It must
@@ -142,7 +147,13 @@ def cut( menu ) :
 def copy( menu ) :
 
 	s = scope( menu )
-	s.script.copy( s.parent, s.script.selection() )
+
+	with GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Error Occurred During Copy",
+		closeLabel = "OK",
+		parentWindow = s.scriptWindow
+	) :
+		s.script.copy( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Paste menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -282,7 +293,7 @@ def rename( menu ) :
 	# user entering an invalid name.
 	# \todo : This could be improved with some combination of a public validator
 	# API, sanitising node names in `GraphComponent::setName` and relaxing
-	# `GraphComponent` name contraints.
+	# `GraphComponent` name constraints.
 	from GafferUI.NameWidget import _Validator
 	textWidget = d._getWidget()._qtWidget()
 	textWidget.setValidator( _Validator( textWidget ) )
@@ -432,6 +443,14 @@ def __pasteAvailable( menu ) :
 
 	root = s.script.ancestor( Gaffer.ApplicationRoot )
 	return isinstance( root.getClipboardContents(), IECore.StringData )
+
+def __renameAvailable( menu ) :
+
+	selection = scope( menu ).script.selection()
+	if not selection.size() :
+		return False
+
+	return not any( Gaffer.MetadataAlgo.readOnly( n ) for n in selection )
 
 def __arrangeAvailable( menu ) :
 

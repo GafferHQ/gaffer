@@ -148,7 +148,12 @@ IECore::ConstObjectPtr MeshNormals::computeProcessedObject( const ScenePath &pat
 		return inputObject;
 	}
 
-	std::string normal = normalPlug()->getValue();
+	const std::string normal = normalPlug()->getValue();
+	if( normal.empty() )
+	{
+		return inputObject;
+	}
+
 	PrimitiveVariable::Interpolation interpolation = (PrimitiveVariable::Interpolation) interpolationPlug()->getValue();
 	MeshAlgo::NormalWeighting weighting = (MeshAlgo::NormalWeighting) weightingPlug()->getValue();
 	float thresholdAngle = thresholdAnglePlug()->getValue();

@@ -53,6 +53,7 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 		light = GafferUSD.USDLight()
 		for name in ( "DistantLight", "DiskLight", "DomeLight", "RectLight", "SphereLight", "CylinderLight" ) :
 			light.loadShader( name )
+			self.assertIn( "light", light["out"].attributes( "/light") )
 			for name, defaultValue in {
 				"intensity" : 1.0 if name != "DistantLight" else 50000.0,
 				"exposure" : 0.0,
@@ -213,6 +214,3 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( light["parameters"]["texture:format"], Gaffer.StringPlug )
 		self.assertEqual( light["parameters"]["texture:format"].defaultValue(), "automatic" )
 		self.assertTrue( light["parameters"]["texture:format"].isSetToDefault() )
-
-if __name__ == "__main__":
-	unittest.main()

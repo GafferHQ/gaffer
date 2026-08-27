@@ -95,6 +95,8 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 			self.assertEqual( Gaffer.Metadata.value( node["out"], "description" ), "The output" )
 			self.assertEqual( Gaffer.Metadata.value( node["in"], "test" ), 1 )
 
+			self.assertTrue( Gaffer.MetadataAlgo.readOnly( node["__add"] ) )
+
 		assertExpectedMetadata( script["node"] )
 
 		# Copy/paste and test
@@ -113,7 +115,7 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 		box["v2i"] = Gaffer.V2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		box["v3i"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		box["color4f"] = Gaffer.Color4fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		box["spline"] = Gaffer.SplinefColor3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["ramp"] = Gaffer.RampfColor3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		Gaffer.ExtensionAlgo.exportExtension( "PlugTypesExtension", [ box ], self.temporaryDirectory() )
 		sys.path.append( str( self.temporaryDirectory() / "python" ) )
@@ -155,5 +157,35 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( script["node1"].keys(), script["node"].keys() )
 		self.assertEqual( script["node1"]["out"].getValue(), 3 )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testDependencyNodeMethods( self ) :
+
+		box = Gaffer.Box( "TestDependencyNode" )
+
+		box["__add"] = GafferTest.AddNode()
+
+		box["__in"] = Gaffer.BoxIn()
+		box["__in"].setup( box["__add"]["op1"] )
+		box["__add"]["op1"].setInput( box["__in"]["out"] )
+
+		box["__out"] = Gaffer.BoxOut()
+		box["__out"].setup( box["__add"]["sum"] )
+		box["__out"]["in"].setInput( box["__add"]["sum"] )
+		box["__out"]["passThrough"].setInput( box["__in"]["out"] )
+
+		def assertPassThrough( node ) :
+
+			self.assertIsNotNone( node.enabledPlug() )
+			self.assertTrue( node.enabledPlug().isSame( node["enabled"] ) )
+			self.assertTrue( node.correspondingInput( node["out"] ).isSame( node["in"] ) )
+
+		assertPassThrough( box )
+
+		Gaffer.ExtensionAlgo.exportExtension( "TestDependencyNodeExtension", [ box ], self.temporaryDirectory() )
+		sys.path.append( str( self.temporaryDirectory() / "python" ) )
+		import TestDependencyNodeExtension
+
+		node = TestDependencyNodeExtension.TestDependencyNode()
+		self.assertIsInstance( node, Gaffer.DependencyNode )
+		self.assertFalse( isinstance( node, Gaffer.SubGraph ) )
+
+		assertPassThrough( node )

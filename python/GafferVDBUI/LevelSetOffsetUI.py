@@ -34,25 +34,34 @@
 #
 ##########################################################################
 
-import GafferUI
+import Gaffer
 import GafferVDB
 
-GafferUI.Metadata.registerNode(
+Gaffer.Metadata.registerNode(
+
 	GafferVDB.LevelSetOffset,
-	'description',
+	"description",
 	"""Erodes or dilates a level set VDB.""",
-	plugs={
-		'grid' : [
-			'description',
+
+	plugs = {
+
+		"grid" : {
+
+			"description" :
 			"""
 			Name of the level set grid to offset in the VDB object.
 			"""
-		],
-		'offset' : [
-			'description',
+
+		},
+
+		"offset" : {
+
+			"description" :
 			"""
 			Amount to offset the level set by in voxel units. A positive number will erode the surface and negative will dilate.
 			"""
-		],
+
+		},
+
 	}
 )

@@ -16,7 +16,7 @@ Unlike spreadsheet tools found in other applications, the Gaffer spreadsheet isn
     **Figure 1.** The Node Editor acts as the Spreadsheet node's editable interface.
 ```
 
-A spreadsheet is most useful when you need to map different plug values to [Context Variable](../Contexts/index.md#context-variables) values. It can save you from having to fork a network multiple times with the same type of node with varying values, or from scripting large numbers of Context-conditional statements in one or more Expression nodes.
+A spreadsheet is most useful when you need to map different plug values to [Context Variable](../Contexts/index.html#context-variables) values. It can save you from having to fork a network multiple times with the same type of node with varying values, or from scripting large numbers of Context-conditional statements in one or more Expression nodes.
 
 In production environments, spreadsheets are particularly effective at managing multi-render and multi-shot graphs while keeping them simple and easy to maintain. In a multi-shot rendering graph, a common temptation is to branch the graph, with separate render options nodes for each shot. But to save space and complexity, you could instead use a single branch and vary the node with a Spreadsheet node.
 
@@ -233,7 +233,7 @@ To drive a PathFilter node's paths with a Spreadsheet node:
 
 1. Select the PathFilter node.
 2. In the Node Editor, click ![](images/gear.png "the gear button"), then select _Create Spreadsheet…_ or select an existing Spreadsheet from the _Connect to Spreadsheet_  sub-menu. The spreadsheet's Selector plug will be filled with `${scene:path}`.
-3. In the spreadsheet interface, click ![](images/plus.png "the plus button") to add a row, then insert the location's path into the pattern. This also adds thethis pattern to the PathFilter’s paths list, since as they are connected.
+3. In the spreadsheet interface, click ![](images/plus.png "the plus button") to add a row, then insert the location's path into the pattern. This also adds the pattern to the PathFilter’s paths list, as they are connected.
 4. Repeat step 3 for each location you wish to affect.
 
 From here on, you will only be able to add paths to the filter by adding rows to the spreadsheet. If necessary, you can edit the patterns to include wildcards to match against multiple similar paths or children of this location.

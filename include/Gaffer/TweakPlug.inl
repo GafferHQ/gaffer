@@ -108,13 +108,14 @@ bool TweakPlug::applyTweak(
 		if(
 			mode == Gaffer::TweakPlug::ListAppend ||
 			mode == Gaffer::TweakPlug::ListPrepend ||
-			mode == Gaffer::TweakPlug::CreateIfMissing
+			mode == Gaffer::TweakPlug::CreateIfMissing ||
+			mode == Gaffer::TweakPlug::SetExpressionInclude
 		)
 		{
 			setDataFunctor( name, tweakData );
 			return true;
 		}
-		else if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore || mode == Gaffer::TweakPlug::ListRemove )
+		else if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore || mode == Gaffer::TweakPlug::ListRemove || mode == Gaffer::TweakPlug::SetExpressionExclude )
 		{
 			return false;
 		}

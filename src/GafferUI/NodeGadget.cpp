@@ -138,6 +138,12 @@ NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 	return nullptr;
 }
 
+NodeGadget::InstanceCreatedSignal &NodeGadget::instanceCreatedSignal()
+{
+	static InstanceCreatedSignal g_signal;
+	return g_signal;
+}
+
 void NodeGadget::registerNodeGadget( const std::string &nodeGadgetType, NodeGadgetCreator creator, IECore::TypeId nodeType )
 {
 	typeCreators()[nodeGadgetType] = creator;

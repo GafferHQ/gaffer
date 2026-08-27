@@ -34,17 +34,11 @@
 #
 ##########################################################################
 
-import imath
 import functools
-import collections
-
-import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
 
 ##########################################################################
 # Internal utilities
@@ -93,7 +87,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			self.getPlugs(),
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		nameWidget.setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__row.append(
 			nameWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -103,7 +97,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["exists"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		existsLabelWidget.label()._qtWidget().setFixedWidth( 40 )
+		existsLabelWidget.setFixedWidth( 40 )
 		self.__row.append(
 			existsLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -118,7 +112,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["value"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		valueLabelWidget.label()._qtWidget().setFixedWidth( 40 )
+		valueLabelWidget.setFixedWidth( 40 )
 		self.__row.append(
 			valueLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -165,18 +159,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query the options from.
 			""",
 
-		],
+		},
 
-		"queries" : [
+		"queries" : {
 
-			"description",
+			"description" :
 			"""
 			The options to be queried - arbitrary numbers of options may be added
 			as children of this plug via the user interface, or via python. Each
@@ -185,101 +179,104 @@ Gaffer.Metadata.registerNode(
 			not be retrieved.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.OptionQueryUI._OptionQueryFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.OptionQueryUI._OptionQueryFooter",
+			"layout:customWidget:footer:index" : -1,
+			"layout:customWidget:addButton:index" : -1,
+			"plugCreationWidget:action" : "addQuery",
+			"ui:scene:acceptsOptions" : True,
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"queries.*" : [
+		"queries.*" : {
 
-			"description",
+			"description" :
 			"""
 			A pair of option name to query and default value.
 			""",
 
-		],
+		},
 
-		"queries.*.name" : [
+		"queries.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the option to query.
 			""",
 
-		],
+		},
 
-		"queries.*.value" : [
+		"queries.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			The value to output if the option does not exist.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.4,
-			"noduleLayout:customGadget:addButton:gadgetType", "",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.4,
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description",
+			"description" :
 			"""
 			The result of the query.
 			""",
 
-			"label", functools.partial( __getLabel, parentPlug = ""),
+			"label" : functools.partial( __getLabel, parentPlug = ""),
 
-			"plugValueWidget:type", "GafferSceneUI.OptionQueryUI._OutputWidget",
+			"plugValueWidget:type" : "GafferSceneUI.OptionQueryUI._OutputWidget",
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 
-		],
+		},
 
-		"out.*.exists" : [
+		"out.*.exists" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs true if the option exists, otherwise false.
 			""",
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "exists" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
-		],
+		},
 
-		"out.*.value" : [
+		"out.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the value of the option, or the default value if the option
 			does not exist.
 			""",
 
-		],
+		},
 
-		"out.*.value..." : [
+		"out.*.value..." : {
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "values" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "values" ),
 
-		],
+		},
 
 	}
 )
@@ -288,124 +285,17 @@ Gaffer.Metadata.registerNode(
 # _OutputQueryFooter
 ##########################################################################
 
-class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
+## \todo Maybe we can move the metadata signalling elsewhere and
+# remove this widget?
+class _OptionQueryFooter( GafferUI.PlugCreationWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, queriesPlug, **kw ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		GafferUI.PlugCreationWidget.__init__( self, queriesPlug, **kw )
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
-
-		with row :
-
-			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-			self.__menuButton = GafferUI.MenuButton(
-				image = "plus.png",
-				hasFrame = False,
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-			)
-
-			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand": True } )
-
-		plug.node().plugSetSignal().connect(
+		queriesPlug.node().plugSetSignal().connect(
 			Gaffer.WeakMethod( self.__updateQueryMetadata )
 		)
-
-	def _updateFromEditable( self ) :
-
-		self.__menuButton.setEnabled( self._editable() )
-
-	def __menuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		result.append(
-			"/From Scene",
-			{
-				"subMenu" : Gaffer.WeakMethod( self.__addFromGlobalsMenuDefinition )
-			}
-		)
-
-		result.append( "/FromPathsDivider", { "divider" : True } )
-
-		for label, plugCreator in [
-			( "Bool", Gaffer.BoolPlug ),
-			( "Float", Gaffer.FloatPlug ),
-			( "Int", Gaffer.IntPlug ),
-			( "NumericDivider", None ),
-			( "String", Gaffer.StringPlug ),
-			( "StringDivider", None ),
-			( "V2i", Gaffer.V2iPlug ),
-			( "V3i", Gaffer.V3iPlug ),
-			( "V2f", Gaffer.V2fPlug ),
-			( "V3f", Gaffer.V3fPlug ),
-			( "VectorDivider", None ),
-			( "Color3f", Gaffer.Color3fPlug ),
-			( "Color4f", Gaffer.Color4fPlug ),
-			( "ObjectDivider", None ),
-			( "Object", functools.partial( Gaffer.ObjectPlug, defaultValue = IECore.NullObject.defaultNullObject() ) ),
-		] :
-			if plugCreator is None :
-				result.append( f"/{label}", { "divider": True } )
-			else :
-				result.append(
-					f"/{label}",
-					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", plugCreator ),
-					}
-				)
-
-		return result
-
-	def __addFromGlobalsMenuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		node = self.getPlug().node()
-		assert( isinstance( node, GafferScene.OptionQuery ) )
-
-		with self.context() :
-			options = node["scene"]["globals"].getValue()
-			existingQueries = { query["name"].getValue() for query in node["queries"] }
-
-		prefix = "option:"
-
-		for name, value in [ ( k[len( prefix ):], v ) for k, v in options.items() if k.startswith( prefix ) ] :
-			result.append(
-				"/{}".format( name ),
-				{
-					"command" : functools.partial(
-						Gaffer.WeakMethod( self.__addQuery ), name, value
-					),
-					"active" : name not in existingQueries
-				}
-			)
-
-		if not len( result.items() ) :
-			result.append(
-				"/No Options Found", { "active" : False }
-			)
-			return result
-
-		return result
-
-	def __addQuery( self, optionName, plugCreatorOrValue ) :
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-
-			node = self.getPlug().node()
-
-			if isinstance( plugCreatorOrValue, IECore.Data ) :
-				prototypePlug = Gaffer.PlugAlgo.createPlugFromData(
-					"valuePrototype",
-					Gaffer.Plug.Direction.In,
-					Gaffer.Plug.Flags.Default,
-					plugCreatorOrValue
-				)
-				node.addQuery( prototypePlug, optionName )
-			else:
-				node.addQuery( plugCreatorOrValue(), optionName )
 
 	def __updateQueryMetadata( self, plug ) :
 

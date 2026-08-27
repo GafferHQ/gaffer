@@ -36,6 +36,7 @@ from __future__ import with_statement
 
 import os
 import pathlib
+import sys
 import unittest
 import ctypes
 import subprocess
@@ -85,7 +86,7 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 			try :
 				subprocess.check_output(
-					[ "gaffer", "test", "IECoreArnoldTest.UniverseBlockTest.testMetadataLoading" ],
+					[ "gaffer" if os.name != "nt" else "gaffer.cmd", "test", "IECoreArnoldTest.UniverseBlockTest.testMetadataLoading" ],
 					env = env, stderr = subprocess.STDOUT
 				)
 			except subprocess.CalledProcessError as e :
@@ -99,7 +100,7 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 				e = arnold.AiNodeEntryLookUp( "options" )
 
-				s = arnold.AtStringReturn()
+				s = arnold.AtStringStruct()
 				i = ctypes.c_int()
 
 				arnold.AiMetaDataGetStr( e, "", "cortex.testString", s )
@@ -114,6 +115,8 @@ class UniverseBlockTest( unittest.TestCase ) :
 				arnold.AiMetaDataGetInt( e, "AA_samples", "cortex.testInt", i )
 				self.assertEqual( i.value, 12 )
 
+	@unittest.skipIf( os.name == "nt", "Kick not currently working on Windows.")
+	@unittest.skipIf( sys.platform == "darwin", "Kick not currently working on macOS." )
 	def testKickNodes( self ) :
 
 		# Running `kick -nodes` will load any plugins that might link to
@@ -126,6 +129,3 @@ class UniverseBlockTest( unittest.TestCase ) :
 		self.assertNotIn( "is already installed", output )
 		self.assertNotIn( "Node entry does not exist", output )
 		self.assertIn( "ieDisplay", output )
-
-if __name__ == "__main__":
-	unittest.main()

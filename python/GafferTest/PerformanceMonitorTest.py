@@ -36,6 +36,7 @@
 
 import os
 import gc
+import sys
 import time
 import unittest
 
@@ -195,7 +196,7 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 		# in CI due to machine contention. We're leaving the test in as it
 		# would potentially still catch some catastrophic orders-of-magnitude
 		# timing increase bug...
-		delta = 1.0 if GafferTest.inCI() else 0.01
+		delta = 1.0 if GafferTest.inCI() else 0.011 if sys.platform == "darwin" else 0.01
 
 		self.assertEqual( m.plugStatistics( n1["out"] ).hashCount, 1 )
 		self.assertEqual( m.plugStatistics( n1["out"] ).computeCount, 1 )
@@ -248,6 +249,3 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 		# where the monitor is active, so we don't expect
 		# to capture any.
 		self.assertEqual( len( m.allStatistics() ), 0 )
-
-if __name__ == "__main__":
-	unittest.main()

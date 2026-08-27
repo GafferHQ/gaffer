@@ -33,9 +33,9 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+
 import Gaffer
 import GafferImage
-import IECore
 
 Gaffer.Metadata.registerNode(
 
@@ -61,11 +61,11 @@ Gaffer.Metadata.registerNode(
 	See opencolorio.org for look configuration customization examples.
 	""",
 
-	plugs={
+	plugs = {
 
-		"look": [
+		"look" : {
 
-			"description",
+			"description" :
 			"""
 			Look Syntax:
 
@@ -76,24 +76,24 @@ Gaffer.Metadata.registerNode(
 			Missing look 'fallbacks' specified with |: 'neutral, -primary | -primary'
 			""",
 
-			"layout:index", 0,
+			"layout:index" : 0,
 
-		],
+		},
 
-		"direction": [
+		"direction" : {
 
-			"description", "Specify the look transform direction",
+			"description" : "Specify the look transform direction",
 
-			"preset:Forward", GafferImage.OpenColorIOTransform.Direction.Forward,
-			"preset:Inverse", GafferImage.OpenColorIOTransform.Direction.Inverse,
+			"preset:Forward" : GafferImage.OpenColorIOTransform.Direction.Forward,
+			"preset:Inverse" : GafferImage.OpenColorIOTransform.Direction.Inverse,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-			"layout:index", 1,
+			"layout:index" : 1,
 
-		]
+		}
 
 	}
 

@@ -78,7 +78,7 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 		command = self["command"].getValue()
 		command = command.format( **substitutions )
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		environmentVariables = IECore.CompoundData()
 		self["environmentVariables"].fillCompoundData( environmentVariables )
 		for name, value in environmentVariables.items() :
@@ -90,4 +90,6 @@ class SystemCommand( GafferDispatch.TaskNode ) :
 
 		subprocess.check_call( command, shell = useShell, env = env )
 
-IECore.registerRunTimeTyped( SystemCommand, typeName = "GafferDispatch::SystemCommand" )
+IECore.registerRunTimeTyped( SystemCommand, "GafferDispatch::SystemCommand" )
+
+Gaffer.Metadata.registerValue( SystemCommand, "dispatcher:allowIsolation", True )

@@ -101,6 +101,7 @@ class TestRunner( unittest.TextTestRunner ) :
 		def __call__( self, method ) :
 
 			method = TestRunner.CategorisedTestMethod.__call__( self, method )
+			method._isPerformanceTestMethod = True
 
 			@functools.wraps( method )
 			def wrapper( *args, **kw ) :
@@ -130,6 +131,16 @@ class TestRunner( unittest.TextTestRunner ) :
 				return result
 
 			return wrapper
+
+		# Returns True if `method` has been decorated with
+		# PerformanceTestMethod.
+		@staticmethod
+		def isDecorated( method ) :
+
+			while method is not None :
+				if getattr( method, "_isPerformanceTestMethod", False ) :
+					return True
+				method = getattr( method, "__wrapped__", None )
 
 	# Context manager used to time only specific blocks
 	# within a PerformanceTestMethod.

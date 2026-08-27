@@ -45,7 +45,7 @@
 #include "GafferUI/Style.h"
 
 #include "boost/bind/bind.hpp"
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
@@ -66,7 +66,7 @@ using SelectModeMap = boost::multi_index::multi_index_container<
 	NamedSelectMode,
 	boost::multi_index::indexed_by<
 		boost::multi_index::ordered_unique<
-			boost::multi_index::member<NamedSelectMode, std::string, &NamedSelectMode::first>
+			boost::multi_index::key<&NamedSelectMode::first>
 		>,
 		boost::multi_index::sequenced<>
 	>

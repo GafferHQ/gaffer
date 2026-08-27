@@ -76,6 +76,15 @@ class GAFFERVDB_API SphereLevelSet : public GafferScene::ObjectSource
 
 	protected :
 
+		// The ObjectSource base class does implement these bound methods for
+		// us, but only by computing the source object and taking its bound.
+		// Since that can be expensive for a high resolution voxel grid, we
+		// reimplement to provide an efficient version.
+		/// \todo Should the base class provide some facility for making this
+		/// easier, so we don't need to account for the transform?
+		void hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		Imath::Box3f computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const override;
+
 		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
 

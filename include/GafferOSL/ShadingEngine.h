@@ -37,6 +37,7 @@
 #include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
 
+#include "IECoreScene/Primitive.h"
 #include "IECoreScene/ShaderNetwork.h"
 
 #include "IECore/CompoundData.h"
@@ -53,10 +54,19 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( ShadingEngine )
 
-		explicit ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork );
+		enum class TextureOrigin
+		{
+			// 0 at the bottom, 1 at the top. Gaffer's standard coordinate system.
+			Bottom,
+			// 0 at the top, 1 at the bottom. For emulating renderers with upside
+			// down textures.
+			Top
+		};
+
+		explicit ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork, TextureOrigin textureOrigin = TextureOrigin::Bottom );
 
 		// Fast version that takes ownership of network instead of copying
-		ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork );
+		ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork, TextureOrigin textureOrigin = TextureOrigin::Bottom );
 
 		~ShadingEngine() override;
 
@@ -83,10 +93,12 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		};
 
 		using Transforms = std::map<IECore::InternedString, Transform>;
+		using PointClouds = std::map<IECore::InternedString, IECoreScene::ConstPrimitivePtr>;
 
 		/// Append a unique hash representing this shading engine to `h`.
 		void hash( IECore::MurmurHash &h ) const;
 		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
+		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms, const PointClouds &pointClouds ) const;
 
 		bool needsAttribute( const std::string &name ) const;
 		bool hasDeformation() const;
@@ -95,6 +107,7 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		void queryShaderGroup();
 
+		const TextureOrigin m_textureOrigin;
 		const IECore::MurmurHash m_hash;
 
 		bool m_timeNeeded;

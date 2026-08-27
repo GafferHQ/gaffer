@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import types
 import unittest
 import weakref
 
@@ -108,13 +109,13 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : a" )
 
 		g.graphGadget().setRoot( b2 )
-		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : a / b" )
+		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : b" )
 
 		b1.setName( "c" )
-		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : c / b" )
+		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : b" )
 
 		b2.setName( "d" )
-		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : c / d" )
+		self.assertEqual( self.__signalUpdatedTitle, "Graph Editor : d" )
 
 		g.setTitle( "This is a test!" )
 		self.assertEqual( self.__signalUpdatedTitle, "This is a test!" )
@@ -195,5 +196,19 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( e.graphGadget().getRoot(), s )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testPlugContextMenuSignal( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		graphEditor1 = GafferUI.GraphEditor( script )
+		graphEditor2 = GafferUI.GraphEditor( script )
+
+		self.assertIsNot( graphEditor1.plugContextMenuSignal(), graphEditor2.plugContextMenuSignal() )
+		self.assertIsNot( GafferUI.GraphEditor.plugContextMenuSignal(), graphEditor1.plugContextMenuSignal() )
+		self.assertIsNot( GafferUI.GraphEditor.plugContextMenuSignal(), graphEditor2.plugContextMenuSignal() )
+
+		self.assertIs( graphEditor1.plugContextMenuSignal(), graphEditor1.plugContextMenuSignal() )
+		self.assertIs( graphEditor2.plugContextMenuSignal(), graphEditor2.plugContextMenuSignal() )
+
+		self.assertIsInstance( graphEditor1.plugContextMenuSignal, types.MethodType )
+		self.assertIsInstance( GafferUI.GraphEditor.plugContextMenuSignal, types.MethodType )

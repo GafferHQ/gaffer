@@ -37,5 +37,6 @@
 __import__( "GafferScene" )
 
 from ._GafferOSL import *
+from .FocalBlur import FocalBlur
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferOSL" )

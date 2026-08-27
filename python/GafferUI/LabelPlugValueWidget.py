@@ -37,6 +37,8 @@
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 from Qt import QtWidgets
 
 ## A simple PlugValueWidget which just displays the name of the plug,
@@ -47,6 +49,8 @@ from Qt import QtWidgets
 #  - "renameable"
 #  - "labelPlugValueWidget:showValueChangedIndicator" : If `False`, the indicator that the
 #  plug value has changed will not be shown. Defaults to `True` if not set.
+#  - "labelPlugValueWidget:icon" : An icon to display next to the plug label.
+#  - "labelPlugValueWidget:iconToolTip" : A toolTip to show for the icon.
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## \todo Remove alignment arguments. Vertically the only alignment that looks good is `Center`, and
@@ -87,6 +91,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__editableLabel = None # we'll make this lazily as needed
 
+		self.__iconWidget = None
+		self.__updateIcon()
+
 		# Connecting at front so we're called before the slots
 		# connected by the NameLabel class.
 		self.__label.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ) )
@@ -113,6 +120,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			else :
 				self.__editableLabel.setGraphComponent( None )
 
+		self.__updateIcon()
+
 		self.__updatePlugMetadataChangedConnections()
 		self.__updateDoubleClickConnection()
 
@@ -128,13 +137,19 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.getPlugs() :
 			if result :
-				result += "\n"
+				result += "\n\n"
 			result += "## Actions\n\n"
 			result += "- Left drag to connect\n"
 			if all( [ hasattr( p, "getValue" ) for p in self.getPlugs() ] ) :
 				result += "- Shift+left or middle drag to transfer value"
 
 		return result
+
+	def setFixedWidth( self, width ) :
+
+		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		self._qtWidget().setFixedWidth( width )
+		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred )
 
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
@@ -145,30 +160,38 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__setValueChanged( any( values ) )
 
+	## \todo This has a pretty high overhead for large plug hierarchies, such
+	# as those in Spreadsheets. It could probably benefit from being reimplemented
+	# in C++, which would mean reimplementing NodeAlgo's user-default mechanism
+	# in C++ too.
 	@staticmethod
 	def _hasUserValue( plug ) :
 
-		if plug.direction() == Gaffer.Plug.Direction.Out :
-			return False
+		def walk( plug, checkIsSetToDefault ) :
 
-		if plug.getInput() is not None :
-			return True
+			if plug.direction() == Gaffer.Plug.Direction.Out :
+				return False
 
-		if any(
-			p.getInput() is not None and p.direction() != Gaffer.Plug.Direction.Out
-			for p in Gaffer.Plug.RecursiveRange( plug )
-		) :
-			return True
+			if plug.getInput() is not None :
+				return True
 
-		if isinstance( plug, Gaffer.ValuePlug ) and Gaffer.NodeAlgo.hasUserDefault( plug ) :
-			return not Gaffer.NodeAlgo.isSetToUserDefault( plug )
+			if isinstance( plug, Gaffer.ValuePlug ) and Gaffer.NodeAlgo.hasUserDefault( plug ) :
+				if not Gaffer.NodeAlgo.isSetToUserDefault( plug ) :
+					return True
+				else :
+					# Plug is at the user-specified default value. We still
+					# need to check for connections to children, but don't
+					# want to check their values against the non-user default.
+					checkIsSetToDefault = False
 
-		if len( plug ) :
-			return any( LabelPlugValueWidget._hasUserValue( p ) for p in Gaffer.Plug.Range( plug ) )
-		elif isinstance( plug, Gaffer.ValuePlug ) :
-			return not plug.isSetToDefault()
-		else :
-			return False
+			if len( plug ) :
+				return any( walk( p, checkIsSetToDefault ) for p in Gaffer.Plug.Range( plug ) )
+			elif checkIsSetToDefault and isinstance( plug, Gaffer.ValuePlug ) :
+				return not plug.isSetToDefault()
+			else :
+				return False
+
+		return walk( plug, checkIsSetToDefault = True )
 
 	# Sets whether or not the label be rendered in a ValueChanged state.
 	def __setValueChanged( self, valueChanged ) :
@@ -287,6 +310,24 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# The NameLabel doesn't know that our formatter is sensitive
 			# to the metadata, so give it a little kick.
 			self.__label.setFormatter( self.__formatter )
+		elif key == "labelPlugValueWidget:icon" :
+			self.__updateIcon()
+		elif key == "labelPlugValueWidget:iconToolTip" :
+			self.__updateIcon()
+
+	def __updateIcon( self ) :
+
+		layout = self._qtWidget().layout()
+		if self.__iconWidget is not None :
+			self.__iconWidget._qtWidget().setParent( None )
+			self.__iconWidget = None
+
+		if ( icon := sole( Gaffer.Metadata.value( p, "labelPlugValueWidget:icon" ) for p in self.getPlugs() )  ) is not None :
+			self.__iconWidget = GafferUI.Image( icon )
+			toolTip = sole( Gaffer.Metadata.value( p, "labelPlugValueWidget:iconToolTip" ) for p in self.getPlugs() )
+			if toolTip is not None :
+				self.__iconWidget.setToolTip( toolTip )
+			layout.addWidget( self.__iconWidget._qtWidget() )
 
 	@staticmethod
 	def __formatter( graphComponents ) :

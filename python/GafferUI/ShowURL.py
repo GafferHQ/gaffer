@@ -36,10 +36,8 @@
 ##########################################################################
 
 import os
+import shutil
 import sys
-import distutils.spawn
-
-import GafferUI
 
 from Qt import QtCore
 from Qt import QtGui
@@ -50,7 +48,7 @@ def showURL( url ) :
 	if sys.platform == "darwin" :
 		opener = "open"
 	elif "linux" in sys.platform :
-		opener = distutils.spawn.find_executable( "xdg-open" )
+		opener = shutil.which( "xdg-open" )
 
 	if opener :
 		os.system( "{0} \"{1}\"".format( opener, url ) )

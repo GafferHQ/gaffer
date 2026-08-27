@@ -51,26 +51,23 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		grid = GafferUI.GridContainer( spacing = 4 )
 		GafferUI.PlugValueWidget.__init__( self, grid, plugs, **kw )
 
-		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
-		grid[0:2,0] = self.__menuButton
+		with grid.nextRow() :
+			self.__menuButton = GafferUI.MenuButton(
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+				parenting = { "index" : slice( 0, 2 ) },
+			)
 
-		self.__minLabel = GafferUI.Label( "Min" )
-		grid.addChild( self.__minLabel, index = ( 0, 1 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
+		with grid.nextRow() :
+			self.__minLabel = GafferUI.Label( "Min", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
+			self.__minWidget = GafferUI.CompoundNumericPlugValueWidget( plugs = [] )
 
-		self.__minWidget = GafferUI.CompoundNumericPlugValueWidget( plugs = [] )
-		grid[1,1] = self.__minWidget
+		with grid.nextRow() :
+			self.__maxLabel = GafferUI.Label( "Max", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
+			self.__maxWidget = GafferUI.CompoundNumericPlugValueWidget( plugs = [] )
 
-		self.__maxLabel = GafferUI.Label( "Max" )
-		grid.addChild( self.__maxLabel, index = ( 0, 2 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
-
-		self.__maxWidget = GafferUI.CompoundNumericPlugValueWidget( plugs = [] )
-		grid[1,2] = self.__maxWidget
-
-		self.__pixelAspectLabel = GafferUI.Label( "Pixel Aspect" )
-		grid.addChild( self.__pixelAspectLabel, index = ( 0, 3 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
-
-		self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plugs = [] )
-		grid[1,3] = self.__pixelAspectWidget
+		with grid.nextRow() :
+			self.__pixelAspectLabel = GafferUI.Label( "Pixel Aspect", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
+			self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plugs = [] )
 
 		self._addPopupMenu( self.__menuButton )
 

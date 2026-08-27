@@ -44,6 +44,3 @@ class DownstreamIteratorTest( GafferTest.TestCase ) :
 
 		# call through to c++ test.
 		GafferTest.testDownstreamIterator()
-
-if __name__ == "__main__":
-	unittest.main()

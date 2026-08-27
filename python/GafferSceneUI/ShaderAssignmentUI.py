@@ -53,30 +53,30 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"shader" : [
+		"shader" : {
 
-			"description",
+			"description" :
 			"""
 			The shader to be assigned.
 			""",
 
-			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"label" : [
+		"label" : {
 
-			"description",
+			"description" :
 			"""
 			A label for the shader to be assigned. If this is empty, the node
 			connected to the `shader` plug will be used instead.
 			""",
 
-			"nodule:type", "",
-			"layout:visibilityActivator", "labelOverride",
+			"nodule:type" : "",
+			"layout:visibilityActivator" : "labelOverride",
 
-		]
+		}
 
 	}
 )

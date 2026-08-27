@@ -42,7 +42,7 @@
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "graph/node.h"
 IECORE_POP_DEFAULT_VISIBILITY
-#undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
+#undef fmix // OpenImageIO's farmhash interferes with IECore::MurmurHash
 
 namespace GafferCycles
 {
@@ -54,7 +54,7 @@ namespace SocketHandler
 Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 void setupPlugs( const ccl::NodeType *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, bool keepExistingChildren = false );
+void setupLightPlugs( const std::string &shaderName, Gaffer::GraphComponent *plugsParent );
 
 } // namespace SocketHandler
 

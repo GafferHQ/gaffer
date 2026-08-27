@@ -37,6 +37,7 @@
 #include "boost/python.hpp"
 
 #include "DispatcherBinding.h"
+#include "FileNodeBinding.h"
 #include "TaskNodeBinding.h"
 
 using namespace boost::python;
@@ -47,5 +48,6 @@ BOOST_PYTHON_MODULE( _GafferDispatch )
 
 	bindTaskNode();
 	bindDispatcher();
+	bindFileNodes();
 
 }

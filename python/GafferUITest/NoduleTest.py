@@ -91,6 +91,3 @@ class NoduleTest( GafferUITest.TestCase ) :
 		n2 = NoduleTestNode()
 		nc2 = GafferUI.Nodule.create( n2["c"] )
 		self.assertIsInstance( nc2, GafferUI.CompoundNodule )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -89,6 +89,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 			Gaffer.WeakMethod( self.__nodeMetadataChanged )
 		)
 
+		self.__lastTrackedContext = None
+
 	## Changes the plugs displayed by this widget. May be overridden by derived classes,
 	# but all implementations must call the base class version first. Note that it is
 	# acceptable for `plugs` to be empty, so derived classes should be implemented with
@@ -323,6 +325,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 	## Returns a context manager that blocks the connections used to
 	# call `_updateFromValues()` when the plug is dirtied. This may
 	# be used to avoid recursion when the widget edits the plug value.
+	# > Note : When used with an UndoScope, the UndoScope must be nested
+	# > _inside_ `_blockedUpdateFromValues()`, as plugs are not signalled
+	# > as dirty until the UndoScope closes.
 	def _blockedUpdateFromValues( self ) :
 
 		return Gaffer.Signals.BlockedConnection( self.__plugDirtiedConnections )
@@ -523,7 +528,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 			}
 		)
 
-		self.popupMenuSignal()( menuDefinition, self )
+		with self.context() :
+			self.popupMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
 
@@ -655,8 +661,16 @@ class PlugValueWidget( GafferUI.Widget ) :
 				self._updateFromEditable()
 				return
 
-	def __contextChanged( self, contextTracker ) :
+	def __contextTrackerChanged( self, contextTracker ) :
 
+		# `ContextTracker.changedSignal()` is emitted every time the
+		# ContextTracker is updated, which does not necessarily mean that _our_
+		# context has changed. Only update if it has.
+		context = self.context()
+		if context == self.__lastTrackedContext :
+			return
+
+		self.__lastTrackedContext = context
 		self.__callLegacyUpdateMethods()
 		self.__callUpdateFromValues()
 
@@ -729,11 +743,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def __updateContextConnection( self ) :
 
 		if self._valuesDependOnContext() and len( self.__plugs ) :
-			self.__contextChangedConnection = self.__contextTracker.changedSignal(
+			self.__contextTrackerChangedConnection = self.__contextTracker.changedSignal(
 				next( iter( self.__plugs ) )
-			).connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
+			).connect( Gaffer.WeakMethod( self.__contextTrackerChanged ), scoped = True )
 		else :
-			self.__contextChangedConnection = None
+			self.__contextTrackerChangedConnection = None
 
 	def __buttonPress( self, widget, event, buttonMask ) :
 

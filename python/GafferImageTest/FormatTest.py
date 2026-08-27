@@ -225,6 +225,3 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 		GafferTest.TestCase.tearDown( self )
 
 		GafferImage.Format.deregisterFormat( "testFormat" )
-
-if __name__ == "__main__":
-	unittest.main()

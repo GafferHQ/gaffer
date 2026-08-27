@@ -68,3 +68,8 @@ for p in [ "intensity", "exposure", "color", "enableColorTemperature", "colorTem
 
 for p in [ "diffuseColor", "emissiveColor", "useSpecularWorkflow", "specularColor", "metallic", "roughness", "clearcoat", "clearcoatRoughness" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "surface", p )
+
+# RenderMan
+
+for p in [ "intensity", "exposure", "angleExtent", "lightColor", "enableTemperature", "temperature", "coneAngle", "coneSoftness", "lightGroup" ] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ri:light", p )

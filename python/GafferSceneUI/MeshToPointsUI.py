@@ -54,29 +54,29 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"userDefault", False,
+			"userDefault" : False,
 
-		],
+		},
 
-		"type" : [
+		"type" : {
 
-			"description",
+			"description" :
 			"""
 			The render type for the newly converted
 			points primitives.
 			""",
 
-			"preset:Particle", "particle",
-			"preset:Sphere", "sphere",
-			"preset:Disk", "disk",
-			"preset:Patch", "patch",
-			"preset:Blobby", "blobby",
+			"preset:Particle" : "particle",
+			"preset:Sphere" : "sphere",
+			"preset:Disk" : "disk",
+			"preset:Patch" : "patch",
+			"preset:Blobby" : "blobby",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
 	}
 )

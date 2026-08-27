@@ -51,42 +51,42 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The input scene containing the meshes to bake, and any lights which affect them.
 			""",
-			"nodule:type", "GafferUI::StandardNodule",
-		],
+			"nodule:type" : "GafferUI::StandardNodule",
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used to control which meshes the textures will be baked for.
 			A Filter node should be connected here.
 			""",
 
-			"layout:section", "Filter",
-			"noduleLayout:section", "right",
-			"layout:index", -3, # Just before the enabled plug,
-			"nodule:type", "GafferUI::StandardNodule",
-			"plugValueWidget:type", "GafferSceneUI.FilterPlugValueWidget",
+			"layout:section" : "Filter",
+			"noduleLayout:section" : "right",
+			"layout:index" : -3, # Just before the enabled plug,
+			"nodule:type" : "GafferUI::StandardNodule",
+			"plugValueWidget:type" : "GafferSceneUI.FilterPlugValueWidget",
 
-		],
+		},
 
-		"bakeDirectory" : [
+		"bakeDirectory" : {
 
-			"description",
+			"description" :
 			"""
 			Sets the Context Variable used in the default file name to control where all the bakes will be stored.
 			""",
-		],
+		},
 
-		"defaultFileName" : [
+		"defaultFileName" : {
 
-			"description",
+			"description" :
 			"""
 			The file name to use for each texture file written.  <UDIM> will be replaced by the UDIM number,
 			and <AOV> will be replaced by the aov name specified in "aovs".  If you want to do an animated bake,
@@ -94,38 +94,38 @@ Gaffer.Metadata.registerNode(
 
 			May be overridden per mesh by specifying the "bake:fileName" string attribute on the meshes to be baked.
 			""",
-		],
+		},
 
-		"defaultResolution" : [
+		"defaultResolution" : {
 
-			"description",
+			"description" :
 			"""
 			The resolution to use for each texture file written.
 
 			May be overridden per mesh by specifying the "bake:resolution" integer attribute on the meshes to be baked.
 			""",
-		],
+		},
 
-		"uvSet" : [
+		"uvSet" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the primitive variable containing uvs which will determine how the mesh is unwrapped
 			for baking.  Must be a Face-Varying or Vertex V2f primitive variable.
 			""",
-		],
+		},
 
-		"udims" : [
-			"description",
+		"udims" : {
+			"description" :
 			"""
 			If non-empty, only UDIMs in this list will be baked. The formatting is the same as a frame list:
 			comma separated, with dashes indicating ranges.
 			""",
-		],
+		},
 
-		"normalOffset" : [
+		"normalOffset" : {
 
-			"description",
+			"description" :
 			"""
 			How far Arnold steps away from the surface before tracing back.  If too large for your scene,
 			you will incorrectly capture occluders near the mesh instead of the mesh itself.  If too small,
@@ -133,11 +133,11 @@ Gaffer.Metadata.registerNode(
 			which are fairly large and simple, the default 0.1 should work.  Smaller objects may require smaller
 			values.
 			""",
-		],
+		},
 
-		"aovs" : [
+		"aovs" : {
 
-			"description",
+			"description" :
 			"""
 			A space separated list of colon separated pairs of image name and data to render.
 
@@ -145,42 +145,42 @@ Gaffer.Metadata.registerNode(
 			render 3 sets of images for every UDIM and mesh baked, containing all lighting, just diffuse
 			lighting, and the diffuse albedo.
 			""",
-		],
+		},
 
-		"tasks" : [
-			"description",
+		"tasks" : {
+			"description" :
 			"""
 			How many tasks the bake process will be split into.  UDIMs cannot be split across tasks, so if you
 			have few UDIMs available, the extra tasks won't do anything, but if you have a large number of
 			UDIMs, and are dispatching to a pool of machines, increasing the number of tasks used will speed
 			up bakes, at the cost of using more machines.
 			""",
-		],
+		},
 
-		"cleanupIntermediateFiles" : [
-			"description",
+		"cleanupIntermediateFiles" : {
+			"description" :
 			"""
 			During baking, we first render exrs ( potentially multiple EXRs per udim if multiple objects
 			are present ).  We then combine them, fill in the background, and convert to textures.  This
 			causes all intermediate EXRs, and the index txt file to be removed, and just the final .tx to be kept.
 			""",
-			"divider", True,
-		],
+			"divider" : True,
+		},
 
-		"applyMedianFilter" : [
-			"description",
+		"applyMedianFilter" : {
+			"description" :
 			"""
 			Adds a simple denoising filter to the texture bake. Mostly preserves high-contrast edges.
 			""",
-		],
+		},
 
-		"medianRadius" : [
-			"description",
+		"medianRadius" : {
+			"description" :
 			"""
 			The radius of the median filter. Values greater than 1 will likely remove small details from the texture.
 			""",
-			"layout:activator", "medianActivator",
-		],
+			"layout:activator" : "medianActivator",
+		},
 
 	}
 

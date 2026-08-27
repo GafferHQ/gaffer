@@ -525,25 +525,32 @@ void Switch::updateInternalConnection()
 	}
 
 	if(
+		// The switch index is constant.
+		!PlugAlgo::dependsOnCompute( enabledPlug() ) &&
+		( !enabledPlug()->getValue() || !PlugAlgo::dependsOnCompute( indexPlug() ) ) &&
+		// And there are no context variables to delete.
+		deleteContextVariablesPlug()->isSetToDefault()
+	)
+	{
+		// Our compute will always pass through the same known input without
+		// modifying the context, so we can optimise by replacing it with a
+		// direct connection.
+
+		// The current context is irrelevant since we've already checked that
+		// `indexPlug()` and `enabledPlug()` aren't computed. But we need to
+		// pass _something_ non-null because that is how we tell
+		// `oppositePlug()` we want it to take the index into account. And we
+		// need to scope this default context too - see
+		// `SwitchTest.testInternalConnectionWithTypeConversionAndCanceller()`.
+		Context::Scope scope( g_defaultContext.get() );
+		Plug *in = const_cast<Plug *>( oppositePlug( out, g_defaultContext.get() ) );
+		out->setInput( in );
+	}
+	else
+	{
 		// We can't use an internal connection to implement the switch,
 		// because the index might vary from context to context. We must
 		// therefore implement switching via hash()/compute().
-		PlugAlgo::dependsOnCompute( enabledPlug() ) || PlugAlgo::dependsOnCompute( indexPlug() ) ||
-		// We can't use an internal connection to implement the switch
-		// because we are on the hook for deleting context variables.
-		!deleteContextVariablesPlug()->isSetToDefault()
-	)
-	{
 		out->setInput( nullptr );
-		return;
 	}
-
-	// The context is irrelevant since we've already checked that `indexPlug()`
-	// and `enabledPlug()` aren't computed. But we need to pass _something_ non-null
-	// because that is how we tell `oppositePlug()` we want it to take the index
-	// into account. And we need to scope this default context too - see
-	// `SwitchTest.testInternalConnectionWithTypeConversionAndCanceller()`.
-	Context::Scope scope( g_defaultContext.get() );
-	Plug *in = const_cast<Plug *>( oppositePlug( out, g_defaultContext.get() ) );
-	out->setInput( in );
 }

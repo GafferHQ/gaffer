@@ -35,6 +35,8 @@
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+#include "SceneAlgo.h"
+
 #include "IECoreScene/SpherePrimitive.h"
 
 #include "IECore/Interpolator.h"
@@ -72,13 +74,13 @@ void warnIfUnsupported( const IECoreScene::SpherePrimitive *sphere )
 	}
 }
 
-ccl::PointCloud *convertCommon( const IECoreScene::SpherePrimitive *sphere )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::SpherePrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
+	auto *sphere = samples[primarySampleIndex];
 	assert( sphere->typeId() == IECoreScene::SpherePrimitive::staticTypeId() );
 	warnIfUnsupported( sphere );
-	ccl::PointCloud *pointcloud = new ccl::PointCloud();
+	ccl::PointCloud *pointcloud = SceneAlgo::createNodeWithLock<ccl::PointCloud>( scene );
 
-	//pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_SPHERE );
 	pointcloud->reserve( 1 );
 	pointcloud->add_point( ccl::make_float3( 0.0f, 0.0f, 0.0f ), sphere->radius(), 0);
 
@@ -99,20 +101,6 @@ ccl::PointCloud *convertCommon( const IECoreScene::SpherePrimitive *sphere )
 	return pointcloud;
 }
 
-ccl::Geometry *convert( const IECoreScene::SpherePrimitive *sphere, const std::string &nodeName, ccl::Scene *scene )
-{
-	ccl::Geometry *result = convertCommon( sphere );
-	result->name = ccl::ustring( nodeName.c_str() );
-	return result;
-}
-
-ccl::Geometry *convert( const vector<const IECoreScene::SpherePrimitive *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
-{
-	ccl::Geometry *result = convertCommon( samples.front() );
-	result->name = ccl::ustring( nodeName.c_str() );
-	return result;
-}
-
-GeometryAlgo::ConverterDescription<SpherePrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<SpherePrimitive> g_description( convert );
 
 } // namespace

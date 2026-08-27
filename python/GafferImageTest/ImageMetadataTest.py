@@ -219,6 +219,3 @@ class ImageMetadataTest( GafferImageTest.ImageTestCase ) :
 				"c" : "extraC",
 			} )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

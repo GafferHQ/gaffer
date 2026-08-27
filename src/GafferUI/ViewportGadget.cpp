@@ -125,7 +125,7 @@ IECoreGL::BufferPtr rectPBuffer()
 	return g_rectPBuffer;
 }
 
-float rectUvBufferData[12] = { 0, 0,  0, 1,  1, 0,  1, 1 };
+float rectUvBufferData[8] = { 0, 0,  0, 1,  1, 0,  1, 1 };
 IECoreGL::BufferPtr rectUvBuffer()
 {
 	static IECoreGL::BufferPtr g_rectUvBuffer = new IECoreGL::Buffer( rectUvBufferData, sizeof( float ) * 8 );
@@ -308,6 +308,13 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			M44f t = m_transform;
 			t.multDirMatrix( z, z );
 			t.multDirMatrix( y, y );
+			if( !( std::isfinite( y.length() ) && std::isfinite( z.length() ) ) )
+			{
+				// If our current camera position has somehow become corrupted with nan's or inf's,
+				// reset it.
+				z = V3f( 0, 0, -1 );
+				y = V3f( 0, 1, 0 );
+			}
 			return frame( box, z, y, variableAspectZoom );
 		}
 
@@ -316,6 +323,12 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		ViewportGadget::CameraFlags frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ), bool variableAspectZoom = false )
 		{
+			if( !( std::isfinite( box.min.length() ) && std::isfinite( box.max.length() ) ) )
+			{
+				// If the target is not finite, we can't meaningfully frame it
+				return CameraFlags::None;
+			}
+
 			// Make a matrix to center the camera on the box, with the appropriate view direction.
 			M44f cameraMatrix = rotationMatrixWithUpDir( V3f( 0, 0, -1 ), viewDirection, upVector );
 			M44f translationMatrix;
@@ -722,7 +735,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		}
 
 		// If m_planarMovement is true, we are doing a 2D view with a fixed scaling
-		// between world units and pixels, independ of viewport resolution
+		// between world units and pixels, independent of viewport resolution
 		// ( and m_sourceCamera will be null ).
 		bool m_planarMovement;
 		bool m_tumblingEnabled;

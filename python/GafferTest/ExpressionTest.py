@@ -1143,13 +1143,13 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["user"].addChild(
-			Gaffer.SplineffPlug(
-				defaultValue = IECore.Splineff(
-					IECore.CubicBasisf.linear(),
+			Gaffer.RampffPlug(
+				defaultValue = IECore.Rampff(
 					(
 						( 0, 0 ),
 						( 1, 1 ),
 					),
+					IECore.RampInterpolation.Linear
 				),
 				flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 			)
@@ -1641,7 +1641,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		script["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		script.save()
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		env["GAFFERTEST_SCRIPT_FILENAME"] = script["fileName"].getValue()
 		try :
 			subprocess.check_output(
@@ -1739,6 +1739,3 @@ class ExpressionTest( GafferTest.TestCase ) :
 		# recurse to an upstream compute for `e1`, which has the same hash. If we don't have a
 		# mechanism for handling it, this will deadlock.
 		script["n"]["user"]["p4"].getValue()
-
-if __name__ == "__main__":
-	unittest.main()

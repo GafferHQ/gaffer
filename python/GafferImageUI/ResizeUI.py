@@ -35,7 +35,6 @@
 ##########################################################################
 
 import inspect
-import itertools
 
 import Gaffer
 import GafferUI
@@ -59,19 +58,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The new format (resolution and pixel aspect ratio)
 			of the output image.
 			""",
 
-		],
+		},
 
-		"fitMode" : [
+		"fitMode" : {
 
-			"description",
+			"description" :
 			"""
 			Determines how the image is scaled to fit the new
 			resolution. If the aspect ratios of the input and
@@ -108,41 +107,41 @@ Gaffer.Metadata.registerNode(
 				window.
 			""",
 
-			"preset:Horizontal", GafferImage.Resize.FitMode.Horizontal,
-			"preset:Vertical", GafferImage.Resize.FitMode.Vertical,
-			"preset:Fit", GafferImage.Resize.FitMode.Fit,
-			"preset:Fill", GafferImage.Resize.FitMode.Fill,
-			"preset:Distort", GafferImage.Resize.FitMode.Distort,
+			"preset:Horizontal" : GafferImage.Resize.FitMode.Horizontal,
+			"preset:Vertical" : GafferImage.Resize.FitMode.Vertical,
+			"preset:Fit" : GafferImage.Resize.FitMode.Fit,
+			"preset:Fill" : GafferImage.Resize.FitMode.Fill,
+			"preset:Distort" : GafferImage.Resize.FitMode.Distort,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used when transforming the image. Each
 			filter provides different tradeoffs between sharpness and
 			the danger of aliasing or ringing.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Default", "",
-			"preset:Nearest", "nearest",
+			"preset:Default" : "",
+			"preset:Nearest" : "nearest",
 
-		] + list( itertools.chain(
+		} | {
 
 			# Disk doesn't make much sense as a resizing filter, and also causes artifacts because
 			# its default width is small enough to fall into the gaps between pixels.
-			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() if x != "disk" ]
+			"preset:" + x.title() : x for x in GafferImage.FilterAlgo.filterNames() if x != "disk"
 
-		) ),
+		},
 
-		"filterDeep" : [
+		"filterDeep" : {
 
-			"description",
+			"description" :
 			inspect.cleandoc(
 				"""
 				When on, deep images are resized accurately using the same filter
@@ -159,7 +158,7 @@ Gaffer.Metadata.registerNode(
 				"""
 			) + GafferImageUI.ResampleUI._filterDeepWarning,
 
-		],
+		},
 
 	}
 

@@ -1013,5 +1013,8 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		# 3 RGB connections and 1 float connection
 		self.assertTrue(len(n["ai:surface"].inputConnections("ramp")) == 4)
 
-if __name__ == "__main__":
-	unittest.main()
+	def testStandardVolumeType( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "standard_volume" )
+		self.assertEqual( shader["type"].getValue(), "ai:volume" )

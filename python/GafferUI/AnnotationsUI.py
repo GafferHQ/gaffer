@@ -37,21 +37,23 @@
 import functools
 import re
 import imath
+import weakref
 
 import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
 
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 
 	def append( menuPath, name ) :
 
 		menuDefinition.append(
 			menuPath,
 			{
-				"command" : functools.partial( __annotate, node, name ),
-				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+				"command" : functools.partial( __annotate, nodeList, name ),
+				"active" : not any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList ),
 			}
 		)
 
@@ -67,10 +69,129 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		menuDefinition.append( "/Annotate/Divider", { "divider" : True } )
 		append( "/Annotate/User...", "user" )
 
-def __annotate( node, name, menu ) :
+def __annotate( nodeList, name, menu ) :
 
-	dialogue = __AnnotationsDialogue( node, name )
+	dialogue = __AnnotationsDialogue( nodeList, name )
 	dialogue.wait( parentWindow = menu.ancestor( GafferUI.Window ) )
+
+# A signal emitted when a popup menu for an annotation is about to be shown.
+# This provides an opportunity to customize the menu from external code.
+# The signature for slots is ( menuDefinition, annotation, persistent ) where
+# `annotation` is a tuple of `( node, name )` and `persistent` indicates whether
+# or not the annotation will be serialised with the script. Slots should modify
+# `menuDefinition` in place.
+
+__contextMenuSignal = Gaffer.Signals.Signal3()
+
+def contextMenuSignal() :
+	return __contextMenuSignal
+
+def __annotationIsPersistent( annotation ) :
+
+	node, name = annotation
+
+	persistentAnnotations = Gaffer.MetadataAlgo.annotations( node, Gaffer.Metadata.RegistrationTypes.InstancePersistent )
+	return name in persistentAnnotations
+
+def __buttonPress( editorWeakRef, annotationsGadget, event ) :
+
+	if event.buttons & event.Buttons.Right :
+		annotation = annotationsGadget.annotationAt( event.line )
+		if annotation is None :
+			return False
+
+		menuDefinition = IECore.MenuDefinition()
+		contextMenuSignal()( menuDefinition, annotation, __annotationIsPersistent( annotation ) )
+
+		global __popupMenu
+		__popupMenu = GafferUI.Menu( menuDefinition )
+		__popupMenu.popup( editorWeakRef() )
+
+		return True
+
+	return True  # Needed for `__buttonDoubleClick()` to fire
+
+def __buttonDoubleClick( editorWeakRef, annotationsGadget, event ) :
+
+	if event.buttons == event.Buttons.Left :
+		annotation = annotationsGadget.annotationAt( event.line )
+		if annotation is None or not __annotationIsPersistent( annotation ) :
+			return False
+
+		node, name = annotation
+
+		__annotate( [node], name, editorWeakRef() )
+
+		return True
+
+	return False
+
+def __clipboardIsAnnotation( clipboard ) :
+
+	return (
+		isinstance( clipboard, IECore.CompoundData ) and
+		[ "color", "name", "text" ] == sorted( clipboard.keys() ) and
+		isinstance( clipboard["color"], IECore.Color3fData ) and
+		isinstance( clipboard["name"], IECore.StringData ) and
+		isinstance( clipboard["text"], IECore.StringData )
+	)
+
+def __keyPress( editor, event ) :
+
+	if event.key == "V" and event.modifiers == event.modifiers.Control :
+		scriptNode = editor.scriptNode()
+		clipboard = scriptNode.ancestor( Gaffer.ApplicationRoot ).getClipboardContents()
+
+		if __clipboardIsAnnotation( clipboard ) :
+			with Gaffer.UndoScope( scriptNode ) :
+				editorSelection = [ i for i in scriptNode.selection() if editor.graphGadget().nodeGadget( i ) is not None ]
+				for n in editorSelection :
+					Gaffer.MetadataAlgo.addAnnotation(
+						n,
+						clipboard["name"].value,
+						Gaffer.MetadataAlgo.Annotation( clipboard["text"].value, clipboard["color"].value )
+					)
+			return True
+
+	return False
+
+def __copyAnnotation( node, name ) :
+
+	annotation = Gaffer.MetadataAlgo.getAnnotation( node, name, True )
+
+	data = IECore.CompoundData(
+		{
+			"color" : IECore.Color3fData( annotation.color() ),
+			"name" : IECore.StringData( name ),
+			"text" : IECore.StringData( annotation.text() ),
+		}
+	)
+
+	node.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
+
+def __contextMenu( menuDefinition, annotation, persistent ) :
+
+	node, name = annotation
+	menuDefinition.append(
+		"/Copy",
+		{
+			"command" : functools.partial( __copyAnnotation, node, name ),
+			"active" : persistent
+		},
+	)
+
+def __graphEditorCreated( editor ) :
+	editor.graphGadget().annotationsGadget().buttonPressSignal().connect(
+		functools.partial( __buttonPress, weakref.ref( editor ) )
+	)
+	editor.graphGadget().annotationsGadget().buttonDoubleClickSignal().connect(
+		functools.partial( __buttonDoubleClick, weakref.ref( editor ) )
+	)
+	editor.keyPressSignal().connect( __keyPress )
+
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated )
+
+contextMenuSignal().connect( __contextMenu )
 
 class _AnnotationsHighlighter( GafferUI.CodeWidget.Highlighter ) :
 
@@ -140,15 +261,15 @@ class _AnnotationsCompleter( GafferUI.CodeWidget.Completer ) :
 
 class __AnnotationsDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, node, name ) :
+	def __init__( self, nodeList, name ) :
 
 		GafferUI.Dialogue.__init__( self, "Annotate" )
 
-		self.__node = node
+		self.__nodeList = nodeList
 		self.__name = name
 
 		template = Gaffer.MetadataAlgo.getAnnotationTemplate( name )
-		annotation = Gaffer.MetadataAlgo.getAnnotation( node, name ) or template
+		annotation = Gaffer.MetadataAlgo.getAnnotation( self.__nodeList[-1], self.__name ) or template
 
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as layout :
 
@@ -156,8 +277,9 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 				text = annotation.text() if annotation else "",
 				placeholderText = "Tip : Use {plugName} to include plug values",
 			)
-			self.__textWidget.setHighlighter( _AnnotationsHighlighter( node ) )
-			self.__textWidget.setCompleter( _AnnotationsCompleter( node ) )
+			self.__textWidget.setHighlighter( _AnnotationsHighlighter( nodeList[-1] ) )
+			self.__textWidget.setCompleter( _AnnotationsCompleter( nodeList[-1] ) )
+			self.__textWidget.setWrapMode( self.__textWidget.WrapMode.WordOrCharacter )
 			self.__textWidget.textChangedSignal().connect(
 				Gaffer.WeakMethod( self.__updateButtonStatus )
 			)
@@ -192,18 +314,20 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 		if button is self.__cancelButton or button is None :
 			return
 
-		with Gaffer.UndoScope( self.__node.scriptNode() ) :
+		with Gaffer.UndoScope( self.__nodeList[0].scriptNode() ) :
 			if button is self.__removeButton :
-				Gaffer.MetadataAlgo.removeAnnotation( self.__node, self.__name )
+				for node in self.__nodeList :
+					Gaffer.MetadataAlgo.removeAnnotation( node, self.__name )
 			else :
-				Gaffer.MetadataAlgo.addAnnotation(
-					self.__node, self.__name,
-					self.__makeAnnotation()
-				)
+				for node in self.__nodeList :
+					Gaffer.MetadataAlgo.addAnnotation(
+						node, self.__name,
+						self.__makeAnnotation()
+					)
 
 	def __updateButtonStatus( self, *unused ) :
 
-		existingAnnotation = Gaffer.MetadataAlgo.getAnnotation( self.__node, self.__name )
+		existingAnnotation = Gaffer.MetadataAlgo.getAnnotation( self.__nodeList[-1], self.__name )
 		newAnnotation = self.__makeAnnotation()
 
 		self.__cancelButton.setEnabled( newAnnotation != existingAnnotation )
@@ -244,7 +368,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 				return
 
 			if isinstance( graphComponent, Gaffer.ValuePlug ) and hasattr( graphComponent, "getValue" ) :
-				relativeName = graphComponent.relativeName( self.__node )
+				relativeName = graphComponent.relativeName( self.__nodeList[-1] )
 				menuDefinition.append(
 					"/Insert Plug Value/{}".format( "/".join( menuLabel( n ) for n in relativeName.split( "." ) ) ),
 					{
@@ -255,7 +379,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 				for plug in Gaffer.Plug.InputRange( graphComponent ) :
 					walkPlugs( plug )
 
-		walkPlugs( self.__node )
+		walkPlugs( self.__nodeList[-1] )
 
 		if not menuDefinition.size() :
 			menuDefinition.append( "/Insert Plug Value/No plugs available", { "active" : False } )

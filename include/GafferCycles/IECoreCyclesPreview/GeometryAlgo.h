@@ -34,19 +34,25 @@
 
 #pragma once
 
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
+#include "IECoreScene/Primitive.h"
 #include "IECoreScene/PrimitiveVariable.h"
 
 #include "IECore/Object.h"
+
+#include "IECoreVDB/VDBObject.h"
 
 #include <vector>
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/geometry.h"
-// Currently only VDBs need scene to get to the image manager
+#include "scene/volume.h"
 #include "scene/scene.h"
+#include "session/session.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECoreCycles
@@ -55,28 +61,29 @@ namespace IECoreCycles
 namespace GeometryAlgo
 {
 
-/// Converts the specified `IECore::Object` into `ccl::Geometry`.
-IECORECYCLES_API ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene = nullptr );
-/// As above, but converting a moving object. If no motion converter
-/// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene = nullptr );
+/// Converts animated samples of an `IECore::Object` into an equivalent `ccl::Geometry` object.
+IECORECYCLES_API ccl::Geometry *convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, ccl::Scene *scene );
 
 /// Converts a primitive variable to a `ccl::Attribute` inside of a `ccl::AttributeSet`.
 IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement );
 
-/// Signature of a function which can convert to `ccl:Geometry`.
-/// \todo There's really no need to pass the node name here, because it's not a unique handle that
-/// needs to be provided when creating the Geometry (like it is in Arnold). The caller can just set the name
-/// afterwards if they want to.
-using Converter = ccl::Geometry *(*)( const IECore::Object *, const std::string &, ccl::Scene * );
-/// Signature of a function which can convert a series of IECore::Object
-/// samples into a moving `ccl:Geometry` object.
-using MotionConverter = ccl::Geometry *(*)( const std::vector<const IECore::Object *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
+/// Converts motion for "P" primitive variable.
+IECORECYCLES_API void convertMotion( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Primitive *> &samples, size_t primarySampleIndex, ccl::Geometry &geometry );
+
+/// Converts voxel grids from a VDB object.
+IECORECYCLES_API void convertVoxelGrids( const IECoreVDB::VDBObject *vdbObject, ccl::Volume *geometry, ccl::Scene *scene, int precision, float clipping );
+
+/// Signature of a function which can convert a series of `IECore::Object`
+/// samples into a moving `ccl:Geometry` object. The `primarySampleIndex`
+/// argument indicates which sample should be used for the main conversion, and
+/// the converter should defer to `convertMotion()` to convert the positions of
+/// the remaining motion samples to ATTR_STD_MOTION_VERTEX_POSITION.
+using Converter = std::function<ccl::Geometry *( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )>;
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
 /// this, since it provides additional type safety.
-IECORECYCLES_API void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter = nullptr );
+IECORECYCLES_API void registerConverter( IECore::TypeId fromType, Converter converter );
 
 /// Class which registers a converter for type T automatically
 /// when instantiated.
@@ -86,16 +93,18 @@ class ConverterDescription
 
 	public :
 
-		/// Type-specific conversion functions.
-		using Converter = ccl::Geometry *(*)( const T *, const std::string &, ccl::Scene * );
-		using MotionConverter = ccl::Geometry *(*)( const std::vector<const T *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
+		/// Type-specific conversion function.
+		using TypedSamples = IECoreScenePreview::Renderer::Samples<const T *>;
+		using TypedConverter = ccl::Geometry *(*)( const TypedSamples &, const IECoreScenePreview::Renderer::SampleTimes &, size_t, ccl::Scene * );
 
-		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
+		ConverterDescription( TypedConverter converter )
 		{
 			registerConverter(
 				T::staticTypeId(),
-				reinterpret_cast<GeometryAlgo::Converter>( converter ),
-				reinterpret_cast<GeometryAlgo::MotionConverter>( motionConverter )
+				[converter] ( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
+				{
+					return converter( IECoreScenePreview::Renderer::staticSamplesCast<const T *>( samples ), times, primarySampleIndex, scene );
+				}
 			);
 		}
 

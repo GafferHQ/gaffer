@@ -53,35 +53,35 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"command" : (
+		"command" : {
 
-			"description",
+			"description" :
 			"""
 			The command to run. This may reference any of the
 			variables by name, and also the node itself as `self`
 			and the current Context as `context`.
 			""",
 
-			"plugValueWidget:type", "GafferDispatchUI.PythonCommandUI._CommandPlugValueWidget",
-			"layout:label", "",
+			"plugValueWidget:type" : "GafferDispatchUI.PythonCommandUI._CommandPlugValueWidget",
+			"layout:label" : "",
 
-		),
+		},
 
-		"variables" : (
+		"variables" : {
 
-			"description",
+			"description" :
 			"""
 			An arbitrary set of variables which can be accessed via
 			the `variables` dictionary within the python command.
 			""",
 
-			"layout:section", "Variables",
+			"layout:section" : "Variables",
 
-		),
+		},
 
-		"framesMode" : (
+		"framesMode" : {
 
-			"description",
+			"description" :
 			"""
 			Determines how tasks for different frames are distributed
 			between calls to the command :
@@ -118,13 +118,13 @@ Gaffer.Metadata.registerNode(
 			> then the command will only be called once.
 			""",
 
-			"layout:section", "Advanced",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Single", GafferDispatch.PythonCommand.FramesMode.Single,
-			"preset:Batch", GafferDispatch.PythonCommand.FramesMode.Batch,
-			"preset:Sequence", GafferDispatch.PythonCommand.FramesMode.Sequence,
+			"layout:section" : "Advanced",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Single" : GafferDispatch.PythonCommand.FramesMode.Single,
+			"preset:Batch" : GafferDispatch.PythonCommand.FramesMode.Batch,
+			"preset:Sequence" : GafferDispatch.PythonCommand.FramesMode.Sequence,
 
-		),
+		},
 
 	}
 

@@ -50,16 +50,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"description",
+			"description" :
 			"""
 			Computes new tightened bounding boxes taking into account
 			the removed objects. This can be an expensive operation -
 			turn on with care.
 			""",
 
-		],
+		},
 
 	}
 

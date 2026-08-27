@@ -39,11 +39,13 @@
 #include "GafferOSL/OSLShader.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
+#include "IECore/KDTree.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
@@ -52,6 +54,7 @@
 #include "OSL/oslclosure.h"
 #include "OSL/oslconfig.h"
 #include "OSL/oslexec.h"
+#include "OSL/oslquery.h"
 #include "OSL/oslversion.h"
 #include "OSL/rendererservices.h"
 
@@ -61,6 +64,7 @@
 #include "OSL/wide.h"
 #endif
 
+#include "OpenImageIO/imagecache.h"
 #include "OpenImageIO/ustring.h"
 
 #include "boost/algorithm/string/classification.hpp"
@@ -92,7 +96,7 @@ using namespace GafferOSL;
 
 // keyword matrix parameter macro. reference: OSL/genclosure.h
 #define CLOSURE_MATRIX_KEYPARAM(st, fld, key) \
-	{ TypeDesc::TypeMatrix44, (int)reckless_offsetof(st, fld), key, fieldsize(st, fld) }
+	{ OIIO::TypeMatrix44, (int)reckless_offsetof(st, fld), key, fieldsize(st, fld) }
 
 //////////////////////////////////////////////////////////////////////////
 // Conversion utilities
@@ -100,6 +104,10 @@ using namespace GafferOSL;
 
 namespace
 {
+
+// Initialised by first call to `shadingSystem()`. Declared here because
+// it affects the conversion routines.
+int g_shadingSystemBatchSize = 0;
 
 template<typename T>
 struct TypeDescFromType
@@ -291,6 +299,34 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 	return false;
 }
 
+bool convertValueToOSL( void *dst, TypeDesc dstType, const void *src, TypeDesc srcType )
+{
+	if( srcType.basetype == TypeDesc::STRING && dstType.basetype == TypeDesc::STRING )
+	{
+		// OSL says it's dealing with `TypeDesc::STRING` but actually it isn't.
+		// For batched shading it is `ustring` and for non-batched it is
+		// `ustringhash`. OSL's `convert_value()` doesn't know anything about
+		// that though, and will botch the conversion, so we do it ourselves.
+		if( !dst || !src )
+		{
+			return true;
+		}
+
+		if( g_shadingSystemBatchSize > 1 )
+		{
+			*(ustring *)dst = *(const char**)src;
+		}
+		else
+		{
+			*(ustringhash *)dst = ustringhash( *(const char**)src );
+		}
+
+		return true;
+	}
+
+	return convertValue( dst, dstType, src, srcType );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -321,6 +357,145 @@ void maskedDataInitWithZeroDerivs( MaskedData<WidthT> &wval )
 }
 #endif
 
+struct PointCloud
+{
+	PointCloud( const IECoreScene::Primitive *primitive, const std::string &name )
+	{
+		const V3fVectorData *pData = primitive->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		if( !pData )
+		{
+			throw std::runtime_error( fmt::format( "Point cloud \"{}\" has no \"P\" primitive variable", name ) );
+		}
+
+		m_kdTree.init( pData->readable().begin(), pData->readable().end() );
+		m_firstPoint = pData->readable().begin();
+		m_size = primitive->variableSize( PrimitiveVariable::Vertex );
+
+		for( auto &[primVarName, primVar] : primitive->variables )
+		{
+			if(
+				primVar.interpolation != IECoreScene::PrimitiveVariable::Vertex &&
+				!(
+					primVar.interpolation == IECoreScene::PrimitiveVariable::Varying &&
+					primitive->variableSize( PrimitiveVariable::Vertex ) == primitive->variableSize( PrimitiveVariable::Varying )
+				)
+			)
+			{
+				continue;
+			}
+
+			if( !primitive->isPrimitiveVariableValid( primVar ) )
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "ShadingEngine",
+					fmt::format( "Ignoring invalid primitive variable \"{}\" on point cloud \"{}\"", primVarName, name )
+				);
+				continue;
+			}
+
+			IECoreImage::OpenImageIOAlgo::DataView dataView( primVar.data.get() );
+			if( !dataView.data )
+			{
+				continue;
+			}
+
+			if( dataView.type.arraylen )
+			{
+				// We unarray the TypeDesc so we can use it directly with
+				// `convertValue()` in `get()`.
+				dataView.type.unarray();
+			}
+
+			m_attributes[ustringhash(primVarName.c_str())] = {
+				dataView,
+				primVar.indices ? &primVar.indices->readable() : nullptr
+			};
+		}
+
+	}
+
+	int search( const OSL::Vec3 &center, float radius, int maxPoints, int *outIndices, float *outDistances ) const
+	{
+		vector<IECore::V3fTree::Neighbour> neighbours;
+		neighbours.reserve( maxPoints );
+		m_kdTree.nearestNNeighbours(
+			V3f( center.x, center.y, center.z ),
+			maxPoints, neighbours
+		);
+
+		const float radiusSquared = radius * radius;
+		int pointsWithinRadius = 0;
+		for( const auto &neighbour : neighbours )
+		{
+			if( neighbour.distSquared > radiusSquared )
+			{
+				// `neighbours` is sorted by distance, so everything after
+				// this will be too far away too.
+				break;
+			}
+			if( outIndices )
+			{
+				*outIndices++ = neighbour.point - m_firstPoint;
+			}
+			if( outDistances )
+			{
+				*outDistances++ = std::sqrt( neighbour.distSquared );
+			}
+			pointsWithinRadius += 1;
+		}
+
+		return pointsWithinRadius;
+	}
+
+	struct Attribute
+	{
+		IECoreImage::OpenImageIOAlgo::DataView dataView;
+		const std::vector<int> *indices;
+	};
+
+	const Attribute *attribute( ustringhash name ) const
+	{
+		auto it = m_attributes.find( name );
+		return it != m_attributes.end() ? &it->second : nullptr;
+	}
+
+	int get( const Attribute &attribute, int index, TypeDesc outType, void *outData ) const
+	{
+		if( index < 0 )
+		{
+			return 0;
+		}
+
+		if( (size_t)index >= m_size )
+		{
+			return 0;
+		}
+		if( attribute.indices )
+		{
+			index = (*attribute.indices)[index];
+		}
+
+		const char *src = static_cast<const char *>( attribute.dataView.data );
+		src += index * attribute.dataView.type.elementsize();
+
+		char *dst = static_cast<char *>( outData );
+		if( !convertValueToOSL( dst, outType.elementtype(), src, attribute.dataView.type ) )
+		{
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private :
+
+		IECore::V3fTree m_kdTree;
+		IECore::V3fTree::Iterator m_firstPoint;
+		size_t m_size;
+		container::flat_map<ustringhash, Attribute> m_attributes;
+
+};
+
 class RenderState
 {
 
@@ -329,6 +504,7 @@ class RenderState
 		RenderState(
 			const IECore::CompoundData *shadingPoints,
 			const ShadingEngine::Transforms &transforms,
+			const ShadingEngine::PointClouds &pointClouds,
 			const std::vector<InternedString> &contextVariablesNeeded,
 			const Gaffer::Context *context
 		)
@@ -339,14 +515,14 @@ class RenderState
 			)
 			{
 				UserData userData;
-				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get(), /* createUStrings = */ true );
+				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get() );
 				if( userData.dataView.data )
 				{
 					userData.numValues = std::max( userData.dataView.type.arraylen, 1 );
 					if( userData.dataView.type.arraylen )
 					{
 						// we unarray the TypeDesc so we can use it directly with
-						// convertValue() in get_userdata().
+						// convertValueToOSL() in get_userdata().
 						userData.dataView.type.unarray();
 					}
 					m_userData.insert( make_pair( ustringhash( it->first.c_str() ), userData ) );
@@ -365,11 +541,23 @@ class RenderState
 					make_pair(
 						ustring( name.c_str() ),
 						ContextData{
-							IECoreImage::OpenImageIOAlgo::DataView( contextEntryData.get(), /* createUStrings = */ true ),
+							IECoreImage::OpenImageIOAlgo::DataView( contextEntryData.get() ),
 							contextEntryData
 						}
 					)
 				);
+			}
+
+			for( const auto &[name, primitive] : pointClouds )
+			{
+				try
+				{
+					m_pointClouds[ustringhash(name.c_str())] = std::make_unique<PointCloud>( primitive.get(), name.string() );
+				}
+				catch( const std::exception &e )
+				{
+					IECore::msg( IECore::Msg::Warning, fmt::format( "Point cloud \"{}\"", name.c_str() ), e.what() );
+				}
 			}
 		}
 
@@ -381,7 +569,7 @@ class RenderState
 				return false;
 			}
 
-			return ShadingSystem::convert_value( value, type, it->second.dataView.data, it->second.dataView.type );
+			return convertValueToOSL( value, type, it->second.dataView.data, it->second.dataView.type );
 		}
 
 		bool userData( size_t pointIndex, ustringhash name, TypeDesc type, void *value ) const
@@ -411,7 +599,7 @@ class RenderState
 			const char *src = static_cast<const char *>( it->second.dataView.data );
 			src += std::min( pointIndex, it->second.numValues - 1 ) * it->second.dataView.type.elementsize();
 
-			return convertValue( value, type, src,  it->second.dataView.type );
+			return convertValueToOSL( value, type, src, it->second.dataView.type );
 		}
 
 #if OSL_USE_BATCHED
@@ -454,7 +642,7 @@ class RenderState
 			const TypeDesc &sourceType = it->second.dataView.type;
 			size_t elementSize = sourceType.elementsize();
 			size_t maxElement = it->second.numValues - 1;
-			if( it->second.dataView.type == wval.type() )
+			if( it->second.dataView.type == wval.type() && wval.type().basetype != TypeDesc::STRING )
 			{
 				maskedDataInitWithZeroDerivs( wval );
 				wval.mask().foreach ([&wval, pointIndex, src, elementSize, maxElement ](ActiveLane lane) -> void {
@@ -465,7 +653,7 @@ class RenderState
 			else
 			{
 				// Start by checking if this is a valid conversion
-				if( !convertValue( nullptr, wval.type(), nullptr, sourceType ) )
+				if( !convertValueToOSL( nullptr, wval.type(), nullptr, sourceType ) )
 				{
 					return Mask<WidthT>( false );
 				}
@@ -485,7 +673,7 @@ class RenderState
 					(ActiveLane lane) -> void
 					{
 						int i = std::min( pointIndex + lane, maxElement );
-						convertValue( tempBuffer, wval.type(), src + i * elementSize, sourceType );
+						convertValueToOSL( tempBuffer, wval.type(), src + i * elementSize, sourceType );
 						wval.assign_val_lane_from_scalar( lane, tempBuffer );
 					}
 				);
@@ -517,6 +705,12 @@ class RenderState
 			return false;
 		}
 
+		const PointCloud *pointCloud( OIIO::ustringhash filename ) const
+		{
+			auto it = m_pointClouds.find( filename );
+			return it != m_pointClouds.end() ? it->second.get() : nullptr;
+		}
+
 	private :
 
 		using RenderStateTransforms = boost::unordered_map< OIIO::ustringhash, ShadingEngine::Transform, std::hash<ustringhash> >;
@@ -536,6 +730,7 @@ class RenderState
 
 		container::flat_map<ustringhash, UserData> m_userData;
 		container::flat_map<ustringhash, ContextData> m_contextVariables;
+		container::flat_map<ustringhash, std::unique_ptr<PointCloud>> m_pointClouds;
 
 };
 
@@ -608,14 +803,142 @@ class GafferBatchedRendererServices : public OSL::BatchedRendererServices<WidthT
 			return false;
 		}
 
+		void pointcloud_search( BatchedShaderGlobals *sg, ustringhash filename, const void *wideCenterVoid, Wide<const float> wideRadius, int maxPoints, bool sort, typename OSL::BatchedRendererServices<WidthT>::PointCloudSearchResults &results ) override
+		{
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->uniform.renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				// See comments in the non-batched `RendererServices::pointcloud_search()`.
+				IECore::msg( IECore::Msg::Warning, "ShadingEngine", "Calls to `pointcloud_search()` can not be constant folded." );
+				return;
+			}
+
+			const PointCloud *pointCloud = threadRenderState->renderState.pointCloud( filename );
+			if( !pointCloud || maxPoints <= 0 )
+			{
+				assign_all( results.wnum_points(), 0 );
+				return;
+			}
+
+			vector<int> tmpIndices( maxPoints ); tmpIndices.resize( maxPoints );
+			vector<float> tmpDistances( maxPoints ); tmpDistances.resize( maxPoints );
+
+			auto wideIndices = results.windices();
+			auto wideNumPoints = results.wnum_points();
+
+			Wide<const OSL::Vec3> wideCenter( wideCenterVoid );
+			results.mask().foreach(
+
+				[&] ( ActiveLane lane ) {
+
+					const OSL::Vec3 center = wideCenter[lane];
+					int numPoints = pointCloud->search(
+						center, wideRadius[lane], maxPoints, tmpIndices.data(), tmpDistances.data()
+					);
+
+					auto indices = wideIndices[lane];
+					for( int i = 0; i < numPoints; ++i )
+					{
+						indices[i] = tmpIndices[i];
+					}
+
+					if( results.has_distances() )
+					{
+						auto wideDistances = results.wdistances();
+						auto distances = wideDistances[lane];
+						for( int i = 0; i < numPoints; ++i )
+						{
+							distances[i] = tmpDistances[i];
+						}
+					}
+
+					if( results.has_distances() && results.distances_have_derivs() )
+					{
+						// We don't support outputting derivatives yet, but we at least
+						// zero them so that junk values don't get into the shader.
+						auto wideDistancesDx = results.wdistancesDx();
+						auto wideDistancesDy = results.wdistancesDy();
+						auto laneDistancesDx = wideDistancesDx[lane];
+						auto laneDistancesDy = wideDistancesDy[lane];
+						for( int i = 0; i < numPoints; ++i )
+						{
+							laneDistancesDx[i] = 0.0f;
+							laneDistancesDy[i] = 0.0f;
+						}
+					}
+
+					wideNumPoints[lane] = numPoints;
+				}
+
+			);
+
+		}
+
 		bool is_overridden_pointcloud_search() const override
 		{
-			return false;
+			return true;
+		}
+
+		Mask pointcloud_get( BatchedShaderGlobals * sg, ustringhash filename, Wide<const int[]> wideIndices, Wide<const int> wideNumPoints, ustringhash attrName, MaskedData wideOutData ) override
+		{
+			Mask result( false );
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->uniform.renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				// See comments in the non-batched `RendererServices::pointcloud_search()`.
+				IECore::msg( IECore::Msg::Warning, "ShadingEngine", "Calls to `pointcloud_get()` can not be constant folded." );
+				return result;
+			}
+
+			const PointCloud *pointCloud = threadRenderState->renderState.pointCloud( filename );
+			if( !pointCloud )
+			{
+				return result;
+			}
+
+			const PointCloud::Attribute *attribute = pointCloud->attribute( attrName );
+			if( !attribute )
+			{
+				return result;
+			}
+
+			const TypeDesc attrType = wideOutData.type();
+			vector<char> tmpData( wideOutData.type().size() );
+
+			wideOutData.mask().foreach(
+
+				[&] ( ActiveLane lane ) {
+
+					const int numPoints = wideNumPoints[lane];
+					auto indices = wideIndices[lane];
+					char *outData = tmpData.data();
+					bool success = true;
+
+					for( int i = 0; i < numPoints; ++i )
+					{
+						if( !pointCloud->get( *attribute, indices[i], attrType, outData ) )
+						{
+							success = false;
+							break;
+						}
+						outData += attrType.elementsize();
+					}
+
+					wideOutData.assign_val_lane_from_scalar( lane, tmpData.data() );
+					if( success )
+					{
+						result.set_on( lane );
+					}
+				}
+
+			);
+
+			return result;
 		}
 
 		bool is_overridden_pointcloud_get() const override
 		{
-			return false;
+			return true;
 		}
 
 		bool is_overridden_pointcloud_write() const override
@@ -798,6 +1121,86 @@ class RendererServices : public OSL::RendererServices
 			return threadRenderState->renderState.userData( threadRenderState->pointIndex,  name, type, value );
 		}
 
+		int pointcloud_search(
+			ShaderGlobals *sg, ustringhash filename, const OSL::Vec3 &center, float radius, int maxPoints,
+			bool sort, int *outIndices, float *outDistances,
+			int derivsOffset
+		) override
+		{
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				// OSL has detected that all the inputs to the `pointcloud_search()` call are constant,
+				// and is trying to constant-fold the result now, rather than perform call the function
+				// at runtime. We don't have the pointcloud now, and it might be different between different
+				// calls to `ShadingEngine::shade()`, so this whole enterprise is doomed. There is nothing
+				// in the OSL API to let us communicate this, so all we can do is emit a warning.
+				IECore::msg( IECore::Msg::Warning, "ShadingEngine", "Calls to `pointcloud_search()` can not be constant folded." );
+				return 0;
+			}
+
+			const PointCloud *pointCloud = threadRenderState->renderState.pointCloud( filename );
+			if( !pointCloud || maxPoints <= 0 )
+			{
+				return 0;
+			}
+
+			const int numPoints = pointCloud->search( center, radius, maxPoints, outIndices, outDistances );
+
+			if( derivsOffset && outDistances )
+			{
+				// We don't support outputting derivatives yet, but we at least
+				// zero them so that junk values don't get into the shader.
+				float *outDistancesDx = outDistances + derivsOffset;
+				float *outDistancesDy = outDistances + derivsOffset * 2;
+				for( int i = 0; i < numPoints; ++i )
+				{
+					outDistancesDx[i] = 0;
+					outDistancesDy[i] = 0;
+				}
+			}
+
+			return numPoints;
+		}
+
+		int pointcloud_get(
+			ShaderGlobals *sg, ustringhash filename, const int *indices, int count,
+			ustringhash attrName, TypeDesc attrType,
+			void *outData
+		) override
+		{
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				// See comment in `pointcloud_search()`.
+				IECore::msg( IECore::Msg::Warning, "ShadingEngine", "Calls to `pointcloud_get()` can not be constant folded." );
+				return 0;
+			}
+
+			const PointCloud *pointCloud = threadRenderState->renderState.pointCloud( filename );
+			if( !pointCloud )
+			{
+				return 0;
+			}
+
+			const PointCloud::Attribute *attribute = pointCloud->attribute( attrName );
+			if( !attribute )
+			{
+				return 0;
+			}
+
+			for( int i = 0; i < count; ++i )
+			{
+				if( !pointCloud->get( *attribute, indices[i], attrType, outData ) )
+				{
+					return 0;
+				}
+				outData = static_cast<char *>( outData ) + attrType.elementsize();
+			}
+
+			return 1;
+		}
+
 #if OSL_USE_BATCHED
 		OSL::BatchedRendererServices<16>* batched(WidthOf<16>) override
 		{
@@ -835,14 +1238,44 @@ struct EmissionParameters
 {
 };
 
+struct StringParameter
+{
+
+	static_assert( sizeof( ustring ) == sizeof( ustringhash ) );
+	static_assert( is_trivially_copyable_v<ustring> );
+	static_assert( is_trivially_copyable_v<ustringhash> );
+
+	ustring asUString() const
+	{
+		if( g_shadingSystemBatchSize == 1 )
+		{
+			ustringhash h;
+			memcpy( &h, storage, sizeof( ustringhash ) );
+			return ustring( h );
+		}
+		else
+		{
+			ustring s;
+			memcpy( &s, storage, sizeof( ustring ) );
+			return s;
+		}
+	}
+
+	// Depending on whether or not we use batched shading, OSL will
+	// want to store string parameters as either `ustring` or `ustringhash`.
+	// We just use bytes for storage so we can deal with both cases.
+	std::byte storage[sizeof(ustring)];
+
+};
+
 struct DebugParameters
 {
 
-	ustring name;
-	ustring type;
+	StringParameter name;
+	StringParameter type;
 	Color3f value;
 	M44f matrixValue;
-	ustring stringValue;
+	StringParameter stringValue;
 
 };
 
@@ -852,31 +1285,36 @@ struct DebugParameters
 using ShadingSystemWriteMutex = tbb::spin_mutex;
 ShadingSystemWriteMutex g_shadingSystemWriteMutex;
 
-OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
+OSL::ShadingSystem *acquireShadingSystem( ShadingEngine::TextureOrigin textureOrigin, int *batchSize = nullptr )
 {
 	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
-	static OSL::TextureSystem *g_textureSystem = nullptr;
-	static OSL::ShadingSystem *g_shadingSystem = nullptr;
-	static int g_shadingSystemBatchSize = 0;
+	// One for each value of TextureOrigin.
+	static std::array<std::shared_ptr<OIIO::TextureSystem>, 2> g_textureSystems;
+	static std::array<OSL::ShadingSystem *, 2> g_shadingSystems = { nullptr, nullptr };
 
-	if( g_shadingSystem )
+	OSL::ShadingSystem *&shadingSystem = g_shadingSystems[(int)textureOrigin];
+
+	if( shadingSystem )
 	{
 		if( batchSize )
 		{
 			*batchSize = g_shadingSystemBatchSize;
 		}
-		return g_shadingSystem;
+		return shadingSystem;
 	}
 
-	g_textureSystem = OIIO::TextureSystem::create( /* shared = */ false );
-	// By default, OIIO considers the image origin to be at the
-	// top left. We consider it to be at the bottom left.
-	// Compensate.
-	g_textureSystem->attribute( "flip_t", 1 );
+	// One ImageCache, not shared with the outside world, but shared by both `TextureOrigin::Bottom`
+	// and `TextureOrigin::Top`.
+	static std::shared_ptr<OIIO::ImageCache> g_imageCache = OIIO::ImageCache::create( /* shared = */ false );
+	std::shared_ptr<OIIO::TextureSystem> &textureSystem = g_textureSystems[(int)textureOrigin];
 
-	g_shadingSystem = new ShadingSystem(
-		new RendererServices( g_textureSystem ),
-		g_textureSystem
+	textureSystem = OIIO::TextureSystem::create( /* shared = */ false, g_imageCache );
+	// By default, OIIO considers the image origin to be at the top left.
+	textureSystem->attribute( "flip_t", textureOrigin == ShadingEngine::TextureOrigin::Bottom ? 1 : 0 );
+
+	shadingSystem = new ShadingSystem(
+		new RendererServices( textureSystem.get() ),
+		textureSystem.get()
 	);
 
 	ClosureParam emissionParams[] = {
@@ -893,7 +1331,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		CLOSURE_FINISH_PARAM( DebugParameters )
 	};
 
-	g_shadingSystem->register_closure(
+	shadingSystem->register_closure(
 		/* name */ "emission",
 		/* id */ EmissionClosureId,
 		/* params */ emissionParams,
@@ -901,7 +1339,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		/* setup */ nullptr
 	);
 
-	g_shadingSystem->register_closure(
+	shadingSystem->register_closure(
 		/* name */ "debug",
 		/* id */ DebugClosureId,
 		/* params */ debugParams,
@@ -909,7 +1347,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		/* setup */ nullptr
 	);
 
-	g_shadingSystem->register_closure(
+	shadingSystem->register_closure(
 		/* name */ "deformation",
 		/* id */ DeformationClosureId,
 		/* params */ debugParams,
@@ -919,21 +1357,23 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 
 	if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
 	{
-		g_shadingSystem->attribute( "searchpath:shader", searchPath );
+		shadingSystem->attribute( "searchpath:shader", searchPath );
 	}
 
 	if( const char *oslHome = getenv( "OSLHOME" ) )
 	{
-		g_shadingSystem->attribute( "searchpath:library", ( std::filesystem::path( oslHome ) / "lib" ).string() );
+		shadingSystem->attribute( "searchpath:library", ( std::filesystem::path( oslHome ) / "lib" ).string() );
 	}
 	else
 	{
 		msg( Msg::Warning, "ShadingEngine", "Please set OSLHOME env var to allow finding OSL libraries." );
 	}
 
-	g_shadingSystem->attribute( "lockgeom", 1 );
+	shadingSystem->attribute( "lockgeom", 1 );
 
-	g_shadingSystem->attribute( "commonspace", "object" );
+	shadingSystem->attribute( "commonspace", "object" );
+
+	g_shadingSystemBatchSize = 1;
 
 #if OSL_USE_BATCHED
 	bool requestBatch = true;
@@ -946,18 +1386,17 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	// `g_shadingSystem->attribute( "llvm_jit_fma", 1 );`
 	// This is a small improvement in performance ( I couldn't detect a change in my test ),
 	// with the downside that the floating point rounding is slightly different.  The
-	// small difference in rounding is actully more likely to be better than to be worse, so
+	// small difference in rounding is actually more likely to be better than to be worse, so
 	// it all sounds pretty good ... except that the slight difference in rounding may vary
-	// between architectures ... this could be pretty bad for a facility with a heterogenous
+	// between architectures ... this could be pretty bad for a facility with a heterogeneous
 	// farm ... getting a subtle flicker because frames that hit out of date farm blades
 	// render ever-so-slightly darker is not much fun.
 
-	g_shadingSystemBatchSize = 1;
-	if( requestBatch && g_shadingSystem->configure_batch_execution_at( 16 ) )
+	if( requestBatch && shadingSystem->configure_batch_execution_at( 16 ) )
 	{
 		g_shadingSystemBatchSize = 16;
 	}
-	else if( requestBatch && g_shadingSystem->configure_batch_execution_at( 8 ) )
+	else if( requestBatch && shadingSystem->configure_batch_execution_at( 8 ) )
 	{
 		g_shadingSystemBatchSize = 8;
 	}
@@ -973,9 +1412,9 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	else
 	{
 		ustring llvm_jit_target;
-		g_shadingSystem->getattribute("llvm_jit_target", llvm_jit_target);
+		shadingSystem->getattribute("llvm_jit_target", llvm_jit_target);
 		int llvm_jit_fma;
-		g_shadingSystem->getattribute("llvm_jit_fma", llvm_jit_fma);
+		shadingSystem->getattribute("llvm_jit_fma", llvm_jit_fma);
 
 		msg( Msg::Info, "ShadingEngine", fmt::format( "Initialized shading system with support for {}-wide batched shading. Architecture: {}, Fused-Multiply-Add: {}", g_shadingSystemBatchSize, llvm_jit_target.string(), llvm_jit_fma ? "Enabled" : "Disabled" ) );
 	}
@@ -985,7 +1424,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 	{
 		*batchSize = g_shadingSystemBatchSize;
 	}
-	return g_shadingSystem;
+	return shadingSystem;
 }
 
 } // namespace
@@ -1085,7 +1524,8 @@ class ShadingResults
 		DebugResult acquireDebugResult( const DebugParameters *parameters, DebugResultsMap &threadCache )
 		{
 			// Try the per-thread cache first.
-			auto it = threadCache.find( parameters->name );
+			const ustring name = parameters->name.asUString();
+			auto it = threadCache.find( name );
 			if( it != threadCache.end() )
 			{
 				return it->second;
@@ -1095,19 +1535,19 @@ class ShadingResults
 			// which requires locking. Start optimistically with a read lock.
 			tbb::spin_rw_mutex::scoped_lock rwScopedLock( m_resultsMutex, /* write = */ false  );
 
-			it = m_debugResults.find( parameters->name );
+			it = m_debugResults.find( name );
 			if( it == m_debugResults.end() )
 			{
 				// Need to insert the result, so need a write lock.
 				rwScopedLock.upgrade_to_writer();
 				// But another thread may have got the write lock before us
 				// and done the work itself, so check again just in case.
-				it = m_debugResults.find( parameters->name );
+				it = m_debugResults.find( name );
 				if( it == m_debugResults.end() )
 				{
 					// Create the result.
 					DebugResult result;
-					result.type = typeDescFromTypeName( parameters->type );
+					result.type = typeDescFromTypeName( parameters->type.asUString() );
 					result.type.arraylen = m_ci->size();
 
 					DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
@@ -1115,15 +1555,15 @@ class ShadingResults
 					{
 						throw IECore::Exception( "Unsupported type specified in debug() closure." );
 					}
-					if( parameters->type == g_uvType )
+					if( parameters->type.asUString() == g_uvType )
 					{
 						static_cast<V2fVectorData *>( data.get() )->setInterpretation( GeometricData::UV );
 					}
 
 					result.type.unarray(); // so we can use convert_value
 
-					m_results->writable()[parameters->name.c_str()] = data;
-					it = m_debugResults.insert( make_pair( parameters->name, result ) ).first;
+					m_results->writable()[name.c_str()] = data;
+					it = m_debugResults.insert( make_pair( name, result ) ).first;
 				}
 			}
 
@@ -1135,21 +1575,22 @@ class ShadingResults
 		{
 			DebugResult debugResult = acquireDebugResult( parameters, threadCache );
 
-			if( parameters->type == g_matrixType )
+			const ustring type = parameters->type.asUString();
+			if( type == g_matrixType )
 			{
 				M44f value = parameters->matrixValue;
 
 				char *dst = static_cast<char *>( debugResult.basePointer );
 				dst += pointIndex * debugResult.type.elementsize();
 				ShadingSystem::convert_value(
-					dst, debugResult.type, &value, TypeDesc::TypeMatrix44
+					dst, debugResult.type, &value, OIIO::TypeMatrix44
 				);
 			}
-			else if( parameters->type == g_stringType )
+			else if( type == g_stringType )
 			{
 				std::string *dst = static_cast<std::string*>( debugResult.basePointer );
 				dst += pointIndex;
-				*dst = parameters->stringValue.string();
+				*dst = parameters->stringValue.asUString().string();
 			}
 			else
 			{
@@ -1161,7 +1602,7 @@ class ShadingResults
 					dst,
 					debugResult.type,
 					&value,
-					debugResult.type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
+					debugResult.type.aggregate == TypeDesc::SCALAR ? OIIO::TypeFloat : OIIO::TypeColor
 				);
 			}
 		}
@@ -1180,7 +1621,8 @@ class ShadingResults
 			{
 				return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC2, TypeDesc::NORMAL );
 			}
-			return type != ustring() ? TypeDesc( type.c_str() ) : TypeDesc::TypeColor;
+
+			return type.size() ? TypeDesc( type.c_str() ) : OIIO::TypeColor;
 		}
 
 		CompoundDataPtr m_results;
@@ -1194,21 +1636,27 @@ class ShadingResults
 // and the OSL machinery that needs to be stored per "renderer-thread"
 struct ThreadInfo
 {
-	ThreadInfo() :
-		oslThreadInfo( ::shadingSystem()->create_thread_info() ),
-		shadingContext( ::shadingSystem()->get_context( oslThreadInfo ) )
+	ThreadInfo( OSL::ShadingSystem *shadingSystem ) :
+		oslThreadInfo( shadingSystem->create_thread_info() ),
+		shadingContext( shadingSystem->get_context( oslThreadInfo ) ),
+		m_shadingSystem( shadingSystem )
 	{
 	}
 
 	~ThreadInfo()
 	{
-		::shadingSystem()->release_context( shadingContext );
-		::shadingSystem()->destroy_thread_info( oslThreadInfo );
+		m_shadingSystem->release_context( shadingContext );
+		m_shadingSystem->destroy_thread_info( oslThreadInfo );
 	}
 
 	ShadingResults::DebugResultsMap debugResults;
 	OSL::PerThreadInfo *oslThreadInfo;
 	OSL::ShadingContext *shadingContext;
+
+	private :
+
+		OSL::ShadingSystem *m_shadingSystem;
+
 };
 
 
@@ -1247,7 +1695,7 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 }
 
 template <typename T>
-static T uniformValue( const IECore::CompoundData *points, const char *name )
+T uniformValue( const IECore::CompoundData *points, const char *name )
 {
 	using DataType = TypedData<T>;
 	const DataType *d = points->member<DataType>( name );
@@ -1262,7 +1710,7 @@ static T uniformValue( const IECore::CompoundData *points, const char *name )
 }
 
 template<typename T>
-static const T *varyingValue( const IECore::CompoundData *points, const char *name )
+const T *varyingValue( const IECore::CompoundData *points, const char *name )
 {
 	using DataType = TypedData<vector<T> >;
 	const DataType *d = points->member<DataType>( name );
@@ -1276,19 +1724,35 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 	}
 }
 
+bool shaderExists( const IECoreScene::Shader *shader )
+{
+	using ExistenceCache = IECorePreview::LRUCache<string, bool>;
+	static ExistenceCache g_existenceCache(
+		[] ( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller )
+		{
+			const char *searchPath = getenv( "OSL_SHADER_PATHS" );
+			OSL::OSLQuery query;
+			return query.open( shaderName, searchPath ? searchPath : "" );
+		},
+		10000
+	);
+
+	return g_existenceCache.get( shader->getName() );
+}
+
 } // namespace
 
-ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork ) : ShadingEngine( shaderNetwork->copy() )
+ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork, TextureOrigin textureOrigin )
+	:	ShadingEngine( shaderNetwork->copy(), textureOrigin )
 {
 }
 
-
-ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
-	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
+ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork, TextureOrigin textureOrigin )
+	:	m_textureOrigin( textureOrigin ), m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
 {
 	IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( shaderNetwork.get(), OSL_VERSION );
 
-	ShadingSystem *shadingSystem = ::shadingSystem();
+	ShadingSystem *shadingSystem = acquireShadingSystem( textureOrigin );
 
 	{
 		ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
@@ -1304,9 +1768,9 @@ ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
 				// full list of invalid shaders.
 
 				const Shader *shader = shaderNetwork->getShader( handle );
-				if( !boost::starts_with( shader->getType(), "osl:" ) )
+				if( !shaderExists( shader ) )
 				{
-					invalidShaders.push_back( shader->getName() + " (" + shader->getType() + ")" );
+					invalidShaders.push_back( shader->getName() );
 				}
 
 				if( invalidShaders.size() )
@@ -1343,7 +1807,7 @@ ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
 
 void ShadingEngine::queryShaderGroup()
 {
-	ShadingSystem *shadingSystem = ::shadingSystem();
+	ShadingSystem *shadingSystem = acquireShadingSystem( m_textureOrigin );
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 
 	// Globals
@@ -1446,6 +1910,11 @@ namespace
 
 struct ExecuteShadeParameters
 {
+	ExecuteShadeParameters( OSL::ShadingSystem *shadingSystem )
+		:	threadInfoCache( shadingSystem )
+	{
+	}
+
 	ShaderGlobals shaderGlobals;
 
 	const IECore::Canceller *canceller;
@@ -1641,11 +2110,16 @@ IECore::CompoundDataPtr executeShadeBatched( const ExecuteShadeParameters &param
 
 IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const ShadingEngine::Transforms &transforms ) const
 {
+	return shade( points, transforms, PointClouds() );
+}
+
+IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const Transforms &transforms, const PointClouds &pointClouds ) const
+{
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 
-	ExecuteShadeParameters shadeParameters;
 	int batchSize;
-	ShadingSystem *shadingSystem = ::shadingSystem( &batchSize );
+	ShadingSystem *shadingSystem = ::acquireShadingSystem( m_textureOrigin, &batchSize );
+	ExecuteShadeParameters shadeParameters( shadingSystem );
 
 	const Gaffer::Context *context = Gaffer::Context::current();
 	shadeParameters.canceller = context->canceller();
@@ -1706,7 +2180,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
-	RenderState renderState( points, transforms, m_contextVariablesNeeded, context );
+	RenderState renderState( points, transforms, pointClouds, m_contextVariablesNeeded, context );
 
 #if OSL_USE_BATCHED
 	if( batchSize == 1 )

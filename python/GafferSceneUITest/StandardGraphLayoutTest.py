@@ -74,6 +74,3 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		self.assertTrue( s["a2"]["in"].getInput().isSame( s["a4"]["out"] ) )
 		self.assertTrue( s["a3"]["in"].getInput().isSame( s["a4"]["out"] ) )
-
-if __name__ == "__main__":
-	unittest.main()

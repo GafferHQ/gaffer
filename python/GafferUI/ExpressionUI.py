@@ -62,11 +62,11 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"user" : (
+		"user" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		),
+		},
 
 	}
 

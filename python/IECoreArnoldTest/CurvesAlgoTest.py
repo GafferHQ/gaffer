@@ -311,6 +311,3 @@ class CurvesAlgoTest( unittest.TestCase ) :
 				self.assertEqual( arnold.AiArrayGetFlt( foo4, i ), 1.5 )
 			for i in range( 12, 24 ) :
 				self.assertEqual( arnold.AiArrayGetFlt( r4, i ), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

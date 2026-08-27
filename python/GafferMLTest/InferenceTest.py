@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import sys
 import subprocess
 import pathlib
 import unittest
@@ -75,6 +76,7 @@ class InferenceTest( GafferTest.TestCase ) :
 		script2.execute( script.serialise() )
 		assertLoaded( script2["inference"] )
 
+	@unittest.skipIf( GafferTest.inCI() and sys.platform == "darwin", "Compute fails with virtualised device on macOS CI" )
 	def testCompute( self ) :
 
 		inference = GafferML.Inference()
@@ -103,6 +105,7 @@ class InferenceTest( GafferTest.TestCase ) :
 			IECore.FloatVectorData( [ 4 ] * 60 )
 		)
 
+	@unittest.skipIf( GafferTest.inCI() and sys.platform == "darwin", "Compute fails with virtualised device on macOS CI" )
 	def testComputeError( self ) :
 
 		inference = GafferML.Inference()
@@ -129,7 +132,7 @@ class InferenceTest( GafferTest.TestCase ) :
 		if os.environ.get( "GAFFERML_MODEL_PATHS", "" ) != testPath :
 
 			self.assertRaises( RuntimeError, node.loadModel )
-			env = os.environ.copy()
+			env = Gaffer.environment()
 			env["GAFFERML_MODEL_PATHS"] = testPath
 			try :
 				subprocess.check_output(
@@ -164,6 +167,3 @@ class InferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( inference["in"][0].getInput().isSame( dataToTensor1["tensor"] ) )
 		self.assertTrue( inference["in"][1].getInput().isSame( dataToTensor2["tensor"] ) )
 		self.assertTrue( destinationPlug.getInput().isSame( inference["out"][0] ) )
-
-if __name__ == "__main__":
-	unittest.main()

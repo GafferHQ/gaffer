@@ -102,7 +102,7 @@ float Warp::approximateDerivative( float upper, float center, float lower )
 		// instead.  This may underfilter sometimes, but there are two arguments for it:
 		// * A large jump on one side could represent a discontinuity that we shouldn't filter across
 		// * Keeping the filter size lower is good for performance ( in the case of a large discontinuity,
-		//   filtering across it could be disasterous for performance )
+		//   filtering across it could be disastrous for performance )
 		return fabs( high ) < fabs( low ) ? high : low;
 	}
 	else if( upper != Engine::black.x )

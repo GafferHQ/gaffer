@@ -58,9 +58,13 @@ shader delightSplineParameters
 	float mayaSpline_Floats[] = { 0, 0, 1, 1 } [[ string widget = "maya_floatRamp" ]],
 	int mayaSpline_Interp[] = { 1, 1, 1, 1 } [[ string widget = "null", string related_to_widget = "maya_floatRamp" ]],
 
-	float inconsistentNameSpline_chaos[] = { 0, 0, 0, 1, 1, 1 } [[ string widget = "null", string related_to_widget = "floatRamp" ]],
+	float inconsistentNameSpline_pos[] = { 0, 0, 0, 1, 1, 1 } [[ string widget = "null", string related_to_widget = "floatRamp" ]],
 	float inconsistentNameSpline_moreChaos[] = { 0, 0, 0, 1, 1, 1 } [[ string widget = "floatRamp" ]],
 	int inconsistentNameSpline_ahhh[] = { 2, 2, 2, 2 } [[ string widget = "null", string related_to_widget = "floatRamp" ]],
+
+	float inconsistentNameOtherSplinePositions[] = { 0, 0, 0, 1, 1, 1 } [[ string widget = "null", string related_to_widget = "floatRamp" ]],
+	float inconsistentNameOtherSplineMoreChaos[] = { 0, 0, 0, 1, 1, 1 } [[ string widget = "floatRamp" ]],
+	int inconsistentNameOtherSplineAhhh[] = { 2, 2, 2, 2 } [[ string widget = "null", string related_to_widget = "floatRamp" ]],
 
 	string notASpline = "notASpline",
 	int alsoNotASpline[] = { 1, 1, 1 },

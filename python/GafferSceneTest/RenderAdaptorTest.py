@@ -82,6 +82,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		cubeC["sets"].setValue( "C CUBE" )
 
 		lightC = GafferSceneTest.TestLight()
+		lightC.loadShader( "simpleLight" )
 		lightC["sets"].setValue( "C" )
 
 		lightFilterC = GafferSceneTest.TestLightFilter()
@@ -107,16 +108,16 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		def assertIncludedObjects( scene, paths, inclusions = None, exclusions = None, additionalLights = None ) :
 
 			if inclusions is not None :
-				standardOptions["options"]["inclusions"]["value"].setValue( inclusions )
-			standardOptions["options"]["inclusions"]["enabled"].setValue( inclusions is not None )
+				standardOptions["options"]["render:inclusions"]["value"].setValue( inclusions )
+			standardOptions["options"]["render:inclusions"]["enabled"].setValue( inclusions is not None )
 
 			if exclusions is not None :
-				standardOptions["options"]["exclusions"]["value"].setValue( exclusions )
-			standardOptions["options"]["exclusions"]["enabled"].setValue( exclusions is not None )
+				standardOptions["options"]["render:exclusions"]["value"].setValue( exclusions )
+			standardOptions["options"]["render:exclusions"]["enabled"].setValue( exclusions is not None )
 
 			if additionalLights is not None :
-				standardOptions["options"]["additionalLights"]["value"].setValue( additionalLights )
-			standardOptions["options"]["additionalLights"]["enabled"].setValue( additionalLights is not None )
+				standardOptions["options"]["render:additionalLights"]["value"].setValue( additionalLights )
+			standardOptions["options"]["render:additionalLights"]["enabled"].setValue( additionalLights is not None )
 
 			allPaths = {
 				"/group/groupA/cube",
@@ -443,6 +444,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:visibility:camera", True, True ) )
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:visibility:camera", True, True ) )
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", True, True ) )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ri:visibility:camera", True, True ) )
 
 		exclusionAttributesFilter = GafferScene.SetFilter()
 		exclusionAttributes = GafferScene.CustomAttributes()
@@ -451,6 +453,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:visibility:camera", False, True ) )
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:visibility:camera", False, True ) )
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", False, True ) )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ri:visibility:camera", False, True ) )
 
 		# Create adaptors for the CapturingRenderer
 		testAdaptors = GafferScene.SceneAlgo.createRenderAdaptors()
@@ -474,28 +477,42 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/groupA/sphere",
 			}
 
-			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
-				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
-			)
-			GafferScene.Private.RendererAlgo.outputObjects(
-				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
-				renderer
-			)
+			for rendererName, attribute in (
+				( "Arnold", "ai:visibility:camera" ),
+				( "Cycles", "cycles:visibility:camera" ),
+				( "3Delight", "dl:visibility.camera" ),
+				( "3Delight Cloud", "dl:visibility.camera" ),
+				( "RenderMan", "ri:visibility:camera" ),
+				( "RenderManXPU", "ri:visibility:camera" ),
+			) :
 
-			if paths != {} :
-				self.assertTrue( paths.issubset( allPaths ) )
+				with self.subTest( rendererName = rendererName, attribute = attribute ) :
 
-			for path in allPaths :
-				capturedObject = renderer.capturedObject( path )
-				for attribute in [ "ai:visibility:camera", "cycles:visibility:camera", "dl:visibility.camera" ] :
-					if path in paths :
-						# path is visible by the absence of the attribute, or its presence with a value of True
-						if attribute in capturedObject.capturedAttributes().attributes() :
-							self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
-					else :
-						# path is invisible only by the presence of the attribute with a value of False
-						self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
-						self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
+					testAdaptors["renderer"].setValue( rendererName )
+
+					renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+					)
+					GafferScene.Private.RendererAlgo.outputObjects(
+						testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ),
+						GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ),
+						GafferScene.Private.RendererAlgo.LightLinks( renderer ),
+						renderer
+					)
+
+					if paths != {} :
+						self.assertTrue( paths.issubset( allPaths ) )
+
+					for path in allPaths :
+						capturedObject = renderer.capturedObject( path )
+						if path in paths :
+							# path is visible by the absence of the attribute, or its presence with a value of True
+							if attribute in capturedObject.capturedAttributes().attributes() :
+								self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
+						else :
+							# path is invisible only by the presence of the attribute with a value of False
+							self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
+							self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
 
 		# By default everything should be camera visible
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" } )
@@ -547,8 +564,11 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "A", exclusionOverrides = "/groupA/cube" )
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "A", exclusionOverrides = "/groupA" )
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "CUBE", inclusionOverrides = "/groupA/sphere" )
+		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "CUBE", inclusionOverrides = "/groupA" )
 		assertCameraVisibleObjects( { "/groupA/cube", "/groupA/sphere" }, cameraInclusions = "", inclusionOverrides = "A" )
 		assertCameraVisibleObjects( {}, cameraInclusions = "/", exclusionOverrides = "A" )
+		assertCameraVisibleObjects( {}, cameraInclusions = "/", cameraExclusions = "/" )
+		assertCameraVisibleObjects( { "/groupA/sphere" }, cameraInclusions = "/", cameraExclusions = "/", inclusionOverrides = "/groupA", exclusionOverrides = "/groupA/cube"  )
 
 	def testMatteAdaptor( self ) :
 
@@ -579,6 +599,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:matte", True, True, "aiMatte" ) )
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:use_holdout", True, True, "cyclesUseHoldout" ) )
 		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:matte", True, True, "dlMatte" ) )
+		inclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ri:Ri:Matte", True, True, "riMatte" ) )
 
 		exclusionAttributesFilter = GafferScene.SetFilter()
 		exclusionAttributes = GafferScene.CustomAttributes()
@@ -587,6 +608,7 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ai:matte", False, True, "aiMatte" ) )
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "cycles:use_holdout", False, True, "cyclesUseHoldout" ) )
 		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "dl:matte", False, True, "dlMatte" ) )
+		exclusionAttributes["attributes"].addChild( Gaffer.NameValuePlug( "ri:Ri:Matte", False, True, "riMatte" ) )
 
 		# Create adaptors for the CapturingRenderer
 		testAdaptors = GafferScene.SceneAlgo.createRenderAdaptors()
@@ -610,25 +632,39 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 				"/groupA/sphere",
 			}
 
-			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
-				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
-			)
-			GafferScene.Private.RendererAlgo.outputObjects(
-				testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
-				renderer
-			)
+			for rendererName, attribute in (
+				( "Arnold", "ai:matte" ),
+				( "Cycles", "cycles:use_holdout" ),
+				( "3Delight", "dl:matte" ),
+				( "3Delight Cloud", "dl:matte" ),
+				( "RenderMan", "ri:Ri:Matte" ),
+				( "RenderManXPU", "ri:Ri:Matte" ),
+			) :
 
-			for path in allPaths :
-				capturedObject = renderer.capturedObject( path )
-				for attribute in [ "ai:matte", "cycles:use_holdout", "dl:matte" ] :
-					if path in paths :
-						# path is matte only by the presence of the attribute with a value of True
-						self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
-						self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
-					else :
-						# path isn't matte by the absence of the attribute, or its presence with a value of False
-						if attribute in capturedObject.capturedAttributes().attributes() :
-							self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
+				with self.subTest( rendererName = rendererName, attribute = attribute ) :
+
+					testAdaptors["renderer"].setValue( rendererName )
+
+					renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+						GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+					)
+					GafferScene.Private.RendererAlgo.outputObjects(
+						testAdaptors["out"], GafferScene.Private.RendererAlgo.RenderOptions( testAdaptors["out"] ),
+						GafferScene.Private.RendererAlgo.RenderSets( testAdaptors["out"] ),
+						GafferScene.Private.RendererAlgo.LightLinks( renderer ),
+						renderer
+					)
+
+					for path in allPaths :
+						capturedObject = renderer.capturedObject( path )
+						if path in paths :
+							# path is matte only by the presence of the attribute with a value of True
+							self.assertTrue( attribute in capturedObject.capturedAttributes().attributes() )
+							self.assertTrue( capturedObject.capturedAttributes().attributes()[attribute].value )
+						else :
+							# path isn't matte by the absence of the attribute, or its presence with a value of False
+							if attribute in capturedObject.capturedAttributes().attributes() :
+								self.assertFalse( capturedObject.capturedAttributes().attributes()[attribute].value )
 
 		# Nothing should be matte when matte inclusions and exclusions are empty or undefined
 		assertMatte( {} )
@@ -669,7 +705,10 @@ class RenderAdaptorTest( GafferSceneTest.SceneTestCase ) :
 		assertMatte( { "/groupA/sphere" }, matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
 		assertMatte( { "/groupA/sphere" }, matteExclusions = "/groupA", inclusionOverrides = "/groupA/sphere" )
 		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteInclusions = "/groupA", matteExclusions = "/groupA/sphere", inclusionOverrides = "/groupA/sphere" )
+		assertMatte( { "/groupA/cube", "/groupA/sphere" }, matteExclusions = "/groupA", inclusionOverrides = "/groupA" )
 
 		assertMatte( {}, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA/sphere" )
 		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA/sphere", exclusionOverrides = "/groupA" )
 		assertMatte( { "/groupA/sphere" }, matteInclusions = "/groupA", exclusionOverrides = "/groupA/cube" )
+		assertMatte( {}, matteInclusions = "/", exclusionOverrides = "/groupA" )
+		assertMatte( { "/groupA/cube" }, matteInclusions = "/", exclusionOverrides = "/groupA", inclusionOverrides = "/groupA/cube" )

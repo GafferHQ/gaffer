@@ -397,6 +397,3 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( dilate["out"] )
-
-if __name__ == "__main__":
-	unittest.main()

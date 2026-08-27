@@ -40,6 +40,7 @@
 #include "GafferImage/DeleteImageMetadata.h"
 #include "GafferImage/ImageMetadata.h"
 #include "GafferImage/MetadataProcessor.h"
+#include "GafferImage/ShuffleImageMetadata.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -54,5 +55,6 @@ void GafferImageModule::bindMetadata()
 	GafferBindings::DependencyNodeClass<ImageMetadata>();
 	GafferBindings::DependencyNodeClass<DeleteImageMetadata>();
 	GafferBindings::DependencyNodeClass<CopyImageMetadata>();
+	GafferBindings::DependencyNodeClass<ShuffleImageMetadata>();
 
 }

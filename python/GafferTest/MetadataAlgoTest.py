@@ -117,6 +117,124 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			Gaffer.MetadataAlgo.readOnlyReason( None )
 
+	def testFirstViewableAncestor( self ) :
+
+		b = Gaffer.Box()
+		b["b"] = Gaffer.Box()
+
+		n = GafferTest.AddNode()
+		b["b"]["n"] = n
+
+		# start with no childrenViewable metadata on either Box
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", None )
+		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", None )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", None )
+		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", None )
+
+		# b has no parent, so is considered viewable
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Node ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Box ), b )
+		# With no childrenViewable metadata registered, only b is viewable
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b["b"], Gaffer.Box ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Box ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Node ), b )
+
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Node ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Box ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b["b"], Gaffer.Box ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Box ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Node ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Plug ), None )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Node ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Box ), b["b"] )
+
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Box ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.Node ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( b["b"], Gaffer.Box ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Box ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.Node ), n )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Plug ), n["op1"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Node ), n )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.Box ), b["b"] )
+
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableAncestor( b, Gaffer.EditScope ) )
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableAncestor( b["b"], Gaffer.EditScope ) )
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableAncestor( n, Gaffer.EditScope ) )
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableAncestor( n["op1"], Gaffer.EditScope ) )
+
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
+			Gaffer.MetadataAlgo.firstViewableAncestor( None, None )
+			Gaffer.MetadataAlgo.firstViewableAncestor( b, None )
+			Gaffer.MetadataAlgo.firstViewableAncestor( None, Gaffer.Box )
+
+	def testFirstViewableNode( self ) :
+
+		b = Gaffer.Box()
+		b["b"] = Gaffer.Box()
+
+		n = GafferTest.AddNode()
+		b["b"]["n"] = n
+
+		# start with no childrenViewable metadata on either Box
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", None )
+		Gaffer.Metadata.registerValue( b, "graphEditor:childrenViewable", None )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", None )
+		Gaffer.Metadata.registerValue( b["b"], "graphEditor:childrenViewable", None )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+		# With no childrenViewable metadata registered, only b is viewable
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
+
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", True )
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), n )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), n )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", False )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), b["b"] )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", False )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), b )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		Gaffer.Metadata.registerValue( b["b"], "ui:childNodesAreViewable", True )
+		# Although `b["b"]` now has viewable children, its parent `b` does not
+		# and is still the first viewable.
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), b )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		Gaffer.Metadata.registerValue( b, "ui:childNodesAreViewable", True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n ), n )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( n["op1"] ), n )
+
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b["b"] ), b["b"] )
+		self.assertEqual( Gaffer.MetadataAlgo.firstViewableNode( b ), b )
+
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
+			Gaffer.MetadataAlgo.firstViewableNode( None )
+
 	def testChildNodesAreReadOnly( self ) :
 
 		b = Gaffer.Box()
@@ -704,6 +822,18 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			Gaffer.MetadataAlgo.Annotation( "abc", imath.Color3f( 0, 1, 0 ) )
 		)
 
+	def testAnnotationRegistrationTypes( self ) :
+
+		n = Gaffer.Node()
+		Gaffer.MetadataAlgo.addAnnotation( n, "persistent", Gaffer.MetadataAlgo.Annotation( "Always here", imath.Color3f( 1, 0, 0 ) ) )
+		Gaffer.MetadataAlgo.addAnnotation( n, "nonPersistent", Gaffer.MetadataAlgo.Annotation( "Ephemeral", imath.Color3f( 0, 1, 0 ) ), False )
+
+		Types = Gaffer.Metadata.RegistrationTypes
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( n, Types.InstancePersistent ), ["persistent"] )
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( n, Types.InstanceNonPersistent ), ["nonPersistent"] )
+		for t in [ Types.None_, Types.TypeId, Types.TypeIdDescendant ] :
+			self.assertEqual( Gaffer.MetadataAlgo.annotations( n, t ), [] )
+
 	def testAnnotationWithoutColor( self ) :
 
 		n = Gaffer.Node()
@@ -767,6 +897,17 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			Gaffer.MetadataAlgo.Annotation( "hi" ),
 		)
 
+	def testAnnotationsDoesntReturnDuplicates( self ) :
+
+		Gaffer.Metadata.registerValue( Gaffer.Node, "annotation:user:text", "TypeId annotation" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, Gaffer.Node, "annotation:user:text" )
+
+		node = Gaffer.Node()
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( node ), [ "user" ] )
+
+		Gaffer.MetadataAlgo.addAnnotation( node, "user", Gaffer.MetadataAlgo.Annotation( "Instance annotation", imath.Color3f( 1, 0, 0 ) ) )
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( node ), [ "user" ] )
+
 	def testNonUserAnnotationTemplates( self ) :
 
 		defaultTemplates = Gaffer.MetadataAlgo.annotationTemplates()
@@ -819,10 +960,100 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 						if typeValue == instanceValue :
 							self.assertIsNone( Gaffer.Metadata.value( node, "metadataAlgoTest", registrationTypes = Gaffer.Metadata.RegistrationTypes.Instance ) )
 
+	def testCreatePlugFromMetadata( self ) :
+
+		self.assertRaises( RuntimeError, Gaffer.MetadataAlgo.createPlugFromMetadata, "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "not:a:target" )
+
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "test:testTarget", "defaultValue" )
+
+		for value, plugType in [
+			( 1, Gaffer.IntPlug ),
+			( 2.0, Gaffer.FloatPlug ),
+			( "hello", Gaffer.StringPlug ),
+			( False, Gaffer.BoolPlug ),
+			( imath.Color3f( 1.0 ), Gaffer.Color3fPlug ),
+			( imath.Color4f( 1.0 ), Gaffer.Color4fPlug ),
+			( imath.V2f( 1.0 ), Gaffer.V2fPlug ),
+			( imath.V3f( 1.0 ), Gaffer.V3fPlug ),
+			( imath.Box2f( imath.V2f( 1.0 ) ), Gaffer.Box2fPlug ),
+			( imath.Box3f( imath.V3f( 1.0 ) ), Gaffer.Box3fPlug ),
+			( imath.Box2i( imath.V2i( 1 ) ), Gaffer.Box2iPlug ),
+			( imath.Box3i( imath.V3i( 1 ) ), Gaffer.Box3iPlug ),
+		] :
+			with self.subTest( value = value, plugType = plugType ) :
+				Gaffer.Metadata.registerValue( "test:testTarget", "defaultValue", value )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertIsInstance( plug, plugType )
+				self.assertEqual( plug.getName(), "value" )
+				self.assertEqual( plug.direction(), Gaffer.Plug.Direction.In )
+
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "test:testTarget", "minValue" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "test:testTarget", "maxValue" )
+
+		for value, minValue, maxValue in [
+			( 5, -1, 10 ),
+			( 5.0, -1.0, 10.0 ),
+			( imath.Color3f( 5.0 ), imath.Color3f( -1.0 ), imath.Color3f( 10.0 ) ),
+			( imath.Color4f( 5.0 ), imath.Color4f( -1.0 ), imath.Color4f( 10.0 ) ),
+			( imath.Box2f( imath.V2f( 5.0 ) ), imath.V2f( -1.0 ), imath.V2f( 10.0 ) ),
+			( imath.Box3f( imath.V3f( 5.0 ) ), imath.V3f( -1.0 ), imath.V3f( 10.0 ) ),
+			( imath.Box2i( imath.V2i( 5 ) ), imath.V2i( -1 ), imath.V2i( 10 ) ),
+			( imath.Box3i( imath.V3i( 5 ) ), imath.V3i( -1 ), imath.V3i( 10 ) ),
+		] :
+			with self.subTest( value = value, minValue = minValue, maxValue = maxValue ) :
+				Gaffer.Metadata.registerValue( "test:testTarget", "defaultValue", value )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertFalse( plug.hasMinValue() )
+				self.assertFalse( plug.hasMaxValue() )
+
+				Gaffer.Metadata.registerValue( "test:testTarget", "minValue", minValue )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertTrue( plug.hasMinValue() )
+				self.assertEqual( plug.minValue(), minValue )
+				self.assertFalse( plug.hasMaxValue() )
+
+				Gaffer.Metadata.deregisterValue( "test:testTarget", "minValue" )
+				Gaffer.Metadata.registerValue( "test:testTarget", "maxValue", maxValue )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertFalse( plug.hasMinValue() )
+				self.assertTrue( plug.hasMaxValue() )
+				self.assertEqual( plug.maxValue(), maxValue )
+
+				Gaffer.Metadata.registerValue( "test:testTarget", "minValue", minValue )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertTrue( plug.hasMinValue() )
+				self.assertEqual( plug.minValue(), minValue )
+				self.assertTrue( plug.hasMaxValue() )
+				self.assertEqual( plug.maxValue(), maxValue )
+
+				Gaffer.Metadata.registerValue( "test:testTarget", "minValue", "bogus" )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertFalse( plug.hasMinValue() )
+				self.assertTrue( plug.hasMaxValue() )
+				self.assertEqual( plug.maxValue(), maxValue )
+
+				Gaffer.Metadata.registerValue( "test:testTarget", "maxValue", "bogus" )
+
+				plug = Gaffer.MetadataAlgo.createPlugFromMetadata( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, "test:testTarget" )
+				self.assertEqual( plug.defaultValue(), value )
+				self.assertFalse( plug.hasMinValue() )
+				self.assertFalse( plug.hasMaxValue() )
+
+				Gaffer.Metadata.deregisterValue( "test:testTarget", "minValue" )
+				Gaffer.Metadata.deregisterValue( "test:testTarget", "maxValue" )
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :
 			Gaffer.Metadata.deregisterValue( n, "metadataAlgoTest" )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -36,14 +36,14 @@
 
 #pragma once
 
-#include "GafferScene/AttributeProcessor.h"
+#include "GafferScene/FilteredSceneProcessor.h"
 
 #include "Gaffer/StringPlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API DeleteAttributes : public AttributeProcessor
+class GAFFERSCENE_API DeleteAttributes final : public FilteredSceneProcessor
 {
 
 	public :
@@ -51,7 +51,7 @@ class GAFFERSCENE_API DeleteAttributes : public AttributeProcessor
 		explicit DeleteAttributes( const std::string &name=defaultName<DeleteAttributes>() );
 		~DeleteAttributes() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteAttributes, DeleteAttributesTypeId, AttributeProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteAttributes, DeleteAttributesTypeId, FilteredSceneProcessor );
 
 		Gaffer::StringPlug *namesPlug();
 		const Gaffer::StringPlug *namesPlug() const;
@@ -59,13 +59,21 @@ class GAFFERSCENE_API DeleteAttributes : public AttributeProcessor
 		Gaffer::BoolPlug *invertNamesPlug();
 		const Gaffer::BoolPlug *invertNamesPlug() const;
 
-	protected :
-
-		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
-		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	private :
+
+		enum class Operation
+		{
+			PassThrough,
+			Delete,
+			Clear
+		};
+
+		Operation operation( const Gaffer::Context *context, std::string &names, bool &invertNames ) const;
+
+		void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const final;
+		IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const final;
 
 		static size_t g_firstPlugIndex;
 

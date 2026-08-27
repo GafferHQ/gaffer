@@ -63,7 +63,17 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self["section"] = Gaffer.StringPlug( defaultValue = "" )
 			self["editScope"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::LightEditor::Settings" )
+			self["__setFilter"] = GafferScene.SetFilter()
+			self["__setFilter"]["setExpression"].setValue( "__lights __lightFilters" )
+
+			self["__isolate"] = GafferScene.Isolate()
+			self["__isolate"]["in"].setInput( self["__adaptedIn"] )
+			self["__isolate"]["filter"].setInput( self["__setFilter"]["out"] )
+
+			self["__filteredIn"] = GafferScene.ScenePlug()
+			self["__filteredIn"].setInput( self["__isolate"]["out"] )
+
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::LightEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -71,9 +81,23 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
-		self.__setFilter = _GafferSceneUI._HierarchyViewSetFilter()
-		self.__setFilter.setScene( self.settings()["in"] )
-		self.__setFilter.setSetNames( [ "__lights", "__lightFilters" ] )
+		self.__commonColumns = [
+			_GafferSceneUI._LightEditorLocationNameColumn(),
+			GafferSceneUI.Private.VisibilityColumn(
+				self.settings()["__adaptedIn"],
+				self.settings()["editScope"]
+			),
+			_GafferSceneUI._LightEditorMuteColumn(
+				self.settings()["__adaptedIn"],
+				self.settings()["editScope"]
+			),
+			_GafferSceneUI._LightEditorSetMembershipColumn(
+				self.settings()["__adaptedIn"],
+				self.settings()["editScope"],
+				"soloLights",
+				"Solo"
+			),
+		]
 
 		with column :
 
@@ -84,20 +108,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			)
 
 			self.__pathListing = GafferUI.PathListingWidget(
-				Gaffer.DictPath( {}, "/" ), # Temp till we make a ScenePath
-				columns = [
-					_GafferSceneUI._LightEditorLocationNameColumn(),
-					_GafferSceneUI._LightEditorMuteColumn(
-						self.settings()["in"],
-						self.settings()["editScope"]
-					),
-					_GafferSceneUI._LightEditorSetMembershipColumn(
-						self.settings()["in"],
-						self.settings()["editScope"],
-						"soloLights",
-						"Solo"
-					),
-				],
+				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
+				columns = self.__commonColumns,
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
@@ -109,13 +121,15 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				Gaffer.WeakMethod( self.__selectionChanged )
 			)
 			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__pathListing )
 
 		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
 		)
 
+		self.__columnCache = {}
+
 		self._updateFromSet()
-		self.__setPathListingPath()
 		self.__transferSelectionFromScriptNode()
 		self.__updateColumns()
 
@@ -124,6 +138,17 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 	def scene( self ) :
 
 		return self.settings()["in"].getInput()
+
+	## Returns the widget used for showing the main scene listing, with the
+	# intention that clients can add custom context menu items via
+	# `sceneListing.columnContextMenuSignal()`.
+	#
+	# > Caution : This currently returns a PathListingWidget, but in future
+	# > will probably return a more specialised widget with fewer privileges.
+	# > Please limit usage to `columnContextMenuSignal()`.
+	def sceneListing( self ) :
+
+		return self.__pathListing
 
 	@classmethod
 	def __parseParameter( cls, parameter ) :
@@ -227,17 +252,17 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		for item in modifiedItems :
-			if not item.startswith( "ui:" ) :
-				# When the context has changed, the hierarchy of the scene may
-				# have too so we should update our PathListingWidget.
-				self.__setPathListingPath()
-				break
+		self.__lazyUpdateFromContext()
 
 	def _updateFromSettings( self, plug ) :
 
 		if plug in ( self.settings()["section"], self.settings()["attribute"] ) :
 			self.__updateColumns()
+
+	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
+	def __lazyUpdateFromContext( self ) :
+
+		self.__pathListing.getPath().setContext( self.context() )
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
@@ -250,23 +275,18 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		for rendererKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( attribute, rendererKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+				sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
 
-		nameColumn = self.__pathListing.getColumns()[0]
-		muteColumn = self.__pathListing.getColumns()[1]
-		soloColumn = self.__pathListing.getColumns()[2]
-		self.__pathListing.setColumns( [ nameColumn, muteColumn, soloColumn ] + sectionColumns )
+		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __setPathListingPath( self ) :
+	def __acquireColumn( self, columnCreator, section ) :
 
-		# We take a static copy of our current context for use in the ScenePath - this prevents the
-		# PathListing from updating automatically when the original context changes, and allows us to take
-		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-		# function until we are visible and playback has stopped.
-		contextCopy = Gaffer.Context( self.context() )
-		self.__setFilter.setContext( contextCopy )
-		self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__setFilter ) )
+		column = self.__columnCache.get( ( columnCreator, section ) )
+		if column is None :
+			column = columnCreator( self.settings()["__adaptedIn"], self.settings()["editScope"] )
+			self.__columnCache[ ( columnCreator, section ) ] = column
+
+		return column
 
 	def __selectedPathsChanged( self, scriptNode ) :
 
@@ -298,46 +318,13 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if columnIndex == 0 :
 			# Whole light operations
 
+			if menuDefinition.size() :
+				menuDefinition.append( "/__lightEditorSelectDivider", { "divider" : True } )
+
 			menuDefinition.append(
 				"Select Linked Objects",
 				{
 					"command" : Gaffer.WeakMethod( self.__selectLinked )
-				}
-			)
-
-			menuDefinition.append( "/deleteDivider", { "divider" : True } )
-
-			# Filter out a number of scenarios where deleting would be impossible
-			# or unintuitive
-			deleteEnabled = True
-			inputNode = self.settings()["in"].getInput().node()
-			editScopeNode = self.editScope()
-			if editScopeNode is not None :
-				if inputNode != editScopeNode and editScopeNode not in Gaffer.NodeAlgo.upstreamNodes( inputNode ) :
-					# Edit scope is downstream of input
-					deleteEnabled = False
-				elif GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScopeNode ) is not None :
-					# Pruning or the edit scope is read only
-					deleteEnabled = False
-				else :
-					with self.context() :
-						if not editScopeNode["enabled"].getValue() :
-							# Edit scope is disabled
-							deleteEnabled = False
-						else :
-							pruningProcessor = editScopeNode.acquireProcessor( "PruningEdits", createIfNecessary = False )
-							if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
-								# Pruning processor is disabled
-								deleteEnabled = False
-			else :
-				# No edit scope selected
-				deleteEnabled = False
-
-			menuDefinition.append(
-				"Delete",
-				{
-					"command" : Gaffer.WeakMethod( self.__deleteLights ),
-					"active" : deleteEnabled
 				}
 			)
 
@@ -362,16 +349,6 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if not isinstance( result, Exception ) :
 			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), result )
 
-	def __deleteLights( self, *unused ) :
-
-		# There may be multiple columns with a selection, but we only operate on the name column.
-		selection = self.__pathListing.getSelection()[0]
-
-		editScope = self.editScope()
-
-		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
-			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
-
 GafferUI.Editor.registerType( "LightEditor", LightEditor )
 
 ##########################################################################
@@ -391,31 +368,31 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"label", "",
+			"label" : "",
 
-		],
+		},
 
-		"attribute" : [
+		"attribute" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"layout:width", 100,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"layout:width" : 100,
 
-		],
+		},
 
-		"section" : [
+		"section" : {
 
-			"plugValueWidget:type", "GafferSceneUI.LightEditor._SectionPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.LightEditor._SectionPlugValueWidget",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 130,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width" : 130,
 
-		],
+		},
 
 	}
 

@@ -36,15 +36,10 @@
 
 from ._GafferOSLUI import *
 
-import os
-import ctypes
-if os.name == "nt" :
-	# Because `_GafferOSLUI.pyd` currently doesn't require any symbols
-	# from `GafferOSLUI.dll`, the Windows linker omits the latter. Load
-	# it explicitly, because it contains custom gadget registrations
-	# that we need.
-	ctypes.CDLL( "GafferOSLUI.dll" )
-del os, ctypes
+# Because the `_GafferOSLUI` Python module currently doesn't require any symbols
+# from the `GafferOSLUI` library, we need to load it explicitly to get its
+# custom gadget registrations.
+__import__( "Gaffer" ).__loadSharedLibrary( "GafferOSLUI" )
 
 from . import OSLShaderUI
 from . import OSLImageUI
@@ -53,5 +48,6 @@ from . import OSLCodeUI
 from . import OSLExpressionEngineUI
 from . import OSLLightUI
 from . import _CodeWidget
+from . import FocalBlurUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferOSLUI" )

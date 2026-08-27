@@ -58,15 +58,6 @@ class GAFFER_API Box : public SubGraph
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Box, BoxTypeId, SubGraph );
 
-		/// \deprecated Use PlugAlgo::canPromote() instead.
-		bool canPromotePlug( const Plug *descendantPlug ) const;
-		/// \deprecated Use PlugAlgo::promote() instead.
-		Plug *promotePlug( Plug *descendantPlug );
-		/// \deprecated Use PlugAlgo::isPromoted() instead.
-		bool plugIsPromoted( const Plug *descendantPlug ) const;
-		/// \deprecated Use PlugAlgo::unpromote() instead.
-		void unpromotePlug( Plug *promotedDescendantPlug );
-
 		/// Exports the contents of the Box so that it can be referenced
 		/// by a Reference node.
 		void exportForReference( const std::filesystem::path &fileName ) const;

@@ -295,9 +295,7 @@ class WindowTest( GafferUITest.TestCase ) :
 		w.setPosition( imath.V2i( 100, 30 ) )
 		self.assertEqual( w.getPosition(), imath.V2i( 100, 30 ) )
 
-		desktop = QtWidgets.QApplication.desktop()
-
-		screenRect = desktop.availableGeometry( w._qtWidget() )
+		screenRect = w._qtWidget().screen().availableGeometry()
 		windowRect = w._qtWidget().frameGeometry()
 
 		# Smaller, off-screen bottom right
@@ -406,6 +404,7 @@ class WindowTest( GafferUITest.TestCase ) :
 		for i in range( 0, 50 ) :
 
 			child = GafferUI.Window()
+			child._qtWidget().resize( 200, 100 )
 			child.setChild( GafferUI.Label( "World" ) )
 
 			parent.addChildWindow( child, removeOnClose = True )
@@ -484,6 +483,3 @@ class WindowTest( GafferUITest.TestCase ) :
 		self.assertTrue( window.close() )
 		self.assertEqual( len( preCloseCapturingSlot ), 1 )
 		self.assertEqual( len( closedSlot ), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

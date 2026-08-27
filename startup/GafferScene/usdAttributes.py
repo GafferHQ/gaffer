@@ -40,35 +40,54 @@ import Gaffer
 
 import pxr.Kind
 
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "label", "Kind" )
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"attribute:usd:kind",
-	"description",
-	"""
-	Specifies the kind of a location to be any
-	of the values from USD's kind registry. See
-	the USD documentation for more details.
+Gaffer.Metadata.registerValues( {
 
-	> Note : Gaffer doesn't assign any intrinsic
-	> meaning to USD's kind.
-	""",
-)
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "presetNames", IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ) )
-Gaffer.Metadata.registerValue( "attribute:usd:kind", "presetValues", IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ) )
+	"attribute:usd:purpose" : {
 
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "label", "Purpose" )
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "defaultValue", IECore.StringData( "default" ) )
-Gaffer.Metadata.registerValue(
-	"attribute:usd:purpose",
-	"description",
-	"""
-	Specifies the purpose of a location to be
-	`default`, `render`, `proxy` or `guide`. See
-	the USD documentation for more details.
-	""",
-)
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "presetNames", IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ) )
-Gaffer.Metadata.registerValue( "attribute:usd:purpose", "presetValues", IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ) )
+		"defaultValue" : "default",
+		"description" :
+		"""
+		Specifies the purpose of a location to be
+		`default`, `render`, `proxy` or `guide`. See
+		the [USD documentation](https://graphics.pixar.com/usd/release/glossary.html#usdglossary-purpose) for more details.
+
+		> Note : The `usd:purpose` attribute can be used with the
+		> `render:includedPurposes` option to limit the objects included
+		> in a render, and with the Viewer "Purposes" drawing mode to
+		> limit the objects visible in a Viewer.
+		>
+		> Also note that native proxy workflows can be built using
+		> Gaffer's contexts, such that proxy or render geometry can appear
+		> at the _same_ location in the scene hierarchy, depending on the
+		> value of a context variable. This has benefits when selecting
+		> and filtering objects.
+		""",
+		"label" : "Purpose",
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ "Default", "Render", "Proxy", "Guide" ] ),
+		"presetValues" : IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ),
+
+	},
+
+	"attribute:usd:kind" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		Specifies the kind of a location to be any
+		of the values from USD's kind registry. See
+		the [USD documentation](https://graphics.pixar.com/usd/release/glossary.html#usdglossary-kind) for more details.
+
+		> Note : Gaffer doesn't assign any intrinsic
+		> meaning to USD's kind.
+		""",
+		"label" : "Kind",
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetNames" : IECore.StringVectorData( [ IECore.CamelCase.toSpaced( k ) for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ] ),
+		"presetValues" : IECore.StringVectorData( k for k in pxr.Kind.Registry().GetAllKinds() if k != "model" ),
+
+	},
+
+} )
+
+Gaffer.Metadata.registerValue( "attribute:usd:*", "category", "USD" )

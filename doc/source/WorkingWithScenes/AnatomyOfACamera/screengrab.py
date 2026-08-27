@@ -1,5 +1,4 @@
 # BuildTarget: images/interfaceCameraParameters.png
-# BuildTarget: images/interfaceCameraSets.png
 
 import IECore
 import time
@@ -28,27 +27,16 @@ script["Camera"]["renderSettingOverrides"]["overscanBottom"]["value"].setValue( 
 script["Camera"]["renderSettingOverrides"]["overscanBottom"]["enabled"].setValue( True )
 
 script.selection().add( script["Camera"] )
-__path = "/camera"
-GafferSceneUI.ScriptNodeAlgo.expandInVisibleSet( script, IECore.PathMatcher( [ __path ] ) )
+GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [ "/camera" ] ) )
 
-from GafferSceneUI.SceneInspector import __TransformSection, __BoundSection, __ObjectSection, __AttributesSection, __SetMembershipSection
+with GafferUI.Window( "Property" ) as window :
 
-for imageName, sectionClass in [
-	( "Parameters.png", __ObjectSection ),
-    ( "Sets.png", __SetMembershipSection )
-] :
+	sceneInspector = GafferSceneUI.SceneInspector( script)
+	sceneInspector.setNodeSet( Gaffer.StandardSet( [ script["Camera"] ] ) )
+	sceneInspector._SceneInspector__locationPathListing.setExpansion( IECore.PathMatcher( [ "/Location/Object", "/Location/Object/Parameters" ] ) )
 
-	section = sectionClass()
-	section._Section__collapsible.setCollapsed( False )
+window._qtWidget().resize( 400, 500 )
+window.setVisible( True )
+window.setPosition( imath.V2i( 0, 0 ) )
 
-	with GafferUI.Window( "Property" ) as window :
-
-		sceneInspector = GafferSceneUI.SceneInspector( script, sections = [ section ] )
-		sceneInspector.setNodeSet( Gaffer.StandardSet( [ script["Camera"] ] ) )
-		sceneInspector.setTargetPaths( [ __path ] )
-
-	window.resizeToFitChild()
-	window.setVisible( True )
-	window.setPosition( imath.V2i( 0, 0 ) )
-
-	GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/interfaceCamera" + imageName )
+GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/interfaceCameraParameters.png" )

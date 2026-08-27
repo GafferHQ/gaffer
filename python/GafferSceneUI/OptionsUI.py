@@ -34,9 +34,49 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
-import GafferUI
 import GafferScene
+
+# The following functions are protected rather than private so that
+# they can be shared by OptionTweaksUI.
+
+def _optionMetadata( plug, name ) :
+
+	if not isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
+		plug = plug.parent()
+
+	source = "option:" + plug["name"].getValue()
+	return Gaffer.Metadata.value( source, name )
+
+def _optionPresetNames( plug ) :
+
+	names = list( __optionPresets( plug ).keys() )
+	return IECore.StringVectorData( names ) if names else None
+
+def _optionPresetValues( plug ) :
+
+	values = list( __optionPresets( plug ).values() )
+	return IECore.DataTraits.dataFromElement( values ) if values else None
+
+def __optionPresets( plug ) :
+
+	result = {}
+	option = plug.parent()["name"].getValue()
+	source = "option:{}".format( option )
+
+	for n in Gaffer.Metadata.registeredValues( source ) :
+		if n.startswith( "preset:" ) :
+			result[n[7:]] = Gaffer.Metadata.value( source, n )
+
+	presetNames = Gaffer.Metadata.value( source, "presetNames" )
+	presetValues = Gaffer.Metadata.value( source, "presetValues" )
+	if presetNames and presetValues :
+		for presetName, presetValue in zip( presetNames, presetValues ) :
+			result.setdefault( presetName, presetValue )
+
+	return result
 
 Gaffer.Metadata.registerNode(
 
@@ -49,28 +89,47 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"options" : [
+		"options" : {
 
-			"description",
+			"description" :
 			"""
 			The options to be applied - arbitrary numbers of user defined options may be added
 			as children of this plug via the user interface, or using the CompoundDataPlug API via
 			python.
 			""",
 
-			"compoundDataPlugValueWidget:editable", False,
+			"layout:customWidget:addButton:visibilityActivator" : False,
 
-		],
+		},
 
-		"options.*" : [
+		"options.*" : {
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-		],
+			"description" : lambda plug : _optionMetadata( plug, "description" ),
+			"label" : lambda plug : _optionMetadata( plug, "label" ),
+			"layout:section" : lambda plug : _optionMetadata( plug, "layout:section" ),
 
-		"extraOptions" : [
+		},
 
-			"description",
+		"options.*.value" : {
+
+			"plugValueWidget:type" : lambda plug : _optionMetadata( plug, "plugValueWidget:type" ),
+			"presetNames" : _optionPresetNames,
+			"presetValues" : _optionPresetValues,
+			"presetsPlugValueWidget:allowCustom" : lambda plug : _optionMetadata( plug, "presetsPlugValueWidget:allowCustom" ),
+			"path:leaf" : lambda plug : _optionMetadata( plug, "path:leaf" ),
+			"path:valid" : lambda plug : _optionMetadata( plug, "path:valid" ),
+			"fileSystemPath:extensions" : lambda plug : _optionMetadata( plug, "fileSystemPath:extensions" ),
+			"fileSystemPath:extensionsLabel" : lambda plug : _optionMetadata( plug, "fileSystemPath:extensionsLabel" ),
+			"scenePathPlugValueWidget:setNames" : lambda plug : _optionMetadata( plug, "scenePathPlugValueWidget:setNames" ),
+			"scenePathPlugValueWidget:setsLabel" : lambda plug : _optionMetadata( plug, "scenePathPlugValueWidget:setsLabel" ),
+
+		},
+
+		"extraOptions" : {
+
+			"description" :
 			"""
 			An additional set of options to be added. Arbitrary numbers
 			of options may be specified within a single `IECore.CompoundObject`,
@@ -85,11 +144,11 @@ Gaffer.Metadata.registerNode(
 			is taken.
 			""",
 
-			"plugValueWidget:type", "",
-			"layout:section", "Extra",
-			"nodule:type", "",
+			"plugValueWidget:type" : "",
+			"layout:section" : "Extra",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

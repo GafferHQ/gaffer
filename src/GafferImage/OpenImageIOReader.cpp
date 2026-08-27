@@ -54,7 +54,6 @@
 #include "IECore/FileSequenceFunctions.h"
 #include "IECore/MessageHandler.h"
 
-#include "OpenImageIO/imagecache.h"
 #include "OpenImageIO/deepdata.h"
 
 #include <boost/algorithm/string.hpp>
@@ -66,12 +65,11 @@
 
 #include <memory>
 
-OIIO_NAMESPACE_USING
-
 using namespace std;
 using namespace boost::placeholders;
 using namespace tbb;
 using namespace Imath;
+using namespace OIIO;
 using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
@@ -163,7 +161,7 @@ V2i coordinateDivide( V2i a, V2i b )
 	return V2i( coordinateDivide( a.x, b.x ), coordinateDivide( a.y, b.y ) );
 }
 
-std::string channelNameFromEXR( std::string view, std::string part, std::string channel, bool useHeuristics, bool singlePartMultiView )
+std::string channelNameFromEXR( std::string view, std::string part, std::string channel, bool useHeuristics, bool singlePartMultiView, bool isMultiPartExr )
 {
 	if( !useHeuristics )
 	{
@@ -185,7 +183,31 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 	}
 
 	// But if useHeuristics is on, try to figure out which of the dozen incorrect interpretations of the EXR spec
-	// this might adhere to
+	// this might adhere to.
+
+	// Specific workaround for ID outputs from 3Delight. 3Delight doesn't
+	// support a custom `layerName`, despite it being part of the NSI spec,
+	// so we need to apply the desired name here.
+	if( channel == "cortexID.v" )
+	{
+		return "id";
+	}
+	else if( channel == "cortexInstanceID.v" )
+	{
+		return "instanceID";
+	}
+
+	if( !isMultiPartExr )
+	{
+		// The weird Nuke behaviour we're trying to emulate includes that Nuke doesn't use the
+		// part name in a single part file. It also doesn't write the part name in a single part
+		// file, so this shouldn't really matter either way ... but also doesn't clear the part
+		// name metadata, and it makes it easy to accidentally write a single part exr with a
+		// bogus part name, and not realize you've done this. By ignoring the part name here,
+		// we match Nuke's behaviour, which is the main purpose of all this hackery.
+		part = "";
+	}
+
 	std::vector< std::string > layerTokens;
 	bool partUnderscoreSplit = false;
 	string baseName;
@@ -206,8 +228,8 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 		boost::split( layerTokens, part, boost::is_any_of(".") );
 		if( layerTokens.size() == 1 )
 		{
-			// There are no period seperators in the part name.  We've seen a few examples
-			// of underscore seperators used in part names, so try that
+			// There are no period separators in the part name.  We've seen a few examples
+			// of underscore separators used in part names, so try that
 			boost::split( layerTokens, part, boost::is_any_of("_") );
 			partUnderscoreSplit = layerTokens.size() > 1;
 		}
@@ -220,10 +242,14 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 			// because they are alternate names for the default layer - Nuke puts channels
 			// from the default layer in layers named "rgba", "depth", or "other", depending
 			// on the channel name.  If a token matches the view name, we assume it's a view
-			// token, and can be removed ( we represent views seperately ).
+			// token, and can be removed ( we represent views separately ).
 			std::string lower = boost::algorithm::to_lower_copy( i);
 			return lower == "main" || lower == "rgb" || lower == "rgba" || lower == "other"
-				|| ( lower == "depth" && baseName == "Z" ) || i == view || lower == "";
+				|| ( lower == "depth" && baseName == "Z" )
+				|| ( lower == "id" && baseName == "id" )
+				|| ( lower == "instanceid" && baseName == "instanceID" )
+				|| i == view || lower == ""
+			;
 		}
 	), layerTokens.end() );
 
@@ -258,7 +284,7 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 	}
 	else if( partUnderscoreSplit )
 	{
-		// It doesn't really make sense to split on underscores, they're not really layer seperators, but
+		// It doesn't really make sense to split on underscores, they're not really layer separators, but
 		// we have seen some software that uses underscores in the part names.  This is actually totally fair
 		// according to the spec, since part names don't actually mean anything - it would load fine with
 		// channelInterpretation = Specification.  But it would go wrong in the Default heuristic mode, because
@@ -715,14 +741,15 @@ class File
 	public:
 
 		// Create a File handle object for an image input and image spec
-		File( std::unique_ptr<ImageInput> imageInput, const std::string &infoFileName, ImageReader::ChannelInterpretation channelNaming )
-			: m_imageInput( std::move( imageInput ) )
+		File( std::unique_ptr<ImageInput> imageInput, const std::string &filePath, ImageReader::ChannelInterpretation channelNaming )
+			: m_imageInput( std::move( imageInput ) ), m_filePath( filePath )
 		{
 			m_viewNamesData = new StringVectorData();
 			auto &viewNames = m_viewNamesData->writable();
 
 			bool singlePartMultiView = false;
 			ImageSpec currentSpec;
+
 			for( int subImageIndex = 0; ; subImageIndex++ )
 			{
 				currentSpec = m_imageInput->spec( subImageIndex, 0 );
@@ -732,9 +759,11 @@ class File
 					break;
 				}
 
+				bool isMultiPartExr = currentSpec.get_int_attribute( "oiio:subimages", 0 ) > 1;
+
 				if( currentSpec.depth != 1 )
 				{
-					throw IECore::Exception( "OpenImageIOReader : " + infoFileName + " : GafferImage does not support 3D pixel arrays " );
+					throw IECore::Exception( "OpenImageIOReader : " + filePath + " : GafferImage does not support 3D pixel arrays " );
 				}
 
 				std::string viewName = currentSpec.get_string_attribute( "view", "" );
@@ -750,7 +779,7 @@ class File
 								IECore::Msg::Warning, "OpenImageIOReader",
 								fmt::format(
 									"Ignoring invalid \"multiView\" attribute in \"{}\".",
-									infoFileName
+									filePath
 								)
 							);
 						}
@@ -799,7 +828,7 @@ class File
 								IECore::Msg::Warning, "OpenImageIOReader",
 								fmt::format(
 									"Ignoring subimage {} of \"{}\" because we only support one part per view for deep images.",
-									subImageIndex, infoFileName
+									subImageIndex, filePath
 								)
 							);
 
@@ -899,7 +928,7 @@ class File
 						channelName = channelNameFromEXR(
 							channelViewName, subImageName.str(), n,
 							channelNaming != ImageReader::ChannelInterpretation::Specification,
-							singlePartMultiView
+							singlePartMultiView, isMultiPartExr
 						);
 					}
 
@@ -908,7 +937,7 @@ class File
 					{
 						std::string m = fmt::format(
 							"Ignoring channel \"{}\" in subimage \"{}\" of \"{}\" because it's already in subimage \"{}\"",
-							channelName, subImageIndex, infoFileName, mapEntry->second.subImage
+							channelName, subImageIndex, filePath, mapEntry->second.subImage
 						);
 						if( viewName != "" )
 						{
@@ -1434,6 +1463,11 @@ class File
 			return m_imageInput->format_name();
 		}
 
+		const std::string &filePath() const
+		{
+			return m_filePath;
+		}
+
 		ConstStringVectorDataPtr channelNamesData( const Context *c )
 		{
 			return lookupView( c ).channelNamesData;
@@ -1569,6 +1603,7 @@ class File
 		}
 
 		std::unique_ptr<ImageInput> m_imageInput;
+		std::string m_filePath;
 		StringVectorDataPtr m_viewNamesData;
 		std::map<std::string, std::unique_ptr< View > > m_views;
 };
@@ -2066,6 +2101,9 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 
 	// Add file format
 	result->writable()["fileFormat"] = new StringData( file->formatName() );
+
+	// Add file path
+	result->writable()["filePath"] = new StringData( std::filesystem::canonical( file->filePath() ).generic_string() );
 
 	// Add on any custom metadata provided by the file format
 

@@ -50,6 +50,9 @@ LocaliseAttributes::LocaliseAttributes( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "attributes", Plug::In, "*" ) );
+	addChild( new BoolPlug( "includeGlobalAttributes", Plug::In, false ) );
+	// Hide `global` plug, since localising global attributes is a no-op.
+	globalPlug()->setName( "__global" );
 }
 
 LocaliseAttributes::~LocaliseAttributes()
@@ -66,23 +69,50 @@ const Gaffer::StringPlug *LocaliseAttributes::attributesPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *LocaliseAttributes::includeGlobalAttributesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *LocaliseAttributes::includeGlobalAttributesPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 bool LocaliseAttributes::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
 	return
 		AttributeProcessor::affectsProcessedAttributes( input ) ||
-		input == attributesPlug()
+		input == attributesPlug() ||
+		input == includeGlobalAttributesPlug() ||
+		( input == inPlug()->globalsPlug() && !includeGlobalAttributesPlug()->isSetToDefault() )
 	;
 }
 
-void LocaliseAttributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void LocaliseAttributes::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	AttributeProcessor::hashProcessedAttributes( path, context, h );
-	h.append( inPlug()->fullAttributesHash( path ) );
+	auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	if( !path )
+	{
+		// Processing global attributes, where localisation is a no-op.
+		return;
+	}
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
+	h.append( inPlug()->fullAttributesHash( *path, /* withGlobalAttributes = */ includeGlobalAttributesPlug()->getValue() ) );
+	includeGlobalAttributesPlug()->hash( h );
 	attributesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr LocaliseAttributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr LocaliseAttributes::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
+	auto path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	if( !path )
+	{
+		// Processing global attributes.
+		return inputAttributes;
+	}
+
 	const string attributes = attributesPlug()->getValue();
 	if( attributes.empty() )
 	{
@@ -92,7 +122,7 @@ IECore::ConstCompoundObjectPtr LocaliseAttributes::computeProcessedAttributes( c
 	CompoundObjectPtr result = new CompoundObject;
 	result->members() = inputAttributes->members();
 
-	ConstCompoundObjectPtr fullAttributes = inPlug()->fullAttributes( path );
+	ConstCompoundObjectPtr fullAttributes = inPlug()->fullAttributes( *path, /* withGlobalAttributes = */ includeGlobalAttributesPlug()->getValue() );
 	for( const auto &attribute : fullAttributes->members() )
 	{
 		if( StringAlgo::matchMultiple( attribute.first, attributes ) )

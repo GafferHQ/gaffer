@@ -137,6 +137,3 @@ class SubGraphTest( GafferTest.TestCase ) :
 		b["o"]["passThrough"].setInput( b["d2"]["out"] )
 
 		self.assertEqual( b.correspondingInput( b["o"].promotedPlug() ), b["i"].promotedPlug() )
-
-if __name__ == "__main__":
-	unittest.main()

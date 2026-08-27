@@ -138,6 +138,38 @@ const char *rendererName( Renderer &renderer )
 	return renderer.name().c_str();
 }
 
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererLight1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
+{
+	return renderer.light( name, object, attributes );
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererLight2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
+{
+	IECoreScenePreview::Renderer::ObjectSamples samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	IECoreScenePreview::Renderer::SampleTimes times;
+	container_utils::extend_container( times, pythonTimes );
+
+	return renderer.light( name, samples, times, attributes );
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererLightFilter1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
+{
+	return renderer.lightFilter( name, object, attributes );
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererLightFilter2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
+{
+	IECoreScenePreview::Renderer::ObjectSamples samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	IECoreScenePreview::Renderer::SampleTimes times;
+	container_utils::extend_container( times, pythonTimes );
+
+	return renderer.lightFilter( name, samples, times, attributes );
+}
+
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
 {
 	return renderer.object( name, object, attributes );
@@ -145,15 +177,28 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &rend
 
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
 {
-	std::vector<const IECore::Object *> samples;
+	IECoreScenePreview::Renderer::ObjectSamples samples;
 	container_utils::extend_container( samples, pythonSamples );
 
-	std::vector<float> times;
+	IECoreScenePreview::Renderer::SampleTimes times;
 	container_utils::extend_container( times, pythonTimes );
 
 	return renderer.object( name, samples, times, attributes );
 }
 
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererPointInstancer( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, object pythonPrototypes, const Renderer::AttributesInterface *attributes )
+{
+	IECoreScenePreview::Renderer::PointInstancerSamples samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	IECoreScenePreview::Renderer::SampleTimes times;
+	container_utils::extend_container( times, pythonTimes );
+
+	std::vector<IECoreScenePreview::Renderer::Prototype> prototypes;
+	container_utils::extend_container( prototypes, pythonPrototypes );
+
+	return renderer.pointInstancer( name, samples, times, prototypes, attributes );
+}
 
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererCamera1( Renderer &renderer, const std::string &name, const IECoreScene::Camera *camera, const Renderer::AttributesInterface *attributes )
 {
@@ -162,10 +207,10 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr rendererCamera1( Renderer &rend
 
 IECoreScenePreview::Renderer::ObjectInterfacePtr rendererCamera2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
 {
-	std::vector<const IECoreScene::Camera *> samples;
+	IECoreScenePreview::Renderer::CameraSamples samples;
 	container_utils::extend_container( samples, pythonSamples );
 
-	std::vector<float> times;
+	IECoreScenePreview::Renderer::SampleTimes times;
 	container_utils::extend_container( times, pythonTimes );
 
 	return renderer.camera( name, samples, times, attributes );
@@ -185,10 +230,10 @@ void objectInterfaceTransform1( Renderer::ObjectInterface &objectInterface, cons
 
 void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, object pythonSamples, object pythonTimes )
 {
-	std::vector<Imath::M44f> samples;
+	IECoreScenePreview::Renderer::TransformSamples samples;
 	container_utils::extend_container( samples, pythonSamples );
 
-	std::vector<float> times;
+	IECoreScenePreview::Renderer::SampleTimes times;
 	container_utils::extend_container( times, pythonTimes );
 
 	return objectInterface.transform( samples, times );
@@ -196,9 +241,13 @@ void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, obje
 
 void objectInterfaceLink( Renderer::ObjectInterface &objectInterface, const IECore::InternedString &type, object pythonObjectSet )
 {
-	std::vector<Renderer::ObjectInterfacePtr> objectVector;
-	container_utils::extend_container( objectVector, pythonObjectSet );
-	auto objectSet = std::make_shared<Renderer::ObjectSet>( objectVector.begin(), objectVector.end() );
+	IECoreScenePreview::Renderer::ConstObjectSetPtr objectSet;
+	if( pythonObjectSet != object() )
+	{
+		std::vector<Renderer::ObjectInterfacePtr> objectVector;
+		container_utils::extend_container( objectVector, pythonObjectSet );
+		objectSet = std::make_shared<Renderer::ObjectSet>( objectVector.begin(), objectVector.end() );
+	}
 	objectInterface.link( type, objectSet );
 }
 
@@ -312,6 +361,16 @@ list capturedObjectCapturedSampleTimes( const CapturingRenderer::CapturedObject 
 	return result;
 }
 
+list capturedObjectCapturedPointInstancerPrototypes( const CapturingRenderer::CapturedObject &o )
+{
+	list result;
+	for( auto &p : o.capturedPointInstancerPrototypes() )
+	{
+		result.append( p );
+	}
+	return result;
+}
+
 list capturedObjectCapturedTransforms( const CapturingRenderer::CapturedObject &o )
 {
 	list result;
@@ -364,6 +423,57 @@ object capturedObjectCapturedLinks( const CapturingRenderer::CapturedObject &o, 
 		// Null pointer used to say "no linking" - return None
 		return object();
 	}
+}
+
+Renderer::Prototype *prototypeConstructor( object pythonSamples, object pythonTimes, Renderer::AttributesInterfacePtr attributes )
+{
+	auto p = std::make_unique<Renderer::Prototype>();
+	container_utils::extend_container( p->samples, pythonSamples );
+	container_utils::extend_container( p->times, pythonTimes );
+	p->attributes = attributes;
+	return p.release();
+}
+
+list prototypeSamplesGetter( const Renderer::Prototype &p )
+{
+	list result;
+	for( const auto &s : p.samples )
+	{
+		result.append( boost::const_pointer_cast<IECore::Object>( s ) );
+	}
+	return result;
+}
+
+void prototypeSamplesSetter( Renderer::Prototype &p, object pythonSamples )
+{
+	p.samples.clear();
+	container_utils::extend_container( p.samples, pythonSamples );
+}
+
+list prototypeTimesGetter( const Renderer::Prototype &p )
+{
+	list result;
+	for( float t : p.times )
+	{
+		result.append( t );
+	}
+	return result;
+}
+
+void prototypeTimesSetter( Renderer::Prototype &p, object pythonTimes )
+{
+	p.times.clear();
+	container_utils::extend_container( p.times, pythonTimes );
+}
+
+Renderer::AttributesInterfacePtr prototypeAttributesGetter( const Renderer::Prototype &p )
+{
+	return p.attributes;
+}
+
+void prototypeAttributesSetter( Renderer::Prototype &p, Renderer::AttributesInterfacePtr attributes )
+{
+	p.attributes = attributes;
 }
 
 void transformPrimitiveWrapper( IECoreScene::Primitive &primitive, Imath::M44f matrix, const IECore::Canceller *canceller = nullptr )
@@ -423,6 +533,18 @@ void GafferSceneModule::bindIECoreScenePreview()
 			.def( "attributes", &Renderer::ObjectInterface::attributes )
 			.def( "link", &objectInterfaceLink )
 			.def( "assignID", &Renderer::ObjectInterface::assignID )
+			.def( "assignInstanceID", &Renderer::ObjectInterface::assignInstanceID )
+		;
+
+		class_<Renderer::Prototype>( "Prototype" )
+			.def( "__init__", make_constructor(
+				prototypeConstructor,
+				default_call_policies(),
+				( arg( "samples" ) = list(), arg( "times" ) = list(), arg( "attributes" ) = object() )
+			) )
+			.add_property( "samples", &prototypeSamplesGetter, &prototypeSamplesSetter )
+			.add_property( "times", &prototypeTimesGetter, &prototypeTimesSetter )
+			.add_property( "attributes", &prototypeAttributesGetter, &prototypeAttributesSetter )
 		;
 	}
 
@@ -444,11 +566,15 @@ void GafferSceneModule::bindIECoreScenePreview()
 
 		.def( "camera", &rendererCamera2, ( arg( "name" ), arg( "samples" ), arg( "times" ), arg( "attributes" ) = object() ) )
 		.def( "camera", &rendererCamera1, ( arg( "name" ), arg( "camera" ), arg( "attributes" ) = object() ) )
-		.def( "light", &Renderer::light )
-		.def( "lightFilter", &Renderer::lightFilter )
+		.def( "light", &rendererLight2, ( arg( "name" ), arg( "samples" ), arg( "times" ), arg( "attributes" ) = object() ) )
+		.def( "light", &rendererLight1, ( arg( "name" ), arg( "object" ), arg( "attributes" ) = object() ) )
+		.def( "lightFilter", &rendererLightFilter2, ( arg( "name" ), arg( "samples" ), arg( "times" ), arg( "attributes" ) = object() ) )
+		.def( "lightFilter", &rendererLightFilter1, ( arg( "name" ), arg( "object" ), arg( "attributes" ) = object() ) )
 
 		.def( "object", &rendererObject1 )
 		.def( "object", &rendererObject2 )
+
+		.def( "pointInstancer", &rendererPointInstancer )
 
 		.def( "render", render )
 		.def( "pause", &Renderer::pause )
@@ -535,6 +661,7 @@ void GafferSceneModule::bindIECoreScenePreview()
 		.def( "capturedName", &capturedObjectCapturedName )
 		.def( "capturedSamples", &capturedObjectCapturedSamples )
 		.def( "capturedSampleTimes", &capturedObjectCapturedSampleTimes )
+		.def( "capturedPointInstancerPrototypes", &capturedObjectCapturedPointInstancerPrototypes )
 		.def( "capturedTransforms", &capturedObjectCapturedTransforms )
 		.def( "capturedTransformTimes", &capturedObjectCapturedTransformTimes )
 		.def( "capturedAttributes", &capturedObjectCapturedAttributes )
@@ -543,6 +670,7 @@ void GafferSceneModule::bindIECoreScenePreview()
 		.def( "numAttributeEdits", &CapturingRenderer::CapturedObject::numAttributeEdits )
 		.def( "numLinkEdits", &CapturingRenderer::CapturedObject::numLinkEdits )
 		.def( "id", &CapturingRenderer::CapturedObject::id )
+		.def( "instanceID", &CapturingRenderer::CapturedObject::instanceID )
 	;
 
 	{

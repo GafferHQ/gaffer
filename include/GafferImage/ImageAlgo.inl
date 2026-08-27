@@ -43,8 +43,18 @@
 
 #include "boost/tuple/tuple.hpp"
 
+#if __has_include( "tbb/version.h" )
+#include "tbb/version.h"
+#else
+#include "tbb/tbb_stddef.h"
+#endif
+#if TBB_VERSION_MAJOR < 2021
 #include "tbb/pipeline.h"
 #include "tbb/task_scheduler_init.h"
+#else
+#include "tbb/parallel_pipeline.h"
+#endif
+#include "tbb/task_arena.h"
 
 namespace GafferImage
 {
@@ -149,6 +159,12 @@ class TileInputFilter
 		Iterator &m_it;
 
 };
+
+#if TBB_VERSION_MAJOR < 2021
+using TBBFilterMode = tbb::filter;
+#else
+using TBBFilterMode = tbb::filter_mode;
+#endif
 
 } // namespace Detail
 
@@ -270,16 +286,16 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 	const Gaffer::ThreadState &threadState = Gaffer::ThreadState::current();
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
+	parallel_pipeline( tbb::this_task_arena::max_concurrency(),
 
 		tbb::make_filter<void, Imath::V2i>(
-			tbb::filter::serial,
+			Detail::TBBFilterMode::serial_in_order,
 			Detail::TileInputFilter<Detail::TileInputIterator>( tileIterator )
 		) &
 
 		tbb::make_filter<Imath::V2i, void>(
 
-			tbb::filter::parallel,
+			Detail::TBBFilterMode::parallel,
 
 			[ imagePlug, &functor, &threadState ] ( const Imath::V2i &tileOrigin ) {
 
@@ -352,16 +368,16 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 	const Gaffer::ThreadState &threadState = Gaffer::ThreadState::current();
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
+	parallel_pipeline( tbb::this_task_arena::max_concurrency(),
 
 		tbb::make_filter<void, Imath::V2i>(
-			tbb::filter::serial,
+			Detail::TBBFilterMode::serial_in_order,
 			Detail::TileInputFilter<Detail::TileInputIterator>( tileIterator )
 		) &
 
 		tbb::make_filter<Imath::V2i, TileFilterResult>(
 
-			tbb::filter::parallel,
+			Detail::TBBFilterMode::parallel,
 
 			[ imagePlug, &tileFunctor, &threadState ] ( const Imath::V2i &tileOrigin ) {
 
@@ -377,7 +393,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 
 		tbb::make_filter<TileFilterResult, void>(
 
-			tileOrder == Unordered ? tbb::filter::serial_out_of_order : tbb::filter::serial_in_order,
+			tileOrder == Unordered ? Detail::TBBFilterMode::serial_out_of_order : Detail::TBBFilterMode::serial_in_order,
 
 			[ imagePlug, &gatherFunctor, &threadState ] ( const TileFilterResult &input ) {
 

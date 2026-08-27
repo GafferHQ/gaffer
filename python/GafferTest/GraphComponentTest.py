@@ -707,22 +707,10 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		self.assertTypeNamesArePrefixed(
 			Gaffer,
-			# Ignore the names imported from GafferCortex and
-			# GafferDispatch into the Gaffer namespace - they're
-			# just for backwards compatibility.
+			# Ignore the names imported from other modules into
+			# the Gaffer namespace - they're just for backwards
+			# compatibility.
 			namesToIgnore = set( [
-				"GafferCortex::ObjectReader",
-				"GafferCortex::ObjectWriter",
-				"GafferCortex::ExecutableOpHolder",
-				"GafferCortex::OpHolder",
-				"GafferCortex::ParameterisedHolderNode",
-				"GafferCortex::ParameterisedHolderDependencyNode",
-				"GafferCortex::ParameterisedHolderComputeNode",
-				"GafferCortex::ParameterisedHolderTaskNode",
-				"GafferCortex::AttributeCachePath",
-				"GafferCortex::ClassLoaderPath",
-				"GafferCortex::IndexedIOPath",
-				"GafferCortex::ParameterPath",
 				"GafferDispatch::Dispatcher",
 				"GafferDispatch::LocalDispatcher",
 				"GafferDispatch::TaskNode",
@@ -1207,5 +1195,65 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertTrue( p.getChild( "test:a:b" ).isSame( g ) )
 		self.assertTrue( p.descendant( "test:a:b" ).isSame( g ) )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testChildAliasMetadata( self ) :
+
+		g = Gaffer.Node()
+		c1 = Gaffer.Plug()
+		c2 = Gaffer.Plug()
+		gc1 = Gaffer.Plug()
+		g["c1"] = c1
+		g["c2"] = c2
+		g["c2"]["gc1"] = gc1
+
+		self.assertIsNone( g.getChild( "c1alias" ) )
+		self.assertIsNone( g.getChild( "c2alias" ) )
+		self.assertNotIn( "c1alias", g )
+		self.assertNotIn( "c2alias", g )
+
+		Gaffer.Metadata.registerValue( g, "compatibility:childAlias:c1alias", "c1" )
+		self.assertTrue( g.getChild( "c1alias" ).isSame( c1 ) )
+		self.assertTrue( g["c1alias"].isSame( c1 ) )
+		self.assertIsNone( g.getChild( "c2alias" ) )
+
+		self.assertIn( "c1alias", g )
+		self.assertNotIn( "c1alias", g.children() )
+		self.assertNotIn( "c2alias", g )
+
+		Gaffer.Metadata.registerValue( g, "compatibility:childAlias:c2alias", "c2" )
+		self.assertTrue( g.getChild( "c1alias" ).isSame( c1 ) )
+		self.assertTrue( g.getChild( "c2alias" ).isSame( c2 ) )
+		self.assertTrue( g["c2alias"].isSame( c2 ) )
+		self.assertTrue( g["c2alias"]["gc1"].isSame( gc1 ) )
+		self.assertTrue( g.descendant( "c2alias.gc1" ).isSame( gc1 ) )
+
+		self.assertIn( "c1alias", g )
+		self.assertIn( "c2alias", g )
+		self.assertNotIn( "c1alias", g.children() )
+		self.assertNotIn( "c2alias", g.children() )
+
+		self.assertIsNone( g["c2"].getChild( "gc1alias") )
+		self.assertIsNone( g.descendant( "c2.gc1alias" ) )
+		Gaffer.Metadata.registerValue( g["c2"], "compatibility:childAlias:gc1alias", "gc1" )
+		self.assertTrue( g["c2"].getChild( "gc1alias" ).isSame( gc1 ) )
+		self.assertTrue( g["c2alias"]["gc1alias"].isSame( gc1 ) )
+		self.assertTrue( g["c2alias"].getChild( "gc1alias" ).isSame( gc1 ) )
+		self.assertTrue( g.descendant( "c2.gc1alias" ).isSame( gc1 ) )
+		self.assertTrue( g.descendant( "c2alias.gc1" ).isSame( gc1 ) )
+		self.assertTrue( g.descendant( "c2alias.gc1alias" ).isSame( gc1 ) )
+
+		self.assertIn( "gc1alias", g["c2"] )
+		self.assertIn( "gc1alias", g["c2alias"] )
+		self.assertNotIn( "gc1alias", g["c2"].children() )
+		self.assertNotIn( "gc1alias", g["c2alias"].children() )
+
+		del g["c1alias"]
+		self.assertNotIn( "c1alias", g )
+		self.assertNotIn( "c1", g )
+		self.assertIsNone( g.getChild( "c1alias" ) )
+		self.assertIsNone( g.getChild( "c1" ) )
+
+		del g["c2"]["gc1"]
+		self.assertNotIn( "gc1alias", g["c2"] )
+		self.assertNotIn( "gc1", g["c2"] )
+		self.assertIsNone( g["c2"].getChild( "gc1alias" ) )
+		self.assertIsNone( g["c2"].getChild( "gc1" ) )

@@ -127,6 +127,33 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( colorSpace["out"], exrReader["out"], ignoreMetadata = True, maxDifference = 0.000001 )
 
+	def testColorSpaceOverrideOnLayers( self ) :
+
+		layersFileName = GafferImageTest.ImageTestCase.imagesPath() / "channelTestSinglePart.exr"
+
+		# Default reader assumes that image is already in `scene_linear`
+		# space, so no transform is applied during loading.
+		exrReader = GafferImage.ImageReader()
+		exrReader["fileName"].setValue( layersFileName )
+
+		# Override reader requires a transform from sRGB primaries to
+		# ACEScg primaries (the primaries for `scene_linear`).
+		overrideReader = GafferImage.ImageReader()
+		overrideReader["fileName"].setValue( layersFileName )
+		overrideReader["colorSpace"].setValue( "Linear Rec.709 (sRGB)" )
+
+		# Transform back manually and we should end up with the default
+		# image.
+		colorSpace = GafferImage.ColorSpace()
+		colorSpace["in"].setInput( overrideReader["out"] )
+		colorSpace["inputSpace"].setValue( "scene_linear" )
+		colorSpace["outputSpace"].setValue( "Linear Rec.709 (sRGB)" )
+
+		# We expect the reader to apply the transform to all layers
+		colorSpace["channels"].setValue( "*" )
+
+		self.assertImagesEqual( colorSpace["out"], exrReader["out"], ignoreMetadata = True, maxDifference = 0.000001 )
+
 	def testJpgRead( self ) :
 
 		exrReader = GafferImage.ImageReader()
@@ -1026,12 +1053,23 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		expectedReader["fileName"].setValue( self.imagesPath() / "rgb.100x100.exr" )
 
 		with IECore.CapturingMessageHandler() as mh :
-			self.assertImagesEqual( reader["out"], expectedReader["out"], metadataBlacklist = [ "DateTime" ] )
+			self.assertImagesEqual( reader["out"], expectedReader["out"], metadataBlacklist = [ "DateTime", "filePath" ] )
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertIn( 'Ignoring invalid "multiView" attribute', mh.messages[0].message )
 
 		self.assertNotIn( "multiView", reader["out"].metadata() )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testIDInSeparatePart( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.imagesPath() / "arnoldCombinedID.exr" )
+
+		# When writing RGBA and ID to the same file, Arnold writes a lovely
+		# spec-conforming EXR image with the channel names we want.
+		reader["channelInterpretation"].setValue( reader.ChannelInterpretation.Specification )
+		self.assertEqual( reader["out"].channelNames(), IECore.StringVectorData( [ "R", "G", "B", "A", "id", "instanceID" ] ) )
+
+		# Make sure that our default heuristics don't mess that up.
+		reader["channelInterpretation"].setValue( reader.ChannelInterpretation.Default )
+		self.assertEqual( reader["out"].channelNames(), IECore.StringVectorData( [ "R", "G", "B", "A", "id", "instanceID" ] ) )

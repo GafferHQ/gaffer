@@ -59,9 +59,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"setExpression" : [
+		"setExpression" : {
 
-			"description",
+			"description" :
 			"""
 			A set expression that computes a set that defines
 			the locations to be matched.
@@ -92,11 +92,11 @@ Gaffer.Metadata.registerNode(
 			entries that help construct set expressions.
 			""",
 
-			"ui:scene:acceptsSetExpression", True,
-			"plugValueWidget:type", "GafferSceneUI.SetExpressionPlugValueWidget",
-			"nodule:type", "",
+			"ui:scene:acceptsSetExpression" : True,
+			"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 
@@ -111,7 +111,7 @@ GafferUI.Pointer.registerPointer( "addSets", GafferUI.Pointer( "pointerAddSets.p
 GafferUI.Pointer.registerPointer( "removeSets", GafferUI.Pointer( "pointerRemoveSets.png", imath.V2i( 53, 14 ) ) )
 GafferUI.Pointer.registerPointer( "replaceSets", GafferUI.Pointer( "pointerReplaceSets.png", imath.V2i( 53, 14 ) ) )
 
-__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace", "NotEditable" ] )
+__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace", "SetExpressionInclude", "SetExpressionRemove", "NotEditable" ] )
 
 __originalDragPointer = None
 
@@ -123,11 +123,18 @@ def __setsPlug( node ) :
 
 	return None
 
+def __filterPlug( node ) :
+
+	filterPlugs = list( GafferScene.FilterPlug.InputRange( node ) )
+	if len( filterPlugs ) == 1 :
+		return filterPlugs[0]
+	return None
+
 def __editable( plug ) :
 	if Gaffer.MetadataAlgo.readOnly( plug ) or not plug.settable() :
 		return False
 
-	if Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" ) or Gaffer.Metadata.value( plug, "ui:scene:acceptsSetExpression" ) :
+	if Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" ) :
 		plugValue = plug.getValue()
 		if any( i in plugValue for i in [ "(", ")", "|", "-", "&"] ) :
 			return False
@@ -142,11 +149,15 @@ def __dropMode( nodeGadget, event ) :
 
 	setsPlug = __setsPlug( nodeGadget.node() )
 	if setsPlug is None :
+		filterPlug = __filterPlug( nodeGadget.node() )
+		if filterPlug is None :
+			return __DropMode.None_
+
 		filter = None
-		if nodeGadget.node()["filter"].getInput() is not None :
-			filter = nodeGadget.node()["filter"].source().node()
+		if filterPlug.getInput() is not None :
+			filter = filterPlug.source().node()
 		if filter is None :
-			return __DropMode.Replace if __editable( nodeGadget.node()["filter"] ) else __DropMode.NotEditable
+			return __DropMode.Replace if __editable( filterPlug ) else __DropMode.NotEditable
 		elif not isinstance( filter, GafferScene.SetFilter ) :
 			return __DropMode.None_
 		setsPlug = filter["setExpression"]
@@ -154,10 +165,11 @@ def __dropMode( nodeGadget, event ) :
 	if not __editable( setsPlug ) :
 		return __DropMode.NotEditable
 
+	acceptsSetExpression = Gaffer.Metadata.value( setsPlug, "ui:scene:acceptsSetExpression" )
 	if event.modifiers & event.Modifiers.Shift :
-		return __DropMode.Add
+		return __DropMode.SetExpressionInclude if acceptsSetExpression else __DropMode.Add
 	elif event.modifiers & event.Modifiers.Control :
-		return __DropMode.Remove
+		return __DropMode.SetExpressionRemove if acceptsSetExpression else __DropMode.Remove
 	else :
 		return __DropMode.Replace
 
@@ -202,8 +214,13 @@ def __dragMove( nodeGadget, event ) :
 		return False
 
 	dropMode = __dropMode( nodeGadget, event )
+	pointers = {
+		__DropMode.NotEditable : "notEditable",
+		__DropMode.SetExpressionInclude : "addSets",
+		__DropMode.SetExpressionRemove : "removeSets",
+	}
 	GafferUI.Pointer.setCurrent(
-		dropMode.name.lower() + "Sets" if dropMode != __DropMode.NotEditable else "notEditable"
+		pointers.get( dropMode, dropMode.name.lower() + "Sets" )
 	)
 
 	return True
@@ -219,21 +236,25 @@ def __drop( nodeGadget, event ) :
 
 	setsPlug = __setsPlug( nodeGadget.node() )
 	if setsPlug is None :
-		setsPlug = __setsPlug( nodeGadget.node()["filter"].source().node() )
+		setsPlug = __setsPlug( __filterPlug( nodeGadget.node() ).source().node() )
 
 	dropSets = event.data
 
 	dropMode = __dropMode( nodeGadget, event )
 	if dropMode == __DropMode.Replace :
-		sets = sorted( dropSets )
+		result = " ".join( sorted( dropSets ) )
+	elif dropMode == __DropMode.SetExpressionInclude :
+		result = Gaffer.SetExpressionAlgo.include( setsPlug.getValue(), " ".join( sorted( dropSets ) ) )
+	elif dropMode == __DropMode.SetExpressionRemove :
+		result = Gaffer.SetExpressionAlgo.remove( setsPlug.getValue(), " ".join( sorted( dropSets ) ) )
 	elif dropMode == __DropMode.Add :
 		sets = set( setsPlug.getValue().split( " " ) )
 		sets.update( dropSets )
-		sets = sorted( sets )
+		result = " ".join( sorted( sets ) )
 	else :
 		sets = set( setsPlug.getValue().split( " " ) )
 		sets.difference_update( dropSets )
-		sets = sorted( sets )
+		result = " ".join( sorted( sets ) )
 
 	with Gaffer.UndoScope( nodeGadget.node().ancestor( Gaffer.ScriptNode ) ) :
 
@@ -241,11 +262,11 @@ def __drop( nodeGadget, event ) :
 
 			setFilter = GafferScene.SetFilter()
 			nodeGadget.node().parent().addChild( setFilter )
-			nodeGadget.node()["filter"].setInput( setFilter["out"] )
+			__filterPlug( nodeGadget.node() ).setInput( setFilter["out"] )
 
 			setsPlug = setFilter["setExpression"]
 
-		setsPlug.setValue( " ".join( sets ) )
+		setsPlug.setValue( result )
 
 	GafferUI.Pointer.setCurrent( __originalDragPointer )
 	__originalDragPointer = None
@@ -258,12 +279,3 @@ def addSetDropTarget( nodeGadget ) :
 	nodeGadget.dragLeaveSignal().connect( __dragLeave )
 	nodeGadget.dragMoveSignal().connect( __dragMove )
 	nodeGadget.dropSignal().connect( __drop )
-
-def __nodeGadget( setFilter ) :
-
-	nodeGadget = GafferUI.StandardNodeGadget( setFilter )
-	addSetDropTarget( nodeGadget )
-
-	return nodeGadget
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.SetFilter, __nodeGadget )

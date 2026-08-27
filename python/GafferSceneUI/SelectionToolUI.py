@@ -75,22 +75,22 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"selectMode" : [
+		"selectMode" : {
 
-			"description",
+			"description" :
 			"""
 			Determines the scene location that is ultimately selected or deselected,
 			which may differ from what is originally selected.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.SelectionToolUI.SelectModePlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.SelectionToolUI.SelectModePlugValueWidget",
 
-			"label", "Select",
+			"label" : "Select",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 150,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 150,
 
-		],
+		},
 	},
 
 )

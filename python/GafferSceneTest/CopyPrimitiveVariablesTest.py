@@ -333,6 +333,3 @@ class CopyPrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		# Variables that can be copied should succeed, even if others don't
 		cubeVariables["enabled"].setValue( True )
 		self.assertEqual( copy["out"].object( "/sphere" )["c"], IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.IntData( 1 ) )  )
-
-if __name__ == "__main__":
-	unittest.main()

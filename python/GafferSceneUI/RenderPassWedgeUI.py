@@ -77,19 +77,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The input scene containing the render passes to wedge.
 			""",
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the render passes to be wedged.
 
@@ -98,18 +98,18 @@ Gaffer.Metadata.registerNode(
 			> over time and to prevent scenes with expensive
 			> globals from slowing task dispatch.
 			""",
-			"plugValueWidget:type", "GafferSceneUI.RenderPassWedgeUI._PassNamesWidget",
+			"plugValueWidget:type" : "GafferSceneUI.RenderPassWedgeUI._PassNamesWidget",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			A direct pass-through of the input scene.
 			""",
 
-		],
+		},
 
 	}
 

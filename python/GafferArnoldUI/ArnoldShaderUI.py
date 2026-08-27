@@ -51,15 +51,6 @@ import GafferImageUI
 import GafferSceneUI
 import GafferArnold
 
-# Arnold shaders to add to the light editor.
-lightEditorShaders = {
-	# "shaderName" : ( "shaderAttributeName", "lightEditorSection" )
-	"light_blocker" : ( "ai:lightFilter:filter", "Blocker" ),
-	"barndoor" : ( "ai:lightFilter:barndoor", "Barndoor" ),
-	"gobo" : ( "ai:lightFilter:gobo", "Gobo" ),
-	"light_decay" : ( "ai:lightFilter:light_decay", "Decay" ),
-}
-
 ##########################################################################
 # Utilities to make it easier to work with the Arnold API, which has a
 # fairly bare wrapping using ctypes.
@@ -269,8 +260,7 @@ def __translateNodeMetadata( nodeEntry ) :
 			nodeEntry, paramName, "desc",
 			defaultValue = __aiMetadataGetStr( nodeEntry, paramName, "help" )
 		)
-		if description is not None :
-			__metadata[paramPath]["description"] = description
+		__metadata[paramPath]["description"] = description or "Refer to Arnold's documentation for further details."
 
 		# Presets
 
@@ -357,37 +347,6 @@ def __translateNodeMetadata( nodeEntry ) :
 		# use the default label for the GraphEditor.
 		__metadata[paramPath]["noduleLayout:label"] = defaultLabel
 
-		if (
-			arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_LIGHT and
-			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
-		) :
-			GafferSceneUI.LightEditor.registerParameter(
-				"ai:light", paramName, page
-			)
-
-		if (
-			nodeName in lightEditorShaders and
-			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
-		) :
-			attributeName, sectionName = lightEditorShaders[nodeName]
-			GafferSceneUI.LightEditor.registerShaderParameter(
-				"ai:light",
-				paramName,
-				attributeName,
-				sectionName,
-				f"{page} {label}" if page is not None and label is not None else paramName
-			)
-
-		childComponents = {
-			arnold.AI_TYPE_VECTOR2 : "xy",
-			arnold.AI_TYPE_VECTOR : "xyz",
-			arnold.AI_TYPE_RGB : "rgb",
-			arnold.AI_TYPE_RGBA : "rgba",
-		}.get( paramType )
-		if childComponents is not None :
-			for c in childComponents :
-				__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
-
 		# NodeEditor layout from other Gaffer-specific metadata
 
 		divider = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.layout.divider" )
@@ -461,14 +420,9 @@ def __translateNodeMetadata( nodeEntry ) :
 			if value is not None :
 				__metadata[paramPath][gafferKey] = value
 
-if [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 3, 1 ] :
-	__AI_NODE_IMAGER = arnold.AI_NODE_DRIVER
-else :
-	__AI_NODE_IMAGER = arnold.AI_NODE_IMAGER
-
 with IECoreArnold.UniverseBlock( writable = False ) :
 
-	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | __AI_NODE_IMAGER )
+	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | arnold.AI_NODE_IMAGER )
 	while not arnold.AiNodeEntryIteratorFinished( nodeIt ) :
 
 		__translateNodeMetadata( arnold.AiNodeEntryIteratorGetNext( nodeIt ) )
@@ -480,11 +434,6 @@ __metadata["quad_light.parameters.width"]["layout:section"] = "Shape"
 __metadata["quad_light.parameters.height"]["layout:section"] = "Shape"
 __metadata["quad_light.parameters.width"]["layout:index"] = 0
 __metadata["quad_light.parameters.height"]["layout:index"] = 1
-GafferSceneUI.LightEditor.registerParameter( "ai:light", "width", "Shape" )
-GafferSceneUI.LightEditor.registerParameter( "ai:light", "height", "Shape" )
-
-# Manually add the `filteredLights` parameter for `light_blocker`
-GafferSceneUI.LightEditor.registerAttribute( "ai:light", "filteredLights", "Blocker" )
 
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed

@@ -53,9 +53,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the file to be read. File sequences with
 			arbitrary padding may be specified using the '#' character
@@ -63,33 +63,33 @@ Gaffer.Metadata.registerNode(
 			format is used, then missingFrameMode will be activated.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "image",
-			"fileSystemPath:extensions", " ".join( GafferImage.OpenImageIOReader.supportedExtensions() ),
-			"fileSystemPath:extensionsLabel", "Show only image files",
-			"fileSystemPath:includeSequences", True,
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:bookmarks" : "image",
+			"fileSystemPath:extensions" : " ".join( GafferImage.OpenImageIOReader.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel" : "Show only image files",
+			"fileSystemPath:includeSequences" : True,
 
-		],
+		},
 
-		"refreshCount" : [
+		"refreshCount" : {
 
-			"description",
+			"description" :
 			"""
 			May be incremented to force a reload if the file has
 			changed on disk - otherwise old contents may still
 			be loaded via Gaffer's cache.
 			""",
 
-			"plugValueWidget:type", "GafferUI.RefreshPlugValueWidget",
-			"layout:label", "",
-			"layout:accessory", True,
+			"plugValueWidget:type" : "GafferUI.RefreshPlugValueWidget",
+			"layout:label" : "",
+			"layout:accessory" : True,
 
-		],
+		},
 
-		"missingFrameMode" : [
+		"missingFrameMode" : {
 
-			"description",
+			"description" :
 			"""
 			Determines how missing frames are handled when the input
 			fileName is a file sequence (uses the '#' character).
@@ -99,17 +99,17 @@ Gaffer.Metadata.registerNode(
 			display window of the previous valid frame in the sequence.
 			""",
 
-			"preset:Error", GafferImage.OpenImageIOReader.MissingFrameMode.Error,
-			"preset:Black", GafferImage.OpenImageIOReader.MissingFrameMode.Black,
-			"preset:Hold", GafferImage.OpenImageIOReader.MissingFrameMode.Hold,
+			"preset:Error" : GafferImage.OpenImageIOReader.MissingFrameMode.Error,
+			"preset:Black" : GafferImage.OpenImageIOReader.MissingFrameMode.Black,
+			"preset:Hold" : GafferImage.OpenImageIOReader.MissingFrameMode.Hold,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"availableFrames" : [
+		"availableFrames" : {
 
-			"description",
+			"description" :
 			"""
 			An output of the available frames for the given file sequence.
 			Returns an empty vector when the input fileName is not a file
@@ -118,27 +118,27 @@ Gaffer.Metadata.registerNode(
 
 			## \todo: consider making this visible using a TextWidget with
 			## FrameList syntax (e.g. "1-100x5")
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"channelInterpretation" : [
-			"description",
+		"channelInterpretation" : {
+			"description" :
 			"Documented in ImageReader, where it is exposed to users."
-		],
+		},
 
-		"fileValid" : [
+		"fileValid" : {
 
-			"description",
+			"description" :
 			"""
 			Whether or not the files exists and can be read into memory,
 			value calculated per frame if an image sequence. MissingFrameMode
 			does not change the behaviour of this plug.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		]
+		}
 
 	}
 

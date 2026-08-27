@@ -44,6 +44,3 @@ class DocumentationTest( GafferUITest.TestCase ) :
 
 		self.maxDiff = None
 		self.assertNodesAreDocumented( GafferDispatch )
-
-if __name__ == "__main__":
-	unittest.main()

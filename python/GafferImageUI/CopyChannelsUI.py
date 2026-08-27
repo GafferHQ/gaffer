@@ -49,18 +49,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the channels to copy. Names should be
 			separated by spaces and can use Gaffer's standard
 			wildcards.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
-		],
+		},
 
 	}
 

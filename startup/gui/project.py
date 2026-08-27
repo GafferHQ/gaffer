@@ -44,8 +44,7 @@ import Gaffer
 import GafferImage
 import GafferDispatch
 import GafferTractor
-
-import GafferSceneUI
+import GafferFlamenco
 
 ##########################################################################
 # Note this file is shared with the `dispatch` app. We need to ensure any
@@ -69,8 +68,14 @@ def __scriptAdded( container, script ) :
 
 	GafferImage.FormatPlug.acquireDefaultFormatPlug( script )
 
-	renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( script )
-	Gaffer.Metadata.registerValue( renderPassPlug["value"], "plugValueWidget:type", "GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget" )
+	# We don't want to load UI modules unless we're in a UI context.
+	## \todo We plan to eventually migrate ScriptNodeAlgo to GafferScene,
+	# which will allow us to remove this hack.
+	if "GafferUI" in sys.modules :
+		import GafferSceneUI
+
+		renderPassPlug = GafferSceneUI.ScriptNodeAlgo.acquireRenderPassPlug( script )
+		Gaffer.Metadata.registerValue( renderPassPlug["value"], "plugValueWidget:type", "GafferSceneUI.RenderPassEditor._RenderPassPlugValueWidget" )
 
 application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 
@@ -113,7 +118,7 @@ if 'GafferUI' in sys.modules :
 # Dispatchers
 ##########################################################################
 
-for dispatcher in [ GafferDispatch.LocalDispatcher, GafferTractor.TractorDispatcher ] :
+for dispatcher in [ GafferDispatch.LocalDispatcher, GafferTractor.TractorDispatcher, GafferFlamenco.FlamencoDispatcher ] :
 
 	Gaffer.Metadata.registerValue( dispatcher, "jobName", "userDefault", "${script:name}" )
 	directoryName = dispatcher.staticTypeName().rpartition( ":" )[2].replace( "Dispatcher", "" ).lower()

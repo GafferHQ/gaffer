@@ -39,22 +39,22 @@ import imath
 import Gaffer
 import GafferScene
 
-__modePresets = [
-	"preset:Euler", GafferScene.Orientation.Mode.Euler,
-	"preset:Quaternion", GafferScene.Orientation.Mode.Quaternion,
-	"preset:Axis-Angle", GafferScene.Orientation.Mode.AxisAngle,
-	"preset:Aim", GafferScene.Orientation.Mode.Aim,
-	"preset:Matrix", GafferScene.Orientation.Mode.Matrix,
-]
+__modePresets = {
+	"preset:Euler" : GafferScene.Orientation.Mode.Euler,
+	"preset:Quaternion" : GafferScene.Orientation.Mode.Quaternion,
+	"preset:Axis-Angle" : GafferScene.Orientation.Mode.AxisAngle,
+	"preset:Aim" : GafferScene.Orientation.Mode.Aim,
+	"preset:Matrix" : GafferScene.Orientation.Mode.Matrix,
+}
 
-__eulerOrderPresets = [
-	"preset:XYZ", imath.Eulerf.XYZ,
-	"preset:XZY", imath.Eulerf.XZY,
-	"preset:YZX", imath.Eulerf.YZX,
-	"preset:YXZ", imath.Eulerf.YXZ,
-	"preset:ZXY", imath.Eulerf.ZXY,
-	"preset:ZYX", imath.Eulerf.ZYX,
-]
+__eulerOrderPresets = {
+	"preset:XYZ" : imath.Eulerf.XYZ,
+	"preset:XZY" : imath.Eulerf.XZY,
+	"preset:YZX" : imath.Eulerf.YZX,
+	"preset:YXZ" : imath.Eulerf.YXZ,
+	"preset:ZXY" : imath.Eulerf.ZXY,
+	"preset:ZYX" : imath.Eulerf.ZYX,
+}
 
 Gaffer.Metadata.registerNode(
 
@@ -95,256 +95,255 @@ Gaffer.Metadata.registerNode(
 		# Input
 		# =====
 
-		"inMode" : [
+		"inMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to define the input orientations.
 			""",
 
+			"layout:section" : "Settings.Input",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"layout:section", "Settings.Input",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		} | __modePresets | {
 
-		] + __modePresets + [
+			"preset:Quaternion XYZW (Houdini)" : GafferScene.Orientation.Mode.QuaternionXYZW,
 
-			"preset:Quaternion XYZW (Houdini)", GafferScene.Orientation.Mode.QuaternionXYZW,
+		},
 
-		],
+		"deleteInputs" : {
 
-		"deleteInputs" : [
-
-			"description",
+			"description" :
 			"""
 			Deletes the input primitive variables, so that they are
 			not present on the output object.
 			""",
 
-			"label", "Delete",
-			"layout:section", "Settings.Input",
-			"layout:index", -1,
+			"label" : "Delete",
+			"layout:section" : "Settings.Input",
+			"layout:index" : -1,
 
-		],
+		},
 
 		# Euler
 		# -----
 
-		"inEuler" : [
+		"inEuler" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that defines the input orientation
 			as euler angles, measured in degrees. This variable should contain
 			V3fVectorData.
 			""",
 
-			"label", "Euler",
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsEuler",
+			"label" : "Euler",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsEuler",
 
-		],
+		},
 
-		"inOrder" : [
+		"inOrder" : {
 
-			"description",
+			"description" :
 			"""
 			The rotation order of the input euler angles.
 			""",
 
-			"label", "Order",
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsEuler",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"label" : "Order",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsEuler",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		] + __eulerOrderPresets,
+		} | __eulerOrderPresets,
 
 		# Quaternion
 		# ----------
 
-		"inQuaternion" : [
+		"inQuaternion" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that defines the input orientation
 			as quaternions. This variable should contain QuatfVectorData.
 			""",
 
-			"label", "Quaternion",
+			"label" : "Quaternion",
 
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsQuaternion",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsQuaternion",
 
-		],
+		},
 
 		# Axis Angle
 		# ----------
 
-		"inAxis" : [
+		"inAxis" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that defines the axis component of
 			the input orientations. This variable should contain V3fVectorData.
 			""",
 
-			"label", "Axis",
+			"label" : "Axis",
 
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsAxisAngle",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsAxisAngle",
 
-		],
+		},
 
-		"inAngle" : [
+		"inAngle" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that defines the angle component of
 			the input orientations. This variable should contain FloatVectorData.
 			""",
 
-			"label", "Angle",
+			"label" : "Angle",
 
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsAxisAngle",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsAxisAngle",
 
-		],
+		},
 
 		# Aim
 		# ---
 
-		"inXAxis" : [
+		"inXAxis" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that defines the direction in which the
 			X axis will be aimed. This variable should contain V3fVectorData.
 			""",
 
-			"label", "X Axis",
+			"label" : "X Axis",
 
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsAim",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsAim",
 
-		],
+		},
 
-		"inYAxis" : [
+		"inYAxis" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that defines the direction in which the
 			Y axis will be aimed. This variable should contain V3fVectorData.
 			""",
 
-			"label", "Y Axis",
+			"label" : "Y Axis",
 
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsAim",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsAim",
 
-		],
+		},
 
-		"inZAxis" : [
+		"inZAxis" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that defines the direction in which the
 			Z axis will be aimed. This variable should contain V3fVectorData.
 			""",
 
-			"label", "Z Axis",
+			"label" : "Z Axis",
 
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsAim",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsAim",
 
-		],
+		},
 
 		# Matrix
 		# ------
 
-		"inMatrix" : [
+		"inMatrix" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that defines the input orientations as
 			a matrix. This variable should contain M33fVectorData.
 			""",
 
-			"label", "Matrix",
+			"label" : "Matrix",
 
-			"layout:section", "Settings.Input",
-			"layout:visibilityActivator", "inModeIsMatrix",
+			"layout:section" : "Settings.Input",
+			"layout:visibilityActivator" : "inModeIsMatrix",
 
-		],
+		},
 
 		# Randomisation
 		# =============
 
-		"randomEnabled" : [
+		"randomEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			Enables randomisation of the orientations. Randomisation
 			is applied as a pre-transform of the input orientation.
 			""",
 
-			"layout:section", "Settings.Random",
-			"label", "Enabled",
+			"layout:section" : "Settings.Random",
+			"label" : "Enabled",
 
-		],
+		},
 
-		"randomAxis" : [
+		"randomAxis" : {
 
-			"description",
+			"description" :
 			"""
 			A reference axis which the randomisation is specified relative
 			to. Typically this would be the primary axis of the model being
 			instanced.
 			""",
 
-			"preset:X", imath.V3f( 1, 0, 0 ),
-			"preset:Y", imath.V3f( 0, 1, 0 ),
-			"preset:Z", imath.V3f( 0, 0, 1 ),
+			"preset:X" : imath.V3f( 1, 0, 0 ),
+			"preset:Y" : imath.V3f( 0, 1, 0 ),
+			"preset:Z" : imath.V3f( 0, 0, 1 ),
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetsPlugValueWidget:allowCustom", True,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetsPlugValueWidget:allowCustom" : True,
 
-			"layout:section", "Settings.Random",
-			"label", "Axis",
-			"layout:activator", "randomEnabled",
+			"layout:section" : "Settings.Random",
+			"label" : "Axis",
+			"layout:activator" : "randomEnabled",
 
-		],
+		},
 
-		"randomSpread" : [
+		"randomSpread" : {
 
-			"description",
+			"description" :
 			"""
 			Applies a random rotation away from the axis, specified in
 			degrees. The maximum spread of 180 degrees gives a uniform
 			randomisation over all possible directions.
 			""",
 
-			"layout:section", "Settings.Random",
-			"label", "Spread",
-			"layout:activator", "randomEnabled",
+			"layout:section" : "Settings.Random",
+			"label" : "Spread",
+			"layout:activator" : "randomEnabled",
 
-		],
+		},
 
-		"randomTwist" : [
+		"randomTwist" : {
 
-			"description",
+			"description" :
 			"""
 			Applies a random rotation around the axis, specified in
 			degrees.
 			""",
 
-			"layout:section", "Settings.Random",
-			"label", "Twist",
-			"layout:activator", "randomEnabled",
+			"layout:section" : "Settings.Random",
+			"label" : "Twist",
+			"layout:activator" : "randomEnabled",
 
-		],
+		},
 
-		"randomSpace" : [
+		"randomSpace" : {
 
-			"description",
+			"description" :
 			"""
 			The space in which the randomisation is specified. This defines
 			how it is combined with the input orientations.
@@ -363,173 +362,173 @@ Gaffer.Metadata.registerNode(
 
 			""",
 
-			"layout:section", "Settings.Random",
-			"label", "Space",
-			"preset:Local", GafferScene.Orientation.Space.Local,
-			"preset:Parent", GafferScene.Orientation.Space.Parent,
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"layout:section" : "Settings.Random",
+			"label" : "Space",
+			"preset:Local" : GafferScene.Orientation.Space.Local,
+			"preset:Parent" : GafferScene.Orientation.Space.Parent,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
 		# Output
 		# ======
 
-		"outMode" : [
+		"outMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to define the output orientations. When
 			creating orientations for the Instancer, the Quaternion
 			mode should be used.
 			""",
 
-			"layout:section", "Settings.Output",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"layout:section" : "Settings.Output",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		] + __modePresets,
+		} | __modePresets,
 
 		# Euler
 		# -----
 
-		"outEuler" : [
+		"outEuler" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that will be created to store
 			the output orientations as euler angles, measured in degrees.
 			""",
 
-			"label", "Euler",
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsEuler",
+			"label" : "Euler",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsEuler",
 
-		],
+		},
 
-		"outOrder" : [
+		"outOrder" : {
 
-			"description",
+			"description" :
 			"""
 			The rotation order of the output euler angles.
 			""",
 
-			"label", "Order",
+			"label" : "Order",
 
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsEuler",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsEuler",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		] + __eulerOrderPresets,
+		} | __eulerOrderPresets,
 
 		# Quaternion
 		# ----------
 
-		"outQuaternion" : [
+		"outQuaternion" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that will be created to store
 			the output orientations as quaternions.
 			""",
 
-			"label", "Quaternion",
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsQuaternion",
+			"label" : "Quaternion",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsQuaternion",
 
-		],
+		},
 
 		# Axis Angle
 		# ----------
 
-		"outAxis" : [
+		"outAxis" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that will be created to store
 			the axis component of the output orientation.
 			""",
 
-			"label", "Axis",
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsAxisAngle",
+			"label" : "Axis",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsAxisAngle",
 
-		],
+		},
 
-		"outAngle" : [
+		"outAngle" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that will be created to store
 			the angle component of the output orientation.
 			""",
 
-			"label", "Angle",
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsAxisAngle",
+			"label" : "Angle",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsAxisAngle",
 
-		],
+		},
 
 		# Aim
 		# ---
 
-		"outXAxis" : [
+		"outXAxis" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that will be created to store
 			the x-axis aim vector of the output orientation.
 			""",
 
-			"label", "X Axis",
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsAim",
+			"label" : "X Axis",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsAim",
 
-		],
+		},
 
-		"outYAxis" : [
+		"outYAxis" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that will be created to store
 			the y-axis aim vector of the output orientation.
 			""",
 
-			"label", "Y Axis",
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsAim",
+			"label" : "Y Axis",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsAim",
 
-		],
+		},
 
-		"outZAxis" : [
+		"outZAxis" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that will be created to store
 			the z-axis aim vector of the output orientation.
 			""",
 
-			"label", "Z Axis",
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsAim",
+			"label" : "Z Axis",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsAim",
 
-		],
+		},
 
 		# Matrix
 		# ------
 
-		"outMatrix" : [
+		"outMatrix" : {
 
-			"description",
+			"description" :
 			"""
 			Name of the primitive variable that will be created to store
 			the output orientations as matrices. The matrices will be
 			stored as M33fVectorData.
 			""",
 
-			"label", "Matrix",
-			"layout:section", "Settings.Output",
-			"layout:visibilityActivator", "outModeIsMatrix",
+			"label" : "Matrix",
+			"layout:section" : "Settings.Output",
+			"layout:visibilityActivator" : "outModeIsMatrix",
 
-		],
+		},
 
 	}
 

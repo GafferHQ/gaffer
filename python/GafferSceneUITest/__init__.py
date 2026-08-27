@@ -46,7 +46,6 @@ from .ShaderUITest import ShaderUITest
 from .TranslateToolTest import TranslateToolTest
 from .ScaleToolTest import ScaleToolTest
 from .RotateToolTest import RotateToolTest
-from .ContextAlgoTest import ContextAlgoTest
 from .CameraToolTest import CameraToolTest
 from .VisualiserTest import VisualiserTest
 from .TransformToolTest import TransformToolTest
@@ -66,6 +65,8 @@ from .SelectionToolTest import SelectionToolTest
 from .InspectorColumnTest import InspectorColumnTest
 from .ScriptNodeAlgoTest import ScriptNodeAlgoTest
 from .AttributeEditorTest import AttributeEditorTest
-
-if __name__ == "__main__":
-	unittest.main()
+from .CatalogueUITest import CatalogueUITest
+from .BasicInspectorTest import BasicInspectorTest
+from .VisibilityColumnTest import VisibilityColumnTest
+from .TransformInspectorTest import TransformInspectorTest
+from .PrimitiveVariableInspectorTest import PrimitiveVariableInspectorTest

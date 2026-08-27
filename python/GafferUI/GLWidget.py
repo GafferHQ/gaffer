@@ -65,9 +65,17 @@ from Qt import QtCore
 ## \todo Now that Qt 4 is long gone, and PySide is an official
 # Qt project, Qt.py isn't much help. Remove across the board, or see
 # if we can coax the project into bridging Qt 5/6 instead of 4/5?
-from PySide2 import QtGui
-from PySide2 import QtWidgets
-from Qt import QtOpenGL
+if Qt.__binding__ == "PySide2" :
+	from PySide2 import QtGui
+	from PySide2 import QtWidgets
+	from PySide2.QtWidgets import QOpenGLWidget
+	from PySide2 import QtOpenGL
+elif Qt.__binding__ == "PySide6" :
+	from PySide6 import QtGui
+	from PySide6 import QtWidgets
+	from PySide6.QtOpenGLWidgets import QOpenGLWidget
+else :
+	raise Exception( "GLWidget : No compatible Qt Python binding found" )
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
@@ -129,6 +137,15 @@ class GLWidget( GafferUI.Widget ) :
 		assert( child in self.__overlays )
 		self.__graphicsScene.removeOverlay( child )
 		self.__overlays.remove( child )
+
+	## Allows customisation of the underlying QGLWidget, by registering a
+	# function that will be used to create QGLWidgets when they are needed. This
+	# is not typically necessary, but can be useful when hosting Gaffer inside
+	# other DCCs.
+	@staticmethod
+	def _registerQGLWidgetCreator( creator ) :
+
+		_GLGraphicsView._widgetCreator = creator
 
 	## Called whenever the widget is resized. May be reimplemented by derived
 	# classes if necessary.
@@ -206,6 +223,8 @@ class GLWidget( GafferUI.Widget ) :
 
 class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
+	_widgetCreator = None
+
 	def __init__( self, format ) :
 
 		QtWidgets.QGraphicsView.__init__( self )
@@ -253,89 +272,16 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 	@classmethod
 	def __createGLWidget( cls, format ) :
 
-		# try to make a host specific widget if necessary.
-		result = cls.__createMayaQGLWidget( format )
-		if result is not None :
-			return result
+		if cls._widgetCreator is not None :
+			return cls._widgetCreator( format )
 
-		result = cls.__createHoudiniQGLWidget( format )
-		if result is not None :
-			return result
-
-		glWidget = QtWidgets.QOpenGLWidget()
+		glWidget = QOpenGLWidget()
 		# Avoid `QOpenGLFramebufferObject: Framebuffer incomplete attachment`
 		# errors caused by Qt trying to make a framebuffer with zero size.
 		glWidget.setMinimumSize( 1, 1 )
 		glWidget.setFormat( format )
 
 		return glWidget
-
-	@classmethod
-	def __createQGLFormat( cls, format ):
-		"""
-		Create a QGLFormat based on the configuration of
-		QSurfaceFormat where possible.
-		"""
-		qGLFormat = QtOpenGL.QGLFormat()
-		qGLFormat.setRgba( True )
-
-		qGLFormat.setAlpha( format.hasAlpha() )
-
-		if format.depthBufferSize() > 1:
-			qGLFormat.setDepth( True )
-
-		if format.samples() > 1:
-			qGLFormat.setSampleBuffers( True )
-
-		return qGLFormat
-
-	@classmethod
-	def __createHostedQGLWidget( cls, format ) :
-
-		# When running Gaffer embedded in a host application such as Maya
-		# or Houdini, we want to be able to share OpenGL resources between
-		# gaffer uis and host viewport uis, because IECoreGL will be used
-		# in both. So we implement our own QGLContext class which creates a
-		# context which shares with the host. The custom QGLContext is
-		# implemented in GLWidgetBinding.cpp, and automatically shares with
-		# the context which is current at the time of its creation. The host
-		# context should therefore be made current before calling this
-		# method.
-
-		qGLFormat = cls.__createQGLFormat( format )
-		result = QtOpenGL.QGLWidget()
-		_GafferUI._glWidgetSetHostedContext( GafferUI._qtAddress( result ), GafferUI._qtAddress( qGLFormat ) )
-		return result
-
-	@classmethod
-	def __createMayaQGLWidget( cls, format ) :
-
-		try :
-			import maya.OpenMayaRender
-		except ImportError :
-			# we're not in maya - createGLWidget() will just make a
-			# normal widget.
-			return None
-
-		mayaRenderer = maya.OpenMayaRender.MHardwareRenderer.theRenderer()
-		mayaRenderer.makeResourceContextCurrent( mayaRenderer.backEndString() )
-		return cls.__createHostedQGLWidget( format )
-
-	@classmethod
-	def __createHoudiniQGLWidget( cls, format ) :
-
-		try :
-			import hou
-		except ImportError :
-			# we're not in houdini - createGLWidget() will just make a
-			# normal widget.
-			return None
-
-		import IECoreHoudini
-
-		# Force the Houdini GL context to be current, and share it.
-		IECoreHoudini.makeMainGLContextCurrent()
-		return cls.__createHostedQGLWidget( format )
 
 class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
@@ -347,6 +293,7 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 		self.__backgroundDrawFunction = backgroundDrawFunction
 		self.sceneRectChanged.connect( self.__sceneRectChanged )
+		self.focusItemChanged.connect( self.__focusItemChanged )
 
 		self.__overlays = {} # Mapping from GafferUI.Widget to _OverlayProxyWidget
 
@@ -402,6 +349,14 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 		for proxy in self.__overlays.values() :
 			self.__updateItemGeometry( proxy, sceneRect )
+
+	def __focusItemChanged( self, newItem, oldItem, reason ) :
+
+		if newItem is None and reason == QtCore.Qt.PopupFocusReason :
+			# Don't lose the focus item for this view due to a popup menu.
+			# Losing that would prevent the `GLWidget` from forwarding events
+			# to overlay widgets.
+			self.setFocusItem( oldItem )
 
 	def __updateItemGeometry( self, item, sceneRect ) :
 

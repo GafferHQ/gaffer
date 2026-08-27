@@ -50,6 +50,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 class Menu( GafferUI.Widget ) :
 
@@ -57,9 +58,6 @@ class Menu( GafferUI.Widget ) :
 	#
 	# Along with the standard IECore.MenuItemDefinition fields, the Gaffer Menu
 	# implementation also supports:
-	#
-	#  - 'enter' and 'leave', to optionally provide callables to be invoked
-	#    when the mouse enters and leaves an item's on-screen representation.
 	#
 	# - 'label' in conjunction with 'divider' = True, displays a textual
 	#   divider as opposed to a simple line.
@@ -80,12 +78,9 @@ class Menu( GafferUI.Widget ) :
 
 		self._qtWidget().__definition = definition
 		self._qtWidget().aboutToShow.connect( Gaffer.WeakMethod( self.__show ) )
-		self._qtWidget().aboutToHide.connect( Gaffer.WeakMethod( self.__hide ) )
-		self._qtWidget().hovered.connect( Gaffer.WeakMethod( self.__actionHovered ) )
-
-		self.__lastHoverAction = None
 
 		if searchable :
+			self._qtWidget().aboutToHide.connect( Gaffer.WeakMethod( self.__hide ) )
 			self.__lastAction = None
 
 		self._setStyleSheet()
@@ -95,7 +90,6 @@ class Menu( GafferUI.Widget ) :
 
 		self.__previousSearchText = ''
 		self.__cachedSearchStructureKeys = []
-
 
 	## Displays the menu at the specified position, and attached to
 	# an optional parent. If position is not specified then it
@@ -121,7 +115,10 @@ class Menu( GafferUI.Widget ) :
 		self._qtWidget().keyboardMode = _Menu.KeyboardMode.Grab if grabFocus else _Menu.KeyboardMode.Close
 
 		if modal :
-			self._qtWidget().exec_( position )
+			if Qt.__binding__ == "PySide6" :
+				self._qtWidget().exec( position )
+			else :
+				self._qtWidget().exec_( position )
 		else :
 			self._qtWidget().popup( position )
 
@@ -173,7 +170,7 @@ class Menu( GafferUI.Widget ) :
 	def __actionTriggered( self, qtActionWeakRef, toggled ) :
 
 		qtAction = qtActionWeakRef()
-		item = qtAction.item
+		item = qtAction.__item
 
 		if not self.__evaluateItemValue( item.active ) :
 			# Because an item's active status can change
@@ -216,6 +213,9 @@ class Menu( GafferUI.Widget ) :
 			# expanding each submenu. The definition is fully expanded, so dynamic submenus that
 			# exist will be expanded and searched.
 			self.__searchStructure = {}
+			# We maintain a cache of actions created for items that appear in the search menu so they
+			# can be reused when the search menu is updated.
+			self.__cachedSearchActions = {}
 			self.__initSearch( self._qtWidget().__definition )
 
 			# Searchable menus require an extra submenu to display the search results.
@@ -249,9 +249,6 @@ class Menu( GafferUI.Widget ) :
 			self.__searchLine.clearFocus()
 			self.__searchMenu.hide()
 
-		self.__doActionUnhover()
-		self.__lastHoverAction = None
-
 	# May be called to fully build the menu /now/, rather than only do it lazily
 	# when it's shown. This is used by the MenuBar. forShortCuts should be set
 	# if the build is for short cut discovery as it will skip dynamic subMenus
@@ -272,6 +269,12 @@ class Menu( GafferUI.Widget ) :
 				definition = definition( self )
 			else :
 				definition = definition()
+
+		# We'll be replacing all existing submenus so flag to Qt that they're
+		# available for deletion. Otherwise they and their children are kept
+		# alive until their parent Menu is deleted.
+		for menu in qtMenu.findChildren( QtWidgets.QMenu ) :
+			menu.deleteLater()
 
 		qtMenu.clear()
 
@@ -294,11 +297,13 @@ class Menu( GafferUI.Widget ) :
 					qtMenu.addMenu( subMenu )
 
 					subMenu.__definition = definition.reRooted( "/" + name + "/" )
-					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
+					subMenu.aboutToShow.connect( functools.partial( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 					if recurse :
 						self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
 				else :
+
+					self.__checkForCycles( path, item )
 
 					if item.subMenu is not None :
 
@@ -324,7 +329,7 @@ class Menu( GafferUI.Widget ) :
 						qtMenu.addMenu( subMenu )
 
 						subMenu.__definition = item.subMenu
-						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
+						subMenu.aboutToShow.connect( functools.partial( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 						if recurse :
 							self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
@@ -371,7 +376,8 @@ class Menu( GafferUI.Widget ) :
 		if item.divider :
 			qtAction = _DividerAction( item, parent )
 		else :
-			qtAction = _Action( item, label, parent )
+			qtAction = QtWidgets.QAction( label, parent )
+			qtAction.__item = item
 
 		if item.checkBox is not None :
 			qtAction.setCheckable( True )
@@ -387,17 +393,45 @@ class Menu( GafferUI.Widget ) :
 			else :
 				signal = qtAction.triggered[bool]
 
-			if self.__searchable :
-				signal.connect( IECore.curry( Gaffer.WeakMethod( self.__menuActionTriggered ), qtAction ) )
+			if self.__searchable and getattr( item, "searchable", True ) :
+				## \todo Investigate why we don't use `weakref.ref( qtAction )` like in the connection below,
+				# and standardise on one approach or the other.
+				signal.connect( functools.partial( Gaffer.WeakMethod( self.__searchableActionTriggered ), qtAction ) )
 
-			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
+			signal.connect( functools.partial( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
 
 		active = self.__evaluateItemValue( item.active )
 		qtAction.setEnabled( active )
 
 		shortCut = getattr( item, "shortCut", None )
 		if shortCut is not None :
-			qtAction.setShortcuts( [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ] )
+			keySequences = [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ]
+			for s in keySequences :
+
+				if s.count() != 1 :
+					continue
+
+				if Qt.__binding__ != "PySide6" :
+					key = s[0] & ~QtCore.Qt.KeyboardModifierMask
+					modifiers = s[0] & QtCore.Qt.KeyboardModifierMask
+				else :
+					key = s[0].key()
+					modifiers = s[0].keyboardModifiers()
+
+				# Qt differentiates keys on the keypad by adding the KeypadModifier to
+				# their keypresses. This means that shortcuts that don't specifically
+				# include the KeypadModifier, such as "Alt+1", would not be triggered
+				# by `Alt`+`keypad 1`. We want keypad keys to be treated the same, and
+				# not require creators of menu items to remember to create two separate
+				# shortcuts, so when we find a shortcut matching a key with an equivalent
+				# key on the keypad we automatically create an additional shortcut that
+				# includes the KeypadModifier.
+				if ( QtCore.Qt.Key_Asterisk <= key <= QtCore.Qt.Key_9 or key == QtCore.Qt.Key_Enter ) and not modifiers & QtCore.Qt.KeypadModifier :
+					keypadSequence = QtGui.QKeySequence( modifiers | QtCore.Qt.KeypadModifier | key )
+					if keypadSequence not in keySequences :
+						keySequences.append( keypadSequence )
+
+			qtAction.setShortcuts( keySequences )
 			# If we allow shortcuts to be created at the window level (the default),
 			# then we can easily get into a situation where our shortcuts conflict
 			# with those of the host when embedding our MenuBars in an application like Maya.
@@ -481,7 +515,10 @@ class Menu( GafferUI.Widget ) :
 
 		self.__searchMenu.setUpdatesEnabled( False )
 		self.__searchMenu.hide()
-		self.__searchMenu.clear()
+		# Remove any existing actions from the search menu. We don't call `self.__searchMenu.clear()`
+		# here as we cache actions for reuse by subsequent updates and `clear()` may delete them.
+		for action in self.__searchMenu.actions() :
+			self.__searchMenu.removeAction( action )
 		self.__searchMenu.setDefaultAction( None )
 
 		if not text :
@@ -605,7 +642,11 @@ class Menu( GafferUI.Widget ) :
 
 				for item, path in self.__searchStructure[name] :
 
-					action = self.__buildAction( item, name, self.__searchMenu )
+					action = self.__cachedSearchActions.get( path )
+					if action is None :
+						action = self.__buildAction( item, name, self.__searchMenu )
+						self.__cachedSearchActions[path] = action
+
 					if name not in results :
 						results[name] = { "pos" : pos, "weight" : weight, "actions" : [], 'grp' : match.groups() }
 
@@ -633,54 +674,57 @@ class Menu( GafferUI.Widget ) :
 		if self.__searchMenu and self.__searchMenu.defaultAction() :
 			self.__searchMenu.defaultAction().trigger()
 
-	def __menuActionTriggered( self, action, checked ) :
+	def __searchableActionTriggered( self, action, checked ) :
 
-		self.__lastAction = action if action.objectName() != "GafferUI.Menu.__searchWidget" else None
 		if self.__lastAction is not None :
-			self.__searchMenu.addAction( self.__lastAction )
+			self.__lastAction.deleteLater()
+
+		# Store the last triggered action as a new action built from the original.
+		# We do this as the triggered action will often be parented to a submenu
+		# that will be deleted the next time we build the menu.
+		self.__lastAction = self.__buildAction( action.__item, action.text(), self._qtWidget() ) if action.objectName() != "GafferUI.Menu.__searchWidget" else None
 
 		self._qtWidget().hide()
 
-	def __actionHovered( self, action ) :
+	# Creating reference cycles by referencing the menu's parent
+	# in a `command` is too easy, and can have dire consequences
+	# (see c2a7fd7bfbe3d251cb62fd688b0cab5688141bde). Warn if we
+	# fall into the trap.
+	def __checkForCycles( self, path, item ) :
 
-		# Hovered is called every time the mouse moves
-		if action == self.__lastHoverAction :
-			return
+		def checkCaptures( self, attribute, o, visited ) :
 
-		self.__doActionUnhover()
+			if id( o ) in visited :
+				return
+			else :
+				visited.add( id( o ) )
 
-		self.__lastHoverAction = action
+			if isinstance( o, GafferUI.Widget ) and ( o is self or o.isAncestorOf( self ) ) :
+				IECore.msg(
+					IECore.Msg.Level.Warning, path,
+					f"Captured variable for `{attribute}` creates cyclic reference back to Menu."
+				)
+			elif isinstance( o, functools.partial ) :
+				checkCaptures( self, attribute, o.func, visited )
+				for a in o.args :
+					checkCaptures( self, attribute, a, visited )
+				for a in o.keywords.values() :
+					checkCaptures( self, attribute, a, visited )
+			elif inspect.isfunction( o ) :
+				closureVars = inspect.getclosurevars( o )
+				for a in closureVars.nonlocals.values() :
+					checkCaptures( self, attribute, a, visited )
+				for a in closureVars.globals.values() :
+					checkCaptures( self, attribute, a, visited )
+			elif inspect.ismethod( o ) :
+				checkCaptures( self, attribute, o.__self__, visited )
 
-		# Sub-menus are normal QActions
-		if isinstance( action, _Action ) and hasattr( action.item, "enter" ) :
-			action.item.enter()
-
-	def __doActionUnhover( self ) :
-
-		if self.__lastHoverAction is None :
-			return
-
-		# Sub-menus are normal QActions
-		if isinstance( self.__lastHoverAction, _Action ) and hasattr( self.__lastHoverAction.item, "leave" ) :
-			self.__lastHoverAction.item.leave()
-
-		self.__lastHoverAction = None
-
-# When we stuck arbitrary attributes on QAction (eg. __item) these would get
-# lost when the action was returned by Qt via a signal (eg: menu.hovered).
-# Creating a subclass seemed to resolve this. Never got to the bottom of why,
-# as the addresses of the python objects _seemed_ to be the same.
-class _Action( QtWidgets.QAction ) :
-
-	def __init__( self, item, *args, **kwarg ) :
-		self.item = item
-		QtWidgets.QAction.__init__( self, *args, **kwarg )
+		for k, v in item.__dict__.items() :
+			checkCaptures( self, k, v, set() )
 
 class _DividerAction( QtWidgets.QWidgetAction ) :
 
 	def __init__( self, item, *args, **kwarg ) :
-
-		self.item = item
 
 		QtWidgets.QWidgetAction.__init__( self, *args, **kwarg )
 
@@ -759,4 +803,3 @@ class _Menu( QtWidgets.QMenu ) :
 					return
 
 		QtWidgets.QMenu.keyPressEvent( self, qEvent )
-

@@ -36,12 +36,67 @@
 
 import unittest
 
+import IECore
+
+import GafferDelight
+import GafferOSL
 import GafferSceneTest
 
 class DelightRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "3Delight"
 	sceneDescriptionSuffix = ".nsi"
+	# Apparent bug in 3Delight's EXR driver writes M44f as Box2f.
+	unsupportedOutputMetadataTypes = [ IECore.M44fData ]
+	pointInstancerSupported = True
 
-if __name__ == "__main__":
-	unittest.main()
+	@unittest.skip( "No light linking support just yet" )
+	def testLightLinking( self ) :
+
+		pass
+
+	@unittest.skip( "No light linking support just yet" )
+	def testLightLinkingWithExclusions( self ) :
+
+		pass
+
+	@unittest.skip( "No shadow linking support just yet" )
+	def testShadowLinking( self ) :
+
+		pass
+
+	@unittest.skip( "No shadow linking support just yet" )
+	def testShadowLinkingExclusions( self ) :
+
+		pass
+
+	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our 3Delight backend" )
+	def testInstanceIDOutput( self ) :
+
+		pass
+
+	def _createConstantShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "Surface/Constant" )
+		return shader, shader["parameters"]["Cs"], shader["out"]["out"]
+
+	def _createColorAttributeReader( self, attributeName ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "dlPrimitiveAttribute" )
+		shader["parameters"]["attribute_name"].setValue( attributeName )
+		shader["parameters"]["attribute_type"].setValue( 1 ) # color
+
+		return shader, shader["out"]["o_color"]
+
+	def _createOptions( self ) :
+
+		# Improve anti-aliasing for motion-blur tests.
+
+		options = GafferDelight.DelightOptions()
+
+		options["options"]["dl:oversampling"]["enabled"].setValue( True )
+		options["options"]["dl:oversampling"]["value"].setValue( 16 )
+
+		return options

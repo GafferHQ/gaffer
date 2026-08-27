@@ -488,6 +488,3 @@ class BoxInTest( GafferTest.TestCase ) :
 		s2.execute( s1.serialise() )
 
 		self.assertEqual( Gaffer.Metadata.value( s2["b"]["out"], "test" ), 1 )
-
-if __name__ == "__main__":
-	unittest.main()

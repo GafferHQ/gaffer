@@ -42,8 +42,8 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "boost/multi_index/member.hpp"
 #include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index_container.hpp"
 
 #include "tbb/task_arena.h"
@@ -84,8 +84,17 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 	// UI classes often house their own internal plugs which receive their input
 	// from nodes in the graph. Follow the inputs to see if we can find the
 	// graph.
+	/// \todo This is an old mechanism that has been superceded by
+	/// the View/Settings mechanism below. We _think_ it can be removed.
 	if( auto p = runTimeCast<const Plug>( subject ) )
 	{
+		if( !p->node() )
+		{
+			// Avoid triggering cancellation when plugs/nodes are undergoing
+			// destruction - see `EditorTest.testIssue5877Variant`.
+			return nullptr;
+		}
+
 		if( auto s = scriptNode( p->getInput() ) )
 		{
 			return s;
@@ -127,10 +136,10 @@ using ActiveTasks = boost::multi_index::multi_index_container<
 	ActiveTask,
 	boost::multi_index::indexed_by<
 		boost::multi_index::hashed_unique<
-			boost::multi_index::member<ActiveTask, BackgroundTask *, &ActiveTask::task>
+			boost::multi_index::key<&ActiveTask::task>
 		>,
 		boost::multi_index::hashed_non_unique<
-			boost::multi_index::member<ActiveTask, ConstScriptNodePtr, &ActiveTask::subject>
+			boost::multi_index::key<&ActiveTask::subject>
 		>
 	>
 >;
@@ -150,12 +159,12 @@ ActiveTasks &activeTasks()
 struct BackgroundTask::TaskData : public boost::noncopyable
 {
 	TaskData( Function *function )
-		:	function( function ), status( Pending )
+		:	function( function ), canceller( new Canceller ), status( Pending )
 	{
 	}
 
 	Function *function;
-	IECore::Canceller canceller;
+	IECore::CancellerPtr canceller;
 	std::mutex mutex; // Protects `conditionVariable`, `status` and `threadID`
 	std::condition_variable conditionVariable;
 	Status status;
@@ -199,7 +208,7 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 			Status status;
 			try
 			{
-				(*taskData->function)( taskData->canceller );
+				(*taskData->function)( *taskData->canceller );
 				status = Completed;
 			}
 			catch( const std::exception &e )
@@ -246,7 +255,7 @@ void BackgroundTask::cancel()
 	{
 		m_taskData->status = Cancelled;
 	}
-	m_taskData->canceller.cancel();
+	m_taskData->canceller->cancel();
 }
 
 void BackgroundTask::wait()

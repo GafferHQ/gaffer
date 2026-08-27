@@ -36,32 +36,13 @@
 
 #include "GafferDelight/DelightAttributes.h"
 
-#include "Gaffer/StringPlug.h"
-
-using namespace Gaffer;
 using namespace GafferDelight;
 
 GAFFER_NODE_DEFINE_TYPE( DelightAttributes );
 
 DelightAttributes::DelightAttributes( const std::string &name )
-	:	GafferScene::Attributes( name )
+	:	GafferScene::Attributes( name, "dl" )
 {
-	Gaffer::CompoundDataPlug *attributes = attributesPlug();
-
-	// Visibility parameters
-
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.camera", new IECore::BoolData( true ), false, "cameraVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.diffuse", new IECore::BoolData( true ), false, "diffuseVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.hair", new IECore::BoolData( true ), false, "hairVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.reflection", new IECore::BoolData( true ), false, "reflectionVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.refraction", new IECore::BoolData( true ), false, "refractionVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.shadow", new IECore::BoolData( true ), false, "shadowVisibility" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:visibility.specular", new IECore::BoolData( true ), false, "specularVisibility" ) );
-
-	// Shading parameters
-
-	attributes->addChild( new Gaffer::NameValuePlug( "dl:matte", new IECore::BoolData( false ), false, "matte" ) );
-
 }
 
 DelightAttributes::~DelightAttributes()

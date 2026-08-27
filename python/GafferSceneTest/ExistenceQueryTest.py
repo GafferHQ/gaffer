@@ -289,6 +289,3 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 		q["location"].setValue( "/iDontExist" )
 		self.assertEqual( q["closestAncestor"].getValue(), "/" )
-
-if __name__ == "__main__":
-	unittest.main()

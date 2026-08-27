@@ -144,6 +144,11 @@ struct ChangedSlotCaller
 	}
 };
 
+CancellerPtr cancellerWrapper( const Context &context )
+{
+	return const_cast<Canceller *>( context.canceller() );
+}
+
 ContextPtr current()
 {
 	return const_cast<Context *>( Context::current() );
@@ -159,11 +164,7 @@ void GafferModule::bindContext()
 	contextClass
 		.def( init<>() )
 		.def( init<const Context &>( ( arg( "other" ) ) ) )
-		.def(
-			init<const Context &, const IECore::Canceller &>( ( arg( "other" ), arg( "canceller" ) ) ) [
-				with_custodian_and_ward<1,3>()
-			]
-		)
+		.def( init<const Context &, const IECore::ConstCancellerPtr &>( ( arg( "other" ), arg( "canceller" ) ) ) )
 		.def( init<const Context &, bool>( ( arg( "other" ), arg( "omitCanceller" ) ) ) )
 		.def( "setFrame", &setFrame )
 		.def( "getFrame", &Context::getFrame )
@@ -205,7 +206,7 @@ void GafferModule::bindContext()
 		.def( self == self )
 		.def( self != self )
 		.def( "substitute", &Context::substitute, ( arg( "input" ), arg( "substitutions" ) = IECore::StringAlgo::AllSubstitutions ) )
-		.def( "canceller", &Context::canceller, return_internal_reference<1>() )
+		.def( "canceller", &cancellerWrapper )
 		.def( "current", &current ).staticmethod( "current" )
 		;
 

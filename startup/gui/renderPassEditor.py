@@ -41,6 +41,16 @@ import Gaffer
 import GafferUI
 import GafferSceneUI
 
+## \todo We intend to move away from these manual `registerOption()` registrations and
+# instead rely on metadata. This would require introducing additional `option:` metadata
+# to configure which section each option belongs, and whether the column for that option
+# should be visible by default. This configuration could also be expanded to support
+# global attributes for renderers that require them, such as RenderMan.
+# We also plan to introduce a user-controlled visibility mask that allows overriding the
+# default visibility of columns within a particular section. This would allow interactive
+# configuration of the columns visible within a section, but not allow columns to be
+# reordered within their section, or moved between sections.
+
 GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:enabled" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "renderPass:type" )
 GafferSceneUI.RenderPassEditor.registerOption( "*", "render:inclusions" )
@@ -106,23 +116,41 @@ with IECore.IgnoredExceptions( ImportError ) :
 	Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "tabGroup", "userDefault", "Arnold" )
 
 	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:AA_samples", "Sampling" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:enable_adaptive_sampling", "Sampling", "Adaptive Sampling" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:enable_adaptive_sampling", "Sampling" )
 	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:AA_samples_max", "Sampling" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:AA_adaptive_threshold", "Sampling", "Adaptive Threshold" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:AA_adaptive_threshold", "Sampling" )
 
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_diffuse_samples", "Sampling", "Diffuse" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_specular_samples", "Sampling", "Specular" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_transmission_samples", "Sampling", "Transmission" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_sss_samples", "Sampling", "SSS" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_volume_samples", "Sampling", "Volume" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:light_samples", "Sampling", "Light" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_diffuse_samples", "Sampling" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_specular_samples", "Sampling" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_transmission_samples", "Sampling" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_sss_samples", "Sampling" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_volume_samples", "Sampling" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:light_samples", "Sampling" )
 
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_total_depth", "Ray Depth", "Total" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_diffuse_depth", "Ray Depth", "Diffuse" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_specular_depth", "Ray Depth", "Specular" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_transmission_depth", "Ray Depth", "Transmission" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_volume_depth", "Ray Depth", "Volume" )
-	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:auto_transparency_depth", "Ray Depth", "Transparency" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_total_depth", "Ray Depth" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_diffuse_depth", "Ray Depth" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_specular_depth", "Ray Depth" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_transmission_depth", "Ray Depth" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:GI_volume_depth", "Ray Depth" )
+	GafferSceneUI.RenderPassEditor.registerOption( "Arnold", "ai:auto_transparency_depth", "Ray Depth" )
+
+if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		# This import appears unused, but it is intentional; it prevents us from
+		# registering when RenderMan isn't available.
+		import GafferRenderMan
+
+		Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "tabGroup", "preset:RenderMan", "RenderMan" )
+		Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "tabGroup", "userDefault", "RenderMan" )
+
+		# Register all options we have metadata for.
+		## \todo We should probably do things this way for the other renderers too.
+		for target in Gaffer.Metadata.targetsWithMetadata( "option:ri:*", "defaultValue" ) :
+			GafferSceneUI.RenderPassEditor.registerOption(
+				"RenderMan", target[7:], Gaffer.Metadata.value( target, "layout:section" ), Gaffer.Metadata.value( target, "label" )
+			)
 
 # Register the default grouping function used to display render passes in a hierarchy.
 # This groups render passes based on the first token in their name delimited by "_".
@@ -134,7 +162,8 @@ GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( __defaultPathGroupi
 
 def __compoundEditorCreated( editor ) :
 
-	if editor.scriptNode().ancestor( Gaffer.ApplicationRoot ).getName() == "gui" :
+	applicationRoot = editor.scriptNode().ancestor( Gaffer.ApplicationRoot )
+	if applicationRoot and applicationRoot.getName() == "gui" :
 
 		Gaffer.Metadata.registerValue( editor.settings(), "layout:customWidget:renderPassSelector:widgetType", "GafferSceneUI.RenderPassEditor.RenderPassChooserWidget" )
 		Gaffer.Metadata.registerValue( editor.settings(), "layout:customWidget:renderPassSelector:section", "Settings" )

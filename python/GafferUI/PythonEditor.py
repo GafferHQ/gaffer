@@ -159,7 +159,7 @@ class PythonEditor( GafferUI.Editor ) :
 
 	def __dropText( self, widget, dragData ) :
 
-		if isinstance( dragData, IECore.StringVectorData ) :
+		if IECore.DataTraits.isSequenceDataType( dragData ) :
 			return repr( list( dragData ) )
 		elif isinstance( dragData, Gaffer.GraphComponent ) :
 			if self.scriptNode().isAncestorOf( dragData ) :
@@ -169,7 +169,7 @@ class PythonEditor( GafferUI.Editor ) :
 				return self.__dropText( widget, dragData[0] )
 			else :
 				return "[ " + ", ".join( [ self.__dropText( widget, d ) for d in dragData ] ) + " ]"
-		elif isinstance( dragData, IECore.CompoundData ) :
+		elif isinstance( dragData, ( IECore.CompoundData, IECore.CompoundObject, IECore.ObjectMatrix ) ) :
 			return repr( dragData )
 		elif isinstance( dragData, IECore.Data ) and hasattr( dragData, "value" ) :
 			return repr( dragData.value )
@@ -246,7 +246,7 @@ class PythonEditor( GafferUI.Editor ) :
 			definition.append(
 				"/Execute Selection" if widget.selectedText() else "/Execute",
 				{
-					"command" : self.execute,
+					"command" : Gaffer.WeakMethod( self.execute ),
 					"shortCut" : "Enter",
 				}
 			)

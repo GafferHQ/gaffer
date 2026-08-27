@@ -42,6 +42,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "util/string.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
+#include "IECoreImage/OpenImageIOAlgo.h"
+
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
@@ -49,6 +51,8 @@ IECORE_POP_DEFAULT_VISIBILITY
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenImageIO/imageio.h"
 IECORE_POP_DEFAULT_VISIBILITY
+
+#include "boost/algorithm/string/predicate.hpp"
 
 namespace
 {
@@ -90,6 +94,7 @@ void applyCryptomatteMetadata( OIIO::ImageSpec &spec, std::string name, IECore::
 }
 
 std::array<IECore::InternedString, 4> g_channels = { { "R", "G", "B", "A" } };
+const std::string g_headerPrefix( "header:" );
 
 } // namespace
 
@@ -147,6 +152,8 @@ OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Ima
 			layer.typeDesc = OIIO::TypeDesc::HALF;
 		}
 
+		layer.metadata = layerData->copy();
+
 		if( layer.passType == ccl::PASS_CRYPTOMATTE )
 		{
 			layer.name = layer.name.substr( 0, layer.name.length() - 2 );
@@ -166,7 +173,6 @@ OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Ima
 
 			if( !cryptoFound )
 			{
-				layer.metadata = layerData->copy();
 				m_layers.push_back( layer );
 			}
 		}
@@ -212,9 +218,24 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 		}
 		else
 		{
-			for( int i = 0; i < layer.numChannels; ++i )
+			/// \todo This logic should be shared with IEDisplayOutputDriver.
+			std::string layerName;
+			if( auto d = layer.metadata->member<IECore::StringData>( "layerName" ) )
 			{
-				spec.channelnames.push_back( g_channels[i] );
+				layerName = d->readable();
+			}
+			if( layer.numChannels == 1 )
+			{
+				spec.channelnames.push_back( layerName.size() ? layerName : layer.name );
+			}
+			else
+			{
+				for( int i = 0; i < layer.numChannels; ++i )
+				{
+					spec.channelnames.push_back(
+						fmt::format( "{}{}{}", layerName, layerName.size() ? "." : "", g_channels[i] )
+					);
+				}
 			}
 		}
 		spec.full_x = m_displayWindow.min.x;
@@ -223,6 +244,19 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 		spec.full_height = m_displayWindow.size().y + 1;
 		spec.x = m_dataWindow.min.x;
 		spec.y = m_dataWindow.min.y;
+
+		for( const auto &[parameterName, parameterValue] : layer.metadata->readable() )
+		{
+			if( boost::starts_with( parameterName.string(), g_headerPrefix ) )
+			{
+				IECoreImage::OpenImageIOAlgo::DataView dataView( parameterValue.get() );
+				if( dataView.data )
+				{
+					spec.attribute( parameterName.string().substr( g_headerPrefix.size() ), dataView.type, dataView.data );
+				}
+			}
+		}
+
 		if( !imageOutput->open( layer.path, spec ) )
 		{
 			IECore::msg( IECore::Msg::Error, "OIIOOutputDriver:write_render_tile", "Failed to create image file." );
@@ -254,6 +288,18 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 			{
 				IECore::msg( IECore::Msg::Error, "OIIOOutputDriver:write_render_tile", "Failed to read render pass pixels." );
 				return;
+			}
+
+			if( layer.name == "id" )
+			{
+				// Cycles renders IDs as float values, but Gaffer's expects them to
+				// be integers, type-punned into a float for storage.
+				for( auto &p : pixels )
+				{
+					/// \todo Use `std::bit_cast` when C++20 is available to us.
+					const uint32_t id = p;
+					memcpy( &p, &id, sizeof( p ) );
+				}
 			}
 
 			imageData = &pixels[0];

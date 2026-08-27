@@ -42,6 +42,7 @@
 #include "GafferScene/AttributeQuery.h"
 #include "GafferScene/CustomAttributes.h"
 #include "GafferScene/DeleteObject.h"
+#include "GafferScene/DeleteOptions.h"
 #include "GafferScene/DeleteOutputs.h"
 #include "GafferScene/Grid.h"
 #include "GafferScene/LightToCamera.h"
@@ -147,7 +148,12 @@ class SceneView::Renderer : public Gaffer::Signals::Trackable
 			deleteOutputs->namesPlug()->setValue( "*" );
 			m_sceneProcessor->addChild( deleteOutputs );
 
-			m_sceneProcessor->outPlug()->setInput( deleteOutputs->outPlug() );
+			DeleteOptionsPtr deleteOptions = new DeleteOptions;
+			deleteOptions->inPlug()->setInput( deleteOutputs->outPlug() );
+			deleteOptions->namesPlug()->setValue( "render:manifestFilePath" );
+			m_sceneProcessor->addChild( deleteOptions );
+
+			m_sceneProcessor->outPlug()->setInput( deleteOptions->outPlug() );
 
 			m_view->plugSetSignal().connect( boost::bind( &Renderer::plugSet, this, ::_1 ) );
 		}
@@ -324,7 +330,7 @@ class SceneView::DrawingMode : public Signals::Trackable
 
 			// Included purposes
 
-			auto *includedPurposesPlug = standardOptions->optionsPlug()->getChild<NameValuePlug>( "includedPurposes" );
+			auto *includedPurposesPlug = standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:includedPurposes" );
 			auto viewIncludedPurposesPlug = boost::static_pointer_cast<NameValuePlug>(
 				includedPurposesPlug->createCounterpart( "includedPurposes", Plug::In )
 			);
@@ -693,7 +699,7 @@ class GnomonGadget : public GafferUI::Gadget
 			// the bottom left corner of the viewport.
 			//
 			// first we compose a new projection matrix with the orthographic
-			// projection and a post-projection transform that moves eveything
+			// projection and a post-projection transform that moves everything
 			// into the corner.
 
 			glMatrixMode( GL_PROJECTION );
@@ -2022,10 +2028,10 @@ SceneView::SceneView( ScriptNodePtr scriptNode )
 	// remove motion blur, because the opengl renderer doesn't support it.
 
 	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
-	standardOptions->optionsPlug()->getChild<NameValuePlug>( "transformBlur" )->enabledPlug()->setValue( true );
-	standardOptions->optionsPlug()->getChild<NameValuePlug>( "transformBlur" )->valuePlug<BoolPlug>()->setValue( false );
-	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->enabledPlug()->setValue( true );
-	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:transformBlur" )->enabledPlug()->setValue( true );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:transformBlur" )->valuePlug<BoolPlug>()->setValue( false );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:deformationBlur" )->enabledPlug()->setValue( true );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "render:deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
 
 	preprocessor->addChild( standardOptions );
 	standardOptions->inPlug()->setInput( m_renderer->preprocessor()->outPlug() );
@@ -2204,6 +2210,12 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	else if( event.key == "Escape" )
 	{
 		m_sceneGadget->setPaused( true );
+	}
+	else if( event.key == "Semicolon" )
+	{
+		BoolPlug *lookThroughPlug = cameraPlug()->getChild<BoolPlug>( "lookThroughEnabled" );
+		lookThroughPlug->setValue( !lookThroughPlug->getValue() );
+		return true;
 	}
 
 	return false;

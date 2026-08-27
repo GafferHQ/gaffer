@@ -304,6 +304,28 @@ void setStringSocket( ccl::Node *node, const ccl::SocketType &socket, const IECo
 	}
 }
 
+void setTransformSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	if( auto m44fData = runTimeCast<const M44fData>( value ) )
+	{
+		node->set( socket, SocketAlgo::setTransform( m44fData->readable() ) );
+	}
+	else if( auto m44dData = runTimeCast<const M44dData>( value ) )
+	{
+		node->set( socket, SocketAlgo::setTransform( m44dData->readable() ) );
+	}
+	else
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "Cycles::SocketAlgo",
+			fmt::format(
+				"Unsupported data type `{}` for socket `{}` on node `{}` (expected M44fData or M44dData).",
+				value->typeName(), socket.name, node->name
+			)
+		);
+	}
+}
+
 } // namespace
 
 namespace IECoreCycles
@@ -448,6 +470,9 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::ENUM:
 			setEnumSocket( node, *socket, value );
 			break;
+		case ccl::SocketType::TRANSFORM:
+			setTransformSocket( node, *socket, value );
+			break;
 		case ccl::SocketType::BOOLEAN_ARRAY:
 			setArraySocket<bool>( node, *socket, value );
 			break;
@@ -496,25 +521,29 @@ void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *va
 	}
 }
 
-void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline )
+void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Rampff &ramp )
 {
-	ccl::array<float> ramp( RAMP_TABLE_SIZE );
+	IECore::Splineff evaluator = ramp.evaluator();
+
+	ccl::array<float> rampTable( RAMP_TABLE_SIZE );
 	for (int i = 0; i < RAMP_TABLE_SIZE; i++)
 	{
-		ramp[i] = spline( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
+		rampTable[i] = evaluator( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
 	}
-	node->set( *socket, ramp );
+	node->set( *socket, rampTable );
 }
 
-void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::SplinefColor3f &spline )
+void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::RampfColor3f &ramp )
 {
-	ccl::array<ccl::float3> ramp( RAMP_TABLE_SIZE );
+	IECore::SplinefColor3f evaluator = ramp.evaluator();
+
+	ccl::array<ccl::float3> rampTable( RAMP_TABLE_SIZE );
 	for (int i = 0; i < RAMP_TABLE_SIZE; i++)
 	{
-		Color3f solve = spline( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
-		ramp[i] = ccl::make_float3( solve.x, solve.y, solve.z );
+		Color3f solve = evaluator( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
+		rampTable[i] = ccl::make_float3( solve.x, solve.y, solve.z );
 	}
-	node->set( *socket, ramp );
+	node->set( *socket, rampTable );
 }
 
 ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore::Data *value )
@@ -525,34 +554,34 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 			{
 				const BoolData *data = static_cast<const BoolData *>( value );
 				float result = static_cast<float>( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &result );
 			}
 			break;
 		case IntDataTypeId :
 			{
 				const IntData *data = static_cast<const IntData *>( value );
 				float result = static_cast<float>( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &result );
 			}
 			break;
 		case UIntDataTypeId :
 			{
 				const UIntData *data = static_cast<const UIntData *>( value );
 				float result = static_cast<float>( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &result );
 			}
 			break;
 		case DoubleDataTypeId :
 			{
 				const DoubleData *data = static_cast<const DoubleData *>( value );
 				float result = static_cast<float>( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &result );
 			}
 			break;
 		case FloatDataTypeId :
 			{
 				const FloatData *data = static_cast<const FloatData *>( value );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat, 1, &data->readable() );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat, 1, &data->readable() );
 			}
 			break;
 		case Color3fDataTypeId :
@@ -589,7 +618,7 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 				// Need to pad to float4 to prevent an assert in Cycles debug mode
 				const V3f vec = data->readable();
 				const ccl::float4 result = ccl::make_float4( vec[0], vec[1], vec[2], 1.0f );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat4, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat4, 1, &result );
 			}
 			break;
 		case V3iDataTypeId :
@@ -598,7 +627,7 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 				// Need to pad to float4 to prevent an assert in Cycles debug mode
 				const V3i vec = data->readable();
 				const ccl::float4 result = ccl::make_float4( (float)vec[0], (float)vec[1], (float)vec[2], 1.0f );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeFloat4, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeFloat4, 1, &result );
 			}
 			break;
 		case QuatfDataTypeId :
@@ -612,14 +641,14 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 			{
 				const M44fData *data = static_cast<const M44fData *>( value );
 				const ccl::Transform result = setTransform( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeMatrix, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeMatrix, 1, &result );
 			}
 			break;
 		case M44dDataTypeId :
 			{
 				const M44dData *data = static_cast<const M44dData *>( value );
 				const ccl::Transform result = setTransform( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeDesc::TypeMatrix, 1, &result );
+				return ccl::ParamValue( name.string(), ccl::TypeMatrix, 1, &result );
 			}
 			break;
 		default :

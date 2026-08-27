@@ -64,8 +64,8 @@ class FramingConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( group["out"] )
-		standardOptions["options"]["renderResolution"]["enabled"].setValue( True )
-		standardOptions["options"]["renderResolution"]["value"].setValue( imath.V2i( 1024 ) )
+		standardOptions["options"]["render:resolution"]["enabled"].setValue( True )
+		standardOptions["options"]["render:resolution"]["value"].setValue( imath.V2i( 1024 ) )
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/camera" ] ) )
@@ -83,9 +83,9 @@ class FramingConstraintTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( framing["out"].transform( "/group/camera" ), imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		# Test effect of resolution globals
-		standardOptions["options"]["renderResolution"]["value"].setValue( imath.V2i( 1024, 512 ) )
+		standardOptions["options"]["render:resolution"]["value"].setValue( imath.V2i( 1024, 512 ) )
 		self.assertEqual( framing["out"].transform( "/group/camera" ), imath.M44f().translate( imath.V3f( 0, 0, 1.5 ) ) )
-		standardOptions["options"]["renderResolution"]["value"].setValue( imath.V2i( 1024 ) )
+		standardOptions["options"]["render:resolution"]["value"].setValue( imath.V2i( 1024 ) )
 
 		# Track cube that is transformed
 		cube["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
@@ -370,6 +370,3 @@ class FramingConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint["target"].setValue( "/cube" )
 
 		self.assertEqual( constraint["out"].fullTransform( "/plane" ), constraint["in"].fullTransform( "/plane" ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -155,6 +155,3 @@ class Transform2DPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"]["user"]["p2"]["rotate"].defaultValue(), 3 )
 		self.assertEqual( s2["n"]["user"]["p2"]["scale"].defaultValue(), imath.V2f( 4, 5 ) )
 		self.assertEqual( s2["n"]["user"]["p2"]["pivot"].defaultValue(), imath.V2f( 6, 7 ) )
-
-if __name__ == "__main__":
-	unittest.main()

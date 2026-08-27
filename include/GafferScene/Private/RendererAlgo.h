@@ -39,6 +39,7 @@
 #include "GafferScene/ScenePlug.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/RenderManifest.h"
 
 #include "IECoreScene/VisibleRenderable.h"
 
@@ -78,38 +79,88 @@ struct GAFFERSCENE_API RenderOptions
 	bool deformationBlur;
 	Imath::V2f shutter;
 	IECore::ConstStringVectorDataPtr includedPurposes;
+
 	/// Returns true if `includedPurposes` includes the purpose defined by
 	/// `attributes`.
 	bool purposeIncluded( const IECore::CompoundObject *attributes ) const;
+	void outputOptions( IECoreScenePreview::Renderer *renderer, const RenderOptions *previousOptions = nullptr );
+
 };
 
 /// Creates the directories necessary to receive the outputs defined in globals.
 GAFFERSCENE_API void createOutputDirectories( const IECore::CompoundObject *globals );
 
+// Returns the "gaffer:renderID" parameter added to outputs for the provided renderer.
+GAFFERSCENE_API std::string renderID( const IECoreScenePreview::Renderer *renderer );
+
+// Returns whether the globals contain an Output that references the data `float id`
+GAFFERSCENE_API bool hasIDOutput( const IECore::CompoundObject *globals );
+
+// Returns whether the globals contain an Output that references the data `float instanceID`
+GAFFERSCENE_API bool hasInstanceIDOutput( const IECore::CompoundObject *globals );
+
+// Returns a manifest file path if it's set in the globals, otherwise empty string
+GAFFERSCENE_API std::string renderManifestFilePath( const IECore::CompoundObject *globals );
+
 /// Sets `times` to a list of times to sample the transform or deformation of a
 /// location at, based on the render options and location attributes. Returns `true`
 /// if `times` was altered and `false` if it was already set correctly.
-GAFFERSCENE_API bool transformMotionTimes( const RenderOptions &renderOptions, const IECore::CompoundObject *attributes, std::vector<float> &times );
-GAFFERSCENE_API bool deformationMotionTimes( const RenderOptions &renderOptions, const IECore::CompoundObject *attributes, std::vector<float> &times );
+GAFFERSCENE_API bool transformMotionTimes( const RenderOptions &renderOptions, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::SampleTimes &times );
+GAFFERSCENE_API bool deformationMotionTimes( const RenderOptions &renderOptions, const IECore::CompoundObject *attributes, IECoreScenePreview::Renderer::SampleTimes &times );
 
+struct GAFFERSCENE_API SampledTransform
+{
+	IECoreScenePreview::Renderer::TransformSamples samples;
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
+	Imath::M44f transformAtTime( float time ) const;
+	void concatenate( const SampledTransform &child );
+};
 /// Samples the local transform from the current location in preparation for output to the renderer.
-/// "samples" will be set to contain one sample for each sampleTime, unless the samples are all identical,
-/// in which case just one sample is output.
-/// If "hash" is passed in, then the hash will be set a value characterizing the samples.  If "hash" is
-/// already at this value, this function will do nothing and return false.  Returns true if hash is not
-/// passed in or the hash does not match.
-GAFFERSCENE_API bool transformSamples( const Gaffer::M44fPlug *transformPlug, const std::vector<float> &sampleTimes, std::vector<Imath::M44f> &samples, IECore::MurmurHash *hash = nullptr );
+/// `sampleTimes` should have been obtained from `transformMotionTimes()` and the current context should
+/// match the frame being output.
+///
+/// If `hash` is provided, then it will be set to a value characterising the samples. If `hash` is already
+/// at the right value, then no samples are taken and `std::nullopt` is returned, indicating that an
+/// interactive render requires no update.
+///
+/// Note that if all samples are identical, a single sample will be returned. Therefore the returned
+/// `sampleTimes` may differ from the `samplesTimes` passed in. It is the _returned_ `sampleTimes` that
+/// should be passed to the Renderer.
+GAFFERSCENE_API std::optional<SampledTransform> transformSamples( const Gaffer::M44fPlug *transformPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, IECore::MurmurHash *hash = nullptr );
 
-/// Samples the object from the current location in preparation for output to the renderer. Sample times and
-/// hash behave the same as for the transformSamples() method. Multiple samples will only be generated for
-/// Primitives and Cameras, since other object types cannot be interpolated anyway.
-GAFFERSCENE_API bool objectSamples( const Gaffer::ObjectPlug *objectPlug, const std::vector<float> &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash = nullptr );
+struct SampledObject
+{
+	IECoreScenePreview::Renderer::ObjectSamples samples;
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
+};
 
-GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+struct ObjectHash
+{
+	IECore::MurmurHash value;
+	bool isPointInstancer = false;
+	bool operator==( const ObjectHash &rhs ) const { return value == rhs.value && isPointInstancer == rhs.isPointInstancer; }
+	bool operator!=( const ObjectHash &rhs ) const { return !(*this == rhs); }
+};
 
-GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+/// Samples the object from the current location in preparation for output to the renderer. The
+/// `sampleTimes` should have been obtained from `deformationMotionTimes()` and the current context should
+/// match the frame being output.
+///
+/// If `hash` is provided, then it will be set to a value characterising the samples. If `hash` is already
+/// at the right value, then no samples are taken and `std::nullopt` is returned, indicating that an
+/// interactive render requires no update.
+///
+/// Note that non-interpolable objects (such as Procedural or CoordinateSystem) will only receive a single
+/// sample from the current frame, no matter the values in `sampleTimes`. Therefore the returned `sampleTimes`
+/// may differ from the `sampleTimes` passed in. It is the _returned_ `sampleTimes` that should be passed to
+/// the Renderer.
+GAFFERSCENE_API std::optional<SampledObject> objectSamples( const Gaffer::ObjectPlug *objectPlug, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, ObjectHash *hash = nullptr );
+
+/// Outputs a sampled object to the renderer. This takes care of special cases for Capsules and PointInstancers.
+GAFFERSCENE_API IECoreScenePreview::Renderer::ObjectInterfacePtr outputObject( const std::string &name, const SampledObject &sampledObject, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const RenderOptions &renderOptions, const ScenePlug *scene, IECoreScenePreview::Renderer *renderer );
+
+GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const RenderOptions &renderOptions, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
 /// Utility class to handle all the set computations needed for a render.
 class GAFFERSCENE_API RenderSets : boost::noncopyable
@@ -171,7 +222,7 @@ class GAFFERSCENE_API LightLinks : boost::noncopyable
 
 	public :
 
-		LightLinks();
+		LightLinks( const IECoreScenePreview::Renderer *renderer );
 
 		/// Registration functions
 		/// ======================
@@ -234,6 +285,10 @@ class GAFFERSCENE_API LightLinks : boost::noncopyable
 		void outputLightFilterLinks( const std::string &lightName, IECoreScenePreview::Renderer::ObjectInterface *light ) const;
 		void clearLightLinks();
 
+		/// \todo Remove. This just provides temporary backwards compatibility for
+		/// Arnold.
+		const IECore::InternedString *m_shadowedLightsFallbackAttributeName;
+
 		/// Storage for lights. This maps from the light name to the light itself.
 		using LightMap = tbb::concurrent_hash_map<std::string, IECoreScenePreview::Renderer::ObjectInterfacePtr>;
 		LightMap m_lights;
@@ -282,7 +337,10 @@ class GAFFERSCENE_API LightLinks : boost::noncopyable
 GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputLights( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+
+// If a renderManifest is given, the paths of all objects rendered will be added to it, and renderer->assignID() will
+// be called to assign the generated ids to every object.
+GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath(), RenderManifest *renderManifest = nullptr );
 
 } // namespace RendererAlgo
 

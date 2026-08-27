@@ -98,18 +98,15 @@ def _qtObjectIsValid( o ) :
 def __shiboken() :
 
 	import Qt
-	assert( "PyQt" not in Qt.__binding__ )
+	assert( Qt.__binding__ in ( "PySide2", "PySide6" ) )
 
-	if Qt.__binding__ == "PySide2" :
+	if Qt.__binding__ == "PySide6" :
+		import shiboken6 as shiboken
+	else :
 		try :
 			import PySide2.shiboken2 as shiboken
 		except ImportError :
 			import shiboken2 as shiboken
-	else :
-		try :
-			import PySide.shiboken
-		except ImportError :
-			import shiboken
 
 	return shiboken
 
@@ -181,10 +178,11 @@ from .PopupWindow import PopupWindow
 from .ConfirmationDialogue import ConfirmationDialogue
 from .Divider import Divider
 from . import _Pointer
-from .SplineWidget import SplineWidget
+from .RampWidget import RampWidget
 from .Bookmarks import Bookmarks
 from . import WidgetAlgo
 from .CodeWidget import CodeWidget
+from .BreadCrumbsWidget import BreadCrumbsWidget
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
@@ -226,7 +224,6 @@ from .NodeMenu import NodeMenu
 from . import FileMenu
 from . import LayoutMenu
 from . import EditMenu
-from . import UserPlugs
 from .Frame import Frame
 from .CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from .BoxPlugValueWidget import BoxPlugValueWidget
@@ -247,12 +244,11 @@ from .PresetsPlugValueWidget import PresetsPlugValueWidget
 from .GraphComponentBrowserMode import GraphComponentBrowserMode
 from .ToolPlugValueWidget import ToolPlugValueWidget
 from .LabelPlugValueWidget import LabelPlugValueWidget
-from .CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
+from . import CompoundDataPlugUI
 from .LayoutPlugValueWidget import LayoutPlugValueWidget
 from . import ScriptNodeUI
 from .RefreshPlugValueWidget import RefreshPlugValueWidget
 from . import PreferencesUI
-from .SplinePlugValueWidget import SplinePlugValueWidget
 from .RampPlugValueWidget import RampPlugValueWidget
 from .NodeFinderDialogue import NodeFinderDialogue
 from .ConnectionPlugValueWidget import ConnectionPlugValueWidget
@@ -277,6 +273,9 @@ from . import AnnotationsUI
 from .TweakPlugValueWidget import TweakPlugValueWidget
 from .PlugPopup import PlugPopup
 from .OptionalValuePlugValueWidget import OptionalValuePlugValueWidget
+from .TogglePlugValueWidget import TogglePlugValueWidget
+from .PlugCreationWidget import PlugCreationWidget, PlugCreationGadget
+from . import _PlugVisibilityGadget
 
 # and then specific node uis
 
@@ -307,6 +306,7 @@ from . import EditScopeUI
 from . import ContextVariableTweaksUI
 from . import CollectUI
 from . import PatternMatchUI
+from . import DataStoreUI
 
 # backwards compatibility
 ## \todo Remove me

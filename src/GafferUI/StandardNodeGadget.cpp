@@ -60,6 +60,8 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "IECoreGL/Texture.h"
+
 #include "IECore/MessageHandler.h"
 
 #include "Imath/ImathBoxAlgo.h"
@@ -528,7 +530,7 @@ bool hasStaticValue( const Gaffer::BoolPlug *plug )
 	// that the compute itself is disabled, and will output
 	// a default value for the plug.
 
-	auto source = plug->source<BoolPlug>();
+	auto source = plug->source<ValuePlug>();
 	if( source == plug || source->direction() != Plug::Out )
 	{
 		return false;
@@ -632,7 +634,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	{
 		// four containers for nodules - one each for the top, bottom, left and right.
 		// these contain spacers at either end to prevent nodules being placed in
-		// the corners of the node gadget, and also to guarantee a minimim width for the
+		// the corners of the node gadget, and also to guarantee a minimum width for the
 		// vertical containers and a minimum height for the horizontal ones.
 
 		LinearContainerPtr topNoduleContainer = new LinearContainer( "topNoduleContainer", LinearContainer::X );
@@ -1518,6 +1520,13 @@ StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfM
 
 void StandardNodeGadget::error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message )
 {
+	if( !refCount() )
+	{
+		// We're in the process of being constructed, and can't add a reference
+		// to ourselves without causing a double delete. Just do nothing.
+		return;
+	}
+
 	std::string header;
 	if( source->node() == node() )
 	{

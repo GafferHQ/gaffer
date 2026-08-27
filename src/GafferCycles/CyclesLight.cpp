@@ -56,70 +56,12 @@ using namespace GafferCycles;
 
 IE_CORE_DEFINERUNTIMETYPED( CyclesLight );
 
-size_t CyclesLight::g_firstPlugIndex = 0;
 
 CyclesLight::CyclesLight( const std::string &name )
-	:	GafferScene::Light( name )
+	:	GafferScene::Light( name, new CyclesShader() )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	/// \todo Perhaps we can make CyclesShader support the loading of lights directly,
-	/// and use one here?
-	addChild( new GafferScene::Shader( "__shader" ) );
-	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
-	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
-	shaderNode()->parametersPlug()->setInput( parametersPlug() );
 }
 
 CyclesLight::~CyclesLight()
 {
-}
-
-GafferScene::Shader *CyclesLight::shaderNode()
-{
-	return getChild<GafferScene::Shader>( g_firstPlugIndex );
-}
-
-const GafferScene::Shader *CyclesLight::shaderNode() const
-{
-	return getChild<GafferScene::Shader>( g_firstPlugIndex );
-}
-
-GafferScene::ShaderPlug *CyclesLight::shaderInPlug()
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-const GafferScene::ShaderPlug *CyclesLight::shaderInPlug() const
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-void CyclesLight::loadShader( const std::string &shaderName )
-{
-	shaderNode()->namePlug()->setValue( shaderName );
-	shaderNode()->typePlug()->setValue( "cycles:light" );
-	SocketHandler::setupLightPlugs( shaderName, ccl::NodeType::find( ccl::ustring( "light" ) ), parametersPlug() );
-	shaderNode()->setChild( "out", new Gaffer::Plug( "out", Gaffer::Plug::Direction::Out ) );
-	shaderInPlug()->setInput( shaderNode()->outPlug() );
-}
-
-void CyclesLight::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	Light::affects( input, outputs );
-
-	if( input == shaderInPlug() )
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
-}
-
-void CyclesLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( shaderInPlug()->attributesHash() );
-}
-
-IECoreScene::ConstShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *context ) const
-{
-	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
-	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "cycles:light" );
 }

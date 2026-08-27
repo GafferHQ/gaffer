@@ -53,17 +53,17 @@ def __visibilitySummary( plug ) :
 		( "specular", "Spec" ),
 
 	)	:
-		if plug[childName+"Visibility"]["enabled"].getValue() :
-			info.append( label + ( " On" if plug[childName+"Visibility"]["value"].getValue() else " Off" ) )
+		if plug["dl:visibility_" + childName]["enabled"].getValue() :
+			info.append( label + ( " On" if plug["dl:visibility_" + childName]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
 
 def __shadingSummary( plug ) :
 
 	info = []
-	for childName in ( "matte", ) :
+	for childName, label in ( ( "dl:matte", "Matte" ), ) :
 		if plug[childName]["enabled"].getValue() :
-			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+			info.append( label + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
 
@@ -80,121 +80,12 @@ Gaffer.Metadata.registerNode(
 
 		# Sections
 
-		"attributes" : [
+		"attributes" : {
 
-			"layout:section:Visibility:summary", __visibilitySummary,
-			"layout:section:Shading:summary", __shadingSummary,
+			"layout:section:Visibility:summary" : __visibilitySummary,
+			"layout:section:Shading:summary" : __shadingSummary,
 
-		],
-
-		# Visibility
-
-		"attributes.cameraVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to camera
-			rays. To hide an object completely, use the
-			visibility settings on the StandardAttributes
-			node instead.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Camera",
-
-		],
-
-		"attributes.diffuseVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to diffuse
-			rays.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Diffuse",
-
-		],
-
-		"attributes.hairVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to
-			hair rays.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Hair",
-
-		],
-
-		"attributes.reflectionVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible in
-			reflections.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Reflection",
-
-		],
-
-		"attributes.refractionVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible in
-			refractions.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Refraction",
-
-		],
-
-		"attributes.shadowVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to shadow
-			rays - whether it casts shadows or not.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Shadow",
-
-		],
-
-		"attributes.specularVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to
-			specular rays.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Specular",
-
-		],
-
-		# Shading
-
-		"attributes.matte" : [
-
-			"description",
-			"""
-			Turns the object into a holdout matte.
-			This only affects primary (camera) rays.
-			""",
-
-			"layout:section", "Shading",
-
-		],
+		},
 
 	}
 

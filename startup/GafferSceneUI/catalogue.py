@@ -38,9 +38,7 @@ import os
 
 import Gaffer
 import GafferScene
-import GafferImageUI
-
-from GafferImageUI import CatalogueUI
+import GafferSceneUI
 
 # We provide extended info in the Catalogue's status column
 # to reflect interactive/batch renders triggered from the UI.
@@ -50,14 +48,14 @@ imageNameMap = {
 	GafferScene.Render : "catalogueStatusBatchRender",
 }
 
-statusIconColumn = CatalogueUI.column( "Status" )
+statusIconColumn = GafferSceneUI.CatalogueUI.column( "Status" )
 if statusIconColumn :
 
-	class __ExtendedStatusIconColumn( CatalogueUI.Column ) :
+	class __ExtendedStatusIconColumn( GafferSceneUI.CatalogueUI.Column ) :
 
 		def __init__( self ) :
 
-			CatalogueUI.Column.__init__( self, "" )
+			GafferSceneUI.CatalogueUI.Column.__init__( self, "" )
 
 		def _imageCellData( self, image, catalogue ) :
 
@@ -79,4 +77,4 @@ if statusIconColumn :
 
 			return result
 
-	CatalogueUI.registerColumn( "Status", __ExtendedStatusIconColumn() )
+	GafferSceneUI.CatalogueUI.registerColumn( "Status", __ExtendedStatusIconColumn() )

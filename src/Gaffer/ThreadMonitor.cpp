@@ -44,7 +44,7 @@ using namespace Gaffer;
 namespace
 {
 
-static std::atomic<int> g_threadIdCounter = 0;
+std::atomic<int> g_threadIdCounter = 0;
 ThreadMonitor::ProcessesPerThread g_emptyStatistics;
 
 } // namespace

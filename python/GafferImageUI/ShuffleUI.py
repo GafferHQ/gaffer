@@ -61,9 +61,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"missingSourceMode" : [
+		"missingSourceMode" : {
 
-			"description",
+			"description" :
 			"""
 			Determines behaviour when the source channel doesn't exist :
 
@@ -74,41 +74,41 @@ Gaffer.Metadata.registerNode(
 			> Note : Does not apply when source contains wildcards.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Ignore", GafferImage.Shuffle.MissingSourceMode.Ignore,
-			"preset:Error", GafferImage.Shuffle.MissingSourceMode.Error,
-			"preset:Black", GafferImage.Shuffle.MissingSourceMode.Black,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Ignore" : GafferImage.Shuffle.MissingSourceMode.Ignore,
+			"preset:Error" : GafferImage.Shuffle.MissingSourceMode.Error,
+			"preset:Black" : GafferImage.Shuffle.MissingSourceMode.Black,
 
-			"layout:divider", True,
+			"layout:divider" : True,
 
-		],
+		},
 
-		"shuffles" : [
+		"shuffles" : {
 
-			"description",
+			"description" :
 			"""
 			The definition of the shuffling to be performed - an
 			arbitrary number of channel edits can be made by adding
 			ShufflePlugs as children of this plug.
 			""",
 
-		],
+		},
 
-		"shuffles.*.source" : [
+		"shuffles.*.source" : {
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "__white", "__black" ] ),
-			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "White", "Black" ] ),
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:extraChannels" : IECore.StringVectorData( [ "__white", "__black" ] ),
+			"channelPlugValueWidget:extraChannelLabels" : IECore.StringVectorData( [ "White", "Black" ] ),
 
-		],
+		},
 
-		"shuffles.*.destination" : [
+		"shuffles.*.destination" : {
 
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:allowNewChannels", True,
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:allowNewChannels" : True,
 
-		],
+		},
 
 	}
 

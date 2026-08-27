@@ -101,6 +101,12 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT :
 			functor( value.GetTensorData<float>() );
 			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
+			functor( value.GetTensorData<Ort::Float16_t>() );
+			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16 :
+			functor( value.GetTensorData<Ort::BFloat16_t>() );
+			break;
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE :
 			functor( value.GetTensorData<double>() );
 			break;
@@ -125,6 +131,17 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64 :
 			functor( value.GetTensorData<int64_t>() );
 			break;
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING :
+			// Not implemented, as ONNX API doesn't guarantee that internal
+			// storage is `std::string` (it is a C API). Clients will need to
+			// use special-case code using functions like
+			// `GetStringTensorContent()` and `GetStringTensorElement()`
+			// instead.
+			//
+			// > Note : It seems that in practice the internal storage currently
+			// > _is_ actually `std::string`, but everything about the API
+			// > implies that we shouldn't know that, let alone depend on it.
+			[[fallthrough]];
 		default :
 			throw IECore::Exception( fmt::format( "Unsupported element type {}", elementType ) );
 	}
@@ -132,26 +149,78 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 
 DataPtr dataFromValue( const Ort::Value &value )
 {
-	DataPtr result;
-	dispatchTensorData(
-		value,
-		[&] ( const auto *data ) {
-
-			using ElementType = remove_const_t<remove_pointer_t<decltype( data )>>;
-			using DataType = TypedData<vector<ElementType>>;
-			using PtrType = typename DataType::Ptr;
-
-			PtrType d = new DataType;
-			const size_t count = value.GetTensorTypeAndShapeInfo().GetElementCount();
-			d->writable().insert( d->writable().end(), data, data + count );
-			result = d;
-
+	if( value.GetTensorTypeAndShapeInfo().GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING )
+	{
+		const size_t count = value.GetTensorTypeAndShapeInfo().GetElementCount();
+		StringVectorDataPtr resultData = new StringVectorData();
+		vector<string> &result = resultData->writable();
+		result.reserve( count );
+		for( size_t i = 0; i < count; ++i )
+		{
+			result.push_back( value.GetStringTensorElement( i ) );
 		}
-	);
-	return result;
+		return resultData;
+	}
+	else
+	{
+		DataPtr result;
+		dispatchTensorData(
+			value,
+			[&] ( const auto *data ) {
+
+				using ElementType = remove_const_t<remove_pointer_t<decltype( data )>>;
+				const size_t count = value.GetTensorTypeAndShapeInfo().GetElementCount();
+
+				if constexpr( std::is_same_v<ElementType, Ort::Float16_t> )
+				{
+					HalfVectorDataPtr d = new HalfVectorData();
+					auto halfData = reinterpret_cast<const half *>( data );
+					d->writable().insert( d->writable().end(), halfData, halfData + count );
+
+					result = d;
+				}
+				else if constexpr( std::is_same_v<ElementType, Ort::BFloat16_t> )
+				{
+					FloatVectorDataPtr d = new FloatVectorData();
+					std::vector<float> &v = d->writable();
+					v.reserve( count );
+					std::transform( data, data + count, std::back_inserter( v ), []( const Ort::BFloat16_t &e ) { return float( e ); } );
+					result = d;
+				}
+				else
+				{
+					using DataType = TypedData<vector<ElementType>>;
+					using PtrType = typename DataType::Ptr;
+
+					PtrType d = new DataType;
+					d->writable().insert( d->writable().end(), data, data + count );
+					result = d;
+				}
+
+			}
+		);
+		return result;
+	}
 }
 
 } // namespace
+
+namespace IECore
+{
+
+inline void murmurHashAppend( MurmurHash &h, const Ort::Float16_t *data, size_t numElements )
+{
+	static_assert( sizeof( Ort::Float16_t ) == sizeof( unsigned short ), "Unexpected size for Ort::Float16_t" );
+	h.append( reinterpret_cast<const unsigned short *>( data ), numElements );
+}
+
+inline void murmurHashAppend( MurmurHash &h, const Ort::BFloat16_t *data, size_t numElements )
+{
+	static_assert( sizeof( Ort::BFloat16_t ) == sizeof( unsigned short ), "Unexpected size for Ort::BFloat16_t" );
+	h.append( reinterpret_cast<const unsigned short *>( data ), numElements );
+}
+
+}  // namespace IECore
 
 IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( Tensor );
 
@@ -185,7 +254,11 @@ Tensor::Tensor( const IECore::ConstDataPtr &data, std::vector<int64_t> shape )
 		[&] ( auto typedData ) -> void {
 
 			using DataType = remove_const_t<remove_pointer_t<decltype( typedData )>>;
-			using BaseType = typename DataType::BaseType;
+			using BaseType = typename std::conditional_t<
+				std::is_same_v<DataType, HalfVectorData>,
+				Ort::Float16_t,
+				typename DataType::BaseType
+			>;
 
 			if( !shape.size() )
 			{
@@ -213,6 +286,22 @@ Tensor::Tensor( const IECore::ConstDataPtr &data, std::vector<int64_t> shape )
 				std::copy( typedData->readable().begin(), typedData->readable().end(), value.GetTensorMutableData<bool>() );
 				m_state = new State{ std::move( value ), nullptr };
 			}
+			else if constexpr( std::is_same_v<DataType, StringVectorData> )
+			{
+				std::vector<const char *> cStrings;
+				cStrings.reserve( typedData->readable().size() );
+				for( const auto &s : typedData->readable() )
+				{
+					cStrings.push_back( s.c_str() );
+				}
+
+				Ort::AllocatorWithDefaultOptions allocator;
+				Ort::Value value = Ort::Value::CreateTensor(
+					allocator, shape.data(), shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING
+				);
+				value.FillStringTensor( cStrings.data(), cStrings.size() );
+				m_state = new State{ std::move( value ), nullptr };
+			}
 			else if constexpr( HasTensorType<BaseType>::value )
 			{
 				Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu( OrtArenaAllocator, OrtMemTypeDefault );
@@ -221,7 +310,7 @@ Tensor::Tensor( const IECore::ConstDataPtr &data, std::vector<int64_t> shape )
 						memoryInfo.GetConst(),
 						// `const_cast()` is OK because we only provide const access to the
 						// `Ort::Value` after construction.
-						const_cast<DataType *>( typedData )->baseWritable(), typedData->baseSize(),
+						reinterpret_cast<BaseType *>( const_cast<DataType *>( typedData )->baseWritable() ), typedData->baseSize(),
 						shape.data(), shape.size()
 					),
 					data
@@ -280,19 +369,34 @@ bool Tensor::isEqualTo( const IECore::Object *other ) const
 		return false;
 	}
 
-	bool equal;
-	dispatchTensorData(
-		m_state->value,
-		[&] ( const auto *data ) {
-
-			using ElementType = remove_const_t<remove_pointer_t<decltype( data )>>;
-			const auto *otherData = otherTensor->m_state->value.GetTensorData<ElementType>();
-			const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
-			equal = memcmp( data, otherData, count * sizeof( *data ) ) == 0;
+	if( m_state->value.GetTensorTypeAndShapeInfo().GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING )
+	{
+		const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
+		for( size_t i = 0; i < count; ++i )
+		{
+			if( m_state->value.GetStringTensorElement( i ) != otherTensor->m_state->value.GetStringTensorElement( i  ) )
+			{
+				return false;
+			}
 		}
-	);
+		return true;
+	}
+	else
+	{
+		bool equal;
+		dispatchTensorData(
+			m_state->value,
+			[&] ( const auto *data ) {
 
-	return equal;
+				using ElementType = remove_const_t<remove_pointer_t<decltype( data )>>;
+				const auto *otherData = otherTensor->m_state->value.GetTensorData<ElementType>();
+				const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
+				equal = memcmp( data, otherData, count * sizeof( *data ) ) == 0;
+			}
+		);
+
+		return equal;
+	}
 }
 
 void Tensor::hash( IECore::MurmurHash &h ) const
@@ -304,13 +408,24 @@ void Tensor::hash( IECore::MurmurHash &h ) const
 		return;
 	}
 
-	dispatchTensorData(
-		m_state->value,
-		[&] ( const auto *data ) {
-			const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
-			h.append( data, count );
+	if( m_state->value.GetTensorTypeAndShapeInfo().GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING )
+	{
+		const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
+		for( size_t i = 0; i < count; ++i )
+		{
+			h.append( m_state->value.GetStringTensorElement( i ) );
 		}
-	);
+	}
+	else
+	{
+		dispatchTensorData(
+			m_state->value,
+			[&] ( const auto *data ) {
+				const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
+				h.append( data, count );
+			}
+		);
+	}
 
 	auto s = shape();
 	h.append( s.data(), s.size() );
@@ -351,14 +466,21 @@ void Tensor::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
 	else if( m_state->value )
 	{
 		// Ort::Value owns the data. Calculate memory usage.
-		dispatchTensorData(
-			m_state->value,
-			[&] ( const auto *data ) {
+		if( m_state->value.GetTensorTypeAndShapeInfo().GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING )
+		{
+			accumulator.accumulate( m_state.get(), m_state->value.GetStringTensorDataLength() );
+		}
+		else
+		{
+			dispatchTensorData(
+				m_state->value,
+				[&] ( const auto *data ) {
 
-				const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
-				accumulator.accumulate( m_state.get(), count * sizeof( *data ) );
-			}
-		);
+					const size_t count = m_state->value.GetTensorTypeAndShapeInfo().GetElementCount();
+					accumulator.accumulate( m_state.get(), count * sizeof( *data ) );
+				}
+			);
+		}
 	}
 }
 

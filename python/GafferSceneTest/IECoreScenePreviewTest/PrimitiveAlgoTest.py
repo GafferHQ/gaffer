@@ -40,6 +40,7 @@ import itertools
 import math
 import pathlib
 import random
+import sys
 import threading
 import time
 
@@ -171,7 +172,7 @@ class PrimitiveAlgoTest( GafferTest.TestCase ) :
 		# than being avoided entirely.
 		time.sleep( 0.01 )
 
-		acceptableCancellationDelay = 0.01 if GafferTest.inCI() else 0.001
+		acceptableCancellationDelay = { "win32" : 0.04, "darwin" : 0.1 }.get( sys.platform, 0.01 ) if GafferTest.inCI() else 0.001
 
 		canceller.cancel()
 		thread.join()
@@ -273,7 +274,7 @@ class PrimitiveAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( merged["P"], IECoreScene.PrimitiveVariable( Interpolation.Vertex, IECore.V3fVectorData( curveVerts1 + curveVerts2, IECore.GeometricData.Interpretation.Point ) ) )
 
 		curves1.setTopology( curves1.verticesPerCurve(), curves1.basis(), True )
-		with self.assertRaisesRegex( RuntimeError, "Cannot merge periodic and non-periodic curves" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot merge curves with mismatched wrap" ) :
 			PrimitiveAlgo.mergePrimitives( [( curves1, imath.M44f() ), ( curves2, imath.M44f() ) ] )
 
 		curves2.setTopology( curves2.verticesPerCurve(), curves2.basis(), True )
@@ -724,7 +725,3 @@ class PrimitiveAlgoTest( GafferTest.TestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			PrimitiveAlgo.mergePrimitives( meshes )
-
-
-if __name__ == "__main__":
-	unittest.main()

@@ -559,9 +559,11 @@ class PythonCompleter( Completer ) :
 		optionalWord = r"[a-zA-Z0-9_]*"
 		getAttr = r"\.{word}".format( word = word )
 		partialGetAttr = r"\.{optionalWord}".format( optionalWord = optionalWord )
-		quotedWord = r"""(?:'{word}'|"{word}")""".format( word = word )
-		getItem = r"\[{quotedWord}\]".format( quotedWord = quotedWord )
-		partialGetItem = r"\[(?:['\"]{optionalWord})?".format( optionalWord = optionalWord )
+		item = r"[a-zA-Z0-9_:]+"
+		optionalItem = r"[a-zA-Z0-9_:]*"
+		quotedItem = r"""(?:'{item}'|"{item}")""".format( item = item )
+		getItem = r"\[{quotedItem}\]".format( quotedItem = quotedItem )
+		partialGetItem = r"\[(?:['\"]{optionalItem})?".format( optionalItem = optionalItem )
 		path = r"{searchPrefix}({word}(?:{getAttr}|{getItem})*)({partialGetAttr}|{partialGetItem})$".format(
 			searchPrefix = self.__searchPrefix, word = word, getAttr = getAttr, getItem = getItem,
 			partialGetAttr = partialGetAttr, partialGetItem = partialGetItem

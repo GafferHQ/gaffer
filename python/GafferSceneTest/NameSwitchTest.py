@@ -113,6 +113,3 @@ class NameSwitchTest( GafferSceneTest.SceneTestCase ) :
 			script["switch"]["out"]["value"].object( "/sphere" ),
 			script["sphere"]["out"].object( "/sphere" )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

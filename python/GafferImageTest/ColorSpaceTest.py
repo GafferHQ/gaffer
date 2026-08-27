@@ -194,7 +194,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s["fileName"].setValue( scriptFileName )
 		s.save()
 
-		env = os.environ.copy()
+		env = Gaffer.environment()
 		env["OCIO"] = str( self.openColorIOPath() / "context.ocio" )
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
@@ -408,6 +408,3 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "color_picking" )
 			self.assertNotEqual( colorSpace["out"].channelData( "R", imath.V2i( 0 ) ), tile )
-
-if __name__ == "__main__":
-	unittest.main()

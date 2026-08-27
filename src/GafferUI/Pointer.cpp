@@ -36,8 +36,6 @@
 
 #include "GafferUI/Pointer.h"
 
-#include "IECore/CachedReader.h"
-
 #include "fmt/format.h"
 
 using namespace GafferUI;
@@ -45,10 +43,10 @@ using namespace GafferUI;
 namespace
 {
 
-static ConstPointerPtr g_current;
+ConstPointerPtr g_current;
 
 using Registry = std::map<std::string, ConstPointerPtr>;
-static Registry &registry()
+Registry &registry()
 {
 	static Registry r;
 	if( !r.size() )

@@ -275,7 +275,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::boxShape( const IECore::Com
 
 	addCube( /* origin */ { 0, 0, 0 }, /* size */ 1.0, vertsPerCurve, p );
 
-	IECoreGL::CurvesPrimitivePtr cube = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr cube = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	cube->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	cube->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 255 / 255.0f, 171 / 255.0f, 15 / 255.0f ) ) ) );
 
@@ -283,7 +283,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::boxShape( const IECore::Com
 
 	// Add falloff visualisation
 
-	IECoreGL::CurvesPrimitivePtr falloff = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr falloff = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	falloff->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	falloff->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 0.0f, 0.0f, 0.0f ) ) ) );
 
@@ -316,7 +316,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::sphereShape( const IECore::
 
 	addCircle( { 0, 0, 0 }, 0.5, vertsPerCurve, p );
 
-	IECoreGL::CurvesPrimitivePtr circleXY = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr circleXY = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	circleXY->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	circleXY->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 255 / 255.0f, 171 / 255.0f, 15 / 255.0f ) ) ) );
 
@@ -325,7 +325,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::sphereShape( const IECore::
 	group->addChild( xy );
 
 
-	IECoreGL::CurvesPrimitivePtr circleYZ = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr circleYZ = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	circleYZ->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	circleYZ->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 255 / 255.0f, 171 / 255.0f, 15 / 255.0f ) ) ) );
 
@@ -338,7 +338,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::sphereShape( const IECore::
 	yz->setTransform( yzRotation );
 
 
-	IECoreGL::CurvesPrimitivePtr circleXZ = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr circleXZ = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	circleXZ->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	circleXZ->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 255 / 255.0f, 171 / 255.0f, 15 / 255.0f ) ) ) );
 
@@ -383,7 +383,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::cylinderShape( const IECore
 	addLine( { 0,  radius, -radius }, { 0,  radius, radius }, vertsPerCurve, p );
 	addLine( { 0, -radius, -radius }, { 0, -radius, radius }, vertsPerCurve, p );
 
-	CurvesPrimitivePtr cylinder = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr cylinder = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurveData );
 	cylinder->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	cylinder->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 255 / 255.0f, 171 / 255.0f, 15 / 255.0f ) ) ) );
 
@@ -399,7 +399,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::cylinderShape( const IECore
 
 	// Add falloff visualisation
 
-	CurvesPrimitivePtr falloff = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr falloff = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	falloff->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	falloff->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 0.0f, 0.0f, 0.0f ) ) ) );
 
@@ -437,7 +437,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::planeShape( const IECore::C
 
 	addQuad( /* origin */ { 0, 0, 0 }, /* size */ 1.0, vertsPerCurve, p );
 
-	IECoreGL::CurvesPrimitivePtr quad = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr quad = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	quad->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	quad->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 255 / 255.0f, 171 / 255.0f, 15 / 255.0f ) ) ) );
 
@@ -445,7 +445,7 @@ IECoreGL::ConstRenderablePtr LightBlockerVisualiser::planeShape( const IECore::C
 
 	// Add falloff visualisation
 
-	CurvesPrimitivePtr falloff = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr falloff = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	falloff->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	falloff->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 0.0f, 0.0f, 0.0f ) ) ) );
 

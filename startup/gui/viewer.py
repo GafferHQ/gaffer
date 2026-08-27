@@ -46,7 +46,6 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
-import GafferImageUI
 
 # add plugs to the preferences node
 
@@ -76,6 +75,7 @@ def __viewContextMenu( viewer, view, menuDefinition ) :
 
 	GafferSceneUI.LightUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 	GafferSceneUI.SceneHistoryUI.appendViewContextMenuItems( viewer, view, menuDefinition )
+	GafferSceneUI.EditScopeUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 
 GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu )
 
@@ -211,10 +211,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "Diagnostic/Arnold/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "ai:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
 		( "Diagnostic/Arnold/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:camera" } ),
 		( "Diagnostic/Arnold/Shadow Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:shadow" } ),
-		( "Diagnostic/Arnold/Reflection Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:reflected" } ),
-		( "Diagnostic/Arnold/Refraction Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:refracted" } ),
-		( "Diagnostic/Arnold/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:diffuse" } ),
-		( "Diagnostic/Arnold/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:glossy" } ),
+		( "Diagnostic/Arnold/Diffuse Reflection Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:diffuse_reflect" } ),
+		( "Diagnostic/Arnold/Specular Reflection Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:specular_reflect" } ),
+		( "Diagnostic/Arnold/Diffuse Transmission Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:diffuse_transmit" } ),
+		( "Diagnostic/Arnold/Specular Transmission Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:specular_transmit" } ),
 		( "Diagnostic/Arnold/Matte", GafferScene.AttributeVisualiser, { "attributeName" : "ai:matte" } ),
 		( "Diagnostic/Arnold/Opaque", GafferScene.AttributeVisualiser, { "attributeName" : "ai:opaque" } ),
 		( "Diagnostic/Arnold/Receive Shadows", GafferScene.AttributeVisualiser, { "attributeName" : "ai:receive_shadows" } ),
@@ -260,7 +260,23 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 			functools.partial( __loadRendererSettings, os.path.join( os.path.dirname( __file__ ), "cyclesViewerSettings.gfr" ) )
 		)
 
+
+if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		import GafferRenderMan
+
+		__registerShadingModes( [
+
+			( "Diagnostic/RenderMan/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "ri:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
+			( "Diagnostic/RenderMan/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:camera" } ),
+			( "Diagnostic/RenderMan/Transmission Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:transmission" } ),
+			( "Diagnostic/RenderMan/Indirect Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:indirect" } ),
+			( "Diagnostic/RenderMan/Matte", GafferScene.AttributeVisualiser, { "attributeName" : "ri:Ri:Matte" } ),
+			( "Diagnostic/RenderMan/Holdout", GafferScene.AttributeVisualiser, { "attributeName" : "ri:trace:holdout" } ),
+
+		] )
+
 # Add catalogue hotkeys to viewers, eg: up/down navigation
-GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys )
-GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addPruningActions )
-GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addVisibilityActions )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.CatalogueUI.addCatalogueHotkeys )

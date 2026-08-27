@@ -79,7 +79,7 @@ class CoordinateSystemVisualiser : public ObjectVisualiser
 			IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
 			vertsPerCurve->writable().resize( 3, 2 );
 
-			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 			group->addChild( curves );
 		}

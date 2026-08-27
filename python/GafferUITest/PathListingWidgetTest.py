@@ -38,6 +38,7 @@
 import unittest
 import functools
 import time
+import threading
 import math
 
 import imath
@@ -329,6 +330,46 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setSelection( [ s31, s12 ] )
 		self.assertEqual( w.getSelection(), [ s31, s12 ] )
 
+	def testVisualOrder( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget(
+			path = p,
+			columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" )
+			],
+			sortable = True,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+
+		s = IECore.PathMatcher( [ "/1", "/2", "/9", "/2/5", "/2/1" ] )
+		w.setSelection( s, scrollToFirst = False )
+		self.assertEqual( w.getSelection(), s )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+
+		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.visualOrder( s ), [ "/1", "/2", "/2/1", "/2/5", "/9" ] )
+
+		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.DescendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.visualOrder( s ), [ "/9", "/2", "/2/5", "/2/1", "/1" ] )
+
+		w._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.visualOrder( s ), [ "/1", "/2", "/2/1", "/2/5", "/9" ] )
+
 	def testRowSelectionScrolling( self ) :
 
 		d = {}
@@ -474,6 +515,41 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.scrollToFirst( IECore.PathMatcher( [ "/2/5" ] ) )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/2", "/3" ] ) )
+
+	def testScrollToFirstWhileExpandingVisualPredecessors( self ) :
+
+		d = {}
+		expansion = IECore.PathMatcher( [ "/" ] )
+		for i in range( 0, 100 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+			expansion.addPath( f"/{i}" )
+
+		p = Gaffer.DictPath( d, "/" )
+
+		with GafferUI.Window() as window :
+			w = GafferUI.PathListingWidget(
+				p,
+				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+			)
+
+		# Expand everything while at the same time scrolling to something
+		# in the middle.
+
+		w.setExpansion( expansion )
+		w.scrollToFirst( IECore.PathMatcher( [ "/55/9" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+
+		# Make sure that the thing we scrolled to is visible in the viewport.
+
+		index = w._PathListingWidget__indexForPath( p.copy().setFromString( "/55/9" ) )
+		self.assertTrue( index.isValid() )
+		self.assertTrue(
+			w._qtWidget().rect().contains( w._qtWidget().visualRect( index ) )
+		)
 
 	def testSelectionSignalFrequency( self ) :
 
@@ -670,6 +746,84 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		c2[1].changedSignal()( c2[1] )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( len( updates ), 0 )
+
+	def testSetColumnsSignalsSelectionChangeInValidState( self ) :
+
+		widget = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "1" : 1 }, "/" ),
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cell
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		widget.setSelection( [ IECore.PathMatcher( [ "/1" ] ) ] )
+
+		columnsWhenSelectionChanged = None
+		def selectionChanged( widget ) :
+
+			nonlocal columnsWhenSelectionChanged
+			columnsWhenSelectionChanged = widget.getColumns()
+
+		widget.selectionChangedSignal().connect( selectionChanged )
+		widget.setColumns( [ widget.StandardColumn( "Value", "dict:value" ), widget.defaultNameColumn ] )
+
+		self.assertEqual( widget.getSelection(), [ IECore.PathMatcher(), IECore.PathMatcher( [ "/1" ] ) ] )
+		self.assertEqual( columnsWhenSelectionChanged, widget.getColumns() )
+
+	def testSetColumnsMaintainsVerticalScroll( self ) :
+
+		path = Gaffer.DictPath(
+			{ str( x ) : x  for x in range( 0, 1000 ) },
+			"/"
+		)
+
+		widget = GafferUI.PathListingWidget( path )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		widget.scrollToPath( path.children()[-1] )
+		scroll = widget._qtWidget().verticalScrollBar().value()
+		self.assertNotEqual( scroll, 0 )
+
+		widget.setColumns( [ widget.defaultNameColumn, widget.StandardColumn( "Value", "dict:value" ) ] )
+		self.assertEqual( widget._qtWidget().verticalScrollBar().value(), scroll )
+
+	def testSetColumnsRetainsValidData( self ) :
+
+		widget = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "child1" : 1 }, "/" ),
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn, GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" ) ],
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# Trigger initial update, and check we get the expected data.
+		model = widget._qtWidget().model()
+		model.rowCount()
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Name" )
+		self.assertEqual( model.headerData( 1, QtCore.Qt.Horizontal ), "Value" )
+		index0 = model.index( 0, 0 )
+		self.assertEqual( model.data( index0 ), "child1" )
+		index1 = model.index( 0, 1 )
+		self.assertEqual( model.data( index1 ), 1 )
+
+		# Reorder the columns, and add a new one. Without waiting for an
+		# update, we should be able to get the values from the columns.
+		widget.setColumns( list( reversed( widget.getColumns() ) ) + [ GafferUI.PathListingWidget.StandardColumn( "Value 2", "dict:value" ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Value" )
+		self.assertEqual( model.headerData( 1, QtCore.Qt.Horizontal ), "Name" )
+		self.assertEqual( model.data( index0 ), 1 )
+		self.assertEqual( model.data( index1 ), "child1" )
+		# But we need to wait for an update to get the value for the
+		# new column.
+		self.assertIsNone( model.headerData( 2, QtCore.Qt.Horizontal ) )
+		index2 = model.index( 0, 2 )
+		self.assertIsNone( model.data( index2 ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertEqual( model.headerData( 2, QtCore.Qt.Horizontal ), "Value 2" )
+		self.assertEqual( model.data( index2 ), 1 )
 
 	def testSortable( self ) :
 
@@ -1162,7 +1316,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 					time.sleep( 0.01 )
 					IECore.Canceller.check( canceller )
 
-			def headerData( self, canceller = None ) :
+			def headerData( self, rootPath, canceller = None ) :
 
 				return self.CellData( value = "Title" )
 
@@ -1473,6 +1627,75 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), columnWidth )
 			self.assertEqual( widget._qtWidget().header().sectionSize( 2 ), widget._qtWidget().viewport().width() - ( columnWidth * 2 ) )
 
+	def testColumnWidthsWhenRemovingLastColumn( self ) :
+
+		for sizeMode in ( GafferUI.PathColumn.SizeMode.Stretch, GafferUI.PathColumn.SizeMode.Interactive ) :
+
+			with self.subTest( sizeMode = sizeMode ) :
+
+				with GafferUI.Window() as window :
+					widget = GafferUI.PathListingWidget(
+						path = Gaffer.DictPath( {}, "/" ),
+						displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+						columns = [
+							GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+							GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = sizeMode ),
+							GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = sizeMode )
+						]
+					)
+
+				window._qtWidget().resize( 512, 384 )
+				window.setVisible( True )
+
+				self.waitForIdle( 1000 )
+				self.assertAlmostEqual(
+					widget._qtWidget().header().length(),
+					widget._qtWidget().viewport().width(),
+					## \todo We should not need this delta. Fix `_TreeView.__resizeStretchColumns` to
+					# remove numerical imprecision.
+					delta = 1
+				)
+
+				widget.setColumns( widget.getColumns()[:-1] )
+				self.assertEqual( widget._qtWidget().header().length(), widget._qtWidget().viewport().width() )
+
+	def testStretchColumnWidthsWhenUpdatingColumns( self ) :
+
+		with GafferUI.Window() as window :
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( {}, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+				columns = [
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+				]
+			)
+
+		window._qtWidget().resize( 512, 384 )
+		window.setVisible( True )
+
+		self.waitForIdle( 1000 )
+
+		widget.setColumns( [
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+		] )
+
+		self.waitForIdle( 1000 )
+
+		# Our two Stretch columns should equally share the available space
+		self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), widget._qtWidget().header().sectionSize( 2 ) )
+		self.assertAlmostEqual(
+			widget._qtWidget().header().sectionSize( 1 ) + widget._qtWidget().header().sectionSize( 2 ),
+			widget._qtWidget().viewport().width() - widget._qtWidget().header().sectionSize( 0 ),
+			## \todo If the available space is an odd number of pixels, we require this delta as `_TreeView.__resizeStretchColumns`
+			# will resize both stretch columns to the same width and leave the remaining pixel. We should update `_TreeView.__resizeStretchColumns`
+			# to use _all_ available space, though this will require moving this delta to the previous assertion as the resulting column
+			# widths could then differ by 1...
+			delta = 1
+		)
+
 	def testColumnSizeSurvivesStylesheetUpdate( self ) :
 
 		for visible in ( False, True ) :
@@ -1502,6 +1725,57 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			finally :
 				QtWidgets.QApplication.instance().setStyleSheet( oldStyle )
 				self.assertEqual( widget._qtWidget().header().sectionSize( 0 ) + 2, c.getSizes()[0] )
+
+	def testSetColumnsUpdatesPersistentIndices( self ) :
+
+		# Make a model with two columns, and expand it fully.
+
+		widget = GafferUI.PathListingWidget(
+			path = Gaffer.DictPath( { "child1" : 10 }, "/" ),
+			columns = [
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test" )
+			],
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+
+		model = widget._qtWidget().model()
+		self.__expandModel( model )
+
+		# Get persistent indices to items in each column.
+
+		indices = [
+			QtCore.QPersistentModelIndex( model.index( 0, c ) )
+			for c in range( 0, len( widget.getColumns() ) )
+		]
+
+		# Change the columns - adding two, moving one, and removing one.
+
+		widget.setColumns( [
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+			GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+			widget.getColumns()[0]
+		] )
+
+		# Check that the persistent indices have been updated as expected.
+
+		self.assertTrue( indices[0].isValid() )
+		self.assertEqual( QtCore.QModelIndex( indices[0] ), model.index( 0, 2 ) )
+		self.assertFalse( indices[1].isValid() )
+
+		# Do the same, but this time reducing the number of columns and
+		# not keeping any of the originals.
+
+		indices = [
+			QtCore.QPersistentModelIndex( model.index( 0, c ) )
+			for c in range( 0, len( widget.getColumns() ) )
+		]
+
+		widget.setColumns( [ widget.defaultNameColumn ] )
+
+		for index in indices :
+			self.assertFalse( index.isValid() )
 
 	def testModelNameSortingDoesntEmitDataChanged( self ) :
 
@@ -1588,9 +1862,9 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 				return self.CellData()
 
-			def headerData( self, canceller = None ) :
+			def headerData( self, rootPath, canceller = None ) :
 
-				return self.CellData( value = self.__title )
+				return self.CellData( value = self.__title, toolTip = str( rootPath ) )
 
 		path = self.InfinitePath( "/" )
 
@@ -1613,23 +1887,28 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# When we first query the header, we should get nothing, because it won't
 		# have been evaluated yet.
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), None )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), None )
 		# But the query should trigger a background update that should update it
 		# asynchronously.
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
 		# The next query shouldn't trigger any update.
 		del changes[:]
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
 		self.assertEqual( changes, [] )
 
 		# Changing the column title should trigger another async update.
 		widget.getColumns()[0].setTitle( "Title 2" )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
 		self.assertEqual( changes, [] )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
 
 		# If the column changes for some other reason, then even though we'll
 		# get an async update happening, it won't find any changes to notify us
@@ -1639,6 +1918,250 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( changes, [] )
 		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+
+		# Changing the PathListingWidget's root path should trigger another async update.
+		widget.setPath( self.InfinitePath( "/other" ) )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+		self.assertEqual( changes, [] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/other" )
+
+	def testUpdateFinished( self ) :
+
+		widget = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+
+		cs = GafferTest.CapturingSlot( widget.updateFinishedSignal() )
+		self.assertEqual( len( cs ), 0 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertEqual( len( cs ), 1 )
+
+		widget.getPath().pathChangedSignal()( widget.getPath() )
+		self.assertEqual( len( cs ), 1 )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertEqual( len( cs ), 2 )
+
+	def testUpdateFinishedNotSignalledForStaleUpdate( self ) :
+
+		childrenCalledCondition = threading.Condition()
+
+		class ConditionPath( Gaffer.Path ) :
+
+			def __init__( self, path, root="/", filter=None ) :
+
+				Gaffer.Path.__init__( self, path, root, filter=filter )
+
+			def isValid( self, canceller = None ) :
+
+				return len( self ) == 0
+
+			def isLeaf( self, canceller = None ) :
+
+				return False
+
+			def copy( self ) :
+
+				return ConditionPath(
+					self[:], self.root(), self.getFilter()
+				)
+
+			def _children( self, canceller = None ) :
+
+				with childrenCalledCondition :
+					childrenCalledCondition.notify()
+
+				return []
+
+		with GafferUI.Window() as window :
+			widget = GafferUI.PathListingWidget( ConditionPath( {}, "/" ) )
+
+		cs = GafferTest.CapturingSlot( widget.updateFinishedSignal() )
+		self.assertEqual( len( cs ), 0 )
+
+		with childrenCalledCondition :
+			# Make window visible and give it time to start an update.
+			window.setVisible( True )
+			self.waitForIdle( 20000 )
+			# Wait for the update to get as far as invoking
+			# `ConditionPath._children()`. No cancellation will occur after this
+			# point.
+			childrenCalledCondition.wait()
+			# Fake a change to the path. This will schedule a new update. Because
+			# we haven't allowed idle events to run yet, this will be scheduled
+			# _before_ the widget has had a chance to emit `updateFinished` for
+			# the first update.
+			widget.getPath().pathChangedSignal()( widget.getPath() )
+			self.assertEqual( len( cs ), 0 )
+
+		# Allow the new update to run to completion.
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		# We only want `updateFinished` to have been emitted once. We don't want it to
+		# have been emitted for the first update, because the results were stale at that
+		# point.
+		self.assertEqual( len( cs ), 1 )
+
+	class LoggingColumn( GafferUI.PathColumn ) :
+
+		def __init__( self ) :
+
+			GafferUI.PathColumn.__init__( self )
+
+			self.cellDataCalls = []
+
+		def cellData( self, path, canceller = None ) :
+
+			self.cellDataCalls.append( str( path ) )
+			return self.CellData( value = 1 )
+
+		def headerData( self, rootPath, canceller = None ) :
+
+			return self.CellData( value = "Title" )
+
+	def testUpdateFlowsTopToBottom( self ) :
+
+		column = self.LoggingColumn()
+
+		path = Gaffer.DictPath(
+			{
+				"a" : { "0" : 0, "1" : 1 },
+				"b" : { "0" : 0, "1" : 1 },
+				"c" : 10
+			},
+			"/"
+		)
+
+		widget = GafferUI.PathListingWidget(
+			path = path,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn, column ],
+			sortable = False,
+		)
+
+		# Expand all parents, and query all data.
+
+		widget.setExpansion( IECore.PathMatcher( [ "/", "/a", "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.__queryVisibleData( widget )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# We expect the data to have been generated in depth-first recursive order, so
+		# that it updates top-to-bottom in the UI.
+		self.assertEqual( column.cellDataCalls, [ "/a", "/a/0", "/a/1", "/b", "/b/0", "/b/1", "/c" ] )
+
+	def testExpandedItemsUpdatedFirst( self ) :
+
+		column = self.LoggingColumn()
+
+		path = Gaffer.DictPath(
+			{
+				"a" : { "0" : 0, "1" : 1 },
+				"b" : { "0" : 0, "1" : 1 },
+				"c" : 10
+			},
+			"/"
+		)
+
+		widget = GafferUI.PathListingWidget(
+			path = path,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn, column ],
+			sortable = False,
+		)
+
+		# Expand all parents, and query all data.
+
+		widget.setExpansion( IECore.PathMatcher( [ "/", "/a", "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.__queryVisibleData( widget )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# We expect the data to have been generated in depth-first recursive order, so
+		# that it updates top-to-bottom in the UI.
+		self.assertEqual( column.cellDataCalls, [ "/a", "/a/0", "/a/1", "/b", "/b/0", "/b/1", "/c" ] )
+
+		# Collapse `/a` and trigger a data update.
+
+		widget.setExpansion( IECore.PathMatcher( [ "/", "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		del column.cellDataCalls[:]
+		column.changedSignal()( column )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# We expect the children of `/a` to have been updated last this time.
+		# They are low priority since they're not currently visible in the tree
+		# view.
+
+		self.assertEqual( len( column.cellDataCalls ), 7 )
+		self.assertEqual( column.cellDataCalls, [ "/a", "/b", "/b/0", "/b/1", "/c", "/a/0", "/a/1" ] )
+
+	def testFirstViewportItemUpdatedFirst( self ) :
+
+		column = self.LoggingColumn()
+
+		path = Gaffer.DictPath(
+			{
+				str( i ) : i for i in range( 0, 100 )
+			},
+			"/"
+		)
+
+		widget = GafferUI.PathListingWidget(
+			path = path,
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn, column ],
+			sortable = False,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+		)
+		widget.setHeaderVisible( False )
+
+		# Expand model and query all data.
+
+		self.__expandModel( widget._qtWidget().model() )
+		self.__queryVisibleData( widget )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# We expect the data to have been generated top-to-bottom in the UI.
+
+		self.assertEqual( column.cellDataCalls, [ "/{}".format( i ) for i in range( 0, 100 ) ] )
+
+		# Scroll down to view the paths in the middle of the list, and
+		# trigger an update.
+
+		widget.scrollToPath( widget.getPath().copy().setFromString( "/50" ) )
+
+		del column.cellDataCalls[:]
+		column.changedSignal()( column )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# Everything should have been updated
+
+		self.assertEqual( len( column.cellDataCalls ), 100 )
+		self.assertEqual( set( column.cellDataCalls ), { "/{}".format( i ) for i in range( 0, 100 ) } )
+
+		# But the visible items should have been updated first
+
+		first = int( widget.pathAt( imath.V2i( 1 ) )[0] )
+		last = int( widget.pathAt(  imath.V2i( 1, widget.bound().size().y - 1 ) )[0] )
+		# What is first depends on the height of the widget, since `scrollTo()` puts
+		# `/50` in the middle.
+		self.assertGreater( first, 15 )
+		self.assertLessEqual( first, 50 )
+		self.assertGreater( last, 50 )
+		# Visible items should have been updated first, in top-to-bottom order.
+		self.assertEqual(
+			column.cellDataCalls[:last-first+1],
+			[ f"/{i}" for i in range( first, last + 1 ) ],
+		)
+		# Then non-visible items, also in top-to-bottom order.
+		self.assertEqual(
+			column.cellDataCalls[last-first+1:],
+			[ f"/{i}" for i in range( 0, 100 ) if i < first or i > last ],
+		)
 
 	@staticmethod
 	def __emitPathChanged( widget ) :
@@ -1661,6 +2184,19 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		for row in range( 0, model.rowCount( index ) ) :
 			cls.__expandModel( model, model.index( row, 0, index ), queryData, depth - 1 )
 
+	@classmethod
+	def __queryVisibleData( cls, widget, index = None ) :
+
+		index = index if index is not None else QtCore.QModelIndex()
+
+		treeView = widget._qtWidget()
+		model = treeView.model()
+		model.data( index )
+
+		if index == QtCore.QModelIndex() or treeView.isExpanded( index ) :
+			for row in range( 0, model.rowCount( index ) ) :
+				cls.__queryVisibleData( widget, model.index( row, 0, index ) )
+
 	@staticmethod
 	def __expansionFromQt( widget ) :
 
@@ -1672,6 +2208,3 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 				)
 
 		return result
-
-if __name__ == "__main__":
-	unittest.main()

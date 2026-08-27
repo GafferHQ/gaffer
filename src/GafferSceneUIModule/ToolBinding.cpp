@@ -47,6 +47,7 @@
 #include "GafferSceneUI/TransformTool.h"
 #include "GafferSceneUI/TranslateTool.h"
 
+#include "GafferSceneUI/Private/ImageSelectionTool.h"
 #include "GafferSceneUI/Private/VisualiserTool.h"
 
 #include "GafferUI/Gadget.h"
@@ -87,6 +88,21 @@ struct StatusChangedSlotCaller
 		try
 		{
 			slot( CropWindowToolPtr( &t ) );
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
+struct ImageSelectionToolStatusChangedSlotCaller
+{
+	void operator()( boost::python::object slot, ImageSelectionTool &t )
+	{
+		try
+		{
+			slot( ImageSelectionToolPtr( &t ) );
 		}
 		catch( const error_already_set & )
 		{
@@ -215,6 +231,16 @@ void registerSelectMode( const std::string &modifierName, object modifier )
 	);
 }
 
+boost::python::list registeredSelectModesWrapper()
+{
+	boost::python::list result;
+	for( auto &m : SelectionTool::registeredSelectModes() )
+	{
+		result.append( m );
+	}
+	return result;
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindTools()
@@ -223,7 +249,7 @@ void GafferSceneUIModule::bindTools()
 	GafferBindings::NodeClass<SelectionTool>( nullptr, no_init )
 		.def( "registerSelectMode", &registerSelectMode, ( boost::python::arg( "modifierName" ), boost::python::arg( "modifier" ) ) )
 		.staticmethod( "registerSelectMode" )
-		.def( "registeredSelectModes", &SelectionTool::registeredSelectModes )
+		.def( "registeredSelectModes", &registeredSelectModesWrapper )
 		.staticmethod( "registeredSelectModes" )
 		.def( "deregisterSelectMode", &SelectionTool::deregisterSelectMode )
 		.staticmethod( "deregisterSelectMode" )
@@ -317,8 +343,26 @@ void GafferSceneUIModule::bindTools()
 		;
 	}
 
-	GafferBindings::NodeClass<VisualiserTool>( nullptr, no_init )
-		.def( init<SceneView *>() )
-	;
+	{
+		scope s = GafferBindings::NodeClass<VisualiserTool>( nullptr, no_init )
+			.def( init<SceneView *>() )
+		;
 
+		enum_<VisualiserTool::Mode>( "Mode" )
+			.value( "Auto", VisualiserTool::Mode::Auto )
+			.value( "ColorAutoRange", VisualiserTool::Mode::ColorAutoRange )
+			.value( "Color", VisualiserTool::Mode::Color )
+			.value( "VertexLabel", VisualiserTool::Mode::VertexLabel )
+		;
+	}
+
+	{
+		GafferBindings::NodeClass<ImageSelectionTool>( nullptr, no_init )
+			.def( init<GafferUI::View *>() )
+			.def( "status", &ImageSelectionTool::status )
+			.def( "statusChangedSignal", &ImageSelectionTool::statusChangedSignal, return_internal_reference<1>() )
+		;
+
+		GafferBindings::SignalClass<ImageSelectionTool::StatusChangedSignal, GafferBindings::DefaultSignalCaller<ImageSelectionTool::StatusChangedSignal>, ImageSelectionToolStatusChangedSlotCaller>( "StatusChangedSignal" );
+	}
 }

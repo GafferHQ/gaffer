@@ -50,8 +50,10 @@ using namespace IECoreDelight;
 namespace
 {
 
-bool convert( const IECoreScene::Camera *camera, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::Camera *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle )
 {
+	const IECoreScene::Camera *camera = samples[0];
+
 	const string &projection = camera->getProjection();
 	const string nodeType = projection + "camera";
 
@@ -68,7 +70,10 @@ bool convert( const IECoreScene::Camera *camera, NSIContext_t context, const cha
 	if( projection == "perspective" )
 	{
 		parameters.add( { "fov", &fov, NSITypeFloat, 0, 1, 0 } );
-		if( camera->getFStop() > 0.0f )
+		/// \todo Switch to `camera->getDepthOfField()` once we have added the
+		/// depthOfField parameter to Cortex.
+		const BoolData *d = camera->parametersData()->member<BoolData>( "depthOfField" );
+		if( d && d->readable() && camera->getFStop() > 0.0f )
 		{
 			parameters.add( { "depthoffield.enable", &dofEnable, NSITypeInteger, 0, 1, 0 } );
 			parameters.add( { "depthoffield.fstop", &fStop, NSITypeDouble, 0, 1, 0 } );

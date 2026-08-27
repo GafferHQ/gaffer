@@ -52,24 +52,24 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"options" : [
+		"options" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the options to be copied. Names should be
 			separated by spaces and can use Gaffer's standard wildcards.
 			""",
 
-		],
+		},
 
-		"source" : [
+		"source" : {
 
-			"description",
+			"description" :
 			"""
 			The source of the options to be copied.
 			""",
 
-		],
+		},
 	}
 
 )

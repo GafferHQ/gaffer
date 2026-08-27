@@ -89,8 +89,8 @@ class LocationNameColumn : public StandardPathColumn
 
 		IE_CORE_DECLAREMEMBERPTR( LocationNameColumn )
 
-		LocationNameColumn()
-			:	StandardPathColumn( "Name", "name" )
+		LocationNameColumn( PathColumn::SizeMode sizeMode )
+			:	StandardPathColumn( "Name", "name", sizeMode )
 		{
 		}
 
@@ -185,21 +185,16 @@ class MuteColumn : public InspectorColumn
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = InspectorColumn::cellData( path, canceller );
-
-			auto scenePath = runTimeCast<const ScenePath>( &path );
-			if( !scenePath )
+			Inspector::ConstResultPtr inspection = inspect( path, canceller );
+			CellData result = InspectorColumn::cellDataFromInspection( inspection.get() );
+			if( !inspection )
 			{
 				return result;
 			}
 
-			if( auto value = runTimeCast<const BoolData>( result.value ) )
+			if( auto value = runTimeCast<const BoolData>( inspection->value() ) )
 			{
-				ScenePlug::PathScope pathScope( scenePath->getContext(), &scenePath->names() );
-				pathScope.setCanceller( canceller );
-
-				Inspector::ConstResultPtr inspectorResult = inspector()->inspect();
-				if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
+				if( inspection->fallbackDescription().empty() )
 				{
 					result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
 				}
@@ -208,7 +203,7 @@ class MuteColumn : public InspectorColumn
 					result.icon = value->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
 				}
 			}
-			if( !result.icon )
+			else
 			{
 				// Use a transparent icon to reserve space in the UI. Without this,
 				// the top row will resize when setting the mute value, causing a full
@@ -285,33 +280,30 @@ class SetMembershipColumn : public InspectorColumn
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = InspectorColumn::cellData( path, canceller );
+			// Get basic cell data from base class, including the tooltip and
+			// background colour to indicate source type.
 
-			auto scenePath = runTimeCast<const ScenePath>( &path );
-			if( !scenePath )
+			Inspector::ConstResultPtr inspection = inspect( path, canceller );
+			CellData result = InspectorColumn::cellDataFromInspection( inspection.get() );
+			if( !inspection )
 			{
 				return result;
 			}
 
-			if( auto value = runTimeCast<const BoolData>( result.value ) )
-			{
-				if( value->readable() )
-				{
-					ScenePlug::PathScope pathScope( scenePath->getContext(), &scenePath->names() );
-					pathScope.setCanceller( canceller );
+			// Replace value with an improved icon indicating set membership.
 
-					Inspector::ConstResultPtr inspectorResult = inspector()->inspect();
-					if( inspectorResult->sourceType() != Inspector::Result::SourceType::Fallback )
-					{
-						result.icon = m_setMemberIconData;
-					}
-					else
-					{
-						result.icon = m_setMemberIconFadedData;
-					}
+			if( inspection->typedValue<bool>( false ) )
+			{
+				if( inspection->fallbackDescription().empty() )
+				{
+					result.icon = m_setMemberIconData;
+				}
+				else
+				{
+					result.icon = m_setMemberIconFadedData;
 				}
 			}
-			if( !result.icon )
+			else
 			{
 				result.icon = m_setMemberUndefinedIconData;
 			}
@@ -321,20 +313,21 @@ class SetMembershipColumn : public InspectorColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = InspectorColumn::headerData( canceller );
+			CellData result = InspectorColumn::headerData( rootPath, canceller );
 
-			if( auto sceneInput = m_scene->getInput() )
+			ConstContextPtr context = inspectorContext( rootPath, canceller );
+			if( !context )
 			{
-				auto scriptNode = sceneInput->ancestor<ScriptNode>();
-
-				Context::EditableScope contextScope( scriptNode->context() );
-				contextScope.setCanceller( canceller );
-
-				ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
-				result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
+				return result;
 			}
+
+			Context::EditableScope contextScope( context.get() );
+			contextScope.setCanceller( canceller );
+
+			ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
+			result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
 
 			return result;
 		}
@@ -383,8 +376,8 @@ StringDataPtr SetMembershipColumn::m_setEmpty = new StringData( "muteLightUndefi
 void GafferSceneUIModule::bindLightEditor()
 {
 
-	IECorePython::RefCountedClass<LocationNameColumn, GafferUI::PathColumn>( "_LightEditorLocationNameColumn" )
-		.def( init<>() )
+	IECorePython::RefCountedClass<LocationNameColumn, GafferUI::StandardPathColumn>( "_LightEditorLocationNameColumn" )
+		.def( init<PathColumn::SizeMode>( arg_( "sizeMode" ) = PathColumn::Default ) )
 	;
 
 	IECorePython::RefCountedClass<MuteColumn, GafferSceneUI::Private::InspectorColumn>( "_LightEditorMuteColumn" )

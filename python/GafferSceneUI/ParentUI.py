@@ -54,50 +54,50 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parent" : [
+		"parent" : {
 
-			"description",
+			"description" :
 			"""
 			The location which the children are parented under. This is
 			ignored when a filter is connected, in which case the children
 			are parented under all the locations matched by the filter.
 			""",
 
-			"userDefault", "/",
+			"userDefault" : "/",
 			# Base class hides this if its not in use, but it's still
 			# pretty useful for the Parent node, so we make it visible
 			# unconditionally again.
-			"layout:visibilityActivator", "",
+			"layout:visibilityActivator" : "",
 
-		],
+		},
 
-		"children" : [
+		"children" : {
 
-			"description",
+			"description" :
 			"""
 			The child hierarchies to be parented.
 			""",
 
-			"plugValueWidget:type", "",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.5,
+			"plugValueWidget:type" : "",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.5,
 
-		],
+		},
 
-		"parentVariable" : [
+		"parentVariable" : {
 
-			"description",
+			"description" :
 			"""
 			A context variable used to pass the location of the parent to the
 			upstream nodes connected into the `children` plug. This can be used
 			to procedurally vary the children at each different parent location.
 			""",
 
-		],
+		},
 
-		"destination" : [
+		"destination" : {
 
-			"description",
+			"description" :
 			"""
 			The location where the children will be placed in the output scene.
 			The default is to place the children under the parent, but they may
@@ -111,7 +111,7 @@ Gaffer.Metadata.registerNode(
 			will place the children alongside the "parent" rather than under it.
 			""",
 
-		],
+		},
 
 	}
 

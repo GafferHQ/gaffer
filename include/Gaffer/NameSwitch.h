@@ -58,6 +58,9 @@ class GAFFER_API NameSwitch : public Switch
 		StringPlug *selectorPlug();
 		const StringPlug *selectorPlug() const;
 
+		StringVectorDataPlug *enabledNamesPlug();
+		const StringVectorDataPlug *enabledNamesPlug() const;
+
 		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
 
 	protected :

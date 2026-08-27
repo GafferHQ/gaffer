@@ -53,6 +53,28 @@ def __lightTypeMatches( node, types ):
 		t = Gaffer.Metadata.value( lightName, "type" )
 		return t in types
 
+def __attributeMetadata( plug, key ) :
+
+	if not isinstance( plug, Gaffer.NameValuePlug ) :
+		plug = plug.parent()
+
+	target = "attribute:" + plug["name"].getValue()
+	return Gaffer.Metadata.value( target, key )
+
+def __parameterMetadata( plug, key ) :
+
+	node = plug.node()
+	shader = node.getChild( "__shader" )
+
+	return Gaffer.Metadata.value(
+		shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( node["parameters"] ),
+		key
+	)
+
+# Sensible default value for `nodule:type`, since the majority of light
+# parameters do not support shader connections.
+Gaffer.Metadata.registerValue( "light:*:*", "nodule:type", "" )
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Light,
@@ -64,42 +86,91 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"sets" : [
+		"sets" : {
 
-			"layout:divider", True
+			"layout:divider" : True
 
-		],
+		},
 
-		"parameters" : [
+		"attributes" : {
 
-			"description",
+			"description" :
+			"""
+			Arbitrary attributes which are applied to the light. Typical
+			uses include setting renderer specific visibility attributes
+			to hide the shape from the camera.
+			""",
+
+			"layout:customWidget:addButton:visibilityActivator" : False,
+
+		},
+
+		"attributes.*" : {
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
+
+			"description" : lambda plug : __attributeMetadata( plug, "description" ),
+			"label" : lambda plug : __attributeMetadata( plug, "label" ),
+
+		},
+
+		"attributes.*.value" : {
+
+			"plugValueWidget:type" : lambda plug : __attributeMetadata( plug, "plugValueWidget:type" ),
+			"presetNames" : lambda plug : __attributeMetadata( plug, "presetNames" ),
+			"presetValues" : lambda plug : __attributeMetadata( plug, "presetValues" ),
+
+		},
+
+		"parameters" : {
+
+			"description" :
 			"""
 			The parameters of the light shader - these will vary based on the light type.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
 
 
-		],
+		},
 
-		"parameters.*" : [
+		"parameters.*" : {
+
+			"label" : functools.partial( __parameterMetadata, key = "label" ),
+			"description" : functools.partial( __parameterMetadata, key = "description" ),
+			"layout:section" : functools.partial( __parameterMetadata, key = "layout:section" ),
+			"layout:accessory" : functools.partial( __parameterMetadata, key = "layout:accessory" ),
+			"layout:divider" : functools.partial( __parameterMetadata, key = "layout:divider" ),
+			"plugValueWidget:type" : functools.partial( __parameterMetadata, key = "plugValueWidget:type" ),
+			"presetNames" : functools.partial( __parameterMetadata, key = "presetNames" ),
+			"presetValues" : functools.partial( __parameterMetadata, key = "presetValues" ),
+			"nodule:type" : functools.partial( __parameterMetadata, key = "nodule:type" ),
+			"noduleLayout:label" : functools.partial( __parameterMetadata, key = "noduleLayout:label" ),
+			"noduleLayout:visible" : functools.partial( __parameterMetadata, key = "noduleLayout:visible" ),
+			"labelPlugValueWidget:icon" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:icon" ),
+			"labelPlugValueWidget:iconToolTip" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:iconToolTip" ),
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
-			"nodule:type", "",
+			"noduleLayout:section" : "left",
 
-		],
+		},
 
-		"defaultLight" : [
+		"parameters..." : {
 
-			"description",
+			"userDefault" : functools.partial( __parameterMetadata, key = "userDefault" ),
+
+		},
+
+		"defaultLight" : {
+
+			"description" :
 			"""
 			Whether this light illuminates all geometry by default. When
 			toggled, the light will be added to the \"defaultLights\" set, which
@@ -107,132 +178,132 @@ Gaffer.Metadata.registerNode(
 			nodes.
 			""",
 
-			"layout:section", "Light Linking",
+			"layout:section" : "Light Linking",
 
-		],
+		},
 
-		"mute" : [
+		"mute" : {
 
-			"description",
+			"description" :
 			"""
 			Whether this light is muted. When toggled, the attribute \"light:mute\"
 			will be set to true. When not toggled, it will be omitted from the attributes.
 			""",
 
-			"layout:section", "Light Linking",
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
-		],
+			"layout:section" : "Light Linking",
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
+		},
 
-		"visualiserAttributes" : [
+		"visualiserAttributes" : {
 
-			"description",
+			"description" :
 			"""
 			Attributes that affect the visualisation of this Light in the Viewer.
 			""",
 
-			"layout:section", "Visualisation",
-			"compoundDataPlugValueWidget:editable", False,
+			"layout:section" : "Visualisation",
+			"layout:customWidget:addButton:visibilityActivator" : False,
 
-			"layout:activator:lookThroughApertureVisibility", lambda parentPlug : __lightTypeMatches( parentPlug.node(), ["distant"] ),
-			"layout:activator:lookThroughClippingPlanesVisibility", lambda parentPlug : __lightTypeMatches( parentPlug.node(), ["distant", "spot"] ),
+			"layout:activator:lookThroughApertureVisibility" : lambda parentPlug : __lightTypeMatches( parentPlug.node(), ["distant"] ),
+			"layout:activator:lookThroughClippingPlanesVisibility" : lambda parentPlug : __lightTypeMatches( parentPlug.node(), ["distant", "spot"] ),
 
-		],
+		},
 
-		"visualiserAttributes.*" : [
+		"visualiserAttributes.*" : {
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-		],
+		},
 
-		"visualiserAttributes.lightDrawingMode" : [
+		"visualiserAttributes.lightDrawingMode" : {
 
-			"description",
+			"description" :
 			"""
 			Controls how lights are presented in the Viewer.
 			""",
 
-			"label", "Light Drawing Mode",
+			"label" : "Light Drawing Mode",
 
-		],
+		},
 
-		"visualiserAttributes.maxTextureResolution" : [
+		"visualiserAttributes.maxTextureResolution" : {
 
-			"description",
+			"description" :
 			"""
 			Visualisers that load textures will respect this setting to
 			limit their resolution.
 			""",
 
-		],
+		},
 
-		"visualiserAttributes.frustum" : [
+		"visualiserAttributes.frustum" : {
 
-			"description",
+			"description" :
 			"""
 			Controls whether applicable lights draw a representation of their
 			light projection in the viewer.
 			"""
 
-		],
+		},
 
-		"visualiserAttributes.frustum.value" : [
+		"visualiserAttributes.frustum.value" : {
 
-			"preset:Off", "off",
-			"preset:When Selected", "whenSelected",
-			"preset:On", "on",
+			"preset:Off" : "off",
+			"preset:When Selected" : "whenSelected",
+			"preset:On" : "on",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget"
+		},
 
-		"visualiserAttributes.lightFrustumScale" : [
+		"visualiserAttributes.lightFrustumScale" : {
 
-			"description",
+			"description" :
 			"""
 			Allows light projections to be scaled to better suit the scene.
 			"""
 
-		],
+		},
 
-		"visualiserAttributes.scale" : [
+		"visualiserAttributes.scale" : {
 
-			"description",
+			"description" :
 			"""
 			Scales non-geometric visualisations in the viewport to make them
 			easier to work with.
 			""",
 
-		],
+		},
 
-		"visualiserAttributes.lightDrawingMode.value" : [
+		"visualiserAttributes.lightDrawingMode.value" : {
 
-			"preset:Wireframe", "wireframe",
-			"preset:Color", "color",
-			"preset:Texture", "texture",
+			"preset:Wireframe" : "wireframe",
+			"preset:Color" : "color",
+			"preset:Texture" : "texture",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget"
+		},
 
-		"visualiserAttributes.lookThroughAperture" : [
+		"visualiserAttributes.lookThroughAperture" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the aperture used when looking through this light. Overrides the Viewer's Camera Settings.
 			""",
 
-			"layout:visibilityActivator", "lookThroughApertureVisibility"
+			"layout:visibilityActivator" : "lookThroughApertureVisibility"
 
-		],
+		},
 
-		"visualiserAttributes.lookThroughClippingPlanes" : [
+		"visualiserAttributes.lookThroughClippingPlanes" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the clipping planes used when looking through this light. Overrides the Viewer's Camera Settings.
 			""",
 
-			"layout:visibilityActivator", "lookThroughClippingPlanesVisibility"
+			"layout:visibilityActivator" : "lookThroughClippingPlanesVisibility"
 
-		]
+		}
 
 	}
 

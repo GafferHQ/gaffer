@@ -328,6 +328,3 @@ class MenuBarTest( GafferUITest.TestCase ) :
 			widget._qtWidget(),
 			QtGui.QKeyEvent( QtCore.QEvent.KeyRelease, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

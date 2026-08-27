@@ -178,6 +178,3 @@ class UndoTest( GafferTest.TestCase ) :
 				s["n"]["op1"].setValue( 20 )
 
 		self.assertFalse( s.undoAvailable() )
-
-if __name__ == "__main__":
-	unittest.main()

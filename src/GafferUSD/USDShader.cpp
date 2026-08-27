@@ -62,7 +62,6 @@
 
 #include "fmt/format.h"
 
-using namespace std;
 using namespace pxr;
 using namespace boost;
 using namespace Imath;
@@ -172,7 +171,7 @@ PlugPtr acquireCompoundNumericPlug( InternedString name, const SdfValueTypeName 
 
 PlugPtr acquireAssetPlug( InternedString name, Plug::Direction direction, VtValue defaultVtValue, Plug *candidate )
 {
-	string defaultValue;
+	std::string defaultValue;
 	if( !defaultVtValue.IsEmpty() )
 	{
 		defaultValue = defaultVtValue.Get<SdfAssetPath>().GetAssetPath();
@@ -301,7 +300,11 @@ Plug *loadParameter( InternedString name, const SdfValueTypeName &type, Plug::Di
 
 Plug *loadShaderProperty( const SdrShaderProperty &property, Plug *parent )
 {
+#if PXR_VERSION >= 2411
+	SdfValueTypeName sdfType = property.GetTypeAsSdfType().GetSdfType();
+#else
 	SdfValueTypeName sdfType = property.GetTypeAsSdfType().first;
+#endif
 	if(
 		property.GetType() == SdrPropertyTypes->Terminal ||
 		property.GetType() == SdrPropertyTypes->Vstruct
@@ -347,11 +350,12 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	// because it includes the attributes from auto-apply schemas that are used
 	// for renderer-specific light extensions.
 
+	std::string shaderType = "surface";
 	const TfToken shaderNameToken( shaderName );
 
 	UsdSchemaRegistry &schemaRegistry = UsdSchemaRegistry::GetInstance();
-	vector<const UsdPrimDefinition *> primDefinitions;
-	vector<TfToken> autoAppliedPropertyNames;
+	std::vector<const UsdPrimDefinition *> primDefinitions;
+	std::vector<TfToken> autoAppliedPropertyNames;
 	if( auto primDefinition = schemaRegistry.FindConcretePrimDefinition( shaderNameToken ) )
 	{
 		primDefinitions.push_back( primDefinition );
@@ -373,6 +377,7 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		const TfType schemaType = schemaRegistry.GetTypeFromName( shaderNameToken );
 		if( schemaType.IsA<UsdLuxBoundableLightBase>() || schemaType.IsA<UsdLuxNonboundableLightBase>() )
 		{
+			shaderType = "light";
 			primDefinitions.push_back( schemaRegistry.FindAppliedAPIPrimDefinition( TfToken( "ShadowAPI" ) ) );
 			primDefinitions.push_back( schemaRegistry.FindAppliedAPIPrimDefinition( TfToken( "ShapingAPI" ) ) );
 		}
@@ -392,7 +397,7 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	// Set name and type and delete old parameters if necessary.
 
 	namePlug()->setValue( shaderName );
-	typePlug()->setValue( "surface" );
+	typePlug()->setValue( shaderType );
 
 	Plug *parametersPlug = this->parametersPlug()->source();
 	Plug *outPlug = this->outPlug();
@@ -429,12 +434,20 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	else
 	{
 		assert( shader );
+#if PXR_VERSION >= 2511
+		for( const auto &name : shader->GetShaderInputNames() )
+#else
 		for( const auto &name : shader->GetInputNames() )
+#endif
 		{
 			SdrShaderPropertyConstPtr property = shader->GetShaderInput( name );
 			validPlugs.insert( loadShaderProperty( *property, parametersPlug ) );
 		}
+#if PXR_VERSION >= 2511
+		for( const auto &name : shader->GetShaderOutputNames() )
+#else
 		for( const auto &name : shader->GetOutputNames() )
+#endif
 		{
 			SdrShaderPropertyConstPtr property = shader->GetShaderOutput( name );
 			validPlugs.insert( loadShaderProperty( *property, outPlug ) );

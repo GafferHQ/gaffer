@@ -54,12 +54,13 @@ def __dispatch( self, nodes ) :
 	for node in nodes :
 		if isinstance( node, GafferDispatch.TaskNode ) :
 			self["tasks"].next().setInput( node["task"] )
-		elif isinstance( node, Gaffer.SubGraph ) :
-			for plug in GafferDispatch.TaskNode.TaskPlug.RecursiveOutputRange( node ) :
-				if isinstance( plug.source().node(), GafferDispatch.TaskNode ) :
-					self["tasks"].next().setInput( plug )
 		else :
-			raise IECore.Exception( "Dispatched nodes must be TaskNodes or SubGraphs containing TaskNodes" )
+			foundPlug = False
+			for plug in GafferDispatch.TaskNode.TaskPlug.RecursiveOutputRange( node ) :
+				self["tasks"].next().setInput( plug )
+				foundPlug = True
+			if not foundPlug :
+				raise IECore.Exception( "Dispatched nodes must have at least one TaskPlug output." )
 
 	self["task"].execute()
 

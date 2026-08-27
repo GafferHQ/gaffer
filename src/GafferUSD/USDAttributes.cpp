@@ -36,20 +36,38 @@
 
 #include "GafferUSD/USDAttributes.h"
 
-#include "Gaffer/StringPlug.h"
+#include "Gaffer/PlugAlgo.h"
+
+#include "boost/container/flat_map.hpp"
 
 using namespace Gaffer;
 using namespace GafferUSD;
 
 GAFFER_NODE_DEFINE_TYPE( USDAttributes );
 
-USDAttributes::USDAttributes( const std::string &name )
-	:	GafferScene::Attributes( name )
+namespace
 {
-	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 
-	attributes->addChild( new Gaffer::NameValuePlug( "usd:purpose", new StringPlug( "value", Plug::In, "default" ), false, "purpose" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "usd:kind", new StringPlug( "value", Plug::In, "assembly" ), false, "kind" ) );
+const boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> g_attributeDefaultOverrides = {
+	{ "usd:kind", new IECore::StringData( "assembly" ) },
+};
+
+}
+
+USDAttributes::USDAttributes( const std::string &name )
+	:	GafferScene::Attributes( name, "usd" )
+{
+
+	for( auto &p : NameValuePlug::Range( *attributesPlug() ) )
+	{
+		auto it = g_attributeDefaultOverrides.find( p->getName() );
+		if( it != g_attributeDefaultOverrides.end() )
+		{
+			Gaffer::PlugAlgo::setValueFromData( p->valuePlug<ValuePlug>(), it->second.get() );
+			p->valuePlug<ValuePlug>()->resetDefault();
+		}
+	}
+
 }
 
 USDAttributes::~USDAttributes()

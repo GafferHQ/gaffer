@@ -54,7 +54,7 @@ using namespace GafferOSL;
 GAFFER_PLUG_DEFINE_TYPE( ClosurePlug );
 
 ClosurePlug::ClosurePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags )
+	:	GafferScene::ClosurePlug( name, direction, flags )
 {
 }
 
@@ -74,6 +74,9 @@ Gaffer::PlugPtr ClosurePlug::createCounterpart( const std::string &name, Directi
 
 bool ClosurePlug::acceptsInput( const Gaffer::Plug *input ) const
 {
+	// Note : Should be calling `GafferScene::ClosurePlug::acceptsInput()`
+	// here, but bypassing it to allow the backwards compatibility code
+	// below to function.
 	if( !Plug::acceptsInput( input ) )
 	{
 		return false;

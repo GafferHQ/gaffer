@@ -90,7 +90,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			self.getPlugs(),
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		nameWidget.setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__row.append(
 			nameWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -100,7 +100,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["exists"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		existsLabelWidget.label()._qtWidget().setFixedWidth( 40 )
+		existsLabelWidget.setFixedWidth( 40 )
 		self.__row.append(
 			existsLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -115,7 +115,7 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 			{ plug["value"] for plug in self.getPlugs() },
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right
 		)
-		valueLabelWidget.label()._qtWidget().setFixedWidth( 40 )
+		valueLabelWidget.setFixedWidth( 40 )
 		self.__row.append(
 			valueLabelWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
@@ -168,9 +168,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"queries" : [
+		"queries" : {
 
-			"description",
+			"description" :
 			"""
 			The context variables to be queried - arbitrary numbers of context
 			variables may be added as children of this plug via the user interface,
@@ -180,101 +180,103 @@ Gaffer.Metadata.registerNode(
 			appropriate type.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:footer:widgetType", "GafferUI.ContextQueryUI._ContextQueryFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:customWidget:footer:widgetType" : "GafferUI.ContextQueryUI._ContextQueryFooter",
+			"layout:customWidget:footer:index" : -1,
+			"plugCreationWidget:action" : "addQuery",
+			"plugCreationWidget:excludedTypes" : "Gaffer.ObjectPlug",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"queries.*" : [
+		"queries.*" : {
 
-			"description",
+			"description" :
 			"""
 			A pair of variable name to query and default value.
 			""",
 
-		],
+		},
 
-		"queries.*.name" : [
+		"queries.*.name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the variable to query.
 			""",
 
-		],
+		},
 
-		"queries.*.value" : [
+		"queries.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			The value to output if the variable does not exist.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 0.4,
-			"noduleLayout:customGadget:addButton:gadgetType", ""
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 0.4,
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description",
+			"description" :
 			"""
 			The result of the query.
 			""",
 
-			"label", functools.partial( __getLabel, parentPlug = ""),
+			"label" : functools.partial( __getLabel, parentPlug = ""),
 
-			"plugValueWidget:type", "GafferUI.ContextQueryUI._OutputWidget",
+			"plugValueWidget:type" : "GafferUI.ContextQueryUI._OutputWidget",
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 
-		],
+		},
 
-		"out.*.exists" : [
+		"out.*.exists" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs true if the variable exists in the context, and is a compatible type.
 			""",
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "exists" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
-		],
+		},
 
-		"out.*.value" : [
+		"out.*.value" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the value of the specified variable, or the default value
 			if the variable does not exist ( or is incompatible ).
 			""",
 
-		],
+		},
 
-		"out.*.value..." : [
+		"out.*.value..." : {
 
-			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "values" ),
+			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "values" ),
 
-		],
+		},
 
 	}
 )
@@ -283,86 +285,18 @@ Gaffer.Metadata.registerNode(
 # _ContextQueryFooter
 ##########################################################################
 
-class _ContextQueryFooter( GafferUI.PlugValueWidget ) :
+## \todo If we put query plugs on the same row as output widgets,
+# then we won't need the funky `label` metadata, and will be able
+# to use PlugCreationWidget directly.
+class _ContextQueryFooter( GafferUI.PlugCreationWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
-
-		with row :
-
-			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-			self.__menuButton = GafferUI.MenuButton(
-				image = "plus.png",
-				hasFrame = False,
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-			)
-
-			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand": True } )
+		GafferUI.PlugCreationWidget.__init__( self, plug, **kw )
 
 		plug.node().plugSetSignal().connect(
 			Gaffer.WeakMethod( self.__updateQueryMetadata )
 		)
-
-	def _updateFromEditable( self ) :
-
-		self.__menuButton.setEnabled( self._editable() )
-
-	def __menuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		for item in [
-			Gaffer.BoolPlug(),
-			Gaffer.FloatPlug(),
-			Gaffer.IntPlug(),
-			"NumericDivider",
-			Gaffer.StringPlug(),
-			"StringDivider",
-			Gaffer.V2iPlug(),
-			Gaffer.V3iPlug(),
-			Gaffer.V2fPlug(),
-			Gaffer.V3fPlug(),
-			"VectorDivider",
-			Gaffer.Color3fPlug(),
-			Gaffer.Color4fPlug(),
-			"ColorDivider",
-			Gaffer.Box2iPlug(),
-			Gaffer.Box2fPlug(),
-			Gaffer.Box3iPlug(),
-			Gaffer.Box3fPlug(),
-			"BoxDivider",
-			Gaffer.FloatVectorDataPlug( defaultValue = IECore.FloatVectorData() ),
-			Gaffer.IntVectorDataPlug( defaultValue = IECore.IntVectorData() ),
-			Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() )
-		] :
-			if isinstance( item, str ) :
-				result.append( "/" + item, { "divider": True } )
-			else :
-				name = type( item ).__name__.replace( "Plug", "" )
-				if name == "StringVectorData":
-					result.append( "/Array/NumericDivider", { "divider": True } )
-				if "Vector" in name:
-					name = "Array/" + name.split( "Vector" )[0]
-				result.append(
-					"/" + name,
-					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", item ),
-					}
-				)
-
-		return result
-
-	def __addQuery( self, name, templatePlug ) :
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-
-			node = self.getPlug().node()
-
-			node.addQuery( templatePlug, name )
 
 	def __updateQueryMetadata( self, plug ) :
 
@@ -419,7 +353,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	# For ValuePlug in general, we offer the option to drive them with ContextQuery
 	plug = plugValueWidget.getPlug()
-	if not isinstance( plug, Gaffer.ValuePlug ) :
+	if not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.PlugAlgo.canSetValueFromData( plug ) :
 		return
 
 	node = plug.node()

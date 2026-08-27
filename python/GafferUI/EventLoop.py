@@ -50,6 +50,7 @@ import GafferUI
 
 from Qt import QtCore
 from Qt import QtWidgets
+import Qt
 
 ## This class provides the event loops used to run GafferUI based applications.
 class EventLoop( object ) :
@@ -106,7 +107,10 @@ class EventLoop( object ) :
 
 		if self.__runStyle == self.__RunStyle.Normal :
 			assert( self.__startCount == 1 )
-			self.__qtEventLoop.exec_()
+			if Qt.__binding__ == "PySide6" :
+				self.__qtEventLoop.exec()
+			else:
+				self.__qtEventLoop.exec_()
 		elif self.__runStyle == self.__RunStyle.PumpThread :
 			if self.__pumpThread is None :
 				self.__pumpThread = threading.Thread( target = self.__pumpThreadFn )
@@ -160,9 +164,12 @@ class EventLoop( object ) :
 		# environment, which could mess with our own style (on GNOME for instance,
 		# our icons can come out the wrong size).
 		style = QtWidgets.QApplication.setStyle( "Fusion" )
-		# Stop icons/fonts being tiny on high-dpi monitors. Must be set before
-		# the application is created.
-		QtWidgets.QApplication.setAttribute( QtCore.Qt.AA_EnableHighDpiScaling )
+
+		if Qt.__binding__ == "PySide2" :
+			# Stop icons/fonts being tiny on high-dpi monitors. Must be set before
+			# the application is created. This is enabled by default with Qt 6.
+			QtWidgets.QApplication.setAttribute( QtCore.Qt.AA_EnableHighDpiScaling )
+
 		# Allow all `GafferUI.GLWidgets` to share OpenGL resources (via the underlying
 		# QOpenGLWidget).
 		QtWidgets.QApplication.setAttribute( QtCore.Qt.AA_ShareOpenGLContexts )

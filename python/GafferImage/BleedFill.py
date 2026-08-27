@@ -193,4 +193,4 @@ class BleedFill( GafferImage.ImageProcessor ) :
 		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
 		self["out"].setInput( self["__disableSwitch"]["out"] )
 
-IECore.registerRunTimeTyped( BleedFill, typeName = "GafferImage::BleedFill" )
+IECore.registerRunTimeTyped( BleedFill, "GafferImage::BleedFill" )

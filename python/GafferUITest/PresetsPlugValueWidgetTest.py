@@ -88,6 +88,3 @@ class PresetsPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		Gaffer.Metadata.deregisterValue( GafferTest.MultiplyNode, "op1", "presetNames" )
 		Gaffer.Metadata.deregisterValue( GafferTest.MultiplyNode, "op1", "presetValues" )
-
-if __name__ == "__main__":
-	unittest.main()

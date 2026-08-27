@@ -219,7 +219,7 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 
 		p = Gaffer.ShufflesPlug()
 		p.addChild( Gaffer.ShufflePlug( source = "foo", destination = "bar" ) )
-		# wont do anything unless "bar" is in the original sources
+		# won't do anything unless "bar" is in the original sources
 		p.addChild( Gaffer.ShufflePlug( source = "bar", destination = "baz" ) )
 
 		source = IECore.CompoundObject( { "foo" : IECore.FloatData( 0.5 ) } )
@@ -234,7 +234,7 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 
 		source = IECore.CompoundObject( { "foo" : IECore.FloatData( 0.5 ) } )
 		p[0]["deleteSource"].setValue( True )
-		# wont affect the new "bar" because  its not in the original sources
+		# won't affect the new "bar" because  its not in the original sources
 		p[1]["deleteSource"].setValue( True )
 		dest = p.shuffle( source )
 		self.assertEqual(
@@ -513,6 +513,3 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 		# from "toto" to "toto"
 		plug[0]["destination"].setValue( "toto" )
 		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources ), IECore.CompoundData( { "toto" : 20 } ) )
-
-if __name__ == "__main__":
-	unittest.main()

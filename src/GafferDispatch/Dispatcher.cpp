@@ -36,19 +36,26 @@
 
 #include "GafferDispatch/Dispatcher.h"
 
+#include "Gaffer/Box.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextProcessor.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Signals.h"
+#include "Gaffer/StandardSet.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Switch.h"
 
+#include "IECore/DataAlgo.h"
+#include "IECore/FileSequenceFunctions.h"
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 #include "fmt/format.h"
 
@@ -67,6 +74,10 @@ namespace
 {
 
 const InternedString g_frame( "frame" );
+const InternedString g_isolatedBlindDataKey( "isolated" );
+const InternedString g_isolatedAnimationNodeName( "isolatedAnimation" );
+const InternedString g_nameBlindDataKey( "name" );
+const BoolDataPtr g_trueData = new BoolData( true );
 
 // TaskBatch contexts are identical to the contexts of their corresponding
 // Tasks, except that they omit the `frame` variable. We need to construct a
@@ -114,6 +125,193 @@ struct BatchContextPool
 
 };
 
+ValuePlug *acquireCellValuePlug( Spreadsheet *spreadsheet, const InternedString columnName, const float frame )
+{
+	const std::string rowName = fmt::format( "{}", frame );
+	if( auto row = spreadsheet->rowsPlug()->row( rowName ) )
+	{
+		assert( row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) );
+		return row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName )->valuePlug();
+	}
+
+	Spreadsheet::RowPlug *newRow = spreadsheet->rowsPlug()->addRow();
+	newRow->namePlug()->setValue( rowName );
+	newRow->enabledPlug()->setValue( true );
+
+	assert( newRow->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) );
+	return newRow->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName )->valuePlug();
+}
+
+/// \todo Move these to `PlugAlgo`
+bool canSetValueFromObject( const ValuePlug *plug, const Object *value = nullptr )
+{
+	return
+		PlugAlgo::canSetValueFromData( plug ) ||
+		plug->typeId() == CompoundObjectPlug::staticTypeId() ||
+		plug->typeId() == ObjectPlug::staticTypeId() ||
+		plug->typeId() == ObjectVectorPlug::staticTypeId()
+	;
+}
+
+ObjectPtr getValueAsObject( const ValuePlug *plug )
+{
+	if( auto coPlug = runTimeCast<const CompoundObjectPlug>( plug ) )
+	{
+		return coPlug->getValue()->copy();
+	}
+	else if( auto oPlug = runTimeCast<const ObjectPlug>( plug ) )
+	{
+		return oPlug->getValue()->copy();
+	}
+	else if( auto ovPlug = runTimeCast<const ObjectVectorPlug>( plug ) )
+	{
+		return ovPlug->getValue()->copy();
+	}
+
+	return PlugAlgo::getValueAsData( plug );
+}
+
+bool setValueFromObject( ValuePlug *plug, const Object *value )
+{
+	if( auto data = runTimeCast<const Data>( value ) )
+	{
+		return PlugAlgo::setValueFromData( plug, data );
+	}
+	else if( auto coPlug = runTimeCast<CompoundObjectPlug>( plug ) )
+	{
+		if( auto compoundObject = runTimeCast<const CompoundObject>( value ) )
+		{
+			coPlug->setValue( compoundObject );
+			return true;
+		}
+		return false;
+	}
+	else if( auto oPlug = runTimeCast<ObjectPlug>( plug ) )
+	{
+		if( auto object = runTimeCast<const Object>( value ) )
+		{
+			oPlug->setValue( object );
+			return true;
+		}
+		return false;
+	}
+	else if( auto ovPlug = runTimeCast<ObjectVectorPlug>( plug ) )
+	{
+		if( auto objectVector = runTimeCast<const ObjectVector>( value ) )
+		{
+			ovPlug->setValue( objectVector );
+			return true;
+		}
+		return false;
+	}
+
+	return false;
+}
+
+void bakePlugValue( ValuePlug *destinationPlug, const ValuePlug *sourcePlug, const std::vector<float> &frames )
+{
+	if( !canSetValueFromObject( destinationPlug ) )
+	{
+		return;
+	}
+
+	Node *destinationNode = destinationPlug->node();
+	Node *animationNodeParent = destinationNode->isInstanceOf( (IECore::TypeId)ScriptNodeTypeId ) ? destinationNode : destinationNode->parent<Node>();
+	Spreadsheet *animationSpreadsheet = animationNodeParent->getChild<Spreadsheet>( g_isolatedAnimationNodeName );
+
+	Context::EditableScope frameContext( Context::current() );
+	frameContext.setFrame( frames.front() );
+
+	const ObjectPtr originalValue = getValueAsObject( sourcePlug );
+	setValueFromObject( destinationPlug, originalValue.get() );
+
+	const MurmurHash originalHash = sourcePlug->hash();
+
+	InternedString columnName( "" );
+	bool animating = false;
+
+	for( std::vector<float>::const_iterator it = frames.begin() + 1, eIt = frames.end(); it != eIt; ++it )
+	{
+		frameContext.setFrame( *it );
+
+		const MurmurHash frameValueHash = sourcePlug->hash();
+
+		if( !animating && frameValueHash != originalHash )
+		{
+			animating = true;
+			if( !animationSpreadsheet )
+			{
+				animationNodeParent->addChild( new Spreadsheet( g_isolatedAnimationNodeName ) );
+				animationSpreadsheet = animationNodeParent->getChild<Spreadsheet>( animationNodeParent->children().size() - 1 );
+				animationSpreadsheet->selectorPlug()->setValue( "${frame}" );
+			}
+
+			if( columnName.string().empty() )
+			{
+				columnName = boost::replace_all_copy( destinationPlug->relativeName( destinationNode ), ".", "_" );
+				animationSpreadsheet->rowsPlug()->addColumn( destinationPlug, columnName );
+
+				destinationPlug->setInput( animationSpreadsheet->outPlug()->getChild<Plug>( columnName ) );
+
+				// We set the plug values for all frames if any are animated. Go back and set
+				// the previous frame cell values.
+				for( std::vector<float>::const_iterator pIt = frames.begin(); pIt != it; ++pIt )
+				{
+					frameContext.setFrame( *pIt );
+					const ObjectPtr previousValue = getValueAsObject( sourcePlug );
+					ValuePlug *cellValuePlug = acquireCellValuePlug( animationSpreadsheet, columnName, *pIt );
+					setValueFromObject( cellValuePlug, previousValue.get() );
+				}
+
+				frameContext.setFrame( *it );
+			}
+		}
+
+		if( animating )
+		{
+			ValuePlug *cellValuePlug = acquireCellValuePlug( animationSpreadsheet, columnName, *it );
+			const ObjectPtr frameValue = getValueAsObject( sourcePlug );
+			setValueFromObject( cellValuePlug, frameValue.get() );
+		}
+	}
+}
+
+void isolateScriptPlugs( ScriptNode *destinationScript, const ScriptNode *sourceScript, const std::vector<float> &frames )
+{
+	StandardSetPtr plugsToSerialise = new StandardSet();
+
+	for( const auto &sourcePlug : Gaffer::ValuePlug::RecursiveInputRange( *sourceScript ) )
+	{
+		plugsToSerialise->add( const_cast<ValuePlug *>( sourcePlug.get() ) );
+	}
+
+	const std::string scriptVariablesSerialisation = sourceScript->serialise( sourceScript, plugsToSerialise.get() );
+	destinationScript->execute( scriptVariablesSerialisation );
+
+	for( const auto &sourcePlug : Gaffer::ValuePlug::RecursiveInputRange( *sourceScript ) )
+	{
+		auto destinationPlug = destinationScript->descendant<ValuePlug>( sourcePlug->relativeName( sourceScript ) );
+		assert( destinationPlug );
+
+		if( sourcePlug->getInput() )
+		{
+			bakePlugValue( destinationPlug, sourcePlug.get(), frames );
+		}
+	}
+}
+
+/// \todo Remove, so that we always omit empty tasks. We're just providing the option
+/// as a courtesy for the 1.6 release, since the change could theoretically affect
+/// subclasses, or processing done via `TractorDispatcher.preSpoolSignal()`.
+bool omitEmptyBatches()
+{
+	if( const char *v = getenv( "GAFFERDISPATCH_OMIT_EMPTY_TASKS" ) )
+	{
+		return strcmp( v, "0" ) != 0;
+	}
+	return true;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,6 +322,8 @@ namespace
 {
 
 const InternedString g_batchSize( "batchSize" );
+const InternedString g_isolatedPlugName( "isolated" );
+const InternedString g_allowIsolationName( "dispatcher:allowIsolation" );
 const InternedString g_immediatePlugName( "immediate" );
 const InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 const InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
@@ -308,6 +508,13 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 {
 	parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
+	if( auto allowIsolation = Metadata::value<BoolData>( parentPlug->node(), g_allowIsolationName ) )
+	{
+		if( allowIsolation->readable() )
+		{
+			parentPlug->addChild( new BoolPlug( g_isolatedPlugName, Plug::In, false ) );
+		}
+	}
 
 	const CreatorMap &m = creators();
 	for( const auto &[name, creator] : m )
@@ -347,6 +554,139 @@ FrameListPtr Dispatcher::frameRange() const
 		throw IECore::Exception( "Dispatcher: Custom Frame Range is not a valid IECore::FrameList" );
 	}
 }
+
+
+//////////////////////////////////////////////////////////////////////////
+// TaskBatch::Namer class. This maintains a cache of formatted labels
+// for nodes and contexts, to speed up the process of generating names
+// for TaskBatches.
+//////////////////////////////////////////////////////////////////////////
+
+class Dispatcher::TaskBatch::Namer
+{
+
+	public :
+
+		Namer( const Context &baseContext )
+			:	m_baseContext( baseContext )
+		{
+		}
+
+		string name( const TaskBatch *batch )
+		{
+			if( !batch->plug() )
+			{
+				return "";
+			}
+
+			string result = nodeLabel( batch->node() );
+			if( !batch->frames().empty() )
+			{
+				result += fmt::format( " {}", framesLabel( batch->frames() ) );
+			}
+
+			const string c = contextLabel( batch->context() );
+			if( !c.empty() )
+			{
+				result += fmt::format( " ({})", c );
+			}
+
+			return result;
+		}
+
+	private :
+
+		const string &nodeLabel( const Node *node )
+		{
+			string &result = m_nodeLabels[node];
+			if( !result.empty() )
+			{
+				return result;
+			}
+
+			result = node->relativeName( node->scriptNode() );
+			return result;
+		}
+
+		string framesLabel( const std::vector<float> &frames )
+		{
+			if( frames.size() == 1 )
+			{
+				// Fast path for common case.
+				return fmt::format( "{}", frames[0] );
+			}
+
+			vector<FrameList::Frame> intFrames( frames.begin(), frames.end() );
+			ConstFrameListPtr frameList = IECore::frameListFromList( intFrames );
+			return frameList->asString();
+		}
+
+		const string &contextLabel( const Context *context )
+		{
+			// Because the contexts we work will all have been uniquefied by
+			// ContextPool, their address is sufficient as our cache key.
+			string &result = m_contextLabels[context];
+			if( !result.empty() )
+			{
+				return result;
+			}
+
+			vector<InternedString> names;
+			context->names( names );
+			std::sort(
+				names.begin(), names.end(),
+				[] ( InternedString a, InternedString b ) {
+					return a.string() < b.string();
+				}
+			);
+
+			for( const auto &name : names )
+			{
+				if( name == g_scriptFileNameContextEntry )
+				{
+					// When we isolate batches, we give them a new script filename,
+					// but that information would only clutter up the batch names,
+					// so we omit it here.
+					/// \todo A smarter method of naming might be to include only
+					/// context variables that differ between batches for the same
+					/// node. That would automatically take care of this omission
+					/// too.
+					continue;
+				}
+				if( context->variableHash( name ) == m_baseContext.variableHash( name ) )
+				{
+					continue;
+				}
+
+				DataPtr data = context->getAsData( name );
+				IECore::dispatch(
+					data.get(),
+					[&] ( const auto *data ) -> void {
+						using DataType = remove_pointer_t<decltype( data )>;
+						using ValueType = typename DataType::ValueType;
+						if constexpr( fmt::is_formattable<ValueType>::value )
+						{
+							if( result.size() )
+							{
+								result += ", ";
+							}
+							result += fmt::format( "{}={}", name.string(), data->readable() );
+						}
+						/// \todo Register formatters for Imath types, and anything
+						/// else that might end up in a context variable.
+					}
+				);
+			}
+
+			return result;
+		}
+
+		const Context &m_baseContext;
+
+		unordered_map<const Node *, string> m_nodeLabels;
+		unordered_map<const Context *, string> m_contextLabels;
+
+};
 
 //////////////////////////////////////////////////////////////////////////
 // TaskBatch implementation
@@ -399,6 +739,11 @@ const std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::preTasks() c
 	return m_preTasks;
 }
 
+const std::string &Dispatcher::TaskBatch::name() const
+{
+	return m_blindData->member<StringData>( g_nameBlindDataKey, /* throwExceptions = */ true )->readable();
+}
+
 CompoundData *Dispatcher::TaskBatch::blindData()
 {
 	return m_blindData.get();
@@ -407,6 +752,214 @@ CompoundData *Dispatcher::TaskBatch::blindData()
 const CompoundData *Dispatcher::TaskBatch::blindData() const
 {
 	return m_blindData.get();
+}
+
+void Dispatcher::TaskBatch::addPreTask( const TaskBatchPtr &preTask, bool forPostTask )
+{
+	// Check that `preTask` isn't already in `batch->m_preTasks`,
+	// returning if it is.
+
+	const size_t setThreshold = 1000;
+	if( m_preTasks.size() < setThreshold )
+	{
+		// Linear search is cheaper than set lookups for smallish
+		// numbers of preTasks.
+		if( std::find( m_preTasks.begin(), m_preTasks.end(), preTask ) != m_preTasks.end() )
+		{
+			return;
+		}
+	}
+	else
+	{
+		// But for large numbers of preTasks we switch to testing
+		// a set for membership for improved performance.
+		if( m_preTasksSet.empty() )
+		{
+			for( const auto &p : m_preTasks )
+			{
+				m_preTasksSet.insert( p.get() );
+			}
+		}
+		if( !m_preTasksSet.insert( preTask.get() ).second )
+		{
+			return;
+		}
+	}
+
+	// Add to preTasks.
+
+	if( forPostTask )
+	{
+		// We're adding the preTask because we are a postTask of it, but we may
+		// already have our own standard preTasks. There's no strict requirement
+		// that we separate out these two types of preTasks (indeed a good
+		// dispatcher might execute them in parallel), but for simple
+		// dispatchers it's more intuitive to users if we separate them so the
+		// standard preTasks come second.
+		//
+		// See `DispatcherTest.testPostTaskWithPreTasks()` for an example.
+		m_preTasks.insert( m_preTasks.begin() + m_postTaskIndex, preTask );
+		m_postTaskIndex++;
+	}
+	else
+	{
+		m_preTasks.push_back( preTask );
+	}
+}
+
+void Dispatcher::TaskBatch::preprocess( bool omitEmpty, Namer &namer, bool immediate )
+{
+	if( m_visited )
+	{
+		return;
+	}
+
+	immediate = immediate || m_immediate;
+
+	// Process our `preTasks`. When they are executed in immediate mode we need
+	// to remove them, and when they are empty we need to replace them with
+	// _their_ `preTasks`. The latter can create duplicates, so the easiest
+	// approach is to clear `m_preTasks` and use `addTask()` to rebuild, since
+	// that deduplicates for us.
+
+	TaskBatches originalPreTasks;
+	originalPreTasks.swap( m_preTasks );
+	// We don't worry about maintaining this, as it is unused from now on.
+	m_postTaskIndex = 0;
+	m_preTasksSet.clear();
+
+	m_preTasks.reserve( originalPreTasks.size() );
+	for( const auto &preTask : originalPreTasks )
+	{
+		preTask->preprocess( omitEmpty, namer, immediate );
+		if( preTask->m_executed )
+		{
+			continue;
+		}
+
+		if(
+			omitEmpty && preTask->frames().empty() &&
+			(!preTask->node()->isInstanceOf( "GafferDispatch::TaskList" ) || preTask->preTasks().empty() )
+		)
+		{
+			for( const auto &prePreTask : preTask->preTasks() )
+			{
+				addPreTask( prePreTask );
+			}
+		}
+		else
+		{
+			addPreTask( preTask );
+		}
+	}
+
+	// Execute or isolate this batch if required.
+
+	if( immediate )
+	{
+		execute();
+		m_executed = true;
+	}
+	else if( blindData()->member( g_isolatedBlindDataKey ) && !frames().empty() )
+	{
+		isolate();
+	}
+
+	/// \todo Use member data rather than blind data.
+	blindData()->writable()[g_nameBlindDataKey] = new StringData( namer.name( this ) );
+
+	m_visited = true;
+
+}
+
+void Dispatcher::TaskBatch::isolate()
+{
+	auto sourceNode = runTimeCast<const TaskNode>( m_plug->node() );
+	const ScriptNode *sourceScript = sourceNode->scriptNode();  // `execute()` has already checked that this will be valid
+
+	std::filesystem::path scriptPath( m_context->get<std::string>( g_scriptFileNameContextEntry ) );
+	const std::string sourceNodeRelativeName = sourceNode->relativeName( sourceScript );
+	const std::vector<FrameList::Frame> intFrames( m_frames.begin(), m_frames.end() );
+	FrameListPtr batchFrames = frameListFromList( intFrames );
+
+	std::filesystem::path isolatedPath =
+		scriptPath.parent_path() /
+		"isolated" /
+		sourceNodeRelativeName /
+		m_context->hash().toString() /
+		batchFrames->asString() /
+		( scriptPath.stem().string() + ".gfr" )
+	;
+
+	ContextPtr isolatedContext = new Context( *m_context );
+	isolatedContext->set( g_scriptFileNameContextEntry, isolatedPath.generic_string() );
+	m_context = isolatedContext;
+
+	ScriptNodePtr destinationScript = new ScriptNode();
+
+	Context::Scope batchScope( m_context.get() );
+
+	isolateScriptPlugs( destinationScript.get(), sourceScript, m_frames );
+
+	NodePtr topBox = nullptr;
+	Node *lowestContainer = destinationScript.get();
+	const GraphComponent *node = sourceNode->parent();
+	while( node != sourceScript )
+	{
+		BoxPtr newChild = new Box( node->getName() );
+		if( topBox )
+		{
+			newChild->addChild( topBox );
+		}
+		else
+		{
+			// The `TaskNode` will be in a `Box`, rather than a child of the script,
+			// and this is the first iteration of this loop. This will be the `Box`
+			// to add the `TaskNode` to.
+			lowestContainer = newChild.get();
+		}
+		topBox = newChild;
+		node = node->parent();
+	}
+
+	if( topBox )
+	{
+		destinationScript->addChild( topBox );
+	}
+
+	auto parentNode = sourceNode->parent<Node>();
+	StandardSetPtr sourceSet = new StandardSet();
+	sourceSet->add( const_cast<TaskNode*>( sourceNode ) );
+	const std::string serialisation = sourceScript->serialise( parentNode, sourceSet.get() );
+	destinationScript->execute( serialisation, lowestContainer );
+
+	TaskNode *destinationNode = lowestContainer->getChild<TaskNode>( sourceNode->getName() );
+	assert( destinationNode );
+
+	for( ValuePlug::RecursiveInputIterator it( sourceNode ); !it.done(); ++it )
+	{
+		auto destinationPlug = destinationNode->descendant<ValuePlug>( (*it)->relativeName( sourceNode ) );
+		assert( destinationPlug != nullptr );
+
+		if( destinationPlug->getInput() )
+		{
+			// Since the destination node is isolated, this must be an internal connection
+			// forming part of the node's implementation. Leave it alone.
+			it.prune();
+			continue;
+		}
+
+		if( (*it)->getInput() )
+		{
+			bakePlugValue( destinationPlug, (*it).get(), m_frames );
+			it.prune();
+		}
+	}
+
+	destinationScript->fileNamePlug()->setValue( isolatedPath.generic_string() );
+	std::filesystem::create_directories( isolatedPath.parent_path() );
+	destinationScript->serialiseToFile( isolatedPath );
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -429,7 +982,7 @@ class Dispatcher::Batcher
 		{
 			if( auto batch = batchTasksWalk( task ) )
 			{
-				addPreTask( m_rootBatch.get(), batch );
+				m_rootBatch->addPreTask( batch );
 			}
 		}
 
@@ -525,7 +1078,7 @@ class Dispatcher::Batcher
 			{
 				if( auto preBatch = batchTasksWalk( preTask, preTaskAncestors ) )
 				{
-					addPreTask( batch.get(), preBatch );
+					batch->addPreTask( preBatch );
 				}
 			}
 
@@ -536,8 +1089,8 @@ class Dispatcher::Batcher
 			// are reachable from doDispatch().
 			for( const auto &postBatch : postBatches )
 			{
-				addPreTask( postBatch.get(), batch, /* forPostTask =  */ true );
-				addPreTask( m_rootBatch.get(), postBatch );
+				postBatch->addPreTask( batch, /* forPostTask =  */ true );
+				m_rootBatch->addPreTask( postBatch );
 			}
 
 			return batch;
@@ -625,67 +1178,17 @@ class Dispatcher::Batcher
 				batch->m_immediate = true;
 			}
 
+			const BoolPlug *isolatePlug = dispatcherPlug( task )->getChild<const BoolPlug>( g_isolatedPlugName );
+			if( isolatePlug && isolatePlug->getValue() )
+			{
+				batch->blindData()->writable()[g_isolatedBlindDataKey] = g_trueData;
+			}
+
 			// Remember which batch we stored this task in, for
 			// the next time someone asks for it.
 			batchForTask = batch;
 
 			return batch;
-		}
-
-		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask, bool forPostTask = false )
-		{
-			// Check that `preTask` isn't already in `batch->m_preTasks`,
-			// returning if it is.
-
-			const size_t setThreshold = 1000;
-			TaskBatches &preTasks = batch->m_preTasks;
-			if( preTasks.size() < setThreshold )
-			{
-				// Linear search is cheaper than set lookups for smallish
-				// numbers of preTasks.
-				if( std::find( preTasks.begin(), preTasks.end(), preTask ) != preTasks.end() )
-				{
-					return;
-				}
-			}
-			else
-			{
-				// But for large numbers of preTasks we switch to testing
-				// a set for membership for improved performance.
-				if( batch->m_preTasksSet.empty() )
-				{
-					for( const auto &p : preTasks )
-					{
-						batch->m_preTasksSet.insert( p.get() );
-					}
-				}
-				if( !batch->m_preTasksSet.insert( preTask.get() ).second )
-				{
-					return;
-				}
-			}
-
-			// Add to preTasks.
-
-			if( forPostTask )
-			{
-				// We're adding the preTask because the batch is a postTask
-				// of it, but the batch may already have it's own standard
-				// preTasks. There's no strict requirement that we separate
-				// out these two types of preTasks (indeed a good dispatcher might
-				// execute them in parallel), but for simple dispatchers
-				// it's more intuitive to users if we separate them so the
-				// standard preTasks come second.
-				//
-				// See `DispatcherTest.testPostTaskWithPreTasks()` for an
-				// example.
-				preTasks.insert( preTasks.begin() + batch->m_postTaskIndex, preTask );
-				batch->m_postTaskIndex++;
-			}
-			else
-			{
-				preTasks.push_back( preTask );
-			}
 		}
 
 		const Gaffer::Plug *dispatcherPlug( const TaskNode::Task &task )
@@ -891,7 +1394,8 @@ void Dispatcher::execute() const
 		}
 	}
 
-	executeAndPruneImmediateBatches( batcher.rootBatch() );
+	TaskBatch::Namer namer( *jobContext );
+	batcher.rootBatch()->preprocess( omitEmptyBatches(), namer );
 
 	// Save the script. If we're in a nested dispatch, this may have been done already by
 	// the outer dispatch, hence the call to `exists()`. Performing the saving here is
@@ -922,39 +1426,6 @@ void Dispatcher::execute() const
 	{
 		doDispatch( batcher.rootBatch() );
 	}
-}
-
-void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate ) const
-{
-	if( batch->m_visited )
-	{
-		return;
-	}
-
-	immediate = immediate || batch->m_immediate;
-
-	TaskBatches &preTasks = batch->m_preTasks;
-	for( TaskBatches::iterator it = preTasks.begin(); it != preTasks.end(); )
-	{
-		executeAndPruneImmediateBatches( it->get(), immediate );
-		if( (*it)->m_executed )
-		{
-			batch->m_preTasksSet.erase( it->get() );
-			it = preTasks.erase( it );
-		}
-		else
-		{
-			++it;
-		}
-	}
-
-	if( immediate )
-	{
-		batch->execute();
-		batch->m_executed = true;
-	}
-
-	batch->m_visited = true;
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -50,6 +50,8 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include <variant>
+
 namespace
 {
 
@@ -68,11 +70,25 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::VisualiserTool, VisualiserToolTypeId, SelectionTool );
 
+		enum class Mode
+		{
+			Auto,
+			ColorAutoRange,
+			Color,
+			VertexLabel,
+
+			First = Auto,
+			Last = VertexLabel
+		};
+
 		Gaffer::StringPlug *dataNamePlug();
 		const Gaffer::StringPlug *dataNamePlug() const;
 
 		Gaffer::FloatPlug *opacityPlug();
 		const Gaffer::FloatPlug *opacityPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
 
 		Gaffer::V3fPlug *valueMinPlug();
 		const Gaffer::V3fPlug *valueMinPlug() const;
@@ -83,6 +99,12 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		Gaffer::FloatPlug *sizePlug();
 		const Gaffer::FloatPlug *sizePlug() const;
 
+		Gaffer::FloatPlug *vectorScalePlug();
+		const Gaffer::FloatPlug *vectorScalePlug() const;
+
+		Gaffer::Color3fPlug *vectorColorPlug();
+		const Gaffer::Color3fPlug *vectorColorPlug() const;
+
 	private:
 
 		friend VisualiserGadget;
@@ -92,29 +114,37 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 		{
 			Selection(
 				const GafferScene::ScenePlug &scene,
+				const GafferScene::ScenePlug &uniformPScene,
 				const GafferScene::ScenePlug::ScenePath &path,
 				const Gaffer::Context &context
 			);
 
 			const GafferScene::ScenePlug &scene() const;
+			const GafferScene::ScenePlug &uniformPScene() const;
 			const GafferScene::ScenePlug::ScenePath &path() const;
 			const Gaffer::Context &context() const;
 
 			private:
 
 				GafferScene::ConstScenePlugPtr m_scene;
+				GafferScene::ConstScenePlugPtr m_uniformPScene;
 				GafferScene::ScenePlug::ScenePath m_path;
 				Gaffer::ConstContextPtr m_context;
 		};
 
 		const std::vector<Selection> &selection() const;
 
-		Imath::V2f cursorPos() const;
+		using CursorPosition = std::optional<Imath::V2f>;
+		CursorPosition cursorPos() const;
 
-		const IECore::Data *cursorValue() const;
+		using CursorValue = std::variant<std::monostate, int, float, Imath::V2f, Imath::V3f, Imath::Color3f, Imath::Quatf>;
+		const CursorValue cursorValue() const;
 
 		GafferScene::ScenePlug *internalScenePlug();
 		const GafferScene::ScenePlug *internalScenePlug() const;
+
+		GafferScene::ScenePlug *internalSceneUniformPPlug();
+		const GafferScene::ScenePlug *internalSceneUniformPPlug() const;
 
 		void connectOnActive();
 		void disconnectOnInactive();
@@ -146,13 +176,12 @@ class GAFFERSCENEUI_API VisualiserTool : public SelectionTool
 
 		GafferUI::GadgetPtr m_gadget;
 		mutable std::vector<Selection> m_selection;
-		Imath::V2i m_cursorPos;
-		bool m_cursorPosValid;
-		IECore::DataPtr m_cursorValue;
+		CursorPosition m_cursorPos;
+		CursorValue m_cursorValue;
 		bool m_gadgetDirty;
 		mutable bool m_selectionDirty;
 		bool m_priorityPathsDirty;
-		IECore::DataPtr m_valueAtButtonPress;
+		CursorValue m_valueAtButtonPress;
 		bool m_initiatedDrag;
 
 		static ToolDescription<VisualiserTool, SceneView> m_toolDescription;

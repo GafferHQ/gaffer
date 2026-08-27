@@ -60,6 +60,3 @@ class RenderPassAdaptorTest( GafferSceneTest.RenderPassAdaptorTest ) :
 		shader = GafferArnold.ArnoldShader()
 		shader.loadShader( "flat" )
 		return shader, shader["parameters"]["color"]
-
-if __name__ == "__main__":
-	unittest.main()

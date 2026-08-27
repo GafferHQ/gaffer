@@ -347,6 +347,3 @@ class BoxOutTest( GafferTest.TestCase ) :
 		self.assertEqual( b["sum"].getValue(), 10 )
 		b["enabled"].setValue( False )
 		self.assertEqual( b["sum"].getValue(), 0 )
-
-if __name__ == "__main__":
-	unittest.main()

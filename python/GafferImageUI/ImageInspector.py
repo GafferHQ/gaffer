@@ -80,7 +80,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 			self["__sampleStats"]["in"].setInput( self["__sampleCounts"]["out"] )
 			self["__sampleStats"]["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DataWindow )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferImageUI::ImageInspector::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferImageUI::ImageInspector::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -188,10 +188,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		for item in modifiedItems :
-			if not item.startswith( "ui:" ) :
-				self.__setPathListingPaths()
-				break
+		self.__setPathListingPaths()
 
 	def _titleFormat( self ) :
 
@@ -238,12 +235,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"view" : [
+		"view" : {
 
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
-			"description", "The view to inspect",
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
+			"description" : "The view to inspect",
 
-		],
+		},
 
 	}
 

@@ -55,18 +55,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The input image data.
 			""",
 
-		],
+		},
 
-		"deepState" : [
+		"deepState" : {
 
-			"description",
+			"description" :
 			"""
 			The desired state.
 			"Sorted" merely orders the samples.
@@ -75,40 +75,40 @@ Gaffer.Metadata.registerNode(
 			"Flat" composites samples into a single sample per pixel.
 			""",
 
-			"preset:Sorted", GafferImage.DeepState.TargetState.Sorted,
-			"preset:Tidy", GafferImage.DeepState.TargetState.Tidy,
-			"preset:Flat", GafferImage.DeepState.TargetState.Flat,
+			"preset:Sorted" : GafferImage.DeepState.TargetState.Sorted,
+			"preset:Tidy" : GafferImage.DeepState.TargetState.Tidy,
+			"preset:Flat" : GafferImage.DeepState.TargetState.Flat,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"pruneTransparent" : [
+		"pruneTransparent" : {
 
-			"description",
+			"description" :
 			"""
 			When tidying, omits fully transparent samples.  This is usually just an optimization,
 			but it could affect the composited result if you start with purely additive samples that have
 			zero alpha, but still add to the color.
 			""",
-			"layout:activator", "prune",
+			"layout:activator" : "prune",
 
-		],
+		},
 
-		"pruneOccluded" : [
+		"pruneOccluded" : {
 
-			"description",
+			"description" :
 			"""
 			When tidying, omits samples which are blocked by samples in front of them ( occluded samples
 			have no effect on the composited result.
 			""",
-			"layout:activator", "prune",
+			"layout:activator" : "prune",
 
-		],
+		},
 
-		"occludedThreshold" : [
+		"occludedThreshold" : {
 
-			"description",
+			"description" :
 			"""
 			How blocked does a sample have to be before it is omitted.  By default, only 100% occluded samples
 			are omitted, but if you select 0.99, then samples with only 1% visibility would also be omitted.
@@ -116,9 +116,9 @@ Gaffer.Metadata.registerNode(
 			sample generated.  Using a threshold lower than 0.99 before doing a DeepMerge or DeepHoldout
 			could introduce large errors, however.
 			""",
-			"layout:activator", "pruneOccluded",
+			"layout:activator" : "pruneOccluded",
 
-		],
+		},
 
 	}
 

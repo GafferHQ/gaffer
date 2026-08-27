@@ -48,32 +48,32 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"userDefault", False,
+			"userDefault" : False,
 
-		],
+		},
 
-		"curves" : [
-			"description",
+		"curves" : {
+			"description" :
 			"""
 			Uniformly interpolated int, float or bool primitive variable to choose which curves to delete. Note a non-zero value indicates the curve will be deleted.
 			"""
-		],
+		},
 
-		"invert" : [
-			"description",
+		"invert" : {
+			"description" :
 			"""
 			Invert the condition used to delete curves. If the primvar is zero then the curve will be deleted.
 			"""
-		],
+		},
 
-		"ignoreMissingVariable" : [
-			"description",
+		"ignoreMissingVariable" : {
+			"description" :
 			"""
 			Causes the node to do nothing if the primitive variable doesn't exist on the curves, instead of erroring.
 			"""
-		],
+		},
 
 	}
 

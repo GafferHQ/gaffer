@@ -34,10 +34,49 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUI
+import IECore
 
+import Gaffer
 import GafferScene
+
+# The following functions are protected rather than private so that
+# they can be shared by AttributeTweaksUI.
+
+def _attributeMetadata( plug, name ) :
+
+	if not isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
+		plug = plug.parent()
+
+	source = "attribute:" + plug["name"].getValue()
+	return Gaffer.Metadata.value( source, name )
+
+def _attributePresetNames( plug ) :
+
+	names = list( __attributePresets( plug ).keys() )
+	return IECore.StringVectorData( names ) if names else None
+
+def _attributePresetValues( plug ) :
+
+	values = list( __attributePresets( plug ).values() )
+	return IECore.DataTraits.dataFromElement( values ) if values else None
+
+def __attributePresets( plug ) :
+
+	result = {}
+	option = plug.parent()["name"].getValue()
+	source = "attribute:{}".format( option )
+
+	for n in Gaffer.Metadata.registeredValues( source ) :
+		if n.startswith( "preset:" ) :
+			result[n[7:]] = Gaffer.Metadata.value( source, n )
+
+	presetNames = Gaffer.Metadata.value( source, "presetNames" )
+	presetValues = Gaffer.Metadata.value( source, "presetValues" )
+	if presetNames and presetValues :
+		for presetName, presetValue in zip( presetNames, presetValues ) :
+			result.setdefault( presetName, presetValue )
+
+	return result
 
 Gaffer.Metadata.registerNode(
 
@@ -52,46 +91,46 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"attributes" : [
+		"attributes" : {
 
-			"description",
+			"description" :
 			"""
 			The attributes to be applied - arbitrary numbers of user defined
 			attributes may be added as children of this plug via the user
 			interface, or using the CompoundDataPlug API via python.
 			""",
 
-			"compoundDataPlugValueWidget:editable", False,
+			"layout:customWidget:addButton:visibilityActivator" : False,
 
-		],
+		},
 
-		"attributes.*" : [
+		"attributes.*" : {
 
-			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+			"nameValuePlugPlugValueWidget:ignoreNamePlug" : True,
 
-		],
+			"description" : lambda plug : _attributeMetadata( plug, "description" ),
+			"label" : lambda plug : _attributeMetadata( plug, "label" ),
+			"layout:section" : lambda plug : _attributeMetadata( plug, "layout:section" ),
 
-		"global" : [
+		},
 
-			"description",
-			"""
-			Causes the attributes to be applied to the scene globals
-			instead of the individual locations defined by the filter.
-			""",
+		"attributes.*.value" : {
 
-			"layout:section", "Filter",
+			"plugValueWidget:type" : lambda plug : _attributeMetadata( plug, "plugValueWidget:type" ),
+			"presetNames" : _attributePresetNames,
+			"presetValues" : _attributePresetValues,
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"layout:activator", "isNotGlobal",
+			"layout:activator" : "isNotGlobal",
 
-		],
+		},
 
-		"extraAttributes" : [
+		"extraAttributes" : {
 
-			"description",
+			"description" :
 			"""
 			An additional set of attributes to be added. Arbitrary numbers
 			of attributes may be specified within a single `IECore.CompoundObject`,
@@ -106,11 +145,11 @@ Gaffer.Metadata.registerNode(
 			is taken.
 			""",
 
-			"plugValueWidget:type", "",
-			"layout:section", "Extra",
-			"nodule:type", "",
+			"plugValueWidget:type" : "",
+			"layout:section" : "Extra",
+			"nodule:type" : "",
 
-		],
+		},
 
 	}
 

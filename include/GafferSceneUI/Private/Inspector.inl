@@ -46,9 +46,9 @@ namespace Private
 {
 
 template<typename T>
-const T Inspector::Result::typedValue( const T &defaultValue ) const
+const T Inspector::Result::typedValue( const T &defaultValue, bool useFallbacks ) const
 {
-	if( auto valueData = IECore::runTimeCast<const IECore::TypedData<T>>( value() ) )
+	if( auto valueData = IECore::runTimeCast<const IECore::TypedData<T>>( value( useFallbacks ) ) )
 	{
 		return valueData->readable();
 	}

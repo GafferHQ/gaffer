@@ -317,9 +317,12 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			d.dispatch( [ self.parent()["__CleanUpSwitch"] ] )
 			"""
 		) )
-		# Connect through the dispatch settings to the render dispatcher
+		# Connect through the dispatch settings to the render dispatcher.
 		# ( The image dispatcher runs much quicker, and should be OK using default settings )
-		self["__RenderDispatcher"]["dispatcher"].setInput( self["dispatcher"] )
+		# We loop through the children ourselves to handle differences between the child plugs
+		# of `dispatcher` on `__RenderDispatcher` and `self`.
+		for c in [ i for i in self["__RenderDispatcher"]["dispatcher"].children() if i.getName() in self["dispatcher"] ] :
+			c.setInput( self["dispatcher"][c.getName()] )
 
 		# Set up variables so the dispatcher knows that the render and image dispatches depend on
 		# the file paths ( in case they are varying in a wedge )
@@ -361,12 +364,12 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# First get rid of options from the upstream scene that could mess up the bake
 		self["__OptionOverrides"] = GafferScene.StandardOptions()
 		self["__OptionOverrides"]["in"].setInput( self["in"] )
-		self["__OptionOverrides"]["options"]["pixelAspectRatio"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["overscan"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["renderCropWindow"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["transformBlur"]["enabled"].setValue( True )
-		self["__OptionOverrides"]["options"]["deformationBlur"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:pixelAspectRatio"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:overscan"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:cropWindow"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:transformBlur"]["enabled"].setValue( True )
+		self["__OptionOverrides"]["options"]["render:deformationBlur"]["enabled"].setValue( True )
 
 		self["__CameraSetup"] = self.__CameraSetup()
 		self["__CameraSetup"]["in"].setInput( self["__OptionOverrides"]["out"] )
@@ -402,10 +405,9 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__outputIndexCommand"]["command"].setValue( inspect.cleandoc(
 			"""
 			import os
-			import distutils.dir_util
 
 			# Ensure path exists
-			distutils.dir_util.mkpath( variables["bakeDirectory"] )
+			os.makedirs( variables["bakeDirectory"], exist_ok = True )
 
 			f = open( variables["indexFilePath"], "w", encoding = "utf-8" )
 
@@ -557,6 +559,16 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__CleanUpCommand"]["command"].setValue( inspect.cleandoc(
 			"""
 			import os
+
+			import GafferImage
+
+			# Clear the image cache to free file handles preventing
+			# intermediate files from being deleted on Windows.
+
+			fLimit = GafferImage.OpenImageIOReader.getOpenFilesLimit()
+			GafferImage.OpenImageIOReader.setOpenFilesLimit( 0 )
+			GafferImage.OpenImageIOReader.setOpenFilesLimit( fLimit )
+
 			for tmpFile in variables["filesToDelete"]:
 				os.remove( tmpFile )
 			"""
@@ -610,4 +622,4 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 
 
-IECore.registerRunTimeTyped( ArnoldTextureBake, typeName = "GafferArnold::ArnoldTextureBake" )
+IECore.registerRunTimeTyped( ArnoldTextureBake, "GafferArnold::ArnoldTextureBake" )

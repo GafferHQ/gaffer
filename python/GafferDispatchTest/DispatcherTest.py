@@ -35,13 +35,13 @@
 ##########################################################################
 
 import os
-import stat
 import subprocess
 import unittest
 import functools
 import itertools
 import time
 import warnings
+import inspect
 
 import IECore
 
@@ -93,6 +93,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	IECore.registerRunTimeTyped( NullDispatcher )
 
+	def __soleSubdirectory( self, dir ) :
+		self.assertTrue( dir.is_dir() )
+
+		subDirectories = [ i for i in dir.iterdir() if i.is_dir() ]
+		self.assertEqual( len( subDirectories ), 1 )
+
+		return subDirectories[0]
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
@@ -105,12 +113,21 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		GafferDispatch.Dispatcher.registerDispatcher( "testDispatcher", functools.partial( create, self.temporaryDirectory() ) )
 
+		self.__emptyTasksOmitted = os.environ.get( "GAFFERDISPATCH_OMIT_EMPTY_TASKS" )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
 
 		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcher" )
 		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcherWithCustomPlugs" )
+
+		Gaffer.Metadata.deregisterValue( GafferDispatch.TaskList, "dispatcher:allowIsolation" )
+
+		if self.__emptyTasksOmitted is not None :
+			os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = self.__emptyTasksOmitted
+		elif "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+			del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
 
 	def testBadJobDirectory( self ) :
 
@@ -768,7 +785,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		expectedText = "n1 on 2;n2 on 2;n1 on 4;n2 on 4;n1 on 6;n2 on 6;n3 on 2;n3 on 4;n3 on 6;n4 on 2;n4 on 4;n4 on 6;"
 		self.assertEqual( text, expectedText )
 
-		# dispatch again with differnt batch sizes
+		# dispatch again with different batch sizes
 		s["n1"]["dispatcher"]["batchSize"].setValue( 2 )
 		s["n2"]["dispatcher"]["batchSize"].setValue( 5 )
 		fileName.unlink()
@@ -1043,7 +1060,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 					# and they need to be preTasks of our preExecute task
 					# only, since that is the topmost branch of our internal
 					# task graph. We also need to use a Context which
-					# does not contain our internal preExecute entry, incase
+					# does not contain our internal preExecute entry, in case
 					# that has meaning for any of our external preTasks.
 					customContext = Gaffer.Context( context )
 					del customContext["selfExecutingNode:preExecute"]
@@ -2337,5 +2354,942 @@ class DispatcherTest( GafferTest.TestCase ) :
 		pythonCommand = GafferDispatch.PythonCommand()
 		self.assertIs( SetupPlugsTestDispatcher.lastNode, pythonCommand )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testIsolatedPlugExistence( self ) :
+
+		for nodeType, exists in [
+			( GafferDispatchTest.TextWriter, True ),
+			( GafferDispatch.PythonCommand, True ),
+			( GafferDispatch.SystemCommand, True ),
+			( GafferDispatch.TaskList, False ),
+			( GafferDispatch.FrameMask, False )
+		] :
+			n = nodeType()
+			self.assertEqual( "isolated" in n["dispatcher"], exists )
+
+	def testIsolatedScriptContext( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["framesPerSecond"].setValue( 4 )
+		s["frameRange"]["start"].setValue( 8 )
+		s["frameRange"]["end"].setValue( 22 )
+		s["frame"].setValue( 11 )
+		s["variables"].addMember( "test", IECore.StringData( "value #" ), "test" )
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["fileName"].setValue( "${script:name}" )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		with IECore.CapturingMessageHandler() as mh :
+			s["d"]["task"].execute()
+
+		# The "test" variable has a frame substitution in it, but `TaskBatch` contexts
+		# omit frame variables. This test ensures the serialisation of `variables` done
+		# in `isolate()` does not error due to the missing frame variable.
+		self.assertEqual( len( mh.messages ), 0 )
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual( newScript["framesPerSecond"].getValue(), 4 )
+		self.assertEqual( newScript["frameRange"]["start"].getValue(), 8 )
+		self.assertEqual( newScript["frameRange"]["end"].getValue(), 22 )
+		self.assertEqual( newScript["frame"].getValue(), 11 )
+
+		testPlugs = [ p for p in newScript["variables"].children() if p["name"].getValue() == "test" ]
+		self.assertEqual( len( testPlugs ), 1 )
+		self.assertEqual( testPlugs[0]["value"].getValue(), "value #" )
+
+	def testIsolated( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		def setupTestTask( p, n ) :
+			p[n] = GafferDispatchTest.TextWriter()
+			p[n]["dispatcher"]["isolated"].setValue( True )
+			p[n]["fileName"].setValue( "${script:name}" )
+			p[n]["mode"].setValue( "r" )
+
+			e = Gaffer.Expression()
+			p.addChild( e )
+			p.children()[-1].setExpression( 'parent["{}"]["text"] = str( 2 + 2 )'.format( n ) )
+
+			return p[n]
+
+		n = setupTestTask( s, "n" )
+		self.assertEqual( n["text"].getValue(), "4" )
+
+		n2 = setupTestTask( s, "n2" )
+
+		s["n3"] = GafferDispatchTest.TextWriter()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["b2"] = Gaffer.Box()
+		s["b"]["b2"]["b3"] = Gaffer.Box()
+
+		n4 = setupTestTask( s["b"]["b2"]["b3"], "n4" )
+
+		n5 = setupTestTask( s["b"]["b2"]["b3"], "n5" )
+		promotedPlug = n5["task"]
+		for i in range( 0, 3 ) :
+			promotedPlug = Gaffer.PlugAlgo.promote( promotedPlug )
+		self.assertIn( "task", s["b"] )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( n["task"] )
+		s["d"]["tasks"][1].setInput( n2["task"] )
+		s["d"]["tasks"][2].setInput( s["n3"]["task"] )
+		s["d"]["tasks"][3].setInput( n4["task"] )
+		s["d"]["tasks"][4].setInput( s["b"]["task"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+
+		for s in [ "n", "n2", "b.b2.b3.n4", "b.b2.b3.n5" ] :
+			with self.subTest( s = s ) :
+				self.assertTrue( ( dispatchDir / "isolated" / s / self.__soleSubdirectory( dispatchDir / "isolated" / s ) / "1" / "untitled.gfr" ).is_file() )
+				newScript["fileName"].setValue( dispatchDir / "isolated" / s / self.__soleSubdirectory( dispatchDir / "isolated" / s ) / "1" / "untitled.gfr" )
+				newScript.load()
+
+				nodeSequence = s.split( "." )
+
+				self.assertEqual( len( list( Gaffer.Node.RecursiveRange( newScript ) ) ), len( nodeSequence ) )
+
+				for i in range( 0, len( nodeSequence ) ) :
+					self.assertIsInstance( newScript.descendant( ".".join( nodeSequence[:(i + 1 )] ) ), Gaffer.Box if nodeSequence[i].startswith( "b" ) else GafferDispatchTest.TextWriter )
+
+				self.assertEqual( newScript.descendant( s )["fileName"].getValue(), "${script:name}" )
+				self.assertEqual( newScript.descendant( s )["mode"].getValue(), "r" )
+				self.assertEqual( newScript.descendant( s )["text"].getValue(), "4" )
+
+		self.assertFalse( ( dispatchDir / "isolated" / "n3" ).exists() )
+
+	def testIsolatedScriptNaming( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.temporaryDirectory() / "testScript.gfr" )
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["text"].setValue( "#" )
+
+		s["n2"] = GafferDispatchTest.TextWriter()
+		s["n2"]["dispatcher"]["isolated"].setValue( True )
+		s["n2"]["dispatcher"]["batchSize"].setValue( 3 )
+		s["n2"]["text"].setValue( "#" )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-5" )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+		s["d"]["tasks"][1].setInput( s["n2"]["task"] )
+
+		s["n3"] = GafferDispatchTest.TextWriter()
+		s["n3"]["dispatcher"]["isolated"].setValue( True )
+		s["n3"]["dispatcher"]["batchSize"].setValue( 3 )
+		s["n3"]["text"].setValue( "#" )
+
+		s["d2"] = self.NullDispatcher()
+		s["d2"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d2"]["frameRange"].setValue( "1-5x2" )
+		s["d2"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d2"]["tasks"][0].setInput( s["n3"]["task"] )
+
+		s["d3"] = self.NullDispatcher()
+		s["d3"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d3"]["frameRange"].setValue( "1, 4, 5" )
+		s["d3"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d3"]["tasks"][0].setInput( s["n3"]["task"] )
+
+		s["d"]["task"].execute()
+		s["d2"]["task"].execute()
+		s["d3"]["task"].execute()
+
+		dispatchDirs = sorted( [ p for p in self.temporaryDirectory().iterdir() if p.is_dir() ] )
+		self.assertEqual( len( dispatchDirs ), 3 )
+
+		self.assertEqual(
+			sorted( list( self.temporaryDirectory().rglob( "*" ) ) ),
+			sorted(
+				[
+					dispatchDirs[0],
+					dispatchDirs[0] / "testScript.gfr",
+					dispatchDirs[0] / "isolated",
+					dispatchDirs[0] / "isolated" / "n",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ),
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "1",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "2",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "3",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "4",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "5",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "1" / "testScript.gfr",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "2" / "testScript.gfr",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "3" / "testScript.gfr",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "4" / "testScript.gfr",
+					dispatchDirs[0] / "isolated" / "n" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n" ) / "5" / "testScript.gfr",
+					dispatchDirs[0] / "isolated" / "n2",
+					dispatchDirs[0] / "isolated" / "n2" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n2" ),
+					dispatchDirs[0] / "isolated" / "n2" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n2" ) / str( IECore.frameListFromList( [ 1, 2, 3 ] ) ),
+					dispatchDirs[0] / "isolated" / "n2" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n2" ) / str( IECore.frameListFromList( [ 1, 2, 3 ] ) ) / "testScript.gfr",
+					dispatchDirs[0] / "isolated" / "n2" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n2" ) / str( IECore.frameListFromList( [ 4, 5 ] ) ),
+					dispatchDirs[0] / "isolated" / "n2" / self.__soleSubdirectory( dispatchDirs[0] / "isolated" / "n2" ) / str( IECore.frameListFromList( [ 4, 5 ] ) ) / "testScript.gfr",
+
+					dispatchDirs[1],
+					dispatchDirs[1] / "testScript.gfr",
+					dispatchDirs[1] / "isolated",
+					dispatchDirs[1] / "isolated" / "n3",
+					dispatchDirs[1] / "isolated" / "n3" / self.__soleSubdirectory( dispatchDirs[1] / "isolated" / "n3" ),
+					dispatchDirs[1] / "isolated" / "n3" / self.__soleSubdirectory( dispatchDirs[1] / "isolated" / "n3" ) / str( IECore.frameListFromList( [ 1, 3, 5 ] ) ),
+					dispatchDirs[1] / "isolated" / "n3" / self.__soleSubdirectory( dispatchDirs[1] / "isolated" / "n3" ) /  str( IECore.frameListFromList( [ 1, 3, 5 ] ) ) / "testScript.gfr",
+
+					dispatchDirs[2],
+					dispatchDirs[2] / "testScript.gfr",
+					dispatchDirs[2] / "isolated",
+					dispatchDirs[2] / "isolated" / "n3",
+					dispatchDirs[1] / "isolated" / "n3" / self.__soleSubdirectory( dispatchDirs[2] / "isolated" / "n3" ),
+					dispatchDirs[2] / "isolated" / "n3" / self.__soleSubdirectory( dispatchDirs[2] / "isolated" / "n3" ) / str( IECore.frameListFromList( [ 1, 4, 5 ] ) ),
+					dispatchDirs[2] / "isolated" / "n3" / self.__soleSubdirectory( dispatchDirs[2] / "isolated" / "n3" ) / str( IECore.frameListFromList( [ 1, 4, 5 ] ) ) / "testScript.gfr",
+				]
+			)
+		)
+
+	def testIsolatedContextVariation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["q"] = Gaffer.ContextQuery()
+		s["q"].addQuery( Gaffer.StringPlug(), "textQuery" )
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["text"].setInput( s["q"]["out"][0]["value"] )
+
+		s["c1"] = Gaffer.ContextVariables()
+		s["c1"].setup( s["n"]["task"] )
+		s["c1"]["in"].setInput( s["n"]["task"] )
+		s["c1"]["variables"].addChild( Gaffer.NameValuePlug( "textQuery", IECore.StringData( "A" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["c2"] = Gaffer.ContextVariables()
+		s["c2"].setup( s["n"]["task"] )
+		s["c2"]["in"].setInput( s["n"]["task"] )
+		s["c1"]["variables"].addChild( Gaffer.NameValuePlug( "textQuery", IECore.StringData( "B" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["c1"]["out"] )
+		s["d"]["tasks"][1].setInput( s["c2"]["out"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		contextDirs = list( p for p in ( dispatchDir / "isolated" / "n" ).iterdir() if p.is_dir() )
+		self.assertEqual( len( contextDirs ), 2 )
+
+		self.assertEqual(
+			sorted( list( dispatchDir.rglob( "*" ) ) ),
+			sorted(
+				[
+					dispatchDir / "untitled.gfr",
+					dispatchDir / "isolated",
+					dispatchDir / "isolated" / "n",
+					dispatchDir / "isolated" / "n" / contextDirs[0],
+					dispatchDir / "isolated" / "n" / contextDirs[0] / "1",
+					dispatchDir / "isolated" / "n" / contextDirs[0] / "1" / "untitled.gfr",
+					dispatchDir / "isolated" / "n" / contextDirs[1],
+					dispatchDir / "isolated" / "n" / contextDirs[1] / "1",
+					dispatchDir / "isolated" / "n" / contextDirs[1] / "1" / "untitled.gfr",
+				]
+			)
+		)
+
+	def testIsolatedBakePlugContext( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["text"] = context["a"]' )
+
+		s["v"] = Gaffer.ContextVariables()
+		s["v"].setup( s["n"]["task"] )
+		s["v"]["in"].setInput( s["n"]["task"] )
+		s["v"]["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "A" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["v"]["out"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertIsNone( newScript["n"]["text"].getInput() )
+		self.assertEqual( newScript["n"]["text"].getValue(), "A" )
+
+	def testIsolatedNoOp( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["text"].setValue( "nothing to see here" )
+
+		Gaffer.Metadata.registerValue( GafferDispatch.TaskList, "dispatcher:allowIsolation", True )
+		s["t"] = GafferDispatch.TaskList()
+		s["t"]["dispatcher"]["isolated"].setValue( True )
+		s["t"]["preTasks"][0].setInput( s["n"]["task"] )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["t"]["task"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+		self.assertEqual(
+			list( ( dispatchDir / "isolated" ).iterdir() ),
+			[ dispatchDir / "isolated" / "n" ]
+		)
+
+	def testIsolatedDontSetChildrenOfPlugWithInput( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["dispatcher"]["batchSize"].setValue( 10 )
+		p = Gaffer.Color3fPlug( "colorPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"].addChild( p )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'import imath;parent["n"]["user"]["colorPlug"] = imath.Color3f( context.getFrame() + 2 )' )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-10" )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+
+		self.assertTrue( s["n"]["user"]["colorPlug"].getInput() is not None )
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+		self.assertEqual(
+			list( ( dispatchDir / "isolated" ).iterdir() ),
+			[ dispatchDir / "isolated" / "n" ]
+		)
+
+	class TextWriterWithChildNode( GafferDispatchTest.TextWriter ) :
+		def __init__( self, name = "TextWriterWithChildNode" ) :
+			GafferDispatchTest.TextWriter.__init__( self, name )
+
+			self["e"] = Gaffer.Expression()
+			self["e"].setExpression( 'parent["text"] = "test"' )
+
+	def testIsolatedInputFromChildNode( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = DispatcherTest.TextWriterWithChildNode()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+
+		s["n"]["e"] = Gaffer.Expression()
+		s["n"]["e"].setExpression( 'parent["text"] = "test"' )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-10" )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual( newScript["n"]["text"].getValue(), "test" )
+
+	def testIsolatedReadOnly( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		Gaffer.MetadataAlgo.setReadOnly( s["n"], True, True )
+		for p in Gaffer.ValuePlug.RecursiveRange( s["n"] ) :
+			Gaffer.MetadataAlgo.setReadOnly( p, True, True )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["text"] = "gottaBeBakedIn"' )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual( newScript["n"]["text"].getValue(), "gottaBeBakedIn" )
+
+	def testIsolatedAnimation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["framesPerSecond"].setValue( 1.0 )
+		s["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "####" ), name = "a", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["dispatcher"]["batchSize"].setValue( 5 )
+		s["n"]["fileName"].setValue( "${script:name}" )
+		s["n"]["text"].setValue( "####" )
+
+		p = Gaffer.FloatPlug( "floatPlug1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"].addChild( p )
+		curve = Gaffer.Animation.acquire( p )
+		curve.addKey( Gaffer.Animation.Key( time = 2, value = 2 ) )
+		curve.addKey( Gaffer.Animation.Key( time = 3, value = 3 ) )
+
+		s["q"] = Gaffer.ContextQuery()
+		s["q"].addQuery( Gaffer.FloatPlug(), "frame" )
+
+		# Make the hash of frames 4 and 5 the same as 1 by using a time warp
+		s["w"] = Gaffer.TimeWarp()
+		s["w"].setup( s["q"]["out"][0]["value"] )
+		s["w"]["in"].setInput( s["q"]["out"][0]["value"] )
+
+		s["we"] = Gaffer.Expression()
+		s["we"].setExpression( 'parent["w"]["offset"] = {1: 0, 2: -1, 3: 0, 4: -3, 5: -4}[context.getFrame()]')
+
+		s["n"]["user"]["floatPlug2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["floatPlug2"].setInput( s["w"]["out"] )
+
+		s["n"]["user"]["stringPlug"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["mode"] = "x"' )
+
+		s["e2"] = Gaffer.Expression()
+		s["e2"].setExpression( 'parent["n"]["user"]["stringPlug"] = { 1.0 : "one", 2.0 : "two" }.get( context.getFrame(), "buckleMyShoe" )')
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-5" )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		with s.context() :
+			s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1-5" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual( len( list( Gaffer.Node.RecursiveRange( newScript ) ) ), 2 )
+
+		self.assertEqual( set( [ type( n ) for n in Gaffer.Node.RecursiveRange( newScript ) ] ), set( [ GafferDispatchTest.TextWriter, Gaffer.Spreadsheet ] ) )
+
+		self.assertEqual( len( newScript["isolatedAnimation"]["rows"] ), 6 )  # default + frame count
+		self.assertEqual( len( newScript["isolatedAnimation"]["rows"].defaultRow()["cells"] ), 3 )
+
+		self.assertIsNone( newScript["variables"]["a"]["value"].getInput() )
+		self.assertIsNone( newScript["n"]["fileName"].getInput() )
+		self.assertIsNone( newScript["n"]["text"].getInput() )
+		self.assertIsNone( newScript["n"]["mode"].getInput() )
+		self.assertEqual( newScript["n"]["user"]["floatPlug1"].getInput(), newScript["isolatedAnimation"]["out"]["user_floatPlug1"] )
+		self.assertEqual( newScript["n"]["user"]["floatPlug2"].getInput(), newScript["isolatedAnimation"]["out"]["user_floatPlug2"] )
+		self.assertEqual( newScript["n"]["user"]["stringPlug"].getInput(), newScript["isolatedAnimation"]["out"]["user_stringPlug"] )
+
+		with newScript.context() as c :
+			for f in range( 1, 6 ) :
+				with self.subTest( f = f ) :
+					c.setFrame( f )
+					self.assertEqual( newScript["variables"]["a"]["value"].getValue(), "####" )
+					self.assertEqual( newScript["n"]["fileName"].getValue(), "${script:name}" )
+					self.assertEqual( newScript["n"]["text"].getValue(), "####" )
+					self.assertEqual( newScript["n"]["mode"].getValue(), "x" )
+					self.assertEqual( newScript["n"]["user"]["floatPlug1"].getValue(), [ 2, 2, 3, 3, 3 ][f - 1] )
+					self.assertEqual( newScript["n"]["user"]["floatPlug2"].getValue(), [ 1, 1, 3, 1, 1 ][f - 1] )
+					self.assertEqual( newScript["n"]["user"]["stringPlug"].getValue(), ["one", "two", "buckleMyShoe", "buckleMyShoe", "buckleMyShoe"][f - 1] )
+
+	def testIsolatedAnimationNodeLocation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["framesPerSecond"].setValue( 1.0 )
+
+		s["b"] = Gaffer.Box()
+
+		s["b"]["n"] = GafferDispatchTest.TextWriter()
+		s["b"]["n"]["dispatcher"]["isolated"].setValue( True )
+		s["b"]["n"]["dispatcher"]["batchSize"].setValue( 2 )
+		a = Gaffer.FloatPlug( "unpromotedFloatPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"].addChild( a )
+		p = Gaffer.FloatPlug( "promotedFloatPlug", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"].addChild( p )
+		promotedPlug = Gaffer.PlugAlgo.promote( p )
+		promotedTask = Gaffer.PlugAlgo.promote( s["b"]["n"]["task"] )
+
+		curveA = Gaffer.Animation.acquire( a )
+		curveA.addKey( Gaffer.Animation.Key( time = 1, value = 10 ) )
+		curveA.addKey( Gaffer.Animation.Key( time = 2, value = 20 ) )
+
+		curve = Gaffer.Animation.acquire( promotedPlug )
+		curve.addKey( Gaffer.Animation.Key( time = 1, value = 1 ) )
+		curve.addKey( Gaffer.Animation.Key( time = 2, value = 2 ) )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-2" )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( promotedTask )
+
+		with s.context() :
+			s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "b.n" / self.__soleSubdirectory( dispatchDir / "isolated" / "b.n" ) / "1-2" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual( len( list( Gaffer.Node.RecursiveRange( newScript["b"] ) ) ), 2 )
+
+		self.assertEqual( set( [ type( n ) for n in Gaffer.Node.RecursiveRange( newScript["b"] ) ] ), set( [ GafferDispatchTest.TextWriter, Gaffer.Spreadsheet ] ) )
+
+		self.assertEqual( newScript["b"]["n"]["user"]["promotedFloatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_promotedFloatPlug"] )
+		self.assertEqual( newScript["b"]["n"]["user"]["unpromotedFloatPlug"].getInput(), newScript["b"]["isolatedAnimation"]["out"]["user_unpromotedFloatPlug"] )
+
+		with s.context() as c :
+			for f in range( 1, 3 ) :
+				c.setFrame( f )
+				self.assertEqual( newScript["b"]["n"]["user"]["promotedFloatPlug"].getValue(), [ 1, 2 ][f - 1] )
+				self.assertEqual( newScript["b"]["n"]["user"]["unpromotedFloatPlug"].getValue(), [ 10, 20 ][f - 1] )
+
+	def testIsolatedObjectPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["text"].setValue( "####" )
+
+		s["n"]["user"]["compoundObjectPlug"] = Gaffer.CompoundObjectPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["objectPlug"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["objectVectorPlug"] = Gaffer.ObjectVectorPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			parent["n"]["user"]["compoundObjectPlug"] = IECore.CompoundObject( { "test" : IECore.FloatData( 2.0 ) } )
+			parent["n"]["user"]["objectPlug"] = IECore.BlindDataHolder( { "test" : IECore.FloatData( 9.0 ) } )
+			parent["n"]["user"]["objectVectorPlug"] = IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( 4.0 ) ] )
+			"""
+		), "python" )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1" / "untitled.gfr" )
+		newScript.load()
+
+		self.assertEqual(
+			newScript["n"]["user"]["compoundObjectPlug"].getValue(),
+			IECore.CompoundObject( { "test" : IECore.FloatData( 2.0 ) } )
+		)
+		self.assertEqual(
+			newScript["n"]["user"]["objectPlug"].getValue(),
+			IECore.BlindDataHolder( { "test" : IECore.FloatData( 9.0 ) } )
+		)
+		self.assertEqual(
+			newScript["n"]["user"]["objectVectorPlug"].getValue(),
+			IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( 4.0 ) ] )
+		)
+
+	def testIsolatedAnimatedObjectPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["dispatcher"]["isolated"].setValue( True )
+		s["n"]["dispatcher"]["batchSize"].setValue( 5 )
+		s["n"]["text"].setValue( "####" )
+
+		s["n"]["user"]["compoundObjectPlug"] = Gaffer.CompoundObjectPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["objectPlug"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["objectVectorPlug"] = Gaffer.ObjectVectorPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			parent["n"]["user"]["compoundObjectPlug"] = IECore.CompoundObject( { "test" : IECore.FloatData( context.getFrame() ) } )
+			parent["n"]["user"]["objectPlug"] = IECore.BlindDataHolder( { "test" : IECore.FloatData( context.getFrame() ) } )
+			parent["n"]["user"]["objectVectorPlug"] = IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( context.getFrame() ) ] )
+			"""
+		), "python" )
+
+		s["d"] = self.NullDispatcher()
+		s["d"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-5" )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+
+		with s.context() :
+			s["d"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		newScript = Gaffer.ScriptNode()
+		newScript["fileName"].setValue( dispatchDir / "isolated" / "n" / self.__soleSubdirectory( dispatchDir / "isolated" / "n" ) / "1-5" / "untitled.gfr" )
+		newScript.load()
+
+		with newScript.context() as c :
+			for f in range( 1, 6 ) :
+				with self.subTest( f = f ) :
+					c.setFrame( f )
+
+					self.assertEqual(
+						newScript["n"]["user"]["compoundObjectPlug"].getValue(),
+						IECore.CompoundObject( { "test" : IECore.FloatData( f ) } )
+					)
+					self.assertEqual(
+						newScript["n"]["user"]["objectPlug"].getValue(),
+						IECore.BlindDataHolder( { "test" : IECore.FloatData( f ) } )
+					)
+					self.assertEqual(
+						newScript["n"]["user"]["objectVectorPlug"].getValue(),
+						IECore.ObjectVector( [ IECore.StringData( "hello" ), IECore.FloatData( f ) ] )
+					)
+
+	def testIsolatedScriptVariableWithInputConnection( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"]["test"] = Gaffer.NameValuePlug( "a", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script["add"] = GafferTest.AddNode()
+		script["add"]["op1"].setValue( 20 )
+		script["variables"]["test"]["value"].setInput( script["add"]["op1"] )
+
+		script["writer"] = GafferDispatchTest.TextWriter()
+		script["writer"]["dispatcher"]["isolated"].setValue( True )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.txt" )
+		script["writer"]["text"].setValue( "Hello world" )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+
+		with script.context() :
+			script["dispatcher"]["task"].execute()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		isolatedScript = Gaffer.ScriptNode()
+		isolatedScript["fileName"].setValue( dispatchDir / "isolated" / "writer" / self.__soleSubdirectory( dispatchDir / "isolated" / "writer" ) / "1" / "untitled.gfr" )
+		isolatedScript.load()
+
+		self.assertEqual( isolatedScript["variables"]["test"]["value"].getValue(), 20 )
+
+	def testOmitEmptyTasks( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello ${wedge:value}" )
+
+		script["emptyCommand"] = GafferDispatch.SystemCommand()
+
+		script["taskList"] = GafferDispatch.TaskList()
+		script["taskList"]["preTasks"][0].setInput( script["command"]["task"] )
+		script["taskList"]["preTasks"][1].setInput( script["emptyCommand"]["task"] )
+
+		script["wedge"] = GafferDispatch.Wedge()
+		script["wedge"]["preTasks"][0].setInput( script["taskList"]["task"] )
+		script["wedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "World", "You" ] ) )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		for omit in ( None, False, True ) :
+
+			with self.subTest( omit = omit ) :
+
+				if omit is None :
+					if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+						del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+				else :
+					os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = str( int( omit ) )
+
+				script["dispatcher"]["task"].execute()
+				rootBatch = script["dispatcher"].lastDispatch
+				self.assertIsNone( rootBatch.plug() )
+
+				if omit is not False :
+
+					# We expect to have omitted the batch for the Wedge, because
+					# it does no work of its own. But we don't omit the TaskList
+					# (even though it too does no work) because the explicit purpose
+					# of the TaskList is to build structure into the graph. If you
+					# wanted to omit it, you'd just connect things directly.
+
+					self.assertEqual( len( rootBatch.preTasks() ), 2 )
+					for index, preTask in enumerate( rootBatch.preTasks() ) :
+
+						self.assertEqual( preTask.plug(), script["taskList"]["task"] )
+						self.assertEqual( preTask.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+						# We expect the empty command to have been omitted, leaving us
+						# with just the one command.
+
+						self.assertEqual( len( preTask.preTasks() ), 1 )
+						self.assertEqual( preTask.preTasks()[0].plug(), script["command"]["task"] )
+						self.assertEqual( preTask.preTasks()[0].context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+				else :
+
+					# We expect task batches for every node, even if the node
+					# itself does no work of its own. Starting with the Wedge.
+
+					self.assertEqual( len( rootBatch.preTasks() ), 1 )
+					wedgeBatch = rootBatch.preTasks()[0]
+					self.assertEqual( wedgeBatch.plug(), script["wedge"]["task"] )
+					self.assertEqual( len( wedgeBatch.preTasks() ), 2 )
+
+					# Now the TaskList.
+
+					for index, taskListBatch in enumerate( wedgeBatch.preTasks() ) :
+
+						self.assertEqual( taskListBatch.plug(), script["taskList"]["task"] )
+						self.assertEqual( taskListBatch.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+						self.assertEqual( len( taskListBatch.preTasks() ), 2 )
+						self.assertEqual( taskListBatch.preTasks()[0].plug(), script["command"]["task"] )
+						self.assertEqual( taskListBatch.preTasks()[1].plug(), script["emptyCommand"]["task"] )
+
+						for commandBatch in taskListBatch.preTasks() :
+							self.assertEqual( commandBatch.context()["wedge:value"], script["wedge"]["strings"].getValue()[index] )
+
+	def testOmitConsecutiveEmptyTasks( self ) :
+
+		if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+			del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo ${greeting} ${greetee}" )
+
+		script["greetingWedge"] = GafferDispatch.Wedge()
+		script["greetingWedge"]["preTasks"][0].setInput( script["command"]["task"] )
+		script["greetingWedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["greetingWedge"]["variable"].setValue( "greeting" )
+		script["greetingWedge"]["strings"].setValue( IECore.StringVectorData( [ "hello", "wotcha" ] ) )
+
+		script["greeteeWedge"] = GafferDispatch.Wedge()
+		script["greeteeWedge"]["preTasks"][0].setInput( script["greetingWedge"]["task"] )
+		script["greeteeWedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["greeteeWedge"]["variable"].setValue( "greetee" )
+		script["greeteeWedge"]["strings"].setValue( IECore.StringVectorData( [ "world", "fella" ] ) )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["greeteeWedge"]["task"] )
+		script["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+
+		rootBatch = script["dispatcher"].lastDispatch
+		self.assertIsNone( rootBatch.plug() )
+		self.assertEqual( len( rootBatch.preTasks() ), 4 )
+
+		index = 0
+		for greetee in script["greeteeWedge"]["strings"].getValue() :
+			for greeting in script["greetingWedge"]["strings"].getValue() :
+				commandBatch = rootBatch.preTasks()[index]
+				self.assertEqual( commandBatch.plug(), script["command"]["task"] )
+				self.assertEqual( commandBatch.context()["greetee"], greetee )
+				self.assertEqual( commandBatch.context()["greeting"], greeting )
+				self.assertEqual( len( commandBatch.preTasks() ), 0 )
+				index += 1
+
+	def testDuplicatePreTasksViaEmptyTask( self ) :
+
+		if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+			del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+
+		# A toy example of a cross-frame denoiser using a Wedge
+		# to depend on multiple frames of an upstream render.
+
+		script = Gaffer.ScriptNode()
+
+		script["render"] = GafferDispatch.SystemCommand()
+		script["render"]["command"].setValue( "Render ####" )
+
+		script["frameWedge"] = GafferDispatch.Wedge()
+		script["frameWedge"]["preTasks"][0].setInput( script["render"]["task"] )
+		script["frameWedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.FloatList )
+		script["frameWedge"]["variable"].setValue( "frame" )
+		script["frameWedge"]["indexVariable"].setValue( "" )
+
+		script["frameWedgeExpression"] = Gaffer.Expression()
+		script["frameWedgeExpression"].setExpression( inspect.cleandoc(
+			"""
+			frame = context.getFrame()
+			parent["frameWedge"]["floats"] = IECore.FloatVectorData( [ frame - 1, frame, frame + 1 ] )
+			"""
+		) )
+
+		script["denoise"] = GafferDispatch.SystemCommand()
+		script["denoise"]["command"].setValue( "Denoise ####" )
+		script["denoise"]["preTasks"][0].setInput( script["frameWedge"]["task"] )
+		script["denoise"]["dispatcher"]["batchSize"].setValue( 2 )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["denoise"]["task"] )
+		script["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		script["dispatcher"]["frameRange"].setValue( "1-2" )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+
+		rootBatch = script["dispatcher"].lastDispatch
+		self.assertIsNone( rootBatch.plug() )
+
+		# Should just be one batch for `denoise` node, because the two
+		# frames are batched together.
+		self.assertEqual( len( rootBatch.preTasks() ), 1 )
+		denoiseBatch = rootBatch.preTasks()[0]
+		self.assertEqual( denoiseBatch.plug(), script["denoise"]["task"] )
+		self.assertEqual( denoiseBatch.frames(), [ 1, 2 ] )
+
+		# Should be a total of 4 renders in `denoise` pretasks. 3 for
+		# each frame, but with an overlap of 2.
+		self.assertEqual( len( denoiseBatch.preTasks() ), 4 )
+		for i, renderTask in enumerate( denoiseBatch.preTasks() ) :
+			self.assertEqual( renderTask.plug(), script["render"]["task"] )
+			self.assertEqual( renderTask.frames(), [ i ] )
+
+	def testOmitEmptyLeafTaskLists( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["taskList"] = GafferDispatch.TaskList()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello World" )
+		script["command"]["preTasks"][0].setInput( script["taskList"]["task"] )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["command"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		for omit in ( None, False, True ) :
+
+			with self.subTest( omit = omit ) :
+
+				if omit is None :
+					if "GAFFERDISPATCH_OMIT_EMPTY_TASKS" in os.environ :
+						del os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"]
+				else :
+					os.environ["GAFFERDISPATCH_OMIT_EMPTY_TASKS"] = str( int( omit ) )
+
+				script["dispatcher"]["task"].execute()
+				rootBatch = script["dispatcher"].lastDispatch
+				self.assertIsNone( rootBatch.plug() )
+
+				self.assertEqual( len( rootBatch.preTasks() ), 1 )
+				self.assertEqual( rootBatch.preTasks()[0].plug(), script["command"]["task"] )
+
+				if omit is not False :
+
+					self.assertEqual( rootBatch.preTasks()[0].preTasks(), [] )
+
+				else :
+
+					self.assertEqual( len( rootBatch.preTasks()[0].preTasks() ), 1 )
+					self.assertEqual( rootBatch.preTasks()[0].preTasks()[0].plug(), script["taskList"]["task"] )
+
+	def testBatchNames( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello ${wedge:value}" )
+
+		script["wedge"] = GafferDispatch.Wedge()
+		script["wedge"]["preTasks"][0].setInput( script["command"]["task"] )
+		script["wedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "foo", "bar" ] ) )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+		rootBatch = script["dispatcher"].lastDispatch
+
+		for index, task in enumerate( rootBatch.preTasks() ) :
+
+			self.assertEqual(
+				task.blindData()["name"].value,
+				"command 1 (wedge:index={}, wedge:value={})".format(
+					index,
+					script["wedge"]["strings"].getValue()[index]
+				)
+			)
+
+	def testIsolatedBatchNamesDontIncludeScriptFileName( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.SystemCommand()
+		script["command"]["command"].setValue( "echo Hello World" )
+		script["command"]["dispatcher"]["isolated"].setValue( True )
+
+		script["dispatcher"] = self.NullDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["command"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
+		rootBatch = script["dispatcher"].lastDispatch
+
+		self.assertEqual(
+			rootBatch.preTasks()[0].blindData()["name"].value,
+			"command 1"
+		)

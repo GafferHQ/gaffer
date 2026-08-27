@@ -73,13 +73,13 @@ class Wedge( GafferDispatch.TaskContextProcessor ) :
 
 		# color range
 
-		self["ramp"] = Gaffer.SplinefColor3fPlug(
-			defaultValue = Gaffer.SplineDefinitionfColor3f(
+		self["ramp"] = Gaffer.RampfColor3fPlug(
+			defaultValue = IECore.RampfColor3f(
 				(
 					( 0, imath.Color3f( 0 ) ),
 					( 1, imath.Color3f( 1 ) ),
 				),
-				Gaffer.SplineDefinitionInterpolation.CatmullRom
+				IECore.RampInterpolation.CatmullRom
 			)
 		)
 
@@ -128,7 +128,7 @@ class Wedge( GafferDispatch.TaskContextProcessor ) :
 
 		elif mode == self.Mode.ColorRange :
 
-			spline = self["ramp"].getValue().spline()
+			spline = self["ramp"].getValue().evaluator()
 			steps = self["colorSteps"].getValue()
 			values = [ spline( i / float( steps - 1 ) ) for i in range( 0, steps ) ]
 
@@ -154,11 +154,14 @@ class Wedge( GafferDispatch.TaskContextProcessor ) :
 		indexVariable = self["indexVariable"].getValue()
 
 		contexts = []
-		for index, value in enumerate( self.values() ) :
-			contexts.append( Gaffer.Context( context ) )
-			contexts[-1][variable] = value
-			contexts[-1][indexVariable] = index
+		if variable or indexVariable :
+			for index, value in enumerate( self.values() ) :
+				contexts.append( Gaffer.Context( context ) )
+				if variable :
+					contexts[-1][variable] = value
+				if indexVariable :
+					contexts[-1][indexVariable] = index
 
 		return contexts
 
-IECore.registerRunTimeTyped( Wedge, typeName = "GafferDispatch::Wedge" )
+IECore.registerRunTimeTyped( Wedge, "GafferDispatch::Wedge" )

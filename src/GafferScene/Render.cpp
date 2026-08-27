@@ -36,6 +36,7 @@
 
 #include "GafferScene/Render.h"
 
+#include "GafferScene/OptionTweaks.h"
 #include "GafferScene/OptionQuery.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
@@ -50,6 +51,8 @@
 #include "Gaffer/Switch.h"
 
 #include "IECore/ObjectPool.h"
+
+#include "boost/algorithm/string/predicate.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -96,6 +99,7 @@ struct RenderScope : public Context::EditableScope
 size_t Render::g_firstPlugIndex = 0;
 
 static IECore::InternedString g_rendererContextName( "scene:renderer" );
+static IECore::InternedString g_defaultRendererOptionName( "render:defaultRenderer" );
 
 GAFFER_NODE_DEFINE_TYPE( Render );
 
@@ -118,7 +122,15 @@ Render::Render( const std::string &name )
 	adaptors->getChild<StringPlug>( "renderer" )->setInput( resolvedRendererPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );
 
-	outPlug()->setInput( inPlug() );
+	OptionTweaksPtr optionTweaks = new OptionTweaks();
+	setChild( "__optionTweaks", optionTweaks );
+	optionTweaks->inPlug()->setInput( inPlug() );
+
+	TweakPlugPtr tweakPlug = new TweakPlug( g_defaultRendererOptionName, new StringPlug(), TweakPlug::CreateIfMissing );
+	tweakPlug->valuePlug()->setInput( rendererPlug() );
+	optionTweaks->tweaksPlug()->addChild( tweakPlug );
+
+	outPlug()->setInput( optionTweaks->outPlug() );
 
 	// Internal network for `resolvedRenderer`. We use a Switch so that we don't
 	// even evaluate the scene globals if the renderer is overridden by `rendererPlug()`.
@@ -127,7 +139,7 @@ Render::Render( const std::string &name )
 	setChild( "__optionQuery", optionQuery );
 	optionQuery->scenePlug()->setInput( inPlug() );
 	NameValuePlug *rendererQuery = optionQuery->addQuery( rendererPlug() );
-	rendererQuery->namePlug()->setValue( "render:defaultRenderer" );
+	rendererQuery->namePlug()->setValue( g_defaultRendererOptionName );
 
 	SwitchPtr querySwitch = new Switch();
 	setChild( "__querySwitch", querySwitch );
@@ -213,6 +225,22 @@ ScenePlug *Render::adaptedInPlug()
 const ScenePlug *Render::adaptedInPlug() const
 {
 	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+}
+
+Render::RenderSignal &Render::preRenderSignal()
+{
+	// Deliberately "leaking" the signal since it is likely to contain
+	// Python slots that can't be destroyed during shutdown (because Python
+	// has already been shut down).
+	static RenderSignal *g_preRenderSignal = new RenderSignal;
+	return *g_preRenderSignal;
+}
+
+Render::RenderSignal &Render::postRenderSignal()
+{
+	// See above.
+	static RenderSignal *g_postRenderSignal = new RenderSignal;
+	return *g_postRenderSignal;
 }
 
 void Render::preTasks( const Gaffer::Context *context, Tasks &tasks ) const
@@ -326,6 +354,13 @@ void Render::executeInternal( bool flushCaches ) const
 		return;
 	}
 
+	// Signal emission isn't thread-safe. It's extremely unlikely that two renders
+	// run concurrently, and even less likely that they start concurrently, but to
+	// be on the safe side we use a mutex to serialise emission.
+	static std::mutex g_preRenderSignalMutex;
+	std::unique_lock preRenderSignalLock( g_preRenderSignalMutex );
+	preRenderSignal()( this );
+
 	GafferScene::Private::RendererAlgo::RenderOptions renderOptions( adaptedInPlug() );
 	if( !renderScope.sceneTranslationOnly() )
 	{
@@ -342,53 +377,98 @@ void Render::executeInternal( bool flushCaches ) const
 	}
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
-	GafferScene::Private::RendererAlgo::outputOptions( renderOptions.globals.get(), renderer.get() );
-	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
+	renderOptions.outputOptions( renderer.get() );
+	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions, renderer.get() );
 
 	{
 		// Using nested scope so that we free the memory used by `renderSets`
 		// and `lightLinks` before we call `render()`.
 		GafferScene::Private::RendererAlgo::RenderSets renderSets( adaptedInPlug() );
-		GafferScene::Private::RendererAlgo::LightLinks lightLinks;
+		GafferScene::Private::RendererAlgo::LightLinks lightLinks( renderer.get() );
+
+		if( boost::starts_with( renderer->name().string(), "RenderMan" ) )
+		{
+			// Workaround for RenderMan API limitations. The backend needs to acquire the Riley
+			// session before we commence multithreaded calls to the Renderer API.
+			renderer->command( "ri:acquireRiley", {} );
+		}
 
 		GafferScene::Private::RendererAlgo::outputCameras( adaptedInPlug(), renderOptions, renderSets, renderer.get() );
 		GafferScene::Private::RendererAlgo::outputLights( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
-		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
-	}
 
-	if( renderScope.sceneTranslationOnly() )
-	{
-		return;
-	}
 
-	if( flushCaches )
-	{
-		// Now we have generated the scene, flush Cortex and Gaffer caches to
-		// provide more memory to the renderer. We limit this to the `execute`
-		// and `dispatch` applications for two reasons :
-		//
-		// - In a GUI application, we don't want to clear the caches because
-		//   we'll probably benefit from using them again later.
-		// - In `execute` and `dispatch` we know we're not executing concurrently
-		//   with anything else, and can therefore pass `now = true` to
-		//   `clearHashCache()` safely.
-		auto *application = ancestor<ApplicationRoot>();
-		if( application && ( application->getName() == "execute" || application->getName() == "dispatch" ) )
+		if( GafferScene::Private::RendererAlgo::hasIDOutput( renderOptions.globals.get() ) )
 		{
-			ObjectPool::defaultObjectPool()->clear();
-			ValuePlug::clearCache();
-			ValuePlug::clearHashCache( /* now = */ true );
+			GafferScene::RenderManifest renderManifest;
+			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get(), ScenePlug::ScenePath(), &renderManifest );
+
+			const std::string renderManifestFilePath = GafferScene::Private::RendererAlgo::renderManifestFilePath(
+				renderOptions.globals.get()
+			);
+			if( renderManifestFilePath.size() )
+			{
+				// Make sure the directory exists to write the exr manifest to.
+				std::filesystem::create_directories(
+					std::filesystem::path( renderManifestFilePath ).parent_path()
+				);
+
+				renderManifest.writeEXRManifest( renderManifestFilePath );
+			}
+		}
+		else
+		{
+			GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+
+			const std::string renderManifestFilePath = GafferScene::Private::RendererAlgo::renderManifestFilePath(
+				renderOptions.globals.get()
+			);
+			if( renderManifestFilePath.size() )
+			{
+				IECore::msg(
+					IECore::Msg::Warning,
+					"Render::execute",
+					"Found render:manifestFilePath option, but the render manifest is not enabled "
+					"because there is no ID output"
+				);
+			}
 		}
 	}
 
-	renderer->render();
-	renderer.reset();
-
-	if( performanceMonitor )
+	if( !renderScope.sceneTranslationOnly() )
 	{
-		std::cerr << "\nPerformance Monitor\n===================\n\n";
-		std::cerr << MonitorAlgo::formatStatistics( *performanceMonitor );
+		if( flushCaches )
+		{
+			// Now we have generated the scene, flush Cortex and Gaffer caches to
+			// provide more memory to the renderer. We limit this to the `execute`
+			// and `dispatch` applications for two reasons :
+			//
+			// - In a GUI application, we don't want to clear the caches because
+			//   we'll probably benefit from using them again later.
+			// - In `execute` and `dispatch` we know we're not executing concurrently
+			//   with anything else, and can therefore pass `now = true` to
+			//   `clearHashCache()` safely.
+			auto *application = ancestor<ApplicationRoot>();
+			if( application && ( application->getName() == "execute" || application->getName() == "dispatch" ) )
+			{
+				ObjectPool::defaultObjectPool()->clear();
+				ValuePlug::clearCache();
+				ValuePlug::clearHashCache( /* now = */ true );
+			}
+		}
+
+		renderer->render();
+		renderer.reset();
+
+		if( performanceMonitor )
+		{
+			std::cerr << "\nPerformance Monitor\n===================\n\n";
+			std::cerr << MonitorAlgo::formatStatistics( *performanceMonitor );
+		}
 	}
+
+	static std::mutex g_postRenderMutex;
+	std::unique_lock postRenderLock( g_postRenderMutex );
+	postRenderSignal()( this );
 }

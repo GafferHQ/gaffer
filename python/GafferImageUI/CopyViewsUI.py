@@ -51,16 +51,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"views" : [
+		"views" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the views to copy. Names should be
 			separated by spaces and can use Gaffer's standard
 			wildcards.
 			""",
 
-		],
+		},
 
 	}
 

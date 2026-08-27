@@ -60,14 +60,6 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
 
-		dataPlugs = self.__dataPlugs()
-		if len( dataPlugs ) > 1 :
-			self.__dataWidget.setHeader( [
-				Gaffer.Metadata.value( p, "vectorDataPlugValueWidget:header" ) or IECore.CamelCase.toSpaced( p.getName() )
-				for p in dataPlugs
-			] )
-			self.__dataWidget.setToolTips( [ Gaffer.Metadata.value( p, "description" ) or "" for p in dataPlugs ] )
-
 		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 
 	def vectorDataWidget( self ) :
@@ -91,8 +83,23 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromValues( self, values, exception ) :
 
+		# Update headers and tooltips from metadata. We can't
+		# do this in `_updateFromMetadata()` because the number
+		# of columns could get out of sync due to `_updateFromValues()`
+		# potentially being scheduled as a background update.
+		dataPlugs = self.__dataPlugs()
+		if len( dataPlugs ) > 1 :
+			self.__dataWidget.setHeader( [
+				Gaffer.Metadata.value( p, "vectorDataPlugValueWidget:header" ) or IECore.CamelCase.toSpaced( p.getName() )
+				for p in dataPlugs
+			] )
+		else :
+			self.__dataWidget.setHeader( False )
+
+		self.__dataWidget.setToolTips( [ Gaffer.Metadata.value( p, "description" ) or "" for p in dataPlugs ] )
+
 		if values :
-			self.__dataWidget.setData( [ values[p] for p in self.__dataPlugs() ] )
+			self.__dataWidget.setData( [ values[p] for p in dataPlugs ] )
 
 		self.__dataWidget.setErrored( exception is not None )
 
@@ -106,6 +113,17 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromEditable( self ) :
 
 		self.__dataWidget.setEditable( self._editable() )
+
+	def _convertValue( self, value ) :
+
+		plugValueType = type( self.getPlug().defaultValue() )
+		if hasattr( value, "value" ) and isinstance(
+			value.value,
+			IECore.DataTraits.valueTypeFromSequenceType( plugValueType )
+		) :
+			return plugValueType( [ value.value ] )
+		else :
+			return GafferUI.PlugValueWidget._convertValue( self, value )
 
 	def __dataPlugs( self ) :
 
@@ -125,8 +143,8 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		assert( widget is self.__dataWidget )
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			with self._blockedUpdateFromValues() :
+		with self._blockedUpdateFromValues() :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				data = self.__dataWidget.getData()
 				for plug, value in zip( self.__dataPlugs(), self.__dataWidget.getData() ) :
 					plug.setValue( value )
@@ -160,3 +178,4 @@ GafferUI.PlugValueWidget.registerType( Gaffer.V3iVectorDataPlug, VectorDataPlugV
 GafferUI.PlugValueWidget.registerType( Gaffer.V2fVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V3fVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.Color3fVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Color4fVectorDataPlug, VectorDataPlugValueWidget )

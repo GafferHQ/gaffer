@@ -238,6 +238,3 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 		e.exclusions.addPath( "/a" )
 		self.assertEqual( e.visibility( "/a", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.ExcludedBounds, False ) )
 		self.assertEqual( e.visibility( "/a/b", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
-
-if __name__ == "__main__":
-	unittest.main()

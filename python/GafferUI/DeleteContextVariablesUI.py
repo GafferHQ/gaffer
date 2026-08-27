@@ -47,16 +47,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"variables" : [
+		"variables" : {
 
-			"description",
+			"description" :
 			"""
 			The variables to be deleted.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		]
+		}
 
 	}
 

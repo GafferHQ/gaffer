@@ -46,6 +46,7 @@
 #include "GafferML/Tensor.h"
 #include "GafferML/TensorPlug.h"
 #include "GafferML/TensorToImage.h"
+#include "GafferML/TensorToMesh.h"
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
@@ -61,6 +62,18 @@ using namespace GafferBindings;
 
 namespace
 {
+
+int64_t toLinearIndex( const std::vector<int64_t> &shape, const std::vector<int64_t> &index )
+{
+	int64_t multiplier = 1;
+	int64_t result = 0;
+	for( int64_t i = shape.size() - 1; i >= 0; --i )
+	{
+		result += index[i] * multiplier;
+		multiplier *= shape[i];
+	}
+	return result;
+}
 
 TensorPtr tensorConstructorWrapper( const DataPtr &data, object pythonShape )
 {
@@ -103,11 +116,11 @@ std::string tensorRepr( const Tensor &tensor )
 	}
 }
 
-template<typename T>
+template<typename T, typename FinalT = T>
 object tensorGetItemTyped( const Tensor &tensor, const std::vector<int64_t> &location )
 {
 	return object(
-		const_cast<Ort::Value &>( tensor.value() ).At<T>( location )
+		static_cast<FinalT>( const_cast<Ort::Value &>( tensor.value() ).At<T>( location ) )
 	);
 }
 
@@ -120,6 +133,8 @@ object tensorGetItem( const Tensor &tensor, const std::vector<int64_t> &location
 	{
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT :
 			return tensorGetItemTyped<float>( tensor, location );
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 :
+			return tensorGetItemTyped<Ort::Float16_t, float>( tensor, location );
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE :
 			return tensorGetItemTyped<double>( tensor, location );
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL :
@@ -136,6 +151,8 @@ object tensorGetItem( const Tensor &tensor, const std::vector<int64_t> &location
 			return tensorGetItemTyped<uint64_t>( tensor, location );
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64 :
 			return tensorGetItemTyped<int64_t>( tensor, location );
+		case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING :
+			return object( tensor.value().GetStringTensorElement( toLinearIndex( tensor.shape(), location ) ) );
 		default :
 			throw IECore::Exception( fmt::format( "Unsupported element type {}", elementType ) );
 	}
@@ -209,15 +226,32 @@ void loadModelWrapper( Inference &inference )
 BOOST_PYTHON_MODULE( _GafferML )
 {
 
-	IECorePython::RunTimeTypedClass<GafferML::Tensor>()
-		.def( init<>() )
-		.def( "__init__", make_constructor( tensorConstructorWrapper, default_call_policies(), ( arg( "data" ), arg( "shape" ) = object() ) ) )
-		.def( "asData", (IECore::DataPtr (Tensor::*)())&Tensor::asData )
-		.def( "shape", &tensorShapeWrapper )
-		.def( "__repr__", &tensorRepr )
-		.def( "__getitem__", &tensorGetItem1D )
-		.def( "__getitem__", &tensorGetItemND )
-	;
+	{
+		scope s = IECorePython::RunTimeTypedClass<GafferML::Tensor>()
+			.def( init<>() )
+			.def( "__init__", make_constructor( tensorConstructorWrapper, default_call_policies(), ( arg( "data" ), arg( "shape" ) = object() ) ) )
+			.def( "asData", (IECore::DataPtr (Tensor::*)())&Tensor::asData )
+			.def( "shape", &tensorShapeWrapper )
+			.def( "__repr__", &tensorRepr )
+			.def( "__getitem__", &tensorGetItem1D )
+			.def( "__getitem__", &tensorGetItemND )
+		;
+		enum_<Tensor::ElementType>( "ElementType" )
+			.value( "Undefined", Tensor::ElementType::Undefined )
+			.value( "Float", Tensor::ElementType::Float )
+			.value( "Float16", Tensor::ElementType::Float16 )
+			.value( "BFloat16", Tensor::ElementType::BFloat16 )
+			.value( "Double", Tensor::ElementType::Double )
+			.value( "Bool", Tensor::ElementType::Bool )
+			.value( "UInt16", Tensor::ElementType::UInt16 )
+			.value( "Int16", Tensor::ElementType::Int16 )
+			.value( "UInt32", Tensor::ElementType::UInt32 )
+			.value( "Int32", Tensor::ElementType::Int32 )
+			.value( "UInt64", Tensor::ElementType::UInt64 )
+			.value( "Int64", Tensor::ElementType::Int64 )
+			.value( "String", Tensor::ElementType::String )
+		;
+	}
 
 	GafferBindings::TypedObjectPlugClass<GafferML::TensorPlug>();
 
@@ -237,6 +271,7 @@ BOOST_PYTHON_MODULE( _GafferML )
 	GafferBindings::DependencyNodeClass<Inference>()
 		.def( "loadModel", &loadModelWrapper )
 	;
+	GafferBindings::DependencyNodeClass<TensorToMesh>();
 
 	GafferBindings::DependencyNodeClass<ImageToTensor>();
 	GafferBindings::DependencyNodeClass<TensorToImage>();

@@ -99,4 +99,4 @@ class LoggingTaskNode( GafferDispatch.TaskNode ) :
 
 		return self["requiresSequenceExecution"].getValue()
 
-IECore.registerRunTimeTyped( LoggingTaskNode, typeName = "GafferDispatchTest::LoggingTaskNode" )
+IECore.registerRunTimeTyped( LoggingTaskNode, "GafferDispatchTest::LoggingTaskNode" )

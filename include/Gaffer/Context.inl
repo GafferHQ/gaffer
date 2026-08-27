@@ -113,6 +113,10 @@ Context::Value::Value( const IECore::InternedString &name, const T *value )
 	const std::string &nameStr = name.string();
 	if( nameStr.size() > 2 && nameStr[0] == 'u' && nameStr[1] == 'i' && nameStr[2] == ':' )
 	{
+		/// \todo Remove this special case. It dates from a time when we abused the
+		/// main ScriptNode context to store UI state, which we no longer do. We're
+		/// keeping the special handling for a little longer in case third parties
+		/// got into the same bad habits we did.
 		m_hash = IECore::MurmurHash( 0, 0 );
 	}
 	else
@@ -226,17 +230,22 @@ inline const Context::Value &Context::internalGet( const IECore::InternedString 
 		throw IECore::Exception( fmt::format( "Context has no variable named \"{}\"", name.value() ) );
 	}
 
-#ifndef NDEBUG
-	result->validate( name );
-#endif
-
 	return *result;
 }
 
 inline const Context::Value *Context::internalGetIfExists( const IECore::InternedString &name ) const
 {
 	Map::const_iterator it = m_map.find( name );
-	return it != m_map.end() ? &it->second : nullptr;
+	if( it == m_map.end() )
+	{
+		return nullptr;
+	}
+
+#ifndef NDEBUG
+	it->second.validate( name );
+#endif
+
+	return &it->second;
 }
 
 template<typename T>
@@ -250,7 +259,7 @@ const T &Context::get( const IECore::InternedString &name, const T &defaultValue
 {
 	if( const Value *value = internalGetIfExists( name ) )
 	{
-		return internalGet( name ).value<T>();
+		return value->value<T>();
 	}
 	return defaultValue;
 }

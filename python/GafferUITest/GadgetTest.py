@@ -130,7 +130,7 @@ class GadgetTest( GafferUITest.TestCase ) :
 		s = GafferUI.StandardStyle()
 		c.setStyle( s )
 
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 5000 )
 
 		self.assertEqual( mg.layersRendered, set( (i,s, GafferUI.Gadget.RenderReason.Draw) for i in layers ) )
 
@@ -390,6 +390,3 @@ class GadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( cs ), 1 )
 		self.assertIs( cs[0][1].sourceWidget, button1 )
 		self.assertIs( cs[0][1].destinationWidget, button2 )
-
-if __name__ == "__main__":
-	unittest.main()

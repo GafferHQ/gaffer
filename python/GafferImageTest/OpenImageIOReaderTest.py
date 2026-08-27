@@ -42,6 +42,8 @@ import unittest
 import imath
 import random
 
+import OpenImageIO
+
 import IECore
 import IECoreImage
 
@@ -97,14 +99,18 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 150 ) ) )
 
 		expectedMetadata = IECore.CompoundData( {
-			"oiio:ColorSpace" : IECore.StringData( 'Linear' ),
+			"oiio:ColorSpace" : IECore.StringData( "Linear" if OpenImageIO.VERSION_MAJOR < 3 else "lin_rec709" ),
 			"compression" : IECore.StringData( 'zips' ),
 			"PixelAspectRatio" : IECore.FloatData( 1 ),
 			"screenWindowCenter" : IECore.V2fData( imath.V2f( 0, 0 ) ),
 			"screenWindowWidth" : IECore.FloatData( 1 ),
 			"fileFormat" : IECore.StringData( "openexr" ),
 			"dataType" : IECore.StringData( "float" ),
+			"filePath" : IECore.StringData( self.fileName.resolve().as_posix() ),
 		} )
+
+		if OpenImageIO.VERSION >= 30004 :
+			expectedMetadata["openexr:lineOrder"] = IECore.StringData( "increasingY" )
 
 		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
 
@@ -666,7 +672,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# with an A channel, and a "depth" subimage with a Z channel.
 		# The standard would expect this to be loaded with channel names like "RGBA.A" and "depth.Z",
 		# but in practice, applications expect these default layers to be loaded as the standard layer
-		# names, so we conform to this pratical expection, and just name the channels R, G, B, A, and Z
+		# names, so we conform to this practical expectation, and just name the channels R, G, B, A, and Z
 		# The test file was created with this command
 		# > oiiotool --create 4x4 3 --addc 0.1,0.2,0.3 --attrib "oiio:subimagename" rgb -create 4x4 1 --chnames A --addc 0.4 --attrib "oiio:subimagename" RGBA -create 4x4 1 --chnames Z --addc 4.2 --attrib "oiio:subimagename" depth --siappendall -o multipartDefaultChannels.exr
 
@@ -748,12 +754,27 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotIn( "oiio:subimagename", metadata )
 		self.assertNotIn( "oiio:subimages", metadata )
 
+	def testDefaultChannelInterpretationIgnoreBogusPartName( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.imagesPath() / "singlePartBogusName.exr" )
+
+		refReader = GafferImage.ImageReader()
+		refReader["fileName"].setValue( self.imagesPath() / "circles.exr" )
+
+		self.assertImagesEqual( reader["out"], refReader["out"], ignoreMetadata = True )
+
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
-	def testImageOpenPerformance( self ):
+	def testImageOpenPerformance( self ) :
+
 		# Test the overhead of opening images by opening lots of images, but only reading the view count
 		files = self.imagesPath().glob( "*.exr" )
-		files = filter( lambda f : not ( "ChannelsOverlap" in f.stem or "NukeSinglePart" in f.stem ), files )
+		filesToSkip = {
+			"invalidMultiViewAttribute.exr", "channelTestMultiViewNukeSinglePart.exr",
+			"channelTestNukeSinglePart.exr", "multipartDefaultChannelsOverlap.exr"
+		}
+		files = [ f for f in files if f.name not in filesToSkip ]
 		files = sorted( files )
 		filesWithResult = [ (i, 2 if "channelTestMultiView" in i.stem else 1 ) for i in files ]
 		reader = GafferImage.ImageReader()
@@ -821,6 +842,3 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testScanlineBlockPerformanceOffsetNegative( self ):
 		self.runPerfTest( False, True, imath.V2i( -1 ) )
-
-if __name__ == "__main__":
-	unittest.main()

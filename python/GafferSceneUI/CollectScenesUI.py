@@ -61,9 +61,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"rootNames" : [
+		"rootNames" : {
 
-			"description",
+			"description" :
 			"""
 			The paths to the root locations to create in the output scene.
 			The input scene is copied underneath each of these root locations.
@@ -73,11 +73,11 @@ Gaffer.Metadata.registerNode(
 			management system or listing cache files on disk.
 			""",
 
-		],
+		},
 
-		"rootNameVariable" : [
+		"rootNameVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The name of a Context Variable that is set to the current
 			root location when evaluating the input scene. This can be used
@@ -85,11 +85,11 @@ Gaffer.Metadata.registerNode(
 			a different hierarchy under each root location.
 			""",
 
-		],
+		},
 
-		"sourceRoot" : [
+		"sourceRoot" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies the root of the subtree to be copied from the input
 			scene. The default value causes the whole scene to be collected.
@@ -103,13 +103,13 @@ Gaffer.Metadata.registerNode(
 			> collect single objects from the input scene.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 
-		],
+		},
 
-		"mergeGlobals" : [
+		"mergeGlobals" : {
 
-			"description",
+			"description" :
 			"""
 			Controls how the output globals are generated from the collected
 			scenes. By default, the globals from the first scene alone
@@ -118,7 +118,7 @@ Gaffer.Metadata.registerNode(
 			in the case of multiple scenes specifying the same global.
 			""",
 
-		],
+		},
 
 	}
 

@@ -39,9 +39,7 @@
 #include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
 
-#include "Gaffer/Plug.h"
-
-#include "IECore/CompoundObject.h"
+#include "GafferScene/ClosurePlug.h"
 
 namespace GafferOSL
 {
@@ -50,7 +48,7 @@ namespace GafferOSL
 /// loader a shader from OSL or a renderer.  We probably won't be able
 /// to set or get closure plugs, but we need to be able to connect
 /// them, and they should only connect to other closure plugs.
-class GAFFEROSL_API ClosurePlug : public Gaffer::Plug
+class GAFFEROSL_API ClosurePlug : public GafferScene::ClosurePlug
 {
 
 	public :
@@ -58,13 +56,11 @@ class GAFFEROSL_API ClosurePlug : public Gaffer::Plug
 		explicit ClosurePlug( const std::string &name=defaultName<ClosurePlug>(), Direction direction=In, unsigned flags=Default );
 		~ClosurePlug() override;
 
-		GAFFER_PLUG_DECLARE_TYPE( GafferOSL::ClosurePlug, ClosurePlugTypeId, Plug );
+		GAFFER_PLUG_DECLARE_TYPE( GafferOSL::ClosurePlug, ClosurePlugTypeId, GafferScene::ClosurePlug );
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 		bool acceptsInput( const Gaffer::Plug *input ) const override;
-
-	private:
 
 };
 

@@ -89,10 +89,6 @@ class GAFFERUI_API StandardNodule : public Nodule
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 
-		/// \deprecated Use overloaded method without `visible` when setting `visible = true`
-		/// or `StandardNodeGadget::applyNoduleLabelVisibilityMetadata()` to restore
-		/// metadata-aware visibility.
-		void setCompatibleLabelsVisible( const DragDropEvent &event, bool visible );
 		void setCompatibleLabelsVisible( const DragDropEvent &event );
 
 	private :

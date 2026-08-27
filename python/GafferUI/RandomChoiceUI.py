@@ -63,24 +63,26 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:isSetup", lambda node : "out" in node,
 	"layout:activator:isNotSetup", lambda node : "out" not in node,
 
-	"layout:customWidget:setupButton:widgetType", "GafferUI.RandomChoiceUI._SetupButton",
+	"layout:customWidget:setupButton:widgetType", "GafferUI.PlugCreationWidget",
 	"layout:customWidget:setupButton:section", "Settings",
 	"layout:customWidget:setupButton:index", -1,
 	"layout:customWidget:setupButton:visibilityActivator", "isNotSetup",
+	"plugCreationWidget:action", "setup",
+	"plugCreationWidget:includedTypes", "Gaffer.BoolPlug Gaffer.FloatPlug Gaffer.IntPlug Gaffer.StringPlug Gaffer.V2iPlug Gaffer.V3fPlug Gaffer.Color3fPlug",
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
 			# Prevents creation of unwanted BoxIn nodes when
 			# plugs are promoted.
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"seed" : [
+		"seed" : {
 
-			"description",
+			"description" :
 			"""
 			Seed for the random number generator. Different seeds
 			produce different random numbers. When controlling two
@@ -89,11 +91,11 @@ Gaffer.Metadata.registerNode(
 			values are different.
 			""",
 
-		],
+		},
 
-		"seedVariable" : [
+		"seedVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The most important plug for achieving interesting variation.
 			Should be set to the name of a context variable which will
@@ -102,119 +104,62 @@ Gaffer.Metadata.registerNode(
 			location, or `frame` to generate a different value per frame.
 			""",
 
-			"preset:Time", "frame",
-			"preset:Scene Location", "scene:path",
+			"preset:Time" : "frame",
+			"preset:Scene Location" : "scene:path",
 
-		],
+		},
 
-		"choices" : [
+		"choices" : {
 
-			"description",
+			"description" :
 			"""
 			The choices that will be randomly selected between based on the seed.
 			""",
 
-			"plugValueWidget:type", "GafferUI.VectorDataPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.VectorDataPlugValueWidget",
 
-			"layout:visibilityActivator", "isSetup",
+			"layout:visibilityActivator" : "isSetup",
 
-		],
+		},
 
-		"choices.values" : [
+		"choices.values" : {
 
-			"description",
+			"description" :
 			"""
 			The list of values for the choices. Use the `choices.weights` plug
 			to assign a relative probability to each choice.
 			""",
 
-			"vectorDataPlugValueWidget:header", "Value",
+			"vectorDataPlugValueWidget:header" : "Value",
 
-		],
+		},
 
-		"choices.weights" : [
+		"choices.weights" : {
 
-			"description",
+			"description" :
 			"""
 			The list of weights for the choices. Choices with a higher weight
 			have a greater chance of being chosen.
 			""",
 
-			"vectorDataPlugValueWidget:header", "Weight",
-			"vectorDataPlugValueWidget:index", -1,
-			"vectorDataPlugValueWidget:elementDefaultValue", 1.0,
+			"vectorDataPlugValueWidget:header" : "Weight",
+			"vectorDataPlugValueWidget:index" : -1,
+			"vectorDataPlugValueWidget:elementDefaultValue" : 1.0,
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs a random choice from the `choices` plug.
 			""",
 
-		]
+		}
 
 	}
 
 )
-
-# _SetupButton
-# ============
-
-class _SetupButton( GafferUI.Widget ) :
-
-	def __init__( self, node ) :
-
-		self.__node = node
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-
-		GafferUI.Widget.__init__( self, self.__row )
-
-		with self.__row :
-
-				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-
-				GafferUI.MenuButton(
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title = "Add Output" ),
-					image = "plus.png", hasFrame = False
-				)
-
-				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
-
-	def __menuDefinition( self, menu ) :
-
-		result = IECore.MenuDefinition()
-
-		def setup( node, plugType ) :
-
-			with Gaffer.UndoScope( node.scriptNode() ) :
-				node.setup( plugType() )
-
-		for plugType in (
-			Gaffer.BoolPlug,
-			Gaffer.FloatPlug,
-			Gaffer.IntPlug,
-			None,
-			Gaffer.StringPlug,
-			None,
-			Gaffer.V2iPlug,
-			Gaffer.V3fPlug,
-			None,
-			Gaffer.Color3fPlug
-		) :
-			if plugType is None :
-				result.append( "/Divider{}".format( result.size() ), { "divider" : True } )
-			else :
-				result.append(
-					plugType.__name__.replace( "Plug", "" ),
-					{
-						"command" : functools.partial( setup, self.__node, plugType ),
-						"active" : not Gaffer.MetadataAlgo.readOnly( self.__node ),
-					}
-				)
-
-		return result
 
 # PlugValueWidget popup menu
 # ==========================

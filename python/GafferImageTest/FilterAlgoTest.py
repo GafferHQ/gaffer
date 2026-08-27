@@ -198,8 +198,3 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
 		for args in tests :
 			__test( *args )
-
-
-
-if __name__ == "__main__":
-	unittest.main()

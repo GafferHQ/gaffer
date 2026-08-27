@@ -86,11 +86,6 @@ Imath::Box3f Geometry::bound() const
 	return m_bound;
 }
 
-void Geometry::render( Renderer *renderer ) const
-{
-	msg( Msg::Warning, "Geometry::render", "Legacy renderers not supported" );
-}
-
 bool Geometry::isEqualTo( const IECore::Object *other ) const
 {
 	if( !VisibleRenderable::isEqualTo( other ) )

@@ -122,30 +122,64 @@ def __indent( text, n ) :
 	prefix = "\t" * n
 	return "\n".join( prefix + l for l in text.split( "\n" ) )
 
+__enabledPlugMethodTemplate = """
+def enabledPlug( self ) :
+
+	return self["{enabledPlugName}"]
+"""
+
+__correspondingInputMethodTemplate = """
+def correspondingInput( self, output ) :
+
+	inputs = {correspondingInputs}
+	return self.descendant( inputs.get( output.relativeName( self ), "" ) )
+"""
+
+def __dependencyNodeMethodDefinitions( box ) :
+
+	enabledPlug = box.enabledPlug()
+	if enabledPlug is None :
+		return ""
+
+	result = __enabledPlugMethodTemplate.format( enabledPlugName = enabledPlug.getName() )
+
+	correspondingInputs = {}
+	for outputPlug in Gaffer.Plug.RecursiveOutputRange( box ) :
+		inputPlug = box.correspondingInput( outputPlug )
+		if inputPlug is not None :
+			correspondingInputs[outputPlug.relativeName( box )] = inputPlug.relativeName( box )
+
+	if correspondingInputs :
+		result += __correspondingInputMethodTemplate.format(
+			correspondingInputs = "{\n" + "\n".join( f'\t\t"{k}" : "{v}"' for k, v in correspondingInputs.items() ) + "\n\t}"
+		)
+
+	return result
+
 __nodeTemplate = """\
 {imports}
 
-class {name}( Gaffer.SubGraph ) :
+class {name}( Gaffer.DependencyNode ) :
 
 	def __init__( self, name = "{name}" ) :
 
-		Gaffer.SubGraph.__init__( self, name )
+		Gaffer.DependencyNode.__init__( self, name )
 
 {constructor}
 
 		self.__removeDynamicFlags()
-
+{dependencyNodeMethods}
 	# Remove dynamic flags using the same logic used by the Reference node.
 	## \todo : Create the plugs without the flags in the first place.
 	def __removeDynamicFlags( self ) :
 
 		for plug in Gaffer.Plug.Range( self ) :
 			plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
-			if not isinstance( plug, ( Gaffer.SplineffPlug, Gaffer.SplinefColor3fPlug, Gaffer.SplinefColor4fPlug ) ) :
+			if not isinstance( plug, ( Gaffer.RampffPlug, Gaffer.RampfColor3fPlug, Gaffer.RampfColor4fPlug ) ) :
 				for plug in Gaffer.Plug.RecursiveRange( plug ) :
 					plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
 
-IECore.registerRunTimeTyped( {name}, typeName = "{moduleName}::{name}" )
+IECore.registerRunTimeTyped( {name}, "{moduleName}::{name}" )
 """
 
 def __nodeDefinition( box, moduleName ) :
@@ -178,7 +212,8 @@ def __nodeDefinition( box, moduleName ) :
 		imports = "\n".join( sorted( imports ) ),
 		name = box.getName(),
 		constructor = __indent( "\n".join( constructorLines ), 2 ),
-		moduleName = moduleName
+		dependencyNodeMethods = __indent( __dependencyNodeMethodDefinitions( box ), 1 ),
+		moduleName = moduleName,
 	)
 
 __uiTemplate = """\
@@ -191,7 +226,9 @@ Gaffer.Metadata.registerNode(
 
 	{moduleName}.{name},
 
+	"childNodesAreReadOnly", True,
 {metadata}
+
 {plugMetadata}
 
 )
@@ -203,19 +240,19 @@ def __uiDefinition( box, moduleName ) :
 
 		moduleName = moduleName,
 		name = box.getName(),
-		metadata = __indent( __metadata( box ), 1 ),
+		metadata = __indent( __metadata( box, ", " ), 1 ),
 		plugMetadata = __indent( __plugMetadata( box ), 1 )
 
 	)
 
-def __metadata( graphComponent ) :
+def __metadata( graphComponent, separator ) :
 
 	items = []
 	for k in Gaffer.Metadata.registeredValues( graphComponent, Gaffer.Metadata.RegistrationTypes.InstancePersistent ) :
 
 		v = Gaffer.Metadata.value( graphComponent, k )
 		items.append(
-			"{k}, {v},".format( k = repr( k ), v = IECore.repr( v ) )
+			"{k}{s}{v},".format( k = repr( k ), s = separator, v = IECore.repr( v ) )
 		)
 
 	return "\n".join( items )
@@ -227,10 +264,10 @@ def __plugMetadata( box ) :
 
 		if isinstance( graphComponent, Gaffer.Plug ) :
 
-			m = __metadata( graphComponent )
+			m = __metadata( graphComponent, " : " )
 			if m :
 				items.append(
-					"\"{name}\" : [\n{m}\n],\n".format(
+					"\"{name}\" : {{\n{m}\n}},\n".format(
 						name = graphComponent.relativeName( graphComponent.node() ),
 						m = __indent( m, 1 )
 					)

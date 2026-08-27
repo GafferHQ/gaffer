@@ -62,9 +62,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"seed" : [
+		"seed" : {
 
-			"description",
+			"description" :
 			"""
 			Seed for the random number generator. Different seeds
 			produce different random numbers. When controlling two
@@ -73,11 +73,11 @@ Gaffer.Metadata.registerNode(
 			values are different.
 			""",
 
-		],
+		},
 
-		"seedVariable" : [
+		"seedVariable" : {
 
-			"description",
+			"description" :
 			"""
 			The most important plug for achieving interesting variation.
 			Should be set to the name of a Context Variable which will
@@ -86,24 +86,24 @@ Gaffer.Metadata.registerNode(
 			location, or "frame" to generate a different value per frame.
 			""",
 
-			"preset:Time", "frame",
-			"preset:Scene Location", "scene:path",
+			"preset:Time" : "frame",
+			"preset:Scene Location" : "scene:path",
 
-		],
+		},
 
-		"floatRange" : [
+		"floatRange" : {
 
-			"description",
+			"description" :
 			"""
 			The minimum and maximum values that will be generated for the
 			outFloat plug.
 			""",
 
-		],
+		},
 
-		"baseColor" : [
+		"baseColor" : {
 
-			"description",
+			"description" :
 			"""
 			Used as the basis for the random colours generated for the
 			outColor plug. All colours start with this value and then
@@ -111,60 +111,60 @@ Gaffer.Metadata.registerNode(
 			below.
 			""",
 
-		],
+		},
 
-		"hue" : [
+		"hue" : {
 
-			"description",
+			"description" :
 			"""
 			The +- range over which the hue of the base colour is varied.
 			""",
 
-		],
+		},
 
-		"saturation" : [
+		"saturation" : {
 
-			"description",
+			"description" :
 			"""
 			The +- range over which the saturation of the base colour is varied.
 			""",
 
-		],
+		},
 
-		"value" : [
+		"value" : {
 
-			"description",
+			"description" :
 			"""
 			The +- range over which the value of the base colour is varied.
 			""",
 
-		],
+		},
 
-		"outFloat" : [
+		"outFloat" : {
 
-			"description",
+			"description" :
 			"""
 			Random floating point output derived from seed, Context Variable
 			and float range plugs.
 			""",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-		],
+		},
 
-		"outColor" : [
+		"outColor" : {
 
-			"description",
+			"description" :
 			"""
 			Random colour output derived from seed, Context Variable, base
 			colour, hue, saturation and value plugs.
 			""",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-			"plugValueWidget:type", "GafferUI.RandomUI._RandomColorPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.RandomUI._RandomColorPlugValueWidget",
 
-		]
+		}
 
 	}
 

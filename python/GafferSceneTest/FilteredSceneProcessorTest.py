@@ -57,6 +57,7 @@ class FilteredSceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.FilteredSceneProcessor.__init__( self, name, filterDefault = IECore.PathMatcher.Result.NoMatch )
 
 				self["__shader"] = GafferSceneTest.TestShader()
+				self["__shader"].loadShader( "simpleShader" )
 				self["__shader"]["type"].setValue( "test:surface" )
 
 				self["__shaderAssignment"] = GafferScene.ShaderAssignment()
@@ -89,6 +90,3 @@ class FilteredSceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 
 		s["enabled"].setValue( False )
 		self.assertEqual( s["out"].attributes( "/plane" ).keys(), [] )
-
-if __name__ == "__main__":
-	unittest.main()

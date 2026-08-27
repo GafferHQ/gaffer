@@ -36,6 +36,7 @@
 
 import contextlib
 import locale
+import math
 import os
 import sys
 import unittest
@@ -48,6 +49,9 @@ import traceback
 import functools
 import pathlib
 import stat
+import time
+
+import imath
 
 import IECore
 
@@ -63,6 +67,7 @@ class TestCase( unittest.TestCase ) :
 	def setUp( self ) :
 
 		self.__temporaryDirectory = None
+		self.__alternateMountTemporaryDirectory = None
 		self.__messagesToIgnore = set()
 
 		# Set up a capturing message handler so that `tearDown()` can assert
@@ -116,7 +121,16 @@ class TestCase( unittest.TestCase ) :
 
 		if self.__temporaryDirectory is not None :
 			if os.name == "nt" :
-				subprocess.check_call( [ "icacls", self.__temporaryDirectory, "/grant", "Users:(OI)(CI)(W)" ] )
+				def makeWritable( p ) :
+					subprocess.check_call(
+						[ "icacls", p, "/grant", "Users:(OI)(CI)(W)" ],
+						stdout = subprocess.DEVNULL,
+						stderr = subprocess.STDOUT
+					)
+				makeWritable( self.__temporaryDirectory )
+				for root, dirs, files in os.walk( self.__temporaryDirectory ) :
+					for fileName in files + dirs :
+						makeWritable( pathlib.Path( root ) / fileName )
 
 			for root, dirs, files in os.walk( self.__temporaryDirectory ) :
 				for fileName in [ p for p in files + dirs if not ( pathlib.Path( root ) / p ).is_symlink() ] :
@@ -124,12 +138,41 @@ class TestCase( unittest.TestCase ) :
 
 			shutil.rmtree( self.__temporaryDirectory )
 
+		if self.__alternateMountTemporaryDirectory is not None :
+			# For the moment, just do the simple version here. I assume we'd only need to do the
+			# complicated stuff we do for __temporaryDirectory if we were putting non-writable files in it.
+			shutil.rmtree( self.__alternateMountTemporaryDirectory )
+
+
 		IECore.MessageHandler.setDefaultHandler( self.__defaultMessageHandler )
 
 		for message in self.__failureMessageHandler.messages :
 			message = "{} : {} : {}".format( IECore.Msg.levelAsString( message.level ), message.context, message.message )
 			if message not in self.__messagesToIgnore :
 				self.fail( f"Unexpected message : {message}" )
+
+	@classmethod
+	def setUpClass( cls ) :
+
+		unittest.TestCase.setUpClass()
+
+		cls.__alternateMountRootDirectory = None
+
+
+	@classmethod
+	def tearDownClass( cls ) :
+
+		unittest.TestCase.tearDownClass()
+
+		if not cls.__alternateMountRootDirectory is None:
+			if sys.platform == "darwin" :
+				subprocess.check_call( [ "hdiutil", "detach", cls.__alternateMountRootDirectory ] )
+			elif sys.platform == "linux" :
+				shutil.rmtree( cls.__alternateMountRootDirectory )
+			elif sys.platform == "win32" :
+				subprocess.check_call( [ "net", "share", "gafferTestLocalShare", "/delete" ] )
+				shutil.rmtree( cls.__windowsMountSource )
+			cls.__alternateMountRootDirectory = None
 
 	## Registers a message that will be ignored if it is emitted during the
 	# test run, instead of triggering a failure.
@@ -147,6 +190,40 @@ class TestCase( unittest.TestCase ) :
 
 		return self.__temporaryDirectory
 
+	@classmethod
+	def __alternateMount( cls ) :
+		if cls.__alternateMountRootDirectory is None:
+			if sys.platform == "darwin" :
+				cls.__alternateMountRootDirectory = pathlib.Path( "/Volumes/GafferTest" )
+				assert( not cls.__alternateMountRootDirectory.exists() )
+				image = subprocess.check_output( [ "hdiutil", "attach", "-nomount", "ram://1024" ] ).strip()
+				subprocess.check_call( [ "diskutil", "erasevolume", "HFS+", "GafferTest", image ] )
+			elif sys.platform == "linux" :
+				cls.__alternateMountRootDirectory = pathlib.Path( "/dev/shm/GafferTest" )
+				assert( not cls.__alternateMountRootDirectory.exists() )
+				cls.__alternateMountRootDirectory.mkdir()
+			elif sys.platform == "win32" :
+				cls.__windowsMountSource = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest" ) )
+				subprocess.check_call( [ "net", "share", "gafferTestLocalShare=" + str( cls.__windowsMountSource ), "/grant:Everyone,FULL" ] )
+				cls.__alternateMountRootDirectory = pathlib.Path( "//localhost/gafferTestLocalShare" )
+			else :
+				raise IECore.Exception( "Unknown platform " + sys.platform )
+
+		return cls.__alternateMountRootDirectory
+
+	## Returns a path to a directory the test may use for temporary
+	# storage. This directory is on a different physical disk than the regular temporaryDirectory(),
+	# allowing for testing situations where we can't rename or hardlink files ( currently achieved
+	# by using a RAM disk on Mac and Linux, and a net share on Windows ).
+	# This will be cleaned up automatically after the test has been run.
+	def alternateMountTemporaryDirectory( self ) :
+
+		if self.__alternateMountTemporaryDirectory is None :
+			if not self.__alternateMount() is None :
+				self.__alternateMountTemporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest", dir = self.__alternateMount()  ) )
+
+		return self.__alternateMountTemporaryDirectory
+
 	## Returns a context manager that sets the locale
 	# on enter and restores it on exit.
 	@staticmethod
@@ -157,6 +234,55 @@ class TestCase( unittest.TestCase ) :
 		locale.setlocale( category, l )
 		yield
 		locale.setlocale( category, previousLocale )
+
+	## Similar to `assertAlmostEqual( delta = error )` but works with Imath
+	# types like `V3f` etc.
+	## \todo Use more widely - there are lots of existing tests that could
+	# be more concise and/or give better failure messages if they used this.
+	def assertEqualWithAbsError( self, x, y, error, message = "" ) :
+
+		if hasattr( x, "equalWithAbsError" ) :
+			equal = x.equalWithAbsError( y, error )
+		elif isinstance( x, imath.Color4f ) :
+			equal = True
+			for i in range( 0, 4 ) :
+				equal = equal and math.fabs( x[i] - y[i] ) <= error
+		else :
+			equal = math.fabs( x - y ) <= error
+
+		if not equal :
+			message = f" : {message}" if message else ""
+			raise self.failureException(
+				f"{x} != {y} with error of {error}{message}"
+			)
+
+	## Runs `fn` repeatedly until it no longer asserts or `timeout` is
+	# reached. Useful for polling the output of an interactive render
+	# while waiting for a condition to be reached.
+	def assertEventually( self, fn, timeout = 10.0, interval = 0.1, delayFn = time.sleep ) :
+
+		if not callable( fn ) :
+			raise TypeError( "assertEventually requires a callable" )
+
+		start = time.time()
+		errors = []
+
+		while True :
+			try :
+				fn()
+				return
+			except AssertionError as e :
+				elapsed = time.time() - start
+				errors.append( ( elapsed, f"{e}" ) )
+				if elapsed >= timeout :
+					break
+				delayFn( min( interval, timeout - elapsed ) )
+				interval *= 2.0
+
+		attempts = "\n".join( f"{timestamp:8.2f}s : {error}" for timestamp, error in errors )
+		raise AssertionError(
+			f"Timed out after {elapsed:.2f}s : {errors[-1][1]}\n\nAttempts:\n{attempts}"
+		)
 
 	## Attempts to ensure that the hashes for a node
 	# are reasonable by jiggling around input values
@@ -270,11 +396,12 @@ class TestCase( unittest.TestCase ) :
 			Gaffer.V2fPlug, Gaffer.V3fPlug,
 			Gaffer.V2iPlug, Gaffer.V3iPlug,
 			Gaffer.Color3fPlug, Gaffer.Color4fPlug,
-			Gaffer.SplineffPlug, Gaffer.SplinefColor3fPlug, Gaffer.SplinefColor4fPlug,
+			Gaffer.RampffPlug, Gaffer.RampfColor3fPlug, Gaffer.RampfColor4fPlug,
 			Gaffer.Box2iPlug, Gaffer.Box3iPlug,
 			Gaffer.Box2fPlug, Gaffer.Box3fPlug,
 			Gaffer.TransformPlug, Gaffer.Transform2DPlug,
 			Gaffer.CompoundDataPlug.MemberPlug,
+			Gaffer.OptionalValuePlug,
 			additionalTerminalPlugTypes
 		)
 

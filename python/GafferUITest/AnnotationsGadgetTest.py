@@ -55,7 +55,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		script["node"] = Gaffer.Node()
 
 		graphGadget = GafferUI.GraphGadget( script )
-		gadget = graphGadget["__annotations"]
+		gadget = graphGadget.annotationsGadget()
 		self.assertEqual( gadget.annotationText( script["node"] ), "" )
 
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "test" ) )
@@ -73,7 +73,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		script["node"] = Gaffer.Node()
 
 		graphGadget = GafferUI.GraphGadget( script )
-		gadget = graphGadget["__annotations"]
+		gadget = graphGadget.annotationsGadget()
 		del graphGadget
 
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "test" ) )
@@ -85,7 +85,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		script["node"] = GafferTest.AddNode()
 
 		graphGadget = GafferUI.GraphGadget( script )
-		gadget = graphGadget["__annotations"]
+		gadget = graphGadget.annotationsGadget()
 		self.assertEqual( gadget.annotationText( script["node"] ), "" )
 
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "test : {op1}" ) )
@@ -107,7 +107,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "{plug}" ) )
 
 		graphGadget = GafferUI.GraphGadget( script )
-		gadget = graphGadget["__annotations"]
+		gadget = graphGadget.annotationsGadget()
 
 		for plugType, value, substitution in [
 			( Gaffer.BoolPlug, True, "On" ),
@@ -130,7 +130,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.addAnnotation( script["node"], "user", Gaffer.MetadataAlgo.Annotation( "test : {op1}" ) )
 
 		graphGadget = GafferUI.GraphGadget( script )
-		gadget = graphGadget["__annotations"]
+		gadget = graphGadget.annotationsGadget()
 		self.assertEqual( gadget.annotationText( script["node"] ), "test : 0" )
 
 	def testComputedText( self ) :
@@ -149,7 +149,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
 
 			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget["__annotations"]
+			gadget = graphGadget.annotationsGadget()
 
 			# Value must be computed in background, so initially we expect a placeholder
 			self.assertEqual( gadget.annotationText( script["node"] ), "test : ---" )
@@ -191,24 +191,29 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		script["node"] = GafferTest.AddNode()
 		script["node2"] = GafferTest.AddNode()
 
-		AnnotationsGadgetTest.expressionStartedCondition = threading.Condition()
-		AnnotationsGadgetTest.expressionContinueCondition = threading.Condition()
+		AnnotationsGadgetTest.expressionStartedEvent = threading.Event()
+		AnnotationsGadgetTest.expressionContinueEvent = threading.Event()
+
+		def waitAndClear( event, timeout = None ) :
+
+			result = event.wait( timeout )
+			event.clear()
+			return result
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( inspect.cleandoc(
 			"""
 			# Let the test know the expression has started running.
 			import GafferUITest
-			with GafferUITest.AnnotationsGadgetTest.expressionStartedCondition :
-				GafferUITest.AnnotationsGadgetTest.expressionStartedCondition.notify()
+			GafferUITest.AnnotationsGadgetTest.expressionStartedEvent.set()
 
 			# And loop checking for cancellation until the test
 			# allows us to continue.
 			while True :
 				IECore.Canceller.check( context.canceller() )
-				with GafferUITest.AnnotationsGadgetTest.expressionContinueCondition :
-					if GafferUITest.AnnotationsGadgetTest.expressionContinueCondition.wait( timeout = 0.1 ) :
-						break
+				if GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.wait( timeout = 0.1 ) :
+					GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.clear()
+					break
 
 			parent["node"]["op1"] = parent["node"]["op2"]
 			"""
@@ -221,15 +226,13 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 
 			graphGadget = GafferUI.GraphGadget( script )
 			viewportGadget = GafferUI.ViewportGadget( graphGadget )
-			gadget = graphGadget["__annotations"]
+			gadget = graphGadget.annotationsGadget()
 
 			# Value must be computed in background, so initially we expect a placeholder
 			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
 			# Wait for compute to start, and make a graph edit to cancel it.
-			with AnnotationsGadgetTest.expressionStartedCondition :
-				AnnotationsGadgetTest.expressionStartedCondition.wait()
-
+			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
 			script["node"]["op2"].setValue( 2 )
 
 			# We expect a call on the UI thread to re-dirty the annotation.
@@ -242,11 +245,8 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 			# A new background task should have been launched to compute the
 			# text again. If we let the expression run to completion then we
 			# should get the final text.
-			with AnnotationsGadgetTest.expressionStartedCondition :
-				AnnotationsGadgetTest.expressionStartedCondition.wait()
-
-			with GafferUITest.AnnotationsGadgetTest.expressionContinueCondition :
-				GafferUITest.AnnotationsGadgetTest.expressionContinueCondition.notify()
+			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
+			GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.set()
 
 			callHandler.assertCalled()
 			self.assertEqual( gadget.annotationText( script["node"] ), "4" )
@@ -256,8 +256,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 
 			script["node"]["op2"].setValue( 3 )
 			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
-			with AnnotationsGadgetTest.expressionStartedCondition :
-				AnnotationsGadgetTest.expressionStartedCondition.wait()
+			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
 
 			script["node2"]["op1"].setValue( 1 ) # Cancels
 
@@ -266,11 +265,8 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 			self.assertEqual( len( renderRequests ), 1 )
 			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
 
-			with AnnotationsGadgetTest.expressionStartedCondition :
-				AnnotationsGadgetTest.expressionStartedCondition.wait()
-
-			with GafferUITest.AnnotationsGadgetTest.expressionContinueCondition :
-				GafferUITest.AnnotationsGadgetTest.expressionContinueCondition.notify()
+			waitAndClear( AnnotationsGadgetTest.expressionStartedEvent )
+			GafferUITest.AnnotationsGadgetTest.expressionContinueEvent.set()
 
 			callHandler.assertCalled()
 			self.assertEqual( gadget.annotationText( script["node"] ), "6" )
@@ -286,7 +282,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
 
 			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget["__annotations"]
+			gadget = graphGadget.annotationsGadget()
 
 			# Value must be computed in background, so initially we expect a placeholder
 			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
@@ -320,7 +316,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
 
 			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget["__annotations"]
+			gadget = graphGadget.annotationsGadget()
 
 			# Value must be computed in background, so initially we expect a placeholder
 			self.assertEqual( gadget.annotationText( script["node"] ), "---" )
@@ -349,7 +345,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		script["node"] = GafferTest.AddNode()
 
 		graphGadget = GafferUI.GraphGadget( script )
-		gadget = graphGadget["__annotations"]
+		gadget = graphGadget.annotationsGadget()
 		viewportGadget = GafferUI.ViewportGadget( graphGadget )
 		renderRequests = GafferTest.CapturingSlot( viewportGadget.renderRequestSignal() )
 
@@ -391,7 +387,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
 
 			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget["__annotations"]
+			gadget = graphGadget.annotationsGadget()
 
 			# Value must be computed in background, so initially we expect a placeholder.
 			self.assertEqual( gadget.annotationText( script["node"], "user" ), "---" )
@@ -417,7 +413,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
 
 			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget["__annotations"]
+			gadget = graphGadget.annotationsGadget()
 
 			# Value must be computed in background, so initially we expect a placeholder
 			self.assertEqual( gadget.annotationText( script["node"], "test" ), "---" )
@@ -445,7 +441,7 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as callHandler :
 
 			graphGadget = GafferUI.GraphGadget( script )
-			gadget = graphGadget["__annotations"]
+			gadget = graphGadget.annotationsGadget()
 
 			# Value must be computed in background, so initially we expect a placeholder
 			self.assertEqual( gadget.annotationText( script["node"], "test0" ), "---" )
@@ -453,10 +449,71 @@ class AnnotationsGadgetTest( GafferUITest.TestCase ) :
 			# Remove annotations while the background task runs.
 			for i in range( 0, numAnnotations ) :
 				Gaffer.MetadataAlgo.removeAnnotation( script["node"], f"test{i}" )
-			self.assertEqual( gadget.annotationText( script["node"], "test0" ), "" )
 
 			# And wait for the task to complete.
 			callHandler.assertCalled()
 
-if __name__ == "__main__":
-	unittest.main()
+		self.assertEqual( gadget.annotationText( script["node"], "test0" ), "" )
+
+	def testAnnotationAt( self ) :
+
+		with GafferUI.Window() as window :
+			gadgetWidget = GafferUI.GadgetWidget()
+
+		viewportGadget = gadgetWidget.getViewportGadget()
+
+		script = Gaffer.ScriptNode()
+		script["node1"] = GafferTest.AddNode()
+		script["node2"] = GafferTest.AddNode()
+
+		graphGadget = GafferUI.GraphGadget( script )
+
+		node1Origin = imath.V2f( 0, 0 )
+		node2Origin = imath.V2f( 0, 10 )
+		graphGadget.setNodePosition( script["node1"], node1Origin )
+		graphGadget.setNodePosition( script["node2"], node2Origin )
+
+		viewportGadget.setPrimaryChild( graphGadget )
+
+		for node, name, text in [
+			( script["node1"], "userA", "testNode1UserA" ),
+			( script["node1"], "userB", "testNode1UserB" ),
+			( script["node2"], "userA", "testNode2UserA" ),
+			( script["node2"], "userC", "testNode2UserC" ),
+		] :
+			Gaffer.MetadataAlgo.addAnnotation( node, name, Gaffer.MetadataAlgo.Annotation( text ) )
+
+		window.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		viewportGadget.frame( imath.Box3f( imath.V3f( -3 ), imath.V3f( 13 ) ) )
+
+		annotationsGadget = graphGadget.annotationsGadget()
+
+		nodeGadget1 = graphGadget.nodeGadget( script["node1"] )
+		nodeGadget2 = graphGadget.nodeGadget( script["node2"] )
+
+		node1Corner = imath.V2f( nodeGadget1.bound().max().x, nodeGadget1.bound().max().y ) + node1Origin
+		node2Corner = imath.V2f( nodeGadget2.bound().max().x, nodeGadget2.bound().max().y ) + node2Origin
+
+		for gadgetPosition, desiredNode, desiredName in [
+			( imath.V2f( 0.0, 0.0 ), None, "" ),
+			( node1Corner + imath.V2f( 2.0, -1.0 ), script["node1"], "userA" ),
+			( node1Corner + imath.V2f( 2.0, -4.0 ), script["node1"], "userB" ),
+			( node2Corner + imath.V2f( 2.0, -1.0 ), script["node2"], "userA" ),
+			( node2Corner + imath.V2f( 2.0, -4.0 ), script["node2"], "userC" ),
+		] :
+			with self.subTest( gadgetPosition = gadgetPosition, desiredNode = desiredNode, desiredName = desiredName ) :
+
+				annotation = annotationsGadget.annotationAt(
+					IECore.LineSegment3f(
+						imath.V3f( gadgetPosition.x, gadgetPosition.y, 1000 ),
+						imath.V3f( gadgetPosition.x, gadgetPosition.y, -1000 )
+					)
+				)
+				if desiredNode is not None :
+					node, name = annotation
+					self.assertEqual( node, desiredNode )
+					self.assertEqual( name, desiredName )
+				else :
+					self.assertIsNone( annotation )

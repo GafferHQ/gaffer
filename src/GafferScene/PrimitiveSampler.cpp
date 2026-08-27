@@ -326,7 +326,7 @@ IECore::ConstObjectPtr PrimitiveSampler::computeProcessedObject( const ScenePath
 	const M44f primitiveVariableTransform = sourceTransform * transform.inverse();
 
 	vector<OutputVariableFunction> outputVariables;
-	for( auto &p : preprocessedSourcePrimitive->variables )
+	for( auto &p : evaluator->primitive()->variables )
 	{
 		if( !StringAlgo::matchMultiple( p.first, primitiveVariables ) )
 		{

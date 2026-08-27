@@ -603,6 +603,3 @@ class SignalsTest( GafferTest.TestCase ) :
 	def testVectorOfScopedConnections( self ) :
 
 		GafferTest.testSignalVectorOfScopedConnections()
-
-if __name__ == "__main__":
-	unittest.main()

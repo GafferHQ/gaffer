@@ -36,11 +36,51 @@
 
 import unittest
 
+import GafferCycles
 import GafferSceneTest
 
 class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "Cycles"
 
-if __name__ == "__main__":
-	unittest.main()
+	def _createDiffuseShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "diffuse_bsdf" )
+		return shader, shader["parameters"]["color"], shader["out"]["BSDF"]
+
+	def _createPointLight( self ) :
+
+		light = GafferCycles.CyclesLight()
+		light.loadShader( "point_light" )
+		return light, light["parameters"]["color"]
+
+	def _createDistantLight( self ) :
+
+		light = GafferCycles.CyclesLight()
+		light.loadShader( "distant_light" )
+		return light, light["parameters"]["color"]
+
+	def _cameraVisibilityAttribute( self ) :
+
+		return "cycles:visibility:camera"
+
+	def _createOptions( self ) :
+
+		# Options that speed up the render, which can otherwise take
+		# longer than we might want.
+
+		options = GafferCycles.CyclesOptions()
+
+		options["options"]["cycles:integrator:max_bounce"]["enabled"].setValue( True )
+		options["options"]["cycles:integrator:max_bounce"]["value"].setValue( 0 )
+
+		options["options"]["cycles:session:samples"]["enabled"].setValue( True )
+		options["options"]["cycles:session:samples"]["value"].setValue( 8 )
+
+		return options
+
+	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our Cycles backend" )
+	def testInstanceIDOutput( self ) :
+
+		pass

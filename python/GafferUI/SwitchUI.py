@@ -61,9 +61,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"index" : [
+		"index" : {
 
-			"description",
+			"description" :
 			"""
 			The index of the input which is passed through. A value
 			of 0 chooses the first input, 1 the second and so on. Values
@@ -71,39 +71,39 @@ Gaffer.Metadata.registerNode(
 			the beginning.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The array of inputs to choose from. One of these is chosen
 			by the index plug to be passed through to the output.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"plugValueWidget:type", "",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"plugValueWidget:type" : "",
 
-			"noduleLayout:spacing", lambda plug : 2.0 if Gaffer.Metadata.value( plug, "noduleLayout:section" ) in ( "top", "bottom", None ) else 0.25,
+			"noduleLayout:spacing" : lambda plug : 2.0 if Gaffer.Metadata.value( plug, "noduleLayout:section" ) in ( "top", "bottom", None ) else 0.25,
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the input specified by the index.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"deleteContextVariables" : [
+		"deleteContextVariables" : {
 
-			"description",
+			"description" :
 			"""
 			The names of context variables to be deleted before accessing the array
 			of inputs. Names should be space-separated and may use Gaffer's standard
@@ -113,14 +113,14 @@ Gaffer.Metadata.registerNode(
 			to compute the switch index.
 			""",
 
-			"nodule:type", "",
-			"layout:section", "Advanced",
+			"nodule:type" : "",
+			"layout:section" : "Advanced",
 
-		],
+		},
 
-		"connectedInputs" : [
+		"connectedInputs" : {
 
-			"description",
+			"description" :
 			"""
 			The indices of the input array that have incoming connections.
 
@@ -128,11 +128,11 @@ Gaffer.Metadata.registerNode(
 			> they operate over each input in turn.
 			""",
 
-			"nodule:type", "",
-			"layout:section", "Advanced",
-			"plugValueWidget:type", "GafferUI.SwitchUI._ConnectedInputsPlugValueWidget",
+			"nodule:type" : "",
+			"layout:section" : "Advanced",
+			"plugValueWidget:type" : "GafferUI.SwitchUI._ConnectedInputsPlugValueWidget",
 
-		],
+		},
 
 	}
 

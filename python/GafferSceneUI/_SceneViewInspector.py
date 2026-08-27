@@ -57,16 +57,13 @@ from Qt import QtWidgets
 # LightEditor. We also intend to move many of the components into GafferUI, so
 # that they can be used in the development of an ImageInspector too.
 
-# \todo Create a central renderer/attribute registry that we can
-# query for this information, this is also duplicated in EditScopeAlgo.cpp
 _rendererAttributePrefixes = {
-	"ai" : "Arnold",
-	"dl" : "Delight",
-	"gl" : "OpenGL",
 	"osl" : "OSL",
-	"cycles" : "Cycles",
 	"" : "USD",
-};
+}
+
+for t in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "attributePrefix" ) :
+	_rendererAttributePrefixes.setdefault( Gaffer.Metadata.value( t, "attributePrefix" ).rstrip( ":" ), t[9:] )
 
 __registeredShaderParameters = OrderedDict()
 
@@ -334,7 +331,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 			for path in selectedPaths :
 				context.set( "scene:path", IECore.InternedStringVectorData( path[1:].split( "/" ) ) )
 				inspectorResult = self.__inspector.inspect()
-				if inspectorResult is not None :
+				if inspectorResult is not None and not inspectorResult.fallbackDescription() :
 					inspectorResults.append( inspectorResult )
 
 		return inspectorResults
@@ -421,14 +418,10 @@ class _InspectorWidget( GafferUI.Widget ) :
 
 		else :
 
-			with GafferUI.PopupWindow() as self.__popup :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Image( "warningSmall.png" )
-					GafferUI.Label( "<h4>{}</h4>".format(
-						self.__formatWarnings( [ r.nonEditableReason() for r in self.__inspectorResults ] )
-					) )
-
-			self.__popup.popup( parent = self )
+			GafferUI.PopupWindow.showWarning(
+				self.__formatWarnings( [ r.nonEditableReason() for r in self.__inspectorResults ] ),
+				parent = self
+			)
 
 		return True
 
@@ -523,6 +516,8 @@ class _ValueWidget( GafferUI.Widget ) :
 			)
 		elif isinstance( value, ( imath.V3f, imath.V2f, imath.V3i, imath.V2i ) ) :
 			return " ".join( GafferUI.NumericWidget.valueToString( x ) for x in value )
+		elif isinstance( value, IECore.Object ) and ( source := GafferSceneUI.Private.ParameterInspector.connectionSource( value ) ) :
+			return source.shader + "." + source.name
 		elif value is None :
 			return ""
 		else :

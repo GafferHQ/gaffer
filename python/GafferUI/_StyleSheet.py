@@ -283,6 +283,11 @@ _styleSheet = string.Template(
 		padding: 5px 8px 5px 8px;
 	}
 
+	QMenuBar QToolButton#qt_menubar_ext_button {
+		qproperty-icon: url(:/pathListingList.png);
+		qproperty-iconSize: 10px 10px;
+	}
+
 	#gafferMenuBarWidgetContainer {
 		background-color: $backgroundDarkest;
 	}
@@ -433,7 +438,7 @@ _styleSheet = string.Template(
 	}
 
 	#gafferSearchField {
-		background-image: url(:/search.png);
+		background-image: url(:/searchFieldBackground.png);
 		background-repeat:no-repeat;
 		background-position: left center;
 		padding-left: 20px;
@@ -443,11 +448,11 @@ _styleSheet = string.Template(
 		margin-right: 4px;
 	}
 
-	QWidget[gafferClass="GafferUI.SplineWidget"] {
+	QWidget[gafferClass="GafferUI.RampWidget"] {
 		border: 1px solid $backgroundDark;
 	}
 
-	QWidget[gafferClass="GafferUI.SplineWidget"][gafferHighlighted="true"] {
+	QWidget[gafferClass="GafferUI.RampWidget"][gafferHighlighted="true"] {
 		border: 1px solid $brightColor;
 	}
 
@@ -515,7 +520,9 @@ _styleSheet = string.Template(
 		text-align: left;
 	}
 
-	*[gafferPlugValueWidget="true"] QPushButton[gafferClass="GafferUI.MenuButton"][gafferError="true"] {
+	/* Todo : I have no idea what `gafferPlugValueWidget` is for - I'm fairly sure it can be removed. */
+	*[gafferPlugValueWidget="true"] QPushButton[gafferClass="GafferUI.MenuButton"][gafferError="true"],
+	*[gafferPlugValueWidget="true"] QPushButton[gafferClass="GafferUI.MenuButton"][gafferError="true"]:disabled {
 		background-color : $errorColor;
 	}
 
@@ -540,7 +547,7 @@ _styleSheet = string.Template(
 		background-color: none;
 	}
 
-	QPushButton:disabled, QComboBox:disabled, QLabel::disabled {
+	QPushButton:disabled, QComboBox:disabled, QLabel::disabled, QCheckBox::disabled {
 		color: $tintLighterStrong;
 	}
 
@@ -1301,20 +1308,15 @@ _styleSheet = string.Template(
 		padding-left: 2px;
 	}
 
-	*[gafferClass="GafferSceneUI.HierarchyView"], *[gafferClass="GafferSceneUI.LightEditor"] QTreeView::item {
-		height: 18px;
-		padding-top: 0px;
-		padding-bottom: 0px;
-	}
-
-	*[gafferClass="GafferSceneUI.RenderPassEditor"] QTreeView::item {
-		min-height: 22px;
-		padding-top: 0px;
-		padding-bottom: 0px;
-	}
-
-	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item {
-		height: 18px;
+	*[gafferClass="GafferSceneUI.HierarchyView"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.LightEditor"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.RenderPassEditor"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.AttributeEditor"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.SceneInspector"] QTreeView::item,
+	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.LightLinkingEditor"] QTreeView::item,
+	*[gafferClass="GafferSceneUI.SetEditor"] QTreeView::item {
+		height: 20px;
 		padding-top: 0px;
 		padding-bottom: 0px;
 	}
@@ -1530,6 +1532,7 @@ _styleSheet = string.Template(
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"] > QFrame,
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] > QFrame,
+	*[gafferClass="GafferSceneUI.ImageSelectionToolUI._StatusWidget"],
 	*[gafferClass="GafferSceneUI._SceneViewInspector"] > QFrame
 	{
 		background: rgba( 42, 42, 42, 240 );
@@ -1743,7 +1746,8 @@ _styleSheet = string.Template(
 
 	/* PinningWidget */
 
-	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"] #menuDownArrow {
+	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"] #menuDownArrow,
+	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"] #menuDownArrow {
 		margin-top: 1px;
 		margin-left: 2px;
 		margin-right: 1px;
@@ -1755,12 +1759,6 @@ _styleSheet = string.Template(
 		border-radius: 2px;
 		border: none;
 		background: $background;
-	}
-
-	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"] #menuDownArrow {
-		margin-top: 1px;
-		margin-left: 2px;
-		margin-right: 1px;
 	}
 
 	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"] {
@@ -1781,12 +1779,35 @@ _styleSheet = string.Template(
 		background-color: $backgroundHighlight;
 	}
 
-	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"]:disabled {
-		background-color: $backgroundHighlight;
-	}
-
 	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"][gafferHighlighted="true"] {
 		border: 1px solid $brightColor;
+	}
+
+	QWidget[gafferClass="GafferUI.BreadCrumbsWidget"] {
+		border: 1px solid transparent;
+		border-bottom-color: $tintDarkerStronger;
+		border-right-color: $tintDarkerStronger;
+		background-color: $backgroundLight;
+		border-radius: $widgetCornerRadius;
+	}
+
+	QWidget[gafferClass="GafferUI.BreadCrumbsWidget"] QLineEdit {
+		border: 0;
+		border-radius: 0;
+		background-color: transparent;
+	}
+
+	QWidget[gafferClass="GafferUI.BreadCrumbsWidget"] QPushButton {
+		margin: 1px;
+		padding-top: 1px;
+		padding-bottom: 1px;
+		padding-left: 5px;
+		padding-right: 5px;
+	}
+
+	QWidget[gafferClass="GafferUI.BreadCrumbsWidget"] QPushButton[hasIcon="false"]:hover {
+		background-color : $brightColorTransparent;
+		border-radius: 4px;
 	}
 
 	"""

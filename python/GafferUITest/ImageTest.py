@@ -93,6 +93,3 @@ class ImageTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertIn( 'Unable to find file "iAmNotAFile"', mh.messages[0].message )
-
-if __name__ == "__main__":
-	unittest.main()

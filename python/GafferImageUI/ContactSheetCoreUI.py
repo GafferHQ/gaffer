@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import itertools
-
 import Gaffer
 import GafferImage
 
@@ -52,18 +50,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The resolution and aspect ratio of the output image.
 			""",
 
-		],
+		},
 
-		"tiles" : [
+		"tiles" : {
 
-			"description",
+			"description" :
 			"""
 			The bounding boxes of each tile.
 
@@ -71,37 +69,33 @@ Gaffer.Metadata.registerNode(
 			> while preserving aspect ratio.
 			""",
 
-		],
+		},
 
-		"tileVariable" : [
+		"tileVariable" : {
 
-			"description",
+			"description" :
 			"""
 			Context variable used to pass the index of the current tile to the upstream
 			node network. This should be used to provide a different input image per tile.
 			""",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The pixel filter used when resizing the input images. Each
 			filter provides different tradeoffs between sharpness and
 			the danger of aliasing or ringing.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Default", "",
-			"preset:Nearest", "nearest",
+			"preset:Default" : "",
+			"preset:Nearest" : "nearest",
 
-		] + list( itertools.chain(
-
-			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() ]
-
-		) ),
+		} | { "preset:" + x.title() : x for x in GafferImage.FilterAlgo.filterNames() },
 
 	}
 

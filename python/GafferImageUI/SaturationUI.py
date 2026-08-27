@@ -49,20 +49,20 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"saturation" : [
+		"saturation" : {
 
-			"description",
+			"description" :
 			"""
 			Values less than 1 bring colors closer to monochrome, values greater than 1
 			push colors away from monochrome.
 			""",
 
-		],
+		},
 
-		"processUnpremultiplied" : [
+		"processUnpremultiplied" : {
 			# Changing saturation is linear, so unpremulting first wouldn't have any affect
-			"plugValueWidget:type", "",
-		],
+			"plugValueWidget:type" : "",
+		},
 
 	}
 

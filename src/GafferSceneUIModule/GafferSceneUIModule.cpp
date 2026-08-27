@@ -36,7 +36,6 @@
 
 #include "boost/python.hpp"
 
-#include "ContextAlgoBinding.h"
 #include "HierarchyViewBinding.h"
 #include "InspectorBinding.h"
 #include "SceneGadgetBinding.h"
@@ -48,6 +47,7 @@
 #include "SetEditorBinding.h"
 #include "RenderPassEditorBinding.h"
 #include "InspectorColumnBinding.h"
+#include "SceneInspectorBinding.h"
 #include "ScriptNodeAlgoBinding.h"
 
 using namespace GafferSceneUIModule;
@@ -60,7 +60,6 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	bindVisualisers();
 	bindHierarchyView();
 	bindSceneGadget();
-	bindContextAlgo();
 	bindQueries();
 	bindInspector();
 	bindInspectorColumn();
@@ -68,5 +67,6 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	bindSetEditor();
 	bindRenderPassEditor();
 	bindScriptNodeAlgo();
+	bindSceneInspector();
 
 }

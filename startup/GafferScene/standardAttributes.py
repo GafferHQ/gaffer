@@ -36,147 +36,312 @@
 
 import imath
 
-import IECore
-
 import Gaffer
 
-Gaffer.Metadata.registerValue( "attribute:scene:visible", "label", "Visible" )
-Gaffer.Metadata.registerValue( "attribute:scene:visible", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:scene:visible",
-	"description",
-	"""
-	Whether or not the object can be seen - invisible objects are
-	not sent to the renderer at all. Typically more fine
-	grained (camera, reflection etc) visibility can be
-	specified using a renderer specific attributes node.
-	Note that making a parent location invisible will
-	always make all the children invisible too, regardless
-	of their visibility settings.
-	""",
-)
+Gaffer.Metadata.registerValues( {
 
-Gaffer.Metadata.registerValue( "attribute:doubleSided", "label", "Double Sided" )
-Gaffer.Metadata.registerValue( "attribute:doubleSided", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:doubleSided",
-	"description",
-	"""
-	Whether or not the object can be seen from both sides.
-	Single sided objects appear invisible when seen from
-	the back.
-	""",
-)
+	"attribute:scene:visible" : {
 
-Gaffer.Metadata.registerValue( "attribute:render:displayColor", "label", "Display Color" )
-Gaffer.Metadata.registerValue( "attribute:render:displayColor", "defaultValue", IECore.Color3fData( imath.Color3f( 1 ) ) )
-Gaffer.Metadata.registerValue(
-	"attribute:render:displayColor",
-	"description",
-	"""
-	The default colour used to display the object in the absence
-	of a specific shader assignment. Commonly used to control
-	basic object appearance in the Viewer.
+		"defaultValue" : True,
+		"description" :
+		"""
+		Whether or not the object can be seen - invisible objects are
+		not sent to the renderer at all. Typically more fine
+		grained (camera, reflection etc) visibility can be
+		specified using a renderer specific attributes node.
+		Note that making a parent location invisible will
+		always make all the children invisible too, regardless
+		of their visibility settings.
+		""",
+		"category" : "Standard",
+		"label" : "Visible",
+		"layout:section" : "Attributes",
 
-	> Tip : For more detailed control of object appearance in the
-	> Viewer, use OpenGL attributes.
-	""",
-)
+	},
 
-Gaffer.Metadata.registerValue( "attribute:gaffer:transformBlur", "label", "Transform Blur" )
-Gaffer.Metadata.registerValue( "attribute:gaffer:transformBlur", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:gaffer:transformBlur",
-	"description",
-	"""
-	Whether or not transformation animation on the object
-	is taken into account in the rendered image. Use the
-	`gaffer:transformBlurSegments` attribute to specify
-	the number of segments used to represent the motion.
-	""",
-)
+	"attribute:doubleSided" : {
 
-Gaffer.Metadata.registerValue( "attribute:gaffer:transformBlurSegments", "label", "Transform Segments" )
-Gaffer.Metadata.registerValue( "attribute:gaffer:transformBlurSegments", "defaultValue", IECore.IntData( 1 ) )
-Gaffer.Metadata.registerValue(
-	"attribute:gaffer:transformBlurSegments",
-	"description",
-	"""
-	The number of segments of transform animation to
-	pass to the renderer when Transform Blur is on.
-	""",
-)
+		"defaultValue" : True,
+		"description" :
+		"""
+		Whether or not the object can be seen from both sides.
+		Single sided objects appear invisible when seen from
+		the back.
+		""",
+		"category" : "Standard",
+		"label" : "Double Sided",
+		"layout:section" : "Attributes",
 
-Gaffer.Metadata.registerValue( "attribute:gaffer:deformationBlur", "label", "Deformation Blur" )
-Gaffer.Metadata.registerValue( "attribute:gaffer:deformationBlur", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:gaffer:deformationBlur",
-	"description",
-	"""
-	Whether or not deformation animation on the object
-	is taken into account in the rendered image. Use the
-	`gaffer:deformationBlurSegments` attribute to specify
-	the number of segments used to represent the motion.
-	""",
-)
+	},
 
-Gaffer.Metadata.registerValue( "attribute:gaffer:deformationBlurSegments", "label", "Deformation Segments" )
-Gaffer.Metadata.registerValue( "attribute:gaffer:deformationBlurSegments", "defaultValue", IECore.IntData( 1 ) )
-Gaffer.Metadata.registerValue(
-	"attribute:gaffer:deformationBlurSegments",
-	"description",
-	"""
-	The number of segments of deformation animation to
-	pass to the renderer when Deformation Blur is on.
-	""",
-)
+	"attribute:render:displayColor" : {
 
-Gaffer.Metadata.registerValue( "attribute:light:mute", "label", "Mute" )
-Gaffer.Metadata.registerValue( "attribute:light:mute", "defaultValue", IECore.BoolData( False ) )
-Gaffer.Metadata.registerValue(
-	"attribute:light:mute",
-	"description",
-	"""
-	Whether this light is muted.
-	"""
-)
+		"defaultValue" : imath.Color3f( 1 ),
+		"description" :
+		"""
+		The default colour used to display the object in the absence
+		of a specific shader assignment. Commonly used to control
+		basic object appearance in the Viewer.
 
-Gaffer.Metadata.registerValue( "attribute:linkedLights", "label", "Linked Lights" )
-Gaffer.Metadata.registerValue( "attribute:linkedLights", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"attribute:linkedLights",
-	"description",
-	"""
-	The lights to be linked to this object. Accepts a set expression or
-	a space separated list of lights. Use \"defaultLights\" to refer to
-	all lights that contribute to illumination by default.
-	"""
-)
+		> Tip : For more detailed control of object appearance in the
+		> Viewer, use OpenGL attributes.
+		""",
+		"category" : "Standard",
+		"label" : "Display Color",
+		"layout:section" : "Attributes",
 
-Gaffer.Metadata.registerValue( "attribute:filteredLights", "label", "Filtered Lights" )
-Gaffer.Metadata.registerValue( "attribute:filteredLights", "defaultValue", IECore.StringData( "" ) )
-Gaffer.Metadata.registerValue(
-	"attribute:filteredLights",
-	"description",
-	"""
-	The lights to be filtered by this light filter. Accepts a
-	set expression or a space separated list of lights.
-	Use \"defaultLights\" to refer to all lights that
-	contribute to illumination by default.
-	"""
-)
+	},
 
-Gaffer.Metadata.registerValue( "attribute:gaffer:automaticInstancing", "label", "Automatic Instancing" )
-Gaffer.Metadata.registerValue( "attribute:gaffer:automaticInstancing", "defaultValue", IECore.BoolData( True ) )
-Gaffer.Metadata.registerValue(
-	"attribute:gaffer:automaticInstancing",
-	"description",
-	"""
-	By default, if Gaffer sees two objects are identical, it will pass them
-	to the renderer only once, saving a lot of memory. You can set this to
-	false to disable that, losing the memory savings. This can be useful
-	in certain cases like using world space displacement and wanting multiple
-	copies to displace differently. Disabling is currently only supported by
-	the Arnold render backend.
-	""",
-)
+	"attribute:gaffer:transformBlur" : {
+
+		"defaultValue" : True,
+		"description" :
+		"""
+		Whether or not transformation animation on the object
+		is taken into account in the rendered image. Use the
+		`gaffer:transformBlurSegments` attribute to specify
+		the number of segments used to represent the motion.
+		""",
+		"category" : "Standard",
+		"label" : "Transform Blur",
+		"layout:section" : "Motion Blur",
+
+	},
+
+	"attribute:gaffer:transformBlurSegments" : {
+
+		"defaultValue" : 1,
+		"minValue" : 1,
+		"description" :
+		"""
+		The number of segments of transform animation to
+		pass to the renderer when Transform Blur is on.
+		""",
+		"category" : "Standard",
+		"label" : "Transform Segments",
+		"layout:section" : "Motion Blur",
+
+	},
+
+	"attribute:gaffer:deformationBlur" : {
+
+		"defaultValue" : True,
+		"description" :
+		"""
+		Whether or not deformation animation on the object
+		is taken into account in the rendered image. Use the
+		`gaffer:deformationBlurSegments` attribute to specify
+		the number of segments used to represent the motion.
+		""",
+		"category" : "Standard",
+		"label" : "Deformation Blur",
+		"layout:section" : "Motion Blur",
+
+	},
+
+	"attribute:gaffer:deformationBlurSegments" : {
+
+		"defaultValue" : 1,
+		"minValue" : 1,
+		"description" :
+		"""
+		The number of segments of deformation animation to
+		pass to the renderer when Deformation Blur is on.
+		""",
+		"category" : "Standard",
+		"label" : "Deformation Segments",
+		"layout:section" : "Motion Blur",
+
+	},
+
+	"attribute:light:mute" : {
+
+		"defaultValue" : False,
+		"description" :
+		"""
+		Whether this light is muted.
+		""",
+		"category" : "Standard",
+		"label" : "Mute",
+		"layout:section" : "Light",
+
+	},
+
+	"attribute:linkedLights" : {
+
+		"defaultValue" : "defaultLights",
+		"description" :
+		"""
+		The lights to be linked to this object. Accepts a set expression or
+		a space separated list of lights. Use \"defaultLights\" to refer to
+		all lights that contribute to illumination by default.
+
+		Examples
+		--------
+
+		All the default lights plus the lights in the `characterLights` set
+		:
+
+		`defaultLights | characterLights`
+
+		All the default lights, but without the lights in the `interiorLights`
+		set :
+
+		`defaultLights - interiorLights`
+
+		> Info : Lights can be added to sets either by using the `sets` plug
+		> on the light node itself, or by using a separate Set node.
+		""",
+		"category" : "Standard",
+		"label" : "Linked Lights",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True
+
+	},
+
+	"attribute:linkedLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights never to be linked to this object, even when they are
+		included by the `linkedLights` attribute. Accepts a set expression
+		or a space separated list of lights.
+
+		> Tip : Since `linkedLights` defaults to \"defaultLights\",
+		> exclusions take effect even when no `linkedLights`
+		> attribute has been created.
+		""",
+		"category" : "Standard",
+		"label" : "Linked Lights Exclusions",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True
+
+	},
+
+	"attribute:shadowedLights" : {
+
+		"defaultValue" : "__lights",
+		"description" :
+		"""
+		The lights that cast shadows from this object. Accepts a set
+		expression or a space separated list of lights.
+		""",
+		"category" : "Standard",
+		"label" : "Shadowed Lights",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True,
+
+	},
+
+	"attribute:shadowedLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights that never cast shadows from this object, even when they are
+		included by the `shadowedLights` attribute. Accepts a set expression or
+		a space separated list of lights.
+
+		> Tip : Since `shadowedLights` defaults to \"__lights\", exclusions
+		> take effect even when no `shadowedLights` attribute has been
+		> created.
+		""",
+		"category" : "Standard",
+		"label" : "Shadowed Lights Exclusions",
+		"layout:section" : "Light Linking",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True,
+
+	},
+
+	"attribute:filteredLights" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights to be filtered by this light filter. Accepts a
+		set expression or a space separated list of lights.
+		Use \"defaultLights\" to refer to all lights that
+		contribute to illumination by default.
+		""",
+		"category" : "Standard",
+		"label" : "Filtered Lights",
+		"layout:section" : "Light Filters",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True,
+
+	},
+
+	"attribute:filteredLights:exclusions" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The lights that are never filtered by this light filter, even when they
+		are included by the `filteredLights` attribute. Accepts a set expression
+		or a space separated list of lights. Has no effect unless `filteredLights`
+		specifies lights to be filtered.
+		""",
+		"category" : "Standard",
+		"label" : "Filtered Lights Exclusions",
+		"layout:section" : "Light Filters",
+
+		"plugValueWidget:type" : "GafferSceneUI.SetExpressionPlugValueWidget",
+		"ui:scene:acceptsSetExpression" : True,
+
+	},
+
+	"attribute:gaffer:automaticInstancing" : {
+
+		"defaultValue" : True,
+		"description" :
+		"""
+		By default, if Gaffer sees two objects are identical, it will pass them
+		to the renderer only once, saving a lot of memory. You can set this to
+		false to disable that, losing the memory savings. This can be useful
+		in certain cases like using world space displacement and wanting multiple
+		copies to displace differently. Disabling is currently only supported by
+		the Arnold and RenderMan renderer backends.
+		""",
+		"category" : "Standard",
+		"label" : "Automatic Instancing",
+		"layout:section" : "Instancing",
+
+	},
+
+	"attribute:surface" : {
+
+		"category" : "Standard",
+
+	},
+
+	"attribute:displacement" : {
+
+		"category" : "Standard",
+
+	},
+
+	"attribute:volume" : {
+
+		"category" : "Standard",
+
+	},
+
+	"attribute:light" : {
+
+		"category" : "Standard",
+
+	},
+
+} )
+
+Gaffer.Metadata.registerValue( "attribute:user:*", "category", "User" )

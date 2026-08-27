@@ -89,7 +89,7 @@ class LayoutsTest( GafferUITest.TestCase ) :
 			# Run test in subprocess, because we don't want to pollute the other
 			# tests with the configs we load.
 			try :
-				env = os.environ.copy()
+				env = Gaffer.environment()
 				env["GAFFERUITEST_LAYOUTTEST_SUBPROCESS"] = "1"
 				subprocess.check_output(
 					[ str( Gaffer.executablePath() ), "test", "GafferUITest.LayoutsTest.testNoPersistentLayoutsInDefaultConfigs" ],
@@ -232,6 +232,3 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		layout2 = layouts.create( "MissingEditor2", script )
 		self.assertIsInstance( layout2, GafferUI.Editor )
 		self.assertEqual( layout2.getTitle(), "Nonexistent Editor" )
-
-if __name__ == "__main__":
-	unittest.main()

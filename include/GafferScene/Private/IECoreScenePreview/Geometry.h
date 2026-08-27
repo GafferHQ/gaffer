@@ -36,9 +36,11 @@
 
 #include "GafferScene/Export.h"
 
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/Private/IECoreScenePreview/TypeIds.h"
 
 #include "IECoreScene/VisibleRenderable.h"
+
+#include "IECore/Version.h"
 
 namespace IECoreScenePreview
 {
@@ -52,7 +54,7 @@ class GAFFERSCENE_API Geometry : public IECoreScene::VisibleRenderable
 
 		Geometry( const std::string &type = "", const Imath::Box3f &bound = Imath::Box3f(), const IECore::CompoundDataPtr &parameters = nullptr );
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Geometry, GafferScene::PreviewGeometryTypeId, IECoreScene::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Geometry, IECoreScenePreview::PreviewGeometryTypeId, IECoreScene::VisibleRenderable );
 
 		void setType( const std::string &type );
 		const std::string &getType() const;
@@ -64,7 +66,10 @@ class GAFFERSCENE_API Geometry : public IECoreScene::VisibleRenderable
 		const IECore::CompoundData *parameters() const;
 
 		Imath::Box3f bound() const override;
-		void render( IECoreScene::Renderer *renderer ) const override;
+
+#if CORTEX_COMPATIBILITY_VERSION < MAKE_CORTEX_COMPATIBILITY_VERSION( 10, 6 )
+		void render( IECoreScene::Renderer *renderer ) const override {};
+#endif
 
 	private:
 

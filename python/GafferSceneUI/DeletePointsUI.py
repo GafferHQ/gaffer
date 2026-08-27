@@ -47,8 +47,8 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	plugs = {
-		"selectionMode" : [
-			"description",
+		"selectionMode" : {
+			"description" :
 			"""
 			Chooses how to select points to delete.
 
@@ -56,71 +56,71 @@ Gaffer.Metadata.registerNode(
 			- IdListPrimitiveVariable : Deletes points with Ids in the `idListVariable` primitive variable.
 			- IdList : Deletes points with Ids in the `idList`.
 			""",
-			"preset:Vertex Primitive Variable", GafferScene.DeletePoints.SelectionMode.VertexPrimitiveVariable,
-			"preset:Id List Primitive Variable", GafferScene.DeletePoints.SelectionMode.IdListPrimitiveVariable,
-			"preset:Id List", GafferScene.DeletePoints.SelectionMode.IdList,
+			"preset:Vertex Primitive Variable" : GafferScene.DeletePoints.SelectionMode.VertexPrimitiveVariable,
+			"preset:Id List Primitive Variable" : GafferScene.DeletePoints.SelectionMode.IdListPrimitiveVariable,
+			"preset:Id List" : GafferScene.DeletePoints.SelectionMode.IdList,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
 
 
-		"adjustBounds" : [
+		"adjustBounds" : {
 
-			"userDefault", False,
+			"userDefault" : False,
 
-		],
+		},
 
-		"points" : [
-			"description",
+		"points" : {
+			"description" :
 			"""
 			Vertex interpolated int, float or bool primitive variable to choose which points to delete. Note a non-zero value indicates the point will be deleted. Only used when `selectionMode` is "VertexPrimitiveVariable".
 			""",
 
-			"layout:visibilityActivator", lambda plug : plug.node()["selectionMode"].getValue() == GafferScene.DeletePoints.SelectionMode.VertexPrimitiveVariable
-		],
+			"layout:visibilityActivator" : lambda plug : plug.node()["selectionMode"].getValue() == GafferScene.DeletePoints.SelectionMode.VertexPrimitiveVariable
+		},
 
-		"idListVariable" : [
-			"description",
+		"idListVariable" : {
+			"description" :
 			"""
 			The name of a constant primitive variable holding a list of ids to delete. Must be type IntVectorData or Int64VectorData. Only used when `selectionMode` is "IdListPrimitiveVariable".
 			""",
 
-			"layout:visibilityActivator", lambda plug : plug.node()["selectionMode"].getValue() == GafferScene.DeletePoints.SelectionMode.IdListPrimitiveVariable
-		],
+			"layout:visibilityActivator" : lambda plug : plug.node()["selectionMode"].getValue() == GafferScene.DeletePoints.SelectionMode.IdListPrimitiveVariable
+		},
 
-		"idList" : [
-			"description",
+		"idList" : {
+			"description" :
 			"""
 			A list of ids to delete. Only used when `selectionMode` is "IdList".
 			""",
 
-			"layout:visibilityActivator", lambda plug : plug.node()["selectionMode"].getValue() == GafferScene.DeletePoints.SelectionMode.IdList
-		],
+			"layout:visibilityActivator" : lambda plug : plug.node()["selectionMode"].getValue() == GafferScene.DeletePoints.SelectionMode.IdList
+		},
 
-		"id" : [
-			"description",
+		"id" : {
+			"description" :
 			"""
 			When using an id list to delete points, this primitive variable defines the id used for each point.
 			If this primitive variable is not found, then the index of each point is its id.
 			""",
 
-			"layout:visibilityActivator", lambda plug : plug.node()["selectionMode"].getValue() in [ GafferScene.DeletePoints.SelectionMode.IdList, GafferScene.DeletePoints.SelectionMode.IdListPrimitiveVariable ]
-		],
+			"layout:visibilityActivator" : lambda plug : plug.node()["selectionMode"].getValue() in [ GafferScene.DeletePoints.SelectionMode.IdList, GafferScene.DeletePoints.SelectionMode.IdListPrimitiveVariable ]
+		},
 
 
-		"invert" : [
-			"description",
+		"invert" : {
+			"description" :
 			"""
 			Invert the condition used to delete points. If the primvar is zero then the point will be deleted.
 			"""
-		],
+		},
 
-		"ignoreMissingVariable" : [
-			"description",
+		"ignoreMissingVariable" : {
+			"description" :
 			"""
 			Causes the node to do nothing if the primitive variable doesn't exist on the points, instead of erroring.
 			"""
-		],
+		},
 
 	}
 

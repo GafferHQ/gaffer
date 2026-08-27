@@ -41,6 +41,8 @@
 
 #include "Gaffer/Signals.h"
 
+#include "GafferScene/RenderManifest.h"
+
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
 
@@ -95,19 +97,19 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 
 		void updateMatchingPaths( const IECore::PathMatcher &pathsToUpdate, const ProgressCallback &callback = ProgressCallback() );
 
-		// ID queries
-		// ==========
+		// Manifest
+		// ========
 		//
-		// These allow IDs acquired from a standard `uint id` AOV to be mapped
+		// Allows IDs acquired from a standard `id` AOV to be mapped
 		// back to the scene paths they came from.
+		std::shared_ptr<RenderManifest> renderManifest();
+		std::shared_ptr<const RenderManifest> renderManifest() const;
 
-		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const;
-		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids ) const;
+		// Controls if a manifest is needed even without any id Outputs.
+		// ( Needed by SceneView which creates Outputs itself without the controller knowing )
+		void setManifestRequired( bool manifestRequired );
+		bool getManifestRequired();
 
-		// Returns the ID associated with the specified path, or `0` if that
-		// path has not been rendered and `createIfNecessary` is `false`.
-		uint32_t idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary = false ) const;
-		std::vector<uint32_t> idsForPaths( const IECore::PathMatcher &paths, bool createIfNecessary = false ) const;
 
 	private :
 
@@ -122,8 +124,9 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 			DeformationBlurGlobalComponent = 32,
 			CameraShutterGlobalComponent = 64,
 			IncludedPurposesGlobalComponent = 128,
+			IDGlobalComponent = 256,
 			CapsuleAffectingGlobalComponents = TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent,
-			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent
+			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent | IDGlobalComponent
 		};
 
 		void plugDirtied( const Gaffer::Plug *plug );
@@ -137,13 +140,11 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		void cancelBackgroundTask();
 
 		class SceneGraph;
-		class SceneGraphUpdateTask;
-		class IDMap;
 
 		ConstScenePlugPtr m_scene;
 		Gaffer::ConstContextPtr m_context;
 		IECoreScenePreview::RendererPtr m_renderer;
-		std::unique_ptr<IDMap> m_idMap;
+
 
 		GafferScene::VisibleSet m_visibleSet;
 		size_t m_minimumExpansionDepth;
@@ -166,6 +167,9 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		IECoreScenePreview::Renderer::AttributesInterfacePtr m_defaultAttributes;
 
 		std::shared_ptr<Gaffer::BackgroundTask> m_backgroundTask;
+
+		bool m_manifestRequired;
+		std::shared_ptr<RenderManifest> m_renderManifest;
 
 };
 

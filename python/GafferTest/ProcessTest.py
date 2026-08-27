@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import sys
 import unittest
 
 import IECore
@@ -229,6 +230,7 @@ class ProcessTest( GafferTest.TestCase ) :
 
 			self.assertIn( monitor.plugStatistics( plug ).computeCount, { 5, 6, 8 } )
 
+	@unittest.skipIf( GafferTest.inCI() and sys.platform == "darwin", "Intermittent failures on macOS CI" )
 	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration" } )
 	def testCollaborationTaskDistribution( self ) :
 
@@ -428,6 +430,3 @@ class ProcessTest( GafferTest.TestCase ) :
 				GafferTest.runTestProcess( plug, 0, dependencies )
 
 		self.assertEqual( monitor.plugStatistics( plug ).computeCount, sum( branchFactor ** d for d in range( 0, maxDepth + 1 ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

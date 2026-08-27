@@ -123,7 +123,7 @@ private:
 	/// Implement to extend curve to specified key
 	virtual void extend( CurvePlug& curve, Animation::Direction direction, KeyPtr key ) const;
 
-	typedef std::vector< ConstExtrapolatorPtr > Container;
+	using Container = std::vector<ConstExtrapolatorPtr>;
 	static const Container& get();
 
 	Animation::Extrapolation m_extrapolation;
@@ -447,7 +447,7 @@ private:
 		//        f'(0) =                 c(t)
 		//        f'(1) = 3a(t) + 2b(t) + c(t)
 		//
-		//        when th == 1 floating point imprecision gives f'(1) as slighty less than 0.
+		//        when th == 1 floating point imprecision gives f'(1) as slightly less than 0.
 
 		assert( ( ct >= 0.0 ) && ( at3 + bt2 + ct >= ( ( th == 1.0 ) ? -1e-15 : 0.0 ) ) );
 
@@ -3056,7 +3056,7 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "CycleFlip";
 		default:
 			assert( 0 );
-			return 0;
+			return nullptr;
 	}
 }
 

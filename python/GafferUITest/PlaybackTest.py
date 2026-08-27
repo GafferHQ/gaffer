@@ -71,6 +71,3 @@ class PlaybackTest( GafferUITest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 		self.assertEqual( s2.context().getFrame(), s.context().getFrame() )
-
-if __name__ == "__main__":
-	unittest.main()

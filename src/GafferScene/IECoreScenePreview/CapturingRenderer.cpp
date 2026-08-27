@@ -115,36 +115,35 @@ Renderer::AttributesInterfacePtr CapturingRenderer::attributes( const IECore::Co
 	return new CapturedAttributes( ConstCompoundObjectPtr( attributes ) );
 }
 
-Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
-	return this->object( name, camera, attributes );
+	return this->object( name, ObjectSamples( samples.begin(), samples.end() ), times, attributes );
 }
 
-Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CapturingRenderer::light( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
-	return this->object( name, vector<const Object *>( samples.begin(), samples.end() ), times, attributes );
+	return this->object( name, samples, times, attributes );
 }
 
-Renderer::ObjectInterfacePtr CapturingRenderer::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CapturingRenderer::lightFilter( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
-	return this->object( name, object, attributes );
+	return this->object( name, samples, times, attributes );
 }
 
-Renderer::ObjectInterfacePtr CapturingRenderer::lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
-{
-	return this->object( name, object, attributes );
-}
-
-Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
-{
-	return this->object( name, { object }, {}, attributes );
-}
-
-Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes )
 {
 	IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 	checkPaused();
+
+	if( samples.size() != times.size() )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "CapturingRenderer::object",
+			"Number of object samples ({}) doesn't match number of time samples ({}) for object \"{}\"",
+			samples.size(), times.size(), name
+		);
+	}
 
 	// To facilitate the testing of code that handles the return from the various object methods of
 	// a renderer, we return null if the `cr:unrenderable` attribute is set to true.
@@ -174,6 +173,13 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 		a->second->addRef();
 	}
 
+	return result;
+}
+
+Renderer::ObjectInterfacePtr CapturingRenderer::pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes )
+{
+	auto result = object( name, staticSamplesCast<ConstObjectPtr>( samples ), times, attributes );
+	static_cast<CapturedObject *>( result.get() )->m_capturedPointInstancerPrototypes = prototypes;
 	return result;
 }
 
@@ -237,8 +243,8 @@ bool CapturingRenderer::CapturedAttributes::unrenderableAttributeValue( const Ca
 // CapturedObject
 //////////////////////////////////////////////////////////////////////////
 
-CapturingRenderer::CapturedObject::CapturedObject( CapturingRenderer *renderer, const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
-	:	m_renderer( renderer ), m_name( name ), m_capturedSamples( samples.begin(), samples.end() ), m_capturedSampleTimes( times ), m_numAttributeEdits( 0 ), m_id( 0 )
+CapturingRenderer::CapturedObject::CapturedObject( CapturingRenderer *renderer, const std::string &name, const ObjectSamples &samples, const SampleTimes &times )
+	:	m_renderer( renderer ), m_name( name ), m_capturedSamples( samples.begin(), samples.end() ), m_capturedSampleTimes( times ), m_numAttributeEdits( 0 ), m_id( 0 ), m_instanceID( 0 )
 {
 }
 
@@ -257,22 +263,27 @@ const std::string &CapturingRenderer::CapturedObject::capturedName() const
 	return m_name;
 }
 
-const std::vector<IECore::ConstObjectPtr> &CapturingRenderer::CapturedObject::capturedSamples() const
+const IECoreScenePreview::Renderer::ObjectSamples &CapturingRenderer::CapturedObject::capturedSamples() const
 {
 	return m_capturedSamples;
 }
 
-const std::vector<float> &CapturingRenderer::CapturedObject::capturedSampleTimes() const
+const IECoreScenePreview::Renderer::SampleTimes &CapturingRenderer::CapturedObject::capturedSampleTimes() const
 {
 	return m_capturedSampleTimes;
 }
 
-const std::vector<Imath::M44f> &CapturingRenderer::CapturedObject::capturedTransforms() const
+const std::vector<IECoreScenePreview::Renderer::Prototype> &CapturingRenderer::CapturedObject::capturedPointInstancerPrototypes() const
+{
+	return m_capturedPointInstancerPrototypes;
+}
+
+const IECoreScenePreview::Renderer::TransformSamples &CapturingRenderer::CapturedObject::capturedTransforms() const
 {
 	return m_capturedTransforms;
 }
 
-const std::vector<float> &CapturingRenderer::CapturedObject::capturedTransformTimes() const
+const IECoreScenePreview::Renderer::SampleTimes &CapturingRenderer::CapturedObject::capturedTransformTimes() const
 {
 	return m_capturedTransformTimes;
 }
@@ -282,9 +293,9 @@ const CapturingRenderer::CapturedAttributes *CapturingRenderer::CapturedObject::
 	return m_capturedAttributes.get();
 }
 
-std::vector< IECore::InternedString > CapturingRenderer::CapturedObject::capturedLinkTypes() const
+std::vector<IECore::InternedString> CapturingRenderer::CapturedObject::capturedLinkTypes() const
 {
-	std::vector< IECore::InternedString > result;
+	std::vector<IECore::InternedString> result;
 	for( const auto &i : m_capturedLinks )
 	{
 		result.push_back( i.first );
@@ -324,17 +335,22 @@ uint32_t CapturingRenderer::CapturedObject::id() const
 	return m_id;
 }
 
-void CapturingRenderer::CapturedObject::transform( const Imath::M44f &transform )
+uint32_t CapturingRenderer::CapturedObject::instanceID() const
 {
-	m_renderer->checkPaused();
-	m_capturedTransforms.clear();
-	m_capturedTransforms.push_back( transform );
-	m_capturedTransformTimes.clear();
+	return m_instanceID;
 }
 
-void CapturingRenderer::CapturedObject::transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+void CapturingRenderer::CapturedObject::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const SampleTimes &times )
 {
 	m_renderer->checkPaused();
+	if( samples.size() != times.size() )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "CapturingRenderer::CapturedObject::transform",
+			"Number of transform samples ({}) doesn't match number of time samples ({}) for object \"{}\"",
+			samples.size(), times.size(), m_name
+		);
+	}
 	m_capturedTransforms = samples;
 	m_capturedTransformTimes = times;
 }
@@ -371,4 +387,10 @@ void CapturingRenderer::CapturedObject::assignID( uint32_t id )
 {
 	m_renderer->checkPaused();
 	m_id = id;
+}
+
+void CapturingRenderer::CapturedObject::assignInstanceID( uint32_t instanceID )
+{
+	m_renderer->checkPaused();
+	m_instanceID = instanceID;
 }

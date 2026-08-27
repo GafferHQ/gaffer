@@ -45,7 +45,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
@@ -65,6 +65,7 @@
 #include "fmt/format.h"
 
 #include <filesystem>
+#include <unordered_set>
 
 using namespace std;
 using namespace Imath;
@@ -72,7 +73,6 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace OSL;
 using namespace Gaffer;
-using namespace GafferScene;
 using namespace GafferOSL;
 
 //////////////////////////////////////////////////////////////////////////
@@ -169,8 +169,7 @@ ShaderTypeSet &compatibleShaders()
 // the graph.
 const bool g_oslShaderTweakAutoProxyRegistration = OSLShader::registerCompatibleShader( "autoProxy" );
 
-ShaderTweakProxy::ShaderLoaderDescription<OSLShader> g_oslShaderTweakProxyLoaderRegistration( "osl" );
-
+GafferScene::ShaderTweakProxy::ShaderLoaderDescription<OSLShader> g_oslShaderTweakProxyLoaderRegistration( "osl" );
 
 } // namespace
 
@@ -204,6 +203,21 @@ QueryCache &queryCache()
 
 } // namespace
 
+/////////////////////////////////////////////////////////////////////////
+// Type overrides
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+boost::container::flat_map<string, string> g_typeOverrides = {
+	{ "vdbVolume", "osl:volume" },
+	{ "dlDisplacement", "osl:displacement" },
+	{ "PxrDisplace", "ri:displacement" }
+};
+
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
 // OSLShader
 //////////////////////////////////////////////////////////////////////////
@@ -213,6 +227,7 @@ GAFFER_NODE_DEFINE_TYPE( OSLShader );
 OSLShader::OSLShader( const std::string &name )
 	:	GafferScene::Shader( name )
 {
+	addChild( new Plug( "out", Plug::Out ) );
 }
 
 OSLShader::~OSLShader()
@@ -232,7 +247,7 @@ const Gaffer::Plug *OSLShader::correspondingInput( const Gaffer::Plug *output ) 
 	const StringData *input = IECore::runTimeCast<const StringData>( OSLShader::parameterMetadata( output, "correspondingInput" ) );
 	if( !input )
 	{
-		return nullptr;
+		return Shader::correspondingInput( output );
 	}
 
 	const Plug *result = parametersPlug()->getChild<Plug>( input->readable() );
@@ -276,7 +291,7 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 			}
 
 			std::string sourceShaderType;
-			if( const ShaderTweakProxy *shaderTweakProxy = IECore::runTimeCast< const ShaderTweakProxy >( sourceShader ) )
+			if( auto shaderTweakProxy = IECore::runTimeCast<const GafferScene::ShaderTweakProxy>( sourceShader ) )
 			{
 				std::string unusedSourceShaderName;
 				shaderTweakProxy->typePrefixAndSourceShaderName( sourceShaderType, unusedSourceShaderName );
@@ -336,46 +351,50 @@ bool is3DelightSplineNonValueParameter( const OSLQuery::Parameter *parameter )
 	return false;
 }
 
-bool find3DelightSplineParameters(
+bool find3DelightSplineParametersFromPositions(
 	const OSLQuery &query,
-	const OSLQuery::Parameter *parameter,
+	const OSLQuery::Parameter *positionsParameter,
 	std::string &nameWithoutSuffix,
-	const OSLQuery::Parameter * &positionsParameter,
 	const OSLQuery::Parameter * &valuesParameter,
 	const OSLQuery::Parameter * &basisParameter
 )
 {
-	if(
-		!( !parameter->type.is_array() && parameter->type == TypeDesc::STRING ) &&  // Interpolation
-		!(
-			parameter->type.is_array() &&
-			parameter->type.basetype == TypeDesc::FLOAT &&
-			(
-				parameter->type.aggregate == TypeDesc::SCALAR ||
-				parameter->type.vecsemantics == TypeDesc::COLOR
-			)
-		) &&  // float or color values or positions
-		!( parameter->type.is_array() && parameter->type.basetype == TypeDesc::INT )  // per-point interpolation
-	)
+	if( !(
+		positionsParameter->type.is_array() &&
+		positionsParameter->type.basetype == TypeDesc::FLOAT &&
+		positionsParameter->type.aggregate == TypeDesc::SCALAR &&
+		is3DelightSplineNonValueParameter( positionsParameter )
+	) )
 	{
 		return false;
 	}
 
-	nameWithoutSuffix = parameter->name.string().substr( 0, parameter->name.rfind( '_' ) );
+	// 3Delight's naming convention seems extremely loose, which makes it hard to
+	// group the related spline parameters. Maybe it would be better to group based
+	// on the "maya_attribute" metadata, which on every 3Delight shader with a spline
+	// is set to <something>_Position, except ramp.oso, where it's set to
+	// <something>.position
+	// Anyway, for now, this list of possible position suffixes seems to cover everything.
+	static const std::string possiblePositionSuffixes[] = {
+		"_Knots", "_Position", "Positions", "_pos"
+	};
+	unsigned int suffixLength = 0;
+	for( const std::string &suffix : possiblePositionSuffixes )
+	{
+		if( boost::ends_with( positionsParameter->name.string(), suffix ) )
+		{
+			suffixLength = suffix.size();
+		}
+	}
 
-	if( is3DelightSplineValueParameter( parameter ) )
-	{
-		valuesParameter = parameter;
-	}
-	else if( is3DelightSplineNonValueParameter( parameter ) )
-	{
-		valuesParameter = nullptr;
-	}
-	else
+	if( !suffixLength )
 	{
 		return false;
 	}
-	positionsParameter = nullptr;
+
+	nameWithoutSuffix = positionsParameter->name.string().substr( 0, positionsParameter->name.string().size() - suffixLength );
+
+	valuesParameter = nullptr;
 	basisParameter = nullptr;
 
 	const OSLQuery::Parameter *perPointInterpolationParameter = nullptr;
@@ -383,7 +402,7 @@ bool find3DelightSplineParameters(
 	for( size_t i = 0, eI = query.nparams(); i < eI; ++i )
 	{
 		const OSLQuery::Parameter *p = query.getparam( i );
-		if( !boost::starts_with( p->name, nameWithoutSuffix ) || p == valuesParameter )
+		if( !boost::starts_with( p->name, nameWithoutSuffix ) || p == positionsParameter )
 		{
 			continue;
 		}
@@ -405,10 +424,6 @@ bool find3DelightSplineParameters(
 			{
 				valuesParameter = p;
 			}
-			else
-			{
-				positionsParameter = p;
-			}
 		}
 	}
 
@@ -416,6 +431,7 @@ bool find3DelightSplineParameters(
 
 	return positionsParameter && valuesParameter && basisParameter;
 }
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -430,7 +446,7 @@ Plug *loadStringParameter( const OSLQuery::Parameter *parameter, const InternedS
 	string defaultValue;
 	if( parameter->sdefault.size() )
 	{
-		defaultValue = parameter->sdefault[0].c_str();
+		defaultValue = parameter->sdefault[0].string();
 	}
 
 	StringPlug *existingPlug = parent->getChild<StringPlug>( name );
@@ -462,7 +478,10 @@ Plug *loadStringArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 		defaultValueDataWritable.resize( parameter->sdefault.size() );
 		for( size_t i = 0; i < parameter->sdefault.size(); i++ )
 		{
-			defaultValueDataWritable[i] = parameter->sdefault[i].c_str();
+			if( !parameter->sdefault[i].empty() )
+			{
+				defaultValueDataWritable[i] = parameter->sdefault[i].string();
+			}
 		}
 	}
 
@@ -813,127 +832,93 @@ Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const Interned
 	return plug.get();
 }
 
-void updatePoints( Splineff::PointContainer &points, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter )
-{
-	const vector<float> &positions = positionsParameter->fdefault;
-	const vector<float> &values = valuesParameter->fdefault;
-
-	for( size_t i = 0; ( i < positions.size() ) && ( i < values.size() ); ++i )
-	{
-		points.insert( Splineff::Point( positions[i], values[i] ) );
-	}
-}
-
-void updatePoints( SplinefColor3f::PointContainer &points, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter )
-{
-	const vector<float> &positions = positionsParameter->fdefault;
-	const vector<float> &values = valuesParameter->fdefault;
-
-	for( size_t i = 0; i < positions.size() && i*3+2 < values.size(); ++i )
-	{
-		points.insert(
-			SplinefColor3f::Point(
-				positions[i],
-				Color3f(
-					values[i*3],
-					values[i*3+1],
-					values[i*3+2]
-				)
-			)
-		);
-	}
-}
-
 // From https://gitlab.com/3Delight/3delight-for-houdini/-/blob/master/osl_utilities.cpp
-SplineDefinitionInterpolation basisFrom3DelightInt( int basis )
+std::string basisStringFrom3DelightInt( int basis )
 {
 	switch( basis )
 	{
-		case 0 : return SplineDefinitionInterpolationConstant;
-		case 1 : return SplineDefinitionInterpolationLinear;
-		case 2 : return SplineDefinitionInterpolationMonotoneCubic;
-		default : return SplineDefinitionInterpolationCatmullRom;
+		case 0 : return "constant";
+		case 1 : return "linear";
+		case 2 : return "monotonecubic";
+		default : return "catmullrom";
 	}
 }
 
-SplineDefinitionInterpolation basisFromString( const std::string &basis )
+struct RampPlugArguments
 {
-	if( basis == "bspline" )
-	{
-		return SplineDefinitionInterpolationBSpline;
-	}
-	else if( basis == "linear" )
-	{
-		return SplineDefinitionInterpolationLinear;
-	}
-	else if( basis == "constant" )
-	{
-		return SplineDefinitionInterpolationConstant;
-	}
-	else if( basis == "monotonecubic" )
-	{
-		return SplineDefinitionInterpolationMonotoneCubic;
-	}
+	std::string name;
+	std::variant< Rampff, RampfColor3f > defaultValue;
+};
 
-	return SplineDefinitionInterpolationCatmullRom;
-}
-
-template <typename PlugType>
-Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, const OSLQuery::Parameter *basisParameter, const InternedString &name, Gaffer::Plug *parent )
+template <typename RampType>
+RampType loadRampDefault( const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, const OSLQuery::Parameter *basisParameter, const OSLQuery::Parameter *countParameter, const std::string &name )
 {
-	typename PlugType::ValueType defaultValue;
+	RampType defaultValue;
 
+	std::string basisString;
 	if( basisParameter->type.basetype == TypeDesc::INT )
 	{
-		defaultValue.interpolation = basisFrom3DelightInt( basisParameter->idefault.front() );
+		basisString = basisStringFrom3DelightInt( basisParameter->idefault.front() );
 	}
 	else
 	{
-		defaultValue.interpolation = basisFromString( basisParameter->sdefault.front().string() );
+		basisString = basisParameter->sdefault.front().string();
 	}
 
-	updatePoints( defaultValue.points, positionsParameter, valuesParameter );
+	std::vector<typename RampType::XType> positions;
+	std::vector<typename RampType::YType> values;
+	const vector<float> &rawPositions = positionsParameter->fdefault;
+	const vector<float> &rawValues = valuesParameter->fdefault;
 
-	// The OSL spline representation includes the need for duplicated end points in order to hit the end.
-	// We need to remove these. We ignore the success or failure of trimming because some renderers have
-	// default values that are already trimmed.
-	defaultValue.trimEndPoints();
-
-	PlugType *existingPlug = parent->getChild<PlugType>( name );
-	if( existingPlug && existingPlug->defaultValue() == defaultValue )
+	size_t maxSize = std::numeric_limits<size_t>::max();
+	if( countParameter )
 	{
-		return existingPlug;
+		maxSize = countParameter->idefault.front();
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, Plug::Default );
-	parent->setChild( name, plug );
-
-	return plug.get();
-}
-
-bool findGafferSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *parameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &positionsParameter, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
-{
-	const char *suffixes[] = { "Positions", "Values", "Basis", nullptr };
-	const char *suffix = nullptr;
-	for( const char **suffixPtr = suffixes; *suffixPtr; ++suffixPtr )
+	if constexpr( std::is_same_v< typename RampType::YType, Color3f > )
 	{
-		if( boost::ends_with( parameter->name.c_str(), *suffixPtr ) )
+		for( size_t i = 0; i < rawPositions.size() && i*3+2 < rawValues.size() && i < maxSize; ++i )
 		{
-			suffix = *suffixPtr;
-			break;
+			values.push_back(
+				Color3f(
+					rawValues[i*3],
+					rawValues[i*3+1],
+					rawValues[i*3+2]
+				)
+			);
+		}
+	}
+	else
+	{
+		for( size_t i = 0; i < rawPositions.size() && i < rawValues.size() && i < maxSize; ++i )
+		{
+			values.push_back( rawValues[i] );
 		}
 	}
 
-	if( !suffix )
+	for( size_t i = 0; i < rawPositions.size() && i < values.size() && i < maxSize; ++i )
+	{
+		positions.push_back( rawPositions[i] );
+	}
+
+	defaultValue.fromOSL( basisString, positions, values, name );
+
+	return defaultValue;
+}
+
+bool findGafferSplineParametersFromPositions( const OSLQuery &query, const OSLQuery::Parameter *positionsParameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
+{
+	static const std::string positionsSuffix( "Positions" );
+	static const std::string valuesSuffix( "Values" );
+	static const std::string basisSuffix( "Basis" );
+
+	if( !boost::ends_with( positionsParameter->name.string(), positionsSuffix ) )
 	{
 		return false;
 	}
 
-	nameWithoutSuffix = parameter->name.string().substr( 0, parameter->name.string().size() - strlen( suffix ) );
-
-	positionsParameter = query.getparam( nameWithoutSuffix + "Positions" );
 	if(
-		!positionsParameter ||
 		!positionsParameter->type.is_array() ||
 		positionsParameter->type.basetype != TypeDesc::FLOAT ||
 		positionsParameter->type.aggregate != TypeDesc::SCALAR
@@ -942,7 +927,9 @@ bool findGafferSplineParameters( const OSLQuery &query, const OSLQuery::Paramete
 		return false;
 	}
 
-	valuesParameter = query.getparam( nameWithoutSuffix + "Values" );
+	nameWithoutSuffix = positionsParameter->name.string().substr( 0, positionsParameter->name.string().size() - positionsSuffix.size() );
+
+	valuesParameter = query.getparam( nameWithoutSuffix + valuesSuffix );
 	if(
 		!valuesParameter ||
 		!valuesParameter->type.is_array() ||
@@ -953,8 +940,8 @@ bool findGafferSplineParameters( const OSLQuery &query, const OSLQuery::Paramete
 		return false;
 	}
 
-	basisParameter = query.getparam( nameWithoutSuffix + "Basis" );
-	if( !basisParameter || basisParameter->type != TypeDesc::TypeString )
+	basisParameter = query.getparam( nameWithoutSuffix + basisSuffix );
+	if( !basisParameter || basisParameter->type != OIIO::TypeString )
 	{
 		return false;
 	}
@@ -962,42 +949,129 @@ bool findGafferSplineParameters( const OSLQuery &query, const OSLQuery::Paramete
 	return true;
 }
 
-bool findSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *parameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &positionsParameter, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
+bool findPRManSplineParametersFromPositions( const OSLQuery &query, const OSLQuery::Parameter *positionsParameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter, const OSLQuery::Parameter * &countParameter )
 {
-	return
-		findGafferSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) ||
-		find3DelightSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter )
-	;
-}
+	static const std::string positionsSuffix( "_Knots" );
+	static const std::string valuesColorSuffix( "_Colors" );
+	static const std::string valuesFloatSuffix( "_Floats" );
+	static const std::string basisSuffix( "_Interpolation" );
 
-Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, const std::string &prefix )
-{
-
-	string nameWithoutSuffix;
-	const OSLQuery::Parameter *positionsParameter;
-	const OSLQuery::Parameter *valuesParameter;
-	const OSLQuery::Parameter *basisParameter;
-
-	if( !findSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) )
+	if( !boost::ends_with( positionsParameter->name.string(), positionsSuffix ) )
 	{
-		return nullptr;
+		return false;
 	}
 
-	const string name = nameWithoutSuffix.substr( prefix.size() );
-	if( valuesParameter->type.vecsemantics == TypeDesc::COLOR )
+	if(
+		!positionsParameter->type.is_array() ||
+		positionsParameter->type.basetype != TypeDesc::FLOAT ||
+		positionsParameter->type.aggregate != TypeDesc::SCALAR
+	)
 	{
-		return loadSplineParameters<SplinefColor3fPlug>( positionsParameter, valuesParameter, basisParameter, name, parent );
+		return false;
+	}
+
+	nameWithoutSuffix = positionsParameter->name.string().substr( 0, positionsParameter->name.string().size() - positionsSuffix.size() );
+
+	valuesParameter = query.getparam( nameWithoutSuffix + valuesColorSuffix );
+	if(
+		!valuesParameter ||
+		!valuesParameter->type.is_array() ||
+		valuesParameter->type.basetype != TypeDesc::FLOAT ||
+		( valuesParameter->type.aggregate != TypeDesc::SCALAR && valuesParameter->type.vecsemantics != TypeDesc::COLOR )
+	)
+	{
+		valuesParameter = query.getparam( nameWithoutSuffix + valuesFloatSuffix );
+		if(
+			!valuesParameter ||
+			!valuesParameter->type.is_array() ||
+			valuesParameter->type.basetype != TypeDesc::FLOAT ||
+			valuesParameter->type.aggregate != TypeDesc::SCALAR
+		)
+		{
+			return false;
+		}
+	}
+
+	basisParameter = query.getparam( nameWithoutSuffix + basisSuffix );
+	if( !basisParameter || basisParameter->type != OIIO::TypeString )
+	{
+		return false;
+	}
+
+	countParameter = query.getparam( nameWithoutSuffix );
+	if( !countParameter || countParameter->type != OIIO::TypeInt )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+
+bool findSplineParametersFromPositions( const std::string &shaderName, const OSLQuery &query, const OSLQuery::Parameter *positionsParameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter, const OSLQuery::Parameter * &countParameter, std::unordered_set<const OSLQuery::Parameter *> &parametersAlreadyProcessed )
+{
+	bool success = false;
+	// Note that this will fail if the shader is loaded from an explicit path ( in which case the shaderName
+	// will be prefixed with a file path ). We've concluded this isn't an issue, because shaders should be found
+	// using search paths instead.
+	if( boost::starts_with( shaderName, "Pxr" ) ||  boost::starts_with( shaderName, "Lama" ) )
+	{
+		success = findPRManSplineParametersFromPositions( query, positionsParameter, nameWithoutSuffix, valuesParameter, basisParameter, countParameter );
 	}
 	else
 	{
-		return loadSplineParameters<SplineffPlug>( positionsParameter, valuesParameter, basisParameter, name, parent );
+		countParameter = nullptr;
+		success =
+			findGafferSplineParametersFromPositions( query, positionsParameter, nameWithoutSuffix, valuesParameter, basisParameter ) ||
+			find3DelightSplineParametersFromPositions( query, positionsParameter, nameWithoutSuffix, valuesParameter, basisParameter );
 	}
+
+	if( success )
+	{
+		parametersAlreadyProcessed.insert( valuesParameter );
+		parametersAlreadyProcessed.insert( basisParameter );
+
+		if( countParameter )
+		{
+			parametersAlreadyProcessed.insert( countParameter );
+		}
+	}
+
+	return success;
+}
+
+std::optional<RampPlugArguments> rampPlugArgumentsFromPositions( const std::string &shaderName, const OSLQuery &query, const OSLQuery::Parameter *positionsParameter, const std::string &prefix, std::unordered_set<const OSLQuery::Parameter *> &parametersAlreadyProcessed )
+{
+
+	string nameWithoutSuffix;
+	const OSLQuery::Parameter *valuesParameter;
+	const OSLQuery::Parameter *basisParameter;
+	const OSLQuery::Parameter *countParameter;
+
+	RampPlugArguments result;
+
+	if( !findSplineParametersFromPositions( shaderName, query, positionsParameter, nameWithoutSuffix, valuesParameter, basisParameter, countParameter, parametersAlreadyProcessed ) )
+	{
+		return std::optional<RampPlugArguments>();
+	}
+
+	result.name = nameWithoutSuffix.substr( prefix.size() );
+	if( valuesParameter->type.vecsemantics == TypeDesc::COLOR )
+	{
+		result.defaultValue = loadRampDefault<RampfColor3f>( positionsParameter, valuesParameter, basisParameter, countParameter, result.name );
+	}
+	else
+	{
+		result.defaultValue = loadRampDefault<Rampff>( positionsParameter, valuesParameter, basisParameter, countParameter, result.name );
+	}
+
+	return std::make_optional<RampPlugArguments>( result );
 }
 
 // Forward declaration so loadStructParameter() can call it.
-void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const CompoundData *metadata, const std::string &prefix = "" );
+void loadShaderParameters( const std::string& shaderName, const OSLQuery &query, Gaffer::Plug *parent, const CompoundData *metadata, const std::string &prefix = "" );
 
-Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
+Plug *loadStructParameter( const std::string &shaderName, const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
 	Plug *result = nullptr;
 
@@ -1024,20 +1098,27 @@ Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 	/// The OSL spec doesn't appear to standardize a way to specify this.
 	/// We could attach metadata to the struct, but would it then be named
 	/// something like "structElementName_min"?
-	loadShaderParameters( query, result, nullptr, parameter->name.string() + "." );
+	loadShaderParameters( shaderName, query, result, nullptr, parameter->name.string() + "." );
 
 	parent->setChild( name, result );
 
 	return result;
 }
 
-Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
+Plug *loadShaderParameter( const std::string shaderName, const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
 	Plug *result = nullptr;
+	if( metadata && metadata->member( "vstructmember" ) && shaderName != "PxrDisplace" )
+	{
+		// RenderMan "virtual struct" member. This isn't for authoring
+		// by users. Instead it will receive a connection or value in the
+		// RenderMan backend at render time.
+		return result;
+	}
 
 	if( parameter->isstruct )
 	{
-		result = loadStructParameter( query, parameter, name, parent );
+		result = loadStructParameter( shaderName, query, parameter, name, parent );
 	}
 	else if( parameter->isclosure )
 	{
@@ -1141,18 +1222,80 @@ Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 
 	if( !result )
 	{
-		msg( Msg::Warning, "OSLShader::loadShader", fmt::format( "Parameter \"{}\" has unsupported type", parameter->name.c_str() ) );
+		msg( Msg::Warning, "OSLShader::loadShader", fmt::format( "Parameter \"{}\" has unsupported type", parameter->name.string() ) );
 	}
 
 	return result;
 }
 
-void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const CompoundData *metadata, const std::string &prefix )
+template <typename PlugType>
+Gaffer::Plug *loadRampParameterFromDefault( const InternedString &name, const typename PlugType::ValueType &defaultValue, Gaffer::Plug *parent )
 {
+	PlugType *existingPlug = parent->getChild<PlugType>( name );
+	if( existingPlug && existingPlug->defaultValue() == defaultValue )
+	{
+		return existingPlug;
+	}
 
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, Plug::Default );
+
+	// Other parameters are loaded using replacePlug if existingPlug is non-null, so existing connections
+	// and values are preserved. It might make sense to do that here as well, but there could be
+	// inconsistencies if the length of the default value has changed, and the user has only overridden
+	// a few control points ... we haven't tested how well replacePlug works on ramps, so for the moment
+	// we'll just throw away previous values here ( this currently isn't causing any problems, so we won't
+	// change it ).
+
+	parent->setChild( name, plug );
+
+	return plug.get();
+}
+
+void loadShaderParameters( const std::string &shaderName, const OSLQuery &query, Gaffer::Plug *parent, const CompoundData *metadata, const std::string &prefix )
+{
 	// Make sure we have a plug to represent each parameter, reusing plugs wherever possible.
 
 	set<const Plug *> validPlugs;
+
+	// Spline parameters are a nasty special case because multiple shader
+	// parameters become a single ramp plug on the node, so we deal with them
+	// first, and use this set to record parameters that have already been
+	// processed as part of a ramp.
+
+	std::unordered_set<const OSLQuery::Parameter *> parametersAlreadyProcessed;
+	std::unordered_map<const OSLQuery::Parameter *, RampPlugArguments > rampPlugArguments;
+
+	for( size_t i = 0; i < query.nparams(); ++i )
+	{
+		// We will check whether this parameter fits as the positions parameter of a ramp
+		const OSLQuery::Parameter *positionsParameter = query.getparam( i );
+		const Plug::Direction direction = positionsParameter->isoutput ? Plug::Out : Plug::In;
+		if( direction != parent->direction() )
+		{
+			continue;
+		}
+
+		if( !boost::starts_with( positionsParameter->name.string(), prefix ) )
+		{
+			continue;
+		}
+
+		const string name = positionsParameter->name.string().substr( prefix.size() );
+		if( name.find( "." ) != string::npos )
+		{
+			// Member of a struct - will be loaded when the struct is loaded
+			continue;
+		}
+
+		auto rampP = rampPlugArgumentsFromPositions( shaderName, query, positionsParameter, prefix, parametersAlreadyProcessed );
+
+		if( rampP )
+		{
+			rampPlugArguments[positionsParameter] = *rampP;
+		}
+	}
+
+	// Now process all the normal parameters that aren't part of a ramp
 	for( size_t i = 0; i < query.nparams(); ++i )
 	{
 		const OSLQuery::Parameter *parameter = query.getparam( i );
@@ -1162,7 +1305,7 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 			continue;
 		}
 
-		if( !boost::starts_with( parameter->name.c_str(), prefix ) )
+		if( !boost::starts_with( parameter->name.string(), prefix ) )
 		{
 			continue;
 		}
@@ -1174,21 +1317,37 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 			continue;
 		}
 
-		// Spline parameters are a nasty special case because multiple shader
-		// parameters become a single plug on the node, so we deal with them
-		// outside of `loadShaderParameter()`, which deals exclusively with
-		// the one-parameter-at-a-time case.
-		Plug *plug = loadSplineParameter( query, parameter, parent, prefix );
-		if( !plug )
+		if( parametersAlreadyProcessed.count( parameter ) )
+		{
+			// Already loaded as part of a ramp
+			continue;
+		}
+
+		Plug *plug = nullptr;
+
+		auto rampIt = rampPlugArguments.find( parameter );
+		if( rampIt != rampPlugArguments.end() )
+		{
+			// This is the key parameter for the ramp, time to output this ramp
+			// ( We need to wait until now to output the ramp so it gets interleaved in proper
+			// order with the non-ramp parameters )
+			if( std::holds_alternative< RampfColor3f >( rampIt->second.defaultValue ) )
+			{
+				plug = loadRampParameterFromDefault<RampfColor3fPlug>( rampIt->second.name, std::get<RampfColor3f>( rampIt->second.defaultValue ), parent );
+			}
+			else
+			{
+				plug = loadRampParameterFromDefault<RampffPlug>( rampIt->second.name, std::get<Rampff>( rampIt->second.defaultValue ), parent );
+			}
+		}
+		else
 		{
 			const CompoundData *parameterMetadata = nullptr;
 			if( metadata )
 			{
 				parameterMetadata = metadata->member<IECore::CompoundData>( name );
 			}
-
-
-			plug = loadShaderParameter( query, parameter, name, parent, parameterMetadata );
+			plug = loadShaderParameter( shaderName, query, parameter, name, parent, parameterMetadata );
 		}
 
 		if( plug )
@@ -1218,52 +1377,37 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	StringPlug *namePlug = this->namePlug()->source<StringPlug>();
 	StringPlug *typePlug = this->typePlug()->source<StringPlug>();
 	Plug *parametersPlug = this->parametersPlug()->source<Plug>();
+	Plug *outPlug = this->outPlug()->source<Plug>();
 
-	Plug *existingOut = outPlug();
 	if( shaderName.empty() )
 	{
 		parametersPlug->clearChildren();
 		namePlug->setValue( "" );
 		typePlug->setValue( "" );
-		if( existingOut )
-		{
-			existingOut->clearChildren();
-		}
+		outPlug->clearChildren();
 		return;
 	}
 
 	OSLQueryPtr query = queryCache().get( shaderName );
 
-	const bool outPlugHadChildren = existingOut ? existingOut->children().size() : false;
+	const bool outPlugHadChildren = outPlug->children().size();
 	if( !keepExistingValues )
 	{
 		// If we're not preserving existing values then remove all existing
 		// parameter plugs - the various plug creators above know that if a
 		// plug exists then they should preserve its values.
 		parametersPlug->clearChildren();
-		if( existingOut )
-		{
-			existingOut->clearChildren();
-		}
+		outPlug->clearChildren();
 	}
 
 	m_metadata = nullptr;
 	namePlug->source<StringPlug>()->setValue( shaderName );
-	// 3delight sets it's vdbVolume shader as a "shader" type but requires the
-	// attribute name be `volumeshader` which we handle when spooling the scene.
-
-	if ( std::filesystem::path( shaderName ).stem() == "vdbVolume" )
-	{
-		typePlug->source<StringPlug>()->setValue( std::string( "osl:volume" ));
-	}
-	else if ( std::filesystem::path( shaderName ).stem() == "dlDisplacement" )
-	{
-		typePlug->source<StringPlug>()->setValue( std::string( "osl:displacement" ));
-	}
-	else
-	{
-		typePlug->source<StringPlug>()->setValue( std::string( "osl:" ) + ( query->shadertype().c_str() ));
-	}
+	auto typeIt = g_typeOverrides.find( std::filesystem::path( shaderName ).stem().string() );
+	typePlug->source<StringPlug>()->setValue(
+		typeIt != g_typeOverrides.end() ?
+		typeIt->second :
+		std::string( "osl:" ) + ( query->shadertype().string() )
+	);
 
 	const IECore::CompoundData *metadata = OSLShader::metadata();
 	const IECore::CompoundData *parameterMetadata = nullptr;
@@ -1272,39 +1416,15 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		parameterMetadata = metadata->member<IECore::CompoundData>( "parameter" );
 	}
 
-	loadShaderParameters( *query, parametersPlug, parameterMetadata );
+	loadShaderParameters( shaderName, *query, parametersPlug, parameterMetadata );
+	loadShaderParameters( shaderName, *query, outPlug, parameterMetadata );
 
-	if( existingOut )
-	{
-		// \todo : This can be removed once old scripts have been updated, and we no longer have
-		// old out plugs set to Dynamic lying around
-		existingOut->setFlags( Gaffer::Plug::Dynamic, false );
-	}
-
-	if( !existingOut || existingOut->typeId() != Plug::staticTypeId() )
-	{
-		PlugPtr outPlug = new Plug( "out", Plug::Out, Plug::Default );
-		if( existingOut )
-		{
-			// We had an out plug but it was the wrong type (we used
-			// to use a CompoundPlug before that was deprecated). Move
-			// over any existing child plugs onto our replacement.
-			for( Plug::Iterator it( existingOut ); !it.done(); ++it )
-			{
-				outPlug->addChild( *it );
-			}
-		}
-		setChild( "out", outPlug );
-	}
-
-	loadShaderParameters( *query, outPlug(), parameterMetadata );
-
-	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
+	if( static_cast<bool>( outPlug->children().size() ) != outPlugHadChildren )
 	{
 		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
 		// not the plug has children, so we must notify the world that the value will
 		// have changed.
-		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
+		Metadata::plugValueChangedSignal( this )( outPlug, "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
 	}
 }
 
@@ -1312,7 +1432,10 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 // Metadata loading code
 //////////////////////////////////////////////////////////////////////////
 
-static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
+namespace
+{
+
+IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 {
 	if( metadata.type == TypeDesc::FLOAT )
 	{
@@ -1324,7 +1447,7 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 	}
 	else if( metadata.type == TypeDesc::STRING )
 	{
-		return new IECore::StringData( metadata.sdefault[0].c_str() );
+		return new IECore::StringData( metadata.sdefault[0].string() );
 	}
 	else if( metadata.type.aggregate == TypeDesc::VEC3 )
 	{
@@ -1377,11 +1500,11 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 		}
 	}
 
-	IECore::msg( IECore::Msg::Warning, "OSLShader", string( "Metadata \"" ) + metadata.name.c_str() + "\" has unsupported type" );
+	IECore::msg( IECore::Msg::Warning, "OSLShader", string( "Metadata \"" ) + metadata.name.string() + "\" has unsupported type" );
 	return nullptr;
 }
 
-static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Parameter> &metadata )
+IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Parameter> &metadata )
 {
 	CompoundDataPtr result = new CompoundData;
 	for( std::vector<OSLQuery::Parameter>::const_iterator it = metadata.begin(), eIt = metadata.end(); it != eIt; ++it )
@@ -1389,23 +1512,23 @@ static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Para
 		DataPtr data = convertMetadata( *it );
 		if( data )
 		{
-			result->writable()[it->name.c_str()] = data;
+			result->writable()[it->name.string()] = data;
 		}
 	}
 	return result;
 }
 
-static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size_t &cost, const IECore::Canceller *canceller )
+IECore::ConstCompoundDataPtr metadataGetter( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = 1;
-	if( !key.size() )
+	if( !shaderName.size() )
 	{
 		return nullptr;
 	}
 
 	const char *searchPath = getenv( "OSL_SHADER_PATHS" );
 	OSLQuery query;
-	if( !query.open( key, searchPath ? searchPath : "" ) )
+	if( !query.open( shaderName, searchPath ? searchPath : "" ) )
 	{
 		return nullptr;
 	}
@@ -1415,36 +1538,72 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 
 	CompoundDataPtr parameterMetadata = new CompoundData;
 	metadata->writable()["parameter"] = parameterMetadata;
+
+	std::unordered_set<const OSLQuery::Parameter *> parametersAlreadyProcessed;
+
+	// First look for ramps, where any metadata on component parameters should be registered onto the ramp plug
+	for( size_t i = 0; i < query.nparams(); ++i )
+	{
+		// We will check whether this parameter fits as the positions parameter of a ramp
+		const OSLQuery::Parameter *positionsParameter = query.getparam( i );
+
+		string nameWithoutSuffix;
+		const OSLQuery::Parameter *valuesParameter;
+		const OSLQuery::Parameter *basisParameter;
+		const OSLQuery::Parameter *countParameter;
+
+		// If this parameter is part of a ramp, register the metadata onto the ramp plug
+		if( !findSplineParametersFromPositions( shaderName, query, positionsParameter, nameWithoutSuffix, valuesParameter, basisParameter, countParameter, parametersAlreadyProcessed ) )
+		{
+			continue;
+		}
+
+		CompoundDataPtr data;
+		if( countParameter )
+		{
+			// PRMan splines include a parameter which just contains a point count, and has the base name
+			// of the spline. If there is any metadata we should have, we expect to find it there.
+			if( countParameter->metadata.size() )
+			{
+				data = convertMetadata( countParameter->metadata );
+			}
+		}
+		else
+		{
+			const OSLQuery::Parameter *parameters[] = { valuesParameter, positionsParameter, basisParameter };
+			for( const OSLQuery::Parameter *p : parameters )
+			{
+				if( p->metadata.size() )
+				{
+					CompoundDataPtr componentData = convertMetadata( p->metadata );
+					if( data )
+					{
+						data->writable().insert( componentData->readable().begin(), componentData->readable().end() );
+					}
+					else
+					{
+						data = componentData;
+					}
+				}
+			}
+		}
+
+		if( data )
+		{
+			data->writable().erase( "widget" );
+			parameterMetadata->writable()[nameWithoutSuffix] = data;
+		}
+	}
+
 	for( size_t i = 0; i < query.nparams(); ++i )
 	{
 		const OSLQuery::Parameter *parameter = query.getparam( i );
 		if( parameter->metadata.size() )
 		{
-			string nameWithoutSuffix;
-			const OSLQuery::Parameter *positionsParameter;
-			const OSLQuery::Parameter *valuesParameter;
-			const OSLQuery::Parameter *basisParameter;
-
-			// If this parameter is part of a spline, register the metadata onto the spline plug
-			if( findSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) )
+			if( !parametersAlreadyProcessed.count( parameter ) )
 			{
-				// We merge metadata found on all the parameters that make up the plug, but in no particular order.
-				// If you specify conflicting metadata on the different parameters you may get inconsistent results.
-				CompoundData *prevData = parameterMetadata->member<CompoundData>( nameWithoutSuffix );
-				CompoundDataPtr data = convertMetadata( parameter->metadata );
-
-				data->writable().erase( "widget" );
-
-				if( prevData )
-				{
-					data->writable().insert( prevData->readable().begin(), prevData->readable().end() );
-				}
-
-				parameterMetadata->writable()[nameWithoutSuffix] = data;
-			}
-			else
-			{
-				parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
+				const std::string &name = parameter->name.string();
+				parameterMetadata->writable()[name] = convertMetadata( parameter->metadata );
 			}
 		}
 	}
@@ -1455,6 +1614,8 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 using MetadataCache = IECorePreview::LRUCache<std::string, IECore::ConstCompoundDataPtr>;
 MetadataCache g_metadataCache( metadataGetter, 10000 );
 
+} // namespace
+
 const IECore::CompoundData *OSLShader::metadata() const
 {
 	if( m_metadata )
@@ -1462,7 +1623,19 @@ const IECore::CompoundData *OSLShader::metadata() const
 		return m_metadata.get();
 	}
 
-	m_metadata = g_metadataCache.get( namePlug()->getValue() );
+	std::string name;
+	try
+	{
+		name = namePlug()->getValue();
+	}
+	catch( ... )
+	{
+		// OSLCode drives the shader name with a compute that compiles the
+		// shader. This can error, in which case there can be no metadata.
+		return nullptr;
+	}
+
+	m_metadata = g_metadataCache.get( name );
 	return m_metadata.get();
 }
 
@@ -1505,6 +1678,20 @@ void OSLShader::reloadShader()
 	queryCache().erase( namePlug()->getValue() );
 	g_metadataCache.erase( namePlug()->getValue() );
 	Shader::reloadShader();
+}
+
+namespace GafferOSL
+{
+
+// Forward declare function defined in OSLExpressionEngine.cpp. It happens to be easier to implement
+// activator expressions in there, but in terms of public API they are more at home on OSLShader.
+bool evaluateActivatorExpression( const std::string &expression, const Gaffer::Plug *parameterPlug, const Gaffer::Context *context );
+
+} // namespace GafferOSL
+
+bool OSLShader::evaluateActivatorExpression( const std::string &expression ) const
+{
+	return GafferOSL::evaluateActivatorExpression( expression, parametersPlug(), Context::current() );
 }
 
 bool OSLShader::registerCompatibleShader( const IECore::InternedString shaderType )

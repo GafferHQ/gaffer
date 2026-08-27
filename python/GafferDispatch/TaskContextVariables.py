@@ -60,4 +60,4 @@ class TaskContextVariables( GafferDispatch.TaskContextProcessor ) :
 
 		return [ context ]
 
-IECore.registerRunTimeTyped( TaskContextVariables, typeName = "GafferDispatch::TaskContextVariables" )
+IECore.registerRunTimeTyped( TaskContextVariables, "GafferDispatch::TaskContextVariables" )

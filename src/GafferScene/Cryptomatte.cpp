@@ -50,6 +50,7 @@
 #include "fmt/format.h"
 
 #include <filesystem>
+#include <regex>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -159,20 +160,12 @@ inline float matteNameToValue( const std::string &matteName )
 	return result;
 }
 
-inline std::string hashLayerName( const std::string &layerName )
-{
-	// hash the layer name to find manifest keys from image metadata
-	return fmt::format( "{:08x}", MurmurHash3_x86_32( layerName.c_str(), layerName.length(), 0 ) );
-}
-
 IECore::CompoundDataPtr propertyTreeToCompoundData( const boost::property_tree::ptree &pt )
 {
 	boost::regex instanceDataRegex( "^instance:[0-9a-f]+$" );
 
 	IECore::CompoundDataPtr resultData = new IECore::CompoundData();
 	CompoundDataMap &result = resultData->writable();
-
-	uint32_t hash;
 
 	for( auto &it : pt )
 	{
@@ -182,7 +175,16 @@ IECore::CompoundDataPtr propertyTreeToCompoundData( const boost::property_tree::
 			continue;
 		}
 
-		std::sscanf( it.second.data().c_str(), "%x", &hash );
+		const std::string &hashString = it.second.data();
+
+		uint32_t hash = 0;
+
+		auto [_unused, errorCode] = std::from_chars( hashString.data(), hashString.data() + hashString.size(), hash, 16 );
+
+		if( errorCode != std::errc() )
+		{
+			throw IECore::Exception( fmt::format( "Expected hexadecimal while parsing manifest: \"{}\"", hashString ) );
+		}
 
 		result[hash] = new StringData( it.first );
 	}
@@ -238,7 +240,7 @@ IECore::CompoundDataPtr parseManifestFromSidecarFile( const std::string &manifes
 	return propertyTreeToCompoundData( pt );
 }
 
-IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &metadataKey, ConstCompoundDataPtr metadata, const std::string &manifestDirectory )
+IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &metadataKey, ConstCompoundDataPtr metadata, std::string manifestDirectory )
 {
 	if( metadata->readable().find( metadataKey ) == metadata->readable().end() )
 	{
@@ -247,9 +249,15 @@ IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &
 
 	if( manifestDirectory == "" )
 	{
-		throw IECore::Exception( "No manifest directory provided. A directory is required to locate the manifest." );
+		const StringData *filePathData = metadata->member<StringData>( "filePath" );
+		if( !filePathData )
+		{
+			throw IECore::Exception( "No manifest directory provided, and no `filePath` metadata that would allow inferring the directory. A directory is required to locate the manifest." );
+		}
+		manifestDirectory = std::filesystem::path( filePathData->readable() ).parent_path().generic_string();
 	}
-	else if( !std::filesystem::is_directory( manifestDirectory ) )
+
+	if( !std::filesystem::is_directory( manifestDirectory ) )
 	{
 		throw IECore::Exception( fmt::format( "Manifest directory not found: {}", manifestDirectory ) );
 	}
@@ -262,14 +270,40 @@ IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &
 	return parseManifestFromSidecarFile( p.generic_string() );
 }
 
+const std::regex g_nameMetadataRegex( R"((cryptomatte/[^/]{1,7})/name)" );
+
 IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &cryptomatteLayer, ConstCompoundDataPtr metadata, const std::string &manifestDirectory )
 {
-	// The Cryptomatte specification suggests metadata entries stored for each layer based on a key generated from the first 7 characters of the hashed layer name.
-	const std::string layerPrefix = fmt::format( "cryptomatte/{:.7s}", hashLayerName( cryptomatteLayer ) );
+	// The Cryptomatte specification suggests metadata entries stored for each
+	// layer based on a key generated from the first 7 characters of the hashed
+	// layer name. But that is not _required_, and RenderMan doesn't follow the
+	// suggestion. So we must do a search for a key that corresponds to the
+	// layer.
+	std::string metadataPrefix;
+	for( const auto &[name, value] : metadata->readable() )
+	{
+		std::smatch match;
+		if( std::regex_match( name.string(), match, g_nameMetadataRegex ) )
+		{
+			if( auto d = runTimeCast<const StringData>( value.get() ) )
+			{
+				if( d->readable() == cryptomatteLayer )
+				{
+					metadataPrefix = match.str( 1 );
+					break;
+				}
+			}
+		}
+	}
+
+	if( metadataPrefix.empty() )
+	{
+		throw IECore::Exception( fmt::format( "Unable to find metadata for \"{}\"", cryptomatteLayer ) );
+	}
 
 	// A "conversion" metadata entry is required, specifying the conversion method used to convert hash values to pixel values.
 	// As per the Cryptomatte specification, "uint32_to_float32" is the only currently supported conversion type.
-	const std::string manifestConversion = layerPrefix + "/conversion";
+	const std::string manifestConversion = metadataPrefix + "/conversion";
 
 	if( metadata->readable().find( manifestConversion ) == metadata->readable().end() )
 	{
@@ -282,7 +316,7 @@ IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &
 
 	// A "hash" metadata entry is required, specifying the type of hash used to generate the manifest.
 	// As per the Cryptomatte specification, "MurmurHash3_32" is the only currently supported hash type.
-	const std::string manifestHash = layerPrefix + "/hash";
+	const std::string manifestHash = metadataPrefix + "/hash";
 
 	if( metadata->readable().find( manifestHash ) == metadata->readable().end() )
 	{
@@ -294,8 +328,8 @@ IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &
 	}
 
 	// The manifest is defined by the existence of one of two metadata entries representing either the manifest data, or the filename of a sidecar manifest.
-	const std::string manifestKey = layerPrefix + "/manifest";
-	const std::string manifestFileKey = layerPrefix + "/manif_file";
+	const std::string manifestKey = metadataPrefix + "/manifest";
+	const std::string manifestFileKey = metadataPrefix + "/manif_file";
 
 	if( metadata->readable().find( manifestKey ) != metadata->readable().end() )
 	{
@@ -828,7 +862,7 @@ Gaffer::ValuePlug::CachePolicy Cryptomatte::computeCachePolicy( const Gaffer::Va
 		output == manifestPathDataPlug() )
 	{
 		// Request blocking compute to avoid concurrent threads computing the manifest redundantly.
-		return ValuePlug::CachePolicy::Standard;
+		return ValuePlug::CachePolicy::TaskCollaboration;
 	}
 
 	return ImageNode::computeCachePolicy( output );

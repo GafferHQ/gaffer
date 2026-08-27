@@ -497,6 +497,3 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		self.assertIs( Gaffer.V3fPlug.ValueType, imath.V3f )
 		self.assertIs( Gaffer.Color3fPlug.ValueType, imath.Color3f )
 		self.assertIs( Gaffer.Color4fPlug.ValueType, imath.Color4f )
-
-if __name__ == "__main__":
-	unittest.main()

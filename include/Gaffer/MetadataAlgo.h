@@ -37,7 +37,9 @@
 #pragma once
 
 #include "Gaffer/Export.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/ValuePlug.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
@@ -180,7 +182,9 @@ struct GAFFER_API Annotation
 GAFFER_API void addAnnotation( Node *node, const std::string &name, const Annotation &annotation, bool persistent = true );
 GAFFER_API Annotation getAnnotation( const Node *node, const std::string &name, bool inheritTemplate = false );
 GAFFER_API void removeAnnotation( Node *node, const std::string &name );
+[[deprecated( "Use alternative form with `RegistrationTypes` instead")]]
 GAFFER_API void annotations( const Node *node, std::vector<std::string> &names );
+GAFFER_API std::vector<std::string> annotations( const Node *node, Metadata::RegistrationTypes types = Metadata::RegistrationTypes::All );
 
 /// Pass `user = false` for annotations not intended for creation directly by the user.
 GAFFER_API void addAnnotationTemplate( const std::string &name, const Annotation &annotation, bool user = true );
@@ -234,10 +238,35 @@ GAFFER_API bool isPromotable( const GraphComponent *from, const GraphComponent *
 
 /// Removes any redundant metadata registrations from `graphComponent` and all
 /// its descendants. By redundant we mean instance-level registrations that have
-/// the same value as an exising type-based fallback, so that removing the
+/// the same value as an existing type-based fallback, so that removing the
 /// instance registration has no effect on the composed result.
 /// \undoable
 GAFFER_API void deregisterRedundantValues( GraphComponent *graphComponent );
+
+/// Plug creation
+/// =============
+
+/// Creates an appropriate plug to hold the data contained within the "defaultValue" metadata
+/// key registered at `target`. Optional "minValue" and "maxValue" metadata registered at
+/// `target` will be used to define the min and max values of the plug.
+GAFFER_API ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction direction, unsigned flags, const std::string &target );
+
+/// Viewability
+/// ===========
+
+/// Returns the first T that is considered user viewable, starting from graphComponent before
+/// testing all ancestors. Nodes can mark their children as viewable by registering "ui:childNodesAreViewable"
+/// metadata.
+template<typename T=GraphComponent>
+T *firstViewableAncestor( GraphComponent *graphComponent );
+template<typename T=GraphComponent>
+const T *firstViewableAncestor( const GraphComponent *graphComponent );
+/// As above, but taking a TypeId to specify type - this is mainly provided for the binding.
+GAFFER_API GraphComponent *firstViewableAncestor( GraphComponent *graphComponent, IECore::TypeId ancestorType );
+GAFFER_API const GraphComponent *firstViewableAncestor( const GraphComponent *graphComponent, IECore::TypeId ancestorType );
+/// Convenience form of the above that always returns a Node - mainly provided for use in Python.
+GAFFER_API Node *firstViewableNode( GraphComponent *graphComponent );
+GAFFER_API const Node *firstViewableNode( const GraphComponent *graphComponent );
 
 } // namespace MetadataAlgo
 

@@ -42,9 +42,9 @@ namespace GafferTest
 enum TypeId
 {
 
-	MultiplyNodeTypeId = 110201,
+	MultiplyNodeTypeId = 119000,
 
-	LastTypeId = 110224,
+	LastTypeId = 119099
 
 };
 

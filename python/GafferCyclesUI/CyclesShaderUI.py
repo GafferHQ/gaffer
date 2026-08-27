@@ -54,20 +54,6 @@ def __outPlugNoduleType( plug ) :
 
 	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
 
-def __getSocketToComponents( socketType ) :
-	if( socketType == "point2" ) :
-		return "xy"
-	elif( socketType == "vector" ) :
-		return "xyz"
-	elif( socketType == "point" ) :
-		return "xyz"
-	elif( socketType == "normal" ) :
-		return "xyz"
-	elif( socketType == "color" ) :
-		return "rgb"
-	else :
-		return None
-
 __metadata = collections.defaultdict( dict )
 
 def __translateParamMetadata( nodeTypeName, socketName, value ) :
@@ -76,9 +62,9 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	if socketType == "enum" :
 		presetNames = IECore.StringVectorData()
 		presetValues = IECore.StringVectorData()
-		for enumName, enumValues in value["enum_values"].items() :
+		for enumName in sorted( value["enum_values"].keys() ):
 			presetNames.append(enumName)
-			presetValues.append( enumValues.value )
+			presetValues.append( value["enum_values"][enumName].value )
 		__metadata[paramPath]["presetNames"] = presetNames
 		__metadata[paramPath]["presetValues"] = presetValues
 		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
@@ -92,20 +78,11 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 		__metadata[paramPath]["fileSystemPath:extensionsLabel"] = "Show only image files"
 
 	__metadata[paramPath]["noduleLayout:visible"] = True
-	label = value["ui_name"].value
-	__metadata[paramPath]["label"] = label
-	__metadata[paramPath]["noduleLayout:label"] = label
+	__metadata[paramPath]["label"] = value["ui_name"].value
+	__metadata[paramPath]["noduleLayout:label"] = value["ui_name"].value
 	# Linkable
 	linkable = bool( value["flags"].value & ( 1 << 0 ) )
 	__metadata[paramPath]["nodule:type"] = "" if not linkable else None # "" disables the nodule, and None falls through to the default
-
-	if "category" in value :
-		__metadata[paramPath]["layout:section"] = value["category"]
-
-	childComponents = __getSocketToComponents( socketType )
-	if childComponents is not None :
-		for c in childComponents :
-			__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
 
 def __translateNodesMetadata( nodeTypes ) :
 
@@ -218,17 +195,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"out" : [
+		"out" : {
 
-			"nodule:type", __outPlugNoduleType,
-			"noduleLayout:spacing", 0.2,
+			"nodule:type" : __outPlugNoduleType,
+			"noduleLayout:spacing" : 0.2,
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"noduleLayout:visible", True,
+			"noduleLayout:visible" : True,
 
-		]
+		}
 	}
 )

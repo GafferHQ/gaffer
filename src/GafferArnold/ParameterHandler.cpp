@@ -52,7 +52,6 @@
 #include "boost/container/flat_set.hpp"
 
 #include "ai_metadata.h"
-#include "ai_version.h"
 
 using namespace std;
 using namespace Imath;
@@ -60,10 +59,6 @@ using namespace boost;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferArnold;
-
-#if ARNOLD_VERSION_NUM < 70301
-#define AI_NODE_IMAGER AI_NODE_DRIVER
-#endif
 
 namespace
 {

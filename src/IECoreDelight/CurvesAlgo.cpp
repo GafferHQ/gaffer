@@ -35,6 +35,7 @@
 #include "IECoreDelight/NodeAlgo.h"
 #include "IECoreDelight/ParameterList.h"
 
+#include "IECoreScene/CurvesAlgo.h"
 #include "IECoreScene/CurvesPrimitive.h"
 
 #include "IECore/MessageHandler.h"
@@ -51,23 +52,27 @@ namespace
 
 const char *g_catmullRom = "catmull-rom";
 const char *g_bSpline = "b-spline";
+const char *g_linear = "linear";
+const int g_one = 1;
 
 void staticParameters( const IECoreScene::CurvesPrimitive *object, ParameterList &parameters )
 {
 	parameters.add( "nvertices", object->verticesPerCurve(), false );
 
 	const char **basis = nullptr;
-	if( object->basis() == CubicBasisf::catmullRom() )
+	switch( object->basis().standardBasis() )
 	{
-		basis = &g_catmullRom;
-	}
-	else if( object->basis() == CubicBasisf::bSpline() )
-	{
-		basis = &g_bSpline;
-	}
-	else
-	{
-		IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Unsupported curves basis" );
+		case StandardCubicBasis::CatmullRom :
+			basis = &g_catmullRom;
+			break;
+		case StandardCubicBasis::BSpline :
+			basis = &g_bSpline;
+			break;
+		case StandardCubicBasis::Linear :
+			basis = &g_linear;
+			break;
+		default :
+			IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Unsupported curves basis" );
 	}
 
 	if( basis )
@@ -82,36 +87,27 @@ void staticParameters( const IECoreScene::CurvesPrimitive *object, ParameterList
 		} );
 	}
 
-	if( object->periodic() )
+	if( object->wrap() == CurvesPrimitive::Wrap::Periodic )
 	{
 		IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Periodic curves are not supported" );
 	}
+	else if( CurvesAlgo::isPinned( object ) )
+	{
+		parameters.add( { "extrapolate", &g_one, NSITypeInteger, 0, 1, 0 } );
+	}
+
 }
 
-bool convertStatic( const IECoreScene::CurvesPrimitive *object, NSIContext_t context, const char *handle )
-{
-	NSICreate( context, handle, "cubiccurves", 0, nullptr );
-
-	ParameterList parameters;
-	staticParameters( object, parameters );
-
-	NodeAlgo::primitiveVariableParameterList( object, parameters );
-
-	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
-
-	return true;
-}
-
-bool convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::CurvesPrimitive *> &objects, const IECoreScenePreview::Renderer::SampleTimes &times, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "cubiccurves", 0, nullptr );
 
 	ParameterList parameters;
 	staticParameters( objects.front(), parameters );
 
-	vector<ParameterList> animatedParameters;
+	IECoreScenePreview::Renderer::Samples<ParameterList> animatedParameters;
 	NodeAlgo::primitiveVariableParameterLists(
-		vector<const Primitive *>( objects.begin(), objects.end() ),
+		IECoreScenePreview::Renderer::staticSamplesCast<const Primitive *>( objects ),
 		parameters, animatedParameters
 	);
 
@@ -128,6 +124,6 @@ bool convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &object
 	return true;
 }
 
-NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( convertStatic, convertAnimated );
+NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( convert );
 
 } // namespace

@@ -36,7 +36,9 @@
 
 #include "boost/python.hpp"
 
+#include "GafferVDB/DeleteGrids.h"
 #include "GafferVDB/LevelSetOffset.h"
+#include "GafferVDB/LevelSetSmooth.h"
 #include "GafferVDB/LevelSetToMesh.h"
 #include "GafferVDB/MeshToLevelSet.h"
 #include "GafferVDB/PointsGridToPoints.h"
@@ -58,5 +60,25 @@ BOOST_PYTHON_MODULE( _GafferVDB )
 	GafferBindings::DependencyNodeClass<SphereLevelSet>();
 	GafferBindings::DependencyNodeClass<PointsToLevelSet>();
 	GafferBindings::DependencyNodeClass<VolumeScatter>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<DeleteGrids>();
+		enum_<DeleteGrids::Mode>( "Mode" )
+			.value( "Keep", DeleteGrids::Keep )
+			.value( "Delete", DeleteGrids::Delete )
+		;
+	}
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<LevelSetSmooth>();
+		enum_<LevelSetSmooth::Mode>( "Mode" )
+			.value( "Box", LevelSetSmooth::Mode::Box )
+			.value( "Gaussian", LevelSetSmooth::Mode::Gaussian )
+			.value( "Median", LevelSetSmooth::Mode::Median )
+			.value( "MeanCurvature", LevelSetSmooth::Mode::MeanCurvature )
+			.value( "Laplacian", LevelSetSmooth::Mode::Laplacian )
+			.value( "Fillet", LevelSetSmooth::Mode::Fillet )
+		;
+	}
 
 }

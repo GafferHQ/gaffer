@@ -104,7 +104,7 @@ IECoreGL::GroupPtr line( const V3f &p0, const V3f &p1 )
 {
 	IntVectorDataPtr vertsPerCurve = new IntVectorData();
 	vertsPerCurve->writable().push_back( 2 );
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), false, vertsPerCurve );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 	V3fVectorDataPtr verts = new V3fVectorData();
 	verts->writable().push_back( p0 );
 	verts->writable().push_back( p1 );

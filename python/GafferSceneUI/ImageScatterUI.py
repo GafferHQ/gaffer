@@ -61,62 +61,62 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"sets" : [
+		"sets" : {
 
-			"layout:divider", True,
+			"layout:divider" : True,
 
-		],
+		},
 
-		"image" : [
+		"image" : {
 
-			"description",
+			"description" :
 			"""
 			The image used to drive the point scattering process.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"view" : [
+		"view" : {
 
-			"description",
+			"description" :
 			"""
 			The view within the image to be used by the scattering process.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
-			"layout:divider", True,
+			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
+			"layout:divider" : True,
 
-		],
+		},
 
-		"density" : [
+		"density" : {
 
-			"description",
+			"description" :
 			"""
 			The overall density of the scattered points, defined in points
 			per pixel.
 			"""
 
-		],
+		},
 
-		"densityChannel" : [
+		"densityChannel" : {
 
-			"description",
+			"description" :
 			"""
 			The image channel used to modulate the density of the scattered points.
 			Black pixels will receive no points and white pixels will receive the
 			full amount as defined by the `density` plug.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:imagePlugName", "image",
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:imagePlugName" : "image",
 
-		],
+		},
 
-		"primitiveVariables" : [
+		"primitiveVariables" : {
 
-			"description",
+			"description" :
 			"""
 			The image channels to be converted to primitive variables on
 			the points. The chosen channels are converted using the
@@ -127,34 +127,34 @@ Gaffer.Metadata.registerNode(
 			- Other channels are converted to individual float primitive variables.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
+			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
-		],
+		},
 
-		"width" : [
+		"width" : {
 
-			"description",
+			"description" :
 			"""
 			The width of the points. If `widthChannel` is used as well, then this acts as
 			a multiplier on the channel values.
 			"""
 
-		],
+		},
 
-		"widthChannel" : [
+		"widthChannel" : {
 
-			"description",
+			"description" :
 			"""
 			The channel used to provide per-point width values for the points.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:imagePlugName", "image",
-			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "" ] ),
-			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "None" ] ),
-			"layout:divider", True,
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:imagePlugName" : "image",
+			"channelPlugValueWidget:extraChannels" : IECore.StringVectorData( [ "" ] ),
+			"channelPlugValueWidget:extraChannelLabels" : IECore.StringVectorData( [ "None" ] ),
+			"layout:divider" : True,
 
-		],
+		},
 
 	}
 

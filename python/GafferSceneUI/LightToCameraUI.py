@@ -36,13 +36,6 @@
 
 import Gaffer
 import GafferScene
-import GafferSceneUI
-
-def filmFitMetadata():
-	# Take the metadata from StandardOptionsUI, except not the layout section
-	allOptions = GafferSceneUI.StandardOptionsUI.plugsMetadata[ "options.filmFit" ] + GafferSceneUI.StandardOptionsUI.plugsMetadata[ "options.filmFit.value" ]
-	optionPairs = zip( allOptions[::2], allOptions[1::2] )
-	return sum( [ [i,j] for i,j in optionPairs if i != "layout:section" ], [] )
 
 Gaffer.Metadata.registerNode(
 
@@ -57,37 +50,44 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"filmFit" : filmFitMetadata(),
+		"filmFit" : {
 
-		"distantAperture" : [
+			"description" : Gaffer.Metadata.value( "option:render:filmFit", "description" ),
+			"plugValueWidget:type" : Gaffer.Metadata.value( "option:render:filmFit", "plugValueWidget:type" ),
+			"presetNames" : Gaffer.Metadata.value( "option:render:filmFit", "presetNames" ),
+			"presetValues" : Gaffer.Metadata.value( "option:render:filmFit", "presetValues" ),
 
-			"description",
+		},
+
+		"distantAperture" : {
+
+			"description" :
 			"""
 			The orthographic aperture used when converting distant lights
 			( which are theoretically infinite in extent )
 			""",
 
-		],
+		},
 
-		"clippingPlanes" : [
+		"clippingPlanes" : {
 
-			"description",
+			"description" :
 			"""
 			Clipping planes for the created cameras.  When creating a perspective camera, a near clip
 			<= 0 is invalid, and will be replaced with 0.01.  Also, certain lights only start casting
 			light at some distance - if near clip is less than this, it will be increased.
 			""",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			Specifies which lights to convert.
 			""",
 
-		],
+		},
 	}
 
 )

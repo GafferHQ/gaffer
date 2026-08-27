@@ -35,22 +35,50 @@
 ##########################################################################
 
 import IECore
+
 import Gaffer
+import GafferScene
 
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "label", "Enabled" )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "description", "Whether the render pass is enabled for rendering." )
-Gaffer.Metadata.registerValue( "option:renderPass:enabled", "defaultValue", IECore.BoolData( True ) )
+def __renderPassTypes() :
 
-Gaffer.Metadata.registerValue( "option:renderPass:type", "label", "Type" )
-Gaffer.Metadata.registerValue(
-	"option:renderPass:type",
-	"description",
-	"""
-	The type of the render pass. This provides simple setup for renders such as reflection and shadow passes,
-	typically by assigning custom shaders to the objects specified by `Casters` and `Catchers`. Use a RenderPassShaders
-	node to customise the shaders used for this purpose.
+	types = sorted( list( GafferScene.RenderPassTypeAdaptor.registeredTypeNames() ) )
 
-	> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
-	"""
-)
-Gaffer.Metadata.registerValue( "option:renderPass:type", "defaultValue", IECore.StringData( "" ) )
+	if callable( GafferScene.RenderPassTypeAdaptor.autoTypeFunction() ) :
+		types.insert( 0, "auto" )
+
+	return types
+
+Gaffer.Metadata.registerValues( {
+
+	"option:renderPass:enabled" : {
+
+		"defaultValue" : True,
+		"description" : "Whether the render pass is enabled for rendering.",
+		"label" : "Enabled",
+		"layout:section" : "Render Pass",
+
+	},
+
+	"option:renderPass:type" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		The type of the render pass. This provides simple setup for renders such as reflection and shadow passes,
+		typically by assigning custom shaders to the objects specified by `Casters` and `Catchers`. Use a RenderPassShaders
+		node to customise the shaders used for this purpose.
+
+		> Hint : Render pass types and their behaviours can be customised using the RenderPassTypeAdaptor API.
+		""",
+		"label" : "Type",
+		"layout:section" : "Render Pass",
+
+		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		"presetsPlugValueWidget:allowCustom" : True,
+		"preset:Standard" : "",
+		"presetNames" : lambda target : IECore.StringVectorData( [ IECore.CamelCase.toSpaced( p ) for p in __renderPassTypes() ] ),
+		"presetValues" : lambda target : IECore.StringVectorData( __renderPassTypes() ),
+
+	},
+
+} )

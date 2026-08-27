@@ -53,7 +53,6 @@ from .CheckerboardTest import CheckerboardTest
 from .RampTest import RampTest
 from .ImageWriterTest import ImageWriterTest
 from .SamplerTest import SamplerTest
-from .DisplayTest import DisplayTest
 from .ImageStatsTest import ImageStatsTest
 from .ImageTransformTest import ImageTransformTest
 from .DeleteChannelsTest import DeleteChannelsTest
@@ -91,9 +90,7 @@ from .MedianTest import MedianTest
 from .ErodeTest import ErodeTest
 from .DilateTest import DilateTest
 from .MixTest import MixTest
-from .CatalogueTest import CatalogueTest
 from .CollectImagesTest import CollectImagesTest
-from .CatalogueSelectTest import CatalogueSelectTest
 from .BleedFillTest import BleedFillTest
 from .RectangleTest import RectangleTest
 from .ModuleTest import ModuleTest
@@ -118,7 +115,8 @@ from .OpenColorIOConfigPlugTest import OpenColorIOConfigPlugTest
 from .DeepSliceTest import DeepSliceTest
 from .ContactSheetCoreTest import ContactSheetCoreTest
 from .ContactSheetTest import ContactSheetTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+from .ShuffleImageMetadataTest import ShuffleImageMetadataTest
+from .DiskBlurTest import DiskBlurTest
+from .DataWindowQueryTest import DataWindowQueryTest
+from .SATBlurTest import SATBlurTest
+from .MetadataOverlayTest import MetadataOverlayTest

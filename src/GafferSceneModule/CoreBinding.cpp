@@ -208,10 +208,10 @@ IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const SceneP
 	return copy ? a->copy() : boost::const_pointer_cast<IECore::CompoundObject>( a );
 }
 
-IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool withGlobalAttributes )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return plug.fullAttributes( scenePath );
+	return plug.fullAttributes( scenePath, withGlobalAttributes );
 }
 
 IECore::CompoundObjectPtr globalsWrapper( const ScenePlug &plug, bool copy )
@@ -271,10 +271,10 @@ IECore::MurmurHash attributesHashWrapper( const ScenePlug &plug, const ScenePlug
 	return plug.attributesHash( scenePath );
 }
 
-IECore::MurmurHash fullAttributesHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+IECore::MurmurHash fullAttributesHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool withGlobalAttributes )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return plug.fullAttributesHash( scenePath );
+	return plug.fullAttributesHash( scenePath, withGlobalAttributes );
 }
 
 IECore::MurmurHash globalsHashWrapper( const ScenePlug &plug )
@@ -406,7 +406,7 @@ void GafferSceneModule::bindCore()
 		.def( "object", &objectWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "childNames", &childNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "attributes", &attributesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
-		.def( "fullAttributes", &fullAttributesWrapper )
+		.def( "fullAttributes", &fullAttributesWrapper, ( boost::python::arg_( "self" ), boost::python::arg_( "scenePath" ), boost::python::arg_( "withGlobalAttributes" ) = false ) )
 		.def( "globals", &globalsWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "setNames", &setNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "set", &setWrapper, ( boost::python::arg_( "_copy" ) = true ) )
@@ -417,7 +417,7 @@ void GafferSceneModule::bindCore()
 		.def( "objectHash", &objectHashWrapper )
 		.def( "childNamesHash", &childNamesHashWrapper )
 		.def( "attributesHash", &attributesHashWrapper )
-		.def( "fullAttributesHash", &fullAttributesHashWrapper )
+		.def( "fullAttributesHash", &fullAttributesHashWrapper, ( ( boost::python::arg_( "self" ), boost::python::arg_( "scenePath" ), boost::python::arg_( "withGlobalAttributes" ) = false ) ) )
 		.def( "globalsHash", &globalsHashWrapper )
 		.def( "setNamesHash", &setNamesHashWrapper )
 		.def( "setHash", &setHashWrapper )

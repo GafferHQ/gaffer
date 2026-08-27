@@ -996,15 +996,72 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
-			# SphereLight (with bogus out-of-range Houdini softness)
+			"sphereLightToPhotometricLight" : [
 
-			"houdiniPenumbra" : [
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "photometric.ies",
+					}
+				),
+
+				IECoreScene.Shader(
+					"photometric_light", "light",
+					expectedLightParameters( {
+						"filename" : "photometric.ies",
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotometricLightEmptyFile" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "",
+					}
+				),
+
+				IECoreScene.Shader(
+					"point_light", "light",
+					expectedLightParameters( {
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			"sphereLightToPhotometricLightNotSpot" : [
 
 				IECoreScene.Shader(
 					"SphereLight", "light",
 					{
 						"shaping:cone:angle" : 20.0,
-						"shaping:cone:softness" : 60.0,
+						"shaping:cone:softness" : 0.5,
+						"shaping:ies:file" : "photometric.ies",
+					}
+				),
+
+				IECoreScene.Shader(
+					"photometric_light", "light",
+					expectedLightParameters( {
+						"filename" : "photometric.ies",
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			"sphereLightToSpotLightEmptyIESFile" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:ies:file" : "",
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
 					}
 				),
 
@@ -1012,6 +1069,31 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					"spot_light", "light",
 					expectedLightParameters( {
 						"cone_angle" : 40.0,
+						"penumbra_angle" : 20.0,
+						"cosine_power" : 0.0,
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			# SphereLight (with softness greater than 1)
+
+			"sphereLightHighSoftness" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 2.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"spot_light", "light",
+					expectedLightParameters( {
+						"cone_angle" : 40.0,
+						"penumbra_angle" : 80.0,
 						"cosine_power" : 0.0,
 						"radius" : 0.5,
 					} )
@@ -1280,5 +1362,36 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( len( nodes ), 1 )
 			self.assertEqual( arnold.AiNodeGetStr( nodes[0], "pattern" ), "worley1" )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testUnwantedClosureValues( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"raySwitchHandle" : IECoreScene.Shader(
+					"ray_switch_shader", "ai:surface",
+					{ "camera" : IECore.StringData() }
+				),
+			},
+			output = "raySwitchHandle"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			with IECore.CapturingMessageHandler() as messageHandler :
+				IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
+
+	def testMissingShaderWithBlindData( self ) :
+
+		shader = IECoreScene.Shader( "NonExistent" )
+		shader.blindData()["test"] = "test"
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = { "outputHandle" : shader },
+			output = "outputHandle"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
+			self.assertEqual( len( nodes ), 0 )

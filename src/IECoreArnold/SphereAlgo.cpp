@@ -68,30 +68,18 @@ void warnIfUnsupported( const IECoreScene::SpherePrimitive *sphere )
 	}
 }
 
-AtNode *convert( const IECoreScene::SpherePrimitive *sphere, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	warnIfUnsupported( sphere );
-
-	AtNode *result = AiNode( universe, g_sphereArnoldString, AtString( nodeName.c_str() ), parentNode );
-	ShapeAlgo::convertPrimitiveVariables( sphere, result, nullptr, messageContext );
-
-	AiNodeSetFlt( result, g_radiusArnoldString, sphere->radius() );
-
-	return result;
-}
-
-AtNode *convert( const std::vector<const IECoreScene::SpherePrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::SpherePrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	AtNode *result = AiNode( universe, g_sphereArnoldString, AtString( nodeName.c_str() ), parentNode );
 	ShapeAlgo::convertPrimitiveVariables( samples.front(), result, nullptr, messageContext );
 
 	AtArray *radiusSamples = AiArrayAllocate( 1, samples.size(), AI_TYPE_FLOAT );
 
-	for( vector<const IECoreScene::SpherePrimitive *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+	for( size_t i = 0; i < samples.size(); ++i )
 	{
-		warnIfUnsupported( *it );
-		float radius = (*it)->radius();
-		AiArraySetKey( radiusSamples, /* key = */ it - samples.begin(), &radius );
+		warnIfUnsupported( samples[i] );
+		float radius = samples[i]->radius();
+		AiArraySetKey( radiusSamples, /* key = */ i, &radius );
 	}
 
 	AiNodeSetArray( result, g_radiusArnoldString, radiusSamples );
@@ -101,6 +89,6 @@ AtNode *convert( const std::vector<const IECoreScene::SpherePrimitive *> &sample
 	return result;
 }
 
-NodeAlgo::ConverterDescription<SpherePrimitive> g_description( convert, convert );
+NodeAlgo::ConverterDescription<SpherePrimitive> g_description( convert );
 
 } // namespace

@@ -34,12 +34,15 @@
 #
 ##########################################################################
 
+import functools
 import inspect
+
+import IECore
 
 import Gaffer
 import GafferScene
 
-def __cameraVisibilityAdaptor() :
+def __cameraVisibilityAdaptor( attributeName ) :
 
 	processor = GafferScene.SceneProcessor()
 
@@ -69,23 +72,9 @@ def __cameraVisibilityAdaptor() :
 	processor["__filterQuery"]["filter"].setInput( processor["__cameraInclusionsFilter"]["out"] )
 	processor["__filterQuery"]["location"].setValue( "/" )
 
-	processor["__allCameraExcluded"] = GafferScene.CustomAttributes()
-	processor["__allCameraExcluded"]["in"].setInput( processor["in"] )
-	processor["__allCameraExcluded"]["attributes"].addChild( Gaffer.NameValuePlug( "ai:visibility:camera", Gaffer.BoolPlug() ) )
-	processor["__allCameraExcluded"]["attributes"].addChild( Gaffer.NameValuePlug( "cycles:visibility:camera", Gaffer.BoolPlug() ) )
-	processor["__allCameraExcluded"]["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", Gaffer.BoolPlug() ) )
-	processor["__allCameraExcluded"]["global"].setValue( True )
-	# __allCameraExcluded is only required when `render:cameraInclusions` exists and does not match the root of the scene.
-	processor["__allCameraExcludedExpression"] = Gaffer.Expression()
-	processor["__allCameraExcludedExpression"].setExpression(
-		"""parent["__allCameraExcluded"]["enabled"] = parent["__optionQuery"]["out"]["out0"]["exists"] and not parent["__filterQuery"]["exactMatch"]"""
-	)
-
 	processor["__cameraInclusions"] = GafferScene.AttributeTweaks()
-	processor["__cameraInclusions"]["in"].setInput( processor["__allCameraExcluded"]["out"] )
-	processor["__cameraInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "ai:visibility:camera", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__cameraInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "cycles:visibility:camera", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__cameraInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "dl:visibility.camera", Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	processor["__cameraInclusions"]["in"].setInput( processor["in"] )
+	processor["__cameraInclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attributeName, Gaffer.BoolPlug( defaultValue = True ), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 
 	processor["__cameraInclusions"]["filter"].setInput( processor["__cameraInclusionsFilter"]["out"] )
 	# __cameraInclusions is only required when `render:cameraInclusions` exists
@@ -96,16 +85,36 @@ def __cameraVisibilityAdaptor() :
 
 	processor["__cameraExclusions"] = GafferScene.AttributeTweaks()
 	processor["__cameraExclusions"]["in"].setInput( processor["__cameraInclusions"]["out"] )
-	processor["__cameraExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "ai:visibility:camera", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__cameraExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "cycles:visibility:camera", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
-	processor["__cameraExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( "dl:visibility.camera", Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+	processor["__cameraExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attributeName, Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
 
 	processor["__cameraExclusions"]["filter"].setInput( processor["__cameraExclusionsFilter"]["out"] )
 	# __cameraExclusions is only required when `render:cameraExclusions` exists
 	processor["__cameraExclusions"]["enabled"].setInput( processor["__optionQuery"]["out"][1]["exists"] )
 
-	processor["out"].setInput( processor["__cameraExclusions"]["out"] )
+	processor["__rootPaths"] = GafferScene.PathFilter()
+	processor["__rootPaths"]["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+	processor["__rootExclusions"] = GafferScene.AttributeTweaks()
+	processor["__rootExclusions"]["in"].setInput( processor["__cameraExclusions"]["out"] )
+	processor["__rootExclusions"]["tweaks"].addChild( Gaffer.TweakPlug( attributeName, Gaffer.BoolPlug(), mode = Gaffer.TweakPlug.Mode.CreateIfMissing ) )
+
+	processor["__rootExclusions"]["filter"].setInput( processor["__rootPaths"]["out"] )
+	# All children of / are excluded from camera visibility when `render:cameraInclusions` exists and does not match the root of the scene.
+	processor["__rootExclusionsExpression"] = Gaffer.Expression()
+	processor["__rootExclusionsExpression"].setExpression(
+		"""parent["__rootExclusions"]["enabled"] = parent["__optionQuery"]["out"]["out0"]["exists"] and not parent["__filterQuery"]["exactMatch"]"""
+	)
+
+	processor["out"].setInput( processor["__rootExclusions"]["out"] )
 
 	return processor
 
-GafferScene.SceneAlgo.registerRenderAdaptor( "CameraVisibilityAdaptor", __cameraVisibilityAdaptor )
+for renderer, attributeName in (
+	( "Arnold", "ai:visibility:camera" ),
+	( "Cycles", "cycles:visibility:camera" ),
+	( "3Delight*", "dl:visibility.camera" ),
+	( "RenderMan*", "ri:visibility:camera" )
+) :
+	# Adaptors are registered to both `renderer` and "OpenGL" so these attributes are also
+	# available for use with the Viewer's OpenGL diagnostic shading modes.
+	GafferScene.SceneAlgo.registerRenderAdaptor( "{}CameraVisibilityAdaptor".format( renderer.rstrip( "*" ) ), functools.partial( __cameraVisibilityAdaptor, attributeName ), renderer = "{} OpenGL".format( renderer ) )

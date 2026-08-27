@@ -96,7 +96,7 @@ class DebugDispatcher( GafferDispatch.Dispatcher ) :
 
 		scriptContext = dispatchData["scriptNode"].context()
 		contextArgs = []
-		for entry in [ k for k in batch.context().keys() if k != "frame" and not k.startswith( "ui:" ) and not k.startswith( "dispatcher:" ) ] :
+		for entry in [ k for k in batch.context().keys() if k != "frame" and not k.startswith( "dispatcher:" ) ] :
 			if entry not in scriptContext.keys() or batch.context()[entry] != scriptContext[entry] :
 				contextArgs.extend( [ "-" + entry, repr( batch.context()[entry] ) ] )
 

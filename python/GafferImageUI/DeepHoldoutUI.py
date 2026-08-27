@@ -48,14 +48,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"holdout" : [
+		"holdout" : {
 
-			"description",
+			"description" :
 			"""
 			Hides the parts of the main input which are behind this image, based on its Z, ZBack and A channels.
 			""",
 
-		],
+		},
 
 	}
 

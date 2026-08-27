@@ -40,6 +40,7 @@
 #include "GafferScene/OptionTweaks.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/PathFilter.h"
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Set.h"
 #include "GafferScene/ShaderTweaks.h"
@@ -154,6 +155,37 @@ const GraphComponent *GafferScene::EditScopeAlgo::prunedReadOnlyReason( const Ed
 	}
 
 	return MetadataAlgo::readOnlyReason( scope );
+}
+
+// Visibility
+// ==========
+
+namespace
+{
+
+const InternedString g_visibilityAttribute( "scene:visible" );
+
+} // namespace
+
+void GafferScene::EditScopeAlgo::setVisibility( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool visible )
+{
+	TweakPlug *edit = acquireAttributeEdit( scope, path, g_visibilityAttribute, /* createIfNecessary = */ true );
+	edit->enabledPlug()->setValue( true );
+	if( visible )
+	{
+		// Prefer inherited visibility
+		edit->modePlug()->setValue( TweakPlug::Mode::Remove );
+	}
+	else
+	{
+		edit->modePlug()->setValue( TweakPlug::Mode::Create );
+		edit->valuePlug<BoolPlug>()->setValue( false );
+	}
+}
+
+const GraphComponent *GafferScene::EditScopeAlgo::visibilityReadOnlyReason( const EditScope *scope, const ScenePlug::ScenePath &path )
+{
+	return attributeEditReadOnlyReason( scope, path, g_visibilityAttribute );
 }
 
 // Transforms
@@ -493,6 +525,11 @@ ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath 
 	}
 	else
 	{
+		if( const auto defaultValue = Gaffer::Metadata::value( fmt::format( "{}:{}:{}", shader->getType(), shader->getName(), parameter.name.string() ), "defaultValue" ) )
+		{
+			return defaultValue;
+		}
+
 		throw IECore::Exception( fmt::format( "Parameter \"{}\" does not exist", parameter.name.string() ) );
 	}
 }
@@ -580,7 +617,7 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireParameterEdit( Gaffer::EditScope *
 	/// every cell will have a `setValue()` for the name, and we expect to have fewer enabled cells than disabled ones.
 	/// Change the TweakPlug constructor (or provide an overload) so we can get the defaults we want. Consider the
 	/// relationship to NameValuePlug and ShufflePlug constructors at the same time.
-	TweakPlugPtr tweakPlug = new TweakPlug( tweakName, valuePlug, TweakPlug::Replace, false );
+	TweakPlugPtr tweakPlug = new TweakPlug( tweakName, valuePlug, TweakPlug::Create, false );
 
 	auto *shaderTweaks = processor->getChild<ShaderTweaks>( "ShaderTweaks" );
 	shaderTweaks->tweaksPlug()->addChild( tweakPlug );
@@ -772,7 +809,8 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireAttributeEdit( Gaffer::EditScope *
 
 	// Find cell for attribute
 
-	std::string columnName = boost::replace_all_copy( attribute, ":", "_" );
+	std::string columnName;
+	boost::replace_copy_if( attribute, std::back_inserter( columnName ), boost::is_any_of( ".:" ), '_' );
 	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
 	{
 		return cell->valuePlug<TweakPlug>();
@@ -835,7 +873,8 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::attributeEditReadOnlyR
 		return reason;
 	}
 
-	std::string columnName = boost::replace_all_copy( attribute, ":", "_" );
+	std::string columnName;
+	boost::replace_copy_if( attribute, std::back_inserter( columnName ), boost::is_any_of( ".:" ), '_' );
 	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
 	{
 		if( MetadataAlgo::getReadOnly( cell ) )
@@ -861,8 +900,8 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::attributeEditReadOnlyR
 namespace
 {
 
-static int g_addSetColumnIndex = 0;
-static int g_removeSetColumnIndex = 1;
+int g_addSetColumnIndex = 0;
+int g_removeSetColumnIndex = 1;
 
 SceneProcessorPtr setMembershipProcessor()
 {
@@ -1491,4 +1530,63 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::renderPassesReadOnlyRe
 	}
 
 	return MetadataAlgo::readOnlyReason( scope );
+}
+
+bool GafferScene::EditScopeAlgo::renameRenderPass( Gaffer::EditScope *scope, const std::string &oldName, const std::string &newName )
+{
+	if( const auto nonEditableReason = renameRenderPassNonEditableReason( scope, newName ) )
+	{
+		throw IECore::Exception( nonEditableReason.value() );
+	}
+
+	bool renamed = false;
+	if( auto renderPassesProcessor = scope->acquireProcessor( g_renderPassesProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto namesPlug = renderPassesProcessor->getChild<StringVectorDataPlug>( "names" );
+		ConstStringVectorDataPtr renderPasses = namesPlug->getValue();
+
+		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), oldName ) != renderPasses->readable().end() )
+		{
+			auto renderPassesCopy = renderPasses->copy();
+			std::replace( renderPassesCopy->writable().begin(), renderPassesCopy->writable().end(), oldName, newName );
+			namesPlug->setValue( renderPassesCopy );
+			renamed = true;
+		}
+	}
+
+	if( auto renderPassOptionEditsProcessor = scope->acquireProcessor( g_renderPassOptionProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto *rows = renderPassOptionEditsProcessor->getChild<Spreadsheet::RowsPlug>( "edits" );
+		if( Spreadsheet::RowPlug *row = rows->row( oldName ) )
+		{
+			row->namePlug()->setValue( newName );
+			renamed = true;
+		}
+	}
+
+	return renamed;
+}
+
+std::optional<std::string> GafferScene::EditScopeAlgo::renameRenderPassNonEditableReason( const Gaffer::EditScope *scope, const std::string &newName )
+{
+	if( auto renderPassesProcessor = const_cast<EditScope *>( scope )->acquireProcessor( g_renderPassesProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto namesPlug = renderPassesProcessor->getChild<StringVectorDataPlug>( "names" );
+		ConstStringVectorDataPtr renderPasses = namesPlug->getValue();
+		if( std::find( renderPasses->readable().begin(), renderPasses->readable().end(), newName ) != renderPasses->readable().end() )
+		{
+			return fmt::format( "A render pass named \"{}\" already exists in {}", newName, renderPassesProcessor->relativeName( scope->parent() ) );
+		}
+	}
+
+	if( auto renderPassOptionEditsProcessor = const_cast<EditScope *>( scope )->acquireProcessor( g_renderPassOptionProcessorName, /* createIfNecessary = */ false ) )
+	{
+		auto *rows = renderPassOptionEditsProcessor->getChild<Spreadsheet::RowsPlug>( "edits" );
+		if( rows->row( newName ) )
+		{
+			return fmt::format( "Edits already exist for render pass \"{}\" in {}", newName, renderPassOptionEditsProcessor->relativeName( scope->parent() ) );
+		}
+	}
+
+	return std::nullopt;
 }

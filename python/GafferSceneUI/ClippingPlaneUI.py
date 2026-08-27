@@ -53,14 +53,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the clipping plane to be created.
 			""",
 
-		],
+		},
 
 	}
 

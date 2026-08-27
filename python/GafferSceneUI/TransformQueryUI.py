@@ -50,18 +50,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query the transform for.
 			"""
 
-		],
+		},
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The location within the scene to query the transform at.
 
@@ -69,30 +69,30 @@ Gaffer.Metadata.registerNode(
 			> performed and all outputs will be set to their default values.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", ""
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"nodule:type" : ""
 
-		],
+		},
 
-		"space" : [
+		"space" : {
 
-			"description",
+			"description" :
 			"""
 			The space to query the transform.
 			""",
 
-			"preset:Local", GafferScene.TransformQuery.Space.Local,
-			"preset:World", GafferScene.TransformQuery.Space.World,
-			"preset:Relative", GafferScene.TransformQuery.Space.Relative,
+			"preset:Local" : GafferScene.TransformQuery.Space.Local,
+			"preset:World" : GafferScene.TransformQuery.Space.World,
+			"preset:Relative" : GafferScene.TransformQuery.Space.Relative,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"nodule:type", ""
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"nodule:type" : ""
+		},
 
-		"relativeLocation" : [
+		"relativeLocation" : {
 
-			"description",
+			"description" :
 			"""
 			The location within the scene to query the transform for relative space mode.
 
@@ -100,59 +100,59 @@ Gaffer.Metadata.registerNode(
 			> performed and all outputs will be set to their default values.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"layout:activator", "spaceIsRelative",
-			"nodule:type", ""
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"layout:activator" : "spaceIsRelative",
+			"nodule:type" : ""
 
-		],
+		},
 
-		"invert" : [
+		"invert" : {
 
-			"description",
+			"description" :
 			"""
 			Invert the result transform.
 			""",
-			"nodule:type", ""
+			"nodule:type" : ""
 
-		],
+		},
 
-		"matrix" : [
+		"matrix" : {
 
-			"description",
+			"description" :
 			"""
 			4x4 matrix of the requested transform.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
-		"translate" : [
-			"description",
+		"translate" : {
+			"description" :
 			"""
 			Translation component of requested transform.
 			""",
 
-			"layout:section", "Settings.Outputs"
-		],
+			"layout:section" : "Settings.Outputs"
+		},
 
-		"rotate" : [
-			"description",
+		"rotate" : {
+			"description" :
 			"""
 			Rotation component of requested transform (degrees).
 			""",
 
-			"layout:section", "Settings.Outputs"
-		],
+			"layout:section" : "Settings.Outputs"
+		},
 
-		"scale" : [
-			"description",
+		"scale" : {
+			"description" :
 			"""
 			Scaling component of requested transform.
 			""",
 
-			"layout:section", "Settings.Outputs"
-		],
+			"layout:section" : "Settings.Outputs"
+		},
 	}
 )

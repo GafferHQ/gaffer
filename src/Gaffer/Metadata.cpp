@@ -45,14 +45,14 @@
 #include "IECore/StringAlgo.h"
 
 #include "boost/bind/bind.hpp"
-#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
 
 #include "tbb/concurrent_hash_map.h"
-#include "tbb/recursive_mutex.h"
 
+#include <mutex>
 #include <unordered_map>
 
 using namespace std;
@@ -68,8 +68,41 @@ using namespace Gaffer;
 namespace
 {
 
-// Signals
-// =======
+// Signals for string targets
+// ==========================
+
+using StringSignalsMap = std::unordered_map<InternedString, Metadata::ValueChangedSignal>;
+StringSignalsMap &stringSignalsMap()
+{
+	static StringSignalsMap *g_stringSignalsMap = new StringSignalsMap;
+	return *g_stringSignalsMap;
+}
+
+void emitValueChangedSignals( InternedString target, InternedString key, Metadata::ValueChangedReason reason )
+{
+	StringSignalsMap &m = stringSignalsMap();
+	if( StringAlgo::hasWildcards( target.c_str() ) )
+	{
+		for( auto &[t, signal] : m )
+		{
+			if( StringAlgo::matchMultiple( t.string(), target.string() ) )
+			{
+				signal( t, key, reason );
+			}
+		}
+	}
+	else
+	{
+		auto it = m.find( target );
+		if( it != m.end() )
+		{
+			it->second( target, key, reason );
+		}
+	}
+}
+
+// Signals for Node/Plug targets
+// =============================
 //
 // We store all our signals in a map indexed by `Node *`. Although we do not
 // allow concurrent edits to a node graph, we do allow different node graphs to
@@ -87,7 +120,7 @@ struct NodeSignals
 };
 
 using SignalsMap = std::unordered_map<Node *, unique_ptr<NodeSignals>>;
-using SignalsMapLock = tbb::recursive_mutex::scoped_lock;
+using SignalsMapLock = std::unique_lock<std::recursive_mutex>;
 
 // Access to the signals requires the passing of a scoped_lock that
 // will be locked for you automatically, and must remain locked while
@@ -95,8 +128,8 @@ using SignalsMapLock = tbb::recursive_mutex::scoped_lock;
 SignalsMap &signalsMap( SignalsMapLock &lock )
 {
 	static SignalsMap *g_signalsMap = new SignalsMap;
-	static tbb::recursive_mutex g_signalsMapMutex;
-	lock.acquire( g_signalsMapMutex );
+	static std::recursive_mutex g_signalsMapMutex;
+	lock = SignalsMapLock( g_signalsMapMutex );
 	return *g_signalsMap;
 }
 
@@ -211,17 +244,35 @@ using Values = multi_index::multi_index_container<
 	NamedValue,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
-			multi_index::member<NamedValue, InternedString, &NamedValue::first>
+			multi_index::key<&NamedValue::first>
 		>,
 		multi_index::sequenced<>
 	>
 >;
 
-using MetadataMap = std::map<IECore::InternedString, Values>;
+using NamedValues = std::pair<InternedString, Values>;
+
+using MetadataMap = multi_index::multi_index_container<
+	NamedValues,
+	multi_index::indexed_by<
+		multi_index::ordered_unique<
+			multi_index::key<&NamedValues::first>
+		>,
+		multi_index::sequenced<>
+	>
+>;
 
 MetadataMap &metadataMap()
 {
 	static auto g_m = new MetadataMap;
+	return *g_m;
+}
+
+using WildcardMetadataMap = std::unordered_map<InternedString, Values>;
+
+WildcardMetadataMap &wildcardMetadataMap()
+{
+	static auto g_m = new WildcardMetadataMap;
 	return *g_m;
 }
 
@@ -238,7 +289,7 @@ struct GraphComponentMetadata
 		NamedValue,
 		multi_index::indexed_by<
 			multi_index::ordered_unique<
-				multi_index::member<NamedValue, InternedString, &NamedValue::first>
+				multi_index::key<&NamedValue::first>
 			>,
 			multi_index::sequenced<>
 		>
@@ -248,7 +299,7 @@ struct GraphComponentMetadata
 		NamedPlugValue,
 		multi_index::indexed_by<
 			multi_index::ordered_unique<
-				multi_index::member<NamedPlugValue, InternedString, &NamedPlugValue::first>
+				multi_index::key<&NamedPlugValue::first>
 			>,
 			multi_index::sequenced<>
 		>
@@ -288,7 +339,7 @@ using InstanceValues = multi_index::multi_index_container<
 	NamedInstanceValue,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
-			multi_index::member<NamedInstanceValue, InternedString, &NamedInstanceValue::name>
+			multi_index::key<&NamedInstanceValue::name>
 		>,
 		multi_index::sequenced<>
 	>
@@ -476,38 +527,88 @@ unsigned registrationTypes( bool instanceOnly, bool persistentOnly = false )
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, IECore::ConstDataPtr value )
 {
-	registerValue( target, key, [value]{ return value; } );
+	registerValue( target, key, [value] ( InternedString key ) { return value; } );
 }
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
 {
-	NamedValue namedValue( key, value );
-	auto &m = metadataMap()[target];
-	auto i = m.insert( namedValue );
-	if( !i.second )
+	Values *values = nullptr;
+	if( StringAlgo::hasWildcards( target.c_str() ) )
 	{
-		m.replace( i.first, namedValue );
+		values = &wildcardMetadataMap()[target];
+	}
+	else
+	{
+		auto &targetMap = metadataMap();
+
+		auto targetIt = targetMap.find( target );
+		if( targetIt == targetMap.end() )
+		{
+			targetIt = targetMap.insert( NamedValues( target, Values() ) ).first;
+		}
+
+		// Cast is safe because we don't use `second` as a key in the `multi_index_container`,
+		// so we can modify it without affecting indexing.
+		values = const_cast<Values *>( &targetIt->second );
 	}
 
+	const NamedValue namedValue( key, value );
+	auto keyIt = values->insert( namedValue );
+	if( !keyIt.second )
+	{
+		values->replace( keyIt.first, namedValue );
+	}
+
+	emitValueChangedSignals( target, key, ValueChangedReason::StaticRegistration );
+	// Legacy signal receives target directly, even if it contains wildcards.
 	valueChangedSignal()( target, key );
 }
 
 void Metadata::deregisterValue( IECore::InternedString target, IECore::InternedString key )
 {
-	auto &m = metadataMap();
-	auto mIt = m.find( target );
-	if( mIt == m.end() )
+	auto erase = [] ( InternedString target, InternedString key, auto &map ) -> bool {
+
+		auto targetIt = map.find( target );
+		if( targetIt == map.end() )
+		{
+			return false;
+		}
+
+		// Cast is safe because we don't use `second` as a key in the `multi_index_container`,
+		// so we can modify it without affecting indexing.
+		Values &values = const_cast<Values &>( targetIt->second );
+		auto keyIt = values.find( key );
+		if( keyIt == values.end() )
+		{
+			return false;
+		}
+
+		values.erase( keyIt );
+		if( values.empty() )
+		{
+			map.erase( targetIt );
+		}
+
+		return true;
+	};
+
+	bool erased;
+	if( StringAlgo::hasWildcards( target.c_str() ) )
+	{
+		erased = erase( target, key, wildcardMetadataMap() );
+	}
+	else
+	{
+		erased = erase( target, key, metadataMap() );
+	}
+
+	if( !erased )
 	{
 		return;
 	}
 
-	auto vIt = mIt->second.find( key );
-	if( vIt == mIt->second.end() )
-	{
-		return;
-	}
-
-	mIt->second.erase( vIt );
+	emitValueChangedSignals( target, key, ValueChangedReason::StaticDeregistration );
+	// Legacy signal receives target directly, even if it contains wildcards.
 	valueChangedSignal()( target, key );
 }
 
@@ -531,17 +632,69 @@ IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IEC
 {
 	const MetadataMap &m = metadataMap();
 	MetadataMap::const_iterator it = m.find( target );
-	if( it == m.end() )
+	if( it != m.end() )
 	{
-		return nullptr;
+		Values::const_iterator vIt = it->second.find( key );
+		if( vIt != it->second.end() )
+		{
+			return vIt->second( target );
+		}
 	}
 
-	Values::const_iterator vIt = it->second.find( key );
-	if( vIt != it->second.end() )
+	for( const auto &[pattern, values] : wildcardMetadataMap() )
 	{
-		return vIt->second();
+		if( !IECore::StringAlgo::matchMultiple( target.string(), pattern ) )
+		{
+			continue;
+		}
+
+		Values::const_iterator vIt = values.find( key );
+		if( vIt != values.end() )
+		{
+			return vIt->second( target );
+		}
 	}
+
 	return nullptr;
+}
+
+std::vector<IECore::InternedString> Metadata::targetsWithMetadata( const IECore::StringAlgo::MatchPattern &targetPattern, IECore::InternedString key )
+{
+	vector<InternedString> result;
+	const auto &orderedIndex = metadataMap().get<1>();
+	const auto &wildcardMap = wildcardMetadataMap();
+
+	for( const auto &[target, values] : orderedIndex )
+	{
+		if( !StringAlgo::matchMultiple( target.c_str(), targetPattern ) )
+		{
+			continue;
+		}
+
+		bool hasMetadata = values.find( key ) != values.end();
+		if( !hasMetadata )
+		{
+			for( const auto &[pattern, wildcardValues] : wildcardMap )
+			{
+				if(
+					StringAlgo::matchMultiple( target.string(), pattern ) &&
+					wildcardValues.find( key ) != wildcardValues.end()
+
+				)
+				{
+					hasMetadata = true;
+					break;
+				}
+			}
+		}
+
+		if( hasMetadata )
+		{
+			result.push_back( target );
+		}
+	}
+
+	return result;
 }
 
 void Metadata::registerValue( IECore::TypeId typeId, IECore::InternedString key, IECore::ConstDataPtr value )
@@ -713,6 +866,7 @@ std::vector<IECore::InternedString> Metadata::registeredValues( const GraphCompo
 {
 	std::vector<IECore::InternedString> keys;
 
+	size_t numSources = 0;
 	if( registrationTypes & RegistrationTypes::TypeId  )
 	{
 		IECore::TypeId typeId = target->typeId();
@@ -722,6 +876,7 @@ std::vector<IECore::InternedString> Metadata::registeredValues( const GraphCompo
 			if( nIt != graphComponentMetadataMap().end() )
 			{
 				const auto &index = nIt->second.values.get<1>();
+				numSources += index.empty() ? 0 : 1;
 				for( auto vIt = index.rbegin(), veIt = index.rend(); vIt != veIt; ++vIt )
 				{
 					keys.push_back( vIt->first );
@@ -753,6 +908,7 @@ std::vector<IECore::InternedString> Metadata::registeredValues( const GraphCompo
 							if( StringAlgo::match( plugPath, it->first ) )
 							{
 								const auto &index = it->second.get<1>();
+								numSources += index.empty() ? 0 : 1;
 								for( auto vIt = index.rbegin(), veIt = index.rend(); vIt != veIt; ++vIt )
 								{
 									plugPathKeys.push_back( vIt->first );
@@ -772,7 +928,26 @@ std::vector<IECore::InternedString> Metadata::registeredValues( const GraphCompo
 
 	if( registrationTypes & RegistrationTypes::Instance )
 	{
+		const size_t numTypeIdKeys = keys.size();
 		registeredInstanceValues( target, keys, registrationTypes );
+		numSources += ( keys.size() > numTypeIdKeys ) ? 1 : 0;
+	}
+
+	if( numSources > 1 )
+	{
+		// We've combined keys from multiple source maps, so need to remove any
+		// duplicates. The approach here is `O( N^2 )`, but for 100 keys it
+		// beats using a separate `unordered_set` by around 30%, and we're
+		// unlikely to have that many keys anyway.
+		keys.erase(
+			std::remove_if(
+				keys.begin(), keys.end(),
+				[&] ( const InternedString &key ) {
+					return std::find( const_cast<const InternedString *>( keys.data() ), &key, key ) != &key;
+				}
+			),
+			keys.end()
+		);
 	}
 
 	return keys;
@@ -901,10 +1076,9 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 	return Metadata::valueInternal( target, key, registrationTypes( instanceOnly ) );
 }
 
-Metadata::ValueChangedSignal &Metadata::valueChangedSignal()
+Metadata::ValueChangedSignal &Metadata::valueChangedSignal( InternedString target )
 {
-	static ValueChangedSignal *s = new ValueChangedSignal;
-	return *s;
+	return stringSignalsMap()[target];
 }
 
 Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal( Node *node )
@@ -915,6 +1089,12 @@ Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal( Node *node )
 Metadata::PlugValueChangedSignal &Metadata::plugValueChangedSignal( Node *node )
 {
 	return nodeSignals( node, /* createIfMissing = */ true )->plugSignal;
+}
+
+Metadata::LegacyValueChangedSignal &Metadata::valueChangedSignal()
+{
+	static LegacyValueChangedSignal *s = new LegacyValueChangedSignal;
+	return *s;
 }
 
 Metadata::LegacyNodeValueChangedSignal &Metadata::nodeValueChangedSignal()

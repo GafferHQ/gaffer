@@ -57,9 +57,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"orientation" : [
+		"orientation" : {
 
-			"description",
+			"description" :
 			"""
 			The space used to define the orientation of the XYZ
 			rotation handles. Note that this is independent
@@ -67,18 +67,18 @@ Gaffer.Metadata.registerNode(
 			setting can be mixed and matched freely.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 100,
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 100,
 
-			"preset:Local", GafferSceneUI.TransformTool.Orientation.Local,
-			"preset:Parent", GafferSceneUI.TransformTool.Orientation.Parent,
-			"preset:World", GafferSceneUI.TransformTool.Orientation.World,
+			"preset:Local" : GafferSceneUI.TransformTool.Orientation.Local,
+			"preset:Parent" : GafferSceneUI.TransformTool.Orientation.Parent,
+			"preset:World" : GafferSceneUI.TransformTool.Orientation.World,
 
-			"viewer:cyclePresetShortcut", "O",
+			"viewer:cyclePresetShortcut" : "O",
 
-		],
+		},
 
 	}
 )

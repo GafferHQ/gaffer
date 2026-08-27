@@ -49,15 +49,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"filterMap" : [
+		"filterMap" : {
 
-			"description",
+			"description" :
 			"""
 			A shader used to weight the samples taken by an
 			Arnold camera. This can be used to create vignetting effects
@@ -67,14 +67,14 @@ Gaffer.Metadata.registerNode(
 			space.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
-			"noduleLayout:section", "left",
+			"nodule:type" : "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
 
-		],
+		},
 
-		"uvRemap" : [
+		"uvRemap" : {
 
-			"description",
+			"description" :
 			"""
 			A shader used to simulate lens distortion effects. The shader
 			is evaluated across a 0-1 UV range that is mapped to the camera's
@@ -82,10 +82,10 @@ Gaffer.Metadata.registerNode(
 			UV positions.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
-			"noduleLayout:section", "left",
+			"nodule:type" : "GafferUI::StandardNodule",
+			"noduleLayout:section" : "left",
 
-		],
+		},
 
 	}
 

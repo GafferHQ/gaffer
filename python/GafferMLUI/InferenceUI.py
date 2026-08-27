@@ -54,9 +54,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"model" : [
+		"model" : {
 
-			"description",
+			"description" :
 			"""
 			Path to the model file, which should be in `.onnx` format.
 			Call `loadModel()` or press the reload button to configure
@@ -67,46 +67,46 @@ Gaffer.Metadata.registerNode(
 			> environment variable.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:valid", True,
-			"path:bookmarks", "onnx",
-			"fileSystemPath:extensions", "onnx",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:valid" : True,
+			"path:bookmarks" : "onnx",
+			"fileSystemPath:extensions" : "onnx",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The inputs to the model.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:spacing", 1.0,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:spacing" : 1.0,
 			# Disable ArrayPlug "+" button.
-			"noduleLayout:customGadget:addButton:gadgetType", "",
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
 			## \todo Add a widget which displays type/shape requirements etc
 			# for each input.
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The outputs from the model.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
+			"nodule:type" : "GafferUI::CompoundNodule",
 			# Disable ArrayPlug "+" button.
-			"noduleLayout:customGadget:addButton:gadgetType", "",
-			"noduleLayout:spacing", 1.0,
-			"plugValueWidget:type", "",
+			"noduleLayout:customGadget:addButton:gadgetType" : "",
+			"noduleLayout:spacing" : 1.0,
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
 	}
 )

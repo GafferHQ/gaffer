@@ -203,7 +203,7 @@ GAFFERIMAGE_API IECore::ConstCompoundObjectPtr tiles( const ImagePlug *imagePlug
 /// Deep Utils
 /// ==============================
 
-/// If the provided sample offsets do not match, raise an exception that indicates where the mismatch occured.
+/// If the provided sample offsets do not match, raise an exception that indicates where the mismatch occurred.
 GAFFERIMAGE_API void throwIfSampleOffsetsMismatch( const IECore::IntVectorData* sampleOffsetsA, const IECore::IntVectorData* sampleOffsetsB, const Imath::V2i &tileOrigin, const std::string &message );
 
 

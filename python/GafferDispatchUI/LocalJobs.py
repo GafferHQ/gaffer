@@ -140,7 +140,7 @@ class _StatusColumn( GafferUI.PathColumn ) :
 			sortValue = int( GafferDispatch.LocalDispatcher.Job.Status[status] )
 		)
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "Status" )
 
@@ -159,7 +159,7 @@ class _RunningTimeColumn( GafferUI.PathColumn ) :
 			sortValue = seconds
 		)
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "Running Time" )
 
@@ -175,7 +175,7 @@ class _CPUUsageColumn( GafferUI.PathColumn ) :
 			toolTip = "CPU usage for current batch"
 		)
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "CPU" )
 
@@ -191,7 +191,7 @@ class _MemoryUsageColumn( GafferUI.PathColumn ) :
 			toolTip = "Memory usage for current batch"
 		)
 
-	def headerData( self, canceller ) :
+	def headerData( self, rootPath, canceller ) :
 
 		return GafferUI.PathColumn.CellData( value = "Memory" )
 
@@ -239,19 +239,22 @@ class LocalJobs( GafferUI.Editor ) :
 
 				with GafferUI.ScrolledContainer( parenting = { "label"  : "Properties" } ) :
 
-					with GafferUI.GridContainer( spacing=10, borderWidth=10 ) :
+					grid = GafferUI.GridContainer( spacing = 10, borderWidth = 10 )
+					with grid.nextRow() :
+						GafferUI.Label( "Frame Range" )
+						self.__propertiesFrameRange = GafferUI.Label( textSelectable = True )
 
-						GafferUI.Label( "Frame Range", parenting = { "index" : ( 0, 0 ) } )
-						self.__propertiesFrameRange = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 0 ) } )
+					with grid.nextRow() :
+						GafferUI.Label( "Job Directory" )
+						self.__propertiesJobDirectory = GafferUI.Label( textSelectable = True )
 
-						GafferUI.Label( "Job Directory", parenting = { "index" : ( 0, 1 ) } )
-						self.__propertiesJobDirectory = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 1 ) } )
+					with grid.nextRow() :
+						GafferUI.Label( "Environment Command" )
+						self.__propertiesEnvironmentCommand = GafferUI.Label( textSelectable = True )
 
-						GafferUI.Label( "Environment Command", parenting = { "index" : ( 0, 2 ) } )
-						self.__propertiesEnvironmentCommand = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 2 ) } )
-
-						GafferUI.Label( "Start Time", parenting = { "index" : ( 0, 3 ) } )
-						self.__propertiesStartTime = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 3 ) } )
+					with grid.nextRow() :
+						GafferUI.Label( "Start Time" )
+						self.__propertiesStartTime = GafferUI.Label( textSelectable = True )
 
 		# Connecting to the JobPool and Job signals allows us to update our PathListingWidget
 		# immediately when jobs are added and removed or their status changes.

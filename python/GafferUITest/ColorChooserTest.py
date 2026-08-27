@@ -302,6 +302,3 @@ class ColorChooserTest( GafferUITest.TestCase ) :
 		self.assertFalse( self.__getColorFieldVisibility( rgbaWidget ) )
 		self.assertFalse( self.__getDynamicSliderBackgrounds( rgbWidget ) )
 		self.assertFalse( self.__getDynamicSliderBackgrounds( rgbaWidget ) )
-
-if __name__ == "__main__" :
-	unittest.main()

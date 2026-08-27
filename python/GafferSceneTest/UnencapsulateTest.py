@@ -300,7 +300,7 @@ class UnencapsulateTest( GafferSceneTest.SceneTestCase ) :
 			while True :
 				IECore.Canceller.check( context.canceller() )
 
-			parent["standardAttributes"]["attributes"]["displayColor"] = imath.Color3f( 1, 2, 3)
+			parent["standardAttributes"]["attributes"]["render:displayColor"] = imath.Color3f( 1, 2, 3)
 			"""
 		) )
 
@@ -346,6 +346,3 @@ class UnencapsulateTest( GafferSceneTest.SceneTestCase ) :
 			# Check that we can cancel the compute.
 			backgroundTask.cancelAndWait()
 			self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
-
-if __name__ == "__main__":
-	unittest.main()

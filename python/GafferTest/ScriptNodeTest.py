@@ -36,9 +36,7 @@
 ##########################################################################
 
 import unittest
-import sys
 import weakref
-import gc
 import os
 import pathlib
 import shutil
@@ -1837,5 +1835,49 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( "Line 3" in mh.messages[0].context )
 		self.assertTrue( "name 'b' is not defined" in mh.messages[0].message )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testConnectionsBetweenContextVariables( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["variables"].addChild(
+			Gaffer.NameValuePlug( "variable1", 1, name = "variable1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		script["variables"].addChild(
+			Gaffer.NameValuePlug( "variable2", 2, name = "variable2", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+
+		self.assertEqual( script.context()["variable1"], 1, )
+		self.assertEqual( script.context()["variable2"], 2 )
+
+		script["variables"]["variable1"]["value"].setInput( script["variables"]["variable2"]["value"] )
+		self.assertEqual( script.context()["variable1"], 2, )
+		self.assertEqual( script.context()["variable2"], 2 )
+
+		script["variables"]["variable2"]["value"].setValue( 3 )
+		self.assertEqual( script.context()["variable1"], 3, )
+		self.assertEqual( script.context()["variable2"], 3 )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertEqual( script2.context()["variable1"], 3, )
+		self.assertEqual( script2.context()["variable2"], 3 )
+
+	def testCantConnectComputedOutputToContextVariable( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild(
+			Gaffer.NameValuePlug( "variable1", 1, name = "variable1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		script["add"] = GafferTest.AddNode()
+
+		self.assertFalse( script["variables"]["variable1"]["value"].acceptsInput( script["add"]["sum"] ) )
+
+	def testCantConnectNonValuePlugToContextVariable( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild(
+			Gaffer.NameValuePlug( "variable1", 1, name = "variable1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		script["node"] = Gaffer.Node()
+		script["node"]["user"]["plug"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertFalse( script["variables"]["variable1"]["value"].acceptsInput( script["node"]["user"]["plug"] ) )

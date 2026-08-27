@@ -57,21 +57,25 @@ Gaffer.Metadata.registerNode(
 	transforms to points.
 	""",
 
+	"layout:activator:sortKeyIsPrimVar", lambda node : node["sortKey"].getValue() == GafferScene.MergeObjects.SortKey.PrimitiveVariable,
+
+	"layout:section:Settings.Merge Order:collapsed", False,
+
 	plugs = {
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used to choose the source locations to be merged. Source locations are
 			pruned from the output scene, unless they are reused as part of a destination location
 			(or a separate source scene is connected).
 			"""
-		],
+		},
 
-		"source" : [
+		"source" : {
 
-			"description",
+			"description" :
 			"""
 			An optional alternate scene to provide the locations to be merged. When connected :
 
@@ -79,12 +83,12 @@ Gaffer.Metadata.registerNode(
 			- Source locations are not pruned from the output scene.
 			"""
 
-		],
+		},
 
 
-		"destination" : [
+		"destination" : {
 
-			"description",
+			"description" :
 			"""
 			The destination location where filtered locations will be merged to. The destination
 			location will be created if it doesn't exist already. If the name overlaps with an existing
@@ -92,8 +96,51 @@ Gaffer.Metadata.registerNode(
 			of scene:path in order to individually map input locations to different destinations.
 			""",
 
-		],
+		},
 
+		"sortKey" : {
+
+			"description" :
+			"""
+			Determines the order in which source objects are merged into the destination.
+
+			- Location Name : Sources are sorted alphabetically by location.
+			- Primitive Variable : Sources are sorted by the values of a primitive variable they each contain.
+			""",
+
+			"layout:section" : "Settings.Merge Order",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Location Name" : GafferScene.MergeObjects.SortKey.LocationName,
+			"preset:Primitive Variable" : GafferScene.MergeObjects.SortKey.PrimitiveVariable
+
+		},
+
+		"sortPrimitiveVariable" : {
+
+			"description" :
+			"""
+			A primitive variable on each input that defines the sort order. All inputs must define
+			the named primitive variable with a Constant interpolation, and a matching type, either
+			int, float, or Color3f.
+			""",
+
+			"layout:section" : "Settings.Merge Order",
+			"layout:activator" : "sortKeyIsPrimVar",
+		},
+
+		"sortOrder" : {
+
+			"description" :
+			"""
+			Allows reversing the sort order.
+			""",
+
+			"layout:section" : "Settings.Merge Order",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Ascending" : GafferScene.MergeObjects.SortOrder.Ascending,
+			"preset:Descending" : GafferScene.MergeObjects.SortOrder.Descending
+
+		},
 
 	},
 

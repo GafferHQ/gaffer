@@ -39,16 +39,24 @@
 #include "boost/python.hpp"
 
 #include "GafferScene/InteractiveRender.h"
+#include "GafferScene/Private/PointInstancerAlgo.h"
 #include "GafferScene/Private/RendererAlgo.h"
 #include "GafferScene/Render.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "Gaffer/Context.h"
+
+#include "IECorePython/ExceptionAlgo.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 
 using namespace Imath;
+using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferDispatchBindings;
@@ -74,57 +82,107 @@ IECore::DataPtr interactiveRenderCommandWrapper( InteractiveRender &r, const IEC
 	return r.command( name, parameters );
 }
 
-object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vector<float> &sampleTimes, IECore::MurmurHash *hash, bool copy )
+std::shared_ptr<RenderManifest> interactiveRenderRenderManifestWrapper( InteractiveRender &r )
 {
-	bool result;
-	std::vector<IECore::ConstObjectPtr> samples;
-	{
-		IECorePython::ScopedGILRelease gilRelease;
-		result = GafferScene::Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples, hash );
-	}
-
-	if( !result )
-	{
-		return object();
-	}
-
-	list pythonSamples;
-	for( auto &s : samples )
-	{
-		if( copy )
-		{
-			pythonSamples.append( s->copy() );
-		}
-		else
-		{
-			pythonSamples.append( boost::const_pointer_cast<IECore::Object>( s ) );
-		}
-	}
-
-	return pythonSamples;
+	return std::const_pointer_cast<RenderManifest>( r.renderManifest() );
 }
 
-object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, const std::vector<float> &sampleTimes, IECore::MurmurHash *hash )
+Private::RendererAlgo::SampledObject *sampledObjectConstructor( list samples, list sampleTimes )
 {
-	bool result;
-	std::vector<M44f> samples;
+	Private::RendererAlgo::SampledObject result;
+	boost::python::container_utils::extend_container( result.samples, samples );
+	boost::python::container_utils::extend_container( result.sampleTimes, sampleTimes );
+	return new Private::RendererAlgo::SampledObject( result );
+}
+
+
+list sampledObjectSamples( const Private::RendererAlgo::SampledObject &sampledObject )
+{
+	list result;
+	for( const auto &x : sampledObject.samples )
+	{
+		result.append( boost::const_pointer_cast<Object>( x ) );
+	}
+	return result;
+}
+
+list sampledObjectSampleTimes( const Private::RendererAlgo::SampledObject &sampledObject )
+{
+	list result;
+	for( auto x : sampledObject.sampleTimes )
+	{
+		result.append( x );
+	}
+	return result;
+}
+
+object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, object pythonSampleTimes, GafferScene::Private::RendererAlgo::ObjectHash *hash, bool copy )
+{
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
+	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
+
+	std::optional<GafferScene::Private::RendererAlgo::SampledObject> sampledObject;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
-		result = GafferScene::Private::RendererAlgo::transformSamples( &transformPlug, sampleTimes, samples, hash );
+		sampledObject = GafferScene::Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, hash );
 	}
 
-	if( !result )
+	if( !sampledObject )
 	{
 		return object();
 	}
 
-	list pythonSamples;
-	for( auto &s : samples )
+	if( copy )
 	{
-		pythonSamples.append( s );
+		for( auto &sample : sampledObject->samples )
+		{
+			sample = sample->copy();
+		}
 	}
 
-	return pythonSamples;
+	return object( *sampledObject );
+}
+
+Private::RendererAlgo::SampledTransform *sampledTransformConstructor( list samples, list sampleTimes )
+{
+	Private::RendererAlgo::SampledTransform result;
+	boost::python::container_utils::extend_container( result.samples, samples );
+	boost::python::container_utils::extend_container( result.sampleTimes, sampleTimes );
+	return new Private::RendererAlgo::SampledTransform( result );
+}
+
+list sampledTransformSamples( const Private::RendererAlgo::SampledTransform &sampledTransform )
+{
+	list result;
+	for( const auto &x : sampledTransform.samples )
+	{
+		result.append( x );
+	}
+	return result;
+}
+
+list sampledTransformSampleTimes( const Private::RendererAlgo::SampledTransform &sampledTransform )
+{
+	list result;
+	for( auto x : sampledTransform.sampleTimes )
+	{
+		result.append( x );
+	}
+	return result;
+}
+
+object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, object pythonSampleTimes, IECore::MurmurHash *hash )
+{
+	IECoreScenePreview::Renderer::SampleTimes sampleTimes;
+	boost::python::container_utils::extend_container( sampleTimes, pythonSampleTimes );
+
+	std::optional<GafferScene::Private::RendererAlgo::SampledTransform> sampledTransform;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		sampledTransform = GafferScene::Private::RendererAlgo::transformSamples( &transformPlug, sampleTimes, hash );
+	}
+
+	return sampledTransform ? object( *sampledTransform ) : object();
 }
 
 void outputCamerasWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
@@ -139,10 +197,40 @@ void outputLightsWrapper( const ScenePlug &scene, const GafferScene::Private::Re
 	GafferScene::Private::RendererAlgo::outputLights( &scene, renderOptions, renderSets, &lightLinks, &renderer );
 }
 
-void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root )
+void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root, GafferScene::RenderManifest *renderManifest )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root );
+	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root, renderManifest );
+}
+
+struct RenderSlotCaller
+{
+	bool operator()( boost::python::object slot, const Render *r )
+	{
+		try
+		{
+			RenderPtr render = const_cast<Render * >( r );
+			return slot( render );
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+		return false;
+	}
+};
+
+
+MurmurHash prototypesHashWrapper( const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return GafferScene::Private::PointInstancerAlgo::prototypesHash( &scene );
+}
+
+IECoreScene::PointInstancerPtr flattenWrapper( IECoreScene::PointInstancer &instancer, const  GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return GafferScene::Private::PointInstancerAlgo::flatten( &instancer, renderOptions, &scene );
 }
 
 } // namespace
@@ -155,6 +243,7 @@ void GafferSceneModule::bindRender()
 			.def( "getContext", &interactiveRenderGetContext )
 			.def( "setContext", &interactiveRenderSetContext )
 			.def( "command", &interactiveRenderCommandWrapper, ( arg( "name" ), arg( "parameters" ) = dict() ) )
+			.def( "renderManifest", &interactiveRenderRenderManifestWrapper )
 		;
 
 		enum_<InteractiveRender::State>( "State" )
@@ -165,12 +254,18 @@ void GafferSceneModule::bindRender()
 	}
 
 	{
-		scope s = TaskNodeClass<GafferScene::Render>();
+		scope s = TaskNodeClass<GafferScene::Render>()
+		.def( "preRenderSignal", &Render::preRenderSignal, return_value_policy<reference_existing_object>() )
+		.def( "postRenderSignal", &Render::postRenderSignal, return_value_policy<reference_existing_object>() )
+			.staticmethod( "postRenderSignal" )
+		;
 
 		enum_<GafferScene::Render::Mode>( "Mode" )
 			.value( "RenderMode", GafferScene::Render::RenderMode )
 			.value( "SceneDescriptionMode", GafferScene::Render::SceneDescriptionMode )
 		;
+
+		SignalClass<Render::RenderSignal, DefaultSignalCaller<Render::RenderSignal>, RenderSlotCaller>( "RenderSignal" );
 	}
 
 	{
@@ -193,19 +288,50 @@ void GafferSceneModule::bindRender()
 				.def( self == self )
 			;
 
+			class_<GafferScene::Private::RendererAlgo::SampledTransform>( "SampledTransform" )
+				.def( "__init__", make_constructor( sampledTransformConstructor, default_call_policies() ) )
+				.add_property( "samples", &sampledTransformSamples )
+				.add_property( "sampleTimes", &sampledTransformSampleTimes )
+				.def( "concatenate", &GafferScene::Private::RendererAlgo::SampledTransform::concatenate )
+			;
+
+			class_<GafferScene::Private::RendererAlgo::SampledObject>( "SampledObject" )
+				.def( "__init__", make_constructor( sampledObjectConstructor, default_call_policies() ) )
+				.add_property( "samples", &sampledObjectSamples )
+				.add_property( "sampleTimes", &sampledObjectSampleTimes )
+			;
+
+			class_<GafferScene::Private::RendererAlgo::ObjectHash>( "ObjectHash" )
+				.def( init<const GafferScene::Private::RendererAlgo::ObjectHash &>() )
+				.def_readwrite( "value", &GafferScene::Private::RendererAlgo::ObjectHash::value )
+				.def_readwrite( "isPointInstancer", &GafferScene::Private::RendererAlgo::ObjectHash::isPointInstancer )
+				.def( self == self )
+				.def( self != self )
+			;
+
 			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object(), arg( "_copy" ) = true ) );
 			def( "transformSamples", &transformSamplesWrapper, ( arg( "transformPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object() ) );
 
 			class_<GafferScene::Private::RendererAlgo::RenderSets, boost::noncopyable>( "RenderSets" )
 				.def( init<const ScenePlug *>() )
 			;
-			class_<GafferScene::Private::RendererAlgo::LightLinks, boost::noncopyable>( "LightLinks" )
-				.def( init<>() )
+			class_<GafferScene::Private::RendererAlgo::LightLinks, boost::noncopyable>( "LightLinks", no_init )
+				.def( init<const IECoreScenePreview::Renderer *>() )
 			;
 
 			def( "outputCameras", &outputCamerasWrapper );
 			def( "outputLights", &outputLightsWrapper );
-			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/" ) );
+			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/", arg( "renderManifest" ) = object() ) );
+		}
+
+		{
+			object pointInstancerAlgoModule( borrowed( PyImport_AddModule( "GafferScene.Private.PointInstancerAlgo" ) ) );
+			scope().attr( "Private" ).attr( "PointInstancerAlgo" ) = pointInstancerAlgoModule;
+
+			scope pointInstancerAlgoModuleScope( pointInstancerAlgoModule );
+
+			def( "prototypesHash", &prototypesHashWrapper );
+			def( "flatten", &flattenWrapper );
 		}
 	}
 

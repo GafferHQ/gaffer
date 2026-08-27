@@ -10,6 +10,10 @@ on:
       - '*'
   release:
       types: [published]
+  workflow_call:
+    inputs:
+      buildType:
+        type: string
 
 jobs:
 
@@ -28,81 +32,138 @@ jobs:
         # and then use `include` to define their settings.
 
         name: [
-          linux-gcc11,
-          linux-debug-gcc11,
+          linux,
+          linux-debug,
+          linux-platform24,
           windows,
+          macos,
         ]
 
         include:
 
-          - name: linux-gcc11
-            os: ubuntu-20.04
+          - name: linux
+            os: ubuntu-24.04
             buildType: RELEASE
             publish: true
-            containerImage: ghcr.io/gafferhq/build/build:3.0.0
+            containerImage: ghcr.io/gafferhq/build/build:4.0.0
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
             # test user rather than as root.
-            testRunner: su testUser -c
+            testRunner: runuser -u testUser --
             sconsCacheMegabytes: 400
             jobs: 4
 
-          - name: linux-debug-gcc11
-            os: ubuntu-20.04
+          - name: linux-debug
+            os: ubuntu-24.04
             buildType: DEBUG
             publish: false
-            containerImage: ghcr.io/gafferhq/build/build:3.0.0
-            testRunner: su testUser -c
+            containerImage: ghcr.io/gafferhq/build/build:4.0.0
+            testRunner: runuser -u testUser --
             testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
             sconsCacheMegabytes: 2500
             jobs: 4
 
+          - name: linux-platform24
+            os: ubuntu-24.04
+            buildType: RELEASE
+            publish: false
+            containerImage: ghcr.io/gafferhq/build/build:3.4.0
+            # GitHub container builds run as root. This causes failures for tests that
+            # assert that filesystem permissions are respected, because root doesn't
+            # respect permissions. So we run the final test suite as a dedicated
+            # test user rather than as root.
+            testRunner: runuser -u testUser --
+            sconsCacheMegabytes: 400
+            jobs: 4
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.0.0/cortex-10.7.0.0-linux-platform24.tar.gz
+            extraBuildArguments: CYCLES_ROOT=""
+
           - name: windows
             os: windows-2022
             buildType: RELEASE
             publish: true
             containerImage:
-            testRunner: Invoke-Expression
-            testArguments: -excludedCategories performance GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest GafferTractorTest GafferTractorUITest GafferMLTest GafferMLUITest
+            testArguments: -excludedCategories performance
             sconsCacheMegabytes: 800
             jobs: 4
 
+          - name: macos
+            os: macos-15
+            buildType: RELEASE
+            publish: false
+            containerImage:
+            testArguments: -excludedCategories performance
+            sconsCacheMegabytes: 400
+            jobs: 3
+
     runs-on: ${{ matrix.os }}
 
-    container: ${{ matrix.containerImage }}
+    container:
+      image: ${{ matrix.containerImage }}
+      env:
+        # We preload `libSegFault.so` to get more information from any crashes
+        # which might occur during CI.
+        LD_PRELOAD: libSegFault.so
+      # The MAC address is required by our RenderMan license. The `--privileged`
+      # option is needed to run docker containers inside the main docker container.
+      options: --mac-address a4:bb:6d:cf:40:7a --privileged
+      volumes:
+        # Mount the `/usr` directory from the host so we can clean it up
+        # in "Install toolchain (Linux)".
+        - /usr:/hostVolume/usr
 
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
       ARNOLD_FORCE_ABORT_ON_LICENSE_FAIL: 0 # And don't abort because the license isn't found
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
+      GAFFER_NIGHTLY: ${{ inputs.buildType == 'nightly' && '1' || '0' }}
 
     steps:
 
-    - uses: actions/checkout@v4
-
-    - uses: ilammy/msvc-dev-cmd@v1.13.0
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       with:
-        sdk: 10.0.19041.0
+        ref: ${{ env.GAFFER_NIGHTLY == '1' && 'pendingNightly' || '' }}
+
+    - name: Install Windows SDK
+      run: |
+        curl.exe -L --output winsdksetup.exe --url https://download.microsoft.com/download/9/7/9/97982c1d-d687-41be-9dd3-6d01e52ceb68/windowssdk/winsdksetup.exe
+        Start-Process ./winsdksetup.exe -ArgumentList "/Features OptionId.DesktopCPPx64 /Quiet /NoRestart" -NoNewWindow -Wait
+      shell: pwsh
+      if: runner.os == 'Windows'
+
+    - uses: TheMrMilchmann/setup-msvc-dev@368ef7d1ee4d1171b31d4a7f67f4d954f903f5a9 # v4.1.0
+      with:
+        sdk: 10.0.20348.0
+        arch: x64
+      if: runner.os == 'Windows'
 
     - name: Install toolchain (Windows)
       run: |
         python -m pip install scons
-        python -m pip install sphinx==4.3.1 sphinx_rtd_theme==1.0.0 myst-parser==0.15.2 docutils==0.17.1 sphinxcontrib-applehelp==1.0.2 sphinxcontrib-devhelp==1.0.2 sphinxcontrib-htmlhelp==2.0.0 sphinxcontrib-jsmath==1.0.1 sphinxcontrib-serializinghtml==1.1.5 sphinxcontrib-qthelp==1.0.3
-        Invoke-WebRequest -Uri "https://inkscape.org/gallery/item/37363/inkscape-1.2.2_2022-12-09_732a01da63-x64.exe" -OutFile "inkscape.exe"
-        Start-Process .\inkscape.exe /S -NoNewWindow -Wait
+        python -m pip install setuptools==81.0.0 sphinx==4.3.1 sphinx_rtd_theme==1.0.0 myst-parser==0.15.2 docutils==0.17.1 sphinxcontrib-applehelp==1.0.2 sphinxcontrib-devhelp==1.0.2 sphinxcontrib-htmlhelp==2.0.0 sphinxcontrib-jsmath==1.0.1 sphinxcontrib-serializinghtml==1.1.5 sphinxcontrib-qthelp==1.0.3
+        choco install inkscape --version 1.2.2 -y
       shell: pwsh
       if: runner.os == 'Windows'
 
     - name: Install toolchain (Linux)
       run: |
+        # Clear space on runner by deleting stuff we don't need from the host VM.
+        rm -rf /hostVolume/usr/lib/jvm /hostVolume/usr/local/lib/android
+        # Remove unnecessary headers from `build:3.x.x` container.
+        rm -rf /usr/local/include/*
+        # Set up an X server and window manager.
         Xvfb :99 -screen 0 1280x1024x24 &
+        # Make sure Xvfb has started and X display :99 is available before running metacity.
+        # Otherwise metacity can fail to start, which results in documentation screengrabs
+        # being made incorrectly.
+        timeout 5 bash -c 'until xset -display :99 q >/dev/null 2>&1; do sleep 0.1; done'
         metacity --display :99.0 &
+        # Create user used for running tests.
         useradd -m testUser
-        echo LD_PRELOAD=libSegFault.so >> $GITHUB_ENV
         # The Docker container configures bash shells such that they enable the
         # software collections we want. If we could set GitHub's
         # `defaults.run.shell` to `bash` then all our build steps would pick up
@@ -117,10 +178,25 @@ jobs:
       shell: bash
       if: runner.os == 'Linux'
 
+    - name: Install toolchain (macOS)
+      run: |
+        # Remove all pre-installed homebrew packages.
+        brew remove --force $(brew list --formula)
+        brew remove --cask --force $(brew list)
+        # Install build requirements.
+        brew install pipx
+        pipx install scons==4.10.1
+        # Install docs dependencies matching the versions specified in the
+        # linux build container.
+        sudo pip3 install setuptools==81.0.0 sphinx==4.3.1 sphinx_rtd_theme==1.0.0 myst-parser==0.15.2 docutils==0.17.1 sphinxcontrib-applehelp==1.0.4 sphinxcontrib-devhelp==1.0.2 sphinxcontrib-htmlhelp==2.0.1 sphinxcontrib-jsmath==1.0.1 sphinxcontrib-serializinghtml==1.1.5 sphinxcontrib-qthelp==1.0.3 --break-system-packages
+        # Install Inkscape.
+        brew install --cask inkscape
+      if: runner.os == 'macOS'
+
     - name: 'Install Python Modules'
       run: |
         python --version
-        pip install PyJWT==1.7.1 PyGitHub==1.45
+        pip install PyJWT==2.13.0 PyGitHub==1.59.0 beautifulsoup4
 
     - name: Set Custom Variables
       run: |
@@ -136,7 +212,7 @@ jobs:
       # containing the hash of the archive, for use in the cache key
       # below.
       run: |
-        echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py ${{ matrix.dependenciesURL != '' && format( '--archiveURL {0}', matrix.dependenciesURL ) || '' }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
+        python .github/workflows/main/installDependencies.py ${{ matrix.dependenciesURL != '' && format( '--archiveURL {0}', matrix.dependenciesURL ) || '' }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "GAFFER_DEPENDENCIES_HASH={archiveDigest}" >> $GITHUB_ENV
         ./.github/workflows/main/installDelight.py
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
         ./.github/workflows/main/installONNX.py
@@ -156,7 +232,7 @@ jobs:
       if: runner.os == 'Windows'
 
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: ${{ env.GAFFER_CACHE_DIR }}
         key: ${{ runner.os }}-${{ matrix.containerImage }}-${{env.GAFFER_DEPENDENCIES_HASH}}-${{ matrix.buildType }}-${{ github.sha }}
@@ -165,7 +241,7 @@ jobs:
 
     - name: Build Gaffer
       run: |
-       scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+       scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
       env:
         PYTHONUTF8: 1
 
@@ -176,8 +252,10 @@ jobs:
       timeout-minutes: 60
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
-        ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }}"
+        ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }}
         echo "::remove-matcher owner=unittest::"
+      env:
+        GAFFER_BUILD_VARIANT: ${{ matrix.name }}
 
     - name: Build and test Arnold extension
       run: |
@@ -185,7 +263,7 @@ jobs:
         import sys
         import os
 
-        for arnoldVersion in [ "7.2.1.0", "7.3.1.0" ] :
+        for arnoldVersion in [ "7.4.1.0", "7.5.1.0" ] :
           arnoldRoot = os.path.join( os.environ["GITHUB_WORKSPACE"], "arnoldRoot", arnoldVersion )
           os.environ["ARNOLD_ROOT"] = arnoldRoot
 
@@ -198,13 +276,15 @@ jobs:
             ]
           )
           #Build Arnold extension
-          subprocess.check_call( "scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
+          subprocess.check_call( "scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}", shell = True )
 
-          if os.name != "nt" :
-            # Test Arnold extension
-            print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
-            subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
-            print( "::remove-matcher owner=unittest::" )
+          # Test Arnold extension
+          print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
+          testCommand = os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" if os.name != "nt" else "gaffer.cmd" )
+          if os.name == "nt" :
+            testCommand = testCommand.lstrip( "./\\" )
+          subprocess.check_call( "${{ matrix.testRunner }} " + testCommand + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest", shell = True )
+          print( "::remove-matcher owner=unittest::" )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.
@@ -223,6 +303,104 @@ jobs:
       # making a pull request from there.
       if: ${{ env.ARNOLD_DOWNLOAD_USER != '' }}
 
+    - name: Install RenderMan 26.3
+      run: ./.github/workflows/main/installRenderMan.py --version 26.3 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'macOS' }}
+
+    - name: Build and test against RenderMan 26.3
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
+        echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
+        ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }} IECoreRenderManTest GafferRenderManTest GafferRenderManUITest
+        echo "::remove-matcher owner=unittest::"
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Install RenderMan 26.4
+      run: |
+        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
+        ./.github/workflows/main/installRenderMan.py --version 26.4 --dailyBuildDate 2026-07-16 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'macOS' }}
+
+    - name: Build against RenderMan 26.4
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Test against RenderMan 26.4
+      # See comments for RenderMan 27.2.
+      run: |
+        podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
+        df -H
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' }}
+
+    - name: Install RenderMan 27.2
+      run: |
+        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
+        ./.github/workflows/main/installRenderMan.py --version 27.2 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'macOS' }}
+
+    - name: Build against RenderMan 27.2
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Test against RenderMan 27.2
+      # RenderMan 27 claims to be compatible with VFXPlatform 2024, but requires a
+      # glibc version higher than the allowed maximum of 2.28. This means we
+      # can't run RenderMan in our Rocky 8 build container, which was carefully
+      # chosen to provide a conforming glibc version. So, to test RenderMan 27,
+      # we must run in a Rocky 9 container.
+      run: |
+        podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
+        df -H
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' }}
+
+    - name: Install RenderMan 27.3
+      run: |
+        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
+        ./.github/workflows/main/installRenderMan.py --version 27.3 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
+        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
+        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
+      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'macOS' }}
+
+    - name: Build against RenderMan 27.3
+      run: |
+        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
+      env:
+        PYTHONUTF8: 1
+      if: ${{ env.RMANTREE != '' }}
+
+    - name: Test against RenderMan 27.3
+      # See comments for RenderMan 27.2.
+      run: |
+        podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
+        df -H
+      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' }}
+
     - name: Build Docs and Package
       # Docs builds should be relatively quick. If there is a problem, this
       # aborts them in a more timely fashion than the default 6hr timeout.
@@ -239,22 +417,33 @@ jobs:
     - name: Validate
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/validateRelease.json"
-        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }} ${{ secrets.ARNOLD_DOWNLOAD_USER == '' && '--skipPaths arnold' || '' }}
+        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }} ${{ secrets.ARNOLD_DOWNLOAD_USER == '' && '--skipPaths arnold' || '' }} ${{ secrets.RENDERMAN_DOWNLOAD_USER == '' && '--skipPaths renderMan' || '' }}
         echo "::remove-matcher owner=validateRelease::"
       if: matrix.publish
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        name: ${{ env.GAFFER_BUILD_NAME }}
         path: ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }}
-        # Using compression-level 0 avoids compressing our already compressed
-        # package and results in a significantly faster upload.
-        compression-level: 0
+        archive: false
       if: matrix.publish
+
+    - name: Compare Images
+      run: |
+        python .github/workflows/main/imageDiff.py --buildDir ${{ env.GAFFER_BUILD_DIR }} --variant ${{ matrix.name }} --branch ${{ github.base_ref }} --outputDir imageDiff
+      env:
+        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: matrix.publish && github.event_name == 'pull_request'
+
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ env.GAFFER_BUILD_NAME }}-imageDiff
+        path: imageDiff
+        if-no-files-found: ignore
+      if: matrix.publish && github.event_name == 'pull_request'
 
     - name: Publish Release
       run: |
-        python ./config/publishRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} --repo ${{ github.repository }} --releaseId ${{ env.GAFFER_GITHUB_RELEASEID }}
+        python ./config/publishRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} --repo ${{ github.repository }} --releaseId ${{ env.GAFFER_GITHUB_RELEASEID }} ${{ env.GAFFER_NIGHTLY == '1' && '--maxAssets 10' || '' }}
       if: matrix.publish && env.GAFFER_GITHUB_RELEASEID != ''
       env:
         GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}

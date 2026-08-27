@@ -142,7 +142,3 @@ class ContextVariableTweaksTest( GafferTest.TestCase ) :
 
 		c["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "A" ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( c["out"].getValue(), "A" )
-
-
-if __name__ == "__main__" :
-	unittest.main()

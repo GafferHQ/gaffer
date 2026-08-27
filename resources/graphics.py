@@ -182,6 +182,7 @@
 				'compareModeUnder',
 				'compareModeDifference',
 				'compareModeSideBySide',
+				'compareModeAdd',
 				'wipeDisabled',
 				'wipeEnabled',
 			]
@@ -206,6 +207,7 @@
 				'gafferSceneUILightTool',
 				'gafferSceneUILightPositionTool',
 				'gafferSceneUIVisualiserTool',
+				'gafferImageUIColorInspectorTool',
 			]
 
 		},
@@ -353,6 +355,7 @@
 				"pointLight",
 				"diskLight",
 				"quadLight",
+				"portalLight",
 				"cylinderLight",
 				"spotLight",
 				"distantLight",
@@ -401,6 +404,8 @@
 				"listPrependSmall",
 				"listRemoveSmall",
 				"removeSmall",
+				"setExpressionIncludeSmall",
+				"setExpressionExcludeSmall",
 			]
 		},
 
@@ -442,6 +447,13 @@
 				"locationIncludedHighlighted",
 				"locationIncludedHighlightedTransparent",
 				"locationIncludedTransparent",
+				"setFilterOff",
+				"setFilterOn",
+				"locationVisible",
+				"locationVisibleTransparent",
+				"locationInvisible",
+				"locationInvisibleTransparent",
+				"locationInvisibleConflict",
 			]
 		},
 
@@ -478,6 +490,21 @@
 			]
 		},
 
+		"sceneInspector" : {
+
+			"options" : {
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"locationPinnedOn",
+				"locationPinnedOff",
+				"sceneInspectorCompareOn",
+				"sceneInspectorCompareOff",
+				"sceneInspectorShaderConnection",
+			]
+		},
+
 		"colorChooser" : {
 
 			"options" : {
@@ -491,7 +518,54 @@
 				"colorFieldSpacerIcon",
 				"colorFieldEmptyIcon",
 			]
-		}
+		},
+
+		"miscellaneous" : {
+
+			"options" : {
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"searchFieldBackground",
+				"search",
+				"searchOn",
+				"home",
+				"historyBack",
+				"historyForward",
+			],
+
+		},
+
+		"nodeEditor" : {
+
+			"options" : {
+				"validatePixelAlignment" : True,
+			},
+
+			"ids" : [
+				"rendererArnoldOnIcon",
+				"rendererArnoldOffIcon",
+				"rendererCyclesOnIcon",
+				"rendererCyclesOffIcon",
+				"rendererRenderManOnIcon",
+				"rendererRenderManOffIcon",
+			],
+
+		},
+
+		"lightLinkingEditor" : {
+
+			"options" : {
+				"validatePixelAlignment" : True,
+			},
+
+			"ids" : [
+				"link",
+				"unlink",
+			],
+
+		},
 
 	},
 
@@ -534,6 +608,7 @@
 		'plugAdder',
 		'plugAdderHighlighted',
 		'plus',
+		'plusHighlighted',
 		'railBottom',
 		'railGap',
 		'railLine',
@@ -549,8 +624,6 @@
 		'scene',
 		'sceneInspectorHistory',
 		'sceneInspectorInheritance',
-		'search',
-		'searchOn',
 		'setMembershipDot',
 		'shuffleArrow',
 		'subMenuArrow',
@@ -583,6 +656,7 @@
 		'focusOnHover',
 		'focusOffHover',
 		'shaderTweakProxy',
-		'shaderTweakProxyIcon'
+		'shaderTweakProxyIcon',
+		'selectInvisibleAncestors',
 	]
 }

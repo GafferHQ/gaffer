@@ -34,12 +34,12 @@
 #
 ##########################################################################
 
+import dataclasses
 import os
+import pathlib
 import re
-import string
 import fnmatch
 import functools
-import imath
 from collections import deque
 
 import IECore
@@ -48,7 +48,6 @@ import IECoreScene
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
 
@@ -58,129 +57,180 @@ from GafferUI.PlugValueWidget import sole
 
 def __shaderMetadata( node, key ) :
 
-	return Gaffer.Metadata.value(
-		node["type"].getValue() + ":" + node["name"].getValue(), key
-	)
+	try :
+		type = node["type"].getValue()
+		name = node["name"].getValue()
+	except :
+		return None
 
-def __parameterUserDefault( plug ) :
+	return Gaffer.Metadata.value( f"{type}:{name}", key )
+
+def __nodeDescriptionMetadata( node ) :
+
+	description =__shaderMetadata( node, "description" )
+	if description :
+		return description
+
+	renderer = node.typeName().rpartition( ":" )[-1].replace( "Shader", "" )
+	return f"Loads {renderer} shaders. Use a ShaderAssignment node to assign the shader to objects in the scene."
+
+def __parameterMetadata( plug, key, shaderFallbackKey = None ) :
 
 	shader = plug.node()
-	return Gaffer.Metadata.value(
-		shader["type"].getValue() + ":" + shader["name"].getValue() + ":" + plug.relativeName( shader["parameters"] ),
-		"userDefault"
+	try :
+		type = shader["type"].getValue()
+		name = shader["name"].getValue()
+	except :
+		return None
+
+	result = Gaffer.Metadata.value(
+		"{}:{}:{}".format( type, name, plug.relativeName( shader["parameters"] ) ),
+		key
 	)
+
+	if result is not None :
+		return result
+
+	return __shaderMetadata( shader, shaderFallbackKey ) if shaderFallbackKey is not None else None
+
+def __parameterComponentNoduleLabel( plug ) :
+
+	parameterPlug = plug.parent()
+	label = Gaffer.Metadata.value( parameterPlug, "label" ) or parameterPlug.getName()
+	return label + "." + plug.getName()
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Shader,
 
-	"description",
-	"""
-	The base type for all nodes which create shaders. Use the
-	ShaderAssignment node to assign them to objects in the scene.
-	""",
+	"description", __nodeDescriptionMetadata,
 
 	"nodeGadget:minWidth", 0.0,
 	"nodeGadget:color", functools.partial( __shaderMetadata, key = "nodeGadget:color" ),
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the shader being represented. This should
 			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
 			""",
 
-			"label", "Shader",
-			"readOnly", True,
-			"layout:section", "",
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferSceneUI.ShaderUI._ShaderNamePlugValueWidget",
+			"label" : "Shader",
+			"readOnly" : True,
+			"layout:section" : "",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "GafferSceneUI.ShaderUI._ShaderNamePlugValueWidget",
 
-		],
+		},
 
-		"type" : [
+		"type" : {
 
-			"description",
+			"description" :
 			"""
 			The type of the shader being represented. This should
 			be considered read-only. Use the `Shader.loadShader()`
 			method to load a shader.
 			""",
 
-			"readOnly", True,
-			"layout:section", "",
-			"nodule:type", "",
-			"plugValueWidget:type", "",
+			"readOnly" : True,
+			"layout:section" : "",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"parameters" : [
+		"parameters" : {
 
-			"description",
+			"description" :
 			"""
 			Where the parameters for the shader are represented.
 			""",
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferUI.PlugVisibilityGadget",
 
-		],
+		},
 
-		"parameters..." : [
+		"parameters.*" : {
+
+			"label" : functools.partial( __parameterMetadata, key = "label" ),
+			"description" : functools.partial( __parameterMetadata, key = "description" ),
+			"layout:section" : functools.partial( __parameterMetadata, key = "layout:section" ),
+			"layout:accessory" : functools.partial( __parameterMetadata, key = "layout:accessory" ),
+			"layout:divider" : functools.partial( __parameterMetadata, key = "layout:divider" ),
+			"plugValueWidget:type" : functools.partial( __parameterMetadata, key = "plugValueWidget:type" ),
+			"presetNames" : functools.partial( __parameterMetadata, key = "presetNames" ),
+			"presetValues" : functools.partial( __parameterMetadata, key = "presetValues" ),
+			"nodule:type" : functools.partial( __parameterMetadata, key = "nodule:type" ),
+			"noduleLayout:visible" : functools.partial( __parameterMetadata, key = "noduleLayout:visible", shaderFallbackKey = "noduleLayout:defaultVisibility" ),
+			"labelPlugValueWidget:icon" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:icon" ),
+			"labelPlugValueWidget:iconToolTip" : functools.partial( __parameterMetadata, key = "labelPlugValueWidget:iconToolTip" ),
+			"plugVisibilityGadget:showable" : True,
+
+		},
+
+		"parameters.*.[rgbxyz]" : {
+
+			"noduleLayout:label" : __parameterComponentNoduleLabel,
+
+		},
+
+		"parameters.*..." : {
 
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"noduleLayout:section", "left",
+			"noduleLayout:section" : "left",
 
-			"userDefault", __parameterUserDefault,
+			"userDefault" : functools.partial( __parameterMetadata, key = "userDefault" ),
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The output from the shader.
 			""",
 
-			"noduleLayout:section", "right",
-			"plugValueWidget:type", "",
+			"noduleLayout:section" : "right",
+			"plugValueWidget:type" : "",
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferUI.PlugVisibilityGadget",
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"noduleLayout:section", "right",
+			"noduleLayout:section" : "right",
+			"plugVisibilityGadget:showable" : True,
 
-		],
+		},
 
-		"attributeSuffix" : [
+		"attributeSuffix" : {
 
-			"description",
+			"description" :
 			"""
 			Suffix for the attribute used for shader assignment.
 			""",
 
-			"nodule:type", "",
-			"plugValueWidget:type", "",
-			"layout:section", "",
+			"nodule:type" : "",
+			"plugValueWidget:type" : "",
+			"layout:section" : "",
 
-		],
+		},
 
 	}
 
@@ -230,7 +280,10 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 def __shaderNameExtractor( node ) :
 
 	if isinstance( node, GafferScene.Shader ) :
-		return node["name"].getValue()
+		try :
+			return node["name"].getValue()
+		except :
+			return ""
 	else :
 		return ""
 
@@ -243,6 +296,7 @@ GafferUI.NodeFinderDialogue.registerMode( "Shader Names", __shaderNameExtractor 
 ## Appends menu items for the creation of all shaders found on some searchpaths.
 def appendShaders( menuDefinition, prefix, searchPaths, extensions, nodeCreator, matchExpression = "*", searchTextPrefix = "" ) :
 
+	searchPaths = [ pathlib.Path( p ) for p in searchPaths ]
 	menuDefinition.append( prefix, { "subMenu" : functools.partial( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) } )
 
 __hiddenShadersPathMatcher = IECore.PathMatcher()
@@ -285,23 +339,24 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
 
 	shaders = set()
-	pathsVisited = set()
+	filesVisited = set()
 	for path in searchPaths :
 
-		if path in pathsVisited :
-			continue
+		path = path.resolve()
 
-		for root, dirs, files in os.walk( path ) :
-			for file in files :
-				if os.path.splitext( file )[1][1:] in extensions :
-					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( os.path.sep )
-					shaderPath = shaderPath.replace( "\\", "/" )
-					if __hiddenShadersPathMatcher.match( shaderPath ) & IECore.PathMatcher.Result.ExactMatch :
-						continue
-					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
-						shaders.add( os.path.splitext( shaderPath )[0] )
+		for extension in extensions :
+			for file in path.rglob( f"*.{extension}") :
 
-		pathsVisited.add( path )
+				if file in filesVisited :
+					continue
+				else :
+					filesVisited.add( file )
+
+				shaderPath = file.relative_to( path )
+				if __hiddenShadersPathMatcher.match( shaderPath.as_posix() ) & IECore.PathMatcher.Result.ExactMatch :
+					continue
+				if matchExpression.match( shaderPath.as_posix() ) :
+					shaders.add( shaderPath.with_suffix( "" ).as_posix() )
 
 	shaders = sorted( list( shaders ) )
 	categorisedShaders = [ x for x in shaders if "/" in x ]
@@ -334,51 +389,10 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 	return result
 
 ##########################################################################
-# Interaction with ShaderNodeGadget
-##########################################################################
-
-def __setPlugMetadata( plug, key, value ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.Metadata.registerValue( plug, key, value )
-
-def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
-
-	if not isinstance( plug.node(), GafferScene.Shader ) :
-		return
-
-	if not (
-		plug.node()["parameters"].isAncestorOf( plug ) or
-		plug.node()["out"].isAncestorOf( plug )
-	) :
-		return
-
-	if len( menuDefinition.items() ) :
-		menuDefinition.append( "/HideDivider", { "divider" : True } )
-
-	if plug.direction() == plug.Direction.In :
-		numConnections = 1 if plug.getInput() else 0
-	else :
-		numConnections = len( plug.outputs() )
-
-	menuDefinition.append(
-
-		"/Hide",
-		{
-			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
-			"active" : numConnections == 0 and not Gaffer.MetadataAlgo.readOnly( plug ),
-		}
-
-	)
-
-GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu )
-
-
-##########################################################################
 # ShaderParameterDialog
 ##########################################################################
 
-class _DuplicateIconColumn ( GafferUI.PathColumn ) :
+class _DuplicateIconColumn( GafferUI.PathColumn ) :
 
 	def __init__( self, title, property ) :
 
@@ -399,19 +413,18 @@ class _DuplicateIconColumn ( GafferUI.PathColumn ) :
 
 		if "shader:instances" in path.propertyNames() and path.property( "shader:instances" ) > 1 :
 			data.icon = "duplicate.png"
-			data.toolTip = (
-				("Shader" if len( path ) == 1 else "Parameter" ) +
-				" occurs in multiple " +
-				( "networks." if len( path ) == 1 else "shaders." )
-			)
+			data.toolTip = "Shader occurs in multiple networks."
+		elif len( path.property( "shader:parameterValues" ) ) > 1 :
+			data.icon = "duplicate.png"
+			data.toolTip = "Parameter occurs in multiple shaders."
 
 		return data
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( self.__title )
 
-class _ShaderInputColumn ( GafferUI.PathColumn ) :
+class _ShaderInputColumn( GafferUI.PathColumn ) :
 
 	def __init__( self, title ) :
 
@@ -437,212 +450,183 @@ class _ShaderInputColumn ( GafferUI.PathColumn ) :
 					for i in inputs :
 						data.toolTip += "- {}\n".format( i )
 				else :
-					data.value = inputs.pop()
-
+					data.value = next( iter( inputs ) )
 					data.toolTip = "Select and scroll to parameter input."
 
 		return data
 
-	def headerData( self, canceller = None ) :
+	def headerData( self, rootPath, canceller = None ) :
 
 		return self.CellData( self.__title )
 
 # A Path pointing to a shader or shader parameter belonging to one or more
 # IECore::ShaderNetworks. Shaders with identical names are merged
 # into a single location.
+#
+# See comments on InspectorTree in SceneInspectorBinding.cpp for the rationale
+# behind the _ShaderTree/_ShaderPath factoring.
+class _ShaderTree :
 
-class _ShaderPath( Gaffer.Path ) :
+	@dataclasses.dataclass
+	class Node :
 
-	def __init__( self, shaderNetworks, path, root = "/", filter = None, connectedParametersOnly = False ) :
+		# Maps from hash to `IECore.Shader`, so we only store unique shaders.
+		shaderInstances : dict = dataclasses.field( default_factory = dict )
+		parameterValues : list = dataclasses.field( default_factory = list )
+		parameterInputs : set = dataclasses.field( default_factory = set )
+		children : dict = dataclasses.field( default_factory = dict )
 
-		Gaffer.Path.__init__( self, path, root, filter )
-
-		self.__connectedParametersOnly = connectedParametersOnly
+	def __init__( self, shaderNetworks, connectedParametersOnly = False ) :
 
 		assert( all( [ isinstance( n, IECoreScene.ShaderNetwork ) for n in shaderNetworks ] ) )
+		self.__root = self.Node()
 
-		self.__shaderNetworks = shaderNetworks
+		# Build an internal tree of Nodes by visiting all shaders, ordered by
+		# depth from the output shader.
 
-	def isValid( self ) :
+		queue = deque(
+			sorted(
+				[ ( n, n.getOutput().shader ) for n in shaderNetworks ],
+				key = lambda k : k[1]
+			)
+		)
+		visited = set()
 
-		if len( self ) > 0 and self.__shaders() is None :
-			return False
+		while queue :
 
-		if len( self ) > 1 and self[1] not in self.__parameters():
-			return False
+			shaderNetwork, shaderHandle = queue.popleft()
 
-		if len( self ) > 2 :
-			return False
+			h = shaderNetwork.hash().append( shaderHandle )
+			if h in visited :
+				continue
 
-		return True
+			visited.add( h )
 
-	def isLeaf( self, canceller = None ) :
+			shaderNode = self.__node( shaderHandle.split( "/" ), createIfMissing = True )
 
-		return self.__isParameter()
+			shader = shaderNetwork.getShader( shaderHandle )
+			shaderHash = shader.hash()
+			if shaderHash not in shaderNode.shaderInstances :
+				shaderNode.shaderInstances[shaderHash] = shader
+				if not connectedParametersOnly :
+					for parameter in sorted( shader.parameters.keys() ) :
+						parameterNode = shaderNode.children.setdefault( parameter, self.Node() )
+						parameterNode.parameterValues.append( shader.parameters[parameter] )
 
-	def propertyNames( self, canceller = None ) :
+			for connection in shaderNetwork.inputConnections( shaderHandle ) :
+				parameterNode = shaderNode.children.setdefault( connection.destination.name.partition( "." )[0], self.Node() )
+				parameterNode.parameterInputs.add( connection.source.shader )
 
-		commonProperties = [
-			"shader:instances"
-		]
-
-		if self.__isParameter() :
-			return Gaffer.Path.propertyNames( self ) + [
-				"shader:value",
-				"shader:inputs",
-			] + commonProperties
-
-		elif self.__isShader() :
-			return Gaffer.Path.propertyNames( self ) + [
-				"shader:type",
-			] + commonProperties
-
-	def property( self, name, canceller = None ) :
-
-		if self.__isParameter() :
-			if name == "shader:instances" :
-				return self.__parameters().count( self[1] )
-
-			if name == "shader:value" :
-				value = sole( self.__parameterValues() )
-				return value if value is not None else "---"
-
-			if name == "shader:inputs" :
-
-				connections = {
-					c.source.shader for n in self.__shaderNetworks if (
-						n.getShader( self[0] ) is not None
-					) for c in n.inputConnections( self[0] ) if (
-						c.destination.name.split( '.' )[0] == self[1]
-					)
-				}
-
-				return connections
-
-		elif self.__isShader() :
-			if name == "shader:instances" :
-				return len( self.__shaders() )
-
-			if name == "shader:type" :
-				shaders = self.__shaders()
-
-				shader = sole( [ s.name for s in self.__shaders() ] )
-
-				return shader if shader is not None else "---"
-
-		return Gaffer.Path.property( self, name )
-
-	def copy( self ) :
-
-		return _ShaderPath( self.__shaderNetworks, self[:], self.root(), self.getFilter(), self.__connectedParametersOnly )
-
-	def _children( self, canceller ) :
-
-		if self.isLeaf() :
-			return []
-
-		result = []
-
-		# Shaders, ordered by depth from the output shader
-		if len( self ) == 0 :
-			shaders = set()
-			visited = set()
-
-			stack = deque(
-				sorted(
-					[ ( n, n.getOutput().shader ) for n in self.__shaderNetworks ],
-					key = lambda k : k[1]
-				)
+			queue.extend(
+				[ ( shaderNetwork, c.source.shader ) for c in shaderNetwork.inputConnections( shaderHandle ) ]
 			)
 
-			while stack :
-				shaderNetwork, shaderHandle = stack.popleft()
+	def _isValid( self, pathNames ) :
 
-				h = shaderNetwork.hash().append( shaderHandle )
+		return self.__node( pathNames ) is not None
 
-				if h not in visited :
-					visited.add( h )
+	def _isLeaf( self, pathNames ) :
 
-					if shaderHandle not in shaders :
-						shaders.add( shaderHandle )
-						result.append(
-							_ShaderPath(
-								self.__shaderNetworks,
-								self[:] + [shaderHandle],
-								self.root(),
-								self.getFilter(),
-								self.__connectedParametersOnly
-							)
-						)
+		node = self.__node( pathNames )
+		return node is not None and not len( node.children )
 
-					stack.extend(
-						[ ( shaderNetwork, i.source.shader ) for i in shaderNetwork.inputConnections( shaderHandle ) ]
-					)
+	def _propertyNames( self, pathNames ) :
 
-		# Parameters
-		elif self.__isShader() :
-			parameterNames = sorted( set( self.__parameters() ) )
-			for p in parameterNames :
-				result.append(
-					_ShaderPath(
-						self.__shaderNetworks,
-						self[:] + [p],
-						self.root(),
-						self.getFilter(),
-						self.__connectedParametersOnly
-					)
-				)
+		node = self.__node( pathNames )
+		if node is None :
+			return []
+
+		result = [ "shader:instances" ]
+		if node.parameterValues :
+			result.append( "shader:value" )
+			result.append( "shader:parameterValues" )
+		if node.parameterInputs :
+			result.append( "shader:inputs" )
+		if node.shaderInstances :
+			result.append( "shader:type" )
 
 		return result
 
-	# Returns a list of all parameters that belong to the path's shaders.
-	# This will mix parameters from different types of shaders into a single list
-	# if multiple shaders in the networks have the same name but different type.
-	def __parameters( self ) :
+	def _property( self, pathNames, propertyName ) :
 
-		if len( self ) == 0 :
-			return []
+		node = self.__node( pathNames )
+		if node is None :
+			return None
 
-		if self.__connectedParametersOnly :
-			connectedParams = set()
-			for n in self.__shaderNetworks :
-				if n.getShader( self[0] ) is not None :
-					for c in n.inputConnections( self[0] ) :
-						connectedParams.add( c.destination.name )
-			return list( connectedParams )
+		match propertyName :
+			case "shader:instances" :
+				return len( node.shaderInstances )
+			case "shader:value" :
+				if node.parameterValues :
+					value = sole( node.parameterValues )
+					return value if value is not None else "---"
+				else :
+					return None
+			case "shader:parameterValues" :
+				return node.parameterValues
+			case "shader:inputs" :
+				return node.parameterInputs
+			case "shader:type" :
+				if node.shaderInstances :
+					return sole( [ s.name for s in node.shaderInstances.values() ] ) or "---"
+				else :
+					return None
 
-		return [ p for s in self.__shaders() for p in s.parameters.keys() ]
+	def _childNames( self, pathNames ) :
 
-	# Returns a list of all shaders with a name matching the path's shader name.
-	def __shaders( self ) :
+		node = self.__node( pathNames )
+		return node.children.keys() if node is not None else []
 
-		if len( self ) > 0 :
+	def __node( self, pathNames, createIfMissing = False ) :
 
-			uniqueShaders = {}
-			for network in self.__shaderNetworks :
-				shader = network.getShader( self[0] )
-				if shader is not None :
-					uniqueShaders[shader.hash()] = shader
+		node = self.__root
+		for name in pathNames :
+			if createIfMissing :
+				node = node.children.setdefault( name, self.Node() )
+			else :
+				node = node.children.get( name )
+				if node is None :
+					return None
 
-			return list( uniqueShaders.values() )
+		return node
 
-		return None
+class _ShaderPath( Gaffer.Path ) :
 
-	def __isShader( self ) :
+	def __init__( self, shaderNetworks, path, root = "/", filter = None ) :
 
-		return len( self ) == 1 and self.isValid()
+		Gaffer.Path.__init__( self, path, root, filter )
+		if isinstance( shaderNetworks, _ShaderTree ) :
+			self.__tree = shaderNetworks
+		else :
+			self.__tree = _ShaderTree( shaderNetworks )
 
-	def __isParameter( self ) :
+	def isValid( self ) :
 
-		return len( self ) == 2 and self.isValid()
+		return self.__tree._isValid( self[:] )
 
-	# Returns a list of values for the path's parameter.
-	def __parameterValues( self ) :
+	def isLeaf( self, canceller = None ) :
 
-		if self.__isParameter() :
-			return [ s.parameters[ self[1] ] for s in self.__shaders() if self[1] in s.parameters ]
+		return self.__tree._isLeaf( self[:] )
 
-		return None
+	def propertyNames( self, canceller = None ) :
+
+		return self.__tree._propertyNames( self[:] )
+
+	def property( self, name, canceller = None ) :
+
+		result = self.__tree._property( self[:], name )
+		return result if result is not None else Gaffer.Path.property( self, name )
+
+	def copy( self ) :
+
+		return _ShaderPath( self.__tree, self[:], self.root(), self.getFilter() )
+
+	def _children( self, canceller ) :
+
+		return [
+			_ShaderPath( self.__tree, self[:] + [ name ], self.root(), self.getFilter() )
+			for name in self.__tree._childNames( self[:] )
+		]
 
 # A path filter that keeps a path if it, any of its ancestors or any of its descendants have a
 # property `propertyName` that matches `patterns`.
@@ -750,11 +734,9 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 		GafferUI.Dialogue.__init__( self, title, **kw )
 
 		self.__selectParameters = selectParameters
-		self.__cancelled = False
 
-		self.__shaderNetworks = shaderNetworks
-
-		self.__path = _ShaderPath( self.__shaderNetworks, path = "/", connectedParametersOnly = not self.__selectParameters )
+		tree = _ShaderTree( shaderNetworks, connectedParametersOnly = not self.__selectParameters )
+		self.__path = _ShaderPath( tree, path = "/" )
 
 		self.__filter = _PathMatcherPathFilter( [ "" ], self.__path.copy() )
 		self.__filter.setEnabled( False )
@@ -839,19 +821,14 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 
 		column = pathListing.columnAt( event.line.p0 )
 		if column == self.__inputNavigateColumn :
-			inputRootPath = path.parent().parent()
+
 			inputs = path.property( "shader:inputs" )
-
-			if inputs is None :
+			if not inputs :
 				return False
 
-			if len( inputs ) == 0 :
-				return False
-
-			inputPaths = [ inputRootPath.copy().append( i ) for i in inputs ]
-
-			if all( [ i.isValid() for i in inputPaths ] ) :
-				self.__pathListingWidget.setSelection( IECore.PathMatcher( [ str( i ) for i in inputPaths ] ) )
+			self.__pathListingWidget.setSelection(
+				IECore.PathMatcher( [ f"/{input}" for input in inputs ] )
+			)
 
 			return True
 
@@ -859,20 +836,26 @@ class _ShaderDialogueBase( GafferUI.Dialogue ) :
 
 	def __result( self ) :
 
-		resultPaths = self.__pathListingWidget.getSelection()
+		selection = self.__pathListingWidget.getSelection()
 
-		if not self.__selectParameters:
-			if not resultPaths.paths() or resultPaths.paths()[0].rfind( "/" ) > 0:
+		if not self.__selectParameters :
+			if selection.isEmpty() :
 				return None
+			assert( selection.size() == 1 )
+			path = self.__pathListingWidget.getPath().copy().setFromString( selection.paths()[0] )
+			if path.property( "shader:instances" ) :
+				return str( path ).strip( "/" )
+			return None
 
-			return resultPaths.paths()[0].strip( "/" )
+		result = []
+		for pathString in selection.paths() :
+			path = self.__pathListingWidget.getPath().copy().setFromString( pathString )
+			if path.property( "shader:value" ) or path.property( "shader:input" ) :
+				result.append(
+					( "/".join( path[:-1] ), path[-1] )
+				)
 
-		resultPaths = [ self.__path.copy().setFromString( x ) for x in resultPaths.paths() ]
-
-		for p in resultPaths :
-			if len( p ) < 2 :
-				return []
-		return [ ( p[0], p[1] ) for p in resultPaths ]
+		return result
 
 	def __updateButtonState( self, *unused ) :
 		self.__confirmButton.setEnabled( bool( self.__result() ) )
@@ -914,3 +897,101 @@ class _ShaderDialogue( _ShaderDialogueBase ) :
 
 	def shaderSelectedSignal( self ) :
 		return self._resultSelectedSignal()
+
+##########################################################################
+# Conditional parameter visibility
+##########################################################################
+
+# Evaluates conditional visibility as it is defined in third-party `.args`
+# files. `queryFunction` is called to look up metadata values for keys such as
+# `conditionalVisOp` etc.
+#
+## \todo Define a standard Gaffer mechanism for shader parameter visibility
+#  that closely matches our general-purpose plug visibility mechanism, and
+#  then hook `.args` files into that. That might look something like this :
+#
+# - Allow `layout:activator:{name}` metadata to be registered to `{shaderType}:{shaderName}`
+#   shader targets, and forward these to the `Shader.parameters` plug. The difficulty here
+#   is forwarding targets whose names are not known in advance - our Metadata API doesn't
+#   currently support that. And the value would need to be a Python expression which we
+#   `eval()`, which isn't ideal.
+# - Allow `layout:visibilityActivator` metadata to be registered to `{shaderType}:{shaderName}:{parameterName}
+#   parameter targets, with values referencing the names of activators registered above. Forward
+#   this to `Shader.parameters.*` plugs.
+# - Convert `.args` conditional visibility into expressions suitable for use in the above and
+#   register them as metadata.
+# - Likewise convert our OSL visibility metadata into expressions suitable for use in the
+#   above.
+def _evaluateConditionalVisibility( parametersPlug, queryFunction ) :
+
+	return __evaluateConditionalOp( parametersPlug, queryFunction, "conditionalVis", defaultValue = True )
+
+def _evaluateConditionalLock( parametersPlug, queryFunction ) :
+
+	return __evaluateConditionalOp( parametersPlug, queryFunction, "conditionalLock", defaultValue = False )
+
+def __evaluateConditionalOp( parametersPlug, queryFunction, prefix, defaultValue = None ) :
+
+	op = queryFunction( f"{prefix}Op" )
+	if op is None :
+		if defaultValue is not None :
+			return defaultValue
+		IECore.msg( IECore.Msg.Level.Warning, "ShaderUI", f"`{prefix}Op` is missing" )
+		return True
+
+	if op in ( "and", "or" ) :
+
+		left = __queryOrWarn( queryFunction, f"{prefix}Left" )
+		right = __queryOrWarn( queryFunction, f"{prefix}Right" )
+
+		if left is None or right is None :
+			return True
+
+		operand1 = __evaluateConditionalOp( parametersPlug, queryFunction, left )
+		operand2 = __evaluateConditionalOp( parametersPlug, queryFunction, right )
+
+	else :
+
+		path = __queryOrWarn( queryFunction, f"{prefix}Path" )
+		value = __queryOrWarn( queryFunction, f"{prefix}Value" )
+
+		if path is None or value is None :
+			return True
+
+		plugName = path.rpartition( "/" )[2]
+		pathPlug = parametersPlug.getChild( plugName )
+		if pathPlug is None :
+			IECore.msg( IECore.Msg.Level.Warning, "ShaderUI", f"`{path}` not found" )
+			return True
+
+		operand1 = pathPlug.getValue()
+		operand2 = operand1.__class__( value )
+
+	match op :
+		case "equalTo" :
+			return operand1 == operand2
+		case "notEqualTo" :
+			return operand1 != operand2
+		case "greaterThan" :
+			return operand1 > operand2
+		case "lessThan" :
+			return operand1 < operand2
+		case "greaterThanOrEqualTo" :
+			return operand1 >= operand2
+		case "lessThanOrEqualTo" :
+			return operand1 <= operand2
+		case "or" :
+			return operand1 or operand2
+		case "and" :
+			return operand1 and operand2
+		case _ :
+			IECore.msg( IECore.Msg.Level.Warning, "ShaderUI", f"Unknown operation `{op}`" )
+			return True
+
+def __queryOrWarn( query, key ) :
+
+	result = query( key )
+	if result is None :
+		IECore.msg( IECore.Msg.Level.Warning, "ShaderUI", f"`{key}` is missing" )
+
+	return result

@@ -211,6 +211,3 @@ if sys.platform == "darwin" :
 	# bit omitted), so for now we mark the test as an expected failure.
 	OpenGLShaderTest.test = unittest.expectedFailure( OpenGLShaderTest.test )
 	OpenGLShaderTest.testLoadShader = unittest.expectedFailure( OpenGLShaderTest.testLoadShader )
-
-if __name__ == "__main__":
-	unittest.main()

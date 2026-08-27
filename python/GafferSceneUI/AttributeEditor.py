@@ -55,23 +55,19 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		def __init__( self ) :
 
-			GafferSceneUI.SceneEditor.Settings.__init__( self )
+			GafferSceneUI.SceneEditor.Settings.__init__( self, withHierarchyFilter = True )
 
 			self["tabGroup"] = Gaffer.StringPlug( defaultValue = "Standard" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "Attributes" )
 			self["editScope"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::AttributeEditor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::AttributeEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
-
-		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
-		searchFilter.setScene( self.settings()["in"] )
-		self.__filter = searchFilter
 
 		with column :
 
@@ -81,13 +77,19 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 				rootSection = "Settings"
 			)
 
-			_SearchFilterWidget( searchFilter )
+			GafferUI.PlugLayout(
+				self.settings(),
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				rootSection = "Filter"
+			)
 
-			self.__locationNameColumn = GafferUI.PathListingWidget.defaultNameColumn
+			self.__locationNameColumn = GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
+			self.__visibilityColumn = GafferSceneUI.Private.VisibilityColumn( self.settings()["__adaptedIn"], self.settings()["editScope"] )
 			self.__pathListing = GafferUI.PathListingWidget(
-				Gaffer.DictPath( {}, "/" ), # Temp till we make a ScenePath
+				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
 					self.__locationNameColumn,
+					self.__visibilityColumn,
 				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
@@ -100,14 +102,16 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 				Gaffer.WeakMethod( self.__selectionChanged )
 			)
 			self.__pathListing.columnContextMenuSignal().connect( Gaffer.WeakMethod( self.__columnContextMenuSignal ) )
+			GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal( self.__pathListing )
 			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ) )
 
 		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
 		)
 
+		self.__columnCache = {}
+
 		self._updateFromSet()
-		self.__setPathListingPath()
 		self.__transferSelectionFromScriptNode()
 		self.__updateColumns()
 
@@ -187,17 +191,17 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		for item in modifiedItems :
-			if not item.startswith( "ui:" ) :
-				# When the context has changed, the hierarchy of the scene may
-				# have too so we should update our PathListingWidget.
-				self.__setPathListingPath()
-				break
+		self.__lazyUpdateFromContext()
 
 	def _updateFromSettings( self, plug ) :
 
 		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
 			self.__updateColumns()
+
+	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
+	def __lazyUpdateFromContext( self ) :
+
+		self.__pathListing.getPath().setContext( self.context() )
 
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
@@ -211,25 +215,21 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				if currentSection == "All" and not sections.get( "All" ) :
 					for section in sections.values() :
-						sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+						sectionColumns += [ self.__acquireColumn( c, "All" ) for c in section.values() ]
 				else :
 					section = sections.get( currentSection or None, {} )
-					sectionColumns += [ c( self.settings()["in"], self.settings()["editScope"] ) for c in section.values() ]
+					sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
 
-		self.__pathListing.setColumns( [ self.__locationNameColumn ] + sectionColumns )
+		self.__pathListing.setColumns( [ self.__locationNameColumn, self.__visibilityColumn ] + sectionColumns )
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def __setPathListingPath( self ) :
+	def __acquireColumn( self, columnCreator, section ) :
 
-		# We take a static copy of our current context for use in the ScenePath - this prevents the
-		# PathListing from updating automatically when the original context changes, and allows us to take
-		# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-		# function until we are visible and playback has stopped.
-		## \todo With the ContextTracker now providing a new and immutable context for each update, we
-		# should be safe to remove this copy, and those from other Editors using PathListingWidgets.
-		contextCopy = Gaffer.Context( self.context() )
-		self.__filter.setContext( contextCopy )
-		self.__pathListing.setPath( GafferScene.ScenePath( self.settings()["in"], contextCopy, "/", filter = self.__filter ) )
+		column = self.__columnCache.get( ( columnCreator, section ) )
+		if column is None :
+			column = columnCreator( self.settings()["__adaptedIn"], self.settings()["editScope"] )
+			self.__columnCache[ ( columnCreator, section ) ] = column
+
+		return column
 
 	def __selectedPathsChanged( self, scriptNode ) :
 
@@ -296,35 +296,35 @@ Gaffer.Metadata.registerNode(
 	# want to add space around, in the same way we use `divider` to add a divider?
 	"layout:customWidget:spacer:widgetType", "GafferSceneUI.AttributeEditor._Spacer",
 	"layout:customWidget:spacer:section", "Settings",
-	"layout:customWidget:spacer:index", 3,
+	"layout:customWidget:spacer:index", 5,
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"label", "",
+			"label" : "",
 
-		],
+		},
 
-		"tabGroup" : [
+		"tabGroup" : {
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"layout:width", 100,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"layout:width" : 100,
 
-		],
+		},
 
-		"section" : [
+		"section" : {
 
-			"plugValueWidget:type", "GafferSceneUI.AttributeEditor._SectionPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.AttributeEditor._SectionPlugValueWidget",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 130,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width" : 130,
 
-		],
+		},
 
 	}
 
@@ -389,6 +389,8 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 						self._qtWidget().addTab( section or "Main" )
 					if "All" not in sections.keys() and len( sections.keys() ) > 1 :
 						self._qtWidget().addTab( "All" )
+
+			self._qtWidget().setVisible( self._qtWidget().count() > 1 )
 		finally :
 			self.__ignoreCurrentChanged = False
 
@@ -410,29 +412,3 @@ class _Spacer( GafferUI.Spacer ) :
 		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
 
 AttributeEditor._Spacer = _Spacer
-
-##########################################################################
-# _SearchFilterWidget
-##########################################################################
-
-## \todo Perhaps the search text should live on a Settings plug, with
-# _updateFromSettings() syncing it to the filter?
-class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
-
-	def __init__( self, pathFilter ) :
-
-		self.__patternWidget = GafferUI.TextWidget()
-		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
-
-		self.__patternWidget.setPlaceholderText( "Filter..." )
-		self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
-
-		self._updateFromPathFilter()
-
-	def _updateFromPathFilter( self ) :
-
-		self.__patternWidget.setText( self.pathFilter().getMatchPattern() )
-
-	def __patternEditingFinished( self, widget ) :
-
-		self.pathFilter().setMatchPattern( self.__patternWidget.getText() )

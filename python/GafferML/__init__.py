@@ -39,6 +39,7 @@ import pathlib
 
 __import__( "Gaffer" )
 __import__( "GafferImage" )
+__import__( "GafferScene" )
 
 if hasattr( os, "add_dll_directory" ) :
 	os.add_dll_directory( ( pathlib.Path( os.environ["ONNX_ROOT"] ) / "lib" ).resolve() )

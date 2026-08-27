@@ -251,6 +251,3 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		script2.execute( script.serialise() )
 
 		assertLoadedOK( script2 )
-
-if __name__ == "__main__":
-	unittest.main()

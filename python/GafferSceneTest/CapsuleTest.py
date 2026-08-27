@@ -103,7 +103,9 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 		GafferScene.Private.RendererAlgo.outputObjects(
-			encapsulate["out"], GafferScene.Private.RendererAlgo.RenderOptions( encapsulate["out"] ), GafferScene.Private.RendererAlgo.RenderSets( encapsulate["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+			encapsulate["out"], GafferScene.Private.RendererAlgo.RenderOptions( encapsulate["out"] ),
+			GafferScene.Private.RendererAlgo.RenderSets( encapsulate["out"] ),
+			GafferScene.Private.RendererAlgo.LightLinks( renderer ),
 			renderer
 		)
 
@@ -119,7 +121,7 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		# Expand the capsule, and check that it didn't bake the inherited attributes onto
-		# its contents. It is the responsibity of the Renderer itself to take care of attribute
+		# its contents. It is the responsibility of the Renderer itself to take care of attribute
 		# inheritance, ideally doing it "live", so that changes to inherited attributes don't
 		# require re-expansion of the capsule.
 
@@ -152,6 +154,3 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNone( capsule.context().canceller() )
 		self.assertIn( "test", capsule.context() )
 		self.assertEqual( capsule.context()["test"], 1 )
-
-if __name__ == "__main__":
-	unittest.main()

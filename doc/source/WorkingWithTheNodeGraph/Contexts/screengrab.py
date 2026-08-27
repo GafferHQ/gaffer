@@ -31,12 +31,7 @@ def __delay( delay ) :
 		GafferUI.EventLoop.waitForIdle( 1 )
 
 mainWindow = GafferUI.ScriptWindow.acquire( script )
-viewer = mainWindow.getLayout().editors( GafferUI.Viewer )[0]
 graphEditor = mainWindow.getLayout().editors( GafferUI.GraphEditor )[0]
-nodeEditor = mainWindow.getLayout().editors( GafferUI.NodeEditor )[0]
-sceneInspector = mainWindow.getLayout().editors( GafferSceneUI.SceneInspector )[0]
-hierarchyView = mainWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
-pythonEditor = mainWindow.getLayout().editors( GafferUI.PythonEditor )[0]
 
 # Concept: Reading a Context Variable
 textNode = GafferScene.Text()
@@ -139,9 +134,10 @@ __delay( 0.1 )
 # Concept: Querying results (Scene Inspector)
 with GafferUI.Window() as tempWindow :
 	tempSceneInspector = GafferSceneUI.SceneInspector( script )
-tempSceneInspector._SceneInspector__sections[2]._Section__collapsible.setCollapsed( False )
+tempSceneInspector._SceneInspector__locationPathListing.setExpansion( IECore.PathMatcher( [ "/Location/Transform", "/Location/Transform/Local" ] ) )
 tempWindow._qtWidget().resize( 512, 400 )
 tempWindow.setVisible( True )
+__delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = tempSceneInspector, imagePath = "images/conceptContextsQueryingResultsSceneInspector.png" )
 tempWindow.close()
 del tempWindow

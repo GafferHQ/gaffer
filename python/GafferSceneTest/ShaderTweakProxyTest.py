@@ -51,14 +51,17 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 
 		plane = GafferScene.Plane()
 		shader = GafferSceneTest.TestShader( "surface" )
+		shader.loadShader( "simpleShader" )
 		shader["type"].setValue( "surface" )
 
 		textureShader1 = GafferSceneTest.TestShader( "texture1" )
+		textureShader1.loadShader( "simpleShader" )
 
 		textureShader2 = GafferSceneTest.TestShader( "texture2" )
+		textureShader2.loadShader( "simpleShader" )
 
-		shader["parameters"]["c"].setInput( textureShader1["out"] )
-		textureShader1["parameters"]["c"].setInput( textureShader2["out"] )
+		shader["parameters"]["c"].setInput( textureShader1["out"]["c"] )
+		textureShader1["parameters"]["c"].setInput( textureShader2["out"]["c"] )
 
 		planeFilter = GafferScene.PathFilter()
 		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
@@ -71,9 +74,10 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		# Check the untweaked network
 		originalNetwork = assignment["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( len( originalNetwork ), 3 )
-		self.assertEqual( originalNetwork.input( ( "surface", "c" ) ), ( "texture1", "out" ) )
+		self.assertEqual( originalNetwork.input( ( "surface", "c" ) ), ( "texture1", "c" ) )
 
 		tweakShader = GafferSceneTest.TestShader( "tweakShader" )
+		tweakShader.loadShader( "simpleShader" )
 
 		tweaks = GafferScene.ShaderTweaks()
 		tweaks["in"].setInput( assignment["out"] )
@@ -81,12 +85,12 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["shader"].setValue( "surface" )
 
 		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
-		tweaks["tweaks"][0]["value"].setInput( tweakShader["out"] )
+		tweaks["tweaks"][0]["value"].setInput( tweakShader["out"]["c"] )
 
 		# If we replace the upstream network with a tweak, now we have just 2 nodes
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( len( tweakedNetwork ), 2 )
-		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "tweakShader", "out" ) )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "tweakShader", "c" ) )
 
 		autoProxy = GafferScene.ShaderTweakProxy()
 		autoProxy.setupAutoProxy( Gaffer.Color3fPlug() )
@@ -97,20 +101,20 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test adding a tweak shader in the middle of the network using the proxy
 		tweakShader["parameters"]["c"].setInput( autoProxy["out"]["auto"] )
-		tweaks["tweaks"][0]["value"].setInput( tweakShader["out"] )
+		tweaks["tweaks"][0]["value"].setInput( tweakShader["out"]["c"] )
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( len( tweakedNetwork ), 4 )
-		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "tweakShader", "out" ) )
-		self.assertEqual( tweakedNetwork.input( ( "tweakShader", "c" ) ), ( "texture1", "out" ) )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "tweakShader", "c" ) )
+		self.assertEqual( tweakedNetwork.input( ( "tweakShader", "c" ) ), ( "texture1", "c" ) )
 
 		# If we target the end of the network where there is no input, then the tweak gets inserted fine,
 		# and there is no input to the tweak, since there's nothing upstream
 		tweaks["tweaks"][0]["name"].setValue( "texture2.c" )
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( len( tweakedNetwork ), 4 )
-		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture1", "out" ) )
-		self.assertEqual( tweakedNetwork.input( ( "texture1", "c" ) ), ( "texture2", "out" ) )
-		self.assertEqual( tweakedNetwork.input( ( "texture2", "c" ) ), ( "tweakShader", "out" ) )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "texture1", "c" ) )
+		self.assertEqual( tweakedNetwork.input( ( "texture1", "c" ) ), ( "texture2", "c" ) )
+		self.assertEqual( tweakedNetwork.input( ( "texture2", "c" ) ), ( "tweakShader", "c" ) )
 		self.assertEqual( tweakedNetwork.input( ( "tweakShader", "c" ) ), ( "", "" ) )
 
 		# Test using an auto-proxy on a parameter with no input ( it should apply the value to what the
@@ -124,16 +128,16 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["tweaks"][0]["name"].setValue( "c" )
 
 		specificProxy = GafferScene.ShaderTweakProxy()
-		specificProxy.loadShader( "test:testShader" )
+		specificProxy.loadShader( "test:simpleShader" )
 
 		specificProxy["parameters"]["targetShader"].setValue( "texture2" )
 
-		tweakShader["parameters"]["c"].setInput( specificProxy["out"]["out"] )
+		tweakShader["parameters"]["c"].setInput( specificProxy["out"]["c"] )
 
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( len( tweakedNetwork ), 3 )
-		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "tweakShader", "out" ) )
-		self.assertEqual( tweakedNetwork.input( ( "tweakShader", "c" ) ), ( "texture2", "out" ) )
+		self.assertEqual( tweakedNetwork.input( ( "surface", "c" ) ), ( "tweakShader", "c" ) )
+		self.assertEqual( tweakedNetwork.input( ( "tweakShader", "c" ) ), ( "texture2", "c" ) )
 
 		# Test error if we try to make a cycle
 		tweaks["tweaks"][0]["name"].setValue( "texture2.c" )
@@ -146,6 +150,7 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 
 		plane = GafferScene.Plane()
 		shader = GafferSceneTest.TestShader( "surface" )
+		shader.loadShader( "simpleShader" )
 		shader["type"].setValue( "surface" )
 		shader["parameters"]["i"].setValue( 42 )
 
@@ -158,6 +163,7 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		assignment["shader"].setInput( shader["out"] )
 
 		tweakShader = GafferSceneTest.TestShader( "tweakShader" )
+		tweakShader.loadShader( "simpleShader" )
 
 		tweaks = GafferScene.ShaderTweaks()
 		tweaks["in"].setInput( assignment["out"] )
@@ -165,7 +171,7 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["shader"].setValue( "surface" )
 
 		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "i", Gaffer.IntPlug() ) )
-		tweaks["tweaks"][0]["value"].setInput( tweakShader["out"]["r"] )
+		tweaks["tweaks"][0]["value"].setInput( tweakShader["out"]["c"]["r"] )
 
 		autoProxy = GafferScene.ShaderTweakProxy()
 		autoProxy.setupAutoProxy( Gaffer.IntPlug() )
@@ -201,7 +207,3 @@ class ShaderTweakProxyTest( GafferSceneTest.SceneTestCase ) :
 		# Using a proxy in a shader assignment is invalid
 		with self.assertRaisesRegex( Gaffer.ProcessException, "ShaderTweakProxy only works with ShaderTweaks" ):
 			assignment["out"].attributes( "/plane" )
-
-
-if __name__ == "__main__":
-	unittest.main()

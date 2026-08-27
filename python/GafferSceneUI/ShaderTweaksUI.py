@@ -54,57 +54,71 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Makes modifications to shader parameter values.
+
+	Shader parameters are identified by name, and can optionally be filtered by the name and type of the shader they belong to. Examples :
+
+	- `intensity` : Chooses a parameter called `intensity` on the final shader in the network. Particularly convenient for lights, which often include only one shader.
+	- `diffuseTexture.filename`: Chooses a parameter called `filename` on a shader called `diffuseTexture`.
+	- `dustLayer*.alpha` : Chooses all parameters called `alpha`, on shaders whose name matches `dustLayer*` (any of Gaffer's other standard wildcards may also be used to match the shader name).
+	- `{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image`.
+	- `diffuseTexture*{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image` and whose name matches `diffuseTexture*`.
+
+	> Tip : Parameters can be dragged from the SceneInspector and dropped into the text field to fill the name automatically.
 	""",
 
 	"layout:section:Settings.Tweaks:collapsed", False,
 
 	plugs = {
 
-		"shader" : [
+		"shader" : {
 
-			"description",
+			"description" :
 			"""
 			The type of shader to modify. This is actually the name
 			of an attribute which contains the shader network.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetsPlugValueWidget:allowCustom", True,
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetsPlugValueWidget:allowCustom" : True,
 
-			"preset:None", "",
+			"preset:None" : "",
 
-			"layout:index", 0
+			"layout:index" : 0
 
-		],
+		},
 
-		"localise" : [
+		"localise" : {
 
-			"description",
+			"description" :
 			"""
 			Turn on to allow location-specific tweaks to be made to inherited
 			shaders. Shaders will be localised to locations matching the
 			node's filter prior to tweaking. The original inherited shader will
 			remain untouched.
+
+			> Note : Has no effect when `global` is on.
 			""",
 
-			"layout:index", 1
-		],
+			"layout:index" : 1,
+			"layout:activator" : "isNotGlobal",
 
-		"ignoreMissing" : [
+		},
 
-			"description",
+		"ignoreMissing" : {
+
+			"description" :
 			"""
 			Ignores tweaks targeting missing parameters. When off, missing parameters
 			cause the node to error.
 			""",
 
-			"layout:index", 2
+			"layout:index" : 2
 
-		],
+		},
 
-		"tweaks" : [
+		"tweaks" : {
 
-			"description",
+			"description" :
 			"""
 			The tweaks to be made to the parameters of the shader.
 			Arbitrary numbers of user defined tweaks may be
@@ -112,28 +126,57 @@ Gaffer.Metadata.registerNode(
 			interface, or using the ShaderTweaks API via python.
 			""",
 
-			"layout:section", "Settings.Tweaks",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.ShaderTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:section" : "Settings.Tweaks",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferUI.PlugCreationWidget",
+			"layout:customWidget:footer:index" : -1,
+			"plugCreationWidget:excludedTypes" : "Gaffer.Box*Plug Gaffer.ObjectPlug",
+			"ui:scene:acceptsShaderParameters" : True,
 
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
+			"nodule:type" : "GafferUI::CompoundNodule",
+			"noduleLayout:section" : "left",
+			"noduleLayout:spacing" : 0.2,
 
 			# Add + button for showing and hiding parameters in the GraphEditor
-			"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderTweaksUI.PlugAdder",
+			"noduleLayout:customGadget:addButton:gadgetType" : "GafferSceneUI.ShaderTweaksUI.PlugAdder",
 
-		],
+		},
 
-		"tweaks.*" : [
+		"tweaks.*" : {
 
-			"noduleLayout:visible", False, # Can be shown individually using PlugAdder above
-			"tweakPlugValueWidget:propertyType", "parameter",
-			"plugValueWidget:type", "GafferSceneUI.ShaderTweaksUI._ShaderTweakPlugValueWidget",
+			# ClosurePlugs are visible by default, because the only thing you can do with them is make
+			# connections. Other plugs can be shown individually using PlugAdder above.
+			"noduleLayout:visible" : lambda plug : isinstance( plug["value"], GafferScene.ClosurePlug ),
+			"tweakPlugValueWidget:propertyType" : "parameter",
+			"plugValueWidget:type" : "GafferSceneUI.ShaderTweaksUI._ShaderTweakPlugValueWidget",
 
-		],
+		},
 
+		"tweaks.*.mode" : {
+
+			# `Replace` is not a good default for closure parameters - they
+			# don't have values in the shader parameter list, so ShaderTweaks
+			# thinks they don't exist and errors. Until this is resolved,
+			# default to `Create` mode.
+			"userDefault" : lambda plug : Gaffer.TweakPlug.Mode.Create if isinstance( plug.parent()["value"], GafferScene.ClosurePlug ) else Gaffer.TweakPlug.Mode.Replace,
+
+		},
+
+		"tweaks.*.name" : {
+
+			"description" :
+			"""
+			Identifies the parameter to be tweaked. Parameters are identified by name, and can optionally be filtered by the name and type of the shader they belong to. Examples :
+
+			- `intensity` : Chooses a parameter called `intensity` on the final shader in the network. Particularly convenient for lights, which often include only one shader.
+			- `diffuseTexture.filename`: Chooses a parameter called `filename` on a shader called `diffuseTexture`.
+			- `dustLayer*.alpha` : Chooses all parameters called `alpha`, on shaders whose name matches `dustLayer*` (any of Gaffer's other standard wildcards may also be used to match the shader name).
+			- `{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image`.
+			- `diffuseTexture*{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image` and whose name matches `diffuseTexture*`.
+
+			> Tip : Parameters can be dragged from the SceneInspector and dropped into the text field to fill the name automatically.
+			"""
+		},
 	}
 
 )
@@ -142,7 +185,7 @@ Gaffer.Metadata.registerNode(
 # Internal utilities
 ##########################################################################
 
-def _shaderTweaksNode( plugValueWidget ) :
+def _shaderTweaksNode( plug ) :
 
 	# The plug may not belong to a ShaderTweaks node
 	# directly. Instead it may have been promoted
@@ -150,184 +193,166 @@ def _shaderTweaksNode( plugValueWidget ) :
 	# ShaderTweaks node.
 
 	return Gaffer.PlugAlgo.findDestination(
-		plugValueWidget.getPlug(),
+		plug,
 		lambda plug : plug.node() if isinstance( plug.node(), GafferScene.ShaderTweaks ) else None,
 	)
 
-def _pathsFromAffected( plugValueWidget ) :
+def _pathsFromAffected( plug ) :
 
-	node = _shaderTweaksNode( plugValueWidget )
+	node = _shaderTweaksNode( plug )
 	if node is None :
 		return []
 
 	pathMatcher = IECore.PathMatcher()
-	with plugValueWidget.context() :
-		GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
+	GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
 
 	return pathMatcher.paths()
 
-def _pathsFromSelection( plugValueWidget ) :
+def _pathsFromSelection( plug ) :
 
-	node = _shaderTweaksNode( plugValueWidget )
+	node = _shaderTweaksNode( plug )
 	if node is None :
 		return []
 
-	paths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( plugValueWidget.scriptNode() )
+	paths = GafferSceneUI.ScriptNodeAlgo.getSelectedPaths( plug.ancestor( Gaffer.ScriptNode ) )
 	paths = paths.paths() if paths else []
 
-	with plugValueWidget.context() :
-		paths = [ p for p in paths if node["in"].exists( p ) ]
+	return [ p for p in paths if node["in"].exists( p ) ]
 
-	return paths
-
-def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
+def _shaderAttributes( plug, paths, affectedOnly ) :
 
 	result = {}
-	node = _shaderTweaksNode( plugValueWidget )
+	node = _shaderTweaksNode( plug )
 	if node is None :
 		return result
 
-	with plugValueWidget.context() :
-		useFullAttr = node["localise"].getValue()
-		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
-		for path in paths :
-			attributes = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )
-			for name, attribute in attributes.items() :
-				if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
-					continue
-				if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
-					continue
-				result.setdefault( path, {} )[name] = attribute
+	useFullAttr = node["localise"].getValue()
+	attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
+	for path in paths :
+		attributes = node["in"].fullAttributes( path, withGlobalAttributes = True ) if useFullAttr else node["in"].attributes( path )
+		for name, attribute in attributes.items() :
+			if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
+				continue
+			if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
+				continue
+			result.setdefault( path, {} )[name] = attribute
 
 	return result
 
 ##########################################################################
-# _TweaksFooter
+# PlugCreationWidget menu extensions
 ##########################################################################
 
-class _TweaksFooter( GafferUI.PlugValueWidget ) :
+def __browseAffectedShaders( menu ) :
 
-	def __init__( self, plug ) :
+	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
+	with plugCreationWidget.context() :
+		__browseShaders( plugCreationWidget, _pathsFromAffected( plugCreationWidget.plugParent() ), "Affected Shaders" )
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+def __browseSelectedShaders( menu ) :
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug )
+	plugCreationWidget = menu.ancestor( GafferUI.PlugCreationWidget )
+	with plugCreationWidget.context() :
+		__browseShaders( plugCreationWidget, _pathsFromSelection( plugCreationWidget.plugParent() ), "Selected Shaders" )
 
-		with row :
+def __browseShaders( plugCreationWidget, paths, title ) :
 
-				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
+	shaderAttributes = _shaderAttributes( plugCreationWidget.plugParent(), paths, affectedOnly = True )
 
-				self.__button = GafferUI.MenuButton(
-					image = "plus.png",
-					hasFrame = False,
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-				)
+	uniqueNetworks = { n.hash(): n for a in shaderAttributes.values() for n in a.values() }
 
-				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
+	browser = GafferSceneUI.ShaderUI._ShaderParameterDialogue( uniqueNetworks.values(), title )
 
-	def _updateFromEditable( self ) :
+	shaderTweaks = browser.waitForParameters( parentWindow = plugCreationWidget.ancestor( GafferUI.ScriptWindow ) )
 
-		# Not using `_editable()` as it considers the whole plug to be non-editable if
-		# any child has an input connection, but that shouldn't prevent us adding a new
-		# tweak.
-		self.__button.setEnabled( self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
+	if shaderTweaks is not None :
+		for shaderName, parameter in shaderTweaks :
+			tweaks = {}
+			for network in uniqueNetworks.values() :
+				if shaderName in network.shaders() and parameter in network.shaders()[shaderName].parameters :
+					tweakName = shaderName + "." + parameter if network.getOutput().shader != shaderName else parameter
+					if tweakName not in tweaks :
+						tweaks[tweakName] = network.shaders()[shaderName].parameters[parameter]
 
-	def __menuDefinition( self ) :
+			plugCreationWidget.createPlug(
+				Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, next( iter( tweaks.values() ) ) ),
+				name = sole( tweaks.keys() )
+			)
 
-		result = IECore.MenuDefinition()
+def __plugCreationMenu( menuDefinition, widget ) :
 
-		result.append(
-			"/From Affected...",
-			{
-				"command" : Gaffer.WeakMethod( self.__browseAffectedShaders )
-			}
-		)
+	if not Gaffer.Metadata.value( widget.plugParent(), "ui:scene:acceptsShaderParameters" ) :
+		return
 
-		result.append(
-			"/From Selection...",
-			{
-				"command" : Gaffer.WeakMethod( self.__browseSelectedShaders )
-			}
-		)
+	menuDefinition.prepend( "/FromPathsDivider", { "divider" : True } )
 
-		result.append( "/FromPathsDivider", { "divider" : True } )
+	menuDefinition.prepend(
+		"/From Selection...",
+		{
+			"command" : __browseSelectedShaders
+		}
+	)
 
-		# TODO - would be nice to share these default options with other users of TweakPlug
-		for item in [
-			Gaffer.BoolPlug,
-			Gaffer.FloatPlug,
-			Gaffer.IntPlug,
-			"NumericDivider",
-			Gaffer.StringPlug,
-			"StringDivider",
-			Gaffer.V2iPlug,
-			Gaffer.V3iPlug,
-			Gaffer.V2fPlug,
-			Gaffer.V3fPlug,
-			"VectorDivider",
-			Gaffer.Color3fPlug,
-			Gaffer.Color4fPlug
-		] :
+	menuDefinition.prepend(
+		"/From Affected...",
+		{
+			"command" : __browseAffectedShaders
+		}
+	)
 
-			if isinstance( item, str ) :
-				result.append( "/" + item, { "divider" : True } )
-			else :
-				result.append(
-					"/" + item.__name__.replace( "Plug", "" ),
-					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), "", item ),
-					}
-				)
+GafferUI.PlugCreationWidget.plugCreationMenuSignal().connect( __plugCreationMenu )
 
-		return result
+##########################################################################
+# PlugCreationWidget drag & drop extension
+##########################################################################
 
-	def __browseAffectedShaders( self ) :
+def __filteredParameters( widget, dragDropEvent ) :
 
-		self.__browseShaders( _pathsFromAffected( self ), "Affected Shaders" )
+	parameters = GafferSceneUI.SceneInspector.draggedParameters( dragDropEvent )
+	if not parameters :
+		return None
 
-	def __browseSelectedShaders( self ) :
+	existingNames = { plug["name"].getValue() for plug in widget.plugParent() }
+	return {
+		k : v for k, v in parameters.items()
+		if k not in existingNames
+	}
 
-		self.__browseShaders( _pathsFromSelection( self ), "Selected Shaders" )
+def __parametersDropHandler( widget, dragDropEvent ) :
 
-	def __browseShaders( self, paths, title ) :
+	parameters = __filteredParameters( widget, dragDropEvent )
+	if not parameters :
+		GafferUI.PopupWindow.showWarning( "Parameters added already", parent = widget )
 
-		shaderAttributes = _shaderAttributes( self, paths, affectedOnly = True )
+	toCreate = {}
+	for name, value in parameters.items() :
+		try :
+			toCreate[name] = Gaffer.PlugAlgo.createPlugFromData( "value", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default, value )
+		except :
+			# If we can't handle a parameter, then warn and exit without handling any
+			# others. It's confusing if we show a warning but still make some tweaks.
+			GafferUI.PopupWindow.showWarning( "Unsupported data type", parent = widget )
+			return
 
-		uniqueNetworks = { n.hash(): n for a in shaderAttributes.values() for n in a.values() }
+	with Gaffer.UndoScope( widget.plugParent().ancestor( Gaffer.ScriptNode ) ) :
+		for name, plug in toCreate.items() :
+			widget.createPlug( plug, name = name )
 
-		browser = GafferSceneUI.ShaderUI._ShaderParameterDialogue( uniqueNetworks.values(), title )
+def __plugCreationDragEnter( widget, dragDropEvent ) :
 
-		shaderTweaks = browser.waitForParameters( parentWindow = self.ancestor( GafferUI.ScriptWindow ) )
+	if not Gaffer.Metadata.value( widget.plugParent(), "ui:scene:acceptsShaderParameters" ) :
+		return
 
-		if shaderTweaks is not None :
-			for shaderName, parameter in shaderTweaks :
-				tweaks = {}
-				for network in uniqueNetworks.values() :
-					if shaderName in network.shaders() and parameter in network.shaders()[shaderName].parameters :
-						tweakName = shaderName + "." + parameter if network.getOutput().shader != shaderName else parameter
-						if tweakName not in tweaks :
-							tweaks[tweakName] = network.shaders()[shaderName].parameters[parameter]
+	if __filteredParameters( widget, dragDropEvent ) is not None :
+		return __parametersDropHandler
 
-				tweakName = sole( tweaks.keys() )
-				if tweakName is None :
-					self.__addTweak( shaderName + "." + parameter, list( tweaks.values() )[0] )
-				else :
-					self.__addTweak( tweakName, tweaks[tweakName] )
+	return None
 
-	def __addTweak( self, name, plugTypeOrValue ) :
+GafferUI.PlugCreationWidget.plugCreationDragEnterSignal().connect( __plugCreationDragEnter )
 
-		if isinstance( plugTypeOrValue, IECore.Data ) :
-			plug = Gaffer.TweakPlug( name, plugTypeOrValue )
-		else :
-			plug = Gaffer.TweakPlug( name, plugTypeOrValue() )
-
-		if name :
-			for i in ( ".", ":", ) :
-				name = name.replace( i, "_" )
-			plug.setName( name )
-
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().addChild( plug )
+##########################################################################
+# _ShaderTweakPlugValueWidget
+##########################################################################
 
 class _ShaderTweakPlugValueWidget( GafferUI.TweakPlugValueWidget ) :
 
@@ -373,22 +398,22 @@ class _ShaderTweakPlugValueWidget( GafferUI.TweakPlugValueWidget ) :
 
 def __setShaderFromAffectedMenuDefinition( menu ) :
 
-	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
-	return __setShaderFromPathsMenuDefinition( plugValueWidget, _pathsFromAffected( plugValueWidget ) )
+	plug = menu.ancestor( GafferUI.PlugValueWidget ).getPlug()
+	return __setShaderFromPathsMenuDefinition( plug, _pathsFromAffected( plug ) )
 
 def __setShaderFromSelectionMenuDefinition( menu ) :
 
-	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
-	return __setShaderFromPathsMenuDefinition( plugValueWidget, _pathsFromSelection( plugValueWidget ) )
+	plug = menu.ancestor( GafferUI.PlugValueWidget ).getPlug()
+	return __setShaderFromPathsMenuDefinition( plug, _pathsFromSelection( plug ) )
 
 def __setShader( plug, value ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( value )
 
-def __setShaderFromPathsMenuDefinition( plugValueWidget, paths ) :
+def __setShaderFromPathsMenuDefinition( plug, paths ) :
 
-	shaderAttributes = _shaderAttributes( plugValueWidget, paths, affectedOnly = False )
+	shaderAttributes = _shaderAttributes( plug, paths, affectedOnly = False )
 	names = set().union( *[ set( a.keys() ) for a in shaderAttributes.values() ] )
 
 	result = IECore.MenuDefinition()
@@ -396,8 +421,8 @@ def __setShaderFromPathsMenuDefinition( plugValueWidget, paths ) :
 		result.append(
 			"/" + name,
 			{
-				"command" : functools.partial( __setShader, plugValueWidget.getPlug(), name ),
-				"active" : not Gaffer.MetadataAlgo.readOnly( plugValueWidget.getPlug() ),
+				"command" : functools.partial( __setShader, plug, name ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( plug ),
 			}
 		)
 

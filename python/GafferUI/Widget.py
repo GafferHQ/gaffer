@@ -49,15 +49,40 @@ from ._StyleSheet import _styleSheet
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 
 	def __call__( cls, *args, **kw ) :
 
+		cls.pushParent( None ) # Disable auto-parenting of private widgets created in constructor.
 		instance = type.__call__( cls, *args, **kw )
 		instance._postConstructor()
+		cls.popParent()
+
+		if len( cls.__parentStack ) and cls.__parentStack[-1] is not None :
+			# Perform automatic parenting if necessary. We don't want to do this
+			# for menus, because they don't have the same parenting semantics.
+			# If other types end up with similar requirements then we should
+			# probably just have a mechanism for them to say they don't want to
+			# participate rather than hardcoding stuff here.
+			if not isinstance( instance, GafferUI.Menu )  :
+				parenting = kw.get( "parenting", {} )
+				cls.__parentStack[-1].addChild( instance, **parenting )
 
 		return instance
+
+	__parentStack = []
+
+	@classmethod
+	def pushParent( cls, parent ) :
+
+		cls.__parentStack.append( parent )
+
+	@classmethod
+	def popParent( cls ) :
+
+		return cls.__parentStack.pop()
 
 ## The Widget class provides a base class for all widgets in GafferUI.
 #
@@ -120,9 +145,9 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	# protected to encourage non-reliance on knowledge of the Qt backend.
 	#
 	# If a current parent has been defined using the `with` syntax described above,
-	# the parenting argument may be passed as a dictionay of optional keywords for the
+	# the parenting argument may be passed as a dictionary of optional keywords for the
 	# automatic `parent.addChild()` call.
-	def __init__( self, topLevelWidget, toolTip="", parenting = None, displayTransform = None ) :
+	def __init__( self, topLevelWidget, *, toolTip="", parenting = None, displayTransform = None ) :
 
 		Gaffer.Signals.Trackable.__init__( self )
 
@@ -182,17 +207,6 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		self.__visible = not isinstance( self, GafferUI.Window )
 		self.__displayTransform = displayTransform
-
-		# perform automatic parenting if necessary. we don't want to do this
-		# for menus, because they don't have the same parenting semantics. if other
-		# types end up with similar requirements then we should probably just have
-		# a mechanism for them to say they don't want to participate rather than
-		# hardcoding stuff here.
-		if len( self.__parentStack ) and not isinstance( self, GafferUI.Menu ) :
-			if self.__initNesting() == self.__parentStack[-1][1] + 1 :
-				if self.__parentStack[-1][0] is not None :
-					parenting = parenting or {}
-					self.__parentStack[-1][0].addChild( self, **parenting )
 
 		self.__eventFilterInstalled = False
 		# if a class has overridden getToolTip, then the tooltips
@@ -629,7 +643,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		cls.__ensureFocusChangedConnection()
 		return cls.__focusChangedSignal
 
-	## Returns the tooltip to be displayed. This may be overriden
+	## Returns the tooltip to be displayed. This may be overridden
 	# by derived classes to provide sensible default behaviour, but
 	# allow custom behaviour when setToolTip( nonEmptyString ) has
 	# been called.
@@ -665,6 +679,11 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			p = p - relativeTo.bound().min()
 
 		return p
+
+	@staticmethod
+	def currentButtons() :
+
+		return _eventFilter.currentButtons()
 
 	@staticmethod
 	def currentModifiers() :
@@ -767,31 +786,12 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		assert( isinstance( container, ( GafferUI.ContainerWidget, type( None ) ) ) )
 
-		cls.__parentStack.append( ( container, cls.__initNesting() ) )
+		cls.__class__.pushParent( container )
 
 	@classmethod
 	def _popParent( cls ) :
 
-		return cls.__parentStack.pop()[0]
-
-	# Returns how many Widgets are currently in construction
-	# on the call stack. We use this to avoid automatically
-	# parenting Widgets that are being created inside a constructor.
-	@staticmethod
-	def __initNesting() :
-
-		widgetsInInit = set()
-		frame = inspect.currentframe()
-		while frame :
-			if frame.f_code.co_name=="__init__" :
-				frameSelf = frame.f_locals[frame.f_code.co_varnames[0]]
-				if isinstance( frameSelf, Widget ) :
-					widgetsInInit.add( frameSelf )
-			frame = frame.f_back
-
-		return len( widgetsInInit )
-
-	__parentStack = []
+		return cls.__class__.popParent()
 
 	## Converts a Qt key code into a string
 	@classmethod
@@ -815,7 +815,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		result = GafferUI.ButtonEvent.Buttons.None_
 		if qtButtons & QtCore.Qt.LeftButton :
 			result |= GafferUI.ButtonEvent.Buttons.Left
-		if qtButtons & QtCore.Qt.MidButton :
+		if qtButtons & QtCore.Qt.MiddleButton :
 			result |= GafferUI.ButtonEvent.Buttons.Middle
 		if qtButtons & QtCore.Qt.RightButton :
 			result |= GafferUI.ButtonEvent.Buttons.Right
@@ -974,6 +974,7 @@ class _EventFilter( QtCore.QObject ) :
 		QtCore.QObject.__init__( self )
 
 		# variables used in the implementation of drag and drop.
+		self.__virtualButton = GafferUI.ButtonEvent.Buttons.None_
 		self.__lastButtonPressWidget = None
 		self.__lastButtonPressEvent = None
 		self.__dragDropEvent = None
@@ -1006,6 +1007,10 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.DragLeave,
 			QtCore.QEvent.Drop,
 		) )
+
+	def currentButtons( self ) :
+
+		return self.__virtualButtons( QtWidgets.QApplication.mouseButtons() )
 
 	def eventFilter( self, qObject, qEvent ) :
 
@@ -1149,27 +1154,23 @@ class _EventFilter( QtCore.QObject ) :
 
 		return False
 
-	def __virtualButtons( self, qtButtons ):
-		result = Widget._buttons( qtButtons )
-		if self.__dragDropEvent is not None and self.__dragDropEvent.__startedByKeyPress :
-			result |= GafferUI.ButtonEvent.Buttons.Left
-		return GafferUI.ButtonEvent.Buttons( result )
+	def __virtualButtons( self, qtButtons ) :
+
+		return GafferUI.ButtonEvent.Buttons( self.__virtualButton | Widget._buttons( qtButtons ) )
 
 	def __mouseButtonPress( self, qObject, qEvent ) :
 
-		if (
-			self.__dragDropEvent is not None and self.__dragDropEvent.__startedByKeyPress
-			and ( Widget._buttons( qEvent.button() ) & GafferUI.ButtonEvent.Buttons.Left )
-		) :
-			# We are doing a virtual drag based on a keypress, but once the actual mouse button gets pressed,
-			# we replace it with an actual drag.
-			self.__dragDropEvent.__startedByKeyPress = False
+		pressedButton = Widget._buttons( qEvent.button() )
+		if self.__dragDropEvent is not None and pressedButton == self.__virtualButton :
+			# We were doing a drag based on a virtual button press, but now the actual mouse button has been pressed,
+			# so we can replace it.
+			self.__virtualButton = GafferUI.ButtonEvent.Buttons.None_
 			return True
 
 		widget = Widget._owner( qObject )
 		if widget._buttonPressSignal is not None :
 			event = GafferUI.ButtonEvent(
-				Widget._buttons( qEvent.button() ),
+				pressedButton,
 				self.__virtualButtons( qEvent.buttons() ),
 				self.__widgetSpaceLine( qEvent, widget ),
 				0.0,
@@ -1274,7 +1275,7 @@ class _EventFilter( QtCore.QObject ) :
 				GafferUI.ButtonEvent.Buttons.None_,
 				self.__virtualButtons( qEvent.buttons() ),
 				self.__widgetSpaceLine( qEvent, widget ),
-				qEvent.delta() / 8.0,
+				qEvent.angleDelta().y() / 8.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
 
@@ -1299,25 +1300,26 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __parentChange( self, qObject, qEvent ) :
 
+		widget = Widget._owner( qObject )
+		if isinstance( widget, ( GafferUI.Window, GafferUI.Editor ) ) :
+			# Strictly speaking, the reparenting of _any_ widget might require
+			# us to propagate display transform changes. But in practice we
+			# don't currently need that, and don't want to incur the expense
+			# either. So we just propagate changes when windows and editors
+			# are reparented.
+			parent = widget.parent()
+			if widget.getDisplayTransform() is None and parent is not None and parent.displayTransform() is not None :
+				widget._Widget__propagateDisplayTransformChange()
+
 		## \todo It might be nice to investigate having the
 		# the signature for this signal match that of
 		# GraphComponent::parentChangedSignal(), which takes
 		# an additional argument for the previous parent. We
 		# may be able to get the value for that from a
 		# ParentAboutToChange event.
-		widget = Widget._owner( qObject )
 		if widget._parentChangedSignal is not None :
 			widget._parentChangedSignal( widget )
 			return True
-
-		if isinstance( widget, GafferUI.Window ) :
-			# Strictly speaking, the reparenting of _any_ widget might require
-			# use to propagate display transform changes. But in practice we
-			# don't currently need that, and don't want to incure the expense
-			# either. So we just propagate changes when windows are reparented.
-			parent = widget.parent()
-			if widget.getDisplayTransform() is None and parent is not None and parent.displayTransform() is not None :
-				widget._Widget__propagateDisplayTransformChange()
 
 		return False
 
@@ -1341,7 +1343,7 @@ class _EventFilter( QtCore.QObject ) :
 
 		return False
 
-	def __startDrag( self, qObject, qEvent, forKeyPress = False ) :
+	def __startDrag( self, qObject, qEvent, threshold = 3 ) :
 
 		if self.__lastButtonPressWidget is None :
 			return False
@@ -1361,7 +1363,6 @@ class _EventFilter( QtCore.QObject ) :
 			# the widget died
 			return False
 
-		threshold = 3 if not forKeyPress else 0
 		if ( self.__lastButtonPressEvent.line.p0 - self.__widgetSpaceLine( qEvent, sourceWidget ).p0 ).length() < threshold :
 			return False
 
@@ -1376,7 +1377,6 @@ class _EventFilter( QtCore.QObject ) :
 		)
 		dragDropEvent.sourceWidget = sourceWidget
 		dragDropEvent.destinationWidget = None
-		dragDropEvent.__startedByKeyPress = forKeyPress
 
 		dragData = sourceWidget._dragBeginSignal( sourceWidget, dragDropEvent )
 		if dragData is not None :
@@ -1393,7 +1393,8 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __doDragEnterAndLeave( self, qObject, qEvent ) :
 
-		candidateWidget = Widget.widgetAt( imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() ) )
+		globalPosition = qEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else qEvent.globalPos()
+		candidateWidget = Widget.widgetAt( imath.V2i( globalPosition.x(), globalPosition.y() ) )
 
 		newDestinationWidget = None
 		while candidateWidget is not None :
@@ -1522,9 +1523,12 @@ class _EventFilter( QtCore.QObject ) :
 				qKeyEvent.modifiers()
 			)
 
+			self.__virtualButton = GafferUI.ButtonEvent.Buttons.Left
 			if self.__mouseButtonPress( qWidget, qEvent ) :
-				self.__startDrag( qWidget, qEvent, forKeyPress = True )
+				self.__startDrag( qWidget, qEvent, threshold = 0 )
 				return True
+			else :
+				self.__virtualButton = GafferUI.ButtonEvent.Buttons.None_
 
 		else :
 
@@ -1542,6 +1546,7 @@ class _EventFilter( QtCore.QObject ) :
 				qKeyEvent.modifiers()
 			)
 
+			self.__virtualButton = GafferUI.ButtonEvent.Buttons.None_
 			self.__endDrag( self.__dragDropEvent.sourceWidget._qtWidget(), qEvent )
 			return True
 
@@ -1567,15 +1572,16 @@ class _EventFilter( QtCore.QObject ) :
 		else :
 			return False
 
-		cursorPos = imath.V2i( qEvent.pos().x(), qEvent.pos().y() )
+		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		cursorPos = imath.V2i( position.x(), position.y() )
 		dragDropEvent = GafferUI.DragDropEvent(
-			Widget._buttons( qEvent.mouseButtons() ),
-			Widget._buttons( qEvent.mouseButtons() ),
+			Widget._buttons( qEvent.buttons() if Qt.__binding__ == "PySide6" else qEvent.mouseButtons() ),
+			Widget._buttons( qEvent.buttons() if Qt.__binding__ == "PySide6" else qEvent.mouseButtons() ),
 			IECore.LineSegment3f(
 				imath.V3f( cursorPos.x, cursorPos.y, 1 ),
 				imath.V3f( cursorPos.x, cursorPos.y, 0 )
 			),
-			Widget._modifiers( qEvent.keyboardModifiers() ),
+			Widget._modifiers( qEvent.modifiers() if Qt.__binding__ == "PySide6" else qEvent.keyboardModifiers() ),
 		)
 		dragDropEvent.data = data
 		dragDropEvent.destinationWidget = None
@@ -1601,7 +1607,8 @@ class _EventFilter( QtCore.QObject ) :
 		if widget is None or widget._dragMoveSignal is None :
 			return False
 
-		cursorPos = imath.V2i( qEvent.pos().x(), qEvent.pos().y() )
+		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		cursorPos = imath.V2i( position.x(), position.y() )
 		self.__foreignDragDropEvent.line = IECore.LineSegment3f(
 			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
 			imath.V3f( cursorPos.x, cursorPos.y, 0 )
@@ -1636,7 +1643,8 @@ class _EventFilter( QtCore.QObject ) :
 		if widget is None or widget._dropSignal is None :
 			return False
 
-		cursorPos = imath.V2i( qEvent.pos().x(), qEvent.pos().y() )
+		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		cursorPos = imath.V2i( position.x(), position.y() )
 		self.__foreignDragDropEvent.line = IECore.LineSegment3f(
 			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
 			imath.V3f( cursorPos.x, cursorPos.y, 0 )
@@ -1664,7 +1672,8 @@ class _EventFilter( QtCore.QObject ) :
 	# long distances.
 	def __widgetSpaceLine( self, qEvent, targetWidget ) :
 
-		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
+		globalPosition = qEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else qEvent.globalPos()
+		cursorPos = imath.V2i( globalPosition.x(), globalPosition.y() )
 		cursorPos -= targetWidget.bound().min()
 
 		return IECore.LineSegment3f(

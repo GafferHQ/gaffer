@@ -65,6 +65,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# may become visible - before this all rows should be directly visible with no need
 	# for scrolling.
 	#
+	# maximumVisibleRows specifies the maximum number of rows displayed before a vertical
+	# scroll bar becomes visible.
+	#
 	# columnToolTips may be specified as a list of strings to provide a tooltip for
 	# each data. Note that the `column` part of the name is misleading.
 	#
@@ -80,6 +83,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		header=False,
 		showIndices=True,
 		minimumVisibleRows=8,
+		maximumVisibleRows = None,
 		columnToolTips=None,
 		sizeEditable=True,
 		columnEditability=None,
@@ -94,7 +98,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		# table view
 
-		self.__tableView = _TableView( minimumVisibleRows = minimumVisibleRows )
+		self.__tableView = _TableView( minimumVisibleRows = minimumVisibleRows, maximumVisibleRows = maximumVisibleRows )
 
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 
@@ -453,8 +457,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		m = IECore.MenuDefinition()
 
-		m.append( "/Select All", { "command" : self.__selectAll } )
-		m.append( "/Clear Selection", { "command" : self.__clearSelection } )
+		m.append( "/Select All", { "command" : Gaffer.WeakMethod( self.__selectAll ) } )
+		m.append( "/Clear Selection", { "command" : Gaffer.WeakMethod( self.__clearSelection ) } )
 
 		if self.getEditable() and self.getSizeEditable() :
 
@@ -629,7 +633,30 @@ class VectorDataWidget( GafferUI.Widget ) :
 			return False
 
 		data = self.getData()
-		if len( data ) == 1 and event.data.isInstanceOf( data[0].typeId() ) :
+
+		hasMatchingData = False
+		if len( data ) == 1:
+			if event.data.isInstanceOf( data[0].typeId() ):
+				hasMatchingData = True
+			elif IECore.DataTraits.isSequenceDataType( data[0] ) and IECore.DataTraits.isSequenceDataType( event.data ):
+				numericTypes = [ int, float ]
+				if (
+					IECore.DataTraits.valueTypeFromSequenceType( type( data[0] ) ) in numericTypes and
+					IECore.DataTraits.valueTypeFromSequenceType( type( event.data ) ) in numericTypes
+				):
+					hasMatchingData = True
+
+			elif hasattr( event.data, "value" ):
+				if isinstance(
+					event.data.value,
+					IECore.DataTraits.valueTypeFromSequenceType( type( data[0] ) )
+				):
+					hasMatchingData = True
+
+				# \todo : We could also add a case here for dropping a single element onto a vector
+				# when the single vector is of a compatible but not identical numeric type
+
+		if hasMatchingData:
 			# The remove button will be disabled if there's no selection -
 			# we reenable it so it can receive the drag. We'll update it again
 			# in __dragLeave() and __drop().
@@ -653,21 +680,27 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# dragEnter checked that we only had one data array
 		data = self.getData()[0]
 
+		# dragEnter also checked that if the drop value is not a vector, then
+		# the type matches what is contained by the widget's vector.
+
+		elementType = IECore.DataTraits.valueTypeFromSequenceType( type( data ) )
+
 		if widget is self.__buttonRow[1] :
 			# remove
-			s = set( event.data )
+			s = set( [ elementType( i ) for i in event.data ] ) if IECore.DataTraits.isSequenceDataType( event.data ) else [ elementType( event.data.value ) ]
 			newData = data.__class__()
 			for d in data :
 				if d not in s :
-					newData.append( d )
+					newData.append( elementType( d ) )
 			data = newData
 		else :
 			# add, but avoid creating duplicates
 			s = set( data )
-			for d in event.data :
+			eventList = event.data if IECore.DataTraits.isSequenceDataType( event.data ) else [event.data.value]
+			for d in eventList :
 				if d not in s :
-					data.append( d )
-					s.add( d )
+					data.append( elementType( d ) )
+					s.add( elementType( d ) )
 
 		self.setData( [ data ] )
 		self.dataChangedSignal()( self )
@@ -771,6 +804,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		qEvent = QtGui.QMouseEvent(
 			QtCore.QEvent.MouseButtonPress,
 			point,
+			self.__tableView.viewport().mapToGlobal( point ),
 			QtCore.Qt.LeftButton,
 			QtCore.Qt.LeftButton,
 			QtCore.Qt.NoModifier
@@ -929,7 +963,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 	def data( self, index, role ) :
 
 		column = self.__columns[index.column()]
-		if role == QtCore.Qt.BackgroundColorRole :
+		if role == QtCore.Qt.BackgroundRole :
 
 			if self.columnToDataIndex( index.column() )[0] % 2 == 0:
 				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("background")  )
@@ -950,11 +984,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if role == QtCore.Qt.EditRole :
 			column = self.__columns[index.column()]
 			column.accessor.setElement( index.row(), column.relativeColumnIndex, value )
-
-			if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-				self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
-			else:
-				self.dataChanged.emit( index, index )
+			self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
 
 		return True
 
@@ -1038,7 +1068,7 @@ class _CompoundDataAccessor( _DataAccessor ) :
 
 	def headerLabel( self, columnIndex ) :
 
-		return [ "X", "Y", "Z", "W" ][columnIndex]
+		return [ "X", "Y", "Z" ][columnIndex]
 
 	def setElement( self, rowIndex, columnIndex, value ) :
 
@@ -1119,17 +1149,21 @@ class _QuatDataAccessor( _CompoundDataAccessor ) :
 
 		return 4
 
+	def headerLabel( self, columnIndex ) :
+
+		return [ "W", "X", "Y", "Z" ][columnIndex]
+
 	def getElement( self, rowIndex, columnIndex ) :
 
 		v = self.data()[rowIndex]
 		if columnIndex == 0:
-			return GafferUI._Variant.toVariant( v.v()[0] )
-		if columnIndex == 1:
-			return GafferUI._Variant.toVariant( v.v()[1] )
-		if columnIndex == 2:
-			return GafferUI._Variant.toVariant( v.v()[2] )
-		if columnIndex == 3:
 			return GafferUI._Variant.toVariant( v.r() )
+		if columnIndex == 1:
+			return GafferUI._Variant.toVariant( v.v()[0] )
+		if columnIndex == 2:
+			return GafferUI._Variant.toVariant( v.v()[1] )
+		if columnIndex == 3:
+			return GafferUI._Variant.toVariant( v.v()[2] )
 
 _DataAccessor.registerType( IECore.QuatfVectorData.staticTypeId(), _QuatDataAccessor )
 _DataAccessor.registerType( IECore.QuatdVectorData.staticTypeId(), _QuatDataAccessor )
@@ -1280,7 +1314,11 @@ class _Delegate( QtWidgets.QStyledItemDelegate ) :
 		# fall through to the base class which will provide a default
 		# editor.
 		if self.__editor is not None :
-			if not isinstance( self.__editor, GafferUI.Window ) :
+			if isinstance( self.__editor, GafferUI.PopupWindow ) :
+				self.__editor.popup( parent = GafferUI.Widget._owner( parent ) )
+			elif isinstance( self.__editor, GafferUI.Window ) :
+				self.__editor.setVisible( True )
+			else :
 				self.__editor._qtWidget().setParent( parent )
 			return self.__editor._qtWidget()
 		else :
@@ -1486,11 +1524,7 @@ class _ColorDelegate( _Delegate ) :
 			return GafferUI.NumericWidget( value )
 		else :
 			self.__colorChooser = GafferUI.ColorChooser( value )
-			self.__popup = GafferUI.PopupWindow( "", child = self.__colorChooser )
-
-			self.__popup.popup( parent = self )
-
-			return self.__popup
+			return GafferUI.PopupWindow( "", child = self.__colorChooser )
 
 	def setEditorData( self, editor, index ) :
 
@@ -1566,7 +1600,8 @@ class _BoolDelegate( _Delegate ) :
 			# eat event so row isn't selected
 			widget = QtCore.QObject.parent( self.parent() )
 			rect = self.__checkBoxRect( widget, option.rect )
-			if event.button() == QtCore.Qt.LeftButton and rect.contains( event.pos() ) :
+			position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+			if event.button() == QtCore.Qt.LeftButton and rect.contains( position ) :
 				checked = self.__toBool( index )
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True

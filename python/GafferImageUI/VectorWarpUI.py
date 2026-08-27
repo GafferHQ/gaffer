@@ -50,9 +50,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"vector" : [
+		"vector" : {
 
-			"description",
+			"description" :
 			"""
 			The UV image. The R and G channel are used to provide
 			the U and V values, and these determine the source pixel
@@ -61,33 +61,33 @@ Gaffer.Metadata.registerNode(
 			corresponds to the top right corner.
 			"""
 
-		],
-		"vectorMode" : [
+		},
+		"vectorMode" : {
 
-			"description",
+			"description" :
 			"""
 			Do vectors specify absolute positions in the source image, or relative
 			offsets from the current pixel to the pixel in the source image.
 			""",
-			"preset:Absolute", GafferImage.VectorWarp.VectorMode.Absolute,
-			"preset:Relative", GafferImage.VectorWarp.VectorMode.Relative,
+			"preset:Absolute" : GafferImage.VectorWarp.VectorMode.Absolute,
+			"preset:Relative" : GafferImage.VectorWarp.VectorMode.Relative,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
-		"vectorUnits" : [
+		},
+		"vectorUnits" : {
 
-			"description",
+			"description" :
 			"""
 			Are vectors measured in pixels, or as fractions of the input image display
 			window ranging from 0 to 1.
 			""",
-			"preset:Pixels", GafferImage.VectorWarp.VectorUnits.Pixels,
-			"preset:Screen", GafferImage.VectorWarp.VectorUnits.Screen,
+			"preset:Pixels" : GafferImage.VectorWarp.VectorUnits.Pixels,
+			"preset:Screen" : GafferImage.VectorWarp.VectorUnits.Screen,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
 
 	}

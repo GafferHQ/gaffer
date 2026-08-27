@@ -136,6 +136,3 @@ class SceneLoopTest( GafferSceneTest.SceneTestCase ) :
 		) )
 
 		self.assertEqual( script["loop"]["out"].transform( "/sphere" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
-
-if __name__ == "__main__":
-	unittest.main()

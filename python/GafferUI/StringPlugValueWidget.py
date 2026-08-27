@@ -78,7 +78,10 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 
-		result += "\n## Actions\n"
+		if result :
+			result += "\n\n"
+
+		result += "## Actions\n\n"
 		result += " - <kbd>Alt</kbd> + middle-click to show context variable substitutions\n"
 
 		return result
@@ -103,7 +106,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if value is None and len( values ) :
 			placeHolder = "---"
 			# Mixed values require interaction before we commit the widget
-			# value to the plugs. This prevents mixed values being overriden
+			# value to the plugs. This prevents mixed values being overridden
 			# by the empty string in the widget when it loses focus.
 			self.__editRequiresInteraction = True
 		else :

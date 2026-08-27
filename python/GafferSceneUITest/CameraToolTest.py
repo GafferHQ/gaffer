@@ -426,6 +426,3 @@ class CameraToolTest( GafferUITest.TestCase ) :
 
 		view["editScope"].setInput( script["editScope"]["out"] )
 		self.assertCameraEditable( view, True )
-
-if __name__ == "__main__":
-	unittest.main()

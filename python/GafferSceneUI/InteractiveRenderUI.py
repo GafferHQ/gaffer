@@ -285,7 +285,7 @@ class _MessageSummaryPlugValueWidget( GafferUI.PlugValueWidget ) :
 # A utility window containing a render nodes message log
 ###############################################################################
 
-## TODO: This is awefully similar to numerous color picker windows, etc...
+## TODO: This is awfully similar to numerous color picker windows, etc...
 # we ideally could do with a GafferUI.PlugWindow or similar.
 class _MessagesWindow( GafferUI.Window ) :
 
@@ -375,13 +375,6 @@ class _MessagesPlugValueWidget( GafferUI.PlugValueWidget ) :
 # Metadata for InteractiveRender node.
 ##########################################################################
 
-def __rendererPresetNames( plug ) :
-
-	return IECore.StringVectorData( [
-		x for x in GafferSceneUI.RenderUI.rendererPresetNames( plug )
-		if x != "OpenGL"
-	] )
-
 Gaffer.Metadata.registerNode(
 
 	GafferScene.InteractiveRender,
@@ -396,26 +389,26 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to be rendered.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"renderer" : [
+		"renderer" : {
 
-			"description",
+			"description" :
 			"""
 			The renderer to use. Default mode uses the `render:defaultRenderer` option from
 			the input scene globals to choose the renderer. This can be authored using
@@ -425,59 +418,76 @@ Gaffer.Metadata.registerNode(
 			> manually stopped and restarted.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.RenderUI.RendererPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.RenderUI.RendererPlugValueWidget",
 
-			"preset:Default", "",
-			"presetNames", __rendererPresetNames,
-			"presetValues", __rendererPresetNames,
+			"presetNames" : lambda plug : IECore.StringVectorData( [
+				"Default" if n == "None" else n
+				for n in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetNames" )
+				if n != "OpenGL"
+			] ),
+			"presetValues" : lambda plug : IECore.StringVectorData( [
+				n for n in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetValues" )
+				if n != "OpenGL"
+			] ),
 
-		],
+		},
 
-		"state" : [
+		"state" : {
 
-			"description",
+			"description" :
 			"""
 			Turns the rendering on and off, or pauses it.
 			""",
 
-			"label", "Render",
-			"plugValueWidget:type", "GafferSceneUI.InteractiveRenderUI._StatePlugValueWidget",
+			"label" : "Render",
+			"plugValueWidget:type" : "GafferSceneUI.InteractiveRenderUI._StatePlugValueWidget",
 
-		],
+		},
 
-		"resolvedRenderer" : [
+		"useVisibleSet" : {
 
-			"description",
+			"description" :
+			"""
+			When on, the Visible Set will control which locations are rendered.
+
+			> Tip : Use the HierarchyView and/or SetEditor to control the Visible Set.
+			""",
+
+		},
+
+		"resolvedRenderer" : {
+
+			"description" :
 			"""
 			The renderer that will be used, accounting for the value of the
 			`render:defaultRenderer` option if `renderer` is set to "Default".
 			""",
 
-			"layout:section", "Advanced",
+			"layout:section" : "Advanced",
 
-		],
+		},
 
-		"messages" : [
+		"messages" : {
 
-			"description",
+			"description" :
 			"""
 			Messages from the render process.
 			""",
 
-			"label", "Messages",
-			"plugValueWidget:type", "GafferSceneUI.InteractiveRenderUI._MessagesPlugValueWidget",
-			"layout:section", "Settings.Log"
+			"label" : "Messages",
+			"plugValueWidget:type" : "GafferSceneUI.InteractiveRenderUI._MessagesPlugValueWidget",
+			"layout:section" : "Settings.Log"
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			A direct pass-through of the input scene.
 			""",
 
-		],
+		},
 
 	}
 )

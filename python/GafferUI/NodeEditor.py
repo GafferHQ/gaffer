@@ -225,7 +225,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				if isinstance( plug, Gaffer.ValuePlug ) :
 					if plug.settable() :
 						plug.setToDefault()
-					return
+						return
 
 			for c in graphComponent.children( Gaffer.Plug ) :
 				applyDefaults( c )

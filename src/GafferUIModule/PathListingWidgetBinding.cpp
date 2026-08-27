@@ -52,11 +52,14 @@
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
 
+#include "IECore/DataAlgo.h"
 #include "IECore/DateTimeData.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/PathMatcher.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/RampData.h"
+#include "IECore/TypeTraits.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/date_time/posix_time/conversion.hpp"
@@ -73,6 +76,7 @@
 #include "QtCore/QVariant"
 
 #include "QtGui/QGuiApplication"
+#include "QtGui/QPainter"
 
 #include "QtWidgets/QFileIconProvider"
 #include "QtWidgets/QTreeView"
@@ -88,8 +92,37 @@ using namespace boost::python;
 using namespace boost::posix_time;
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// General utilities
+//////////////////////////////////////////////////////////////////////////
+
+// Allows us to store ConstDataPtr in a QVariant.
+Q_DECLARE_METATYPE( IECore::ConstDataPtr )
+
 namespace
 {
+
+// Trick to call `QAbstractItemView::scheduleDelayedItemsLayout()`,
+// which is protected. We actually do derive from QTreeView so technically have
+// access via more legitimate means, except that we derive from it in Python
+// (see `_TreeView` in PathListingWidget.py). We don't want to have to call into
+// Python to access the protected method for performance reeasons, so for now we
+// cheat.
+/// \todo Perhaps we should reimplement `_TreeView` in C++ anyway, then we wouldn't
+/// need this trick.
+void scheduleDelayedItemsLayout( QTreeView *treeView )
+{
+	struct TreeViewAccessor : public QTreeView
+	{
+		void callScheduleDelayedItemsLayout()
+		{
+			scheduleDelayedItemsLayout();
+		}
+	};
+
+	// Yes, this cast is completely bogus, but it does the job.
+	static_cast<TreeViewAccessor *>( treeView )->callScheduleDelayedItemsLayout();
+}
 
 // QVariant does have `operator <`, but it's deprecated as it doesn't define a
 // total ordering, making it unsuitable for our purposes.
@@ -111,28 +144,28 @@ bool variantLess( const QVariant &left, const QVariant &right )
 
 	switch( left.userType() )
 	{
-		case QVariant::Invalid :
+		case QMetaType::UnknownType :
 			// Both values are invalid, making them equal.
 			return false;
-		case QVariant::Int :
+		case QMetaType::Int :
 			return left.toInt() < right.toInt();
-		case QVariant::UInt :
+		case QMetaType::UInt :
 			return left.toUInt() < right.toUInt();
-		case QVariant::LongLong:
+		case QMetaType::LongLong :
 			return left.toLongLong() < right.toLongLong();
-		case QVariant::ULongLong:
+		case QMetaType::ULongLong :
 			return left.toULongLong() < right.toULongLong();
-		case QMetaType::Float:
+		case QMetaType::Float :
 			return left.toFloat() < right.toFloat();
-		case QVariant::Double:
+		case QMetaType::Double :
 			return left.toDouble() < right.toDouble();
-		case QVariant::Char:
+		case QMetaType::Char :
 			return left.toChar() < right.toChar();
-		case QVariant::Date:
+		case QMetaType::QDate :
 			return left.toDate() < right.toDate();
-		case QVariant::Time:
+		case QMetaType::QTime :
 			return left.toTime() < right.toTime();
-		case QVariant::DateTime:
+		case QMetaType::QDateTime :
 			return left.toDateTime() < right.toDateTime();
 		default :
 			return left.toString() < right.toString();
@@ -184,8 +217,9 @@ IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 	/* maxCost = */ 10000
 );
 
-// Equivalent to `GafferUI.NumericWidget.formatValue()`.
-QString doubleToString( double v )
+// Equivalent to `GafferUI.NumericWidget.valueToString()`.
+template<typename T>
+QString toString( T v, typename std::enable_if<std::is_floating_point_v<T> || std::is_same_v<T, Imath::half>>::type *enabler = nullptr )
 {
 	QString result = QString::number( v, 'f', 4 );
 	for( int i = result.size() - 1; i; --i )
@@ -206,7 +240,18 @@ QString doubleToString( double v )
 }
 
 template<typename T>
-QString vectorToString( const T &v )
+QString toString( T v, typename std::enable_if<std::is_integral_v<T> || std::is_same_v<T, std::vector<bool>::const_reference>>::type *enabler = nullptr )
+{
+	return QString::number( v );
+}
+
+QString toString( IECore::InternedString v )
+{
+	return v.c_str();
+}
+
+template<typename T>
+QString toString( const T &v, typename std::enable_if<IECore::TypeTraits::IsVec<T>::value || IECore::TypeTraits::IsColor<T>::value>::type *enabler = nullptr )
 {
 	QString result;
 	for( unsigned i = 0; i < T::dimensions(); ++i )
@@ -215,9 +260,83 @@ QString vectorToString( const T &v )
 		{
 			result += " ";
 		}
-		result += doubleToString( v[i] );
+		result += toString( v[i] );
 	}
 	return result;
+}
+
+template<typename T>
+QString toString( const Imath::Box<T> &v )
+{
+	if( v.isEmpty() )
+	{
+		return "Empty";
+	}
+	return "[ " + toString( v.min ) + " ] [ " + toString( v.max ) + " ]";
+}
+
+template<typename T>
+QString toString( const Imath::Quat<T> &v )
+{
+	return toString( v.r ) + " " + toString( v.v );
+}
+
+template<typename T>
+QString toString( const T &v, typename std::enable_if<IECore::TypeTraits::IsMatrix<T>::value>::type *enabler = nullptr )
+{
+	QString result;
+	for( size_t i = 0; i < T::dimensions(); ++i )
+	{
+		if( result.size() )
+		{
+			result += " ";
+		}
+		result += "[";
+		for( size_t j = 0; j < T::dimensions(); ++j )
+		{
+			result += " " + toString( v[i][j] );
+		}
+		result += " ]";
+	}
+	return result;
+}
+
+std::optional<QString> vectorDataToString( const IECore::Data *data )
+{
+	return IECore::dispatch(
+
+		data, [] ( const auto *typedData ) -> std::optional<QString> {
+
+			using DataType = typename std::remove_pointer_t<decltype( typedData )>;
+
+			if constexpr ( IECore::TypeTraits::IsVectorTypedData<DataType>::value )
+			{
+				QString result;
+				for( const auto &v : typedData->readable() )
+				{
+					if( result.size() > 1000 )
+					{
+						// Avoid performance problems formatting and displaying
+						// strings that are too large to read in-place anyway.
+						// People can drag the full value to the PythonEditor if
+						// they want to interact with it further.
+						result += "...";
+						break;
+					}
+					else if( result.size() )
+					{
+						result += " ";
+					}
+					result += toString( v );
+				}
+				return result;
+			}
+
+			return std::nullopt;
+
+		}
+
+	);
 }
 
 QVariant dataToVariant( const IECore::Data *value, int role )
@@ -326,25 +445,57 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		case IECore::UInt64DataTypeId :
 			return (quint64)static_cast<const IECore::UInt64Data *>( value )->readable();
 		case IECore::FloatDataTypeId :
-			return doubleToString( static_cast<const IECore::FloatData *>( value )->readable() );
+			return toString( static_cast<const IECore::FloatData *>( value )->readable() );
 		case IECore::DoubleDataTypeId :
-			return doubleToString( static_cast<const IECore::DoubleData *>( value )->readable() );
+			return toString( static_cast<const IECore::DoubleData *>( value )->readable() );
 		case IECore::V2fDataTypeId :
-			return vectorToString( static_cast<const IECore::V2fData *>( value )->readable() );
+			return toString( static_cast<const IECore::V2fData *>( value )->readable() );
 		case IECore::V3fDataTypeId :
-			return vectorToString( static_cast<const IECore::V3fData *>( value )->readable() );
+			return toString( static_cast<const IECore::V3fData *>( value )->readable() );
+		case IECore::V2dDataTypeId :
+			return toString( static_cast<const IECore::V2dData *>( value )->readable() );
+		case IECore::V3dDataTypeId :
+			return toString( static_cast<const IECore::V3dData *>( value )->readable() );
 		case IECore::Color3fDataTypeId :
-			return vectorToString( static_cast<const IECore::Color3fData *>( value )->readable() );
+			return toString( static_cast<const IECore::Color3fData *>( value )->readable() );
 		case IECore::Color4fDataTypeId :
-			return vectorToString( static_cast<const IECore::Color4fData *>( value )->readable() );
+			return toString( static_cast<const IECore::Color4fData *>( value )->readable() );
+		case IECore::Box2fDataTypeId :
+			return toString( static_cast<const IECore::Box2fData *>( value )->readable() );
+		case IECore::Box3fDataTypeId :
+			return toString( static_cast<const IECore::Box3fData *>( value )->readable() );
+		case IECore::Box2iDataTypeId :
+			return toString( static_cast<const IECore::Box2iData *>( value )->readable() );
+		case IECore::Box3iDataTypeId :
+			return toString( static_cast<const IECore::Box3iData *>( value )->readable() );
+		case IECore::M33fDataTypeId :
+			return toString( static_cast<const IECore::M33fData *>( value )->readable() );
+		case IECore::M44fDataTypeId :
+			return toString( static_cast<const IECore::M44fData *>( value )->readable() );
+		case IECore::M33dDataTypeId :
+			return toString( static_cast<const IECore::M33dData *>( value )->readable() );
+		case IECore::M44dDataTypeId :
+			return toString( static_cast<const IECore::M44dData *>( value )->readable() );
 		case IECore::DateTimeDataTypeId :
 		{
 			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );
 			time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
-			return QVariant( QDateTime::fromTime_t( t ) );
+			return QVariant( QDateTime::fromSecsSinceEpoch( t ) );
+		}
+		case IECore::RampffDataTypeId :
+		case IECore::RampfColor3fDataTypeId :
+		{
+			// Pass through directly for use in PathListingWidgetItemDelegate.
+			QVariant v;
+			v.setValue( IECore::ConstDataPtr( value ) );
+			return v;
 		}
 		default :
 		{
+			if( auto s = vectorDataToString( value ) )
+			{
+				return *s;
+			}
 			// Fall back to using `str()` in python, to emulate old behaviour. If we find commonly
 			// used types within large hierarchies falling through to here, we will need to give
 			// them their own special case above, for improved performance.
@@ -355,6 +506,15 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		}
 	}
 }
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// PathModel
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 /// Equivalent to PathModel::CellData, but converted into the form needed by Qt.
 struct CellVariants
@@ -431,6 +591,26 @@ struct CellVariants
 IECore::InternedString g_nameProperty( "name" );
 IECore::InternedString g_childPlaceholder( "childPlaceholder" );
 
+template<typename T>
+void shuffle( std::vector<T> &values, const std::vector<int> &mapping )
+{
+	std::vector<T> shuffledValues;
+	shuffledValues.reserve( mapping.size() );
+	for( auto i : mapping )
+	{
+		if( i >= 0 && i < (int)values.size() )
+		{
+			shuffledValues.push_back( std::move( values[i] ) );
+		}
+		else
+		{
+			shuffledValues.push_back( T() );
+		}
+	}
+
+	values.swap( shuffledValues );
+}
+
 // A QAbstractItemModel for the navigation of Gaffer::Paths.
 // This allows us to view Paths in QTreeViews. This forms part
 // of the internal implementation of PathListingWidget, the rest
@@ -450,7 +630,8 @@ class PathModel : public QAbstractItemModel
 				m_sortColumn( -1 ),
 				m_sortOrder( Qt::AscendingOrder ),
 				m_modifyingTreeViewExpansion( false ),
-				m_updateScheduled( false )
+				m_updateScheduled( false ),
+				m_blockUpdateFinished( false )
 		{
 			connect( parent, &QTreeView::expanded, this, &PathModel::treeViewExpanded );
 			connect( parent, &QTreeView::collapsed, this, &PathModel::treeViewCollapsed );
@@ -477,42 +658,95 @@ class PathModel : public QAbstractItemModel
 
 		void setColumns( const std::vector<GafferUI::PathColumnPtr> columns )
 		{
-			/// \todo Maintain persistent indices etc
-			/// using `m_rootItem->update()`.
-
 			// Cancel update and flush edit queue before we destroy
 			// the items they reference.
 			cancelUpdate();
 
-			beginResetModel();
-
+			// Connect to signals on new columns so we can update when they are
+			// changed.
 			m_columnChangedConnections.clear();
-
-			// Keep track of selections that are common between the current and incoming columns
-			Selection newSelection( columns.size(), IECore::PathMatcher() );
-			for( size_t i = 0; i < columns.size(); ++i )
-			{
-				auto it = std::find( m_columns.begin(), m_columns.end(), columns[i] );
-				if( it != m_columns.end() )
-				{
-					newSelection[i] = m_selection[ it - m_columns.begin() ];
-				}
-			}
-			setSelection( newSelection );
-
-			m_columns = columns;
-			for( const auto &c : m_columns )
+			for( const auto &c : columns )
 			{
 				m_columnChangedConnections.push_back(
 					c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) )
 				);
 			}
 
-			m_rootItem = new Item( IECore::InternedString(), nullptr );
-			m_headerData.clear();
-			m_headerDataState = State::Unrequested;
+			// Deal with the simple case where we are being initialised for the
+			// first time.
+			if( !m_columns.size() && !m_rootPath && !m_selection.size() )
+			{
+				m_columns = columns;
+				m_selection.resize( m_columns.size() );
+				return;
+			}
 
-			endResetModel();
+			// Build mapping from old columns to new columns.
+			std::vector<int> columnMapping( columns.size(), -1 );
+			std::vector<int> columnForwardMapping( m_columns.size(), -1 );
+			for( size_t newColumnIndex = 0; newColumnIndex < columns.size(); ++newColumnIndex )
+			{
+				auto it = std::find( m_columns.begin(), m_columns.end(), columns[newColumnIndex] );
+				if( it != m_columns.end() )
+				{
+					const size_t oldColumnIndex = it - m_columns.begin();
+					columnForwardMapping[oldColumnIndex] = newColumnIndex;
+					columnMapping[newColumnIndex] = oldColumnIndex;
+				}
+			}
+
+			// Dirty state and assign `m_columns`. We need to do this inside an
+			// `insert/removeColumn()` block so Qt knows what is going on.
+
+			auto rootIndex = indexForPath( m_rootPath->names() );
+			decltype( &PathModel::endInsertColumns ) endFunction = nullptr;
+			if( columns.size() > m_columns.size() )
+			{
+				beginInsertColumns( rootIndex, m_columns.size(), columns.size() - 1 );
+				endFunction = &PathModel::endInsertColumns;
+			}
+			else if( columns.size() < m_columns.size() )
+			{
+				beginRemoveColumns( rootIndex, columns.size(), m_columns.size() - 1 );
+				endFunction = &PathModel::endRemoveColumns;
+			}
+
+			m_rootItem->dirty( /* dirtyChildItems = */ false, /* dirtyData = */ true, &columnMapping );
+			shuffle( m_headerData, columnMapping );
+
+			QModelIndexList changedPersistentIndexesFrom = persistentIndexList();
+			QModelIndexList	changedPersistentIndexesTo; changedPersistentIndexesTo.reserve( changedPersistentIndexesFrom.size() );
+			for( const auto &index : changedPersistentIndexesFrom )
+			{
+				if( columnForwardMapping[index.column()] != -1 )
+				{
+					changedPersistentIndexesTo.push_back(
+						createIndex( index.row(), columnForwardMapping[index.column()], index.internalPointer() )
+					);
+				}
+				else
+				{
+					changedPersistentIndexesTo.push_back( QModelIndex() );
+				}
+			}
+			changePersistentIndexList( changedPersistentIndexesFrom, changedPersistentIndexesTo );
+
+			m_headerDataState = State::Dirty;
+			m_columns = columns;
+
+			if( endFunction )
+			{
+				std::invoke( endFunction, this );
+			}
+
+			// Schedule update to process the dirtied items.
+			scheduleUpdate();
+
+			// Update selection. We do this last so observers see our
+			// final state in `selectionChangedSignal()`.
+			Selection newSelection = m_selection;
+			shuffle( newSelection, columnMapping );
+			setSelection( newSelection, /* scrollToFirst = */ false );
 		}
 
 		const std::vector<GafferUI::PathColumnPtr> &getColumns() const
@@ -539,6 +773,7 @@ class PathModel : public QAbstractItemModel
 			cancelUpdate();
 			m_rootPath = root;
 			m_rootItem->dirty();
+			m_headerDataState = State::Dirty;
 			m_recursiveExpansionPath.reset();
 			// Schedule update to process the dirtied items.
 			scheduleUpdate();
@@ -640,6 +875,21 @@ class PathModel : public QAbstractItemModel
 			return m_selection;
 		}
 
+		std::vector<std::string> visualOrder( const IECore::PathMatcher &paths ) const
+		{
+			std::vector<std::string> result;
+			const auto indices = indicesForPaths( paths );
+			for( auto &i : indices )
+			{
+				if( const auto path = pathForIndex( i ) )
+				{
+					result.push_back( path.get()->string() );
+				}
+			}
+
+			return result;
+		}
+
 		void attachTester()
 		{
 			if( !m_tester )
@@ -672,7 +922,7 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		PathPtr pathForIndex( const QModelIndex &index )
+		PathPtr pathForIndex( const QModelIndex &index ) const
 		{
 			if( !index.isValid() || !m_rootPath )
 			{
@@ -693,7 +943,7 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		QModelIndex indexForPath( const std::vector<IECore::InternedString> &path )
+		QModelIndex indexForPath( const std::vector<IECore::InternedString> &path ) const
 		{
 			if( !m_rootPath )
 			{
@@ -735,12 +985,12 @@ class PathModel : public QAbstractItemModel
 			return result;
 		}
 
-		QModelIndex indexForPath( const Path *path )
+		QModelIndex indexForPath( const Path *path ) const
 		{
 			return indexForPath( path->names() );
 		}
 
-		std::vector<QModelIndex> indicesForPaths( const IECore::PathMatcher &paths )
+		std::vector<QModelIndex> indicesForPaths( const IECore::PathMatcher &paths ) const
 		{
 			std::vector<QModelIndex> result;
 			if( !m_rootPath )
@@ -766,6 +1016,7 @@ class PathModel : public QAbstractItemModel
 
 		void expansionChanged();
 		void selectionChanged();
+		void headerUpdateFinished();
 		void updateFinished();
 
 		///////////////////////////////////////////////////////////////////
@@ -911,7 +1162,7 @@ class PathModel : public QAbstractItemModel
 		// We need to apply the updates and signal them to Qt on the main thread,
 		// for which we use `queueEdit()`.
 
-		// Arranges to peform a background update after a short delay.
+		// Arranges to perform a background update after a short delay.
 		void scheduleUpdate()
 		{
 			if( !m_rootPath || m_updateScheduled )
@@ -962,16 +1213,32 @@ class PathModel : public QAbstractItemModel
 			// And then we can reschedule our update task.
 			m_updateTask = ParallelAlgo::callOnBackgroundThread(
 				getRoot()->cancellationSubject(),
-				[this] {
+				// We take a copy of `expandedPaths` because it may be modified
+				// on the UI thread by `treeViewExpanded()` while we run in the
+				// background. Likewise, we take a copy of the Path to work
+				// with, because anyone could modify that on the UI thread as it
+				// is a public member of PathListingWidget.
+				[this, workingPath = m_rootPath->copy(), expandedPaths = IECore::PathMatcher( m_expandedPaths ), priorityPaths = visiblePaths() ] {
 					try
 					{
 						const IECore::Canceller *canceller = Context::current()->canceller();
 						updateHeaderData( canceller );
-						m_rootItem->update( this, canceller );
+						queueEdit(
+							[this] () {
+								if( !m_blockUpdateFinished )
+								{
+									headerUpdateFinished();
+								}
+							}
+						);
+						m_rootItem->update( this, workingPath.get(), expandedPaths, priorityPaths, canceller );
 						queueEdit(
 							[this] () {
 								finaliseRecursiveExpansion();
-								updateFinished();
+								if( !m_blockUpdateFinished )
+								{
+									updateFinished();
+								}
 							}
 						);
 					}
@@ -1027,6 +1294,7 @@ class PathModel : public QAbstractItemModel
 
 			if( flushPendingEdits )
 			{
+				Private::ScopedAssignment blockUpdateFinished( m_blockUpdateFinished, true );
 				QCoreApplication::sendPostedEvents( this, EditEvent::staticType() );
 			}
 		}
@@ -1107,7 +1375,7 @@ class PathModel : public QAbstractItemModel
 			std::vector<CellVariants> newHeaderData;
 			for( auto &column : m_columns )
 			{
-				newHeaderData.push_back( column->headerData( canceller ) );
+				newHeaderData.push_back( column->headerData( *m_rootPath, canceller ) );
 			}
 
 			if( m_headerData == newHeaderData )
@@ -1179,12 +1447,12 @@ class PathModel : public QAbstractItemModel
 				return m_name;
 			}
 
-			void dirty( bool dirtyChildItems = true, bool dirtyData = true )
+			void dirty( bool dirtyChildItems = true, bool dirtyData = true, const std::vector<int> *dataMapping = nullptr )
 			{
 				// This is just intended to be called on the root item by the
 				// PathModel when the path changes.
 				assert( !m_parent );
-				dirtyWalk( dirtyChildItems, dirtyData );
+				dirtyWalk( dirtyChildItems, dirtyData, dataMapping );
 			}
 
 			void dirtyExpansion()
@@ -1201,13 +1469,82 @@ class PathModel : public QAbstractItemModel
 				m_expandedInTreeView = expanded;
 			}
 
-			void update( PathModel *model, const IECore::Canceller *canceller )
+			void update( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::PathMatcher &priorityPaths, const IECore::Canceller *canceller )
 			{
-				// We take a copy of `expandedPaths` because it may be modified
-				// on the UI thread by `treeViewExpanded()` while we run in the
-				// background.
-				PathPtr workingPath = model->m_rootPath->copy();
-				updateWalk( model, workingPath.get(), IECore::PathMatcher( model->m_expandedPaths ), canceller );
+				// Do a queue-based recursion through the hierarchy, updating
+				// each item as we visit it.
+				/// \todo We could consider using a `concurrent_priority_queue()`
+				/// and multiple threads here for improved performance. But
+				/// given all the other modules vying for processor time (the
+				/// Viewer and Renderer in particular), perhaps limiting
+				/// ourselves to a single core is reasonable. If we do use
+				/// multiple threads we need to consider the interaction with
+				/// `m_scrollToCandidates` because the order we visit children
+				/// in would no longer be deterministic.
+
+				std::deque<std::pair<Path::Names, Ptr>> queue( { { path->names(), this } } );
+				while( !queue.empty() )
+				{
+					IECore::Canceller::check( canceller );
+
+					// Update the item from the front of the queue.
+
+					const auto [names, item] = std::move( queue.front() );
+					queue.pop_front();
+
+					path->set( 0, path->names().size(), names );
+					item->updateData( model, path, canceller );
+					item->updateExpansion( model, path, expandedPaths );
+					std::shared_ptr<ChildContainer> updatedChildItems = item->updateChildItems( model, path, canceller );
+
+					// Traverse to children by pushing them in to the queue.
+					// High priority items are pushed to the front of the queue
+					// for immediate processing, and low priority items are
+					// pushed to the back of the queue to be processed last.
+
+					Path::Names childNames = names; childNames.push_back( IECore::InternedString() );
+					size_t newFrontItems = 0;
+					for( const auto &child : *updatedChildItems )
+					{
+						childNames.back() = child->name();
+						// If we're scrolling to something and we haven't found it yet,
+						// then we're processing items above it visually. These have to
+						// be high priority so that we don't end up expanding them _after_
+						// scrolling, which would push the target out of frame.
+						bool highPriority = (bool)model->m_scrollToCandidates;
+						// If we've been told explicitly that something is a priority
+						// (because it is visible in the viewport) then it is.
+						if( !highPriority )
+						{
+							if( priorityPaths.match( childNames ) & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::DescendantMatch ) )
+							{
+								highPriority = true;
+							}
+						}
+						// Lastly, if the child is subject to recursive expansion then it is
+						// a priority, because the user has explicitly asked to see it.
+						if( !highPriority && model->m_recursiveExpansionPath )
+						{
+							if( boost::starts_with( childNames, *model->m_recursiveExpansionPath ) )
+							{
+								highPriority = true;
+							}
+						}
+
+						if( !highPriority )
+						{
+							queue.emplace_back( childNames, child );
+						}
+						else
+						{
+							queue.emplace_front( childNames, child );
+							newFrontItems++;
+						}
+					}
+					// Reverse the items we added at the front, so we'll pop them
+					// in the order we pushed them.
+					std::reverse( queue.begin(), queue.begin() + newFrontItems );
+				}
 			}
 
 			Item *parent()
@@ -1267,11 +1604,15 @@ class PathModel : public QAbstractItemModel
 
 			private :
 
-				void dirtyWalk( bool dirtyChildItems, bool dirtyData )
+				void dirtyWalk( bool dirtyChildItems, bool dirtyData, const std::vector<int> *dataMapping )
 				{
 					if( dirtyData && ( m_dataState == State::Clean ) )
 					{
 						m_dataState = State::Dirty;
+					}
+					if( dataMapping )
+					{
+						shuffle( m_data, *dataMapping );
 					}
 					if( dirtyChildItems && ( m_childItemsState == State::Clean ) )
 					{
@@ -1279,34 +1620,7 @@ class PathModel : public QAbstractItemModel
 					}
 					for( const auto &child : *m_childItems )
 					{
-						child->dirtyWalk( dirtyChildItems, dirtyData );
-					}
-				}
-
-				void updateWalk( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::Canceller *canceller )
-				{
-					IECore::Canceller::check( canceller );
-					updateData( model, path, canceller );
-					updateExpansion( model, path, expandedPaths );
-					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path, canceller );
-
-					const size_t pathSize = path->names().size();
-					Path::Names childName( 1 );
-
-					/// \todo We could consider using `parallel_for()` here for improved
-					/// performance. But given all the other modules vying for processor time
-					/// (the Viewer and Renderer in particular), perhaps limiting ourselves to
-					/// a single core is reasonable. If we do use `parallel_for` we need to
-					/// consider the interaction with `m_scrollToCandidates` because the order
-					/// we visit children in would no longer be deterministic.
-					for( const auto &child : *updatedChildItems )
-					{
-						// Append child name to path, bearing in mind that recursion
-						// in `updateWalk()` may have left us with a longer path than
-						// we had before.
-						childName.back() = child->name();
-						path->set( pathSize, path->names().size(), childName );
-						child->updateWalk( model, path, expandedPaths, canceller );
+						child->dirtyWalk( dirtyChildItems, dirtyData, dataMapping );
 					}
 				}
 
@@ -1445,6 +1759,11 @@ class PathModel : public QAbstractItemModel
 							[this, model, expanded] {
 								QTreeView *treeView = dynamic_cast<QTreeView *>( model->QObject::parent() );
 								Private::ScopedAssignment<bool> assignment( model->m_modifyingTreeViewExpansion, true );
+								// Call `scheduleDelayedItemsLayout()` so that QTreeView doesn't rebuild
+								// its internal layout for every call to `setExpanded()`. When we are delivering
+								// a sequence of calls (as we do for recursive expansion) this provides a major
+								// performance improvement.
+								scheduleDelayedItemsLayout( treeView );
 								treeView->setExpanded( model->createIndex( m_row, 0, this ), expanded );
 							}
 						);
@@ -1686,7 +2005,7 @@ class PathModel : public QAbstractItemModel
 
 		};
 
-		void indicesForPathsWalk( Item *item, const Path::Names &itemPath, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices )
+		void indicesForPathsWalk( Item *item, const Path::Names &itemPath, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices ) const
 		{
 			/// \todo Using `match()` here isn't right, because we want to
 			/// treat wildcards in the selection verbatim rather than perform
@@ -1827,6 +2146,23 @@ class PathModel : public QAbstractItemModel
 			}
 		}
 
+		IECore::PathMatcher visiblePaths() const
+		{
+			QTreeView *treeView = static_cast<QTreeView *>( QObject::parent() );
+			const int height = treeView->height();
+
+			IECore::PathMatcher result;
+
+			QModelIndex index = treeView->indexAt( QPoint( 0, 0 ) );
+			while( index.isValid() && treeView->visualRect( index ).top() < height )
+			{
+				result.addPath( namesForIndex( index ) );
+				index = treeView->indexBelow( index );
+			}
+
+			return result;
+		}
+
 		// Column change handling
 
 		void columnChanged()
@@ -1869,8 +2205,137 @@ class PathModel : public QAbstractItemModel
 
 		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;
 		bool m_updateScheduled;
+		bool m_blockUpdateFinished;
 
 };
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// DisplayTransform utilities
+//////////////////////////////////////////////////////////////////////////
+
+size_t hash_value( const QColor &v )
+{
+	size_t s = 0;
+	boost::hash_combine( s, v.redF() );
+	boost::hash_combine( s, v.greenF() );
+	boost::hash_combine( s, v.blueF() );
+	boost::hash_combine( s, v.alphaF() );
+	return s;
+}
+
+namespace
+{
+
+using DisplayTransform = std::function<Imath::Color3f ( const Imath::Color3f & )>;
+
+struct DisplayColorCache : public IECorePreview::LRUCache<QColor, QIcon, IECorePreview::LRUCachePolicy::Serial>
+{
+	DisplayColorCache( const DisplayTransform &displayTransform, size_t maxIcons = 1000 )
+		:	IECorePreview::LRUCache<QColor, QIcon, IECorePreview::LRUCachePolicy::Serial>(
+				[displayTransform] ( const QColor &color, size_t &cost, const IECore::Canceller *canceller ) {
+					cost = 1;
+					return convert( color, displayTransform );
+				},
+				maxIcons
+			)
+	{
+	}
+
+	private :
+
+		static QIcon convert( const QColor &qColor, const DisplayTransform &displayTransform )
+		{
+			const Imath::Color3f c = displayTransform(
+				Imath::Color3f( qColor.redF(), qColor.greenF(), qColor.blueF() )
+			);
+			QPixmap pixmap( QSize( 16, 16 ) );
+			pixmap.fill( QColor::fromRgbF( c[0], c[1], c[2] ) );
+			return QIcon( pixmap );
+		}
+
+};
+
+struct DisplayGradientCacheGetterKey
+{
+
+	DisplayGradientCacheGetterKey( const IECore::Data *rampData = nullptr )
+		:	rampData( rampData ), hash( rampData ?  rampData->Object::hash() : IECore::MurmurHash() )
+	{
+	}
+
+	operator const IECore::MurmurHash &() const
+	{
+		return hash;
+	}
+
+	const IECore::Data *rampData;
+	const IECore::MurmurHash hash;
+
+};
+
+struct DisplayGradientCache : public IECorePreview::LRUCache<IECore::MurmurHash, QBrush, IECorePreview::LRUCachePolicy::Serial, DisplayGradientCacheGetterKey>
+{
+
+	DisplayGradientCache( const DisplayTransform &displayTransform, size_t maxGradients = 1000 )
+		:	IECorePreview::LRUCache<IECore::MurmurHash, QBrush, IECorePreview::LRUCachePolicy::Serial, DisplayGradientCacheGetterKey>(
+				[displayTransform] ( const DisplayGradientCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller ) {
+					cost = 1;
+					return convert( key.rampData, displayTransform );
+				},
+				maxGradients
+			)
+	{
+	}
+
+	private :
+
+		static QBrush convert( const IECore::Data *data, const DisplayTransform &displayTransform )
+		{
+			switch( data->typeId() )
+			{
+				case IECore::RampffDataTypeId :
+					return convertTyped( static_cast<const IECore::RampffData *>( data )->readable(), displayTransform );
+				case IECore::RampfColor3fDataTypeId :
+					return convertTyped( static_cast<const IECore::RampfColor3fData *>( data )->readable(), displayTransform );
+				default :
+					return QBrush();
+			}
+		}
+
+		template<typename RampType>
+		static QBrush convertTyped( const RampType &ramp, const DisplayTransform &displayTransform )
+		{
+			QLinearGradient gradient( QPoint( 0, 0 ), QPoint( 1, 0 ) );
+			gradient.setCoordinateMode( QGradient::ObjectMode );
+
+			auto evaluator = ramp.evaluator();
+			const int numStops = 100;
+			for( int i = 0; i < numStops; ++i )
+			{
+				float x = (float)i / (float)(numStops - 1);
+				Imath::Color3f c( evaluator( x ) );
+				if( displayTransform )
+				{
+					c = displayTransform( c );
+				}
+				gradient.setColorAt( x, QColor::fromRgbF( c[0], c[1], c[2] ) );
+			}
+
+			return QBrush( gradient );
+		}
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// PathListingWidgetItemDelegate
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 class PathListingWidgetItemDelegate : public QStyledItemDelegate
 {
@@ -1882,8 +2347,39 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 		{
 		}
 
-		using DisplayTransform = std::function<Imath::Color3f ( const Imath::Color3f & )>;
-		DisplayTransform displayTransform;
+		void paint( QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index ) const override
+		{
+			QStyledItemDelegate::paint( painter, option, index );
+
+			const QVariant displayData = index.data( Qt::DisplayRole );
+			if( auto data = displayData.value<IECore::ConstDataPtr>() )
+			{
+				// When we want to render ramps, we just pass the data
+				// through directly and convert it here.
+				QBrush brush = m_displayGradientCache->get( data.get() );
+				if( brush.style() != Qt::NoBrush )
+				{
+					QRect rect = option.rect;
+					rect.setTopLeft( rect.topLeft() + QPoint( 2, 2 ) );
+					rect.setBottomRight( rect.bottomRight() - QPoint( 2, 2 ) );
+					painter->fillRect( rect, brush );
+				}
+			}
+		}
+
+		void updateDisplayTransform( const DisplayTransform &displayTransform )
+		{
+			if( displayTransform )
+			{
+				m_displayColorCache = std::make_unique<DisplayColorCache>( displayTransform );
+			}
+			else
+			{
+				m_displayColorCache.reset();
+			}
+
+			m_displayGradientCache = std::make_unique<DisplayGradientCache>( displayTransform );
+		}
 
 	protected :
 
@@ -1891,21 +2387,16 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 		{
 			QStyledItemDelegate::initStyleOption( option, index );
 
-			if( displayTransform )
+			if( m_displayColorCache )
 			{
 				const QVariant decoration = index.data( Qt::DecorationRole );
 				if( decoration.userType() == QMetaType::QColor )
 				{
-					// Apply display transform to the colour.
+					// Update `option` to apply a display transform. Making a
+					// QPixmap for this seems wasteful, but that's what the
+					// QStyledItemDelegate does.
 					const QColor qc = qvariant_cast<QColor>( decoration );
-					const Imath::Color3f c = displayTransform(
-						Imath::Color3f( qc.redF(), qc.greenF(), qc. blueF() )
-					);
-					// Update `option`. Making a QPixmap for this seems wasteful,
-					// but that's what the QStyledItemDelegate does.
-					QPixmap pixmap( option->decorationSize );
-					pixmap.fill( QColor::fromRgbF( c[0], c[1], c[2] ) );
-					option->icon = QIcon( pixmap );
+					option->icon = m_displayColorCache->get( qc );
 				}
 			}
 
@@ -1920,7 +2411,21 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 			}
 		}
 
+	private :
+
+		std::unique_ptr<DisplayColorCache> m_displayColorCache;
+		std::unique_ptr<DisplayGradientCache> m_displayGradientCache;
+
 };
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Python bindings
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 void setColumns( uint64_t treeViewAddress, object pythonColumns )
 {
@@ -1966,7 +2471,7 @@ void updateDelegate( uint64_t treeViewAddress, boost::python::object pythonDispl
 		treeView->setItemDelegate( delegate );
 	}
 
-	PathListingWidgetItemDelegate::DisplayTransform displayTransform;
+	DisplayTransform displayTransform;
 	if( pythonDisplayTransform )
 	{
 		// The lambda below needs to own a reference to `pythonDisplayTransform`,
@@ -1981,21 +2486,23 @@ void updateDelegate( uint64_t treeViewAddress, boost::python::object pythonDispl
 			}
 		);
 
-		delegate->displayTransform = [pythonDisplayTransformPtr] ( const Imath::Color3f &color ) -> Imath::Color3f {
-			IECorePython::ScopedGILLock gilLock;
-			try
-			{
-				return extract<Imath::Color3f>( (*pythonDisplayTransformPtr)( color ) );
+		delegate->updateDisplayTransform(
+			[pythonDisplayTransformPtr] ( const Imath::Color3f &color ) -> Imath::Color3f {
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					return extract<Imath::Color3f>( (*pythonDisplayTransformPtr)( color ) );
+				}
+				catch( const boost::python::error_already_set & )
+				{
+					return color;
+				}
 			}
-			catch( const boost::python::error_already_set & )
-			{
-				return color;
-			}
-		};
+		);
 	}
 	else
 	{
-		delegate->displayTransform = nullptr;
+		delegate->updateDisplayTransform( nullptr );
 	}
 
 	treeView->update();
@@ -2052,6 +2559,21 @@ list getSelection( uint64_t treeViewAddress )
 	list result;
 
 	for( auto &p : model->getSelection() )
+	{
+		result.append( p );
+	}
+
+	return result;
+}
+
+list visualOrder( uint64_t treeViewAddress, const IECore::PathMatcher &paths )
+{
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+
+	list result;
+
+	for( auto &p : model->visualOrder( paths ) )
 	{
 		result.append( p );
 	}
@@ -2187,6 +2709,7 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetGetExpansion", &getExpansion );
 	def( "_pathListingWidgetSetSelection", &setSelection );
 	def( "_pathListingWidgetGetSelection", &getSelection );
+	def( "_pathListingWidgetVisualOrder", &visualOrder );
 	def( "_pathListingWidgetPathForIndex", &pathForIndex );
 	def( "_pathListingWidgetIndexForPath", &indexForPath );
 	def( "_pathListingWidgetPathsForIndexRange", &pathsForIndexRange );

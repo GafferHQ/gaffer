@@ -149,10 +149,10 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 
 		arnoldOptions = GafferArnold.ArnoldOptions()
 		arnoldOptions["in"].setInput( combineGroup["out"] )
-		arnoldOptions["options"]["giDiffuseDepth"]["enabled"].setValue( True )
-		arnoldOptions["options"]["giDiffuseDepth"]["value"].setValue( 0 )
-		arnoldOptions["options"]["giSpecularDepth"]["enabled"].setValue( True )
-		arnoldOptions["options"]["giSpecularDepth"]["value"].setValue( 0 )
+		arnoldOptions["options"]["ai:GI_diffuse_depth"]["enabled"].setValue( True )
+		arnoldOptions["options"]["ai:GI_diffuse_depth"]["value"].setValue( 0 )
+		arnoldOptions["options"]["ai:GI_specular_depth"]["enabled"].setValue( True )
+		arnoldOptions["options"]["ai:GI_specular_depth"]["value"].setValue( 0 )
 
 		arnoldTextureBake = GafferArnold.ArnoldTextureBake()
 		arnoldTextureBake["in"].setInput( arnoldOptions["out"] )
@@ -406,7 +406,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		customAttributes1["attributes"].addChild( Gaffer.NameValuePlug( 'bake:fileName', IECore.StringData( ( pathlib.Path( "${bakeDirectory}" ) / "complete" / "<AOV>" / "<AOV>.<UDIM>.exr" ).as_posix() ) ) )
 		customAttributes1["in"].setInput( collectScenes["out"] )
 
-		# Second vaiant: bake just 2 of the 4 meshes, leaving lots of holes that will need filling
+		# Second variant: bake just 2 of the 4 meshes, leaving lots of holes that will need filling
 		pruneFilter = GafferScene.PathFilter()
 		pruneFilter["paths"].setValue( IECore.StringVectorData( [ '/2', '/3' ] ) )
 
@@ -542,6 +542,3 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 				self.assertLess( edgeStats["max"].getValue()[i], maxEdge )
 				self.assertLess( refDiffStats["max"].getValue()[i], maxRefDiff )
 				self.assertLess( refDiffCoveredStats["max"].getValue()[i], maxMaskedDiff )
-
-if __name__ == "__main__":
-	unittest.main()

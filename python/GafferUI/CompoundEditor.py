@@ -50,6 +50,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 class CompoundEditor( GafferUI.Editor ) :
 
@@ -61,7 +62,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 			self["editScope"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::CompoundEditor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferUI::CompoundEditor::Settings" )
 
 	# The CompoundEditor constructor args are considered 'private', used only
 	# by the persistent layout system.
@@ -179,11 +180,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow :
-			panel.setTitle( scriptWindow.getTitle() )
-			weakSetTitle = Gaffer.WeakMethod( panel.setTitle )
-			panel.__titleChangedConnection = scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ), scoped = True )
-			# It's not directly in the qt hierarchy so shortcut events don't make it to the MenuBar
-			scriptWindow.menuBar().addShortcutTarget( panel )
+			panel.connectToScriptWindow( scriptWindow )
 
 		self.__detachedPanels.append( panel )
 		return panel
@@ -198,6 +195,16 @@ class CompoundEditor( GafferUI.Editor ) :
 		assert( not panel.visible() )
 		GafferUI.WidgetAlgo.keepUntilIdle( panel )
 
+	def _displayTransformChanged( self ) :
+
+		GafferUI.Editor._displayTransformChanged( self )
+
+		# Propagate display transform to detached panels. This would
+		# happen naturally if they were parented to the main ScriptWindow,
+		# but they're not.
+		for panel in self.__detachedPanels :
+			panel.setDisplayTransform( self.displayTransform() )
+
 	def __visibilityChanged(self, widget) :
 
 		v = self.visible()
@@ -206,11 +213,12 @@ class CompoundEditor( GafferUI.Editor ) :
 
 	def __parentChanged( self, widget ) :
 
-		# Make sure we have the correct keyboard shortcut listeners
+		# If we created any detached panels before we were
+		# in a ScriptWindow, connect them to the ScriptWindow now.
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow is not None :
 			for panel in self._detachedPanels() :
-				scriptWindow.menuBar().addShortcutTarget( panel )
+				panel.connectToScriptWindow( scriptWindow )
 
 	def __repr__( self ) :
 
@@ -508,17 +516,14 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 
 		container[0].addEditor( editor )
 
-	def serialiseChildren( self, scriptNode = None ) :
-
-		if not scriptNode :
-			scriptNode = self.ancestor( GafferUI.CompoundEditor ).scriptNode()
+	def serialiseChildren( self ) :
 
 		if self.isSplit() :
 			sizes = self.getSizes()
 			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
 			return "( GafferUI.SplitContainer.{}, {}, ( {}, {} ) )".format(
 				str( self.getOrientation() ), splitPosition,
-				self[0].serialiseChildren( scriptNode ), self[1].serialiseChildren( scriptNode )
+				self[0].serialiseChildren(), self[1].serialiseChildren()
 			)
 		else :
 			# not split - a tabbed container full of editors
@@ -677,7 +682,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		m = IECore.MenuDefinition()
 
 		layouts = GafferUI.Layouts.acquire( self.ancestor( CompoundEditor ).scriptNode().applicationRoot() )
-		for c in layouts.registeredEditors() :
+		for c in sorted( layouts.registeredEditors() ) :
 			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : functools.partial( Gaffer.WeakMethod( self.addEditor ), c ) } )
 
 		m.append( "/divider", { "divider" : True } )
@@ -780,10 +785,10 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		result = False
 		if isinstance( event.data, Gaffer.Node ) :
-			result = True
+			result = currentEditor.scriptNode().isAncestorOf( event.data )
 		elif isinstance( event.data, Gaffer.Set ) :
 			if event.data.size() and isinstance( event.data[0], Gaffer.Node ) :
-				result = True
+				result = all( [ currentEditor.scriptNode().isAncestorOf( x ) for x in event.data if isinstance( x, Gaffer.Node ) ] )
 
 		if result :
 			self.setHighlighted( True )
@@ -921,6 +926,13 @@ class _DetachedPanel( GafferUI.Window ) :
 		if self.__windowState :
 			_restoreWindowState( self, self.__windowState )
 
+	def connectToScriptWindow( self, scriptWindow ) :
+
+		scriptWindow.menuBar().addShortcutTarget( self )
+		self.setTitle( scriptWindow.getTitle() )
+		scriptWindow.titleChangedSignal().connect( Gaffer.WeakMethod( self.__scriptWindowTitleChanged ) )
+		self.setDisplayTransform( scriptWindow.displayTransform() )
+
 	# A detached panel is considered empty if it has a single split with no editors.
 	def isEmpty( self ) :
 
@@ -943,6 +955,10 @@ class _DetachedPanel( GafferUI.Window ) :
 	# Required for editor path introspection
 	def _splitContainer( self ) :
 		return self.__splitContainer
+
+	def __scriptWindowTitleChanged( self, window, title ) :
+
+		self.setTitle( title )
 
 ## An internal eventFilter class managing all tab drag-drop events and logic.
 # Tab dragging is an exception and is implemented entirely using mouse-move
@@ -1076,7 +1092,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		# Ensure we can leave the UI in a predictable state for the user
 		# post-drag.
 
-		self.__draggedTabOriginalIndex = qTabBar.tabAt( event.pos() )
+		self.__draggedTabOriginalIndex = qTabBar.tabAt( event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos() )
 		if self.__draggedTabOriginalIndex == -1 :
 			return False
 
@@ -1271,7 +1287,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 	def __shouldAbortInitialRearrange( self, qTabBar, event ) :
 
 		# We don't reliably know where this event comes from
-		pos = qTabBar.mapFromGlobal( event.globalPos() )
+		pos = qTabBar.mapFromGlobal( event.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else event.globalPos() )
 
 		if qTabBar.geometry().contains( pos ) :
 			return False
@@ -1290,7 +1306,8 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 		fakeReleaseEvent = QtGui.QMouseEvent(
 			QtCore.QEvent.MouseButtonRelease,
-			self.__constrainGlobalPosTo( moveEvent.globalPos(), self.__qTabBar ),
+			self.__constrainGlobalPosTo( moveEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else moveEvent.globalPos(), self.__qTabBar ),
+			moveEvent.globalPosition() if Qt.__binding__ == "PySide6" else moveEvent.screenPos(),
 			QtCore.Qt.LeftButton, QtCore.Qt.LeftButton,
 			QtCore.Qt.NoModifier
 		)
@@ -1301,7 +1318,8 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		modifiedEvent = QtGui.QMouseEvent(
 			event.type(),
 			# Keep the mouse in sensible bounds to prevent tab clipping
-			self.__constrainGlobalPosTo( event.globalPos(), self.__qTabBar ),
+			self.__constrainGlobalPosTo( event.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else event.globalPos(), self.__qTabBar ),
+			event.globalPosition() if Qt.__binding__ == "PySide6" else event.screenPos(),
 			event.button(), event.buttons(),
 			event.modifiers()
 		)
@@ -1313,8 +1331,9 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		# space) such that when the user drags left/right the left/right edges
 		# of the tab never leave the TabBar.
 		barRect = qTabBar.rect()
-		tabRect = qTabBar.tabRect( qTabBar.tabAt( event.pos() ) )
-		mouseX = event.pos().x()
+		position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+		tabRect = qTabBar.tabRect( qTabBar.tabAt( position ) )
+		mouseX = position.x()
 
 		self.__dragMinX = mouseX - tabRect.x() # cursorToTabLeftEdge
 
@@ -1328,7 +1347,8 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 	def __targetUnderMouse( self, event ) :
 
-		mousePos = imath.V2i( event.globalPos().x(), event.globalPos().y() )
+		globalPosition = event.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else event.globalPos()
+		mousePos = imath.V2i( globalPosition.x(), globalPosition.y() )
 		target = GafferUI.Widget.widgetAt( mousePos, _TabbedContainer )
 
 		if target is not None :
@@ -1388,7 +1408,7 @@ def _getWindowState( gafferWindow ) :
 		return {}
 
 	widgetScreen = window.screen()
-	widgetScreenNumber = QtWidgets.QApplication.desktop().screenNumber( qWidget )
+	widgetScreenNumber = QtWidgets.QApplication.screens().index( widgetScreen )
 
 	if widgetScreen == QtWidgets.QApplication.primaryScreen():
 		widgetScreenNumber = -1
@@ -1538,15 +1558,6 @@ class _PinningWidget( _Frame ) :
 
 		self._repolish()
 
-	# Disclaimer:
-	# In order to defer the highlighting of related editors, avoiding brief
-	# flashes whilst general mousing around, we abuse the tooltip mechanism.
-	# Otherwise, we'd have to reimplement the entire set-timeout/cancel/etc...
-	# behaviour or figure some way to hook up to Qt's tooltip event directly.
-	# As this is technically a private implementation class, no one should be
-	# calling getToolTip themselves anyway so were going to try and get away
-	# with it.  We'll have to fix this up should we need to call this in other
-	# presentation scenarios.
 	def getToolTip( self ) :
 
 		editor = self.__getNodeSetEditor()
@@ -1677,19 +1688,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"label", "",
+			"label" : "",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
-			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
-			"layout:width", 185,
-			"editScopePlugValueWidget:showLabel", True,
+			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+			"layout:width" : 185,
+			"editScopePlugValueWidget:showLabel" : True,
 
-		],
+		},
 
 	}
 

@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferSceneUI
 
 import GafferOSL
 
@@ -127,19 +128,33 @@ __widgetTypes = {
 	"checkBox" : "GafferUI.BoolPlugValueWidget",
 	"popup" : "GafferUI.PresetsPlugValueWidget",
 	"mapper" : "GafferUI.PresetsPlugValueWidget",
-	"filename" : "GafferUI.PathPlugValueWidget",
+	"filename" : "GafferUI.FileSystemPathPlugValueWidget",
+	# For RenderMan.
+	"assetIdInput" : "GafferUI.FileSystemPathPlugValueWidget",
 	"null" : "",
 }
 
 def __plugWidgetType( plug ) :
 
-	return __widgetTypes.get(
+	result = __widgetTypes.get(
 		plug.node().parameterMetadata( plug, "widget" )
 	)
 
+	if result is not None :
+		return result
+
+	# See comments in `__plugNoduleVisibility()`.
+	node = plug.node()
+	try :
+		parameterKey = node["type"].getValue() + ":" + node["name"].getValue() + ":" + plug.getName()
+	except :
+		return None
+
+	return Gaffer.Metadata.value( parameterKey, "plugValueWidget:type" )
+
 def __plugNoduleType( plug ) :
 
-	if isinstance( plug, ( Gaffer.SplinefColor3fPlug, Gaffer.SplineffPlug ) ) :
+	if isinstance( plug, ( Gaffer.RampfColor3fPlug, Gaffer.RampffPlug ) ) :
 		return ""
 	elif plug.node().parameterMetadata( plug, "connectable" ) == 0 :
 		return ""
@@ -159,6 +174,33 @@ def __plugNoduleVisibility( plug ) :
 	if visible is None :
 		visible = node.shaderMetadata( "gafferNoduleLayoutDefaultVisibility" )
 
+	# Manual fallback to the lookups that the base ShaderUI would do for
+	# us if we hadn't made our own registrations.
+	## \todo Ditch all our metadata overrides for plugs, and instead register
+	# dynamic metadata loaders against the "osl:*:*:*" string target. This
+	# will have several benefits :
+	#
+	# - We'll be able to query shader metadata without access to a node. This
+	#   could allow us to improve presentation in other areas of the UI, like
+	#   the SceneInspector.
+	# - Users will be able to override the metadata easily, without needing to
+	#   modify the OSL source code itself.
+	# - We'll be matching the method used for RenderMan shader metadata. If we
+	#   move Arnold and Cycles over too then we'll have standardised metadata
+	#   for all options/attributes/shaders.
+	#
+	# Before we can do this, we need to modify `Metadata::ValueFunction` so that
+	# it is passed a `target` argument.
+	if visible is None :
+		try :
+			shaderKey = node["type"].getValue() + ":" + node["name"].getValue()
+		except :
+			return None
+		parameterKey = shaderKey + ":" + plug.getName()
+		visible = Gaffer.Metadata.value( parameterKey, "noduleLayout:visible" )
+		if visible is None :
+			visible = Gaffer.Metadata.value( shaderKey, "noduleLayout:defaultVisibility" )
+
 	return bool( visible ) if visible is not None else True
 
 def __plugNoduleLabel( plug ) :
@@ -173,14 +215,36 @@ def __plugNoduleLabel( plug ) :
 
 	return label
 
-def __plugComponentNoduleLabel( plug ) :
+def __plugActivator( plug ) :
 
-	parameterPlug = plug.parent()
-	label = __plugNoduleLabel( parameterPlug )
-	if label is None :
-		label = parameterPlug.getName()
+	# Prefer our own format, in which activation is defined by a single
+	# OSL expression with access to all plug values and all OSL constructs.
 
-	return label + "." + plug.getName()
+	node = plug.node()
+	expression = node.parameterMetadata( plug, "enabledExpression" )
+	if expression :
+		return node.evaluateActivatorExpression( expression )
+
+	# Fall back to a far less satisfying but more pervasive format.
+
+	node = plug.node()
+	return not GafferSceneUI.ShaderUI._evaluateConditionalLock(
+		node["parameters"],
+		lambda key : node.parameterMetadata( plug, key )
+	)
+
+def __plugVisibilityActivator( plug ) :
+
+	node = plug.node()
+	expression = node.parameterMetadata( plug, "visibleExpression" )
+	if expression :
+		return node.evaluateActivatorExpression( expression )
+
+	node = plug.node()
+	return GafferSceneUI.ShaderUI._evaluateConditionalVisibility(
+		node["parameters"],
+		lambda key : node.parameterMetadata( plug, key ),
+	)
 
 Gaffer.Metadata.registerNode(
 
@@ -193,40 +257,36 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters.*" : [
+		"parameters.*" : {
 
-			"description", __plugDescription,
-			"label", __plugLabel,
-			"layout:divider", __plugDivider,
-			"layout:section", __plugPage,
-			"presetNames", __plugPresetNames,
-			"presetValues", __plugPresetValues,
-			"plugValueWidget:type", __plugWidgetType,
-			"nodule:type", __plugNoduleType,
-			"noduleLayout:visible", __plugNoduleVisibility,
-			"noduleLayout:label", __plugNoduleLabel,
+			"description" : __plugDescription,
+			"label" : __plugLabel,
+			"layout:divider" : __plugDivider,
+			"layout:section" : __plugPage,
+			"presetNames" : __plugPresetNames,
+			"presetValues" : __plugPresetValues,
+			"plugValueWidget:type" : __plugWidgetType,
+			"nodule:type" : __plugNoduleType,
+			"noduleLayout:visible" : __plugNoduleVisibility,
+			"noduleLayout:label" : __plugNoduleLabel,
+			"layout:activator" : __plugActivator,
+			"layout:visibilityActivator" : __plugVisibilityActivator,
 
-		],
+		},
 
-		"parameters.*.[rgbxyz]" : [
+		"out" : {
 
-			"noduleLayout:label", __plugComponentNoduleLabel,
+			"nodule:type" : __outPlugNoduleType,
+			"noduleLayout:spacing" : 0.2,
 
-		],
+		},
 
-		"out" : [
+		"out.*" : {
 
-			"nodule:type", __outPlugNoduleType,
-			"noduleLayout:spacing", 0.2,
+			"noduleLayout:visible" : __plugNoduleVisibility,
+			"noduleLayout:label" : __plugNoduleLabel,
 
-		],
-
-		"out.*" : [
-
-			"noduleLayout:visible", __plugNoduleVisibility,
-			"noduleLayout:label", __plugNoduleLabel,
-
-		]
+		}
 
 	}
 

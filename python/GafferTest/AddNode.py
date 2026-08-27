@@ -105,4 +105,4 @@ class AddNode( Gaffer.ComputeNode ) :
 
 		self.numComputeCalls += 1
 
-IECore.registerRunTimeTyped( AddNode, typeName = "GafferTest::AddNode" )
+IECore.registerRunTimeTyped( AddNode, "GafferTest::AddNode" )

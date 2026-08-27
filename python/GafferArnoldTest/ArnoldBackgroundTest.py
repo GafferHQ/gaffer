@@ -71,6 +71,3 @@ class ArnoldBackgroundTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( backgroundOption, IECoreScene.ShaderNetwork )
 		self.assertEqual( backgroundOption.outputShader().name, "flat" )
 		self.assertEqual( backgroundOption.outputShader().parameters["color"].value, imath.Color3f( 0.25, 1, 1 ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -50,75 +50,75 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query.
 			""",
 
-		],
+		},
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The location to query the set memberships for.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", "",
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"sets" : [
+		"sets" : {
 
-			"description",
+			"description" :
 			"""
 			The sets to query.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"inherit" : [
+		"inherit" : {
 
-			"description",
+			"description" :
 			"""
 			When on, locations are treated as being in a set if an
 			ancestor location is in that set.
 			""",
 
-			"nodule:type", "",
+			"nodule:type" : "",
 
-		],
+		},
 
-		"matches" : [
+		"matches" : {
 
-			"description",
+			"description" :
 			"""
 			The list of sets that the `location` is a member of. Returned in the
 			order they are listed in the `sets` plug.
 			""",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-		],
+		},
 
-		"firstMatch" : [
+		"firstMatch" : {
 
-			"description",
+			"description" :
 			"""
 			The first set from the `matches` output, or `""` if there were no matches.
 			This is particularly convenient for use in a Spreadsheet's selector, to
 			select rows based on the set membership of a location.
 			""",
 
-			"layout:section", "Settings.Outputs",
+			"layout:section" : "Settings.Outputs",
 
-		]
+		}
 
 	}
 

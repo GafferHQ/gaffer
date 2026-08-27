@@ -36,6 +36,10 @@
 
 import pathlib
 
+import imath
+
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -91,30 +95,70 @@ class OSLShaderUITest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( s["parameters"]["name"].getValue(), "xx" )
 		self.assertEqual( s["parameters"]["defaultValue"].getValue(), 1 )
 
-	def testSplineParameterUserDefaults( self ) :
+	def testRampParameterUserDefaults( self ) :
 
 		Gaffer.Metadata.registerValue(
-			"osl:shader:Pattern/ColorSpline:spline.interpolation", "userDefault",
-			Gaffer.SplineDefinitionInterpolation.Linear
+			"osl:shader:Pattern/ColorRamp:ramp.interpolation", "userDefault",
+			IECore.RampInterpolation.Linear
 		)
 
 		s = GafferOSL.OSLShader()
-		s.loadShader( "Pattern/ColorSpline" )
+		s.loadShader( "Pattern/ColorRamp" )
 		Gaffer.NodeAlgo.applyUserDefaults( s )
-		self.assertEqual( s["parameters"]["spline"]["interpolation"].getValue(), Gaffer.SplineDefinitionInterpolation.Linear )
+		self.assertEqual( s["parameters"]["ramp"]["interpolation"].getValue(), IECore.RampInterpolation.Linear )
 
 		Gaffer.Metadata.registerValue(
-			"osl:shader:Pattern/ColorSpline:spline.interpolation", "userDefault",
-			Gaffer.SplineDefinitionInterpolation.MonotoneCubic
+			"osl:shader:Pattern/ColorRamp:ramp.interpolation", "userDefault",
+			IECore.RampInterpolation.MonotoneCubic
 		)
 		Gaffer.NodeAlgo.applyUserDefaults( s )
-		self.assertEqual( s["parameters"]["spline"]["interpolation"].getValue(), Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+		self.assertEqual( s["parameters"]["ramp"]["interpolation"].getValue(), IECore.RampInterpolation.MonotoneCubic )
+
+	def testActivatorMetadata( self ) :
+
+		s = self.compileShader( pathlib.Path( __file__ ).parents[1] / "GafferOSLTest" / "shaders" / "activatorMetadata.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		parameters = n["parameters"]
+		for i in range( 5 ):
+			parameters["i"].setValue( i )
+			self.assertEqual( Gaffer.Metadata.value( parameters["test1"], "layout:activator" ), i > 2 )
+
+		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), False )
+		parameters["s"].setValue( "foo" )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), True )
+
+		parameters["i"].setValue( 9 )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), False )
+		parameters["i2"].setValue( 8 )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), True )
+
+		self.assertEqual( Gaffer.Metadata.value( parameters["test4"], "layout:visibilityActivator" ), False )
+		parameters["c"].setValue( imath.Color3f( 0.2, 0.4, 0 ) )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test4"], "layout:visibilityActivator" ), True )
+
+	def testConditionalVisMetadata( self ) :
+
+		shader = self.compileShader( pathlib.Path( __file__ ).parents[1] / "GafferOSLTest" / "shaders" / "conditionalVisMetadata.osl" )
+		node = GafferOSL.OSLShader()
+		node.loadShader( shader )
+
+		parameters = node["parameters"]
+		for i in range( 5 ):
+			parameters["i"].setValue( i )
+			self.assertEqual( Gaffer.Metadata.value( parameters["test1"], "layout:activator" ), i > 2 )
+
+		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), False )
+		parameters["s"].setValue( "foo" )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), True )
+
+		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), False )
+		parameters["i2"].setValue( 72 )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), True )
 
 	def tearDown( self ) :
 
 		Gaffer.Metadata.deregisterValue( "osl:shader:ObjectProcessing/InFloat:name", "userDefault" )
 		Gaffer.Metadata.deregisterValue( "osl:shader:ObjectProcessing/InFloat:defaultValue", "userDefault" )
-		Gaffer.Metadata.deregisterValue( "osl:shader:Pattern/ColorSpline:spline.interpolation", "userDefault" )
-
-if __name__ == "__main__":
-	unittest.main()
+		Gaffer.Metadata.deregisterValue( "osl:shader:Pattern/ColorRamp:ramp.interpolation", "userDefault" )

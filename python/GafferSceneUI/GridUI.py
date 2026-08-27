@@ -52,110 +52,110 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the grid.
 			""",
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			The transform applied to the grid.
 			""",
 
-			"layout:section", "Transform",
+			"layout:section" : "Transform",
 
-		],
+		},
 
-		"dimensions" : [
+		"dimensions" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the grid in the x and y
 			axes. Use the transform to rotate the
 			grid into a different plane.
 			""",
 
-		],
+		},
 
-		"spacing" : [
+		"spacing" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the space between adjacent lines
 			in the grid.
 			"""
 
-		],
+		},
 
-		"gridColor" : [
+		"gridColor" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of the lines forming the main part
 			of the grid.
 			"""
 
-		],
+		},
 
-		"centerColor" : [
+		"centerColor" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of the two lines forming the central
 			cross of the grid.
 			"""
 
-		],
+		},
 
-		"borderColor" : [
+		"borderColor" : {
 
-			"description",
+			"description" :
 			"""
 			The colour of the lines forming the border
 			of the grid.
 			"""
 
-		],
+		},
 
-		"gridPixelWidth" : [
+		"gridPixelWidth" : {
 
-			"description",
+			"description" :
 			"""
 			The width of the lines forming the main part
 			of the grid. This width applies only to the
 			OpenGL representation of the grid.
 			"""
 
-		],
+		},
 
 
-		"centerPixelWidth" : [
+		"centerPixelWidth" : {
 
-			"description",
+			"description" :
 			"""
 			The width of the two lines forming the central
 			cross of the grid. This width applies only to the
 			OpenGL representation of the grid.
 			"""
 
-		],
+		},
 
-		"borderPixelWidth" : [
+		"borderPixelWidth" : {
 
-			"description",
+			"description" :
 			"""
 			The width of the lines forming the border
 			of the grid. This width applies only to the
 			OpenGL representation of the grid.
 			"""
 
-		],
+		},
 
 	}
 

@@ -51,7 +51,7 @@ class GAFFERSCENE_API RenderPasses : public GlobalsProcessor
 		explicit RenderPasses( const std::string &name=defaultName<RenderPasses>() );
 		~RenderPasses() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::RenderPasses, PassesTypeId, GlobalsProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::RenderPasses, RenderPassesTypeId, GlobalsProcessor );
 
 		Gaffer::StringVectorDataPlug *namesPlug();
 		const Gaffer::StringVectorDataPlug *namesPlug() const;

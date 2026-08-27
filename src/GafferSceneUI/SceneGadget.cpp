@@ -48,7 +48,7 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 using namespace boost::placeholders;
@@ -98,14 +98,18 @@ Box3f sceneBound( const ScenePlug *scene, const PathMatcher *include, const Path
 		}
 	};
 
-	if( include )
-	{
-		SceneAlgo::filteredParallelTraverse( scene, *include, f );
-	}
-	else
-	{
-		SceneAlgo::parallelTraverse( scene, f );
-	}
+	tbb::this_task_arena::isolate(
+		[&] () {
+			if( include )
+			{
+				SceneAlgo::filteredParallelTraverse( scene, *include, f );
+			}
+			else
+			{
+				SceneAlgo::parallelTraverse( scene, f );
+			}
+		}
+	);
 
 	return threadBounds.combine(
 		[] ( const Box3f b1, const Box3f b2 ) {
@@ -206,14 +210,7 @@ SceneGadget::SceneGadget()
 
 SceneGadget::~SceneGadget()
 {
-	// Make sure background task completes before anything
-	// it relies on is destroyed.
-	m_updateTask.reset();
-	// Then destroy controller and renderer before our OutputBuffer is
-	// destroyed, because the renderer might send pixels to it during shutdown.
-	m_controller.reset();
-	m_camera.reset();
-	m_renderer.reset();
+	clearRenderer();
 }
 
 void SceneGadget::setScene( GafferScene::ConstScenePlugPtr scene )
@@ -347,56 +344,64 @@ void SceneGadget::setRenderer( IECore::InternedString name )
 		return;
 	}
 
-	// Cancel any updates/renders we're currently doing.
+	// Remember any state we'll lose when destroying the renderer.
 
-	cancelUpdateAndPauseRenderer();
+	ConstScenePlugPtr currentScene = m_controller ? m_controller->getScene() : nullptr;
+	ConstContextPtr currentContext = m_controller ? m_controller->getContext() : nullptr;
+	const VisibleSet currentVisibleSet = m_controller ? m_controller->getVisibleSet() : VisibleSet();
+	const size_t currentMinimumExpansionDepth = m_controller ? m_controller->getMinimumExpansionDepth() : 0;
 
-	// Make new renderer, controller and output buffer.
+	// Cancel any updates/renders we're currently doing and destroy the
+	// renderer.
 
-	m_rendererName = name;
-	IECoreScenePreview::RendererPtr newRenderer;
-	std::unique_ptr<OutputBuffer> newOutputBuffer;
-	if( m_rendererName == "OpenGL" )
+	clearRenderer();
+
+	// Make new renderer and output buffer. Start with an OpenGL renderer since
+	// we always use one in some form, and it gives us something to fall back
+	// to if creation of a raytraced renderer fails.
+
+	m_renderer = IECoreScenePreview::Renderer::create( "OpenGL", IECoreScenePreview::Renderer::Interactive );
+
+	if( name != "OpenGL" )
 	{
-		newRenderer = IECoreScenePreview::Renderer::create( m_rendererName, IECoreScenePreview::Renderer::Interactive );
-	}
-	else
-	{
-		newRenderer = new IECoreScenePreview::CompoundRenderer( {
-			IECoreScenePreview::Renderer::create( "OpenGL", IECoreScenePreview::Renderer::Interactive ),
-			IECoreScenePreview::Renderer::create( m_rendererName, IECoreScenePreview::Renderer::Interactive ),
-		} );
+		try
+		{
+			m_renderer = new IECoreScenePreview::CompoundRenderer( {
+				m_renderer,
+				IECoreScenePreview::Renderer::create( name, IECoreScenePreview::Renderer::Interactive ),
+			} );
+			m_outputBuffer = std::make_unique<OutputBuffer>( m_renderer.get() );
+			m_outputBuffer->bufferChangedSignal().connect( boost::bind( &SceneGadget::bufferChanged, this ) );
+		}
+		catch( const std::exception &e )
+		{
+			IECore::msg( IECore::Msg::Warning, "SceneGadget::setRenderer", e.what() );
+		}
+		// Stop the OpenGL renderer from rendering objects even if we failed to
+		// make the raytraced renderer. This makes it more obvious that
+		// something went wrong.
 		ConstBoolDataPtr renderObjectsData = new BoolData( false );
-		newRenderer->option( "gl:renderObjects", renderObjectsData.get() );
-		newOutputBuffer = std::make_unique<OutputBuffer>( newRenderer.get() );
-		newOutputBuffer->bufferChangedSignal().connect( boost::bind( &SceneGadget::bufferChanged, this ) );
+		m_renderer->option( "gl:renderObjects", renderObjectsData.get() );
 	}
 
-	auto newController = std::make_unique<RenderController>(
-		m_controller ? m_controller->getScene() : nullptr,
-		m_controller ? m_controller->getContext() : nullptr,
-		newRenderer
-	);
+	// Make new RenderController and transfer saved state.
 
-	if( m_controller )
+	m_controller = std::make_unique<RenderController>( currentScene, currentContext, m_renderer );
+	if( m_outputBuffer )
 	{
-		newController->setVisibleSet( m_controller->getVisibleSet() );
-		newController->setMinimumExpansionDepth( m_controller->getMinimumExpansionDepth() );
+		// OutputBuffer will set up outputs directly in the renderer - the controller won't know about these
+		// outputs, so we must manually enable the manifest so that we get ids.
+		m_controller->setManifestRequired( true );
 	}
 
-	// Replace old controller and renderer, being careful to delete controller
-	// and camera first, since ObjectInterfaces must be deleted _before_ the
-	// renderer. We must also be careful to delete the old OutputBuffer after
-	// the old renderer, as the renderer may send pixels during destruction.
-
-	m_controller = std::move( newController );
-	m_camera.reset();
-	m_renderer = newRenderer;
-	m_outputBuffer = std::move( newOutputBuffer );
+	m_controller->setVisibleSet( currentVisibleSet );
+	m_controller->setMinimumExpansionDepth( currentMinimumExpansionDepth );
 
 	m_controller->updateRequiredSignal().connect(
 		boost::bind( &SceneGadget::dirty, this, DirtyType::Layout )
 	);
+
+	m_rendererName = name;
 
 	// Give our OpenGL options, selection and viewport camera to the new
 	// renderer.
@@ -509,13 +514,14 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	auto viewportGadget = ancestor<ViewportGadget>();
 	if( m_outputBuffer )
 	{
+		std::shared_ptr<const RenderManifest> manifest = m_controller->renderManifest();
 		const V2f rasterPosition = viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p1, this );
 		float bufferDepth;
 		if( uint32_t id = m_outputBuffer->idAt( rasterPosition / viewportGadget->getViewport(), bufferDepth ) )
 		{
 			if( bufferDepth < depth )
 			{
-				if( auto bufferPath = m_controller->pathForID( id ) )
+				if( auto bufferPath = manifest->pathForID( id ) )
 				{
 					if( m_selectionMask )
 					{
@@ -630,7 +636,7 @@ size_t SceneGadget::objectsAt(
 		Box2f ndcBox;
 		ndcBox.extendBy( viewportGadget->gadgetToRasterSpace( corner0InGadgetSpace, this ) / viewportGadget->getViewport() );
 		ndcBox.extendBy( viewportGadget->gadgetToRasterSpace( corner1InGadgetSpace, this ) / viewportGadget->getViewport() );
-		PathMatcher bufferPaths = m_controller->pathsForIDs( m_outputBuffer->idsAt( ndcBox ) );
+		PathMatcher bufferPaths = m_controller->renderManifest()->pathsForIDs( m_outputBuffer->idsAt( ndcBox ) );
 		if( m_selectionMask )
 		{
 			Context::Scope scope( getContext() );
@@ -766,7 +772,7 @@ void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 	m_renderer->option( "gl:selection", d.get() );
 	if( m_outputBuffer )
 	{
-		m_outputBuffer->setSelection( m_controller->idsForPaths( selection, /* createIfMissing = */ true ) );
+		m_outputBuffer->setSelection( m_controller->renderManifest()->acquireIDs( selection ) );
 	}
 	dirty( DirtyType::Render );
 }
@@ -1073,4 +1079,18 @@ void SceneGadget::cancelUpdateAndPauseRenderer()
 	{
 		m_renderer->pause();
 	}
+}
+
+void SceneGadget::clearRenderer()
+{
+	// Make sure background task completes before anything
+	// it relies on is destroyed.
+	m_updateTask.reset();
+	// Then destroy controller and renderer before our OutputBuffer is
+	// destroyed, because the renderer might send pixels to it during shutdown.
+	m_controller.reset();
+	m_camera.reset();
+	m_renderer.reset();
+	// Destroy OutputBuffer.
+	m_outputBuffer.reset();
 }

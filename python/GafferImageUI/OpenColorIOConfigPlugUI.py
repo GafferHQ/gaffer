@@ -56,9 +56,10 @@ Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "layout:sectio
 
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:$OCIO", "" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:ACES 2.0 - CG Config", "${GAFFER_ROOT}/openColorIO/cg-config-v3.0.0_aces-v2.0_ocio-v2.4.ocio" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:ACES 2.0 - Studio Config", "${GAFFER_ROOT}/openColorIO/studio-config-v3.0.0_aces-v2.0_ocio-v2.4.ocio" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:ACES 1.3 - CG Config", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:ACES 1.3 - Studio Config", "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1" )
-Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:Legacy (Gaffer 1.2)", "${GAFFER_ROOT}/openColorIO/config.ocio" )
 
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "presetsPlugValueWidget:allowCustom", True )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "presetsPlugValueWidget:customWidgetType", "GafferUI.FileSystemPathPlugValueWidget" )
@@ -77,7 +78,9 @@ Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "openColorIO.displayTransform"
 
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:section", "Variables" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget" )
-Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:customWidget:footer:widgetType", "GafferImageUI.OpenColorIOContextUI._VariablesFooter" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:customWidget:footer:widgetType", "GafferUI.PlugCreationWidget" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "plugCreationWidget:includedTypes", "Gaffer.StringPlug" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "plugCreationWidget:action", "addNameValuePlug" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:customWidget:footer:index", -1 )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables.*", "deletable", True )
 
@@ -89,15 +92,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"openColorIO" : [
+		"openColorIO" : {
 
-			"layout:section", "OpenColorIO",
+			"layout:section" : "OpenColorIO",
 
-		],
+		},
 
-		"openColorIO.config" : [
+		"openColorIO.config" : {
 
-			"description",
+			"description" :
 			"""
 			The OpenColorIO config to use.
 
@@ -105,21 +108,21 @@ Gaffer.Metadata.registerNode(
 			of the node graph, or to perform wedging across several contexts.
 			""",
 
-		],
+		},
 
-		"openColorIO.workingSpace" : [
+		"openColorIO.workingSpace" : {
 
-			"description",
+			"description" :
 			"""
 			The color space in which Gaffer performs image processing. ImageReaders will automatically load
 			images into this space, and ImageWriters will automatically convert images from this space.
 			""",
 
-		],
+		},
 
-		"openColorIO.variables" : [
+		"openColorIO.variables" : {
 
-			"description",
+			"description" :
 			"""
 			Variables used to customise the default
 			[OpenColorIO context](https://opencolorio.readthedocs.io/en/latest/guides/authoring/overview.html#environment).
@@ -130,12 +133,12 @@ Gaffer.Metadata.registerNode(
 			of the node graph, or to perform wedging across several variable values.
 			""",
 
-		],
+		},
 
-		"openColorIO.displayTransform" : [
+		"openColorIO.displayTransform" : {
 
-			"label", "UI Display Transform",
-			"description",
+			"label" : "UI Display Transform",
+			"description" :
 			"""
 			The colour transform used for showing colours in the UI - in swatches and colour pickers etc.
 			This is a combination of an OpenColorIO Display and an OpenColorIO View.
@@ -143,7 +146,7 @@ Gaffer.Metadata.registerNode(
 			> Note : The Viewer has its own display transform configured in the Viewer itself.
 			""",
 
-		],
+		},
 
 	}
 
@@ -297,6 +300,7 @@ def connectToApplication( application ) :
 	)
 
 	application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+	GafferUI.ScriptWindow.instanceCreatedSignal().connect( __scriptWindowCreated )
 
 ## \deprecated. Use `connectToApplication()` instead.
 def connect( script ) :
@@ -314,7 +318,10 @@ def __scriptAdded( container, script ) :
 		Gaffer.NodeAlgo.applyUserDefaults( plug )
 
 	script.plugDirtiedSignal().connect( __scriptPlugDirtied )
-	__scriptPlugDirtied( plug )
+
+def __scriptWindowCreated( scriptWindow ) :
+
+	__updateDisplayTransforms( scriptWindow.scriptNode() )
 
 def __displayTransformProcessor( config, context, workingSpace, display, view ) :
 
@@ -358,10 +365,16 @@ def __widgetDisplayTransform( config, context, workingSpace, display, view ) :
 
 def __scriptPlugDirtied( plug ) :
 
-	if plug.getName() != "openColorIO" :
+	if plug.getName() == "openColorIO" :
+		__updateDisplayTransforms( plug.node() )
+
+def __updateDisplayTransforms( scriptNode ) :
+
+	plug = scriptNode.getChild( "openColorIO" )
+	if plug is None :
 		return
 
-	with plug.parent().context() :
+	with scriptNode.context() :
 		try :
 			config, context = GafferImage.OpenColorIOAlgo.currentConfigAndContext()
 			currentDisplay, currentView, currentValid = DisplayTransformPlugValueWidget.parseValue( plug["displayTransform"].getValue() )
@@ -375,7 +388,7 @@ def __scriptPlugDirtied( plug ) :
 				functools.partial( _viewDisplayTransformCreator, display, view )
 			)
 
-	scriptWindow = GafferUI.ScriptWindow.acquire( plug.parent(), createIfNecessary = False )
+	scriptWindow = GafferUI.ScriptWindow.acquire( scriptNode, createIfNecessary = False )
 	if scriptWindow is not None :
-		workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( plug.parent().context() )
+		workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( scriptNode.context() )
 		scriptWindow.setDisplayTransform( __widgetDisplayTransform( config, context, workingSpace, currentDisplay, currentView ) )

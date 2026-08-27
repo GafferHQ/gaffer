@@ -175,6 +175,3 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 
 		w = GafferUI.TextWidget( placeholderText = "test" )
 		self.assertEqual( w.getPlaceholderText(), "test" )
-
-if __name__ == "__main__":
-	unittest.main()

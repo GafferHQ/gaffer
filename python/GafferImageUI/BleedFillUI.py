@@ -45,15 +45,15 @@ Gaffer.Metadata.registerNode(
 	"Fills in areas of low alpha in the image by blurring in contributions from nearby pixels.",
 
 	plugs = {
-		"expandDataWindow" : [
+		"expandDataWindow" : {
 
-			"description",
+			"description" :
 			"""
 			Expand the data window to cover the display window.  The new data will be filled
 			with blurred contributions from nearby pixels ( the same as any regions of low
 			alpha within the original data window ).
 			""",
 
-		],
+		},
 	}
 )

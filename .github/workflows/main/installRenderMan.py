@@ -1,0 +1,267 @@
+#!/usr/bin/env python
+##########################################################################
+#
+#  Copyright (c) 2025, Cinesite VFX Ltd. All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#
+#	 * Redistributions of source code must retain the above copyright
+#	   notice, this list of conditions and the following disclaimer.
+#
+#	 * Redistributions in binary form must reproduce the above copyright
+#	   notice, this list of conditions and the following disclaimer in the
+#	   documentation and/or other materials provided with the distribution.
+#
+#	 * Neither the name of Image Engine Design nor the names of any
+#	   other contributors to this software may be used to endorse or
+#	   promote products derived from this software without specific prior
+#	   written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+##########################################################################
+
+import argparse
+import bs4
+import os
+import pathlib
+import re
+import shutil
+import subprocess
+import sys
+import time
+
+import requests
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+	"--version",
+	help = "The version of RenderMan to install.",
+	default = "26.3",
+	choices = [ "26.3", "26.4", "27.0", "27.1", "27.2", "27.3" ],
+)
+parser.add_argument(
+	"--dailyBuildDate",
+	help = "The date of the daily build in YYYY-MM-DD format.",
+	default = "",
+)
+parser.add_argument(
+	"--outputFormat",
+	help = "A format string that specifies the output printed "
+		"by this script. May contain an {rmanTree} token that "
+		"will be substituted with the installation location.",
+	default = "",
+)
+parser.add_argument(
+	"--maxAttempts",
+	help = "The maximum number of download attempts made.",
+	default = 5,
+	type = int,
+)
+args = parser.parse_args()
+
+# RenderMan is only available for download through a web interface connected to
+# the RenderMan support forums, and the download requires valid credentials.
+# Start by "logging in" with our user name and password. This will return some
+# cookies we can use to authenticate our further requests.
+
+cookies = requests.post(
+	"https://renderman.pixar.com/forum/auth/ajax-login",
+	{
+		"username" : os.environ["RENDERMAN_DOWNLOAD_USER"],
+		"password" : os.environ["RENDERMAN_DOWNLOAD_PASSWORD"],
+	}
+).cookies
+
+if "rmanprofile" not in cookies :
+	sys.stderr.write( "Error : Login failed\n" )
+	sys.exit( 1 )
+
+# Figure out the download URL and request data.
+
+if args.dailyBuildDate :
+
+	# Download the web page that lists the daily builds for the chosen
+	# date.
+
+	dailyBuilds = requests.get(
+		"https://renderman.pixar.com/forum/daily_builds",
+		{
+			"action" : "showbuilds",
+			"datepicker" : args.dailyBuildDate
+		},
+		cookies = cookies,
+	)
+
+	soup = bs4.BeautifulSoup( dailyBuilds.text, "html.parser" )
+
+	# The page contains a series of forms, each for downloading a particular
+	# version and platform. Search for one containing the version and platform
+	# we care about. We identify this by an input within the form that specifies
+	# the filename.
+
+	platformSuffix = "-linuxRHEL9_gcc11icx232.x86_64.rpm" if os.name != "nt" else "-windows11_vc143icx232.x86_64.msi"
+	fileNameRegex = re.compile( f"RenderManProServer-{args.version}_[0-9]+{platformSuffix}" )
+
+	input = soup.find( "input", attrs = { "name" : "filename", "value" : fileNameRegex } )
+	if input is None :
+		sys.stderr.write( f'No download found matching "{fileNameRegex.pattern}"\n' )
+		sys.exit( 1 )
+
+	form = input.parent
+
+	# The inputs to this form contain all the parameter we need to make a download
+	# request. So grab those.
+
+	downloadParameters = {
+		input["name"] : input["value"]
+		for input in form.find_all( "input" )
+		if input.has_attr( "value" )
+	}
+	downloadParameters["action"] = "dodownload"
+	downloadURL = "https://renderman.pixar.com/forum/daily_builds_download"
+
+else :
+
+	# The release versions of RenderMan are listed on a download page, each
+	# with a link that takes you to _another_ page which has the file ids
+	# for the download for each platform. At some point we should scrape that
+	# to figure out the files given the RenderMan version we want, but for now
+	# we just hardcode the ids for the versions we care about.
+
+	fileId, distId = {
+		"26.3-posix" : ( "12545", "4483"),
+		"26.3-nt" : ( "12544", "4483"),
+		"27.0-posix" : ( "12607", "4492"),
+		"27.0-nt" : ( "12604", "4492"),
+		"27.1-posix" : ( "12718", "4518"),
+		"27.1-nt" : ( "12716", "4518"),
+		"27.2-posix" : ( "12773", "4545"),
+		"27.2-nt" : ( "12771", "4545"),
+		"27.3-posix" : ( "12826", "4583"),
+		"27.3-nt" : ( "12828", "4583"),
+	}[f"{args.version}-{os.name}"]
+
+	downloadURL = "https://renderman.pixar.com/forum/download/release"
+	downloadParameters = {
+		"fileid" : fileId,
+		"distid" : distId,
+		"action" : "dodownload",
+	}
+
+# Download.
+
+fileName = "RenderMan.msi" if os.name == "nt" else "RenderMan.rpm"
+
+for attempt in range( args.maxAttempts ) :
+
+	try :
+
+		download = requests.get(
+			downloadURL,
+			downloadParameters,
+			cookies = cookies,
+			allow_redirects = True,
+			stream = True,
+			# This timeout causes the request to raise an exception if it hasn't received a response from
+			# the server within this number of seconds. It isn't a time limit on the download itself. If
+			# left unspecified, the request will never time out.
+			timeout = 60,
+		)
+		download.raise_for_status()
+
+		with open( fileName, "wb" ) as outFile :
+			shutil.copyfileobj( download.raw, outFile )
+
+		break
+
+	except requests.exceptions.RequestException as e :
+
+		if isinstance( e, requests.exceptions.HTTPError ) :
+			# Fail immediately for non-transient server error codes.
+			if e.response.status_code not in ( 500, 502, 503, 504 ) :
+				sys.stderr.write( f"Download failed with status {e.response.status_code}\n" )
+				raise
+
+		if attempt == args.maxAttempts - 1 :
+			sys.stderr.write( f"Download failed after {args.maxAttempts} attempts\n" )
+			raise
+
+		delay = 10 * 2 ** attempt
+		sys.stderr.write( f"Download failed ({e}). Retrying in {delay} seconds\n" )
+		time.sleep( delay )
+
+# Install.
+
+if os.name == "nt" :
+
+	subprocess.check_call(
+		[
+			"powershell.exe",
+			"Start-Process", "msiexec.exe", "-Wait", "-ArgumentList",
+			"\"/i {} /qn\"".format( os.path.abspath( fileName ) )
+		],
+	)
+
+	installLocation = pathlib.Path( rf"c:\Program Files\Pixar\RenderManProServer-{args.version}" )
+
+else :
+
+	# The `--force` flag is necessary because RenderMan 27.1 contains files in
+	# `/usr/lib/.build-id` that conflict with RenderMan 27.0. These files are
+	# outside RMANTREE though so we can safely ignore the conflict as it doesn't
+	# impact our builds.
+	subprocess.check_call(
+		[ "rpm", "-i", "--force", fileName ]
+	)
+
+	installLocation = pathlib.Path( f"/opt/pixar/RenderManProServer-{args.version}" )
+
+# Remove unnecessary bits. The default installation is a whopping 2.9G, and
+# pushes us to the edge of available space on the GitHub runners. We could
+# probably be more aggressive if we needed, but this alone clears over 1G.
+
+os.remove( fileName )
+
+for path in [
+	installLocation / "lib" / "3rdparty" / "Qt-6.5.3",
+	installLocation / "lib" / "RenderManAssetLibrary",
+	installLocation / "lib" / "python2.7",
+	installLocation / "lib" / "python3.7",
+	installLocation / "lib" / "python3.9",
+	installLocation / "lib" / "python3.11",
+	installLocation / "lib" / "textures",
+] :
+	if path.exists() :
+		shutil.rmtree( path )
+
+# Install the license file. Details of how we store this securely are
+# documented here :
+#
+#  https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#storing-large-secrets
+
+subprocess.check_call( [
+	"gpg", "--quiet", "--batch", "--yes", "--decrypt",
+	f"--passphrase={os.environ['RENDERMAN_LICENSE_PASSPHRASE']}",
+	"--output", installLocation.parent / "pixar.license",
+	pathlib.Path( __file__ ).parent / "pixar.license.gpg"
+] )
+
+if args.outputFormat :
+	print(
+		args.outputFormat.format(
+			rmanTree = installLocation
+		)
+	)

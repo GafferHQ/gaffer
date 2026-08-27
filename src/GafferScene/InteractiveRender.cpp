@@ -36,11 +36,14 @@
 
 #include "GafferScene/InteractiveRender.h"
 
+#include "GafferScene/OptionTweaks.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/SceneProcessor.h"
+#include "GafferScene/VisibleSetData.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -84,6 +87,15 @@ PendingUpdates &pendingUpdates()
 }
 
 const InternedString g_rendererOptionName( "option:render:defaultRenderer" );
+const InternedString g_renderCameraOptionName( "option:render:camera" );
+const InternedString g_visibleSetName( "ui:scene:visibleSet" );
+const VisibleSet g_defaultVisibleSet = VisibleSet();
+
+unordered_set<string> &activeRenderIds()
+{
+	static unordered_set<string> g_activeRenderIds;
+	return g_activeRenderIds;
+}
 
 } // anon namespace
 
@@ -156,6 +168,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	addChild( new ScenePlug( "in" ) );
 	addChild( new StringPlug( "renderer" ) );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new BoolPlug( "useVisibleSet" ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "resolvedRenderer", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ObjectPlug( "messages", Plug::Out, new MessagesData(), Plug::Default & ~Plug::Serialisable ) );
@@ -171,7 +184,15 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	adaptors->getChild<StringPlug>( "renderer" )->setInput( resolvedRendererPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );
 
-	outPlug()->setInput( inPlug() );
+	OptionTweaksPtr optionTweaks = new OptionTweaks();
+	setChild( "__optionTweaks", optionTweaks );
+	optionTweaks->inPlug()->setInput( inPlug() );
+
+	TweakPlugPtr tweakPlug = new TweakPlug( "render:defaultRenderer", new StringPlug(), TweakPlug::CreateIfMissing );
+	tweakPlug->valuePlug()->setInput( rendererPlug() );
+	optionTweaks->tweaksPlug()->addChild( tweakPlug );
+
+	outPlug()->setInput( optionTweaks->outPlug() );
 
 	// We can't use plugDirtiedSignal as we need to update messagesUpdateCountPlug
 	// due to message output during render startup. We implement acceptsInput
@@ -216,54 +237,64 @@ const Gaffer::IntPlug *InteractiveRender::statePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::BoolPlug *InteractiveRender::useVisibleSetPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::BoolPlug *InteractiveRender::useVisibleSetPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
 ScenePlug *InteractiveRender::outPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 3 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
 }
 
 const ScenePlug *InteractiveRender::outPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 3 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::StringPlug *InteractiveRender::resolvedRendererPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::StringPlug *InteractiveRender::resolvedRendererPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 ObjectPlug *InteractiveRender::messagesPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
 }
 
 const ObjectPlug *InteractiveRender::messagesPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
 }
 
 ScenePlug *InteractiveRender::adaptedInPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
 }
 
 const ScenePlug *InteractiveRender::adaptedInPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 6 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::IntPlug *InteractiveRender::messageUpdateCountPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 7 );
+	return getChild<IntPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::IntPlug *InteractiveRender::messageUpdateCountPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 7 );
+	return getChild<IntPlug>( g_firstPlugIndex + 8 );
 }
 
 Gaffer::Context *InteractiveRender::getContext()
@@ -306,7 +337,7 @@ IECore::DataPtr InteractiveRender::command( const IECore::InternedString name, c
 
 void InteractiveRender::plugSet( const Gaffer::Plug *plug )
 {
-	if( plug == rendererPlug() || plug == statePlug() )
+	if( plug == rendererPlug() || plug == statePlug() || plug == useVisibleSetPlug() )
 	{
 		try
 		{
@@ -362,14 +393,20 @@ void InteractiveRender::update()
 			"",
 			m_messageHandler.get()
 		);
+		activeRenderIds().insert( Private::RendererAlgo::renderID( m_renderer.get() ) );
 
 		m_controller.reset(
 			new RenderController( adaptedInPlug(), effectiveContext(), m_renderer )
 		);
-		m_controller->setMinimumExpansionDepth( numeric_limits<size_t>::max() );
-		m_controller->updateRequiredSignal().connect(
+		m_updateRequiredConnection = m_controller->updateRequiredSignal().connect(
 			boost::bind( &InteractiveRender::update, this )
 		);
+		m_scriptMetadataChangedConnection = Metadata::nodeValueChangedSignal( scriptNode() ).connect(
+			boost::bind( &InteractiveRender::scriptMetadataChanged, this, ::_2 )
+		);
+
+		// We can now use a live render manifest from the controller, so get rid of the saved manifest
+		m_lastRenderManifest.reset();
 	}
 
 	// We need to pause to make edits, even if we want to
@@ -387,6 +424,27 @@ void InteractiveRender::update()
 
 	{
 		IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
+		Signals::BlockedConnection blockedConnection( m_updateRequiredConnection );
+		if( useVisibleSetPlug()->getValue() )
+		{
+			// We can't use GafferSceneUI::ScriptNodeAlgo::getVisibleSet() here, so instead
+			// we query the metadata directly.
+			const auto data = Metadata::value<VisibleSetData>( scriptNode(), g_visibleSetName );
+			VisibleSet visibleSet = data ? data->readable() : VisibleSet();
+			// As a user convenience, we always include the render camera in the Visible Set
+			// to mimic the Visible Set behaviour expected from the Viewer.
+			if( ConstStringDataPtr renderCamera = inPlug()->globals()->member<StringData>( g_renderCameraOptionName ) )
+			{
+				visibleSet.inclusions.addPath( renderCamera->readable() );
+			}
+			m_controller->setVisibleSet( visibleSet );
+			m_controller->setMinimumExpansionDepth( 0 );
+		}
+		else
+		{
+			m_controller->setMinimumExpansionDepth( numeric_limits<size_t>::max() );
+			m_controller->setVisibleSet( g_defaultVisibleSet );
+		}
 		m_controller->update();
 	}
 
@@ -410,11 +468,38 @@ Gaffer::ConstContextPtr InteractiveRender::effectiveContext()
 	}
 }
 
+bool InteractiveRender::renderIsActive( const std::string &renderId )
+{
+	return activeRenderIds().count( renderId );
+}
+
 void InteractiveRender::stop()
 {
+	// A Catalogue may need to access the render manifest as part of saving out the images from this
+	// render when it stops. To allow for this, we hold onto the manifest when we release the
+	// controller ( which is what triggers the render to stop and the catalogue to save the images to
+	// disk ). In theory, we could try to track when the render has finished signalling all catalogues
+	// and then release this, but it's much simpler to hold onto it until the next render starts.
+	if( m_controller )
+	{
+		m_lastRenderManifest = m_controller->renderManifest();
+	}
+
+	activeRenderIds().erase( Private::RendererAlgo::renderID( m_renderer.get() ) );
+
+	m_scriptMetadataChangedConnection.disconnect();
 	m_controller.reset();
 	m_renderer.reset();
 	m_state = Stopped;
+
+}
+
+void InteractiveRender::scriptMetadataChanged( IECore::InternedString key )
+{
+	if( key == g_visibleSetName && useVisibleSetPlug()->getValue() )
+	{
+		update();
+	}
 }
 
 // Called on a background thread when data is received on the driver.
@@ -492,6 +577,16 @@ void InteractiveRender::affects( const Plug *input, AffectedPlugsContainer &outp
 	}
 }
 
+std::shared_ptr<const RenderManifest> InteractiveRender::renderManifest() const
+{
+	if( m_controller )
+	{
+		return m_controller->renderManifest();
+	}
+
+	return m_lastRenderManifest;
+}
+
 void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h );
@@ -505,7 +600,7 @@ void InteractiveRender::hash( const Gaffer::ValuePlug *output, const Gaffer::Con
 		const std::string renderer = rendererPlug()->getValue();
 		if( renderer.empty() )
 		{
-			inPlug()->globalsPlug()->hash( h );
+			h.append( inPlug()->globalsHash() );
 		}
 		else
 		{

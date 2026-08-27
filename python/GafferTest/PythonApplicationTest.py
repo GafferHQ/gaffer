@@ -67,6 +67,3 @@ class PythonApplicationTest( GafferTest.TestCase ) :
 	def testName( self ) :
 
 		subprocess.check_call( [ str( Gaffer.executablePath() ), "python", str( pathlib.Path( __file__ ).parent / "pythonScripts" / "name.py" ) ] )
-
-if __name__ == "__main__":
-	unittest.main()

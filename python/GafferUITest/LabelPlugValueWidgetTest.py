@@ -39,6 +39,7 @@ import unittest
 import imath
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
@@ -137,5 +138,13 @@ class LabelPlugValueWidgetTest( GafferUITest.TestCase ) :
 		self.assertFalse( GafferUI.LabelPlugValueWidget._hasUserValue( node["user"]["o"]["x"] ) )
 		self.assertFalse( GafferUI.LabelPlugValueWidget._hasUserValue( node["user"]["o"]["y"] ) )
 
-if __name__ == "__main__":
-	unittest.main()
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHasUserValuePerformance( self ) :
+
+		spreadsheet = Gaffer.Spreadsheet()
+		for i in range( 10 ) :
+			spreadsheet["rows"].addColumn( Gaffer.V3fPlug() )
+		spreadsheet["rows"].addRows( 1000 )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferUI.LabelPlugValueWidget._hasUserValue( spreadsheet["rows" ] )

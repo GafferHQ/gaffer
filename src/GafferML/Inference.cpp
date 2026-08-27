@@ -43,6 +43,10 @@
 #include "IECore/StringAlgo.h"
 
 #include "onnxruntime_cxx_api.h"
+#include "onnxruntime_run_options_config_keys.h"
+
+#include "boost/algorithm/string.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include <mutex>
 #include <condition_variable>
@@ -60,10 +64,28 @@ using namespace GafferML;
 namespace
 {
 
+std::vector<std::filesystem::path> customOpLibraryPaths()
+{
+	std::vector<std::filesystem::path> paths;
+	if( const char *envVar = std::getenv( "GAFFERML_CUSTOM_OPS_LIBRARIES" ) )
+	{
+		string s( envVar );
+		boost::trim_if( s, boost::is_any_of( "," ) );
+		boost::split( paths, s, boost::is_any_of( "," ), boost::token_compress_on );
+	}
+	return paths;
+}
+
 Ort::Env &acquireEnv()
 {
 	static Ort::Env g_env( ORT_LOGGING_LEVEL_WARNING, "Gaffer" );
 	return g_env;
+}
+
+bool useCUDA()
+{
+	const char *c = getenv( "GAFFERML_USE_CUDA" );
+	return c && strcmp( c, "0" ) != 0;
 }
 
 // Constructing a session (loading a model) is relatively expensive,
@@ -94,7 +116,26 @@ Ort::Session &acquireSession( const std::string &fileName )
 		throw Exception( fmt::format( "Could not find file \"{}\" on GAFFERML_MODEL_PATHS", fileName ) );
 	}
 
-	it = g_map.try_emplace( fileName, acquireEnv(), path.c_str(), Ort::SessionOptions() ).first;
+	auto sessionOpt = Ort::SessionOptions();
+	for( const auto &customLibraryPath : customOpLibraryPaths() )
+	{
+		sessionOpt.RegisterCustomOpsLibrary( customLibraryPath.c_str() );
+	}
+
+	if( useCUDA() )
+	{
+		try
+		{
+			OrtCUDAProviderOptions cudaOptions;
+			sessionOpt.AppendExecutionProvider_CUDA( cudaOptions );
+		}
+		catch( const std::exception &e )
+		{
+			throw IECore::Exception( fmt::format( "Error Initializing CUDA inference : {}", e.what() ) );
+		}
+	}
+
+	it = g_map.try_emplace( fileName, acquireEnv(), path.c_str(), sessionOpt ).first;
 	return it->second;
 }
 
@@ -341,6 +382,14 @@ void Inference::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		// to check for cancellation via our AsyncWaiter.
 
 		Ort::RunOptions runOptions;
+		if( useCUDA() )
+		{
+			/// \todo Use `Env::GetEpDevices()` to get the names of all
+			/// available devices, instead of assuming a single `gpu:0` device.
+			/// We need to upgrade the ONNX version before we can do that
+			/// though.
+			runOptions.AddConfigEntry( kOrtRunOptionsConfigEnableMemoryArenaShrinkage, "gpu:0" );
+		}
 		AsyncWaiter waiter( runOptions );
 
 		session.RunAsync(

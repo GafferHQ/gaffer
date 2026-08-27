@@ -43,22 +43,22 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"tensor" : [
+		"tensor" : {
 
-			"description",
+			"description" :
 			"""
 			The input tensor to be turned into an image. Typically this would be connected
 			to the output of an Inference node that is doing image processing.
 			""",
 
-			"plugValueWidget:type", "",
-			"nodule:type", "GafferUI::StandardNodule",
+			"plugValueWidget:type" : "",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"channels" : [
+		"channels" : {
 
-			"description",
+			"description" :
 			"""
 			The names to give to the channels in the output image. These
 			channels are unpacked from the tensor in the order in which they are
@@ -68,11 +68,11 @@ Gaffer.Metadata.registerNode(
 			when unpacking.
 			""",
 
-		],
+		},
 
-		"interleavedChannels" : [
+		"interleavedChannels" : {
 
-			"description",
+			"description" :
 			"""
 			Indicates that the channels are interleaved in the input tensor, in
 			which case they will be deinterleaved when converting to the output
@@ -80,16 +80,16 @@ Gaffer.Metadata.registerNode(
 			model from which the tensor is obtained.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The output image.
 			""",
 
-		],
+		},
 
 	}
 )

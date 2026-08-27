@@ -264,6 +264,3 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 		# process, so we expect it to have been transferred to the
 		# background thread and remained active there for the duration.
 		self.assertEqual( m.plugStatistics( s["n"]["product"] ).computeCount, 10000 )
-
-if __name__ == "__main__":
-	unittest.main()

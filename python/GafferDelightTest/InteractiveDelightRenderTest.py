@@ -48,41 +48,26 @@ import GafferDelight
 class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "3Delight"
+	pointInstancerSupported = True
 
-	# Temporarily disable this test (which is implemented in the
-	# base class) because it fails. The issue is that we're automatically
-	# instancing the geometry for the two lights, and that appears to
-	# trigger a bug in 3delight where the sampling goes awry.
-	@unittest.skip( "Awaiting feedback from 3delight developers" )
-	def testAddLight( self ) :
-
-		pass
-
-	# Disable this test for now as we don't have light linking support in
-	# 3Delight, yet.
 	@unittest.skip( "No light linking support just yet" )
-	def testLightLinking( self ) :
+	def testBasicLightLinking( self ) :
 
 		pass
 
-	# Disable this test for now as we don't have light linking support in
-	# 3Delight, yet.
+	@unittest.skip( "No light linking support just yet" )
+	def testLinkedLightsAttributes( self ) :
+
+		pass
+
 	@unittest.skip( "No light linking support just yet" )
 	def testHideLinkedLight( self ) :
 
 		pass
 
-	# Disable this test for now as we don't have light filter support in
-	# 3Delight, yet.
-	@unittest.skip( "No light filter support just yet" )
-	def testLightFilters( self ) :
 
-		pass
-
-	# Disable this test for now as we don't have light filter support in
-	# 3Delight, yet.
-	@unittest.skip( "No light filter support just yet" )
-	def testLightFiltersAndSetEdits( self ) :
+	@unittest.skip( "No shadow linking support just yet" )
+	def testShadowLinking( self ) :
 
 		pass
 
@@ -121,5 +106,18 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		return light, light["parameters"]["i_color"]
 
-if __name__ == "__main__":
-	unittest.main()
+	def _createSpotLight( self ) :
+
+		light = GafferOSL.OSLLight()
+		light.loadShader( "spotLight" )
+		light["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", False ) )
+
+		return light, light["parameters"]["i_color"]
+
+	def _createLightFilter( self ) :
+
+		self.skipTest( "Light filters not supported" )
+
+	def _createGobo( self ) :
+
+		self.skipTest( "Light filters not supported" )

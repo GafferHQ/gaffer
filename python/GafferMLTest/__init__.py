@@ -40,7 +40,4 @@ from .DataToTensorTest import DataToTensorTest
 from .InferenceTest import InferenceTest
 from .ImageToTensorTest import ImageToTensorTest
 from .TensorToImageTest import TensorToImageTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+from .TensorToMeshTest import TensorToMeshTest

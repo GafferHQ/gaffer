@@ -52,9 +52,9 @@ class PopupWindow( GafferUI.Window ) :
 
 		self.__popupParent = None
 
-		self._qtWidget().setWindowFlags( QtCore.Qt.Popup )
+		self._qtWidget().setWindowFlags( QtCore.Qt.Popup | QtCore.Qt.FramelessWindowHint )
 		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
-		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
+		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent, fallbackResult = None )
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
@@ -84,6 +84,16 @@ class PopupWindow( GafferUI.Window ) :
 
 		return GafferUI.Widget.parent( self )
 
+	@classmethod
+	def showWarning( cls, warning, parent = None, center = None ) :
+
+		with GafferUI.PopupWindow() as cls.__warningPopup :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				GafferUI.Image( "warningSmall.png" )
+				GafferUI.Label( f"<h4>{warning}</h4>" )
+
+		cls.__warningPopup.popup( parent = parent, center = center )
+
 	def __paintEvent( self, event ) :
 
 		painter = QtGui.QPainter( self._qtWidget() )
@@ -98,5 +108,13 @@ class PopupWindow( GafferUI.Window ) :
 
 	def __keyPress( self, widget, event ) :
 
+		## \todo This automatic-close behaviour is not always wanted.
+		# `PlugPopup` has its own version anyway and we have to disable it
+		# manually for `VectorDataWidget`. I suspect we can consolidate
+		# most other usages into a `PopupWindow.showWarning()` function,
+		# and move the auto-close there.
 		if event.key == "Return" :
-			self.close()
+			# The QAbstractItemView in VectorDataWidget handles auto-close
+			# itself, and gets upset if we do it first.
+			if self.ancestor( GafferUI.VectorDataWidget ) is None :
+				self.close()

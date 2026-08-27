@@ -161,6 +161,3 @@ class StringPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		w = weakref.ref( w )
 		self.assertIsNone( w() )
-
-if __name__ == "__main__":
-	unittest.main()

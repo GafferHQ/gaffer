@@ -83,6 +83,14 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 		Gaffer::StringPlug *resolvedRendererPlug();
 		const Gaffer::StringPlug *resolvedRendererPlug() const;
 
+		using RenderSignal = Gaffer::Signals::Signal<void ( const Render * ), Gaffer::Signals::CatchingCombiner<void>>;
+		// Signal emitted prior to rendering. When executing a sequence, this is
+		// emitted once per frame.
+		static RenderSignal &preRenderSignal();
+		// Signal emitted after a render has been completed. When executing a
+		// sequence, this is emitted once per frame.
+		static RenderSignal &postRenderSignal();
+
 	protected :
 
 		void preTasks( const Gaffer::Context *context, Tasks &tasks ) const override;

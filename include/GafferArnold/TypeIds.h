@@ -42,24 +42,22 @@ namespace GafferArnold
 
 enum TypeId
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905, // Available for reuse
-	ArnoldRenderTypeId = 110906, // Available for reuse
-	ArnoldDisplacementTypeId = 110907,
-	ArnoldMeshLightTypeId = 110908,
-	ArnoldAOVShaderTypeId = 110909,
-	ArnoldAtmosphereTypeId = 110910,
-	ArnoldBackgroundTypeId = 110911,
-	ArnoldCameraShadersTypeId = 110912,
-	ArnoldLightFilterTypeId = 110913,
-	ArnoldColorManagerTypeId = 110914,
-	ArnoldImagerTypeId = 110915,
+	ArnoldShaderTypeId = 122300,
+	ArnoldOptionsTypeId = 122301,
+	ArnoldAttributesTypeId = 122302,
+	ArnoldLightTypeId = 122303,
+	ArnoldVDBTypeId = 122304,
+	ArnoldDisplacementTypeId = 122305,
+	ArnoldMeshLightTypeId = 122306,
+	ArnoldAOVShaderTypeId = 122307,
+	ArnoldAtmosphereTypeId = 122308,
+	ArnoldBackgroundTypeId = 122309,
+	ArnoldCameraShadersTypeId = 122310,
+	ArnoldLightFilterTypeId = 122311,
+	ArnoldColorManagerTypeId = 122312,
+	ArnoldImagerTypeId = 122313,
 
-	LastTypeId = 110924
+	LastTypeId = 122499
 };
 
 } // namespace GafferArnold

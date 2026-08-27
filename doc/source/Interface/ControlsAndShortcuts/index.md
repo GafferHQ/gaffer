@@ -95,6 +95,8 @@ Leave `Box` node (subgraph)          | {kbd}`↑`
 Search for nodes                     | {kbd}`Ctrl` + {kbd}`F`
 Frame to numeric bookmark            | {kbd}`1` … {kbd}`9`
 Frame to focus node                  | <kbd>&#96;</kbd>
+Go back in history                   | {kbd}`[`
+Go forward in history                | {kbd}`]`
 
 ### Node creation ###
 
@@ -154,6 +156,7 @@ Auto-arrange selected nodes          | {kbd}`Ctrl` + {kbd}`L`
 Duplicate outgoing connection        | {kbd}`Shift` + {{leftClick}} and drag connection just before in plug
 Disconnect connections under cursor  | {kbd}`X` + {{leftClick}}
 Disconnect connections under line    | {kbd}`X` + {{leftClick}} and drag to draw a line, then release {{leftClick}}
+Hide disconnected nodules            | {kbd}`/`
 
 ### Focus Node ###
 
@@ -172,6 +175,12 @@ Connect to bookmarked node           | {{rightClick}} plug > *Connect Bookmark*
 Jump to bookmarked node              | Hover cursor over editor, {kbd}`Ctrl` + {kbd}`B` > select bookmarked node<br>or<br> {{leftClick}} {{editorFocusMenu}}, select *Bookmark* > ...
 Assign numeric bookmark              | {kbd}`Ctrl` + {kbd}`1` … {kbd}`9`
 Remove numeric bookmark              | {kbd}`Ctrl` + {kbd}`0`
+
+### Node Appearance ###
+
+Action                               | Control or shortcut
+-------------------------------------|--------------------
+Set node color                       | {kbd}`C`
 
 ## Node Editor ##
 
@@ -222,13 +231,15 @@ Pause processing                     | {kbd}`Escape`
 Selection Tool                       | {kbd}`Q`
 Translate Tool                       | {kbd}`W`
 Rotate Tool                          | {kbd}`E`
-Cycle Transform Tool Orientation     | {kbd}`O`
 Scale Tool                           | {kbd}`R`
 Camera Tool                          | {kbd}`T`
 Crop Window Tool                     | {kbd}`C`
 Crop Window Tool and crop enabled    | {kbd}`Alt` + {kbd}`C`
+Light Tool                           | {kbd}`A`
 Light Position Tool                  | {kbd}`D`
+Visualiser Tool                      | {kbd}`L`
 Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
+Toggle camera / free view            | {kbd}`;`
 
 ### 3D scenes ###
 
@@ -251,7 +262,8 @@ Frame view, and fit clipping planes                              | {kbd}`Ctrl` +
 Reset clipping planes                                            | {{rightClick}} > *Clipping Planes* > *Default*
 Toggle Inspector                                                 | {kbd}`I`
 Prune selected objects from current EditScope                    | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
-Turn off visibility for selected objects from current EditScope  | {kbd}`Ctrl` + {kbd}`H`
+Hide selected objects from current EditScope                     | {kbd}`Ctrl` + {kbd}`H`
+Unhide selected objects from current EditScope                   | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`H`
 
 ### Transform tools ###
 
@@ -266,7 +278,7 @@ Add animation key to transform of selected object(s)| {kbd}`S`
 Adjust, fine precision                              | Hold {kbd}`Shift` during action
 Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` during action
 Target mode (Translate and Rotate only)             | Hold {kbd}`V` then {{leftClick}} on target geometry
-
+Cycle tool orientation (Translate and Rotate only)  | {kbd}`O`
 
 ### Light Tool ###
 
@@ -288,6 +300,17 @@ Action                                        | Control or shortcut
 Set shadow target position                    | {kbd}`V` + {{leftClick}}
 Set shadow pivot position                     | {kbd}`Shift` + {kbd}`V` + {{leftClick}}
 
+### Visualiser Tool ###
+
+> Note :
+> For the following controls and shortcuts, the Visualiser Tool must be active.
+
+Action                                        | Control or shortcut
+----------------------------------------------|--------------------
+Increase vertex label size                    | {kbd}`+`
+Decrease vertex label size                    | {kbd}`-`
+Increase vector size                          | {kbd}`Shift` + {kbd}`+`
+Decrease vector size                          | {kbd}`Shift` + {kbd}`-`
 
 ### 2D images ###
 
@@ -301,6 +324,7 @@ View luminance of RGB                | {kbd}`L`
 Previous layer                       | {kbd}`PgUp`
 Next layer                           | {kbd}`PgDn`
 First layer (RGBA)                   | {kbd}`Ctrl` + {kbd}`PgUp`
+Toggle to denoised/undenoised layer  | {kbd}`D`
 Previous view                        | {kbd}`[`
 Next view                            | {kbd}`]`
 Center image at 1:1 scale            | {kbd}`Home`
@@ -318,16 +342,19 @@ Draw new region anywhere             | {kbd}`Shift` + click and drag
 
 ## Hierarchy View ##
 
-Action                              | Control or shortcut
-------------------------------------|-------------------
-Expand selected location            | {kbd}`→`
-Fully expand selected location      | {kbd}`Shift` + {kbd}`→`
-Collapse selected location          | {kbd}`←`
-Fully collapse selected location    | {kbd}`Shift` + {kbd}`←`
-Copy selected paths                 | {kbd}`Ctrl` + {kbd}`C`
-Edit source node of selection       | {kbd}`Alt` + {kbd}`E`
-Edit tweaks node for selection      | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
-Frame selection                     | {kbd}`F`
+Action                                               | Control or shortcut
+-----------------------------------------------------|-------------------
+Expand selected location                             | {kbd}`→`
+Fully expand selected location                       | {kbd}`Shift` + {kbd}`→`
+Collapse selected location                           | {kbd}`←`
+Fully collapse selected location                     | {kbd}`Shift` + {kbd}`←`
+Copy selected paths                                  | {kbd}`Ctrl` + {kbd}`C`
+Edit source node of selection                        | {kbd}`Alt` + {kbd}`E`
+Edit tweaks node for selection                       | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
+Frame selection                                      | {kbd}`F`
+Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
+Hide selected objects from current EditScope         | {kbd}`Ctrl` + {kbd}`H`
+Unhide selected objects from current EditScope       | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`H`
 
 ## Python Editor ##
 
@@ -408,7 +435,7 @@ Extend cell selection                              | {kbd}`Shift` + {kbd}`↑`, 
 Move keyboard focus                                | {kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle selection state of cell with keyboard focus | {kbd}`Space`
 
-## Light Editor ##
+## Light Editor and Attribute Editor ##
 
 Action                                               | Control or shortcut
 -----------------------------------------------------|---------------------
@@ -418,8 +445,13 @@ Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {
 Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
+Commit edit without closing popup                    | {kbd}`Shift` + {kbd}`Return`<br>or<br>{kbd}`Ctrl` + {kbd}`Shift` + {kbd}`Return`
 Disable Edit                                         | {kbd}`D`
 Remove Attribute                                     | {kbd}`Delete`
+Copy/Paste selected cells                            | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
+Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
+Hide selected objects from current EditScope         | {kbd}`Ctrl` + {kbd}`H`
+Unhide selected objects from current EditScope       | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`H`
 
 ## Set Editor ##
 
@@ -435,9 +467,14 @@ Action                                               | Control or shortcut
 Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Inspect current selection                            | {kbd}`I`<br>or<br>{kbd}`Alt` + {{middleClick}}
+Show history for selected cells                      | {kbd}`H`
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
+Commit edit without closing popup                    | {kbd}`Shift` + {kbd}`Return`<br>or<br>{kbd}`Ctrl` + {kbd}`Shift` + {kbd}`Return`
 Disable edit                                         | {kbd}`D`
 Toggle a render pass as active                       | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column
+Rename a render pass                                 | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the "Name" column
+Copy/Paste selected cells                            | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
 
 ## Color Chooser Color Field ##
 

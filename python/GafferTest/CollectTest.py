@@ -87,7 +87,7 @@ class CollectTest( GafferTest.TestCase ) :
 
 		for unsupportedPlug in [
 			Gaffer.NameValuePlug(),
-			Gaffer.SplineffPlug( defaultValue = Gaffer.SplineDefinitionff() ),
+			Gaffer.RampffPlug( defaultValue = IECore.Rampff() ),
 		] :
 			with self.subTest( inputPlugType = type( unsupportedPlug ) ) :
 				self.assertFalse( node.canAddInput( unsupportedPlug ) )
@@ -265,7 +265,7 @@ class CollectTest( GafferTest.TestCase ) :
 		script["initialised"].addInput( Gaffer.IntPlug( "c", defaultValue = 2, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		serialisation = script.serialise()
-		self.assertEqual( serialisation.count( "addChild" ), 2 ) # One for each node, but none for the inputs and ouputs
+		self.assertEqual( serialisation.count( "addChild" ), 2 ) # One for each node, but none for the inputs and outputs
 
 		script2 = Gaffer.ScriptNode()
 		script2.execute( serialisation )
@@ -591,6 +591,3 @@ class CollectTest( GafferTest.TestCase ) :
 
 		for i in range( maxIterations ) :
 			self.assertEqual( depth( result[i] ), i )
-
-if __name__ == "__main__":
-	unittest.main()

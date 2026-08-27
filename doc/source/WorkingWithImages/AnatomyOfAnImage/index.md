@@ -56,7 +56,7 @@ The data window differs from the display window in that only the pixels inside i
 Gaffer can read, add, and remove metadata from an image, but it assigns no specific meaning to any particular value. For a node graph to respond to a metadata value, it will need to be accessed by an Expression node.
 
 > Note :
-> Gaffer follows the OpenImageIO conventions for metadata naming, as specified in [Appendix B](../../../../../share/doc/OpenImageIO/openimageio.pdf#page=397) of the project's _Programmer Documentation_.
+> Gaffer follows the [OpenImageIO conventions for metadata naming](https://openimageio.readthedocs.io/en/stable/stdmetadata.html).
 
 
 ### Channel names ###

@@ -194,6 +194,3 @@ class HighlighterTest( GafferOSLTest.OSLTestCase ) :
 				highlights,
 				msg = "Code is `{}`".format( code )
 			)
-
-if __name__ == "__main__":
-	unittest.main()

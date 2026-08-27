@@ -35,7 +35,6 @@
 ##########################################################################
 
 import inspect
-import itertools
 
 import Gaffer
 import GafferUI
@@ -68,19 +67,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"matrix" : [
+		"matrix" : {
 
-			"description",
+			"description" :
 			"""
 			The transform to be applied to the input image.
 			This must contain only translation and scaling.
 			""",
 
-		],
+		},
 
-		"filter" : [
+		"filter" : {
 
-			"description",
+			"description" :
 			"""
 			The filter used to perform the resampling. The name
 			of any OIIO filter may be specified. The default automatically
@@ -88,20 +87,16 @@ Gaffer.Metadata.registerNode(
 			or not the image is being enlarged or reduced.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Default", "",
-			"preset:Nearest", "nearest",
+			"preset:Default" : "",
+			"preset:Nearest" : "nearest",
 
-		] + list( itertools.chain(
+		} | { "preset:" + x.title() : x for x in GafferImage.FilterAlgo.filterNames() },
 
-			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() ]
+		"filterScale" : {
 
-		) ),
-
-		"filterScale" : [
-
-			"description",
+			"description" :
 			"""
 			A multiplier for the scale of the filter used.  Scaling up gives a softer
 			result, scaling down gives a sharper result ( likely to alias or even create black
@@ -109,37 +104,37 @@ Gaffer.Metadata.registerNode(
 			you have a special technical reason.
 			""",
 
-		],
+		},
 
-		"boundingMode" : [
+		"boundingMode" : {
 
-			"description",
+			"description" :
 			"""
 			The method used when a filter references pixels outside the
 			input data window.
 			""",
 
-			"preset:Black", GafferImage.Sampler.BoundingMode.Black,
-			"preset:Clamp", GafferImage.Sampler.BoundingMode.Clamp,
+			"preset:Black" : GafferImage.Sampler.BoundingMode.Black,
+			"preset:Clamp" : GafferImage.Sampler.BoundingMode.Clamp,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"expandDataWindow" : [
+		"expandDataWindow" : {
 
-			"description",
+			"description" :
 			"""
 			Expands the data window by the filter radius, to include the
 			external pixels affected by the filter.
 			""",
 
-		],
+		},
 
-		"debug" : [
+		"debug" : {
 
 
-			"description",
+			"description" :
 			"""
 			Enables debug output. The HorizontalPass setting outputs
 			an intermediate image filtered just in the horizontal
@@ -150,17 +145,17 @@ Gaffer.Metadata.registerNode(
 			the results of the the two-pass (default) approach.
 			""",
 
-			"preset:Off", GafferImage.Resample.Debug.Off,
-			"preset:HorizontalPass", GafferImage.Resample.Debug.HorizontalPass,
-			"preset:SinglePass", GafferImage.Resample.Debug.SinglePass,
+			"preset:Off" : GafferImage.Resample.Debug.Off,
+			"preset:HorizontalPass" : GafferImage.Resample.Debug.HorizontalPass,
+			"preset:SinglePass" : GafferImage.Resample.Debug.SinglePass,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"filterDeep" : [
+		"filterDeep" : {
 
-			"description",
+			"description" :
 			inspect.cleandoc(
 				"""
 				When on, deep images are resized accurately using the same filter
@@ -176,7 +171,7 @@ Gaffer.Metadata.registerNode(
 
 				"""
 			) + _filterDeepWarning,
-		],
+		},
 
 	}
 

@@ -36,10 +36,13 @@
 
 #include "Gaffer/MetadataAlgo.h"
 
+#include "Gaffer/BoxPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Spreadsheet.h"
@@ -65,6 +68,11 @@ const std::string g_annotationPrefix( "annotation:" );
 const InternedString g_annotations( "annotations" );
 const InternedString g_spreadsheetColumnWidth( "spreadsheet:columnWidth" );
 const InternedString g_spreadsheetColumnLabel( "spreadsheet:columnLabel" );
+const InternedString g_defaultValue( "defaultValue" );
+const InternedString g_minValue( "minValue" );
+const InternedString g_maxValue( "maxValue" );
+const InternedString g_childNodesAreViewable( "ui:childNodesAreViewable" );
+const InternedString g_childrenViewable( "graphEditor:childrenViewable" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
 {
@@ -150,6 +158,134 @@ bool ancestorChildNodesAreReadOnly( const Gaffer::GraphComponent *graphComponent
 		graphComponent = graphComponent->parent();
 	}
 	return false;
+}
+
+const std::string g_incorrectMetadataWarning( "Ignoring \"{}\" metadata for target \"{}\" as it has incorrect type \"{}\" (expected {})" );
+
+template<typename T>
+Gaffer::ValuePlugPtr numericValuePlug( const std::string &target, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
+{
+	using ValueType = typename T::ValueType;
+	using PlugType = Gaffer::NumericPlug<ValueType>;
+
+	const T *min = runTimeCast<const T>( minValue );
+	if( minValue && !min )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"minValue", target, minValue->typeName(), value->typeName()
+			)
+		);
+	}
+
+	const T *max = runTimeCast<const T>( maxValue );
+	if( maxValue && !max )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"maxValue", target, maxValue->typeName(), value->typeName()
+			)
+		);
+	}
+
+	typename PlugType::Ptr result = new PlugType(
+		name,
+		direction,
+		value->readable(),
+		min ? min->readable() : std::numeric_limits<ValueType>::lowest(),
+		max ? max->readable() : std::numeric_limits<ValueType>::max(),
+		flags
+	);
+
+	return result;
+}
+
+template<typename T>
+Gaffer::ValuePlugPtr compoundNumericValuePlug( const std::string &target, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
+{
+	using ValueType = typename T::ValueType;
+	using BaseType = typename ValueType::BaseType;
+	using PlugType = Gaffer::CompoundNumericPlug<ValueType>;
+
+	const T *min = runTimeCast<const T>( minValue );
+	if( minValue && !min )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"minValue", target, minValue->typeName(), value->typeName()
+			)
+		);
+	}
+
+	const T *max = runTimeCast<const T>( maxValue );
+	if( maxValue && !max )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"maxValue", target, minValue->typeName(), value->typeName()
+			)
+		);
+	}
+
+	typename PlugType::Ptr result = new PlugType(
+		name,
+		direction,
+		value->readable(),
+		min ? min->readable() : ValueType( std::numeric_limits<BaseType>::lowest() ),
+		max ? max->readable() : ValueType( std::numeric_limits<BaseType>::max() ),
+		flags
+	);
+
+	return result;
+}
+
+template<typename T>
+Gaffer::ValuePlugPtr boxValuePlug( const std::string &target, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )
+{
+	using ValueType = typename T::ValueType;
+	using PointType = typename Gaffer::BoxPlug<ValueType>::PointType;
+	using PointBaseType = typename PointType::BaseType;
+
+	const TypedData<PointType> *min = runTimeCast<const TypedData<PointType>>( minValue );
+	if( minValue && !min )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"minValue", target, minValue->typeName(), TypedData<PointType>::staticTypeName()
+			)
+		);
+	}
+
+	const TypedData<PointType> *max = runTimeCast<const TypedData<PointType>>( maxValue );
+	if( maxValue && !max )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+			fmt::format(
+				g_incorrectMetadataWarning,
+				"maxValue", target, maxValue->typeName(), TypedData<PointType>::staticTypeName()
+			)
+		);
+	}
+
+	return new Gaffer::BoxPlug<ValueType>(
+		name,
+		direction,
+		value->readable(),
+		min ? min->readable() : PointType( std::numeric_limits<PointBaseType>::lowest() ),
+		max ? max->readable() : PointType( std::numeric_limits<PointBaseType>::max() ),
+		flags
+	);
 }
 
 } // namespace
@@ -452,15 +588,24 @@ void removeAnnotation( Node *node, const std::string &name )
 
 void annotations( const Node *node, std::vector<std::string> &names )
 {
-	const vector<InternedString> keys = Metadata::registeredValues( node );
+	names = annotations( node );
+}
+
+std::vector<std::string> annotations( const Node *node, Gaffer::Metadata::RegistrationTypes types )
+{
+	std::vector<std::string> result;
+
+	const vector<InternedString> keys = Metadata::registeredValues( node, types );
 
 	for( const auto &key : keys )
 	{
 		if( boost::starts_with( key.string(), g_annotationPrefix ) && boost::ends_with( key.string(), ":text" ) )
 		{
-			names.push_back( key.string().substr( g_annotationPrefix.size(), key.string().size() - g_annotationPrefix.size() - 5 ) );
+			result.push_back( key.string().substr( g_annotationPrefix.size(), key.string().size() - g_annotationPrefix.size() - 5 ) );
 		}
 	}
+
+	return result;
 }
 
 void addAnnotationTemplate( const std::string &name, const Annotation &annotation, bool user )
@@ -795,6 +940,133 @@ void deregisterRedundantValues( GraphComponent *graphComponent )
 	{
 		deregisterRedundantValues( child.get() );
 	}
+}
+
+/// Plug creation
+/// =============
+
+ValuePlugPtr createPlugFromMetadata( const std::string &name, Plug::Direction direction, unsigned flags, const std::string &target )
+{
+	ConstDataPtr defaultValue = Metadata::value( target, g_defaultValue );
+	if( !defaultValue )
+	{
+		throw IECore::Exception( fmt::format( "No \"defaultValue\" metadata registered for target \"{}\". Cannot create plug.", target ) );
+	}
+
+	ConstDataPtr minValue = Metadata::value( target, g_minValue );
+	ConstDataPtr maxValue = Metadata::value( target, g_maxValue );
+
+	switch( defaultValue->typeId() )
+	{
+		case IntDataTypeId :
+			return numericValuePlug( target, name, direction, flags, static_cast<const IntData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case FloatDataTypeId :
+			return numericValuePlug( target, name, direction, flags, static_cast<const FloatData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Color3fDataTypeId :
+			return compoundNumericValuePlug( target, name, direction, flags, static_cast<const Color3fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Color4fDataTypeId :
+			return compoundNumericValuePlug( target, name, direction, flags, static_cast<const Color4fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box2iDataTypeId :
+			return boxValuePlug( target, name, direction, flags, static_cast<const Box2iData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box2fDataTypeId :
+			return boxValuePlug( target, name, direction, flags, static_cast<const Box2fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box3iDataTypeId :
+			return boxValuePlug( target, name, direction, flags, static_cast<const Box3iData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		case Box3fDataTypeId :
+			return boxValuePlug( target, name, direction, flags, static_cast<const Box3fData *>( defaultValue.get() ), minValue.get(), maxValue.get() );
+		default :
+			if( minValue )
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+					fmt::format(
+						"Ignoring \"minValue\" metadata for target \"{}\" as it is not supported for {}",
+						target, defaultValue->typeName()
+					)
+				);
+			}
+			if( maxValue )
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "MetadataAlgo::createPlugFromMetadata",
+					fmt::format(
+						"Ignoring \"maxValue\" metadata for target \"{}\" as it not supported for {}",
+						target, defaultValue->typeName()
+					)
+				);
+			}
+			return PlugAlgo::createPlugFromData( name, direction, flags, defaultValue.get() );
+	}
+}
+
+/// Viewability
+/// ===========
+
+GraphComponent *firstViewableAncestor( Gaffer::GraphComponent *graphComponent, IECore::TypeId type )
+{
+	Gaffer::GraphComponent *result = nullptr;
+
+	while( graphComponent )
+	{
+		Gaffer::GraphComponent *nodeParent = nullptr;
+		if( auto p = runTimeCast<Gaffer::Plug>( graphComponent ) )
+		{
+			nodeParent = p->node()->ancestor<Gaffer::Node>();
+		}
+		else
+		{
+			nodeParent = graphComponent->ancestor<Gaffer::Node>();
+		}
+
+		bool viewable = false;
+		if( nodeParent )
+		{
+			if( ConstBoolDataPtr d = Metadata::value<BoolData>( nodeParent, g_childNodesAreViewable ) )
+			{
+				viewable = d->readable();
+			}
+			/// \todo Remove when we remove legacy "graphEditor:childrenViewable" metadata.
+			else if( ConstBoolDataPtr d = Metadata::value<BoolData>( nodeParent, g_childrenViewable ) )
+			{
+				viewable = d->readable();
+			}
+		}
+		else
+		{
+			viewable = true;
+		}
+
+		if( viewable )
+		{
+			if( !result && graphComponent->isInstanceOf( type ) )
+			{
+				result = graphComponent;
+			}
+		}
+		else
+		{
+			result = nullptr;
+		}
+
+		graphComponent = graphComponent->parent();
+	}
+
+	return result;
+}
+
+const GraphComponent *firstViewableAncestor( const Gaffer::GraphComponent *graphComponent, IECore::TypeId type )
+{
+	return firstViewableAncestor( const_cast<GraphComponent *>( graphComponent ), type );
+}
+
+Node *firstViewableNode( Gaffer::GraphComponent *graphComponent )
+{
+	return firstViewableAncestor<Node>( graphComponent );
+}
+
+const Node *firstViewableNode( const Gaffer::GraphComponent *graphComponent )
+{
+	return firstViewableAncestor<Node>( graphComponent );
 }
 
 } // namespace MetadataAlgo

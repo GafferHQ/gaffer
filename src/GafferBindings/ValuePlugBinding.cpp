@@ -102,7 +102,7 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 		// Can't condense, because can't get value at this level.
 		// We also disable condensing at outer levels in this case,
 		// because otherwise we hit problems trying to serialise
-		// SplinePlugs.
+		// RampPlugs.
 		canCondense = false;
 		return childSerialisations;
 	}

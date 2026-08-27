@@ -38,8 +38,6 @@
 
 #include "IECoreScene/Camera.h"
 
-#include <vector>
-
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/camera.h"
@@ -52,7 +50,7 @@ namespace CameraAlgo
 {
 
 /// Converts the specified IECoreScene::Camera into a ccl::Camera.
-IECORECYCLES_API ccl::Camera *convert( const IECoreScene::Camera *camera, const std::string &nodeName, ccl::Scene *scene = nullptr );
+IECORECYCLES_API void convert( const IECoreScene::Camera *source, ccl::Camera *destination );
 
 } // namespace CameraAlgo
 

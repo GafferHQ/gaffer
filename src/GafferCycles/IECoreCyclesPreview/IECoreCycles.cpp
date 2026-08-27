@@ -45,6 +45,7 @@
 #include "boost/algorithm/string.hpp"
 
 #include "fmt/format.h"
+#include "fmt/std.h"
 
 #include <filesystem>
 
@@ -52,6 +53,7 @@
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "device/device.h"
 #include "graph/node.h"
+#include "scene/pass.h"
 #include "util/openimagedenoise.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
@@ -68,70 +70,47 @@ IECore::CompoundDataPtr g_shaderData;
 IECore::CompoundDataPtr g_lightData;
 IECore::CompoundDataPtr g_passData;
 
+IECore::CompoundDataPtr socket( const ccl::SocketType &socketType )
+{
+	IECore::CompoundDataPtr resultData = new IECore::CompoundData();
+	IECore::CompoundDataMap &result = resultData->writable();
+
+	result["ui_name"] = new IECore::StringData( socketType.ui_name.c_str() );
+	result["type"] = new IECore::StringData( ccl::SocketType::type_name( socketType.type ).c_str() );
+	result["flags"] = new IECore::IntData( socketType.flags );
+
+	if( socketType.type == ccl::SocketType::ENUM )
+	{
+		const ccl::NodeEnum *enums = socketType.enum_values;
+		IECore::CompoundDataPtr enumData = new IECore::CompoundData();
+		IECore::CompoundDataMap &e = enumData->writable();
+		for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
+		{
+			std::string uiEnumName( it->first.c_str() );
+			uiEnumName[0] = toupper( uiEnumName[0] );
+			boost::replace_all( uiEnumName, "_", " " );
+			e[uiEnumName.c_str()] = new IECore::StringData( it->first.c_str() );
+		}
+		result["enum_values"] = std::move( enumData );
+	}
+
+	return resultData;
+}
+
 // Get sockets data
 IECore::CompoundDataPtr getSockets( const ccl::NodeType *nodeType, const bool output )
 {
-	IECore::CompoundDataPtr result = new IECore::CompoundData();
-	IECore::CompoundDataMap &sockets = result->writable();
+	IECore::CompoundDataPtr resultData = new IECore::CompoundData();
+	IECore::CompoundDataMap &result = resultData->writable();
 
-	if( !output )
+	for( const ccl::SocketType &socketType : ( output ? nodeType->outputs : nodeType->inputs ) )
 	{
-		for( const ccl::SocketType &socketType : nodeType->inputs )
-		{
-			IECore::CompoundDataPtr socket = new IECore::CompoundData();
-			IECore::CompoundDataMap &s = socket->writable();
-			std::string name( socketType.name.c_str() );
-			std::string uiName( socketType.ui_name.c_str() );
-			if( boost::contains( name, "." ) )
-			{
-				std::vector<std::string> split;
-				boost::split( split, name, boost::is_any_of( "." ) );
-				if( split[0] == "tex_mapping" )
-				{
-					s["category"] = new IECore::StringData( "Texture Mapping" );
-				}
-			}
-			s["ui_name"] = new IECore::StringData( uiName );
-
-			s["type"] = new IECore::StringData( ccl::SocketType::type_name( socketType.type ).c_str() );
-			if( socketType.type == ccl::SocketType::ENUM )
-			{
-				const ccl::NodeEnum *enums = socketType.enum_values;
-				IECore::CompoundDataPtr enumData = new IECore::CompoundData();
-				IECore::CompoundDataMap &e = enumData->writable();
-				for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
-				{
-					std::string uiEnumName( it->first.c_str() );
-					uiEnumName[0] = toupper( uiEnumName[0] );
-					boost::replace_all( uiEnumName, "_", " " );
-
-					e[uiEnumName.c_str()] = new IECore::StringData( it->first.c_str() );
-				}
-				s["enum_values"] = std::move( enumData );
-			}
-			s["is_array"] = new IECore::BoolData( socketType.is_array() );
-			s["flags"] = new IECore::IntData( socketType.flags );
-
-			// Some of the texture mapping nodes have a dot in them, replace here with 2 underscores
-			std::string actualName = boost::replace_first_copy( name, ".", "__" );
-			sockets[actualName] = std::move( socket );
-		}
-	}
-	else
-	{
-		for( const ccl::SocketType &socketType : nodeType->outputs )
-		{
-			IECore::CompoundDataPtr socket = new IECore::CompoundData();
-			IECore::CompoundDataMap &s = socket->writable();
-			s["ui_name"] = new IECore::StringData( socketType.ui_name.c_str() );
-			s["type"] = new IECore::StringData( ccl::SocketType::type_name( socketType.type ).c_str() );
-			s["is_array"] = new IECore::BoolData( socketType.is_array() );
-			s["flags"] = new IECore::IntData( socketType.flags );
-			sockets[socketType.name.c_str()] = std::move( socket );
-		}
+		// Some of the texture mapping nodes have a dot in them, replace here with 2 underscores
+		const std::string name = boost::replace_first_copy( socketType.name.string(), ".", "__" );
+		result[name] = socket( socketType );
 	}
 
-	return IECore::CompoundDataPtr( result );
+	return resultData;
 }
 
 IECore::CompoundDataPtr deviceData()
@@ -167,9 +146,9 @@ IECore::CompoundDataPtr nodeData()
 	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &nodes = result->writable();
 
-	for( const auto& nodeType : ccl::NodeType::types() )
+	for( const auto& nodeType : ccl::NodeType::type_names() )
 	{
-		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType.first );
+		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType );
 		if( cNodeType )
 		{
 			// We skip "ShaderNode" types here
@@ -177,14 +156,14 @@ IECore::CompoundDataPtr nodeData()
 				continue;
 
 			// The shader node we skip
-			if( nodeType.first == "shader" )
+			if( nodeType == "shader" )
 				continue;
 
 			IECore::CompoundDataPtr node = new IECore::CompoundData();
 			IECore::CompoundDataMap &n = node->writable();
 			n["in"] = getSockets( cNodeType, false );
 			n["out"] = getSockets( cNodeType, true );
-			nodes[nodeType.first.c_str()] = std::move( node );
+			nodes[nodeType.c_str()] = std::move( node );
 		}
 	}
 	return result;
@@ -195,14 +174,14 @@ IECore::CompoundDataPtr shaderData()
 	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	IECore::CompoundDataMap &shaders = result->writable();
 
-	for( const auto& nodeType : ccl::NodeType::types() )
+	for( const auto& nodeType : ccl::NodeType::type_names() )
 	{
 		// Skip over the "output" ShaderNode, as this is a part of the main
 		// "shader" node.
-		if( std::string( nodeType.first.c_str() ) == "output" )
+		if( std::string( nodeType.c_str() ) == "output" )
 			continue;
 
-		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType.first );
+		const ccl::NodeType *cNodeType = ccl::NodeType::find( nodeType );
 		if( cNodeType )
 		{
 			if( cNodeType->type == ccl::NodeType::SHADER )
@@ -212,7 +191,7 @@ IECore::CompoundDataPtr shaderData()
 				s["in"] = getSockets( cNodeType, false );
 				s["out"] = getSockets( cNodeType, true );
 
-				std::string type( nodeType.first.c_str() );
+				std::string type( nodeType.c_str() );
 
 				if( boost::ends_with( type, "bsdf" ) )
 				{
@@ -379,16 +358,10 @@ IECore::CompoundDataPtr lightData()
 
 			in["size"] = _in["size"]->copy();
 			in["cast_shadow"] = _in["cast_shadow"]->copy();
-			in["use_camera"] = _in["use_camera"]->copy();
 			in["use_mis"] = _in["use_mis"]->copy();
-			in["use_diffuse"] = _in["use_diffuse"]->copy();
-			in["use_glossy"] = _in["use_glossy"]->copy();
-			in["use_transmission"] = _in["use_transmission"]->copy();
-			in["use_scatter"] = _in["use_scatter"]->copy();
 			in["use_caustics"] = _in["use_caustics"]->copy();
 			in["max_bounces"] = _in["max_bounces"]->copy();
 			in["strength"] = _in["strength"]->copy();
-			in["lightgroup"] = _in["lightgroup"]->copy();
 
 			if( type == "background_light" )
 			{
@@ -502,11 +475,9 @@ bool init()
 
 	ccl::path_init( cyclesRootValue );
 
-	// This is a global thing for logging
-	const char* argv[] = { "-", "v", "1" };
-	ccl::util_logging_init( argv[0] );
-	ccl::util_logging_start();
-	ccl::util_logging_verbosity_set( 0 );
+	/// \todo Register MessageHandler via `ccl::log_init( const LogFunction )`
+	ccl::log_init( nullptr );
+	ccl::log_level_set( ccl::LOG_LEVEL_ERROR );
 
 	// Store data for binding
 	g_deviceData = deviceData();

@@ -81,8 +81,3 @@ void Procedural::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) c
 {
 	VisibleRenderable::memoryUsage( accumulator );
 }
-
-void Procedural::render( IECoreScene::Renderer *renderer ) const
-{
-	IECore::msg( IECore::Msg::Warning, std::string( typeName() ) + "::render", "Legacy renderers are not supported." );
-}

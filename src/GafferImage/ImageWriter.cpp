@@ -82,10 +82,9 @@
 #endif
 #include <zlib.h>
 
-OIIO_NAMESPACE_USING
-
 using namespace std;
 using namespace Imath;
+using namespace OIIO;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferDispatch;
@@ -1088,14 +1087,6 @@ void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spe
 			continue;
 		}
 
-		if( it->first == "fileValid" )
-		{
-			// Don't want to write `fileValid = False` into files! Dealt
-			// with separately from blacklist above because we don't need to
-			// emit a warning for it.
-			continue;
-		}
-
 		const IECoreImage::OpenImageIOAlgo::DataView dataView( it->second.get() );
 		if( dataView.data )
 		{
@@ -1273,11 +1264,25 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	// and file-format-specific metadata created by the OpenImageIOReader.
 	CompoundDataPtr metadata = node->inPlug()->metadataPlug()->getValue()->copy();
 
+	// Metadata we never want to write into files, and always want to silently ignore. Usually because
+	// it's stuff we automatically set up when reading a file, based on other information. There is a
+	// separate blacklist inside metadataToImageSpecAttributes for things we want to warn about.
+
 	metadata->writable().erase( "oiio:ColorSpace" );
 	metadata->writable().erase( "oiio:Gamma" );
 	metadata->writable().erase( "oiio:UnassociatedAlpha" );
 	metadata->writable().erase( "fileFormat" );
+	metadata->writable().erase( "filePath" );
+	// Including fileValid is technically redundant here - it is usually a BoolData, and
+	// IECoreImage::OpenImageIOAlgo::DataView fails to support bools. But we keep this erase()
+	// for a hypothetical future where bools might be supported.
+	metadata->writable().erase( "fileValid" );
 	metadata->writable().erase( "dataType" );
+
+	// It's crucial to get rid of this particular metadata, because it affects OpenEXR during writing.
+	// If it's set to something that contradicts how we're writing the file, it can cause file corruption
+	// or crashes.
+	metadata->writable().erase( "openexr:lineOrder" );
 
 	// Also erase multiView metadata - if you want to create multi-view images, use CreateViews
 	// instead of just setting metadata.
@@ -1365,7 +1370,7 @@ void setImageSpecDataWindow( ImageSpec &spec, Imath::Box2i &dataWindow, const Im
 	}
 }
 
-// Remove leading, trailing, or repeated dot seperators
+// Remove leading, trailing, or repeated dot separators
 std::string cleanExcessDots( std::string name )
 {
 	auto last = std::unique( name.begin(), name.end(), []( char a, char b ) {
@@ -2086,7 +2091,7 @@ void ImageWriter::execute() const
 		{
 			if( parts.size() > 1 )
 			{
-				throw IECore::Exception( "If you want to write single part multi-view, you must write all channnels to the same part - when writing multi-part files, write different views to different parts" );
+				throw IECore::Exception( "If you want to write single part multi-view, you must write all channels to the same part - when writing multi-part files, write different views to different parts" );
 			}
 
 			std::vector< const char* > rawPtrNames;

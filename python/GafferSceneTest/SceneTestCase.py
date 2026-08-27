@@ -54,9 +54,17 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 
 		GafferImageTest.ImageTestCase.setUp( self )
 
-		sanitiser = GafferSceneTest.ContextSanitiser()
-		sanitiser.__enter__()
-		self.addCleanup( sanitiser.__exit__, None, None, None )
+		# Only install sanitisers when we're not testing performance, as they do
+		# have some overhead.
+		if not GafferTest.TestRunner.PerformanceTestMethod.isDecorated( getattr( self, self._testMethodName ) ) :
+
+			sanitiser = GafferSceneTest.ContextSanitiser()
+			sanitiser.__enter__()
+			self.addCleanup( sanitiser.__exit__, None, None, None )
+
+			globalsSanitiser = GafferSceneTest.GlobalsSanitiser()
+			globalsSanitiser.__enter__()
+			self.addCleanup( globalsSanitiser.__exit__, None, None, None )
 
 	def tearDown( self ) :
 
@@ -349,22 +357,6 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 			self.assertNotEqual( scenePlug1.setNamesHash(), scenePlug2.setNamesHash() )
 			for setName in scenePlug1.setNames() :
 				self.assertNotEqual( scenePlug1.setHash( setName ), scenePlug2.setHash( setName ) )
-
-	def assertBoxesEqual( self, box1, box2 ) :
-
-		for n in "min", "max" :
-			v1 = getattr( box1, n )
-			v2 = getattr( box1, n )
-			for i in range( 0, 3 ) :
-				self.assertEqual( v1[i], v2[i] )
-
-	def assertBoxesAlmostEqual( self, box1, box2, places ) :
-
-		for n in "min", "max" :
-			v1 = getattr( box1, n )()
-			v2 = getattr( box1, n )()
-			for i in range( 0, 3 ) :
-				self.assertAlmostEqual( v1[i], v2[i], places )
 
 	def assertParallelGetValueComputesObjectOnce( self, scene, path ) :
 

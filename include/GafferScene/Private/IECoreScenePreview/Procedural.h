@@ -38,9 +38,11 @@
 
 #include "GafferScene/Export.h"
 
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/Private/IECoreScenePreview/TypeIds.h"
 
 #include "IECoreScene/VisibleRenderable.h"
+
+#include "IECore/Version.h"
 
 namespace IECoreScenePreview
 {
@@ -57,12 +59,11 @@ class GAFFERSCENE_API Procedural : public IECoreScene::VisibleRenderable
 		Procedural();
 		~Procedural() override;
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( Procedural, GafferScene::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( Procedural, IECoreScenePreview::PreviewProceduralTypeId, IECoreScene::VisibleRenderable );
 
-		/// Legacy inherited from IECore::VisibleRenderable.
-		/// Should not be implemented by derived classes.
-		void render( IECoreScene::Renderer *renderer ) const final;
-		/// Render function for use with new renderer backends.
+#if CORTEX_COMPATIBILITY_VERSION < MAKE_CORTEX_COMPATIBILITY_VERSION( 10, 6 )
+		void render( IECoreScene::Renderer *renderer ) const final {};
+#endif
 		/// Must be implemented by derived classes.
 		virtual void render( Renderer *renderer ) const = 0;
 

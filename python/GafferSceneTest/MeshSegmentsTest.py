@@ -198,6 +198,3 @@ class MeshSegmentsTest( GafferSceneTest.SceneTestCase ) :
 		# And segmenting by a const primvar always puts everything in one segment
 		s["connectivity"].setValue( "const" )
 		self.assertEqual( s["out"].object( "/object" )["segment"].data, IECore.IntVectorData( [0, 0] ) )
-
-if __name__ == "__main__":
-	unittest.main()

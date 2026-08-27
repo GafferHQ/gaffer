@@ -34,15 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferScene
 
-def __copyOptionsGetItem( originalGetItem ) :
-
-	def getItem( self, key ) :
-
-		key = "options" if key == "names" else key
-		return originalGetItem( self, key )
-
-	return getItem
-
-GafferScene.CopyOptions.__getitem__ = __copyOptionsGetItem( GafferScene.CopyOptions.__getitem__ )
+Gaffer.Metadata.registerValue( GafferScene.CopyOptions, "compatibility:childAlias:names", "options" )

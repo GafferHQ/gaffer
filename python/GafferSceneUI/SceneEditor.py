@@ -34,30 +34,54 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 ## Base class to simplify the creation of Editors which operate on ScenePlugs.
 class SceneEditor( GafferUI.NodeSetEditor ) :
 
 	## Provides an `in` ScenePlug which defines the scene to be
-	#  displayed and/or edited. Pass `numInputs > 1` to the constructor to
-	#  instead provide an `in` ArrayPlug to provide multiple scenes.
+	#  displayed and/or edited.
 	class Settings( GafferUI.Editor.Settings ) :
 
-		def __init__( self, numInputs = 1 ) :
+		# Pass `withHierarchyFilter = True` to set up a standard filter directed
+		# to a `__filteredIn` input plug.
+		def __init__( self, withHierarchyFilter = False ) :
 
 			GafferUI.Editor.Settings.__init__( self )
 
-			if numInputs == 1 :
-				self["in"] = GafferScene.ScenePlug()
-			else :
-				self["in"] = Gaffer.ArrayPlug( elementPrototype = GafferScene.ScenePlug(), minSize = numInputs, maxSize = numInputs )
+			self["in"] = GafferScene.ScenePlug()
+			self["__adaptedIn"] = GafferScene.ScenePlug()
+			self["RenderAdaptors"] = GafferScene.SceneAlgo.createRenderAdaptors()
+			self["RenderAdaptors"]["in"].setInput( self["in"] )
+			self["RenderAdaptors"]["client"].setValue( "SceneEditor" )
+			# Allow the individual adaptors within RenderAdaptors to appear in the history.
+			Gaffer.Metadata.registerValue( self, "ui:childNodesAreViewable", True )
+			Gaffer.Metadata.registerValue( self["RenderAdaptors"], "ui:childNodesAreViewable", True )
+			self["__optionQuery"] = GafferScene.OptionQuery()
+			self["__optionQuery"]["scene"].setInput( self["in"] )
+			self["__optionQuery"].addQuery( Gaffer.StringPlug() )
+			self["__optionQuery"]["queries"][0]["name"].setValue( "render:defaultRenderer" )
+			self["__optionQuery"]["queries"][0]["value"].setValue( Gaffer.Metadata.value( "option:render:defaultRenderer", "defaultValue" ) )
+			self["RenderAdaptors"]["renderer"].setInput( self["__optionQuery"]["out"]["out0"]["value"] )
+			self["__adaptedIn"].setInput( self["RenderAdaptors"]["out"] )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::SceneEditor::Settings" )
+			if withHierarchyFilter :
+
+				self["__filteredIn"] = GafferScene.ScenePlug()
+				self["__hierarchyFilter"] = _HierarchyFilter()
+				self["__hierarchyFilter"]["in"].setInput( self["__adaptedIn"] )
+				self["__filteredIn"].setInput( self["__hierarchyFilter"]["out"] )
+				Gaffer.PlugAlgo.promote( self["__hierarchyFilter"]["filter"] )
+				Gaffer.PlugAlgo.promote( self["__hierarchyFilter"]["setFilter"] )
+
+	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::SceneEditor::Settings" )
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
@@ -80,27 +104,30 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 	def _updateFromSet( self ) :
 
-		# Find ScenePlugs and connect them to `settings()["in"]`.
+		# Find a ScenePlug and connect it to `settings()["in"]`.
 
 		updatedParentingConnections = {}
-		inputsToFill = [ self.settings()["in"] ] if isinstance( self.settings()["in"], GafferScene.ScenePlug ) else list( self.settings()["in"].children() )
 
 		with Gaffer.DirtyPropagationScope() :
 
-			for node in self.getNodeSet()[-len(inputsToFill):] :
-
+			node = self.getNodeSet()[-1] if self.getNodeSet() else None
+			outputScenePlug = None
+			if node is not None :
 				outputScenePlug = next(
 					( p for p in GafferScene.ScenePlug.RecursiveOutputRange( node ) if not p.getName().startswith( "__" ) ),
 					None
 				)
-				if outputScenePlug is not None :
-					inputsToFill.pop( 0 ).setInput( outputScenePlug )
-					plugConnection = self.__parentingConnections.get( outputScenePlug )
-					if plugConnection is None :
-						plugConnection = outputScenePlug.parentChangedSignal().connect(
-							Gaffer.WeakMethod( self.__scenePlugParentChanged ), scoped = True
-						)
-					updatedParentingConnections[outputScenePlug] = plugConnection
+
+			self.settings()["in"].setInput( outputScenePlug )
+
+			if outputScenePlug is not None :
+
+				plugConnection = self.__parentingConnections.get( outputScenePlug )
+				if plugConnection is None :
+					plugConnection = outputScenePlug.parentChangedSignal().connect(
+						Gaffer.WeakMethod( self.__scenePlugParentChanged ), scoped = True
+					)
+				updatedParentingConnections[outputScenePlug] = plugConnection
 
 				nodeConnections = self.__parentingConnections.get( node )
 				if nodeConnections is None :
@@ -109,9 +136,6 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 						node.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True ),
 					]
 				updatedParentingConnections[node] = nodeConnections
-
-			for unfilledInput in inputsToFill :
-				unfilledInput.setInput( None )
 
 		# Note : We reuse existing connections where we can to avoid getting
 		# into infinite loops. We are called from the very signals we are
@@ -125,14 +149,9 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 	def _titleFormat( self ) :
 
-		if isinstance( self.settings()["in"], GafferScene.ScenePlug ) :
-			numInputs = 1 if self.settings()["in"].getInput() is not None else 0
-		else :
-			numInputs = sum( 1 for p in self.settings()["in"] if p.getInput() is not None )
-
 		return GafferUI.NodeSetEditor._titleFormat(
 			self,
-			_maxNodes = numInputs,
+			_maxNodes = 1 if self.settings()["in"].getInput() is not None else 0,
 			_reverseNodes = True,
 			_ellipsis = False
 		)
@@ -155,3 +174,275 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 
 		if isinstance( child, GafferScene.ScenePlug ) :
 			self._updateFromSet()
+
+# Settings metadata
+# =================
+
+Gaffer.Metadata.registerNode(
+
+	SceneEditor.Settings,
+
+	plugs = {
+
+		"filter" : {
+
+			"description" :
+			"""
+			Filters the input scene to isolate locations with matching names.
+			The filter may contain any of Gaffer's standard wildcards, and may
+			either be used to match individual location names or entire paths.
+
+			Examples
+			--------
+
+			- `building` : Matches any location in the scene which has the
+			  text `building` anywhere in its name.
+			- `/cityA/.../building*` : Matches only locations within `cityA`
+			  whose name starts with `building`.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
+			# We need a non-default value to toggle to, so that the first
+			# toggling can highlight the icon. `*` seems like a reasonable value
+			# since it has no effect on the filtering, and hints that wildcards
+			# are available.
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"layout:section" : "Filter"
+
+		},
+
+		"setFilter" : {
+
+			"description" :
+			"""
+			Filters the input scene to isolate locations belonging to specific
+			sets.
+			""",
+
+			"label" : "",
+			"plugValueWidget:type" : "GafferSceneUI.SceneEditor._SetFilterPlugValueWidget",
+			"layout:section" : "Filter"
+
+		},
+
+	}
+
+)
+
+# _HierarchyFilter
+# ================
+
+# Provides a standard filter for the input scene hierarchy,
+# allowing the user to search for specific locations or filter
+# using sets.
+class _HierarchyFilter( GafferScene.SceneProcessor ) :
+
+	def __init__( self, name = "_HierarchyFilter" ) :
+
+		GafferScene.SceneProcessor.__init__( self, name )
+
+		self["filter"] = Gaffer.StringPlug()
+		self["setFilter"] = Gaffer.StringPlug()
+
+		# We transform the `filter` match pattern into a set, rather
+		# than using it with a PathFilter directly. Otherwise `...`
+		# causes us to speculatively include all descendants
+		# even if there is no concrete match.
+
+		self["__pathFilter"] = GafferScene.PathFilter()
+		self["__filterSet"] = GafferScene.Set()
+		self["__filterSet"]["in"].setInput( self["in"] )
+		self["__filterSet"]["filter"].setInput( self["__pathFilter"]["out"] )
+		self["__filterSet"]["name"].setValue( "__HierarchyFilter__FilterSet__" )
+
+		self["__pathFilterExpression"] = Gaffer.Expression()
+		self["__pathFilterExpression"].setExpression(
+			'import GafferSceneUI;'
+			'parent["__pathFilter"]["paths"] = GafferSceneUI.SceneEditor._HierarchyFilter._pathFilterExpression('
+			'	parent["filter"]'
+			')'
+		)
+
+		# We combine the `filter` and `setFilter` into a single SetFilter
+		# expression for everything we want to view.
+
+		self["__setFilter"] = GafferScene.SetFilter()
+
+		self["__setFilterExpression"] = Gaffer.Expression()
+		self["__setFilterExpression"].setExpression(
+			'import GafferSceneUI;'
+			'parent["__setFilter"]["setExpression"] = GafferSceneUI.SceneEditor._HierarchyFilter._setFilterExpression('
+			'	parent["filter"], parent["setFilter"]'
+			')'
+		)
+
+		# An Isolate node is used to do the actual filtering.
+
+		self["__isolate"] = GafferScene.Isolate()
+		self["__isolate"]["in"].setInput( self["__filterSet"]["out"] )
+		self["__isolate"]["filter"].setInput( self["__setFilter"]["out"] )
+		# Disable the node unless we have filtering to perform.
+		self["__isolate"]["enabled"].setInput( self["__setFilter"]["setExpression"] )
+
+		self["out"].setInput( self["__isolate"]["out"] )
+
+	__identityFilterValues = { "", "*", "/..." }
+
+	@classmethod
+	def _pathFilterExpression( cls, filterValue ) :
+
+		result = IECore.StringVectorData()
+		if filterValue in cls.__identityFilterValues :
+			return result
+
+		if "/" in filterValue :
+			result.append( filterValue )
+		elif IECore.StringAlgo.hasWildcards( filterValue ) :
+			result.append( f"/.../{filterValue}" )
+		else :
+			result.append( f"/.../*{filterValue}*" )
+
+		return result
+
+	@classmethod
+	def _setFilterExpression( cls, filterValue, setFilterValue ) :
+
+		filterSet = "__HierarchyFilter__FilterSet__" if filterValue not in cls.__identityFilterValues else None
+
+		if filterSet and setFilterValue :
+			return f"({filterSet} in ({setFilterValue})) | (({setFilterValue}) in {filterSet})"
+		else :
+			return filterSet or setFilterValue
+
+IECore.registerRunTimeTyped( _HierarchyFilter, "GafferSceneUI::SceneEditor::_HierarchyFilter" )
+
+SceneEditor._HierarchyFilter = _HierarchyFilter
+
+# _SetFilterPlugValueWidget
+# =========================
+
+# Supported plug metadata :
+#
+#  - "setFilterPlugValueWidget:excludedSetNames" : A list of set names that shouldn't be shown in the menu.
+class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__button = GafferUI.MenuButton(
+			image = "setFilterOff.png",
+			menu = GafferUI.Menu(
+				Gaffer.WeakMethod( self.__setsMenuDefinition ),
+				title = "Set Filter"
+			),
+			hasFrame = False,
+		)
+
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug )
+
+		self.__lastNonDefaultValue = None
+		self.__availableSetNames = []
+		self.__excludedSetNames = set()
+
+	def _auxiliaryPlugs( self, plug ) :
+
+		return [ plug.node()["in"] ]
+
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
+
+		assert( len( plugs ) == 1 )
+
+		setNames = []
+		scenePlug = next( iter( auxiliaryPlugs ) )[0]
+		with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+			setNames = [ str( s ) for s in scenePlug.setNames() ]
+
+		return [ {
+			"value" : next( iter( plugs ) ).getValue(),
+			"setNames" : setNames,
+		} ]
+
+	def _updateFromValues( self, values, exception ) :
+
+		if not values :
+			# Background update started
+			return
+
+		assert( len( values ) == 1 and exception is None )
+
+		value = values[0]["value"]
+		if value != self.getPlug().defaultValue() :
+			self.__lastNonDefaultValue = value
+
+		self.__button.setImage( "setFilter{}.png".format( "On" if value else "Off" ) )
+		self.__availableSetNames = values[0]["setNames"]
+
+	def _updateFromMetadata( self ) :
+
+		self.__excludedSetNames = set( Gaffer.Metadata.value( self.getPlug(), "setFilterPlugValueWidget:excludedSetNames" ) or [] )
+
+	def __setsMenuDefinition( self ) :
+
+		m = IECore.MenuDefinition()
+
+		availableSets = set( self.__availableSetNames ) - self.__excludedSetNames
+		builtInSets = { "__lights", "__lightFilters", "__cameras", "__coordinateSystems" } - self.__excludedSetNames
+		selectedSets = set( self.getPlug().getValue().split() )
+
+		m.append(
+			"/Enabled", {
+				"checkBox" : not self.getPlug().isSetToDefault(),
+				"command" : functools.partial(
+					Gaffer.WeakMethod( self.__setPlugValue ),
+					self.__lastNonDefaultValue if self.getPlug().isSetToDefault() else ""
+				),
+				"active" : self.__lastNonDefaultValue is not None,
+			}
+		)
+
+		m.append( "/EnabledDivider", { "divider" : True } )
+
+		if not ( availableSets | selectedSets | builtInSets ) :
+
+			m.append( "/No sets available", { "active" : False } )
+			return m
+
+		def item( setName ) :
+
+			updatedSets = set( selectedSets )
+			if setName in updatedSets :
+				updatedSets.remove( setName )
+			else :
+				updatedSets.add( setName )
+
+			return {
+				"checkBox" : s in selectedSets,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setPlugValue ), " ".join( sorted( updatedSets ) ) )
+			}
+
+		for s in sorted( builtInSets ) :
+			m.append(
+				"/{}".format( IECore.CamelCase.toSpaced( s[2:] ) ),
+				item( s )
+			)
+
+		haveDivider = False
+		pathFn = GafferSceneUI.SetUI.getMenuPathFunction()
+		for s in sorted( availableSets | selectedSets ) :
+			if s in builtInSets :
+				continue
+			if builtInSets and not haveDivider :
+				m.append( "/BuiltInDivider", { "divider" : True } )
+				haveDivider = True
+			m.append( "/" + pathFn( s ), item( s ) )
+
+		return m
+
+	def __setPlugValue( self, value, *unused ) :
+
+		self.getPlug().setValue( value )
+
+SceneEditor._SetFilterPlugValueWidget = _SetFilterPlugValueWidget

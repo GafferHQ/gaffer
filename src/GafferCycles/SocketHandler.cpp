@@ -45,7 +45,7 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -265,11 +265,11 @@ Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketTyp
 		case ccl::SocketType::FLOAT_ARRAY :
 
 			{
-				IECore::Splineff::PointContainer points;
+				IECore::Rampff::PointContainer points;
 				points.insert( std::pair<float, float>( 0.0f, 0.0f ) );
 				points.insert( std::pair<float, float>( 1.0f, 1.0f ) );
 
-				return setupTypedPlug<SplineffPlug>( socketName, plugParent, direction, SplineDefinitionff( points, SplineDefinitionInterpolationCatmullRom ) );
+				return setupTypedPlug<RampffPlug>( socketName, plugParent, direction, Rampff( points, RampInterpolation::CatmullRom ) );
 			}
 
 		case ccl::SocketType::COLOR_ARRAY :
@@ -277,11 +277,11 @@ Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketTyp
 
 			{
 
-				IECore::SplinefColor3f::PointContainer points;
+				IECore::RampfColor3f::PointContainer points;
 				points.insert( std::pair<float, Color3f>( 0.0f, Color3f( 0.0f ) ) );
 				points.insert( std::pair<float, Color3f>( 1.0f, Color3f( 1.0f ) ) );
 
-				return setupTypedPlug<SplinefColor3fPlug>( socketName, plugParent, direction, SplineDefinitionfColor3f( points, SplineDefinitionInterpolationCatmullRom ) );
+				return setupTypedPlug<RampfColor3fPlug>( socketName, plugParent, direction, RampfColor3f( points, RampInterpolation::CatmullRom ) );
 
 			}
 
@@ -430,15 +430,15 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 		case ccl::SocketType::FLOAT_ARRAY :
 
 			{
-				IECore::Splineff::PointContainer points;
+				IECore::Rampff::PointContainer points;
 				points.insert( std::pair<float, float>( 0.0f, 0.0f ) );
 				points.insert( std::pair<float, float>( 1.0f, 1.0f ) );
-				plug = setupTypedPlug<SplineffPlug>(
+				plug = setupTypedPlug<RampffPlug>(
 					nodeType,
 					socketType,
 					plugParent,
 					direction,
-					SplineDefinitionff( points, SplineDefinitionInterpolationCatmullRom )
+					Rampff( points, RampInterpolation::CatmullRom )
 				);
 			}
 			break;
@@ -447,15 +447,15 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 		case ccl::SocketType::VECTOR_ARRAY :
 
 			{
-				IECore::SplinefColor3f::PointContainer points;
+				IECore::RampfColor3f::PointContainer points;
 				points.insert( std::pair<float, Color3f>( 0.0f, Color3f( 0.0f ) ) );
 				points.insert( std::pair<float, Color3f>( 1.0f, Color3f( 1.0f ) ) );
-				plug = setupTypedPlug<SplinefColor3fPlug>(
+				plug = setupTypedPlug<RampfColor3fPlug>(
 					nodeType,
 					socketType,
 					plugParent,
 					direction,
-					SplineDefinitionfColor3f( points, SplineDefinitionInterpolationCatmullRom )
+					RampfColor3f( points, RampInterpolation::CatmullRom )
 				);
 			}
 			break;
@@ -522,25 +522,20 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 	}
 }
 
-void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, bool keepExistingChildren )
+void setupLightPlugs( const std::string &shaderName, Gaffer::GraphComponent *plugsParent )
 {
 
 	// Make sure we have a plug to represent each socket, reusing plugs wherever possible.
 
 	std::set<const Plug *> validPlugs;
+	const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( "light" ) );
 
 	if( shaderName != "portal" )
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "cast_shadow" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupTypedPlug<BoolPlug>( "use_mis", plugsParent, Gaffer::Plug::In, true ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_camera" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_diffuse" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_glossy" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_transmission" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_scatter" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_caustics" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "max_bounces" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "lightgroup" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "intensity", plugsParent, Gaffer::Plug::In, 1.0f ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "exposure", plugsParent, Gaffer::Plug::In, 0.0f ) );
 		validPlugs.insert( setupTypedPlug<Color3fPlug>( "color", plugsParent, Gaffer::Plug::In, Color3f( 1.0f ) ) );
@@ -612,15 +607,12 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 
 	// Remove any old plugs which it turned out we didn't need.
 
-	if( !keepExistingChildren )
+	for( int i = plugsParent->children().size() - 1; i >= 0; --i )
 	{
-		for( int i = plugsParent->children().size() - 1; i >= 0; --i )
+		Plug *child = plugsParent->getChild<Plug>( i );
+		if( validPlugs.find( child ) == validPlugs.end() )
 		{
-			Plug *child = plugsParent->getChild<Plug>( i );
-			if( validPlugs.find( child ) == validPlugs.end() )
-			{
-				plugsParent->removeChild( child );
-			}
+			plugsParent->removeChild( child );
 		}
 	}
 }

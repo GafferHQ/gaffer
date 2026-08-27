@@ -62,7 +62,8 @@ parser.add_argument(
 	"--skipPaths",
 	nargs = '+',
 	default = [],
-	help = "A list of paths to skip the checks for."
+	help = "A list of paths to skip the checks for.",
+	action = "extend",
 )
 
 args = parser.parse_args()
@@ -81,6 +82,7 @@ sys.stdout.flush()
 requiredPaths = [
 	os.path.join( "resources", "examples" ),
 	"arnold",
+	"renderMan",
 ]
 
 if args.skipDocs :

@@ -72,6 +72,3 @@ class StandardNodeToolbarTest( GafferUITest.TestCase ) :
 			GafferUITest.PlugValueWidgetTest.waitForUpdate( widget )
 			self.assertEqual( widget.updateCount, 1 )
 			self.assertEqual( widget.updateContexts[0], script.context() )
-
-if __name__ == "__main__":
-	unittest.main()

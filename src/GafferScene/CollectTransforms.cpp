@@ -72,6 +72,10 @@ CollectTransforms::CollectTransforms( const std::string &name )
 	addChild( new BoolPlug( "requireVariation", Plug::In, false ) );
 
 	addChild( new CompoundObjectPlug( "transforms", Plug::Out, new CompoundObject() ) );
+
+	// Hide `global` plug, since collecting transforms makes no sense unless
+	// `scene:path` is defined.
+	globalPlug()->setName( "__global" );
 }
 
 CollectTransforms::~CollectTransforms()
@@ -310,22 +314,19 @@ bool CollectTransforms::affectsProcessedAttributes( const Gaffer::Plug *input ) 
 	return AttributeProcessor::affectsProcessedAttributes( input ) || input == transformsPlug();
 }
 
-void CollectTransforms::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void CollectTransforms::hashProcessedAttributes( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	IECore::MurmurHash transformsHash = transformsPlug()->hash();
 	if( transformsHash == g_emptyCompoundHash )
 	{
-		h = inPlug()->attributesPlug()->hash();
+		return;
 	}
-	else
-	{
-		AttributeProcessor::hashProcessedAttributes( path, context, h );
-		h.append( transformsHash );
-	}
+
+	AttributeProcessor::hashProcessedAttributes( context, h );
+	h.append( transformsHash );
 }
 
-
-IECore::ConstCompoundObjectPtr CollectTransforms::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+IECore::ConstCompoundObjectPtr CollectTransforms::computeProcessedAttributes( const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	IECore::ConstCompoundObjectPtr collectedTransforms = transformsPlug()->getValue();
 	if( collectedTransforms->members().size() == 0 )

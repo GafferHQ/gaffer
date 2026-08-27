@@ -38,7 +38,6 @@
 import functools
 import pathlib
 import re
-import weakref
 
 import imath
 
@@ -97,20 +96,24 @@ def __nodeDoubleClick( graphEditor, node ) :
 
 GafferUI.GraphEditor.nodeDoubleClickSignal().connect( __nodeDoubleClick )
 
-def __nodeContextMenu( graphEditor, node, menuDefinition ) :
+def __acquireNodeEditors( nodeList ) :
 
-	menuDefinition.append( "/Edit...", { "command" : functools.partial( GafferUI.NodeEditor.acquire, node, floating = True ) } )
+	for n in nodeList :
+		GafferUI.NodeEditor.acquire( n, floating = True )
 
-	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.AnnotationsUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferSceneUI.CryptomatteUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
-	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
+def __nodeContextMenu( graphEditor, nodeList, menuDefinition ) :
 
-GafferUI.GraphEditor.nodeContextMenuSignal().connect( __nodeContextMenu )
+	menuDefinition.append( "/Edit...", { "command" : functools.partial( __acquireNodeEditors, nodeList ) } )
+	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.AnnotationsUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferSceneUI.CryptomatteUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition )
+
+GafferUI.GraphEditor.nodeContextMenuSignal( True ).connect( __nodeContextMenu )
 
 def __plugContextMenu( graphEditor, plug, menuDefinition ) :
 
@@ -236,91 +239,20 @@ def __fileDrop( graphGadget, event ) :
 
 	return True
 
-##########################################################################
-# Scene location drop handler
-##########################################################################
-
-def __dropLocationData( event ) :
-
-	if (
-		not isinstance( event.data, IECore.StringVectorData ) or
-		len( event.data ) != 1 or
-		not event.data[0].startswith( "/" ) or
-		event.sourceWidget is None
-	) :
-		return None
-
-	scene = None
-	sourceEditor = event.sourceWidget.ancestor( GafferUI.Editor )
-	if isinstance( sourceEditor, GafferUI.Viewer ) :
-		if isinstance( event.sourceGadget, GafferSceneUI.SceneGadget ) :
-			scene = sourceEditor.view()["in"].getInput()
-	elif isinstance( sourceEditor, GafferSceneUI.HierarchyView ) :
-		scene = sourceEditor.scene()
-
-	if scene is None :
-		return None
-
-	return {
-		"path" : event.data[0],
-		"scene" : scene,
-		"context" : sourceEditor.getContext(),
-	}
-
-def __locationDragEnter( graphGadget, event ) :
-
-	if __dropLocationData( event ) is None :
-		return False
-
-	GafferUI.Pointer.setCurrent( "targetObjects" )
-	return True
-
-def __locationDragLeave( graphGadget, event ) :
-
-	if __dropLocationData( event ) is not None :
-		if event.destinationWidget is None :
-			# Hack to restore (what we assume to have been) the original
-			# drag pointer. We don't do this when another widget has
-			# accepted the drag, because it would clobber any pointer
-			# change they made in `dragEnter`. But of course that means
-			# that if another widget _has_ accepted the drag but hasn't
-			# changed the pointer themselves (maybe they use highlighting
-			# instead), they will be stuck with the wrong pointer.
-			## \todo This is far too fragile. We need to manage
-			# pointer restoration at a higher level, in Widget.py's
-			# _EventFilter (and ViewportGadget's handlers).
-			GafferUI.Pointer.setCurrent( "objects" )
-		return True
-
-	return False
-
-def __locationDrop( graphGadget, event, graphEditor ) :
-
-	dropLocationData = __dropLocationData( event )
-	if dropLocationData is None :
-		return False
-
-	with dropLocationData["context"] :
-		sourceScene = GafferScene.SceneAlgo.source( dropLocationData["scene"], dropLocationData["path"] )
-
-	if sourceScene is not None :
-		graphGadget.setRoot( sourceScene.node().parent() )
-		## \todo The `frame()` method should probably be on the GraphGadget itself, and the `at`
-		# functionality should be made public.
-		graphEditor()._GraphEditor__frame(
-			[ sourceScene.node() ],
-			at = imath.V2f( GafferUI.Widget.mousePosition( relativeTo = graphEditor() ) )
-		)
-
-	return True
-
 def __graphEditorCreated( graphEditor ) :
 
 	graphEditor.graphGadget().dragEnterSignal().connect( __fileDragEnter )
 	graphEditor.graphGadget().dropSignal().connect( __fileDrop )
 
-	graphEditor.graphGadget().dragEnterSignal().connect( __locationDragEnter )
-	graphEditor.graphGadget().dragLeaveSignal().connect( __locationDragLeave )
-	graphEditor.graphGadget().dropSignal().connect( functools.partial( __locationDrop, graphEditor = weakref.ref( graphEditor ) ) )
-
 GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated )
+
+##########################################################################
+# Filter drop handlers
+##########################################################################
+
+def __nodeGadgetCreated( nodeGadget ) :
+
+	GafferSceneUI.PathFilterUI.addObjectDropTarget( nodeGadget )
+	GafferSceneUI.SetFilterUI.addSetDropTarget( nodeGadget )
+
+GafferUI.NodeGadget.instanceCreatedSignal().connect( __nodeGadgetCreated )

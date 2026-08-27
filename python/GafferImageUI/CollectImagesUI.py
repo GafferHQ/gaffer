@@ -53,48 +53,48 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The image which will be evaluated for each layer.
 			""",
 
-		],
+		},
 
-		"rootLayers" : [
+		"rootLayers" : {
 
-			"description",
+			"description" :
 			"""
 			A list of values for the `layerVariable`, defining the layers to be collected.
 			""",
 
-		],
+		},
 
-		"layerVariable" : [
+		"layerVariable" : {
 
-			"description",
+			"description" :
 			"""
 			This Context Variable will be set with the current layer name when evaluating the in plug.
 			This allows you to vary the upstream processing for each new layer.
 			""",
 
-		],
+		},
 
-		"addLayerPrefix" : [
+		"addLayerPrefix" : {
 
-			"description",
+			"description" :
 			"""
 			When on, the output channel names are automatically prefixed with
 			the name of the layer being collected. Should be turned off when
 			the input channel names already contain the layer name.
 			""",
 
-		],
+		},
 
-		"mergeMetadata" : [
+		"mergeMetadata" : {
 
-			"description",
+			"description" :
 			"""
 			Controls how the output metadata is generated from the collected
 			images. By default, the metadata from the first image alone
@@ -103,7 +103,7 @@ Gaffer.Metadata.registerNode(
 			in the case of multiple image specifying the same piece of metadata.
 			""",
 
-		],
+		},
 	}
 
 )

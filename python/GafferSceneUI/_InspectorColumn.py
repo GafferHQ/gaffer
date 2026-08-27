@@ -34,8 +34,10 @@
 #
 ##########################################################################
 
+import enum
 import functools
 
+import GafferUI.PopupWindow
 import IECore
 
 import Gaffer
@@ -46,119 +48,71 @@ import GafferSceneUI
 from GafferUI.PlugValueWidget import sole
 from GafferSceneUI._HistoryWindow import _HistoryWindow
 
+from . import _GafferSceneUI
+
 # This file extends the C++ functionality of InspectorColumn with functionality
 # that is easier to implement in Python. This should all be considered as one
 # component.
 
-def __toggleBoolean( pathListing, inspectors, inspections ) :
+def __toggleBoolean( pathListing, inspections ) :
 
-	plugs = [ i.acquireEdit() for i in inspections ]
-	# Make sure all the plugs either contain, or are themselves a BoolPlug or can be edited
-	# by `SetMembershipInspector.editSetMembership()`
-	if not all (
-		(
-			isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-			isinstance( plug["value"], Gaffer.BoolPlug )
-		) or (
-			isinstance( plug, ( Gaffer.BoolPlug ) )
-		) or (
-			isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector )
-		)
-		for plug, inspector in zip( plugs, inspectors )
+	# Make sure all the inspections contain and accept BoolData
+	if not all(
+		isinstance( i.value(), IECore.BoolData ) and i.canEdit( IECore.BoolData( True ) )
+		for i in inspections
 	) :
 		return False
 
-	currentValues = []
-
-	# Use a single new value for all plugs.
-	# First we need to find out what the new value would be for each plug in isolation.
-	for inspector, pathInspections in inspectors.items() :
-		for path, inspection in pathInspections.items() :
-			currentValues.append( inspection.value().value if inspection.value() is not None else False )
-
-	# Now set the value for all plugs, defaulting to `True` if they are not
-	# currently all the same.
-	newValue = not sole( currentValues )
+	# Default to `True` if values differ.
+	newValue = not sole( [ i.value().value for i in inspections ] )
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
-		for inspector, pathInspections in inspectors.items() :
-			for path, inspection in pathInspections.items() :
-				if isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
-					inspector.editSetMembership(
-						inspection,
-						path,
-						GafferScene.EditScopeAlgo.SetMembership.Added if newValue else GafferScene.EditScopeAlgo.SetMembership.Removed
-					)
-
-				else :
-					plug = inspection.acquireEdit()
-					if isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
-						plug["value"].setValue( newValue )
-						plug["enabled"].setValue( True )
-						if isinstance( plug, Gaffer.TweakPlug ) :
-							plug["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
-					else :
-						plug.setValue( newValue )
+		for inspection in inspections :
+			inspection.edit( IECore.BoolData( newValue ) )
 
 	return True
 
-def __editSelectedCells( pathListing, quickBoolean = True ) :
+def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False ) :
 
 	global __inspectorColumnPopup
 
-	# A dictionary of the form :
-	# { inspector : { path1 : inspection, path2 : inspection, ... }, ... }
-	inspectors = {}
 	inspections = []
 
 	path = pathListing.getPath().copy()
 	for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 		for pathString in selection.paths() :
 			path.setFromString( pathString )
-			inspectionContext = path.inspectionContext()
-			if inspectionContext is None :
-				continue
+			inspection = column.inspect( path )
+			if inspection is not None :
+				inspections.append( inspection )
 
-			with inspectionContext :
-				inspection = column.inspector().inspect()
-
-				if inspection is not None :
-					inspectors.setdefault( column.inspector(), {} )[pathString] = inspection
-					inspections.append( inspection )
-
-	if len( inspectors ) == 0 :
-		with GafferUI.PopupWindow() as __inspectorColumnPopup :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-				GafferUI.Image( "warningSmall.png" )
-				GafferUI.Label( "<h4>The selected cells cannot be edited in the current Edit Scope</h4>" )
-
-		__inspectorColumnPopup.popup( parent = pathListing )
-
+	if len( inspections ) == 0 :
+		GafferUI.PopupWindow.showWarning( "The selected cells cannot be edited in the current Edit Scope", parent = pathListing )
 		return
 
 	nonEditable = [ i for i in inspections if not i.editable() ]
+	if len( nonEditable ) :
+		GafferUI.PopupWindow.showWarning( nonEditable[0].nonEditableReason(), parent = pathListing )
+		return
 
-	if len( nonEditable ) == 0 :
-		## \todo Consider removal of this usage of the Editor's context when
-		# the toggling code is moved the inspectors.
-		with pathListing.ancestor( GafferUI.Editor ).context() :
-			if not quickBoolean or not __toggleBoolean( pathListing, inspectors, inspections ) :
-				edits = [ i.acquireEdit() for i in inspections ]
-				warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
-				# The plugs are either not boolean, boolean with mixed values,
-				# or attributes that don't exist and are not boolean. Show the popup.
-				__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
+	if not quickBoolean or not __toggleBoolean( pathListing, inspections ) :
 
-				if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-					__inspectorColumnPopup.plugValueWidget().setNameVisible( False )
+		# Not toggleable, so show popup editor.
 
-				__inspectorColumnPopup.popup( parent = pathListing )
+		with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
 
-	else :
-		with GafferUI.PopupWindow() as __inspectorColumnPopup :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-				GafferUI.Image( "warningSmall.png" )
-				GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
+			edits = [ i.acquireEdit() for i in inspections ]
+
+			if ensureEnabled :
+				for edit in edits :
+					if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
+						edit["enabled"].setValue( True )
+
+		warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+		__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
+
+		if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
+			__inspectorColumnPopup.plugValueWidget().setNameVisible( False )
 
 		__inspectorColumnPopup.popup( parent = pathListing )
 
@@ -168,32 +122,28 @@ def __toggleableInspections( pathListing ) :
 	nonEditableReason = ""
 	toggleShouldDisable = True
 
-	path = pathListing.getPath().copy()
+	rootPath = pathListing.getPath()
+	path = rootPath.copy()
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 		for pathString in columnSelection.paths() :
 			path.setFromString( pathString )
-			inspectionContext = path.inspectionContext()
-			if inspectionContext is None :
+			inspection = column.inspect( path )
+			if inspection is None :
 				continue
 
-			with inspectionContext :
-				inspection = column.inspector().inspect()
-				if inspection is None :
-					continue
+			canReenableEdit = False
+			if not inspection.canDisableEdit() and inspection.editable() :
+				edit = inspection.acquireEdit( createIfNecessary = False )
+				canReenableEdit = isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) and Gaffer.Metadata.value( edit, "inspector:disabledEdit" )
+				if canReenableEdit :
+					toggleShouldDisable = False
 
-				canReenableEdit = False
-				if not inspection.canDisableEdit() and inspection.editable() :
-					edit = inspection.acquireEdit( createIfNecessary = False )
-					canReenableEdit = isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) and Gaffer.Metadata.value( edit, "inspector:disabledEdit" )
-					if canReenableEdit :
-						toggleShouldDisable = False
-
-				if canReenableEdit or inspection.canDisableEdit() :
-					inspections.append( inspection )
-				elif nonEditableReason == "" :
-					# Prefix reason with the column header to disambiguate when more than one column has selection
-					nonEditableReason = "{} : ".format( column.headerData().value ) if len( [ x for x in pathListing.getSelection() if not x.isEmpty() ] ) > 1 else ""
-					nonEditableReason += inspection.nonDisableableReason() if toggleShouldDisable else inspection.nonEditableReason()
+			if canReenableEdit or inspection.canDisableEdit() :
+				inspections.append( inspection )
+			elif nonEditableReason == "" :
+				# Prefix reason with the column header to disambiguate when more than one column has selection
+				nonEditableReason = "{} : ".format( column.headerData( rootPath ).value ) if len( [ x for x in pathListing.getSelection() if not x.isEmpty() ] ) > 1 else ""
+				nonEditableReason += inspection.nonDisableableReason() if toggleShouldDisable else inspection.nonEditableReason()
 
 	return inspections, nonEditableReason, toggleShouldDisable
 
@@ -204,13 +154,7 @@ def __toggleEditEnabled( pathListing ) :
 	inspections, nonEditableReason, shouldDisable = __toggleableInspections( pathListing )
 
 	if nonEditableReason != "" :
-		with GafferUI.PopupWindow() as __inspectorColumnPopup :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-				GafferUI.Image( "warningSmall.png" )
-				GafferUI.Label( "<h4>{}</h4>".format( nonEditableReason ) )
-
-			__inspectorColumnPopup.popup( parent = pathListing )
-
+		GafferUI.PopupWindow.showWarning( nonEditableReason, parent = pathListing )
 		return
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
@@ -234,28 +178,23 @@ def __removableAttributeInspections( pathListing ) :
 
 	path = pathListing.getPath().copy()
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-		if not columnSelection.isEmpty() and type( column.inspector() ) != GafferSceneUI.Private.AttributeInspector :
-			return []
 		for pathString in columnSelection.paths() :
 			path.setFromString( pathString )
-			inspectionContext = path.inspectionContext()
-			if inspectionContext is None :
-				continue
-
-			with inspectionContext :
-				inspection = column.inspector().inspect()
-				if inspection is not None and inspection.editable() :
-					source = inspection.source()
-					if (
-						( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
-						( isinstance( source, Gaffer.ValuePlug ) and len( source.children() ) == 2 and "Added" in source and "Removed" in source ) or
-						inspection.editScope() is not None
-					) :
-						inspections.append( inspection )
-					else :
-						return []
+			if not isinstance( column.inspector( path ), GafferSceneUI.Private.AttributeInspector ) :
+				return []
+			inspection = column.inspect( path )
+			if inspection is not None and inspection.editable() :
+				source = inspection.source()
+				if (
+					( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
+					( isinstance( source, Gaffer.ValuePlug ) and len( source.children() ) == 2 and "Added" in source and "Removed" in source ) or
+					inspection.editScope() is not None
+				) :
+					inspections.append( inspection )
 				else :
 					return []
+			else :
+				return []
 
 	return inspections
 
@@ -272,36 +211,24 @@ def __removeAttributes( pathListing ) :
 def __selectedSetExpressions( pathListing ) :
 
 	# A dictionary of the form :
-	# { path1 : set( setExpression1, setExpression2 ), path2 : set( setExpression1 ), ... }
+	# { path1 : set( column1, column2 ), path2 : set( column1 ), ... }
 	result = {}
-
-	# Map of Inspectors to metadata prefixes.
-	prefixMap = {
-		GafferSceneUI.Private.OptionInspector : "option:",
-		GafferSceneUI.Private.AttributeInspector : "attribute:"
-	}
 
 	path = pathListing.getPath().copy()
 	for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
-		if (
-			not columnSelection.isEmpty() and (
-				type( column.inspector() ) not in prefixMap.keys() or
-				not (
-					Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), "ui:scene:acceptsSetName" ) or
-					Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), "ui:scene:acceptsSetNames" ) or
-					Gaffer.Metadata.value( prefixMap.get( type( column.inspector() ) ) + column.inspector().name(), "ui:scene:acceptsSetExpression" )
-				)
-			)
-		) :
-			# We only return set expressions if all selected paths are in
-			# columns that accept set names or set expressions.
-			return {}
-
 		for pathString in columnSelection.paths() :
 			path.setFromString( pathString )
+			if not (
+				__cellMetadata( column, path, "ui:scene:acceptsSetName" ) or
+				__cellMetadata( column, path, "ui:scene:acceptsSetNames" ) or
+				__cellMetadata( column, path, "ui:scene:acceptsSetExpression" )
+			) :
+				# We only return set expressions if all selected paths are in
+				# columns that accept set names or set expressions.
+				return {}
 			cellValue = column.cellData( path ).value
 			if cellValue is not None :
-				result.setdefault( pathString, set() ).add( cellValue )
+				result.setdefault( pathString, set() ).add( column )
 			else :
 				# We only return set expressions if all selected paths have values.
 				return {}
@@ -315,31 +242,61 @@ def __selectAffected( pathListing ) :
 	editor = pathListing.ancestor( GafferUI.Editor )
 	path = pathListing.getPath().copy()
 
-	for pathString, setExpressions in __selectedSetExpressions( pathListing ).items() :
-		# Evaluate set expressions within their path's inspection context
-		# as set membership could vary based on the context.
+	for pathString, columns in __selectedSetExpressions( pathListing ).items() :
 		path.setFromString( pathString )
-		with path.inspectionContext() :
-			for setExpression in setExpressions :
+		for column in columns :
+			# Evaluate set expressions within their path's inspection context
+			# as set membership could vary based on the context.
+			with column.inspectorContext( path ) :
+				setExpression = column.inspector( path ).inspect().value().value
 				result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, editor.settings()["in"] ) )
 
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( editor.scriptNode(), result )
+
+def __inspectionSelection( pathListing ) :
+
+	result = None
+	for column, selection in zip( pathListing.getColumns(), pathListing.getSelection() ) :
+		if selection.isEmpty() :
+			continue
+		# We can only inspect a single cell.
+		if selection.size() > 1 :
+			return None, None
+		if result is not None :
+			return None, None
+
+		path = pathListing.getPath().copy()
+		path.setFromString( selection.paths()[0] )
+		result = column, path
+
+	return result
+
+def __inspect( pathListing, column, path ) :
+
+	inspection = column.inspect( path )
+	if inspection is None :
+		return
+
+	pathListing.__inspectionPopupWindow = __InspectionPopupWindow( inspection )
+	pathListing.__inspectionPopupWindow.popup( parent = pathListing )
 
 def __showHistory( pathListing ) :
 
 	columns = pathListing.getColumns()
 	selection = pathListing.getSelection()
 
+	rootPath = pathListing.getPath()
+	path = rootPath.copy()
 	for i, column in enumerate( columns ) :
 		for pathString in selection[i].paths() :
-			path = pathListing.getPath().copy()
 			path.setFromString( pathString )
-			if path.inspectionContext() is None :
+			if column.inspectorContext( path ) is None or column.inspector( path ) is None :
 				continue
 			window = _HistoryWindow(
-				column.inspector(),
-				path,
-				"History : {} : {}".format( pathString, column.headerData().value )
+				column,
+				pathListing.getPath(),
+				pathString,
+				"History : {} : {}".format( pathString, column.headerData( rootPath ).value )
 			)
 			pathListing.ancestor( GafferUI.Window ).addChildWindow( window, removeOnClose = True )
 			window.setVisible( True )
@@ -355,11 +312,29 @@ def __validateSelection( pathListing ) :
 	if all( [ x.isEmpty() for x in selection ] ) :
 		return False
 
+	firstSelectedColumn = None
 	for columnSelection, column in zip( selection, pathListing.getColumns() ) :
-		if not columnSelection.isEmpty() and not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		if columnSelection.isEmpty() :
+			continue
+
+		if not isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+			return False
+
+		if firstSelectedColumn is None :
+			firstSelectedColumn = column
+		elif type( column ) != type( firstSelectedColumn ) :
+			GafferUI.PopupWindow.showWarning( "Cannot edit columns with mixed types", parent = pathListing )
 			return False
 
 	return True
+
+def __buttonPress( column, path, pathListing, event ) :
+
+	if event.buttons == event.Buttons.Middle and event.modifiers == event.Modifiers.Alt :
+		__inspect( pathListing, column, path )
+		return True
+
+	return False
 
 def __buttonDoubleClick( path, pathListing, event ) :
 
@@ -376,30 +351,75 @@ def __buttonDoubleClick( path, pathListing, event ) :
 
 def __contextMenu( column, pathListing, menuDefinition ) :
 
-	# We only add context menu items when all of the selected
+	if not any( isinstance( c, GafferSceneUI.Private.InspectorColumn ) for c in pathListing.getColumns() ) :
+		return
+
+	pluralSuffix = "" if sum( [ x.size() for x in pathListing.getSelection() ] ) == 1 else "s"
+	valueLabel = "Value"
+	if __onlyNamesSelected( pathListing ) :
+		valueLabel = "Path" if isinstance( pathListing.getPath(), GafferScene.ScenePath ) else "Name"
+	menuDefinition.append(
+		f"Copy {valueLabel}{pluralSuffix}",
+		{
+			"command" : lambda menu : _copySelectedValues( menu.ancestor( GafferUI.PathListingWidget ) ),
+			"active" : _canCopySelectedValues( pathListing ),
+			"shortCut" : "Ctrl+C",
+		}
+	)
+
+	# Our other context menu items only make sense when all of the selected
 	# cells are in InspectorColumns.
 	if not __validateSelection( pathListing ) :
 		return
 
 	menuDefinition.append(
-		"Show History...",
+		f"Paste Value{pluralSuffix}",
 		{
-			"command" : functools.partial( __showHistory, pathListing )
+			"command" : lambda menu : _pasteValues( menu.ancestor( GafferUI.PathListingWidget ) ),
+			"active" : _canPasteValues( pathListing ),
+			"shortCut" : "Ctrl+V",
 		}
 	)
 
-	toggleOnly = isinstance( column.inspector(), GafferSceneUI.Private.SetMembershipInspector )
+	menuDefinition.append(
+		"CopyPasteDivider", { "divider" : True }
+	)
+
+	inspectionSelection = __inspectionSelection( pathListing )
+	menuDefinition.append(
+		"Inspect...",
+		{
+			"command" : lambda menu : __inspect( menu.ancestor( GafferUI.PathListingWidget ), *inspectionSelection ),
+			"active" : inspectionSelection[0] is not None,
+			"shortCut" : "I",
+		}
+	)
+
+	menuDefinition.append(
+		"Show History...",
+		{
+			"command" : lambda menu : __showHistory( menu.ancestor( GafferUI.PathListingWidget ) ),
+			"shortCut" : "H",
+		}
+	)
+
+	menuDefinition.append(
+		"EditDivider", { "divider" : True }
+	)
+
+	toggleOnly = isinstance( column, _GafferSceneUI._LightEditorSetMembershipColumn )
 	menuDefinition.append(
 		"Toggle" if toggleOnly else "Edit...",
 		{
-			"command" : functools.partial( __editSelectedCells, pathListing, toggleOnly ),
+			"command" : lambda menu : __editSelectedCells( menu.ancestor( GafferUI.PathListingWidget ), toggleOnly ),
+			"shortCut" : "Return, Enter",
 		}
 	)
 	inspections, nonEditableReason, disable = __toggleableInspections( pathListing )
 	menuDefinition.append(
 		"{} Edit{}".format( "Disable" if disable else "Reenable", "s" if len( inspections ) > 1 else "" ),
 		{
-			"command" : functools.partial( __toggleEditEnabled, pathListing ),
+			"command" : lambda menu : __toggleEditEnabled( menu.ancestor( GafferUI.PathListingWidget ) ),
 			"active" : len( inspections ) > 0 and nonEditableReason == "",
 			"shortCut" : "D",
 			"description" : nonEditableReason,
@@ -410,7 +430,7 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		menuDefinition.append(
 			"Remove Attribute",
 			{
-				"command" : functools.partial( __removeAttributes, pathListing ),
+				"command" : lambda menu : __removeAttributes( menu.ancestor( GafferUI.PathListingWidget ) ),
 				"shortCut" : "Backspace, Delete",
 			}
 		)
@@ -422,21 +442,43 @@ def __contextMenu( column, pathListing, menuDefinition ) :
 		menuDefinition.append(
 			"Select Affected Objects",
 			{
-				"command" : functools.partial( __selectAffected, pathListing ),
+				"command" : lambda menu : __selectAffected( menu.ancestor( GafferUI.PathListingWidget ) ),
 			}
 		)
 
 def __keyPress( column, pathListing, event ) :
 
-	# We only support keyPress events when all of the selected
-	# cells are in InspectorColumns.
+	if not any( isinstance( c, GafferSceneUI.Private.InspectorColumn ) for c in pathListing.getColumns() ) :
+		return
+
+	if event.key == "C" and event.modifiers == event.Modifiers.Control :
+		_copySelectedValues( pathListing )
+		return True
+
+	# We only support the other keyPress events when all of the selected cells
+	# are in InspectorColumns.
 	if not __validateSelection( pathListing ) :
 		return
 
+	if event.key in ( "Return", "Enter" ) and event.modifiers in ( event.Modifiers.None_, event.modifiers.Control ):
+		__editSelectedCells( pathListing, ensureEnabled = event.modifiers == event.modifiers.Control )
+		return True
+
+	if event.key == "V" and event.modifiers == event.Modifiers.Control :
+		_pasteValues( pathListing )
+		return True
+
+	if event.key == "H" and event.modifiers == event.Modifiers.None_ :
+		__showHistory( pathListing )
+		return True
+
+	if event.key == "I" and event.modifiers == event.Modifiers.None_ :
+		selection = __inspectionSelection( pathListing )
+		if selection[0] is not None :
+			__inspect( pathListing, *selection )
+		return True
+
 	if event.modifiers == event.Modifiers.None_ :
-		if event.key in ( "Return", "Enter" ) :
-			__editSelectedCells( pathListing )
-			return True
 
 		if event.key == "D" :
 			inspections, nonEditableReason, _ = __toggleableInspections( pathListing )
@@ -453,11 +495,636 @@ def __keyPress( column, pathListing, event ) :
 
 	return False
 
+__originalDragPointer = None
+__DropMode = enum.Enum( "__DropMode", [ "Add", "Remove", "Replace", "SetExpressionInclude", "SetExpressionRemove", "NotEditable" ] )
+
+def __dragEnter( column, path, pathListing, event ) :
+
+	global __originalDragPointer
+	if __originalDragPointer is None :
+		__originalDragPointer = GafferUI.Pointer.getCurrent()
+
+	if path is None or path.isEmpty() :
+		return False
+
+	if not isinstance( event.data, IECore.Object ) or isinstance( event.data, IECore.NullObject ) :
+		return False
+
+	inspection = column.inspect( path )
+	if inspection is None :
+		return False
+
+	__updatePointer( column, path, inspection, event )
+	return True
+
+def __dragLeave( column, path, pathListing, event ) :
+
+	global __originalDragPointer
+	if __originalDragPointer is None :
+		return False
+
+	GafferUI.Pointer.setCurrent( __originalDragPointer )
+	__originalDragPointer = None
+
+	return True
+
+def __dragMove( column, path, pathListing, event ) :
+
+	if path is None or path.isEmpty() :
+		return False
+
+	inspection = column.inspect( path )
+	if inspection is None :
+		return False
+
+	__updatePointer( column, path, inspection, event )
+	return True
+
+def __updatePointer( column, path, inspection, event ) :
+
+	dropMode = __dropMode( column, path, inspection, event )
+	if dropMode in ( __DropMode.Add, __DropMode.SetExpressionInclude ) :
+		GafferUI.Pointer.setCurrent( "add" )
+	elif dropMode in ( __DropMode.Remove, __DropMode.SetExpressionRemove ) :
+		GafferUI.Pointer.setCurrent( "remove" )
+	elif dropMode == __DropMode.NotEditable :
+		GafferUI.Pointer.setCurrent( "notEditable" )
+	else :
+		GafferUI.Pointer.setCurrent( __originalDragPointer )
+
+def __dropMode( column, path, inspection, event ) :
+
+	if isinstance( inspection.value(), IECore.StringData ) :
+		if __cellMetadata( column, path, "ui:scene:acceptsSetExpression" ) :
+			if event.modifiers == event.Modifiers.Shift :
+				return __DropMode.SetExpressionInclude
+			elif event.modifiers == event.Modifiers.Control :
+				return __DropMode.SetExpressionRemove
+		if __cellMetadata( column, path, "ui:scene:acceptsSetNames" ) :
+			if event.modifiers == event.Modifiers.Shift :
+				return __DropMode.Add if __updatable( inspection ) else __DropMode.NotEditable
+			elif event.modifiers == event.Modifiers.Control :
+				return __DropMode.Remove if __updatable( inspection ) else __DropMode.NotEditable
+	elif isinstance( inspection.value(), IECore.StringVectorData ) :
+		if event.modifiers == event.Modifiers.Shift :
+			return __DropMode.Add
+		elif event.modifiers == event.Modifiers.Control :
+			return __DropMode.Remove
+
+	return __DropMode.Replace
+
+def __updatable( inspection ) :
+
+	if isinstance( inspection.value(), IECore.StringData ) :
+		if any( i in inspection.value().value for i in [ "(", ")", "|", "-", "&" ] ) :
+			return False
+
+		plugTokens = inspection.value().value.split( " " )
+		if any( i in plugTokens for i in [ "in", "containing" ] ) :
+			return False
+
+	return True
+
+def __drop( column, path, pathListing, event ) :
+
+	if path is None or path.isEmpty() :
+		return False
+
+	global __originalDragPointer
+	if __originalDragPointer is not None :
+		GafferUI.Pointer.setCurrent( __originalDragPointer )
+		__originalDragPointer = None
+
+	inspection = column.inspect( path )
+	if inspection is None :
+		return True
+
+	if __dropMode( column, path, inspection, event ) == __DropMode.NotEditable :
+		GafferUI.PopupWindow.showWarning( "Cannot modify values containing operators with drag and drop.", parent = pathListing )
+		return True
+
+	data = __dropData( column, path, inspection, event )
+	if not inspection.canEdit( data ) :
+		GafferUI.PopupWindow.showWarning( inspection.nonEditableReason( data ) or "Unable to edit.", parent = pathListing )
+		return True
+
+	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+		inspection.edit( data )
+
+	return True
+
+def __dropData( column, path, inspection, event ) :
+
+	if isinstance( event.data, IECore.StringVectorData ) and isinstance( inspection.value(), IECore.StringData ) :
+		data = IECore.StringData( " ".join( event.data ) )
+	elif isinstance( event.data, IECore.StringData ) and isinstance( inspection.value(), IECore.StringVectorData ) :
+		data = IECore.StringVectorData( event.data.value.split( " " ) )
+	else :
+		data = event.data
+
+	mode = __dropMode( column, path, inspection, event )
+	if mode == __DropMode.Replace or not isinstance( inspection.value(), ( IECore.StringData, IECore.StringVectorData ) ) :
+		return data
+	elif mode == __DropMode.SetExpressionInclude :
+		return IECore.StringData( Gaffer.SetExpressionAlgo.include( inspection.value().value, data.value ) )
+	elif mode == __DropMode.SetExpressionRemove :
+		return IECore.StringData( Gaffer.SetExpressionAlgo.remove( inspection.value().value, data.value ) )
+
+	strings = set( inspection.value().value.split( " " ) if isinstance( inspection.value(), IECore.StringData ) else inspection.value() )
+	updateData = event.data.value.split( " " ) if isinstance( event.data, IECore.StringData ) else event.data
+
+	if mode == __DropMode.Add :
+		strings.update( updateData )
+	elif mode == __DropMode.Remove :
+		strings.difference_update( updateData )
+	else :
+		return data
+
+	if isinstance( inspection.value(), IECore.StringData ) :
+		return IECore.StringData( " ".join( sorted( strings ) ) )
+	else :
+		return IECore.StringVectorData( sorted( strings ) )
+
+def __cellMetadata( column, path, metadataKey ) :
+
+	# Map of Inspectors to metadata prefixes.
+	prefixMap = {
+		GafferSceneUI.Private.OptionInspector : "option:",
+		GafferSceneUI.Private.AttributeInspector : "attribute:"
+	}
+
+	inspector = column.inspector( path )
+	if type( inspector ) not in prefixMap.keys() :
+		return None
+
+	return Gaffer.Metadata.value( prefixMap.get( type( inspector ) ) + inspector.name(), metadataKey )
+
+##########################################################################
+# __InspectionPopupWindow
+##########################################################################
+
+class __InspectionPopupWindow( GafferUI.PopupWindow ) :
+
+	def __init__( self, inspection, **kw ) :
+
+		GafferUI.PopupWindow.__init__( self, **kw )
+
+		self.__inspection = inspection
+
+		with self :
+
+			grid = GafferUI.GridContainer( spacing = 6 )
+			with grid.nextRow() :
+
+				GafferUI.Label( "<b>Source</b>", parenting = { "alignment" : (  GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
+
+				if inspection.fallbackDescription() :
+					GafferUI.Label( inspection.fallbackDescription() )
+				elif inspection.source() is not None :
+					node = Gaffer.MetadataAlgo.firstViewableNode( inspection.source() )
+					nameLabel = GafferUI.NameLabel(
+						node,
+						numComponents = node.relativeName( node.scriptNode() ).count( "." ) + 1,
+					)
+					nameLabel.setFormatter( lambda l : ".".join( x.getName() for x in l ) )
+					nameLabel.dragEndSignal().connectFront( Gaffer.WeakMethod( self.__nameLabelDragEnd ) )
+
+			with grid.nextRow() :
+
+				GafferUI.Label( "<b>Value</b>", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top ) } )
+
+				value = inspection.value()
+				valueLabel = None
+				## \todo It would be nice to support more widget types here, maybe we could create a common
+				# ValueWidget base class with a `create()` method similar to `PlugValueWidget.create()`?
+				if IECore.DataTraits.isSequenceDataType( value ) :
+					GafferUI.VectorDataWidget(
+						value, editable = False, maximumVisibleRows = 10,
+						parenting = { "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
+					)
+				elif ( connectionSource := GafferSceneUI.Private.ParameterInspector.connectionSource( value ) ) :
+					value = connectionSource.shader + "." + connectionSource.name
+					with GafferUI.ListContainer(
+						GafferUI.ListContainer.Orientation.Horizontal,
+						spacing = 4,
+						parenting = { "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
+					) :
+						GafferUI.Image( "sceneInspectorShaderConnection.png" )
+						valueLabel = GafferUI.Label( f"{value}" )
+				else :
+					valueLabel = GafferUI.Label(
+						f"{value}",
+						parenting = { "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) }
+					)
+
+				if valueLabel is not None :
+					valueLabel.buttonPressSignal().connect( lambda widget, event : True )
+					valueLabel.dragBeginSignal().connect( Gaffer.WeakMethod( self.__valueDragBegin ) )
+					valueLabel.dragEndSignal().connect( Gaffer.WeakMethod( self.__valueDragEnd ) )
+
+				button = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Copy Value", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) } )
+				button.clickedSignal().connect( Gaffer.WeakMethod( self.__valueCopyClicked ) )
+
+	def __nameLabelDragEnd( self, widget, event ) :
+
+		self.close()
+		return False
+
+	def __valueDragBegin( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( "values" )
+		return self.__inspection.value()
+
+	def __valueDragEnd( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( None )
+		return True
+
+	def __valueCopyClicked( self, widget ) :
+
+		application = self.ancestor( GafferUI.Editor ).scriptNode().ancestor( Gaffer.ApplicationRoot )
+		application.setClipboardContents( self.__inspection.value() )
+		self.close()
+		return True
+
+##########################################################################
+# Copy and paste
+##########################################################################
+
+def __vectorDataFromObjectMatrix( objectMatrix ) :
+
+	if objectMatrix.numRows() != 1 and objectMatrix.numColumns() != 1 :
+		return None
+
+	values = []
+	for row in range( 0, objectMatrix.numRows() ) :
+		for column in range( 0, objectMatrix.numColumns() ) :
+			v = objectMatrix[row,column]
+			if hasattr( v, "value" ) :
+				v = v.value
+			values.append( v )
+
+	valueType = sole( type( v ) for v in values )
+	if not valueType :
+		return None
+
+	with IECore.IgnoredExceptions( TypeError ) :
+		return IECore.DataTraits.dataTypeFromElement( values )( values )
+
+	return None
+
+def __isNameColumn( column ) :
+
+	return isinstance( column, GafferUI.StandardPathColumn ) and column.property() == "name"
+
+def __onlyNamesSelected( pathListing ) :
+
+	columnsWithSelection = [
+		x[1] for x in zip( pathListing.getSelection(), pathListing.getColumns() )
+		if not x[0].isEmpty()
+	]
+
+	return len( columnsWithSelection ) == 1 and __isNameColumn( columnsWithSelection[0] )
+
+## Returns True if the pathListing selection can be copied to the clipboard.
+def _canCopySelectedValues( pathListing ) :
+
+	dataOrReason = _dataFromPathListingOrReason( pathListing )
+	if isinstance( dataOrReason, str ) :
+		return False
+
+	return True
+
+## Returns the reason why the pathListing selection cannot be copied to the clipboard.
+def _nonCopyableReason( pathListing ) :
+
+	dataOrReason = _dataFromPathListingOrReason( pathListing )
+	if isinstance( dataOrReason, str ) :
+		return dataOrReason
+
+	return ""
+
+## Copies the pathListing selection to the clipboard.
+## \todo The copy functionality implemented here could be relocated to PathListingWidget,
+# this would allow values to be copied from any column.
+def _copySelectedValues( pathListing ) :
+
+	dataOrReason = _dataFromPathListingOrReason( pathListing )
+	if isinstance( dataOrReason, str ) :
+		GafferUI.PopupWindow.showWarning( dataOrReason, parent = pathListing )
+		return
+
+	scriptNode = pathListing.ancestor( GafferUI.Editor ).scriptNode()
+	scriptNode.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( dataOrReason )
+
+## Returns the pathListing selection as data, or the reason why the selection is not valid.
+def _dataFromPathListingOrReason( pathListing ) :
+
+	selection = __orderedSelection( pathListing )
+
+	if not selection :
+		return "No selection"
+
+	numColumns = max( [ len( x[1] ) for x in selection ] )
+	if not all( [ len( x[1] ) == numColumns for x in selection ] ) :
+		# Only return data if all rows have the same number of columns
+		## \todo Relax this constraint?
+		return "Each row in the selection must contain the same number of cells."
+
+	rootPath = pathListing.getPath()
+	path = rootPath.copy()
+	objectMatrix = IECore.ObjectMatrix( len( selection ), numColumns )
+	rowIndex = 0
+	for pathString, columns in selection :
+		path.setFromString( pathString )
+
+		for columnIndex, column in enumerate( columns ) :
+
+			if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+				# Prefer the raw `Inspector.Result.value` over the potentially
+				# reformatted `column.cellData()`.
+				value = column.inspect( path )
+				value = value.value() if value is not None else None
+			elif __isNameColumn( column ) and isinstance( path, GafferScene.ScenePath ) :
+				# Prefer full paths suitable for pasting into PathFilters etc.
+				value = pathString
+			else :
+				value = column.cellData( path ).value
+
+			if value is None :
+				reason = "No value to copy."
+				if len( columns ) > 1 :
+					return "{} : {}".format( column.headerData( rootPath ).value, reason )
+				else :
+					return reason
+
+			## \todo Store values as a CompoundData including the column name so values could be pasted to a row and matched by name.
+			objectMatrix[ rowIndex, columnIndex ] = value
+
+		rowIndex += 1
+
+	if __onlyNamesSelected( pathListing ) :
+		# Convert to form suitable for pasting into PathFilters,
+		# DeleteRenderPasses etc.
+		## \todo Do this conversion for all results where possible, and
+		# update `__getObjectMatrixFromClipboard()` to handle it.
+		return __vectorDataFromObjectMatrix( objectMatrix )
+
+	if objectMatrix.numRows() == 1 and objectMatrix.numColumns() == 1 :
+		# If a single cell is selected, return its data directly.
+		# This allows easy pasting of a single value to PlugValueWidgets.
+		return objectMatrix[0, 0]
+
+	return objectMatrix
+
+## Returns True if the current clipboard contents can be pasted to the pathListing selection.
+def _canPasteValues( pathListing ) :
+
+	objectMatrix = __getObjectMatrixFromClipboard( pathListing )
+	pasteFunctions = __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix )
+	if isinstance( pasteFunctions, str ) :
+		return False
+
+	return True
+
+## Returns the reason why the current clipboard contents cannot be pasted.
+def _nonPasteableReason( pathListing ) :
+
+	objectMatrix = __getObjectMatrixFromClipboard( pathListing )
+	pasteFunctionsOrReason = __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix )
+	if isinstance( pasteFunctionsOrReason, str ) :
+		return pasteFunctionsOrReason
+
+	return ""
+
+## Pastes the current clipboard contents to the pathListing selection.
+def _pasteValues( pathListing ) :
+
+	objectMatrix = __getObjectMatrixFromClipboard( pathListing )
+	pasteFunctionsOrReason = __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix )
+	if isinstance( pasteFunctionsOrReason, str ) :
+		GafferUI.PopupWindow.showWarning( pasteFunctionsOrReason, parent = pathListing )
+		return
+
+	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
+		for f in pasteFunctionsOrReason :
+			f()
+
+def __getObjectMatrixFromClipboard( pathListing ) :
+
+	scriptNode = pathListing.ancestor( GafferUI.Editor ).scriptNode()
+
+	clipboard = scriptNode.ancestor( Gaffer.ApplicationRoot ).getClipboardContents()
+	if isinstance( clipboard, IECore.ObjectMatrix ) :
+		return clipboard
+	elif isinstance( clipboard, IECore.Data ) :
+		matrix = IECore.ObjectMatrix( 1, 1 )
+		matrix[0, 0] = clipboard
+		return matrix
+	else :
+		## \todo Support conversion of IECore.ObjectVector and VectorData to ObjectMatrix
+		return None
+
+def __matrixValue( objectMatrix, row, column ) :
+
+	value = objectMatrix[ row % objectMatrix.numRows(), column % objectMatrix.numColumns() ]
+
+	if isinstance( value, IECore.CompoundData ) and "value" in value :
+		value = value["value"]
+		# Values copied from spreadsheets are nested within a CellPlug,
+		# we want `CellPlug.value.value`.
+		if isinstance( value, IECore.CompoundData ) and "value" in value :
+			value = value["value"]
+
+	return value
+
+## \todo Support pasting `atTime` once `Inspection::edit()` has support for it.
+def __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix ) :
+
+	if objectMatrix is None :
+		return "Nothing to paste"
+
+	pasteFunctions = []
+
+	rootPath = pathListing.getPath()
+	path = rootPath.copy()
+	selection = __orderedSelection( pathListing )
+	## \todo Allow a N x 1 or 1 x N sized clipboard to be pasted as either a row or column
+	for rowIndex, (pathString, columns) in enumerate( selection ) :
+		sourceIndex = 0
+		path.setFromString( pathString )
+		for column in columns :
+			inspection = column.inspect( path )
+			if inspection is None :
+				return "\"{}\" is not editable.".format( pathString )
+
+			value = __matrixValue( objectMatrix, rowIndex, sourceIndex )
+			sourceIndex += 1
+			if value is None :
+				continue
+
+			if inspection.canEdit( value ) :
+				pasteFunctions.append( functools.partial( inspection.edit, value ) )
+			elif len( columns ) > 1 :
+				return "{} : {}".format( column.headerData( rootPath ).value, inspection.nonEditableReason( value ) )
+			else :
+				return inspection.nonEditableReason( value )
+
+	return pasteFunctions
+
+def __orderedSelection( pathListing ) :
+
+	# Returns the current selection ordered based on the
+	# current sort order of the PathListingWidget.
+
+	rows = {}
+	for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+		for path in selection.paths() :
+			rows.setdefault( path, [] ).append( column )
+
+	matrix = [
+		( path, rows[path] ) for path in pathListing.visualOrder( IECore.PathMatcher( list( rows.keys() ) ) )
+	]
+
+	return matrix
+
+##########################################################################
+# Signal connections
+##########################################################################
+
 def __inspectorColumnCreated( column ) :
 
-	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
-		column.buttonDoubleClickSignal().connectFront( __buttonDoubleClick )
+	if isinstance( column, ( GafferUI.StandardPathColumn, GafferSceneUI.Private.InspectorColumn ) ) :
 		column.contextMenuSignal().connectFront( __contextMenu )
 		column.keyPressSignal().connectFront( __keyPress )
 
-GafferSceneUI.Private.InspectorColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )
+	if isinstance( column, GafferSceneUI.Private.InspectorColumn ) :
+		## \todo `buttonPressSignal` should provide the column for us.
+		column.buttonPressSignal().connectFront( functools.partial( __buttonPress, column ) )
+		column.buttonDoubleClickSignal().connectFront( __buttonDoubleClick )
+		column.dragEnterSignal().connectFront( __dragEnter )
+		column.dragMoveSignal().connectFront( __dragMove )
+		column.dragLeaveSignal().connectFront( __dragLeave )
+		column.dropSignal().connectFront( __drop )
+
+GafferUI.PathColumn.instanceCreatedSignal().connect( __inspectorColumnCreated )
+
+# There's no `PathColumn.dragBeginSignal()`, so we can't automatically add a drag handler
+# via `instanceCreatedSignal()`. So for now we expose a `connectToDragBeginSignal()` method
+# that clients must call explicitly.
+
+def __dragBegin( pathListing, event ) :
+
+	data = _dataFromPathListingOrReason( pathListing )
+
+	if isinstance( data, str ) :
+		# We couldn't get data from the selection, but we don't want to allow a
+		# fallthrough to the default PathListingWidget drag implementation, because
+		# it only really makes sense for `SelectionMode.Rows`. Compromise, by using
+		# the pointer to indicate "this isn't working" and putting the reason in the
+		# drag data.
+		GafferUI.Pointer.setCurrent( "notEditable" )
+		return data
+	else :
+		if __onlyNamesSelected( pathListing ) and isinstance( pathListing.getPath(), GafferScene.ScenePath ) :
+			GafferUI.Pointer.setCurrent( "objects" )
+		else :
+			GafferUI.Pointer.setCurrent( "values" )
+		return data
+
+def __connectToDragBeginSignal( pathListingWidget ) :
+
+	pathListingWidget.dragBeginSignal().connectFront( __dragBegin )
+
+GafferSceneUI.Private.InspectorColumn.connectToDragBeginSignal = __connectToDragBeginSignal
+
+##########################################################################
+# VisibilityColumn
+##########################################################################
+
+def __selectInvisibleAncestorsPopup( pathListing, ancestors ) :
+
+	with GafferUI.PopupWindow() as pathListing.__inspectorColumnPopup :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			GafferUI.Image( "warningSmall.png" )
+			GafferUI.Label( "<h4>Location(s) have been unhidden, but are still not visible because they have invisible ancestors.</h4>" )
+			button = GafferUI.Button( image = "selectInvisibleAncestors.png", hasFrame = False, toolTip = "Select invisible ancestors" )
+			button.clickedSignal().connect( functools.partial( __selectAncestorsClicked, pathListing = pathListing, ancestors = ancestors ) )
+
+	pathListing.__inspectorColumnPopup.popup( parent = pathListing )
+
+def __selectAncestorsClicked( widget, pathListing, ancestors ) :
+
+	selection = [ ancestors if isinstance( x, GafferSceneUI.Private.VisibilityColumn ) else IECore.PathMatcher() for x in pathListing.getColumns() ]
+	pathListing.setSelection( selection, True )
+	widget.ancestor( GafferUI.Window ).close()
+	return True
+
+def __toggleVisibility( pathListing ) :
+
+	inspections = []
+
+	path = pathListing.getPath().copy()
+	for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+		for pathString in selection.paths() :
+			path.setFromString( pathString )
+			inspection = column.inspect( path )
+			if inspection is None :
+				continue
+
+			if not inspection.editable() :
+				GafferUI.PopupWindow.showWarning( inspection.nonEditableReason(), parent = pathListing )
+				return
+
+			inspections.append( ( inspection, pathString ) )
+
+	if len( inspections ) == 0 :
+		GafferUI.PopupWindow.showWarning( "The selected cells cannot be edited in the current Edit Scope", parent = pathListing )
+		return
+
+	editor = pathListing.ancestor( GafferUI.Editor )
+	# Default to attempting to make the selection visible if visibility differs.
+	makeVisible = not sole( [ i.value().value for i, _ in inspections ] )
+	with editor.context() :
+		with Gaffer.UndoScope( editor.scriptNode() ) :
+			for inspection, pathString in inspections :
+				GafferScene.EditScopeAlgo.setVisibility( inspection.editScope(), pathString, makeVisible )
+
+		if makeVisible :
+			hiddenAncestors = GafferSceneUI.EditScopeUI._hiddenAncestors( editor.editScope()["out"], IECore.PathMatcher( [ i[1] for i in inspections ] ) )
+			if not hiddenAncestors.isEmpty() :
+				__selectInvisibleAncestorsPopup( pathListing, hiddenAncestors )
+
+	return
+
+def __visibilityKeyPress( column, pathListing, event ) :
+
+	if not __validateSelection( pathListing ) :
+		return True
+
+	if event.key in ( "Return", "Enter" ) :
+		__toggleVisibility( pathListing )
+		return True
+
+	return False
+
+def __visibilityButtonDoubleClick( path, pathListing, event ) :
+
+	# We only support doubleClick events when all of the selected
+	# cells are in VisibilityColumns.
+	if not __validateSelection( pathListing ) :
+		return False
+
+	if event.button == event.Buttons.Left :
+		__toggleVisibility( pathListing )
+		return True
+
+	return False
+
+def __visibilityColumnCreated( column ) :
+
+	if isinstance( column, GafferSceneUI.Private.VisibilityColumn ) :
+		column.buttonDoubleClickSignal().connectFront( __visibilityButtonDoubleClick )
+		column.keyPressSignal().connectFront( __visibilityKeyPress )
+
+GafferSceneUI.Private.VisibilityColumn.instanceCreatedSignal().connect( __visibilityColumnCreated )

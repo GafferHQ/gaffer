@@ -51,29 +51,29 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"min" : [
+		"min" : {
 
-			"description",
+			"description" :
 			"""
 			The minimum value - values below this will
 			be clamped if minEnabled is on.
 			""",
 
-		],
+		},
 
-		"max" : [
+		"max" : {
 
-			"description",
+			"description" :
 			"""
 			The maximum value - values above this will
 			be clamped if maxEnabled is on.
 			""",
 
-		],
+		},
 
-		"minClampTo" : [
+		"minClampTo" : {
 
-			"description",
+			"description" :
 			"""
 			By default, values below the minimum value are
 			clamped to the minimum value itself. If minClampToEnabled
@@ -81,11 +81,11 @@ Gaffer.Metadata.registerNode(
 			be useful for highlighting out-of-range values.
 			""",
 
-		],
+		},
 
-		"maxClampTo" : [
+		"maxClampTo" : {
 
-			"description",
+			"description" :
 			"""
 			By default, values above the maximum value are
 			clamped to the maximum value itself. If maxClampToEnabled
@@ -93,45 +93,45 @@ Gaffer.Metadata.registerNode(
 			be useful for highlighting out-of-range values.
 			""",
 
-		],
+		},
 
-		"minEnabled" : [
+		"minEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			Turns on clamping for values below the min value.
 			""",
 
-		],
+		},
 
-		"maxEnabled" : [
+		"maxEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			Turns on clamping for values above the max value.
 			""",
 
-		],
+		},
 
-		"minClampToEnabled" : [
+		"minClampToEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			Turns on the effect of minClampTo, allowing out
 			of range values to be highlighted.
 			""",
 
-		],
+		},
 
-		"maxClampToEnabled" : [
+		"maxClampToEnabled" : {
 
-			"description",
+			"description" :
 			"""
 			Turns on the effect of maxClampTo, allowing out
 			of range values to be highlighted.
 			""",
 
-		],
+		},
 
 	}
 

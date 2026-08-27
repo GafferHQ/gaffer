@@ -118,6 +118,66 @@ using SurfaceTextureCache = IECorePreview::LRUCache<IECore::MurmurHash, Compound
 SurfaceTextureCache g_surfaceTextureCache( surfaceTextureGetter, 1024 * 1024 * 64 );
 
 //////////////////////////////////////////////////////////////////////////
+// Surface texture
+//////////////////////////////////////////////////////////////////////////
+
+IECore::DataPtr surfaceTexture( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution )
+{
+	if( attributeName != "ai:light" && attributeName != "light" )
+	{
+		return nullptr;
+	}
+
+	const ShaderNetwork::Parameter &output = shaderNetwork->getOutput();
+	if( !output )
+	{
+		return nullptr;
+	}
+
+	const IECoreScene::Shader *outputShader = shaderNetwork->outputShader();
+	const IECore::InternedString metadataTarget = attributeName.string() + ":" + outputShader->getName();
+
+	ConstStringDataPtr colorParamData = Gaffer::Metadata::value<StringData>( metadataTarget, "colorParameter" );
+	if( !colorParamData )
+	{
+		return nullptr;
+	}
+
+	ShaderNetwork::Parameter colorParam( output.shader, colorParamData->readable() );
+	const ShaderNetwork::Parameter &colorInput = shaderNetwork->input( colorParam );
+	if( !colorInput )
+	{
+		return nullptr;
+	}
+
+	// skydome and quad_light may specify a resolution, so use that.
+	const IntData *textureResolutionData = shaderNetwork->outputShader()->parametersData()->member<IntData>( "resolution" );
+	int textureResolution = textureResolutionData ? textureResolutionData->readable() : 512;
+	Imath::V2i resolution( std::min( textureResolution, maxTextureResolution ) );
+
+	ConstStringDataPtr typeData = Gaffer::Metadata::value<StringData>( metadataTarget, "type" );
+	if( typeData && typeData->readable() == "environment" )
+	{
+		resolution.y /= 2;
+	}
+
+	CompoundDataPtr surfaceTexture = nullptr;
+	try
+	{
+		surfaceTexture = g_surfaceTextureCache.get( SurfaceTextureCacheGetterKey( colorInput, shaderNetwork, resolution ) );
+	}
+	catch( const Exception &e )
+	{
+		msg( Msg::Warning, "ArnoldLightVisualiser", e.what() );
+		return nullptr;
+	}
+
+	return surfaceTexture;
+}
+
+GafferSceneUI::StandardLightVisualiser::SurfaceTextureRegistration g_surfaceTexture( surfaceTexture );
+
+//////////////////////////////////////////////////////////////////////////
 // IESVisualisation helpers
 //////////////////////////////////////////////////////////////////////////
 
@@ -185,10 +245,6 @@ class ArnoldLightVisualiser : public GafferSceneUI::StandardLightVisualiser
 
 		Visualisations visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
-	protected :
-
-		IECore::DataPtr surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const override;
-
 	private :
 
 		static LightVisualiser::LightVisualiserDescription<ArnoldLightVisualiser> g_description;
@@ -234,55 +290,6 @@ Visualisations ArnoldLightVisualiser::visualise( const IECore::InternedString &a
 	}
 
 	return v;
-}
-
-IECore::DataPtr ArnoldLightVisualiser::surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const
-{
-	const ShaderNetwork::Parameter &output = shaderNetwork->getOutput();
-	if( !output )
-	{
-		return nullptr;
-	}
-
-	const IECoreScene::Shader *outputShader = shaderNetwork->outputShader();
-	const IECore::InternedString metadataTarget = "ai:light:" + outputShader->getName();
-
-	ConstStringDataPtr colorParamData = Gaffer::Metadata::value<StringData>( metadataTarget, "colorParameter" );
-	if( !colorParamData )
-	{
-		return nullptr;
-	}
-
-	ShaderNetwork::Parameter colorParam( output.shader, colorParamData->readable() );
-	const ShaderNetwork::Parameter &colorInput = shaderNetwork->input( colorParam );
-	if( !colorInput )
-	{
-		return nullptr;
-	}
-
-	// skydome and quad_light may specify a resolution, so use that.
-	const IntData *textureResolutionData = shaderNetwork->outputShader()->parametersData()->member<IntData>( "resolution" );
-	int textureResolution = textureResolutionData ? textureResolutionData->readable() : 512;
-	Imath::V2i resolution( std::min( textureResolution, maxTextureResolution ) );
-
-	ConstStringDataPtr typeData = Gaffer::Metadata::value<StringData>( metadataTarget, "type" );
-	if( typeData && typeData->readable() == "environment" )
-	{
-		resolution.y /= 2;
-	}
-
-	CompoundDataPtr surfaceTexture = nullptr;
-	try
-	{
-		surfaceTexture = g_surfaceTextureCache.get( SurfaceTextureCacheGetterKey( colorInput, shaderNetwork, resolution ) );
-	}
-	catch( const Exception &e )
-	{
-		msg( Msg::Warning, "ArnoldLightVisualiser", e.what() );
-		return nullptr;
-	}
-
-	return surfaceTexture;
 }
 
 }

@@ -158,6 +158,8 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 	def testCantDeleteInternalSets( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
+
 		camera = GafferScene.Camera()
 
 		group = GafferScene.Group()
@@ -181,6 +183,3 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		deleteSets["in"].setInput( cube["out"] )
 
 		self.assertEqual( deleteSets["out"].setHash( "test" ), cube["out"].setHash( "test" ) )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -176,6 +176,22 @@ ValuePlug::HashCacheMode defaultHashCacheMode()
 
 } // namespace
 
+namespace std
+{
+
+// With oneTBB 2021 `std::hash<HashCacheKey>` is a requirement of `Process::acquireCollaborativeResult()`,
+// which uses `tbb::concurrent_hash_map` internally to manage collaborations.
+template<>
+struct hash<HashCacheKey>
+{
+	size_t operator()( const HashCacheKey &k ) const noexcept
+	{
+		return tbb_hasher( k );
+	}
+};
+
+} // namespace std
+
 class ValuePlug::HashProcess : public Process
 {
 
@@ -266,7 +282,7 @@ class ValuePlug::HashProcess : public Process
 				// No value in local cache, so either compute it directly or get it via
 				// the global cache if it's expensive enough to warrant collaboration.
 				IECore::MurmurHash result;
-				if( cachePolicy == CachePolicy::Default || cachePolicy == CachePolicy::Standard )
+				if( cachePolicy == CachePolicy::Default )
 				{
 					result = HashProcess( p, plug, computeNode ).run();
 				}
@@ -839,24 +855,6 @@ bool ValuePlug::acceptsInput( const Plug *input ) const
 	return true;
 }
 
-void ValuePlug::setInput( PlugPtr input )
-{
-	// set value back to what it was before
-	// we received a connection. we do that
-	// before calling Plug::setInput, so that
-	// we've got our new state set correctly before
-	// the dirty signal is emitted. we don't emit
-	// in the setValueInternal call, because we don't
-	// want to double up on the signals that the Plug
-	// is emitting for us in Plug::setInput().
-	if( getInput() && !input )
-	{
-		setValueInternal( m_staticValue, false );
-	}
-
-	Plug::setInput( input );
-}
-
 PlugPtr ValuePlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	PlugPtr result = new ValuePlug( name, direction, getFlags() );
@@ -1113,7 +1111,7 @@ void ValuePlug::parentChanged( Gaffer::GraphComponent *oldParent )
 
 	// Addition or removal of a child is considered to change a plug's value,
 	// so we emit the appropriate signal. This is mostly of use for the
-	// SplinePlug and CompoundDataPlug, where points and data members
+	// RampPlug and CompoundDataPlug, where points and data members
 	// are added and removed by adding and removing plugs.
 	if( auto p = IECore::runTimeCast<ValuePlug>( oldParent ) )
 	{

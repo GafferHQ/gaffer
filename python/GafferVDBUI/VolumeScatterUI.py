@@ -35,10 +35,10 @@
 #
 ##########################################################################
 
-import GafferUI
+import Gaffer
 import GafferVDB
 
-GafferUI.Metadata.registerNode(
+Gaffer.Metadata.registerNode(
 
 	GafferVDB.VolumeScatter,
 
@@ -49,57 +49,57 @@ GafferUI.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description",
+			"description" :
 			"""
 			The name given to the PointsPrimitive -
 			this will be placed under the location specified by
 			"destination".
 			""",
 
-		],
+		},
 
-		"grid" : [
+		"grid" : {
 
-			"description",
+			"description" :
 			"""
 			Name of grid in VDBObject in which points will be scattered.
 			""",
 
-		],
+		},
 
-		"density" : [
+		"density" : {
 
-			"description",
+			"description" :
 			"""
 			This density is multiplied with the value of the grid to produce a number of points per unit volume.
 			""",
-		],
+		},
 
-		"pointType" : [
+		"pointType" : {
 
-			"description",
+			"description" :
 			"""
 			The render type of the points. This defaults to
 			"gl:point" so that the points are rendered in a
 			lightweight manner in the viewport.
 			""",
 
-			"preset:GL Point", "gl:point",
-			"preset:Particle", "particle",
-			"preset:Sphere", "sphere",
-			"preset:Disk", "disk",
-			"preset:Patch", "patch",
-			"preset:Blobby", "blobby",
+			"preset:GL Point" : "gl:point",
+			"preset:Particle" : "particle",
+			"preset:Sphere" : "sphere",
+			"preset:Disk" : "disk",
+			"preset:Patch" : "patch",
+			"preset:Blobby" : "blobby",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"destination" : [
+		"destination" : {
 
-			"description",
+			"description" :
 			"""
 			The location where the points primitives will be placed in the output scene.
 			When the destination is evaluated, the `${scene:path}` variable holds
@@ -110,15 +110,15 @@ GafferUI.Metadata.registerNode(
 			> source mesh.
 			""",
 
-		],
+		},
 
-		"parent" : [
+		"parent" : {
 
-			"description",
+			"description" :
 			"""
 			This plug has been deprecated in favour of using a filter to select the volume.
 			"""
-		],
+		},
 
 	}
 )

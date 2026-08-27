@@ -55,7 +55,6 @@
 #include "fmt/format.h"
 
 #include "ai_metadata.h"
-#include "ai_version.h"
 
 using namespace std;
 using namespace boost;
@@ -65,10 +64,6 @@ using namespace GafferScene;
 using namespace GafferArnold;
 using namespace Gaffer;
 using namespace GafferOSL;
-
-#if ARNOLD_VERSION_NUM < 70301
-#define AI_NODE_IMAGER AI_NODE_DRIVER
-#endif
 
 namespace
 {

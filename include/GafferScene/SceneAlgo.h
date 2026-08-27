@@ -44,6 +44,7 @@
 #include "Gaffer/NumericPlug.h"
 
 #include "IECoreScene/Camera.h"
+#include "IECoreScene/PrimitiveVariable.h"
 
 #include "IECore/Export.h"
 
@@ -139,6 +140,40 @@ void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterP
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
+/// Calls `locationFunctor` in parallel for all locations in the scene, passing the results
+/// serially to `gatherFunctor`. Parent locations are guaranteed to be passed to `gatherFunctor`
+/// before their children, but otherwise the order of execution is unspecified.
+template <class LocationFunctor, class GatherFunctor>
+void parallelGatherLocations(
+	const ScenePlug *scene,
+	LocationFunctor &&locationFunctor, // Signature : T locationFunctor( const ScenePlug *scene, const ScenePath &path )
+	GatherFunctor &&gatherFunctor, // Signature : void gatherFunctor( T &locationFunctorResult )
+	const ScenePlug::ScenePath &root = ScenePlug::ScenePath()
+);
+
+/// Calls `locationFunctor` in parallel for all locations in the scene, merging all results
+/// using `reduceFunctor`.
+template <typename T, typename LocationFunctor, typename ReduceFunctor>
+T parallelReduceLocations(
+	const ScenePlug *scene,
+	const T& identity,
+	LocationFunctor &&locationFunctor, // Signature : T locationFunctor( const ScenePlug *scene, const ScenePath &path )
+	ReduceFunctor &&reduceFunctor, // Signature : void reduceFunctor( T &result, const T &other )
+	const ScenePlug::ScenePath &root = ScenePlug::ScenePath()
+);
+
+/// Calls `locationFunctor` in parallel for all locations in the scene. The results from sibling locations
+/// are merged using `reduceFunctor`, and results from children are merged using `mergeChildrenFunctor`.
+template <typename T, typename LocationFunctor, typename MergeChildrenFunctor, typename ReduceFunctor>
+T parallelReduceLocations(
+	const ScenePlug *scene,
+	const T& identity,
+	LocationFunctor &&locationFunctor, // Signature : T locationFunctor( const ScenePlug *scene, const ScenePath &path )
+	MergeChildrenFunctor &&mergeChildrenFunctor, // Signature : void mergeChildrenFunctor( T &result, const T &childrenResult )
+	ReduceFunctor &&reduceFunctor, // Signature : void reduceFunctor( T &result, const T &sibling )
+	const ScenePlug::ScenePath &root = ScenePlug::ScenePath()
+);
+
 /// Searching
 /// =========
 
@@ -213,8 +248,13 @@ struct AttributeHistory : public History
 
 /// Filters `attributesHistory` and returns a history for the specific `attribute`.
 /// `attributesHistory` should have been obtained from a previous call to
-/// `history( scene->attributesPlug(), path )`. If the attribute doesn't exist then
-/// null is returned.
+/// `history( scene->attributesPlug(), path )`.
+///
+/// > Note : This function is not sensitive to the current context because it uses the contexts
+/// > from `attributesHistory`. Hence a separate canceller must be passed if cancellation is
+/// > required.
+GAFFERSCENE_API AttributeHistory::Ptr attributeHistory( const History *attributesHistory, const IECore::InternedString &attribute, const IECore::Canceller *canceller );
+/// \todo Remove and add nullptr `canceller` default in the version above.
 GAFFERSCENE_API AttributeHistory::Ptr attributeHistory( const History *attributesHistory, const IECore::InternedString &attribute );
 
 /// Extends History to provide information on the history of a specific option.
@@ -231,9 +271,29 @@ struct OptionHistory : public History
 
 /// Filters `globalsHistory` and returns a history for the specific `option`.
 /// `globalsHistory` should have been obtained from a previous call to
-/// `history( scene->globalsPlug() )`. If the option doesn't exist then
-/// null is returned.
+/// `history( scene->globalsPlug() )`.
 GAFFERSCENE_API OptionHistory::Ptr optionHistory( const History *globalsHistory, const IECore::InternedString &option );
+
+/// Extends History to provide information on the history of a specific primitive variable.
+/// Primitive variables may be renamed by ShufflePrimitiveVariables nodes and this is reflected
+/// in the `primitiveVariableName` field.
+struct PrimitiveVariableHistory : public History
+{
+	IE_CORE_DECLAREMEMBERPTR( PrimitiveVariableHistory )
+	PrimitiveVariableHistory(
+		const ScenePlugPtr &scene, const Gaffer::ContextPtr &context,
+		const IECore::InternedString &primitiveVariableName, const IECoreScene::PrimitiveVariable &primitiveVariableValue
+	) :	History( scene, context ), primitiveVariableName( primitiveVariableName ), primitiveVariableValue( primitiveVariableValue ) {}
+	IECore::InternedString primitiveVariableName;
+	IECoreScene::PrimitiveVariable primitiveVariableValue;
+};
+
+/// Filters `objectHistory` and returns a history for the specific `primitiveVariable`.
+/// `objectHistory` should have been obtained from a previous call to
+/// `history( scene->objectPlug(), path )`. If the primitive variable doesn't exist then
+/// null is returned.
+GAFFERSCENE_API PrimitiveVariableHistory::Ptr primitiveVariableHistory( const History *objectHistory, const IECore::InternedString &primitiveVariable );
+
 
 /// Returns the upstream scene originally responsible for generating the specified location.
 GAFFERSCENE_API ScenePlug *source( const ScenePlug *scene, const ScenePlug::ScenePath &path );
@@ -280,6 +340,12 @@ GAFFERSCENE_API IECore::PathMatcher linkedObjects( const ScenePlug *scene, const
 GAFFERSCENE_API IECore::PathMatcher linkedLights( const ScenePlug *scene, const ScenePlug::ScenePath &object );
 /// Returns the paths to all lights which are linked to at least one of the specified objects.
 GAFFERSCENE_API IECore::PathMatcher linkedLights( const ScenePlug *scene, const IECore::PathMatcher &objects );
+
+/// Complex hashing
+/// ===============
+
+// Hashes all properties of a location and all its children. Does not include set membership.
+GAFFERSCENE_API IECore::MurmurHash hierarchyHash( const ScenePlug *scene, const ScenePlug::ScenePath &root );
 
 /// Miscellaneous
 /// =============

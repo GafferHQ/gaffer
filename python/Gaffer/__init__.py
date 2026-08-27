@@ -38,14 +38,6 @@
 import os
 import pathlib
 
-# Make sure we can can find DLLs that are linked into Python modules on Windows.
-if hasattr( os, "add_dll_directory" ) :
-	os.add_dll_directory( ( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "lib" ).resolve() )
-	for extensionPath in os.environ.get( "GAFFER_EXTENSION_PATHS", "" ).split( os.pathsep ) :
-		for dllPath in [ pathlib.Path( extensionPath ) / d for d in [ "bin", "lib" ] ] :
-			if dllPath.is_dir() :
-				os.add_dll_directory( dllPath.resolve() )
-
 __import__( "IECore" )
 
 from ._Gaffer import *
@@ -53,7 +45,7 @@ from .import _Range
 from .About import About
 from .Application import Application
 from .WeakMethod import WeakMethod
-from . import _BlockedConnection
+from . import _Signals
 from .FileNamePathFilter import FileNamePathFilter
 from .UndoScope import UndoScope
 from .Context import Context
@@ -86,5 +78,17 @@ def executablePath( absolute = True ) :
 		return rootPath() / "bin" / executable
 
 	return executable
+
+def __loadSharedLibrary( name ) :
+
+	import platform
+	import ctypes
+
+	prefix, suffix = {
+		"Darwin" : ( "lib", ".dylib" ),
+		"Windows" : ( "", ".dll" ),
+	}.get( platform.system(), ( "lib", ".so" ) )
+
+	return ctypes.CDLL( f"{prefix}{name}{suffix}" )
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffer" )

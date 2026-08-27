@@ -90,15 +90,17 @@ class GAFFERSCENE_API Shader : public Gaffer::ComputeNode
 		Gaffer::Plug *parametersPlug();
 		const Gaffer::Plug *parametersPlug() const;
 
-		/// Shaders can be enabled and disabled. A disabled shader
-		/// returns an empty object from the state() method, causing
-		/// any downstream ShaderAssignments to act as if they've been
-		/// disabled. If a shader in the middle of a network is disabled
-		/// then by default its output connections are ignored on any
-		/// downstream nodes. Derived classes may implement correspondingInput( outPlug() )
-		/// to allow disabled shaders to act as a pass-through instead.
+		/// Shaders can be enabled and disabled. By default, disabled shaders
+		/// and all their upstream inputs are omitted from the generated
+		/// network. But pass-through behaviours can be defined using metadata,
+		/// as documented on `correspondingInput()`.
 		Gaffer::BoolPlug *enabledPlug() override;
 		const Gaffer::BoolPlug *enabledPlug() const override;
+		/// Implemented to look up `correspondingInput` metadata on a
+		/// `{shaderType}:{shaderName}:{outputName}` target. The value should
+		/// be the name of an input parameter.
+		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
+		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
 
 		/// Plug which defines the shader's output - this should
 		/// be connected to a ShaderAssignment::shaderPlug() or

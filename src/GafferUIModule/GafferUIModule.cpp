@@ -41,7 +41,6 @@
 #include "ConnectionGadgetBinding.h"
 #include "ContainerGadgetBinding.h"
 #include "EventBinding.h"
-#include "GLWidgetBinding.h"
 #include "GadgetBinding.h"
 #include "GraphGadgetBinding.h"
 #include "HandleBinding.h"
@@ -87,7 +86,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindHandle();
 	bindTool();
 	bindPathListingWidget();
-	bindGLWidget();
 	bindPlugAdder();
 	bindAnimationGadget();
 	bindPathColumn();

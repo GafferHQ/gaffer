@@ -658,7 +658,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setInput( writer["fileName"] )
 
-		for extension in IECoreScene.SceneInterface.supportedExtensions() :
+		for extension in IECoreScene.SceneInterface.supportedExtensions( IECore.IndexedIO.OpenMode.Write ) :
 
 			if extension in { "abc", "usdz", "vdb" } :
 				# - `IECoreAlembic::AlembicScene::writeSet()` hasn't been implemented properly for
@@ -731,6 +731,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		cube["sets"].setValue( "setA setB setC setD setE setF" )
 
 		light = GafferSceneTest.TestLight()
+		light.loadShader( "simpleLight" )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( sceneReader["out"] )
@@ -825,6 +826,3 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].message, 'No file found for "/volume"' )
-
-if __name__ == "__main__":
-	unittest.main()

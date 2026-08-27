@@ -38,7 +38,6 @@ import imath
 import math
 
 import IECore
-import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -88,9 +87,7 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 						sampler["pixel"].setValue( imath.V2f( x, y ) )
 
-						c = sampler["color"].getValue()
-						for i in range( 4 ):
-							self.assertAlmostEqual( c[i], [ x, y, 0, 0 ][i], places = 3 )
+						self.assertEqualWithAbsError( sampler["color"].getValue(), imath.Color4f( x, y, 0, 0 ), 0.001 )
 						hashes.add( str( sampler["color"].hash() ) )
 						count += 1
 
@@ -193,7 +190,3 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 		inf["multiply"].setValue( imath.Color4f( float( "nan" ) ) )
 		self.assertTrue( math.isnan( sampler["color"].getValue()[0] ) )
-
-
-if __name__ == "__main__":
-	unittest.main()

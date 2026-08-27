@@ -40,6 +40,7 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 #include "GafferSceneUI/Private/InspectorColumn.h"
+#include "GafferSceneUI/Private/VisibilityColumn.h"
 
 #include "GafferUI/PathColumn.h"
 
@@ -49,6 +50,40 @@ using namespace boost::python;
 using namespace IECorePython;
 using namespace GafferUI;
 using namespace GafferSceneUI::Private;
+
+namespace
+{
+
+InspectorPtr inspectorColumnInspectorBinding( const InspectorColumn &column, const Gaffer::Path &path, const IECore::Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return boost::const_pointer_cast<Inspector>( column.inspector( path, canceller ) );
+}
+
+Inspector::ResultPtr inspectorColumnInspectBinding( const InspectorColumn &column, const Gaffer::Path &path, const IECore::Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return column.inspect( path, canceller );
+}
+
+Gaffer::PathPtr inspectorColumnHistoryPathBinding( const InspectorColumn &column, const Gaffer::Path &path, const IECore::Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return column.historyPath( path, canceller );
+}
+
+Gaffer::ContextPtr inspectorColumnInspectorContextBinding( const InspectorColumn &column, const Gaffer::Path &path, const IECore::Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return boost::const_pointer_cast<Gaffer::Context>( column.inspectorContext( path, canceller ) );
+}
+
+PathColumn::CellData inspectorColumnCellDataFromDataValue( const IECore::DataPtr &data )
+{
+	return InspectorColumn::cellDataFromValue( data.get() );
+}
+
+} // namespace
 
 void GafferSceneUIModule::bindInspectorColumn()
 {
@@ -73,7 +108,33 @@ void GafferSceneUIModule::bindInspectorColumn()
 				arg_( "sizeMode" ) = PathColumn::Default
 			)
 		) )
-		.def( "inspector", &InspectorColumn::inspector, return_value_policy<CastToIntrusivePtr>() )
+		.def( init<IECore::InternedString, const PathColumn::CellData &, IECore::InternedString, PathColumn::SizeMode>(
+			(
+				arg_( "inspectorProperty" ),
+				arg_( "headerData" ),
+				arg_( "contextProperty") = "inspector:context",
+				arg_( "sizeMode" ) = PathColumn::Default
+			)
+		) )
+		.def( "inspector", &inspectorColumnInspectorBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "inspect", &inspectorColumnInspectBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "historyPath", &inspectorColumnHistoryPathBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "inspectorContext", &inspectorColumnInspectorContextBinding, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "cellDataFromValue", &InspectorColumn::cellDataFromValue )
+		// Overload accepting DataPtr is needed to allow automatic type
+		// conversion from simple types - string, int etc. Those exist for
+		// DataPtr but not ObjectPtr.
+		.def( "cellDataFromValue", &inspectorColumnCellDataFromDataValue )
+		.staticmethod( "cellDataFromValue" )
+	;
+
+	RefCountedClass<GafferSceneUI::Private::VisibilityColumn, GafferSceneUI::Private::InspectorColumn>( "VisibilityColumn" )
+		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &>(
+			(
+				arg_( "scene" ),
+				arg_( "editScope" )
+			)
+		) )
 	;
 
 }

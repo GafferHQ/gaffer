@@ -156,6 +156,3 @@ class CompoundNumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 		w.setHighlighted( False )
 		for childPlug in w.getPlug() :
 			self.assertFalse( w.childPlugValueWidget( childPlug ).getHighlighted() )
-
-if __name__ == "__main__":
-	unittest.main()

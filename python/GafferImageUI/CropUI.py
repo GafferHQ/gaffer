@@ -45,11 +45,10 @@ import GafferImage
 # sets the area for the node to cover the entire format.
 def postCreate( node, menu ) :
 
-	with node.scriptNode().context() :
-		if node["in"].getInput() :
-			cropFormat = node["in"]["format"].getValue()
-		else:
-			cropFormat = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
+	if node["in"].getInput() :
+		cropFormat = node["in"]["format"].getValue()
+	else:
+		cropFormat = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
 
 	node['area'].setValue( cropFormat.getDisplayWindow() )
 
@@ -71,55 +70,61 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"areaSource" : [
+		"areaSource" : {
 
-			"description",
+			"description" :
 			"""
-			Where to source the actual area to use. If this is
-			set to DataWindow, it will use the input's Data Window,
-			if it is set to DisplayWindow, it will use the input's
-			Display Window, and if it is set to Area, it will use
-			the Area plug.
+			The source of the area to crop to.
+
+			- Area : A user-defined area specified by the `area` plug.
+			- Format : A user-defined area specified by the `format` plug.
+			- DataWindow : The data window of the input image.
+			- DisplayWindow : The display window of the input image.
+			- Auto : The minimal area that contains all the non-empty pixels
+			  of the input image. For flat images, this means pixels
+			  with a non-zero value in at least one channel, and for deep images
+			  it means pixels with at least one sample.
 			""",
 
-			"preset:Area", GafferImage.Crop.AreaSource.Area,
-			"preset:Format", GafferImage.Crop.AreaSource.Format,
-			"preset:DataWindow", GafferImage.Crop.AreaSource.DataWindow,
-			"preset:DisplayWindow", GafferImage.Crop.AreaSource.DisplayWindow,
+			"preset:Area" : GafferImage.Crop.AreaSource.Area,
+			"preset:Format" : GafferImage.Crop.AreaSource.Format,
+			"preset:DataWindow" : GafferImage.Crop.AreaSource.DataWindow,
+			"preset:DisplayWindow" : GafferImage.Crop.AreaSource.DisplayWindow,
+			"preset:Auto" : GafferImage.Crop.AreaSource.Auto,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"area" : [
+		"area" : {
 
-			"description",
+			"description" :
 			"""
 			The custom area to set the Data/Display Window to.
 			This plug is only used if 'Area Source' is set to
 			Area.
 			""",
 
-			"layout:activator", "areaSourceIsArea",
+			"layout:activator" : "areaSourceIsArea",
 
-		],
+		},
 
-		"format" : [
+		"format" : {
 
-			"description",
+			"description" :
 			"""
 			The Format to use as the area to set the Data/Display
 			Window to. This plug is only used if 'Area Source' is
 			set to Format.
 			""",
 
-			"layout:activator", "areaSourceIsFormat",
+			"layout:activator" : "areaSourceIsFormat",
 
-		],
+		},
 
-		"formatCenter" : [
+		"formatCenter" : {
 
-			"description",
+			"description" :
 			"""
 			Whether to center the output image (based on the
 			existing display window) inside the new display
@@ -128,43 +133,43 @@ Gaffer.Metadata.registerNode(
 			Window' it checked.
 			""",
 
-			"layout:activator", "areaSourceIsFormatAndAffectDisplayWindowIsOn",
-			"layout:divider", True
+			"layout:activator" : "areaSourceIsFormatAndAffectDisplayWindowIsOn",
+			"layout:divider" : True
 
-		],
+		},
 
-		"affectDataWindow" : [
+		"affectDataWindow" : {
 
-			"description",
+			"description" :
 			"""
 			Whether to intersect the defined area with the input Data
 			Window. It will never pad black onto the Data Window, it
 			will only ever reduce the existing Data Window.
 			""",
 
-		],
+		},
 
-		"affectDisplayWindow" : [
+		"affectDisplayWindow" : {
 
-			"description",
+			"description" :
 			"""
 			Whether to assign a new Display Window based on the defined
 			area.
 			""",
 
-		],
+		},
 
-		"resetOrigin" : [
+		"resetOrigin" : {
 
-			"description",
+			"description" :
 			"""
 			Shifts the cropped image area back to the origin, so that
 			the bottom left of the display window is at ( 0, 0 ).
 			""",
 
-			"layout:activator", "affectDisplayWindowIsOn",
+			"layout:activator" : "affectDisplayWindowIsOn",
 
-		]
+		}
 
 	}
 

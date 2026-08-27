@@ -254,6 +254,3 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 		# GIL while doing that then it'll never be able to
 		# check for cancellation, and we'll deadlock.
 		del task
-
-if __name__ == "__main__":
-	unittest.main()

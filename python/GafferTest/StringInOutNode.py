@@ -72,4 +72,4 @@ class StringInOutNode( Gaffer.ComputeNode ) :
 
 		self.numComputeCalls += 1
 
-IECore.registerRunTimeTyped( StringInOutNode, typeName = "GafferTest::StringInOutNode" )
+IECore.registerRunTimeTyped( StringInOutNode, "GafferTest::StringInOutNode" )

@@ -504,6 +504,3 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		GafferSceneTest.SceneTestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__previousCacheMemoryLimit )
-
-if __name__ == "__main__":
-	unittest.main()

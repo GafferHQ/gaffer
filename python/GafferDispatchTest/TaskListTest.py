@@ -67,6 +67,3 @@ class TaskListTest( GafferTest.TestCase ) :
 
 		n["sequence"].setValue( True )
 		self.assertTrue( n["task"].requiresSequenceExecution() )
-
-if __name__ == "__main__":
-	unittest.main()

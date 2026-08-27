@@ -46,7 +46,7 @@ import GafferUI
 # Public methods
 ##########################################################################
 
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/GraphBookmarksDivider", { "divider" : True } )
@@ -54,9 +54,9 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 	menuDefinition.append(
 		"/Bookmarked",
 		{
-			"checkBox" : Gaffer.MetadataAlgo.getBookmarked( node ),
-			"command" : functools.partial( __setBookmarked, node ),
-			"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+			"checkBox" : all( Gaffer.MetadataAlgo.getBookmarked( n ) for n in nodeList ),
+			"command" : functools.partial( __setBookmarked, nodeList ),
+			"active" : not any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList ),
 		}
 	)
 
@@ -64,18 +64,18 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		menuDefinition.append(
 			"/Numeric Bookmark/%s" % i,
 			{
-				"command" : functools.partial( __assignNumericBookmark, node, i ),
+				"command" : functools.partial( __assignNumericBookmark, nodeList[0], i ),
 				"shortCut" : "Ctrl+%i" % i,
-				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+				"active" : len( nodeList ) == 1 and not Gaffer.MetadataAlgo.readOnly( nodeList[0] ),
 			}
 		)
 
 	menuDefinition.append(
 		"/Numeric Bookmark/Remove",
 		{
-			"command" : functools.partial( __assignNumericBookmark, node, 0 ),
+			"command" : functools.partial( __clearNumericBookmarks, nodeList ),
 			"shortCut" : "Ctrl+0",
-			"active" : Gaffer.MetadataAlgo.numericBookmark( node )
+			"active" : any( Gaffer.MetadataAlgo.numericBookmark( n ) for n in nodeList )
 		}
 	)
 
@@ -169,10 +169,11 @@ def connectToEditor( editor ) :
 # Internal implementation
 ##########################################################################
 
-def __setBookmarked( node, bookmarked ) :
+def __setBookmarked( nodeList, bookmarked ) :
 
-	with Gaffer.UndoScope( node.scriptNode() ) :
-		Gaffer.MetadataAlgo.setBookmarked( node, bookmarked )
+	with Gaffer.UndoScope( nodeList[0].scriptNode() ) :
+		for node in nodeList :
+			Gaffer.MetadataAlgo.setBookmarked( node, bookmarked )
 
 ## \todo Perhaps this functionality should be provided by the
 # GraphGadget or NodeGadget class?
@@ -280,15 +281,25 @@ def __findBookmark( editor, bookmarks = None ) :
 	editor.__findBookmarksMenu = GafferUI.Menu( menuDefinition, title = "Find Bookmark", searchable = True )
 	editor.__findBookmarksMenu.popup()
 
+def __clearSingleNumericBookmark( node ) :
+
+	current = Gaffer.MetadataAlgo.numericBookmark( node )
+	if current :
+		Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), current, None )
+
 def __assignNumericBookmark( node, numericBookmark ) :
 
 	with Gaffer.UndoScope( node.scriptNode() ) :
 		if numericBookmark == 0 : # Remove the current numeric bookmark from selection
-			current = Gaffer.MetadataAlgo.numericBookmark( node )
-			if current :
-				Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), current, None )
+			__clearSingleNumericBookmark( node )
 		else :
 			Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), numericBookmark, node )
+
+def __clearNumericBookmarks( nodeList ) :
+
+	with Gaffer.UndoScope( nodeList[0].scriptNode() ) :
+		for node in nodeList :
+			__clearSingleNumericBookmark( node )
 
 def __findNumericBookmark( editor, numericBookmark ) :
 
@@ -358,5 +369,3 @@ def __editorKeyPress( editor, event ) :
 				editor.setNodeSet( editor.scriptNode().selection() )
 
 			return True
-
-

@@ -55,73 +55,73 @@ Gaffer.Metadata.registerNode(
 
 
 	plugs = {
-		"zMode" : [
-			"description",
+		"zMode" : {
+			"description" :
 			"""
 			Deep images must have a Z channel - it can be set either as a fixed depth, or using a channel.
 			""",
 
-			"preset:Constant", GafferImage.FlatToDeep.ZMode.Constant,
-			"preset:Channel", GafferImage.FlatToDeep.ZMode.Channel,
+			"preset:Constant" : GafferImage.FlatToDeep.ZMode.Constant,
+			"preset:Channel" : GafferImage.FlatToDeep.ZMode.Channel,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"depth" : [
+		"depth" : {
 
-			"description",
+			"description" :
 			"""
 			A constant depth value to place the whole image at.
 			""",
-			"layout:visibilityActivator", "zConstant",
-		],
+			"layout:visibilityActivator" : "zConstant",
+		},
 
-		"zChannel" : [
+		"zChannel" : {
 
-			"description",
+			"description" :
 			"""
 			Uses this channel as a Z channel, defining the depth each pixel is at.
 			""",
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"layout:visibilityActivator", "zChannel",
-		],
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"layout:visibilityActivator" : "zChannel",
+		},
 
-		"zBackMode" : [
-			"description",
+		"zBackMode" : {
+			"description" :
 			"""
 			Deep images may optionally have a ZBack channel - for transparent samples, this specifies
 			the depth range over which the opacity gradually increases from 0 to the alpha value.
 			""",
 
-			"preset:None", GafferImage.FlatToDeep.ZBackMode.None_,
-			"preset:Thickness", GafferImage.FlatToDeep.ZBackMode.Thickness,
-			"preset:Channel", GafferImage.FlatToDeep.ZBackMode.Channel,
+			"preset:None" : GafferImage.FlatToDeep.ZBackMode.None_,
+			"preset:Thickness" : GafferImage.FlatToDeep.ZBackMode.Thickness,
+			"preset:Channel" : GafferImage.FlatToDeep.ZBackMode.Channel,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"thickness" : [
+		"thickness" : {
 
-			"description",
+			"description" :
 			"""
 			A constant thickness value for the whole image.  Transparent images will be
 			interpreted as fog where the density increases over this range.
 			""",
-			"layout:visibilityActivator", "zBackThickness",
-		],
+			"layout:visibilityActivator" : "zBackThickness",
+		},
 
-		"zBackChannel" : [
+		"zBackChannel" : {
 
-			"description",
+			"description" :
 			"""
 			Uses this channel as a ZBack channel, defining the end of the depth range for each
 			pixel.
 			""",
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"layout:visibilityActivator", "zBackChannel",
-		],
+			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
+			"layout:visibilityActivator" : "zBackChannel",
+		},
 
 	}
 

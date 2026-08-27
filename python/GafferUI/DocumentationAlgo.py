@@ -80,6 +80,9 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 			except :
 				continue
 
+			if name.startswith( "_" ) :
+				continue
+
 			if not node.__module__.startswith( module.__name__ + "." ) :
 				# Skip nodes which look like they've been injected from
 				# another module by one of the compatibility config files.
@@ -323,21 +326,9 @@ def __cmark() :
 	if __cmarkDLL != "" :
 		return __cmarkDLL
 
-	sys = platform.system()
-
-	if sys == "Darwin" :
-		prefix = "lib"
-		suffix = ".dylib"
-	elif sys == "Windows" :
-		prefix = ""
-		suffix = ".dll"
-	else :
-		prefix = "lib"
-		suffix = ".so"
-
 	try :
-		__cmarkDLL = ctypes.CDLL( f"{prefix}cmark-gfm{suffix}" )
-		__cmarkExtensionsDLL = ctypes.CDLL( f"{prefix}cmark-gfm-extensions{suffix}" )
+		__cmarkDLL = Gaffer.__loadSharedLibrary( "cmark-gfm" )
+		__cmarkExtensionsDLL = Gaffer.__loadSharedLibrary( "cmark-gfm-extensions" )
 	except :
 		__cmarkDLL = None
 		return __cmarkDLL

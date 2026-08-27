@@ -34,9 +34,9 @@
 #
 ##########################################################################
 
-import imath
+import contextlib
 
-import IECore
+import imath
 
 import GafferUI
 
@@ -48,6 +48,7 @@ from Qt import QtWidgets
 # syntax used by ListContainer. Indexing starts from 0,0 at the top left of the
 # container.
 #
+# ```
 # g = GafferUI.GridContainer()
 # g[0,0] = GafferUI.Button() # add a button at cell 0,0
 # g[1:3, 0] = GafferUI.Button() # add a button spanning two cells in the x direction
@@ -57,6 +58,7 @@ from Qt import QtWidgets
 #
 # del[0,0] # delete the button in the top left corner.
 # del[2,0:2] # delete all children intersecting the specified area (both the remaining buttons in this case).
+# ```
 class GridContainer( GafferUI.ContainerWidget ) :
 
 	def __init__( self, spacing=0, borderWidth=0, **kw ) :
@@ -76,6 +78,8 @@ class GridContainer( GafferUI.ContainerWidget ) :
 		# currently has) ourselves. this is so we can implement gridSize() to return
 		# what we really want.
 		self.__maxCoordinate = imath.V2i( -1 )
+
+		self.__nextIndex = None
 
 	def gridSize( self ) :
 
@@ -139,7 +143,13 @@ class GridContainer( GafferUI.ContainerWidget ) :
 
 		return xRange, yRange
 
-	def addChild( self, child, index=( 1, 1 ), alignment = ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.None_ ) ) :
+	def addChild( self, child, index = None, alignment = ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.None_ ) ) :
+
+		if index is None :
+			index = self.__nextIndex if self.__nextIndex is not None else ( 1, 1 )
+		elif self.__nextIndex is not None :
+			assert( isinstance( index, ( int, slice ) ) )
+			index = ( index, self.__nextIndex[1] )
 
 		ranges = self.__indexToRanges( index )
 		self.__removeRanges( ranges )
@@ -163,6 +173,9 @@ class GridContainer( GafferUI.ContainerWidget ) :
 		if self.__maxCoordinate is not None :
 			self.__maxCoordinate.x = max( self.__maxCoordinate[0], ranges[0][1] - 1 )
 			self.__maxCoordinate.y = max( self.__maxCoordinate[1], ranges[1][1] - 1 )
+
+		if self.__nextIndex is not None :
+			self.__nextIndex = ( ranges[0][1], self.__nextIndex[1] )
 
 	def removeChild( self, child ) :
 
@@ -196,6 +209,20 @@ class GridContainer( GafferUI.ContainerWidget ) :
 	def removeColumn( self, columnIndex ) :
 
 		self.__removeLine( 0, columnIndex )
+
+	## Returns a context manager that automatically parents
+	# widgets into a new row within the grid.
+	@contextlib.contextmanager
+	def nextRow( self, index = None ) :
+
+		assert( self.__nextIndex is None )
+		GafferUI.Widget._pushParent( self )
+		self.__nextIndex = ( 0, index if index is not None else self.gridSize().y )
+
+		yield self.__nextIndex[1]
+
+		assert( GafferUI.Widget._popParent() is self )
+		self.__nextIndex = None
 
 	def __removeLine( self, axis, index ) :
 

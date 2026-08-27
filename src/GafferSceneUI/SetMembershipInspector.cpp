@@ -65,8 +65,6 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
-const InternedString g_setMembershipContextVariableName( "setMembership:set" );
-
 // This uses the same strategy that ValuePlug uses for the hash cache,
 // using `plug->dirtyCount()` to invalidate previous cache entries when
 // a plug is dirtied.
@@ -126,6 +124,41 @@ HistoryCache g_historyCache(
 	}
 
 );
+
+bool canEdit( const Gaffer::Plug *plug, const IECore::Object *value, std::string &failureReason )
+{
+	if( !runTimeCast<const IECore::BoolData>( value ) )
+	{
+		failureReason = fmt::format( "Data of type \"{}\" is not compatible.", value->typeName() );
+		return false;
+	}
+
+	if( plug->node() )
+	{
+		if( runTimeCast<const ObjectSource>( plug->node() ) )
+		{
+			return true;
+		}
+
+		if( runTimeCast<const Gaffer::ValuePlug>( plug ) && plug->parent<Spreadsheet::RowPlug>() && plug->ancestor<EditScope>() )
+		{
+			return true;
+		}
+		failureReason = fmt::format( "Cannot edit nodes of type \"{}\".", plug->node()->typeName() );
+	}
+	else
+	{
+		// If we've received a plug without a node, it's expected
+		// that this edit would need to be first acquired from an
+		// EditScope, which would create an appropriate plug to
+		// receive a BoolData edit. Typically this situation would
+		// arise from a plug being created by `Inspector::Result::canEdit()`
+		// when it cannot acquire an existing edit.
+		return true;
+	}
+
+	return false;
+}
 
 bool editSetMembership( Gaffer::Plug *plug, const std::string &setName, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership )
 {
@@ -198,22 +231,10 @@ SetMembershipInspector::SetMembershipInspector(
 	const GafferScene::ScenePlugPtr &scene,
 	const Gaffer::PlugPtr &editScope,
 	IECore::InternedString setName
-) :
-Inspector( "setMembership", setName.string(), editScope ),
-m_scene( scene ),
-m_setName( setName )
+)
+	:	Inspector( { scene->setPlug() }, "setMembership", setName.string(), editScope ),
+		m_scene( scene ), m_setName( setName )
 {
-	m_scene->node()->plugDirtiedSignal().connect(
-		boost::bind( &SetMembershipInspector::plugDirtied, this, ::_1 )
-	);
-
-	Metadata::plugValueChangedSignal().connect( boost::bind( &SetMembershipInspector::plugMetadataChanged, this, ::_3, ::_4 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &SetMembershipInspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
-}
-
-bool SetMembershipInspector::editSetMembership( const Result *inspection, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership ) const
-{
-	return ::editSetMembership( inspection->acquireEdit().get(), m_setName.string(), path, setMembership );
 }
 
 GafferScene::SceneAlgo::History::ConstPtr SetMembershipInspector::history() const
@@ -289,12 +310,16 @@ Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlg
 			return nullptr;
 		}
 
-		const FilterPlug *filterPlug = setSource->filterPlug();
-
-		Context::EditableScope setNameScope( history->context.get() );
-		setNameScope.set( g_setMembershipContextVariableName, &m_setName );
-
-		PathMatcher::Result filterResult = (PathMatcher::Result)filterPlug->match( history->scene.get() );
+		unsigned filterResult;
+		{
+			Context::EditableScope filterScope( history->context.get() );
+			const std::string setVariable = setSource->setVariablePlug()->getValue();
+			if( !setVariable.empty() )
+			{
+				filterScope.set( setVariable, &m_setName );
+			}
+			filterResult = setSource->filterPlug()->match( setSource->inPlug() );
+		}
 
 		if( !( filterResult & ( PathMatcher::Result::ExactMatch | PathMatcher::Result::AncestorMatch ) ) )
 		{
@@ -315,7 +340,7 @@ Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlg
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure SetMembershipInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure SetMembershipInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	const GraphComponent *readOnlyReason = EditScopeAlgo::setMembershipReadOnlyReason(
 		editScope,
@@ -341,6 +366,29 @@ Inspector::EditFunctionOrFailure SetMembershipInspector::editFunction( Gaffer::E
 	}
 }
 
+Inspector::CanEditFunction SetMembershipInspector::canEditFunction( const GafferScene::SceneAlgo::History *history ) const
+{
+	return [] ( const Gaffer::Plug *plug, const IECore::Object *value, std::string &failureReason ) { return ::canEdit( plug, value, failureReason ); };
+}
+
+Inspector::EditFunction SetMembershipInspector::editFunction( const GafferScene::SceneAlgo::History *history ) const
+{
+	const auto path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	return [
+		setName = m_setName,
+		path
+	] ( Gaffer::Plug *plug, const IECore::Object *value ) {
+		if( const auto boolValue = runTimeCast<const IECore::BoolData>( value ) )
+		{
+			return ::editSetMembership( plug, setName.string(), path, boolValue->readable() ? EditScopeAlgo::SetMembership::Added : EditScopeAlgo::SetMembership::Removed );
+		}
+		else
+		{
+			throw IECore::Exception( fmt::format( "Cannot edit. Data of type \"{}\" is not compatible.", value->typeName() ) );
+		}
+	};
+}
+
 Inspector::DisableEditFunctionOrFailure SetMembershipInspector::disableEditFunction( Gaffer::ValuePlug *plug, const GafferScene::SceneAlgo::History *history ) const
 {
 	const std::string nonDisableableReason = ::nonDisableableReason( plug, m_setName );
@@ -358,52 +406,5 @@ Inspector::DisableEditFunctionOrFailure SetMembershipInspector::disableEditFunct
 		] () {
 			return ::editSetMembership( plug.get(), setName.string(), path, EditScopeAlgo::SetMembership::Unchanged );
 		};
-	}
-}
-
-void SetMembershipInspector::plugDirtied( Gaffer::Plug *plug )
-{
-	if( plug == m_scene->setPlug() )
-	{
-		dirtiedSignal()( this );
-	}
-}
-
-void SetMembershipInspector::plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug )
-{
-	if( !plug )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-	nodeMetadataChanged( key, plug->node() );
-}
-
-void SetMembershipInspector::nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node )
-{
-	if( !node )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-
-	EditScope *scope = targetEditScope();
-	if( !scope )
-	{
-		return;
-	}
-
-	if(
-		MetadataAlgo::readOnlyAffectedByChange( scope, node, key ) ||
-		( MetadataAlgo::readOnlyAffectedByChange( key ) && scope->isAncestorOf( node ) )
-	)
-	{
-		// Might affect `EditScopeAlgo::setMembershipEditReadOnlyReason()`
-		// which we call in `editFunction()`.
-		/// \todo Can we ditch the signal processing and call `setMembershipEditReadOnlyReason()`
-		/// just-in-time from `editable()`? In the past that wasn't possible
-		/// because editability changed the appearance of the UI, but it isn't
-		/// doing that currently.
-		dirtiedSignal()( this );
 	}
 }

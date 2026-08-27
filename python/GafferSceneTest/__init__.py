@@ -187,10 +187,25 @@ from .MergeMeshesTest import MergeMeshesTest
 from .MergePointsTest import MergePointsTest
 from .MergeCurvesTest import MergeCurvesTest
 from .ShaderPlugTest import ShaderPlugTest
+from .ShuffleRenderPassesTest import ShuffleRenderPassesTest
+from .ShuffleOptionsTest import ShuffleOptionsTest
+from .RenderManifestTest import RenderManifestTest
+from .DisplayTest import DisplayTest
+from .CatalogueTest import CatalogueTest
+from .CatalogueSelectTest import CatalogueSelectTest
+from .CameraQueryTest import CameraQueryTest
+from .GlobalsSanitiserTest import GlobalsSanitiserTest
+from .ReflectionConstraintTest import ReflectionConstraintTest
+from .CurvesInterpolationTest import CurvesInterpolationTest
+from .CurvesTangentsTest import CurvesTangentsTest
+from .PrimitiveQueryTest import PrimitiveQueryTest
+from .SceneStatsTest import SceneStatsTest
+from .PointInstancerAlgoTest import PointInstancerAlgoTest
+from .CopyObjectTest import CopyObjectTest
+from .QuantizePrimitiveVariablesTest import QuantizePrimitiveVariablesTest
+from .RandomPrimitiveVariableTest import RandomPrimitiveVariableTest
+from .PointInstancerCoreTest import PointInstancerCoreTest
+from .PointInstancerTest import PointInstancerTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

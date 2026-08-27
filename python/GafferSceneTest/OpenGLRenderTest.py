@@ -109,5 +109,37 @@ class OpenGLRenderTest( GafferSceneTest.RenderTest ) :
 		self.assertAlmostEqual( imageSampler["color"]["g"].getValue(), 0.666666, delta = 0.001 )
 		self.assertEqual( imageSampler["color"]["b"].getValue(), 0 )
 
-if __name__ == "__main__":
-	unittest.main()
+	@unittest.skip( "Light linking not supported" )
+	def testLightLinking( self ) :
+
+		pass
+
+	@unittest.skip( "Light linking not supported" )
+	def testLightLinkingWithExclusions( self ) :
+
+		pass
+
+	@unittest.skip( "Shadow linking not supported" )
+	def testShadowLinking( self ) :
+
+		pass
+
+	@unittest.skip( "Shadow linking not supported" )
+	def testShadowLinkingExclusions( self ) :
+
+		pass
+
+	@unittest.skip( "ID output not supported" )
+	def testIDOutput( self ) :
+
+		pass
+
+	@unittest.skip( "Instance ID output not supported" )
+	def testInstanceIDOutput( self ) :
+
+		pass
+
+	@unittest.skip( "Crop window not supported" )
+	def testCropWindow( self ) :
+
+		pass

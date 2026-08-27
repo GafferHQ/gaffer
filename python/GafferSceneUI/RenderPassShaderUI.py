@@ -43,14 +43,31 @@ import IECore
 
 def __rendererNames( plug ) :
 
-	return [
-		x for x in GafferSceneUI.RenderUI.rendererPresetNames( plug )
-		if x not in ( "OpenGL", "3Delight Cloud" )
-	]
+	prefixes = set()
+	result = []
+	for renderer in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetValues" ) :
+
+		if renderer in ( "", "OpenGL" ) :
+			continue
+
+		# Only use primary variant if two variants of a renderer use the same prefix.
+		prefix = Gaffer.Metadata.value( f"renderer:{renderer}", "optionPrefix" )
+		if prefix in prefixes :
+			continue
+
+		result.append( renderer)
+		prefixes.add( prefix )
+
+	return result
 
 def __rendererPresetNames( plug ) :
 
-	return IECore.StringVectorData( [ "All" ] + __rendererNames( plug ) )
+	return IECore.StringVectorData(
+		[ "All" ] + [
+			Gaffer.Metadata.value( f"renderer:{n}", "label" ) or n
+			for n in __rendererNames( plug )
+		]
+	)
 
 def __rendererPresetValues( plug ) :
 
@@ -67,38 +84,38 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"renderer" : [
+		"renderer" : {
 
-			"description",
+			"description" :
 			"""
 			The renderer the shader should affect. Shaders assigned to a specific
 			renderer will take precedence over shaders assigned to "All" when
 			rendering with that renderer.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"presetNames", __rendererPresetNames,
-			"presetValues", __rendererPresetValues,
+			"presetNames" : __rendererPresetNames,
+			"presetValues" : __rendererPresetValues,
 
-		],
+		},
 
-		"usage" : [
+		"usage" : {
 
-			"description",
+			"description" :
 			"""
 			How the shader is to be used.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"shader" : [
+		"shader" : {
 
-			"layout:index", -1,
+			"layout:index" : -1,
 
-		],
+		},
 
 	}
 

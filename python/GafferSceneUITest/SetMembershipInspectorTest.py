@@ -71,11 +71,13 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		editable,
 		nonEditableReason = "",
 		edit = None,
-		editWarning = ""
+		editWarning = "",
+		fallbackDescription = "",
 	) :
 
 		self.assertEqual( result.source(), source )
 		self.assertEqual( result.sourceType(), sourceType )
+		self.assertEqual( result.fallbackDescription(), fallbackDescription )
 		self.assertEqual( result.editable(), editable )
 
 		if editable :
@@ -115,33 +117,35 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 	def testFallbackValue( self ) :
 
-		plane = GafferScene.Plane()
-		group = GafferScene.Group()
-		group["in"][0].setInput( plane["out"] )
+		s = Gaffer.ScriptNode()
 
-		pathFilter = GafferScene.PathFilter()
-		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
+		s["plane"] = GafferScene.Plane()
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["plane"]["out"] )
 
-		setNode = GafferScene.Set()
-		setNode["in"].setInput( group["out"] )
-		setNode["name"].setValue( "planeSet" )
-		setNode["filter"].setInput( pathFilter["out"] )
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
 
-		inspection = self.__inspect( setNode["out"], "/group/plane", "planeSet" )
+		s["setNode"] = GafferScene.Set()
+		s["setNode"]["in"].setInput( s["group"]["out"] )
+		s["setNode"]["name"].setValue( "planeSet" )
+		s["setNode"]["filter"].setInput( s["pathFilter"]["out"] )
+
+		inspection = self.__inspect( s["setNode"]["out"], "/group/plane", "planeSet" )
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
-			GafferSceneUI.Private.Inspector.Result.SourceType.Fallback
+			GafferSceneUI.Private.Inspector.Result.SourceType.Other
 		)
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /" )
 
-		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/", "/group" ] ) )
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ "/", "/group" ] ) )
 
-		inspection = self.__inspect( setNode["out"], "/group/plane", "planeSet" )
+		inspection = self.__inspect( s["setNode"]["out"], "/group/plane", "planeSet" )
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
-			GafferSceneUI.Private.Inspector.Result.SourceType.Fallback
+			GafferSceneUI.Private.Inspector.Result.SourceType.Other
 		)
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
@@ -373,6 +377,31 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "editScope2.SetMembershipEdits is locked."
 		)
 
+	def testSourceForEditScopeMembershipRemoval( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A" )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( plane["out"] )
+		editScope["in"].setInput( plane["out"] )
+
+		self.assertEqual( editScope["out"].set( "A" ).value, IECore.PathMatcher( [ "/plane" ] ) )
+
+		GafferScene.EditScopeAlgo.setSetMembership(
+			editScope,
+			IECore.PathMatcher( [ "/plane" ] ),
+			"A",
+			GafferScene.EditScopeAlgo.SetMembership.Removed
+		)
+
+		self.assertEqual( editScope["out"].set( "A" ).value, IECore.PathMatcher() )
+		inspection = self.__inspect( editScope["out"], "/plane", "A", editScope )
+		self.assertTrue( editScope["SetMembershipEdits"].isAncestorOf( inspection.source() ) )
+		self.assertTrue( inspection.sourceType(), inspection.SourceType.EditScope )
+		self.assertEqual( inspection.value(), IECore.BoolData( False ) )
+		self.assertEqual( inspection.fallbackDescription(), "Default value" )
+
 	def testNonExistentLocation( self ) :
 
 		plane = GafferScene.Plane()
@@ -383,12 +412,13 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# ObjectSource nodes should always return their `sets` plug as a source. Otherwise,
 		# creating a new set that doesn't yet exist would not be possible.
-
-		plane = GafferScene.Plane()
+		s = Gaffer.ScriptNode()
+		s["plane"] = GafferScene.Plane()
 		self.__assertExpectedResult(
-			self.__inspect( plane["out"], "/plane", "planeSet" ),
-			source = plane["sets"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Fallback,
+			self.__inspect( s["plane"]["out"], "/plane", "planeSet" ),
+			source = s["plane"]["sets"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			fallbackDescription = "Default value",
 			editable = True
 		)
 
@@ -459,32 +489,35 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 	def testObjectSourceEditSetMembership( self ) :
 
-		plane1 = GafferScene.Plane()
+		s = Gaffer.ScriptNode()
 
-		group = GafferScene.Group()
-		group["in"][0].setInput( plane1["out"] )
+		s["plane1"] = GafferScene.Plane()
 
-		plane2 = GafferScene.Plane()
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["plane1"]["out"] )
 
-		parent = GafferScene.Parent()
-		parent["parent"].setValue( "/" )
-		parent["children"][0].setInput( group["out"] )
-		parent["children"][1].setInput( plane2["out"] )
+		s["plane2"] = GafferScene.Plane()
+
+		s["parent"] = GafferScene.Parent()
+		s["parent"]["parent"].setValue( "/" )
+		s["parent"]["children"][0].setInput( s["group"]["out"] )
+		s["parent"]["children"][1].setInput( s["plane2"]["out"] )
 
 		editScopePlug = Gaffer.Plug()
 
 		# Include in `planeSet`
 
-		inspector = GafferSceneUI.Private.SetMembershipInspector( parent["out"], editScopePlug, "planeSet" )
+		inspector = GafferSceneUI.Private.SetMembershipInspector( s["parent"]["out"], editScopePlug, "planeSet" )
 		self.assertIsNotNone( inspector )
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "group", "plane" ] )
 			inspection = inspector.inspect()
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Added ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+		inspection.edit( IECore.BoolData( True ) )
 
-		planeSet = parent["out"].set( "planeSet" ).value
+		planeSet = s["parent"]["out"].set( "planeSet" ).value
 
 		for path, result in [
 			( "/group/plane", IECore.PathMatcher.Result.ExactMatch ),
@@ -495,9 +528,10 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# And remove it
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+		inspection.edit( IECore.BoolData( False ) )
 
-		planeSet = parent["out"].set( "planeSet" ).value
+		planeSet = s["parent"]["out"].set( "planeSet" ).value
 
 		for path, result in [
 			( "/group/plane", IECore.PathMatcher.Result.NoMatch ),
@@ -535,7 +569,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "group", "plane" ] )
 			inspection = inspector.inspect()
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Added ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+		inspection.edit( IECore.BoolData( True ) )
 
 		planeSet = editScope["out"].set( "planeSet" ).value
 
@@ -557,7 +592,9 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# And remove it
 
-		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+		inspection.edit( IECore.BoolData( False ) )
+
 		planeSet = parent["out"].set( "planeSet" ).value
 
 		for path, result in [
@@ -580,19 +617,21 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		# Modifying a `Set` node is beyond our powers
 
-		plane = GafferScene.Plane()
+		s = Gaffer.ScriptNode()
 
-		planeFilter = GafferScene.PathFilter()
-		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane"] ) )
+		s["plane"] = GafferScene.Plane()
 
-		setNode = GafferScene.Set()
-		setNode["name"].setValue( "planeSet" )
-		setNode["in"].setInput( plane["out"] )
-		setNode["filter"].setInput( planeFilter["out"] )
+		s["planeFilter"] = GafferScene.PathFilter()
+		s["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane"] ) )
+
+		s["setNode"] = GafferScene.Set()
+		s["setNode"]["name"].setValue( "planeSet" )
+		s["setNode"]["in"].setInput( s["plane"]["out"] )
+		s["setNode"]["filter"].setInput( s["planeFilter"]["out"] )
 
 		editScopePlug = Gaffer.Plug()
 
-		inspector = GafferSceneUI.Private.SetMembershipInspector( setNode["out"], editScopePlug, "planeSet" )
+		inspector = GafferSceneUI.Private.SetMembershipInspector( s["setNode"]["out"], editScopePlug, "planeSet" )
 
 		# Even if we know the source, we politely decline to make an edit
 
@@ -600,9 +639,11 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
 			inspection = inspector.inspect()
 
-		self.assertEqual( inspection.source(), setNode["name"] )
+		self.assertEqual( inspection.source(), s["setNode"]["name"] )
 
-		self.assertFalse( inspector.editSetMembership( inspection, "/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "Cannot edit nodes of type \"GafferScene::Set\"." )
+		self.assertRaises( IECore.Exception, inspection.edit, IECore.BoolData( False ) )
 
 	def testAcquireEditCreateIfNecessary( self ) :
 
@@ -690,9 +731,10 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
 			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", None )
+			self.assertTrue( inspection.acquireEdit( False ).isSame( s["plane"]["sets"] ) )
 			self.assertFalse( inspection.canDisableEdit() )
-			self.assertEqual( inspection.nonDisableableReason(), "Source is in an EditScope. Change scope to editScope1 to disable." )
-			self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : Source is in an EditScope. Change scope to editScope1 to disable.", inspection.disableEdit )
+			self.assertEqual( inspection.nonDisableableReason(), "plane.sets has no edit to disable." )
+			self.assertRaisesRegex( IECore.Exception, "Cannot disable edit : plane.sets has no edit to disable.", inspection.disableEdit )
 
 			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
 			self.assertTrue( inspection.canDisableEdit() )
@@ -704,5 +746,164 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 				GafferScene.EditScopeAlgo.SetMembership.Unchanged
 			)
 
-if __name__ == "__main__" :
-	unittest.main()
+	def testCanEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["sets"].setValue( "planeSetA planeSetB" )
+
+		s["editScope1"] = Gaffer.EditScope()
+		s["editScope1"].setup( s["plane"]["out"] )
+		s["editScope1"]["in"].setInput( s["plane"]["out"] )
+
+		for setName in [ "planeSetA", "planeSetB", "planeSetC" ] :
+
+			inspection = self.__inspect( s["plane"]["out"], "/plane", setName, None )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+			self.assertFalse( inspection.canEdit( IECore.StringData( "someOtherSet" ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.StringData( "someOtherSet" ) ), "Data of type \"StringData\" is not compatible." )
+			self.assertFalse( inspection.canEdit( IECore.IntData( 1 ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.IntData( 1 ) ), "Data of type \"IntData\" is not compatible." )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["plane"]["sets"], True )
+			inspection = self.__inspect( s["plane"]["out"], "/plane", setName, None )
+			self.assertFalse( inspection.canEdit( IECore.BoolData( True ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( True ) ), "plane.sets is locked." )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["plane"]["sets"], False )
+			inspection = self.__inspect( s["plane"]["out"], "/plane", setName, None )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+
+			inspection = self.__inspect( s["editScope1"]["out"], "/plane", setName, s["editScope1"] )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "" )
+			self.assertFalse( inspection.canEdit( IECore.StringData( "someOtherSet" ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.StringData( "someOtherSet" ) ), "Data of type \"StringData\" is not compatible." )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
+			inspection = self.__inspect( s["editScope1"]["out"], "/plane", setName, s["editScope1"] )
+			self.assertFalse( inspection.canEdit( IECore.BoolData( True ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( True ) ), "editScope1 is locked." )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
+			inspection = self.__inspect( s["editScope1"]["out"], "/plane", setName, s["editScope1"] )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( True ) ), "" )
+
+		s["filter"] = GafferScene.PathFilter()
+		s["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		s["set"] = GafferScene.Set()
+		s["set"]["in"].setInput( s["editScope1"]["out"] )
+		s["set"]["name"].setValue( "planeSetC" )
+		s["set"]["filter"].setInput( s["filter"]["out"] )
+
+		# We don't allow direct editing of Set nodes
+		inspection = self.__inspect( s["set"]["out"], "/plane", "planeSetC", None )
+		self.assertEqual( inspection.source(), s["set"]["name"] )
+		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "Cannot edit nodes of type \"GafferScene::Set\"." )
+
+	def testEdit( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["sets"].setValue( "planeSetA planeSetB" )
+
+		s["group"] = GafferScene.Group()
+
+		s["editScope1"] = Gaffer.EditScope()
+
+		s["group"]["in"][0].setInput( s["plane"]["out"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["plane"]["sets"], True )
+		inspection = self.__inspect( s["group"]["out"], "/group/plane", "planeSetA", None )
+		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["plane"]["sets"], False )
+		inspection = self.__inspect( s["group"]["out"], "/group/plane", "planeSetA", None )
+		self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "" )
+		self.assertFalse( inspection.canEdit( IECore.StringData( "False" ) ) )
+		self.assertEqual( inspection.nonEditableReason( IECore.StringData( "False" ) ), "Data of type \"StringData\" is not compatible." )
+		self.assertRaisesRegex( IECore.Exception, "Not editable : Data of type \"StringData\" is not compatible.", inspection.edit, IECore.StringData( "False" ) )
+
+		inspection.edit( IECore.BoolData( False ) )
+		self.assertEqual( s["plane"]["sets"].getValue(), "planeSetB" )
+
+		inspection = self.__inspect( s["group"]["out"], "/group/plane", "planeSetB", None )
+		inspection.edit( IECore.BoolData( False ) )
+		self.assertEqual( s["plane"]["sets"].getValue(), "" )
+
+		s["editScope1"].setup( s["group"]["out"] )
+		s["editScope1"]["in"].setInput( s["group"]["out"] )
+
+		for membership in ( GafferScene.EditScopeAlgo.SetMembership.Added, GafferScene.EditScopeAlgo.SetMembership.Removed ) :
+
+			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
+			inspection.edit( IECore.BoolData( membership == GafferScene.EditScopeAlgo.SetMembership.Added ) )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.getSetMembership( s["editScope1"], "/group/plane", "planeSetEditScope"),
+				membership
+			)
+
+			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
+			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
+			self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "editScope1 is locked." )
+			self.assertRaisesRegex( IECore.Exception, "Not editable : editScope1 is locked.", inspection.edit, IECore.BoolData( False ) )
+
+			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
+			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
+			self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
+			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "" )
+
+	def testSetMembershipDependingOnSetContextVariable( self ) :
+
+		# Build a classic set-defining spreadsheet.
+
+		sphere = GafferScene.Sphere()
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( plane["out"] )
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["selector"].setValue( "${mySetName}" )
+		spreadsheet["rows"].addColumn( Gaffer.StringVectorDataPlug( "paths" ) )
+
+		setDefinitions = {
+			"A" : "/group/sphere",
+			"B" : "/group/plane",
+			"C" : "/group",
+		}
+
+		for setName, path in setDefinitions.items() :
+			row = spreadsheet["rows"].addRow()
+			row["name"].setValue( setName )
+			row["cells"]["paths"]["value"].setValue( IECore.StringVectorData( [ path ] ) )
+			row["cells"]["paths"]["enabled"].setValue( True )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setInput( spreadsheet["out"]["paths"] )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( group["out"] )
+		setNode["name"].setInput( spreadsheet["activeRowNames"] )
+		setNode["filter"].setInput( pathFilter["out"] )
+		setNode["setVariable"].setValue( "mySetName" )
+
+		# Check we've built the scene we think we have.
+
+		self.assertEqual( { str( n ) for n in setNode["out"].setNames() }, { "A", "B", "C" } )
+
+		for setName, path in setDefinitions.items() :
+			self.assertEqual( setNode["out"].set( setName ).value, IECore.PathMatcher( [ path ] ) )
+
+		# Check that a SetMembershipInspector understands what we've done.
+
+		for setName, path in setDefinitions.items() :
+			inspection = self.__inspect( setNode["out"], path, setName )
+			self.assertEqual( inspection.source(), spreadsheet["rows"].row( setName )["cells"] )

@@ -83,7 +83,7 @@ from .CompoundNumericPlugTest import CompoundNumericPlugTest
 from .CompoundNumericNode import CompoundNumericNode
 from .CompoundPlugNode import CompoundPlugNode
 from .TypedObjectPlugTest import TypedObjectPlugTest
-from .SplinePlugTest import SplinePlugTest
+from .RampPlugTest import RampPlugTest
 from .AboutTest import AboutTest
 from .ChildSetTest import ChildSetTest
 from .PythonApplicationTest import PythonApplicationTest
@@ -163,9 +163,7 @@ from .ThreadMonitorTest import ThreadMonitorTest
 from .CollectTest import CollectTest
 from .ProcessTest import ProcessTest
 from .PatternMatchTest import PatternMatchTest
+from .SetExpressionAlgoTest import SetExpressionAlgoTest
+from .DataStoreTest import DataStoreTest
 
 from .IECorePreviewTest import *
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

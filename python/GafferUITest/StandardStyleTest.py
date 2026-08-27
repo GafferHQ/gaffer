@@ -104,6 +104,3 @@ class StandardStyleTest( GafferUITest.TestCase ) :
 
 		s.setFont( GafferUI.Style.TextType.LabelText, f )
 		self.assertEqual( len( cs ), 3 )
-
-if __name__ == "__main__":
-	unittest.main()

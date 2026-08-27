@@ -66,7 +66,7 @@ namespace
 // Equivalent to checking a regex match against "^[A-Za-z_:0-9]+",
 // but significantly quicker.
 //
-/// \todo Relax restrictions to only disallow '.' and `/'? We originally had
+/// \todo Relax restrictions to only disallow '.', ' ' and `/'? We originally had
 /// these strict requirements because we accessed GraphComponent children
 /// as attributes in Python, but that approach has long since gone.
 /// When doing this, also update the validator in NameWidget.

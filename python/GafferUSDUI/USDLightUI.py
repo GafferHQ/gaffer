@@ -34,9 +34,13 @@
 #
 ##########################################################################
 
+import functools
+import imath
+
 import IECore
 
 import Gaffer
+import GafferUI
 import GafferUSD
 
 Gaffer.Metadata.registerNode(
@@ -45,21 +49,154 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters" : [
+		"parameters" : {
 
-			"layout:section:Basic:collapsed", False,
+			"layout:section:Basic:collapsed" : False,
 
-		],
+			"layout:customWidget:rendererFilter:widgetType" : "GafferUSDUI.USDLightUI._RendererFilter",
+			"layout:customWidget:rendererFilter:index" : 0,
 
-		"parameters.colorTemperature" : [ "layout:activator", lambda plug : plug.parent()["enableColorTemperature"].getValue() ],
+			"layout:customWidget:standardFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:standardFilter:index" : 1,
+			"layout:customWidget:standardFilter:accessory" : True,
 
-		"parameters.shaping:ies:file.value" : [
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:bookmarks", "iesProfile",
-			"path:leaf", True,
-			"path:value", True,
-			"fileSystemPath:extensions", "ies",
-		],
+		},
+
+		"parameters.colorTemperature" : { "layout:activator" : lambda plug : plug.parent()["enableColorTemperature"].getValue() },
+
+		"parameters.shaping:ies:file.value" : {
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:bookmarks" : "iesProfile",
+			"path:leaf" : True,
+			"path:value" : True,
+			"fileSystemPath:extensions" : "ies",
+		},
 
 	}
 )
+
+# \todo Remove this method when merging to `1.7`. Instead, register
+# dynamic metadata methods to `light:*:*` and determine the renderer
+# in that method. This will be consistent with `ShaderUI` and `LightUI`
+# registrations of the form `{shaderType}:{shaderName}:{parameterName}`.
+def __registerIcons() :
+
+	visited = set()
+	for rendererTarget in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "optionPrefix" ) :
+		renderer = rendererTarget[9:]  # Trim off "renderer:"
+		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
+		prefix = "arnold:" if renderer == "Arnold" else Gaffer.Metadata.value( rendererTarget, "optionPrefix" )
+
+		if prefix in visited :
+			# A prefix can be registered for multiple renderers. We register them in
+			# order of importance, so skip all but the first.
+			continue
+
+		Gaffer.Metadata.registerValue(
+			GafferUSD.USDLight.staticTypeId(),
+			f"parameters.{prefix}*",
+			"labelPlugValueWidget:icon",
+			"renderer" + renderer + "OnIcon.png"
+		)
+		Gaffer.Metadata.registerValue(
+			GafferUSD.USDLight.staticTypeId(),
+			f"parameters.{prefix}*",
+			"labelPlugValueWidget:iconToolTip",
+			f"Parameter is specific to {renderer}."
+		)
+		visited.add( prefix )
+
+__registerIcons()
+
+class _RendererFilter( GafferUI.Widget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		GafferUI.Widget.__init__( self, self.__listContainer, **kw )
+
+		self.__parametersPlug = plug
+
+		visible = Gaffer.Metadata.value( self.__parametersPlug, "layout:visibleRenderers" )
+		self.__rendererVisibility = {}
+
+		visited = set()
+
+		for rendererTarget in Gaffer.Metadata.targetsWithMetadata( "renderer:*", "optionPrefix" ) :
+			renderer = rendererTarget[9:]  # Trim of "renderer:"
+			# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
+			prefix = "arnold:" if renderer == "Arnold" else Gaffer.Metadata.value( rendererTarget, "optionPrefix" )
+			if (
+				any( i.getName().startswith( prefix ) for i in Gaffer.Plug.Range( self.__parametersPlug ) ) and
+				prefix not in visited
+			) :
+				visited.add( prefix )
+				self.__rendererVisibility[renderer] = (
+					renderer in visible if visible is not None else (
+						Gaffer.Metadata.value( rendererTarget, "ui:enabled" ) is not False
+					)
+				)
+
+		with self.__listContainer :
+
+			# `ui:enabled` may be `False` but the renderer may still be registered with Gaffer and have
+			# plugs on the light. For example, Cycles has the `GAFFERCYCLES_HIDE_UI` environment variable.
+			# We need to hide the plugs in that case (taken care of by `__visibleRenderers` initial value above)
+			# and also not show a toggle button for it to honor the `ui:enabled` state.
+			renderersWithIcons = [ i for i in self.__rendererVisibility.keys() if Gaffer.Metadata.value( "renderer:" + i, "ui:enabled" ) is not False ]
+			# Indent the filter UI so `customFilterValue` lines up with the plug widgets below.
+			# The `20` pixel spacing consists of 16 for the icon and 4 for the spacing between widgets.
+			# The vertical space prevents a slight resizing of the UI below when toggling the filter Text.
+			leftIndent = GafferUI.PlugWidget.labelWidth() - ( ( len( renderersWithIcons ) + 1 ) * 20 )
+			GafferUI.Spacer( imath.V2i( leftIndent, 18 ), maximumSize = imath.V2i( leftIndent, 18 ) )
+
+			self.__rendererIcons = {}
+			for r in renderersWithIcons :
+				self.__rendererIcons[r] = GafferUI.Button( "", hasFrame = False, toolTip = "Include {} parameters".format( r ) )
+				self.__rendererIcons[r].clickedSignal().connect( functools.partial( Gaffer.WeakMethod( self.__rendererIconClicked ), r ) )
+
+		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+
+	def __parentChanged( self, widget ) :
+
+		if self.__plugLayout() is None :
+			p = widget.parent()
+			while p.parent() is not None :
+				p = p.parent()
+			p.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+
+		self.__updateFilter()
+		self.__updateWidgets()
+
+	def __plugFilter( self, rendererPrefixes, plug ) :
+
+		prefix = plug.getName().partition( ":" )[0] + ":"
+		return rendererPrefixes.get( prefix, True )
+
+	def __plugLayout( self ) :
+
+		return self.ancestor( GafferUI.PlugLayout )
+
+	def __updateFilter( self ) :
+
+		if self.__plugLayout() is None :
+			return
+
+		# \todo Once we standardize on `arnold:` prefix instead of `ai:`, we can remove this special case.
+		prefixes = { ( "arnold:" if k == "Arnold" else Gaffer.Metadata.value( "renderer:" + k, "optionPrefix" ) ) : v for k, v in self.__rendererVisibility.items() }
+		self.__plugLayout().setFilter( "renderers", functools.partial( Gaffer.WeakMethod( self.__plugFilter ), prefixes ) )
+
+	def __updateWidgets( self ) :
+
+		for renderer, button in self.__rendererIcons.items() :
+			button.setImage( "renderer" + renderer + ( "On" if self.__rendererVisibility[renderer] else "Off" ) + "Icon.png" )
+
+	def __rendererIconClicked( self, renderer, widget ) :
+
+		self.__rendererVisibility[renderer] = not self.__rendererVisibility[renderer]
+
+		Gaffer.Metadata.registerValue( self.__parametersPlug, "layout:visibleRenderers", IECore.StringVectorData( k for k, v in self.__rendererVisibility.items() if v ), persistent = False )
+
+		self.__updateFilter()
+		self.__updateWidgets()

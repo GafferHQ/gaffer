@@ -43,6 +43,7 @@
 #include "GafferScene/Deformer.h"
 #include "GafferScene/ShaderPlug.h"
 
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
@@ -70,6 +71,44 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		Gaffer::BoolPlug *useAttributesPlug();
 		const Gaffer::BoolPlug *useAttributesPlug() const;
 
+		GafferScene::ScenePlug *sourcePlug();
+		const GafferScene::ScenePlug *sourcePlug() const;
+
+		class GAFFEROSL_API SourceLocationPlug : public Gaffer::ValuePlug
+		{
+
+			public :
+
+				GAFFER_PLUG_DECLARE_TYPE( OSLObject::SourceLocationPlug, OSLObjectSourceLocationPlugTypeId, ValuePlug );
+
+				explicit SourceLocationPlug( const std::string &name = defaultName<SourceLocationPlug>(), Direction direction=In, unsigned flags = Default );
+
+				Gaffer::StringPlug *namePlug();
+				const Gaffer::StringPlug *namePlug() const;
+
+				Gaffer::BoolPlug *enabledPlug();
+				const Gaffer::BoolPlug *enabledPlug() const;
+
+				Gaffer::StringPlug *locationPlug();
+				const Gaffer::StringPlug *locationPlug() const;
+
+				Gaffer::BoolPlug *pointCloudPlug();
+				const Gaffer::BoolPlug *pointCloudPlug() const;
+
+				Gaffer::BoolPlug *transformPlug();
+				const Gaffer::BoolPlug *transformPlug() const;
+
+				bool acceptsChild( const GraphComponent *potentialChild ) const override;
+				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+
+		};
+
+		Gaffer::ArrayPlug *sourceLocationsPlug();
+		const Gaffer::ArrayPlug *sourceLocationsPlug() const;
+
+		Gaffer::BoolPlug *ignoreMissingSourceLocationsPlug();
+		const Gaffer::BoolPlug *ignoreMissingSourceLocationsPlug() const;
+
 		Gaffer::Plug *primitiveVariablesPlug();
 		const Gaffer::Plug *primitiveVariablesPlug() const;
 
@@ -91,8 +130,8 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		GafferScene::ShaderPlug *shaderPlug();
 		const GafferScene::ShaderPlug *shaderPlug() const;
 
-		GafferScene::ScenePlug *resampledInPlug();
-		const GafferScene::ScenePlug *resampledInPlug() const;
+		Gaffer::ObjectPlug *resampledInObjectPlug();
+		const Gaffer::ObjectPlug *resampledInObjectPlug() const;
 
 		Gaffer::StringPlug *resampledNamesPlug();
 		const Gaffer::StringPlug *resampledNamesPlug() const;
@@ -110,5 +149,7 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		static size_t g_firstPlugIndex;
 
 };
+
+IE_CORE_DECLAREPTR( OSLObject )
 
 } // namespace GafferOSL

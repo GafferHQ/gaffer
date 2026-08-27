@@ -123,19 +123,11 @@ ValuePlug::CachePolicy cachePolicyFromEnv( const char *name )
 			IECore::Msg::Info, "SceneReader", fmt::format( "{} is set to {}.", name, cp )
 		);
 
-		if( !strcmp( cp, "Standard" ) )
-		{
-			return ValuePlug::CachePolicy::Standard;
-		}
-		else if( !strcmp( cp, "TaskCollaboration" ) )
+		if( !strcmp( cp, "TaskCollaboration" ) )
 		{
 			return ValuePlug::CachePolicy::TaskCollaboration;
 		}
-		else if( !strcmp( cp, "TaskIsolation" ) )
-		{
-			return ValuePlug::CachePolicy::TaskIsolation;
-		}
-		else if( !strcmp( cp, "Legacy" ) || !strcmp( cp, "Default" ) )
+		else if( !strcmp( cp, "Default" ) )
 		{
 			return ValuePlug::CachePolicy::Default;
 		}
@@ -143,7 +135,7 @@ ValuePlug::CachePolicy cachePolicyFromEnv( const char *name )
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "SceneReader",
-				fmt::format( "Invalid value \"{}\" for {}. Must be Standard, TaskCollaboration, TaskIsolation or Legacy.", cp, name )
+				fmt::format( "Invalid value \"{}\" for {}. Must be TaskCollaboration or Default.", cp, name )
 			);
 		}
 	}

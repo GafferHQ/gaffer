@@ -57,8 +57,10 @@ using namespace IECoreDelight;
 namespace
 {
 
-bool convert( const IECoreScene::ExternalProcedural *object, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::ExternalProcedural *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle )
 {
+	const IECoreScene::ExternalProcedural *object = samples[0];
+
 	NSICreate( context, handle, "procedural", 0, nullptr );
 
 	ParameterList procParameters;

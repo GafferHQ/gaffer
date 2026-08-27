@@ -117,7 +117,7 @@ std::string repr( ShadingEngine::Transform &s )
 	);
 }
 
-IECore::CompoundDataPtr shadeWrapper( ShadingEngine &shadingEngine, const IECore::CompoundData *points, boost::python::dict pythonTransforms )
+IECore::CompoundDataPtr shadeWrapper( ShadingEngine &shadingEngine, const IECore::CompoundData *points, boost::python::dict pythonTransforms, boost::python::dict pythonPointClouds )
 {
 	ShadingEngine::Transforms transforms;
 
@@ -146,7 +146,34 @@ IECore::CompoundDataPtr shadeWrapper( ShadingEngine &shadingEngine, const IECore
 		transforms[ keyElem() ] = valueElem();
 	}
 
-	return shadingEngine.shade( points, transforms );
+	ShadingEngine::PointClouds pointClouds;
+
+	values = pythonPointClouds.values();
+	keys = pythonPointClouds.keys();
+
+	for( int i = 0; i < boost::python::len( keys ); i++ )
+	{
+		object key( keys[i] );
+		object value( values[i] );
+
+		extract<const char *> keyElem( key );
+		if( !keyElem.check() )
+		{
+			PyErr_SetString( PyExc_TypeError, "Expected string" );
+			throw_error_already_set();
+		}
+
+		extract<IECoreScene::ConstPrimitivePtr> valueElem( value );
+		if( !valueElem.check() )
+		{
+			PyErr_SetString( PyExc_TypeError, "Expected IECoreScene.Primitive." );
+			throw_error_already_set();
+		}
+
+		pointClouds[keyElem()] = valueElem();
+	}
+
+	return shadingEngine.shade( points, transforms, pointClouds );
 }
 
 IECore::CompoundDataPtr shadeUVTextureWrapper( const IECoreScene::ShaderNetwork &shaderNetwork, const Imath::V2i &resolution, const IECoreScene::ShaderNetwork::Parameter &output )
@@ -155,10 +182,10 @@ IECore::CompoundDataPtr shadeUVTextureWrapper( const IECoreScene::ShaderNetwork 
 	return ShadingEngineAlgo::shadeUVTexture( &shaderNetwork, resolution, output );
 }
 
-void loadShader( OSLLight &l, const std::string &shaderName )
+bool evaluateActivatorExpressionWrapper( OSLShader &shader, const std::string &expression )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	l.loadShader( shaderName );
+	return shader.evaluateActivatorExpression( expression );
 }
 
 } // namespace
@@ -170,10 +197,15 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 		.def( "shaderMetadata", &shaderMetadata, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "parameterMetadata", &parameterMetadata, ( boost::python::arg_( "plug" ), boost::python::arg_( "_copy" ) = true ) )
 		.def( "shadingEngine", &oslShaderShadingEngine, ( boost::python::arg_( "substitutions" ) = object() ) )
+		.def( "evaluateActivatorExpression", &evaluateActivatorExpressionWrapper )
 	;
 
 	GafferBindings::DependencyNodeClass<OSLImage>();
-	GafferBindings::DependencyNodeClass<OSLObject>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<OSLObject>();
+		GafferBindings::PlugClass<OSLObject::SourceLocationPlug>();
+	}
 
 	PlugClass<ClosurePlug>()
 		.def( init<const std::string &, Gaffer::Plug::Direction, unsigned>(
@@ -194,17 +226,12 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 
 
 	{
-		scope s = IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
-			.def( init<const IECoreScene::ShaderNetwork *>() )
-			.def( "hash", &ShadingEngine::hash )
-			.def( "shade", &shadeWrapper,
-				(
-					boost::python::arg( "points" ),
-					boost::python::arg( "transforms" ) = boost::python::dict()
-				)
-			)
-			.def( "needsAttribute", &ShadingEngine::needsAttribute )
-			.def( "hasDeformation", &ShadingEngine::hasDeformation )
+		IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted> shadingEngineClass( "ShadingEngine" );
+		scope s = shadingEngineClass;
+
+		enum_<ShadingEngine::TextureOrigin>( "TextureOrigin" )
+			.value( "Bottom", ShadingEngine::TextureOrigin::Bottom )
+			.value( "Top", ShadingEngine::TextureOrigin::Top )
 		;
 
 		class_<ShadingEngine::Transform>( "Transform" )
@@ -214,6 +241,22 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 			.def_readwrite( "toObjectSpace", &ShadingEngine::Transform::toObjectSpace )
 			.def( "__repr__", &repr )
 		;
+
+		shadingEngineClass
+			.def( init<const IECoreScene::ShaderNetwork *, ShadingEngine::TextureOrigin>( ( arg( "shaderNetwork" ), arg( "textureOrigin" ) = ShadingEngine::TextureOrigin::Bottom ) ) )
+			.def( "hash", &ShadingEngine::hash )
+			.def( "shade", &shadeWrapper,
+				(
+					boost::python::arg( "points" ),
+					boost::python::arg( "transforms" ) = boost::python::dict(),
+					boost::python::arg( "pointClouds" ) = boost::python::dict()
+				)
+			)
+			.def( "needsAttribute", &ShadingEngine::needsAttribute )
+			.def( "hasDeformation", &ShadingEngine::hasDeformation )
+		;
+
+
 	}
 
 	{
@@ -233,10 +276,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	{
 		scope s = GafferBindings::DependencyNodeClass<OSLCode>()
 			.def( "source", &oslCodeSource, ( arg_( "shaderName" ) = "" ) )
-			.def( "shaderCompiledSignal", &OSLCode::shaderCompiledSignal, return_internal_reference<1>() )
 		;
-
-		SignalClass<OSLCode::ShaderCompiledSignal>( "ShaderCompiledSignal" );
 
 		// Use a default serialiser for OSLCode, so that we don't get a
 		// loadShader call like every other kind of shader.
@@ -244,9 +284,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	}
 
 	{
-		scope s = GafferBindings::DependencyNodeClass<OSLLight>()
-			.def( "loadShader", &loadShader )
-		;
+		scope s = GafferBindings::DependencyNodeClass<OSLLight>();
 
 		enum_<OSLLight::Shape>( "Shape" )
 			.value( "Disk", OSLLight::Disk )

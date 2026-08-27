@@ -37,8 +37,10 @@
 #pragma once
 
 #include "GafferUI/ButtonEvent.h"
+#include "GafferUI/DragDropEvent.h"
 #include "GafferUI/EventSignalCombiner.h"
 #include "GafferUI/Export.h"
+#include "GafferUI/Gadget.h"
 #include "GafferUI/KeyEvent.h"
 
 #include "Gaffer/Path.h"
@@ -98,6 +100,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 					sortValue( sortValue ), foreground( foreground ) {}
 
 			CellData( const CellData &other ) = default;
+			CellData &operator=( const CellData &other ) = default;
 
 			/// The primary value to be displayed in a cell or header.
 			/// Supported types :
@@ -107,6 +110,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			/// - FloatData, DoubleData
 			/// - DateTimeData
 			/// - V2fData, V3fData, Color3fData, Color4fData
+			/// - RampffData, RampfColor3fData
 			IECore::ConstDataPtr value;
 			/// An additional icon to be displayed next to the primary
 			/// value. Supported types :
@@ -144,7 +148,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		/// Returns the data needed to draw a column cell.
 		virtual CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller = nullptr ) const = 0;
 		/// Returns the data needed to draw a column header.
-		virtual CellData headerData( const IECore::Canceller *canceller = nullptr ) const = 0;
+		virtual CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller = nullptr ) const = 0;
 
 		using PathColumnSignal = Gaffer::Signals::Signal<void ( PathColumn * ), Gaffer::Signals::CatchingCombiner<void>>;
 		/// Subclasses should emit this signal when something changes
@@ -172,6 +176,12 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		KeySignal &keyPressSignal();
 		KeySignal &keyReleaseSignal();
 
+		using DragDropSignal = Gaffer::Signals::Signal<bool ( PathColumn &column, Gaffer::Path &path, PathListingWidget &widget, const DragDropEvent &event ), EventSignalCombiner<bool>>;
+		DragDropSignal &dragEnterSignal();
+		DragDropSignal &dragMoveSignal();
+		DragDropSignal &dragLeaveSignal();
+		DragDropSignal &dropSignal();
+
 		/// Creation
 		/// ========
 
@@ -190,6 +200,10 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		ContextMenuSignal m_contextMenuSignal;
 		KeySignal m_keyPressSignal;
 		KeySignal m_keyReleaseSignal;
+		DragDropSignal m_dragEnterSignal;
+		DragDropSignal m_dragMoveSignal;
+		DragDropSignal m_dragLeaveSignal;
+		DragDropSignal m_dropSignal;
 
 		SizeMode m_sizeMode;
 
@@ -211,7 +225,7 @@ class GAFFERUI_API StandardPathColumn : public PathColumn
 		IECore::InternedString property() const;
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
-		CellData headerData( const IECore::Canceller *canceller ) const override;
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override;
 
 	private :
 
@@ -243,7 +257,7 @@ class GAFFERUI_API IconPathColumn : public PathColumn
 		IECore::InternedString property() const;
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
-		CellData headerData( const IECore::Canceller *canceller ) const override;
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override;
 
 	private :
 
@@ -267,7 +281,7 @@ class GAFFERUI_API FileIconPathColumn : public PathColumn
 		FileIconPathColumn( PathColumn::SizeMode sizeMode = Default );
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
-		CellData headerData( const IECore::Canceller *canceller ) const override;
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override;
 
 	private :
 
@@ -294,6 +308,7 @@ class PathListingWidget : public IECore::RefCounted
 		using Selection = std::variant<IECore::PathMatcher, std::vector<IECore::PathMatcher>>;
 		virtual void setSelection( const Selection &selection ) = 0;
 		virtual Selection getSelection() const = 0;
+		virtual std::vector<std::string> visualOrder( const IECore::PathMatcher &paths ) const = 0;
 
 };
 

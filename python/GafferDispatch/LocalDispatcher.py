@@ -86,12 +86,17 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# the main thread).
 			self.__name = dispatcher["jobName"].getValue()
 			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
-			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
 			self.__frameRange = dispatcher.frameRange()
 			self.__id = os.path.basename( self.__directory )
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
 			self.__environmentCommand = dispatcher["environmentCommand"].getValue()
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
+
+			# We want to warn if a Task is executing in the foreground and the `isolate` plug
+			# is enabled, which are mutually exclusive. We want to warn once per dispatch per
+			# Task. The unit of work a dispatcher gets is a batch, so we track whether we can
+			# actually isolate the Task using the batch's node.
+			self.__effectiveIsolate = {}
 
 			if self.__executeInBackground :
 				application = script.ancestor( Gaffer.ApplicationRoot )
@@ -257,7 +262,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			IECore.msg(
 				IECore.MessageHandler.Level.Info, batch.blindData()["nodeName"].value,
-				f"Executing {frames}"
+				"Executing {}".format( batch.name() )
 			)
 
 			try :
@@ -265,8 +270,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__executeBatch( batch, canceller )
 				IECore.msg(
 					IECore.MessageHandler.Level.Info, batch.blindData()["nodeName"].value,
-					"Completed {frames} in {time}".format(
-						frames = frames,
+					"Completed {name} in {time}".format(
+						name = batch.name(),
 						time = datetime.timedelta( seconds = int( 0.5 + time.perf_counter() - startTime ) )
 					)
 				)
@@ -275,7 +280,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				IECore.msg( IECore.MessageHandler.Level.Debug, batch.blindData()["nodeName"].value, traceback.format_exc().strip() )
 				IECore.msg(
 					IECore.MessageHandler.Level.Error, batch.blindData()["nodeName"].value,
-					f"Execution failed for {frames}"
+					"Execution failed for {}".format( batch.name() )
 				)
 				raise e
 
@@ -296,7 +301,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			args = shlex.split( self.__environmentCommand ) + [
 				str( Gaffer.executablePath() ),
 				"execute",
-				"-script", str( self.__scriptFile ),
+				"-script", taskContext["dispatcher:scriptFileName"],
 				"-nodes", batch.blindData()["nodeName"].value,
 				"-frames", frames,
 			]
@@ -305,7 +310,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				args.append( "-ignoreScriptLoadErrors" )
 
 			contextArgs = []
-			for entry in [ k for k in taskContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
+			for entry in [ k for k in taskContext.keys() if k != "frame" ] :
 				if entry not in self.__context.keys() or taskContext[entry] != self.__context[entry] :
 					contextArgs.extend( [ "-" + entry, IECore.repr( taskContext[entry] ) ] )
 
@@ -316,7 +321,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# we can capture everything and then let the LocalJobs UI filter
 			# it dynamically.
 
-			env = os.environ.copy()
+			env = Gaffer.environment()
 			env["IECORE_LOG_LEVEL"] = "DEBUG"
 
 			# Launch process.
@@ -339,7 +344,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# > Note : `os.set_blocking( False )` is not a good solution because :
 			# >  1. It is not available on Windows until Python 3.12.
 			# >  2. If we interleave sleeping and reading on one thread, processes
-			# >     with a lot of output are artifically slowed by the sleeps.
+			# >     with a lot of output are artificially slowed by the sleeps.
 
 			def handleOutput( stream, messageContext, messageHandler ) :
 
@@ -385,6 +390,11 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def __initBatchWalk( self, batch ) :
 
+			## \todo `TaskBatch.Namer` is computing this as
+			# part of getting `TaskBatch.name()`. Perhaps we should share the
+			# intermediate result? There is also scope for sharing the frames
+			# formatted as a string.
+
 			if "nodeName" in batch.blindData() :
 				# Already visited via another path
 				return
@@ -392,6 +402,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			nodeName = ""
 			if batch.plug() is not None :
 				nodeName = batch.plug().node().relativeName( batch.plug().node().scriptNode() )
+
 			batch.blindData()["nodeName"] = nodeName
 
 			for upstreamBatch in batch.preTasks() :
@@ -507,7 +518,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		self.__jobPool.addJob( job )
 		job._execute()
 
-IECore.registerRunTimeTyped( LocalDispatcher, typeName = "GafferDispatch::LocalDispatcher" )
+IECore.registerRunTimeTyped( LocalDispatcher, "GafferDispatch::LocalDispatcher" )
 GafferDispatch.Dispatcher.registerDispatcher( "Local", LocalDispatcher )
 
 ## \todo Should this be a shared component implemented in C++ in `Messages.h`?

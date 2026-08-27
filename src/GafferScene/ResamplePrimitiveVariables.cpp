@@ -100,11 +100,11 @@ void ResamplePrimitiveVariables::processPrimitiveVariable( const ScenePath &path
 	}
 	else if( const CurvesPrimitive *curvesPrimitive = IECore::runTimeCast<const CurvesPrimitive>( inputGeometry.get() ) )
 	{
-		CurvesAlgo::resamplePrimitiveVariable( curvesPrimitive, variable, interpolation );
+		CurvesAlgo::resamplePrimitiveVariable( curvesPrimitive, variable, interpolation, context->canceller() );
 	}
 	else if( const PointsPrimitive *pointsPrimitive = IECore::runTimeCast<const PointsPrimitive>( inputGeometry.get() ) )
 	{
-		PointsAlgo::resamplePrimitiveVariable( pointsPrimitive, variable, interpolation );
+		PointsAlgo::resamplePrimitiveVariable( pointsPrimitive, variable, interpolation, context->canceller() );
 	}
 	else
 	{

@@ -352,6 +352,3 @@ class AuxiliaryConnectionsGadgetTest( GafferUITest.TestCase ) :
 			self.assertTrue( acg.hasConnection( s["Box"]["CameraMatrixAveraged"], s["Box"]["OutputCameraMatrices"] ) )
 
 			g.setRoot( s )
-
-if __name__ == "__main__":
-	unittest.main()

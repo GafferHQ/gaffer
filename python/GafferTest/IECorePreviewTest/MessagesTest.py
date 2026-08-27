@@ -407,6 +407,3 @@ class MessagesTest( GafferTest.TestCase ) :
 	def testMessagesConstness( self ) :
 
 		GafferTest.testMessagesConstness()
-
-if __name__ == "__main__":
-	unittest.main()

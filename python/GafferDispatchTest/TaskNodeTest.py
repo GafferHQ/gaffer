@@ -427,7 +427,7 @@ class TaskNodeTest( GafferTest.TestCase ) :
 				else :
 					return GafferDispatch.SystemCommand.affectsTask( self, input )
 
-		IECore.registerRunTimeTyped( MySystemCommand, typeName = "GafferDispatchTest::MySystemCommand" )
+		IECore.registerRunTimeTyped( MySystemCommand, "GafferDispatchTest::MySystemCommand" )
 
 		n = MySystemCommand()
 		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
@@ -487,6 +487,3 @@ class TaskNodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( log ), 3 )
 		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["n3"]["internalTask"], s["n2"] ] )
-
-if __name__ == "__main__":
-	unittest.main()

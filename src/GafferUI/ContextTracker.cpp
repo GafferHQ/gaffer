@@ -54,8 +54,8 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-#include "boost/multi_index/member.hpp"
 #include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index/key.hpp"
 #include "boost/multi_index_container.hpp"
 
 #include <unordered_set>
@@ -78,10 +78,10 @@ using SharedInstances = boost::multi_index::multi_index_container<
 	SharedInstance,
 	boost::multi_index::indexed_by<
 		boost::multi_index::hashed_unique<
-			boost::multi_index::member<SharedInstance, const Node *, &SharedInstance::first>
+			boost::multi_index::key<&SharedInstance::first>
 		>,
 		boost::multi_index::hashed_non_unique<
-			boost::multi_index::member<SharedInstance, ContextTracker *, &SharedInstance::second>
+			boost::multi_index::key<&SharedInstance::second>
 		>
 	>
 >;
@@ -97,10 +97,10 @@ using SharedFocusInstances = boost::multi_index::multi_index_container<
 	SharedFocusInstance,
 	boost::multi_index::indexed_by<
 		boost::multi_index::hashed_unique<
-			boost::multi_index::member<SharedFocusInstance, const ScriptNode *, &SharedFocusInstance::first>
+			boost::multi_index::key<&SharedFocusInstance::first>
 		>,
 		boost::multi_index::hashed_non_unique<
-			boost::multi_index::member<SharedFocusInstance, ContextTracker *, &SharedFocusInstance::second>
+			boost::multi_index::key<&SharedFocusInstance::second>
 		>
 	>
 >;
@@ -560,6 +560,10 @@ void ContextTracker::contextChanged( IECore::InternedString variable )
 	if( !boost::starts_with( variable.string(), "ui:" ) )
 	{
 		scheduleUpdate();
+	}
+	else
+	{
+		IECore::msg( IECore::Msg::Warning, "ContextTracker", fmt::format( "Unexpected context variable \"{}\". Should you be using ScriptNodeAlgo or Metadata instead?", variable.string() ) );
 	}
 }
 

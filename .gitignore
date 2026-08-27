@@ -27,6 +27,7 @@ doc/python
 include/Gaffer/Version.h
 contrib/openColorIOPandemonium/luts/*.spi1d
 contrib/openColorIOPandemonium/luts/*.cube
+bin/__private/*.o
 
 # clang compile commands
 compile_commands.json

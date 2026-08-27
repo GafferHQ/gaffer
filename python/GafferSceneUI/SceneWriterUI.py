@@ -54,9 +54,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the file to be written. Note that unlike
 			image sequences, many scene formats write animation into
@@ -64,33 +64,33 @@ Gaffer.Metadata.registerNode(
 			number is generally not necessary.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "sceneCache",
-			"fileSystemPath:extensions", " ".join( IECoreScene.SceneInterface.supportedExtensions( IECore.IndexedIO.OpenMode.Write ) ),
-			"fileSystemPath:extensionsLabel", "Show only cache files",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:bookmarks" : "sceneCache",
+			"fileSystemPath:extensions" : " ".join( IECoreScene.SceneInterface.supportedExtensions( IECore.IndexedIO.OpenMode.Write ) ),
+			"fileSystemPath:extensionsLabel" : "Show only cache files",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to be written.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			A direct pass-through of the input scene.
 			""",
 
-		],
+		},
 
 	}
 

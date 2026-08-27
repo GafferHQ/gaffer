@@ -70,19 +70,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"ignoreMissing" : [
+		"ignoreMissing" : {
 
-			"description",
+			"description" :
 			"""
 			Ignores tweaks that would normally cause an error if the input
 			parameter was missing.
 			""",
 
-		],
+		},
 
-		"tweaks" : [
+		"tweaks" : {
 
-			"description",
+			"description" :
 			"""
 			Add a camera tweak.
 
@@ -91,18 +91,18 @@ Gaffer.Metadata.registerNode(
 			interface, or via the CameraTweaks API in Python.
 			""",
 
-			"layout:section", "Settings.Tweaks",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.CameraTweaksUI._TweaksFooter",
-			"layout:customWidget:footer:index", -1,
+			"layout:section" : "Settings.Tweaks",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType" : "GafferSceneUI.CameraTweaksUI._TweaksFooter",
+			"layout:customWidget:footer:index" : -1,
 
-		],
+		},
 
-		"tweaks.*" : [
+		"tweaks.*" : {
 
-			"tweakPlugValueWidget:propertyType", "parameter",
+			"tweakPlugValueWidget:propertyType" : "parameter",
 
-		],
+		},
 
 	}
 
@@ -111,6 +111,7 @@ Gaffer.Metadata.registerNode(
 ## Registers a function to create a tweak of a particular type.
 # This will appear as an item labelled `name` in the popup menu
 # used for adding tweaks.
+## \todo Remove. Use metadata instead (see CameraQueryUI).
 def registerTweak( name, tweakPlugCreator ) :
 
 	_registeredTweaks[name] = tweakPlugCreator
@@ -169,6 +170,9 @@ def __registerCameraParameters() :
 
 __registerCameraParameters()
 
+## \todo Replace with PlugCreationWidget. Introduce `ui:scene:acceptsCameraParameters`
+# metadata to trigger the creation of menu items for all registered parameters. See
+# CameraQueryUI.
 class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :

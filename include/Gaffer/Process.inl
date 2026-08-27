@@ -203,7 +203,7 @@ namespace Gaffer
 /// process graph.
 ///
 /// In practice, such cyclic dependencies are rare, but not rare enough
-/// that we can neglect them completely. Our stragegy is therefore to
+/// that we can neglect them completely. Our strategy is therefore to
 /// perform collaboration wherever we can, but to replace it with one
 /// additional "redundant" process where collaboration would cause a
 /// cycle.
@@ -248,6 +248,8 @@ class GAFFER_API Process::Collaboration : public IECore::RefCounted
 		using Set = std::unordered_set<const Collaboration *>;
 		// Collaborations depending directly on this one.
 		Set dependents;
+
+		IECore::CancellerPtr canceller;
 
 		// Returns true if this collaboration depends on `collaboration`, either
 		// directly or indirectly via other collaborations it depends on.
@@ -367,6 +369,19 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 		//  not access them!
 
 		CollaborationTypePtr collaboration = candidate;
+
+		std::optional<IECore::Canceller::ScopedChild> cancellationScope;
+		if( auto currentCanceller = threadState.context()->canceller() )
+		{
+			if( collaboration->canceller && collaboration->canceller != currentCanceller )
+			{
+				// Collaboration has a different canceller than ours. Forward
+				// cancellation requests from our canceller, so that our clients
+				// can cancel execution too.
+				cancellationScope.emplace( const_cast<IECore::Canceller *>( currentCanceller ), collaboration->canceller );
+			}
+		}
+
 		accessor.release();
 
 		collaboration->arena.execute(
@@ -386,6 +401,7 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 	}
 
 	CollaborationTypePtr collaboration = new CollaborationType;
+	collaboration->canceller = const_cast<IECore::Canceller *>( threadState.context()->canceller() );
 	if( currentCollaboration )
 	{
 		// No need to hold `m_dependentsMutex` here because other threads can't

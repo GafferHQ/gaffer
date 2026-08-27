@@ -67,13 +67,6 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		self.__tabBar.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragLeave ) )
 		self.__tabBarDragState = self.__DragState.None_
 
-		# See comments in Button.py
-		if TabbedContainer.__palette is None :
-			TabbedContainer.__palette = QtGui.QPalette( QtWidgets.QApplication.instance().palette( self.__tabBar._qtWidget() ) )
-			TabbedContainer.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
-
-		self.__tabBar._qtWidget().setPalette( TabbedContainer.__palette )
-
 		self._qtWidget().setTabBar( self.__tabBar._qtWidget() )
 		self._qtWidget().setElideMode( QtCore.Qt.ElideNone )
 

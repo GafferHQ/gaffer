@@ -514,6 +514,3 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 
 		setNode["mode"].setValue( setNode.Mode.Create )
 		self.assertEqual( { str( x ) for x in setNode["out"].setNames() }, { "test1", "test2", "test3", "test4" } )
-
-if __name__ == "__main__":
-	unittest.main()

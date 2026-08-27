@@ -42,13 +42,17 @@ namespace GafferDispatch
 enum TypeId
 {
 
-	TaskNodeTypeId = 110160,
-	TaskNodeTaskPlugTypeId = 110161,
-	DispatcherTypeId = 110162,
-	TaskListTypeId = 110163,
-	FrameMaskTypeId = 110164,
+	TaskNodeTypeId = 118800,
+	TaskNodeTaskPlugTypeId = 118801,
+	DispatcherTypeId = 118802,
+	TaskListTypeId = 118803,
+	FrameMaskTypeId = 118804,
+	FileListTypeId = 118805,
+	DeleteFilesTypeId = 118806,
+	CopyFilesTypeId = 118807,
+	RenameFilesTypeId = 118808,
 
-	LastTypeId = 110180,
+	LastTypeId = 118999
 
 };
 

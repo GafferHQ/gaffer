@@ -66,9 +66,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"paths" : [
+		"paths" : {
 
-			"description",
+			"description" :
 			"""
 			The list of paths to the locations to be matched by the filter.
 			A path is formed by a sequence of names separated by `/`, and
@@ -91,18 +91,18 @@ Gaffer.Metadata.registerNode(
 			 - `/.../house` matches `/house`, `/street/house` and `/city/street/house`.
 			""",
 
-			"nodule:type", "",
-			"ui:scene:acceptsPaths", True,
+			"nodule:type" : "",
+			"ui:scene:acceptsPaths" : True,
 
-			"vectorDataPlugValueWidget:dragPointer", "objects",
+			"vectorDataPlugValueWidget:dragPointer" : "objects",
 
-			"plugValueWidget:type", "GafferSceneUI.PathFilterUI._PathsPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.PathFilterUI._PathsPlugValueWidget",
 
-		],
+		},
 
-		"roots" : [
+		"roots" : {
 
-			"description",
+			"description" :
 			"""
 			An optional filter input used to provide multiple root locations
 			which the `paths` are relative to. This can be useful when working
@@ -111,9 +111,9 @@ Gaffer.Metadata.registerNode(
 			are treated as being relative to `/`, the true scene root.
 			""",
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
 	}
 
@@ -202,24 +202,23 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	scenes = []
 	pathMatcher = None
-	with plugValueWidget.context() :
-		pathFilter = _destinationPathFilter( plug )
+	pathFilter = _destinationPathFilter( plug )
+	if pathFilter is not None :
+		pathMatcher = IECore.PathMatcher( plug.getValue() )
+		scenes = _filteredScenes( pathFilter )
+	elif plug == rowPlug["name"] and spreadsheet["selector"].getValue() == "${scene:path}" :
+		pathMatcher = IECore.PathMatcher( [ plug.getValue() ] )
+		pathFilter = _destinationPathFilter( spreadsheet["enabledRowNames"] )
 		if pathFilter is not None :
-			pathMatcher = IECore.PathMatcher( plug.getValue() )
 			scenes = _filteredScenes( pathFilter )
-		elif plug == rowPlug["name"] and spreadsheet["selector"].getValue() == "${scene:path}" :
-			pathMatcher = IECore.PathMatcher( [ plug.getValue() ] )
-			pathFilter = _destinationPathFilter( spreadsheet["enabledRowNames"] )
-			if pathFilter is not None :
-				scenes = _filteredScenes( pathFilter )
-			else :
-				for output in spreadsheet["out"] :
-					scene = Gaffer.PlugAlgo.findDestination(
-						output,
-						lambda plug : plug.node()["out"] if isinstance( plug.node(), GafferScene.SceneNode ) else None
-					)
-					if scene is not None :
-						scenes = [ scene ]
+		else :
+			for output in spreadsheet["out"] :
+				scene = Gaffer.PlugAlgo.findDestination(
+					output,
+					lambda plug : plug.node()["out"] if isinstance( plug.node(), GafferScene.SceneNode ) else None
+				)
+				if scene is not None :
+					scenes = [ scene ]
 
 	if pathMatcher is None or len( scenes ) == 0 :
 		return
@@ -256,7 +255,7 @@ def __pathsPlug( node ) :
 
 def __filterPlug( node ) :
 
-	filterPlugs = list( GafferScene.FilterPlug.Range( node ) )
+	filterPlugs = list( GafferScene.FilterPlug.InputRange( node ) )
 	if len( filterPlugs ) == 1 :
 		return filterPlugs[0]
 	return None
@@ -269,12 +268,10 @@ def __dropMode( nodeGadget, event ) :
 
 	pathsPlug = __pathsPlug( nodeGadget.node() )
 	if pathsPlug is None :
-		filter = None
-
 		filterPlug = __filterPlug( nodeGadget.node() )
 		if filterPlug is None :
 			return __DropMode.None_
-
+		filter = None
 		if filterPlug.getInput() is not None :
 			filter = filterPlug.source().node()
 		if filter is None :
@@ -414,13 +411,3 @@ def addObjectDropTarget( nodeGadget ) :
 	nodeGadget.dragLeaveSignal().connect( __dragLeave )
 	nodeGadget.dragMoveSignal().connect( __dragMove )
 	nodeGadget.dropSignal().connect( __drop )
-
-def __nodeGadget( pathFilter ) :
-
-	nodeGadget = GafferUI.StandardNodeGadget( pathFilter )
-	addObjectDropTarget( nodeGadget )
-
-	return nodeGadget
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.PathFilter, __nodeGadget )
-GafferUI.NodeGadget.registerNodeGadget( Gaffer.SubGraph, __nodeGadget )

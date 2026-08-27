@@ -141,6 +141,15 @@ class PathListingWidgetAccessor : public GafferUI::PathListingWidget
 			}
 		}
 
+		std::vector<std::string> visualOrder( const IECore::PathMatcher &paths ) const override
+		{
+			IECorePython::ScopedGILLock gilLock;
+			object pythonResult = m_widget.attr( "visualOrder" )( paths );
+			std::vector<std::string> result;
+			container_utils::extend_container( result, pythonResult );
+			return result;
+		}
+
 	private :
 
 		// A `weakref` for the Python PathListingWidget object. We use a
@@ -257,8 +266,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 					if( f )
 					{
 						return extract<CellData>(
-							// See note of caution about `ptr( canceller )` in PathWrapper.
-							f( PathPtr( const_cast<Path *>( &path ) ), boost::python::ptr( canceller ) )
+							f( PathPtr( const_cast<Path *>( &path ) ), CancellerPtr( const_cast<IECore::Canceller *>( canceller ) ) )
 						);
 					}
 				}
@@ -271,7 +279,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 			throw IECore::Exception( "PathColumn::cellData() python method not defined" );
 		}
 
-		CellData headerData( const IECore::Canceller *canceller = nullptr ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( isSubclassed() )
 			{
@@ -282,7 +290,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 					if( f )
 					{
 						return extract<CellData>(
-							f( boost::python::ptr( canceller ) )
+							f( PathPtr( const_cast<Path *>( &rootPath ) ), CancellerPtr( const_cast<IECore::Canceller *>( canceller ) ) )
 						);
 					}
 				}
@@ -362,10 +370,10 @@ PathColumn::CellData cellDataWrapper( PathColumn &pathColumn, const Path &path, 
 	return pathColumn.cellData( path, canceller );
 }
 
-PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
+PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Path &rootPath, const Canceller *canceller )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return pathColumn.headerData( canceller );
+	return pathColumn.headerData( rootPath, canceller );
 }
 
 struct ChangedSignalSlotCaller
@@ -468,6 +476,31 @@ struct KeySignalSlotCaller
 	}
 };
 
+struct DragDropSignalCaller
+{
+	static bool call( PathColumn::DragDropSignal &s, PathColumn &column, Gaffer::Path &path, object widget, const DragDropEvent &event )
+	{
+		PathListingWidgetAccessor accessor( widget );
+		IECorePython::ScopedGILRelease gilRelease;
+		return s( column, path, accessor, event );
+	}
+};
+
+struct DragDropSignalSlotCaller
+{
+	bool operator()( boost::python::object slot, PathColumn &column, Gaffer::Path &path, PathListingWidget &widget, const DragDropEvent &event )
+	{
+		try
+		{
+			return slot( PathColumnPtr( &column ), PathPtr( &path ), static_cast<PathListingWidgetAccessor&>( widget ).widget(), event );
+		}
+		catch( const boost::python::error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 template<typename T>
 const char *pathColumnProperty( const T &column )
 {
@@ -524,18 +557,23 @@ void GafferUIModule::bindPathColumn()
 		SignalClass<PathColumn::ButtonSignal, ButtonSignalCaller, ButtonSignalSlotCaller>( "ButtonSignal" );
 		SignalClass<PathColumn::ContextMenuSignal, ContextMenuSignalCaller, ContextMenuSignalSlotCaller>( "ContextMenuSignal" );
 		SignalClass<PathColumn::KeySignal, KeySignalCaller, KeySignalSlotCaller>( "KeySignal" );
+		SignalClass<PathColumn::DragDropSignal, DragDropSignalCaller, DragDropSignalSlotCaller>( "DragDropSignal" );
 	}
 
 	pathColumnClass.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::SizeMode::Default ) )
 		.def( "changedSignal", &PathColumn::changedSignal, return_internal_reference<1>() )
 		.def( "cellData", &cellDataWrapper, ( arg( "path" ), arg( "canceller" ) = object() ) )
-		.def( "headerData", &headerDataWrapper, ( arg( "canceller" ) = object() ) )
+		.def( "headerData", &headerDataWrapper, ( arg( "rootPath" ), arg( "canceller" ) = object() ) )
 		.def( "buttonPressSignal", &PathColumn::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
 		.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )
 		.def( "contextMenuSignal", &PathColumn::contextMenuSignal, return_internal_reference<1>() )
 		.def( "keyPressSignal", &PathColumn::keyPressSignal, return_internal_reference<1>() )
 		.def( "keyReleaseSignal", &PathColumn::keyReleaseSignal, return_internal_reference<1>() )
+		.def( "dragEnterSignal", &PathColumn::dragEnterSignal, return_internal_reference<1>() )
+		.def( "dragMoveSignal", &PathColumn::dragMoveSignal, return_internal_reference<1>() )
+		.def( "dragLeaveSignal", &PathColumn::dragLeaveSignal, return_internal_reference<1>() )
+		.def( "dropSignal", &PathColumn::dropSignal, return_internal_reference<1>() )
 		.def( "instanceCreatedSignal", &PathColumn::instanceCreatedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "instanceCreatedSignal" )
 		.def( "getSizeMode", (PathColumn::SizeMode (PathColumn::*)() const )&PathColumn::getSizeMode )

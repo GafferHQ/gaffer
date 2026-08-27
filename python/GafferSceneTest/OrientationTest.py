@@ -298,6 +298,3 @@ class OrientationTest( GafferSceneTest.SceneTestCase ) :
 			equal,
 			[ True ] * len( a )
 		)
-
-if __name__ == "__main__":
-	unittest.main()

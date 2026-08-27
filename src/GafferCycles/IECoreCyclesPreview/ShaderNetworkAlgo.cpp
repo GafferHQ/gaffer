@@ -47,7 +47,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
+#include "IECore/RampData.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string.hpp"
@@ -57,9 +57,12 @@
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
+#include "kernel/types.h"
 #include "scene/shader_nodes.h"
+#include "scene/object.h"
 #include "scene/osl.h"
 #include "util/path.h"
+#include "util/version.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "fmt/format.h"
@@ -92,7 +95,7 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 	}
 }
 
-typedef IECore::LRUCache<std::string, std::string> ShaderSearchPathCache;
+using ShaderSearchPathCache = IECore::LRUCache<std::string, std::string>;
 ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
 ccl::SocketType::Type getSocketType( const std::string &name )
@@ -108,15 +111,14 @@ ccl::SocketType::Type getSocketType( const std::string &name )
 	return ccl::SocketType::Type::UNDEFINED;
 }
 
-typedef boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *> ShaderMap;
+using ShaderMap = boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *>;
 
-ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
+ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::Scene *scene, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
 	// Reuse previously created node if we can.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
-	ccl::ShaderNode *&node = inserted.first->second;
-	if( !inserted.second )
+	ccl::ShaderNode *&node = converted[outputParameter.shader];
+	if( node )
 	{
 		return node;
 	}
@@ -127,11 +129,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	if( isOSLShader )
 	{
-		if( shaderManager && shaderManager->use_osl() )
+		if( scene->shader_manager->use_osl() )
 		{
-			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
-			node = manager->osl_node( shaderGraph, shaderManager, shaderFileName.c_str() );
+			node = ccl::OSLShaderManager::osl_node( shaderGraph, scene, shaderFileName.c_str() );
 		}
 		else
 		{
@@ -152,16 +153,14 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		boost::split( split, shader->getName(), boost::is_any_of( "_" ) );
 		if( split.size() >= 4 ) // should be 4 eg. "convert, X, to, Y"
 		{
-			ccl::ConvertNode *convertNode = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
-			node = (ccl::ShaderNode*)convertNode;
+			node = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
 		}
 	}
 	else if( const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) ) )
 	{
 		if( nodeType->type == ccl::NodeType::SHADER && nodeType->create )
 		{
-			node = static_cast<ccl::ShaderNode *>( nodeType->create( nodeType ) );
-			node->set_owner( shaderGraph );
+			node = shaderGraph->create_node( nodeType );
 		}
 	}
 
@@ -171,15 +170,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		return node;
 	}
 
-	// Add node to graph
-
-	node = shaderGraph->add( node );
-
-	string nodeName(
-		namePrefix +
-		outputParameter.shader.string()
-	);
-	node->name = ccl::ustring( nodeName.c_str() );
+	node->name = ccl::ustring( namePrefix + outputParameter.shader.string() );
 
 	// Set the shader parameters
 
@@ -191,24 +182,24 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		// "__", revert that change here.
 		string parameterName = boost::replace_first_copy( namedParameter.first.string(), "__", "." );
 
-		if( const SplineffData *splineData = runTimeCast<const SplineffData>( namedParameter.second.get() ) )
+		if( const RampffData *rampData = runTimeCast<const RampffData>( namedParameter.second.get() ) )
 		{
-			// For OSL, splines are handled by convertToOSLConventions
+			// For OSL, ramps are handled by convertToOSLConventions
 			assert( !isOSLShader );
 
 			if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
 			{
-				SocketAlgo::setRampSocket( node, socket, splineData->readable() );
+				SocketAlgo::setRampSocket( node, socket, rampData->readable() );
 			}
 		}
-		else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( namedParameter.second.get() ) )
+		else if( const RampfColor3fData *rampData = runTimeCast<const RampfColor3fData>( namedParameter.second.get() ) )
 		{
-			// For OSL, splines are handled by convertToOSLConventions
+			// For OSL, ramps are handled by convertToOSLConventions
 			assert( !isOSLShader );
 
 			if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
 			{
-				SocketAlgo::setRampSocket( node, socket, splineData->readable() );
+				SocketAlgo::setRampSocket( node, socket, rampData->readable() );
 			}
 		}
 		else if( isImageTexture && parameterName == "filename" )
@@ -257,7 +248,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
-		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, shaderGraph, converted );
+		ccl::ShaderNode *sourceNode = convertWalk( connection.source, shaderNetwork, namePrefix, scene, shaderGraph, converted );
 		if( !sourceNode )
 		{
 			continue;
@@ -309,7 +300,7 @@ T parameterValue( const IECore::CompoundDataMap &parameters, const IECore::Inter
 	return defaultValue;
 }
 
-static const bool g_useLegacyLights = []() -> bool {
+const bool g_useLegacyLights = []() -> bool {
 	const char *c = getenv( "GAFFERCYCLES_USE_LEGACY_LIGHTS" );
 	if( !c )
 	{
@@ -430,7 +421,7 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	{
 		if( node->outputs.size() )
 		{
-			return node->outputs.front();
+			return node->outputs[0];
 		}
 	}
 
@@ -441,13 +432,13 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	return nullptr;
 }
 
-ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
+std::unique_ptr<ccl::ShaderGraph> convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 								const IECoreScene::ShaderNetwork *displacementShader,
 								const IECoreScene::ShaderNetwork *volumeShader,
-								ccl::ShaderManager *shaderManager,
+								ccl::Scene *scene,
 								const std::string &namePrefix )
 {
-	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
+	std::unique_ptr<ccl::ShaderGraph> graph = std::make_unique<ccl::ShaderGraph>();
 
 	using NamedNetwork = std::pair<std::string, const IECoreScene::ShaderNetwork *>;
 	for( const auto &[name, network] : { NamedNetwork( "surface", surfaceShader ), NamedNetwork( "displacement", displacementShader ), NamedNetwork( "volume", volumeShader ) } )
@@ -467,12 +458,12 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 		/// Hardcoded to the old OSL version to indicate that component connection adapters are
 		/// required - even though OSL now supports component connections, the Cycles API AFAIK doesn't.
 		IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( toConvert.get(), 10900 );
-		// The above only added component connection adaptors for OSL. Now add them for native
-		// Cycles shaders.
-		IECoreScene::ShaderNetworkAlgo::addComponentConnectionAdapters( toConvert.get() );
 		IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( toConvert.get() );
+		// The convertToOSLConventions call only added component connection adaptors for OSL.
+		// Now add them for native Cycles shaders.
+		IECoreScene::ShaderNetworkAlgo::addComponentConnectionAdapters( toConvert.get() );
 		ShaderMap converted;
-		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
+		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, scene, graph.get(), converted );
 
 		if( node )
 		{
@@ -488,10 +479,10 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 	return graph;
 }
 
-void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix )
+void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::Scene *scene, const std::string &namePrefix )
 {
 	ShaderMap converted;
-	convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, graph, converted );
+	convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, scene, graph, converted );
 }
 
 void setSingleSided( ccl::ShaderGraph *graph )
@@ -499,9 +490,9 @@ void setSingleSided( ccl::ShaderGraph *graph )
 	// Cycles doesn't natively support setting single-sided on objects, however we can build
 	// a shader which does it for us by checking for backfaces and using a transparentBSDF
 	// to emulate the effect.
-	ccl::ShaderNode *mixClosure = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::MixClosureNode>() );
-	ccl::ShaderNode *transparentBSDF = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::TransparentBsdfNode>() );
-	ccl::ShaderNode *geometry = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::GeometryNode>() );
+	ccl::ShaderNode *mixClosure = graph->create_node<ccl::MixClosureNode>();
+	ccl::ShaderNode *transparentBSDF = graph->create_node<ccl::TransparentBsdfNode>();
+	ccl::ShaderNode *geometry = graph->create_node<ccl::GeometryNode>();
 
 	if( ccl::ShaderOutput *shaderOutput = ShaderNetworkAlgo::output( geometry, "backfacing" ) )
 		if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( mixClosure, "fac" ) )
@@ -526,29 +517,6 @@ void setSingleSided( ccl::ShaderGraph *graph )
 				graph->connect( shaderOutput2, shaderInput );
 		}
 	}
-}
-
-ccl::Shader *createDefaultShader()
-{
-	// This creates a camera dot-product shader/facing ratio.
-	ccl::Shader *cshader = new ccl::Shader();
-	ccl::ShaderGraph *cgraph = new ccl::ShaderGraph();
-	cshader->name = ccl::ustring( "defaultSurfaceShader" );
-	ccl::ShaderNode *outputNode = (ccl::ShaderNode*)cgraph->output();
-	ccl::VectorMathNode *vecMath = cgraph->create_node<ccl::VectorMathNode>();
-	vecMath->set_math_type( ccl::NODE_VECTOR_MATH_DOT_PRODUCT );
-	ccl::GeometryNode *geo = cgraph->create_node<ccl::GeometryNode>();
-	ccl::ShaderNode *vecMathNode = cgraph->add( (ccl::ShaderNode*)vecMath );
-	ccl::ShaderNode *geoNode = cgraph->add( (ccl::ShaderNode*)geo );
-	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "normal" ),
-						ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
-	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "incoming" ),
-						ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
-	cgraph->connect( ShaderNetworkAlgo::output( vecMathNode, "value" ),
-						ShaderNetworkAlgo::input( outputNode, "surface" ) );
-	cshader->set_graph( cgraph );
-
-	return cshader;
 }
 
 bool hasOSL( const ccl::Shader *cshader )
@@ -618,7 +586,8 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		{
 			continue;
 		}
-		// Convert angle-based parameters, where we use degress and Cycles uses radians.
+
+		// Convert angle-based parameters, where we use degrees and Cycles uses radians.
 		else if( name == "angle" )
 		{
 			cyclesLight->set_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 0.0f ) ) );
@@ -925,8 +894,6 @@ const InternedString g_texMappingYMappingParameter( "tex_mapping__y_mapping" );
 const InternedString g_texMappingZMappingParameter( "tex_mapping__z_mapping" );
 const InternedString g_translationParameter( "translation" );
 const InternedString g_treatAsPointParameter( "treatAsPoint" );
-const InternedString g_useDiffuseParameter( "use_diffuse" );
-const InternedString g_useGlossyParameter( "use_glossy" );
 const InternedString g_useMISParameter( "use_mis" );
 const InternedString g_useSpecularWorkflowParameter( "useSpecularWorkflow" );
 const InternedString g_UVParameter( "UV" );
@@ -945,6 +912,9 @@ const InternedString g_vector3Parameter( "vector3" );
 const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
+const InternedString g_USDRayVisibilityBlindDataKey( "__USDRayVisibility" );
+
+const string g_cyclesNamespace( "cycles:" );
 
 void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
 {
@@ -960,13 +930,26 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 	transferUSDParameter( network, shaderHandle, usdShader, g_normalizeParameter, shader, g_normalizeParameter, false );
 	transferUSDParameter( network, shaderHandle, usdShader, g_shadowEnableParameter, shader, g_castShadowParameter, true );
 
-	const float diffuse = parameterValue( usdShader, g_diffuseParameter, 1.0f );
-	shader->parameters()[g_useDiffuseParameter] = new BoolData( diffuse > 0.0f );
-
-	const float specular = parameterValue( usdShader, g_specularParameter, 1.0f );
-	shader->parameters()[g_useGlossyParameter] = new BoolData( specular > 0.0f );
+	int visibility = (int)ccl::PATH_RAY_ALL_VISIBILITY;
+	if( parameterValue( usdShader, g_diffuseParameter, 1.0f ) == 0.0f )
+	{
+		visibility &= ~(int)ccl::PATH_RAY_DIFFUSE;
+	}
+	if( parameterValue( usdShader, g_specularParameter, 1.0f ) == 0.0f )
+	{
+		visibility &= ~(int)ccl::PATH_RAY_GLOSSY;
+	}
+	shader->blindData()->writable()[g_USDRayVisibilityBlindDataKey] = new IntData( visibility );
 
 	shader->parameters()[g_useMISParameter] = new BoolData( true );
+
+	for( const auto &[name, value] : usdShader->parameters() )
+	{
+		if( boost::starts_with( name.string(), g_cyclesNamespace ) )
+		{
+			shader->parameters()[name.string().substr(g_cyclesNamespace.size())] = value;
+		}
+	}
 }
 
 void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )

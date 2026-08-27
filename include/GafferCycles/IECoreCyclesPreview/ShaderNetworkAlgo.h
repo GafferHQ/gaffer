@@ -58,17 +58,16 @@ IECORECYCLES_API ccl::ShaderInput  *input( ccl::ShaderNode *node, IECore::Intern
 IECORECYCLES_API ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name );
 
 
-IECORECYCLES_API ccl::ShaderGraph *convertGraph(
+IECORECYCLES_API std::unique_ptr<ccl::ShaderGraph> convertGraph(
 	const IECoreScene::ShaderNetwork *surfaceShader,
 	const IECoreScene::ShaderNetwork *displacementShader,
 	const IECoreScene::ShaderNetwork *volumeShader,
-	ccl::ShaderManager *shaderManager,
+	ccl::Scene *scene,
 	const std::string &namePrefix = ""
 );
 
-IECORECYCLES_API void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
+IECORECYCLES_API void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::Scene *scene, const std::string &namePrefix = "" );
 IECORECYCLES_API void setSingleSided( ccl::ShaderGraph *graph );
-IECORECYCLES_API ccl::Shader *createDefaultShader();
 IECORECYCLES_API bool hasOSL( const ccl::Shader *cshader );
 
 // Light conversion
@@ -81,7 +80,7 @@ IECORECYCLES_API bool hasOSL( const ccl::Shader *cshader );
 //
 // We represent lights as a `IECoreScene::ShaderNetwork`, where the output shader defines the light and
 // each parameter can have input shaders. We support "virtual" parameters for `intensity`, `exposure` and `color`,
-// combinining them in to the single `strength` parameter in Cycles. Where these parameters have input connections,
+// combining them in to the single `strength` parameter in Cycles. Where these parameters have input connections,
 // we instead combine them into a Cycles shader suitable for providing emission to the `shader` socket.
 
 // Converts all non-connected light parameters on to the provided `cyclesLight` node.
@@ -94,7 +93,7 @@ IECORECYCLES_API void convertLight( const IECoreScene::ShaderNetwork *light, ccl
 IECORECYCLES_API IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreScene::ShaderNetwork *light );
 
 /// Converts any UsdLuxLights into native Cycles shaders. This should be done before
-/// caling `convertLight()` and `convertLightShader()`.
+/// calling `convertLight()` and `convertLightShader()`.
 IECORECYCLES_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
 
 } // namespace ShaderNetworkAlgo

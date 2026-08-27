@@ -69,7 +69,7 @@ using namespace GafferScene;
 //
 // We deliberately separate the actual conversion operations out from
 // `computeProcessedObject()` so that the latter has a simple structure
-// that matches `hashProcessedObject()` closesly. This makes it easier
+// that matches `hashProcessedObject()` closely. This makes it easier
 // to verify correctness, and harder to introduce bugs. Perhaps the
 // conversion functions might make sense as IECoreScene Algo at some
 // point.

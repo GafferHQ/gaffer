@@ -48,7 +48,9 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 
 		shader1 = GafferSceneTest.TestShader( "s1" )
+		shader1.loadShader( "simpleShader" )
 		shader2 = GafferSceneTest.TestShader( "s2" )
+		shader2.loadShader( "simpleShader" )
 
 		shader1["type"].setValue( "test:surface" )
 		shader2["type"].setValue( "test:surface" )
@@ -80,7 +82,9 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["shader1"] = GafferSceneTest.TestShader()
+		script["shader1"].loadShader( "simpleShader" )
 		script["shader2"] = GafferSceneTest.TestShader()
+		script["shader2"].loadShader( "simpleShader" )
 
 		script["shader1"]["parameters"]["i"].setValue( 1 )
 		script["shader2"]["parameters"]["i"].setValue( 2 )
@@ -109,7 +113,9 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 	def testSetup( self ) :
 
 		shader1 = GafferSceneTest.TestShader( "s1" )
+		shader1.loadShader( "simpleShader" )
 		shader2 = GafferSceneTest.TestShader( "s2" )
+		shader2.loadShader( "simpleShader" )
 
 		shader1["parameters"]["c"].setValue( imath.Color3f( 0 ) )
 		shader2["parameters"]["c"].setValue( imath.Color3f( 1 ) )
@@ -117,10 +123,11 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		switch = Gaffer.Switch()
 		switch.setup( shader1["parameters"]["c"] )
 
-		switch["in"][0].setInput( shader1["out"] )
-		switch["in"][1].setInput( shader2["out"] )
+		switch["in"][0].setInput( shader1["out"]["c"] )
+		switch["in"][1].setInput( shader2["out"]["c"] )
 
 		shader3 = GafferSceneTest.TestShader( "s3" )
+		shader3.loadShader( "simpleShader" )
 		shader3["type"].setValue( "test:surface" )
 		shader3["parameters"]["c"].setInput( switch["out"] )
 
@@ -140,20 +147,23 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n1"] = GafferSceneTest.TestShader()
+		s["n1"].loadShader( "simpleShader" )
 		s["n1"]["parameters"]["i"].setValue( 1 )
 
 		s["n2"] = GafferSceneTest.TestShader()
+		s["n2"].loadShader( "simpleShader" )
 		s["n2"]["parameters"]["i"].setValue( 2 )
 
 		s["n3"] = GafferSceneTest.TestShader()
+		s["n3"].loadShader( "simpleShader" )
 		s["n3"]["parameters"]["i"].setValue( 3 )
 		s["n3"]["type"].setValue( "test:surface" )
 
 		s["switch"] = Gaffer.Switch()
 		s["switch"].setup( s["n3"]["parameters"]["c"] )
 
-		s["switch"]["in"][0].setInput( s["n1"]["out"] )
-		s["switch"]["in"][1].setInput( s["n2"]["out"] )
+		s["switch"]["in"][0].setInput( s["n1"]["out"]["c"] )
+		s["switch"]["in"][1].setInput( s["n2"]["out"]["c"] )
 
 		s["n3"]["parameters"]["c"].setInput( s["switch"]["out"] )
 
@@ -175,8 +185,5 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 				)
 				self.assertEqual(
 					network.inputConnections( "n3" ),
-					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "out" ), network.Parameter( "n3", "c" ) ) ]
+					[ network.Connection( network.Parameter( "n{0}".format( effectiveIndex + 1 ), "c" ), network.Parameter( "n3", "c" ) ) ]
 				)
-
-if __name__ == "__main__":
-	unittest.main()

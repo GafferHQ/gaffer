@@ -48,24 +48,24 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"dimensions" : [
+		"dimensions" : {
 
-			"description",
+			"description" :
 			"""
 			The size of the plane in the X and Y directions.
 			""",
 
-		],
+		},
 
-		"divisions" : [
+		"divisions" : {
 
-			"description",
+			"description" :
 			"""
 			The number of subdivisions of the plane in the
 			X and Y directions.
 			""",
 
-		],
+		},
 
 	}
 

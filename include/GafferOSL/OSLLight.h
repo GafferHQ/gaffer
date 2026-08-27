@@ -40,9 +40,6 @@
 #include "GafferOSL/TypeIds.h"
 
 #include "GafferScene/Light.h"
-#include "GafferScene/ShaderPlug.h"
-
-#include "Gaffer/CompoundDataPlug.h"
 
 namespace GafferOSL
 {
@@ -58,9 +55,6 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 
 		explicit OSLLight( const std::string &name=defaultName<OSLLight>() );
 		~OSLLight() override;
-
-		Gaffer::StringPlug *shaderNamePlug();
-		const Gaffer::StringPlug *shaderNamePlug() const;
 
 		enum Shape
 		{
@@ -84,31 +78,12 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 		Gaffer::CompoundDataPlug *geometryParametersPlug();
 		const Gaffer::CompoundDataPlug *geometryParametersPlug() const;
 
-		Gaffer::CompoundDataPlug *attributesPlug();
-		const Gaffer::CompoundDataPlug *attributesPlug() const;
-
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-		void loadShader( const std::string &shaderName );
 
 	protected :
 
 		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
-
-		void hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const override;
-
-		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
-
-	private :
-
-		OSLShader *shaderNode();
-		const OSLShader *shaderNode() const;
-
-		GafferScene::ShaderPlug *shaderInPlug();
-		const GafferScene::ShaderPlug *shaderInPlug() const;
 
 		static size_t g_firstPlugIndex;
 

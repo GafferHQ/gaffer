@@ -57,7 +57,7 @@ class GAFFERSCENEUI_API OptionInspector : public Inspector
 			IECore::InternedString option
 		);
 
-		IE_CORE_DECLAREMEMBERPTR( OptionInspector );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::OptionInspector, OptionInspectorTypeId, Inspector );
 
 	protected :
 
@@ -65,13 +65,9 @@ class GAFFERSCENEUI_API OptionInspector : public Inspector
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
 		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const override;
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
-		EditFunctionOrFailure editFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
+		AcquireEditFunctionOrFailure acquireEditFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
 
 	private :
-
-		void plugDirtied( Gaffer::Plug *plug );
-		void plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug );
-		void nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node );
 
 		const GafferScene::ScenePlugPtr m_scene;
 		const IECore::InternedString m_option;

@@ -50,16 +50,16 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters" : [
+		"parameters" : {
 
-			"description",
+			"description" :
 			"""
 			The parameters to be added - any number of arbitrary
 			parameters may be specified here using either the user
 			interface or the CompoundDataPlug API.
 			""",
 
-		]
+		}
 
 	}
 

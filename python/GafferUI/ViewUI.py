@@ -51,32 +51,32 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
+		"*" : {
 
-			"toolbarLayout:section", "Top",
+			"toolbarLayout:section" : "Top",
 
-		],
+		},
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"editScope" : [
+		"editScope" : {
 
 			# Most Views don't yet have any functionality that
 			# uses EditScopes, so we'll opt in to showing the
 			# widget on specific subclasses.
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"user" : [
+		"user" : {
 
-			"plugValueWidget:type", "",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
 	}
 
@@ -92,85 +92,89 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"displayTransform" : [
+		"displayTransform" : {
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layoutPlugValueWidget:orientation", "horizontal",
-			"label", "",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation" : "horizontal",
+			"label" : "",
 
-		],
+		},
 
-		"displayTransform.name" : [
+		"displayTransform.name" : {
 
-			"description",
+			"description" :
 			"""
 			The colour transform used for correcting the Viewer output for display.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"label", "",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"label" : "",
 
-			"presetNames", lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
-			"presetValues", lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
+			"presetNames" : lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
+			"presetValues" : lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
 
-		],
+		},
 
-		"displayTransform.soloChannel" : [
+		"displayTransform.soloChannel" : {
 
-			"plugValueWidget:type", "GafferUI.ViewUI._SoloChannelPlugValueWidget",
-			"label", "",
+			"plugValueWidget:type" : "GafferUI.ViewUI._SoloChannelPlugValueWidget",
+			"label" : "",
 
-		],
+		},
 
-		"displayTransform.clipping" : [
+		"displayTransform.clipping" : {
 
-			"description",
+			"description" :
 			"""
 			Highlights the regions in which the colour values go above 1 or below 0.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "clipping",
-			"togglePlugValueWidget:defaultToggleValue", True,
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "clippingOn.png",
+			"togglePlugValueWidget:image:off" : "clippingOff.png",
 
-		],
+		},
 
-		"displayTransform.exposure" : [
+		"displayTransform.exposure" : {
 
-			"description",
+			"description" :
 			"""
 			Applies an exposure adjustment to the image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "exposure",
-			"togglePlugValueWidget:defaultToggleValue", 1,
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "exposureOn.png",
+			"togglePlugValueWidget:image:off" : "exposureOff.png",
+			"togglePlugValueWidget:defaultToggleValue" : 1,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
-		"displayTransform.gamma" : [
+		"displayTransform.gamma" : {
 
-			"description",
+			"description" :
 			"""
 			Applies a gamma correction to the image.
 			""",
 
-			"plugValueWidget:type", "GafferUI.ViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "gamma",
-			"togglePlugValueWidget:defaultToggleValue", 2,
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "gammaOn.png",
+			"togglePlugValueWidget:image:off" : "gammaOff.png",
+			"togglePlugValueWidget:defaultToggleValue" : 2,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 
-		],
+		},
 
-		"displayTransform.absolute" : [
+		"displayTransform.absolute" : {
 
-			"description",
+			"description" :
 			"""
 			Converts negative values to positive.
 			""",
 
-			"layout:visibilityActivator", False,
+			"layout:visibilityActivator" : False,
 
-		],
+		},
 
 	}
 
@@ -246,62 +250,3 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __setValue( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
-
-# Toggles between default value and the last non-default value
-class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
-
-		self.__imagePrefix = Gaffer.Metadata.value( plug, "togglePlugValueWidget:imagePrefix" )
-		with row :
-
-			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
-			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
-
-			if not isinstance( plug, Gaffer.BoolPlug ) :
-				plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = None )
-				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
-
-		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
-
-	def hasLabel( self ) :
-
-		return True
-
-	def getToolTip( self ) :
-
-		result = GafferUI.PlugValueWidget.getToolTip( self )
-
-		if result :
-			result += "\n"
-		result += "## Actions\n\n"
-		result += "- Click to toggle to/from default value\n"
-
-		return result
-
-	def _updateFromValues( self, values, exception ) :
-
-		value = sole( values )
-		if value != self.getPlug().defaultValue() :
-			self.__toggleValue = value
-			self.__button.setImage( self.__imagePrefix + "On.png" )
-		else :
-			self.__button.setImage( self.__imagePrefix + "Off.png" )
-
-	def _updateFromEditable( self ) :
-
-		self.__button.setEnabled( self._editable() )
-
-	def __clicked( self, button ) :
-
-		with self.context() :
-			value = self.getPlug().getValue()
-
-		if value == self.getPlug().defaultValue() and self.__toggleValue is not None :
-			self.getPlug().setValue( self.__toggleValue )
-		else :
-			self.getPlug().setToDefault()

@@ -35,7 +35,7 @@ script["Set"]["in"].setInput( script["StandardAttributes"]["out"] )
 
 # Set node plug values
 script["SceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
-script["StandardAttributes"]["attributes"]["visibility"]["enabled"].setValue( True )
+script["StandardAttributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
 script["Set"]["name"].setValue( "hands" )
 script["Set"]["paths"].setValue( IECore.StringVectorData( [ '/GAFFERBOT' ] ) )
 script.setFocus( script["Set"] )
@@ -60,29 +60,24 @@ with GafferUI.Window( "Scene Inspector" ) as window :
 
 window._qtWidget().resize( 512, 320 )
 window.setVisible( True )
+__delay( 0.5 )
 GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/sceneInspector.png" )
 
-# Each section of the Selection tab of the Scene Inspector with a location selected
-from GafferSceneUI.SceneInspector import __TransformSection, __BoundSection, __ObjectSection, __AttributesSection
-
-for imageName, sectionClass in [
-	( "TransformSection.png", __TransformSection ),
-	( "BoundSection.png", __BoundSection ),
-	( "ObjectSection.png", __ObjectSection ),
-	( "AttributesSection.png", __AttributesSection )
+for imageName, expandedPaths, height in [
+	( "TransformSection.png", [ "/Location", "/Location/Transform/..." ], 380 ),
+	( "BoundSection.png", [ "/Location", "/Location/Bound/..." ], 200 ),
+	( "ObjectSection.png", [ "/Location", "/Location/Object", "/Location/Object/Primitive Variables" ], 350 ),
+	( "AttributesSection.png", [ "/Location", "/Location/Attributes/..." ], 300 )
 ] :
-
-	section = sectionClass()
-	section._Section__collapsible.setCollapsed( False )
 
 	with GafferUI.Window( "Property" ) as window :
 
-		sceneInspector = GafferSceneUI.SceneInspector( script, sections = [ section ] )
+		sceneInspector = GafferSceneUI.SceneInspector( script )
 		sceneInspector.setNodeSet( Gaffer.StandardSet( [ script["Set"] ] ) )
-		sceneInspector.setTargetPaths( [ __path ] )
+		sceneInspector._SceneInspector__locationPathListing.setExpansion( IECore.PathMatcher( expandedPaths ) )
 
-	window.resizeToFitChild()
 	window.setVisible( True )
+	window._qtWidget().resize( 400, height )
 	__delay( 0.5 )
 
 	GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/sceneInspector" + imageName )

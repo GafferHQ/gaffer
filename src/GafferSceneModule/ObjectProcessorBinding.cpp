@@ -38,7 +38,10 @@
 
 #include "ObjectProcessorBinding.h"
 
+#include "GafferScene/CopyObject.h"
 #include "GafferScene/CopyPrimitiveVariables.h"
+#include "GafferScene/CurvesInterpolation.h"
+#include "GafferScene/CurvesTangents.h"
 #include "GafferScene/Deformer.h"
 #include "GafferScene/DeleteCurves.h"
 #include "GafferScene/DeleteFaces.h"
@@ -89,13 +92,39 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<DeleteObject>();
 	GafferBindings::DependencyNodeClass<UDIMQuery>();
 	GafferBindings::DependencyNodeClass<Wireframe>();
+	GafferBindings::DependencyNodeClass<CopyObject>();
 	GafferBindings::DependencyNodeClass<CopyPrimitiveVariables>();
 	GafferBindings::DependencyNodeClass<MeshNormals>();
 	GafferBindings::DependencyNodeClass<MeshTessellate>();
-	GafferBindings::DependencyNodeClass<MergeObjects>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<GafferScene::MergeObjects>();
+
+		boost::python::enum_< GafferScene::MergeObjects::SortKey >( "SortKey" )
+			.value( "LocationName", GafferScene::MergeObjects::SortKey::LocationName )
+			.value( "PrimitiveVariable", GafferScene::MergeObjects::SortKey::PrimitiveVariable )
+		;
+
+		boost::python::enum_< GafferScene::MergeObjects::SortOrder >( "SortOrder" )
+			.value( "Ascending", GafferScene::MergeObjects::SortOrder::Ascending )
+			.value( "Descending", GafferScene::MergeObjects::SortOrder::Descending )
+		;
+	}
+
 	GafferBindings::DependencyNodeClass<MergeMeshes>();
 	GafferBindings::DependencyNodeClass<MergePoints>();
 	GafferBindings::DependencyNodeClass<MergeCurves>();
+	GafferBindings::DependencyNodeClass<CurvesInterpolation>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<CurvesTangents>();
+
+		enum_<GafferScene::CurvesTangents::Mode>( "Mode" )
+			.value( "FirstDifference", GafferScene::CurvesTangents::Mode::FirstDifference )
+			.value( "CentralDifference", GafferScene::CurvesTangents::Mode::CentralDifference )
+			.value( "Derivative", GafferScene::CurvesTangents::Mode::Derivative )
+		;
+	}
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();

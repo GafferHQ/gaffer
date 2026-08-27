@@ -55,10 +55,17 @@ class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 
 		ParameterInspector(
 			const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
-			IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter
+			IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter,
+			const bool inheritAttributes = false
 		);
 
-		IE_CORE_DECLAREMEMBERPTR( ParameterInspector );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::ParameterInspector, ParameterInspectorTypeId, AttributeInspector );
+
+		const IECoreScene::ShaderNetwork::Parameter &parameter() const;
+
+		/// Returns the equivalent `Parameter` given an `object` as returned from `value()` or an
+		/// empty `Parameter` if the input cannot be converted.
+		static IECoreScene::ShaderNetwork::Parameter connectionSource( const IECore::Object *object );
 
 	protected :
 
@@ -69,9 +76,10 @@ class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
 		IECore::ConstObjectPtr fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const override;
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
-		EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const override;
+		AcquireEditFunctionOrFailure acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const override;
 
 		const IECoreScene::ShaderNetwork::Parameter m_parameter;
+		const bool m_inheritAttributes;
 
 };
 

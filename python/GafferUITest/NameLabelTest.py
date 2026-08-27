@@ -169,6 +169,3 @@ class NameLabelTest( GafferUITest.TestCase ) :
 
 		l.setGraphComponent( None )
 		self.assertEqual( l.getText(), "" )
-
-if __name__ == "__main__":
-	unittest.main()

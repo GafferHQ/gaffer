@@ -86,7 +86,7 @@ class GAFFERUI_API ContextTracker final : public IECore::RefCounted, public Gaff
 		///
 		/// Tracking the upstream contexts can involve significant computation,
 		/// so it is recommended that ContextTracker instances are shared
-		/// between UI components. The `aquire()` methods maintain a pool of
+		/// between UI components. The `acquire()` methods maintain a pool of
 		/// instances for this purpose. Acquisition and destruction of shared
 		/// instances is not threadsafe, and must always be done on the UI
 		/// thread.

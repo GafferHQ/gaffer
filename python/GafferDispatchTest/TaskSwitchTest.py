@@ -167,6 +167,3 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		s["d"] = self.__dispatcher()
 		s["d"]["tasks"][0].setInput( s["s"]["task"] )
 		self.assertRaisesRegex( RuntimeError, "cannot have cyclic dependencies", s["d"]["task"].execute )
-
-if __name__ == "__main__":
-	unittest.main()

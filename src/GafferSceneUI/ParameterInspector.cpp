@@ -44,6 +44,7 @@
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/ShaderTweaks.h"
 
+#include "Gaffer/Metadata.h"
 #include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Switch.h"
@@ -59,20 +60,81 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferSceneUI::Private;
 
-ParameterInspector::ParameterInspector(
-	const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
-	IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter
-)
-	: AttributeInspector( scene, editScope, attribute, parameter.name.string(), "parameter" ), m_parameter( parameter )
+namespace
 {
 
+const InternedString g_defaultValue( "defaultValue" );
+const InternedString g_shaderConnectionShader( "shaderConnection:shader" );
+const InternedString g_shaderConnectionParameter( "shaderConnection:parameter" );
+
+IECore::ConstObjectPtr parameterData( const Object *attribute, const ShaderNetwork::Parameter &parameter )
+{
+	auto shaderNetwork = runTimeCast<const ShaderNetwork>( attribute );
+	if( !shaderNetwork )
+	{
+		return nullptr;
+	}
+
+	const IECoreScene::Shader *shader = parameter.shader.string().empty() ? shaderNetwork->outputShader() : shaderNetwork->getShader( parameter.shader );
+	if( !shader )
+	{
+		return nullptr;
+	}
+
+	const ShaderNetwork::Parameter input = parameter.shader.string().empty() ? shaderNetwork->input( { shaderNetwork->getOutput().shader, parameter.name } ) : shaderNetwork->input( parameter );
+	if( input )
+	{
+		return new CompoundData( {
+			{ g_shaderConnectionShader, new InternedStringData( input.shader ) },
+			{ g_shaderConnectionParameter, new InternedStringData( input.name ) }
+		} );
+	}
+
+	return shader->parametersData()->member( parameter.name );
+}
+
+}  // namespace
+
+IE_CORE_DEFINERUNTIMETYPED( ParameterInspector )
+
+ParameterInspector::ParameterInspector(
+	const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
+	IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter,
+	const bool inheritAttributes
+)
+	: AttributeInspector( scene, editScope, attribute, parameter.name.string(), "parameter" ), m_parameter( parameter ), m_inheritAttributes( inheritAttributes )
+{
+
+}
+
+const IECoreScene::ShaderNetwork::Parameter &ParameterInspector::parameter() const
+{
+	return m_parameter;
+}
+
+ShaderNetwork::Parameter ParameterInspector::connectionSource( const Object *object )
+{
+	if( auto data = runTimeCast<const CompoundData>( object ) )
+	{
+		if( data->readable().size() == 2 )
+		{
+			const auto shaderName = data->member<InternedStringData>( "shaderConnection:shader" );
+			const auto parameterName = data->member<InternedStringData>( "shaderConnection:parameter" );
+
+			if( shaderName && parameterName )
+			{
+				return ShaderNetwork::Parameter( shaderName->readable(), parameterName->readable() );
+			}
+		}
+	}
+	return ShaderNetwork::Parameter();
 }
 
 GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const
 {
 	// Computing histories is expensive, and there's no point doing it
 	// if the specific attribute we want doesn't exist.
-	if( !attributeExists() )
+	if( !attributeExists( m_inheritAttributes ) )
 	{
 		return nullptr;
 	}
@@ -83,7 +145,17 @@ GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const
 IECore::ConstObjectPtr ParameterInspector::value( const GafferScene::SceneAlgo::History *history ) const
 {
 	auto attribute = AttributeInspector::value( history );
-	auto shaderNetwork = runTimeCast<const ShaderNetwork>( attribute.get() );
+	return parameterData( attribute.get(), m_parameter );
+}
+
+IECore::ConstObjectPtr ParameterInspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
+{
+	if( auto fallbackAttribute = AttributeInspector::fallbackValue( history, description ) )
+	{
+		return parameterData( fallbackAttribute.get(), m_parameter );
+	}
+
+	auto shaderNetwork = runTimeCast<const ShaderNetwork>( AttributeInspector::value( history ) );
 	if( !shaderNetwork )
 	{
 		return nullptr;
@@ -95,12 +167,12 @@ IECore::ConstObjectPtr ParameterInspector::value( const GafferScene::SceneAlgo::
 		return nullptr;
 	}
 
-	return shader->parametersData()->member( m_parameter.name );
-}
+	if( const auto defaultValue = Gaffer::Metadata::value( fmt::format( "{}:{}:{}", shader->getType(), shader->getName(), m_parameter.name.string() ), g_defaultValue ) )
+	{
+		description = "Default value";
+		return defaultValue;
+	}
 
-IECore::ConstObjectPtr ParameterInspector::fallbackValue( const GafferScene::SceneAlgo::History *history, std::string &description ) const
-{
-	// No fallback values are provided for parameters. Implemented to override AttributeInspector::fallbackValue().
 	return nullptr;
 }
 
@@ -138,7 +210,7 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 	}
 	else if( auto shaderAssignment = runTimeCast<ShaderAssignment>( sceneNode ) )
 	{
-		if( !(shaderAssignment->filterPlug()->match( shaderAssignment->inPlug() ) & PathMatcher::ExactMatch) )
+		if( shaderAssignment->globalPlug()->getValue() || !(shaderAssignment->filterPlug()->match( shaderAssignment->inPlug() ) & PathMatcher::ExactMatch) )
 		{
 			return nullptr;
 		}
@@ -158,7 +230,7 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 	}
 	else if( auto shaderTweaks = runTimeCast<ShaderTweaks>( sceneNode ) )
 	{
-		if( !(shaderTweaks->filterPlug()->match( shaderTweaks->inPlug() ) & PathMatcher::ExactMatch) )
+		if( shaderTweaks->globalPlug()->getValue() || !(shaderTweaks->filterPlug()->match( shaderTweaks->inPlug() ) & PathMatcher::ExactMatch) )
 		{
 			return nullptr;
 		}
@@ -181,11 +253,17 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 	return nullptr;
 }
 
-Inspector::EditFunctionOrFailure ParameterInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Inspector::AcquireEditFunctionOrFailure ParameterInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	auto attributeHistory = static_cast<const SceneAlgo::AttributeHistory *>( history );
 
 	ConstObjectPtr v = value( history );
+	if( !v )
+	{
+		std::string description;
+		v = fallbackValue( history, description );
+	}
+
 	if( !v )
 	{
 		return fmt::format( "Parameter \"{}\" does not exist.", m_parameter.name.string() );

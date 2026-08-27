@@ -41,9 +41,8 @@ from .CyclesLightTest import CyclesLightTest
 from .CyclesShaderTest import CyclesShaderTest
 from .CyclesRenderTest import CyclesRenderTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
+from .CyclesOptionsTest import CyclesOptionsTest
+from .CyclesAttributesTest import CyclesAttributesTest
+from .CyclesShaderBallTest import CyclesShaderBallTest
 
 from .IECoreCyclesPreviewTest import *
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()

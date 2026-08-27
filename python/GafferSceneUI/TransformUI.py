@@ -51,9 +51,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"space" : [
+		"space" : {
 
-			"description",
+			"description" :
 			"""
 			The space in which the transformation is specified.
 			Note that no matter which space is chosen, only the
@@ -84,25 +84,25 @@ Gaffer.Metadata.registerNode(
 				be moved to this absolute position.
 			""",
 
-			"preset:Local", GafferScene.Transform.Space.Local,
-			"preset:Parent", GafferScene.Transform.Space.Parent,
-			"preset:World", GafferScene.Transform.Space.World,
-			"preset:Reset Local", GafferScene.Transform.Space.ResetLocal,
-			"preset:Reset World", GafferScene.Transform.Space.ResetWorld,
+			"preset:Local" : GafferScene.Transform.Space.Local,
+			"preset:Parent" : GafferScene.Transform.Space.Parent,
+			"preset:World" : GafferScene.Transform.Space.World,
+			"preset:Reset Local" : GafferScene.Transform.Space.ResetLocal,
+			"preset:Reset World" : GafferScene.Transform.Space.ResetWorld,
 
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"transform" : [
+		"transform" : {
 
-			"description",
+			"description" :
 			"""
 			The transform to be applied.
 			""",
 
-		]
+		}
 
 	}
 

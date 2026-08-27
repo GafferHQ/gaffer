@@ -354,6 +354,3 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		selection = GafferSceneUI.TransformTool.Selection( script["editScope"]["out"], "/plane", script.context(), script["editScope"] )
 		self.assertTrue( selection.editable() )
 		self.assertEqual( selection.warning(), "" )
-
-if __name__ == "__main__":
-	unittest.main()

@@ -50,9 +50,9 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			Defines how the views listed in the views
 			plug are treated. Delete mode deletes the listed
@@ -60,16 +60,16 @@ Gaffer.Metadata.registerNode(
 			deleting all others.
 			""",
 
-			"preset:Delete", GafferImage.DeleteViews.Mode.Delete,
-			"preset:Keep", GafferImage.DeleteViews.Mode.Keep,
+			"preset:Delete" : GafferImage.DeleteViews.Mode.Delete,
+			"preset:Keep" : GafferImage.DeleteViews.Mode.Keep,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"views" : [
+		"views" : {
 
-			"description",
+			"description" :
 			"""
 			The names of the views to be deleted (or kept
 			if the mode is set to Keep). Names should be separated
@@ -81,7 +81,7 @@ Gaffer.Metadata.registerNode(
 			will have no data left.
 			""",
 
-		],
+		},
 
 	}
 

@@ -80,6 +80,9 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		Gaffer::IntPlug *statePlug();
 		const Gaffer::IntPlug *statePlug() const;
 
+		Gaffer::BoolPlug *useVisibleSetPlug();
+		const Gaffer::BoolPlug *useVisibleSetPlug() const;
+
 		GafferScene::ScenePlug *outPlug();
 		const GafferScene::ScenePlug *outPlug() const;
 
@@ -101,6 +104,8 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+		std::shared_ptr<const RenderManifest> renderManifest() const;
 
 	protected :
 
@@ -130,14 +135,24 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		Gaffer::ConstContextPtr effectiveContext();
 		void stop();
 
+		Gaffer::Signals::ScopedConnection m_updateRequiredConnection;
+
+		void scriptMetadataChanged( IECore::InternedString key );
+		Gaffer::Signals::ScopedConnection m_scriptMetadataChangedConnection;
+
 		IECoreScenePreview::RendererPtr m_renderer;
 		std::unique_ptr<RenderController> m_controller;
 		State m_state;
+
+		std::shared_ptr<const RenderManifest> m_lastRenderManifest;
 
 		Gaffer::ContextPtr m_context;
 
 		IE_CORE_FORWARDDECLARE( RenderMessageHandler )
 		RenderMessageHandlerPtr  m_messageHandler;
+
+		friend class Catalogue;
+		static bool renderIsActive( const std::string &renderId );
 
 		static size_t g_firstPlugIndex;
 

@@ -64,29 +64,34 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 				# Make default title
 
-				if len( plugs ) == 1 :
-					title = plugs[0].relativeName( script )
-				else :
-					nodes = { plug.node() for plug in plugs }
-					title = "{} plugs{}".format(
+				commonNode = Gaffer.MetadataAlgo.firstViewableNode( plugs[0] )
+
+				if len( plugs ) > 1 :
+					nodes = { Gaffer.MetadataAlgo.firstViewableNode( plug ) for plug in plugs }
+					plugSummary = "{} plugs{}".format(
 						len( plugs ),
 						" on {} nodes".format( len( nodes ) ) if len( nodes ) > 1 else ""
 					)
 
-					commonNode = plugs[0].node()
-					for plug in plugs :
+					for plug in plugs[1:] :
 						if not commonNode.isAncestorOf( plug ) :
 							commonNode = commonNode.commonAncestor( plug.node() )
 
-					if commonNode != script :
-						title = "{} ({})".format(
-							commonNode.relativeName( script ),
-							title
-						)
+				else :
+					plugSummary = ""
+
+				target = "<b>{}</b>".format( commonNode.relativeName( script ) ) if script.isAncestorOf( commonNode ) else ""
+				title = "Editing {}{}".format(
+					target,
+					" ({})".format( plugSummary ) if plugSummary != "" and target != "" else plugSummary
+				)
+
+			elif title :
+				title = "<h4>{}</h4>".format( title )
 
 			if title :
 
-				titleWidget = GafferUI.Label( "<h4>{}</h4>".format( title ) )
+				titleWidget = GafferUI.Label( title )
 				titleWidget.setToolTip(
 					"\n".join( "- " + p.relativeName( script ) for p in plugs )
 				)
@@ -154,10 +159,10 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 		textWidget = self.__firstTextWidget( self.__plugValueWidget )
 		if textWidget is not None :
+			textWidget.setSelection( 0, len( textWidget.getText() ) )
 			if isinstance( textWidget, GafferUI.TextWidget ) :
 				textWidget.grabFocus()
-				textWidget.setSelection( 0, len( textWidget.getText() ) )
-			else :
+			else : # MultiLineTextWidget
 				textWidget.setFocussed( True )
 			textWidget._qtWidget().activateWindow()
 
@@ -191,6 +196,11 @@ class PlugPopup( GafferUI.PopupWindow ) :
 			self.__widgetActivatedConnection = None
 
 	def __activated( self, unused ) :
+
+		if GafferUI.Widget.currentModifiers() & GafferUI.ModifiableEvent.Modifiers.Shift :
+			# Do not close while Shift is held, so Shift+Return can
+			# be used to commit an edit without closing the popup.
+			return
 
 		self.close()
 

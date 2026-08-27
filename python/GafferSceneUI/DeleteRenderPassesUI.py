@@ -52,25 +52,25 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			Defines how the names listed in the `names` plug
 			are treated. Delete mode deletes the listed names.
 			Keep mode keeps the listed names, deleting all others.
 			""",
 
-			"preset:Delete", GafferScene.DeleteRenderPasses.Mode.Delete,
-			"preset:Keep", GafferScene.DeleteRenderPasses.Mode.Keep,
+			"preset:Delete" : GafferScene.DeleteRenderPasses.Mode.Delete,
+			"preset:Keep" : GafferScene.DeleteRenderPasses.Mode.Keep,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"names" : [
+		"names" : {
 
-			"description",
+			"description" :
 			"""
 			The names of render passes to be deleted (or kept
 			if the mode is set to Keep). Names should be separated
@@ -78,9 +78,9 @@ Gaffer.Metadata.registerNode(
 			wildcards.
 			""",
 
-			"ui:scene:acceptsRenderPassNames", True,
+			"ui:scene:acceptsRenderPassNames" : True,
 
-		],
+		},
 
 	}
 
@@ -103,12 +103,15 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
-	if not Gaffer.Metadata.value( plug, "ui:scene:acceptsRenderPassNames" ) :
+	acceptsRenderPassName = Gaffer.Metadata.value( plug, "ui:scene:acceptsRenderPassName" )
+	acceptsRenderPassNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsRenderPassNames" )
+
+	if not acceptsRenderPassName and not acceptsRenderPassNames :
 		return
 
-	with plugValueWidget.context() :
-		globals = plug.node()["in"]["globals"].getValue()
-		currentNames = set( plug.getValue().split() )
+	globals = plug.node()["in"]["globals"].getValue()
+	currentText = plug.getValue()
+	currentNames = set( currentText.split() )
 
 	menuDefinition.prepend( "/RenderPassesDivider", { "divider" : True } )
 
@@ -119,20 +122,33 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 
 	for passName in reversed( sorted( list( passNames ) ) ) :
 
-		newNames = set( currentNames )
+		if acceptsRenderPassNames :
 
-		if passName not in currentNames :
-			newNames.add( passName )
-		else :
-			newNames.discard( passName )
+			newNames = set( currentNames )
 
-		menuDefinition.prepend(
-			"/Render Passes/{}".format( passName ),
-			{
-				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
-				"checkBox" : passName in currentNames,
-				"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
-			}
-		)
+			if passName not in currentNames :
+				newNames.add( passName )
+			else :
+				newNames.discard( passName )
+
+			menuDefinition.prepend(
+				"/Render Passes/{}".format( passName ),
+				{
+					"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
+					"checkBox" : passName in currentNames,
+					"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				}
+			)
+
+		else : # acceptsRenderPassName
+
+			menuDefinition.prepend(
+				"/Render Passes/{}".format( passName ),
+				{
+					"command" : functools.partial( __setValue, plug, passName if currentText != passName else "" ),
+					"checkBox" : passName == currentText,
+					"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				}
+			)
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __passPopupMenu )

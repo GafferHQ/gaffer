@@ -64,7 +64,10 @@ class TweakPlugTest( GafferTest.TestCase ) :
 
 	def testCreateCounterpart( self ) :
 
-		p = Gaffer.TweakPlug( "test", 10.0, Gaffer.TweakPlug.Mode.Multiply )
+		p = Gaffer.TweakPlug(
+			name = "p", nameDefault = "test", enabledDefault = False, modeDefault = Gaffer.TweakPlug.Mode.Multiply,
+			valuePlug = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
 		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.In )
 
 		self.assertIsInstance( p2, Gaffer.TweakPlug )
@@ -73,6 +76,7 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.keys(), p.keys() )
 		for n in p2.keys() :
 			self.assertIsInstance( p2[n], p[n].__class__ )
+			self.assertEqual( p2[n].defaultValue(), p[n].defaultValue() )
 
 	def testTweakParameters( self ) :
 
@@ -133,10 +137,55 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( p2.keys(), p.keys() )
 
-	def testOldSerialisation( self ) :
+	def testLoadFrom0_53( self ) :
 
-		# Old scripts call a constructor with an outdated signature as below.
+		# The ancient constructor as used by serialisations in Gaffer 0.53 and earlier.
 		plug = Gaffer.TweakPlug( "exposure", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		# This left the plug in a bogus half-initialised state that needed to be
+		# finalised by a subsequent `addChild()` call that provided the `value`
+		# plug.
+		self.assertEqual( plug.getName(), "exposure" )
+		self.assertIsInstance( plug["name"], Gaffer.StringPlug )
+		self.assertEqual( plug["name"].defaultValue(), "" )
+		self.assertEqual( plug["name"].getValue(), "" )
+		self.assertIsInstance( plug["enabled"], Gaffer.BoolPlug )
+		self.assertEqual( plug["enabled"].defaultValue(), True )
+		self.assertEqual( plug["enabled"].getValue(), True )
+		self.assertIsInstance( plug["mode"], Gaffer.IntPlug )
+		self.assertEqual( plug["mode"].defaultValue(), plug.Mode.Replace )
+		self.assertEqual( plug["mode"].getValue(), plug.Mode.Replace )
+		self.assertNotIn( "value", plug )
+		self.assertEqual( plug.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+	def testLoadFrom1_5_16_1( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferTest" / "scripts" / "tweakPlug-1.5.16.1.gfr" )
+		script.load()
+
+		def assertExpected( script ) :
+
+			plug = script["Node"]["user"]["tweak"]
+			self.assertIsInstance( plug, Gaffer.TweakPlug )
+			self.assertIsInstance( plug["name"], Gaffer.StringPlug )
+			self.assertEqual( plug["name"].defaultValue(), "" )
+			self.assertEqual( plug["name"].getValue(), "tweakName" )
+			self.assertIsInstance( plug["enabled"], Gaffer.BoolPlug )
+			self.assertEqual( plug["enabled"].defaultValue(), True )
+			self.assertEqual( plug["enabled"].getValue(), True )
+			self.assertIsInstance( plug["mode"], Gaffer.IntPlug )
+			self.assertEqual( plug["mode"].defaultValue(), plug.Mode.Replace )
+			self.assertEqual( plug["mode"].getValue(), plug.Mode.Add )
+			self.assertIsInstance( plug["value"], Gaffer.IntPlug )
+			self.assertEqual( plug["value"].defaultValue(), 1 )
+			self.assertEqual( plug["value"].getValue(), 2 )
+			self.assertEqual( plug.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		assertExpected( script )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		assertExpected( script )
 
 	def testApplyReturnValues( self ) :
 
@@ -477,7 +526,7 @@ class TweakPlugTest( GafferTest.TestCase ) :
 				if plug.isSame( self["out"] ) :
 					plug.setValue( IECore.StringVectorData( [ "a", "b", "c", "d", "e" ] ) )
 
-		IECore.registerRunTimeTyped( UncachedOutNode, typeName = "GafferTest::UncachedOutNode" )
+		IECore.registerRunTimeTyped( UncachedOutNode, "GafferTest::UncachedOutNode" )
 
 		# This exposed a bug whereby TweakPlug could clobber the incoming tweak
 		# data before applying it.
@@ -553,6 +602,33 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( plug.applyTweak( data, Gaffer.TweakPlug.MissingMode.Ignore ) )
 		self.assertEqual( data, IECore.CompoundData() )
 
+	def testConvertibleDataTypes( self ) :
+
+		p = Gaffer.TweakPlug( "test", IECore.IntData( 3 ) )
+		p["mode"].setValue( p.Mode.Add )
+		d = IECore.CompoundData( { "test" : IECore.FloatData( 1.5 ) } )
+		p.applyTweak( d )
+		self.assertEqual( d["test"], IECore.FloatData( 4.5 ) )
+
+		p = Gaffer.TweakPlug( "test", IECore.FloatData( 7.4 ) )
+		p["mode"].setValue( p.Mode.Add )
+		d = IECore.CompoundData( { "test" : IECore.IntData( 10 ) } )
+		p.applyTweak( d )
+		self.assertEqual( d["test"], IECore.IntData( 17 ) )
+
+		p = Gaffer.TweakPlug( "test", IECore.BoolData( True ) )
+		p["mode"].setValue( p.Mode.Add )
+		d = IECore.CompoundData( { "test" : IECore.IntData( 10 ) } )
+		p.applyTweak( d )
+		self.assertEqual( d["test"], IECore.IntData( 11 ) )
+
+		p = Gaffer.TweakPlug( "test", IECore.IntVectorData( [ 10, 11, 12 ] ) )
+		p["mode"].setValue( p.Mode.ListAppend )
+		d = IECore.CompoundData( { "test" : IECore.FloatVectorData( [ 1.5, 3.0, 4.5 ] ) } )
+		p.applyTweak( d )
+		self.assertEqual( d["test"], IECore.FloatVectorData( [ 1.5, 3.0, 4.5, 10, 11, 12 ] ) )
+
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testListPerformance( self ) :
 
@@ -568,5 +644,91 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			tweaks.applyTweaks( parameters )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testFullConstructor( self ) :
+
+		valuePlug = Gaffer.IntPlug()
+
+		plug = Gaffer.TweakPlug( "name", "tweakName", False, Gaffer.TweakPlug.Mode.Add, valuePlug, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( plug.getName(), "name" )
+		self.assertTrue( plug.isSetToDefault() )
+		self.assertEqual( plug["name"].getValue(), "tweakName" )
+		self.assertEqual( plug["enabled"].getValue(), False )
+		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
+		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
+		self.assertTrue( plug["value"].isSame( valuePlug ) )
+
+		# As above, but using keyword arguments.
+		plug = Gaffer.TweakPlug(
+			nameDefault = "tweakName",
+			name = "name",
+			enabledDefault = False,
+			modeDefault = Gaffer.TweakPlug.Mode.Add,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic,
+			valuePlug = valuePlug
+		)
+		self.assertEqual( plug.getName(), "name" )
+		self.assertTrue( plug.isSetToDefault() )
+		self.assertEqual( plug["name"].getValue(), "tweakName" )
+		self.assertEqual( plug["enabled"].getValue(), False )
+		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
+		self.assertEqual( plug["mode"].getValue(), Gaffer.TweakPlug.Mode.Add )
+		self.assertTrue( plug["value"].isSame( valuePlug ) )
+
+	def testSerialiseChildDefaultValues( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = Gaffer.Node()
+		script["node"]["user"]["tweak"] = Gaffer.TweakPlug(
+			nameDefault = "tweakName",
+			valuePlug = Gaffer.IntPlug( defaultValue = 10 ),
+			enabledDefault = False,
+			modeDefault = Gaffer.TweakPlug.Mode.Subtract,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		self.assertEqual( script2["node"]["user"]["tweak"]["name"].defaultValue(), "tweakName" )
+		self.assertEqual( script2["node"]["user"]["tweak"]["enabled"].defaultValue(), False )
+		self.assertEqual( script2["node"]["user"]["tweak"]["mode"].defaultValue(), Gaffer.TweakPlug.Mode.Subtract )
+		self.assertEqual( script2["node"]["user"]["tweak"]["value"].defaultValue(), 10 )
+
+	def testSetExpressionTweakModes( self ) :
+
+		for source, tweakMode, tweakValue, result in (
+			( None, Gaffer.TweakPlug.Mode.SetExpressionInclude, "a", "a" ),
+			( "", Gaffer.TweakPlug.Mode.SetExpressionInclude, "a", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionInclude, "", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionInclude, "a", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b", "a b" ),
+			( "a b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b", "a b" ),
+			( "a b c", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b", "a c b" ),
+			( "a b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b x", "a b x" ),
+			( "a b c", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b d e", "a c b d e" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "a", "a" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b", "a b" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "c", "a - b c" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionInclude, "b c", "a b c" ),
+			( None, Gaffer.TweakPlug.Mode.SetExpressionExclude, "a", None ),
+			( "", Gaffer.TweakPlug.Mode.SetExpressionExclude, "a", "" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionExclude, "", "a" ),
+			( "a", Gaffer.TweakPlug.Mode.SetExpressionExclude, "a", "" ),
+			( "a b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "b", "a - b" ),
+			( "a b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "b x", "a - (b x)" ),
+			( "a b c", Gaffer.TweakPlug.Mode.SetExpressionExclude, "b d", "(a c) - (b d)" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "a", "" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "b", "a - b" ),
+			( "a - b", Gaffer.TweakPlug.Mode.SetExpressionExclude, "c", "a - (b c)" ),
+		) :
+
+			with self.subTest( source = source, tweakMode = tweakMode, tweakValue = tweakValue, result = result ) :
+
+				plug = Gaffer.TweakPlug( "v", tweakValue, tweakMode )
+				data = IECore.CompoundData( { "v" : source } )
+				if result is not None :
+					self.assertTrue( plug.applyTweak( data ) )
+					self.assertEqual( data["v"], IECore.StringData( result ) )
+				else :
+					self.assertFalse( plug.applyTweak( data ) )
+					self.assertIsNone( data["v"] )

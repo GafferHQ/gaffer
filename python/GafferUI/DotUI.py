@@ -75,21 +75,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"plugValueWidget:type", ""
+			"plugValueWidget:type" : ""
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"plugValueWidget:type", ""
+			"plugValueWidget:type" : ""
 
-		],
+		},
 
-		"labelType" : [
+		"labelType" : {
 
-			"description",
+			"description" :
 			"""
 			The method used to apply an optional label
 			to the dot. Using a node name is recommended,
@@ -101,27 +101,27 @@ Gaffer.Metadata.registerNode(
 			can use.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"nodule:type", "",
+			"plugValueWidget:type" :"GafferUI.PresetsPlugValueWidget",
+			"nodule:type" : "",
 
-			"preset:None", Gaffer.Dot.LabelType.None_,
-			"preset:Node Name", Gaffer.Dot.LabelType.NodeName,
-			"preset:Upstream Node Name", Gaffer.Dot.LabelType.UpstreamNodeName,
-			"preset:Custom", Gaffer.Dot.LabelType.Custom,
+			"preset:None" : Gaffer.Dot.LabelType.None_,
+			"preset:Node Name" : Gaffer.Dot.LabelType.NodeName,
+			"preset:Upstream Node Name" : Gaffer.Dot.LabelType.UpstreamNodeName,
+			"preset:Custom" : Gaffer.Dot.LabelType.Custom,
 
-		],
+		},
 
-		"label" : [
+		"label" : {
 
-			"description",
+			"description" :
 			"""
 			The label displayed when the type is set to custom.
 			""",
 
-			"nodule:type", "",
-			"layout:activator", "labelTypeIsCustom",
+			"nodule:type" : "",
+			"layout:activator" : "labelTypeIsCustom",
 
-		],
+		},
 
 	},
 

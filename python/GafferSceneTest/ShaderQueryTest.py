@@ -162,17 +162,19 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["t"] = Gaffer.Color3fPlug()
 
 		tex = GafferSceneTest.TestShader( "texture" )
+		tex.loadShader( "simpleShader" )
 		tex["type"].setValue( "test:surface" )
 
-		srf["parameters"]["t"].setInput( tex["out"] )
+		srf["parameters"]["t"].setInput( tex["out"]["c"] )
 
 		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( s["out"] )
-		a["shader"].setInput( srf["out"] )
+		a["shader"].setInput( srf["out"]["c"] )
 
 		q = GafferScene.ShaderQuery()
 		q["scene"].setInput( a["out"] )
@@ -228,6 +230,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["c"].setValue( imath.Color3f( 0.4, 0.5, 0.6 ) )
 		srf["parameters"]["i"].setValue( 2 )
@@ -236,11 +239,12 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		srf["parameters"]["b"].setValue( imath.Box2i( imath.V2i( 3 ), imath.V2i( 4 ) ) )
 
 		tex = GafferSceneTest.TestShader( "texture" )
+		tex.loadShader( "simpleShader" )
 		tex["type"].setValue( "test:surface" )
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
 
-		srf["parameters"]["t"].setInput( tex["out"] )
+		srf["parameters"]["t"].setInput( tex["out"]["c"] )
 
 		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( s["out"] )
@@ -295,6 +299,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["i"].setValue( 2 )
 		srf["parameters"]["t"] = Gaffer.Color3fPlug()
@@ -302,11 +307,12 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		srf["parameters"]["b"].setValue( imath.Box2i( imath.V2i( 3 ), imath.V2i( 4 ) ) )
 
 		tex = GafferSceneTest.TestShader( "texture" )
+		tex.loadShader( "simpleShader" )
 		tex["type"].setValue( "test:surface" )
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
 
-		srf["parameters"]["t"].setInput( tex["out"] )
+		srf["parameters"]["t"].setInput( tex["out"]["c"] )
 
 		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( s["out"] )
@@ -344,6 +350,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["i"].setValue( 2 )
 		srf["parameters"]["t"] = Gaffer.Color3fPlug()
@@ -351,11 +358,12 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		srf["parameters"]["b"].setValue( imath.Box2i( imath.V2i( 3 ), imath.V2i( 4 ) ) )
 
 		tex = GafferSceneTest.TestShader( "texture" )
+		tex.loadShader( "simpleShader" )
 		tex["type"].setValue( "test:surface" )
 		tex["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
 		tex["parameters"]["i"].setValue( 3 )
 
-		srf["parameters"]["t"].setInput( tex["out"] )
+		srf["parameters"]["t"].setInput( tex["out"]["c"] )
 
 		a = GafferScene.ShaderAssignment()
 		a["in"].setInput( s["out"] )
@@ -393,6 +401,7 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		s = GafferScene.Sphere()
 
 		srf = GafferSceneTest.TestShader( "surface" )
+		srf.loadShader( "simpleShader" )
 		srf["type"].setValue( "test:surface" )
 		srf["parameters"]["i"].setValue( 2 )
 		srf["parameters"]["c"].setValue( imath.Color3f( 0.7, 0.8, 0.9 ) )
@@ -475,6 +484,72 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		self.assertIsNone( scriptNode["target"]["parameters"]["b1"].getInput() )
 		self.assertEqual( str( scriptNode["target"]["parameters"]["b2"].getInput() ), str( q["out"][1]["exists"] ) )
 
+	def testInheritedGlobalShader( self ) :
 
-if __name__ == "__main__":
-	unittest.main()
+		sphere = GafferScene.Sphere()
+
+		globalSurface = GafferSceneTest.TestShader( "surface" )
+		globalSurface.loadShader( "simpleShader" )
+		globalSurface["type"].setValue( "test:surface" )
+		globalSurface["parameters"]["i"].setValue( 2 )
+		globalSurface["parameters"]["c"].setValue( imath.Color3f( 0.3, 0.4, 0.5 ) )
+
+		globalAttributes = GafferScene.CustomAttributes()
+		globalAttributes["in"].setInput( sphere["out"] )
+		globalAttributes["global"].setValue( True )
+		globalAttributes["extraAttributes"].setValue( IECore.CompoundObject( { "test:surface" : globalSurface.attributes()["test:surface"] } ) )
+
+		surface = GafferSceneTest.TestShader( "surface" )
+		surface.loadShader( "simpleShader" )
+		surface["type"].setValue( "test:surface" )
+		surface["parameters"]["i"].setValue( 3 )
+		surface["parameters"]["c"].setValue( imath.Color3f( 0.6, 0.7, 0.8 ) )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( globalAttributes["out"] )
+		shaderAssignment["shader"].setInput( surface["out"] )
+		shaderAssignment["enabled"].setValue( False )
+
+		query = GafferScene.ShaderQuery()
+		query["scene"].setInput( shaderAssignment["out"] )
+		query["location"].setValue( "/sphere" )
+		query["shader"].setValue( "test:surface" )
+
+		v1 = query.addQuery( Gaffer.IntPlug( "i", Gaffer.Plug.Direction.Out, 1 ), "i" )
+		v2 = query.addQuery( Gaffer.Color3fPlug( "c3f", Gaffer.Plug.Direction.Out, imath.Color3f( 0.1, 0.2, 0.3 ) ), "c" )
+
+		self.assertFalse( query["out"][0]["exists"].getValue() )
+		self.assertFalse( query["out"][1]["exists"].getValue() )
+
+		query["inherit"].setValue( True )
+
+		self.assertTrue( query["out"][0]["exists"].getValue() )
+		self.assertTrue( query["out"][1]["exists"].getValue() )
+
+		self.assertEqual( query["out"][0]["value"].getValue(), 2 )
+		self.assertEqual( query["out"][1]["value"].getValue(), imath.Color3f( 0.3, 0.4, 0.5 ) )
+
+		globalSurface["parameters"]["i"].setValue( 10 )
+		globalAttributes["extraAttributes"].setValue( IECore.CompoundObject( { "test:surface" : globalSurface.attributes()["test:surface"] } ) )
+
+		self.assertTrue( query["out"][0]["exists"].getValue() )
+		self.assertTrue( query["out"][1]["exists"].getValue() )
+
+		self.assertEqual( query["out"][0]["value"].getValue(), 10 )
+		self.assertEqual( query["out"][1]["value"].getValue(), imath.Color3f( 0.3, 0.4, 0.5 ) )
+
+		shaderAssignment["enabled"].setValue( True )
+
+		self.assertTrue( query["out"][0]["exists"].getValue() )
+		self.assertTrue( query["out"][1]["exists"].getValue() )
+
+		self.assertEqual( query["out"][0]["value"].getValue(), 3 )
+		self.assertEqual( query["out"][1]["value"].getValue(), imath.Color3f( 0.6, 0.7, 0.8 ) )
+
+		query["inherit"].setValue( False )
+
+		self.assertTrue( query["out"][0]["exists"].getValue() )
+		self.assertTrue( query["out"][1]["exists"].getValue() )
+
+		self.assertEqual( query["out"][0]["value"].getValue(), 3 )
+		self.assertEqual( query["out"][1]["value"].getValue(), imath.Color3f( 0.6, 0.7, 0.8 ) )

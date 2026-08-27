@@ -35,6 +35,8 @@
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+#include "SceneAlgo.h"
+
 #include "IECoreScene/PointsPrimitive.h"
 
 #include "IECore/Interpolator.h"
@@ -56,17 +58,24 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
+ccl::PointCloud *convertPrimary( const IECoreScene::PointsPrimitive *points, ccl::Scene *scene )
 {
 	assert( points->typeId() == IECoreScene::PointsPrimitive::staticTypeId() );
-	ccl::PointCloud *pointcloud = new ccl::PointCloud();
+
+	const V3fVectorData *p = points->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+	if( !p )
+	{
+		msg( Msg::Warning, "IECoreCyles::PointsAlgo", "PointsPrimitive does not have \"P\" primitive variable of interpolation type Vertex." );
+		return nullptr;
+	}
+
+	ccl::PointCloud *pointcloud = SceneAlgo::createNodeWithLock<ccl::PointCloud>( scene );
 
 	PrimitiveVariableMap variablesToConvert = points->variables;
 
 	size_t numPoints = points->getNumPoints();
 	pointcloud->reserve( numPoints );
 
-	const V3fVectorData *p = points->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &pos = p->readable();
 
 	if( const FloatVectorData *w = points->variableData<FloatVectorData>( "width", PrimitiveVariable::Vertex ) )
@@ -135,125 +144,17 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 	return pointcloud;
 }
 
-ccl::Geometry *convert( const IECoreScene::PointsPrimitive *points, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::PointsPrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &times, size_t primarySampleIndex, ccl::Scene *scene )
 {
-	ccl::PointCloud *pointCloud = convertCommon( points );
-	pointCloud->name = ccl::ustring( nodeName.c_str() );
-	return pointCloud;
+	if( ccl::PointCloud *result = convertPrimary( samples[primarySampleIndex], scene ) )
+	{
+		GeometryAlgo::convertMotion( IECoreScenePreview::Renderer::staticSamplesCast<const IECoreScene::Primitive *>( samples ), primarySampleIndex, *result );
+		return result;
+	}
+
+	return nullptr;
 }
 
-ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &points, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
-{
-	const int numSamples = points.size();
-
-	ccl::PointCloud *pointcloud = nullptr;
-	std::vector<const IECoreScene::PointsPrimitive *> samples;
-	IECoreScene::PointsPrimitivePtr midMesh;
-
-	if( frameIdx != -1 ) // Start/End frames
-	{
-		pointcloud = convertCommon(points[frameIdx]);
-
-		if( numSamples == 2 ) // Make sure we have 3 samples
-		{
-			const V3fVectorData *p1 = points[0]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			const V3fVectorData *p2 = points[1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			if( p1 && p2 )
-			{
-				midMesh = points[frameIdx]->copy();
-				V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-				IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-
-				samples.push_back( midMesh.get() );
-			}
-		}
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			if( i == frameIdx )
-				continue;
-			samples.push_back( points[i] );
-		}
-	}
-	else if( numSamples % 2 ) // Odd numSamples
-	{
-		int _frameIdx = ( numSamples+1 ) / 2;
-		pointcloud = convertCommon( points[_frameIdx] );
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			if( i == _frameIdx )
-				continue;
-			samples.push_back( points[i] );
-		}
-	}
-	else // Even numSamples
-	{
-		int _frameIdx = numSamples / 2 - 1;
-		const V3fVectorData *p1 = points[_frameIdx]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-		const V3fVectorData *p2 = points[_frameIdx+1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-		if( p1 && p2 )
-		{
-			midMesh = points[_frameIdx]->copy();
-			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-			pointcloud = convertCommon( midMesh.get() );
-		}
-
-		for( int i = 0; i < numSamples; ++i )
-		{
-			samples.push_back( points[i] );
-		}
-	}
-
-	// Add the motion position/normal attributes
-	pointcloud->set_use_motion_blur( true );
-	pointcloud->set_motion_steps( samples.size() + 1 );
-	ccl::Attribute *attr_mP = pointcloud->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
-	ccl::float3 *mP = attr_mP->data_float3();
-
-	for( size_t i = 0; i < samples.size(); ++i )
-	{
-		PrimitiveVariableMap::const_iterator pIt = samples[i]->variables.find( "P" );
-		if( pIt != samples[i]->variables.end() )
-		{
-			const V3fVectorData *p = runTimeCast<const V3fVectorData>( pIt->second.data.get() );
-			if( p )
-			{
-				PrimitiveVariable::Interpolation pInterpolation = pIt->second.interpolation;
-				if( pInterpolation == PrimitiveVariable::Varying || pInterpolation == PrimitiveVariable::Vertex || pInterpolation == PrimitiveVariable::FaceVarying )
-				{
-					// Vertex positions
-					const V3fVectorData *samplePData = samples[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-					const std::vector<V3f> &sampleP = samplePData->readable();
-					size_t numVerts = samplePData->readable().size();
-
-					for( size_t j = 0; j < numVerts; ++j, ++mP )
-						*mP = ccl::make_float3( sampleP[j].x, sampleP[j].y, sampleP[j].z );
-				}
-				else
-				{
-					msg( Msg::Warning, "IECoreCycles::PointsAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
-					pointcloud->attributes.remove( attr_mP );
-					pointcloud->set_motion_steps( 0 );
-					pointcloud->set_use_motion_blur( false );
-				}
-			}
-			else
-			{
-				msg( Msg::Warning, "IECoreCycles::PointsAlgo::convert", fmt::format( "Variable \"Position\" has unsupported type \"{}\" (expected V3fVectorData).", pIt->second.data->typeName() ) );
-				pointcloud->attributes.remove( attr_mP );
-				pointcloud->set_motion_steps( 0 );
-				pointcloud->set_use_motion_blur( false );
-			}
-		}
-	}
-	mP = attr_mP->data_float3();
-
-	pointcloud->name = ccl::ustring( nodeName.c_str() );
-	return pointcloud;
-}
-
-GeometryAlgo::ConverterDescription<PointsPrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<PointsPrimitive> g_description( convert );
 
 } // namespace

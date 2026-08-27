@@ -86,7 +86,3 @@ class SelectionToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.SelectionTool.deregisterSelectMode( "testModifier" )
 		GafferSceneUI.SelectionTool.deregisterSelectMode( "testModifier2" )
-
-
-if __name__ == "__main__" :
-	unittest.main()

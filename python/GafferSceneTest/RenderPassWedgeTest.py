@@ -323,6 +323,3 @@ class RenderPassWedgeTest( GafferTest.TestCase ) :
 			{ l.context["renderPass"] for l in script["log"].log },
 			{ "fx1", "fx2" }
 		)
-
-if __name__ == "__main__":
-	unittest.main()

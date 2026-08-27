@@ -39,11 +39,11 @@
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
 
+#include "GafferScene/Display.h"
 #include "GafferScene/InteractiveRender.h"
 
 #include "GafferImageUI/ImageView.h"
 
-#include "GafferImage/Display.h"
 
 #include <functional>
 #include <filesystem>
@@ -89,8 +89,8 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 		using PrefixAndName = std::pair<std::string, std::string>;
 		using Scenes = std::map<PrefixAndName, Gaffer::NodePtr>;
 
-		GafferImage::Display *display();
-		const GafferImage::Display *display() const;
+		GafferScene::Display *display();
+		const GafferScene::Display *display() const;
 
 		void viewportVisibilityChanged();
 

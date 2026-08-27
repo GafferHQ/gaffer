@@ -42,16 +42,6 @@ import GafferScene
 
 from GafferUI.PlugValueWidget import sole
 
-def rendererPresetNames( plug = None ) :
-
-	blacklist = { "Capturing" }
-	return IECore.StringVectorData(
-		sorted(
-			t for t in GafferScene.Private.IECoreScenePreview.Renderer.types()
-			if t not in blacklist
-		)
-	)
-
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Render,
@@ -68,82 +58,84 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to be rendered.
 			""",
 
-			"nodule:type", "GafferUI::StandardNodule",
+			"nodule:type" : "GafferUI::StandardNodule",
 
-		],
+		},
 
-		"renderer" : [
+		"renderer" : {
 
-			"description",
+			"description" :
 			"""
 			The renderer to use. Default mode uses the `render:defaultRenderer` option from
 			the input scene globals to choose the renderer. This can be authored using
 			the StandardOptions node.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.RenderUI.RendererPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.RenderUI.RendererPlugValueWidget",
 
-			"preset:Default", "",
-			"presetNames", rendererPresetNames,
-			"presetValues", rendererPresetNames,
+			"presetNames" : lambda plug : IECore.StringVectorData( [
+				"Default" if n == "None" else n
+				for n in Gaffer.Metadata.value( "option:render:defaultRenderer", "presetNames" )
+			] ),
+			"presetValues" : lambda plug : Gaffer.Metadata.value( "option:render:defaultRenderer", "presetValues" ),
 
-		],
+		},
 
-		"mode" : [
+		"mode" : {
 
-			"description",
+			"description" :
 			"""
 			The type of render to perform.
 			""",
 
-			"preset:Render", GafferScene.Render.Mode.RenderMode,
-			"preset:Scene Description", GafferScene.Render.Mode.SceneDescriptionMode,
+			"preset:Render" : GafferScene.Render.Mode.RenderMode,
+			"preset:Scene Description" : GafferScene.Render.Mode.SceneDescriptionMode,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-		],
+		},
 
-		"fileName" : [
+		"fileName" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the file to be generated when in scene description mode.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
 
-			"layout:activator", "modeIsSceneDescription",
+			"layout:activator" : "modeIsSceneDescription",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			A direct pass-through of the input scene.
 			""",
 
-		],
+		},
 
-		"resolvedRenderer" : [
+		"resolvedRenderer" : {
 
-			"description",
+			"description" :
 			"""
 			The renderer that will be used, accounting for the value of the
 			`render:defaultRenderer` option if `renderer` is set to "Default".
 			""",
 
-			"layout:section", "Advanced",
+			"layout:section" : "Advanced",
 
-		],
+		},
 
 	}
 )
@@ -186,7 +178,8 @@ class RendererPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 			resolvedRenderer = sole( v["resolvedRenderer"] for v in values )
 			self.menuButton().setText(
 				"Default ({})".format(
-					resolvedRenderer if resolvedRenderer else
+					Gaffer.Metadata.value( f"renderer:{resolvedRenderer}", "label" ) or resolvedRenderer
+					if resolvedRenderer else
 					( "None" if resolvedRenderer == "" else "---" )
 				)
 			)

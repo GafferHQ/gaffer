@@ -37,6 +37,7 @@
 
 import inspect
 import unittest
+import sys
 import threading
 import time
 
@@ -495,9 +496,9 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		s["n"] = GafferTest.AddNode()
 		s["e1"] = Gaffer.Expression()
-		s["e1"].setExpression( "import time; time.sleep( 0.9 ); parent['n']['op1'] = 10" )
+		s["e1"].setExpression( "import time; time.sleep( {} ); parent['n']['op1'] = 10".format( 0.8 if sys.platform == "darwin" else 0.9 ) )
 		s["e2"] = Gaffer.Expression()
-		s["e2"].setExpression( "import time; time.sleep( 0.9 ); parent['n']['op2'] = 20" )
+		s["e2"].setExpression( "import time; time.sleep( {} ); parent['n']['op2'] = 20".format( 0.8 if sys.platform == "darwin" else 0.9 ) )
 
 		cs = GafferTest.CapturingSlot( s["n"].errorSignal() )
 
@@ -608,7 +609,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		def __init__( self, name="ThrowingNode" ) :
 
 			self.hashFail = False
-			self.cachePolicy = Gaffer.ValuePlug.CachePolicy.Standard
+			self.cachePolicy = Gaffer.ValuePlug.CachePolicy.Default
 
 			Gaffer.ComputeNode.__init__( self, name )
 
@@ -769,6 +770,3 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( pm.plugStatistics( n1["sum"] ).computeCount, 1 )
 		self.assertEqual( pm.plugStatistics( n2["sum"] ).computeCount, 0 )
-
-if __name__ == "__main__":
-	unittest.main()

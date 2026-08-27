@@ -40,10 +40,12 @@
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/Output.h"
+#include "IECoreScene/PointInstancer.h"
 
 #include "IECore/CompoundObject.h"
 #include "IECore/MessageHandler.h"
 
+#include "boost/container/small_vector.hpp"
 #include "boost/unordered_set.hpp"
 
 namespace IECoreScenePreview
@@ -158,6 +160,24 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		using ObjectSetPtr = std::shared_ptr<ObjectSet>;
 		using ConstObjectSetPtr = std::shared_ptr<const ObjectSet>;
 
+		/// Types for storing animation samples to be passed to the
+		/// Renderer. We use `small_vector` to avoid allocations in the
+		/// common case of static objects or single-segment motion blur.
+
+		template<typename T>
+		using Samples = boost::container::small_vector<T, 2>;
+		using TransformSamples = Samples<Imath::M44f>;
+		using CameraSamples = Samples<IECoreScene::ConstCameraPtr>;
+		using ObjectSamples = Samples<IECore::ConstObjectPtr>;
+		using PointInstancerSamples = Samples<IECoreScene::ConstPointInstancerPtr>;
+		using SampleTimes = Samples<float>;
+
+		/// Convenience function for casting between sample types. Typically
+		/// used by implementations to downcast from ObjectSamples to a more
+		/// specific type.
+		template<typename T, typename S>
+		static Samples<T> staticSamplesCast( const Samples<S> &samples );
+
 		/// A handle to an object in the renderer. The reference counting semantics of an
 		/// ObjectInterfacePtr are as follows :
 		///
@@ -186,14 +206,9 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 				/// Assigns a transform to the object, replacing any previously
 				/// assigned transform. For Interactive renders transforms may be
 				/// modified at any time the renderer is paused.
-				/// \todo Should we introduce a TransformInterface that can be
-				/// passed directly to `Renderer::object()` etc in the same
-				/// way that attributes are? This might be a way of supporting
-				/// renderers with more complex transform models than just flattened
-				/// matrices.
-				virtual void transform( const Imath::M44f &transform ) = 0;
-				/// As above, but specifying a moving transform.
-				virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) = 0;
+				virtual void transform( const TransformSamples &samples, const SampleTimes &times ) = 0;
+				/// Convenience overload for when there is only a single transform sample.
+				void transform( const Imath::M44f &transform );
 				/// Assigns a new block of attributes to the object, replacing any
 				/// previously assigned attributes. This may only be used in Interactive
 				/// mode, and then only when the renderer is paused. Returns true on
@@ -213,6 +228,8 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 				/// Assigns an integer ID that should be made available via a `uint id`
 				/// AOV that can be referenced via `output()`.
 				virtual void assignID( uint32_t id ) = 0;
+
+				virtual void assignInstanceID( uint32_t id ) = 0;
 
 			protected :
 
@@ -267,36 +284,49 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		/// times passed to motionBegin() to specify motion blur. Defaults to 0,0 if unspecified.
 		///
 		/// May return a nullptr if the camera definition is not supported by the renderer.
-		virtual ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes = nullptr ) = 0;
-		/// As above, but allowing animated camera parameters to be specified. A default implementation
-		/// that calls `camera( name, samples[0], attributes )` is provided for renderers which don't
-		/// support animated cameras. Renderers that do support animated cameras should implement a suitable
-		/// override.
-		virtual ObjectInterfacePtr camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes = nullptr );
+		virtual ObjectInterfacePtr camera( const std::string &name, const CameraSamples &samples, const SampleTimes &times, const AttributesInterface *attributes = nullptr ) = 0;
+		/// Convenience wrapper for the above when there is only a single sample.
+		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes = nullptr );
 
 		/// Adds a named light with the initially supplied set of attributes, which are expected
-		/// to provide at least a light shader. Object may be non-null to specify arbitrary geometry
-		/// for a geometric area light, or null to indicate that the light shader specifies its own
+		/// to provide at least a light shader. Object samples may be non-empty to specify arbitrary geometry
+		/// for a geometric area light, or empty to indicate that the light shader specifies its own
 		/// geometry internally (or is non-geometric in nature).
 		/// May return a nullptr if the light definition is not supported by the renderer.
-		/// \todo Should object be typed as Primitive?
-		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr light( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
+		/// Convenience wrapper for the above when there is only a single sample.
+		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes );
 
 		/// Adds a named light filter with the initially supplied set of attributes, which are expected
 		/// to provide at least a light filter shader.
 		/// May return a nullptr if the light filter definition is not supported by the renderer.
-		virtual ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr lightFilter( const std::string &name, const ObjectSamples &objectSamples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
+		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes );
 
-		/// Adds a named object to the render with the initally supplied set of attributes.
+		/// Adds a named object to the render with the initially supplied set of attributes.
 		/// The attributes may subsequently be edited in interactive mode using
 		/// ObjectInterface::attributes().
 		/// May return a nullptr if the object definition is not supported by the renderer.
 		/// \todo Rejig class hierarchy so we can have something less generic than
 		/// Object here, but still pass CoordinateSystems. Or should
 		/// coordinate systems have their own dedicated calls?
-		virtual ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
-		/// As above, but specifying a deforming object.
-		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr object( const std::string &name, const ObjectSamples &samples, const SampleTimes &times, const AttributesInterface *attributes ) = 0;
+		/// Convenience overload for when there is only a single object sample.
+		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes );
+
+		/// Prototype geometry for use in the `pointInstancer()` method.
+		struct Prototype
+		{
+			ObjectSamples samples;
+			SampleTimes times;
+			AttributesInterfacePtr attributes;
+		};
+		/// Renders prototype geometry instanced onto a point cloud.
+		/// > Note : It is the caller's responsibility to have
+		/// > prepared `prototypes` based on the value of
+		/// >`PointInstancer::getPrototypes()`. Therefore the renderer
+		/// > need not be concerned with the value of `getPrototypes()`.
+		virtual ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes );
 
 		/// Performs the render - should be called after the
 		/// entire scene has been specified using the methods
@@ -348,3 +378,5 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 IE_CORE_DECLAREPTR( Renderer )
 
 } // namespace IECoreScenePreview
+
+#include "GafferScene/Private/IECoreScenePreview/Renderer.inl"

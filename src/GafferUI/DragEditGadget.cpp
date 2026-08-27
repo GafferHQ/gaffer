@@ -220,7 +220,7 @@ void DragEditGadget::renderLayer( Layer layer, const Style *style, RenderReason 
 
 		IntVectorDataPtr vertsPerCurve = new IntVectorData();
 		vertsPerCurve->writable().push_back( m_dragPositions->readable().size() );
-		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), false, vertsPerCurve );
+		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, m_dragPositions ) );
 		group->addChild( curves );
 

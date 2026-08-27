@@ -356,10 +356,7 @@ class SetPath : public Gaffer::Path
 
 		void contextChanged( const IECore::InternedString &key )
 		{
-			if( !boost::starts_with( key.c_str(), "ui:" ) )
-			{
-				emitPathChanged();
-			}
+			emitPathChanged();
 		}
 
 		void plugDirtied( Gaffer::Plug *plug )
@@ -466,9 +463,9 @@ class SetMembersColumn : public StandardPathColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
-			CellData result = StandardPathColumn::headerData( canceller );
+			CellData result = StandardPathColumn::headerData( rootPath, canceller );
 			result.toolTip = new IECore::StringData( "The number of scene locations that are set members" );
 
 			return result;
@@ -512,7 +509,7 @@ class SetSelectionColumn : public PathColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
 			CellData result;
 			result.value = g_headerValue;
@@ -630,7 +627,7 @@ class VisibleSetInclusionsColumn : public PathColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
 			return CellData( /* value = */ nullptr, /* icon = */ m_visibleSet.inclusions.isEmpty() ? g_inclusionsEmptyIconName : g_setIncludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Inclusions" ) );
 		}
@@ -844,7 +841,7 @@ class VisibleSetExclusionsColumn : public PathColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
 			return CellData( /* value = */ nullptr, /* icon = */ m_visibleSet.exclusions.isEmpty() ? g_exclusionsEmptyIconName : g_setExcludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Exclusions" ) );
 		}

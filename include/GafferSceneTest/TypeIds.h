@@ -42,12 +42,12 @@ namespace GafferSceneTest
 
 enum TypeId
 {
-	CompoundObjectSourceTypeId = 110701,
-	TestShaderTypeId = 110702,
-	TestLightTypeId = 110703,
-	TestLightFilterTypeId = 110704,
+	CompoundObjectSourceTypeId = 121200,
+	TestShaderTypeId = 121201,
+	TestLightTypeId = 121202,
+	TestLightFilterTypeId = 121203,
 
-	LastTypeId = 110749
+	LastTypeId = 121399
 };
 
 } // namespace GafferSceneTest

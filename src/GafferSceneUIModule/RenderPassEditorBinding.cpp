@@ -196,6 +196,7 @@ PathMatcherCache g_pathMatcherCache( pathMatcherCacheGetter, 50 );
 
 const InternedString g_renderPassContextName( "renderPass" );
 const InternedString g_enableAdaptorsContextName( "renderPassEditor:enableAdaptors" );
+const InternedString g_inspectorContextPropertyName( "inspector:context" );
 const InternedString g_renderPassNamePropertyName( "renderPassPath:name" );
 const InternedString g_renderPassEnabledPropertyName( "renderPassPath:enabled" );
 const InternedString g_renderPassNamesOption( "option:renderPass:names" );
@@ -271,6 +272,21 @@ class RenderPassPath : public Gaffer::Path
 			return m_context.get();
 		}
 
+		void setGrouped( bool grouped )
+		{
+			if( grouped == m_grouped )
+			{
+				return;
+			}
+			m_grouped = grouped;
+			emitPathChanged();
+		}
+
+		bool getGrouped() const
+		{
+			return m_grouped;
+		}
+
 		const Gaffer::Context *getContext() const
 		{
 			return m_context.get();
@@ -304,6 +320,7 @@ class RenderPassPath : public Gaffer::Path
 			Path::propertyNames( names, canceller );
 			names.push_back( g_renderPassNamePropertyName );
 			names.push_back( g_renderPassEnabledPropertyName );
+			names.push_back( g_inspectorContextPropertyName );
 		}
 
 		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override
@@ -335,27 +352,26 @@ class RenderPassPath : public Gaffer::Path
 			return Path::property( name, canceller );
 		}
 
+		Gaffer::ConstContextPtr contextProperty( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override
+		{
+			if( name == g_inspectorContextPropertyName )
+			{
+				const auto renderPassName = runTimeCast<const IECore::StringData>( property( g_renderPassNamePropertyName, canceller ) );
+				if( !renderPassName )
+				{
+					return nullptr;
+				}
+
+				ContextPtr result = new Context( *getContext() );
+				result->set( g_renderPassContextName, renderPassName.get() );
+				return result;
+			}
+			return Path::contextProperty( name, canceller );
+		}
+
 		const Gaffer::Plug *cancellationSubject() const override
 		{
 			return m_scene.get();
-		}
-
-		Gaffer::ContextPtr inspectionContext( const IECore::Canceller *canceller ) const override
-		{
-			const auto renderPassName = runTimeCast<const IECore::StringData>( property( g_renderPassNamePropertyName, canceller ) );
-			if( !renderPassName )
-			{
-				return nullptr;
-			}
-
-			Context::EditableScope scope( getContext() );
-			scope.set( g_renderPassContextName, &( renderPassName->readable() ) );
-			if( canceller )
-			{
-				scope.setCanceller( canceller );
-			}
-
-			return new Context( *scope.context() );
 		}
 
 	protected :
@@ -414,10 +430,7 @@ class RenderPassPath : public Gaffer::Path
 
 		void contextChanged( const IECore::InternedString &key )
 		{
-			if( !boost::starts_with( key.c_str(), "ui:" ) )
-			{
-				emitPathChanged();
-			}
+			emitPathChanged();
 		}
 
 		void plugDirtied( Gaffer::Plug *plug )
@@ -447,6 +460,24 @@ RenderPassPath::Ptr constructor1( ScenePlug &scene, Context &context, PathFilter
 RenderPassPath::Ptr constructor2( ScenePlug &scene, Context &context, const std::vector<IECore::InternedString> &names, const IECore::InternedString &root, PathFilterPtr filter, const bool grouped )
 {
 	return new RenderPassPath( &scene, &context, names, root, filter, grouped );
+}
+
+void renderPassPathSetSceneWrapper( RenderPassPath &path, const ScenePlugPtr &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	path.setScene( scene );
+}
+
+void renderPassPathSetContextWrapper( RenderPassPath &path, const ContextPtr &context )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	path.setContext( context );
+}
+
+void renderPassPathSetGroupedWrapper( RenderPassPath &path, bool grouped )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	path.setGrouped( grouped );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -579,7 +610,7 @@ class RenderPassActiveColumn : public PathColumn
 			return result;
 		}
 
-		CellData headerData( const IECore::Canceller *canceller ) const override
+		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
 			return CellData( nullptr, /* icon = */ g_activeRenderPassIcon, /* background = */ nullptr, new IECore::StringData( "The currently active render pass." ) );
 		}
@@ -591,164 +622,6 @@ class RenderPassActiveColumn : public PathColumn
 
 StringDataPtr RenderPassActiveColumn::g_activeRenderPassIcon = new StringData( "activeRenderPass.png" );
 StringDataPtr RenderPassActiveColumn::g_activeRenderPassFadedHighlightedIcon = new StringData( "activeRenderPassFadedHighlighted.png" );
-
-//////////////////////////////////////////////////////////////////////////
-// RenderPassEditorSearchFilter - filters based on a match pattern. This
-// removes non-leaf paths if all their children have also been
-// removed by the filter.
-//////////////////////////////////////////////////////////////////////////
-
-/// \todo This is the same as the SetEditorSearchFilter, we'll need the non-leaf
-/// path removal functionality when we start grouping render passes by category.
-/// Could be worth turning into common functionality?
-class RenderPassEditorSearchFilter : public Gaffer::PathFilter
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( RenderPassEditorSearchFilter )
-
-		RenderPassEditorSearchFilter( IECore::CompoundDataPtr userData = nullptr )
-			:	PathFilter( userData )
-		{
-		}
-
-		void setMatchPattern( const string &matchPattern )
-		{
-			if( m_matchPattern == matchPattern )
-			{
-				return;
-			}
-			m_matchPattern = matchPattern;
-			m_wildcardPattern = IECore::StringAlgo::hasWildcards( matchPattern ) ? matchPattern : "*" + matchPattern + "*";
-
-			changedSignal()( this );
-		}
-
-		const string &getMatchPattern() const
-		{
-			return m_matchPattern;
-		}
-
-		void doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const override
-		{
-			if( m_matchPattern.empty() || paths.empty() )
-			{
-				return;
-			}
-
-			paths.erase(
-				std::remove_if(
-					paths.begin(),
-					paths.end(),
-					[this] ( const auto &p ) { return remove( p ); }
-				),
-				paths.end()
-			);
-		}
-
-		bool remove( PathPtr path ) const
-		{
-			if( !path->names().size() )
-			{
-				return true;
-			}
-
-			bool leaf = path->isLeaf();
-			if( !leaf )
-			{
-				std::vector<PathPtr> c;
-				path->children( c );
-
-				leaf = std::all_of( c.begin(), c.end(), [this] ( const auto &p ) { return remove( p ); } );
-			}
-
-			const bool match = IECore::StringAlgo::matchMultiple( path->names().back().string(), m_wildcardPattern );
-
-			return leaf && !match;
-		}
-
-	private:
-
-		std::string m_matchPattern;
-		std::string m_wildcardPattern;
-
-};
-
-//////////////////////////////////////////////////////////////////////////
-// DisabledRenderPassFilter - filters out paths with a renderPassPath:enabled
-// property value of `false`. This also removes non-leaf paths if all their
-// children have been removed by the filter.
-//////////////////////////////////////////////////////////////////////////
-
-class DisabledRenderPassFilter : public Gaffer::PathFilter
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( DisabledRenderPassFilter )
-
-		DisabledRenderPassFilter( IECore::CompoundDataPtr userData = nullptr )
-			:	PathFilter( userData )
-		{
-		}
-
-		void doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const override
-		{
-			paths.erase(
-				std::remove_if(
-					paths.begin(),
-					paths.end(),
-					[this, canceller] ( auto &p ) { return remove( p, canceller ); }
-				),
-				paths.end()
-			);
-		}
-
-		bool remove( PathPtr path, const IECore::Canceller *canceller ) const
-		{
-			if( !path->names().size() )
-			{
-				return true;
-			}
-
-			bool leaf = path->isLeaf();
-			if( !leaf )
-			{
-				std::vector<PathPtr> c;
-				path->children( c );
-
-				leaf = std::all_of( c.begin(), c.end(), [this, canceller] ( const auto &p ) { return remove( p, canceller ); } );
-			}
-
-			// Enable render adaptors so we remove any render passes
-			// that have been disabled or deleted by them.
-			auto pathCopy = runTimeCast<RenderPassPath>( path->copy() );
-			if( !pathCopy )
-			{
-				return true;
-			}
-			ContextPtr adaptorEnabledContext = new Context( *pathCopy->getContext() );
-			adaptorEnabledContext->set<bool>( g_enableAdaptorsContextName, true );
-			pathCopy->setContext( adaptorEnabledContext );
-
-			bool enabled = false;
-			if( runTimeCast<const IECore::StringData>( pathCopy->property( g_renderPassNamePropertyName, canceller ) ) )
-			{
-				if( const auto enabledData = IECore::runTimeCast<const IECore::BoolData>( pathCopy->property( g_renderPassEnabledPropertyName, canceller ) ) )
-				{
-					enabled = enabledData->readable();
-				}
-				else
-				{
-					enabled = true;
-				}
-			}
-
-			return leaf && !enabled;
-		}
-
-};
 
 } // namespace
 
@@ -792,32 +665,24 @@ void GafferSceneUIModule::bindRenderPassEditor()
 				)
 			)
 		)
-		.def( "setScene", &RenderPassPath::setScene )
+		.def( "setScene", &renderPassPathSetSceneWrapper )
 		.def( "getScene", (ScenePlug *(RenderPassPath::*)())&RenderPassPath::getScene, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setContext", &RenderPassPath::setContext )
+		.def( "setContext", &renderPassPathSetContextWrapper )
 		.def( "getContext", (Context *(RenderPassPath::*)())&RenderPassPath::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "setGrouped", &renderPassPathSetGroupedWrapper )
+		.def( "getGrouped", &RenderPassPath::getGrouped )
 		.def( "registerPathGroupingFunction", &registerPathGroupingFunctionWrapper )
 		.staticmethod( "registerPathGroupingFunction" )
 		.def( "pathGroupingFunction", &pathGroupingFunctionWrapper )
 		.staticmethod( "pathGroupingFunction" )
 	;
 
-	RefCountedClass<RenderPassNameColumn, GafferUI::PathColumn>( "RenderPassNameColumn" )
+	RefCountedClass<RenderPassNameColumn, GafferUI::StandardPathColumn>( "RenderPassNameColumn" )
 		.def( init<>() )
 	;
 
 	RefCountedClass<RenderPassActiveColumn, GafferUI::PathColumn>( "RenderPassActiveColumn" )
 		.def( init<>() )
-	;
-
-	RefCountedClass<RenderPassEditorSearchFilter, PathFilter>( "SearchFilter" )
-		.def( init<IECore::CompoundDataPtr>( ( boost::python::arg( "userData" ) = object() ) ) )
-		.def( "setMatchPattern", &RenderPassEditorSearchFilter::setMatchPattern )
-		.def( "getMatchPattern", &RenderPassEditorSearchFilter::getMatchPattern, return_value_policy<copy_const_reference>() )
-	;
-
-	RefCountedClass<DisabledRenderPassFilter, PathFilter>( "DisabledRenderPassFilter" )
-		.def( init<IECore::CompoundDataPtr>( ( boost::python::arg( "userData" ) = object() ) ) )
 	;
 
 }

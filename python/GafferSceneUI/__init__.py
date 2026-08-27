@@ -53,6 +53,7 @@ from .LightEditor import LightEditor
 from .SetEditor import SetEditor
 from .RenderPassEditor import RenderPassEditor
 from .AttributeEditor import AttributeEditor
+from .LightLinkingEditor import LightLinkingEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
 from . import _InspectorColumn
@@ -183,6 +184,7 @@ from . import AttributeTweaksUI
 from . import OptionTweaksUI
 from . import OptionQueryUI
 from . import RenameUI
+from . import PrimitiveQueryUI
 from . import PrimitiveVariableQueryUI
 from . import SetQueryUI
 from . import MeshSegmentsUI
@@ -205,6 +207,24 @@ from . import MergePointsUI
 from . import MergeCurvesUI
 from . import VisualiserToolUI
 from . import PrimitiveVariableTweaksUI
+from . import ShuffleRenderPassesUI
+from . import ShuffleOptionsUI
+from . import DisplayUI
+from . import CatalogueUI
+from . import CatalogueSelectUI
+from . import ImageSelectionToolUI
+from . import CameraQueryUI
+from . import SceneStatsUI
+from . import ReflectionConstraintUI
+from . import CurvesInterpolationUI
+from . import MeshLightUI
+from . import AttributeProcessorUI
+from . import CurvesTangentsUI
+from . import CopyObjectUI
+from . import QuantizePrimitiveVariablesUI
+from . import RandomPrimitiveVariableUI
+from . import PointInstancerCoreUI
+from . import PointInstancerUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

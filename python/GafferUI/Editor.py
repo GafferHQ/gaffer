@@ -78,7 +78,7 @@ class Editor( GafferUI.Widget ) :
 			# Editor from Node?
 			self["__scriptNode"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "GafferUI::Editor::Settings" )
+	IECore.registerRunTimeTyped( Settings, "GafferUI::Editor::Settings" )
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
@@ -243,7 +243,19 @@ class Editor( GafferUI.Widget ) :
 
 	def __enter( self, widget ) :
 
+		# \todo The same method for finding the focus of a `QGraphicsView`
+		# is used in `GadgetWidget`. Extract both to a common place?
 		currentFocusWidget = QtWidgets.QApplication.focusWidget()
+
+		if (
+			isinstance( currentFocusWidget, QtWidgets.QGraphicsView ) and
+			isinstance( nextWidget := currentFocusWidget.scene().focusItem(), QtWidgets.QGraphicsProxyWidget )
+		) :
+			nextWidget = nextWidget.widget()
+			currentFocusWidget = None
+			while nextWidget is not None and nextWidget != currentFocusWidget :
+				currentFocusWidget = nextWidget
+				nextWidget = nextWidget.focusWidget()
 
 		# Don't disrupt in-progress text edits
 		if isinstance( currentFocusWidget, ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :

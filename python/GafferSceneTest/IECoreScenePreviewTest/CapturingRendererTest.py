@@ -77,19 +77,22 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		self.assertIsInstance( o, renderer.CapturedObject )
 		self.assertTrue( o.isSame( renderer.capturedObject( "o" ) ) )
 		self.assertEqual( o.capturedSamples(), [ IECoreScene.SpherePrimitive() ] )
-		self.assertEqual( o.capturedSampleTimes(), [] )
+		self.assertEqual( o.capturedSampleTimes(), [ 0.0 ] )
 		self.assertEqual( o.capturedAttributes(), attributes1 )
 		self.assertEqual( o.capturedLinks( "lights" ), None )
 		self.assertEqual( o.numAttributeEdits(), 1 )
 		self.assertEqual( o.numLinkEdits( "lights" ), 0 )
 		self.assertEqual( o.id(), 0 )
+		self.assertEqual( o.instanceID(), 0 )
 
 		o.attributes( attributes2 )
 		self.assertEqual( o.capturedAttributes(), attributes2 )
 		self.assertEqual( o.numAttributeEdits(), 2 )
 
 		o.assignID( 10 )
+		o.assignInstanceID( 7 )
 		self.assertEqual( o.id(), 10 )
+		self.assertEqual( o.instanceID(), 7 )
 
 		l1 = renderer.light( "l1", IECore.NullObject(), attributes1 )
 		l2 = renderer.light( "l2", IECore.NullObject(), attributes1 )
@@ -242,37 +245,17 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 				for a, val in subObject.capturedAttributes.items():
 					newAttrs[a] = val
 
-				parentTransformSampleTimes = capturedObject.capturedTransformSampleTimes
-				newTransformTimes = subObject.capturedTransformSampleTimes
-				if newTransformTimes != parentTransformSampleTimes:
-					if parentTransformSampleTimes == []:
-						# Combining a static transform with an animated transform results in an animated transform
-						pass
-					elif newTransformTimes == []:
-						newTransformTimes = parentTransformSampleTimes
-					else:
-						raise IECore.Exception( "Incompatible transform sample times when expanding procedural at location '%s' : %s != %s" % ( newName, parentTransformSampleTimes, newTransformTimes ) )
+				newSampledTransform = GafferScene.Private.RendererAlgo.SampledTransform(
+					capturedObject.capturedTransforms,
+					capturedObject.capturedTransformSampleTimes
+				)
 
-				parentTransforms = capturedObject.capturedTransforms
-				newTransforms = subObject.capturedTransforms
-				if parentTransforms == []:
-					pass
-				elif newTransforms == []:
-					newTransforms = parentTransforms
-				else:
-					effectiveParentTransforms = parentTransforms
-					if len( effectiveParentTransforms ) != len( newTransforms ):
-						if len( effectiveParentTransforms ) == 1:
-							effectiveParentTransforms = [ parentTransforms[0] ] * len( newTransforms )
-						elif len( newTransforms ) == 1:
-							newTransforms = [ newTransforms[0] ] * len( effectiveParentTransforms )
-						else:
-							raise IECore.Exception( "Incompatible transform sample lengths when expanding procedural at location '%s' : %s != %s" % ( newName, len( parentTransforms ), len( newTransforms ) ) )
-
-					newTransforms = [
-						newTransforms[i] * effectiveParentTransforms[i]
-						for i in range( len( newTransforms ) )
-					]
+				newSampledTransform.concatenate(
+					GafferScene.Private.RendererAlgo.SampledTransform(
+						subObject.capturedTransforms,
+						subObject.capturedTransformSampleTimes
+					)
+				)
 
 				# \todo - If we want to test links properly, that would need better support ... passing
 				# object references from `procRenderer` doesn't feel reliable ... it's probably reasonable
@@ -280,9 +263,8 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 				# the names in the list, the same way we do the new object name?
 				# I don't think we currently really support light linking inside procedurals much, so I haven't
 				# worried about it yet.
-
 				result[ newName ] = CapturingRendererTest.__ExpandedCapture(
-					subObject.capturedSamples, subObject.capturedSampleTimes, newTransforms, newTransformTimes,
+					subObject.capturedSamples, subObject.capturedSampleTimes, newSampledTransform.samples, newSampledTransform.sampleTimes,
 					newAttrs, subObject.capturedLinks
 				)
 
@@ -393,11 +375,14 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		del oA
 		oA = rendererA.object( "/o", [ sphere1, sphere1 ], [ 0, 1 ], rendererA.attributes( attrs ) )
 
-		with self.assertRaisesRegex( AssertionError, r"Mismatched samples times at path '/o' : \[0.0, 1.0\] != \[\]" ):
+		with self.assertRaisesRegex( AssertionError, r"Mismatched samples times at path '/o' : \[0.0, 1.0\] != \[0.0\]" ):
 			CapturingRendererTest.assertRendersMatch( rendererA, rendererB )
 
 		del oB
-		oB = rendererB.object( "/o", [ sphere1 ], [ 0, 1 ], rendererB.attributes( attrs ) )
+		with IECore.CapturingMessageHandler() as mh :
+			oB = rendererB.object( "/o", [ sphere1 ], [ 0, 1 ], rendererB.attributes( attrs ) )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, '''Number of object samples (1) doesn't match number of time samples (2) for object "/o"''' )
 
 		with self.assertRaisesRegex( AssertionError, r"Mismatched samples counts at path '/o' : 2 != 1" ):
 			CapturingRendererTest.assertRendersMatch( rendererA, rendererB )
@@ -438,7 +423,7 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 
 		oA.transform( imath.M44f( 1 ) )
 
-		with self.assertRaisesRegex( AssertionError, re.escape( r"Mismatched transforms at path '/o' : [M44f((1, 1, 1, 1), (1, 1, 1, 1), (1, 1, 1, 1), (1, 1, 1, 1))] != []" ) ):
+		with self.assertRaisesRegex( AssertionError, r"Mismatched transform times at path '/o' : \[0.0\] != \[\]" ):
 			CapturingRendererTest.assertRendersMatch( rendererA, rendererB )
 
 		oB.transform( imath.M44f( 1 ) )
@@ -446,7 +431,7 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 
 		oA.transform( [ imath.M44f( 1 ), imath.M44f( 2 ) ], [ 0, 1 ] )
 
-		with self.assertRaisesRegex( AssertionError, r"Mismatched transform times at path '/o' : \[0.0, 1.0\] != \[\]" ):
+		with self.assertRaisesRegex( AssertionError, r"Mismatched transform times at path '/o' : \[0.0, 1.0\] != \[0.0\]" ):
 			CapturingRendererTest.assertRendersMatch( rendererA, rendererB )
 
 		oB.transform( [ imath.M44f( 1 ), imath.M44f( 2 ) ], [ 0, 1 ] )
@@ -479,7 +464,7 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 
 		lA = rendererA.object( "/l", sphere1, rendererA.attributes( attrs ) )
 
-		with self.assertRaisesRegex( AssertionError, r"Objects do not match : \['/o', '/l'\] != \['/o'\]" ):
+		with self.assertRaisesRegex( AssertionError, r"Objects do not match : \['/[ol]', '/[lo]'\] != \['/o'\]" ):
 			CapturingRendererTest.assertRendersMatch( rendererA, rendererB )
 
 		lB = rendererB.object( "/l", sphere1, rendererB.attributes( attrs ) )
@@ -546,17 +531,3 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		)
 
 		CapturingRendererTest.assertRendersMatch( rendererA, rendererB, expandProcedurals = True )
-
-		# Test transform mismatch errors
-		oA.transform( [ imath.M44f(), imath.M44f(), imath.M44f() ], [] )
-
-		with self.assertRaisesRegex( RuntimeError, r"Incompatible transform sample lengths when expanding procedural at location '/c/b/a' : 3 != 2" ):
-			CapturingRendererTest.assertRendersMatch( rendererA, rendererB, expandProcedurals = True )
-
-		oA.transform( [ imath.M44f() ], [1,2,3] )
-
-		with self.assertRaisesRegex( RuntimeError, r"Incompatible transform sample times when expanding procedural at location '/c/b/a' : \[1.0, 2.0, 3.0\] != \[0.0, 1.0\]" ):
-			CapturingRendererTest.assertRendersMatch( rendererA, rendererB, expandProcedurals = True )
-
-if __name__ == "__main__":
-	unittest.main()

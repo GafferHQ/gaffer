@@ -130,6 +130,3 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 		self.__widget = None
 
 		GafferUITest.TestCase.tearDown( self )
-
-if __name__ == "__main__":
-	unittest.main()

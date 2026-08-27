@@ -226,7 +226,7 @@ void convertCornersAndCreases( const IECoreScene::MeshPrimitive *mesh, AtNode *n
 	AiNodeSetArray( node, g_creaseSharpnessArnoldString, sharpnessesArray );
 }
 
-AtNode *convertCommon( const IECoreScene::MeshPrimitive *mesh, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convertStatic( const IECoreScene::MeshPrimitive *mesh, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 
 	// Make the result mesh and add topology
@@ -374,45 +374,25 @@ void convertNormalIndices( const IECoreScene::MeshPrimitive *mesh, AtNode *node,
 	}
 }
 
-
-AtNode *convert( const IECoreScene::MeshPrimitive *mesh, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::MeshPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( mesh, universe, nodeName, parentNode, messageContext );
+	AtNode *result = convertStatic( samples.front(), universe, nodeName, parentNode, messageContext );
 
-	ShapeAlgo::convertP( mesh, result, g_vlistArnoldString, messageContext );
-
-	// add normals
-
-	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-	if( const V3fVectorData *n = normal( mesh, nInterpolation, messageContext ) )
+	const auto primitiveSamples = IECoreScenePreview::Renderer::staticSamplesCast<const Primitive *>( samples );
+	if( !ShapeAlgo::convertP( primitiveSamples, result, g_vlistArnoldString, messageContext ) )
 	{
-		AiNodeSetArray(
-			result,
-			g_nlistArnoldString,
-			AiArrayConvert( n->readable().size(), 1, AI_TYPE_VECTOR, &n->readable().front() )
-		);
-		convertNormalIndices( mesh, result, nInterpolation );
-		AiNodeSetBool( result, g_smoothingArnoldString, true );
+		AiNodeDestroy( result );
+		return nullptr;
 	}
 
-	return result;
-}
-
-AtNode *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	AtNode *result = convertCommon( samples.front(), universe, nodeName, parentNode, messageContext );
-
-	std::vector<const IECoreScene::Primitive *> primitiveSamples( samples.begin(), samples.end() );
-	ShapeAlgo::convertP( primitiveSamples, result, g_vlistArnoldString, messageContext );
-
 	// add normals
 
-	vector<const Data *> nSamples;
+	ParameterAlgo::DataSamples nSamples;
 	nSamples.reserve( samples.size() );
 	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-	for( vector<const MeshPrimitive *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+	for( auto sample : samples )
 	{
-		if( const V3fVectorData *n = normal( *it, nInterpolation, messageContext ) )
+		if( const V3fVectorData *n = normal( sample, nInterpolation, messageContext ) )
 		{
 			nSamples.push_back( n );
 		}
@@ -441,6 +421,6 @@ AtNode *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples,
 	return result;
 }
 
-NodeAlgo::ConverterDescription<MeshPrimitive> g_description( ::convert, ::convert );
+NodeAlgo::ConverterDescription<MeshPrimitive> g_description( ::convert );
 
 } // namespace

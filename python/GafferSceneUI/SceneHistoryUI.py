@@ -35,6 +35,9 @@
 ##########################################################################
 
 import functools
+import weakref
+
+import imath
 
 import IECore
 import IECoreScene
@@ -65,10 +68,17 @@ def connectToEditor( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
 		editor.keyPressSignal().connect( __viewerKeyPress )
-	elif isinstance( editor, GafferSceneUI.HierarchyView ) or isinstance( editor, GafferSceneUI.LightEditor ) :
+	elif isinstance( editor, ( GafferSceneUI.HierarchyView, GafferSceneUI.LightEditor, GafferSceneUI.LightLinkingEditor ) ) :
 		editor.keyPressSignal().connect( __hierarchyViewKeyPress )
 	elif isinstance( editor, GafferUI.NodeEditor ) :
 		editor.keyPressSignal().connect( __nodeEditorKeyPress )
+		editor.dragEnterSignal().connect( __locationDragEnter )
+		editor.dragLeaveSignal().connect( __locationDragLeave )
+		editor.dropSignal().connect( __locationDrop )
+	elif isinstance( editor, ( GafferUI.GraphEditor ) ) :
+		editor.graphGadget().dragEnterSignal().connect( __locationDragEnter )
+		editor.graphGadget().dragLeaveSignal().connect( __locationDragLeave )
+		editor.graphGadget().dropSignal().connect( functools.partial( __locationDrop, graphEditor = weakref.ref( editor ) ) )
 
 ##########################################################################
 # Internal implementation
@@ -122,8 +132,7 @@ def __editSourceNode( context, scene, path, nodeEditor = None ) :
 	if source is None :
 		return
 
-	node = source.node()
-	node = __ancestorWithNonViewableChildNodes( node ) or node
+	node = Gaffer.MetadataAlgo.firstViewableNode( source )
 	if nodeEditor is not None :
 		nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
 	else :
@@ -153,21 +162,11 @@ def __editTweaksNode( context, scene, path, nodeEditor = None ) :
 	if tweaks is None :
 		return
 
-	node = __ancestorWithNonViewableChildNodes( tweaks ) or tweaks
+	node = Gaffer.MetadataAlgo.firstViewableNode( tweaks )
 	if nodeEditor is not None :
 		nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
 	else :
 		GafferUI.NodeEditor.acquire( node, floating = True )
-
-def __ancestorWithNonViewableChildNodes( node ) :
-
-	result = None
-	while isinstance( node, Gaffer.Node ) :
-		if Gaffer.Metadata.value( node, "graphEditor:childrenViewable" ) == False :
-			result = node
-		node = node.parent()
-
-	return result
 
 __editSourceKeyPress = GafferUI.KeyEvent( "E", GafferUI.KeyEvent.Modifiers.Alt )
 __editTweaksKeyPress = GafferUI.KeyEvent(
@@ -231,3 +230,86 @@ def __nodeEditorKeyPress( nodeEditor, event ) :
 		if selectedPath is not None :
 			__editTweaksNode( nodeEditor.scriptNode().context(), scene, selectedPath, nodeEditor )
 		return True
+
+def __dropLocationData( event ) :
+
+	if (
+		not isinstance( event.data, IECore.StringVectorData ) or
+		len( event.data ) != 1 or
+		not event.data[0].startswith( "/" ) or
+		event.sourceWidget is None
+	) :
+		return None
+
+	scene = None
+	sourceEditor = event.sourceWidget.ancestor( GafferUI.Editor )
+	if isinstance( sourceEditor, GafferUI.Viewer ) :
+		if isinstance( event.sourceGadget, GafferSceneUI.SceneGadget ) :
+			scene = sourceEditor.view()["in"].getInput()
+	elif isinstance(
+		sourceEditor,
+		( GafferSceneUI.HierarchyView, GafferSceneUI.LightEditor, GafferSceneUI.AttributeEditor, GafferSceneUI.LightLinkingEditor )
+	) :
+		scene = sourceEditor.settings()["in"].getInput()
+
+	if scene is None :
+		return None
+
+	return {
+		"path" : event.data[0],
+		"scene" : scene,
+		"context" : sourceEditor.context(),
+	}
+
+def __locationDragEnter( target, event ) :
+
+	if __dropLocationData( event ) is None :
+		return False
+
+	GafferUI.Pointer.setCurrent( "targetObjects" )
+	return True
+
+def __locationDragLeave( target, event ) :
+
+	if __dropLocationData( event ) is None :
+		return False
+
+	if event.destinationWidget is None :
+		# Hack to restore (what we assume to have been) the original
+		# drag pointer. We don't do this when another widget has
+		# accepted the drag, because it would clobber any pointer
+		# change they made in `dragEnter`. But of course that means
+		# that if another widget _has_ accepted the drag but hasn't
+		# changed the pointer themselves (maybe they use highlighting
+		# instead), they will be stuck with the wrong pointer.
+		## \todo This is far too fragile. We need to manage
+		# pointer restoration at a higher level, in Widget.py's
+		# _EventFilter (and ViewportGadget's handlers).
+		GafferUI.Pointer.setCurrent( "objects" )
+
+	return True
+
+def __locationDrop( target, event, graphEditor = None ) :
+
+	dropLocationData = __dropLocationData( event )
+	if dropLocationData is None :
+		return False
+
+	with dropLocationData["context"] :
+		sourceScene = GafferScene.SceneAlgo.source( dropLocationData["scene"], dropLocationData["path"] )
+
+	if sourceScene is not None :
+		sourceNode = Gaffer.MetadataAlgo.firstViewableNode( sourceScene )
+		if isinstance( target, GafferUI.GraphGadget ) :
+			target.setRoot( sourceNode.parent() )
+			## \todo The `frame()` method should probably be on the GraphGadget itself, and the `at`
+			# functionality should be made public.
+			graphEditor()._GraphEditor__frame(
+				[ sourceNode ],
+				at = imath.V2f( GafferUI.Widget.mousePosition( relativeTo = graphEditor() ) )
+			)
+		else :
+			assert( isinstance( target, GafferUI.NodeEditor ) )
+			target.setNodeSet( Gaffer.StandardSet( [ sourceNode ] ) )
+
+	return True

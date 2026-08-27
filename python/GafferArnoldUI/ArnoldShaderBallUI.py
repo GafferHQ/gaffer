@@ -48,24 +48,24 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"environment" : [
+		"environment" : {
 
-			"description",
+			"description" :
 			"""
 			An environment map used for lighting. Should be in latlong
 			format.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:valid", True,
-			"path:bookmarks", "texture",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:valid" : True,
+			"path:bookmarks" : "texture",
 
-		],
+		},
 
-		"threads" : [
+		"threads" : {
 
-			"description",
+			"description" :
 			"""
 			The number of threads used by Arnold to render the
 			shader ball. A value of 0 uses all cores, and negative
@@ -73,7 +73,7 @@ Gaffer.Metadata.registerNode(
 			the rest of the UI for instance.
 			"""
 
-		],
+		},
 
 	}
 

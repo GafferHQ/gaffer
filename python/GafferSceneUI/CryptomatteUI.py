@@ -151,40 +151,40 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in" : {
 
-			"description",
+			"description" :
 			"""
 			The input image containing Cryptomatte image layers and optional metadata.
 			""",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"description",
+			"description" :
 			"""
 			The resulting image.
 			""",
 
-		],
+		},
 
-		"layer" : [
+		"layer" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the Cryptomatte layer to use.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetNames", __layerPresetNames,
-			"presetValues", __layerPresetValues,
-			"presetsPlugValueWidget:allowCustom", True,
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"presetNames" : __layerPresetNames,
+			"presetValues" : __layerPresetValues,
+			"presetsPlugValueWidget:allowCustom" : True,
+		},
 
-		"manifestSource" : [
+		"manifestSource" : {
 
-			"description",
+			"description" :
 			"""
 			The source of the Cryptomatte manifest.
 
@@ -197,32 +197,36 @@ Gaffer.Metadata.registerNode(
 			 - Sidecar File: From a JSON file specified on the `sidecarFile` plug.
 			""",
 
-			"preset:None", GafferScene.Cryptomatte.ManifestSource.None_,
-			"preset:Metadata", GafferScene.Cryptomatte.ManifestSource.Metadata,
-			"preset:Sidecar File", GafferScene.Cryptomatte.ManifestSource.Sidecar,
+			"preset:None" : GafferScene.Cryptomatte.ManifestSource.None_,
+			"preset:Metadata" : GafferScene.Cryptomatte.ManifestSource.Metadata,
+			"preset:Sidecar File" : GafferScene.Cryptomatte.ManifestSource.Sidecar,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
 
-		"manifestDirectory" : [
+		"manifestDirectory" : {
 
-			"description",
+			"description" :
 			"""
 			A directory of JSON files containing Cryptomatte manifests.
 
 			If a `manif_file` metadata entry exists for the selected Cryptomatte
 			layer, it will be appended to this directory. The manifest is read from
 			the file at the resulting path.
+
+			If this is not specified, the directory will be inferred from the
+			image's `filePath` metadata.
+
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", False,
-			"layout:visibilityActivator", "metadataManifest",
-		],
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : False,
+			"layout:visibilityActivator" : "metadataManifest",
+		},
 
-		"sidecarFile" : [
+		"sidecarFile" : {
 
-			"description",
+			"description" :
 			"""
 			A JSON file containing a Cryptomatte manifest.
 
@@ -230,17 +234,17 @@ Gaffer.Metadata.registerNode(
 			as a placeholder for the frame numbers.
 			""",
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"fileSystemPath:extensions", "json",
-			"fileSystemPath:extensionsLabel", "Show only JSON files",
-			"fileSystemPath:includeSequences", True,
-			"layout:visibilityActivator", "sidecarManifest",
-		],
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"fileSystemPath:extensions" : "json",
+			"fileSystemPath:extensionsLabel" : "Show only JSON files",
+			"fileSystemPath:includeSequences" : True,
+			"layout:visibilityActivator" : "sidecarManifest",
+		},
 
-		"matteNames" : [
+		"matteNames" : {
 
-			"description",
+			"description" :
 			"""
 			The list of names to be extracted as a matte.
 
@@ -270,26 +274,26 @@ Gaffer.Metadata.registerNode(
 			 - `<value>`.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.CryptomatteUI._CryptomatteNamesPlugValueWidget",
-		],
+			"plugValueWidget:type" : "GafferSceneUI.CryptomatteUI._CryptomatteNamesPlugValueWidget",
+		},
 
-		"outputChannel" : [
+		"outputChannel" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the output channel containing the extracted matte.
 			""",
 
-		],
+		},
 
-		"manifestScene" : [
+		"manifestScene" : {
 
-			"description",
+			"description" :
 			"""
 			A scene containing locations representing the contents of the Cryptomatte manifest.
 			""",
 
-		],
+		},
 
 	}
 
@@ -415,31 +419,39 @@ GafferUI.NodeGadget.registerNodeGadget( GafferScene.Cryptomatte, __nodeGadget )
 # GraphEditor context menu
 ##########################################################################
 
-def __selectAffected( node, context ) :
+def __selectAffected( nodeList, context ) :
 
-	if not isinstance( node, GafferScene.Cryptomatte ) :
-		return
+	pathMatcherResult = IECore.PathMatcher()
 
-	scene = node["manifestScene"]
+	for node in nodeList :
 
-	with context :
-		pathMatcher = IECore.PathMatcher()
-		for path in node["matteNames"].getValue() :
-			if path[0] != '<' and path[-1] != '>' :
-				pathMatcher.addPath( path )
+		if not isinstance( node, GafferScene.Cryptomatte ) :
+			continue
 
-		pathMatcherResult = IECore.PathMatcher()
-		GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, pathMatcherResult )
+		scene = node["manifestScene"]
+
+		with context :
+			pathMatcher = IECore.PathMatcher()
+			for path in node["matteNames"].getValue() :
+				if path[0] != '<' and path[-1] != '>' :
+					pathMatcher.addPath( path )
+
+			nodeMatches = IECore.PathMatcher()
+			GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, nodeMatches )
+			pathMatcherResult.addPaths( nodeMatches )
 
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( node.scriptNode(), pathMatcherResult )
 
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
+def appendNodeContextMenuDefinitions( graphEditor, nodeList, menuDefinition ) :
 
-	if not isinstance( node, GafferScene.Cryptomatte ) :
+	if not any( isinstance( n, GafferScene.Cryptomatte ) for n in nodeList ) :
 		return
 
 	menuDefinition.append( "/CryptomatteDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.context() ) } )
+	menuDefinition.append( "/Select Affected Objects", {
+		"command" : functools.partial( __selectAffected, nodeList, graphEditor.context() ),
+		"active" : all( isinstance( n, GafferScene.Cryptomatte ) for n in nodeList )
+	} )
 
 ##########################################################################
 # NodeEditor tool menu

@@ -104,40 +104,40 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"parameters" : [
+		"parameters" : {
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-			"description",
+			"description" :
 			"""
 			The parameters for the colour manager.
 			""",
 
-		],
+		},
 
-		"parameters..." : [
+		"parameters..." : {
 
-			"userDefault", __parameterUserDefault,
+			"userDefault" : __parameterUserDefault,
 
-		],
+		},
 
-		"parameters.color_space_narrow" : [
+		"parameters.color_space_narrow" : {
 
-			"presetNames", __colorSpacePresetNames,
-			"presetValues", __colorSpacePresetValues,
-			"plugValueWidget:type", __colorSpacePlugValueWidget,
-			"openColorIO:includeRoles", True,
+			"presetNames" : __colorSpacePresetNames,
+			"presetValues" : __colorSpacePresetValues,
+			"plugValueWidget:type" : __colorSpacePlugValueWidget,
+			"openColorIO:includeRoles" : True,
 
-		],
+		},
 
-		"parameters.color_space_linear" : [
+		"parameters.color_space_linear" : {
 
-			"presetNames", __colorSpacePresetNames,
-			"presetValues", __colorSpacePresetValues,
-			"plugValueWidget:type", __colorSpacePlugValueWidget,
-			"openColorIO:includeRoles", True,
+			"presetNames" : __colorSpacePresetNames,
+			"presetValues" : __colorSpacePresetValues,
+			"plugValueWidget:type" : __colorSpacePlugValueWidget,
+			"openColorIO:includeRoles" : True,
 
-		]
+		}
 
 	}
 

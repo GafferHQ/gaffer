@@ -212,7 +212,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		f["in"].setInput( c["out"] )
 		f["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ), 1 ) )
 		d = GafferImage.ImageMetadata()
-		d["metadata"].addChild( Gaffer.NameValuePlug( "comment", IECore.StringData( "reformated and metadata updated" ) ) )
+		d["metadata"].addChild( Gaffer.NameValuePlug( "comment", IECore.StringData( "reformatted and metadata updated" ) ) )
 		d["in"].setInput( f["out"] )
 
 		m = GafferImage.Mix()
@@ -557,9 +557,9 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		# With mix set to 1, the mix blends the offsetted samples to 0, and outputs just the non-offset
 		# samples
 		mix["mix"].setValue( 1.0 )
-		for i in range( 4 ):
-			self.assertAlmostEqual( startDiffStats["average"].getValue()[i], 0 )
-			self.assertAlmostEqual( startDiffStats["max"].getValue()[i], 0, places = 5 )
+		self.assertEqualWithAbsError( startDiffStats["average"].getValue(), imath.Color4f( 0 ), 1e-6 )
+		self.assertEqualWithAbsError( startDiffStats["max"].getValue(), imath.Color4f( 0 ), 1e-6 )
+
 		self.assertGreater( mergedDiffStats["average"].getValue()[3], 0.2 )
 		self.assertGreater( mergedDiffStats["max"].getValue()[3], 0.999  )
 		for i in range( 3 ):
@@ -689,6 +689,3 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 					Mix["mask"].setInput( mask["out"] )
 
 					self.assertImagesEqual( Mix["out"], ReferenceWithDataWindow["out"], maxDifference = 1e-7 )
-
-if __name__ == "__main__":
-	unittest.main()

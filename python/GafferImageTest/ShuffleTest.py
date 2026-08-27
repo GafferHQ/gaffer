@@ -431,6 +431,3 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( script["shuffle"]["shuffles"][0]["source"].getValue(), "X" )
 		self.assertEqual( script["shuffle"]["shuffles"][1]["source"].getValue(), "Y" )
-
-if __name__ == "__main__":
-	unittest.main()

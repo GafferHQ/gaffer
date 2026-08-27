@@ -645,29 +645,6 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		text = "".join( open( self.temporaryDirectory() / "test.txt", encoding = "utf-8" ).readlines() )
 		self.assertEqual( text, "i am a string with spaces" )
 
-	def testUIContextEntriesIgnored( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["n"] = GafferDispatchTest.TextWriter()
-		s["n"]["fileName"].setValue( self.temporaryDirectory() / "out.txt" )
-		s["n"]["text"].setValue( "${foo} ${ui:foo}" )
-
-		s["dispatcher"] = self.__createLocalDispatcher()
-		s["dispatcher"]["executeInBackground"].setValue( True )
-		s["dispatcher"]["tasks"][0].setInput( s["n"]["task"] )
-
-		c = Gaffer.Context()
-		c["ui:foo"] = "uiFoo"
-		c["foo"] = "foo"
-
-		with c :
-			s["dispatcher"]["task"].execute()
-
-		s["dispatcher"].jobPool().waitForAll()
-
-		text = "".join( open( self.temporaryDirectory() / "out.txt", encoding = "utf-8" ).readlines() )
-		self.assertEqual( text, "foo " )
-
 	def testContextLockedDuringBackgroundDispatch( self ) :
 
 		fileName = self.temporaryDirectory() / "out.txt"
@@ -1292,5 +1269,110 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( fileToCreate.is_file() )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testEnvironmentVariableCase( self ) :
+
+		# On Windows, the `os` module will screw this up, and create an all-upper-case
+		# environment variable instead. Still, we want to test that variables created
+		# this way are passed to child tasks.
+		os.environ["gafferLocalDispatcherTestMIXEDcaseA"] = "testTEST"
+		self.addCleanup( os.environ.__delitem__, "gafferLocalDispatcherTestMIXEDcaseA" )
+
+		# If we bypass `os.environ`, then we can create a mixed-case variable even
+		# on Windows.
+		os.putenv( "gafferLocalDispatcherTestMIXEDcaseB", "testTEST" )
+		self.addCleanup( os.unsetenv, "gafferLocalDispatcherTestMIXEDcaseB" )
+
+		# Dispatch a task that will serialise the environment it finds itself running in.
+
+		environmentFile = self.temporaryDirectory() / "environment.py"
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue(
+			inspect.cleandoc(
+				f"""
+				import sys
+				if sys.platform == "win32" :
+					# Use lower-level access to environment,
+					# because `os.environ` botches case preservation
+					# on Windows and we want to check the ground truth
+					# from the process.
+					import nt
+					env = nt.environ
+				else :
+					import os
+					env = os.environ.copy()
+
+				with open( r"{environmentFile}", "w", encoding = "utf-8" ) as f :
+					f.write( repr( env ) )
+				"""
+			)
+		)
+
+		script["dispatcher"] = self.__createLocalDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["command"]["task"] )
+		script["dispatcher"]["executeInBackground"].setValue( True )
+		script["dispatcher"]["task"].execute()
+		script["dispatcher"].jobPool().waitForAll()
+
+		# Load the environment from the task, and check it is as we expect.
+
+		with open( environmentFile, encoding = "utf-8" ) as f :
+			childEnvironment = eval( compile( f.read(), "test.py", "eval" ) )
+
+		# We preserve mixed-case environment variables on all platforms.
+		self.assertEqual( childEnvironment["gafferLocalDispatcherTestMIXEDcaseB"], "testTEST" )
+
+		if sys.platform == "win32" :
+			# Assert that Python botched this one as expected.
+			self.assertEqual( childEnvironment["GAFFERLOCALDISPATCHERTESTMIXEDCASEA"], "testTEST" )
+			# Check standard variable that happens to be mixed case.
+			self.assertIn( "ProgramData", childEnvironment )
+		else :
+			# On Linux, everything actually makes sense.
+			self.assertEqual( childEnvironment["gafferLocalDispatcherTestMIXEDcaseA"], "testTEST" )
+
+	def testIsolated( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferDispatchTest.TextWriter()
+		s["n"]["fileName"].setValue( self.temporaryDirectory() / "fullScriptName.txt" )
+		s["n"]["text"].setValue( "${script:name}" )
+
+		s["i"] = GafferDispatchTest.TextWriter()
+		s["i"]["dispatcher"]["isolated"].setValue( True )
+		s["i"]["fileName"].setValue( self.temporaryDirectory() / "isolatedScriptName.txt" )
+		s["i"]["text"].setValue( "${script:name}" )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["b2"] = Gaffer.Box()
+
+		s["b"]["b2"]["i2"] = GafferDispatchTest.TextWriter()
+		s["b"]["b2"]["i2"]["dispatcher"]["isolated"].setValue( True )
+		s["b"]["b2"]["i2"]["fileName"].setValue( self.temporaryDirectory() / "boxedScriptName.txt" )
+		s["b"]["b2"]["i2"]["text"].setValue( "${script:name}" )
+
+		promotedTaskPlug = Gaffer.PlugAlgo.promote( s["b"]["b2"]["i2"]["task"] )
+		promotedTaskPlug = Gaffer.PlugAlgo.promote( promotedTaskPlug )
+
+		s["d"] = self.__createLocalDispatcher()
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+		s["d"]["tasks"][1].setInput( s["i"]["task"] )
+		s["d"]["tasks"][2].setInput( promotedTaskPlug )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CurrentFrame )
+
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
+
+		dispatchDir = next( p for p in self.temporaryDirectory().iterdir() if p.is_dir() )
+
+		with open( self.temporaryDirectory() / "fullScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )
+
+		with open( self.temporaryDirectory() / "isolatedScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )
+
+		with open( self.temporaryDirectory() / "boxedScriptName.txt", "r" ) as inFile :
+			self.assertEqual( inFile.readlines()[0].strip(), "untitled" )

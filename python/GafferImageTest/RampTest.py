@@ -148,6 +148,3 @@ class RampTest( GafferImageTest.ImageTestCase ) :
 		reader["fileName"].setValue( self.imagesPath() / "GafferRamp.exr" )
 
 		self.assertImagesEqual( ramp["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
-
-if __name__ == "__main__":
-	unittest.main()

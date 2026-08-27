@@ -44,74 +44,26 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
 
+namespace
+{
+
+ArnoldShaderPtr createShader()
+{
+	ArnoldShaderPtr result = new ArnoldShader;
+	/// \todo Have ArnoldShader make this in its constructor. See #5542.
+	result->addChild( new Plug( "out", Plug::Out ) );
+	return result;
+}
+
+} // namespace
+
 GAFFER_NODE_DEFINE_TYPE( ArnoldLight );
 
-size_t ArnoldLight::g_firstPlugIndex = 0;
-
 ArnoldLight::ArnoldLight( const std::string &name )
-	:	GafferScene::Light( name )
+	:	GafferScene::Light( name, createShader() )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-
-	addChild( new ArnoldShader( "__shader" ) );
-	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
-
-	shaderNode()->addChild( new Plug( "out", Plug::Out ) );
-	shaderNode()->typePlug()->setValue( "ai:light" );
-	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
-	shaderNode()->parametersPlug()->setInput( parametersPlug() );
-
-	shaderInPlug()->setInput( shaderNode()->outPlug() );
 }
 
 ArnoldLight::~ArnoldLight()
 {
-}
-
-ArnoldShader *ArnoldLight::shaderNode()
-{
-	return getChild<ArnoldShader>( g_firstPlugIndex );
-}
-
-const ArnoldShader *ArnoldLight::shaderNode() const
-{
-	return getChild<ArnoldShader>( g_firstPlugIndex );
-}
-
-GafferScene::ShaderPlug *ArnoldLight::shaderInPlug()
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-const GafferScene::ShaderPlug *ArnoldLight::shaderInPlug() const
-{
-	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
-}
-
-void ArnoldLight::loadShader( const std::string &shaderName )
-{
-	shaderNode()->loadShader( shaderName );
-	shaderNode()->typePlug()->setValue( "ai:light" );
-	shaderInPlug()->setInput( shaderNode()->outPlug() );
-}
-
-void ArnoldLight::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	Light::affects( input, outputs );
-
-	if( input == shaderInPlug() )
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
-}
-
-void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h.append( shaderInPlug()->attributesHash() );
-}
-
-IECoreScene::ConstShaderNetworkPtr ArnoldLight::computeLight( const Gaffer::Context *context ) const
-{
-	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
-	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "ai:light" );
 }

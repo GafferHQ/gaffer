@@ -298,19 +298,16 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		standardAttributes = GafferScene.StandardAttributes()
 		standardAttributes["in"].setInput( group["out"] )
 		standardAttributes["filter"].setInput( pathFilter["out"] )
-		standardAttributes["attributes"]["transformBlurSegments"]["value"].setValue( 4 )
-		standardAttributes["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
+		standardAttributes["attributes"]["gaffer:transformBlurSegments"]["value"].setValue( 4 )
+		standardAttributes["attributes"]["gaffer:transformBlurSegments"]["enabled"].setValue( True )
 
 		standardOptions = GafferScene.StandardOptions()
 		standardOptions["in"].setInput( standardAttributes["out"] )
-		standardOptions["options"]["transformBlur"]["value"].setValue( True )
-		standardOptions["options"]["transformBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["render:transformBlur"]["value"].setValue( True )
+		standardOptions["options"]["render:transformBlur"]["enabled"].setValue( True )
 
 		encapsulate = GafferScene.Encapsulate()
 		encapsulate["in"].setInput( standardOptions["out"] )
 		encapsulate["filter"].setInput( pathFilter["out"] )
 
 		self.assertScenesRenderSame( encapsulate["in"], encapsulate["out"], expandProcedurals = True, ignoreLinks = True )
-
-if __name__ == "__main__":
-	unittest.main()

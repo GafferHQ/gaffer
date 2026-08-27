@@ -238,7 +238,7 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__activatedSignal
 		except :
 			self.__activatedSignal = GafferUI.WidgetSignal()
-			self._qtWidget().returnPressed.connect( Gaffer.WeakMethod( self.__returnPressed ) )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__activationKeyPress ) )
 
 		return self.__activatedSignal
 
@@ -280,10 +280,6 @@ class TextWidget( GafferUI.Widget ) :
 
 		self.__textChangedSignal( self )
 
-	def __returnPressed( self ) :
-
-		self.__activatedSignal( self )
-
 	def __editingFinished( self ) :
 
 		self.__editingFinishedSignal( self )
@@ -291,6 +287,17 @@ class TextWidget( GafferUI.Widget ) :
 	def __selectionChanged( self ) :
 
 		self.__selectionChangedSignal( self )
+
+	def __activationKeyPress( self, widget, event ) :
+
+		assert( widget is self )
+
+		if event.key in ( "Enter", "Return" ) :
+			self.__activatedSignal( self )
+			self.editingFinishedSignal()( self )
+			return True
+
+		return False
 
 	def __keyPress( self, widget, event ) :
 
@@ -388,11 +395,11 @@ class _LineEdit( QtWidgets.QLineEdit ) :
 
 		# but then calculate our own width
 		numChars = self.__fixedCharacterWidth if self.__fixedCharacterWidth is not None else self.__preferredCharacterWidth
-		textMargins = self.getTextMargins()
-		contentsMargins = self.getContentsMargins()
+		textMargins = self.textMargins()
+		contentsMargins = self.contentsMargins()
 
 		width = self.fontMetrics().boundingRect( "M" * numChars ).width()
-		width += contentsMargins[0] + contentsMargins[2] + textMargins[0] + textMargins[2]
+		width += contentsMargins.left() + contentsMargins.right() + textMargins.left() + textMargins.right()
 
 		options = QtWidgets.QStyleOptionFrame()
 		self.initStyleOption( options )

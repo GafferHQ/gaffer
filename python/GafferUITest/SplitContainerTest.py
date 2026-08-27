@@ -165,6 +165,3 @@ class SplitContainerTest( GafferUITest.TestCase ) :
 
 		s = c.getSizes()
 		self.assertAlmostEqual( float( s[0] ) / s[1], 1/3.0, 1 )
-
-if __name__ == "__main__":
-	unittest.main()

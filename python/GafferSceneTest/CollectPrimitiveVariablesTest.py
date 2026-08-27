@@ -146,6 +146,3 @@ parent["PrimitiveVariables"]["primitiveVariables"]["member1"]["value"] = imath.V
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs"].data.value, imath.Color3f( 0 ) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs_suffix1"].data.value, imath.Color3f( 1 ) )
 		self.assertEqual( script["CollectPrimitiveVariables"]["out"].object( "/cube" )["Cs_suffix2"].data.value, imath.Color3f( 2 ) )
-
-if __name__ == "__main__":
-	unittest.main()

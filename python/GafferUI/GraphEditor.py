@@ -35,17 +35,72 @@
 #
 ##########################################################################
 
+import enum
 import functools
+import types
 import imath
 
 import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
+
+class _ViewableChildrenPathFilter( Gaffer.PathFilter ) :
+
+	def __init__( self, scriptRoot, userData = {} ) :
+
+		Gaffer.PathFilter.__init__( self, userData )
+
+		self.__scriptRoot = scriptRoot
+
+	def _filter( self, paths, canceller ) :
+
+		result = []
+		for p in paths :
+			n = self.__scriptRoot.descendant( str( p ).lstrip( "/" ).replace( "/", "." ) )
+			if isinstance( n, Gaffer.Node ) and Gaffer.Metadata.value( n, "ui:childNodesAreViewable" ) :
+				result.append( p )
+
+		return result
+
+def _currentFrame( viewportGadget ) :
+
+	rasterMin = viewportGadget.rasterToWorldSpace( imath.V2f( 0 ) ).p0
+	rasterMax = viewportGadget.rasterToWorldSpace( imath.V2f( viewportGadget.getViewport() ) ).p0
+
+	frame = imath.Box2f()
+	frame.extendBy( imath.V2f( rasterMin[0], rasterMin[1] ) )
+	frame.extendBy( imath.V2f( rasterMax[0], rasterMax[1] ) )
+
+	return frame
+
+# Decorator equivalent to `@classmethod` if function is
+# called as `Class.foo()`, but also allows use as an instance
+# method if called as `instance.foo()`. We use this to aid
+# a transition from class-level signals to instance-level
+# signals.
+class _ClassOrInstanceMethod :
+
+	def __init__( self, function ) :
+
+		self.__function = function
+		functools.update_wrapper( self, function )
+
+	def __get__( self, instance, owner ) :
+
+		if instance is not None :
+			return types.MethodType( self.__function, instance )
+		else :
+			return types.MethodType( self.__function, owner )
 
 class GraphEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
+
+		column = GafferUI.ListContainer( borderWidth = 4, spacing = 4 )
+
+		GafferUI.Editor.__init__( self, column, scriptNode, **kw )
 
 		# We want to disable precise navigation motions as they interfere
 		# with our keyboard shortcuts and aren't that useful in the graph
@@ -55,18 +110,28 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.__gadgetWidget = GafferUI.GadgetWidget( gadget = viewportGadget )
 
-		GafferUI.Editor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
-
 		graphGadget = GafferUI.GraphGadget( self.scriptNode() )
 		graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
 
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( graphGadget )
+
+		self.__rootPath = Gaffer.GraphComponentPath( self.scriptNode(), [], filter = _ViewableChildrenPathFilter( self.scriptNode() ) )
+		self.__rootPathChangedConnection = self.__rootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__rootPathChanged ), scoped = True )
+
+		with column :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				self.__historyWidget = _HistoryWidget( self.graphGadget(), self.scriptNode() )
+				crumbs = GafferUI.BreadCrumbsWidget( self.__rootPath )
+				crumbs.pathContextMenuSignal().connect( Gaffer.WeakMethod( self.__breadCrumbsPathContextMenu ) )
+
+		column.addChild( self.__gadgetWidget )
+
 		self.__gadgetWidget.getViewportGadget().setDragTracking( GafferUI.ViewportGadget.DragTracking.XDragTracking | GafferUI.ViewportGadget.DragTracking.YDragTracking )
 		self.__frame( scriptNode.selection() )
 
-		self.__gadgetWidget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
-		self.__gadgetWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
-		self.__gadgetWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
+		self.__gadgetWidget.getViewportGadget().buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
+		self.__gadgetWidget.getViewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__gadgetWidget.getViewportGadget().buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
 		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
@@ -89,6 +154,12 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.__nodeMenu = None
 		self.__readOnlyPopup = None
+
+		self.__plugContextMenuSignal = Gaffer.Signals.Signal3()
+		self.__connectionContextMenuSignal = Gaffer.Signals.Signal3()
+		self.__nodeContextMenuSignal = Gaffer.Signals.Signal3()
+		self.__multiNodeContextMenuSignal = Gaffer.Signals.Signal3()
+		self.__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 
 	## Returns the internal GadgetWidget holding the GraphGadget.
 	def graphGadgetWidget( self ) :
@@ -120,7 +191,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		root = self.graphGadget().getRoot()
 		if not root.isSame( self.scriptNode() ) :
-			result += " : " + root.relativeName( self.scriptNode() ).replace( ".", " / " )
+			result += " : " + root.getName()
 
 		return result
 
@@ -130,10 +201,10 @@ class GraphEditor( GafferUI.Editor ) :
 	# menu definition on the fly - the signature for the signal is
 	# ( graphEditor, plug, menuDefinition ) and the menu definition should just be
 	# edited in place.
-	@classmethod
-	def plugContextMenuSignal( cls ) :
+	@_ClassOrInstanceMethod
+	def plugContextMenuSignal( classOrSelf ) :
 
-		return cls.__plugContextMenuSignal
+		return classOrSelf.__plugContextMenuSignal
 
 	__connectionContextMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
@@ -141,10 +212,10 @@ class GraphEditor( GafferUI.Editor ) :
 	# menu definition on the fly - the signature for the signal is
 	# ( graphEditor, destinationPlug, menuDefinition ) and the menu definition
 	# should just be edited in place.
-	@classmethod
-	def connectionContextMenuSignal( cls ) :
+	@_ClassOrInstanceMethod
+	def connectionContextMenuSignal( classOrSelf ) :
 
-		return cls.__connectionContextMenuSignal
+		return classOrSelf.__connectionContextMenuSignal
 
 	@classmethod
 	def appendConnectionNavigationMenuDefinitions( cls, graphEditor, destinationPlug, menuDefinition ) :
@@ -178,21 +249,28 @@ class GraphEditor( GafferUI.Editor ) :
 		__append( destinationPlug, "Destination Node" )
 
 	__nodeContextMenuSignal = Gaffer.Signals.Signal3()
+	__multiNodeContextMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
 	# node in the graph. Slots may connect to this signal to edit the
-	# menu definition on the fly - the signature for the signal is
-	# ( graphEditor, node, menuDefinition ) and the menu definition should just be
-	# edited in place. Typically you would add slots to this signal
-	# as part of a startup script.
-	@classmethod
-	def nodeContextMenuSignal( cls ) :
+	# menu definition on the fly. If `multiNode` is `False`, the signature
+	# for the signal is ( graphEditor, node, menuDefinition ).
+	# Otherwise the signature is ( graphEditor, nodeList, menuDefinition ).
+	# The menu is built by first emitting the multi-node signal then the
+	# single node signal with the same `menuDefinition`.
+	# For both, the menu definition should just be edited in place. Typically
+	# you would add slots to this signal as part of a startup script.
+	# \todo Deprecate the single node signal in version `1.8` and remove it in `1.9`.
+	@_ClassOrInstanceMethod
+	def nodeContextMenuSignal( classOrSelf, multiNode = False ) :
 
-		return cls.__nodeContextMenuSignal
+		if multiNode :
+			return classOrSelf.__multiNodeContextMenuSignal
+		return classOrSelf.__nodeContextMenuSignal
 
 	## May be used from a slot attached to nodeContextMenuSignal() to install some
 	# standard menu items for modifying the connection visibility for a node.
 	@classmethod
-	def appendConnectionVisibilityMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendConnectionVisibilityMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
 		def plugDirectionsWalk( gadget ) :
 
@@ -205,94 +283,106 @@ class GraphEditor( GafferUI.Editor ) :
 
 			return result
 
-		plugDirections = plugDirectionsWalk( graphEditor.graphGadget().nodeGadget( node ) )
+		nodePlugDirections = [ plugDirectionsWalk( graphEditor.graphGadget().nodeGadget( n ) ) for n in nodeList ]
+		plugDirections = set().union( *nodePlugDirections )
 		if not plugDirections :
 			return
 
-		readOnly = Gaffer.MetadataAlgo.readOnly( node )
+		readOnly = any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList )
+		allNodesHavePlugs = all( len( n ) > 0 for n in nodePlugDirections )
+		active = not readOnly and allNodesHavePlugs
 
 		menuDefinition.append( "/ConnectionVisibilityDivider", { "divider" : True } )
 
 		if Gaffer.Plug.Direction.In in plugDirections :
+			value = sole( cls.__getNodeInputConnectionsVisible( graphEditor.graphGadget(), n ) for n in nodeList )
 			menuDefinition.append(
 				"/Connections/Show Input Connections",
 				{
-					"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
-					"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), node ),
-					"active" : not readOnly,
+					"checkBox" : ( value or False ) and active,
+					"command" : functools.partial( cls.__setNodeInputConnectionsVisible, graphEditor.graphGadget(), nodeList ),
+					"active" : active,
 				}
 			)
 
 		if Gaffer.Plug.Direction.Out in plugDirections :
+			value = sole( cls.__getNodeOutputConnectionsVisible( graphEditor.graphGadget(), n ) for n in nodeList )
 			menuDefinition.append(
 				"/Connections/Show Output Connections",
 				{
-					"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
-					"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), node ),
-					"active" : not readOnly
+					"checkBox" : ( value or False ) and active,
+					"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, graphEditor.graphGadget(), nodeList ),
+					"active" : active,
 				}
 			)
 
 		if Gaffer.Plug.Direction.In in plugDirections :
+			value = sole( cls.__getNoduleLabelsVisible( n, "input" ) for n in nodeList )
 			menuDefinition.append(
 				"/Connections/Show Input Labels",
 				{
-					"checkBox" : functools.partial( cls.__getNoduleLabelsVisible, node, "input" ),
-					"command" : functools.partial( cls.__setNoduleLabelsVisible, node, "input" ),
-					"active" : not readOnly,
+					"checkBox" : ( value or False ) and active,
+					"command" : functools.partial( cls.__setNoduleLabelsVisible, nodeList, "input" ),
+					"active" : active,
 				}
 			)
 
 		if Gaffer.Plug.Direction.Out in plugDirections :
+			value = sole( cls.__getNoduleLabelsVisible( n, "output" ) for n in nodeList )
 			menuDefinition.append(
 				"/Connections/Show Output Labels",
 				{
-					"checkBox" : functools.partial( cls.__getNoduleLabelsVisible, node, "output" ),
-					"command" : functools.partial( cls.__setNoduleLabelsVisible, node, "output" ),
-					"active" : not readOnly,
+					"checkBox" : ( value or False ) and active,
+					"command" : functools.partial( cls.__setNoduleLabelsVisible, nodeList, "output" ),
+					"active" : active,
 				}
 			)
 
 	## May be used from a slot attached to nodeContextMenuSignal() to install a
 	# standard menu item for modifying the enabled state of a node.
 	@classmethod
-	def appendEnabledPlugMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendEnabledPlugMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
-		enabledPlug = cls.__enabledPlugForEditing( node )
-		if enabledPlug is not None :
+		enabledPlugs = [ cls.__enabledPlugForEditing( node ) for node in nodeList ]
+		if any( p is not None for p in enabledPlugs ) :
+			value = sole( p.getValue() for p in enabledPlugs if p is not None )
+			active = all( enabledPlugs ) and all( p.settable() and not Gaffer.MetadataAlgo.readOnly( p ) for p in enabledPlugs )
 			menuDefinition.append( "/EnabledDivider", { "divider" : True } )
 			menuDefinition.append(
 				"/Enabled",
 				{
-					"command" : functools.partial( cls.__setValue, enabledPlug ),
-					"checkBox" : enabledPlug.getValue(),
-					"active" : enabledPlug.settable() and not Gaffer.MetadataAlgo.readOnly( enabledPlug )
+					"command" : functools.partial( cls.__setValue, enabledPlugs ),
+					"checkBox" : ( value or False ) and active,
+					"active" : active
 				}
 			)
 
 	@classmethod
-	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendContentsMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
 		menuDefinition.append( "/FocusDivider", { "divider" : True } )
 		menuDefinition.append( "/Focus", {
-			"command" : functools.partial( graphEditor.scriptNode().setFocus, node ),
-			"active" : not node.isSame( graphEditor.scriptNode().getFocus() ),
+			"command" : functools.partial( graphEditor.scriptNode().setFocus, nodeList[0] ),
+			"active" : len( nodeList ) == 1 and not nodeList[0].isSame( graphEditor.scriptNode().getFocus() ),
 			"shortCut" : "Ctrl+`"
 		} )
 
-		if not GraphEditor.__childrenViewable( node ) :
+		if not any( GraphEditor.__childrenViewable( n ) for n in nodeList ) :
 			return
 
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
-		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
+		menuDefinition.append( "/Show Contents...", {
+			"command" : functools.partial( cls.__acquireNodes, nodeList ),
+			"active" : all( GraphEditor.__childrenViewable( n ) for n in nodeList )
+		} )
 
 	__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 	## Returns a signal which is emitted whenever a node is double clicked.
 	# Slots should have the signature ( graphEditor, node ).
-	@classmethod
-	def nodeDoubleClickSignal( cls ) :
+	@_ClassOrInstanceMethod
+	def nodeDoubleClickSignal( classOrSelf ) :
 
-		return cls.__nodeDoubleClickSignal
+		return classOrSelf.__nodeDoubleClickSignal
 
 	## Ensures that the specified node has a visible GraphEditor viewing
 	# it, and returns that editor.
@@ -349,13 +439,7 @@ class GraphEditor( GafferUI.Editor ) :
 		else :
 
 			if self.__readOnlyPopup is None :
-
-				with GafferUI.PopupWindow() as self.__readOnlyPopup :
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-						GafferUI.Image( "warningSmall.png" )
-						GafferUI.Label( "Node Graph Not Editable" )
-
-			self.__readOnlyPopup.popup( center = self.bound().center(), parent = self )
+				GafferUI.PopupWindow.showWarning( "Node Graph Not Editable", parent = self, center = self.bound().center() )
 
 	def __nodeMenuVisibilityChanged( self, widget ) :
 
@@ -383,9 +467,11 @@ class GraphEditor( GafferUI.Editor ) :
 				overrideMenuTitle = None
 
 				if isinstance( gadgets[0], GafferUI.Nodule ) :
+					GraphEditor.plugContextMenuSignal()( self, gadgets[0].plug(), overrideMenuDefinition )
 					self.plugContextMenuSignal()( self, gadgets[0].plug(), overrideMenuDefinition )
 					overrideMenuTitle = gadgets[0].plug().relativeName( self.graphGadget().getRoot() )
 				elif isinstance( gadgets[0], GafferUI.ConnectionGadget ) :
+					GraphEditor.connectionContextMenuSignal()( self, gadgets[0].dstNodule().plug(), overrideMenuDefinition )
 					self.connectionContextMenuSignal()( self, gadgets[0].dstNodule().plug(), overrideMenuDefinition )
 					overrideMenuTitle = "-> " + gadgets[0].dstNodule().plug().relativeName( self.graphGadget().getRoot() )
 				else :
@@ -393,8 +479,17 @@ class GraphEditor( GafferUI.Editor ) :
 					if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
 						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget )
 					if nodeGadget is not None :
+						if nodeGadget.node() in self.scriptNode().selection() :
+							nodeList = [ node for node in self.scriptNode().selection() if self.graphGadget().nodeGadget( node ) is not None ]
+						else :
+							nodeList = [ nodeGadget.node() ]
+
+						GraphEditor.nodeContextMenuSignal( True )( self, nodeList, overrideMenuDefinition )
+						self.nodeContextMenuSignal( True )( self, nodeList, overrideMenuDefinition )
+						GraphEditor.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
-						overrideMenuTitle = nodeGadget.node().getName()
+
+						overrideMenuTitle = ( "{} Nodes".format( len( nodeList ) ) ) if len( nodeList ) > 1 else nodeList[0].getName()
 
 				if len( overrideMenuDefinition.items() ) :
 					menuDefinition = overrideMenuDefinition
@@ -461,6 +556,12 @@ class GraphEditor( GafferUI.Editor ) :
 					enabledPlug.setValue( not enabled )
 
 			return True
+		elif event.key == "BracketLeft" and not event.modifiers :
+			self.__historyWidget.moveHistoryIndex( self.__historyWidget.Direction.Back )
+			return True
+		elif event.key == "BracketRight" and not event.modifiers :
+			self.__historyWidget.moveHistoryIndex( self.__historyWidget.Direction.Forward )
+			return True
 
 		return False
 
@@ -493,7 +594,7 @@ class GraphEditor( GafferUI.Editor ) :
 			# we're extending the existing framing, which we assume the
 			# user was happy with other than it not showing the nodes in question.
 			# so we just take the union of the existing frame and the one for the nodes.
-			cb = self.__currentFrame()
+			cb = _currentFrame( self.graphGadgetWidget().getViewportGadget() )
 			bound.extendBy( imath.Box3f( imath.V3f( cb.min().x, cb.min().y, 0 ), imath.V3f( cb.max().x, cb.max().y, 0 ) ) )
 		else :
 			# we're reframing from scratch, so the frame for the nodes is all we need.
@@ -530,7 +631,10 @@ class GraphEditor( GafferUI.Editor ) :
 
 		nodeGadget = self.__nodeGadgetAt( event.line.p1 )
 		if nodeGadget is not None :
-			return self.nodeDoubleClickSignal()( self, nodeGadget.node() )
+			return (
+				self.nodeDoubleClickSignal()( self, nodeGadget.node() ) or
+				GraphEditor.nodeDoubleClickSignal()( self, nodeGadget.node() )
+			)
 
 	def __dragEnter( self, widget, event ) :
 
@@ -569,9 +673,9 @@ class GraphEditor( GafferUI.Editor ) :
 
 	def __dropNodes( self, dragData ) :
 
-		if isinstance( dragData, Gaffer.Node ) :
+		if isinstance( dragData, Gaffer.Node ) and self.scriptNode().isAncestorOf( dragData ) :
 			return [ dragData ]
-		elif isinstance( dragData, Gaffer.Set ) :
+		elif isinstance( dragData, Gaffer.Set ) and self.scriptNode().isAncestorOf( dragData[0] ) :
 			nodes = [ x for x in dragData if isinstance( x, Gaffer.Node ) ]
 			if len( set( n.parent() for n in nodes ) ) == 1 :
 				# Can only frame nodes if they all share the same parent.
@@ -579,32 +683,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		return []
 
-	def __currentFrame( self ) :
-		viewportGadget = self.graphGadgetWidget().getViewportGadget()
-
-		rasterMin = viewportGadget.rasterToWorldSpace( imath.V2f( 0 ) ).p0
-		rasterMax = viewportGadget.rasterToWorldSpace( imath.V2f( viewportGadget.getViewport() ) ).p0
-
-		frame = imath.Box2f()
-		frame.extendBy( imath.V2f( rasterMin[0], rasterMin[1] ) )
-		frame.extendBy( imath.V2f( rasterMax[0], rasterMax[1] ) )
-
-		return frame
-
 	def __rootChanged( self, graphGadget, previousRoot ) :
-
-		# save/restore the current framing so jumping in
-		# and out of Boxes isn't a confusing experience.
-
-		Gaffer.Metadata.registerValue( previousRoot, "ui:graphEditor{}:framing".format( id( self ) ), self.__currentFrame(), persistent = False )
-
-		frame = Gaffer.Metadata.value( self.graphGadget().getRoot(), "ui:graphEditor{}:framing".format( id( self ) ) )
-		if frame is not None :
-			self.graphGadgetWidget().getViewportGadget().frame(
-				imath.Box3f( imath.V3f( frame.min().x, frame.min().y, 0 ), imath.V3f( frame.max().x, frame.max().y, 0 ) )
-			)
-		else :
-			self.__frame( self.graphGadget().getRoot().children( Gaffer.Node ) )
 
 		# do what we need to do to keep our title up to date.
 
@@ -620,7 +699,12 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.titleChangedSignal()( self )
 
+		self.__rootPath.setFromComponent( graphGadget.getRoot() )
+
 	def __rootNameChanged( self, root, oldName ) :
+
+		with Gaffer.Signals.BlockedConnection( self.__rootPathChangedConnection ) :
+			self.__rootPath.setFromComponent( self.graphGadget().getRoot() )
 
 		self.titleChangedSignal()( self )
 
@@ -629,6 +713,11 @@ class GraphEditor( GafferUI.Editor ) :
 		# This may be called for our root, or any of its parents
 		if node.parent() == None :
 			self.graphGadget().setRoot( self.scriptNode() )
+
+	def __rootPathChanged( self, path ) :
+
+		with Gaffer.Signals.BlockedConnection( self.__rootPathChangedConnection ) :
+			self.graphGadget().setRoot( path.property( "graphComponent:graphComponent" ) )
 
 	def __preRender( self, viewportGadget ) :
 
@@ -658,10 +747,26 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.frame( nodes, extend = True )
 
+	def __acquireGraphEditorFromPath( self, pathString ) :
+
+		scriptNode = self.ancestor( GafferUI.ScriptWindow ).scriptNode()
+		n = scriptNode.descendant( pathString ) if pathString else scriptNode
+		GafferUI.GraphEditor.acquire( n )
+
+	def __breadCrumbsPathContextMenu( self, path, widget, menuDefinition ) :
+
+		menuDefinition.append(
+			"Open in new Graph Editor",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__acquireGraphEditorFromPath ), pathString = str( path ) ),
+				"active" : path != self.__rootPath,
+			}
+		)
+
 	def __annotationsMenu( self ) :
 
 		graphGadget = self.graphGadget()
-		annotationsGadget = graphGadget["__annotations"]
+		annotationsGadget = graphGadget.annotationsGadget()
 
 		annotations = Gaffer.MetadataAlgo.annotationTemplates() + [ "user", annotationsGadget.untemplatedAnnotations ]
 		visiblePattern = annotationsGadget.getVisibleAnnotations()
@@ -734,7 +839,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 	def __setVisibleAnnotations( self, unused, annotations ) :
 
-		annotationsGadget = self.graphGadget()["__annotations"]
+		annotationsGadget = self.graphGadget().annotationsGadget()
 		pattern = " ".join( a.replace( " ", r"\ " ) for a in annotations )
 		annotationsGadget.setVisibleAnnotations( pattern )
 
@@ -744,10 +849,11 @@ class GraphEditor( GafferUI.Editor ) :
 		return not graphGadget.getNodeInputConnectionsMinimised( node )
 
 	@classmethod
-	def __setNodeInputConnectionsVisible( cls, graphGadget, node, value ) :
+	def __setNodeInputConnectionsVisible( cls, graphGadget, nodeList, value ) :
 
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			graphGadget.setNodeInputConnectionsMinimised( node, not value )
+		with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
+			for node in nodeList :
+				graphGadget.setNodeInputConnectionsMinimised( node, not value )
 
 	@classmethod
 	def __getNoduleLabelsVisible( cls, node, direction ) :
@@ -755,10 +861,11 @@ class GraphEditor( GafferUI.Editor ) :
 		return Gaffer.Metadata.value( node, f"nodeGadget:{direction}NoduleLabelsVisible" ) or False
 
 	@classmethod
-	def __setNoduleLabelsVisible( cls, node, direction, value ) :
+	def __setNoduleLabelsVisible( cls, nodeList, direction, value ) :
 
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.Metadata.registerValue( node, f"nodeGadget:{direction}NoduleLabelsVisible", value )
+		with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
+			for node in nodeList :
+				Gaffer.Metadata.registerValue( node, f"nodeGadget:{direction}NoduleLabelsVisible", value )
 
 	@classmethod
 	def __getNodeOutputConnectionsVisible( cls, graphGadget, node ) :
@@ -766,25 +873,38 @@ class GraphEditor( GafferUI.Editor ) :
 		return not graphGadget.getNodeOutputConnectionsMinimised( node )
 
 	@classmethod
-	def __setNodeOutputConnectionsVisible( cls, graphGadget, node, value ) :
+	def __setNodeOutputConnectionsVisible( cls, graphGadget, nodeList, value ) :
 
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			graphGadget.setNodeOutputConnectionsMinimised( node, not value )
+		with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
+			for node in nodeList :
+				graphGadget.setNodeOutputConnectionsMinimised( node, not value )
 
 	@classmethod
-	def __setValue( cls, plug, value ) :
+	def __setValue( cls, plugs, value ) :
 
-		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-			plug.setValue( value )
+		with Gaffer.UndoScope( plugs[0].ancestor( Gaffer.ScriptNode ) ) :
+			for p in plugs :
+				p.setValue( value )
+
+	@classmethod
+	def __acquireNodes( cls, nodeList ) :
+
+		for n in nodeList :
+			cls.acquire( n )
 
 	@staticmethod
 	def __childrenViewable( node ) :
 
+		viewable = Gaffer.Metadata.value( node, "ui:childNodesAreViewable" )
+		if viewable is not None :
+			return viewable
+
+		## \todo: Remove graphEditor fallback when all client code has been updated
 		viewable = Gaffer.Metadata.value( node, "graphEditor:childrenViewable" )
 		if viewable is not None :
 			return viewable
 
-		## \todo: Remove nodeGraph fallback when all client code has been updated
+		## \todo: Remove nodeGraph fallback for Gaffer 1.7
 		return Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" )
 
 	@staticmethod
@@ -830,3 +950,162 @@ class GraphEditor( GafferUI.Editor ) :
 		return enabledPlug
 
 GafferUI.Editor.registerType( "GraphEditor", GraphEditor )
+
+class _HistoryWidget( GafferUI.Widget ) :
+
+	def __init__( self, graphGadget, scriptNode, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		GafferUI.Widget.__init__( self, self.__row, **kw )
+
+		self.__graphGadget = graphGadget
+		self.__scriptNode = scriptNode
+
+		self.__rootChangedConnection = self.__graphGadget.rootChangedSignal().connectFront( Gaffer.WeakMethod( self.__rootChanged ), scoped = True )
+
+		with self.__row :
+			self.__backButton = GafferUI.Button( "", "historyBack.png", hasFrame = False, toolTip = "Go back. [<kbd>[</kbd>]<br>Right-click for history menu." )
+			self.__forwardButton = GafferUI.Button( "", "historyForward.png", hasFrame = False, toolTip = "Go forward. [<kbd>]</kbd>]<br>Right-click for history menu." )
+			self.__backButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPressed ) )
+			self.__backButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonPressed ) )
+			self.__forwardButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPressed ) )
+			self.__forwardButton.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonPressed ) )
+
+		# A list of tuples of the form `( rootNode, frame, scoped rootNode.parentChangedSignal() connection )`.
+		# A frame value of `None` indicates framing to fit all child nodes.
+		self.__history = [ ( self.__scriptNode, None, None ) ]
+		self.__historyIndex = 0
+		self.__historyPopup = None
+
+		self.__updateHistoryButtonsEnabled()
+
+	Direction = enum.Enum( "Direction", [ "Forward", "Back" ] )
+
+	# Moves forwards or backwards in the history. Returns `True`
+	# on success and `False` if there was nothing to navigate to.
+	def moveHistoryIndex( self, direction ) :
+
+		assert( isinstance( direction, self.Direction ) )
+		nextIndex = next( self.__navigableHistoryIndices( direction ), None )
+		if nextIndex is not None :
+			self.__setHistoryIndex( nextIndex )
+			return True
+
+		return False
+
+	def __buttonPressed( self, button, event ) :
+
+		direction = self.Direction.Forward if button is self.__forwardButton else self.Direction.Back
+
+		if event.buttons == event.Buttons.Left :
+			self.moveHistoryIndex( direction )
+		elif event.buttons == event.Buttons.Right :
+			self.__showHistoryPopup( direction, button )
+
+	def __historyNodeParentChanged( self, child, oldParent ) :
+
+		self.__updateHistoryButtonsEnabled()
+
+	def __createHistoryEntry( self, node ) :
+
+		return (
+			node,
+			_currentFrame( self.__graphGadget.parent() ),
+			node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__historyNodeParentChanged ), scoped = True )
+		)
+
+	def __rootChanged( self, graphGadget, previousRoot ) :
+
+		self.__history = self.__history[:self.__historyIndex + 1]
+		self.__history[self.__historyIndex]  = self.__createHistoryEntry( self.__history[self.__historyIndex][0] )
+
+		self.__history.append( ( graphGadget.getRoot(), None, None ) )
+		self.__historyIndex += 1
+		self.__frame()
+		self.__updateHistoryButtonsEnabled()
+
+	def __frame( self ) :
+
+		rootNode = self.__history[self.__historyIndex][0]
+		frame = None
+		for i in range( self.__historyIndex, -1, -1 ) :
+			historyNode, historyFrame, parentChangedConnection = self.__history[i]
+			if historyNode.isSame( rootNode ) and historyFrame is not None :
+				frame = historyFrame
+				break
+
+		graphEditor = self.ancestor( GafferUI.GraphEditor )
+		assert( graphEditor is not None )
+		if frame is not None :
+			graphEditor.graphGadgetWidget().getViewportGadget().frame(
+				imath.Box3f( imath.V3f( frame.min().x, frame.min().y, 0 ), imath.V3f( frame.max().x, frame.max().y, 0 ) )
+			)
+		else :
+			graphEditor.frame( graphEditor.graphGadget().getRoot().children( Gaffer.Node ) )
+
+	def __setHistoryIndex( self, index ) :
+
+		if index < 0 or index >= len( self.__history ) or index == self.__historyIndex :
+			return
+
+		self.__history[self.__historyIndex] = self.__createHistoryEntry( self.__history[self.__historyIndex][0] )
+
+		self.__historyIndex = index
+
+		graphEditor = self.ancestor( GafferUI.GraphEditor )
+		assert( graphEditor is not None )
+		rootNode = self.__history[self.__historyIndex][0]
+		if rootNode.isSame( self.__scriptNode ) or self.__scriptNode.isAncestorOf( rootNode ) :
+			with Gaffer.Signals.BlockedConnection( self.__rootChangedConnection ) :
+				# We're blocking `__rootChangedConnection` so we don't append to history.
+				# That connection also handles framing, so we need to take care of that here.
+				self.__frame()
+				self.__graphGadget.setRoot( rootNode )
+
+		self.__updateHistoryButtonsEnabled()
+
+	def __navigableHistoryIndices( self, direction ) :
+
+		increment = 1 if direction == self.Direction.Forward else -1
+		i = previousI = self.__historyIndex
+		while i >= 0 and i < len( self.__history ) :
+			if (
+				# Node not deleted
+				( self.__history[i][0].scriptNode() is not None ) and
+				# Node different from previous yield
+				( not self.__history[i][0].isSame( self.__history[previousI][0] ) )
+			) :
+				previousI = i
+				yield i
+			i += increment
+
+	def __showHistoryPopup(self, direction, popupParent ) :
+
+		menuDefinition = IECore.MenuDefinition()
+		prefix = "/"
+
+		for counter, i in enumerate( self.__navigableHistoryIndices( direction ) ) :
+			menuDefinition.append(
+				f"{prefix}{counter}",
+				{
+					"label" : ( "/" + self.__history[i][0].relativeName( self.__scriptNode ).replace( ".", "/" ) ) if not self.__history[i][0].isSame( self.__scriptNode ) else "/",
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setHistoryIndex ), i ),
+				}
+			)
+
+			if counter == 11 :
+				prefix = "/More/"
+				menuDefinition.append( "/Divider", { "divider" : True } )
+
+		self.__historyPopup = GafferUI.Menu( menuDefinition )
+		self.__historyPopup.popup( popupParent, position = imath.V2i( popupParent.bound().min().x, popupParent.bound().max().y ) )
+
+	def __updateHistoryButtonsEnabled( self ) :
+
+		self.__backButton.setEnabled(
+			next( self.__navigableHistoryIndices( self.Direction.Back ), None ) is not None
+		)
+		self.__forwardButton.setEnabled(
+			next( self.__navigableHistoryIndices( self.Direction.Forward ), None ) is not None
+		)

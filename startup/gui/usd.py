@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import Gaffer
 import GafferUSD
 
@@ -50,7 +51,17 @@ Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.texture:format", 
 # because they provide no control over property ordering.
 for i, parameter in enumerate( [
 	"aov", "aov_indirect", "portal_mode", "spread", "roundness", "soft_edge", "camera",
-	"transmission", "sss", "indirect", "volume", "max_bounces", "cast_volumetric_shadows",
-	"samples", "volume_samples", "resolution"
+	"transmission", "sss", "indirect", "volume", "max_bounces", "lens_radius", "aspect_ratio",
+	"cast_volumetric_shadows", "shadow_density", "samples", "volume_samples", "resolution"
 ] ) :
 	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.arnold:{parameter}", "layout:index", 1000 + i )
+
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters", "layout:activator:coneAngleEnabled", lambda plug : plug["shaping:cone:angle"]["enabled"].getValue() )
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.arnold:lens_radius", "layout:activator", "coneAngleEnabled" )
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.arnold:aspect_ratio", "layout:activator", "coneAngleEnabled" )
+
+# Change Cycles ordering.
+for i, parameter in enumerate( [
+	"use_mis", "use_caustics", "spread", "map_resolution", "max_bounces"
+] ) :
+	Gaffer.Metadata.registerValue( GafferUSD.USDLight, f"parameters.cycles:{parameter}", "layout:index", 2000 + i )

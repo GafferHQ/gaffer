@@ -267,6 +267,3 @@ class BookmarksTest( GafferUITest.TestCase ) :
 		b.addRecent( "/b/b" )
 
 		self.assertEqual( b.recents(), [ "/a/b", "/b/b" ] )
-
-if __name__ == "__main__":
-	unittest.main()

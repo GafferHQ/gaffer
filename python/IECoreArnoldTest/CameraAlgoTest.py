@@ -184,6 +184,8 @@ class CameraAlgoTest( unittest.TestCase ) :
 				camera.setFocalLengthFromFieldOfView( 45 * ( i + 1 ) )
 				camera.setAperture( imath.V2f( 10, 10 + i ) )
 				camera.setFStop( i + 1 )
+				## \todo Replace with camera.setDepthOfField( True ) once Cortex supports it
+				camera.parameters()["depthOfField"] = True
 				camera.setFocusDistance( i + 100 )
 				samples.append( camera )
 
@@ -283,14 +285,14 @@ class CameraAlgoTest( unittest.TestCase ) :
 
 			camera = IECoreScene.Camera()
 			camera.setProjection( "perspective" )
-			camera.parameters()["shutter_curve"] = IECore.Splineff(
-				IECore.CubicBasisf.linear(),
+			camera.parameters()["shutter_curve"] = IECore.Rampff(
 				[
 					( 0, -0.1 ),
 					( 0.25, 1 ),
 					( 0.75, 1.1 ),
 					( 1.1, 0 ),
 				],
+				IECore.RampInterpolation.Linear
 			)
 
 			node = IECoreArnold.NodeAlgo.convert( camera, universe, "camera" )
@@ -301,8 +303,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetVec2( curve, 2 ), arnold.AtVector2( 0.75, 1 ) )
 			self.assertEqual( arnold.AiArrayGetVec2( curve, 3 ), arnold.AtVector2( 1, 0 ) )
 
-			camera.parameters()["shutter_curve"] = IECore.Splineff(
-				IECore.CubicBasisf.catmullRom(),
+			camera.parameters()["shutter_curve"] = IECore.Rampff(
 				[
 					( 0, 0 ),
 					( 0, 0 ),
@@ -311,6 +312,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 					( 1, 0 ),
 					( 1, 0 ),
 				],
+				IECore.RampInterpolation.CatmullRom
 			)
 
 			node = IECoreArnold.NodeAlgo.convert( camera, universe, "camera" )
@@ -319,10 +321,31 @@ class CameraAlgoTest( unittest.TestCase ) :
 			for i in range( 0, 25 ) :
 				point = arnold.AiArrayGetVec2( curve, i )
 				self.assertAlmostEqual(
-					min( camera.parameters()["shutter_curve"].value( point.x ), 1 ),
+					min( camera.parameters()["shutter_curve"].value.evaluator()( point.x ), 1 ),
 					point.y,
 					delta = 0.0001
 				)
 
-if __name__ == "__main__":
-	unittest.main()
+	def testDepthOfField( self ) :
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			for depthOfField in [ True, False, None ] :
+				for fStop in [ 0.0, 2.5 ] :
+					with self.subTest( depthOfField = depthOfField, fStop = fStop ) :
+
+						c = IECoreScene.Camera(
+							parameters = {
+								"projection" : "perspective",
+								"focalLength" : 1 / ( 2.0 * math.tan( 0.5 * math.radians( 45 ) ) ),
+								"aperture" : imath.V2f( 2, 1 ),
+								"fStop" : fStop,
+							} | ( { "depthOfField" : depthOfField } if depthOfField is not None else {} )
+						)
+
+						n = IECoreArnold.NodeAlgo.convert( c, universe, "testCamera" )
+
+						if depthOfField and fStop > 0 :
+							self.assertGreater( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.01 )
+						else :
+							self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.0 )

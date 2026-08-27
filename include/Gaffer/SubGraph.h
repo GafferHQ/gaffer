@@ -41,6 +41,10 @@
 namespace Gaffer
 {
 
+/// > Caution : This is _not_ expected to be used as a base class for
+/// > custom nodes. Any Node can use an internal network without needing to
+/// > inherit from SubGraph. SubGraph is only intended for use when the user
+/// > will interact directly with the internal network.
 class GAFFER_API SubGraph : public DependencyNode
 {
 

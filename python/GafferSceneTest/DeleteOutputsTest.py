@@ -72,6 +72,3 @@ class DeleteOutputsTest( GafferSceneTest.SceneTestCase ) :
 
 		g = deleteOutputs["out"]["globals"].getValue()
 		self.assertFalse( "output:test" in g )
-
-if __name__ == "__main__":
-	unittest.main()

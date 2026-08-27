@@ -49,18 +49,18 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"enabled" : (
+		"enabled" : {
 
-			"description",
+			"description" :
 			"""
 			Turns the node on and off.
 			""",
 
-			"layout:index", -2, # Last but one
-			"layout:section", "Node",
-			"nodule:type", "",
+			"layout:index" : -2, # Last but one
+			"layout:section" : "Node",
+			"nodule:type" : "",
 
-		),
+		},
 
 	},
 

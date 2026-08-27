@@ -202,7 +202,10 @@ OutputBuffer::OutputBuffer( IECoreScenePreview::Renderer *renderer )
 			// approximation of depth at the centre of the pixel, which is important
 			// for accuracy in `SceneGadget::objectAt()`.
 			OutputDefinition( "depth", "float Z", "box" ),
-			OutputDefinition( "id", "uint id", "closest" ),
+			// The `IECoreImage::DisplayDriver` API only supports floats, and several
+			// renderers have deficiencies in rendering integer AOVs. So we declare
+			// `id` as a float AOV, and pass type-punned integers through it.
+			OutputDefinition( "id", "float id", "closest" ),
 		}
 	)
 	{

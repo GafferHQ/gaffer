@@ -88,6 +88,7 @@ void GafferImageModule::bindTransforms()
 			.value( "Format", Crop::Format )
 			.value( "DataWindow", Crop::DataWindow )
 			.value( "DisplayWindow", Crop::DisplayWindow )
+			.value( "Auto", Crop::Auto )
 		;
 	}
 

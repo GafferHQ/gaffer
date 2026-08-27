@@ -37,15 +37,17 @@
 
 #include "GafferScene/Shader.h"
 
+#include "GafferScene/ClosurePlug.h"
 #include "GafferScene/ShaderTweakProxy.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/SplinePlug.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/TypedPlug.h"
 
 #include "IECoreScene/ShaderNetwork.h"
@@ -59,6 +61,7 @@
 #include "fmt/compile.h"
 #include "fmt/format.h"
 
+#include <unordered_map>
 #include <unordered_set>
 
 using namespace std;
@@ -193,6 +196,8 @@ const IECore::InternedString g_outPlugName( "out" );
 const IECore::InternedString g_label( "label" );
 const IECore::InternedString g_gafferNodeName( "gaffer:nodeName" );
 const IECore::InternedString g_gafferNodeColor( "gaffer:nodeColor" );
+const IECore::InternedString g_nodeColorMetadataName( "nodeGadget:color" );
+const IECore::InternedString g_correspondingInputMetadataName( "correspondingInput" );
 
 struct OptionalScopedContext
 {
@@ -431,8 +436,12 @@ class Shader::NetworkBuilder
 			m_hasProxyNodes |= ShaderTweakProxy::isProxy( shader.get() );
 
 			const std::string nodeName = shaderNode->nodeNamePlug()->getValue();
+			/// \todo  Stop storing `label` and `gaffer:nodeName` metadata. It
+			/// was just used as a crutch until the SceneInspector could show
+			/// the history of the shader, which it now can. And either remove
+			/// `gaffer:nodeColor` metadata or update the SceneInspector to show
+			/// it again.
 			shader->blindData()->writable()[g_label] = new IECore::StringData( nodeName );
-			// \todo: deprecated, stop storing gaffer:nodeName after a grace period
 			shader->blindData()->writable()[g_gafferNodeName] = new IECore::StringData( nodeName );
 			shader->blindData()->writable()[g_gafferNodeColor] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
 
@@ -452,6 +461,10 @@ class Shader::NetworkBuilder
 		{
 			if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 			{
+				if( !parameter->parent<Node>() )
+				{
+					hashParameter( parameter, h );
+				}
 				// Compound parameter - recurse
 				for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 				{
@@ -477,6 +490,15 @@ class Shader::NetworkBuilder
 		{
 			if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 			{
+				if( !parameter->parent<Node>() )
+				{
+					// Needed to add top-level connections between OSL struct parameters.
+					/// \todo Refactor recursion so this happens more naturally, and so that
+					/// we don't redundantly store the connections between each field
+					/// of the struct as well.
+					addParameter( parameter, parameterName, shader, connections );
+				}
+
 				// Compound parameter - recurse
 				for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 				{
@@ -592,17 +614,17 @@ class Shader::NetworkBuilder
 					}
 				}
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplineffPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampffPlugTypeId )
 			{
-				hashSplineParameterComponentConnections< SplineffPlug >( (const SplineffPlug*)parameter, h );
+				hashRampParameterComponentConnections< RampffPlug >( (const RampffPlug*)parameter, h );
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor3fPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampfColor3fPlugTypeId )
 			{
-				hashSplineParameterComponentConnections< SplinefColor3fPlug >( (const SplinefColor3fPlug*)parameter, h );
+				hashRampParameterComponentConnections< RampfColor3fPlug >( (const RampfColor3fPlug*)parameter, h );
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor4fPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampfColor4fPlugTypeId )
 			{
-				hashSplineParameterComponentConnections< SplinefColor4fPlug >( (const SplinefColor4fPlug*)parameter, h );
+				hashRampParameterComponentConnections< RampfColor4fPlug >( (const RampfColor4fPlug*)parameter, h );
 			}
 			else if ( (Gaffer::TypeId)parameter->typeId() == ArrayPlugTypeId )
 			{
@@ -625,7 +647,7 @@ class Shader::NetworkBuilder
 		}
 
 		template< typename T >
-		void hashSplineParameterComponentConnections( const T *parameter, IECore::MurmurHash &h )
+		void hashRampParameterComponentConnections( const T *parameter, IECore::MurmurHash &h )
 		{
 			checkNoShaderInput( parameter->interpolationPlug() );
 
@@ -689,17 +711,17 @@ class Shader::NetworkBuilder
 					}
 				}
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplineffPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampffPlugTypeId )
 			{
-				addSplineParameterComponentConnections< SplineffPlug >( (const SplineffPlug*) parameter, parameterName, connections );
+				addRampParameterComponentConnections< RampffPlug >( (const RampffPlug*) parameter, parameterName, connections );
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor3fPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampfColor3fPlugTypeId )
 			{
-				addSplineParameterComponentConnections< SplinefColor3fPlug >( (const SplinefColor3fPlug*)parameter, parameterName, connections );
+				addRampParameterComponentConnections< RampfColor3fPlug >( (const RampfColor3fPlug*)parameter, parameterName, connections );
 			}
-			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor4fPlugTypeId )
+			else if( (Gaffer::TypeId)parameter->typeId() == RampfColor4fPlugTypeId )
 			{
-				addSplineParameterComponentConnections< SplinefColor4fPlug >( (const SplinefColor4fPlug*)parameter, parameterName, connections );
+				addRampParameterComponentConnections< RampfColor4fPlug >( (const RampfColor4fPlug*)parameter, parameterName, connections );
 			}
 			else if ( (Gaffer::TypeId)parameter->typeId() == ArrayPlugTypeId )
 			{
@@ -728,7 +750,7 @@ class Shader::NetworkBuilder
 		}
 
 		template< typename T >
-		void addSplineParameterComponentConnections( const T *parameter, const IECore::InternedString &parameterName, vector<IECoreScene::ShaderNetwork::Connection> &connections )
+		void addRampParameterComponentConnections( const T *parameter, const IECore::InternedString &parameterName, vector<IECoreScene::ShaderNetwork::Connection> &connections )
 		{
 			const int n = parameter->numPoints();
 			std::vector< std::tuple<int, std::string, IECoreScene::ShaderNetwork::Parameter> > inputs;
@@ -778,58 +800,18 @@ class Shader::NetworkBuilder
 				}
 			}
 
-			SplineDefinitionInterpolation interp = (SplineDefinitionInterpolation)parameter->interpolationPlug()->getValue();
-			int endPointDupes = 0;
-			// \todo : Need to duplicate the logic from SplineDefinition::endPointMultiplicity
-			// John requested an explicit notice that we are displeased by this duplication.
-			// Possible alternatives to this would be storing SplineDefinitionData instead of SplineData
-			// in the ShaderNetwork, or moving the handling of endpoint multiplicity inside Splineff
-			if( interp == SplineDefinitionInterpolationCatmullRom )
-			{
-				endPointDupes = 1;
-			}
-			else if( interp == SplineDefinitionInterpolationBSpline )
-			{
-				endPointDupes = 2;
-			}
-			else if( interp == SplineDefinitionInterpolationMonotoneCubic )
-			{
-				throw IECore::Exception(
-					"Cannot support monotone cubic interpolation for splines with inputs, for plug " + parameter->fullName()
-				);
-			}
-
-
 			for( const auto &[ origIndex, componentSuffix, sourceParameter ] : inputs )
 			{
 				int index = applySort[ origIndex ];
-				int outIndexMin, outIndexMax;
-				if( index == 0 )
-				{
-					outIndexMin = 0;
-					outIndexMax = endPointDupes;
-				}
-				else if( index == n - 1 )
-				{
-					outIndexMin = endPointDupes + n - 1;
-					outIndexMax = endPointDupes + n - 1 + endPointDupes;
-				}
-				else
-				{
-					outIndexMin = outIndexMax = index + endPointDupes;
-				}
 
-				for( int i = outIndexMin; i <= outIndexMax; i++ )
-				{
-					IECore::InternedString inputName = fmt::format(
-						FMT_COMPILE( "{}[{}].y{}" ),
-						parameterName.string(), i, componentSuffix
-					);
-					connections.push_back( {
-						sourceParameter,
-						{ IECore::InternedString(), inputName }
-					} );
-				}
+				IECore::InternedString inputName = fmt::format(
+					FMT_COMPILE( "{}[{}].y{}" ),
+					parameterName.string(), index, componentSuffix
+				);
+				connections.push_back( {
+					sourceParameter,
+					{ IECore::InternedString(), inputName }
+				} );
 			}
 		}
 
@@ -855,8 +837,6 @@ class Shader::NetworkBuilder
 //////////////////////////////////////////////////////////////////////////
 // Shader implementation
 //////////////////////////////////////////////////////////////////////////
-
-static IECore::InternedString g_nodeColorMetadataName( "nodeGadget:color" );
 
 GAFFER_NODE_DEFINE_TYPE( Shader );
 
@@ -1065,6 +1045,49 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 	}
 }
 
+Gaffer::Plug *Shader::correspondingInput( const Gaffer::Plug *output )
+{
+	// Better to do a few harmless casts than manage a duplicate implementation.
+	return const_cast<Gaffer::Plug *>(
+		const_cast<const Shader *>( this )->correspondingInput( output )
+	);
+}
+
+const Gaffer::Plug *Shader::correspondingInput( const Gaffer::Plug *output ) const
+{
+	if( auto *out = outPlug() )
+	{
+		if( out->isAncestorOf( output ) )
+		{
+			string metadataTarget;
+			try
+			{
+				metadataTarget = fmt::format(
+					"{}:{}:{}", typePlug()->getValue(), namePlug()->getValue(), output->relativeName( out )
+				);
+			}
+			catch( const Gaffer::ProcessException & )
+			{
+				// Exception computing plug value. The UI will display this for
+				// us, so we can just ignore it.
+				return nullptr;
+			}
+			IECore::ConstStringDataPtr metadata = Metadata::value<const IECore::StringData>( metadataTarget, g_correspondingInputMetadataName );
+			if( metadata )
+			{
+				const Plug *result = parametersPlug()->getChild<Plug>( metadata->readable() );
+				if( !result )
+				{
+					IECore::msg( IECore::Msg::Error, "Shader::correspondingInput", fmt::format( "Parameter \"{}\" does not exist", metadata->readable() ) );
+				}
+				return result;
+			}
+		}
+	}
+
+	return ComputeNode::correspondingInput( output );
+}
+
 void Shader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
 	// A base shader doesn't know anything about what sort of parameters you might want to load.
@@ -1103,9 +1126,7 @@ void Shader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	{
 		if( output == o || o->isAncestorOf( output ) )
 		{
-			ComputeNode::hash( output, context, h );
-			namePlug()->hash( h );
-			typePlug()->hash( h );
+			h = output->defaultHash();
 			return;
 		}
 	}
@@ -1161,18 +1182,20 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHas
 
 IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug ) const
 {
+	const ValuePlug *valuePlug = nullptr;
 	if( auto optionalValuePlug = IECore::runTimeCast<const OptionalValuePlug>( parameterPlug ) )
 	{
 		if( optionalValuePlug->enabledPlug()->getValue() )
 		{
-			return Gaffer::PlugAlgo::getValueAsData( optionalValuePlug->valuePlug() );
-		}
-		else
-		{
-			return nullptr;
+			valuePlug = optionalValuePlug->valuePlug();
 		}
 	}
-	else if( auto valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
+	else
+	{
+		valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug );
+	}
+
+	if( valuePlug && !IECore::runTimeCast<const ClosurePlug>( valuePlug ) )
 	{
 		return Gaffer::PlugAlgo::getValueAsData( valuePlug );
 	}

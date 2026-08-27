@@ -47,6 +47,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.PlugValueWidget import sole
 from . import MetadataWidget
 
 ## The UIEditor class allows the user to edit the interfaces for nodes.
@@ -175,28 +176,32 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		return self.__plugTab
 
 	@classmethod
-	def appendNodeContextMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+	def appendNodeContextMenuDefinitions( cls, graphEditor, nodeList, menuDefinition ) :
 
 		menuDefinition.append( "/UIEditorDivider", { "divider" : True } )
 		menuDefinition.append(
 			"/Set Color...",
 			{
-				"command" : functools.partial( cls.__setColor, node = node ),
-				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+				"command" : functools.partial( cls.__setColor, nodeList = nodeList ),
+				"active" : not any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList ),
+				"shortCut" : "C",
 			}
 		)
 
-		nodeGadgetTypes = Gaffer.Metadata.value( node, "uiEditor:nodeGadgetTypes" )
-		if nodeGadgetTypes :
-			nodeGadgetTypes = set( nodeGadgetTypes )
-			if nodeGadgetTypes == { "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" } :
-				nodeGadgetType = Gaffer.Metadata.value( node, "nodeGadget:type" ) or "GafferUI::StandardNodeGadget"
+		nodeGadgetTypes = set().union( *( Gaffer.Metadata.value( n, "uiEditor:nodeGadgetTypes" ) or { None } for n in nodeList ) )
+
+		if nodeGadgetTypes != { None } :
+			if (
+				nodeGadgetTypes == { "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" } or
+				nodeGadgetTypes == { None, "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" }
+			) :
+				nodeGadgetType = sole( Gaffer.Metadata.value( n, "nodeGadget:type" ) or "GafferUI::StandardNodeGadget" for n in nodeList )
 				menuDefinition.append(
 					"/Show Name",
 					{
-						"command" : functools.partial( cls.__setNameVisible, node ),
-						"checkBox" : nodeGadgetType == "GafferUI::StandardNodeGadget",
-						"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+						"command" : functools.partial( cls.__setNameVisible, nodeList ),
+						"checkBox" : None not in nodeGadgetTypes and nodeGadgetType == "GafferUI::StandardNodeGadget",
+						"active" : not any( Gaffer.MetadataAlgo.readOnly( n ) for n in nodeList ) and None not in nodeGadgetTypes
 					}
 				)
 			else :
@@ -271,6 +276,14 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			lambda plug : widgetClass( key, target=plug, defaultValue=defaultValue )
 		)
 
+	@classmethod
+	def connectToEditor( cls, editor ) :
+
+		if not isinstance( editor, GafferUI.GraphEditor ) :
+			return
+
+		editor.keyPressSignal().connect( Gaffer.WeakMethod( cls.__graphEditorKeyPress ) )
+
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
@@ -332,23 +345,34 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		return "GafferUI.UIEditor( scriptNode )"
 
 	@classmethod
-	def __setColor( cls, menu, node ) :
+	def __setColor( cls, menu, nodeList ) :
 
-		color = Gaffer.Metadata.value( node, "nodeGadget:color" ) or imath.Color3f( 1 )
+		color = Gaffer.Metadata.value( nodeList[-1], "nodeGadget:color" ) or imath.Color3f( 1 )
 		dialogue = GafferUI.ColorChooserDialogue( color = color, displayTransform = GafferUI.Widget.identityDisplayTransform )
 		color = dialogue.waitForColor( parentWindow = menu.ancestor( GafferUI.Window ) )
 		if color is not None :
-			with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-				Gaffer.Metadata.registerValue( node, "nodeGadget:color", color )
+			with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
+				for node in nodeList :
+					Gaffer.Metadata.registerValue( node, "nodeGadget:color", color )
+
+	@classmethod
+	def __graphEditorKeyPress( cls, graphEditor, event ) :
+
+		selection = [ n for n in graphEditor.scriptNode().selection() if n.parent() == graphEditor.graphGadget().getRoot() ]
+		if event.key == "C" and event.modifiers == event.Modifiers.None_ :
+			if selection and not any( Gaffer.MetadataAlgo.readOnly( n ) for n in selection ) :
+				cls.__setColor( graphEditor, selection )
+			return True
 
 	@staticmethod
-	def __setNameVisible( node, nameVisible ) :
+	def __setNameVisible( nodeList, nameVisible ) :
 
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.Metadata.registerValue(
-				node, "nodeGadget:type",
-				"GafferUI::StandardNodeGadget" if nameVisible else "GafferUI::AuxiliaryNodeGadget"
-			)
+		with Gaffer.UndoScope( nodeList[0].ancestor( Gaffer.ScriptNode ) ) :
+			for node in nodeList :
+				Gaffer.Metadata.registerValue(
+					node, "nodeGadget:type",
+					"GafferUI::StandardNodeGadget" if nameVisible else "GafferUI::AuxiliaryNodeGadget"
+				)
 
 GafferUI.Editor.registerType( "UIEditor", UIEditor )
 
@@ -946,6 +970,8 @@ class _PlugListing( GafferUI.Widget ) :
 
 		return False
 
+	## \todo Can we replace this with PlugCreationWidget? The main obstacle is the additional
+	# work we're doing in `__addPlug`.
 	def __addMenuDefinition( self ) :
 
 		m = IECore.MenuDefinition()

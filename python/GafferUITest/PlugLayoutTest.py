@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -80,6 +82,27 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertEqual(
 			GafferUI.PlugLayout.layoutOrder( n["user"] ),
 			[ n["user"]["c"], n["user"]["b"], n["user"]["a"] ],
+		)
+
+	def testExplicitIndexWins( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["a"] = Gaffer.IntPlug()
+		n["user"]["b"] = Gaffer.IntPlug()
+		n["user"]["c"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["user"]["b"], "layout:index", 0 )
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"] ),
+			[ n["user"]["b"], n["user"]["a"], n["user"]["c"] ],
+		)
+
+		Gaffer.Metadata.registerValue( n["user"]["a"], "layout:index", -1 )
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"] ),
+			[ n["user"]["b"], n["user"]["c"], n["user"]["a"] ],
 		)
 
 	class CustomWidget( GafferUI.Widget ) :
@@ -211,6 +234,7 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 				self["b"] = Gaffer.BoolPlug()
 				self["s"] = Gaffer.StringPlug()
+				self["s2"] = Gaffer.StringPlug()
 
 				self["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
 				self["out"].setInput( self["s"] )
@@ -230,6 +254,11 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 					"layout:activator", "bIsOn",
 
+				],
+				"s2" : [
+
+					"layout:activator", lambda plug : plug.parent()["b"].getValue()
+
 				]
 
 			},
@@ -247,9 +276,11 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 		l = GafferUI.PlugLayout( s["n"] )
 		self.assertEqual( l.plugValueWidget( s["n"]["s"] ).enabled(), False )
+		self.assertEqual( l.plugValueWidget( s["n"]["s2"] ).enabled(), False )
 
 		p["value"].setValue( True )
 		self.assertEqual( l.plugValueWidget( s["n"]["s"] ).enabled(), True )
+		self.assertEqual( l.plugValueWidget( s["n"]["s2"] ).enabled(), True )
 
 		# When a node is focussed, the layout should use the tracked context
 		# instead of the script context.
@@ -266,11 +297,13 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 			s.setFocus( s["contextVariables"] )
 
 		self.assertFalse( l.plugValueWidget( s["n"]["s"] ).enabled() )
+		self.assertFalse( l.plugValueWidget( s["n"]["s2"] ).enabled() )
 
 		with GafferUITest.ContextTrackerTest.UpdateHandler() :
 			s.setFocus( s["stringIO"] )
 
 		self.assertTrue( l.plugValueWidget( s["n"]["s"] ).enabled() )
+		self.assertTrue( l.plugValueWidget( s["n"]["s2"] ).enabled() )
 
 	def testMultipleLayouts( self ) :
 
@@ -312,5 +345,140 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( l.plugValueWidget( n["p1"] ) is None )
 		self.assertTrue( l.plugValueWidget( n["p2"] ) is not None )
 
-if __name__ == "__main__":
-	unittest.main()
+	def testFilterFunction( self ) :
+
+		n = Gaffer.Node()
+
+		n["i"] = Gaffer.IntPlug()
+		n["i2"] = Gaffer.IntPlug()
+		n["f"] = Gaffer.FloatPlug()
+		Gaffer.Metadata.registerValue( n, "layout:customWidget:test:widgetType", "GafferUITest.PlugLayoutTest.CustomWidget" )
+
+		with GafferUI.Window() as w :
+			l = GafferUI.PlugLayout( n )
+
+		w.setVisible( True )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+		def intFilterFunction( plug ) :
+			self.assertIsInstance( plug, Gaffer.Plug )
+			return plug.typeId() == Gaffer.IntPlug.staticTypeId()
+
+		l.setFilter( "a", intFilterFunction )
+		self.assertEqual( l.getFilter( "a" ), intFilterFunction )
+
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
+		self.assertFalse( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+		def iNameFilterFunction( plug ) :
+			self.assertIsInstance( plug, Gaffer.Plug )
+			return plug.getName() == "i"
+
+		l.setFilter( "b", iNameFilterFunction )
+		self.assertEqual( l.getFilter( "b" ), iNameFilterFunction )
+
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertFalse( l.plugValueWidget( n["i2"] ).visible() )
+		self.assertFalse( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+		l.removeFilter( "b" )
+		self.assertIsNone( l.getFilter( "b" ) )
+
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
+		self.assertFalse( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+		l.removeFilter( "a" )
+		self.assertIsNone( l.getFilter( "a" ) )
+
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( l.plugValueWidget( n["i"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["i2"] ).visible() )
+		self.assertTrue( l.plugValueWidget( n["f"] ).visible() )
+		self.assertTrue( l.customWidget( "test" ).visible() )
+
+	def testWidthMetadata( self ) :
+
+		n = Gaffer.Node()
+		n["withLabel"] = Gaffer.IntPlug()
+		n["withoutLabel"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["withLabel"], "layout:width", 100 )
+		Gaffer.Metadata.registerValue( n["withoutLabel"], "layout:width", 100 )
+		Gaffer.Metadata.registerValue( n["withoutLabel"], "label", "" )
+
+		l = GafferUI.PlugLayout( n, orientation = GafferUI.ListContainer.Orientation.Horizontal )
+
+		withLabel = l.plugValueWidget( n["withLabel"] )
+		self.assertEqual( withLabel._qtWidget().minimumWidth(), 100 )
+		self.assertEqual( withLabel._qtWidget().maximumWidth(), 100 )
+
+		plugWidget = withLabel.ancestor( GafferUI.PlugWidget )
+		self.assertIsNotNone( plugWidget )
+		self.assertNotEqual( plugWidget._qtWidget().maximumWidth(), 100 )
+
+		withoutLabel = l.plugValueWidget( n["withoutLabel"] )
+		self.assertIsNone( withoutLabel.ancestor( GafferUI.PlugWidget ) )
+		self.assertEqual( withoutLabel._qtWidget().minimumWidth(), 100 )
+		self.assertEqual( withoutLabel._qtWidget().maximumWidth(), 100 )
+
+	def testWidthMetadataMaintainedByRelayout( self ) :
+
+		n = Gaffer.Node()
+		n["withLabel"] = Gaffer.IntPlug()
+		n["withoutLabel"] = Gaffer.IntPlug()
+		n["other"] = Gaffer.IntPlug()
+
+		Gaffer.Metadata.registerValue( n["withLabel"], "layout:width", 100 )
+		Gaffer.Metadata.registerValue( n["withoutLabel"], "label", "" )
+
+		l = GafferUI.PlugLayout( n, orientation = GafferUI.ListContainer.Orientation.Horizontal )
+
+		withLabel = l.plugValueWidget( n["withLabel"] )
+		withLabelPlugWidget = withLabel.ancestor( GafferUI.PlugWidget )
+		self.assertIsNotNone( withLabelPlugWidget )
+
+		self.assertEqual( withLabel._qtWidget().minimumWidth(), 100 )
+		self.assertEqual( withLabel._qtWidget().maximumWidth(), 100 )
+
+		plugWidgetMin = withLabelPlugWidget._qtWidget().minimumWidth()
+		plugWidgetMax = withLabelPlugWidget._qtWidget().maximumWidth()
+		self.assertLess( plugWidgetMin, 100 )
+		self.assertGreater( plugWidgetMax, 100 )
+
+		# A width change on any plug causes an update of the entire PlugLayout,
+		# reusing the existing widgets. Ensure widths are applied to the same
+		# widgets they were applied to originally.
+
+		Gaffer.Metadata.registerValue( n["other"], "layout:width", 50 )
+		Gaffer.Metadata.registerValue( n["withoutLabel"], "layout:width", 50 )
+
+		self.assertIs( l.plugValueWidget( n["withLabel"] ), withLabel )
+		self.assertEqual( withLabel._qtWidget().minimumWidth(), 100 )
+		self.assertEqual( withLabel._qtWidget().maximumWidth(), 100 )
+		self.assertEqual( withLabelPlugWidget._qtWidget().minimumWidth(), plugWidgetMin )
+		self.assertEqual( withLabelPlugWidget._qtWidget().maximumWidth(), plugWidgetMax )
+
+		withoutLabel = l.plugValueWidget( n["withoutLabel"] )
+		self.assertIsNone( withoutLabel.ancestor( GafferUI.PlugWidget ) )
+		self.assertEqual( withoutLabel._qtWidget().minimumWidth(), 50 )
+		self.assertEqual( withoutLabel._qtWidget().maximumWidth(), 50 )
+
+		other = l.plugValueWidget( n["other"] )
+		self.assertEqual( other._qtWidget().minimumWidth(), 50 )
+		self.assertEqual( other._qtWidget().maximumWidth(), 50 )

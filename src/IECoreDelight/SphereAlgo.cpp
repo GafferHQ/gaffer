@@ -48,7 +48,7 @@ using namespace IECoreDelight;
 namespace
 {
 
-bool convert( const IECoreScene::SpherePrimitive *object, NSIContext_t context, const char *handle )
+bool convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::SpherePrimitive *> &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "particles", 0, nullptr );
 
@@ -64,7 +64,7 @@ bool convert( const IECoreScene::SpherePrimitive *object, NSIContext_t context, 
 		NSIParamPerVertex
 	} );
 
-	const float width = object->radius() * 2;
+	const float width = samples[0]->radius() * 2;
 	parameters.add( {
 		"width",
 		&width,

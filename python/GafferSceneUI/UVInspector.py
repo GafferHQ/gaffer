@@ -50,7 +50,7 @@ class UVInspector( GafferSceneUI.SceneEditor ) :
 		GafferSceneUI.SceneEditor.__init__( self, column, scriptNode, **kw )
 
 		self.__uvView = GafferSceneUI.UVView( scriptNode )
-		self.__uvView["in"].setInput( self.settings()["in"] )
+		self.__uvView["in"].setInput( self.settings()["__adaptedIn"] )
 		Gaffer.NodeAlgo.applyUserDefaults( self.__uvView )
 
 		with column :
@@ -120,15 +120,15 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"textureFileName" : [
+		"textureFileName" : {
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "image",
-			"fileSystemPath:extensions", " ".join( GafferImage.ImageReader.supportedExtensions() ),
-			"fileSystemPath:extensionsLabel", "Show only image files",
+			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf" : True,
+			"path:bookmarks" : "image",
+			"fileSystemPath:extensions" : " ".join( GafferImage.ImageReader.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel" : "Show only image files",
 
-		],
+		},
 
 	}
 

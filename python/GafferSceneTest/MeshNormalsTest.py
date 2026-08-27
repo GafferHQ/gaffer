@@ -102,9 +102,7 @@ class MeshNormalsTest( GafferSceneTest.SceneTestCase ) :
 		source["object"].setValue( IECoreScene.MeshAlgo.triangulate( sourceMesh ) )
 		triangulatedM = meshNormals["out"].object( "/object" )
 		for n, p in zip( triangulatedM["N"].data, triangulatedM["P"].data ):
-			self.assertAlmostEqual( n[0], p.normalized()[0], places = 6 )
-			self.assertAlmostEqual( n[1], p.normalized()[1], places = 6 )
-			self.assertAlmostEqual( n[2], p.normalized()[2], places = 6 )
+			self.assertEqualWithAbsError( n, p.normalized(), 1e-6 )
 
 		# Try out the naive "equal weighting" mode on the triangulated mesh, which yields ugly results
 		meshNormals["weighting"].setValue( IECoreScene.MeshAlgo.NormalWeighting.Equal )
@@ -119,5 +117,16 @@ class MeshNormalsTest( GafferSceneTest.SceneTestCase ) :
 				sortedVec.equalWithRelError( imath.V3f( 1, 2, 2 ).normalized(), 1e-7 )
 			)
 
-if __name__ == "__main__":
-	unittest.main()
+	def testEmptyString( self ) :
+
+		cube = GafferScene.Cube()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		meshNormals = GafferScene.MeshNormals()
+		meshNormals["in"].setInput( cube["out"] )
+		meshNormals["filter"].setInput( cubeFilter["out"] )
+		meshNormals["normal"].setValue( "" )
+
+		self.assertEqual( meshNormals["out"].object( "/cube" ), meshNormals["in"].object( "/cube" ) )

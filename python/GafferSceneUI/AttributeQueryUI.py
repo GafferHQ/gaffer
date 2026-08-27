@@ -41,6 +41,10 @@ import imath
 
 from GafferSceneUI._GafferSceneUI import __showSetupMenu as showSetupMenu
 
+## \todo Replace with PlugCreationWidget, figuring out how that relates to
+# the menu on the PlugAdder used in the GraphEditor. Do we want to have menus
+# on all PlugAdders? Should PlugAdder and PlugCreationWidget be driven by
+# the same metadata?
 class _SetupButton( GafferUI.Widget ) :
 
 	def __init__( self, node ) :
@@ -91,84 +95,85 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"scene" : [
+		"scene" : {
 
-			"description",
+			"description" :
 			"""
 			The scene to query the attribute for.
 			"""
 
-		],
+		},
 
-		"location" : [
+		"location" : {
 
-			"description",
+			"description" :
 			"""
 			The location within the scene to query the attribute at.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
 			""",
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", ""
+			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene" : "scene",
+			"nodule:type" : ""
 
-		],
+		},
 
-		"attribute" : [
+		"attribute" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the attribute to query.
 			> Note : If the attribute does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
 			""",
 
-			"nodule:type", ""
+			"nodule:type" : ""
 
-		],
+		},
 
-		"inherit" : [
+		"inherit" : {
 
-			"description",
+			"description" :
 			"""
-			Should inherited attributes or be considered or not.
+			When on, the query includes attributes inherited from ancestor locations
+			and the scene globals if a local attribute is not found.
 			""",
 
-			"nodule:type", ""
+			"nodule:type" : ""
 
-		],
+		},
 
-		"default" : [
+		"default" : {
 
-			"description",
+			"description" :
 			"""
 			Default value to use if attribute or location does not exist.
 			"""
 
-		],
+		},
 
-		"exists" : [
+		"exists" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs true if both attribute and location exist, otherwise false.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
-		"value" : [
+		"value" : {
 
-			"description",
+			"description" :
 			"""
 			Outputs the value of the specified attribute.
 			""",
 
-			"layout:section", "Settings.Outputs"
+			"layout:section" : "Settings.Outputs"
 
-		],
+		},
 
 	}
 )

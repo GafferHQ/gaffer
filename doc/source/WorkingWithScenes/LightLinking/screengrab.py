@@ -6,6 +6,7 @@
 # BuildTarget: images/interfaceLinkedLightsPlug.png
 # BuildTarget: images/taskLightLinkingSetExpressionLocation.png
 # BuildTarget: images/taskLightLinkingSetExpressionSet.png
+# BuildTarget: images/taskLightLinkingExclusionsSetExpression.png
 
 import imath
 import IECore
@@ -32,7 +33,9 @@ script["StandardAttributes"] = GafferScene.StandardAttributes()
 script["StandardAttributes"]["in"].setInput( script["Group"]["out"] )
 script["StandardAttributes"]["filter"].setInput( script["PathFilter"]["out"] )
 script["StandardAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
-script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "/group/light" )
+script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "defaultLights" )
+script["StandardAttributes"]["attributes"]["linkedLights:exclusions"]["enabled"].setValue( True )
+script["StandardAttributes"]["attributes"]["linkedLights:exclusions"]["value"].setValue( "/group/light" )
 script.addChild( script["Sphere"] )
 script.addChild( script["Light"] )
 script.addChild( script["Group"] )
@@ -48,43 +51,36 @@ GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/interfa
 nodeEditorWindow.parent().close()
 del nodeEditorWindow
 
-# Interface: the linkedLights attribute in the Scene Inspector
+# Interface: the linkedLights and linkedLights:exclusions attributes in the Scene Inspector
 script.selection().clear()
 script.selection().add( script["StandardAttributes"] )
 __path = "/group/sphere"
 __paths = IECore.PathMatcher( [ __path ] )
 GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, __paths )
 
-from GafferSceneUI.SceneInspector import __AttributesSection
+with GafferUI.Window( "Property" ) as window :
 
-for imageName, sectionClass in [
-	( "LinkedLightsAttribute.png", __AttributesSection )
-] :
+	sceneInspector = GafferSceneUI.SceneInspector( script )
+	sceneInspector.setNodeSet( Gaffer.StandardSet( [ script["StandardAttributes"] ] ) )
+	sceneInspector._SceneInspector__locationPathListing.setExpansion( IECore.PathMatcher( [ "/Location", "/Location/Attributes/..." ] ) )
 
-	section = sectionClass()
-	section._Section__collapsible.setCollapsed( False )
+window._qtWidget().resize( 400, 300 )
+window.setVisible( True )
 
-	with GafferUI.Window( "Property" ) as window :
+GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/interfaceLinkedLightsAttribute.png" )
 
-		sceneInspector = GafferSceneUI.SceneInspector( script, sections = [ section ] )
-		sceneInspector.setNodeSet( Gaffer.StandardSet( [ script["StandardAttributes"] ] ) )
-		sceneInspector.setTargetPaths( [ __path ] )
+window.close()
 
-	window.resizeToFitChild()
-	window.setVisible( True )
-
-	GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/interface" + imageName )
-
-	window.close()
-	del window
+script["StandardAttributes"]["attributes"]["linkedLights:exclusions"]["enabled"].setValue( False )
+script["StandardAttributes"]["attributes"]["linkedLights:exclusions"]["value"].setValue( "" )
 
 # Interface: a StandardAttributes node downstream of an object node
 script.selection().clear()
 graphEditor.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/interfaceLightLinkSetupGraphEditor.png" )
 
-# Interface: the empty Linked Lights plug of a StandardAttributes node in the Node Editor
-script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "" )
+# Interface: the Linked Lights plug of a StandardAttributes node in the Node Editor
+script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "defaultLights" )
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["StandardAttributes"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
 GafferUI.PlugValueWidget.acquire( script["StandardAttributes"]["attributes"]["linkedLights"] )
@@ -124,5 +120,16 @@ script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "m
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["StandardAttributes"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/taskLightLinkingSetExpressionSet.png" )
+nodeEditorWindow.parent().close()
+del nodeEditorWindow
+
+# Task: the light linking exclusions set expression
+script["StandardAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( False )
+script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "defaultLights" )
+script["StandardAttributes"]["attributes"]["linkedLights:exclusions"]["enabled"].setValue( True )
+script["StandardAttributes"]["attributes"]["linkedLights:exclusions"]["value"].setValue( "myLights" )
+nodeEditorWindow = GafferUI.NodeEditor.acquire( script["StandardAttributes"], floating = True )
+nodeEditorWindow._qtWidget().setFocus()
+GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/taskLightLinkingExclusionsSetExpression.png" )
 nodeEditorWindow.parent().close()
 del nodeEditorWindow

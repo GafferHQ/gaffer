@@ -38,14 +38,12 @@
 import pathlib
 import inspect
 import unittest
-import subprocess
 import threading
 
 import arnold
 import imath
 
 import IECore
-import IECoreImage
 import IECoreScene
 import IECoreArnold
 
@@ -63,6 +61,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "Arnold"
 	sceneDescriptionSuffix = ".ass"
+	pointInstancerSupported = True
 
 	def setUp( self ) :
 
@@ -102,8 +101,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["filter"]["setExpression"].setValue( "hidden" )
 
 		s["attributes"] = GafferScene.StandardAttributes()
-		s["attributes"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["attributes"]["attributes"]["visibility"]["value"].setValue( False )
+		s["attributes"]["attributes"]["scene:visible"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["scene:visible"]["value"].setValue( False )
 		s["attributes"]["filter"].setInput( s["filter"]["out"] )
 		s["attributes"]["in"].setInput( s["sphere"]["out"] )
 
@@ -190,13 +189,13 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["attributes"] = GafferScene.StandardAttributes()
 		s["attributes"]["in"].setInput( s["group"]["out"] )
 		s["attributes"]["filter"].setInput( s["planeFilter"]["out"] )
-		s["attributes"]["attributes"]["transformBlur"]["enabled"].setValue( True )
-		s["attributes"]["attributes"]["transformBlur"]["value"].setValue( False )
+		s["attributes"]["attributes"]["gaffer:transformBlur"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["gaffer:transformBlur"]["value"].setValue( False )
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["attributes"]["out"] )
-		s["options"]["options"]["shutter"]["enabled"].setValue( True )
-		s["options"]["options"]["transformBlur"]["enabled"].setValue( True )
+		s["options"]["options"]["render:shutter"]["enabled"].setValue( True )
+		s["options"]["options"]["render:transformBlur"]["enabled"].setValue( True )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
@@ -206,7 +205,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		# No motion blur
 
-		s["options"]["options"]["transformBlur"]["value"].setValue( False )
+		s["options"]["options"]["render:transformBlur"]["value"].setValue( False )
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
@@ -244,7 +243,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		# Motion blur
 
-		s["options"]["options"]["transformBlur"]["value"].setValue( True )
+		s["options"]["options"]["render:transformBlur"]["value"].setValue( True )
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
@@ -350,10 +349,10 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["camera"]["out"] )
-		s["options"]["options"]["renderResolution"]["enabled"].setValue( True )
-		s["options"]["options"]["renderResolution"]["value"].setValue( imath.V2i( 200, 100 ) )
-		s["options"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
-		s["options"]["options"]["resolutionMultiplier"]["value"].setValue( 2 )
+		s["options"]["options"]["render:resolution"]["enabled"].setValue( True )
+		s["options"]["options"]["render:resolution"]["value"].setValue( imath.V2i( 200, 100 ) )
+		s["options"]["options"]["render:resolutionMultiplier"]["enabled"].setValue( True )
+		s["options"]["options"]["render:resolutionMultiplier"]["value"].setValue( 2 )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
@@ -374,8 +373,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		# As should a camera picked from the scene.
 
-		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
@@ -393,8 +392,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["camera"]["out"] )
-		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
@@ -417,8 +416,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Apply Crop Window
-		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCropWindow"]["value"].setValue( imath.Box2f( imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 1.0 ) ) )
+		s["options"]["options"]["render:cropWindow"]["enabled"].setValue( True )
+		s["options"]["options"]["render:cropWindow"]["value"].setValue( imath.Box2f( imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 1.0 ) ) )
 
 		s["render"]["task"].execute()
 
@@ -434,7 +433,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Test Empty Crop Window
-		s["options"]["options"]["renderCropWindow"]["value"].setValue( imath.Box2f() )
+		s["options"]["options"]["render:cropWindow"]["value"].setValue( imath.Box2f() )
 
 		s["render"]["task"].execute()
 
@@ -452,17 +451,17 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Apply Overscan
-		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( False )
-		s["options"]["options"]["overscan"]["enabled"].setValue( True )
-		s["options"]["options"]["overscan"]["value"].setValue( True )
-		s["options"]["options"]["overscanTop"]["enabled"].setValue( True )
-		s["options"]["options"]["overscanTop"]["value"].setValue( 0.1 )
-		s["options"]["options"]["overscanBottom"]["enabled"].setValue( True )
-		s["options"]["options"]["overscanBottom"]["value"].setValue( 0.2 )
-		s["options"]["options"]["overscanLeft"]["enabled"].setValue( True )
-		s["options"]["options"]["overscanLeft"]["value"].setValue( 0.3 )
-		s["options"]["options"]["overscanRight"]["enabled"].setValue( True )
-		s["options"]["options"]["overscanRight"]["value"].setValue( 0.4 )
+		s["options"]["options"]["render:cropWindow"]["enabled"].setValue( False )
+		s["options"]["options"]["render:overscan"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscan"]["value"].setValue( True )
+		s["options"]["options"]["render:overscanTop"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscanTop"]["value"].setValue( 0.1 )
+		s["options"]["options"]["render:overscanBottom"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscanBottom"]["value"].setValue( 0.2 )
+		s["options"]["options"]["render:overscanLeft"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscanLeft"]["value"].setValue( 0.3 )
+		s["options"]["options"]["render:overscanRight"]["enabled"].setValue( True )
+		s["options"]["options"]["render:overscanRight"]["value"].setValue( 0.4 )
 
 		s["render"]["task"].execute()
 
@@ -482,8 +481,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s = Gaffer.ScriptNode()
 
 		s["options"] = GafferScene.StandardOptions()
-		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCamera"]["value"].setValue( "/i/dont/exist" )
+		s["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["options"]["options"]["render:camera"]["value"].setValue( "/i/dont/exist" )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["options"]["out"] )
@@ -643,8 +642,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 					c.setFrame( frame )
 
-					options["options"]["aaSeed"]["enabled"].setValue( seed is not None )
-					options["options"]["aaSeed"]["value"].setValue( seed or 1 )
+					options["options"]["ai:AA_seed"]["enabled"].setValue( seed is not None )
+					options["options"]["ai:AA_seed"]["value"].setValue( seed or 1 )
 
 					render["task"].execute()
 
@@ -682,8 +681,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		def a() :
 
 			result = GafferArnold.ArnoldAttributes()
-			result["attributes"]["matte"]["enabled"].setValue( True )
-			result["attributes"]["matte"]["value"].setValue( True )
+			result["attributes"]["ai:matte"]["enabled"].setValue( True )
+			result["attributes"]["ai:matte"]["value"].setValue( True )
 
 			return result
 
@@ -739,8 +738,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		attributes["attributes"]["linkedLights"]["value"].setValue( "/group/light" )
 
 		# Shadows
-		arnoldAttributes["attributes"]["shadowGroup"]["enabled"].setValue( True )
-		arnoldAttributes["attributes"]["shadowGroup"]["value"].setValue( "/group/light1" )
+		arnoldAttributes["attributes"]["ai:visibility:shadow_group"]["enabled"].setValue( True )
+		arnoldAttributes["attributes"]["ai:visibility:shadow_group"]["value"].setValue( "/group/light1" )
 
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
@@ -760,6 +759,87 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual(
 				arnold.AiNodeGetName( arnold.AiArrayGetPtr( lights, 0 ) ),
 				"light:/group/light"
+			)
+
+			# check shadows
+			self.assertTrue( arnold.AiNodeGetBool( sphere, "use_shadow_group" ) )
+			shadows = arnold.AiNodeGetArray( sphere, "shadow_group" )
+			self.assertEqual( arnold.AiArrayGetNumElements( shadows ), 1 )
+			self.assertEqual(
+				arnold.AiNodeGetName( arnold.AiArrayGetPtr( shadows, 0 ) ),
+				"light:/group/light1"
+			)
+
+			# the second sphere does not have any light linking enabled
+			sphere1 = arnold.AiNodeLookUpByName( universe, "/group/sphere1" )
+
+			# check illumination
+			self.assertFalse( arnold.AiNodeGetBool( sphere1, "use_light_group" ) )
+			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
+			self.assertEqual( arnold.AiArrayGetNumElements( lights ), 0 )
+
+			# check shadows
+			self.assertFalse( arnold.AiNodeGetBool( sphere1, "use_shadow_group" ) )
+			shadows = arnold.AiNodeGetArray( sphere1, "shadow_group" )
+			self.assertEqual( arnold.AiArrayGetNumElements( shadows ), 0 )
+
+	def testLightAndShadowLinkingExclusions( self ) :
+
+		sphere1 = GafferScene.Sphere()
+		sphere2 = GafferScene.Sphere()
+
+		attributes = GafferScene.StandardAttributes()
+
+		light1 = GafferArnold.ArnoldLight()
+		light1.loadShader( "point_light" )
+
+		light2 = GafferArnold.ArnoldLight()
+		light2.loadShader( "point_light" )
+
+		group = GafferScene.Group()
+
+		render = GafferScene.Render()
+		render["renderer"].setValue( "Arnold" )
+
+		attributes["in"].setInput( sphere1["out"] )
+		group["in"][0].setInput( attributes["out"] )
+		group["in"][1].setInput( light1["out"] )
+		group["in"][2].setInput( light2["out"] )
+		group["in"][3].setInput( sphere2["out"] )
+
+		render["in"].setInput( group["out"] )
+
+		# Illumination
+		attributes["attributes"]["linkedLights"]["enabled"].setValue( True )
+		attributes["attributes"]["linkedLights"]["value"].setValue( "defaultLights" )
+		attributes["attributes"]["linkedLights:exclusions"]["enabled"].setValue( True )
+		attributes["attributes"]["linkedLights:exclusions"]["value"].setValue( "/group/light" )
+
+		# Shadows
+		attributes["attributes"]["shadowedLights"]["enabled"].setValue( True )
+		attributes["attributes"]["shadowedLights"]["value"].setValue( "defaultLights" )
+
+		attributes["attributes"]["shadowedLights:exclusions"]["enabled"].setValue( True )
+		attributes["attributes"]["shadowedLights:exclusions"]["value"].setValue( "/group/light" )
+
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			# the first sphere had linked lights
+			sphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
+
+			# check illumination
+			self.assertTrue( arnold.AiNodeGetBool( sphere, "use_light_group" ) )
+			lights = arnold.AiNodeGetArray( sphere, "light_group" )
+			self.assertEqual( arnold.AiArrayGetNumElements( lights ), 1 )
+			self.assertEqual(
+				arnold.AiNodeGetName( arnold.AiArrayGetPtr( lights, 0 ) ),
+				"light:/group/light1"
 			)
 
 			# check shadows
@@ -883,6 +963,23 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( linkedFilter ) ), "light_blocker" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( linkedGobo ) ), "gobo" )
 
+		s["attributes"]["attributes"]["filteredLights:exclusions"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["filteredLights:exclusions"]["value"].setValue( "/group/light" )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			light = arnold.AiNodeLookUpByName( universe, "light:/group/light" )
+			linkedFilters = arnold.AiNodeGetArray( light, "filters" )
+			numFilters = arnold.AiArrayGetNumElements( linkedFilters.contents )
+
+			self.assertEqual( numFilters, 1 )
+			linkedGobo = arnold.cast( arnold.AiArrayGetPtr( linkedFilters, 0 ), arnold.POINTER( arnold.AtNode ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( linkedGobo ) ), "gobo" )
+
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testLightFiltersMany( self ) :
 
@@ -950,7 +1047,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.tif" ),
+				( self.temporaryDirectory() / "test.tif" ).as_posix(),
 				"tiff",
 				"rgba",
 				{}
@@ -985,7 +1082,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		ball = GafferArnold.ArnoldShaderBall()
 		ball["shader"].setInput( mix["out"] )
 
-		catalogue = GafferImage.Catalogue()
+		catalogue = GafferScene.Catalogue()
 
 		outputs = GafferScene.Outputs()
 		outputs.addOutput(
@@ -998,7 +1095,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
 					"displayPort" : str( catalogue.displayDriverServer().portNumber() ),
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
 				}
 			)
 		)
@@ -1139,8 +1236,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		options = GafferScene.StandardOptions()
 
-		options["options"]["performanceMonitor"]["value"].setValue( True )
-		options["options"]["performanceMonitor"]["enabled"].setValue( True )
+		options["options"]["render:performanceMonitor"]["value"].setValue( True )
+		options["options"]["render:performanceMonitor"]["enabled"].setValue( True )
 
 		render = GafferScene.Render()
 		render["in"].setInput( options["out"] )
@@ -1291,7 +1388,7 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "deformationBlurOff.exr" ),
+				( self.temporaryDirectory() / "deformationBlurOff.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{
@@ -1305,8 +1402,8 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		s["arnoldOptions"] = GafferArnold.ArnoldOptions()
 		s["arnoldOptions"]["in"].setInput( s["options"]["out"] )
-		s["arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
-		s["arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 6 )
+		s["arnoldOptions"]["options"]["ai:AA_samples"]["enabled"].setValue( True )
+		s["arnoldOptions"]["options"]["ai:AA_samples"]["value"].setValue( 6 )
 
 		s["render"] = GafferScene.Render()
 		s["render"]["in"].setInput( s["arnoldOptions"]["out"] )
@@ -1315,10 +1412,10 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 
 		# Do another render at frame 1, but with deformation blur on.
 
-		s["options"]["options"]["deformationBlur"]["enabled"].setValue( True )
-		s["options"]["options"]["deformationBlur"]["value"].setValue( True )
-		s["options"]["options"]["shutter"]["enabled"].setValue( True )
-		s["options"]["options"]["shutter"]["value"].setValue( imath.V2f( -0.5, 0.5 ) )
+		s["options"]["options"]["render:deformationBlur"]["enabled"].setValue( True )
+		s["options"]["options"]["render:deformationBlur"]["value"].setValue( True )
+		s["options"]["options"]["render:shutter"]["enabled"].setValue( True )
+		s["options"]["options"]["render:shutter"]["value"].setValue( imath.V2f( -0.5, 0.5 ) )
 		s["outputs"]["outputs"][0]["fileName"].setValue( self.temporaryDirectory() / "deformationBlurOn.exr" )
 		s["render"]["task"].execute()
 
@@ -1352,6 +1449,52 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			# Arnold doesn't support coordinate systems, so we don't expect a
 			# node to have been created for ours.
 			self.assertIsNone( arnold.AiNodeLookUpByName( universe, "/coordinateSystem" ) )
+
+	def testSceneDescriptionOptions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["cube"] = GafferScene.Cube()
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/cube' ] ) )
+
+		s["encapsulate"] = GafferScene.Encapsulate()
+		s["encapsulate"]["in"].setInput( s["cube"]["out"] )
+		s["encapsulate"]["filter"].setInput( s["pathFilter"]["out"] )
+
+		s["options"] = GafferArnold.ArnoldOptions()
+		s["options"]["in"].setInput( s["encapsulate"]["out"] )
+
+		s["render"] = GafferScene.Render()
+		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["renderer"].setValue( "Arnold" )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
+
+		s["render"]["task"].execute()
+
+		# Since the cube is encapsulated, we won't see it in the output
+		with open( self.temporaryDirectory() / "test.ass", "r", encoding = "utf-8" ) as f :
+			self.assertFalse( "vidxs" in f.read() )
+
+		s["options"]["options"]["ai:scene_write:open_procs"]["enabled"].setValue( True )
+		s["options"]["options"]["ai:scene_write:open_procs"]["value"].setValue( True )
+
+		s["render"]["task"].execute()
+
+		# With open_procs set, we now see the cube data
+		with open( self.temporaryDirectory() / "test.ass", "r", encoding = "utf-8" ) as f :
+			self.assertTrue( " vidxs 24 1 b85UINT\n" + r"B$$-0*%<hl0%s\>:$$?K4%XA/5%s@u/" in f.read() )
+
+		s["options"]["options"]["ai:scene_write:binary"]["enabled"].setValue( True )
+		s["options"]["options"]["ai:scene_write:binary"]["value"].setValue( False )
+
+		s["render"]["task"].execute()
+
+		# Turning off binary gets us plain text vertex data
+		with open( self.temporaryDirectory() / "test.ass", "r", encoding = "utf-8" ) as f :
+			self.assertTrue( "vidxs 24 1 UINT\n  3 2 1 0 1 2 5 4 4 5 7 6 6 7 3 0 2 3 7 5 0 1 4 6" in f.read() )
 
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testInstancerPerf( self ) :
@@ -1627,5 +1770,54 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			with GafferTest.TestRunner.PerformanceScope() :
 				s["render"]["task"].execute()
 
-if __name__ == "__main__":
-	unittest.main()
+	def _createConstantShader( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "flat" )
+		return shader, shader["parameters"]["color"], shader["out"]
+
+	def _createDiffuseShader( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "lambert" )
+		shader["parameters"]["Kd"].setValue( 1 )
+		return shader, shader["parameters"]["Kd_color"], shader["out"]
+
+	def _createPointLight( self ) :
+
+		light = GafferArnold.ArnoldLight()
+		light.loadShader( "point_light" )
+		return light, light["parameters"]["color"]
+
+	def _createDistantLight( self ) :
+
+		light = GafferArnold.ArnoldLight()
+		light.loadShader( "distant_light" )
+		return light, light["parameters"]["color"]
+
+	def _createColorAttributeReader( self, attributeName ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "user_data_rgb" )
+		shader["parameters"]["attribute"].setValue( attributeName )
+		return shader, shader["out"]
+
+	def _cameraVisibilityAttribute( self ) :
+
+		return "ai:visibility:camera"
+
+	def _createOptions( self ) :
+
+		# Stop unwanted bounce light throwing off the shadow linking test
+
+		options = GafferArnold.ArnoldOptions()
+
+		options["options"]["ai:GI_total_depth"]["enabled"].setValue( True )
+		options["options"]["ai:GI_total_depth"]["value"].setValue( 0 )
+
+		# Improve sampling for motion blur tests.
+
+		options["options"]["ai:AA_samples"]["enabled"].setValue( True )
+		options["options"]["ai:AA_samples"]["value"].setValue( 3 )
+
+		return options

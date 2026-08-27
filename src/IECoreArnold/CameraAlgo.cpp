@@ -42,7 +42,7 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
+#include "IECore/RampData.h"
 
 #include "Imath/ImathFun.h"
 
@@ -58,7 +58,7 @@ using namespace IECoreArnold;
 namespace
 {
 
-NodeAlgo::ConverterDescription<Camera> g_description( CameraAlgo::convert, CameraAlgo::convert );
+NodeAlgo::ConverterDescription<Camera> g_description( CameraAlgo::convert );
 
 const AtString g_perspCameraArnoldString("persp_camera");
 const AtString g_orthoCameraArnoldString("ortho_camera");
@@ -75,7 +75,7 @@ const AtString g_focusDistanceArnoldString("focus_distance");
 const AtString g_motionStartArnoldString("motion_start");
 const AtString g_motionEndArnoldString("motion_end");
 
-AtVector2 curvePoint( const Splineff::Point &point )
+AtVector2 curvePoint( const Rampff::Point &point )
 {
 	// Clamping enforces constraints specified in Arnold docs.
 	// Not likely to be an issue in the X-axis, but in Y it's
@@ -88,27 +88,29 @@ AtVector2 curvePoint( const Splineff::Point &point )
 
 void setShutterCurveParameter( AtNode *camera, const IECore::Data *value, const std::string &messageContext )
 {
-	auto *splineData = runTimeCast<const SplineffData>( value );
-	if( !splineData )
+	auto *rampData = runTimeCast<const IECore::RampffData>( value );
+	if( !rampData )
 	{
-		msg( Msg::Warning, messageContext, fmt::format( "Unsupported value type \"{}\" (expected SplineffData).", value->typeName() ) );
+		msg( Msg::Warning, messageContext, fmt::format( "Unsupported value type \"{}\" (expected RampffData).", value->typeName() ) );
 		return;
 	}
 
 
 	AtArray *array;
-	const Splineff &spline = splineData->readable();
-	if( spline.basis == CubicBasisf::linear() )
+	const Rampff &ramp = rampData->readable();
+	if( ramp.interpolation == IECore::RampInterpolation::Linear )
 	{
-		array = AiArrayAllocate( spline.points.size(), 1, AI_TYPE_VECTOR2 );
+		array = AiArrayAllocate( ramp.points.size(), 1, AI_TYPE_VECTOR2 );
 		size_t index = 0;
-		for( const auto &p : spline.points )
+		for( const auto &p : ramp.points )
 		{
 			AiArraySetVec2( array, index++, curvePoint( p ) );
 		}
 	}
 	else
 	{
+		IECore::Splineff eval = ramp.evaluator();
+
 		// Cubic curve, but Arnold only supports linear. Just apply a fixed
 		// sampling for now. From SolidAngle support : "Looking at the code, a
 		// larger number of points in the shutter curve should have negligible
@@ -118,7 +120,7 @@ void setShutterCurveParameter( AtNode *camera, const IECore::Data *value, const 
 		for( int i = 0; i < numSamples; ++i )
 		{
 			const float x = (float)i / (float)( numSamples - 1 );
-			const float y = spline( x );
+			const float y = eval( x );
 			AiArraySetVec2( array, i, curvePoint( { x, y } ) );
 		}
 	}
@@ -126,8 +128,8 @@ void setShutterCurveParameter( AtNode *camera, const IECore::Data *value, const 
 	AiNodeSetArray( camera, g_shutterCurveArnoldString, array );
 }
 
-// Performs the part of the conversion that is shared by both animated and non-animated cameras.
-AtNode *convertCommon( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+// Converts the parts of the camera that can't be animated in Arnold.
+AtNode *convertStatic( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
 	// Use projection to decide what sort of camera node to create
 	const std::string projection = camera->getProjection();
@@ -219,7 +221,10 @@ float fieldOfView( const IECoreScene::Camera *camera )
 
 float apertureSize( const IECoreScene::Camera *camera )
 {
-	if( camera->getFStop() <= 0.0f )
+	/// \todo Switch to `camera->getDepthOfField()` once we have added the
+	/// depthOfField parameter to Cortex.
+	const BoolData *d = camera->parametersData()->member<BoolData>( "depthOfField" );
+	if( !d || !d->readable() || camera->getFStop() <= 0.0f )
 	{
 		return 0.0f;
 	}
@@ -228,10 +233,10 @@ float apertureSize( const IECoreScene::Camera *camera )
 }
 
 template<typename F>
-auto parameterSamples( const std::vector<const IECoreScene::Camera *> &cameraSamples, F &&parameterFunction )
+auto parameterSamples( const IECoreArnold::CameraAlgo::CameraSamples &cameraSamples, F &&parameterFunction )
 {
 	using SampleType = std::invoke_result_t<F, const IECoreScene::Camera *>;
-	std::vector<SampleType> result;
+	IECoreScenePreview::Renderer::Samples<SampleType> result;
 	result.reserve( cameraSamples.size() );
 	for( const auto &camera : cameraSamples )
 	{
@@ -245,7 +250,7 @@ auto parameterSamples( const std::vector<const IECoreScene::Camera *> &cameraSam
 	return result;
 }
 
-void setAnimatedFloat( AtNode *node, AtString name, const std::vector<const IECoreScene::Camera *> &cameraSamples, float (*parameterFunction)( const IECoreScene::Camera * ) )
+void setAnimatedFloat( AtNode *node, AtString name, const IECoreArnold::CameraAlgo::CameraSamples &cameraSamples, float (*parameterFunction)( const IECoreScene::Camera * ) )
 {
 	const auto samples = parameterSamples( cameraSamples, parameterFunction );
 	if( samples.size() > 1 )
@@ -260,26 +265,9 @@ void setAnimatedFloat( AtNode *node, AtString name, const std::vector<const IECo
 
 } // namespace
 
-AtNode *CameraAlgo::convert( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
+AtNode *CameraAlgo::convert( const CameraSamples &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
 {
-	AtNode *result = convertCommon( camera, universe, nodeName, parentNode, messageContext );
-	if( camera->getProjection()=="perspective" )
-	{
-		AiNodeSetFlt( result, g_fovArnoldString, fieldOfView( camera ) );
-		AiNodeSetFlt( result, g_apertureSizeArnoldString, apertureSize( camera ) );
-		AiNodeSetFlt( result, g_focusDistanceArnoldString, camera->getFocusDistance() );
-	}
-
-	const Imath::Box2f sw = screenWindow( camera );
-	AiNodeSetVec2( result, g_screenWindowMinArnoldString, sw.min.x, sw.min.y );
-	AiNodeSetVec2( result, g_screenWindowMaxArnoldString, sw.max.x, sw.max.y );
-
-	return result;
-}
-
-AtNode *CameraAlgo::convert( const std::vector<const IECoreScene::Camera *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode, const std::string &messageContext )
-{
-	AtNode *result = convertCommon( samples[0], universe, nodeName, parentNode, messageContext );
+	AtNode *result = convertStatic( samples[0], universe, nodeName, parentNode, messageContext );
 	if( samples[0]->getProjection()=="perspective" )
 	{
 		setAnimatedFloat( result, g_fovArnoldString, samples, fieldOfView );

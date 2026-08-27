@@ -87,16 +87,16 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 
 		script["StandardOptions"] = GafferScene.StandardOptions()
 		script["StandardOptions"]["in"].setInput( script["Group"]["out"] )
-		script["StandardOptions"]["options"]["renderCamera"]["value"].setValue( '/group/camera' )
-		script["StandardOptions"]["options"]["renderCamera"]["enabled"].setValue( True )
-		script["StandardOptions"]["options"]["renderResolution"]["value"].setValue( imath.V2i( resolution, resolution ) )
-		script["StandardOptions"]["options"]["renderResolution"]["enabled"].setValue( True )
+		script["StandardOptions"]["options"]["render:camera"]["value"].setValue( '/group/camera' )
+		script["StandardOptions"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["StandardOptions"]["options"]["render:resolution"]["value"].setValue( imath.V2i( resolution, resolution ) )
+		script["StandardOptions"]["options"]["render:resolution"]["enabled"].setValue( True )
 
 		script["ArnoldOptions"] = GafferArnold.ArnoldOptions( "ArnoldOptions" )
 		script["ArnoldOptions"]["in"].setInput( script["StandardOptions"]["out"] )
 		# Make sure we leave some CPU available for Gaffer
-		script["ArnoldOptions"]["options"]["threads"]["value"].setValue( -1 )
-		script["ArnoldOptions"]["options"]["threads"]["enabled"].setValue( True )
+		script["ArnoldOptions"]["options"]["ai:threads"]["value"].setValue( -1 )
+		script["ArnoldOptions"]["options"]["ai:threads"]["enabled"].setValue( True )
 
 		script["Outputs"] = GafferScene.Outputs()
 		script["Outputs"].addOutput(
@@ -109,8 +109,8 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 					"driverType" : 'ClientDisplayDriver',
 					"displayHost" : 'localhost',
-					"displayPort" : str( GafferImage.Catalogue.displayDriverServer().portNumber() ),
-					"remoteDisplayType" : 'GafferImage::GafferDisplayDriver',
+					"displayPort" : str( GafferScene.Catalogue.displayDriverServer().portNumber() ),
+					"remoteDisplayType" : 'GafferScene::GafferDisplayDriver',
 					"filter" : 'box',
 				}
 			)
@@ -121,7 +121,7 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 		script["InteractiveArnoldRender"]["renderer"].setValue( "Arnold" )
 		script["InteractiveArnoldRender"]["in"].setInput( script["Outputs"]["out"] )
 
-		script["Catalogue"] = GafferImage.Catalogue( "Catalogue" )
+		script["Catalogue"] = GafferScene.Catalogue( "Catalogue" )
 		script["Catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogues" / "test" )
 
 		script["Blur"] = GafferImage.Blur( "Blur" )
@@ -134,10 +134,10 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 		if useUI:
 
 			with GafferUI.Window() as window :
+				window.setVisible( True )
 				window.setFullScreen( True )
 				viewer = GafferUI.Viewer( script )
 
-			window.setVisible( True )
 			viewer.setNodeSet( Gaffer.StandardSet( [ watchNode ] ) )
 
 
@@ -166,8 +166,9 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 
 			script['InteractiveArnoldRender']['state'].setValue( GafferScene.InteractiveRender.State.Stopped )
 
-			del window, viewer, timer
-			self.waitForIdle( 10 )
+			del viewer, timer
+			self.waitForIdle( 1000 )
+			del window
 
 		else:
 			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
@@ -214,7 +215,3 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
 	def testUIPerfWithBlur( self ) :
 		self.runInteractive( True, True, 1000 )
-
-
-if __name__ == "__main__":
-	unittest.main()

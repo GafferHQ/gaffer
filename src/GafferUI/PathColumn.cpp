@@ -39,7 +39,6 @@
 #include "Gaffer/FileSystemPath.h"
 
 #include "IECore/MessageHandler.h"
-#include "IECore/SplineData.h"
 
 #include "QtWidgets/QFileIconProvider"
 
@@ -50,26 +49,6 @@
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
-
-namespace
-{
-
-const std::string basisName( StandardCubicBasis basis )
-{
-	switch( basis )
-	{
-		case StandardCubicBasis::Bezier : return "Bezier"; break;
-		case StandardCubicBasis::BSpline : return "BSpline"; break;
-		case StandardCubicBasis::CatmullRom : return "CatmullRom"; break;
-		case StandardCubicBasis::Linear : return "Linear"; break;
-		case StandardCubicBasis::Constant : return "Constant"; break;
-		default: break;
-	}
-
-	return "Unknown";
-}
-
-}  // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // PathColumn
@@ -125,6 +104,26 @@ PathColumn::KeySignal &PathColumn::keyReleaseSignal()
 	return m_keyReleaseSignal;
 }
 
+PathColumn::DragDropSignal &PathColumn::dragEnterSignal()
+{
+	return m_dragEnterSignal;
+}
+
+PathColumn::DragDropSignal &PathColumn::dragMoveSignal()
+{
+	return m_dragMoveSignal;
+}
+
+PathColumn::DragDropSignal &PathColumn::dragLeaveSignal()
+{
+	return m_dragLeaveSignal;
+}
+
+PathColumn::DragDropSignal &PathColumn::dropSignal()
+{
+	return m_dropSignal;
+}
+
 PathColumn::PathColumnSignal &PathColumn::instanceCreatedSignal()
 {
 	static PathColumnSignal g_instanceCreatedSignal;
@@ -163,27 +162,11 @@ PathColumn::CellData StandardPathColumn::cellData( const Gaffer::Path &path, con
 	{
 		cellData.icon = color;
 	}
-	else if( auto spline = runTimeCast<const SplineffData>( data.get() ) )
-	{
-		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
-	}
-	else if( auto spline = runTimeCast<const SplineddData>( data.get() ) )
-	{
-		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
-	}
-	else if( auto spline = runTimeCast<const SplinefColor3fData>( data.get() ) )
-	{
-		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
-	}
-	else if( auto spline = runTimeCast<const SplinefColor4fData>( data.get() ) )
-	{
-		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
-	}
 
 	return CellData( cellData );
 }
 
-PathColumn::CellData StandardPathColumn::headerData( const IECore::Canceller *canceller ) const
+PathColumn::CellData StandardPathColumn::headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const
 {
 	return m_headerData;
 }
@@ -246,7 +229,7 @@ PathColumn::CellData IconPathColumn::cellData( const Gaffer::Path &path, const I
 	return result;
 }
 
-PathColumn::CellData IconPathColumn::headerData( const IECore::Canceller *canceller ) const
+PathColumn::CellData IconPathColumn::headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const
 {
 	return m_headerData;
 }
@@ -288,7 +271,7 @@ PathColumn::CellData FileIconPathColumn::cellData( const Gaffer::Path &path, con
 	return result;
 }
 
-PathColumn::CellData FileIconPathColumn::headerData( const IECore::Canceller *canceller ) const
+PathColumn::CellData FileIconPathColumn::headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const
 {
 	return CellData( m_label );
 }

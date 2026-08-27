@@ -166,6 +166,3 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 
 		deleteFaces["ignoreMissingVariable"].setValue( True )
 		self.assertEqual( deleteFaces["in"].object( "/object" ), deleteFaces["out"].object( "/object" ) )
-
-if __name__ == "__main__":
-	unittest.main()

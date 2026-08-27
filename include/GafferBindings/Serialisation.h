@@ -41,6 +41,7 @@
 
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/Set.h"
+#include "Gaffer/Signals.h"
 
 #include "IECore/Canceller.h"
 #include "IECore/Object.h"
@@ -98,6 +99,11 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		static std::string objectToBase64( const IECore::Object *object );
 		/// Creates an object from a string previously encoded with `objectToBase64()`.
 		static IECore::ObjectPtr objectFromBase64( const std::string &base64 );
+
+		using PostSerialisationSignal = Gaffer::Signals::Signal<void ( const Serialisation *, bool ) >;
+		/// This signal is emitted when Serialisation is finished. The bool argument indicates whether
+		/// the serialisation was successful.
+		PostSerialisationSignal &postSerialisationSignal();
 
 		/// The Serialiser class may be implemented differently for specific types to customise
 		/// their serialisation.
@@ -170,6 +176,8 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		std::set<std::string> m_modules;
 
 		void walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser, const IECore::Canceller *canceller );
+
+		PostSerialisationSignal m_postSerialisationSignal;
 
 		using SerialiserMap = std::map<IECore::TypeId, SerialiserPtr>;
 		static SerialiserMap &serialiserMap();

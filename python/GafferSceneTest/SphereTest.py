@@ -240,6 +240,3 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( sphere["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "unnamed" ] ) )
 		self.assertEqual( sphere["out"].set( "A" ).value, IECore.PathMatcher( [ "/unnamed" ] ) )
-
-if __name__ == "__main__":
-	unittest.main()

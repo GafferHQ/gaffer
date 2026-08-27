@@ -59,54 +59,54 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"name" : [
+		"name" : {
 
-			"description", "Hardcoded for ShaderTweakProxy nodes.",
-			"plugValueWidget:type", "",
+			"description" : "Hardcoded for ShaderTweakProxy nodes.",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"type" : [
+		"type" : {
 
-			"description", "Hardcoded for ShaderTweakProxy nodes.",
-			"plugValueWidget:type", "",
+			"description" : "Hardcoded for ShaderTweakProxy nodes.",
+			"plugValueWidget:type" : "",
 
-		],
+		},
 
-		"parameters" : [
+		"parameters" : {
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
-		],
+		},
 
-		"parameters.targetShader" : [
+		"parameters.targetShader" : {
 
-			"description",
+			"description" :
 			"""
 			The handle of the upstream shader being fetched by this proxy - or Auto, indicating that
 			the original input of the parameter being ShaderTweaked will be used.
 			""",
-			"readOnly", True,
-			"nodule:type", "",
-			"stringPlugValueWidget:placeholderText", "Auto",
+			"readOnly" : True,
+			"nodule:type" : "",
+			"stringPlugValueWidget:placeholderText" : "Auto",
 
-		],
+		},
 
-		"out" : [
+		"out" : {
 
-			"plugValueWidget:type", "",
-			"nodule:type", "GafferUI::CompoundNodule"
+			"plugValueWidget:type" : "",
+			"nodule:type" : "GafferUI::CompoundNodule"
 
-		],
+		},
 
-		"out.*" : [
+		"out.*" : {
 
-			"description",
+			"description" :
 			"""
 			The name of the output on the shader we are fetching, or "auto" for an auto proxy.
 			""",
 
-		],
+		},
 
 	}
 
@@ -154,7 +154,7 @@ def __findConnectedShaderTweaks( startShader ):
 def __createShaderTweakProxy( plug, sourceHandle, sourceType, sourceName ):
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ):
-		result = GafferScene.ShaderTweakProxy( sourceHandle or "Auto" )
+		result = GafferScene.ShaderTweakProxy( sourceHandle.replace( "/", "_" ) or "Auto" )
 		if sourceHandle:
 			sourceTypePrefix = sourceType.split( ":" )[0]
 			result.loadShader( sourceTypePrefix + ":" + sourceName )
@@ -199,7 +199,7 @@ def _shaderAttributes( context, nodes, paths, affectedOnly ) :
 				if not node["in"].exists( path ):
 					continue
 
-				attributes = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )
+				attributes = node["in"].fullAttributes( path, withGlobalAttributes = True ) if useFullAttr else node["in"].attributes( path )
 				for name, attribute in attributes.items() :
 					if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
 						continue
