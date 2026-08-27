@@ -20,6 +20,7 @@ Fixes
 - LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
 - AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
 - GraphEditor : Stopped drag & dropped scene locations from navigating to private internal nodes.
+- PlugLayout : Fixed `Internal C++ object already deleted` errors when a plug stops being laid out as an inline accessory, such as when its `layout:accessory` metadata was changed or removed, or when the plug it was grouped with was hidden or deleted (#6938).
 
 API
 ---
@@ -286,6 +287,7 @@ Fixes
 
 - LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
 - AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
+- PlugLayout : Fixed `Internal C++ object already deleted` errors when a plug stops being laid out as an inline accessory, such as when its `layout:accessory` metadata was changed or removed, or when the plug it was grouped with was hidden or deleted (#6938).
 
 1.6.21.4 (relative to 1.6.21.3)
 ========
