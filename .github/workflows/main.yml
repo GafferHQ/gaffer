@@ -78,7 +78,7 @@ jobs:
             testRunner: runuser -u testUser --
             sconsCacheMegabytes: 400
             jobs: 4
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.0.0/cortex-10.7.0.0-linux-platform24.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.1.0/cortex-10.7.1.0-linux-platform24.tar.gz
             extraBuildArguments: CYCLES_ROOT=""
 
           - name: windows
