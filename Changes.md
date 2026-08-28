@@ -9,6 +9,10 @@ Fixes
 - LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
 - AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
 - PlugLayout : Fixed `Internal C++ object already deleted` errors when a plug stops being laid out as an inline accessory, such as when its `layout:accessory` metadata was changed or removed, or when the plug it was grouped with was hidden or deleted (#6938).
+- Arnold :
+  - Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
+  - Fixed crash translating network where all shaders are invalid.
+- ReferenceTest, 3Delight RendererTest : Fixed leakage of modified environment. This is handled in the TestCase base class, so in future no test can accidentally leak modifications.
 
 1.6.21.4 (relative to 1.6.21.3)
 ========
