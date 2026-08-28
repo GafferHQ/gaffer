@@ -542,6 +542,13 @@ void Globals::output( const IECore::InternedString &name, const Output *output )
 			copy->parameters()["ri:accumulationRule"] = new StringData( "zmin" );
 			copy->parameters().erase( "filter" );
 		}
+		// Conform "standard" instanceID output used for Gaffer's ImageSelectionTool.
+		if( copy->getData() == "float instanceID" && parameter<string>( copy->parameters(), "filter", "" ) == "closest" )
+		{
+			copy->setData( "int id2" );
+			copy->parameters()["ri:accumulationRule"] = new StringData( "zmin" );
+			copy->parameters().erase( "filter" );
+		}
 
 		// Warn for parameters that we don't support, but which folks might
 		// accidentally set.

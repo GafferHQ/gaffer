@@ -1685,6 +1685,158 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 				sampler["pixel"].setValue( centre )
 				self.assertEqual( sampler["color"].getValue(), expectedColor )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerIDOutputs( self ) :
+
+		if not self.pointInstancerSupported :
+			raise unittest.SkipTest( "PointInstancer not supported" )
+
+		script = Gaffer.ScriptNode()
+
+		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancer.setPosition(
+			IECore.V3fVectorData( [
+				imath.V3f( -1, 0, 0 ), imath.V3f( 0, 0, 0 ), imath.V3f( 1, 0, 0 ),
+			] )
+		)
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 0, 0 ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "./sphere" ] ) )
+
+		script["pointInstancer"] = GafferScene.ObjectToScene()
+		script["pointInstancer"]["name"].setValue( "instancer" )
+		script["pointInstancer"]["object"].setValue( pointInstancer )
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["radius"].setValue( 0.5 )
+
+		script["prototypeParent"] = GafferScene.Parent()
+		script["prototypeParent"]["in"].setInput( script["pointInstancer"]["out"] )
+		script["prototypeParent"]["children"][0].setInput( script["sphere"]["out"] )
+		script["prototypeParent"]["parent"].setValue( "/instancer" )
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["prototypeParent"]["out"] )
+		script["parent"]["children"][0].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		idPath = self.temporaryDirectory() / "testID.exr"
+		instanceIDPath = self.temporaryDirectory() / "testInstanceID.exr"
+
+		script["outputs"] = GafferScene.Outputs()
+
+		script["outputs"].addOutput(
+			"instanceID",
+			IECoreScene.Output(
+				instanceIDPath.as_posix(),
+				"exr",
+				"float instanceID",
+				{
+					"layerName" : "instanceID",
+					"filter" : "closest",
+				},
+			)
+		)
+
+		script["outputs"].addOutput(
+			"id",
+			IECoreScene.Output(
+				idPath.as_posix(),
+				"exr",
+				"float id",
+				{
+					"layerName" : "id",
+					"filter" : "closest",
+				},
+			)
+		)
+
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		manifestPath = self.temporaryDirectory() / "manifest.exr"
+		script["options"]["options"]["render:manifestFilePath"]["enabled"].setValue( True )
+		script["options"]["options"]["render:manifestFilePath"]["value"].setValue( manifestPath )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+
+		script["render"]["task"].execute()
+
+		idReader = GafferImage.ImageReader()
+		idReader["fileName"].setValue( idPath )
+
+		instanceIDReader = GafferImage.ImageReader()
+		instanceIDReader["fileName"].setValue( instanceIDPath )
+
+		idSampler = GafferImage.ImageSampler()
+		idSampler["image"].setInput( idReader["out"] )
+		idSampler["channels"].setValue( IECore.StringVectorData( [ "id" ] * 4 ) )
+		idSampler["interpolate"].setValue( False )
+
+		instanceIDSampler = GafferImage.ImageSampler()
+		instanceIDSampler["image"].setInput( instanceIDReader["out"] )
+		instanceIDSampler["channels"].setValue( IECore.StringVectorData( [ "instanceID" ] * 4 ) )
+		instanceIDSampler["interpolate"].setValue( False )
+
+		manifest = GafferScene.RenderManifest.loadFromImageMetadata( idReader["out"].metadata(), "" )
+
+		for pixel, expectedInstanceID in {
+			imath.V2f( 184, 228 ) : 0,
+			imath.V2f( 320, 228 ) : 1,
+			imath.V2f( 458, 228 ) : 2,
+		}.items() :
+
+			idSampler["pixel"].setValue( pixel )
+			id = idSampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			id = struct.pack( "f", id )
+			id = struct.unpack( "I", id )[0]
+
+			self.assertEqual( manifest.pathForID( id ), "/instancer" )
+
+			instanceIDSampler["pixel"].setValue( pixel )
+			instanceID = instanceIDSampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			instanceID = struct.pack( "f", instanceID )
+			instanceID = struct.unpack( "I", instanceID )[0]
+
+			self.assertEqual( instanceID, expectedInstanceID + 1 )
+
+		# Repeat, but with custom instance IDs
+
+		pointInstancer.setID( IECore.Int64VectorData( [ 12, 11, 10 ] ) )
+		script["pointInstancer"]["object"].setValue( pointInstancer )
+		script["render"]["task"].execute()
+		instanceIDReader["refreshCount"].setValue( 1 )
+
+		for pixel, expectedInstanceID in {
+			imath.V2f( 184, 228 ) : 12,
+			imath.V2f( 320, 228 ) : 11,
+			imath.V2f( 458, 228 ) : 10,
+		}.items() :
+
+			instanceIDSampler["pixel"].setValue( pixel )
+			instanceID = instanceIDSampler["color"]["r"].getValue()
+
+			# Reinterpret float as int.
+			instanceID = struct.pack( "f", instanceID )
+			instanceID = struct.unpack( "I", instanceID )[0]
+
+			self.assertEqual( instanceID, expectedInstanceID + 1 )
+
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a constant surface shader loaded, along
 	# with the plug for the colour parameter and the output plug to be connected

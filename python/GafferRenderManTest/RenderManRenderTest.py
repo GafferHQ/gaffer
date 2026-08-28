@@ -171,6 +171,13 @@ class RenderManXPURenderTest( RenderManRenderTest ) :
 
 		pass
 
+	## \todo Either find a way of getting float outputs in the style of RIS,
+	# or update OpenImageIOReader to load integer IDs via `reinterpret_cast`.
+	@unittest.skip( "XPU only renders integer ID outputs, but we want floats" )
+	def testPointInstancerIDOutputs( self ) :
+
+		pass
+
 	@unittest.skip( "Apparent bounding box bug clips motion" )
 	def testPointInstancerMotionBlur( self ) :
 
