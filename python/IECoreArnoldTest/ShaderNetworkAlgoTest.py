@@ -1383,12 +1383,12 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 	def testMissingShaderWithBlindData( self ) :
 
-		shader = IECoreScene.Shader( "NonExistent" )
-		shader.blindData()["test"] = "test"
+		shader = IECoreScene.Shader( "nonexistent", "ai:surface" )
+		shader.blindData()["test"] = IECore.IntData( 1 )
 
 		network = IECoreScene.ShaderNetwork(
-			shaders = { "outputHandle" : shader },
-			output = "outputHandle"
+			shaders = { "output" : shader },
+			output = "output"
 		)
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :

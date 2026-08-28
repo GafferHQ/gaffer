@@ -94,7 +94,26 @@ class TestCase( unittest.TestCase ) :
 		Gaffer.ValuePlug.clearCache()
 		Gaffer.ValuePlug.clearHashCache()
 
+		# Stash a copy of the current environment, so we can restore it
+		# in `tearDown()`. This allows tests to make temporary modifications
+		# without needing to do manual cleanup.
+		self.__originalEnv = os.environ.copy()
+
 	def tearDown( self ) :
+
+		# Restore the original environment. Do this using the minimal
+		# number of edits to `os.environ`, since Windows doesn't seem to
+		# like clearing it and rebuilding it completely.
+
+		for key, value in self.__originalEnv.items() :
+			if os.environ.get( key ) != value :
+				os.environ[key] = value
+
+		for key in list( os.environ.keys() ) :
+			if key not in self.__originalEnv :
+				del os.environ[key]
+
+		assert( os.environ == self.__originalEnv )
 
 		# Clear any previous exceptions, as they can be holding
 		# references to resources we would like to die. This is
