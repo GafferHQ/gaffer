@@ -35,7 +35,6 @@
 ##########################################################################
 
 import weakref
-import unittest
 
 import GafferUI
 import GafferUITest

@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import unittest
 import warnings
 
 import GafferUI

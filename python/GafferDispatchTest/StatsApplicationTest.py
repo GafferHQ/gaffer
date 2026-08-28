@@ -35,7 +35,6 @@
 ##########################################################################
 
 import inspect
-import unittest
 import subprocess
 
 import Gaffer

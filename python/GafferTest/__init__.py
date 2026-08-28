@@ -40,7 +40,6 @@ __import__( "Gaffer" )
 from ._GafferTest import *
 
 import os
-import unittest
 
 ## Determines if the tests are running in a Continuous Integration
 # environment.

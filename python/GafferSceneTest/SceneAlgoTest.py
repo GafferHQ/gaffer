@@ -37,7 +37,6 @@
 import imath
 import inspect
 import time
-import unittest
 
 import IECore
 import IECoreScene

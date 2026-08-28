@@ -38,7 +38,6 @@
 import os
 import pathlib
 import inspect
-import unittest
 
 import IECore
 

@@ -36,7 +36,6 @@
 
 import re
 import time
-import unittest
 from collections import deque
 import shlex
 import pathlib

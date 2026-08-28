@@ -36,7 +36,6 @@
 
 import os
 import pathlib
-import unittest
 import subprocess
 import imath
 

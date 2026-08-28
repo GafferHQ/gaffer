@@ -35,7 +35,6 @@
 ##########################################################################
 
 import inspect
-import unittest
 
 import Gaffer
 import GafferScene

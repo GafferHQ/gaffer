@@ -36,7 +36,6 @@
 
 import os
 import subprocess
-import unittest
 import imath
 
 import IECore

@@ -36,7 +36,6 @@
 
 import imath
 import inspect
-import unittest
 import os
 import subprocess
 import threading

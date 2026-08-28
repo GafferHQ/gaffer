@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import IECoreScene
 
 import GafferSceneTest

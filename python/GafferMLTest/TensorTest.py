@@ -36,7 +36,6 @@
 
 import itertools
 import math
-import unittest
 
 import imath
 

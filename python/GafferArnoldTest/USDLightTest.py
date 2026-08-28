@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import arnold
 
 import IECoreArnold

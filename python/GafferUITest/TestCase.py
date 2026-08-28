@@ -37,7 +37,6 @@
 import os
 import sys
 import functools
-import unittest
 import inspect
 import weakref
 

@@ -37,7 +37,6 @@
 
 import pathlib
 import inspect
-import unittest
 import threading
 
 import arnold

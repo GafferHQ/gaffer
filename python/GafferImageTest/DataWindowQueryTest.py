@@ -36,7 +36,6 @@
 
 import imath
 import random
-import unittest
 
 import GafferImage
 import GafferImageTest

@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import inspect
 import pathlib
 import imath

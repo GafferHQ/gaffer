@@ -35,7 +35,6 @@
 ##########################################################################
 
 import os
-import unittest
 import IECore
 import Gaffer
 import GafferUI

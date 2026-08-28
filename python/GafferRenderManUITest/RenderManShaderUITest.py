@@ -36,7 +36,6 @@
 
 import os
 import pathlib
-import unittest
 from xml.etree import ElementTree
 
 import IECore

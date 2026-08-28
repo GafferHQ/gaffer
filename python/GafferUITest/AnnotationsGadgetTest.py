@@ -36,7 +36,6 @@
 
 import inspect
 import threading
-import unittest
 
 import imath
 

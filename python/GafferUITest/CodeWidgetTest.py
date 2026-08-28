@@ -35,7 +35,6 @@
 ##########################################################################
 
 import pathlib
-import unittest
 
 import Gaffer
 import GafferUI

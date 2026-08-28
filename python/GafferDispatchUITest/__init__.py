@@ -34,7 +34,5 @@
 #
 ##########################################################################
 
-import unittest
-
 from .DocumentationTest import DocumentationTest
 from .NodeUITest import NodeUITest

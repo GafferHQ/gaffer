@@ -36,7 +36,6 @@
 ##########################################################################
 
 import inspect
-import unittest
 import sys
 import threading
 import time

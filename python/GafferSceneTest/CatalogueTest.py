@@ -40,7 +40,6 @@ import stat
 import shutil
 import imath
 import pathlib
-import unittest
 import subprocess
 
 import IECore
