@@ -268,6 +268,8 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 				]
 			)
 
+			self.assertFalse( flattened.getID() )
+
 			self.assertEqual( flattened["intPrimitiveVariable"].data, IECore.IntVectorData( [ 1, 1, 1, 2, 2 ] ) )
 			self.assertEqual( flattened["stringPrimitiveVariable"].data, IECore.StringVectorData( [ "apple", "apple", "apple", "pear", "pear" ] ) )
 			self.assertEqual(
@@ -553,3 +555,36 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( flattened.numPoints, 1 )
 			self.assertNotIn( "prototypeRoots", flattened )
 			self.assertEqual( flattened, pointInstancer )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testFlattenIDs( self ) :
+
+		prototype = self.PrototypeGroup()
+
+		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ), imath.V3f( 1, 0, 0 ) ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 0 ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "prototype" ] ) )
+		pointInstancer.setID( IECore.Int64VectorData( [ 102, 56 ] ) )
+
+		pointInstancerNode = GafferScene.ObjectToScene()
+		pointInstancerNode["object"].setValue( pointInstancer )
+		pointInstancerNode["name"].setValue( "instancer" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( pointInstancerNode["out"] )
+		parent["children"][0].setInput( prototype["out"] )
+		parent["parent"].setValue( "/instancer" )
+
+		with Gaffer.Context() as context :
+
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/instancer" )
+			pointInstancer = parent["out"]["object"].getValue()
+			flattened = GafferScene.Private.PointInstancerAlgo.flatten(
+				pointInstancer, GafferScene.Private.RendererAlgo.RenderOptions(), parent["out"]
+			)
+
+			self.assertEqual(
+				list( flattened.getID() ),
+				[ 102, 102, 102, 56, 56, 56 ]
+			)

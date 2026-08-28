@@ -1275,7 +1275,6 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# environment variable instead. Still, we want to test that variables created
 		# this way are passed to child tasks.
 		os.environ["gafferLocalDispatcherTestMIXEDcaseA"] = "testTEST"
-		self.addCleanup( os.environ.__delitem__, "gafferLocalDispatcherTestMIXEDcaseA" )
 
 		# If we bypass `os.environ`, then we can create a mixed-case variable even
 		# on Windows.

@@ -16,8 +16,15 @@ Breaking Changes
     Use `with script.context()` instead.
 - TractorDispatcher : Removed deprecated support for `preSpoolSignal` slots without `taskData` arguments.
 
-1.7.x.x (relative to 1.7.0.0)
+1.7.x.x (relative to 1.7.1.0)
 =======
+
+
+
+1.7.1.0 (relative to 1.7.0.0)
+=======
+
+> Note : RenderMan 26.4 is no longer supported on Windows, due to being unavailable for download from https://renderman.pixar.com.
 
 Features
 --------
@@ -27,10 +34,12 @@ Features
 Improvements
 ------------
 
+- PointInstancer : Integrated with the `instanceID` AOV.
 - SetFilter, Scene Editors : Set expressions containing operators are now editable via drag and drop of set names.
 - NodeEditor : Scene locations can now be dropped to pin the editor to their source node. Locations may be dragged from the Viewer, AttributeEditor, LightEditor, HierarchyView and LightLinkingEditor.
 - Arnold : Added support for V3dVectorData primitive variables. These are converted to float vectors, since Arnold does not support doubles.
 - SceneReader : Added support for reading `P3d` and `N3d` GeomParams from Alembic files.
+- UIEditor : Added `Inline` checkbox to the Widget Settings section for all widget types (#6523).
 
 Fixes
 -----
@@ -39,6 +48,10 @@ Fixes
 - AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
 - GraphEditor : Stopped drag & dropped scene locations from navigating to private internal nodes.
 - PlugLayout : Fixed `Internal C++ object already deleted` errors when a plug stops being laid out as an inline accessory, such as when its `layout:accessory` metadata was changed or removed, or when the plug it was grouped with was hidden or deleted (#6938).
+- Arnold :
+  - Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
+  - Fixed crash translating network where all shaders are invalid.
+- ReferenceTest, 3Delight RendererTest : Fixed leakage of modified environment. This is handled in the TestCase base class, so in future no test can accidentally leak modifications.
 
 API
 ---
@@ -295,7 +308,12 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.21.x (relative to 1.6.21.4)
+1.6.21.x (relative to 1.6.21.5)
+========
+
+
+
+1.6.21.5 (relative to 1.6.21.4)
 ========
 
 > Note : RenderMan 26.4 is no longer supported on Windows, due to being unavailable for download from https://renderman.pixar.com.
@@ -306,6 +324,10 @@ Fixes
 - LevelSetOffset : Fixed crash when attempting to offset grid types other than `FloatGrid`.
 - AttributeTweaks, CustomAttributes, OptionTweaks, CustomOptions, OptionQuery : Fixed contexts used by "From Scene", "From Selected" and "From Affected" menu items. This fixes errors caused by missing context variables (such as script variables).
 - PlugLayout : Fixed `Internal C++ object already deleted` errors when a plug stops being laid out as an inline accessory, such as when its `layout:accessory` metadata was changed or removed, or when the plug it was grouped with was hidden or deleted (#6938).
+- Arnold :
+  - Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
+  - Fixed crash translating network where all shaders are invalid.
+- ReferenceTest, 3Delight RendererTest : Fixed leakage of modified environment. This is handled in the TestCase base class, so in future no test can accidentally leak modifications.
 
 1.6.21.4 (relative to 1.6.21.3)
 ========
