@@ -1,5 +1,12 @@
-1.7.x.x (relative to 1.7.0.0)
+1.7.x.x (relative to 1.7.1.0)
 =======
+
+
+
+1.7.1.0 (relative to 1.7.0.0)
+=======
+
+> Note : RenderMan 26.4 is no longer supported on Windows, due to being unavailable for download from https://renderman.pixar.com.
 
 Features
 --------
