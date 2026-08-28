@@ -95,7 +95,6 @@ class ApplicationTest( GafferTest.TestCase ) :
 		# environment variable instead. Still, we want to test that variables created
 		# this way are passed to child applications.
 		os.environ["gafferApplicationTestMIXEDcaseA"] = "testTEST"
-		self.addCleanup( os.environ.__delitem__, "gafferApplicationTestMIXEDcaseA" )
 
 		# If we bypass `os.environ`, then we can create a mixed-case variable even
 		# on Windows.
