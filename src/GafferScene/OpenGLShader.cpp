@@ -58,6 +58,8 @@
 
 #include "fmt/format.h"
 
+#include <array>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
