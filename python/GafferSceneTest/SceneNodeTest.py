@@ -37,7 +37,6 @@
 
 import enum
 import inspect
-import unittest
 import time
 import threading
 import imath

@@ -41,7 +41,6 @@ import GafferUITest
 import IECore
 
 import itertools
-import unittest
 
 import GafferUI.SpreadsheetUI._ClipboardAlgo as _ClipboardAlgo
 from GafferUI.SpreadsheetUI._OutPlugTableModel import _OutPlugTableModel

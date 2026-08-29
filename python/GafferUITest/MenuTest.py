@@ -36,7 +36,6 @@
 ##########################################################################
 
 import functools
-import unittest
 import weakref
 
 import IECore

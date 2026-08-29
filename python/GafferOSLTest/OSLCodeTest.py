@@ -38,7 +38,6 @@ import os
 import pathlib
 import subprocess
 import shutil
-import unittest
 import functools
 import imath
 

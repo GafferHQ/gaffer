@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import unittest
 import threading
 import time
 import functools

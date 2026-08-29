@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import unittest
 import os
 import glob
 import urllib

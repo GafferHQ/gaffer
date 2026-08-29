@@ -35,7 +35,6 @@
 ##########################################################################
 
 import sys
-import unittest
 import imath
 import os
 import pathlib

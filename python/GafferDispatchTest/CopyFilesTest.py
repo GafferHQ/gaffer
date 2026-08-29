@@ -39,7 +39,6 @@ import pathlib
 import subprocess
 import shutil
 import sys
-import unittest
 
 import IECore
 

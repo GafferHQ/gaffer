@@ -37,7 +37,6 @@
 import pathlib
 import math
 import time
-import unittest
 
 import imath
 import OpenImageIO

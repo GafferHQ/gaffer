@@ -38,7 +38,6 @@ import http.server
 import inspect
 import json
 import threading
-import unittest
 
 import Gaffer
 import GafferTest

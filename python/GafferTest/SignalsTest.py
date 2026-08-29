@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import unittest
 import weakref
 import functools
 import imath

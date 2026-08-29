@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import unittest
 import warnings
 import weakref
 

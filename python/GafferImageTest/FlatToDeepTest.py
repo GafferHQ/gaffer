@@ -35,7 +35,6 @@
 ##########################################################################
 
 import random
-import unittest
 import imath
 
 import IECore

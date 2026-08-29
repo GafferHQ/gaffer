@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import GafferUSD
 import GafferUSDUI
 import GafferUITest

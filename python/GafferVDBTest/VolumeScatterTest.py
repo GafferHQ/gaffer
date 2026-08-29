@@ -35,7 +35,6 @@
 ##########################################################################
 
 import imath
-import unittest
 import pathlib
 
 import IECore

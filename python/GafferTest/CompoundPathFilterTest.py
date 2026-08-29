@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import unittest
 import itertools
 
 import Gaffer
