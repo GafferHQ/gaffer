@@ -42,6 +42,7 @@ import imath
 
 import GafferUI
 import Gaffer
+from GafferUI.i18n import translate as _translate
 
 from Qt import QtCore
 from Qt import QtGui
@@ -101,7 +102,7 @@ class Window( GafferUI.ContainerWidget ) :
 
 	def setTitle( self, title ) :
 
-		self._qtWidget().setWindowTitle( title )
+		self._qtWidget().setWindowTitle( _translate( title ) )
 
 	def getTitle( self ) :
 

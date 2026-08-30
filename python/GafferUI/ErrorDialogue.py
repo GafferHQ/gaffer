@@ -41,6 +41,7 @@ import imath
 import IECore
 
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 class ErrorDialogue( GafferUI.Dialogue ) :
 
@@ -79,7 +80,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 				messageWidget.setMessages( messages )
 
 			if details is not None :
-				with GafferUI.Collapsible( label = "Details", collapsed = True ) :
+				with GafferUI.Collapsible( label = _translate( "Details" ), collapsed = True ) :
 					GafferUI.MultiLineTextWidget(
 						text = details,
 						editable = False,
