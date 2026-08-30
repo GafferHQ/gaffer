@@ -44,16 +44,17 @@ import IECoreScene
 
 import functools
 import imath
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ShaderTweakProxy,
 
 	"description",
-	"""
+	_("""
 	Represents a shader in the shader network that a ShaderTweaks node is modifying. Allows forming
 	connections from existing shaders to shaders that are being inserted.
-	""",
+	"""),
 
 	"icon", "shaderTweakProxy.png",
 
@@ -61,14 +62,14 @@ Gaffer.Metadata.registerNode(
 
 		"name" : {
 
-			"description" : "Hardcoded for ShaderTweakProxy nodes.",
+			"description" : _("Hardcoded for ShaderTweakProxy nodes."),
 			"plugValueWidget:type" : "",
 
 		},
 
 		"type" : {
 
-			"description" : "Hardcoded for ShaderTweakProxy nodes.",
+			"description" : _("Hardcoded for ShaderTweakProxy nodes."),
 			"plugValueWidget:type" : "",
 
 		},
@@ -82,10 +83,10 @@ Gaffer.Metadata.registerNode(
 		"parameters.targetShader" : {
 
 			"description" :
-			"""
+			_("""
 			The handle of the upstream shader being fetched by this proxy - or Auto, indicating that
 			the original input of the parameter being ShaderTweaked will be used.
-			""",
+			"""),
 			"readOnly" : True,
 			"nodule:type" : "",
 			"stringPlugValueWidget:placeholderText" : "Auto",
@@ -102,9 +103,9 @@ Gaffer.Metadata.registerNode(
 		"out.*" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the output on the shader we are fetching, or "auto" for an auto proxy.
-			""",
+			"""),
 
 		},
 
@@ -304,7 +305,7 @@ def __plugContextMenuSignal( graphEditor, plug, menuDefinition ) :
 		# any connected as outputs either.
 		return
 
-	menuDefinition.append( "/Create ShaderTweakProxy",
+	menuDefinition.append( "/" + _("Create ShaderTweakProxy"),
 		{ "subMenu" : functools.partial( _plugContextMenu, plug, None ) }
 	)
 

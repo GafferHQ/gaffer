@@ -46,13 +46,14 @@ import GafferScene
 import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ShaderTweaks,
 
 	"description",
-	"""
+	_("""
 	Makes modifications to shader parameter values.
 
 	Shader parameters are identified by name, and can optionally be filtered by the name and type of the shader they belong to. Examples :
@@ -64,7 +65,7 @@ Gaffer.Metadata.registerNode(
 	- `diffuseTexture*{shaderType=image}.mipmap_bias` : Chooses all parameters called `mipmap_bias` on shaders whose type is `image` and whose name matches `diffuseTexture*`.
 
 	> Tip : Parameters can be dragged from the SceneInspector and dropped into the text field to fill the name automatically.
-	""",
+	"""),
 
 	"layout:section:Settings.Tweaks:collapsed", False,
 
@@ -73,10 +74,10 @@ Gaffer.Metadata.registerNode(
 		"shader" : {
 
 			"description" :
-			"""
+			_("""
 			The type of shader to modify. This is actually the name
 			of an attribute which contains the shader network.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"presetsPlugValueWidget:allowCustom" : True,
@@ -90,12 +91,12 @@ Gaffer.Metadata.registerNode(
 		"localise" : {
 
 			"description" :
-			"""
+			_("""
 			Turn on to allow location-specific tweaks to be made to inherited
 			shaders. Shaders will be localised to locations matching the
 			node's filter prior to tweaking. The original inherited shader will
 			remain untouched.
-			""",
+			"""),
 
 			"layout:index" : 1
 		},
@@ -103,10 +104,10 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissing" : {
 
 			"description" :
-			"""
+			_("""
 			Ignores tweaks targeting missing parameters. When off, missing parameters
 			cause the node to error.
-			""",
+			"""),
 
 			"layout:index" : 2
 
@@ -115,12 +116,12 @@ Gaffer.Metadata.registerNode(
 		"tweaks" : {
 
 			"description" :
-			"""
+			_("""
 			The tweaks to be made to the parameters of the shader.
 			Arbitrary numbers of user defined tweaks may be
 			added as children of this plug via the user
 			interface, or using the ShaderTweaks API via python.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Tweaks",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
@@ -318,7 +319,7 @@ def __parametersDropHandler( widget, dragDropEvent ) :
 
 	parameters = __filteredParameters( widget, dragDropEvent )
 	if not parameters :
-		GafferUI.PopupWindow.showWarning( "Parameters added already", parent = widget )
+		GafferUI.PopupWindow.showWarning( _("Parameters added already"), parent = widget )
 
 	toCreate = {}
 	for name, value in parameters.items() :
@@ -327,7 +328,7 @@ def __parametersDropHandler( widget, dragDropEvent ) :
 		except :
 			# If we can't handle a parameter, then warn and exit without handling any
 			# others. It's confusing if we show a warning but still make some tweaks.
-			GafferUI.PopupWindow.showWarning( "Unsupported data type", parent = widget )
+			GafferUI.PopupWindow.showWarning( _("Unsupported data type"), parent = widget )
 			return
 
 	with Gaffer.UndoScope( widget.plugParent().ancestor( Gaffer.ScriptNode ) ) :
@@ -361,8 +362,8 @@ class _ShaderTweakPlugValueWidget( GafferUI.TweakPlugValueWidget ) :
 			self.__proxyButton = GafferUI.MenuButton(
 				image="shaderTweakProxyIcon.png",
 				hasFrame=False,
-				menu=GafferUI.Menu( Gaffer.WeakMethod( self.__createProxyMenuDefinition ), title = "Create Proxy" ),
-				toolTip = "Proxies allow making connections from the outputs of nodes in the input network."
+				menu=GafferUI.Menu( Gaffer.WeakMethod( self.__createProxyMenuDefinition ), title = _("Create Proxy") ),
+				toolTip = _("Proxies allow making connections from the outputs of nodes in the input network.")
 			)
 
 		self.__updateButtonVisibility()

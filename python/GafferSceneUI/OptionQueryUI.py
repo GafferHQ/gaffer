@@ -39,6 +39,7 @@ import functools
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Internal utilities
@@ -153,31 +154,31 @@ Gaffer.Metadata.registerNode(
 	GafferScene.OptionQuery,
 
 	"description",
-	"""
+	_("""
 	Queries global scene options, creating an output for each option.
-	""",
+	"""),
 
 	plugs = {
 
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query the options from.
-			""",
+			"""),
 
 		},
 
 		"queries" : {
 
 			"description" :
-			"""
+			_("""
 			The options to be queried - arbitrary numbers of options may be added
 			as children of this plug via the user interface, or via python. Each
 			child is a `NameValuePlug` whose `name` plug is the option to query,
 			and whose `value` plug is the default value to use if the option can
 			not be retrieved.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -194,37 +195,37 @@ Gaffer.Metadata.registerNode(
 		"queries.*" : {
 
 			"description" :
-			"""
+			_("""
 			A pair of option name to query and default value.
-			""",
+			"""),
 
 		},
 
 		"queries.*.name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the option to query.
-			""",
+			"""),
 
 		},
 
 		"queries.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			The value to output if the option does not exist.
-			""",
+			"""),
 
 		},
 
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The parent plug of the query outputs. The order of outputs corresponds
 			to the order of children of `queries`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -239,9 +240,9 @@ Gaffer.Metadata.registerNode(
 		"out.*" : {
 
 			"description" :
-			"""
+			_("""
 			The result of the query.
-			""",
+			"""),
 
 			"label" : functools.partial( __getLabel, parentPlug = ""),
 
@@ -254,9 +255,9 @@ Gaffer.Metadata.registerNode(
 		"out.*.exists" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs true if the option exists, otherwise false.
-			""",
+			"""),
 
 			"noduleLayout:label" : functools.partial( __getLabel, parentPlug = "exists" ),
 
@@ -265,10 +266,10 @@ Gaffer.Metadata.registerNode(
 		"out.*.value" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the value of the option, or the default value if the option
 			does not exist.
-			""",
+			"""),
 
 		},
 
@@ -326,7 +327,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
+		menuDefinition.append( "/" + _("Delete"), { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 def __deletePlug( plug ) :
 

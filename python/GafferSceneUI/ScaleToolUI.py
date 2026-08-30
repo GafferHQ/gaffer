@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.ScaleTool,
 
 	"description",
-	"""
+	_("""
 	Tool for editing object scale.
-	""",
+	"""),
 
 	"viewer:shortCut", "R",
 	"order", 3,

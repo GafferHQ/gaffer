@@ -41,6 +41,7 @@ import GafferUI
 import GafferScene
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 ## \deprecated
 ## \todo Remove in next major version.
@@ -58,12 +59,12 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Render,
 
 	"description",
-	"""
+	_("""
 	Performs offline batch rendering using any of the
 	available renderer backends, or optionally writes
 	scene descriptions to disk for later rendering via
 	a SystemCommand node.
-	""",
+	"""),
 
 	"layout:activator:modeIsSceneDescription", lambda node : node["mode"].getValue() == node.Mode.SceneDescriptionMode,
 
@@ -72,9 +73,9 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to be rendered.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 
@@ -83,11 +84,11 @@ Gaffer.Metadata.registerNode(
 		"renderer" : {
 
 			"description" :
-			"""
+			_("""
 			The renderer to use. Default mode uses the `render:defaultRenderer` option from
 			the input scene globals to choose the renderer. This can be authored using
 			the StandardOptions node.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.RenderUI.RendererPlugValueWidget",
 
@@ -102,9 +103,9 @@ Gaffer.Metadata.registerNode(
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			The type of render to perform.
-			""",
+			"""),
 
 			"preset:Render" : GafferScene.Render.Mode.RenderMode,
 			"preset:Scene Description" : GafferScene.Render.Mode.SceneDescriptionMode,
@@ -116,9 +117,9 @@ Gaffer.Metadata.registerNode(
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the file to be generated when in scene description mode.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -130,19 +131,19 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			A direct pass-through of the input scene.
-			""",
+			"""),
 
 		},
 
 		"resolvedRenderer" : {
 
 			"description" :
-			"""
+			_("""
 			The renderer that will be used, accounting for the value of the
 			`render:defaultRenderer` option if `renderer` is set to "Default".
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 

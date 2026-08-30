@@ -39,6 +39,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -162,14 +163,14 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if all( p.isGanged() for p in plugs ) :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
-			menuDefinition.append( "/Ungang", {
+			menuDefinition.append( "/" + _("Ungang"), {
 				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__ungang ),
 				"shortCut" : "Ctrl+G",
 				"active" : not readOnly,
 			} )
 		else :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
-			menuDefinition.append( "/Gang", {
+			menuDefinition.append( "/" + _("Gang"), {
 				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__gang ),
 				"shortCut" : "Ctrl+G",
 				"active" : not readOnly and all( p.canGang() for p in plugs ),

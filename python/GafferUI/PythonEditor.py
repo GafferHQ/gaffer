@@ -47,6 +47,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtWidgets
 from Qt import QtCore
@@ -244,7 +245,7 @@ class PythonEditor( GafferUI.Editor ) :
 		if widget is self.inputWidget() :
 
 			definition.append(
-				"/Execute Selection" if widget.selectedText() else "/Execute",
+				"/" + _("Execute Selection") if widget.selectedText() else "/" + _("Execute"),
 				{
 					"command" : Gaffer.WeakMethod( self.execute ),
 					"shortCut" : "Enter",
@@ -254,7 +255,7 @@ class PythonEditor( GafferUI.Editor ) :
 			definition.append( "/ExecuteDivider", { "divider" : True } )
 
 		definition.append(
-			"/Copy",
+			"/" + _("Copy"),
 			{
 				"command" : functools.partial(
 					self.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents,
@@ -266,7 +267,7 @@ class PythonEditor( GafferUI.Editor ) :
 
 		if widget is self.inputWidget() :
 			definition.append(
-				"/Paste",
+				"/" + _("Paste"),
 				{
 					"command" : functools.partial(
 						widget.insertText,
@@ -279,7 +280,7 @@ class PythonEditor( GafferUI.Editor ) :
 		definition.append( "/CopyPasteDivider", { "divider" : True } )
 
 		definition.append(
-			"/Select All",
+			"/" + _("Select All"),
 			{
 				"command" : widget._qtWidget().selectAll,
 				"active" :  bool( widget.getText() )
@@ -289,7 +290,7 @@ class PythonEditor( GafferUI.Editor ) :
 		definition.append( "/SelectDivider", { "divider" : True } )
 
 		definition.append(
-			"/Clear",
+			"/" + _("Clear"),
 			{
 				"command" : functools.partial( widget.setText, "" ),
 				"active" : bool( widget.getText() )

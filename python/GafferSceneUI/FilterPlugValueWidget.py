@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -89,7 +90,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# update the selection menu text
 		if filterNode is None :
-			self.__menuButton.setText( "Add..." )
+			self.__menuButton.setText( _("Add...") )
 		elif filterNode.parent().isSame( thisNode ) :
 			self.__menuButton.setText( filterNode.getName() )
 		else :
@@ -147,11 +148,12 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result = IECore.MenuDefinition()
 
 		if filterNode is not None :
-			result.append( "/Remove", { "command" : Gaffer.WeakMethod( self.__removeFilter ) } )
+			result.append( "/" + _("Remove"), { "command" : Gaffer.WeakMethod( self.__removeFilter ), "label" : _("Remove") } )
 			result.append( "/RemoveDivider", { "divider" : True } )
 
 		for filterType in self.__filterTypes() :
-			result.append( "/" + filterType.staticTypeName().rpartition( ":" )[2], { "command" : functools.partial( Gaffer.WeakMethod( self.__addFilter ), filterType ) } )
+			typeName = IECore.CamelCase.toSpaced( filterType.staticTypeName().rpartition( ":" )[2] )
+			result.append( "/" + _(typeName), { "command" : functools.partial( Gaffer.WeakMethod( self.__addFilter ), filterType ) } )
 
 		return result
 

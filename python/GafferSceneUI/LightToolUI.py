@@ -42,15 +42,16 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.LightTool,
 
 	"description",
-	"""
+	_("""
 	Tool for editing light shapes, such as spot light cones or quad light width and height.
-	""",
+	"""),
 
 	"viewer:shortCut", "A",
 	"order", 6,

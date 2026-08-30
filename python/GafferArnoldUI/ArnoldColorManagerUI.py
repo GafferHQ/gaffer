@@ -40,6 +40,7 @@ import Gaffer
 import GafferUI
 import GafferImageUI
 import GafferArnold
+from GafferUI.i18n import _
 
 def __parameterUserDefault( plug ) :
 
@@ -97,10 +98,10 @@ Gaffer.Metadata.registerNode(
 	GafferArnold.ArnoldColorManager,
 
 	"description",
-	"""
+	_("""
 	Specifies the colour manager to be used in Arnold renders. This is represented
 	in the scene as an option called `ai:color_manager`.
-	""",
+	"""),
 
 	plugs = {
 
@@ -109,9 +110,9 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
 			"description" :
-			"""
+			_("""
 			The parameters for the colour manager.
-			""",
+			"""),
 
 		},
 

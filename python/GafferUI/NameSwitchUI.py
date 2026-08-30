@@ -42,13 +42,14 @@ import Gaffer
 import GafferUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.NameSwitch,
 
 	"description",
-	"""
+	_("""
 	Switches between multiple input connections, passing through the
 	chosen input to the output. Each input has a "name" as well
 	as a value, and switching is performed by comparing the names against
@@ -62,18 +63,18 @@ Gaffer.Metadata.registerNode(
 	  by spaces.
 	- The first input is used as a default, and is chosen only if no other
 	  input matches.
-	""",
+	"""),
 
 	plugs = {
 
 		"selector" : {
 
 			"description" :
-			"""
+			_("""
 			The value that the input names will be matched against.
 			Typically this will refer to a Context Variable using
 			the `${variableName}` syntax.
-			""",
+			"""),
 
 			"preset:Render Pass" : "${renderPass}",
 
@@ -165,11 +166,11 @@ Gaffer.Metadata.registerNode(
 		"enabledNames" : {
 
 			"description" :
-			"""
+			_("""
 			An output plug containing the names of all currently enabled inputs.
 			Example uses include driving `Collect.contextValues` to collect all
 			the inputs, or `Wedge.strings` to dispatch a task per input.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
@@ -380,7 +381,7 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 					# Spacers on default row occupy the space taken by PlugValueWidgets on
 					# non-default rows. This keeps the ConnectionPlugValueWidgets in alignment.
 					GafferUI.Spacer( imath.V2i( 11, 1 ) )
-					label = GafferUI.Label( "Default", horizontalAlignment = GafferUI.HorizontalAlignment.Left )
+					label = GafferUI.Label( _("Default"), horizontalAlignment = GafferUI.HorizontalAlignment.Left )
 					label._qtWidget().setFixedWidth( self.__labelWidth )
 					GafferUI.Spacer( imath.V2i( 25, 1 ) )
 

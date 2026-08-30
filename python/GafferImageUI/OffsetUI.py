@@ -37,27 +37,28 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Offset,
 
 	"description",
-	"""
+	_("""
 	Offsets (translates) the image in integer increments. Because
 	the increments may only be whole numbers, no filtering is necessary,
 	and this node has improved performance compared to the equivalent
 	ImageTransform.
-	""",
+	"""),
 
 	plugs = {
 
 		"offset" : {
 
 			"description" :
-			"""
+			_("""
 			The amount to offset the image by.
-			""",
+			"""),
 
 		},
 

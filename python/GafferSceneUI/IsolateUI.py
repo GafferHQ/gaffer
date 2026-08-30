@@ -39,6 +39,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -49,7 +50,7 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Isolate,
 
 	"description",
-	"""
+	_("""
 	Isolates objects by removing paths not matching a filter from the scene.
 
 	> Caution : The Isolate node does not work well with the `...` wildcard in
@@ -63,17 +64,17 @@ Gaffer.Metadata.registerNode(
 	> alternative would be to search the scene recursively looking for a true
 	> match, but this would defeat the goal of lazy evaluation and could cause
 	> poor performance.
-	""",
+	"""),
 
 	plugs = {
 
 		"from" : {
 
 			"description" :
-			"""
+			_("""
 			The ancestor to isolate the objects from. Only locations below
 			this will be removed.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 
@@ -82,35 +83,35 @@ Gaffer.Metadata.registerNode(
 		"keepLights" : {
 
 			"description" :
-			"""
+			_("""
 			Keeps all lights and light filters, regardless of other settings.
 			This is useful when isolating an asset but wanting to render it
 			using a light rig located elsewhere in the scene.
-			""",
+			"""),
 
 		},
 
 		"keepCameras" : {
 
 			"description" :
-			"""
+			_("""
 			Keeps all cameras, regardless of other settings. This is
 			useful when isolating an asset but wanting to render it
 			through a camera located elsewhere in the scene.
-			""",
+			"""),
 
 		},
 
 		"adjustBounds" : {
 
 			"description" :
-			"""
+			_("""
 			By default, the bounding boxes of ancestor locations are
 			automatically updated when children are removed. This can
 			be turned off if necessary to get improved performance - in
 			this case the bounding boxes will still wholly contain the
 			contents at each location, but may be bigger than necessary.
-			""",
+			"""),
 
 		},
 

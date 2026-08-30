@@ -37,16 +37,17 @@
 import Gaffer
 import GafferImage
 import IECore
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.FlatToDeep,
 
 	"description",
-	"""
+	_("""
 	Sets the deep flag on a flat image, and makes sure that it has a Z channel ( and optionally a ZBack channel )
 	so that it can be used in deep compositing.
-	""",
+	"""),
 
 	"layout:activator:zConstant", lambda node : node["zMode"].getValue() == GafferImage.FlatToDeep.ZMode.Constant,
 	"layout:activator:zChannel", lambda node : node["zMode"].getValue() == GafferImage.FlatToDeep.ZMode.Channel,
@@ -57,9 +58,9 @@ Gaffer.Metadata.registerNode(
 	plugs = {
 		"zMode" : {
 			"description" :
-			"""
+			_("""
 			Deep images must have a Z channel - it can be set either as a fixed depth, or using a channel.
-			""",
+			"""),
 
 			"preset:Constant" : GafferImage.FlatToDeep.ZMode.Constant,
 			"preset:Channel" : GafferImage.FlatToDeep.ZMode.Channel,
@@ -71,28 +72,28 @@ Gaffer.Metadata.registerNode(
 		"depth" : {
 
 			"description" :
-			"""
+			_("""
 			A constant depth value to place the whole image at.
-			""",
+			"""),
 			"layout:visibilityActivator" : "zConstant",
 		},
 
 		"zChannel" : {
 
 			"description" :
-			"""
+			_("""
 			Uses this channel as a Z channel, defining the depth each pixel is at.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 			"layout:visibilityActivator" : "zChannel",
 		},
 
 		"zBackMode" : {
 			"description" :
-			"""
+			_("""
 			Deep images may optionally have a ZBack channel - for transparent samples, this specifies
 			the depth range over which the opacity gradually increases from 0 to the alpha value.
-			""",
+			"""),
 
 			"preset:None" : GafferImage.FlatToDeep.ZBackMode.None_,
 			"preset:Thickness" : GafferImage.FlatToDeep.ZBackMode.Thickness,
@@ -105,20 +106,20 @@ Gaffer.Metadata.registerNode(
 		"thickness" : {
 
 			"description" :
-			"""
+			_("""
 			A constant thickness value for the whole image.  Transparent images will be
 			interpreted as fog where the density increases over this range.
-			""",
+			"""),
 			"layout:visibilityActivator" : "zBackThickness",
 		},
 
 		"zBackChannel" : {
 
 			"description" :
-			"""
+			_("""
 			Uses this channel as a ZBack channel, defining the end of the depth range for each
 			pixel.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 			"layout:visibilityActivator" : "zBackChannel",
 		},

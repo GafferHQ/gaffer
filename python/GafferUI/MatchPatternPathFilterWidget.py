@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
@@ -159,12 +160,12 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		propertyNameData = self.__propertyFilters().get( pathFilter.getPropertyName(), None )
 
 		self.__patternWidget.setPlaceholderText(
-			"Filter{}".format( ( " by " + propertyNameData.value + "..." ) if propertyNameData is not None else "..." )
+			"{}{}".format( _("Filter"), ( " " + _("by") + " " + propertyNameData.value + "..." ) if propertyNameData is not None else "..." )
 		)
 
 	def __propertyFilters( self ) :
 
-		result = { "name": IECore.StringData( "Name" ), "filesystem:owner": IECore.StringData( "Owner" ) }
+		result = { "name": IECore.StringData( _("Name") ), "filesystem:owner": IECore.StringData( _("Owner") ) }
 
 		with IECore.IgnoredExceptions( KeyError ) :
 			result = self.pathFilter().userData()["UI"]["propertyFilters"]

@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferOSL
 
 from . import _CodeMenu
@@ -52,10 +53,10 @@ Gaffer.Metadata.registerNode(
 	GafferOSL.OSLCode,
 
 	"description",
-	"""
+	_("""
 	Allows arbitrary OSL shaders to be written directly within
 	Gaffer.
-	""",
+	"""),
 
 	"layout:customWidget:error:widgetType", "GafferOSLUI.OSLCodeUI._ErrorWidget",
 	"layout:customWidget:error:section", "Settings.Code",
@@ -69,14 +70,14 @@ Gaffer.Metadata.registerNode(
 
 		"name" : {
 
-			"description" : "Generated automatically - do not edit.",
+			"description" : _("Generated automatically - do not edit."),
 			"plugValueWidget:type" : "",
 
 		},
 
 		"type" : {
 
-			"description" : "Generated automatically - do not edit.",
+			"description" : _("Generated automatically - do not edit."),
 			"plugValueWidget:type" : "",
 
 		},
@@ -84,7 +85,7 @@ Gaffer.Metadata.registerNode(
 		"parameters" : {
 
 			"description" :
-			"""
+			_("""
 			The inputs to the shader. Any number of inputs may be created
 			by adding child plugs. Supported plug types and the corresponding
 			OSL types are :
@@ -97,7 +98,7 @@ Gaffer.Metadata.registerNode(
 			- StringPlug (`string`)
 			- ClosurePlug (`closure color`)
 			- SplinefColor3f ( triplet of `float [], color [], string` )
-			""",
+			"""),
 
 			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLCodeUI._ParametersFooter",
 			"layout:customWidget:footer:index" : -1,
@@ -118,12 +119,12 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The outputs from the shader. Any number of outputs may be created
 			by adding child plugs. Supported plug types are as for the input
 			parameters, with the exception of SplinefColor3f, which cannot be
 			used as an output.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 
@@ -144,10 +145,10 @@ Gaffer.Metadata.registerNode(
 		"code" : {
 
 			"description" :
-			"""
+			_("""
 			The code for the body of the OSL shader. This should read from the
 			input parameters and write to the output parameters.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"plugValueWidget:type" : "GafferOSLUI.OSLCodeUI._CodePlugValueWidget",
@@ -181,9 +182,9 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 					hasFrame = False,
 					menu = GafferUI.Menu(
 						Gaffer.WeakMethod( self.__menuDefinition ),
-						title = "Add " + ( "Input" if plug.direction() == plug.Direction.In else "Output" )
+						title = _("Add ") + ( _("Input") if plug.direction() == plug.Direction.In else _("Output") )
 					),
-					toolTip = "Add " + ( "Input" if plug.direction() == plug.Direction.In else "Output" ),
+					toolTip = _("Add ") + ( _("Input") if plug.direction() == plug.Direction.In else _("Output") ),
 				)
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
@@ -375,7 +376,7 @@ def __toolMenu( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/ExportDivider", { "divider" : True } )
-	menuDefinition.append( "/Export OSL Shader...", { "command" : functools.partial( __exportOSLShader, nodeEditor, node ) } )
+	menuDefinition.append( "/" + _("Export OSL Shader..."), { "command" : functools.partial( __exportOSLShader, nodeEditor, node ), "label" : _("Export OSL Shader...") } )
 
 def __exportOSLShader( nodeEditor, node ) :
 
@@ -384,7 +385,7 @@ def __exportOSLShader( nodeEditor, node ) :
 	path = Gaffer.FileSystemPath( bookmarks.getDefault( nodeEditor ) )
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "osl" ] ) )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export OSL Shader", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title=_("Export OSL Shader"), confirmLabel=_("Export"), leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = nodeEditor.ancestor( GafferUI.Window ) )
 
 	if not path :
@@ -394,7 +395,7 @@ def __exportOSLShader( nodeEditor, node ) :
 	if not path.endswith( ".osl" ) :
 		path += ".osl"
 
-	with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Exporting Shader", parentWindow = nodeEditor.ancestor( GafferUI.Window ) ) :
+	with GafferUI.ErrorDialogue.ErrorHandler( title = _("Error Exporting Shader"), parentWindow = nodeEditor.ancestor( GafferUI.Window ) ) :
 		with open( path, "w", encoding = "utf-8" ) as f :
 			with nodeEditor.context() :
 				f.write( node.source( os.path.splitext( os.path.basename( path ) )[0] ) )

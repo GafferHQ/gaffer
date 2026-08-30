@@ -41,6 +41,8 @@ import IECore
 
 import GafferUI
 
+from GafferUI.i18n import _
+
 ## Appends a submenu of the given name to the specified IECore.MenuDefinition. The submenu
 # contains commands to facilitate the administration of different UI layouts.
 def appendDefinitions( menuDefinition, name="" ) :
@@ -73,7 +75,7 @@ def save( menu ) :
 		if layoutName not in layoutNames :
 			break
 
-	d = GafferUI.TextInputDialogue( initialText=layoutName, title="Save Layout", confirmLabel="Save" )
+	d = GafferUI.TextInputDialogue( initialText=layoutName, title=_( "Save Layout" ), confirmLabel=_( "Save" ) )
 	t = d.waitForText( parentWindow = scriptWindow )
 	d.setVisible( False )
 
@@ -153,21 +155,21 @@ def layoutMenuCallable( menu ) :
 			}
 		)
 	if persistentLayoutNames :
-		menuDefinition.append( "/Save As/Divider", { "divider" : True } )
+		menuDefinition.append( "/" + _("Save As") + "/Divider", { "divider" : True } )
 
-	menuDefinition.append( "/Save As/New Layout...", { "command" : save } )
+	menuDefinition.append( "/" + _("Save As") + "/" + _("New Layout..."), { "command" : save, "label" : _( "New Layout..." ) } )
 
 	# Menu items to delete layouts
 
 	if persistentLayoutNames :
 		for name in persistentLayoutNames :
-			menuDefinition.append( "/Delete/" + name, { "command" : functools.partial( layouts.remove, name = name ) } )
+			menuDefinition.append( "/" + _("Delete") + name, { "command" : functools.partial( layouts.remove, name = name ) } )
 
 	menuDefinition.append( "/SaveDeleteDivider", { "divider" : True } )
 
 	# Other menu items
 
-	menuDefinition.append( "/Full Screen", { "command" : fullScreen, "checkBox" : fullScreenCheckBox, "shortCut" : "F11" } )
+	menuDefinition.append( "/" + _("Full Screen"), { "command" : fullScreen, "checkBox" : fullScreenCheckBox, "shortCut" : "F11", "label" : _( "Full Screen" ) } )
 
 	return menuDefinition
 

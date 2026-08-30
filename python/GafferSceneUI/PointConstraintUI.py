@@ -36,17 +36,18 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.PointConstraint,
 
 	"description",
-	"""
+	_("""
 	Translates objects so that they are constrained to
 	the world space position of the target. Leaves the
 	scale and orientation of the object untouched.
-	""",
+	"""),
 
 	plugs = {
 
@@ -59,40 +60,40 @@ Gaffer.Metadata.registerNode(
 		"xEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables the constraint in the world space x axis.
-			""",
+			"""),
 
 		},
 
 		"yEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables the constraint in the world space y axis.
-			""",
+			"""),
 
 		},
 
 		"zEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables the constraint in the world space z axis.
-			""",
+			"""),
 
 		},
 
 		"offset" : {
 
 			"description" :
-			"""
+			_("""
 			A world space translation offset applied on top
 			of the target position.
 
 			> Note : This is ignored when `keepReferencePosition` is on. In this case it is easier
 			> to modify the reference position instead.
-			""",
+			"""),
 
 			"layout:activator" : "keepReferencePositionIsOff",
 

@@ -36,37 +36,38 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.LocaliseAttributes,
 
 	"description",
-	"""
+	_("""
 	Copies inherited attributes into local attributes.
-	""",
+	"""),
 
 	plugs = {
 
 		"attributes" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the attributes to localise. These should be
 			separated by spaces and can use Gaffer's standard wildcards
 			to match multiple attributes.
-			""",
+			"""),
 
 		},
 
 		"includeGlobalAttributes" : {
 
 			"description" :
-			"""
+			_("""
 			When enabled, global attributes matching the names in
 			`attributes` will be localised if an equivalent local
 			or inherited attribute is not found.
-			""",
+			"""),
 
 		},
 

@@ -37,6 +37,7 @@
 import IECore
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 # Command suitable for use with `NodeMenu.append()`.
 def nodeMenuCreateCommand( menu ) :
@@ -51,29 +52,29 @@ Gaffer.Metadata.registerNode(
 	GafferImage.RankFilter,
 
 	"description",
-	"""
+	_("""
 	Applies a rank filter to the image.
-	""",
+	"""),
 
 	plugs = {
 
 		"radius" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the filter in pixels. This can be varied independently
 			in the x and y directions.
-			""",
+			"""),
 
 		},
 
 		"boundingMode" : {
 
 			"description" :
-			"""
+			_("""
 			The method used when the filter references pixels outside the
 			input data window.
-			""",
+			"""),
 
 			"preset:Black" : GafferImage.Sampler.BoundingMode.Black,
 			"preset:Clamp" : GafferImage.Sampler.BoundingMode.Clamp,
@@ -85,22 +86,22 @@ Gaffer.Metadata.registerNode(
 		"expandDataWindow" : {
 
 			"description" :
-			"""
+			_("""
 			Expands the data window to include the external pixels
 			which the filter radius covers.
-			"""
+			""")
 
 		},
 
 		"masterChannel" : {
 
 			"description" :
-			"""
+			_("""
 			If specified, this channel will be used to compute the pixel index to select for all
 			channels.  You would probably want to use this with a channel that represents the overall
 			luminance of the image.  It will produce a rank filter which is lower quality, but preserves
 			additivity between channels, and is a bit faster.
-			""",
+			"""),
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 			"channelPlugValueWidget:extraChannels" : IECore.StringVectorData( [ "" ] ),
 			"channelPlugValueWidget:extraChannelLabels" : IECore.StringVectorData( [ "None" ] ),

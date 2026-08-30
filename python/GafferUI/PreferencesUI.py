@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Preferences,
 
 	"description",
-	"""
+	_("""
 	A container for application preferences.
-	""",
+	"""),
 
 	plugs = {
 

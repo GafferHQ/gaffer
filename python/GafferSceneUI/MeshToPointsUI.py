@@ -37,20 +37,21 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.MeshToPoints,
 
 	"description",
-	"""
+	_("""
 	Converts mesh primitives into points primitives.
 
 	Primitive variables with FaceVarying or Uniform
 	interpolation are discarded (because they have the
 	wrong size for the new primitive), but all other
 	primitive variables are preserved during conversion.
-	""",
+	"""),
 
 	plugs = {
 
@@ -63,10 +64,10 @@ Gaffer.Metadata.registerNode(
 		"type" : {
 
 			"description" :
-			"""
+			_("""
 			The render type for the newly converted
 			points primitives.
-			""",
+			"""),
 
 			"preset:Particle" : "particle",
 			"preset:Sphere" : "sphere",

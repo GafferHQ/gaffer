@@ -37,16 +37,17 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageProcessor,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which process an input image to
 	to generate an output image.
-	""",
+	"""),
 
 	plugs = {
 

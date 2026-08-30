@@ -36,20 +36,21 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CollectPrimitiveVariables,
 
 	"description",
-	"""
+	_("""
 	Make copies of target primitive variables with different suffixes,
 	where the new suffixed copies come from different Contexts.
 
 	By combining this with a TimeWarp, you can create copies of
 	primitive variables at different times, useful for creating trail
 	effects.
-	""",
+	"""),
 
 	"ui:spreadsheet:enabledRowNamesConnection", "suffixes",
 	"ui:spreadsheet:selectorContextVariablePlug", "suffixContextVariable",
@@ -58,27 +59,27 @@ Gaffer.Metadata.registerNode(
 		"primitiveVariables" : {
 
 			"description" :
-			"""
+			_("""
 			A match pattern for which primitive variables will be copied.
-			"""
+			""")
 
 		},
 
 		"suffixes" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the new suffixes to add to copies of the target
 			primitive variables.  The new suffixed variables will be
 			copied from different Contexts.
-			""",
+			"""),
 
 		},
 
 		"suffixContextVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a Context Variable that is set to the current
 			suffix when evaluating the input object. This can be used
 			in upstream expressions and string substitutions to vary
@@ -87,20 +88,20 @@ Gaffer.Metadata.registerNode(
 			For example, you could drive a TimeWarp with this
 			variable in order create copies of a primitive variable at
 			different times.
-			""",
+			"""),
 
 		},
 
 		"requireVariation" : {
 
 			"description" :
-			"""
+			_("""
 			If true, newly copied primitive variables will only be created
 			if the source object is differs in some of the suffix Contexts.
 			If the source object never changes, it will be passed through
 			unchanged ( since there is no variation, you can just use the
 			original primitive variables ).
-			"""
+			""")
 
 		},
 

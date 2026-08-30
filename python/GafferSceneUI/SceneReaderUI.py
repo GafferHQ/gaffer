@@ -41,6 +41,7 @@ import IECoreScene
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -51,22 +52,22 @@ Gaffer.Metadata.registerNode(
 	GafferScene.SceneReader,
 
 	"description",
-	"""
+	_("""
 	The primary means of loading external assets (models, animation and cameras etc)
 	from caches into Gaffer. Gaffer's native file format is the .scc (SceneCache) format
 	provided by Cortex, but Alembic and USD files are also supported. Other formats may be
 	added by registering a new implementation of Cortex's abstract SceneInterface.
-	""",
+	"""),
 
 	plugs = {
 
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the file to be loaded. The file can be
 			in any of the formats supported by Cortex's SceneInterfaces.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -80,11 +81,11 @@ Gaffer.Metadata.registerNode(
 		"refreshCount" : {
 
 			"description" :
-			"""
+			_("""
 			May be incremented to force a reload if the file has
 			changed on disk - otherwise old contents may still
 			be loaded via Gaffer's cache.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.RefreshPlugValueWidget",
 			"layout:label" : "",
@@ -95,20 +96,20 @@ Gaffer.Metadata.registerNode(
 		"tags" : {
 
 			"description" :
-			"""
+			_("""
 			Limits the parts of the scene loaded to only those
 			with a specific set of tags.
-			""",
+			"""),
 
 		},
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			The transform used to position the cache. This is applied to
 			all children of the cache root.
-			""",
+			"""),
 
 			"layout:section" : "Transform",
 

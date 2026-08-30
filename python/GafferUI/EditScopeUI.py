@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI._StyleSheet import _styleColors
 from Qt import QtGui
@@ -54,10 +55,10 @@ Gaffer.Metadata.registerNode(
 	Gaffer.EditScope,
 
 	"description",
-	"""
+	_("""
 	A container that interactive tools may make nodes in
 	as necessary.
-	""",
+	"""),
 
 	"icon", "editScopeNode.png",
 
@@ -126,7 +127,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__listContainer, plug, **kw )
 
 		with self.__listContainer :
-			self.__label = GafferUI.Label( "Edit Target" )
+			self.__label = GafferUI.Label( _("Edit Target") )
 			self.__busyWidget = GafferUI.BusyWidget( size = 18 )
 			self.__busyWidget.setVisible( False )
 			self.__menuButton = GafferUI.MenuButton(
@@ -268,7 +269,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.__followingGlobalEditTarget() :
 			self.__menuButton.setText( " " )
 		else :
-			self.__menuButton.setText( editScope.getName() if editScope is not None else "Source" )
+			self.__menuButton.setText( editScope.getName() if editScope is not None else _("Source") )
 
 		if editScope is not None :
 			self.__menuButton.setImage(
@@ -374,7 +375,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __buildMenu( self, path, currentEditScope ) :
 
 		result = IECore.MenuDefinition()
-		result.append( "/__TargetsDivider__", { "divider" : True, "label" : "Edit Targets" } )
+		result.append( "/__TargetsDivider__", { "divider" : True, "label" : _("Edit Targets") } )
 
 		for childPath in path.children() :
 			itemName = childPath[-1]
@@ -422,7 +423,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				)
 
 		if result.size() == 1 :
-			result.append( "No EditScopes Available", { "active" : False } )
+			result.append( "No EditScopes Available", { "active" : False, "label" : _("No EditScopes Available") } )
 
 		return result
 
@@ -459,7 +460,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.__contextTracker.updatePending() :
 			result.append( "/__RefreshDivider__", { "divider" : True } )
-			result.append( "/Refresh", { "command" : Gaffer.WeakMethod( self.__refreshMenu ) } )
+			result.append( "/" + _("Refresh"), { "command" : Gaffer.WeakMethod( self.__refreshMenu ) } )
 
 		result.append( "/__SourceDivider__", { "divider" : True } )
 		result.append(
@@ -472,18 +473,19 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		if self.__globalEditTargetPlug() is not None :
-			result.append( "/__FollowDivider__", { "divider" : True, "label" : "Options" } )
+			result.append( "/__FollowDivider__", { "divider" : True, "label" : _("Options") } )
 			result.append(
 				"/Follow Global Edit Target",
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__connectPlug ), self.__globalEditTargetPlug() ),
 					"checkBox" : self.__followingGlobalEditTarget(),
-					"description" : "Always use the global edit target.",
+					"description" : _("Always use the global edit target."),
+					"label" : _("Follow Global Edit Target"),
 				}
 			)
 
 		if currentEditScope is not None :
-			result.append( "/__ActionsDivider__", { "divider" : True, "label" : "Actions" } )
+			result.append( "/__ActionsDivider__", { "divider" : True, "label" : _("Actions") } )
 			nodes = currentEditScope.processors()
 			nodes.extend( self.__userNodes( currentEditScope ) )
 
@@ -499,7 +501,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			else :
 				result.append(
 					"/Show Edits/EditScope is Empty",
-					{ "active" : False },
+					{ "active" : False, "label" : _("EditScope is Empty") },
 				)
 
 		return result

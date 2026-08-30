@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 from . import _GafferSceneUI
@@ -85,7 +86,7 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				GafferScene.ScenePath( self.settings()["__filteredIn"], self.context(), "/" ),
 				columns = [
-					GafferUI.PathListingWidget.StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch ),
+					GafferUI.PathListingWidget.StandardColumn( _("Name"), "name", GafferUI.PathColumn.SizeMode.Stretch ),
 					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode ),
 					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode ),
 					GafferSceneUI.Private.VisibilityColumn( self.settings()["__adaptedIn"], self.settings()["editScope"] ),
@@ -198,7 +199,8 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			{
 				"command" : Gaffer.WeakMethod( self.__copySelectedPaths ),
 				"active" : not selection.isEmpty(),
-				"shortCut" : "Ctrl+C"
+				"shortCut" : "Ctrl+C",
+				"label" : _("Copy Path") if selection.size() == 1 else _("Copy Paths"),
 			}
 		)
 		menuDefinition.append(
@@ -206,7 +208,8 @@ class HierarchyView( GafferSceneUI.SceneEditor ) :
 			{
 				"command" : Gaffer.WeakMethod( self.__frameSelectedPaths ),
 				"active" : not selection.isEmpty(),
-				"shortCut" : "F"
+				"shortCut" : "F",
+				"label" : _("Frame Selection"),
 			}
 		)
 
@@ -276,8 +279,8 @@ class _VisibleSetBookmarkWidget( GafferUI.Widget ) :
 		button = GafferUI.MenuButton(
 			image = "bookmarks.png",
 			hasFrame = False,
-			toolTip = "Visible Set Bookmarks",
-			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title = "Visible Set Bookmarks" )
+			toolTip = _("Visible Set Bookmarks"),
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ), title = _("Visible Set Bookmarks") )
 		)
 
 		GafferUI.Widget.__init__( self, button )
@@ -316,9 +319,9 @@ class _VisibleSetBookmarkWidget( GafferUI.Widget ) :
 						"active" : not readOnly,
 					}
 				)
-			menuDefinition.append( "/Save As/Divider", { "divider" : True } )
+			menuDefinition.append( "/" + _("Save As") + "/Divider", { "divider" : True } )
 		else :
-			menuDefinition.append( "/No Bookmarks Available", { "active" : False } )
+			menuDefinition.append( "/" + _("No Bookmarks Available"), { "active" : False, "label" : _("No Bookmarks Available") } )
 			menuDefinition.append( "/NoBookmarksDivider", { "divider" : True } )
 
 		menuDefinition.append(
@@ -326,6 +329,7 @@ class _VisibleSetBookmarkWidget( GafferUI.Widget ) :
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__save ) ),
 				"active" : not readOnly,
+				"label" : _("New Bookmark..."),
 			}
 		)
 
@@ -333,7 +337,7 @@ class _VisibleSetBookmarkWidget( GafferUI.Widget ) :
 
 	def __save( self, *unused ) :
 
-		d = GafferUI.TextInputDialogue( initialText = "", title = "Save Bookmark", confirmLabel = "Save" )
+		d = GafferUI.TextInputDialogue( initialText = "", title = _("Save Bookmark"), confirmLabel = _("Save") )
 		name = d.waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if not name :
@@ -341,9 +345,9 @@ class _VisibleSetBookmarkWidget( GafferUI.Widget ) :
 
 		if name in GafferSceneUI.ScriptNodeAlgo.visibleSetBookmarks( self.ancestor( GafferUI.Editor ).scriptNode() ) :
 			c = GafferUI.ConfirmationDialogue(
-				"Replace existing bookmark?",
-				"A bookmark named {} already exists. Do you want to replace it?".format( name ),
-				confirmLabel = "Replace"
+				_("Replace existing bookmark?"),
+				_("A bookmark named {} already exists. Do you want to replace it?").format( name ),
+				confirmLabel = _("Replace")
 			)
 			if not c.waitForConfirmation( parentWindow = self.ancestor( GafferUI.Window ) ) :
 				return

@@ -36,59 +36,60 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ContactSheetCore,
 
 	"description",
-	"""
+	_("""
 	Collects multiple input images, transforming them into tiles within
 	the output image. Provides the core functionality of the ContactSheet
 	node, and may be reused for making similar nodes.
-	""",
+	"""),
 
 	plugs = {
 
 		"format" : {
 
 			"description" :
-			"""
+			_("""
 			The resolution and aspect ratio of the output image.
-			""",
+			"""),
 
 		},
 
 		"tiles" : {
 
 			"description" :
-			"""
+			_("""
 			The bounding boxes of each tile.
 
 			> Note : Each input image will be scaled to fit entirely within its tile
 			> while preserving aspect ratio.
-			""",
+			"""),
 
 		},
 
 		"tileVariable" : {
 
 			"description" :
-			"""
+			_("""
 			Context variable used to pass the index of the current tile to the upstream
 			node network. This should be used to provide a different input image per tile.
-			""",
+			"""),
 
 		},
 
 		"filter" : {
 
 			"description" :
-			"""
+			_("""
 			The pixel filter used when resizing the input images. Each
 			filter provides different tradeoffs between sharpness and
 			the danger of aliasing or ringing.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 

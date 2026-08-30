@@ -35,10 +35,11 @@
 ##########################################################################
 
 import GafferUI
+from GafferUI.i18n import _
 
 class ConfirmationDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title, message, cancelLabel="Cancel", confirmLabel="OK", sizeMode=GafferUI.Window.SizeMode.Automatic, details = None, **kw ) :
+	def __init__( self, title, message, cancelLabel=_("Cancel"), confirmLabel=_("OK"), sizeMode=GafferUI.Window.SizeMode.Automatic, details = None, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 
@@ -47,7 +48,7 @@ class ConfirmationDialogue( GafferUI.Dialogue ) :
 			GafferUI.Label( message )
 
 			if details is not None :
-				with GafferUI.Collapsible( label = "Details", collapsed = True ) :
+				with GafferUI.Collapsible( label = _("Details"), collapsed = True ) :
 					GafferUI.MultiLineTextWidget(
 						text = details,
 						editable = False,

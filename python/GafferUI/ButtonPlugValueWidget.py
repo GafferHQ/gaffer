@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 ## Supported metadata :
 #
@@ -100,7 +101,7 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"button" : self,
 		}
 
-		with GafferUI.ErrorDialogue.ErrorHandler( title = "Button Error", parentWindow = self.ancestor( GafferUI.Window ) ) :
+		with GafferUI.ErrorDialogue.ErrorHandler( title = _("Button Error"), parentWindow = self.ancestor( GafferUI.Window ) ) :
 			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				with self.context() :
 					exec( code, executionDict, executionDict )

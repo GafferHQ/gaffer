@@ -36,16 +36,17 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepTidy,
 
 	"description",
-	"""
+	_("""
 	Ensures deep samples are sorted and non-overlapping, and optionally
 	discards samples that are completely transparent, or covered by other
 	samples.
-	""",
+	"""),
 
 )

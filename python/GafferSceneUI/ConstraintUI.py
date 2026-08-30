@@ -38,6 +38,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -48,10 +49,10 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Constraint,
 
 	"description",
-	"""
+	_("""
 	Base type for nodes which constrain objects to a target
 	object by manipulating their transform.
-	""",
+	"""),
 
 	"layout:activator:targetModeIsUV", lambda node : node["targetMode"].getValue() == GafferScene.Constraint.TargetMode.UV,
 	"layout:activator:targetModeIsVertex", lambda node : node["targetMode"].getValue() == GafferScene.Constraint.TargetMode.Vertex,
@@ -63,23 +64,23 @@ Gaffer.Metadata.registerNode(
 		"targetScene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene containing the target location to which objects are
 			constrained. If this is unconnected, the main input scene
 			is used instead.
-			""",
+			"""),
 
 		},
 
 		"target" : {
 
 			"description" :
-			"""
+			_("""
 			The scene location to which the objects are constrained.
 			The world space transform of this location forms the basis
 			of the constraint target, but is modified by the targetMode
 			and targetOffset values before the constraint is applied.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "targetScene in",
@@ -89,21 +90,21 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissingTarget" : {
 
 			"description" :
-			"""
+			_("""
 			Causes the constraint to do nothing if the target location
 			doesn't exist in the scene, instead of erroring.
-			""",
+			"""),
 
 		},
 
 		"targetMode" : {
 
 			"description" :
-			"""
+			_("""
 			The precise location of the target transform - this can be
 			derived from the origin, bounding box or from a specific primitive
 			uv coordinate or vertex id of the target location.
-			""",
+			"""),
 
 			"preset:Origin" : GafferScene.Constraint.TargetMode.Origin,
 			"preset:BoundMin" : GafferScene.Constraint.TargetMode.BoundMin,
@@ -119,11 +120,11 @@ Gaffer.Metadata.registerNode(
 		"targetUV" : {
 
 			"description" :
-			"""
+			_("""
 			UV coordinate used in \"UV\" target mode.
 			The node will error if the specified uv coordinate is out of range or does not map unambiguously
 			to a single position on the primitive's surface unless ignoreMissingTarget is true.
-			""",
+			"""),
 
 			"layout:activator" : "targetModeIsUV",
 		},
@@ -131,13 +132,13 @@ Gaffer.Metadata.registerNode(
 		"targetVertex" : {
 
 			"description" :
-			"""
+			_("""
 			Vertex id used in \"Vertex\" target mode.
 			The node will error if the specified vertex id is out of range unless ignoreMissingTarget is true.
 			The node will error if the specified primitive does not have a set of uvs named \"uv\" with
 			FaceVarying or Vertex interpolation unless ignoreMissingTarget is true. The uvs will be used to
 			construct a local coordinate frame.
-			""",
+			"""),
 
 			"layout:activator" : "targetModeIsVertex",
 		},
@@ -145,12 +146,12 @@ Gaffer.Metadata.registerNode(
 		"targetOffset" : {
 
 			"description" :
-			"""
+			_("""
 			An offset applied to the target transform before the constraint
 			is applied. The offset is measured in the object space of the
 			target location unless the target mode is UV or Vertex in which case
 			the offset is measured relative to the local surface coordinate frame.
-			""",
+			"""),
 
 			"divider" : True,
 
@@ -159,20 +160,20 @@ Gaffer.Metadata.registerNode(
 		"keepReferencePosition" : {
 
 			"description" :
-			"""
+			_("""
 			Adjusts the constraint so that the original position of the object
 			at the `referenceFrame` is maintained.
-			""",
+			"""),
 
 		},
 
 		"referenceFrame" : {
 
 			"description" :
-			"""
+			_("""
 			The reference frame used by the `keepReferencePosition` mode. The constraint
 			is adjusted so that the original position at this frame is maintained.
-			""",
+			"""),
 
 			"layout:activator" : "keepReferencePositionIsOn",
 

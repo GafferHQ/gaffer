@@ -38,16 +38,17 @@ import Gaffer
 import GafferUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Switch,
 
 	"description",
-	"""
+	_("""
 	Chooses between multiple input connections, passing through the
 	chosen input to the output.
-	""",
+	"""),
 
 	# Add + buttons for creating new plugs in the GraphEditor
 	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.SwitchUI.PlugAdder",
@@ -64,12 +65,12 @@ Gaffer.Metadata.registerNode(
 		"index" : {
 
 			"description" :
-			"""
+			_("""
 			The index of the input which is passed through. A value
 			of 0 chooses the first input, 1 the second and so on. Values
 			larger than the number of available inputs wrap back around to
 			the beginning.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -78,10 +79,10 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The array of inputs to choose from. One of these is chosen
 			by the index plug to be passed through to the output.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::CompoundNodule",
 			"plugValueWidget:type" : "",
@@ -93,9 +94,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the input specified by the index.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -104,14 +105,14 @@ Gaffer.Metadata.registerNode(
 		"deleteContextVariables" : {
 
 			"description" :
-			"""
+			_("""
 			The names of context variables to be deleted before accessing the array
 			of inputs. Names should be space-separated and may use Gaffer's standard
 			wildcards.
 
 			> Tip : This is convenient for cleaning up context variables only needed
 			to compute the switch index.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"layout:section" : "Advanced",
@@ -121,12 +122,12 @@ Gaffer.Metadata.registerNode(
 		"connectedInputs" : {
 
 			"description" :
-			"""
+			_("""
 			The indices of the input array that have incoming connections.
 
 			> Tip : This can be used to drive a Wedge or Collect node so that
 			> they operate over each input in turn.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"layout:section" : "Advanced",
