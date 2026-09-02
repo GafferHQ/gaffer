@@ -98,19 +98,6 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 using ShaderSearchPathCache = IECore::LRUCache<std::string, std::string>;
 ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
-ccl::SocketType::Type getSocketType( const std::string &name )
-{
-	if( name == "float" ) return ccl::SocketType::Type::FLOAT;
-	if( name == "int" ) return ccl::SocketType::Type::INT;
-	if( name == "color" ) return ccl::SocketType::Type::COLOR;
-	if( name == "vector" ) return ccl::SocketType::Type::VECTOR;
-	if( name == "point" ) return ccl::SocketType::Type::POINT;
-	if( name == "normal" ) return ccl::SocketType::Type::NORMAL;
-	if( name == "closure" ) return ccl::SocketType::Type::CLOSURE;
-	if( name == "string" ) return ccl::SocketType::Type::STRING;
-	return ccl::SocketType::Type::UNDEFINED;
-}
-
 using ShaderMap = boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *>;
 
 ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::Scene *scene, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
@@ -125,7 +112,16 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	// Create node for shader.
 
-	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
+	const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) );
+	const bool isOSLShader =
+		// If the type says it's OSL, then it's definitely OSL.
+		boost::starts_with( shader->getType(), "osl:" ) ||
+		// But we're trying to wean ourselves off `Shader::getType()`,
+		// as it doesn't round-trip through USD. In this case use
+		// some heuristics : if it's not a Cycles shader then assume
+		// it's OSL.
+		( !boost::starts_with( shader->getType(), "cycles:" ) && !nodeType )
+	;
 
 	if( isOSLShader )
 	{
@@ -143,20 +139,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			return node;
 		}
 	}
-	else if( boost::starts_with( shader->getName(), "convert" ) )
-	{
-		/// \todo Why can't this be handled by the generic case below? There are NodeTypes
-		/// registered for each of these conversions, so `NodeType::find()` does work. The
-		/// only difference I can see is that this way we pass `autoconvert = true` to the
-		/// ConvertNode constructor, but it's not clear what benefit that has.
-		vector<string> split;
-		boost::split( split, shader->getName(), boost::is_any_of( "_" ) );
-		if( split.size() >= 4 ) // should be 4 eg. "convert, X, to, Y"
-		{
-			node = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
-		}
-	}
-	else if( const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) ) )
+	else if( nodeType )
 	{
 		if( nodeType->type == ccl::NodeType::SHADER && nodeType->create )
 		{

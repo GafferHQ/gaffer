@@ -35,6 +35,7 @@
 ##########################################################################
 
 import inspect
+import os
 import pathlib
 import struct
 import subprocess
@@ -68,6 +69,8 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	# the `pointInstancer()` call, so that it is tested.
 	## \todo Flip this to `True` by default, and make derived classes opt out.
 	pointInstancerSupported = False
+	# May be set to `True` to enable tests involving OSL surface shaders.
+	oslSurfaceSupported = False
 
 	@classmethod
 	def setUpClass( cls ) :
@@ -1837,6 +1840,90 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertEqual( instanceID, expectedInstanceID + 1 )
 
+	def testUSDConformantOSLShaders( self ) :
+
+		if not self.oslSurfaceSupported :
+			raise unittest.SkipTest( "OSL surface shaders not supported" )
+
+		# Render a simple constant OSL shader.
+
+		import GafferOSL
+
+		constant = GafferOSL.OSLShader()
+		constant.loadShader( "Surface/Constant" )
+		constant["parameters"]["Cs"].setValue( imath.Color3f( 1, 0.5, 0.25 ) )
+
+		sphere = GafferScene.Sphere()
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( sphere["out"] )
+		shaderAssignment["shader"].setInput( constant["out"]["out"] )
+
+		camera = GafferScene.Camera()
+		camera["transform"]["translate"]["z"].setValue( 3 )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( shaderAssignment["out"] )
+		parent["children"][0].setInput( camera["out"] )
+
+		imagePath = self.temporaryDirectory() / "test.exr"
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput(
+			"beauty",
+			IECoreScene.Output( imagePath.as_posix(), "exr", "rgba", {} )
+		)
+		outputs["in"].setInput( parent["out"] )
+
+		options = GafferScene.StandardOptions()
+		options["options"]["render:camera"]["enabled"].setValue( True )
+		options["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		rendererOptions = self._createOptions()
+		rendererOptions["in"].setInput( outputs["out"] )
+
+		render = GafferScene.Render()
+		render["in"].setInput( rendererOptions["out"] )
+		render["renderer"].setValue( self.renderer )
+		render["task"].execute()
+
+		# Check the result is as expected.
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( imagePath )
+
+		self.assertEqual( self.__color4fAtUV( imageReader, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0.5, 0.25, 1 ) )
+
+		# Write the scene to USD, losing the "osl:" type
+		# prefix in the process.
+
+		sceneWriter = GafferScene.SceneWriter()
+		sceneWriter["in"].setInput( parent["out"] )
+		sceneWriter["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
+
+		os.environ["IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS"] = "1"
+		sceneWriter["task"].execute()
+
+		# Render using the USD.
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setInput( sceneWriter["fileName"] )
+
+		outputs["in"].setInput( sceneReader["out"] )
+		# Make sure the shader is on the path. The wrapper would have done
+		# this for us if IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS was set at
+		# the time it ran.
+		os.environ["OSL_SHADER_PATHS"] = "{}{}{}".format(
+			os.environ["OSL_SHADER_PATHS"], os.pathsep, Gaffer.rootPath() / "shaders" / "Surface"
+		)
+
+		render["task"].execute()
+
+		# Check we still managed to find the right shader.
+
+		imageReader["refreshCount"].setValue( 1 )
+		self.assertEqual( self.__color4fAtUV( imageReader, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0.5, 0.25, 1 ) )
+
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a constant surface shader loaded, along
 	# with the plug for the colour parameter and the output plug to be connected
@@ -1905,3 +1992,11 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			shuffle["shuffles"].addChild( shufflePlug )
 
 		return shuffle
+
+	def __color4fAtUV( self, image, uv ) :
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( image["out"] )
+		dw = image['out']["format"].getValue().getDisplayWindow().size()
+		sampler["pixel"].setValue( uv * imath.V2f( dw.x, dw.y ) )
+		return sampler["color"].getValue()

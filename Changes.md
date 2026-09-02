@@ -6,6 +6,11 @@ Improvements
 
 - Cycles : Added support for the standard `automaticInstancing` attribute.
 
+Fixes
+-----
+
+- Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
+
 1.7.1.0 (relative to 1.7.0.0)
 =======
 
@@ -296,7 +301,10 @@ Build
 1.6.21.x (relative to 1.6.21.5)
 ========
 
+Fixes
+-----
 
+- Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
 
 1.6.21.5 (relative to 1.6.21.4)
 ========

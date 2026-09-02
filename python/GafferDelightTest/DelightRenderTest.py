@@ -49,6 +49,7 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 	# Apparent bug in 3Delight's EXR driver writes M44f as Box2f.
 	unsupportedOutputMetadataTypes = [ IECore.M44fData ]
 	pointInstancerSupported = True
+	oslSurfaceSupported = True
 
 	@unittest.skip( "No light linking support just yet" )
 	def testLightLinking( self ) :
