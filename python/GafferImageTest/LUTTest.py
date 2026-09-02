@@ -81,7 +81,7 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.LUT()
 		o["in"].setInput( n["out"] )
 		o["fileName"].setValue( "/not/a/real.cube" )
-		self.assertRaises( RuntimeError, GafferImage.ImageAlgo.image, o["out"] )
+		self.assertRaises( RuntimeError, GafferImageTest.processTiles, o["out"] )
 
 	def testBadInterpolation( self ) :
 

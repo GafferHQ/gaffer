@@ -63,8 +63,6 @@ class GAFFERUI_API ImageGadget : public Gadget
 		/// the GAFFERUI_IMAGE_PATHS environment variable.
 		/// Throws if the file cannot be loaded.
 		explicit ImageGadget( const std::string &fileName );
-		/// \deprecated
-		ImageGadget( const IECoreImage::ConstImagePrimitivePtr image );
 		~ImageGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::ImageGadget, ImageGadgetTypeId, Gadget );
@@ -96,11 +94,10 @@ class GAFFERUI_API ImageGadget : public Gadget
 	private :
 
 		Imath::Box3f m_bound;
-		// We can't actually generate the GL texture until renderLayer(), as
-		// the GL state might not be valid until then. so we store either
-		// the image to convert, the filename to load, or the previously
-		// converted texture in this member.
-		mutable IECore::ConstRunTimeTypedPtr m_imageOrTextureOrFileName;
+		// We can't actually generate the GL texture until `renderLayer()`, as
+		// the GL state might not be valid until then. So we store the filename
+		// to load or the previously converted texture in this member.
+		mutable IECore::ConstRunTimeTypedPtr m_textureOrFileName;
 
 };
 

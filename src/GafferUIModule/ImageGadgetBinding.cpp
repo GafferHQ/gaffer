@@ -51,6 +51,5 @@ void GafferUIModule::bindImageGadget()
 {
 	GadgetClass<ImageGadget>()
 		.def( init<const std::string &>() )
-		.def( init<IECoreImage::ConstImagePrimitivePtr>() )
 	;
 }

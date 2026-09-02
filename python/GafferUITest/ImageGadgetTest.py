@@ -40,20 +40,11 @@ import unittest
 import imath
 
 import IECore
-import IECoreImage
 
 import GafferUI
 import GafferUITest
 
 class ImageGadgetTest( GafferUITest.TestCase ) :
-
-	def testConstructFromImagePrimitive( self ) :
-
-		window = imath.Box2i( imath.V2i( 0 ), imath.V2i( 255 ) )
-		imagePrimitive = IECoreImage.ImagePrimitive.createRGBFloat( imath.Color3f( 0.25, .5, .75 ), window, window )
-
-		i = GafferUI.ImageGadget( imagePrimitive )
-		self.assertEqual( i.bound(), imath.Box3f( imath.V3f( -128, -128, 0 ), imath.V3f( 128, 128, 0 ) ) )
 
 	def testConstructFromFile( self ) :
 

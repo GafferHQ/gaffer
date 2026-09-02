@@ -174,13 +174,6 @@ void parallelGatherTiles2( const GafferImage::ImagePlug &image, object pythonCha
 	);
 }
 
-IECoreImage::ImagePrimitivePtr imageWrapper( const ImagePlug *plug, const char *viewName )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	std::string viewNameStr( viewName ? viewName : "" );
-	return ImageAlgo::image( plug, viewName ? &viewNameStr : nullptr );
-}
-
 IECore::MurmurHash imageHashWrapper( const ImagePlug *plug, const char *viewName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -243,7 +236,6 @@ void GafferImageModule::bindImageAlgo()
 		)
 	);
 
-	def( "image", &imageWrapper, ( boost::python::arg( "viewName" ) = object() ) );
 	def( "imageHash", &imageHashWrapper, ( boost::python::arg( "viewName" ) = object() ) );
 	def( "tiles", &tilesWrapper, ( boost::python::arg( "_copy" ) = true, boost::python::arg( "viewName" ) = object() ) );
 
