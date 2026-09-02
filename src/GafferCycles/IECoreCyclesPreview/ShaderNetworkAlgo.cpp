@@ -110,7 +110,16 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	// Create node for shader.
 
-	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
+	const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) );
+	const bool isOSLShader =
+		// If the type says it's OSL, then it's definitely OSL.
+		boost::starts_with( shader->getType(), "osl:" ) ||
+		// But we're trying to wean ourselves off `Shader::getType()`,
+		// as it doesn't round-trip through USD. In this case use
+		// some heuristics : if it's not a Cycles shader then assume
+		// it's OSL.
+		( !boost::starts_with( shader->getType(), "cycles:" ) && !nodeType )
+	;
 
 	if( isOSLShader )
 	{
@@ -128,7 +137,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			return node;
 		}
 	}
-	else if( const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) ) )
+	else if( nodeType )
 	{
 		if( nodeType->type == ccl::NodeType::SHADER && nodeType->create )
 		{
