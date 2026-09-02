@@ -48,6 +48,7 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
+#include "fmt/core.h"
 #include "fmt/format.h"
 
 #include <algorithm>
@@ -174,6 +175,8 @@ const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene:
 
 const string g_lightGroupArg = "lightGroup";
 const string g_emissionArg = "emission";
+const string g_emissionPipeArg = "emissionPipe";
+const string g_pipeEmissionArg = "pipeEmission";
 
 string lightGroupFormatString( const IECore::InternedString &name, const IECoreScene::Output *output )
 {
@@ -222,6 +225,8 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 	{
 		const string lightGroupBrackets = "<L.'{" + g_lightGroupArg + "}'>";
 		const string emissionBrackets = "{" + g_emissionArg + "}";
+		const string emissionPipeBrackets = "{" + g_emissionPipeArg + "}";
+		const string pipeEmissionBrackets = "{" + g_pipeEmissionArg + "}";
 
 		result = lpe.substr( 0, lpeStart + 1 );
 
@@ -265,7 +270,20 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 			{
 				// Add a token to allow `lightGroupOutput` to conditionally
 				// add the emission (O) token.
-				result += emissionBrackets;
+				if( i + 1 < eI && lpe[i + 1] == '|' )
+				{
+					result += emissionPipeBrackets;
+					++i;  // Skip over the following `|` that will be invalid without `O`.
+				}
+				else if( !result.empty() && result.back() == '|' )
+				{
+					result.pop_back();  // Remove previous `|` that will be invalid without `O`.
+					result += pipeEmissionBrackets;
+				}
+				else
+				{
+					result += emissionBrackets;
+				}
 			}
 			else if( lpe[i] == '{' && !inQuotes )
 			{
@@ -308,10 +326,14 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 
 IECoreScene::ConstOutputPtr lightGroupOutput( const std::string &lightGroupFormatString, const IECoreScene::Output *output, const std::string &lightGroup )
 {
+	// Only include the emission (O) token on the default layer.
+	// Otherwise light emission will be repeated in every light group.
 	const string lpe = fmt::format(
 		lightGroupFormatString,
 		fmt::arg( g_lightGroupArg.c_str(), lightGroup ),
-		fmt::arg( g_emissionArg.c_str(), lightGroup == g_defaultLightGroupLayer ? "O" : "" )
+		fmt::arg( g_emissionArg.c_str(), lightGroup == g_defaultLightGroupLayer ? "O" : "" ),
+		fmt::arg( g_emissionPipeArg.c_str(), lightGroup == g_defaultLightGroupLayer ? "O|" : "" ),
+		fmt::arg( g_pipeEmissionArg.c_str(), lightGroup == g_defaultLightGroupLayer ? "|O" : "" )
 	);
 
 	const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
