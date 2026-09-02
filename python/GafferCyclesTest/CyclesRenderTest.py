@@ -42,6 +42,7 @@ import GafferSceneTest
 class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "Cycles"
+	oslSurfaceSupported = True
 
 	def _createDiffuseShader( self ) :
 

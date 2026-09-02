@@ -1,7 +1,10 @@
 1.6.21.x (relative to 1.6.21.5)
 ========
 
+Fixes
+-----
 
+- Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
 
 1.6.21.5 (relative to 1.6.21.4)
 ========
