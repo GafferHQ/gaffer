@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.1.0)
 =======
 
+Improvements
+------------
 
+- Cycles : Added support for the standard `automaticInstancing` attribute.
 
 1.7.1.0 (relative to 1.7.0.0)
 =======
