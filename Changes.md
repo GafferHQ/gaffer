@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
+- BoxIO : Fixed `noduleLayout:section` metadata when BoxIn/BoxOut are set up from a plug of the opposite direction. This could result in EditScope nodes created immediately downstream of a Box having their `in` plug at the bottom of the node rather than the top.
 
 1.6.21.5 (relative to 1.6.21.4)
 ========

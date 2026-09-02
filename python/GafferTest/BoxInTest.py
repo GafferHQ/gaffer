@@ -220,6 +220,20 @@ class BoxInTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["b"]["i"].promotedPlug(), "noduleLayout:section" ), "left" )
 		self.assertEqual( Gaffer.Metadata.value( s["b"]["i"].plug(), "noduleLayout:section" ), "right" )
 
+	def testNoduleSectionMetadataFromOutPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		Gaffer.Metadata.registerValue( s["n"]["sum"], "noduleLayout:section", "bottom" )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"].setup( s["n"]["sum"] )
+
+		self.assertEqual( Gaffer.Metadata.value( s["b"]["i"].promotedPlug(), "noduleLayout:section" ), "top" )
+		self.assertIsNone( Gaffer.Metadata.value( s["b"]["i"].plug(), "noduleLayout:section" ) )
+
 	def testPromotedPlugRemovalDeletesBoxIn( self ) :
 
 		s = Gaffer.ScriptNode()

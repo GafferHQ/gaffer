@@ -189,5 +189,33 @@ class EditScopeTest( GafferTest.TestCase ) :
 		self.assertEqual( p2["variables"][0]["value"].getValue(), p["variables"][0]["value"].getValue() )
 		self.assertEqual( s2["e"]["out"].getValue(), s["e"]["out"].getValue() )
 
+	def testSetupFromOutPlugWithSectionMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.AddNode()
+		Gaffer.BoxIO.promote( s["b"]["n"]["sum"] )
+		Gaffer.Metadata.registerValue( s["b"]["sum"], "noduleLayout:section", "bottom" )
+
+		s["e"] = Gaffer.EditScope()
+		s["e"].setup( s["b"]["sum"] )
+
+		self.assertEqual( Gaffer.Metadata.value( s["e"]["in"], "noduleLayout:section" ), "top" )
+		self.assertEqual( Gaffer.Metadata.value( s["e"]["out"], "noduleLayout:section" ), "bottom" )
+
+	def testSetupFromInPlugWithSectionMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.AddNode()
+		Gaffer.BoxIO.promote( s["b"]["n"]["op1"] )
+		Gaffer.Metadata.registerValue( s["b"]["op1"], "noduleLayout:section", "top" )
+
+		s["e"] = Gaffer.EditScope()
+		s["e"].setup( s["b"]["op1"] )
+
+		self.assertEqual( Gaffer.Metadata.value( s["e"]["in"], "noduleLayout:section" ), "top" )
+		self.assertEqual( Gaffer.Metadata.value( s["e"]["out"], "noduleLayout:section" ), "bottom" )
+
 if __name__ == "__main__":
 	unittest.main()

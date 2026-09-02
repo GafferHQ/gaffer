@@ -244,7 +244,7 @@ void BoxIO::setup( const Plug *plug )
 	);
 
 	setupNoduleSectionMetadata(
-		m_direction == Plug::In ? outPlugInternal() : inPlugInternal(),
+		plug->direction() == Plug::In ? outPlugInternal() : inPlugInternal(),
 		plug
 	);
 
