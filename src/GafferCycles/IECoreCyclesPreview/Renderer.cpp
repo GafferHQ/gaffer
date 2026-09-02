@@ -2103,9 +2103,9 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 		IE_CORE_DECLAREMEMBERPTR( CyclesCamera );
 
 		CyclesCamera( const IECoreScene::ConstCameraPtr &camera )
-			:	m_camera( camera ),
-				m_transformSamples( { M44f() } )
+			:	m_camera( camera )
 		{
+			transform( { M44f() }, { 0.0f } );
 		}
 
 		~CyclesCamera() override
@@ -2118,7 +2118,16 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
-			m_transformSamples = samples;
+			m_transformSamples.resize( samples.size() );
+			for( size_t i = 0; i < samples.size(); ++i )
+			{
+				/// \todo Should we really be scaling in Y? It seems we're doing
+				/// it to counteract the flipping of the top/bottom view planes
+				/// in CameraAlgo, so perhaps we can stop doing that?
+				M44f m = samples[i];
+				m.scale( Imath::V3f( 1, -1, -1 ) );
+				m_transformSamples[i] = SocketAlgo::setTransform( m );
+			}
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2139,69 +2148,16 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			CameraAlgo::convert( m_camera.get(), destination );
 
-			const size_t numSamples = m_transformSamples.size();
+			const size_t primarySampleIndex = (m_transformSamples.size() - 1) / 2;
+			destination->set_matrix( m_transformSamples[primarySampleIndex] );
 
 			ccl::array<ccl::Transform> motion;
-
-			const Imath::V3f scale = Imath::V3f( 1.0f, -1.0f, -1.0f );
-			Imath::M44f matrix;
-
-			if( destination->get_motion_position() == ccl::MOTION_POSITION_START )
+			if( m_transformSamples.size() > 1 )
 			{
-				matrix = m_transformSamples.front();
-				matrix.scale( scale );
-				destination->set_matrix( SocketAlgo::setTransform( matrix ) );
-				if( numSamples != 1 )
+				motion.resize( m_transformSamples.size() );
+				for( size_t i = 0; i < m_transformSamples.size(); ++i )
 				{
-					motion = ccl::array<ccl::Transform>( 3 );
-					motion[0] = destination->get_matrix();
-					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.front(), m_transformSamples.back(), 0.5f, matrix );
-					matrix.scale( scale );
-					motion[1] = SocketAlgo::setTransform( matrix );
-					matrix = m_transformSamples.back();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
-				}
-			}
-			else if( destination->get_motion_position() == ccl::MOTION_POSITION_END )
-			{
-				matrix = m_transformSamples.back();
-				matrix.scale( scale );
-				destination->set_matrix( SocketAlgo::setTransform( matrix ) );
-				if( numSamples != 1 )
-				{
-					motion = ccl::array<ccl::Transform>( 3 );
-					motion[0] = destination->get_matrix();
-					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.back(), m_transformSamples.front(), 0.5f, matrix );
-					matrix.scale( scale );
-					motion[1] = SocketAlgo::setTransform( matrix );
-					matrix = m_transformSamples.front();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
-				}
-			}
-			else // ccl::Camera::MOTION_POSITION_CENTER
-			{
-				if( numSamples == 1 ) // One sample
-				{
-					matrix = m_transformSamples.front();
-					matrix.scale( scale );
-					destination->set_matrix( SocketAlgo::setTransform( matrix ) );
-				}
-				else
-				{
-					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.front(), m_transformSamples.back(), 0.5f, matrix );
-					matrix.scale( scale );
-					destination->set_matrix( SocketAlgo::setTransform( matrix ) );
-
-					motion = ccl::array<ccl::Transform>( 3 );
-					matrix = m_transformSamples.front();
-					matrix.scale( scale );
-					motion[0] = SocketAlgo::setTransform( matrix );
-					motion[1] = destination->get_matrix();
-					matrix = m_transformSamples.back();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
+					motion[i] = m_transformSamples[i];
 				}
 			}
 			destination->set_motion( motion );
@@ -2210,7 +2166,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		IECoreScene::ConstCameraPtr m_camera;
-		IECoreScenePreview::Renderer::TransformSamples m_transformSamples;
+		ccl::array<ccl::Transform> m_transformSamples;
 
 };
 
