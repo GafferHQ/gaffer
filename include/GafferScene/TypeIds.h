@@ -205,6 +205,7 @@ enum TypeId
 	QuantizePrimitiveVariablesTypeId = 120160,
 	RandomPrimitiveVariableTypeId = 120161,
 	PointInstancerCoreTypeId = 120162,
+	VisibilityQueryTypeId = 120163,
 
 	LastTypeId = 120999
 };
