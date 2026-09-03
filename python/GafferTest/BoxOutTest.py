@@ -178,6 +178,20 @@ class BoxOutTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["b"]["o"].promotedPlug(), "noduleLayout:section" ), "right" )
 		self.assertEqual( Gaffer.Metadata.value( s["b"]["o"].plug(), "noduleLayout:section" ), "left" )
 
+	def testNoduleSectionMetadataFromInPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		Gaffer.Metadata.registerValue( s["n"]["op1"], "noduleLayout:section", "top" )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["o"] = Gaffer.BoxOut()
+		s["b"]["o"].setup( s["n"]["op1"] )
+
+		self.assertEqual( Gaffer.Metadata.value( s["b"]["o"].promotedPlug(), "noduleLayout:section" ), "bottom" )
+		self.assertIsNone( Gaffer.Metadata.value( s["b"]["o"].plug(), "noduleLayout:section" ) )
+
 	def testPromotedPlugRemovalDeletesBoxOut( self ) :
 
 		s = Gaffer.ScriptNode()
