@@ -249,6 +249,16 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 				);
 				return "";
 			}
+			if( i + 3 <= eI && string_view( lpe.data() + i, 3 ) == "(O)" && !inQuotes )
+			{
+				// We're going to remove `O` tokens below and empty LPE groups currently crash RenderMan.
+				// They also aren't meaningful so we bail on creating light group layers.
+				IECore::msg(
+					IECore::Msg::Warning, "RenderManRenderer",
+					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because it includes an invalid emission group.", name.string() )
+				);
+				return "";
+			}
 
 			if( lpe[i] == '\'' )
 			{
