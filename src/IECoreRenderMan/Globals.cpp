@@ -245,6 +245,16 @@ IECoreScene::ConstOutputPtr lightGroupOutput( const IECore::InternedString &name
 				);
 				return nullptr;
 			}
+			if( lpe.compare( i, 3, "(O)" ) == 0 && !inQuotes )
+			{
+				// We're going to remove `O` tokens below and empty LPE groups currently crash RenderMan.
+				// They also aren't meaningful so we bail on creating light group layers.
+				IECore::msg(
+					IECore::Msg::Warning, "RenderManRenderer",
+					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because its LPE contains \"(O)\". Replace with \"O\" to use \"layerPerLightGroup\".", name.string() )
+				);
+				return nullptr;
+			}
 
 			if( lpe[i] == '\'' )
 			{

@@ -4218,6 +4218,61 @@ class RendererTest( GafferTest.TestCase ) :
 			{ f"{i}_{g}.{c}" for i in outputs.keys() for g in [ "group", "default" ] for c in "rgb" }
 		)
 
+	def testLayerPerLightGroupInvalidLPE( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = messageHandler
+		)
+
+
+		outputs = { "A" : "lpe C.*[L(O)]", "B" : "lpe C<D'(O)Goodness'>[LO]" }
+
+		for layerName, lpe in outputs.items() :
+			renderer.output(
+				layerName,
+				IECoreScene.Output(
+					"test", "ieDisplay", lpe,
+					{
+						"driverType" : "ImageDisplayDriver",
+						"handle" : "lightGroupTest",
+						"layerName" : layerName,
+						"layerPerLightGroup" : True,
+					}
+				)
+			)
+
+		light = renderer.light(
+			"/light", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "group" },
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+
+		del light
+		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual(
+			set( i.message for i in messageHandler.messages ),
+			{
+				"Ignoring \"layerPerLightGroup\" parameter on output \"A\" because its LPE contains \"(O)\". Replace with \"O\" to use \"layerPerLightGroup\".",
+			}
+		)
+
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )
