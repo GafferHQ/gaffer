@@ -4264,7 +4264,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_default.g"]], 0, delta = 0.001 )
 		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_default.b"]], 0, delta = 0.001 )
 
-	def testLayerPerLightGroupEmissionRemovalValid( self ) :
+	def testLayerPerLightGroupEmissionRemovalIsValid( self ) :
 
 		messageHandler = IECore.CapturingMessageHandler()
 
@@ -4283,7 +4283,7 @@ class RendererTest( GafferTest.TestCase ) :
 		fileName = self.temporaryDirectory() / "output.exr"
 		for layerName, lpe in outputs.items() :
 			renderer.output(
-				"test" + layerName,
+				layerName,
 				IECoreScene.Output(
 					str( fileName ), "exr", lpe,
 					{
@@ -4319,6 +4319,61 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual(
 			set( image.spec().channelnames ),
 			{ f"{i}_{g}.{c}" for i in outputs.keys() for g in [ "group", "default" ] for c in "rgb" }
+		)
+
+	def testLayerPerLightGroupInvalidLPE( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = messageHandler
+		)
+
+
+		outputs = { "A" : "lpe C.*[L(O)]", "B" : "lpe C<D'(O)Goodness'>[LO]" }
+
+		for layerName, lpe in outputs.items() :
+			renderer.output(
+				layerName,
+				IECoreScene.Output(
+					"test", "ieDisplay", lpe,
+					{
+						"driverType" : "ImageDisplayDriver",
+						"handle" : "lightGroupTest",
+						"layerName" : layerName,
+						"layerPerLightGroup" : True,
+					}
+				)
+			)
+
+		light = renderer.light(
+			"/light", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "group" },
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+
+		del light
+		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual(
+			set( i.message for i in messageHandler.messages ),
+			{
+				"Ignoring \"layerPerLightGroup\" parameter on output \"A\" because it includes an invalid emission group.",
+			}
 		)
 
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
