@@ -149,6 +149,14 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		self.__nodeUI = GafferUI.NodeUI.create( node )
 		self.__nodeUIFrame.setChild( self.__nodeUI )
+		# Activate all layouts now, bottom up from the leaf layouts to the
+		# `__nodeUIFrame`. This works around flicker caused by widgets changing
+		# size after an initial round of layout. One culprit seems to be the usage
+		# of `QtWidgets.QLayout.SetMinAndMaxSize` by Widget - see comments there.
+		for widget in reversed( self.__nodeUIFrame._qtWidget().findChildren( QtWidgets.QWidget ) ) :
+			layout = widget.layout()
+			if layout is not None :
+				layout.activate()
 
 	def _titleFormat( self ) :
 
