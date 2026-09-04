@@ -17,6 +17,7 @@ Improvements
 Fixes
 -----
 
+- PointInstancer : Fixed rendering of points and/or prototypes with zero scale.
 - StandardLightVisualiser : Fixed missing wireframe segment when visualising quad lights.
 
 API
