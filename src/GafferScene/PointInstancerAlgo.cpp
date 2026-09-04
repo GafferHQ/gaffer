@@ -44,6 +44,8 @@
 
 #include "Imath/ImathMatrixAlgo.h"
 
+#include <algorithm>
+#include <cmath>
 #include <limits>
 
 using namespace std;
@@ -309,6 +311,109 @@ FlattenedPrimitiveVariable createFlattenedPrimitiveVariable( const PrimitiveVari
 	return result;
 }
 
+// Equivalent to Imath's `extractAndRemoveScalingAndShear()` followed by
+// `extractQuat()`, but without aborting for zero scale.
+void extractScaleAndOrientation( const M44f &m, V3f &scale, Quatf &orientation )
+{
+	V3f row[3] = {
+		V3f( m[0][0], m[0][1], m[0][2] ),
+		V3f( m[1][0], m[1][1], m[1][2] ),
+		V3f( m[2][0], m[2][1], m[2][2] )
+	};
+
+	// Normalize by the largest coefficient first, to avoid loss of precision
+	// (or underflow) in the `.length()` calls below when the matrix contains
+	// very small values. We undo this at the end by scaling `scale` back up.
+	float maxVal = 0.0f;
+	for( int i = 0; i < 3; ++i )
+	{
+		for( int j = 0; j < 3; ++j )
+		{
+			maxVal = std::max( maxVal, std::abs( row[i][j] ) );
+		}
+	}
+
+	if( maxVal > 0.0f )
+	{
+		row[0] /= maxVal;
+		row[1] /= maxVal;
+		row[2] /= maxVal;
+	}
+
+	// Compute X scale factor, and normalize first row.
+	scale.x = row[0].length();
+	if( scale.x > 0.0f )
+	{
+		row[0] /= scale.x;
+	}
+
+	// Remove XY shear by making the second row orthogonal to the first, then
+	// compute Y scale and normalize the second row.
+	row[1] -= row[0].dot( row[1] ) * row[0];
+	scale.y = row[1].length();
+	if( scale.y > 0.0f )
+	{
+		row[1] /= scale.y;
+	}
+
+	// Remove XZ and YZ shear by orthogonalizing the third row against the
+	// first two, then compute Z scale and normalize the third row.
+	row[2] -= row[0].dot( row[2] ) * row[0];
+	row[2] -= row[1].dot( row[2] ) * row[1];
+	scale.z = row[2].length();
+	if( scale.z > 0.0f )
+	{
+		row[2] /= scale.z;
+	}
+
+	scale *= maxVal;
+
+	// At most one row can be degenerate (zero length) and still leave us
+	// enough information to reconstruct a valid orientation - reconstruct it
+	// via the cross product of the other two, already-orthonormal, rows. Two
+	// or more degenerate rows leave nothing to reconstruct from, so we fall
+	// back to an identity orientation.
+	const int numDegenerate = int( scale.x <= 0.0f ) + int( scale.y <= 0.0f ) + int( scale.z <= 0.0f );
+	if( numDegenerate > 1 )
+	{
+		orientation = Quatf();
+		return;
+	}
+	else if( numDegenerate == 1 )
+	{
+		if( scale.x <= 0.0f )
+		{
+			row[0] = row[1].cross( row[2] );
+		}
+		else if( scale.y <= 0.0f )
+		{
+			row[1] = row[2].cross( row[0] );
+		}
+		else
+		{
+			row[2] = row[0].cross( row[1] );
+		}
+	}
+	// Check for a coordinate system flip. If the determinant is negative,
+	// negate the matrix and the scale factors to compensate.
+	else if( row[0].dot( row[1].cross( row[2] ) ) < 0.0f )
+	{
+		row[0] *= -1; row[1] *= -1; row[2] *= -1;
+		scale *= -1;
+	}
+
+	// The rows are now orthonormal, so form a pure rotation matrix from which
+	// we can extract the orientation.
+	orientation = extractQuat(
+		M44f(
+			row[0].x, row[0].y, row[0].z, 0.0f,
+			row[1].x, row[1].y, row[1].z, 0.0f,
+			row[2].x, row[2].y, row[2].z, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		)
+	);
+}
+
 } // namespace
 
 IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECoreScene::PointInstancer *instancer, const RendererAlgo::RenderOptions &renderOptions, const ScenePlug *scene )
@@ -471,9 +576,7 @@ IECoreScene::PointInstancerPtr Private::PointInstancerAlgo::flatten( const IECor
 					M44f m = location.transform * transformQuery.transform( pointIndex );
 					flattenedPosition[flattenedPointIndex] = m.translation();
 
-					V3f discardedShear( 0 );
-					extractAndRemoveScalingAndShear( m, flattenedScale[flattenedPointIndex], discardedShear );
-					flattenedOrientation[flattenedPointIndex] = extractQuat( m );
+					extractScaleAndOrientation( m, flattenedScale[flattenedPointIndex], flattenedOrientation[flattenedPointIndex] );
 
 					if( flattenedID )
 					{

@@ -29,7 +29,13 @@ Improvements
 Fixes
 -----
 
+- PointInstancer : Fixed rendering of points and/or prototypes with zero scale.
 - Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
+
+API
+---
+
+- TestCase : Added Quatf support to `assertEqualWithAbsError()`.
 
 1.7.1.0 (relative to 1.7.0.0)
 =======

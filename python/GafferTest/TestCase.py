@@ -266,6 +266,9 @@ class TestCase( unittest.TestCase ) :
 			equal = True
 			for i in range( 0, 4 ) :
 				equal = equal and math.fabs( x[i] - y[i] ) <= error
+		elif isinstance( x, imath.Quatf ) :
+			equal = x.v().equalWithAbsError( y.v(), error )
+			equal = equal and math.fabs( x.r() - y.r() ) <= error
 		else :
 			equal = math.fabs( x - y ) <= error
 
