@@ -84,6 +84,12 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Query a particular location in a scene and outputs attribute.
+
+	> Caution : Not suitable for querying `scene:visible` with `inherit = True`,
+	> because visibility does not follow the usual attribute inheritance rules
+	> (a child can not be made visible if an ancestor is invisible).
+	>
+	> Use the VisibilityQuery node to query resolved visibility.
 	""",
 
 	"layout:customWidget:setupButton:widgetType", "GafferSceneUI.AttributeQueryUI._SetupButton",

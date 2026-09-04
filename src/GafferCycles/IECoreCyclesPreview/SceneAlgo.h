@@ -50,11 +50,11 @@ template<typename T, typename... Args> T *createNodeWithLock( ccl::Scene *scene,
 	return scene->create_node<T>( std::forward<Args>( args )... );
 }
 
-template<typename T>
-void tagUpdateWithLock( T *node, ccl::Scene *scene )
+template<typename T, typename... Args>
+void tagUpdateWithLock( T *node, ccl::Scene *scene, Args &&...args )
 {
 	std::scoped_lock lock( scene->mutex );
-	node->tag_update( scene );
+	node->tag_update( scene, std::forward<Args>( args )... );
 }
 
 } // IECoreCycles::SceneAlgo

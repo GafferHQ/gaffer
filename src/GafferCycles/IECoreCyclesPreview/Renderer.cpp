@@ -1622,10 +1622,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesObject( ccl::Scene *scene, const SharedGeometryPtr &geometry, const std::string &name, const float frame, LightLinker *lightLinker, NodeDeleter *nodeDeleter )
+		CyclesObject( ccl::Scene *scene, const SharedGeometryPtr &geometry, const std::string &name, LightLinker *lightLinker, NodeDeleter *nodeDeleter )
 			:	m_scene( scene ),
 				m_object( SceneAlgo::createNodeWithLock<ccl::Object>( scene ), NodeDeleter::ObjectDeleter( nodeDeleter ) ),
-				m_geometry( geometry ), m_frame( frame ), m_attributes( nullptr ), m_lightLinker( lightLinker )
+				m_geometry( geometry ), m_attributes( nullptr ), m_lightLinker( lightLinker )
 		{
 			assert( m_geometry );
 			m_object->name = ccl::ustring( name.c_str() );
@@ -1699,119 +1699,38 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
+			const size_t primarySampleIndex = (samples.size() - 1) / 2;
+			m_object->set_tfm( SocketAlgo::setTransform( samples[primarySampleIndex] ) );
+
 			ccl::array<ccl::Transform> motion;
-			ccl::Geometry *geo = m_object->get_geometry();
-			if( geo->get_use_motion_blur() && geo->get_motion_steps() != samples.size() )
+			if( samples.size() > 1 )
 			{
-				IECore::msg(
-					IECore::Msg::Error, "IECoreCycles::Renderer",
-					fmt::format( "Transform step size on \"{}\" must match deformation step size.", m_object->name.c_str() )
-				);
-				m_object->set_tfm( SocketAlgo::setTransform( samples.front() ) );
-				motion.resize( geo->get_motion_steps(), ccl::transform_empty() );
-				for( size_t i = 0; i < motion.size(); ++i )
-				{
-					motion[i] = m_object->get_tfm();
-					m_object->set_motion( motion );
-				}
-				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
-				return;
-			}
-
-			const size_t numSamples = samples.size();
-
-			if( numSamples == 1 )
-			{
-				m_object->set_tfm( SocketAlgo::setTransform( samples.front() ) );
-				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
-				return;
-			}
-
-			int frameIdx = -1;
-			for( size_t i = 0; i < numSamples; ++i )
-			{
-				if( times[i] == m_frame )
-				{
-					frameIdx = i;
-				}
-			}
-
-			if( numSamples % 2 ) // Odd numSamples
-			{
-				motion.resize( numSamples, ccl::transform_empty() );
-
-				for( int i = 0; i < (int)numSamples; ++i )
-				{
-					if( i == frameIdx )
-					{
-						m_object->set_tfm( SocketAlgo::setTransform( samples[i] ) );
-					}
-
-					motion[i] = SocketAlgo::setTransform( samples[i] );
-				}
-			}
-			else if( numSamples == 2 )
-			{
-				Imath::M44f matrix;
-				motion.resize( numSamples+1, ccl::transform_empty() );
-				IECore::LinearInterpolator<Imath::M44f>()( samples[0], samples[1], 0.5f, matrix );
-
-				if( frameIdx == -1 ) // Center frame
-				{
-					m_object->set_tfm( SocketAlgo::setTransform( matrix ) );
-				}
-				else if( frameIdx == 0 ) // Start frame
-				{
-					m_object->set_tfm( SocketAlgo::setTransform( samples[0] ) );
-				}
-				else // End frame
-				{
-					m_object->set_tfm( SocketAlgo::setTransform( samples[1] ) );
-				}
-				motion[0] = SocketAlgo::setTransform( samples[0] );
-				motion[1] = SocketAlgo::setTransform( matrix );
-				motion[2] = SocketAlgo::setTransform( samples[1] );
-			}
-			else // Even numSamples
-			{
-				motion.resize( numSamples, ccl::transform_empty() );
-
-				if( frameIdx == -1 ) // Center frame
-				{
-					const int mid = numSamples / 2 - 1;
-					Imath::M44f matrix;
-					IECore::LinearInterpolator<Imath::M44f>()( samples[mid], samples[mid+1], 0.5f, matrix );
-					m_object->set_tfm( SocketAlgo::setTransform( matrix ) );
-				}
-				else if( frameIdx == 0 ) // Start frame
-				{
-					m_object->set_tfm( SocketAlgo::setTransform( samples[0] ) );
-				}
-				else // End frame
-				{
-					m_object->set_tfm( SocketAlgo::setTransform( samples[numSamples-1] ) );
-				}
-
-				for( size_t i = 0; i < numSamples; ++i )
+				motion.resize( samples.size() );
+				for( size_t i = 0; i < samples.size(); ++i )
 				{
 					motion[i] = SocketAlgo::setTransform( samples[i] );
 				}
 			}
-
 			m_object->set_motion( motion );
-			if( !geo->get_use_motion_blur() )
-			{
-				/// \todo This is not thread-safe, nor is it compatible
-				/// with instancing.
-				geo->set_motion_steps( motion.size() );
-			}
 
-			if( geo->is_mesh() )
+			if( m_geometry->is_mesh() )
 			{
-				auto mesh = static_cast<ccl::Mesh *>( geo );
-				if( mesh->get_num_subd_faces() )
+				auto mesh = static_cast<ccl::Mesh *>( m_geometry.get() );
+				if( mesh->get_subdivision_type() != ccl::Mesh::SUBDIVISION_NONE )
 				{
-					mesh->set_subd_objecttoworld( m_object->get_tfm() );
+					if( mesh->get_subd_adaptive_space() == ccl::Mesh::SUBDIVISION_ADAPTIVE_SPACE_PIXEL )
+					{
+						// View-dependent subdivs aren't auto-instanced, so we
+						// should be the only one managing `subd_objecttoworld`.
+						assert( m_geometry.use_count() == 1 );
+						mesh->set_subd_objecttoworld( m_object->get_tfm() );
+						SceneAlgo::tagUpdateWithLock( m_geometry.get(), m_scene, /* rebuild = */ true );
+					}
+					else
+					{
+						// Non-view-dependent subdivs don't use `subd_objecttoworld`,
+						// so we don't need to set it.
+					}
 				}
 			}
 
@@ -1847,7 +1766,6 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		using UniqueObjectPtr = std::unique_ptr<ccl::Object, NodeDeleter::ObjectDeleter>;
 		UniqueObjectPtr m_object;
 		SharedGeometryPtr m_geometry;
-		const float m_frame;
 		ConstCyclesAttributesPtr m_attributes;
 		LightLinker *m_lightLinker;
 		IECoreScenePreview::Renderer::ConstObjectSetPtr m_linkedLights;
@@ -2103,9 +2021,9 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 		IE_CORE_DECLAREMEMBERPTR( CyclesCamera );
 
 		CyclesCamera( const IECoreScene::ConstCameraPtr &camera )
-			:	m_camera( camera ),
-				m_transformSamples( { M44f() } )
+			:	m_camera( camera )
 		{
+			transform( { M44f() }, { 0.0f } );
 		}
 
 		~CyclesCamera() override
@@ -2118,7 +2036,16 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
-			m_transformSamples = samples;
+			m_transformSamples.resize( samples.size() );
+			for( size_t i = 0; i < samples.size(); ++i )
+			{
+				/// \todo Should we really be scaling in Y? It seems we're doing
+				/// it to counteract the flipping of the top/bottom view planes
+				/// in CameraAlgo, so perhaps we can stop doing that?
+				M44f m = samples[i];
+				m.scale( Imath::V3f( 1, -1, -1 ) );
+				m_transformSamples[i] = SocketAlgo::setTransform( m );
+			}
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2139,69 +2066,16 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			CameraAlgo::convert( m_camera.get(), destination );
 
-			const size_t numSamples = m_transformSamples.size();
+			const size_t primarySampleIndex = (m_transformSamples.size() - 1) / 2;
+			destination->set_matrix( m_transformSamples[primarySampleIndex] );
 
 			ccl::array<ccl::Transform> motion;
-
-			const Imath::V3f scale = Imath::V3f( 1.0f, -1.0f, -1.0f );
-			Imath::M44f matrix;
-
-			if( destination->get_motion_position() == ccl::MOTION_POSITION_START )
+			if( m_transformSamples.size() > 1 )
 			{
-				matrix = m_transformSamples.front();
-				matrix.scale( scale );
-				destination->set_matrix( SocketAlgo::setTransform( matrix ) );
-				if( numSamples != 1 )
+				motion.resize( m_transformSamples.size() );
+				for( size_t i = 0; i < m_transformSamples.size(); ++i )
 				{
-					motion = ccl::array<ccl::Transform>( 3 );
-					motion[0] = destination->get_matrix();
-					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.front(), m_transformSamples.back(), 0.5f, matrix );
-					matrix.scale( scale );
-					motion[1] = SocketAlgo::setTransform( matrix );
-					matrix = m_transformSamples.back();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
-				}
-			}
-			else if( destination->get_motion_position() == ccl::MOTION_POSITION_END )
-			{
-				matrix = m_transformSamples.back();
-				matrix.scale( scale );
-				destination->set_matrix( SocketAlgo::setTransform( matrix ) );
-				if( numSamples != 1 )
-				{
-					motion = ccl::array<ccl::Transform>( 3 );
-					motion[0] = destination->get_matrix();
-					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.back(), m_transformSamples.front(), 0.5f, matrix );
-					matrix.scale( scale );
-					motion[1] = SocketAlgo::setTransform( matrix );
-					matrix = m_transformSamples.front();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
-				}
-			}
-			else // ccl::Camera::MOTION_POSITION_CENTER
-			{
-				if( numSamples == 1 ) // One sample
-				{
-					matrix = m_transformSamples.front();
-					matrix.scale( scale );
-					destination->set_matrix( SocketAlgo::setTransform( matrix ) );
-				}
-				else
-				{
-					IECore::LinearInterpolator<Imath::M44f>()( m_transformSamples.front(), m_transformSamples.back(), 0.5f, matrix );
-					matrix.scale( scale );
-					destination->set_matrix( SocketAlgo::setTransform( matrix ) );
-
-					motion = ccl::array<ccl::Transform>( 3 );
-					matrix = m_transformSamples.front();
-					matrix.scale( scale );
-					motion[0] = SocketAlgo::setTransform( matrix );
-					motion[1] = destination->get_matrix();
-					matrix = m_transformSamples.back();
-					matrix.scale( scale );
-					motion[2] = SocketAlgo::setTransform( matrix );
+					motion[i] = m_transformSamples[i];
 				}
 			}
 			destination->set_motion( motion );
@@ -2210,7 +2084,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		IECoreScene::ConstCameraPtr m_camera;
-		IECoreScenePreview::Renderer::TransformSamples m_transformSamples;
+		ccl::array<ccl::Transform> m_transformSamples;
 
 };
 
@@ -2587,7 +2461,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_scene, geometry, name, frame(), &m_lightLinker, m_nodeDeleter.get() );
+			ObjectInterfacePtr result = new CyclesObject( m_scene, geometry, name, &m_lightLinker, m_nodeDeleter.get() );
 			result->attributes( attributes );
 			return result;
 		}

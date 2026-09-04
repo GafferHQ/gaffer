@@ -53,6 +53,7 @@
 #include "GafferScene/SetQuery.h"
 #include "GafferScene/ShaderQuery.h"
 #include "GafferScene/TransformQuery.h"
+#include "GafferScene/VisibilityQuery.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -294,6 +295,7 @@ void GafferSceneModule::bindQueries()
 	GafferBindings::DependencyNodeClass< GafferScene::PrimitiveQuery >();
 	GafferBindings::DependencyNodeClass< GafferScene::ExistenceQuery >();
 	GafferBindings::DependencyNodeClass< GafferScene::FilterQuery >();
+	GafferBindings::DependencyNodeClass<GafferScene::VisibilityQuery>();
 
 	{
 		boost::python::scope s = GafferBindings::DependencyNodeClass< GafferScene::TransformQuery >();

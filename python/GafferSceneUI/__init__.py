@@ -225,6 +225,7 @@ from . import QuantizePrimitiveVariablesUI
 from . import RandomPrimitiveVariableUI
 from . import PointInstancerCoreUI
 from . import PointInstancerUI
+from . import VisibilityQueryUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

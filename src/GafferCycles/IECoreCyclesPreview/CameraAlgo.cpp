@@ -77,7 +77,12 @@ void IECoreCycles::CameraAlgo::convert( const IECoreScene::Camera *source, ccl::
 	destination->set_full_height( resolution[1] );
 	destination->set_viewplane_left( frustum.min.x );
 	destination->set_viewplane_right( frustum.max.x );
-	// Invert the viewplane in Y so Gaffer's aperture offsets and overscan are applied in the correct direction
+	// Invert the viewplane in Y so Gaffer's aperture offsets and overscan are
+	// applied in the correct direction.
+	/// \todo This forces us to flip in Y in `CyclesCamera::transform()` to
+	/// compensate. I suspect the real issue is that our display driver API is top-down
+	/// and Cycles is bottom-up. If we fixed in the display driver then I think
+	/// CameraAlgo and CyclesCamera could just do the obvious thing.
 	destination->set_viewplane_bottom( -frustum.max.y );
 	destination->set_viewplane_top( -frustum.min.y );
 	destination->set_aperture_ratio( pixelAspectRatio ); // This is more for the bokeh, maybe it should be a separate parameter?
@@ -98,7 +103,8 @@ void IECoreCycles::CameraAlgo::convert( const IECoreScene::Camera *source, ccl::
 	}
 
 	/// \todo Set `motion_position`. We'd need to do this by comparing the camera's shutter
-	/// to the Renderer's `frame` option.
+	/// to the Renderer's `frame` option. I don't know how important this is - it only seems
+	/// to be used by Cycles for volume motion blur.
 
 	// Additional parameters
 

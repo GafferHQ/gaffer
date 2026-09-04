@@ -21,6 +21,11 @@ Breaking Changes
 1.7.x.x (relative to 1.7.1.0)
 =======
 
+Features
+--------
+
+- VisibilityQuery : Added a node for querying the visibility of a particular scene location.
+
 Improvements
 ------------
 
