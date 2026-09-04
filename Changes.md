@@ -9,6 +9,7 @@ Improvements
 Fixes
 -----
 
+- PointInstancer : Fixed rendering of points and/or prototypes with zero scale.
 - Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
 
 API
