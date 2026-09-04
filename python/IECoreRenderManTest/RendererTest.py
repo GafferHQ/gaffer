@@ -3248,6 +3248,1134 @@ class RendererTest( GafferTest.TestCase ) :
 					"user:__materialid", [ expectedID ]
 				)
 
+	def testLayerPerLightGroupOutputs( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		beautyFileName = self.temporaryDirectory() / "beauty.exr"
+		renderer.output(
+			"RGBA",
+			IECoreScene.Output( str( beautyFileName ), "exr", "rgba" )
+		)
+
+		beautyLayersFileName = self.temporaryDirectory() / "beautyLayers.exr"
+		renderer.output(
+			"perLightGroupRGBA",
+			IECoreScene.Output(
+				str( beautyLayersFileName ), "exr", "rgba",
+				{
+					"layerPerLightGroup" : True
+				}
+			)
+		)
+
+		diffuseFileName = self.temporaryDirectory() / "diffuse.exr"
+		renderer.output(
+			"perLightGroupLPE",
+			IECoreScene.Output(
+				str( diffuseFileName ), "exr", "lpe C<RD>[<L.>O]",
+				{
+					"layerName" : "directDiffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		bracketFileName = self.temporaryDirectory() / "bracket.exr"
+		renderer.output(
+			"bracketLPE",
+			IECoreScene.Output(
+				str( bracketFileName ), "exr", "lpe C.{0,2}[LO]",
+				{
+					"layerName" : "bracket",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		shortNameDiffuseFileName = self.temporaryDirectory() / "shortNameDiffuse.exr"
+		renderer.output(
+			"perLightGroupShortNameLPE",
+			IECoreScene.Output(
+				str( shortNameDiffuseFileName ), "exr", "lpe diffuse",
+				{
+					"layerName" : "diffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		prefixedDiffuseFileName = self.temporaryDirectory() / "prefixedDiffuse.exr"
+		renderer.output(
+			"perLightGroupLPEPrefixed",
+			IECoreScene.Output(
+				str( prefixedDiffuseFileName ), "exr", "lpe unoccluded;noclamp;nothruput;C<RD>[<L.>O]",
+				{
+					"layerName" : "directDiffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		shortNamePrefixedDiffuseFileName = self.temporaryDirectory() / "shortNamePrefixedDiffuse.exr"
+		renderer.output(
+			"perLightGroupShortNameLPEPrefixed",
+			IECoreScene.Output(
+				str( shortNamePrefixedDiffuseFileName ), "exr", "lpe unoccluded;noclamp;nothruput;diffuse",
+				{
+					"layerName" : "diffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "PxrDiffuse" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		lightGroups = {
+			"red" : imath.Color3f( 1, 0, 0 ),
+			"green" : imath.Color3f( 0, 1, 0 ),
+			"blue" : imath.Color3f( 0, 0, 1 ),
+		}
+
+		lights = [
+			renderer.light(
+				f"/light/{group}", None,
+				renderer.attributes( IECore.CompoundObject( {
+					"ri:light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"PxrDomeLight", "ri:light",
+								{ "lightGroup" : group, "lightColor" : color }
+							),
+						},
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( True ),
+				} ) )
+			)
+			for group, color in lightGroups.items()
+		]
+
+		renderer.render()
+		del sphere, lights
+		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
+
+		beautyImage = OpenImageIO.ImageBuf( str( beautyFileName ) )
+		self.assertEqual(
+			set( beautyImage.spec().channelnames ),
+			set( "RGBA" )
+		)
+
+		# The original layers should be replaced by a layer for each light group and a default layer.
+
+		lightLayers = { k : ( v, imath.Color3f( 0.0 ) ) for k, v in lightGroups.items() }
+		lightLayers["default"] = ( imath.Color3f( 0.0 ), imath.Color3f( 1.0 ) )
+
+		beautyLayersImage = OpenImageIO.ImageBuf( str( beautyLayersFileName ) )
+		self.assertEqual(
+			set( beautyLayersImage.spec().channelnames ),
+			{ f"RGBA_{g}.{c}" for g in lightLayers for c in "rgb" }
+		)
+
+		diffuseImage = OpenImageIO.ImageBuf( str( diffuseFileName ) )
+		self.assertEqual(
+			set( diffuseImage.spec().channelnames ),
+			{ f"directDiffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
+		)
+
+		diffuseShortNameImage = OpenImageIO.ImageBuf( str( shortNameDiffuseFileName ) )
+		self.assertEqual(
+			set( diffuseShortNameImage.spec().channelnames ),
+			{ f"diffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
+		)
+
+		prefixedDiffuseImage = OpenImageIO.ImageBuf( str( prefixedDiffuseFileName ) )
+		self.assertEqual(
+			set( prefixedDiffuseImage.spec().channelnames ),
+			{ f"directDiffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
+		)
+
+		prefixedDiffuseShortNameImage = OpenImageIO.ImageBuf( str( shortNamePrefixedDiffuseFileName ) )
+		self.assertEqual(
+			set( prefixedDiffuseShortNameImage.spec().channelnames ),
+			{ f"diffuse_{g}.{c}" for g in lightLayers for c in "rgb" }
+		)
+
+		# Each light group layer should only contain illumination from its own
+		# group, and the group layers should sum to the beauty.
+
+		layerChannelIndices = { c : i for i, c in enumerate( beautyLayersImage.spec().channelnames ) }
+		layersMidPixel = beautyLayersImage.getpixel( 320, 240 )
+		layersTopLeftPixel = beautyLayersImage.getpixel( 0, 0 )
+
+		for group, color in lightGroups.items() :
+			for channel, value in zip( "rgb", color ) :
+				groupValue = layersMidPixel[layerChannelIndices[f"RGBA_{group}.{channel}"]]
+				if value == 0 :
+					self.assertAlmostEqual( groupValue, 0, delta = 0.001 )
+				else :
+					self.assertGreater( groupValue, 0.2 )
+
+				# Where the dome lights are directly visible, no color on layers
+				self.assertEqual( layersTopLeftPixel[layerChannelIndices[f"RGBA_{group}.{channel}"]], 0 )
+
+		for channel in "rgb" :
+			# default layer has no color on sphere
+			self.assertEqual( layersMidPixel[layerChannelIndices[f"RGBA_default.{channel}"]], 0 )
+			# default layer all white where dome lights combine
+			self.assertEqual( layersTopLeftPixel[layerChannelIndices[f"RGBA_default.{channel}"]], 1 )
+
+		channelIndices = { c : i for i, c in enumerate( beautyImage.spec().channelnames ) }
+		midPixel = beautyImage.getpixel( 320, 240 )
+		topLeftPixel = beautyImage.getpixel( 0, 0 )
+
+		for channel in "rgb" :
+			self.assertAlmostEqual(
+				midPixel[channelIndices[channel.upper()]],
+				sum( layersMidPixel[layerChannelIndices[f"RGBA_{g}.{channel}"]] for g in lightLayers ),
+				delta = 0.01
+			)
+			self.assertAlmostEqual(
+				topLeftPixel[channelIndices[channel.upper()]],
+				sum( layersTopLeftPixel[layerChannelIndices[f"RGBA_{g}.{channel}"]] for g in lightLayers ),
+				delta = 0.01
+			)
+
+	def testLayerPerLightGroupLightWithoutGroup( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		beautyLayersFileName = self.temporaryDirectory() / "beautyLayers.exr"
+		renderer.output(
+			"perLightGroupRGBA",
+			IECoreScene.Output(
+				str( beautyLayersFileName ), "exr", "rgba",
+				{
+					"layerPerLightGroup" : True
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "PxrDiffuse" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		lightGroups = [
+			( "red", "red", imath.Color3f( 1, 0, 0 ) ),
+			( "green", "", imath.Color3f( 0, 1, 0 ) ),
+			( "blue", "", imath.Color3f( 0, 0, 1 ) ),
+		]
+
+		lights = [
+			renderer.light(
+				f"/light/{lightName}", None,
+				renderer.attributes( IECore.CompoundObject( {
+					"ri:light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"PxrDomeLight", "ri:light",
+								{ "lightGroup" : group, "lightColor" : color }
+							),
+						},
+						output = "output",
+					),
+					"ri:visibility:camera" : IECore.BoolData( False ),
+				} ) )
+			)
+			for lightName, group, color in lightGroups
+		]
+
+		renderer.render()
+		del sphere, lights
+		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
+
+		beautyLayersImage = OpenImageIO.ImageBuf( str( beautyLayersFileName ) )
+		self.assertEqual(
+			set( beautyLayersImage.spec().channelnames ),
+			{ f"RGBA_{g}.{c}" for g in [ "red", "default" ] for c in "rgb" }
+		)
+
+		expectedColorPerLayer = {}
+		for lightName, group, color in lightGroups :
+			expectedColorPerLayer[group] = expectedColorPerLayer.get( group, imath.Color3f( 0 ) ) + color
+
+		layerChannelIndices = { c : i for i, c in enumerate( beautyLayersImage.spec().channelnames ) }
+		layersMidPixel = beautyLayersImage.getpixel( 320, 240 )
+
+		for group, color in expectedColorPerLayer.items() :
+			group = group or "default"
+			for channel, value in zip( "rgb", color ) :
+				groupValue = layersMidPixel[layerChannelIndices[f"RGBA_{group}.{channel}"]]
+				if value == 0 :
+					self.assertAlmostEqual( groupValue, 0, delta = 0.001 )
+				else :
+					self.assertGreater( groupValue, 0.2 )
+
+	def testLayerPerLightGroupIgnoresLPEWithExplicitGroup( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		fileName = self.temporaryDirectory() / "keyDiffuse.exr"
+		renderer.output(
+			"explicitGroup",
+			IECoreScene.Output(
+				str( fileName ), "exr", "lpe C<RD>[<L.'key'>O]",
+				{
+					"layerName" : "keyDiffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		shortNameFileName = self.temporaryDirectory() / "shortNameDiffuse.exr"
+		renderer.output(
+			"explicitShortNameGroup",
+			IECoreScene.Output(
+				str( shortNameFileName ), "exr", "lpe diffuse_key",
+				{
+					"layerName" : "diffuse",
+					"layerPerLightGroup" : True
+				}
+			)
+		)
+
+		# This is valid because the `L'` is part of the LPE identifier
+		lpeIdentifierFileName = self.temporaryDirectory() / "lpeIdentifier.exr"
+		renderer.output(
+			"explicitLPEIdentifierGroup",
+			IECoreScene.Output(
+				str( lpeIdentifierFileName ), "exr", "lpe C<.D\'LLLLL\'>*[LO]",
+				{
+					"layerName" : "lpeIdentifier",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		light = renderer.light(
+			"/light", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "rim" }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+		del light
+		del renderer
+
+		# If the LPE already specifies a light group, then
+		# `layerPerLightGroup` should be ignored with a warning.
+
+		self.assertEqual( len( messageHandler.messages ), 2 )
+		self.assertEqual(
+			set( i.message for i in messageHandler.messages ),
+			{
+				"Ignoring \"layerPerLightGroup\" parameter on output \"explicitGroup\", because its LPE already specifies a light group.",
+				"Ignoring \"layerPerLightGroup\" parameter on output \"explicitShortNameGroup\", because its LPE already specifies a light group.",
+			}
+		)
+
+		image = OpenImageIO.ImageBuf( str( fileName ) )
+		self.assertEqual( set( image.spec().channelnames ), { "keyDiffuse.r", "keyDiffuse.g", "keyDiffuse.b" } )
+
+		image = OpenImageIO.ImageBuf( str( shortNameFileName ) )
+		self.assertEqual( set( image.spec().channelnames ), { "diffuse.r", "diffuse.g", "diffuse.b" } )
+
+		image = OpenImageIO.ImageBuf( str( lpeIdentifierFileName ) )
+		self.assertEqual(
+			set( image.spec().channelnames ),
+			{ "lpeIdentifier_rim.r", "lpeIdentifier_rim.g", "lpeIdentifier_rim.b", "lpeIdentifier_default.r", "lpeIdentifier_default.g", "lpeIdentifier_default.b" }
+		)
+
+	def testLayerPerLightGroupIgnoresIncompatibleLPE( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		fileName = self.temporaryDirectory() / "emission.exr"
+		renderer.output(
+			"emission",
+			IECoreScene.Output(
+				str( fileName ), "exr", "lpe CO",
+				{
+					"layerName" : "emission",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		light = renderer.light(
+			"/light", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "rim" }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+		del light
+		del renderer
+
+		# The emission LPE doesn't contain `L` or `<L.>`, so `layerPerLightGroup`
+		# should be ignored with a warning and there is no default group.
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].message, "Ignoring \"layerPerLightGroup\" parameter on output \"emission\", because its LPE doesn't contain \"L\" or \"<L.>\"." )
+
+		image = OpenImageIO.ImageBuf( str( fileName ) )
+		self.assertEqual( set( image.spec().channelnames ), { "emission.r", "emission.g", "emission.b" } )
+
+	def testLayerPerLightGroupOutputsIgnoreInvalidLights( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test", "ieDisplay", "rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "invalidLightGroupTest",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		invalidLight = renderer.light(
+			"/invalidLight", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"NotALight", "ri:light",
+							{ "lightGroup" : "bad" }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		validLight = renderer.light(
+			"/validLight", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "good" }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].message, "Unable to find shader \"NotALight\"." )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "invalidLightGroupTest" )
+		self.assertEqual(
+			set( image.keys() ),
+			{ f"RGBA_good.{c}" for c in "RGB" } | { f"RGBA_default.{c}" for c in "RGB" }
+		)
+
+		del invalidLight, validLight
+		del renderer
+
+	def testInteractiveLightGroupEdits( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = messageHandler
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				"test", "ieDisplay", "rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "lightGroupTest",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		def channelNames() :
+
+			image = IECoreImage.ImageDisplayDriver.storedImage( "lightGroupTest" )
+			return set( image.keys() ) if image is not None else set()
+
+		def lightAttributes( lightGroup ) :
+
+			return renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDistantLight", "ri:light",
+							{ "lightGroup" : lightGroup }
+						),
+					},
+					output = "output",
+				),
+			} ) )
+
+		keyLight = renderer.light( "/light/key", None, lightAttributes( "first" ) )
+
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "first", "default" ) for c in "RGB" }
+			)
+		)
+
+		renderer.pause()
+		keyLight.attributes( lightAttributes( "key" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "key", "default" ) for c in "RGB" }
+			)
+		)
+
+		# Adding a light without a light group keeps the default layer.
+
+		renderer.pause()
+		fillLight = renderer.light( "/light/fill", None, lightAttributes( "" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "key", "default" ) for c in "RGB" }
+			)
+		)
+
+		# Editing the new light's light group should only affect its layer.
+
+		renderer.pause()
+		fillLight.attributes( lightAttributes( "second" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "key", "second", "default" ) for c in "RGB" }
+			)
+		)
+
+		renderer.pause()
+		fillLight.attributes( lightAttributes( "fill" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "key", "fill", "default" ) for c in "RGB" }
+			)
+		)
+
+		# Add a third light with another light group.
+
+		renderer.pause()
+		fillLight2 = renderer.light( "/light/fill2", None, lightAttributes( "third" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "key", "fill", "third", "default" ) for c in "RGB" }
+			)
+		)
+
+		# Edit the third light's lightgroup to combine it with the existing fill group.
+
+		renderer.pause()
+		fillLight2.attributes( lightAttributes( "fill" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "key", "fill", "default" ) for c in "RGB" }
+			)
+		)
+
+		# Deleting a light in the fill group should keep the fill layer, as there
+		# is still another light in that group.
+
+		renderer.pause()
+		del fillLight
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "key", "fill", "default" ) for c in "RGB" }
+			)
+		)
+
+		# Deleting the remaining light in the fill group should remove the layer.
+
+		renderer.pause()
+		del fillLight2
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_{g}.{c}" for g in ( "key", "default" ) for c in "RGB" }
+			)
+		)
+
+		# Editing the only light in the key group to remove its light group should remove
+		# the key layer leave only the default layer.
+
+		renderer.pause()
+		keyLight.attributes( lightAttributes( "" ) )
+		renderer.render()
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_default.{c}" for c in "RGB" }
+			)
+		)
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
+
+		renderer.pause()
+		del keyLight
+		renderer.render()
+
+		# Deleting the light with a now empty light group still leaves the default layer.
+
+		self.assertEventually(
+			lambda : self.assertEqual(
+				channelNames(),
+				{ f"RGBA_default.{c}" for c in "RGB" }
+			)
+		)
+
+		renderer.pause()
+
+		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
+
+	def testLayerPerLightGroupGlowSurfaceShader( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		beautyLayersFileName = self.temporaryDirectory() / "beautyLayers.exr"
+		renderer.output(
+			"perLightGroupRGBA",
+			IECoreScene.Output(
+				str( beautyLayersFileName ), "exr", "rgba",
+				{
+					"layerPerLightGroup" : True
+				}
+			)
+		)
+
+		diffuseLayersFileName = self.temporaryDirectory() / "diffuseLayers.exr"
+		renderer.output(
+			"perLightGroupDiffuse",
+			IECoreScene.Output(
+				str( diffuseLayersFileName ), "exr", "lpe CD[DS]*[LO]",
+				{
+					"layerName" : "diffuseLayers",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "PxrDiffuse" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		backPlane = renderer.object(
+			"backPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -3 ), imath.V2f( 3 ) ) ),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrConstant",
+							parameters = {
+								"emitColor" : imath.Color3f( 1.0, 0.0, 0.0 )
+							}
+						)
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		backPlane.transform( imath.M44f().translate( imath.V3f( 0, 0, -3 ) ) )
+
+		frontPlane = renderer.object(
+			"frontPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -3 ), imath.V2f( 3 ) ) ),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrConstant",
+							parameters = {
+								# Glow materials do not have the same strength as lights, so we boost
+								# the intensity a little.
+								"emitColor" : imath.Color3f( 0.0, 5.0, 0.0 )
+							}
+						)
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		frontPlane.transform( imath.M44f().translate( imath.V3f( 0, 0, 3 ) ).rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
+		light = renderer.light(
+			"/blue", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "blue", "lightColor" : imath.Color3f( 0, 0, 1 ) }
+						),
+					},
+					output = "output",
+				),
+				"ri:visibility:camera" : IECore.BoolData( False ),
+			} ) )
+		)
+
+		renderer.render()
+		del sphere, frontPlane, backPlane, light
+		del renderer
+
+		def testLayerImage( layerFileName, layerName ) :
+			layersImage = OpenImageIO.ImageBuf( str( layerFileName ) )
+			self.assertEqual(
+				set( layersImage.spec().channelnames ),
+				{ f"{layerName}_{g}.{c}" for g in [ "blue", "default" ] for c in "rgb" }
+			)
+
+			layerChannelIndices = { c : i for i, c in enumerate( layersImage.spec().channelnames ) }
+			layersMidPixel = layersImage.getpixel( 320, 240 )
+			layersTopPixel = layersImage.getpixel( 320, 0 )
+			# The `blue` layer is blue on the sphere.
+			self.assertAlmostEqual( layersMidPixel[layerChannelIndices[f"{layerName}_blue.r"]], 0.0, delta = 0.001 )
+			self.assertAlmostEqual( layersMidPixel[layerChannelIndices[f"{layerName}_blue.g"]], 0.0, delta = 0.001 )
+			self.assertGreater( layersMidPixel[layerChannelIndices[f"{layerName}_blue.b"]], 0.2 )
+			# And black in the background.
+			self.assertAlmostEqual( layersTopPixel[layerChannelIndices[f"{layerName}_blue.r"]], 0, delta = 0.001 )
+			self.assertAlmostEqual( layersTopPixel[layerChannelIndices[f"{layerName}_blue.g"]], 0, delta = 0.001 )
+			self.assertAlmostEqual( layersTopPixel[layerChannelIndices[f"{layerName}_blue.b"]], 0, delta = 0.001 )
+
+			# The default layer gets the green illumination from the illuminating plane (behind the camera).
+			self.assertAlmostEqual( layersMidPixel[layerChannelIndices[f"{layerName}_default.r"]], 0.0, delta = 0.001 )
+			self.assertGreater( layersMidPixel[layerChannelIndices[f"{layerName}_default.g"]], 0.2 )
+			self.assertAlmostEqual( layersMidPixel[layerChannelIndices[f"{layerName}_default.b"]], 0.0, delta = 0.001 )
+
+			if layerName == "RGBA" :
+				# Red emission from the background plane for the beauty layer.
+				self.assertGreater( layersTopPixel[layerChannelIndices[f"{layerName}_default.r"]], 0.2 )
+			else :
+				# No emission on non-beauty layers.
+				self.assertAlmostEqual( layersTopPixel[layerChannelIndices[f"{layerName}_default.r"]], 0, delta = 0.001 )
+			self.assertAlmostEqual( layersTopPixel[layerChannelIndices[f"{layerName}_default.g"]], 0, delta = 0.001 )
+			self.assertAlmostEqual( layersTopPixel[layerChannelIndices[f"{layerName}_default.b"]], 0, delta = 0.001 )
+
+		testLayerImage( beautyLayersFileName, "RGBA" )
+		testLayerImage( diffuseLayersFileName, "diffuseLayers" )
+
+	def testLayerPerLightGroupIdentifierLPEGroups( self ) :
+
+		# LPE groups (per-object groups, not light groups) should not be
+		# affected by our removal of emission or substitution of light groups.
+
+		for lpeGroup in [ "OOOOO", "LLLLL" ] :
+
+			with self.subTest( lpeGroup = lpeGroup ) :
+
+				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					self.renderer,
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+				)
+
+				diffuseFileName = self.temporaryDirectory() / f"{lpeGroup}_diffuse.exr"
+				renderer.output(
+					"perLightGroupRGBA",
+					IECoreScene.Output(
+						str( diffuseFileName ), "exr", f"lpe C<.D'{lpeGroup}'>*[LO]",
+						{
+							"layerPerLightGroup" : True
+						}
+					)
+				)
+
+				sphere = renderer.object(
+					"sphere",
+					IECoreScene.SpherePrimitive(),
+					renderer.attributes( IECore.CompoundObject( {
+						"ri:identifier:lpegroup" : IECore.StringData( lpeGroup ),
+						"ri:surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"output" : IECoreScene.Shader( "PxrDiffuse" )
+							},
+							output = "output",
+						)
+					} ) )
+				)
+				sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+				light = renderer.light(
+					"/light/red", None,
+					renderer.attributes( IECore.CompoundObject( {
+						"ri:light" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"output" : IECoreScene.Shader(
+									"PxrDomeLight", "ri:light",
+									{ "lightGroup" : "red", "lightColor" : imath.Color3f( 1.0, 0.0, 0.0 ) }
+								),
+							},
+							output = "output",
+						),
+						"ri:visibility:camera" : IECore.BoolData( False ),
+					} ) )
+				)
+
+				renderer.render()
+				del sphere, light
+				del renderer
+
+				diffuseImage = OpenImageIO.ImageBuf( str( diffuseFileName ) )
+				self.assertEqual(
+					set( diffuseImage.spec().channelnames ),
+					{ f"RGBA_{g}.{c}" for g in [ "red", "default" ] for c in "rgb" }
+				)
+
+				layerChannelIndices = { c : i for i, c in enumerate( diffuseImage.spec().channelnames ) }
+				layersMidPixel = diffuseImage.getpixel( 320, 240 )
+
+				for channel, value in zip( "rgb", imath.Color3f( 1.0, 0.0, 0.0 ) ) :
+					channelValue = layersMidPixel[layerChannelIndices[f"RGBA_red.{channel}"]]
+					if value == 0 :
+						self.assertAlmostEqual( channelValue, 0, delta = 0.001 )
+					else :
+						self.assertGreater( channelValue, 0.2 )
+
+	def testLayerPerLightGroupPortal( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		beautyLayersFileName = self.temporaryDirectory() / "beautyLayers.exr"
+		renderer.output(
+			"perLightGroupRGBA",
+			IECoreScene.Output(
+				str( beautyLayersFileName ), "exr", "rgba",
+				{
+					"layerPerLightGroup" : True
+				}
+			)
+		)
+
+		sphere = renderer.object(
+			"sphere",
+			IECoreScene.SpherePrimitive(),
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "PxrDiffuse" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		sphere.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+
+		lightDome = renderer.light(
+			"/light/dome", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "dome", "lightColor" : imath.Color3f( 1, 0, 0 ), "intensity" : 100.0 }
+						)
+					},
+					output = "output"
+				),
+				"ri:visibility:camera" : IECore.BoolData( False ),
+			} ) )
+		)
+
+		frontPortal = renderer.light(
+			"/light/frontPortal", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = { "output" : IECoreScene.Shader(
+						"PxrPortalLight", "ri:light",
+						{ "lightGroup" : "bogusPortal" }
+					) },
+					output = "output"
+				),
+				"ri:visibility:camera" : IECore.BoolData( True ),
+			} ) )
+		)
+		frontPortal.transform( imath.M44f().translate( imath.V3f( 0, 0, -3 ) ).rotate( imath.V3f( 0, math.pi, 0 ) ).scale( imath.V3f( 10.0 )) )
+
+		backPortal = renderer.light(
+			"/light/backPortal", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = { "output" : IECoreScene.Shader(
+						"PxrPortalLight", "ri:light",
+						{ "lightGroup" : "bogusPortal2" }
+					) },
+					output = "output"
+				),
+				"ri:visibility:camera" : IECore.BoolData( True ),
+			} ) )
+		)
+		backPortal.transform( imath.M44f().translate( imath.V3f( 0, 0, 3 ) ) )
+
+		renderer.render()
+		del sphere, lightDome, frontPortal, backPortal
+		del renderer
+
+		beautyLayersImage = OpenImageIO.ImageBuf( str( beautyLayersFileName ) )
+		self.assertEqual(
+			set( beautyLayersImage.spec().channelnames ),
+			{ f"RGBA_{g}.{c}" for g in ( "dome", "default" ) for c in "rgb" }
+		)
+
+		layerChannelIndices = { c : i for i, c in enumerate( beautyLayersImage.spec().channelnames ) }
+		layersMidPixel = beautyLayersImage.getpixel( 320, 240 )
+		layersTopLeftPixel = beautyLayersImage.getpixel( 0, 0 )
+
+		# Illuminated from the back portal
+		self.assertGreater( layersMidPixel[layerChannelIndices["RGBA_dome.r"]], 0.2 )
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_dome.g"]], 0.0, delta = 0.001 )
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_dome.b"]], 0.0, delta = 0.001 )
+		# And black in the background.
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_dome.r"]], 0, delta = 0.001 )
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_dome.g"]], 0, delta = 0.001 )
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_dome.b"]], 0, delta = 0.001 )
+
+		# Default layer gets nothing on the sphere.
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_default.r"]], 0.0, delta = 0.001 )
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_default.g"]], 0.0, delta = 0.001 )
+		self.assertAlmostEqual( layersMidPixel[layerChannelIndices["RGBA_default.b"]], 0.0, delta = 0.001 )
+		# And emission from the front portal.
+		self.assertGreater( layersTopLeftPixel[layerChannelIndices["RGBA_default.r"]], 0.2 )
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_default.g"]], 0, delta = 0.001 )
+		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_default.b"]], 0, delta = 0.001 )
+
+	def testLayerPerLightGroupEmissionRemovalIsValid( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			messageHandler = messageHandler
+		)
+
+		outputs = {
+			"A" : "lpe C(DL)|O",
+			"B" : "lpe CO|(DL)",
+			"C" : "lpe C(D(L|O))|O",
+		}
+
+		fileName = self.temporaryDirectory() / "output.exr"
+		for layerName, lpe in outputs.items() :
+			renderer.output(
+				layerName,
+				IECoreScene.Output(
+					str( fileName ), "exr", lpe,
+					{
+						"layerName" : layerName,
+						"layerPerLightGroup" : True,
+					}
+				)
+			)
+
+		light = renderer.light(
+			"/light", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "group" },
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+
+		del light
+		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 0 )
+
+		image = OpenImageIO.ImageBuf( str( fileName ) )
+		self.assertEqual(
+			set( image.spec().channelnames ),
+			{ f"{i}_{g}.{c}" for i in outputs.keys() for g in [ "group", "default" ] for c in "rgb" }
+		)
+
+	def testLayerPerLightGroupInvalidLPE( self ) :
+
+		messageHandler = IECore.CapturingMessageHandler()
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = messageHandler
+		)
+
+
+		outputs = { "A" : "lpe C.*[L(O)]", "B" : "lpe C<D'(O)Goodness'>[LO]" }
+
+		for layerName, lpe in outputs.items() :
+			renderer.output(
+				layerName,
+				IECoreScene.Output(
+					"test", "ieDisplay", lpe,
+					{
+						"driverType" : "ImageDisplayDriver",
+						"handle" : "lightGroupTest",
+						"layerName" : layerName,
+						"layerPerLightGroup" : True,
+					}
+				)
+			)
+
+		light = renderer.light(
+			"/light", None,
+			renderer.attributes( IECore.CompoundObject( {
+				"ri:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"PxrDomeLight", "ri:light",
+							{ "lightGroup" : "group" },
+						),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+
+		del light
+		del renderer
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual(
+			set( i.message for i in messageHandler.messages ),
+			{
+				"Ignoring \"layerPerLightGroup\" parameter on output \"A\" because it includes an invalid emission group.",
+			}
+		)
+
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )

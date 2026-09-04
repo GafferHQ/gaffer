@@ -593,6 +593,13 @@ if os.environ.get( "GAFFERRENDERMAN_HIDE_UI", "" ) != "1" :
 			elif data != "rgba" :
 				parameters["layerName"] = name
 
+			if name in {
+				"beauty", "diffuse", "directDiffuse", "directSpecular",
+				"indirectDiffuse", "indirectSpecular", "specular",
+				"subsurface", "transmission",
+			} :
+				parameters["layerPerLightGroup"] = False
+
 			interactiveParameters = parameters.copy()
 			interactiveParameters.update( {
 					"driverType" : "ClientDisplayDriver",
