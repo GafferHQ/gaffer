@@ -19,6 +19,11 @@ Fixes
 
 - StandardLightVisualiser : Fixed missing wireframe segment when visualising quad lights.
 
+API
+---
+
+- TestCase : Added Quatf support to `assertEqualWithAbsError()`.
+
 1.7.2.0 (relative to 1.7.1.0)
 =======
 
