@@ -151,7 +151,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		nodeUIFrame = self.__nodeUIFrame._qtWidget()
 		nodeUIFrame.setUpdatesEnabled( False )
-		
+
 		try :
 			self.__nodeUIFrame.setChild( self.__nodeUI )
 			self.__layOut( nodeUIFrame )
