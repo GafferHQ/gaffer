@@ -148,7 +148,27 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		self.__header.setVisible( True )
 
 		self.__nodeUI = GafferUI.NodeUI.create( node )
-		self.__nodeUIFrame.setChild( self.__nodeUI )
+
+		nodeUIFrame = self.__nodeUIFrame._qtWidget()
+		nodeUIFrame.setUpdatesEnabled( False )
+
+		try :
+			self.__nodeUIFrame.setChild( self.__nodeUI )
+			self.__layOut( nodeUIFrame )
+		finally :
+			nodeUIFrame.setUpdatesEnabled( True )
+
+	@staticmethod
+	def __layOut( widget ) :
+
+		widgets = widget.findChildren( QtWidgets.QWidget )
+		widgets.sort( key = lambda w : -len( w.findChildren( QtWidgets.QWidget ) ) )
+		widgets.append( widget )
+
+		for w in widgets :
+			layout = w.layout()
+			if layout is not None :
+				layout.activate()
 
 	def _titleFormat( self ) :
 
