@@ -3241,3 +3241,30 @@ class RendererTest( GafferTest.TestCase ) :
 						untiledImage = image
 					else :
 						self.assertFalse( OpenImageIO.ImageBufAlgo.compare( image, untiledImage, failthresh = 0, warnthresh = 0 ).error )
+
+	def testUnsupportedTesselationEdits( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+
+		polygonSphere = IECoreScene.MeshPrimitive.createSphere( 1 )
+		subdivSphere = polygonSphere.copy()
+		subdivSphere.setInterpolation( "catmullClark" )
+
+		maxLevel1Attributes = renderer.attributes(
+			IECore.CompoundObject( { "cycles:max_level" : IECore.IntData( 1 ) } )
+		)
+		maxLevel2Attributes = renderer.attributes(
+			IECore.CompoundObject( { "cycles:max_level" : IECore.IntData( 2 ) } )
+		)
+
+		polygonObject = renderer.object( "polygonSphere", polygonSphere, maxLevel1Attributes )
+		subdivObject = renderer.object( "subdivSphere", subdivSphere, maxLevel1Attributes )
+
+		self.assertTrue( polygonObject.attributes( maxLevel1Attributes ) )
+		self.assertTrue( polygonObject.attributes( maxLevel2Attributes ) )
+
+		self.assertTrue( subdivObject.attributes( maxLevel1Attributes ) )
+		self.assertFalse( subdivObject.attributes( maxLevel2Attributes ) )
+
+		del polygonObject, subdivObject
+

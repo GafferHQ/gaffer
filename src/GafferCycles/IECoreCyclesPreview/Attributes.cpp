@@ -636,205 +636,6 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *s
 	}
 }
 
-bool Attributes::applyObject( ccl::Object *object, const Attributes *previousAttributes, ccl::Scene *scene ) const
-{
-	// Re-issue a new object if displacement or subdivision has changed
-	if( previousAttributes )
-	{
-		if( previousAttributes->m_shader && m_shader )
-		{
-			ccl::Shader *shader = m_shader->shader();
-			ccl::Shader *prevShader = previousAttributes->m_shader->shader();
-			if( prevShader->has_displacement && prevShader->get_displacement_method() != ccl::DISPLACE_BUMP )
-			{
-				const char *oldHash = (prevShader->graph) ? prevShader->graph->displacement_hash.c_str() : "";
-				const char *newHash = (shader->graph) ? shader->graph->displacement_hash.c_str() : "";
-
-				if( strcmp( oldHash, newHash ) != 0 )
-				{
-					//m_shader->need_update_uvs = true;
-					//m_shader->need_update_attribute = true;
-					shader->need_update_displacement = true;
-					// Returning false will make Gaffer re-issue a fresh mesh
-					return false;
-				}
-				else
-				{
-					// In Blender a shader->set_graph(graph); is called which handles the hashing similar to the code above. In GafferCycles
-					// we re-create a fresh shader which is easier to manage, however it misses this call to set need_update_mesh to false.
-					// We set false here, but we also need to make sure all the attribute requests are the same to prevent the flag to be set
-					// to true in another place of the code inside of Cycles. If we have made it this far in this area, we are just updating
-					// the same shader so this should be safe.
-					shader->attributes = prevShader->attributes;
-					//m_shader->need_update_uvs = false;
-					//m_shader->need_update_attribute = false;
-					shader->need_update_displacement = false;
-				}
-			}
-		}
-
-		if( object->get_geometry()->is_mesh() )
-		{
-			auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
-			if( mesh->get_num_subd_faces() )
-			{
-				if(
-					previousAttributes->m_maxLevel != m_maxLevel ||
-					previousAttributes->m_dicingRate != m_dicingRate ||
-					previousAttributes->m_adaptiveSpace != m_adaptiveSpace
-				)
-				{
-					// Get a new mesh
-					return false;
-				}
-			}
-		}
-		else if( object->get_geometry()->is_volume() )
-		{
-			IECore::MurmurHash previousVolumeHash;
-			previousAttributes->m_volume.hash( previousVolumeHash );
-
-			IECore::MurmurHash currentVolumeHash;
-			m_volume.hash( currentVolumeHash );
-			if( previousVolumeHash != currentVolumeHash )
-			{
-				return false;
-			}
-		}
-	}
-
-	object->set_visibility( m_visibility );
-	object->set_use_holdout( m_useHoldout );
-	object->set_is_shadow_catcher( m_isShadowCatcher );
-	object->set_shadow_terminator_shading_offset( m_shadowTerminatorShadingOffset );
-	object->set_shadow_terminator_geometry_offset( m_shadowTerminatorGeometryOffset );
-	object->set_color( SocketAlgo::setColor( m_color ) );
-	object->set_asset_name( ccl::ustring( m_assetName.c_str() ) );
-	object->set_is_caustics_caster( m_isCausticsCaster );
-	object->set_is_caustics_receiver( m_isCausticsReceiver );
-	object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
-
-	if( object->get_geometry()->is_mesh() )
-	{
-		auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
-		if( mesh->get_num_subd_faces() )
-		{
-			mesh->set_subd_dicing_rate( m_dicingRate );
-			mesh->set_subd_max_level( m_maxLevel );
-			mesh->set_subd_adaptive_space( nameToAdaptiveSpaceEnum( m_adaptiveSpace ) );
-		}
-	}
-	else if( object->get_geometry()->is_light() )
-	{
-		auto light = static_cast<ccl::Light *>( object->get_geometry() );
-		if( m_lightAttribute )
-		{
-			ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
-			ccl::array<ccl::Node *> shaders;
-			shaders.push_back_slow( m_lightShader->shader() );
-			{
-				// We need the scene lock for `set_used_shaders()`, to protect
-				// the non-atomic increment made in `ccl::Node::reference()`.
-				std::scoped_lock sceneLock( scene->mutex );
-				light->set_used_shaders( shaders );
-			}
-
-			light->set_is_enabled( !m_muteLight );
-		}
-		else
-		{
-			// No `cycles:light` shader assignment. Most likely a light
-			// intended for another renderer, so we turn off the Cycles
-			// light.
-			light->set_is_enabled( false );
-		}
-
-		if( !light->get_is_enabled() )
-		{
-			// Alas, `ccl::LightManager::test_enabled_lights()` will
-			// re-enable the light unless we also set its strength to zero.
-			light->set_strength( ccl::zero_float3() );
-		}
-
-		return true;
-	}
-
-	if( !previousAttributes || m_shader != previousAttributes->m_shader )
-	{
-		ccl::array<ccl::Node *> shaders;
-		shaders.push_back_slow( m_shader->shader() );
-		{
-			// We need the scene lock because `tag_used()` will modify the
-			// scene.
-			std::scoped_lock sceneLock( scene->mutex );
-			m_shader->shader()->tag_used( scene );
-			// But we also use the lock for `set_used_shaders()`, to protect
-			// the non-atomic increment made in `ccl::Node::reference()`.
-			// > Note : because we instance geometry, two objects
-			// > might be fighting over what shader the geometry should have.
-			// > This needs fixing in its own right, but until then, the lock
-			// > at least prevents concurrent access.
-			object->get_geometry()->set_used_shaders( shaders );
-
-			if( object->get_geometry()->is_mesh() )
-			{
-				auto mesh = static_cast<ccl::Mesh *>( object->get_geometry() );
-				/// \todo I don't know why this is necessary, but without it the new
-				/// assignment doesn't seem to be transferred to the render device.
-				mesh->tag_shader_modified();
-			}
-			else if(
-				object->get_geometry()->is_volume() &&
-				object->get_geometry()->is_modified() &&
-				static_cast<ccl::Volume*>( object->get_geometry() )->get_triangles().size()
-			)
-			{
-				// We've replaced an existing shader on a volume
-				// from which Cycles has already built a mesh, so
-				// we cheekily clear the modified tag to prevent
-				// the volume from disappearing.
-				/// \todo I suspect we need something similar for meshes,
-				/// to prevent unnecessary BVH rebuilds.
-				object->get_geometry()->clear_modified();
-			}
-		}
-	}
-
-	m_volume.apply( object );
-
-	// Custom attributes.
-	object->attributes = m_custom;
-
-	SceneAlgo::tagUpdateWithLock( object, scene );
-
-	return true;
-}
-
-
-void Attributes::hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
-{
-	// Currently Cycles can only have a shader assigned uniquely and not instanced...
-	//h.append( m_shaderHash );
-	const IECore::TypeId objectType = object->typeId();
-	switch( (int)objectType )
-	{
-		case IECoreScene::MeshPrimitiveTypeId :
-			if( static_cast<const IECoreScene::MeshPrimitive *>( object )->interpolation() == "catmullClark" )
-			{
-				h.append( m_dicingRate );
-				h.append( m_maxLevel );
-				h.append( m_adaptiveSpace );
-			}
-			break;
-		case IECoreVDB::VDBObjectTypeId :
-			m_volume.hash( h );
-			break;
-		default :
-			// No geometry attributes for this type.
-			break;
-	}
-}
-
 bool Attributes::canInstanceGeometry( const IECore::Object *object ) const
 {
 	if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) || !m_automaticInstancing )
@@ -855,6 +656,158 @@ bool Attributes::canInstanceGeometry( const IECore::Object *object ) const
 	}
 
 	return true;
+}
+
+void Attributes::applyObject( ccl::Object *object, ccl::Scene *scene ) const
+{
+	object->set_visibility( m_visibility );
+	object->set_use_holdout( m_useHoldout );
+	object->set_is_shadow_catcher( m_isShadowCatcher );
+	object->set_shadow_terminator_shading_offset( m_shadowTerminatorShadingOffset );
+	object->set_shadow_terminator_geometry_offset( m_shadowTerminatorGeometryOffset );
+	object->set_color( SocketAlgo::setColor( m_color ) );
+	object->set_asset_name( ccl::ustring( m_assetName.c_str() ) );
+	object->set_is_caustics_caster( m_isCausticsCaster );
+	object->set_is_caustics_receiver( m_isCausticsReceiver );
+	object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
+	object->attributes = m_custom;
+
+	SceneAlgo::tagUpdateWithLock( object, scene );
+}
+
+void Attributes::hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
+{
+	if( auto mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
+	{
+		if( mesh->interpolation() == "catmullClark" )
+		{
+			hashSubdivision( h );
+		}
+	}
+	else if( IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
+	{
+		m_volume.hash( h );
+	}
+}
+
+void Attributes::hashGeometry( const ccl::Geometry *geometry, IECore::MurmurHash &h ) const
+{
+	if( geometry->is_mesh() )
+	{
+		if( static_cast<const ccl::Mesh *>( geometry )->get_num_subd_faces() )
+		{
+			hashSubdivision( h );
+		}
+	}
+	else if( geometry->is_volume() )
+	{
+		m_volume.hash( h );
+	}
+}
+
+void Attributes::hashSubdivision( IECore::MurmurHash &h ) const
+{
+	h.append( m_dicingRate );
+	h.append( m_maxLevel );
+	h.append( m_adaptiveSpace );
+}
+
+void Attributes::applyGeometry( ccl::Geometry *geometry, ccl::Scene *scene ) const
+{
+	if( geometry->is_mesh() )
+	{
+		auto mesh = static_cast<ccl::Mesh *>( geometry );
+		if( mesh->get_num_subd_faces() )
+		{
+			mesh->set_subd_dicing_rate( m_dicingRate );
+			mesh->set_subd_max_level( m_maxLevel );
+			mesh->set_subd_adaptive_space( nameToAdaptiveSpaceEnum( m_adaptiveSpace ) );
+			SceneAlgo::tagUpdateWithLock( geometry, scene, /* rebuild = */ true );
+		}
+	}
+	else if( geometry->is_volume() )
+	{
+		m_volume.apply( static_cast<ccl::Volume *>( geometry ) );
+		SceneAlgo::tagUpdateWithLock( geometry, scene, false );
+	}
+}
+
+void Attributes::applyShader( ccl::Geometry *geometry, ccl::Scene *scene ) const
+{
+	const ccl::array<ccl::Node *> oldShaders = geometry->get_used_shaders();
+	if( !oldShaders.size() || oldShaders[0] != m_shader->shader() )
+	{
+		ccl::array<ccl::Node *> shaders;
+		shaders.push_back_slow( m_shader->shader() );
+		{
+			// We need the scene lock because `tag_used()` will modify the
+			// scene.
+			std::scoped_lock sceneLock( scene->mutex );
+			m_shader->shader()->tag_used( scene );
+			// But we also use the lock for `set_used_shaders()`, to protect
+			// the non-atomic increment made in `ccl::Node::reference()`.
+			// > Note : because we instance geometry, two objects
+			// > might be fighting over what shader the geometry should have.
+			// > This needs fixing in its own right, but until then, the lock
+			// > at least prevents concurrent access.
+			geometry->set_used_shaders( shaders );
+
+			if( geometry->is_mesh() )
+			{
+				auto mesh = static_cast<ccl::Mesh *>( geometry );
+				/// \todo I don't know why this is necessary, but without it the new
+				/// assignment doesn't seem to be transferred to the render device.
+				mesh->tag_shader_modified();
+			}
+			else if(
+				geometry->is_volume() && geometry->is_modified() &&
+				static_cast<ccl::Volume *>( geometry )->get_triangles().size()
+			)
+			{
+				// We've replaced an existing shader on a volume
+				// from which Cycles has already built a mesh, so
+				// we cheekily clear the modified tag to prevent
+				// the volume from disappearing.
+				/// \todo I suspect we need something similar for meshes,
+				/// to prevent unnecessary BVH rebuilds.
+				geometry->clear_modified();
+			}
+		}
+	}
+}
+
+void Attributes::applyLight( ccl::Light *light, ccl::Scene *scene ) const
+{
+	if( m_lightAttribute )
+	{
+		ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
+		ccl::array<ccl::Node *> shaders;
+		shaders.push_back_slow( m_lightShader->shader() );
+		{
+			// We need the scene lock for `set_used_shaders()`, to protect
+			// the non-atomic increment made in `ccl::Node::reference()`.
+			std::scoped_lock sceneLock( scene->mutex );
+			light->set_used_shaders( shaders );
+		}
+
+		light->set_is_enabled( !m_muteLight );
+	}
+	else
+	{
+		// No `cycles:light` shader assignment. Most likely a light
+		// intended for another renderer, so we turn off the Cycles
+		// light.
+		light->set_is_enabled( false );
+	}
+
+	if( !light->get_is_enabled() )
+	{
+		// Alas, `ccl::LightManager::test_enabled_lights()` will
+		// re-enable the light unless we also set its strength to zero.
+		light->set_strength( ccl::zero_float3() );
+	}
+
+	SceneAlgo::tagUpdateWithLock( light, scene );
 }
 
 int Attributes::getVolumePrecision() const
@@ -916,14 +869,8 @@ void Attributes::Volume::hash( IECore::MurmurHash &h ) const
 	}
 }
 
-void Attributes::Volume::apply( ccl::Object *object ) const
+void Attributes::Volume::apply( ccl::Volume *volume ) const
 {
-	if( !object->get_geometry()->is_volume() )
-	{
-		return;
-	}
-
-	auto volume = static_cast<ccl::Volume *>( object->get_geometry() );
 	if( stepSize )
 	{
 		volume->set_step_size( stepSize.value() );

@@ -541,6 +541,8 @@ class GeometryCache
 			if( geometry )
 			{
 				geometry->name = ccl::ustring( nodeName.c_str() );
+				attributes->applyShader( geometry.get(), m_scene );
+				attributes->applyGeometry( geometry.get(), m_scene );
 			}
 
 			if( auto vdb = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front().get() ) )
@@ -746,14 +748,26 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const Attributes *cyclesAttributes = static_cast<const Attributes *>( attributes );
-			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get(), m_scene ) )
+
+			if( m_attributes )
 			{
-				m_attributes = cyclesAttributes;
-				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
-				return true;
+				IECore::MurmurHash currentGeometryHash, newGeometryHash;
+				m_attributes->hashGeometry( m_geometry.get(), currentGeometryHash );
+				cyclesAttributes->hashGeometry( m_geometry.get(), newGeometryHash );
+				if( newGeometryHash != currentGeometryHash )
+				{
+					// Our geometry might be shared with other instances that
+					// don't want the new attributes, so we're not at liberty
+					// to make the edit.
+					return false;
+				}
 			}
 
-			return false;
+			cyclesAttributes->applyObject( m_object.get(), m_scene );
+			cyclesAttributes->applyShader( m_geometry.get(), m_scene );
+			m_attributes = cyclesAttributes;
+
+			return true;
 		}
 
 		void assignID( uint32_t id ) override
@@ -849,15 +863,10 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			const Attributes *cyclesAttributes = static_cast<const Attributes *>( attributes );
-			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get(), m_scene ) )
-			{
-				m_attributes = cyclesAttributes;
-				SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
-				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
-				return true;
-			}
-
-			return false;
+			cyclesAttributes->applyLight( m_light.get(), m_scene );
+			cyclesAttributes->applyObject( m_object.get(), m_scene );
+			m_attributes = cyclesAttributes;
+			return true;
 		}
 
 		void assignID( uint32_t id ) override
