@@ -3369,3 +3369,29 @@ class RendererTest( GafferTest.TestCase ) :
 				renderer.render()
 
 		self.ignoreMessage( IECore.Msg.Level.Error, "Cycles", """OpenImageIO could not find a format writer for "test". Is it a file format that OpenImageIO doesn't know about?""" )
+
+	def testUnsupportedTesselationEdits( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+
+		polygonSphere = IECoreScene.MeshPrimitive.createSphere( 1 )
+		subdivSphere = polygonSphere.copy()
+		subdivSphere.setInterpolation( "catmullClark" )
+
+		maxLevel1Attributes = renderer.attributes(
+			IECore.CompoundObject( { "cycles:max_level" : IECore.IntData( 1 ) } )
+		)
+		maxLevel2Attributes = renderer.attributes(
+			IECore.CompoundObject( { "cycles:max_level" : IECore.IntData( 2 ) } )
+		)
+
+		polygonObject = renderer.object( "polygonSphere", polygonSphere, maxLevel1Attributes )
+		subdivObject = renderer.object( "subdivSphere", subdivSphere, maxLevel1Attributes )
+
+		self.assertTrue( polygonObject.attributes( maxLevel1Attributes ) )
+		self.assertTrue( polygonObject.attributes( maxLevel2Attributes ) )
+
+		self.assertTrue( subdivObject.attributes( maxLevel1Attributes ) )
+		self.assertFalse( subdivObject.attributes( maxLevel2Attributes ) )
+
+		del polygonObject, subdivObject

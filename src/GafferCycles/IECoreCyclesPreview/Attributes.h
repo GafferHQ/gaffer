@@ -121,17 +121,30 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 
 		Attributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache );
 
-		bool applyObject( ccl::Object *object, const Attributes *previousAttributes, ccl::Scene *scene ) const;
+		// Applies all relevant attributes to `object`.
+		// > Note : Does not modify the geometry at `object->get_geometry()`.
+		void applyObject( ccl::Object *object, ccl::Scene *scene ) const;
 
-		// Generates a signature for the work done by applyGeometry.
-		/// \todo This description is inaccurate. There used to be a method called `applyGeometry()`,
-		/// but it was removed. We didn't remove `hashGeometry()` at the same time because it hashes
-		/// things that were never used by `applyGeometry()` in the first place. Figure out why there
-		/// was this mismatch, and if this function is really needed or not.
-		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const;
+		// Geometry Attributes
+		// ===================
+		//
+		// Some attributes apply to `ccl::Geometry`. These need careful handling
+		// because they interact with automatic instancing.
 
 		// Returns true if the given geometry can be instanced.
 		bool canInstanceGeometry( const IECore::Object *object ) const;
+		// Generates a signature for the work done by `applyGeometry()`.
+		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const;
+		void hashGeometry( const ccl::Geometry *geometry, IECore::MurmurHash &h ) const;
+		// Applies attributes relevant to `geometry`.
+		void applyGeometry( ccl::Geometry *geometry, ccl::Scene *scene ) const;
+
+		// Applies the shader to the geometry.
+		void applyShader( ccl::Geometry *geometry, ccl::Scene *scene ) const;
+
+		// Applies attributes relevant to `light`. Instancing is not an
+		// issue here because we never instance lights.
+		void applyLight( ccl::Light *light, ccl::Scene *scene ) const;
 
 		int getVolumePrecision() const;
 		float getVolumeClipping() const;
@@ -139,6 +152,7 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 	private :
 
 		void updateVisibility( const IECore::InternedString &name, int rayType, const IECore::CompoundObject *attributes );
+		void hashSubdivision( IECore::MurmurHash &h ) const;
 
 		struct Volume
 		{
@@ -151,7 +165,7 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 			std::optional<std::string> precision;
 
 			void hash( IECore::MurmurHash &h ) const;
-			void apply( ccl::Object *object ) const;
+			void apply( ccl::Volume *volume ) const;
 
 		};
 
