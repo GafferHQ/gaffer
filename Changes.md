@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.3.0)
 =======
 
+Improvements
+------------
+
+- Cycles : Added support for rendering PointInstancers.
+
 Fixes
 -----
 
