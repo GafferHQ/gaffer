@@ -966,6 +966,55 @@ class RendererTest( GafferTest.TestCase ) :
 		color = self.__colorAtUV( image, imath.V2f( 0.5 ) )
 		self.assertEqualWithAbsError( imath.Color3f( color.r, color.g, color.b ), points["N"].data[0].normalize(), 0.0001 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerWithEmptyPrototype( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		attributes = renderer.attributes( IECore.CompoundObject() )
+
+		prototype = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[], [], attributes
+		)
+
+		# We're just happy if this doesn't crash - no need to assert anything.
+		renderer.pointInstancer( "test", [ pointInstancer ], [ 0.0 ], [ prototype ], attributes )
+		renderer.render()
+
+		del attributes
+		del renderer
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerWithMissingPrototypeIndices( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+
+		attributes = renderer.attributes( IECore.CompoundObject() )
+
+		prototype = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[ IECoreScene.SpherePrimitive() ], [ 0.0 ], attributes
+		)
+
+		# We're just happy if this doesn't crash - no need to assert anything.
+		renderer.pointInstancer( "test", [ pointInstancer ], [ 0.0 ], [ prototype ], attributes )
+		renderer.render()
+
+		del attributes
+		del renderer
+
 	def __testMeshSmoothing( self, cube, smoothingExpected ) :
 
 		renderer = self.createRenderer()

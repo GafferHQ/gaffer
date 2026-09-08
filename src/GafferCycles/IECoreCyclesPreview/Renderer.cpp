@@ -46,6 +46,7 @@
 #include "IEDisplayOutputDriver.h"
 #include "NodeDeleter.h"
 #include "OIIOOutputDriver.h"
+#include "PointInstancer.h"
 #include "SceneAlgo.h"
 
 #include "IECoreScene/Camera.h"
@@ -383,6 +384,11 @@ class GeometryCache
 			const std::string &nodeName
 		)
 		{
+			if( samples.empty() )
+			{
+				return nullptr;
+			}
+
 			const Attributes *cyclesAttributes = static_cast<const Attributes *>( attributes );
 
 			if( !cyclesAttributes->canInstanceGeometry( samples.front().get() ) )
@@ -1400,6 +1406,23 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ObjectInterfacePtr result = new CyclesObject( m_scene, geometry, name, &m_lightLinker, m_nodeDeleter.get() );
 			result->attributes( attributes );
 			return result;
+		}
+
+		ObjectInterfacePtr pointInstancer( const std::string &name, const PointInstancerSamples &samples, const SampleTimes &times, const std::vector<Prototype> &prototypes, const AttributesInterface *attributes ) override
+		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+			acquireSession();
+
+			vector<SharedGeometryPtr> prototypeGeometry;
+			vector<ConstAttributesPtr> prototypeAttributes;
+			prototypeGeometry.reserve( prototypes.size() );
+			for( size_t i = 0; i < prototypes.size(); ++i )
+			{
+				prototypeGeometry.push_back( m_geometryCache->get( prototypes[i].samples, prototypes[i].times, prototypes[i].attributes.get(), fmt::format( "{}_prototype{}", name, i ) ) );
+				prototypeAttributes.push_back( boost::static_pointer_cast<Attributes>( prototypes[i].attributes ) );
+			}
+
+			return new IECoreCycles::PointInstancer( m_scene, m_nodeDeleter.get(), samples, prototypeGeometry, prototypeAttributes );
 		}
 
 		void render() override
