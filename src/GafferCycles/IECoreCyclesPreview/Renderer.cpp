@@ -455,9 +455,7 @@ class AttributesCache
 namespace
 {
 
-/// \todo Make this point to `const ccl::Geometry`, since shared
-/// geometry should be immutable.
-using SharedGeometryPtr = std::shared_ptr<ccl::Geometry>;
+using SharedGeometryPtr = std::shared_ptr<const ccl::Geometry>;
 
 class GeometryCache
 {
@@ -537,7 +535,7 @@ class GeometryCache
 			const std::string &nodeName
 		)
 		{
-			auto geometry = SharedGeometryPtr( GeometryAlgo::convert( samples, times, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
+			std::shared_ptr<ccl::Geometry> geometry( GeometryAlgo::convert( samples, times, m_scene ), NodeDeleter::GeometryDeleter( m_nodeDeleter ) );
 			if( geometry )
 			{
 				geometry->name = ccl::ustring( nodeName.c_str() );
@@ -646,7 +644,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				/// \todo Would the Cycles project accept a patch to make the
 				/// reference count atomic?
 				std::scoped_lock sceneLock( scene->mutex );
-				m_object->set_geometry( geometry.get() );
+				m_object->set_geometry( const_cast<ccl::Geometry *>( geometry.get() ) );
 			}
 		}
 
@@ -723,16 +721,18 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			if( m_geometry->is_mesh() )
 			{
-				auto mesh = static_cast<ccl::Mesh *>( m_geometry.get() );
-				if( mesh->get_subdivision_type() != ccl::Mesh::SUBDIVISION_NONE )
+				auto constMesh = static_cast<const ccl::Mesh *>( m_geometry.get() );
+				if( constMesh->get_subdivision_type() != ccl::Mesh::SUBDIVISION_NONE )
 				{
-					if( mesh->get_subd_adaptive_space() == ccl::Mesh::SUBDIVISION_ADAPTIVE_SPACE_PIXEL )
+					if( constMesh->get_subd_adaptive_space() == ccl::Mesh::SUBDIVISION_ADAPTIVE_SPACE_PIXEL )
 					{
 						// View-dependent subdivs aren't auto-instanced, so we
-						// should be the only one managing `subd_objecttoworld`.
+						// should be the only one managing `subd_objecttoworld`,
+						// making it safe to mutate.
 						assert( m_geometry.use_count() == 1 );
+						auto mesh = const_cast<ccl::Mesh *>( constMesh );
 						mesh->set_subd_objecttoworld( m_object->get_tfm() );
-						SceneAlgo::tagUpdateWithLock( m_geometry.get(), m_scene, /* rebuild = */ true );
+						SceneAlgo::tagUpdateWithLock( mesh, m_scene, /* rebuild = */ true );
 					}
 					else
 					{
@@ -764,7 +764,12 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 
 			cyclesAttributes->applyObject( m_object.get(), m_scene );
-			cyclesAttributes->applyShader( m_geometry.get(), m_scene );
+			// We only have const access to `m_geometry`, because we may be sharing
+			// it with other CyclesObjects. By casting and clobbering the shader, we
+			// risk changing the shading on other objects. But currently we prefer that
+			// to the alternative of failing the edit and issuing all-new geometry.
+			// Ideally Cycles would assign shaders to `ccl::Object` instead.
+			cyclesAttributes->applyShader( const_cast<ccl::Geometry *>( m_geometry.get() ), m_scene );
 			m_attributes = cyclesAttributes;
 
 			return true;
