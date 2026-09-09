@@ -54,8 +54,10 @@ namespace
 const InternedString g_oslShader( "osl:shader" );
 const InternedString g_oslSurface( "osl:surface" );
 
-const char *g_oslPrefix( getenv( "GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX" ) );
-const InternedString g_oslTarget( g_oslPrefix ? std::string( g_oslPrefix ) + ":surface" : "osl:surface" );
+const InternedString g_oslTarget = [] {
+	const char *oslPrefix = getenv( "GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX" );
+	return oslPrefix ? std::string( oslPrefix ) + ":surface" : "osl:surface";
+}();
 
 } // namespace
 

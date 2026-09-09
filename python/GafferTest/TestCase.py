@@ -101,9 +101,7 @@ class TestCase( unittest.TestCase ) :
 
 	def tearDown( self ) :
 
-		# Restore the original environment. Do this using the minimal
-		# number of edits to `os.environ`, since Windows doesn't seem to
-		# like clearing it and rebuilding it completely.
+		# Restore the original environment.
 
 		for key, value in self.__originalEnv.items() :
 			if os.environ.get( key ) != value :

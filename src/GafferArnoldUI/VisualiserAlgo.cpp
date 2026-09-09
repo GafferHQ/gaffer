@@ -50,7 +50,6 @@
 
 #include "OSL/oslquery.h"
 
-
 using namespace OSL;
 using namespace IECore;
 using namespace IECoreScene;
@@ -62,7 +61,10 @@ namespace
 // OSL query LRU cache
 //////////////////////////////////////////////////////////////////////////
 
-const char *g_oslSearchPaths = getenv( "OSL_SHADER_PATHS" );
+const std::string g_oslSearchPaths = [] {
+	const char *e = getenv( "OSL_SHADER_PATHS" );
+	return std::string( e ? e : "" );
+}();
 
 using OSLQueryPtr = std::shared_ptr<OSLQuery>;
 
@@ -71,7 +73,7 @@ OSLQueryPtr oslQueryGetter( const std::string &shaderName, size_t &cost, const I
 	cost = 1;
 
 	OSLQueryPtr result( new OSLQuery() );
-	if( result->open( shaderName, g_oslSearchPaths ? g_oslSearchPaths : "" ) )
+	if( result->open( shaderName, g_oslSearchPaths ) )
 	{
 		return result;
 	}
