@@ -250,6 +250,23 @@ class DataStoreTest( GafferTest.TestCase ) :
 			self.assertComparisonValid( loadS )
 			del loadS
 
+	def testRemoveDataStore( self ):
+		s = Gaffer.ScriptNode()
+		self.setupComparison( s )
+
+		self.comparisonSetEntry( s, "test", IECore.IntData( 42 ) )
+
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
+		self.assertComparisonValid( s )
+		s.save()
+		self.assertSaved( s )
+
+		del s["dataStore"]
+
+		# This will check that the caches on disk match the empty list ( ie. we should now
+		# have cleaned up and deleted all data stores )
+		self.assertSaved( s )
+
 	def testMovingManyEntriesToRecycleBin( self ):
 		# Just wanted to double check that iterating the data store directory is working properly, by
 		# moving a whole bunch of files at once to the recycle bin
