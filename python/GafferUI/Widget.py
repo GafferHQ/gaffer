@@ -175,6 +175,14 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			# way. However we may want other types to expand in the future. I think what we
 			# really need to do is somehow make __qtWidget without a layout, and just have
 			# it's size etc. dictated directly by self.__gafferWidget._qtWidget() somehow.
+			#
+			# See `NodeEditor._updateFromSet()` where we work around layout
+			# flicker caused by this. Our theory is that when the layout first
+			# runs, it sets the minimum and maximum sizes of the widget, causing
+			# a second layout event to be posted to the event loop. Before that
+			# is dealt with, a paint event draws a layout computed without the
+			# right constraints and we get flicker when the second round of
+			# layout completes.
 			self.__qtWidget.layout().setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 			self.__qtWidget.layout().setContentsMargins( 0, 0, 0, 0 )
 			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
