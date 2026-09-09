@@ -4483,6 +4483,30 @@ class XPURendererTest( RendererTest ) :
 
 		RendererTest.testPortalLight( self )
 
+	# RenderManXPU portal light illumination does not respect light groups.
+	@unittest.expectedFailure
+	def testLayerPerLightGroupGlowSurfaceShader( self ) :
+
+		RendererTest.testLayerPerLightGroupGlowSurfaceShader( self )
+
+	# RenderManXPU does not recognize short-form LPE with a light group suffix.
+	@unittest.expectedFailure
+	def testLayerPerLightGroupIgnoresLPEWithExplicitGroup( self ) :
+
+		RendererTest.testLayerPerLightGroupIgnoresLPEWithExplicitGroup( self )
+
+	# RenderManXPU does not recognize short-form LPE with a light group suffix.
+	@unittest.expectedFailure
+	def testLayerPerLightGroupOutputs( self ) :
+
+		RendererTest.testLayerPerLightGroupOutputs( self )
+
+	# RenderManXPU portal light illumination does not respect light groups.
+	@unittest.expectedFailure
+	def testLayerPerLightGroupPortal( self ) :
+
+		RendererTest.testLayerPerLightGroupPortal( self )
+
 	def testNoDeviceSelection( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
