@@ -261,3 +261,30 @@ class NameSwitchTest( GafferTest.TestCase ) :
 		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "C" ] ) )
 		switch["in"][2]["enabled"].setValue( True )
 		self.assertEqual( switch["enabledNames"].getValue(), IECore.StringVectorData( [ "C", "B" ] ) )
+
+	def testDerivingInPython( self ) :
+
+		class MyNameSwitch( Gaffer.NameSwitch ) :
+
+			def __init__( self, name = "MySuMyNameSwitchbGraph" ) :
+
+				Gaffer.NameSwitch.__init__( self, name )
+
+		IECore.registerRunTimeTyped( MyNameSwitch )
+
+		Gaffer.Metadata.registerNode(
+
+			MyNameSwitch,
+
+			"description",
+			"""
+			If you're retrieving this, the subclassing has worked.
+			""",
+
+		)
+
+		n = MyNameSwitch()
+		self.assertEqual(
+			Gaffer.Metadata.value( n, "description" ),
+			"If you're retrieving this, the subclassing has worked."
+		)

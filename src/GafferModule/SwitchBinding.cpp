@@ -38,6 +38,7 @@
 
 #include "SwitchBinding.h"
 
+#include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "Gaffer/NameSwitch.h"
@@ -120,12 +121,14 @@ class SwitchSerialiser : public NodeSerialiser
 
 void GafferModule::bindSwitch()
 {
-	DependencyNodeClass<Switch>()
+	using SwitchWrapper = ComputeNodeWrapper<Switch>;
+	DependencyNodeClass<Switch, SwitchWrapper>()
 		.def( "setup", &setup<Switch> )
 		.def( "activeInPlug", &activeInPlug, ( arg( "plug") = object() ) )
 	;
 
-	DependencyNodeClass<NameSwitch>()
+	using NameSwitchWrapper = ComputeNodeWrapper<NameSwitch>;
+	DependencyNodeClass<NameSwitch, NameSwitchWrapper>()
 		.def( "setup", &setup<NameSwitch> )
 	;
 
