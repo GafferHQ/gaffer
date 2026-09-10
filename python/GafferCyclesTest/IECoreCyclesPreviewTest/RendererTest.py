@@ -2938,5 +2938,80 @@ class RendererTest( GafferTest.TestCase ) :
 		del volume2
 		del vdb
 
+	def testCustomAttributes( self ) :
+
+		ignoreWarningMessage = "Custom attribute \"unsupportedMatrix\" has unsupported type \"M44fData\"."
+		self.ignoreMessage( IECore.Msg.Level.Warning, "IECoreCycles::Renderer", ignoreWarningMessage )
+
+		renderer = self.createRenderer()
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testCustomAttributes",
+				}
+			)
+		)
+
+		# Create many float values as this would make Cycles unstable and "glitch" or crash.
+		# Also add invalid ones like matrices to make sure these get skipped with a warning.
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"render:displayColor" : IECore.Color3fData( imath.Color3f( 1, 0.5, 0.25 ) ),
+				"render:displayOpacity" : IECore.FloatData( 1.0 ),
+				"render:myFloat" : IECore.FloatData( 0.5 ),
+				"render:anotherFloat" : IECore.FloatData( 0.25 ),
+				"render:myBool0" : IECore.BoolData( 0 ),
+				"render:myBool1" : IECore.BoolData( 1 ),
+				"render:unsupportedMatrix" : IECore.M44fData( imath.M44f() ),
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_strength" : 1 } ),
+						"combineColor" : IECoreScene.Shader( "combine_color", "cycles:shader" ),
+						"attributeMyFloat" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : IECore.StringData( "myFloat" ) } ),
+						"attributeAnotherFloat" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : IECore.StringData( "anotherFloat" ) } ),
+						"attributeMyBool1" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : IECore.StringData( "myBool1" ) } ),
+					},
+					connections = [
+						( ( "attributeMyFloat", "fac" ), ( "combineColor", "r" ) ),
+						( ( "attributeAnotherFloat", "fac" ), ( "combineColor", "g" ) ),
+						( ( "attributeMyBool1", "fac" ), ( "combineColor", "b" ) ),
+						( ( "combineColor", "color" ), ( "output", "emission_color" ) ),
+					],
+					output = "output",
+				)
+			} ) )
+		)
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.render()
+			for m in mh.messages :
+				if m.level != IECore.MessageHandler.Level.Warning :
+					continue
+				self.assertEqual( m.context, "IECoreCycles::Renderer" )
+				self.assertEqual( m.message, ignoreWarningMessage )
+				break
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testCustomAttributes" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 0.5 )
+		self.assertEqual( testPixel.g, 0.25 )
+		self.assertEqual( testPixel.b, 1.0 )
+
+		del plane
+
 if __name__ == "__main__":
 	unittest.main()
