@@ -44,6 +44,7 @@
 
 #include "Attributes.h"
 #include "IEDisplayOutputDriver.h"
+#include "NodeDeleter.h"
 #include "OIIOOutputDriver.h"
 #include "SceneAlgo.h"
 
@@ -161,99 +162,6 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		return defaultValue;
 	}
 }
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// NodeDeleter
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-// `ccl::Scene::delete_node()` is the official way of removing a node from the
-// scene and deleting it. It is specialised for each node type so that it also
-// tags the appropriate object manager for update. In an ideal world we would
-// just call it whenever we need to delete a node.
-//
-// But a single call to `delete_node()` is `O(n)` in the number of nodes in the
-// scene, making deletion of all nodes `O(n^2)`, which is unacceptable for large
-// scenes. The NodeDeleter class allows us to batch up deletions and use a single
-// call to the more performant `ccl::Scene::delete_nodes()` method to delete
-// multiple nodes at once.
-struct NodeDeleter
-{
-
-	NodeDeleter( ccl::Scene *scene )
-		:	m_scene( scene )
-	{
-	}
-
-	// Deleter for use with `std::shared_ptr` and `std::unique_ptr`.
-	template<typename T>
-	struct Deleter
-	{
-
-		Deleter( NodeDeleter *nodeDeleter = nullptr )
-			:	m_nodeDeleter( nodeDeleter )
-		{
-		}
-
-		void operator()( T *node ) const
-		{
-			if( m_nodeDeleter )
-			{
-				m_nodeDeleter->scheduleDeletion( node );
-			}
-		}
-
-		private :
-
-			NodeDeleter *m_nodeDeleter;
-
-	};
-
-	using GeometryDeleter = Deleter<ccl::Geometry>;
-	using ObjectDeleter = Deleter<ccl::Object>;
-
-	void doPendingDeletions()
-	{
-		std::lock_guard lock( m_mutex );
-		std::lock_guard sceneLock( m_scene->mutex );
-
-		if( m_pendingObjectDeletions.size() )
-		{
-			m_scene->delete_nodes( m_pendingObjectDeletions );
-			m_pendingObjectDeletions.clear();
-		}
-		if( m_pendingGeometryDeletions.size() )
-		{
-			m_scene->delete_nodes( m_pendingGeometryDeletions );
-			m_pendingGeometryDeletions.clear();
-		}
-	}
-
-	private :
-
-		void scheduleDeletion( ccl::Object *object )
-		{
-			std::lock_guard lock( m_mutex );
-			m_pendingObjectDeletions.insert( object );
-		}
-
-		void scheduleDeletion( ccl::Geometry *geometry )
-		{
-			std::lock_guard lock( m_mutex );
-			m_pendingGeometryDeletions.insert( geometry );
-		}
-
-		ccl::Scene *m_scene;
-
-		std::mutex m_mutex;
-		std::set<ccl::Object *> m_pendingObjectDeletions;
-		std::set<ccl::Geometry *> m_pendingGeometryDeletions;
-
-};
 
 } // namespace
 
