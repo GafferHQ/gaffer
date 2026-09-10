@@ -6,6 +6,12 @@ Fixes
 
 - Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
 - MergeMeshes, MergeCurves, MergePoints : Fixed crash when merge is sorted by a primitive variable and none of the locations to merge contain primitives.
+- SceneReader : Fixed loading of float-precision orientations from the USD `PointInstancer.orientationsf` attribute. Previously only the half-precision `orientations` attribute was supported.
+
+Build
+-----
+
+- Cortex : Updated to version 10.6.7.2.
 
 1.6.21.5 (relative to 1.6.21.4)
 ========
