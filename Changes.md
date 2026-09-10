@@ -16,6 +16,7 @@ Fixes
 
 - Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
 - NodeEditor : Fixed flicker when changing the node being viewed.
+- Linux : Fixed startup from installation directory containing spaces.
 
 API
 ---
