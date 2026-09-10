@@ -214,10 +214,9 @@ PrimitiveVariableInspector::PrimitiveVariableInspector(
 	const Gaffer::PlugPtr &editScope,
 	IECore::InternedString primitiveVariable,
 	Property property,
-	const std::string &name,
-	const std::string &type
+	const std::string &name
 )
-	:	Inspector( { scene->objectPlug() }, type, name == "" ? primitiveVariable.string() : name, editScope ),
+	:	Inspector( { scene->objectPlug() }, "primitiveVariable", name == "" ? primitiveVariable.string() : name, editScope ),
 		m_scene( scene ), m_primitiveVariable( primitiveVariable ), m_property( property )
 {
 }
