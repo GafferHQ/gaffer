@@ -35,6 +35,13 @@ Fixes
 -----
 
 - Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
+- NodeEditor : Fixed flicker when changing the node being viewed.
+- Linux : Fixed startup from installation directory containing spaces.
+
+API
+---
+
+- Switch, NameSwitch : Added support for subclassing in Python.
 
 1.7.1.0 (relative to 1.7.0.0)
 =======

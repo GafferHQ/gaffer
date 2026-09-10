@@ -392,7 +392,7 @@ if sys.platform == "win32" :
 
 if sys.platform == "linux" :
 	if os.environ.get( "GAFFER_JEMALLOC", "1" ) != "0" :
-		appendToPath( gafferRoot / "lib" / "libjemalloc.so", "LD_PRELOAD" )
+		appendToPath( "libjemalloc.so", "LD_PRELOAD" )
 
 # OIIO Setup
 # ==========
