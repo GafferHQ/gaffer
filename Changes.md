@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- USD : UsdGeomPointInstancers now always render as optimised native PointInstancer objects. The legacy adaptor which rendered them via an Instancer node has been removed, along with the Viewer's "Expand USD Instancers" menu item.
 - Transform : Added an `extraTransform` plug, allowing an expression to specify the transform as an `M44f` rather than separate translate, rotate and scale components.
 - BoolPlug : Added support for connections from array-valued plugs such as StringVectorDataPlug. The BoolPlug's value is true when the input array is non-empty, and false when the input array is empty.
 - PlugAlgo : Added more type coercions to `setValueFromData()`, allowing BoolPlugs and NumericPlugs to be set from StringData.
@@ -24,6 +25,10 @@ Breaking Changes
 - TractorDispatcher : Removed deprecated support for `preSpoolSignal` slots without `taskData` arguments.
 - ImageAlgo : Removed `image()` method.
 - ImageGadget, Image : Removed constructors taking an `IECoreImage::ImagePrimitive`.
+- USD :
+  - UsdGeomPointInstancers now always render as native PointInstancer objects, rather than via a legacy adaptor.
+  - The `gafferUSD:pointInstancerAdaptor:attributes` and `gafferUSD:pointInstancerAdaptor:enabled` options have been removed.
+  - Instance attributes no longer have a `user:` prefix when rendered in Arnold and 3Delight.
 
 1.7.x.x (relative to 1.7.3.1)
 =======
