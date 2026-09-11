@@ -93,6 +93,7 @@ from .ConnectionGadgetTest import ConnectionGadgetTest
 from .AuxiliaryConnectionsGadgetTest import AuxiliaryConnectionsGadgetTest
 from .MessageWidgetTest import MessageWidgetTest
 from .ModuleTest import ModuleTest
+from .ShowURLTest import ShowURLTest
 from .PlugLayoutTest import PlugLayoutTest
 from .ViewportGadgetTest import ViewportGadgetTest
 from .VectorDataWidgetTest import VectorDataWidgetTest
