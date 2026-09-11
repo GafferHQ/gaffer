@@ -57,6 +57,7 @@ const RtUString g_intensityMultUStr( "intensityMult" );
 const RtUString g_lightingMuteUStr( "lighting:mute" );
 const RtUString g_lightColorUStr( "lightColor" );
 const RtUString g_lightColorMapUStr( "lightColorMap" );
+const RtUString g_lightGroupUStr( "lightGroup" );
 const RtUString g_portalNameUStr( "portalName" );
 const RtUString g_portalToDomeUStr( "portalToDome" );
 const RtUString g_progressModeUStr( "progressMode" );
@@ -64,6 +65,8 @@ const RtUString g_pxrDomeLightUStr( "PxrDomeLight" );
 const RtUString g_pxrPortalLightUStr( "PxrPortalLight" );
 const RtUString g_tintUStr( "tint" );
 const RtUString g_xpuVariant( "xpu" );
+
+const std::string g_defaultLightGroupLayer = "default";
 
 // Returns a unique portal name based on a color map and rotation, to
 // satisfy these requirements from the RenderMan docs :
@@ -261,7 +264,22 @@ void Session::deleteCamera( riley::CameraId cameraId )
 riley::LightShaderId Session::createLightShader( const riley::ShadingNetwork &light, const riley::ShadingNetwork &lightFilter )
 {
 	riley::LightShaderId result = riley->CreateLightShader( riley::UserId(), light, lightFilter );
-	RtUString type = light.nodeCount ? light.nodes[light.nodeCount-1].name : RtUString();
+
+	const RtUString type = light.nodeCount ? light.nodes[light.nodeCount-1].name : RtUString();
+
+	// PxrPortalLight takes its light group from the dome light it's associated with
+	// in `updatePortals()`.
+	if( result != riley::LightShaderId::InvalidId() && !type.Empty() && type != g_pxrPortalLightUStr )
+	{
+		RtUString lightGroup;
+		light.nodes[light.nodeCount-1].params.GetString( g_lightGroupUStr, lightGroup );
+		if( !lightGroup.Empty() )
+		{
+			std::lock_guard lock( m_lightGroupsMutex );
+			m_lightGroups[result.AsUInt32()] = lightGroup.CStr();
+		}
+	}
+
 	if( type == g_pxrDomeLightUStr || type == g_pxrPortalLightUStr )
 	{
 		LightShaderInfo &lightShaderInfo = m_domeAndPortalShaders[result.AsUInt32()];
@@ -277,6 +295,11 @@ riley::LightShaderId Session::createLightShader( const riley::ShadingNetwork &li
 void Session::deleteLightShader( riley::LightShaderId lightShaderId )
 {
 	riley->DeleteLightShader( lightShaderId );
+
+	{
+		std::lock_guard lock( m_lightGroupsMutex );
+		m_lightGroups.erase( lightShaderId.AsUInt32() );
+	}
 	auto it = m_domeAndPortalShaders.find( lightShaderId.AsUInt32() );
 	if( it != m_domeAndPortalShaders.end() )
 	{
@@ -525,4 +548,15 @@ void Session::updatePortals()
 	}
 
 	m_portalsDirty = false;
+}
+
+std::set<std::string> Session::lightGroups() const
+{
+	std::set<std::string> result = { g_defaultLightGroupLayer };
+	std::lock_guard lock( m_lightGroupsMutex );
+	for( const auto &g : m_lightGroups )
+	{
+		result.insert( g.second );
+	}
+	return result;
 }
