@@ -50,6 +50,13 @@ class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 		shader.loadShader( "diffuse_bsdf" )
 		return shader, shader["parameters"]["color"], shader["out"]["BSDF"]
 
+	def _createEmissiveShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "emission" )
+		shader["parameters"]["strength"].setValue( 1.0 )
+		return shader, shader["parameters"]["color"], shader["out"]["emission"]
+
 	def _createPointLight( self ) :
 
 		light = GafferCycles.CyclesLight()

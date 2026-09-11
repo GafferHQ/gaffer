@@ -39,6 +39,7 @@ import os
 import pathlib
 import inspect
 import threading
+import unittest
 
 import arnold
 import imath
@@ -1771,6 +1772,11 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 			with GafferTest.TestRunner.PerformanceScope() :
 				s["render"]["task"].execute()
 
+	@unittest.skip( "No USDMeshLight support just yet" )
+	def testUSDMeshLight( self ) :
+
+		pass
+
 	def _createConstantShader( self ) :
 
 		shader = GafferArnold.ArnoldShader()
@@ -1783,6 +1789,12 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		shader.loadShader( "lambert" )
 		shader["parameters"]["Kd"].setValue( 1 )
 		return shader, shader["parameters"]["Kd_color"], shader["out"]
+
+	def _createEmissiveShader( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "flat" )
+		return shader, shader["parameters"]["color"], shader["out"]
 
 	def _createPointLight( self ) :
 
