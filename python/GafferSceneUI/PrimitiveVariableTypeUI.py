@@ -81,7 +81,8 @@ Gaffer.Metadata.registerNode(
 
 			"description" :
 			"""
-			The type the primitive variables are converted to.
+			The type the primitive variables are converted to. When converting
+			arrays, this is the type of each element in the destination array.
 
 			Primitive variables are converted using the following rules :
 
