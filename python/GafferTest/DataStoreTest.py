@@ -132,8 +132,9 @@ class DataStoreTest( GafferTest.TestCase ) :
 			c["contextVar"] = IECore.StringData( "b" )
 			self.assertEqual( s["dataStore"]["out"].getValue(), IECore.FloatData( 123.456 ) )
 			c["contextVar"] = IECore.StringData( "d" )
-			with self.assertRaisesRegex( Gaffer.ProcessException, "Unknown key: d" ) :
-				s["dataStore"]["out"].getValue()
+			self.assertEqual( s["dataStore"]["out"].getValue(), IECore.NullObject() )
+			s["dataStore"]["default"].setValue( IECore.StringData( "Overrode default" ) )
+			self.assertEqual( s["dataStore"]["out"].getValue(), IECore.StringData( "Overrode default" ) )
 
 
 		# After saving, the live values will be cleared, and values will be read from disk

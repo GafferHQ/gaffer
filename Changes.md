@@ -7,6 +7,11 @@ Features
 - PythonEditor : Added `mcpEnabled` setting, allowing an AI assistant or large language model to interact with Gaffer. Models can execute arbitrary Python and screenshot the UI or capture the output of image nodes for feedback.
 - `gaffer mcp` : Added application to allow AI assistants and large language models to launch and control a headless Gaffer session.
 
+Improvements
+------------
+
+- DataStore : Added `default` plug.
+
 API
 ---
 
