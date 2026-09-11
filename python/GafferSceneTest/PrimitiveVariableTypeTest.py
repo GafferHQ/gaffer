@@ -280,7 +280,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 			IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.V3fData( imath.V3f( 3, 4, 5 ), IECore.GeometricData.Interpretation.Normal )
 		)
 		points["color4f"] = IECoreScene.PrimitiveVariable(
-			IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.Color4fData( imath.Color4f( 4, 5, 6, 1 ) )
+			IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.Color4fData( imath.Color4f( 4, 5, 6, 0.5 ) )
 		)
 
 		node = self.__convert( points )
@@ -319,10 +319,10 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Color4f ) )
 		result = node["out"].object( "/object" )
-		self.assertEqual( result["float"].data, IECore.Color4fData( imath.Color4f( 5, 5, 5, 5 ) ) )
-		self.assertEqual( result["v2f"].data, IECore.Color4fData( imath.Color4f( 2, 3, 0, 0 ) ) )
-		self.assertEqual( result["v3f"].data, IECore.Color4fData( imath.Color4f( 3, 4, 5, 0 ) ) )
-		self.assertEqual( result["color4f"].data, IECore.Color4fData( imath.Color4f( 4, 5, 6, 1 ) ) )
+		self.assertEqual( result["float"].data, IECore.Color4fData( imath.Color4f( 5, 5, 5, 1 ) ) )
+		self.assertEqual( result["v2f"].data, IECore.Color4fData( imath.Color4f( 2, 3, 0, 1 ) ) )
+		self.assertEqual( result["v3f"].data, IECore.Color4fData( imath.Color4f( 3, 4, 5, 1 ) ) )
+		self.assertEqual( result["color4f"].data, IECore.Color4fData( imath.Color4f( 4, 5, 6, 0.5 ) ) )
 		self.assertTrue( result.arePrimitiveVariablesValid() )
 
 	def testSingleValueToVector( self ) :
@@ -614,7 +614,10 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 						for value in values :
 							if dimensions > 0 :
 								for x in range( dimensions ) :
-									self.assertTrue( math.isnan( value[x] ) )
+									if elementType == GafferScene.PrimitiveVariableType.Type.Color4f and x == 3 :
+										self.assertEqual( value[x], 1.0 )
+									else :
+										self.assertTrue( math.isnan( value[x] ) )
 							else :
 								self.assertTrue( math.isnan( value ) )
 
@@ -683,6 +686,10 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.Color3fVectorData( [ imath.Color3f( x, x + 1, x + 2 ) for x in range( 0, size ) ] )
 		)
+		points["color4"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.Color4fVectorData( [ imath.Color4f( x, x + 1, x + 2, 0.1 ) for x in range( 0, size ) ] )
+		)
 		points["index"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( list( range( 0, size ) ) )
 		)
@@ -694,11 +701,12 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		result = node["out"].object( "/object" )
 		self.assertEqual(
 			result["color3"].data,
-			IECore.Color4fVectorData( [ imath.Color4f( x, x + 1, x + 2, 0 ) for x in range( 0, size ) ] )
+			IECore.Color4fVectorData( [ imath.Color4f( x, x + 1, x + 2, 1 ) for x in range( 0, size ) ] )
 		)
+		self.assertEqual( result["color4"].data, points["color4"].data )
 		self.assertEqual(
 			result["index"].data,
-			IECore.Color4fVectorData( [ imath.Color4f( x, x, x, x ) for x in range( 0, size ) ] )
+			IECore.Color4fVectorData( [ imath.Color4f( x, x, x, 1 ) for x in range( 0, size ) ] )
 		)
 		self.assertTrue( result.arePrimitiveVariablesValid() )
 

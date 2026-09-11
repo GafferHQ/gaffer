@@ -88,12 +88,15 @@ Gaffer.Metadata.registerNode(
 			- Single-component sources, such as `float` or `int`, are applied
 			to every component of the destination. For example, a `float` primitive
 			variable with a value of `2` is converted to `V2f( 2, 2 )`,
-			`V3f/Color3f( 2, 2, 2 )`, and `Color4f( 2, 2, 2, 2 )`.
+			and `V3f/Color3f( 2, 2, 2 )`.
 			- Multi-component sources, such as `V3f` or `Color4f`, are applied
 			per-component. Components missing from the destination are dropped,
 			and extra components are set to zero. For example, `Color4f( 1, 2, 3, 4 )`
 			becomes `V3f/Color3f( 1, 2, 3 )`, `V2f( 1, 2 )`, and `1`. `V2f( 1, 2 )`
-			becomes `V3f/Color3f( 1, 2, 0 )`, and `Color4f( 1, 2, 0, 0 )`.
+			becomes `V3f/Color3f( 1, 2, 0 )`.
+			- The alpha of a `Color4f` destination is the exception to the above rules
+			and is instead set to `1`. For example, a `float` source with a value of `2`
+			becomes `Color4f( 2, 2, 2, 1 )` and `V2f(1, 2)` becomes `Color4f( 1, 2, 0, 1 )`.
 			- Floating point values are truncated towards zero when converted to an
 			integer, so `2.75` becomes `2`, and `-2.75` becomes `-2`.
 			- Values converted to integer types are clamped to the range of the

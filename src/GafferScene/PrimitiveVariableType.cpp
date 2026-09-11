@@ -159,19 +159,24 @@ void parallelProcessElements( const size_t size, const Canceller *canceller, con
 }
 
 template<typename S, typename T>
-void convertElements( const S *source, const size_t sourceComponents, T *target, const size_t targetComponents, const size_t size, const Canceller *canceller )
+void convertElements( const S *source, const size_t sourceComponents, T *target, const size_t targetComponents, const bool fillTargetAlpha, const size_t size, const Canceller *canceller )
 {
 	parallelProcessElements( size, canceller, [&] ( const size_t begin, const size_t end ) {
 
+		const size_t valueComponents = fillTargetAlpha && targetComponents == 4 ? targetComponents - 1 : targetComponents;
 		if( sourceComponents == 1 )
 		{
 			for( size_t i = begin; i < end; ++i )
 			{
 				const T v = convertComponent<S, T>( source[i] );
-				for( size_t c = 0; c < targetComponents; ++c )
+				for( size_t c = 0; c < valueComponents; ++c )
 				{
 					// A single source is copied to all components of the target.
 					target[i * targetComponents + c] = v;
+				}
+				if( fillTargetAlpha )
+				{
+					target[i * targetComponents + valueComponents] = T( 1 );
 				}
 			}
 		}
@@ -179,11 +184,15 @@ void convertElements( const S *source, const size_t sourceComponents, T *target,
 		{
 			for( size_t i = begin; i < end; ++i )
 			{
-				for( size_t c = 0; c < targetComponents; ++c )
+				for( size_t c = 0; c < valueComponents; ++c )
 				{
 					// Components are converted one for one, dropping any
 					// the target doesn't have and filling the remaining with 0.
 					target[i * targetComponents + c] = convertComponent<S, T>( c < sourceComponents ? source[i * sourceComponents + c] : S( 0 ) );
+				}
+				if( fillTargetAlpha )
+				{
+					target[i * targetComponents + valueComponents] = T( 1 );
 				}
 			}
 		}
@@ -224,7 +233,7 @@ DataPtr convertTypeAndInterpretation( const S *sourceData, std::optional<Geometr
 
 	convertElements(
 		sourceData->baseReadable(), componentCount<S>(),
-		targetData->baseWritable(), componentCount<T>(),
+		targetData->baseWritable(), componentCount<T>(), /* fillTargetAlpha = */ TypeTraits::IsColor4<DataElementType<T>>::value,
 		size, canceller
 	);
 
