@@ -252,8 +252,6 @@ constexpr bool isConvertible()
 template<typename T>
 DataPtr convertTo( const Data *data, const std::string &name, std::optional<GeometricData::Interpretation> interpretation, const Canceller *canceller )
 {
-	static_assert( TypeTraits::IsSimpleTypedData<T>::value );
-
 	return dispatch(
 
 		data,
@@ -266,16 +264,21 @@ DataPtr convertTo( const Data *data, const std::string &name, std::optional<Geom
 			{
 				if constexpr( TypeTraits::IsVectorTypedData<SourceDataType>::value )
 				{
-					using VectorDataType = std::conditional_t<
-						TypeTraits::IsGeometricTypedData<T>::value,
-						GeometricTypedData<std::vector<typename T::ValueType>>,
-						TypedData<std::vector<typename T::ValueType>>
+					using DataType = std::conditional_t<
+						TypeTraits::IsVec<T>::value,
+						GeometricTypedData<std::vector<T>>,
+						TypedData<std::vector<T>>
 					>;
-					return convertTypeAndInterpretation<VectorDataType>( typedData, interpretation, canceller );
+					return convertTypeAndInterpretation<DataType>( typedData, interpretation, canceller );
 				}
 				else
 				{
-					return convertTypeAndInterpretation<T>( typedData, interpretation, canceller );
+					using DataType = std::conditional_t<
+						TypeTraits::IsVec<T>::value,
+						GeometricTypedData<T>,
+						TypedData<T>
+					>;
+					return convertTypeAndInterpretation<DataType>( typedData, interpretation, canceller );
 				}
 			}
 			else
@@ -295,52 +298,52 @@ DataPtr convertData( const Data *data, const std::string &name, PrimitiveVariabl
 	switch( targetType )
 	{
 		case PrimitiveVariableType::ElementType::UChar :
-			return convertTo<UCharData>( data, name, interpretation, canceller );
+			return convertTo<unsigned char>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::Int :
-			return convertTo<IntData>( data, name, interpretation, canceller );
+			return convertTo<int>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::UInt :
-			return convertTo<UIntData>( data, name, interpretation, canceller );
+			return convertTo<unsigned int>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::Int64 :
-			return convertTo<Int64Data>( data, name, interpretation, canceller );
+			return convertTo<int64_t>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::UInt64 :
-			return convertTo<UInt64Data>( data, name, interpretation, canceller );
+			return convertTo<uint64_t>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::Half :
-			return convertTo<HalfData>( data, name, interpretation, canceller );
+			return convertTo<half>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::Float :
-			return convertTo<FloatData>( data, name, interpretation, canceller );
+			return convertTo<float>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::Double :
-			return convertTo<DoubleData>( data, name, interpretation, canceller );
+			return convertTo<double>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::V2i :
-			return convertTo<V2iData>( data, name, interpretation, canceller );
+			return convertTo<Imath::V2i>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::V2f :
-			return convertTo<V2fData>( data, name, interpretation, canceller );
+			return convertTo<Imath::V2f>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::V2d :
-			return convertTo<V2dData>( data, name, interpretation, canceller );
+			return convertTo<Imath::V2d>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::V3i :
-			return convertTo<V3iData>( data, name, interpretation, canceller );
+			return convertTo<Imath::V3i>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::V3f :
-			return convertTo<V3fData>( data, name, interpretation, canceller );
+			return convertTo<Imath::V3f>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::V3d :
-			return convertTo<V3dData>( data, name, interpretation, canceller );
+			return convertTo<Imath::V3d>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::Color3f :
-			return convertTo<Color3fData>( data, name, interpretation, canceller );
+			return convertTo<Imath::Color3f>( data, name, interpretation, canceller );
 
 		case PrimitiveVariableType::ElementType::Color4f :
-			return convertTo<Color4fData>( data, name, interpretation, canceller );
+			return convertTo<Imath::Color4f>( data, name, interpretation, canceller );
 
 		default :
 			throw IECore::InvalidArgumentException( fmt::format( "PrimitiveVariableType : Invalid target type {}", (int)targetType ) );
