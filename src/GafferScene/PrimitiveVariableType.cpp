@@ -293,56 +293,56 @@ DataPtr convertTo( const Data *data, const std::string &name, std::optional<Geom
 	);
 }
 
-DataPtr convertData( const Data *data, const std::string &name, PrimitiveVariableType::ElementType targetType, std::optional<GeometricData::Interpretation> interpretation, const Canceller *canceller )
+DataPtr convertData( const Data *data, const std::string &name, PrimitiveVariableType::Type targetType, std::optional<GeometricData::Interpretation> interpretation, const Canceller *canceller )
 {
 	switch( targetType )
 	{
-		case PrimitiveVariableType::ElementType::UChar :
+		case PrimitiveVariableType::Type::UChar :
 			return convertTo<unsigned char>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::Int :
+		case PrimitiveVariableType::Type::Int :
 			return convertTo<int>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::UInt :
+		case PrimitiveVariableType::Type::UInt :
 			return convertTo<unsigned int>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::Int64 :
+		case PrimitiveVariableType::Type::Int64 :
 			return convertTo<int64_t>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::UInt64 :
+		case PrimitiveVariableType::Type::UInt64 :
 			return convertTo<uint64_t>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::Half :
+		case PrimitiveVariableType::Type::Half :
 			return convertTo<half>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::Float :
+		case PrimitiveVariableType::Type::Float :
 			return convertTo<float>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::Double :
+		case PrimitiveVariableType::Type::Double :
 			return convertTo<double>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::V2i :
+		case PrimitiveVariableType::Type::V2i :
 			return convertTo<Imath::V2i>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::V2f :
+		case PrimitiveVariableType::Type::V2f :
 			return convertTo<Imath::V2f>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::V2d :
+		case PrimitiveVariableType::Type::V2d :
 			return convertTo<Imath::V2d>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::V3i :
+		case PrimitiveVariableType::Type::V3i :
 			return convertTo<Imath::V3i>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::V3f :
+		case PrimitiveVariableType::Type::V3f :
 			return convertTo<Imath::V3f>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::V3d :
+		case PrimitiveVariableType::Type::V3d :
 			return convertTo<Imath::V3d>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::Color3f :
+		case PrimitiveVariableType::Type::Color3f :
 			return convertTo<Imath::Color3f>( data, name, interpretation, canceller );
 
-		case PrimitiveVariableType::ElementType::Color4f :
+		case PrimitiveVariableType::Type::Color4f :
 			return convertTo<Imath::Color4f>( data, name, interpretation, canceller );
 
 		default :
@@ -362,7 +362,7 @@ PrimitiveVariableType::PrimitiveVariableType( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "primitiveVariables" ) );
-	addChild( new OptionalValuePlug( "type", new IntPlug( "value", Plug::In, (int)ElementType::Float, (int)ElementType::First, (int)ElementType::Last ) ) );
+	addChild( new OptionalValuePlug( "type", new IntPlug( "value", Plug::In, (int)Type::Float, (int)Type::First, (int)Type::Last ) ) );
 	addChild( new OptionalValuePlug( "interpretation", new IntPlug( "value", Plug::In, (int)GeometricData::None, (int)GeometricData::None, (int)GeometricData::UV ) ) );
 }
 
@@ -453,10 +453,10 @@ IECore::ConstObjectPtr PrimitiveVariableType::computeProcessedObject( const Scen
 
 	const std::string primitiveVariables = primitiveVariablesPlug()->getValue();
 
-	std::optional<ElementType> type;
+	std::optional<Type> type;
 	if( typePlug()->enabledPlug()->getValue() )
 	{
-		type = (ElementType)typePlug()->valuePlug<IntPlug>()->getValue();
+		type = (Type)typePlug()->valuePlug<IntPlug>()->getValue();
 	}
 
 	std::optional<GeometricData::Interpretation> interpretation;

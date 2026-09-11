@@ -50,12 +50,12 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:typeIsGeometric", lambda node : (
 		not node["type"]["enabled"].getValue() or
 		node["type"]["value"].getValue() in {
-			GafferScene.PrimitiveVariableType.ElementType.V2i,
-			GafferScene.PrimitiveVariableType.ElementType.V2f,
-			GafferScene.PrimitiveVariableType.ElementType.V2d,
-			GafferScene.PrimitiveVariableType.ElementType.V3i,
-			GafferScene.PrimitiveVariableType.ElementType.V3f,
-			GafferScene.PrimitiveVariableType.ElementType.V3d,
+			GafferScene.PrimitiveVariableType.Type.V2i,
+			GafferScene.PrimitiveVariableType.Type.V2f,
+			GafferScene.PrimitiveVariableType.Type.V2d,
+			GafferScene.PrimitiveVariableType.Type.V3i,
+			GafferScene.PrimitiveVariableType.Type.V3f,
+			GafferScene.PrimitiveVariableType.Type.V3d,
 		}
 	),
 
@@ -106,23 +106,23 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Float" : GafferScene.PrimitiveVariableType.ElementType.Float,
-			"preset:Int" : GafferScene.PrimitiveVariableType.ElementType.Int,
-			"preset:V2i" : GafferScene.PrimitiveVariableType.ElementType.V2i,
-			"preset:V2f" : GafferScene.PrimitiveVariableType.ElementType.V2f,
-			"preset:V3i" : GafferScene.PrimitiveVariableType.ElementType.V3i,
-			"preset:V3f" : GafferScene.PrimitiveVariableType.ElementType.V3f,
-			"preset:Color3f" : GafferScene.PrimitiveVariableType.ElementType.Color3f,
-			"preset:Color4f" : GafferScene.PrimitiveVariableType.ElementType.Color4f,
+			"preset:Float" : GafferScene.PrimitiveVariableType.Type.Float,
+			"preset:Int" : GafferScene.PrimitiveVariableType.Type.Int,
+			"preset:V2i" : GafferScene.PrimitiveVariableType.Type.V2i,
+			"preset:V2f" : GafferScene.PrimitiveVariableType.Type.V2f,
+			"preset:V3i" : GafferScene.PrimitiveVariableType.Type.V3i,
+			"preset:V3f" : GafferScene.PrimitiveVariableType.Type.V3f,
+			"preset:Color3f" : GafferScene.PrimitiveVariableType.Type.Color3f,
+			"preset:Color4f" : GafferScene.PrimitiveVariableType.Type.Color4f,
 
-			"preset:Other/UChar" : GafferScene.PrimitiveVariableType.ElementType.UChar,
-			"preset:Other/UInt" : GafferScene.PrimitiveVariableType.ElementType.UInt,
-			"preset:Other/Int64" : GafferScene.PrimitiveVariableType.ElementType.Int64,
-			"preset:Other/UInt64" : GafferScene.PrimitiveVariableType.ElementType.UInt64,
-			"preset:Other/Half" : GafferScene.PrimitiveVariableType.ElementType.Half,
-			"preset:Other/Double" : GafferScene.PrimitiveVariableType.ElementType.Double,
-			"preset:Other/V2d" : GafferScene.PrimitiveVariableType.ElementType.V2d,
-			"preset:Other/V3d" : GafferScene.PrimitiveVariableType.ElementType.V3d,
+			"preset:Other/UChar" : GafferScene.PrimitiveVariableType.Type.UChar,
+			"preset:Other/UInt" : GafferScene.PrimitiveVariableType.Type.UInt,
+			"preset:Other/Int64" : GafferScene.PrimitiveVariableType.Type.Int64,
+			"preset:Other/UInt64" : GafferScene.PrimitiveVariableType.Type.UInt64,
+			"preset:Other/Half" : GafferScene.PrimitiveVariableType.Type.Half,
+			"preset:Other/Double" : GafferScene.PrimitiveVariableType.Type.Double,
+			"preset:Other/V2d" : GafferScene.PrimitiveVariableType.Type.V2d,
+			"preset:Other/V3d" : GafferScene.PrimitiveVariableType.Type.V3d,
 
 		},
 

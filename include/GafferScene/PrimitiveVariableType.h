@@ -54,7 +54,7 @@ class GAFFERSCENE_API PrimitiveVariableType : public ObjectProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::PrimitiveVariableType, PrimitiveVariableTypeTypeId, ObjectProcessor );
 
-		enum class ElementType
+		enum class Type
 		{
 			UChar = 0,
 			Int,

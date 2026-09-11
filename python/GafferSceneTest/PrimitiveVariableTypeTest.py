@@ -162,41 +162,41 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( points )
 
-		__elementTypes = {
+		__types = {
 
-			GafferScene.PrimitiveVariableType.ElementType.UChar : ( IECore.UCharData, IECore.UCharVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.Int : ( IECore.IntData, IECore.IntVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.UInt : ( IECore.UIntData, IECore.UIntVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.Int64 : ( IECore.Int64Data, IECore.Int64VectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.UInt64 : ( IECore.UInt64Data, IECore.UInt64VectorData ),
+			GafferScene.PrimitiveVariableType.Type.UChar : ( IECore.UCharData, IECore.UCharVectorData ),
+			GafferScene.PrimitiveVariableType.Type.Int : ( IECore.IntData, IECore.IntVectorData ),
+			GafferScene.PrimitiveVariableType.Type.UInt : ( IECore.UIntData, IECore.UIntVectorData ),
+			GafferScene.PrimitiveVariableType.Type.Int64 : ( IECore.Int64Data, IECore.Int64VectorData ),
+			GafferScene.PrimitiveVariableType.Type.UInt64 : ( IECore.UInt64Data, IECore.UInt64VectorData ),
 
-			GafferScene.PrimitiveVariableType.ElementType.Half : ( IECore.HalfData, IECore.HalfVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.Float : ( IECore.FloatData, IECore.FloatVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.Double : ( IECore.DoubleData, IECore.DoubleVectorData ),
+			GafferScene.PrimitiveVariableType.Type.Half : ( IECore.HalfData, IECore.HalfVectorData ),
+			GafferScene.PrimitiveVariableType.Type.Float : ( IECore.FloatData, IECore.FloatVectorData ),
+			GafferScene.PrimitiveVariableType.Type.Double : ( IECore.DoubleData, IECore.DoubleVectorData ),
 
-			GafferScene.PrimitiveVariableType.ElementType.V2i : ( IECore.V2iData, IECore.V2iVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.V2f : ( IECore.V2fData, IECore.V2fVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.V2d : ( IECore.V2dData, IECore.V2dVectorData ),
+			GafferScene.PrimitiveVariableType.Type.V2i : ( IECore.V2iData, IECore.V2iVectorData ),
+			GafferScene.PrimitiveVariableType.Type.V2f : ( IECore.V2fData, IECore.V2fVectorData ),
+			GafferScene.PrimitiveVariableType.Type.V2d : ( IECore.V2dData, IECore.V2dVectorData ),
 
-			GafferScene.PrimitiveVariableType.ElementType.V3i : ( IECore.V3iData, IECore.V3iVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.V3f : ( IECore.V3fData, IECore.V3fVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.V3d : ( IECore.V3dData, IECore.V3dVectorData ),
+			GafferScene.PrimitiveVariableType.Type.V3i : ( IECore.V3iData, IECore.V3iVectorData ),
+			GafferScene.PrimitiveVariableType.Type.V3f : ( IECore.V3fData, IECore.V3fVectorData ),
+			GafferScene.PrimitiveVariableType.Type.V3d : ( IECore.V3dData, IECore.V3dVectorData ),
 
-			GafferScene.PrimitiveVariableType.ElementType.Color3f : ( IECore.Color3fData, IECore.Color3fVectorData ),
-			GafferScene.PrimitiveVariableType.ElementType.Color4f : ( IECore.Color4fData, IECore.Color4fVectorData ),
+			GafferScene.PrimitiveVariableType.Type.Color3f : ( IECore.Color3fData, IECore.Color3fVectorData ),
+			GafferScene.PrimitiveVariableType.Type.Color4f : ( IECore.Color4fData, IECore.Color4fVectorData ),
 
 		}
 
-		for elementType in GafferScene.PrimitiveVariableType.ElementType.values.values() :
+		for type in GafferScene.PrimitiveVariableType.Type.values.values() :
 
-			node["type"]["value"].setValue( int( elementType ) )
+			node["type"]["value"].setValue( int( type ) )
 			result = node["out"].object( "/object" )
 
-			targetDataType, targetVectorDataType = __elementTypes[ elementType ]
+			targetDataType, targetVectorDataType = __types[ type ]
 
 			for name in points.keys() :
 
-				with self.subTest( elementType = elementType, primitiveVariable = name ) :
+				with self.subTest( type = type, primitiveVariable = name ) :
 
 					self.assertIsInstance(
 						result[name].data,
@@ -257,7 +257,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		node = self.__convert( points )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Float ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Float ) )
 
 		for name in points.keys() :
 			typeName = points[name].data.typeName()
@@ -285,7 +285,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( points )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Float ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Float ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["float"].data, IECore.FloatData( 5 ) )
 		self.assertEqual( result["v2f"].data, IECore.FloatData( 2 ) )
@@ -293,7 +293,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( result["color4f"].data, IECore.FloatData( 4 ) )
 		self.assertTrue( result.arePrimitiveVariablesValid() )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.V2f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.V2f ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["float"].data, IECore.V2fData( imath.V2f( 5, 5 ) ) )
 		self.assertEqual( result["v2f"].data, IECore.V2fData( imath.V2f( 2, 3 ), IECore.GeometricData.Interpretation.UV ) )
@@ -301,7 +301,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( result["color4f"].data, IECore.V2fData( imath.V2f( 4, 5 ) ) )
 		self.assertTrue( result.arePrimitiveVariablesValid() )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.V3f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.V3f ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["float"].data, IECore.V3fData( imath.V3f( 5, 5, 5 ) ) )
 		self.assertEqual( result["v2f"].data, IECore.V3fData( imath.V3f( 2, 3, 0 ), IECore.GeometricData.Interpretation.UV ) )
@@ -309,7 +309,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( result["color4f"].data, IECore.V3fData( imath.V3f( 4, 5, 6 ) ) )
 		self.assertTrue( result.arePrimitiveVariablesValid() )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Color3f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Color3f ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["float"].data, IECore.Color3fData( imath.Color3f( 5, 5, 5 ) ) )
 		self.assertEqual( result["v2f"].data, IECore.Color3fData( imath.Color3f( 2, 3, 0 ) ) )
@@ -317,7 +317,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( result["color4f"].data, IECore.Color3fData( imath.Color3f( 4, 5, 6 ) ) )
 		self.assertTrue( result.arePrimitiveVariablesValid() )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Color4f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Color4f ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["float"].data, IECore.Color4fData( imath.Color4f( 5, 5, 5, 5 ) ) )
 		self.assertEqual( result["v2f"].data, IECore.Color4fData( imath.Color4f( 2, 3, 0, 0 ) ) )
@@ -344,10 +344,10 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		node = self.__convert( points )
 
 		for target, values in (
-			( GafferScene.PrimitiveVariableType.ElementType.V3f, [ imath.V3f( 2.75 ), imath.V3f( -2.75 ), imath.V3f( 3 ), imath.V3f( -3 ) ] ),
-			( GafferScene.PrimitiveVariableType.ElementType.V2f, [ imath.V2f( 2.75 ), imath.V2f( -2.75 ), imath.V2f( 3 ), imath.V2f( -3 ) ] ),
-			( GafferScene.PrimitiveVariableType.ElementType.V3i, [ imath.V3i( 2 ), imath.V3i( -2 ), imath.V3i( 3 ), imath.V3i( -3 ) ] ),
-			( GafferScene.PrimitiveVariableType.ElementType.V2i, [ imath.V2i( 2 ), imath.V2i( -2 ), imath.V2i( 3 ), imath.V2i( -3 ) ] ),
+			( GafferScene.PrimitiveVariableType.Type.V3f, [ imath.V3f( 2.75 ), imath.V3f( -2.75 ), imath.V3f( 3 ), imath.V3f( -3 ) ] ),
+			( GafferScene.PrimitiveVariableType.Type.V2f, [ imath.V2f( 2.75 ), imath.V2f( -2.75 ), imath.V2f( 3 ), imath.V2f( -3 ) ] ),
+			( GafferScene.PrimitiveVariableType.Type.V3i, [ imath.V3i( 2 ), imath.V3i( -2 ), imath.V3i( 3 ), imath.V3i( -3 ) ] ),
+			( GafferScene.PrimitiveVariableType.Type.V2i, [ imath.V2i( 2 ), imath.V2i( -2 ), imath.V2i( 3 ), imath.V2i( -3 ) ] ),
 		) :
 			with self.subTest( target = target ) :
 				node["type"]["value"].setValue( int( target ) )
@@ -374,19 +374,19 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( points )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Float ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Float ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["f"].data, IECore.FloatData( 0.1 ) )
 		self.assertEqual( result["d"].data, IECore.FloatData( 0.1 ) )
 		self.assertEqual( result["h"].data, IECore.FloatData( 0.0999755859375 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Double ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Double ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["f"].data, IECore.DoubleData( 0.10000000149011612 ) )
 		self.assertEqual( result["d"].data, IECore.DoubleData( 0.1 ) )
 		self.assertEqual( result["h"].data, IECore.DoubleData( 0.0999755859375 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Half ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Half ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["f"].data, IECore.HalfData( 0.0999755859375 ) )
 		self.assertEqual( result["d"].data, IECore.HalfData( 0.0999755859375 ) )
@@ -410,7 +410,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( points )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Float ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Float ) )
 		result = node["out"].object( "/object" )
 		# Values too large for float overflow to infinity.
 		self.assertEqual( result["big"].data, IECore.FloatData( float( "inf" ) ) )
@@ -419,7 +419,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( result["acceptableFloat"].data, IECore.FloatData( 1e30 ) )
 		self.assertEqual( result["acceptableHalf"].data, IECore.FloatData( 65504 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Half ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Half ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["big"].data, IECore.HalfData( float( "inf" ) ) )
 		self.assertEqual( result["negativeBig"].data, IECore.HalfData( float( "-inf" ) ) )
@@ -445,14 +445,14 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( points )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Int ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Int ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["atIntLimit"].data, IECore.IntData( 2147483520 ) )
 		self.assertEqual( result["overIntLimit"].data, IECore.IntData( 2**31 - 1 ) )
 		self.assertEqual( result["atInt64Limit"].data, IECore.IntData( 2**31 - 1 ) )
 		self.assertEqual( result["overInt64Limit"].data, IECore.IntData( 2**31 - 1 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Int64 ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Int64 ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["atIntLimit"].data, IECore.Int64Data( 2147483520 ) )
 		self.assertEqual( result["overIntLimit"].data, IECore.Int64Data( 2**31 ) )
@@ -477,35 +477,35 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( points )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.UChar ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.UChar ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["big"].data, IECore.UCharData( 255 ) )
 		self.assertEqual( result["negativeBig"].data, IECore.UCharData( 0 ) )
 		self.assertEqual( result["bigFloat"].data, IECore.UCharData( 255 ) )
 		self.assertEqual( result["negativeBigFloat"].data, IECore.UCharData( 0 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Int ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Int ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["big"].data, IECore.IntData( 2147483647 ) )
 		self.assertEqual( result["negativeBig"].data, IECore.IntData( -2147483648 ) )
 		self.assertEqual( result["bigFloat"].data, IECore.IntData( 2147483647 ) )
 		self.assertEqual( result["negativeBigFloat"].data, IECore.IntData( -2147483648 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.UInt ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.UInt ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["big"].data, IECore.UIntData( 2147483647 ) )
 		self.assertEqual( result["negativeBig"].data, IECore.UIntData( 0 ) )
 		self.assertEqual( result["bigFloat"].data, IECore.UIntData( 4294967295 ) )
 		self.assertEqual( result["negativeBigFloat"].data, IECore.UIntData( 0 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Int64 ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Int64 ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["big"].data, IECore.Int64Data( 2147483647 ) )
 		self.assertEqual( result["negativeBig"].data, IECore.Int64Data( -2147483648 ) )
 		self.assertEqual( result["bigFloat"].data, IECore.Int64Data( 9223372036854775807 ) )
 		self.assertEqual( result["negativeBigFloat"].data, IECore.Int64Data( -9223372036854775808 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.UInt64 ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.UInt64 ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["big"].data, IECore.UInt64Data( 2147483647 ) )
 		self.assertEqual( result["negativeBig"].data, IECore.UInt64Data( 0 ) )
@@ -525,38 +525,38 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		node = self.__convert( points )
 
 		# Clamped to the destination's limits.
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.UChar ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.UChar ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["inf"].data, IECore.UCharData( 255 ) )
 		self.assertEqual( result["negativeInf"].data, IECore.UCharData( 0 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Int ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Int ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["inf"].data, IECore.IntData( 2147483647 ) )
 		self.assertEqual( result["negativeInf"].data, IECore.IntData( -2147483648 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.UInt ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.UInt ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["inf"].data, IECore.UIntData( 4294967295 ) )
 		self.assertEqual( result["negativeInf"].data, IECore.UIntData( 0 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Int64 ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Int64 ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["inf"].data, IECore.Int64Data( 9223372036854775807 ) )
 		self.assertEqual( result["negativeInf"].data, IECore.Int64Data( -9223372036854775808 ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.UInt64 ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.UInt64 ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["inf"].data, IECore.UInt64Data( 18446744073709551615 ) )
 		self.assertEqual( result["negativeInf"].data, IECore.UInt64Data( 0 ) )
 
 		# Preserved when converted to other floating point types.
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Double ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Double ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["inf"].data, IECore.DoubleData( float( "inf" ) ) )
 		self.assertEqual( result["negativeInf"].data, IECore.DoubleData( float( "-inf" ) ) )
 
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Half ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Half ) )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["inf"].data, IECore.HalfData( float( "inf" ) ) )
 		self.assertEqual( result["negativeInf"].data, IECore.HalfData( float( "-inf" ) ) )
@@ -584,13 +584,13 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 				node["primitiveVariables"].setValue( name )
 				# Throws when converted to types without NaN.
 				for elementType in [
-					GafferScene.PrimitiveVariableType.ElementType.UChar,
-					GafferScene.PrimitiveVariableType.ElementType.Int,
-					GafferScene.PrimitiveVariableType.ElementType.UInt,
-					GafferScene.PrimitiveVariableType.ElementType.Int64,
-					GafferScene.PrimitiveVariableType.ElementType.UInt64,
-					GafferScene.PrimitiveVariableType.ElementType.V2i,
-					GafferScene.PrimitiveVariableType.ElementType.V3i,
+					GafferScene.PrimitiveVariableType.Type.UChar,
+					GafferScene.PrimitiveVariableType.Type.Int,
+					GafferScene.PrimitiveVariableType.Type.UInt,
+					GafferScene.PrimitiveVariableType.Type.Int64,
+					GafferScene.PrimitiveVariableType.Type.UInt64,
+					GafferScene.PrimitiveVariableType.Type.V2i,
+					GafferScene.PrimitiveVariableType.Type.V3i,
 				] :
 					with self.subTest( elementType = elementType ) :
 						node["type"]["value"].setValue( int( elementType ) )
@@ -598,12 +598,12 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 				# Preserved when converted to other floating point types.
 				for elementType in [
-					GafferScene.PrimitiveVariableType.ElementType.Half,
-					GafferScene.PrimitiveVariableType.ElementType.Double,
-					GafferScene.PrimitiveVariableType.ElementType.V2f,
-					GafferScene.PrimitiveVariableType.ElementType.V3f,
-					GafferScene.PrimitiveVariableType.ElementType.Color3f,
-					GafferScene.PrimitiveVariableType.ElementType.Color4f,
+					GafferScene.PrimitiveVariableType.Type.Half,
+					GafferScene.PrimitiveVariableType.Type.Double,
+					GafferScene.PrimitiveVariableType.Type.V2f,
+					GafferScene.PrimitiveVariableType.Type.V3f,
+					GafferScene.PrimitiveVariableType.Type.Color3f,
+					GafferScene.PrimitiveVariableType.Type.Color4f,
 				] :
 					with self.subTest( elementType = elementType ) :
 						node["type"]["value"].setValue( int( elementType ) )
@@ -636,7 +636,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( points )
 		node["primitiveVariables"].setValue( "v i f" )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Color3f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Color3f ) )
 
 		result = node["out"].object( "/object" )
 		self.assertEqual(
@@ -664,7 +664,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		node = self.__convert( points )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.V3f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.V3f ) )
 		node["interpretation"]["enabled"].setValue( True )
 		node["interpretation"]["value"].setValue( int( IECore.GeometricData.Interpretation.Normal ) )
 
@@ -689,7 +689,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( points )
 		node["primitiveVariables"].setValue( "color3 index" )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Color4f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Color4f ) )
 
 		result = node["out"].object( "/object" )
 		self.assertEqual(
@@ -722,7 +722,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 
 		node = self.__convert( mesh )
 		node["primitiveVariables"].setValue( "uniform faceVarying indexed constant" )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Double ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Double ) )
 
 		result = node["out"].object( "/object" )
 
@@ -755,7 +755,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		node = self.__convert( points )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.V3d ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.V3d ) )
 
 		# With `interpretation` disabled, the source interpretation is preserved
 		# and non-geometric sources like `Color3f` get `None`.
@@ -814,7 +814,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		node = self.__convert( points )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.V3f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.V3f ) )
 		node["interpretation"]["enabled"].setValue( True )
 		node["interpretation"]["value"].setValue( int( IECore.GeometricData.Interpretation.Vector ) )
 
@@ -835,7 +835,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		node = self.__convert( points )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Color3f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Color3f ) )
 
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["normal"].data, IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
@@ -849,7 +849,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		node2["filter"].setInput( self.__filter["out"] )
 		node2["primitiveVariables"].setValue( "*" )
 		node2["type"]["enabled"].setValue( True )
-		node2["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.V3f ) )
+		node2["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.V3f ) )
 
 		result = node2["out"].object( "/object" )
 		self.assertEqual( result["normal"].data.value, imath.V3f( 1, 2, 3 ) )
@@ -866,7 +866,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		node = self.__convert( points )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Float ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Float ) )
 		node["primitiveVariables"].setValue( "a" )
 		result = node["out"].object( "/object" )
 		self.assertEqual( result["a"].data, IECore.FloatData( 1 ) )
@@ -917,7 +917,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneHashesEqual( node["out"], node["in"] )
 
 		node["type"]["enabled"].setValue( True )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Color3f ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Color3f ) )
 		node["primitiveVariables"].setValue( "" )
 
 		self.assertTrue( node["out"].exists( "/sphere" ) )
@@ -936,7 +936,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		node["filter"].setInput( pathFilter["out"] )
 		node["primitiveVariables"].setValue( "*" )
 		node["type"]["enabled"].setValue( True )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.Double ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.Double ) )
 		node["interpretation"]["enabled"].setValue( True )
 		node["interpretation"]["value"].setValue( int( IECore.GeometricData.Interpretation.Point ) )
 
@@ -950,7 +950,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		for plug, value in [
 			( node["primitiveVariables"], "*" ),
 			( node["type"]["enabled"], True ),
-			( node["type"]["value"], int( GafferScene.PrimitiveVariableType.ElementType.Int ) ),
+			( node["type"]["value"], int( GafferScene.PrimitiveVariableType.Type.Int ) ),
 			( node["interpretation"]["enabled"], True ),
 			( node["interpretation"]["value"], int( IECore.GeometricData.Interpretation.Normal ) ),
 		] :
@@ -973,7 +973,7 @@ class PrimitiveVariableTypeTest( GafferSceneTest.SceneTestCase ) :
 		node["filter"].setInput( pathFilter["out"] )
 		node["primitiveVariables"].setValue( "P uv" )
 		node["type"]["enabled"].setValue( True )
-		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.ElementType.V3d ) )
+		node["type"]["value"].setValue( int( GafferScene.PrimitiveVariableType.Type.V3d ) )
 
 		node["in"].object( "/plane" )
 
