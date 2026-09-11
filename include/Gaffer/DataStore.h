@@ -78,6 +78,9 @@ class GAFFER_API DataStore : public ComputeNode
 		StringPlug *selectorPlug();
 		const StringPlug *selectorPlug() const;
 
+		ObjectPlug *defaultPlug();
+		const ObjectPlug *defaultPlug() const;
+
 		ObjectPlug *outPlug();
 		const ObjectPlug *outPlug() const;
 
