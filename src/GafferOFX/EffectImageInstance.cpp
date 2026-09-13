@@ -397,6 +397,41 @@ void registerParameterMetadata( Gaffer::Plug *plug, const OFX::Host::Param::Desc
 		Gaffer::Metadata::registerValue( plug, "nodule:type", new IECore::StringData( "" ), false );
 	}
 
+	// Parametric params: use stock RampPlugValueWidget; hide the parent ValuePlug, show children only.
+	if( type == kOfxParamTypeParametric )
+	{
+		Gaffer::Metadata::registerValue( plug, "plugValueWidget:type", new IECore::StringData( "GafferUI.LayoutPlugValueWidget" ), false );
+		Gaffer::Metadata::registerValue( plug, "nodule:type", new IECore::StringData( "" ), false );
+		int dimension = 1;
+		try { dimension = props.getIntProperty( kOfxParamPropParametricDimension ); } catch( ... ) {}
+		if( dimension < 1 ) { dimension = 1; }
+		// Per-dimension labels: try kOfxParamPropDimensionLabel first, fall back to convention.
+		const char *labels3[] = { "Red", "Green", "Blue" };
+		const char *labels4[] = { "Red", "Green", "Blue", "Alpha" };
+		const char *labels5[] = { "Master", "Red", "Green", "Blue", "Alpha" };
+		const char **fallbackLabels = nullptr;
+		int nFallback = 0;
+		if( dimension == 5 )      { fallbackLabels = labels5; nFallback = 5; }
+		else if( dimension == 4 ) { fallbackLabels = labels4; nFallback = 4; }
+		else if( dimension == 3 ) { fallbackLabels = labels3; nFallback = 3; }
+		for( int i = 0; i < dimension; ++i )
+		{
+			std::string childName = "curve" + std::to_string( i );
+			Gaffer::Plug *child = plug->getChild<Gaffer::Plug>( childName );
+			if( child )
+			{
+				std::string label;
+				try { label = props.getStringProperty( kOfxParamPropDimensionLabel, i ); } catch( ... ) {}
+				if( label.empty() )
+				{
+					label = ( i < nFallback ) ? fallbackLabels[i] : "Curve " + std::to_string( i );
+				}
+				Gaffer::Metadata::registerValue( child, "label", new IECore::StringData( label ), false );
+				Gaffer::Metadata::registerValue( child, "plugValueWidget:type", new IECore::StringData( "GafferUI.RampPlugValueWidget" ), false );
+			}
+		}
+	}
+
 	// Numeric range limits
 	if( type == kOfxParamTypeInteger || type == kOfxParamTypeDouble )
 	{
@@ -584,6 +619,10 @@ OFX::Host::Param::Instance* EffectImageInstance::newParam(const std::string& nam
 	else if(descriptor.getType()==kOfxParamTypeCustom)
 	{
 		result = new StringInstance(this,name,descriptor);
+	}
+	else if(descriptor.getType()==kOfxParamTypeParametric)
+	{
+		result = new ParametricInstance(this,name,descriptor);
 	}
 	if( result )
 	{

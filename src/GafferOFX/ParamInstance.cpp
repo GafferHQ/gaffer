@@ -39,8 +39,13 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/RampPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/ValuePlug.h"
 #include "Gaffer/TypedPlug.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/Ramp.h"
 
 using namespace Gaffer;
 using namespace GafferOFX;
@@ -713,4 +718,305 @@ OfxStatus StringInstance::set( OfxTime time, const char* s )
 	return set( s );
 }
 
+// ------------------------------------------------------------------------
+// Parametric parameters
+//
+// A parametric parameter is stored in a Gaffer::ValuePlug containing
+// RampffPlug children ("curve0" .. "curveN"), one per dimension.
+// Each RampffPlug holds sorted (x, y) control points and an
+// interpolation mode. Evaluation uses the Rampff spline evaluator.
+// The value is exposed to the OFX plugin through the parametric suite,
+// which dispatches to this class.
 
+namespace {
+
+Gaffer::ValuePlug *parentPlug( const GafferOFX::EffectImageInstance *effect, const std::string &paramName )
+{
+	auto *node = const_cast<GafferOFX::OFXImageNode*>(static_cast<const GafferOFX::OFXImageNode*>( effect->node() ));
+	return node->parametersPlug()->getChild<Gaffer::ValuePlug>( sanitizeName( paramName ) );
+}
+
+Gaffer::RampffPlug *curvePlug( Gaffer::ValuePlug *parent, int curveIndex )
+{
+	if( !parent || curveIndex < 0 )
+	{
+		return nullptr;
+	}
+	return parent->getChild<Gaffer::RampffPlug>( "curve" + std::to_string( curveIndex ) );
+}
+
+// Find the nth point in key-sorted order from a Rampff value.
+// Returns false if nthCtl is out of range.
+bool nthSortedPoint( const IECore::Rampff &ramp, int nthCtl, double &key, double &value )
+{
+	if( nthCtl < 0 || nthCtl >= (int)ramp.points.size() )
+	{
+		return false;
+	}
+	auto it = ramp.points.begin();
+	std::advance( it, nthCtl );
+	key = (double)it->first;
+	value = (double)it->second;
+	return true;
+}
+
+// Build a Rampff for a single curve index from the base class curves.
+// Falls back to identity (0,0)→(1,1) when the base has no points for that curve.
+IECore::Rampff rampForCurve( const std::vector<std::vector<std::pair<double,double>>> &baseCurves, int curveIndex )
+{
+	IECore::Rampff result;
+	result.interpolation = IECore::RampInterpolation::Linear;
+	if( curveIndex >= 0 && curveIndex < (int)baseCurves.size() && !baseCurves[curveIndex].empty() )
+	{
+		for( const auto &cp : baseCurves[curveIndex] )
+		{
+			result.points.insert( IECore::Rampff::Point( (float)cp.first, (float)cp.second ) );
+		}
+	}
+	if( result.points.empty() )
+	{
+		result.points.insert( IECore::Rampff::Point( 0.0f, 0.0f ) );
+		result.points.insert( IECore::Rampff::Point( 1.0f, 1.0f ) );
+	}
+	return result;
+}
+
+} // namespace
+
+GafferOFX::ParametricInstance::ParametricInstance( GafferOFX::EffectImageInstance* effect, const std::string& name, OFX::Host::Param::Descriptor& descriptor ) : OFX::Host::Param::ParametricInstance( descriptor, effect ), m_effect( effect ), m_descriptor( descriptor )
+{
+	auto* plugParent = const_cast<GafferOFX::OFXImageNode*>(static_cast<const GafferOFX::OFXImageNode*>(m_effect->node()))->parametersPlug();
+	const std::string paramName = sanitizeName( name );
+
+	int dimension = 1;
+	try { dimension = descriptor.getProperties().getIntProperty( kOfxParamPropParametricDimension ); } catch( ... ) {}
+	if( dimension < 1 ) { dimension = 1; }
+
+	// Validate existing plug: must be a ValuePlug whose children are
+	// `dimension` RampffPlugs with matching default values (setupTypedPlug
+	// semantics). This catches stale ObjectPlugs from saved scripts and
+	// stale RampffPlugs whose described defaults changed.
+	Gaffer::ValuePlug *existingPlug = plugParent->getChild<Gaffer::ValuePlug>( paramName );
+	if( existingPlug && existingPlug->direction() == Plug::In )
+	{
+		const auto &baseCurves = curves();
+		int childCount = 0;
+		for( int i = 0; ; ++i )
+		{
+			if( !existingPlug->getChild<Gaffer::RampffPlug>( "curve" + std::to_string( i ) ) )
+			{
+				break;
+			}
+			++childCount;
+		}
+		if( childCount == dimension )
+		{
+			bool defaultsMatch = true;
+			for( int i = 0; i < dimension; ++i )
+			{
+				auto *child = existingPlug->getChild<Gaffer::RampffPlug>( "curve" + std::to_string( i ) );
+				if( !child || child->defaultValue() != rampForCurve( baseCurves, i ) )
+				{
+					defaultsMatch = false;
+					break;
+				}
+			}
+			if( defaultsMatch )
+			{
+				return;
+			}
+		}
+	}
+
+	// Read described control points from the base class (populated by the plugin's
+	// addControlPoint calls during DescribeInContext via the parametric suite).
+	// Fall back to identity (0,0)→(1,1) when the base class has no points.
+	const auto &baseCurves = curves();
+	Gaffer::ValuePlug::Ptr parent = new Gaffer::ValuePlug( paramName, Plug::In, Plug::Default | Plug::Dynamic );
+	for( int i = 0; i < dimension; ++i )
+	{
+		IECore::Rampff def = rampForCurve( baseCurves, i );
+		Gaffer::RampffPlug::Ptr ramp = new Gaffer::RampffPlug( "curve" + std::to_string( i ), Plug::In, def, Gaffer::Plug::Default | Gaffer::Plug::Dynamic );
+		parent->addChild( ramp );
+	}
+	PlugAlgo::replacePlug( plugParent, parent );
+}
+
+OfxStatus GafferOFX::ParametricInstance::getValue( int curveIndex, double time, double parametricPosition, double* returnValue )
+{
+	if( !returnValue )
+	{
+		return kOfxStatErrBadHandle;
+	}
+	auto *parent = parentPlug( m_effect, m_descriptor.getName() );
+	auto *ramp = curvePlug( parent, curveIndex );
+	if( !ramp )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	IECore::Rampff value = ramp->getValue();
+	if( value.points.empty() )
+	{
+		*returnValue = parametricPosition;
+		return kOfxStatOK;
+	}
+	if( value.points.size() == 1 )
+	{
+		*returnValue = (double)value.points.begin()->second;
+		return kOfxStatOK;
+	}
+	*returnValue = (double)value.evaluator()( (float)parametricPosition );
+	return kOfxStatOK;
+}
+
+OfxStatus GafferOFX::ParametricInstance::getNControlPoints( int curveIndex, double time, int* count )
+{
+	if( !count )
+	{
+		return kOfxStatErrBadHandle;
+	}
+	auto *parent = parentPlug( m_effect, m_descriptor.getName() );
+	auto *ramp = curvePlug( parent, curveIndex );
+	if( !ramp )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	*count = (int)ramp->numPoints();
+	return kOfxStatOK;
+}
+
+OfxStatus GafferOFX::ParametricInstance::getNthControlPoint( int curveIndex, double time, int nthCtl, double* key, double* value )
+{
+	if( !key || !value )
+	{
+		return kOfxStatErrBadHandle;
+	}
+	auto *parent = parentPlug( m_effect, m_descriptor.getName() );
+	auto *ramp = curvePlug( parent, curveIndex );
+	if( !ramp )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	IECore::Rampff rampValue = ramp->getValue();
+	if( !nthSortedPoint( rampValue, nthCtl, *key, *value ) )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	return kOfxStatOK;
+}
+
+OfxStatus GafferOFX::ParametricInstance::setNthControlPoint( int curveIndex, double time, int nthCtl, double key, double value, bool addAnimationKey )
+{
+	auto* node = const_cast<OFXImageNode*>( static_cast<const OFXImageNode*>( m_effect->node() ) );
+	if( node->rendering() )
+	{
+		return kOfxStatOK;
+	}
+	auto *parent = parentPlug( m_effect, m_descriptor.getName() );
+	auto *ramp = curvePlug( parent, curveIndex );
+	if( !ramp )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	IECore::Rampff rampValue = ramp->getValue();
+	if( nthCtl < 0 || nthCtl >= (int)rampValue.points.size() )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	// Remove the nth sorted point, then reinsert with new key/value.
+	auto it = rampValue.points.begin();
+	std::advance( it, nthCtl );
+	rampValue.points.erase( it );
+	// Replace-within-tolerance: if a point at the same key exists, update it.
+	for( auto pit = rampValue.points.begin(); pit != rampValue.points.end(); ++pit )
+	{
+		if( fabs( pit->first - key ) < 1e-6 )
+		{
+			rampValue.points.erase( pit );
+			break;
+		}
+	}
+	rampValue.points.insert( IECore::Rampff::Point( key, value ) );
+	m_effect->markParamInteracted( m_descriptor.getName() );
+	SettingFromPluginScope scope( node );
+	ramp->setValue( rampValue );
+	return kOfxStatOK;
+}
+
+OfxStatus GafferOFX::ParametricInstance::addControlPoint( int curveIndex, double time, double key, double value, bool addAnimationKey )
+{
+	auto* node = const_cast<OFXImageNode*>( static_cast<const OFXImageNode*>( m_effect->node() ) );
+	if( node->rendering() )
+	{
+		return kOfxStatOK;
+	}
+	auto *parent = parentPlug( m_effect, m_descriptor.getName() );
+	auto *ramp = curvePlug( parent, curveIndex );
+	if( !ramp )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	m_effect->markParamInteracted( m_descriptor.getName() );
+	SettingFromPluginScope scope( node );
+	IECore::Rampff rampValue = ramp->getValue();
+	// Insert or update: erase existing point at same key, then insert.
+	for( auto it = rampValue.points.begin(); it != rampValue.points.end(); ++it )
+	{
+		if( fabs( it->first - key ) < 1e-6 )
+		{
+			rampValue.points.erase( it );
+			break;
+		}
+	}
+	rampValue.points.insert( IECore::Rampff::Point( key, value ) );
+	ramp->setValue( rampValue );
+	return kOfxStatOK;
+}
+
+OfxStatus GafferOFX::ParametricInstance::deleteControlPoint( int curveIndex, int nthCtl )
+{
+	auto* node = const_cast<OFXImageNode*>( static_cast<const OFXImageNode*>( m_effect->node() ) );
+	if( node->rendering() )
+	{
+		return kOfxStatOK;
+	}
+	auto *parent = parentPlug( m_effect, m_descriptor.getName() );
+	auto *ramp = curvePlug( parent, curveIndex );
+	if( !ramp )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	IECore::Rampff rampValue = ramp->getValue();
+	if( nthCtl < 0 || nthCtl >= (int)rampValue.points.size() )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	auto it = rampValue.points.begin();
+	std::advance( it, nthCtl );
+	rampValue.points.erase( it );
+	m_effect->markParamInteracted( m_descriptor.getName() );
+	SettingFromPluginScope scope( node );
+	ramp->setValue( rampValue );
+	return kOfxStatOK;
+}
+
+OfxStatus GafferOFX::ParametricInstance::deleteAllControlPoints( int curveIndex )
+{
+	auto* node = const_cast<OFXImageNode*>( static_cast<const OFXImageNode*>( m_effect->node() ) );
+	if( node->rendering() )
+	{
+		return kOfxStatOK;
+	}
+	auto *parent = parentPlug( m_effect, m_descriptor.getName() );
+	auto *ramp = curvePlug( parent, curveIndex );
+	if( !ramp )
+	{
+		return kOfxStatErrBadIndex;
+	}
+	m_effect->markParamInteracted( m_descriptor.getName() );
+	SettingFromPluginScope scope( node );
+	IECore::Rampff rampValue = ramp->getValue();
+	rampValue.points.clear();
+	ramp->setValue( rampValue );
+	return kOfxStatOK;
+}

@@ -1438,6 +1438,124 @@ class OFXImageNodeTest( GafferTest.TestCase ) :
 				sampR.sample( dw.min().x, dw.min().y ), places = 5
 			)
 
+	def testColorLookupPlugin( self ) :
+
+		# ColorLookup uses kOfxParamTypeParametric, exercised through the
+		# parametric suite. The lookupTable param must surface as a
+		# ValuePlug containing RampffPlug children (one per dimension),
+		# and the plugin must render as a straight passthrough with the
+		# identity LUT.
+
+		scriptNode = Gaffer.ScriptNode()
+
+		cb = GafferImage.Checkerboard()
+		scriptNode.addChild( cb )
+		cb["format"].setValue( GafferImage.Format( 64, 64 ) )
+		cb["colorA"].setValue( imath.Color4f( 0.2, 0.3, 0.4, 1.0 ) )
+
+		n = GafferOFX.OFXImageNode()
+		scriptNode.addChild( n )
+		n["pluginId"].setValue( "net.sf.openfx.ColorLookupPlugin" )
+		self.assertTrue( n.createPluginInstance() )
+		n["in"].setInput( cb["out"] )
+
+		lt = n["parameters"].getChild( "lookupTable" )
+		self.assertIsInstance( lt, Gaffer.ValuePlug )
+		# 5 dimensions: master + RGB + alpha
+		self.assertEqual( len( lt.children() ), 5 )
+		for i in range( 5 ) :
+			child = lt.getChild( "curve{}".format( i ) )
+			self.assertIsInstance( child, Gaffer.RampffPlug )
+			# Each ramp starts with 2 identity control points: (0,0) and (1,1)
+			self.assertEqual( child.numPoints(), 2 )
+			self.assertAlmostEqual( child.pointXPlug( 0 ).getValue(), 0.0, places = 4 )
+			self.assertAlmostEqual( child.pointYPlug( 0 ).getValue(), 0.0, places = 4 )
+			self.assertAlmostEqual( child.pointXPlug( 1 ).getValue(), 1.0, places = 4 )
+			self.assertAlmostEqual( child.pointYPlug( 1 ).getValue(), 1.0, places = 4 )
+
+		dw = n["out"]["dataWindow"].getValue()
+		tile = n["out"].channelData( "R", imath.V2i( 0 ) )
+		self.assertAlmostEqual( tile[0], 0.2, places = 4 )  # colorA.x, identity LUT is a passthrough
+
+	def testColorLookupCurveAffectsOutput( self ) :
+
+		# Flipping the master curve must invert the image, and invalidate
+		# the output hash so the render buffer is re-computed.
+
+		scriptNode = Gaffer.ScriptNode()
+
+		cb = GafferImage.Checkerboard()
+		scriptNode.addChild( cb )
+		cb["format"].setValue( GafferImage.Format( 64, 64 ) )
+		cb["colorA"].setValue( imath.Color4f( 0.2, 0.3, 0.4, 1.0 ) )
+
+		n = GafferOFX.OFXImageNode()
+		scriptNode.addChild( n )
+		n["pluginId"].setValue( "net.sf.openfx.ColorLookupPlugin" )
+		n["in"].setInput( cb["out"] )
+
+		lt = n["parameters"].getChild( "lookupTable" )
+		master = lt.getChild( "curve0" )
+		h1 = n["out"].channelDataHash( "R", imath.V2i( 0 ) )
+		self.assertAlmostEqual( n["out"].channelData( "R", imath.V2i( 0 ) )[0], 0.2, places = 4 )
+
+		# Flip the master curve: (0,1) -> (1,0)
+		with Gaffer.UndoScope( scriptNode ) :
+			master.clearPoints()
+			master.addPoint()
+			master.pointXPlug( 0 ).setValue( 0.0 )
+			master.pointYPlug( 0 ).setValue( 1.0 )
+			master.addPoint()
+			master.pointXPlug( 1 ).setValue( 1.0 )
+			master.pointYPlug( 1 ).setValue( 0.0 )
+
+		h2 = n["out"].channelDataHash( "R", imath.V2i( 0 ) )
+		self.assertNotEqual( h1, h2 )
+		self.assertAlmostEqual( n["out"].channelData( "R", imath.V2i( 0 ) )[0], 0.8, places = 4 )
+
+	def testColorCorrectDescribedDefaults( self ) :
+
+		# ColorCorrect's toneRanges has described (non-identity) defaults.
+		# Verify the RampffPlug children carry these described defaults,
+		# not hardcoded identity curves.
+
+		scriptNode = Gaffer.ScriptNode()
+
+		cb = GafferImage.Checkerboard()
+		scriptNode.addChild( cb )
+		cb["format"].setValue( GafferImage.Format( 64, 64 ) )
+
+		n = GafferOFX.OFXImageNode()
+		scriptNode.addChild( n )
+		n["pluginId"].setValue( "net.sf.openfx.ColorCorrectPlugin" )
+		self.assertTrue( n.createPluginInstance() )
+
+		tr = n["parameters"].getChild( "toneRanges" )
+		self.assertIsInstance( tr, Gaffer.ValuePlug )
+		self.assertEqual( len( tr.children() ), 2 )
+
+		# Shadow curve (dimension 0): (0,1)→(0.09,0)→(1,1)
+		shadow = tr.getChild( "curve0" )
+		self.assertIsInstance( shadow, Gaffer.RampffPlug )
+		self.assertEqual( shadow.numPoints(), 3 )
+		self.assertAlmostEqual( shadow.pointXPlug( 0 ).getValue(), 0.0, places = 4 )
+		self.assertAlmostEqual( shadow.pointYPlug( 0 ).getValue(), 1.0, places = 4 )
+		self.assertAlmostEqual( shadow.pointXPlug( 1 ).getValue(), 0.09, places = 4 )
+		self.assertAlmostEqual( shadow.pointYPlug( 1 ).getValue(), 0.0, places = 4 )
+		self.assertAlmostEqual( shadow.pointXPlug( 2 ).getValue(), 1.0, places = 4 )
+		self.assertAlmostEqual( shadow.pointYPlug( 2 ).getValue(), 1.0, places = 4 )
+
+		# Highlight curve (dimension 1): (0,0)→(0.5,0)→(1,1)
+		highlight = tr.getChild( "curve1" )
+		self.assertIsInstance( highlight, Gaffer.RampffPlug )
+		self.assertEqual( highlight.numPoints(), 3 )
+		self.assertAlmostEqual( highlight.pointXPlug( 0 ).getValue(), 0.0, places = 4 )
+		self.assertAlmostEqual( highlight.pointYPlug( 0 ).getValue(), 0.0, places = 4 )
+		self.assertAlmostEqual( highlight.pointXPlug( 1 ).getValue(), 0.5, places = 4 )
+		self.assertAlmostEqual( highlight.pointYPlug( 1 ).getValue(), 0.0, places = 4 )
+		self.assertAlmostEqual( highlight.pointXPlug( 2 ).getValue(), 1.0, places = 4 )
+		self.assertAlmostEqual( highlight.pointYPlug( 2 ).getValue(), 1.0, places = 4 )
+
 if __name__ == "__main__" :
 	unittest.main()
 

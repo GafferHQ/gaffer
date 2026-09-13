@@ -206,5 +206,21 @@ class StringInstance : public OFX::Host::Param::StringInstance
 		OfxStatus getV( OfxTime time, va_list arg ) override;
 };
 
+class ParametricInstance : public OFX::Host::Param::ParametricInstance
+{
+	protected :
+		GafferOFX::EffectImageInstance*   m_effect;
+		OFX::Host::Param::Descriptor& m_descriptor;
+	public :
+		ParametricInstance( GafferOFX::EffectImageInstance* effect, const std::string& name, OFX::Host::Param::Descriptor& descriptor );
+		OfxStatus getValue( int curveIndex, double time, double parametricPosition, double* returnValue ) override;
+		OfxStatus getNControlPoints( int curveIndex, double time, int* count ) override;
+		OfxStatus getNthControlPoint( int curveIndex, double time, int nthCtl, double* key, double* value ) override;
+		OfxStatus setNthControlPoint( int curveIndex, double time, int nthCtl, double key, double value, bool addAnimationKey ) override;
+		OfxStatus addControlPoint( int curveIndex, double time, double key, double value, bool addAnimationKey ) override;
+		OfxStatus deleteControlPoint( int curveIndex, int nthCtl ) override;
+		OfxStatus deleteAllControlPoints( int curveIndex ) override;
+};
+
 }
 

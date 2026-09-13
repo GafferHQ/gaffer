@@ -1235,13 +1235,13 @@ libraries = {
 	"GafferOFX" : {
 		"envAppends" : {
 			"CXXFLAGS" : [ systemIncludeArgument, "$OFX_ROOT/include/openfx", systemIncludeArgument, "$OFX_ROOT/include/openfx/HostSupport" ],
-			"CPPDEFINES" : [ "OFX_SUPPORTS_OPENGLRENDER" ],
+			"CPPDEFINES" : [ "OFX_SUPPORTS_OPENGLRENDER", "OFX_SUPPORTS_PARAMETRIC" ],
 			"LIBPATH" : [ "$OFX_ROOT/lib" ],
 			"LIBS" : [ "Gaffer", "GafferImage", "OfxGafferHost", "GL", "EGL", "X11", "expat" ],
 		},
 		"pythonEnvAppends" : {
 			"CXXFLAGS" : [ systemIncludeArgument, "$OFX_ROOT/include/openfx", systemIncludeArgument, "$OFX_ROOT/include/openfx/HostSupport" ],
-			"CPPDEFINES" : [ "OFX_SUPPORTS_OPENGLRENDER" ],
+			"CPPDEFINES" : [ "OFX_SUPPORTS_OPENGLRENDER", "OFX_SUPPORTS_PARAMETRIC" ],
 			"LIBS" : [ "GafferBindings", "GafferImage", "GafferOFX", "OfxGafferHost", "GL", "EGL", "X11", "expat" ],
 		},
 		"requiredOptions" : [ "OFX_ROOT" ],

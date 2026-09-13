@@ -495,11 +495,18 @@ void OFXImageNode::createClipPlugs()
 			continue;
 		}
 
-		// Derive Gaffer plug name from clip name (lowercase first letter)
+		// Derive Gaffer plug name from clip name (lowercase first letter + sanitize)
 		std::string plugName = clipName;
 		if( !plugName.empty() && isupper( plugName[0] ) )
 		{
 			plugName[0] = tolower( plugName[0] );
+		}
+		for( char &c : plugName )
+		{
+			if( !( ( c >= 'A' && c <= 'Z' ) || ( c >= 'a' && c <= 'z' ) || ( c >= '0' && c <= '9' ) || c == '_' || c == ':' ) )
+			{
+				c = '_';
+			}
 		}
 
 		// Reuse existing plug if present (e.g. after scene load or re-creation)
