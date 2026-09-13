@@ -1189,68 +1189,71 @@ void MergeObjects::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 				}
 			}
 
-			IECore::dispatch( sortVarTypeExemplar,
-				[&sources, &sortOrder, &sortPrimitiveVariable]( const auto *typed )
-				{
-					using TargetType = typename std::remove_const_t<std::remove_pointer_t<decltype( typed )> >;
-					if constexpr(
-						std::is_same_v<TargetType, IntData> ||
-						std::is_same_v<TargetType, FloatData> ||
-						std::is_same_v<TargetType, StringData>
-					)
+			if( sortVarTypeExemplar )
+			{
+				IECore::dispatch( sortVarTypeExemplar,
+					[&sources, &sortOrder, &sortPrimitiveVariable]( const auto *typed )
 					{
-						std::stable_sort( sources.begin(), sources.end(),
-							[&sortOrder, &sortPrimitiveVariable]( const auto &a, const auto &b)
-							{
-								const IECoreScene::Primitive* aPrim = IECore::runTimeCast<const IECoreScene::Primitive>( a.first.get() );
-								const IECoreScene::Primitive* bPrim = IECore::runTimeCast<const IECoreScene::Primitive>( b.first.get() );
-
-								if( !( aPrim && bPrim ) )
+						using TargetType = typename std::remove_const_t<std::remove_pointer_t<decltype( typed )> >;
+						if constexpr(
+							std::is_same_v<TargetType, IntData> ||
+							std::is_same_v<TargetType, FloatData> ||
+							std::is_same_v<TargetType, StringData>
+						)
+						{
+							std::stable_sort( sources.begin(), sources.end(),
+								[&sortOrder, &sortPrimitiveVariable]( const auto &a, const auto &b)
 								{
+									const IECoreScene::Primitive* aPrim = IECore::runTimeCast<const IECoreScene::Primitive>( a.first.get() );
+									const IECoreScene::Primitive* bPrim = IECore::runTimeCast<const IECoreScene::Primitive>( b.first.get() );
+
+									if( !( aPrim && bPrim ) )
+									{
+										if( sortOrder == MergeObjects::SortOrder::Ascending )
+										{
+											return (bool)aPrim < (bool)bPrim;
+										}
+										else
+										{
+											return (bool)bPrim < (bool)aPrim;
+										}
+									}
+
+									// I don't love doing these lookups inside the sort comparison. If the sources
+									// vector is large, it would probably be more efficient to copy the sources to
+									// a new vector where each element was augmented with a pointer directly to the
+									// data. Then we could sort that using the data pointers before copying back to
+									// the sources vector.
+									// For now, this is a bit simpler, and it probably won't be an issue unless
+									// someone requires an ordered merge while merging a huge number of tiny meshes,
+									// which is pretty special case.
+									const auto &aVal = aPrim->variableData<TargetType>( sortPrimitiveVariable )->readable();
+									const auto &bVal = bPrim->variableData<TargetType>( sortPrimitiveVariable )->readable();
+
 									if( sortOrder == MergeObjects::SortOrder::Ascending )
 									{
-										return (bool)aPrim < (bool)bPrim;
+										return aVal < bVal;
 									}
 									else
 									{
-										return (bool)bPrim < (bool)aPrim;
+										return bVal < aVal;
 									}
 								}
-
-								// I don't love doing these lookups inside the sort comparison. If the sources
-								// vector is large, it would probably be more efficient to copy the sources to
-								// a new vector where each element was augmented with a pointer directly to the
-								// data. Then we could sort that using the data pointers before copying back to
-								// the sources vector.
-								// For now, this is a bit simpler, and it probably won't be an issue unless
-								// someone requires an ordered merge while merging a huge number of tiny meshes,
-								// which is pretty special case.
-								const auto &aVal = aPrim->variableData<TargetType>( sortPrimitiveVariable )->readable();
-								const auto &bVal = bPrim->variableData<TargetType>( sortPrimitiveVariable )->readable();
-
-								if( sortOrder == MergeObjects::SortOrder::Ascending )
-								{
-									return aVal < bVal;
-								}
-								else
-								{
-									return bVal < aVal;
-								}
-							}
-						);
+							);
+						}
+						else
+						{
+							throw IECore::Exception(
+								fmt::format(
+									"Sort key primitive variable \"{}\", unsupported type {}.",
+									sortPrimitiveVariable,
+									typed->typeName()
+								)
+							);
+						}
 					}
-					else
-					{
-						throw IECore::Exception(
-							fmt::format(
-								"Sort key primitive variable \"{}\", unsupported type {}.",
-								sortPrimitiveVariable,
-								typed->typeName()
-							)
-						);
-					}
-				}
-			);
+				);
+			}
 		}
 
 

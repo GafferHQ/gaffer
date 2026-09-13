@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
+- MergeMeshes, MergeCurves, MergePoints : Fixed crash when merge is sorted by a primitive variable and none of the locations to merge contain primitives.
 
 1.6.21.5 (relative to 1.6.21.4)
 ========

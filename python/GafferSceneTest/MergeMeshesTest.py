@@ -1011,6 +1011,20 @@ class MergeMeshesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( getMeshOrder(), [ 0.0, 1.0, 3.0, 4.0 ] )
 
+	def testPrimitiveVariableSortWithNoPrimitives( self ) :
+
+		camera = GafferScene.Camera()
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/camera" ] ) )
+
+		mergeMeshes = GafferScene.MergeMeshes()
+		mergeMeshes["in"].setInput( camera["out"] )
+		mergeMeshes["filter"].setInput( pathFilter["out"] )
+		mergeMeshes["sortKey"].setValue( GafferScene.MergeMeshes.SortKey.PrimitiveVariable )
+		mergeMeshes["sortPrimitiveVariable"].setValue( "test" )
+
+		self.assertIsInstance( mergeMeshes["out"].object( "/mergedMesh" ), IECore.NullObject )
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testPerformance( self ) :
