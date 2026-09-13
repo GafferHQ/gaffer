@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from Qt import QtCore
 from Qt import QtGui
@@ -122,7 +123,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 			oldParent.removeChild( child )
 
 		self.__widgets.append( child )
-		self._qtWidget().addTab( child._qtWidget(), label )
+		self._qtWidget().addTab( child._qtWidget(), _translate( label ) )
 
 		# note that we are deliberately not calling child._applyVisibility(),
 		# because the tabbed container operates by managing the visibility
@@ -144,11 +145,11 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 			oldParent.removeChild( child )
 
 		self.__widgets.insert( index, child )
-		self._qtWidget().insertTab( index, child._qtWidget(), label )
+		self._qtWidget().insertTab( index, child._qtWidget(), _translate( label ) )
 
 	def setLabel( self, child, labelText ) :
 
-		self._qtWidget().setTabText( self.__widgets.index( child ), labelText )
+		self._qtWidget().setTabText( self.__widgets.index( child ), _translate( labelText ) )
 
 	def getLabel( self, child ) :
 

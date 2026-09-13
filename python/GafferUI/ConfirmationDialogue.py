@@ -35,6 +35,7 @@
 ##########################################################################
 
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 class ConfirmationDialogue( GafferUI.Dialogue ) :
 
@@ -47,7 +48,7 @@ class ConfirmationDialogue( GafferUI.Dialogue ) :
 			GafferUI.Label( message )
 
 			if details is not None :
-				with GafferUI.Collapsible( label = "Details", collapsed = True ) :
+				with GafferUI.Collapsible( label = _translate( "Details" ), collapsed = True ) :
 					GafferUI.MultiLineTextWidget(
 						text = details,
 						editable = False,

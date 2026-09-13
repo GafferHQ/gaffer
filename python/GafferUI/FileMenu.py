@@ -276,8 +276,7 @@ def revertToSaved( menu ) :
 
 	dialogue = GafferUI.ConfirmationDialogue(
 		title = "Discard Unsaved Changes?",
-		message = "There are unsaved changes which will be lost."
-			"Discard them and revert?",
+		message = "There are unsaved changes which will be lost. Discard them and revert?",
 		confirmLabel = "Revert",
 		cancelLabel = "Cancel",
 	)

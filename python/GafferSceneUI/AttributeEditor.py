@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 import GafferScene
 import GafferSceneUI
 
@@ -150,7 +151,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			attributeName,
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.AttributeInspector( scene, editScope, attributeName ),
-				columnName,
+				_translate( columnName ),
 				toolTip
 			),
 			section
@@ -341,6 +342,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		self.__ignoreCurrentChanged = False
+		self.__tabOriginalNames = []
 
 		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
@@ -353,8 +355,9 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromValues( self, values, exception ) :
 
+		translatedText = _translate( values[0] ) if values[0] else _translate( "Main" )
 		for i in range( 0, self._qtWidget().count() ) :
-			if self._qtWidget().tabText( i ) == values[0] :
+			if self._qtWidget().tabText( i ) == translatedText :
 				try :
 					self.__ignoreCurrentChanged = True
 					self._qtWidget().setCurrentIndex( i )
@@ -368,10 +371,10 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 
 		index = self._qtWidget().currentIndex()
-		text = self._qtWidget().tabText( index )
+		originalName = self.__tabOriginalNames[index] if index < len( self.__tabOriginalNames ) else ""
 		with self._blockedUpdateFromValues() :
 			self.getPlug().setValue(
-				text if text != "Main" else ""
+				originalName if originalName != "Main" else ""
 			)
 
 	def __updateTabs( self ) :
@@ -383,12 +386,16 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			tabGroup = self.getPlug().node()["tabGroup"].getValue()
 
+			self.__tabOriginalNames = []
 			for groupKey, sections in AttributeEditor._AttributeEditor__columnRegistry.items() :
 				if IECore.StringAlgo.match( tabGroup, groupKey ) :
 					for section in sections.keys() :
-						self._qtWidget().addTab( section or "Main" )
+						name = section or "Main"
+						self.__tabOriginalNames.append( name )
+						self._qtWidget().addTab( _translate( name ) )
 					if "All" not in sections.keys() and len( sections.keys() ) > 1 :
-						self._qtWidget().addTab( "All" )
+						self.__tabOriginalNames.append( "All" )
+						self._qtWidget().addTab( _translate( "All" ) )
 
 			self._qtWidget().setVisible( self._qtWidget().count() > 1 )
 		finally :
