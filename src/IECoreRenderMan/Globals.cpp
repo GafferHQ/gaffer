@@ -1037,10 +1037,22 @@ void Globals::updateRenderView()
 			}
 		}
 
-		ConstOutputPtr firstOutput = lightGroupFormatTemplate.empty() ? output : lightGroupOutput( lightGroupFormatTemplate, output.get(), *(m_renderViewLightGroups->begin()) );
+		vector<riley::RenderOutputId> renderOutputs;
+		if( lightGroupFormatTemplate.empty() )
+		{
+			renderOutputs = acquireRenderOutputs( output.get() );
+		}
+		else
+		{
+			for( const auto &lightGroup : *m_renderViewLightGroups )
+			{
+				ConstOutputPtr groupOutput = lightGroupOutput( lightGroupFormatTemplate, output.get(), lightGroup );
+				const auto &o = acquireRenderOutputs( groupOutput.get() );
+				renderOutputs.insert( renderOutputs.end(), o.begin(), o.end() );
+			}
+		}
 
-		const vector<riley::RenderOutputId> &firstRenderOutputs = acquireRenderOutputs( firstOutput.get());
-		if( firstRenderOutputs.empty() )
+		if( renderOutputs.empty() )
 		{
 			IECore::msg( IECore::Msg::Warning, "RenderManRenderer", fmt::format( "Ignoring unsupported output {}", name.c_str() ) );
 			continue;
@@ -1089,29 +1101,17 @@ void Globals::updateRenderView()
 		// the beauty first - it is the only one to have two render outputs (the second
 		// one being for alpha).
 
-		const bool beauty = lightGroupFormatTemplate.empty() && firstRenderOutputs.size() == 2;
+		const bool beauty = lightGroupFormatTemplate.empty() && renderOutputs.size() == 2;
 
 		display.outputs.insert(
 			beauty ? display.outputs.begin() : display.outputs.end(),
-			firstRenderOutputs.begin(), firstRenderOutputs.end()
+			renderOutputs.begin(), renderOutputs.end()
 		);
 
 		renderTargetOutputs.insert(
 			beauty ? renderTargetOutputs.begin() : renderTargetOutputs.end(),
-			firstRenderOutputs.begin(), firstRenderOutputs.end()
+			renderOutputs.begin(), renderOutputs.end()
 		);
-
-		if( !lightGroupFormatTemplate.empty() )
-		{
-			// We already added the first element above, start with the second.
-			for( auto it = std::next( m_renderViewLightGroups->begin() ), eIt = m_renderViewLightGroups->end(); it != eIt; ++it )
-			{
-				ConstOutputPtr groupOutput = lightGroupOutput( lightGroupFormatTemplate, output.get(), *it );
-				const vector<riley::RenderOutputId> &groupRenderOutputs = acquireRenderOutputs( groupOutput.get() );
-				display.outputs.insert( display.outputs.end(), groupRenderOutputs.begin(), groupRenderOutputs.end() );
-				renderTargetOutputs.insert( renderTargetOutputs.end(), groupRenderOutputs.begin(), groupRenderOutputs.end() );
-			}
-		}
 	}
 
 	m_renderTarget = m_session->riley->CreateRenderTarget(
