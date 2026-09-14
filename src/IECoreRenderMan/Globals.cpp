@@ -259,7 +259,7 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 			// They also aren't meaningful so we bail on creating light group layers.
 			IECore::msg(
 				IECore::Msg::Warning, "RenderManRenderer",
-				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because it includes an invalid emission group.", name.string() )
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because its LPE contains \"(O)\". Replace with \"O\" to use \"layerPerLightGroup\".", name.string() )
 			);
 			return "";
 		}

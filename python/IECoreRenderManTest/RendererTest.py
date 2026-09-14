@@ -4379,7 +4379,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual(
 			set( i.message for i in messageHandler.messages ),
 			{
-				"Ignoring \"layerPerLightGroup\" parameter on output \"A\" because it includes an invalid emission group.",
+				"Ignoring \"layerPerLightGroup\" parameter on output \"A\" because its LPE contains \"(O)\". Replace with \"O\" to use \"layerPerLightGroup\".",
 			}
 		)
 
