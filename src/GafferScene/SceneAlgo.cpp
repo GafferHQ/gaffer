@@ -330,6 +330,46 @@ Imath::V2f GafferScene::SceneAlgo::shutter( const IECore::CompoundObject *global
 	return shutter;
 }
 
+namespace
+{
+
+const IECore::InternedString g_renderPassContextName( "renderPass" );
+const IECore::InternedString g_renderPassEnabledGlobalsKey( "option:renderPass:enabled" );
+const IECore::InternedString g_renderPassNamesGlobalsKey( "option:renderPass:names" );
+const IECore::ConstStringVectorDataPtr g_emptyRenderPassNames = new StringVectorData();
+
+} // namespace
+
+IECore::ConstStringVectorDataPtr GafferScene::SceneAlgo::renderPassNames( const ScenePlug *scene, std::optional<bool> enabledFilter )
+{
+	Context::EditableScope context( Context::current() );
+	context.remove( g_renderPassContextName );
+	ConstStringVectorDataPtr names = scene->globals()->member<StringVectorData>( g_renderPassNamesGlobalsKey );
+	if( !names )
+	{
+		return g_emptyRenderPassNames;
+	}
+
+	if( !enabledFilter )
+	{
+		return names;
+	}
+
+	StringVectorDataPtr filteredNames = new StringVectorData;
+	for( const auto &name : names->readable() )
+	{
+		context.set( g_renderPassContextName, &name );
+		ConstBoolDataPtr enabledOption = scene->globals()->member<BoolData>( g_renderPassEnabledGlobalsKey );
+		const bool enabledValue = enabledOption ? enabledOption->readable() : true;
+		if( enabledValue == *enabledFilter )
+		{
+			filteredNames->writable().push_back( name );
+		}
+	}
+
+	return filteredNames;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Sets Algo
 //////////////////////////////////////////////////////////////////////////

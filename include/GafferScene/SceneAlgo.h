@@ -197,6 +197,15 @@ GAFFERSCENE_API IECore::ConstCompoundObjectPtr globalAttributes( const IECore::C
 /// Calculates the shutter specified by the globals ( potentially overridden by a camera )
 GAFFERSCENE_API Imath::V2f shutter( const IECore::CompoundObject *globals, const ScenePlug *scene );
 
+/// Returns the names of all render passes for the current context, as provided
+/// by the `renderPass:names` option. If `enabledFilter` is specified, then the passes
+/// are filtered down to those with a matching `renderPass:enabled` option
+/// value.
+///
+/// > Note : The `renderPass` context variable will be deleted temporarily when querying
+/// > `renderPass:names`, as the list of names is not allowed to depend on it.
+GAFFERSCENE_API IECore::ConstStringVectorDataPtr renderPassNames( const ScenePlug *scene, std::optional<bool> enabledFilter = std::nullopt );
+
 /// Sets
 /// ====
 

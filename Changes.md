@@ -28,6 +28,7 @@ API
 ---
 
 - Switch, NameSwitch : Added support for subclassing in Python.
+- SceneAlgo : Added `renderPassNames()` utility method.
 
 Build
 -----
