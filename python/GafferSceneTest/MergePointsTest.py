@@ -36,17 +36,12 @@
 
 import unittest
 import imath
-import inspect
-import pathlib
-import random
 
 import IECore
 import IECoreScene
 
-import Gaffer
 import GafferScene
 import GafferSceneTest
-import GafferTest
 
 class MergePointsTest( GafferSceneTest.SceneTestCase ) :
 
