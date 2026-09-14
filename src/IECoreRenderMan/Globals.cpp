@@ -53,7 +53,6 @@
 
 #include <algorithm>
 #include <condition_variable>
-#include <string_view>
 
 using namespace std;
 using namespace IECore;
@@ -235,13 +234,7 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 
 		for( size_t i = lpeStart + 1, eI = lpe.size(); i < eI; ++i )
 		{
-			if(
-				(
-					( i + 2 <= eI && string_view( lpe.data() + i, 2 ) == "L\'" ) ||
-					( i + 3 <= eI && string_view( lpe.data() + i, 3 ) == "L.\'" )
-				) &&
-				!inQuotes
-			)
+			if( ( lpe.compare( i, 2, "L\'" ) == 0 || lpe.compare( i, 3, "L.\'" ) == 0 ) && !inQuotes )
 			{
 				IECore::msg(
 					IECore::Msg::Warning, "RenderManRenderer",
@@ -265,7 +258,7 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 				result += lpe[i];
 				inQuotes = !inQuotes;
 			}
-			else if( i + 4 <= eI && string_view( lpe.data() + i, 4 ) == "<L.>" && !inQuotes )
+			else if( lpe.compare( i, 4, "<L.>" ) == 0 && !inQuotes )
 			{
 				result += lightGroupBrackets;
 				madeSubstitution = true;
