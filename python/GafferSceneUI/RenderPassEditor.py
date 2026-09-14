@@ -953,7 +953,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def __renderPassNames( self, plug ) :
 
-		with self.context() :
+		with Gaffer.Context( self.context() ) as context :
+			del context["renderPass"]
 			return plug["globals"].getValue().get( "option:renderPass:names", IECore.StringVectorData() )
 
 	def __renderPassCreationDialogue( self ) :
@@ -1468,6 +1469,7 @@ class _RenderPassPlugValueWidget( GafferUI.PlugValueWidget ) :
 			renderPasses = {}
 
 			with Gaffer.Context( Gaffer.Context.current() ) as context :
+				del context["renderPass"]
 				context["renderPassEditor:enableAdaptors"] = True
 				adaptedRenderPassNames = globalsPlug.getValue().get( "option:renderPass:names", IECore.StringVectorData() )
 				context["renderPassEditor:enableAdaptors"] = False

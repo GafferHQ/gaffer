@@ -249,6 +249,30 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 				self.assertEqual( cellData.icon, "adaptorDisabledRenderPass.png" )
 				self.assertEqual( cellData.toolTip, "Automatically disabled by a render adaptor." )
 
+	def testRenderPassPathChildNamesIgnoresRenderPassVariable( self ) :
+
+		renderPasses = GafferScene.RenderPasses()
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "a" ] ) )
+
+		switchedRenderPasses = GafferScene.RenderPasses()
+		switchedRenderPasses["in"].setInput( renderPasses["out"] )
+		switchedRenderPasses["names"].setValue( IECore.StringVectorData( [ "b" ] ) )
+
+		nameSwitch = Gaffer.NameSwitch()
+		nameSwitch.setup( renderPasses["out"] )
+		nameSwitch["selector"].setValue( "${renderPass}" )
+		nameSwitch["in"][0]["value"].setInput( renderPasses["out"] )
+		nameSwitch["in"][1]["value"].setInput( switchedRenderPasses["out"] )
+		nameSwitch["in"][1]["name"].setValue( "a" )
+
+		context = Gaffer.Context()
+		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( nameSwitch["out"]["value"], context, "/" )
+		self.assertEqual( [ str( n ) for n in path.children() ], [ "/a" ] )
+
+		context["renderPass"] = "a"
+		path.setContext( context )
+		self.assertEqual( [ str( n ) for n in path.children() ], [ "/a" ] )
+
 	def testSearchFilter( self ) :
 
 		script = Gaffer.ScriptNode()
