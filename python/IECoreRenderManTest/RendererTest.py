@@ -4090,7 +4090,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# LPE groups (per-object groups, not light groups) should not be
 		# affected by our removal of emission or substitution of light groups.
 
-		for lpeGroup in [ "OOOOO", "LLLLL" ] :
+		for lpeGroup in [ "OOOOO", "LLLLL", "{brackets}" ] :
 
 			with self.subTest( lpeGroup = lpeGroup ) :
 

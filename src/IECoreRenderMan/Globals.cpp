@@ -295,11 +295,11 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 					result += emissionBrackets;
 				}
 			}
-			else if( lpe[i] == '{' && !inQuotes )
+			else if( lpe[i] == '{' )
 			{
 				result += "{{";
 			}
-			else if( lpe[i] == '}' && !inQuotes )
+			else if( lpe[i] == '}' )
 			{
 				result += "}}";
 			}
