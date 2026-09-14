@@ -19,11 +19,18 @@ Fixes
 - MergeMeshes, MergeCurves, MergePoints : Fixed crash when merge is sorted by a primitive variable and none of the locations to merge contain primitives.
 - NodeEditor : Fixed flicker when changing the node being viewed.
 - Linux : Fixed startup from installation directory containing spaces.
+- SceneReader : Fixed loading of float-precision orientations from the USD `PointInstancer.orientationsf` attribute. Previously only the half-precision `orientations` attribute was supported.
+- Viewer : Fixed colourspace handling for PNG files loaded as textures for custom OpenGL shaders.
 
 API
 ---
 
 - Switch, NameSwitch : Added support for subclassing in Python.
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.1.3.
 
 1.7.1.0 (relative to 1.7.0.0)
 =======
