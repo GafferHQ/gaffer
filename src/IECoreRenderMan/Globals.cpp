@@ -218,100 +218,7 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 		return "";
 	}
 
-	string result;
-
-	if( lpe[lpeStart] == 'C' )
-	{
-		const string lightGroupBrackets = "<L.'{" + g_lightGroupArg + "}'>";
-		const string emissionBrackets = "{" + g_emissionArg + "}";
-		const string emissionPipeBrackets = "{" + g_emissionPipeArg + "}";
-		const string pipeEmissionBrackets = "{" + g_pipeEmissionArg + "}";
-
-		result = lpe.substr( 0, lpeStart + 1 );
-
-		bool inQuotes = false;
-		bool madeSubstitution = false;
-
-		for( size_t i = lpeStart + 1, eI = lpe.size(); i < eI; ++i )
-		{
-			if( ( lpe.compare( i, 2, "L\'" ) == 0 || lpe.compare( i, 3, "L.\'" ) == 0 ) && !inQuotes )
-			{
-				IECore::msg(
-					IECore::Msg::Warning, "RenderManRenderer",
-					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
-				);
-				return "";
-			}
-			if( lpe.compare( i, 3, "(O)" ) == 0 && !inQuotes )
-			{
-				// We're going to remove `O` tokens below and empty LPE groups currently crash RenderMan.
-				// They also aren't meaningful so we bail on creating light group layers.
-				IECore::msg(
-					IECore::Msg::Warning, "RenderManRenderer",
-					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because it includes an invalid emission group.", name.string() )
-				);
-				return "";
-			}
-
-			if( lpe[i] == '\'' )
-			{
-				result += lpe[i];
-				inQuotes = !inQuotes;
-			}
-			else if( lpe.compare( i, 4, "<L.>" ) == 0 && !inQuotes )
-			{
-				result += lightGroupBrackets;
-				madeSubstitution = true;
-				i += 3;
-			}
-			else if( lpe[i] == 'L' && !inQuotes )
-			{
-				result += lightGroupBrackets;
-				madeSubstitution = true;
-			}
-			else if( lpe[i] == 'O' && !inQuotes )
-			{
-				// Add a token to allow `lightGroupOutput` to conditionally
-				// add the emission (O) token.
-				if( i + 1 < eI && lpe[i + 1] == '|' )
-				{
-					result += emissionPipeBrackets;
-					++i;  // Skip over the following `|` that will be invalid without `O`.
-				}
-				else if( !result.empty() && result.back() == '|' )
-				{
-					result.pop_back();  // Remove previous `|` that will be invalid without `O`.
-					result += pipeEmissionBrackets;
-				}
-				else
-				{
-					result += emissionBrackets;
-				}
-			}
-			else if( lpe[i] == '{' )
-			{
-				result += "{{";
-			}
-			else if( lpe[i] == '}' )
-			{
-				result += "}}";
-			}
-			else
-			{
-				result += lpe[i];
-			}
-		}
-
-		if( !madeSubstitution )
-		{
-			IECore::msg(
-				IECore::Msg::Warning, "RenderManRenderer",
-				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
-			);
-			return "";
-		}
-	}
-	else
+	if( lpe[lpeStart] != 'C' )
 	{
 		if( lpe.find( "_" ) != string::npos )
 		{
@@ -321,7 +228,98 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 			);
 			return "";
 		}
-		result = lpe + "_{" + g_lightGroupArg + "}";
+		return lpe + "_{" + g_lightGroupArg + "}";
+	}
+
+	string result;
+
+	const string lightGroupBrackets = "<L.'{" + g_lightGroupArg + "}'>";
+	const string emissionBrackets = "{" + g_emissionArg + "}";
+	const string emissionPipeBrackets = "{" + g_emissionPipeArg + "}";
+	const string pipeEmissionBrackets = "{" + g_pipeEmissionArg + "}";
+
+	result = lpe.substr( 0, lpeStart + 1 );
+
+	bool inQuotes = false;
+	bool madeSubstitution = false;
+
+	for( size_t i = lpeStart + 1, eI = lpe.size(); i < eI; ++i )
+	{
+		if( ( lpe.compare( i, 2, "L\'" ) == 0 || lpe.compare( i, 3, "L.\'" ) == 0 ) && !inQuotes )
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+			);
+			return "";
+		}
+		if( lpe.compare( i, 3, "(O)" ) == 0 && !inQuotes )
+		{
+			// We're going to remove `O` tokens below and empty LPE groups currently crash RenderMan.
+			// They also aren't meaningful so we bail on creating light group layers.
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because it includes an invalid emission group.", name.string() )
+			);
+			return "";
+		}
+
+		if( lpe[i] == '\'' )
+		{
+			result += lpe[i];
+			inQuotes = !inQuotes;
+		}
+		else if( lpe.compare( i, 4, "<L.>" ) == 0 && !inQuotes )
+		{
+			result += lightGroupBrackets;
+			madeSubstitution = true;
+			i += 3;
+		}
+		else if( lpe[i] == 'L' && !inQuotes )
+		{
+			result += lightGroupBrackets;
+			madeSubstitution = true;
+		}
+		else if( lpe[i] == 'O' && !inQuotes )
+		{
+			// Add a token to allow `lightGroupOutput` to conditionally
+			// add the emission (O) token.
+			if( i + 1 < eI && lpe[i + 1] == '|' )
+			{
+				result += emissionPipeBrackets;
+				++i;  // Skip over the following `|` that will be invalid without `O`.
+			}
+			else if( !result.empty() && result.back() == '|' )
+			{
+				result.pop_back();  // Remove previous `|` that will be invalid without `O`.
+				result += pipeEmissionBrackets;
+			}
+			else
+			{
+				result += emissionBrackets;
+			}
+		}
+		else if( lpe[i] == '{' )
+		{
+			result += "{{";
+		}
+		else if( lpe[i] == '}' )
+		{
+			result += "}}";
+		}
+		else
+		{
+			result += lpe[i];
+		}
+	}
+
+	if( !madeSubstitution )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "RenderManRenderer",
+			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
+		);
+		return "";
 	}
 
 	return result;
