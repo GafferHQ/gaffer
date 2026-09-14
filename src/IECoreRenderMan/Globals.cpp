@@ -242,7 +242,7 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 				);
 				return "";
 			}
-			if( i + 3 <= eI && string_view( lpe.data() + i, 3 ) == "(O)" && !inQuotes )
+			if( lpe.compare( i, 3, "(O)" ) == 0 && !inQuotes )
 			{
 				// We're going to remove `O` tokens below and empty LPE groups currently crash RenderMan.
 				// They also aren't meaningful so we bail on creating light group layers.
