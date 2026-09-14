@@ -962,7 +962,7 @@ void Globals::updateRenderView()
 
 	if(
 		m_renderView != riley::RenderViewId::InvalidId() &&
-		m_renderViewLightGroups && *m_renderViewLightGroups != m_session->lightGroups()
+		m_renderViewLightGroups != m_session->lightGroups()
 	)
 	{
 		deleteRenderView();
@@ -1009,7 +1009,7 @@ void Globals::updateRenderView()
 
 	std::unordered_map<std::string, DisplayDefinition> displayDefinitions;
 	vector<riley::RenderOutputId> renderTargetOutputs;
-	m_renderViewLightGroups.reset();
+	m_renderViewLightGroups.clear();
 
 	for( const auto &[name, output] : m_outputs )
 	{
@@ -1022,11 +1022,11 @@ void Globals::updateRenderView()
 			lightGroupFormatTemplate = lightGroupFormatString( name, output.get() );
 			if( !lightGroupFormatTemplate.empty() )
 			{
-				if( !m_renderViewLightGroups )
+				if( m_renderViewLightGroups.empty() )
 				{
 					m_renderViewLightGroups = m_session->lightGroups();
 				}
-				assert( m_renderViewLightGroups->size() );  // We always have at least `default` light group.
+				assert( m_renderViewLightGroups.size() );  // We always have at least `default` light group.
 			}
 		}
 
@@ -1037,7 +1037,7 @@ void Globals::updateRenderView()
 		}
 		else
 		{
-			for( const auto &lightGroup : *m_renderViewLightGroups )
+			for( const auto &lightGroup : m_renderViewLightGroups )
 			{
 				ConstOutputPtr groupOutput = lightGroupOutput( lightGroupFormatTemplate, output.get(), lightGroup );
 				const auto &o = acquireRenderOutputs( groupOutput.get() );
