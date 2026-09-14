@@ -301,6 +301,17 @@ class RenderController::SceneGraph
 				return;
 			}
 			m_dirtyComponents |= components;
+
+			if( m_objectHash.isPointInstancer )
+			{
+				if( components & ( AttributesComponent | TransformComponent ) )
+				{
+					// Account for the fact that `PointInstancerAlgo::prototypesHash()`
+					// is dependent on attributes and transforms.
+					m_dirtyComponents |= ObjectComponent;
+				}
+			}
+
 			for( const auto &c : m_children )
 			{
 				c->dirty( components );

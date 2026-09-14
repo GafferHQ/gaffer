@@ -2096,6 +2096,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 			self["numPoints"] = Gaffer.IntPlug( defaultValue = 2 )
 			self["sphereRadius"] = Gaffer.FloatPlug( defaultValue = 1 )
 			self["transform"] = Gaffer.TransformPlug()
+			self["spherePrototypeTransform"] = Gaffer.TransformPlug()
+			self["cubePrototypeAttribute"] = Gaffer.FloatPlug()
 
 			self["objectToScene"] = GafferScene.ObjectToScene()
 			self["objectToScene"]["transform"].setInput( self["transform"] )
@@ -2118,14 +2120,21 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 			) )
 
 			self["sphere"] = GafferScene.Sphere()
+			self["sphere"]["transform"].setInput( self["spherePrototypeTransform"] )
 			self["sphere"]["radius"].setInput( self["sphereRadius"] )
 			self["sphere"]["type"].setValue( self["sphere"].Type.Primitive )
+
 			self["cube"] = GafferScene.Cube()
+
+			self["cubeAttributes"] = GafferScene.CustomAttributes()
+			self["cubeAttributes"]["in"].setInput( self["cube"]["out"] )
+			self["cubeAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "user:test", IECore.FloatData( 0 ) ) )
+			self["cubeAttributes"]["attributes"][0]["value"].setInput( self["cubePrototypeAttribute"] )
 
 			self["prototypesGroup"] = GafferScene.Group()
 			self["prototypesGroup"]["name"].setValue( "prototypes" )
 			self["prototypesGroup"]["in"][0].setInput( self["sphere"]["out"] )
-			self["prototypesGroup"]["in"][1].setInput( self["cube"]["out"] )
+			self["prototypesGroup"]["in"][1].setInput( self["cubeAttributes"]["out"] )
 
 			self["parent"] = GafferScene.Parent()
 			self["parent"]["in"].setInput( self["objectToScene"]["out"] )
@@ -2205,12 +2214,45 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( capture.capturedPointInstancerPrototypes()[0].samples[0].radius(), 1 )
 		del capture
 
+		# Prototype object edit.
+
 		pointInstancer["sphereRadius"].setValue( 2 )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 
 		capture = renderer.capturedObject( "/instancer" )
 		self.assertEqual( capture.capturedPointInstancerPrototypes()[0].samples[0].radius(), 2 )
+
+		# Prototype transform edit.
+
+		self.assertEqual( capture.capturedSamples()[0]["P"].data[0], imath.V3f( 0 ) )
+		del capture
+
+		pointInstancer["spherePrototypeTransform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		capture = renderer.capturedObject( "/instancer" )
+		self.assertEqual( capture.capturedPointInstancerPrototypes()[0].samples[0].radius(), 2 )
+		self.assertEqual( capture.capturedSamples()[0]["P"].data[0], imath.V3f( 1, 0, 0 ) )
+
+		# Prototype attribute edit.
+
+		self.assertEqual(
+			capture.capturedPointInstancerPrototypes()[1].attributes.attributes()["user:test"],
+			IECore.FloatData( 0 )
+		)
+		del capture
+
+		pointInstancer["cubePrototypeAttribute"].setValue( 2.5 )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+
+		capture = renderer.capturedObject( "/instancer" )
+		self.assertEqual(
+			capture.capturedPointInstancerPrototypes()[1].attributes.attributes()["user:test"],
+			IECore.FloatData( 2.5 )
+		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
 	def testPointInstancerUnrelatedEdits( self ) :
