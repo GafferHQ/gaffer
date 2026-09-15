@@ -109,13 +109,13 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 	if not acceptsRenderPassName and not acceptsRenderPassNames :
 		return
 
-	globals = plug.node()["in"]["globals"].getValue()
+	passNames = GafferScene.SceneAlgo.renderPassNames( plug.node()["in"] )
 	currentText = plug.getValue()
+
 	currentNames = set( currentText.split() )
 
 	menuDefinition.prepend( "/RenderPassesDivider", { "divider" : True } )
 
-	passNames = globals.get( "option:renderPass:names" ) or []
 	if not len( passNames ) :
 		menuDefinition.prepend( "/Render Passes/No Render Passes Available", { "active" : False } )
 		return

@@ -3405,6 +3405,71 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# See todo in `CapturingMonitor::forceMonitoring()`.
 		self.__assertPrimitiveVariableHistory( primitiveVariableHistory, [ 0, 0, 0, 0 ], shufflePrimitiveVariables["out"], "/cube", "foo", emptyPrimitiveVariable, 0 )
 
+	def testRenderPassNames( self ) :
+
+		renderPasses = GafferScene.RenderPasses()
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "a" ] ) )
+		self.assertEqual( GafferScene.SceneAlgo.renderPassNames( renderPasses["out"] ), IECore.StringVectorData( [ "a" ] ) )
+
+		switchedRenderPasses = GafferScene.RenderPasses()
+		switchedRenderPasses["in"].setInput( renderPasses["out"] )
+		switchedRenderPasses["names"].setValue( IECore.StringVectorData( [ "b" ] ) )
+		self.assertEqual( GafferScene.SceneAlgo.renderPassNames( switchedRenderPasses["out"] ), IECore.StringVectorData( [ "a", "b" ] ) )
+
+		nameSwitch = Gaffer.NameSwitch()
+		nameSwitch.setup( renderPasses["out"] )
+		nameSwitch["selector"].setValue( "${renderPass}" )
+		nameSwitch["in"][0]["value"].setInput( renderPasses["out"] )
+		nameSwitch["in"][1]["value"].setInput( switchedRenderPasses["out"] )
+		nameSwitch["in"][1]["name"].setValue( "a" )
+
+		self.assertEqual( GafferScene.SceneAlgo.renderPassNames( nameSwitch["out"]["value"] ), IECore.StringVectorData( [ "a" ] ) )
+
+		with Gaffer.Context() as context :
+			context["renderPass"] = "a"
+			self.assertEqual( GafferScene.SceneAlgo.renderPassNames( nameSwitch["out"]["value"] ), IECore.StringVectorData( [ "a" ] ) )
+
+	def testRenderPassNamesEmpty( self ) :
+
+		sphere = GafferScene.Sphere()
+		self.assertEqual( GafferScene.SceneAlgo.renderPassNames( sphere["out"] ), IECore.StringVectorData() )
+
+	def testRenderPassNamesFiltered( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["renderPasses"] = GafferScene.RenderPasses()
+		script["renderPasses"]["names"].setValue( IECore.StringVectorData( [ "enabled", "disabled", "neither" ] ) )
+
+		script["customOptions"] = GafferScene.CustomOptions()
+		script["customOptions"]["in"].setInput( script["renderPasses"]["out"] )
+		script["customOptions"]["options"]["renderPass:enabled"] = Gaffer.NameValuePlug( "renderPass:enabled", True, defaultEnabled = True )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			renderPass = context.get( "renderPass", "" )
+			parent["customOptions"]["options"]["renderPass:enabled"]["enabled"] = renderPass != "neither"
+			parent["customOptions"]["options"]["renderPass:enabled"]["value"] = renderPass == "enabled"
+			"""
+		) )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.renderPassNames( script["customOptions"]["out"] ),
+			IECore.StringVectorData( [ "enabled", "disabled", "neither" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.renderPassNames( script["customOptions"]["out"], enabledFilter = None ),
+			IECore.StringVectorData( [ "enabled", "disabled", "neither" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.renderPassNames( script["customOptions"]["out"], enabledFilter = True ),
+			IECore.StringVectorData( [ "enabled", "neither" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.renderPassNames( script["customOptions"]["out"], enabledFilter = False ),
+			IECore.StringVectorData( [ "disabled" ] )
+		)
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

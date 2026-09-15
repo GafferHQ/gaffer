@@ -22,11 +22,13 @@ Fixes
 - SceneReader : Fixed loading of float-precision orientations from the USD `PointInstancer.orientationsf` attribute. Previously only the half-precision `orientations` attribute was supported.
 - Viewer : Fixed colourspace handling for PNG files loaded as textures for custom OpenGL shaders.
 - PointInstancer : Fixed potential interactive render update bug.
+- RenderPassEditor, DeleteRenderPasses : Fixed bugs which made it appear that the `renderPass:names` option was allowed to be dependent on the `${renderPass}` context variable.
 
 API
 ---
 
 - Switch, NameSwitch : Added support for subclassing in Python.
+- SceneAlgo : Added `renderPassNames()` utility method.
 
 Build
 -----
