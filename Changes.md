@@ -18,7 +18,12 @@ Breaking Changes
 - ImageAlgo : Removed `image()` method.
 - ImageGadget, Image : Removed constructors taking an `IECoreImage::ImagePrimitive`.
 
-1.7.x.x (relative to 1.7.1.0)
+1.7.x.x (relative to 1.7.2.0)
+=======
+
+
+
+1.7.2.0 (relative to 1.7.1.0)
 =======
 
 Features
@@ -39,11 +44,21 @@ Fixes
 - MergeMeshes, MergeCurves, MergePoints : Fixed crash when merge is sorted by a primitive variable and none of the locations to merge contain primitives.
 - NodeEditor : Fixed flicker when changing the node being viewed.
 - Linux : Fixed startup from installation directory containing spaces.
+- SceneReader : Fixed loading of float-precision orientations from the USD `PointInstancer.orientationsf` attribute. Previously only the half-precision `orientations` attribute was supported.
+- Viewer : Fixed colourspace handling for PNG files loaded as textures for custom OpenGL shaders.
+- PointInstancer : Fixed potential interactive render update bug.
+- RenderPassEditor, DeleteRenderPasses : Fixed bugs which made it appear that the `renderPass:names` option was allowed to be dependent on the `${renderPass}` context variable.
 
 API
 ---
 
 - Switch, NameSwitch : Added support for subclassing in Python.
+- SceneAlgo : Added `renderPassNames()` utility method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.1.3.
 
 1.7.1.0 (relative to 1.7.0.0)
 =======
@@ -332,7 +347,12 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.21.x (relative to 1.6.21.5)
+1.6.21.x (relative to 1.6.21.6)
+========
+
+
+
+1.6.21.6 (relative to 1.6.21.5)
 ========
 
 Fixes

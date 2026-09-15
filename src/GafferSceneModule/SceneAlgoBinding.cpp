@@ -199,6 +199,18 @@ Imath::V2f shutterWrapper( const IECore::CompoundObject &globals, const ScenePlu
 	return SceneAlgo::shutter( &globals, &scene );
 }
 
+IECore::StringVectorDataPtr renderPassNamesWrapper( const ScenePlug &scene, object pythonEnabledFilter, bool copy )
+{
+	std::optional<bool> enabledFilter;
+	if( pythonEnabledFilter != object() )
+	{
+		enabledFilter = extract<bool>( pythonEnabledFilter );
+	}
+	IECorePython::ScopedGILRelease r;
+	ConstStringVectorDataPtr names = SceneAlgo::renderPassNames( &scene, enabledFilter );
+	return copy ? names->copy() : boost::const_pointer_cast<StringVectorData>( names );
+}
+
 bool setExistsWrapper( const ScenePlug &scene, const IECore::InternedString &setName )
 {
 	IECorePython::ScopedGILRelease r;
@@ -467,6 +479,7 @@ void bindSceneAlgo()
 	def( "findAllWithAttribute", &findAllWithAttributeWrapper, ( arg( "scene" ), arg( "name" ), arg( "value" ) = object(), arg( "root" ) = "/" ) );
 
 	def( "shutter", &shutterWrapper );
+	def( "renderPassNames", &renderPassNamesWrapper, ( arg( "scene" ), arg( "enabledFilter" ) = object(), arg( "_copy" ) = true ) );
 	def( "setExists", &setExistsWrapper );
 	def(
 		"sets",

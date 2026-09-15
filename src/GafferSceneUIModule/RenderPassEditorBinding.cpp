@@ -418,6 +418,7 @@ class RenderPassPath : public Gaffer::Path
 			{
 				scopedContext.setCanceller( canceller );
 			}
+			scopedContext.remove( g_renderPassContextName );
 
 			if( ConstStringVectorDataPtr renderPassData = m_scene.get()->globals()->member<StringVectorData>( g_renderPassNamesOption ) )
 			{
