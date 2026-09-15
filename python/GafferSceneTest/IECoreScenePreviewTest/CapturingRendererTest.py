@@ -36,7 +36,6 @@
 
 import collections
 import imath
-import unittest
 import re
 
 import IECore

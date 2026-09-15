@@ -37,7 +37,6 @@
 
 import gc
 import weakref
-import unittest
 import threading
 import queue
 

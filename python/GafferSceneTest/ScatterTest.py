@@ -36,7 +36,6 @@
 ##########################################################################
 
 import imath
-import unittest
 import threading
 
 import IECore

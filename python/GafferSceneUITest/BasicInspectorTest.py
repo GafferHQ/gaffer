@@ -35,7 +35,6 @@
 ##########################################################################
 
 import functools
-import unittest
 
 import IECore
 

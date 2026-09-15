@@ -38,7 +38,6 @@
 import os
 import pathlib
 import subprocess
-import unittest
 import inspect
 import imath
 

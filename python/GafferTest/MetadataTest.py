@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import unittest
 import subprocess
 import os
 import pathlib

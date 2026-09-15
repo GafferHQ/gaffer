@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import GafferTest
 
 class FilteredRecursiveChildIteratorTest( GafferTest.TestCase ) :

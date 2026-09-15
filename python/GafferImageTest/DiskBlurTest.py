@@ -35,7 +35,6 @@
 ##########################################################################
 
 import os
-import unittest
 import random
 
 import imath
