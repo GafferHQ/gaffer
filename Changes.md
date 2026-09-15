@@ -20,6 +20,7 @@ Improvements
 Fixes
 -----
 
+- PointInstancer : Fixed rendering of points and/or prototypes with zero scale.
 - Cycles : Fixed rendering of shaders written with `IECOREUSD_WRITE_CONFORMANT_OSL_SHADERS=1`.
 - MergeMeshes, MergeCurves, MergePoints : Fixed crash when merge is sorted by a primitive variable and none of the locations to merge contain primitives.
 - NodeEditor : Fixed flicker when changing the node being viewed.
@@ -39,6 +40,11 @@ Build
 -----
 
 - Cortex : Updated to version 10.7.1.3.
+
+API
+---
+
+- TestCase : Added Quatf support to `assertEqualWithAbsError()`.
 
 1.7.1.0 (relative to 1.7.0.0)
 =======

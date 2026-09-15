@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import math
 import unittest
 
 import imath
@@ -588,3 +589,135 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 				list( flattened.getID() ),
 				[ 102, 102, 102, 56, 56, 56 ]
 			)
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testFlattenWithZeroPointScale( self ) :
+
+		prototype = GafferScene.Sphere()
+
+		prototypeGroup = GafferScene.Group()
+		prototypeGroup["name"].setValue( "prototypes" )
+		prototypeGroup["in"][0].setInput( prototype["out"] )
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ) ] ) )
+		pointInstancer.setScale( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "prototypes/sphere" ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		pointInstancerNode = GafferScene.ObjectToScene()
+		pointInstancerNode["object"].setValue( pointInstancer )
+		pointInstancerNode["name"].setValue( "instancer" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( pointInstancerNode["out"] )
+		parent["children"][0].setInput( prototypeGroup["out"] )
+		parent["parent"].setValue( "/instancer" )
+
+		with Gaffer.Context() as context :
+
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/instancer" )
+			pointInstancer = parent["out"]["object"].getValue()
+			self.assertEqual( pointInstancer, pointInstancerNode["object"].getValue() )
+
+			flattened = GafferScene.Private.PointInstancerAlgo.flatten(
+				pointInstancer, GafferScene.Private.RendererAlgo.RenderOptions(), parent["out"]
+			)
+
+			self.assertTrue( isinstance( flattened, IECoreScene.PointInstancer ) )
+			self.assertTrue( flattened.arePrimitiveVariablesValid() )
+			self.assertEqual( flattened.numPoints, 1 )
+			self.assertEqual( list( flattened.getPosition() ), [ imath.V3f( 1, 2, 3 ) ] )
+			self.assertEqual( list( flattened.getScale() ), [ imath.V3f( 0 ) ] )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testFlattenWithZeroPrototypeScale( self ) :
+
+		prototype = GafferScene.Sphere()
+		prototype["transform"]["scale"].setValue( imath.V3f( 0 ) )
+
+		prototypeGroup = GafferScene.Group()
+		prototypeGroup["name"].setValue( "prototypes" )
+		prototypeGroup["in"][0].setInput( prototype["out"] )
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ) ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "prototypes/sphere" ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		pointInstancerNode = GafferScene.ObjectToScene()
+		pointInstancerNode["object"].setValue( pointInstancer )
+		pointInstancerNode["name"].setValue( "instancer" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( pointInstancerNode["out"] )
+		parent["children"][0].setInput( prototypeGroup["out"] )
+		parent["parent"].setValue( "/instancer" )
+
+		with Gaffer.Context() as context :
+
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/instancer" )
+			pointInstancer = parent["out"]["object"].getValue()
+			self.assertEqual( pointInstancer, pointInstancerNode["object"].getValue() )
+
+			flattened = GafferScene.Private.PointInstancerAlgo.flatten(
+				pointInstancer, GafferScene.Private.RendererAlgo.RenderOptions(), parent["out"]
+			)
+
+			self.assertTrue( isinstance( flattened, IECoreScene.PointInstancer ) )
+			self.assertTrue( flattened.arePrimitiveVariablesValid() )
+			self.assertEqual( flattened.numPoints, 1 )
+			self.assertEqual( list( flattened.getPosition() ), [ imath.V3f( 1, 2, 3 ) ] )
+			self.assertEqual( list( flattened.getScale() ), [ imath.V3f( 0 ) ] )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testFlattenWithZeroScaleInOneDimension( self ) :
+
+		# A single degenerate axis shouldn't stop us extracting the
+		# non-zero scale from the other two axes, or produce garbage
+		# orientations.
+
+		prototype = GafferScene.Sphere()
+		prototype["transform"]["rotate"].setValue( imath.V3f( 0, 0, 90 ) )
+
+		prototypeGroup = GafferScene.Group()
+		prototypeGroup["name"].setValue( "prototypes" )
+		prototypeGroup["in"][0].setInput( prototype["out"] )
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ) ] ) )
+		pointInstancer.setScale( IECore.V3fVectorData( [ imath.V3f( 0, 2, 3 ) ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "prototypes/sphere" ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		pointInstancerNode = GafferScene.ObjectToScene()
+		pointInstancerNode["object"].setValue( pointInstancer )
+		pointInstancerNode["name"].setValue( "instancer" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( pointInstancerNode["out"] )
+		parent["children"][0].setInput( prototypeGroup["out"] )
+		parent["parent"].setValue( "/instancer" )
+
+		with Gaffer.Context() as context :
+
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/instancer" )
+			pointInstancer = parent["out"]["object"].getValue()
+			self.assertEqual( pointInstancer, pointInstancerNode["object"].getValue() )
+
+			flattened = GafferScene.Private.PointInstancerAlgo.flatten(
+				pointInstancer, GafferScene.Private.RendererAlgo.RenderOptions(), parent["out"]
+			)
+
+			self.assertTrue( isinstance( flattened, IECoreScene.PointInstancer ) )
+			self.assertTrue( flattened.arePrimitiveVariablesValid() )
+			self.assertEqual( flattened.numPoints, 1 )
+			self.assertEqual( list( flattened.getPosition() ), [ imath.V3f( 1, 2, 3 ) ] )
+
+			scale = flattened.getScale()[0]
+			self.assertEqual( sorted( [ scale.x, scale.y, scale.z ] ), [ 0, 2, 3 ] )
+
+			# The prototype's 90 degree rotation about Z should have survived
+			# intact, rather than being corrupted by the zero-scaled axis.
+			expectedOrientation = imath.Quatf().setAxisAngle( imath.V3f( 0, 0, 1 ), math.radians( 90 ) )
+			self.assertEqualWithAbsError( flattened.getOrientation()[0], expectedOrientation, 0.00001 )
