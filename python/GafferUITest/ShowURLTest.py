@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2026, Pascal Andre. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -10,12 +9,10 @@
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
@@ -27,39 +24,42 @@
 #  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
 #  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 #  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
 
-import os
-import shutil
 import sys
+import unittest
+import unittest.mock
 
-from Qt import QtCore
+import GafferUI
+import GafferUITest
+
 from Qt import QtGui
 
-def showURL( url ) :
 
-	opener = None
-	if sys.platform == "darwin" :
-		opener = "open"
-	elif "linux" in sys.platform :
-		opener = shutil.which( "xdg-open" )
+class ShowURLTest( GafferUITest.TestCase ) :
 
-	if opener :
-		os.system( "{0} \"{1}\"".format( opener, url ) )
-	else :
-		if sys.platform == "win32" and url.startswith( "file://" ) :
-			# Windows doesn't let us reliably open "file://" URLs but
-			# yet has no problem with opening the file itself. This
-			# means we can't support anchors in file URLs on Windows
-			# as we need to strip them to produce a valid file path.
-			url = QtCore.QUrl.fromLocalFile( url[7:].partition( "#" )[0] )
-		else :
-			url = QtCore.QUrl( url, QtCore.QUrl.TolerantMode )
+	def testWebURL( self ) :
 
-		QtGui.QDesktopServices.openUrl( url )
+		with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL :
+			GafferUI.showURL( "https://www.gafferhq.org" )
+
+		openURL.assert_called_once()
+		self.assertEqual( openURL.call_args[0][0].toString(), "https://www.gafferhq.org" )
+
+	@unittest.skipUnless( sys.platform == "win32", "Windows-specific URL handling" )
+	def testLocalFileURL( self ) :
+
+		path = "C:/Program Files/Gaffer/doc/gaffer/html/index.html"
+		with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL :
+			GafferUI.showURL( "file://" + path + "#section" )
+
+		openURL.assert_called_once()
+		url = openURL.call_args[0][0]
+		self.assertTrue( url.isLocalFile() )
+		self.assertEqual( url.toLocalFile().replace( "\\", "/" ), path )
