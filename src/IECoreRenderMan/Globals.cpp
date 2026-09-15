@@ -172,12 +172,7 @@ ListType idToList( std::remove_pointer_t<decltype( ListType::ids )> &id )
 
 const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene::ShaderNetwork();
 
-const string g_lightGroupArg = "lightGroup";
-const string g_emissionArg = "emission";
-const string g_emissionPipeArg = "emissionPipe";
-const string g_pipeEmissionArg = "pipeEmission";
-
-string lightGroupFormatString( const IECore::InternedString &name, const IECoreScene::Output *output )
+IECoreScene::ConstOutputPtr lightGroupOutput( const IECore::InternedString &name, const IECoreScene::Output *output, const std::string &lightGroup )
 {
 	const string lpe = [&output]() -> string
 	{
@@ -203,7 +198,7 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 			IECore::Msg::Warning, "RenderManRenderer",
 			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because data \"{}\" is not \"rgb\", \"rgba\" or an lpe.", name.string(), output->getData() )
 		);
-		return "";
+		return nullptr;
 	}
 
 	const size_t lastPrefixSeparatorPosition = lpe.find_last_of( ';' );
@@ -215,8 +210,10 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 			IECore::Msg::Warning, "RenderManRenderer",
 			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because data \"{}\" only contains prefixes.", name.string(), output->getData() )
 		);
-		return "";
+		return nullptr;
 	}
+
+	string resultLPE;
 
 	if( lpe[lpeStart] != 'C' )
 	{
@@ -226,116 +223,84 @@ string lightGroupFormatString( const IECore::InternedString &name, const IECoreS
 				IECore::Msg::Warning, "RenderManRenderer",
 				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
 			);
-			return "";
+			return nullptr;
 		}
-		return lpe + "_{" + g_lightGroupArg + "}";
+		resultLPE = lpe + "_" + lightGroup;
 	}
-
-	string result;
-
-	const string lightGroupBrackets = "<L.'{" + g_lightGroupArg + "}'>";
-	const string emissionBrackets = "{" + g_emissionArg + "}";
-	const string emissionPipeBrackets = "{" + g_emissionPipeArg + "}";
-	const string pipeEmissionBrackets = "{" + g_pipeEmissionArg + "}";
-
-	result = lpe.substr( 0, lpeStart + 1 );
-
-	bool inQuotes = false;
-	bool madeSubstitution = false;
-
-	for( size_t i = lpeStart + 1, eI = lpe.size(); i < eI; ++i )
+	else
 	{
-		if( ( lpe.compare( i, 2, "L\'" ) == 0 || lpe.compare( i, 3, "L.\'" ) == 0 ) && !inQuotes )
-		{
-			IECore::msg(
-				IECore::Msg::Warning, "RenderManRenderer",
-				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
-			);
-			return "";
-		}
-		if( lpe.compare( i, 3, "(O)" ) == 0 && !inQuotes )
-		{
-			// We're going to remove `O` tokens below and empty LPE groups currently crash RenderMan.
-			// They also aren't meaningful so we bail on creating light group layers.
-			IECore::msg(
-				IECore::Msg::Warning, "RenderManRenderer",
-				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because its LPE contains \"(O)\". Replace with \"O\" to use \"layerPerLightGroup\".", name.string() )
-			);
-			return "";
-		}
+		const string lightGroupToken = "<L.'" + lightGroup + "'>";
 
-		if( lpe[i] == '\'' )
+		resultLPE = lpe.substr( 0, lpeStart + 1 );
+
+		bool inQuotes = false;
+		bool madeSubstitution = false;
+
+		for( size_t i = lpeStart + 1, eI = lpe.size(); i < eI; ++i )
 		{
-			result += lpe[i];
-			inQuotes = !inQuotes;
-		}
-		else if( lpe.compare( i, 4, "<L.>" ) == 0 && !inQuotes )
-		{
-			result += lightGroupBrackets;
-			madeSubstitution = true;
-			i += 3;
-		}
-		else if( lpe[i] == 'L' && !inQuotes )
-		{
-			result += lightGroupBrackets;
-			madeSubstitution = true;
-		}
-		else if( lpe[i] == 'O' && !inQuotes )
-		{
-			// Add a token to allow `lightGroupOutput` to conditionally
-			// add the emission (O) token.
-			if( i + 1 < eI && lpe[i + 1] == '|' )
+			if( ( lpe.compare( i, 2, "L\'" ) == 0 || lpe.compare( i, 3, "L.\'" ) == 0 ) && !inQuotes )
 			{
-				result += emissionPipeBrackets;
-				++i;  // Skip over the following `|` that will be invalid without `O`.
+				IECore::msg(
+					IECore::Msg::Warning, "RenderManRenderer",
+					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+				);
+				return nullptr;
 			}
-			else if( !result.empty() && result.back() == '|' )
+			if( lpe.compare( i, 3, "(O)" ) == 0 && !inQuotes )
 			{
-				result.pop_back();  // Remove previous `|` that will be invalid without `O`.
-				result += pipeEmissionBrackets;
+				// We're going to remove `O` tokens below and empty LPE groups currently crash RenderMan.
+				// They also aren't meaningful so we bail on creating light group layers.
+				IECore::msg(
+					IECore::Msg::Warning, "RenderManRenderer",
+					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because its LPE contains \"(O)\". Replace with \"O\" to use \"layerPerLightGroup\".", name.string() )
+				);
+				return nullptr;
+			}
+
+			if( lpe[i] == '\'' )
+			{
+				resultLPE += lpe[i];
+				inQuotes = !inQuotes;
+			}
+			else if( lpe.compare( i, 4, "<L.>" ) == 0 && !inQuotes )
+			{
+				resultLPE += lightGroupToken;
+				madeSubstitution = true;
+				i += 3;
+			}
+			else if( lpe[i] == 'L' && !inQuotes )
+			{
+				resultLPE += lightGroupToken;
+				madeSubstitution = true;
+			}
+			else if( lpe[i] == 'O' && !inQuotes && lightGroup != g_defaultLightGroupLayer )
+			{
+				// Remove the emission (O) token on all but the default layer.
+				// Otherwise light emission will be repeated in every light group.
+				if( i + 1 < eI && lpe[i + 1] == '|' )
+				{
+					++i;  // Skip over the following `|` that will be invalid without `O`.
+				}
+				else if( !resultLPE.empty() && resultLPE.back() == '|' )
+				{
+					resultLPE.pop_back();  // Remove previous `|` that will be invalid without `O`.
+				}
 			}
 			else
 			{
-				result += emissionBrackets;
+				resultLPE += lpe[i];
 			}
 		}
-		else if( lpe[i] == '{' )
+
+		if( !madeSubstitution )
 		{
-			result += "{{";
-		}
-		else if( lpe[i] == '}' )
-		{
-			result += "}}";
-		}
-		else
-		{
-			result += lpe[i];
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
+			);
+			return nullptr;
 		}
 	}
-
-	if( !madeSubstitution )
-	{
-		IECore::msg(
-			IECore::Msg::Warning, "RenderManRenderer",
-			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
-		);
-		return "";
-	}
-
-	return result;
-}
-
-IECoreScene::ConstOutputPtr lightGroupOutput( const std::string &lightGroupFormatString, const IECoreScene::Output *output, const std::string &lightGroup )
-{
-	// Only include the emission (O) token on the default layer.
-	// Otherwise light emission will be repeated in every light group.
-	const string lpe = fmt::format(
-		lightGroupFormatString,
-		fmt::arg( g_lightGroupArg.c_str(), lightGroup ),
-		fmt::arg( g_emissionArg.c_str(), lightGroup == g_defaultLightGroupLayer ? "O" : "" ),
-		fmt::arg( g_emissionPipeArg.c_str(), lightGroup == g_defaultLightGroupLayer ? "O|" : "" ),
-		fmt::arg( g_pipeEmissionArg.c_str(), lightGroup == g_defaultLightGroupLayer ? "|O" : "" )
-	);
 
 	const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
 
@@ -345,7 +310,7 @@ IECoreScene::ConstOutputPtr lightGroupOutput( const std::string &lightGroupForma
 	);
 	parameters->writable().erase( g_layerPerLightGroup );
 
-	return new IECoreScene::Output( output->getName(), output->getType(), "lpe " + lpe, parameters );
+	return new IECoreScene::Output( output->getName(), output->getType(), "lpe " + resultLPE, parameters );
 }
 
 } // namespace
@@ -1013,34 +978,39 @@ void Globals::updateRenderView()
 	{
 		// Render outputs.
 
-		string lightGroupFormatTemplate;
-
-		if( parameter<bool>( output->parameters(), g_layerPerLightGroup, false ) )
-		{
-			lightGroupFormatTemplate = lightGroupFormatString( name, output.get() );
-			if( !lightGroupFormatTemplate.empty() )
-			{
-				if( m_renderViewLightGroups.empty() )
-				{
-					m_renderViewLightGroups = m_session->lightGroups();
-				}
-				assert( m_renderViewLightGroups.size() );  // We always have at least `default` light group.
-			}
-		}
-
 		vector<riley::RenderOutputId> renderOutputs;
-		if( lightGroupFormatTemplate.empty() )
+
+		bool layerPerLightGroup = parameter<bool>( output->parameters(), g_layerPerLightGroup, false );
+		if( layerPerLightGroup )
 		{
-			renderOutputs = acquireRenderOutputs( output.get() );
-		}
-		else
-		{
+			if( m_renderViewLightGroups.empty() )
+			{
+				m_renderViewLightGroups = m_session->lightGroups();
+			}
+			assert( m_renderViewLightGroups.size() );  // We always have at least `default` light group.
+
+			vector<riley::RenderOutputId> layerRenderOutputs;
+
 			for( const auto &lightGroup : m_renderViewLightGroups )
 			{
-				ConstOutputPtr groupOutput = lightGroupOutput( lightGroupFormatTemplate, output.get(), lightGroup );
+				ConstOutputPtr groupOutput = lightGroupOutput( name, output.get(), lightGroup );
+				if( !groupOutput )
+				{
+					layerPerLightGroup = false;
+					break;
+				}
 				const auto &o = acquireRenderOutputs( groupOutput.get() );
-				renderOutputs.insert( renderOutputs.end(), o.begin(), o.end() );
+				layerRenderOutputs.insert( layerRenderOutputs.end(), o.begin(), o.end() );
 			}
+			if( layerPerLightGroup )
+			{
+				renderOutputs.insert( renderOutputs.end(), layerRenderOutputs.begin(), layerRenderOutputs.end() );
+			}
+		}
+
+		if( !layerPerLightGroup )
+		{
+			renderOutputs = acquireRenderOutputs( output.get() );
 		}
 
 		if( renderOutputs.empty() )
@@ -1063,7 +1033,7 @@ void Globals::updateRenderView()
 			display.driverParamList.GetInteger( RtUString( "asrgba" ), asRGBA );
 			const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
 			if(
-				lightGroupFormatTemplate.empty() &&
+				!layerPerLightGroup &&
 				( layerName.empty() || output->getData() == "rgb" || output->getData() == "rgba" )
 			)
 			{
@@ -1092,7 +1062,7 @@ void Globals::updateRenderView()
 		// the beauty first - it is the only one to have two render outputs (the second
 		// one being for alpha).
 
-		const bool beauty = lightGroupFormatTemplate.empty() && renderOutputs.size() == 2;
+		const bool beauty = !layerPerLightGroup && renderOutputs.size() == 2;
 
 		display.outputs.insert(
 			beauty ? display.outputs.begin() : display.outputs.end(),
