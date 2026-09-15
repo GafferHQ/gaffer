@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.2.0)
 =======
 
+Improvements
+------------
 
+- EditScope : Disabled the additional ➕ gadgets in the GraphEditor by default. They can be shown again using the UIEditor if necessary.
 
 1.7.2.0 (relative to 1.7.1.0)
 =======

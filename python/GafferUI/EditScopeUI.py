@@ -73,13 +73,14 @@ Gaffer.Metadata.registerNode(
 	"noduleLayout:customGadget:setupButtonBottom:gadgetType", "GafferUI.EditScopeUI.PlugAdder",
 	"noduleLayout:customGadget:setupButtonBottom:section", "bottom",
 
-	# Hide the Box + buttons until the node has been set up. Two sets of buttons at
-	# the same time is way too confusing.
+	# Hide the Box + buttons by default, since they're not commonly used.
+	# They can be re-enabled for individual nodes using the UIEditor if
+	# needed.
 
-	"noduleLayout:customGadget:addButtonTop:visible", lambda node : "in" in node,
-	"noduleLayout:customGadget:addButtonBottom:visible", lambda node : "in" in node,
-	"noduleLayout:customGadget:addButtonLeft:visible", lambda node : "in" in node,
-	"noduleLayout:customGadget:addButtonRight:visible", lambda node : "in" in node,
+	"noduleLayout:customGadget:addButtonTop:visible", False,
+	"noduleLayout:customGadget:addButtonBottom:visible", False,
+	"noduleLayout:customGadget:addButtonLeft:visible", False,
+	"noduleLayout:customGadget:addButtonRight:visible", False,
 
 	# Add a custom widget for showing a summary of the processors within.
 
