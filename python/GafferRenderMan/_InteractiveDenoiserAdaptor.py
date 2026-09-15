@@ -90,6 +90,11 @@ class _InteractiveDenoiserAdaptor( GafferScene.SceneProcessor ) :
 			IECore.msg( IECore.Msg.Level.Warning, "_InteractiveDenoiserAdaptor", "No beauty output found" )
 			return inputGlobals
 
+		if "layerPerLightGroup" in templateOutput.parameters() :
+			# `layerPerLightGroup` on layers meant for `quicklyNoiseless` will break the layer scheme
+			# expected by the denoiser.
+			del templateOutput.parameters()["layerPerLightGroup"]
+
 		# Set up the template for the `quicklyNoiseless` driver.
 
 		suffix = ".dll" if os.name == "nt" else ".so"

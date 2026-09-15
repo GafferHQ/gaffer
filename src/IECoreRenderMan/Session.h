@@ -49,6 +49,8 @@
 #include "tbb/concurrent_unordered_map.h"
 
 #include <mutex>
+#include <set>
+#include <unordered_map>
 
 namespace IECoreRenderMan
 {
@@ -130,6 +132,12 @@ struct Session
 	/// portal lights and the associated dome light.
 	void updatePortals();
 
+	/// Light Groups
+	/// ============
+
+	/// Returns the light groups defined by the session's light shaders.
+	std::set<std::string> lightGroups() const;
+
 	private :
 
 		RixRiCtl *m_riCtl;
@@ -178,6 +186,10 @@ struct Session
 		using LightInstanceMap = tbb::concurrent_unordered_map<uint32_t, LightInfo>;
 		LightInstanceMap m_domeAndPortalLights;
 		std::atomic_bool m_portalsDirty;
+
+		// Keys are `riley::LightShaderId`.
+		mutable std::mutex m_lightGroupsMutex;
+		std::unordered_map<uint32_t, std::string> m_lightGroups;
 
 };
 
