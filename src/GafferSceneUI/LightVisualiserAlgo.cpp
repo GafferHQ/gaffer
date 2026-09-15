@@ -529,7 +529,7 @@ IECoreGL::ConstRenderablePtr roundedQuadWireframe( const V2f &size, const V2f &r
 
 	vertsPerCurve.push_back( p.size() );
 
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, vertsPerCurveData );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( lightWireframeColor( muted ) ) ) );
 
