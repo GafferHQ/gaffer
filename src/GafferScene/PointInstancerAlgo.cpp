@@ -52,10 +52,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-namespace
-{
-
-ScenePlug::ScenePath fullPrototypePath( const std::string &prototypePath, const ScenePlug::ScenePath &pointInstancerPath )
+ScenePlug::ScenePath Private::PointInstancerAlgo::fullPrototypePath( const std::string &prototypePath, const ScenePlug::ScenePath &pointInstancerPath )
 {
 	if( prototypePath.empty() )
 	{
@@ -81,8 +78,6 @@ ScenePlug::ScenePath fullPrototypePath( const std::string &prototypePath, const 
 		return result;
 	}
 }
-
-} // namespace
 
 IECore::MurmurHash Private::PointInstancerAlgo::prototypesHash( const ScenePlug *scene )
 {

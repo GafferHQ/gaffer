@@ -208,6 +208,7 @@ from .PointInstancerCoreTest import PointInstancerCoreTest
 from .PointInstancerTest import PointInstancerTest
 from .VisibilityQueryTest import VisibilityQueryTest
 from .PrimitiveVariableTypeTest import PrimitiveVariableTypeTest
+from .PointInstancerQueryTest import PointInstancerQueryTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

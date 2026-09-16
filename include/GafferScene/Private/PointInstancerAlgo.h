@@ -45,6 +45,10 @@
 namespace GafferScene::Private::PointInstancerAlgo
 {
 
+/// Returns the full path to a prototype, given the path stored in the
+/// PointInstancer and the path to the PointInstancer itself.
+GAFFERSCENE_API ScenePlug::ScenePath fullPrototypePath( const std::string &prototypePath, const ScenePlug::ScenePath &pointInstancerPath );
+
 /// Returns a combined `SceneAlgo::hierarchyHash()` of all prototypes referenced by any PointInstancer
 /// at the current location. If there is no PointInstancer or it has no prototypes, returns an empty hash.
 GAFFERSCENE_API IECore::MurmurHash prototypesHash( const ScenePlug *scene );
