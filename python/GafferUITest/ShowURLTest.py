@@ -40,7 +40,7 @@ import unittest.mock
 import GafferUI
 import GafferUITest
 
-from Qt import QtGui
+from Qt import QtCore, QtGui
 
 
 class ShowURLTest( GafferUITest.TestCase ) :
@@ -77,3 +77,15 @@ class ShowURLTest( GafferUITest.TestCase ) :
 					self.assertEqual( url.fragment(), suffix[1:].replace( "%20", " " ) )
 					self.assertEqual( url.hasFragment(), bool( suffix ) )
 					system.assert_not_called()
+
+	@unittest.skipIf( sys.platform == "darwin", "macOS uses the external open command" )
+	def testEncodedFileURLs( self ) :
+
+		for path in ( "/opt/Gaffer Docs/100%/index.html", "C:/Program Files/100%/index.html", "//server/share/Gaffer Docs/index.html" ) :
+			with self.subTest( path = path ) :
+				expected = QtCore.QUrl.fromLocalFile( path )
+				expected.setFragment( "a section" )
+				with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL :
+					GafferUI.showURL( expected.toString( QtCore.QUrl.FullyEncoded ) )
+				openURL.assert_called_once()
+				self.assertEqual( openURL.call_args[0][0], expected )
