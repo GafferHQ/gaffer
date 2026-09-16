@@ -38,7 +38,6 @@
 import contextlib
 import io
 import sys
-import unittest
 import warnings
 import weakref
 import imath

@@ -36,7 +36,6 @@
 ##########################################################################
 
 import gc
-import unittest
 
 import GafferUI
 import GafferUITest

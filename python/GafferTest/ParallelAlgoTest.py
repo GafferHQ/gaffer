@@ -35,7 +35,6 @@
 ##########################################################################
 
 import threading
-import unittest
 import timeit
 import queue
 import _thread

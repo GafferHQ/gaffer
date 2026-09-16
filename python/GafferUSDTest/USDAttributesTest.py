@@ -37,7 +37,6 @@
 import os
 import collections
 import pathlib
-import unittest
 
 import IECore
 

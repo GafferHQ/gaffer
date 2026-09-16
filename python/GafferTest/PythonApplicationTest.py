@@ -37,7 +37,6 @@
 import os
 import pathlib
 import subprocess
-import unittest
 
 import Gaffer
 import GafferTest

@@ -36,7 +36,6 @@
 
 import os
 import pathlib
-import unittest
 import imath
 import inspect
 import random

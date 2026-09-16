@@ -35,7 +35,6 @@
 ##########################################################################
 
 import sys
-import unittest
 import threading
 import time
 

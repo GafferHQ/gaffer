@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import unittest
 import gc
 import os
 import imath
