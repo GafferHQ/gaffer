@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.7.x.x)
 =======
 
+Features
+--------
+
+- PromotePointInstances : Added a new node for promoting point instances to "hero" scene locations. This replaces a similar node previously provided as part of GafferUSD and which is now deprecated.
+
 Improvements
 ------------
 

@@ -47,6 +47,7 @@ from .ShaderBall import ShaderBall
 from .RenderPassWedge import RenderPassWedge
 from .RenderPassTypeAdaptor import RenderPassTypeAdaptor
 from .PointInstancer import PointInstancer
+from .PromotePointInstances import PromotePointInstances
 
 # Manually inject enums for PointInstancer class.
 ## \todo It'd be nice if ExtensionAlgo could do this for us somehow.

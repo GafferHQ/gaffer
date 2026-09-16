@@ -340,6 +340,7 @@ nodeMenu.append( "/Scene/Hierarchy/Collect", GafferScene.CollectScenes, searchTe
 nodeMenu.append( "/Scene/Hierarchy/Encapsulate", GafferScene.Encapsulate )
 nodeMenu.append( "/Scene/Hierarchy/Unencapsulate", GafferScene.Unencapsulate )
 nodeMenu.append( "/Scene/Hierarchy/Rename", GafferScene.Rename )
+nodeMenu.append( "/Scene/Hierarchy/Promote Point Instances", GafferScene.PromotePointInstances, searchText = "PromotePointInstances" )
 nodeMenu.append( "/Scene/Transform/Transform", GafferScene.Transform )
 nodeMenu.append( "/Scene/Transform/Freeze Transform", GafferScene.FreezeTransform, searchText = "FreezeTransform" )
 nodeMenu.append( "/Scene/Transform/Point Constraint", GafferScene.PointConstraint, searchText = "PointConstraint" )
@@ -562,7 +563,6 @@ if os.environ.get( "GAFFERUSD_HIDE_LIGHT_UI", "" ) != "1" :
 
 nodeMenu.append( "/USD/Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
 nodeMenu.append( "/USD/Layer Writer", GafferUSD.USDLayerWriter, searchText = "USDLayerWriter" )
-nodeMenu.append( "/USD/Promote Instances", GafferUSD.PromotePointInstances, searchText = "PromotePointInstances" )
 
 # Dispatch nodes
 
