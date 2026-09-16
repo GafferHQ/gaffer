@@ -35,7 +35,6 @@
 ##########################################################################
 
 import collections
-import unittest
 import imath
 
 import IECore

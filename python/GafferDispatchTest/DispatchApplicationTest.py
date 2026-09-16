@@ -36,7 +36,6 @@
 
 import os
 import subprocess
-import unittest
 
 import Gaffer
 import GafferDispatch

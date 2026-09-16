@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import GafferVDB
 import GafferVDBUI
 import GafferUITest

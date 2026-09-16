@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import GafferTest
 
 class DownstreamIteratorTest( GafferTest.TestCase ) :

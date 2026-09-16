@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import unittest
-
 import imath
 
 import GafferSceneTest

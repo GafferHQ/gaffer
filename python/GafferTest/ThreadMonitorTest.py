@@ -35,7 +35,6 @@
 ##########################################################################
 
 import threading
-import unittest
 
 import IECore
 

@@ -21,7 +21,15 @@ Breaking Changes
 1.7.x.x (relative to 1.7.2.0)
 =======
 
+Improvements
+------------
 
+- EditScope : Disabled the additional ➕ gadgets in the GraphEditor by default. They can be shown again using the UIEditor if necessary.
+
+Fixes
+-----
+
+- StandardLightVisualiser : Fixed missing wireframe segment when visualising quad lights.
 
 1.7.2.0 (relative to 1.7.1.0)
 =======

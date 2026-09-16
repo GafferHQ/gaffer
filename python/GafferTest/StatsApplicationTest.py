@@ -35,7 +35,6 @@
 ##########################################################################
 
 import re
-import unittest
 import os
 import subprocess
 

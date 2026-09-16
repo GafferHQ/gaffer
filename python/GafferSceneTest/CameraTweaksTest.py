@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import unittest
 import math
 import imath
 import random

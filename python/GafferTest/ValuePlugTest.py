@@ -41,7 +41,6 @@ import os
 import subprocess
 import threading
 import time
-import unittest
 
 import imath
 

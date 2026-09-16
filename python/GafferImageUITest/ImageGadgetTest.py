@@ -35,7 +35,6 @@
 ##########################################################################
 
 import time
-import unittest
 import imath
 
 import IECore
