@@ -36,7 +36,6 @@
 ##########################################################################
 
 import os
-import shutil
 import sys
 
 from Qt import QtCore
@@ -44,21 +43,16 @@ from Qt import QtGui
 
 def showURL( url ) :
 
-	opener = None
 	if sys.platform == "darwin" :
-		opener = "open"
-	elif "linux" in sys.platform :
-		opener = shutil.which( "xdg-open" )
-
-	if opener :
-		os.system( "{0} \"{1}\"".format( opener, url ) )
+		os.system( "open \"{0}\"".format( url ) )
 	else :
-		if sys.platform == "win32" and url.startswith( "file://" ) :
-			# Windows doesn't let us reliably open "file://" URLs but
-			# yet has no problem with opening the file itself. This
-			# means we can't support anchors in file URLs on Windows
-			# as we need to strip them to produce a valid file path.
-			url = QtCore.QUrl.fromLocalFile( url[7:].partition( "#" )[0] )
+		if url.startswith( "file://" ) :
+			# Keep the fragment separate so fromLocalFile() doesn't
+			# encode it as part of the file name.
+			path, separator, fragment = url[7:].partition( "#" )
+			url = QtCore.QUrl.fromLocalFile( path )
+			if separator :
+				url.setFragment( fragment )
 		else :
 			url = QtCore.QUrl( url, QtCore.QUrl.TolerantMode )
 

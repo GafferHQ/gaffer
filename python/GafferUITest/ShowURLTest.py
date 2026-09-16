@@ -32,6 +32,7 @@
 #
 ##########################################################################
 
+import os
 import sys
 import unittest
 import unittest.mock
@@ -46,20 +47,33 @@ class ShowURLTest( GafferUITest.TestCase ) :
 
 	def testWebURL( self ) :
 
-		with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL :
-			GafferUI.showURL( "https://www.gafferhq.org" )
+		with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL, unittest.mock.patch.object( os, "system" ) as system :
+			GafferUI.showURL( "https://www.gafferhq.org#section" )
 
-		openURL.assert_called_once()
-		self.assertEqual( openURL.call_args[0][0].toString(), "https://www.gafferhq.org" )
+		if sys.platform == "darwin" :
+			system.assert_called_once_with( 'open "https://www.gafferhq.org#section"' )
+			openURL.assert_not_called()
+		else :
+			openURL.assert_called_once()
+			self.assertEqual( openURL.call_args[0][0].toString(), "https://www.gafferhq.org#section" )
+			system.assert_not_called()
 
-	@unittest.skipUnless( sys.platform == "win32", "Windows-specific URL handling" )
 	def testLocalFileURL( self ) :
 
-		path = "C:/Program Files/Gaffer/doc/gaffer/html/index.html"
-		with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL :
-			GafferUI.showURL( "file://" + path + "#section" )
+		path = "C:/Program Files/Gaffer/doc/gaffer/html/index.html" if sys.platform == "win32" else "/opt/Gaffer Docs/doc/gaffer/html/index.html"
+		for suffix in ( "", "#section", "#a%20section" ) :
+			with self.subTest( suffix = suffix ) :
+				with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL, unittest.mock.patch.object( os, "system" ) as system :
+					GafferUI.showURL( "file://" + path + suffix )
 
-		openURL.assert_called_once()
-		url = openURL.call_args[0][0]
-		self.assertTrue( url.isLocalFile() )
-		self.assertEqual( url.toLocalFile().replace( "\\", "/" ), path )
+				if sys.platform == "darwin" :
+					system.assert_called_once_with( 'open "file://' + path + suffix + '"' )
+					openURL.assert_not_called()
+				else :
+					openURL.assert_called_once()
+					url = openURL.call_args[0][0]
+					self.assertTrue( url.isLocalFile() )
+					self.assertEqual( url.toLocalFile().replace( "\\", "/" ), path )
+					self.assertEqual( url.fragment(), suffix[1:].replace( "%20", " " ) )
+					self.assertEqual( url.hasFragment(), bool( suffix ) )
+					system.assert_not_called()
