@@ -9,7 +9,9 @@ Features
 Improvements
 ------------
 
-- EditScope : Disabled the additional ➕ gadgets in the GraphEditor by default. They can be shown again using the UIEditor if necessary.
+- EditScope :
+  - Disabled the additional ➕ gadgets in the GraphEditor by default. They can be shown again using the UIEditor if necessary.
+  - Added "Delete Contents" menu option.
 
 Fixes
 -----
