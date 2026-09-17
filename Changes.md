@@ -12,6 +12,7 @@ Improvements
 - MeshLight : Added viewport visualisation of textures.
 - SceneReader : Added support for loading ParticleField3DGaussianSplat USD prims.
 - Arnold : Added support for rendering Gaussian splats. This requires Arnold version `7.5.2` or later.
+- EditScope : Added "Delete Contents" item to NodeEditor tool menu.
 
 Fixes
 -----
