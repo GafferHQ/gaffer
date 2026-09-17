@@ -116,6 +116,36 @@ Gaffer.Metadata.registerValue( Gaffer.EditScope, "BoxOut.name", "layout:visibili
 Gaffer.Metadata.registerValue( Gaffer.BoxIn, "renameable", lambda node : not isinstance( node.parent(), Gaffer.EditScope ) or node.getName() != "BoxIn" )
 Gaffer.Metadata.registerValue( Gaffer.BoxOut, "renameable", lambda node : not isinstance( node.parent(), Gaffer.EditScope ) or node.getName() != "BoxOut" )
 
+## The tool menu is set up in startup/gui/nodeEditor.py, this is used there
+def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
+
+	if not isinstance( node, Gaffer.EditScope ) :
+		return
+
+	contents = __contents( node )
+
+	menuDefinition.append( "/DeleteContentsDivider", { "divider" : True } )
+	menuDefinition.append(
+		"/Delete Contents",
+		{
+			"command" : functools.partial( __deleteContents, node ),
+			"active" : len( contents ) and not Gaffer.MetadataAlgo.readOnly( node )
+		}
+	)
+
+def __contents( editScope ) :
+	return [
+		i for i in editScope if
+		not isinstance( i, Gaffer.Plug ) and
+		not isinstance( i, Gaffer.BoxIn ) and
+		not isinstance( i, Gaffer.BoxOut )
+	]
+
+def __deleteContents( editScope ) :
+
+	with Gaffer.UndoScope( editScope.scriptNode() ):
+		editScope.scriptNode().deleteNodes( editScope, Gaffer.StandardSet( __contents( editScope ) ) )
+
 # EditScopePlugValueWidget
 # ========================
 
@@ -525,7 +555,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		nodes = Gaffer.Metadata.nodesWithMetadata( editScope, "editScope:includeInNavigationMenu" )
 		return [ n for n in nodes if n.ancestor( Gaffer.EditScope ).isSame( editScope ) ]
 
-	def __dropNode( self,  event ) :
+	def __dropNode( self, event ) :
 
 		if isinstance( event.data, Gaffer.EditScope ) :
 			return event.data
