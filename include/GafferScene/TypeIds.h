@@ -207,6 +207,7 @@ enum TypeId
 	PointInstancerCoreTypeId = 120162,
 	VisibilityQueryTypeId = 120163,
 	PrimitiveVariableTypeTypeId = 120164,
+	PointInstancerQueryTypeId = 120165,
 
 	LastTypeId = 120999
 };
