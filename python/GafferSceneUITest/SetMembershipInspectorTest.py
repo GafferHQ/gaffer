@@ -922,3 +922,5 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		for setName, path in setDefinitions.items() :
 			inspection = self.__inspect( setNode["out"], path, setName )
 			self.assertEqual( inspection.source(), spreadsheet["rows"].row( setName )["cells"] )
+
+		## \todo Implement editing for this state and test it.
