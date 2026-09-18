@@ -1439,32 +1439,6 @@ def _getWindowState( gafferWindow ) :
 
 def _restoreWindowState( gafferWindow, boundData ) :
 
-	window = gafferWindow._qtWidget().windowHandle()
-	if not window :
-		return
-
-	targetScreen = QtWidgets.QApplication.primaryScreen()
-
-	if boundData["screen"] > -1 :
-		screens = QtWidgets.QApplication.screens()
-		if boundData["screen"] < len(screens) :
-			targetScreen = screens[ boundData["screen"] ]
-			window.setScreen( targetScreen )
-
-	if boundData["fullScreen"] :
-		window.setWindowState( QtCore.Qt.WindowFullScreen )
-	elif boundData["maximized"] and sys.platform != "darwin" :
-		window.setWindowState( QtCore.Qt.WindowMaximized )
-	else :
-		window.setWindowState( QtCore.Qt.WindowNoState )
-		screenGeom = targetScreen.availableGeometry()
-		window.setGeometry(
-			( boundData["bound"].min()[0] * screenGeom.width() ) + screenGeom.x(),
-			( ( 1.0 - boundData["bound"].max()[1] ) * screenGeom.height() ) + screenGeom.y(),
-			( boundData["bound"].size()[0] * screenGeom.width() ),
-			( boundData["bound"].size()[1] * screenGeom.height() )
-		)
-
 	# We operate on the QWidget rather than its QWindow so that this works
 	# before the window has been shown, which is what allows us to control
 	# the initial placement of the window.
