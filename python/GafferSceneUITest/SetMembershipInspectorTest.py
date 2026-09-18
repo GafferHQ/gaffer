@@ -44,6 +44,7 @@ import GafferSceneUI
 
 class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testName( self ) :
 
 		plane = GafferScene.Plane()
@@ -103,6 +104,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			self.assertEqual( result.nonEditableReason(), nonEditableReason )
 			self.assertRaises( RuntimeError, result.acquireEdit )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testValue( self ) :
 
 		plane = GafferScene.Plane()
@@ -113,6 +115,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			True
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testFallbackValue( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -147,6 +150,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		)
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceAndEdits( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -375,6 +379,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "editScope2.SetMembershipEdits is locked."
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceForEditScopeMembershipRemoval( self ) :
 
 		plane = GafferScene.Plane()
@@ -400,12 +405,14 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value(), IECore.BoolData( False ) )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonExistentLocation( self ) :
 
 		plane = GafferScene.Plane()
 		plane["sets"].setValue( "planeSet" )
 		self.assertIsNone( self.__inspect( plane["out"], "/nothingHere", "planeSet" ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testObjectSourceFallback( self ) :
 
 		# ObjectSource nodes should always return their `sets` plug as a source. Otherwise,
@@ -420,6 +427,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			editable = True
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDirtiedSignal( self ) :
 
 		plane = GafferScene.Plane()
@@ -458,6 +466,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		settings["editScope"].setInput( None )
 		self.assertEqual( len( cs ), 4 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testReadOnlyMetadataSignalling( self ) :
 
 		plane = GafferScene.Plane()
@@ -485,6 +494,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
 		self.assertEqual( len( cs ), 2 )  # Change affects the result of `inspect().editable()`
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testObjectSourceEditSetMembership( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -538,6 +548,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		] :
 			self.assertEqual( planeSet.match( path ), result )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEditScopeEditSetMembership( self ) :
 
 		plane1 = GafferScene.Plane()
@@ -611,6 +622,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		] :
 			self.assertEqual( planeSet.match( path ), result )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSetNodeEditSetMembership( self ) :
 
 		# Modifying a `Set` node is beyond our powers
@@ -643,6 +655,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "Cannot edit nodes of type \"GafferScene::Set\"." )
 		self.assertRaises( IECore.Exception, inspection.edit, IECore.BoolData( False ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testAcquireEditCreateIfNecessary( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -667,6 +680,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertIsNotNone( edit )
 		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisableEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -744,6 +758,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 				GafferScene.EditScopeAlgo.SetMembership.Unchanged
 			)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testCanEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -803,6 +818,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertFalse( inspection.canEdit( IECore.BoolData( False ) ) )
 		self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "Cannot edit nodes of type \"GafferScene::Set\"." )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -858,6 +874,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			self.assertTrue( inspection.canEdit( IECore.BoolData( False ) ) )
 			self.assertEqual( inspection.nonEditableReason( IECore.BoolData( False ) ), "" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSetMembershipDependingOnSetContextVariable( self ) :
 
 		# Build a classic set-defining spreadsheet.

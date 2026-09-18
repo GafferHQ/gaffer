@@ -50,6 +50,7 @@ Property = GafferSceneUI.Private.PrimitiveVariableInspector.Property
 
 class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testName( self ) :
 
 		plane = GafferScene.Plane()
@@ -57,6 +58,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 		inspector = GafferSceneUI.Private.PrimitiveVariableInspector( plane["out"], None, "P", Property.Data )
 		self.assertEqual( inspector.name(), "P" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDirtiedSignal( self ) :
 
 		sphere = GafferScene.Sphere()
@@ -79,6 +81,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
 			return inspector.inspect()
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testInspectObject( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -99,16 +102,19 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 		self.assertFalse( inspection.canEdit( inspection.value() ) )
 		self.assertRaises( RuntimeError, inspection.edit, inspection.value() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonExistentLocation( self ) :
 
 		plane = GafferScene.Plane()
 		self.assertIsNone( self.__inspect( plane["out"], "/nothingHere", "P", Property.Data ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonExistentPrimitiveVariable( self ) :
 
 		plane = GafferScene.Plane()
 		self.assertIsNone( self.__inspect( plane["out"], "/plane", "badPrimVar", Property.Data ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testHistory( self ) :
 
 		cube = GafferScene.Cube()
@@ -166,6 +172,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			[ cube, meshTangents, group ]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceAndSourceType( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -259,6 +266,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			)
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testValue( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -302,6 +310,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			IECore.IntVectorData( [ 0, 1, 3, 2 ] )
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testValueNotFound( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -373,6 +382,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			self.assertEqual( result.nonEditableReason(), nonEditableReason )
 			self.assertRaises( RuntimeError, result.acquireEdit )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisabledTweaks( self ) :
 
 
@@ -417,6 +427,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			edit = scaleTweak1
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testExternalSourceType( self ) :
 
 		s = Gaffer.ScriptNode()

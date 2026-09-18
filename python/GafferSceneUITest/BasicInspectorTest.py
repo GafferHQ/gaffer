@@ -46,6 +46,7 @@ import GafferSceneUI
 
 class BasicInspectorTest( GafferUITest.TestCase ) :
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testName( self ) :
 
 		sphere = GafferScene.SceneNode()
@@ -53,6 +54,7 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 		inspector = GafferSceneUI.Private.BasicInspector( sphere["out"]["object"], None, lambda plug : None, name = "MyName" )
 		self.assertEqual( inspector.name(), "MyName" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testPlugMustBeChildOfScene( self ) :
 
 		sphere = GafferScene.Sphere()
@@ -62,6 +64,7 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 			with self.assertRaisesRegex( Exception, 'Plug "{}" is not a child of a ScenePlug'.format( plug.fullName() ) ) :
 				GafferSceneUI.Private.BasicInspector( plug, None, lambda plug : None )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDirtiedSignal( self ) :
 
 		sphere = GafferScene.Sphere()
@@ -87,6 +90,7 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 				context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 			return inspector.inspect()
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testInspectObject( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -107,12 +111,14 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 		self.assertFalse( inspection.canEdit( inspection.value() ) )
 		self.assertRaises( RuntimeError, inspection.edit, inspection.value() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testInspectNonExistentObject( self ) :
 
 		sphere = GafferScene.Sphere()
 		inspection = self.__inspect( sphere["out"]["object"], lambda objectPlug : objectPlug["ifThisLambdaIsCalledItWillError"].getValue(), path = "/iDoNotExist" )
 		self.assertIsNone( inspection )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testInspectGlobals( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -134,6 +140,7 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 		self.assertFalse( inspection.canEdit( inspection.value() ) )
 		self.assertRaises( RuntimeError, inspection.edit, inspection.value() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testHistory( self ) :
 
 		cube = GafferScene.Cube()
@@ -168,6 +175,7 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 			[ cube, primitiveVariables, meshTangents, group ]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceAndSourceType( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -246,6 +254,7 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["out"]["object"], SourceType.Other )
 		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["out"]["object"], SourceType.Upstream, editScope = script["editScope"] )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testCancellation( self ) :
 
 		cube = GafferScene.Cube()
