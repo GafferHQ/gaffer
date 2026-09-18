@@ -237,8 +237,9 @@ class ScriptWindow( GafferUI.Window ) :
 	def __scriptAdded( scriptContainer, script ) :
 
 		w = ScriptWindow.acquire( script )
-		w.setVisible( True )
+		
 		w.getLayout().restoreWindowState()
+		w.setVisible( True )
 
 	@staticmethod
 	def __staticScriptRemoved( scriptContainer, script ) :

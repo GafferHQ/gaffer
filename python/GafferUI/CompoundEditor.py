@@ -1465,6 +1465,44 @@ def _restoreWindowState( gafferWindow, boundData ) :
 			( boundData["bound"].size()[1] * screenGeom.height() )
 		)
 
+	# We operate on the QWidget rather than its QWindow so that this works
+	# before the window has been shown, which is what allows us to control
+	# the initial placement of the window.
+	qWidget = gafferWindow._qtWidget()
+
+	# `-1` denotes the primary screen. We must handle it explicitly rather
+	# than relying on the platform to place the window on the primary
+	# screen : `QPlatformWindow::initialGeometry()` centres parentless
+	# windows on the screen containing the mouse cursor (Windows), and on
+	# Linux Qt doesn't set a position at all, leaving the window manager to
+	# place it (again, typically the screen with the mouse cursor).
+	screens = QtWidgets.QApplication.screens()
+	if 0 <= boundData["screen"] < len( screens ) :
+		targetScreen = screens[ boundData["screen"] ]
+	else :
+		targetScreen = QtWidgets.QApplication.primaryScreen()
+
+	# Setting the geometry moves the window on all platforms, and also sets
+	# the corresponding window manager hints so that our position is
+	# respected. We can't use `QWindow.setScreen()` because it doesn't move
+	# child windows (detached panels) or windows that are already visible.
+	screenGeom = targetScreen.availableGeometry()
+	bound = boundData["bound"]
+	qWidget.setGeometry(
+		round( bound.min()[0] * screenGeom.width() ) + screenGeom.x(),
+		round( ( 1.0 - bound.max()[1] ) * screenGeom.height() ) + screenGeom.y(),
+		round( bound.size()[0] * screenGeom.width() ),
+		round( bound.size()[1] * screenGeom.height() )
+	)
+
+	if boundData["fullScreen"] :
+		qWidget.setWindowState( QtCore.Qt.WindowFullScreen )
+	elif boundData["maximized"] and sys.platform != "darwin" :
+		qWidget.setWindowState( QtCore.Qt.WindowMaximized )
+	else :
+		qWidget.setWindowState( QtCore.Qt.WindowNoState )
+
+
 def _reprDict( d ) :
 
 	# IECore.repr has a bug in that it won't 'fix' dict values
