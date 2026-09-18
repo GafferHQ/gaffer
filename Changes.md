@@ -10,6 +10,9 @@ Improvements
 ------------
 
 - EditScope : Disabled the additional ➕ gadgets in the GraphEditor by default. They can be shown again using the UIEditor if necessary.
+- RenderMan :
+  - Added support for the `layerPerLightGroup` boolean parameter on outputs. When enabled, the output is automatically split into separate layers, one for each light group.
+  - Lights without a specific light group defined are now added to the `default` light group.
 
 Fixes
 -----

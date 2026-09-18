@@ -50,6 +50,7 @@
 
 #include "fmt/format.h"
 
+#include <algorithm>
 #include <condition_variable>
 
 using namespace std;
@@ -64,6 +65,7 @@ const string g_renderManPrefix( "ri:" );
 const IECore::InternedString g_cameraOption( "camera" );
 const IECore::InternedString g_checkpointIntervalOption( "ri:checkpoint:interval" );
 const IECore::InternedString g_layerName( "layerName" );
+const IECore::InternedString g_layerPerLightGroup( "layerPerLightGroup" );
 const IECore::InternedString g_sampleMotionOption( "sampleMotion" );
 const IECore::InternedString g_frameOption( "frame" );
 const IECore::InternedString g_integratorOption( "ri:integrator" );
@@ -91,6 +93,8 @@ const vector<InternedString> g_rejectedOutputFilterParameters = {
 	"filter",
 	"filterwidth"
 };
+
+const string g_defaultLightGroupLayer = "default";
 
 // These must be kept in sync with `startup/GafferScene/renderManOptions.py`
 // See that file for a fuller explanation of this mess.
@@ -166,6 +170,147 @@ ListType idToList( std::remove_pointer_t<decltype( ListType::ids )> &id )
 }
 
 const IECoreScene::ConstShaderNetworkPtr g_emptyShaderNetwork = new IECoreScene::ShaderNetwork();
+
+IECoreScene::ConstOutputPtr lightGroupOutput( const IECore::InternedString &name, const IECoreScene::Output *output, const std::string &lightGroup )
+{
+	const string lpe = [&output]() -> string
+	{
+		if( output->getData() == "rgb" || output->getData() == "rgba" )
+		{
+			return "C[DS]*[<L.>O]";
+		}
+		else
+		{
+			vector<string> tokens;
+			StringAlgo::tokenize( output->getData(), ' ', tokens );
+			if( tokens.size() == 2 && tokens[0] == "lpe" )
+			{
+				return tokens[1];
+			}
+		}
+		return "";
+	}();
+
+	if( lpe.empty() )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "RenderManRenderer",
+			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because data \"{}\" is not \"rgb\", \"rgba\" or an lpe.", name.string(), output->getData() )
+		);
+		return nullptr;
+	}
+
+	const size_t lastPrefixSeparatorPosition = lpe.find_last_of( ';' );
+	const size_t lpeStart = lastPrefixSeparatorPosition == string::npos ? 0 : lastPrefixSeparatorPosition + 1;
+
+	if( lpeStart >= lpe.size() )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "RenderManRenderer",
+			fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because data \"{}\" only contains prefixes.", name.string(), output->getData() )
+		);
+		return nullptr;
+	}
+
+	string resultLPE;
+
+	if( lpe[lpeStart] != 'C' )
+	{
+		if( lpe.find( "_" ) != string::npos )
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+			);
+			return nullptr;
+		}
+		resultLPE = lpe + "_" + lightGroup;
+	}
+	else
+	{
+		const string lightGroupToken = "<L.'" + lightGroup + "'>";
+
+		resultLPE = lpe.substr( 0, lpeStart + 1 );
+
+		bool inQuotes = false;
+		bool madeSubstitution = false;
+
+		for( size_t i = lpeStart + 1, eI = lpe.size(); i < eI; ++i )
+		{
+			if( ( lpe.compare( i, 2, "L\'" ) == 0 || lpe.compare( i, 3, "L.\'" ) == 0 ) && !inQuotes )
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "RenderManRenderer",
+					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE already specifies a light group.", name.string() )
+				);
+				return nullptr;
+			}
+			if( lpe.compare( i, 3, "(O)" ) == 0 && !inQuotes )
+			{
+				// We're going to remove `O` tokens below and empty LPE groups currently crash RenderMan.
+				// They also aren't meaningful so we bail on creating light group layers.
+				IECore::msg(
+					IECore::Msg::Warning, "RenderManRenderer",
+					fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\" because its LPE contains \"(O)\". Replace with \"O\" to use \"layerPerLightGroup\".", name.string() )
+				);
+				return nullptr;
+			}
+
+			if( lpe[i] == '\'' )
+			{
+				resultLPE += lpe[i];
+				inQuotes = !inQuotes;
+			}
+			else if( lpe.compare( i, 4, "<L.>" ) == 0 && !inQuotes )
+			{
+				resultLPE += lightGroupToken;
+				madeSubstitution = true;
+				i += 3;
+			}
+			else if( lpe[i] == 'L' && !inQuotes )
+			{
+				resultLPE += lightGroupToken;
+				madeSubstitution = true;
+			}
+			else if( lpe[i] == 'O' && !inQuotes && lightGroup != g_defaultLightGroupLayer )
+			{
+				// Remove the emission (O) token on all but the default layer.
+				// Otherwise light emission will be repeated in every light group.
+				if( i + 1 < eI && lpe[i + 1] == '|' )
+				{
+					++i;  // Skip over the following `|` that will be invalid without `O`.
+				}
+				else if( !resultLPE.empty() && resultLPE.back() == '|' )
+				{
+					resultLPE.pop_back();  // Remove previous `|` that will be invalid without `O`.
+				}
+			}
+			else
+			{
+				resultLPE += lpe[i];
+			}
+		}
+
+		if( !madeSubstitution )
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "RenderManRenderer",
+				fmt::format( "Ignoring \"layerPerLightGroup\" parameter on output \"{}\", because its LPE doesn't contain \"L\" or \"<L.>\".", name.string() )
+			);
+			return nullptr;
+		}
+	}
+
+	const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
+
+	CompoundDataPtr parameters = output->parametersData()->copy();
+	parameters->writable()[g_layerName] = new StringData(
+		fmt::format( "{}_{}", ( layerName.empty() ? "RGBA" : layerName ), lightGroup )
+	);
+	parameters->writable().erase( g_layerPerLightGroup );
+
+	return new IECoreScene::Output( output->getName(), output->getType(), "lpe " + resultLPE, parameters );
+}
 
 } // namespace
 
@@ -774,6 +919,17 @@ void Globals::updateRenderView()
 	updateDisplayFilter();
 	updateSampleFilter();
 
+	// If outputs were made automatically from light groups, then the render view
+	// must be rebuilt when the light groups in the scene change.
+
+	if(
+		m_renderView != riley::RenderViewId::InvalidId() &&
+		!m_renderViewLightGroups.empty() && m_renderViewLightGroups != m_session->lightGroups()
+	)
+	{
+		deleteRenderView();
+	}
+
 	// If we still have a render view, then it is valid for
 	// `m_outputs`, and all we need to do is update the camera and
 	// resolution.
@@ -815,12 +971,46 @@ void Globals::updateRenderView()
 
 	std::unordered_map<std::string, DisplayDefinition> displayDefinitions;
 	vector<riley::RenderOutputId> renderTargetOutputs;
+	m_renderViewLightGroups.clear();
 
 	for( const auto &[name, output] : m_outputs )
 	{
 		// Render outputs.
 
-		const vector<riley::RenderOutputId> &renderOutputs = acquireRenderOutputs( output.get());
+		vector<riley::RenderOutputId> renderOutputs;
+
+		bool layerPerLightGroup = parameter<bool>( output->parameters(), g_layerPerLightGroup, false );
+		if( layerPerLightGroup )
+		{
+			if( lightGroupOutput( name, output.get(), g_defaultLightGroupLayer ) )
+			{
+				if( m_renderViewLightGroups.empty() )
+				{
+					m_renderViewLightGroups = m_session->lightGroups();
+				}
+				assert( m_renderViewLightGroups.size() );  // We always have at least `default` light group.
+
+				for( const auto &lightGroup : m_renderViewLightGroups )
+				{
+					ConstOutputPtr groupOutput = lightGroupOutput( name, output.get(), lightGroup );
+					assert( groupOutput ); // If we could make an output for 'default', we can make one for any group.
+					const auto &o = acquireRenderOutputs( groupOutput.get() );
+					renderOutputs.insert( renderOutputs.end(), o.begin(), o.end() );
+				}
+			}
+			else
+			{
+				// If we can't create an output for the default light group,
+				// avoid creating outputs for any light groups.
+				layerPerLightGroup = false;
+			}
+		}
+
+		if( !layerPerLightGroup )
+		{
+			renderOutputs = acquireRenderOutputs( output.get() );
+		}
+
 		if( renderOutputs.empty() )
 		{
 			IECore::msg( IECore::Msg::Warning, "RenderManRenderer", fmt::format( "Ignoring unsupported output {}", name.c_str() ) );
@@ -840,7 +1030,10 @@ void Globals::updateRenderView()
 			int asRGBA = 0;
 			display.driverParamList.GetInteger( RtUString( "asrgba" ), asRGBA );
 			const string layerName = parameter<string>( output->parameters(), g_layerName, "" );
-			if( layerName.empty() || output->getData() == "rgb" || output->getData() == "rgba" )
+			if(
+				!layerPerLightGroup &&
+				( layerName.empty() || output->getData() == "rgb" || output->getData() == "rgba" )
+			)
 			{
 				asRGBA = 1;
 			}
@@ -867,7 +1060,7 @@ void Globals::updateRenderView()
 		// the beauty first - it is the only one to have two render outputs (the second
 		// one being for alpha).
 
-		const bool beauty = renderOutputs.size() == 2;
+		const bool beauty = !layerPerLightGroup && renderOutputs.size() == 2;
 
 		display.outputs.insert(
 			beauty ? display.outputs.begin() : display.outputs.end(),
