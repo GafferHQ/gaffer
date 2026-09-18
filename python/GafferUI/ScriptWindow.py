@@ -237,8 +237,11 @@ class ScriptWindow( GafferUI.Window ) :
 	def __scriptAdded( scriptContainer, script ) :
 
 		w = ScriptWindow.acquire( script )
-		w.setVisible( True )
+		# Restore the window state before showing the window, so that the
+		# position we assign is used for its initial placement rather than
+		# correcting it after it has appeared on the wrong screen.
 		w.getLayout().restoreWindowState()
+		w.setVisible( True )
 
 	@staticmethod
 	def __staticScriptRemoved( scriptContainer, script ) :

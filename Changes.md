@@ -14,6 +14,7 @@ Improvements
 Fixes
 -----
 
+- CompoundEditor : Fixed maximized windows opening on the screen containing the mouse cursor instead of the screen recorded in the layout.
 - StandardLightVisualiser : Fixed missing wireframe segment when visualising quad lights.
 
 1.7.2.0 (relative to 1.7.1.0)
