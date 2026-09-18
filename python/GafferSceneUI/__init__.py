@@ -227,6 +227,7 @@ from . import PointInstancerCoreUI
 from . import PointInstancerUI
 from . import VisibilityQueryUI
 from . import PrimitiveVariableTypeUI
+from . import PointInstancerQueryUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

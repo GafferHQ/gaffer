@@ -18,18 +18,37 @@ Breaking Changes
 - ImageAlgo : Removed `image()` method.
 - ImageGadget, Image : Removed constructors taking an `IECoreImage::ImagePrimitive`.
 
-1.7.x.x (relative to 1.7.2.0)
+1.7.x.x (relative to 1.7.3.0)
 =======
+
+
+
+1.7.3.0 (relative to 1.7.2.0)
+=======
+
+Features
+--------
+
+- PointInstancerQuery : Added a new node for querying the properties (prototype, transform, visibility etc) of a specific instance within a PointInstancer.
 
 Improvements
 ------------
 
 - EditScope : Disabled the additional ➕ gadgets in the GraphEditor by default. They can be shown again using the UIEditor if necessary.
+- RenderMan :
+  - Added support for the `layerPerLightGroup` boolean parameter on outputs. When enabled, the output is automatically split into separate layers, one for each light group.
+  - Lights without a specific light group defined are now added to the `default` light group.
 
 Fixes
 -----
 
+- PointInstancer : Fixed rendering of points and/or prototypes with zero scale.
 - StandardLightVisualiser : Fixed missing wireframe segment when visualising quad lights.
+
+API
+---
+
+- TestCase : Added Quatf support to `assertEqualWithAbsError()`.
 
 1.7.2.0 (relative to 1.7.1.0)
 =======
