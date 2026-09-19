@@ -35,29 +35,24 @@
 #
 ##########################################################################
 
-import os
 import re
-import sys
 
 from Qt import QtCore
 from Qt import QtGui
 
 def showURL( url ) :
 
-	if sys.platform == "darwin" :
-		os.system( "open \"{0}\"".format( url ) )
+	if re.match( r"^file://[a-zA-Z]:[/\\]", url ) :
+		# Gaffer's legacy Windows links prefix an unencoded drive path
+		# with file://. Standard file URIs must instead be parsed as URLs,
+		# preserving their percent encoding and authority (UNC server).
+		# Keep the fragment separate so fromLocalFile() doesn't
+		# encode it as part of the file name.
+		path, separator, fragment = url[7:].partition( "#" )
+		url = QtCore.QUrl.fromLocalFile( path )
+		if separator :
+			url.setFragment( fragment )
 	else :
-		if re.match( r"^file://[a-zA-Z]:[/\\]", url ) :
-			# Gaffer's legacy Windows links prefix an unencoded drive path
-			# with file://. Standard file URIs must instead be parsed as URLs,
-			# preserving their percent encoding and authority (UNC server).
-			# Keep the fragment separate so fromLocalFile() doesn't
-			# encode it as part of the file name.
-			path, separator, fragment = url[7:].partition( "#" )
-			url = QtCore.QUrl.fromLocalFile( path )
-			if separator :
-				url.setFragment( fragment )
-		else :
-			url = QtCore.QUrl( url, QtCore.QUrl.TolerantMode )
+		url = QtCore.QUrl( url, QtCore.QUrl.TolerantMode )
 
-		QtGui.QDesktopServices.openUrl( url )
+	QtGui.QDesktopServices.openUrl( url )

@@ -32,7 +32,6 @@
 #
 ##########################################################################
 
-import os
 import sys
 import unittest
 import unittest.mock
@@ -47,38 +46,27 @@ class ShowURLTest( GafferUITest.TestCase ) :
 
 	def testWebURL( self ) :
 
-		with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL, unittest.mock.patch.object( os, "system" ) as system :
+		with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL :
 			GafferUI.showURL( "https://www.gafferhq.org#section" )
 
-		if sys.platform == "darwin" :
-			system.assert_called_once_with( 'open "https://www.gafferhq.org#section"' )
-			openURL.assert_not_called()
-		else :
-			openURL.assert_called_once()
-			self.assertEqual( openURL.call_args[0][0].toString(), "https://www.gafferhq.org#section" )
-			system.assert_not_called()
+		openURL.assert_called_once()
+		self.assertEqual( openURL.call_args[0][0].toString(), "https://www.gafferhq.org#section" )
 
 	def testLocalFileURL( self ) :
 
 		path = "C:/Program Files/Gaffer/doc/gaffer/html/index.html" if sys.platform == "win32" else "/opt/Gaffer Docs/doc/gaffer/html/index.html"
 		for suffix in ( "", "#section", "#a%20section" ) :
 			with self.subTest( suffix = suffix ) :
-				with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL, unittest.mock.patch.object( os, "system" ) as system :
+				with unittest.mock.patch.object( QtGui.QDesktopServices, "openUrl" ) as openURL :
 					GafferUI.showURL( "file://" + path + suffix )
 
-				if sys.platform == "darwin" :
-					system.assert_called_once_with( 'open "file://' + path + suffix + '"' )
-					openURL.assert_not_called()
-				else :
-					openURL.assert_called_once()
-					url = openURL.call_args[0][0]
-					self.assertTrue( url.isLocalFile() )
-					self.assertEqual( url.toLocalFile().replace( "\\", "/" ), path )
-					self.assertEqual( url.fragment(), suffix[1:].replace( "%20", " " ) )
-					self.assertEqual( url.hasFragment(), bool( suffix ) )
-					system.assert_not_called()
+				openURL.assert_called_once()
+				url = openURL.call_args[0][0]
+				self.assertTrue( url.isLocalFile() )
+				self.assertEqual( url.toLocalFile().replace( "\\", "/" ), path )
+				self.assertEqual( url.fragment(), suffix[1:].replace( "%20", " " ) )
+				self.assertEqual( url.hasFragment(), bool( suffix ) )
 
-	@unittest.skipIf( sys.platform == "darwin", "macOS uses the external open command" )
 	def testEncodedFileURLs( self ) :
 
 		for path in ( "/opt/Gaffer Docs/100%/index.html", "C:/Program Files/100%/index.html", "//server/share/Gaffer Docs/index.html" ) :
