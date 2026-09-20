@@ -1452,26 +1452,62 @@ def _restoreWindowState( gafferWindow, boundData ) :
 	# place it (again, typically the screen with the mouse cursor).
 	screens = QtWidgets.QApplication.screens()
 	if 0 <= boundData["screen"] < len( screens ) :
-		targetScreen = screens[ boundData["screen"] ]
+		targetScreenIndex = boundData["screen"]
 	else :
-		targetScreen = QtWidgets.QApplication.primaryScreen()
+		targetScreenIndex = screens.index( QtWidgets.QApplication.primaryScreen() )
+	targetScreen = screens[ targetScreenIndex ]
+
+	maximized = boundData["maximized"] and not boundData["fullScreen"] and sys.platform != "darwin"
+
+	# If the window is already in the state we want, on the screen we want,
+	# then there is nothing to do. This matters most when a maximized layout
+	# is restored while the window is already maximized : leaving and then
+	# re-entering the maximized state would flash the window.
+	window = qWidget.windowHandle()
+	if qWidget.isVisible() and window is not None and screens.index( window.screen() ) == targetScreenIndex :
+		if boundData["fullScreen"] and qWidget.isFullScreen() :
+			return
+		if maximized and qWidget.isMaximized() :
+			return
+
+	# `setGeometry()` has no effect while the window is maximized or
+	# full screen. Worse, on some window managers the window remains
+	# maximized but with a geometry that no longer matches the maximized
+	# state, so that it fills the screen while the UI within it is laid out
+	# for the size we asked for. So leave those states before moving the
+	# window.
+	if qWidget.windowState() != QtCore.Qt.WindowNoState :
+		qWidget.setWindowState( QtCore.Qt.WindowNoState )
 
 	# Setting the geometry moves the window on all platforms, and also sets
 	# the corresponding window manager hints so that our position is
 	# respected. We can't use `QWindow.setScreen()` because it doesn't move
 	# child windows (detached panels) or windows that are already visible.
+	#
+	# When the window is to be maximized or full screen, the window manager
+	# decides the final geometry, so we ask for the whole of the target screen
+	# rather than for the saved bound - the bound is the size the window had
+	# when it was last windowed, and asking for that and a maximized state at
+	# the same time is contradictory. This also matters because we are
+	# typically placing the window before it has been shown : not all window
+	# managers apply a state change to an unmapped window, and asking to fill
+	# the screen means the window still ends up in the right place and size
+	# when the state change is deferred until the window is mapped.
 	screenGeom = targetScreen.availableGeometry()
-	bound = boundData["bound"]
-	qWidget.setGeometry(
-		round( bound.min()[0] * screenGeom.width() ) + screenGeom.x(),
-		round( ( 1.0 - bound.max()[1] ) * screenGeom.height() ) + screenGeom.y(),
-		round( bound.size()[0] * screenGeom.width() ),
-		round( bound.size()[1] * screenGeom.height() )
-	)
+	if boundData["fullScreen"] or maximized :
+		qWidget.setGeometry( screenGeom )
+	else :
+		bound = boundData["bound"]
+		qWidget.setGeometry(
+			round( bound.min()[0] * screenGeom.width() ) + screenGeom.x(),
+			round( ( 1.0 - bound.max()[1] ) * screenGeom.height() ) + screenGeom.y(),
+			round( bound.size()[0] * screenGeom.width() ),
+			round( bound.size()[1] * screenGeom.height() )
+		)
 
 	if boundData["fullScreen"] :
 		qWidget.setWindowState( QtCore.Qt.WindowFullScreen )
-	elif boundData["maximized"] and sys.platform != "darwin" :
+	elif maximized :
 		qWidget.setWindowState( QtCore.Qt.WindowMaximized )
 	else :
 		qWidget.setWindowState( QtCore.Qt.WindowNoState )
