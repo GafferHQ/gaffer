@@ -40,5 +40,23 @@ from ._GafferRenderMan import *
 from . import ArgsFileAlgo
 from ._InteractiveDenoiserAdaptor import _InteractiveDenoiserAdaptor
 from ._StylizedAOVAdaptor import _StylizedAOVAdaptor
+from ._WorldOriginAdaptor import _WorldOriginAdaptor
+
+def __worldOriginAdaptor() :
+
+	import GafferScene
+
+	# Wrap in a SceneProcessor, since that's what
+	# `SceneAlgo.registerRenderAdaptor()` requires.
+	## \todo Could we relax this restriction and just
+	# mandate that there must be `in` and `out` ScenePlugs?
+	wrapper = GafferScene.SceneProcessor()
+	wrapper["_WorldOriginAdaptor"] = _WorldOriginAdaptor()
+	wrapper["_WorldOriginAdaptor"]["in"].setInput( wrapper["in"] )
+	wrapper["out"].setInput( wrapper["_WorldOriginAdaptor"]["out"] )
+
+	return wrapper
+
+__import__( "GafferScene" ).SceneAlgo.registerRenderAdaptor( "RenderManWorldOriginAdaptor", __worldOriginAdaptor, "*Render", "RenderMan*" )
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderMan" )
