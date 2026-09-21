@@ -1464,7 +1464,8 @@ def _restoreWindowState( gafferWindow, boundData ) :
 	# is restored while the window is already maximized : leaving and then
 	# re-entering the maximized state would flash the window.
 	window = qWidget.windowHandle()
-	if qWidget.isVisible() and window is not None and screens.index( window.screen() ) == targetScreenIndex :
+	currentScreen = window.screen() if window is not None else None
+	if qWidget.isVisible() and currentScreen in screens and screens.index( currentScreen ) == targetScreenIndex :
 		if boundData["fullScreen"] and qWidget.isFullScreen() :
 			return
 		if maximized and qWidget.isMaximized() :
@@ -1481,29 +1482,24 @@ def _restoreWindowState( gafferWindow, boundData ) :
 
 	# Setting the geometry moves the window on all platforms, and also sets
 	# the corresponding window manager hints so that our position is
-	# respected. We can't use `QWindow.setScreen()` because it doesn't move
-	# child windows (detached panels) or windows that are already visible.
+	# respected when the window is first shown. We can't use
+	# `QWindow.setScreen()` because it doesn't move a window between the
+	# screens of a virtual desktop, and there is no `QWindow` at all before
+	# the window has been shown.
 	#
-	# When the window is to be maximized or full screen, the window manager
-	# decides the final geometry, so we ask for the whole of the target screen
-	# rather than for the saved bound - the bound is the size the window had
-	# when it was last windowed, and asking for that and a maximized state at
-	# the same time is contradictory. This also matters because we are
-	# typically placing the window before it has been shown : not all window
-	# managers apply a state change to an unmapped window, and asking to fill
-	# the screen means the window still ends up in the right place and size
-	# when the state change is deferred until the window is mapped.
+	# We always ask for the saved bound, even when the window is about to be
+	# maximized or made full screen. The window manager decides the final
+	# geometry in those states, but the bound becomes the window's normal
+	# geometry, so that the window returns to a sensible size and position
+	# when the user leaves the maximized or full screen state.
 	screenGeom = targetScreen.availableGeometry()
-	if boundData["fullScreen"] or maximized :
-		qWidget.setGeometry( screenGeom )
-	else :
-		bound = boundData["bound"]
-		qWidget.setGeometry(
-			round( bound.min()[0] * screenGeom.width() ) + screenGeom.x(),
-			round( ( 1.0 - bound.max()[1] ) * screenGeom.height() ) + screenGeom.y(),
-			round( bound.size()[0] * screenGeom.width() ),
-			round( bound.size()[1] * screenGeom.height() )
-		)
+	bound = boundData["bound"]
+	qWidget.setGeometry(
+		round( bound.min()[0] * screenGeom.width() ) + screenGeom.x(),
+		round( ( 1.0 - bound.max()[1] ) * screenGeom.height() ) + screenGeom.y(),
+		round( bound.size()[0] * screenGeom.width() ),
+		round( bound.size()[1] * screenGeom.height() )
+	)
 
 	if boundData["fullScreen"] :
 		qWidget.setWindowState( QtCore.Qt.WindowFullScreen )
@@ -1511,7 +1507,6 @@ def _restoreWindowState( gafferWindow, boundData ) :
 		qWidget.setWindowState( QtCore.Qt.WindowMaximized )
 	else :
 		qWidget.setWindowState( QtCore.Qt.WindowNoState )
-
 
 def _reprDict( d ) :
 
