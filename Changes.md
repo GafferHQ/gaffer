@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.3.0)
 =======
 
+Fixes
+-----
 
+- Set expressions : Fixed potential crash.
 
 1.7.3.0 (relative to 1.7.2.0)
 =======
