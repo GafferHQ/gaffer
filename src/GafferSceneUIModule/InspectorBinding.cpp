@@ -88,16 +88,17 @@ void disableEditWrapper( GafferSceneUI::Private::Inspector::Result &result )
 	return result.disableEdit();
 }
 
-bool canEditWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object *value )
-{
-	std::string reason;
-	return result.canEdit( value, reason );
-}
-
-void editWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object *value )
+bool canEditWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object &value )
 {
 	ScopedGILRelease gilRelease;
-	result.edit( value );
+	std::string reason;
+	return result.canEdit( &value, reason );
+}
+
+void editWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object &value )
+{
+	ScopedGILRelease gilRelease;
+	result.edit( &value );
 }
 
 struct DirtiedSlotCaller
