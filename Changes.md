@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Arnold : Fixed unwanted overrides of shaders inside `.ass` procedurals (#7163).
 - Set expressions : Fixed potential crash.
 
 1.7.3.0 (relative to 1.7.2.0)
