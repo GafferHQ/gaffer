@@ -785,7 +785,8 @@ struct AstHasher
 				return;
 			}
 
-			const std::vector<IECore::InternedString> &setNames = m_setProvider.setNames()->readable();
+			ConstInternedStringVectorDataPtr setNamesData = m_setProvider.setNames();
+			const std::vector<IECore::InternedString> &setNames = setNamesData->readable();
 			if( setNames.empty() )
 			{
 				return;
