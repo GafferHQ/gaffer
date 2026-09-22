@@ -76,10 +76,34 @@ IECore::ObjectPtr valueWrapper( const GafferSceneUI::Private::Inspector::Result 
 	return v ? v->copy() : nullptr;
 }
 
+bool canAcquireEditWrapper( GafferSceneUI::Private::Inspector::Result &result, bool createIfNecessary )
+{
+	ScopedGILRelease gilRelease;
+	return result.canAcquireEdit( createIfNecessary );
+}
+
+std::string cantAcquireEditReasonWrapper( GafferSceneUI::Private::Inspector::Result &result, bool createIfNecessary )
+{
+	ScopedGILRelease gilRelease;
+	return result.cantAcquireEditReason( createIfNecessary );
+}
+
 Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Result &result, bool createIfNecessary )
 {
 	ScopedGILRelease gilRelease;
 	return result.acquireEdit( createIfNecessary );
+}
+
+bool canDisableEditWrapper( GafferSceneUI::Private::Inspector::Result &result )
+{
+	ScopedGILRelease gilRelease;
+	return result.canDisableEdit();
+}
+
+std::string cantDisableEditReasonWrapper( GafferSceneUI::Private::Inspector::Result &result )
+{
+	ScopedGILRelease gilRelease;
+	return result.cantDisableEditReason();
 }
 
 void disableEditWrapper( GafferSceneUI::Private::Inspector::Result &result )
@@ -91,8 +115,13 @@ void disableEditWrapper( GafferSceneUI::Private::Inspector::Result &result )
 bool canEditWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object &value )
 {
 	ScopedGILRelease gilRelease;
-	std::string reason;
-	return result.canEdit( &value, reason );
+	return result.canEdit( &value );
+}
+
+std::string cantEditReasonWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object &value )
+{
+	ScopedGILRelease gilRelease;
+	return result.cantEditReason( &value );
 }
 
 void editWrapper( GafferSceneUI::Private::Inspector::Result &result, const IECore::Object &value )
@@ -177,14 +206,14 @@ void GafferSceneUIModule::bindInspector()
 			.def( "sourceType", &Inspector::Result::sourceType )
 			.def( "fallbackDescription", &Inspector::Result::fallbackDescription, return_value_policy<copy_const_reference>() )
 			.def( "editScopeInHistory", &Inspector::Result::editScopeInHistory )
-			.def( "editable", &Inspector::Result::editable )
-			.def( "nonEditableReason", &Inspector::Result::nonEditableReason, ( arg( "value" ) = object() ) )
+			.def( "canAcquireEdit", &canAcquireEditWrapper, ( arg( "createIfNecessary" ) = true ) )
+			.def( "cantAcquireEditReason", &cantAcquireEditReasonWrapper, ( arg( "createIfNecessary" ) = true ) )
 			.def( "acquireEdit", &acquireEditWrapper, ( arg( "createIfNecessary" ) = true ) )
-			.def( "editWarning", &Inspector::Result::editWarning )
-			.def( "canDisableEdit", &Inspector::Result::canDisableEdit )
-			.def( "nonDisableableReason", &Inspector::Result::nonDisableableReason )
+			.def( "canDisableEdit", &canDisableEditWrapper )
+			.def( "cantDisableEditReason", &cantDisableEditReasonWrapper )
 			.def( "disableEdit", &disableEditWrapper )
-			.def( "canEdit", &canEditWrapper )
+			.def( "canEdit", &canEditWrapper, ( arg( "value" ) ) )
+			.def( "cantEditReason", &cantEditReasonWrapper, ( arg( "value" ) ) )
 			.def( "edit", &editWrapper, ( arg( "value") ) )
 		;
 

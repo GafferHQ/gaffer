@@ -95,9 +95,9 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 
 	# Not toggleable, so show popup editor.
 
-	nonEditable = [ i for i in inspections if not i.editable() ]
+	nonEditable = [ i for i in inspections if not i.canAcquireEdit() ]
 	if len( nonEditable ) :
-		GafferUI.PopupWindow.showWarning( nonEditable[0].nonEditableReason(), parent = pathListing )
+		GafferUI.PopupWindow.showWarning( nonEditable[0].cantAcquireEditReason(), parent = pathListing )
 		return
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
@@ -106,11 +106,14 @@ def __editSelectedCells( pathListing, quickBoolean = True, ensureEnabled = False
 
 		if ensureEnabled :
 			for edit in edits :
-				if isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) :
+				if (
+					isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) and
+					not Gaffer.MetadataAlgo.readOnly( edit["enabled"] ) and
+					edit["enabled"].settable()
+				) :
 					edit["enabled"].setValue( True )
 
-	warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
-	__inspectorColumnPopup = GafferUI.PlugPopup( edits, warning = warnings )
+	__inspectorColumnPopup = GafferUI.PlugPopup( edits )
 
 	if isinstance( __inspectorColumnPopup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 		__inspectorColumnPopup.plugValueWidget().setNameVisible( False )
@@ -133,7 +136,7 @@ def __toggleableInspections( pathListing ) :
 				continue
 
 			canReenableEdit = False
-			if not inspection.canDisableEdit() and inspection.editable() :
+			if not inspection.canDisableEdit() and inspection.canAcquireEdit( createIfNecessary = False ) :
 				edit = inspection.acquireEdit( createIfNecessary = False )
 				canReenableEdit = isinstance( edit, ( Gaffer.NameValuePlug, Gaffer.OptionalValuePlug, Gaffer.TweakPlug ) ) and Gaffer.Metadata.value( edit, "inspector:disabledEdit" )
 				if canReenableEdit :
@@ -144,7 +147,7 @@ def __toggleableInspections( pathListing ) :
 			elif nonEditableReason == "" :
 				# Prefix reason with the column header to disambiguate when more than one column has selection
 				nonEditableReason = "{} : ".format( column.headerData( rootPath ).value ) if len( [ x for x in pathListing.getSelection() if not x.isEmpty() ] ) > 1 else ""
-				nonEditableReason += inspection.nonDisableableReason() if toggleShouldDisable else inspection.nonEditableReason()
+				nonEditableReason += inspection.cantDisableEditReason() if toggleShouldDisable else inspection.cantAcquireEditReason()
 
 	return inspections, nonEditableReason, toggleShouldDisable
 
@@ -161,18 +164,25 @@ def __toggleEditEnabled( pathListing ) :
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
 		for inspection in inspections :
 			if shouldDisable :
+				edit = inspection.acquireEdit( createIfNecessary = False )
+				if edit is not None :
+					# We register non-persistent metadata on disabled edits to later determine
+					# whether the disabled edit is a suitable candidate for enabling. This allows
+					# investigative toggling of edits in the current session while avoiding enabling
+					# edits the user may not expect to exist, such as previously unedited spreadsheet
+					# cells in EditScope processors.
+					## \todo This should be dealt with internally by Inspectors, and there should be
+					# a public API point for re-enabling.
+					Gaffer.Metadata.registerValue( edit, "inspector:disabledEdit", True, persistent = False )
 				inspection.disableEdit()
-				# We register non-persistent metadata on disabled edits to later determine
-				# whether the disabled edit is a suitable candidate for enabling. This allows
-				# investigative toggling of edits in the current session while avoiding enabling
-				# edits the user may not expect to exist, such as previously unedited spreadsheet
-				# cells in EditScope processors.
-				Gaffer.Metadata.registerValue( inspection.source(), "inspector:disabledEdit", True, persistent = False )
 			else :
 				edit = inspection.acquireEdit( createIfNecessary = False )
 				edit["enabled"].setValue( True )
 				Gaffer.Metadata.deregisterValue( edit, "inspector:disabledEdit" )
 
+## \todo This might be expressed better as a call to `inspection.edit( None )`.
+# Then there would be less special-case code in the UI, and other Inspector
+# subclasses could get in on the act.
 def __removableAttributeInspections( pathListing ) :
 
 	inspections = []
@@ -184,11 +194,15 @@ def __removableAttributeInspections( pathListing ) :
 			if not isinstance( column.inspector( path ), GafferSceneUI.Private.AttributeInspector ) :
 				return []
 			inspection = column.inspect( path )
-			if inspection is not None and inspection.editable() :
-				source = inspection.source()
+			if inspection is not None and inspection.canAcquireEdit() :
+				edit = inspection.acquireEdit( createIfNecessary = False )
 				if (
-					( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
-					inspection.editScope() is not None
+					(
+						isinstance( edit, Gaffer.TweakPlug ) and
+						all( not Gaffer.MetadataAlgo.readOnly( edit[n] ) and edit[n].settable() for n in ( "enabled", "mode" ) ) and
+						edit["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove
+					) or
+					( edit is None and inspection.editScope() is not None )
 				) :
 					inspections.append( inspection )
 				else :
@@ -605,7 +619,7 @@ def __drop( column, path, pathListing, event ) :
 
 	data = __dropData( column, path, inspection, event )
 	if not inspection.canEdit( data ) :
-		GafferUI.PopupWindow.showWarning( inspection.nonEditableReason( data ) or "Unable to edit.", parent = pathListing )
+		GafferUI.PopupWindow.showWarning( inspection.cantEditReason( data ) or "Unable to edit.", parent = pathListing )
 		return True
 
 	with Gaffer.UndoScope( pathListing.ancestor( GafferUI.Editor ).scriptNode() ) :
@@ -966,9 +980,9 @@ def __pasteFunctionsOrNonPasteableReason( pathListing, objectMatrix ) :
 			if inspection.canEdit( value ) :
 				pasteFunctions.append( functools.partial( inspection.edit, value ) )
 			elif len( columns ) > 1 :
-				return "{} : {}".format( column.headerData( rootPath ).value, inspection.nonEditableReason( value ) )
+				return "{} : {}".format( column.headerData( rootPath ).value, inspection.cantEditReason( value ) )
 			else :
-				return inspection.nonEditableReason( value )
+				return inspection.cantEditReason( value )
 
 	return pasteFunctions
 
@@ -1072,22 +1086,28 @@ def __toggleVisibility( pathListing ) :
 			if inspection is None :
 				continue
 
-			if not inspection.editable() :
-				GafferUI.PopupWindow.showWarning( inspection.nonEditableReason(), parent = pathListing )
-				return
-
 			inspections.append( ( inspection, pathString ) )
 
 	if len( inspections ) == 0 :
 		GafferUI.PopupWindow.showWarning( "The selected cells cannot be edited in the current Edit Scope", parent = pathListing )
 		return
 
-	editor = pathListing.ancestor( GafferUI.Editor )
 	# Default to attempting to make the selection visible if visibility differs.
 	makeVisible = not sole( [ i.value().value for i, _ in inspections ] )
+
+	newValue = IECore.BoolData( makeVisible )
+	for inspection, pathString in inspections :
+		if not inspection.canEdit( newValue ) :
+			GafferUI.PopupWindow.showWarning( inspection.cantEditReason( newValue ), parent = pathListing )
+			return
+
+	editor = pathListing.ancestor( GafferUI.Editor )
+
 	with editor.context() :
 		with Gaffer.UndoScope( editor.scriptNode() ) :
 			for inspection, pathString in inspections :
+				## \todo We should be using the Inspector API to achieve this. Maybe `AttributeInspector.edit()`
+				# could be overridden to use the same logic as `setVisibility()`?
 				GafferScene.EditScopeAlgo.setVisibility( inspection.editScope(), pathString, makeVisible )
 
 		if makeVisible :

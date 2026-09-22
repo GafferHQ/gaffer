@@ -107,43 +107,39 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 			context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 			return inspector.inspect()
 
-	def __assertExpectedSource( self, scene, path, expectedSource ) :
+	def __assertExpectedResult( self, scene, path, source, edit ) :
 
 		for space in GafferSceneUI.Private.TransformInspector.Space.values.values() :
 			for component in GafferSceneUI.Private.TransformInspector.Component.values.values() :
 
 				inspection = self.__inspect( scene, path, space, component )
-				source = inspection.source()
 				if space == GafferSceneUI.Private.TransformInspector.Space.World :
 					# World matrix is typically the result of concatenating a hierarchy
 					# of matrices, so there can be no single source.
-					self.assertIsNone( source )
-					self.assertFalse( inspection.editable() )
+					self.assertIsNone( inspection.source() )
+					self.assertFalse( inspection.canAcquireEdit() )
 					continue
 
-				if expectedSource is None :
-					self.assertIsNone( expectedSource )
-				elif isinstance( expectedSource, Gaffer.TransformPlug ) :
+				self.assertEqual( inspection.source(), source )
+
+				if edit is None :
+					self.assertFalse( inspection.canAcquireEdit() )
+				else :
 					match component :
 						case GafferSceneUI.Private.TransformInspector.Component.Matrix :
-							self.assertTrue( source.isSame( expectedSource ) )
-							self.assertTrue( inspection.editable() )
+							self.assertTrue( inspection.canAcquireEdit() )
+							self.assertTrue( inspection.acquireEdit().isSame( edit ) )
 						case GafferSceneUI.Private.TransformInspector.Component.Translate :
-							self.assertTrue( source.isSame( expectedSource["translate"] ) )
-							self.assertTrue( inspection.editable() )
+							self.assertTrue( inspection.canAcquireEdit() )
+							self.assertTrue( inspection.acquireEdit().isSame( edit["translate"] ) )
 						case GafferSceneUI.Private.TransformInspector.Component.Rotate :
-							self.assertTrue( source.isSame( expectedSource["rotate"] ) )
-							self.assertTrue( inspection.editable() )
+							self.assertTrue( inspection.canAcquireEdit() )
+							self.assertTrue( inspection.acquireEdit().isSame( edit["rotate"] ) )
 						case GafferSceneUI.Private.TransformInspector.Component.Scale :
-							self.assertTrue( source.isSame( expectedSource["scale"] ) )
-							self.assertTrue( inspection.editable() )
+							self.assertTrue( inspection.canAcquireEdit() )
+							self.assertTrue( inspection.acquireEdit().isSame( edit["scale"] ) )
 						case _ :
-							self.assertIsNone( source )
-							self.assertFalse( inspection.editable() )
-				else :
-					self.assertTrue( source.isSame( expectedSource ) )
-					self.assertTrue( source.isSame( source.node()["out"]["transform"] ) )
-					self.assertFalse( inspection.editable() )
+							self.assertFalse( inspection.canAcquireEdit() )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testObjectSourceSource( self ) :
@@ -151,8 +147,8 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["sphere"] = GafferScene.Sphere()
-		self.__assertExpectedSource( s["sphere"]["out"], "/", None )
-		self.__assertExpectedSource( s["sphere"]["out"], "/sphere", s["sphere"]["transform"] )
+		self.__assertExpectedResult( s["sphere"]["out"], "/", s["sphere"]["out"], None )
+		self.__assertExpectedResult( s["sphere"]["out"], "/sphere", source = s["sphere"]["out"], edit = s["sphere"]["transform"] )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testGroupSource( self ) :
@@ -163,13 +159,13 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 		s["group"] = GafferScene.Group()
 		s["group"]["in"][0].setInput( s["sphere"]["out"] )
 
-		self.__assertExpectedSource( s["group"]["out"], "/", None )
-		self.__assertExpectedSource( s["group"]["out"], "/group", s["group"]["transform"] )
-		self.__assertExpectedSource( s["group"]["out"], "/group/sphere", s["sphere"]["transform"] )
+		self.__assertExpectedResult( s["group"]["out"], "/", source = s["group"]["out"], edit = None )
+		self.__assertExpectedResult( s["group"]["out"], "/group", source = s["group"]["out"], edit = s["group"]["transform"] )
+		self.__assertExpectedResult( s["group"]["out"], "/group/sphere", source = s["sphere"]["out"], edit = s["sphere"]["transform"] )
 
 		s["group"]["enabled"].setValue( False )
-		self.__assertExpectedSource( s["group"]["out"], "/", None )
-		self.__assertExpectedSource( s["group"]["out"], "/sphere", s["sphere"]["transform"] )
+		self.__assertExpectedResult( s["group"]["out"], "/", source = s["sphere"]["out"], edit = None )
+		self.__assertExpectedResult( s["group"]["out"], "/sphere", source = s["sphere"]["out"], edit = s["sphere"]["transform"] )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testTransformSource( self ) :
@@ -187,19 +183,20 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 
 		for space in s["transform"].Space.values.values() :
 			s["transform"]["space"].setValue( space )
-			self.__assertExpectedSource(
+			self.__assertExpectedResult(
 				s["transform"]["out"], "/sphere",
-				s["transform"]["transform"] if space == s["transform"].Space.ResetLocal else s["transform"]["out"]["transform"]
+				source = s["transform"]["out"],
+				edit = s["transform"]["transform"] if space == s["transform"].Space.ResetLocal else None
 			)
 
 		s["transform"]["space"].setValue( s["transform"].Space.ResetLocal )
 
 		sphereFilter["enabled"].setValue( False )
-		self.__assertExpectedSource( s["transform"]["out"], "/sphere", s["sphere"]["transform"] )
+		self.__assertExpectedResult( s["transform"]["out"], "/sphere", source = s["sphere"]["out"], edit = s["sphere"]["transform"] )
 
 		sphereFilter["enabled"].setValue( True )
 		s["transform"]["enabled"].setValue( False )
-		self.__assertExpectedSource( s["transform"]["out"], "/sphere", s["sphere"]["transform"] )
+		self.__assertExpectedResult( s["transform"]["out"], "/sphere", source = s["sphere"]["out"], edit = s["sphere"]["transform"] )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testGridSource( self ) :
@@ -207,11 +204,11 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["grid"] = GafferScene.Grid()
 
-		self.__assertExpectedSource( s["grid"]["out"], "/", None )
-		self.__assertExpectedSource( s["grid"]["out"], "/grid", s["grid"]["transform"] )
-		self.__assertExpectedSource( s["grid"]["out"], "/grid/centerLines", None )
-		self.__assertExpectedSource( s["grid"]["out"], "/grid/gridLines", None )
-		self.__assertExpectedSource( s["grid"]["out"], "/grid/borderLines", None )
+		self.__assertExpectedResult( s["grid"]["out"], "/", source = s["grid"]["out"], edit = None )
+		self.__assertExpectedResult( s["grid"]["out"], "/grid", source = s["grid"]["out"], edit = s["grid"]["transform"] )
+		self.__assertExpectedResult( s["grid"]["out"], "/grid/centerLines", source = s["grid"]["out"], edit = None )
+		self.__assertExpectedResult( s["grid"]["out"], "/grid/gridLines", source = s["grid"]["out"], edit = None )
+		self.__assertExpectedResult( s["grid"]["out"], "/grid/borderLines", source = s["grid"]["out"], edit = None )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEditScopes( self ) :
@@ -234,10 +231,10 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 			GafferSceneUI.Private.TransformInspector.Component.Translate,
 			s["editScope"]
 		)
-		self.assertEqual( inspection.source(), s["plane"]["transform"]["translate"] )
+		self.assertEqual( inspection.source(), s["plane"]["out"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Upstream )
-		self.assertFalse( inspection.editable() )
-		self.assertEqual( inspection.nonEditableReason(), "Edit creation not supported yet. Use the transform tools in the Viewer instead." )
+		self.assertFalse( inspection.canAcquireEdit() )
+		self.assertEqual( inspection.cantAcquireEditReason(), "Edit creation not supported yet. Use the transform tools in the Viewer instead." )
 
 		# But if an edit already exists, we'll use it.
 
@@ -249,6 +246,6 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 			GafferSceneUI.Private.TransformInspector.Component.Translate,
 			s["editScope"]
 		)
-		self.assertEqual( inspection.source(), edit.translate )
+		self.assertEqual( inspection.source(), edit.translate.node()["out"].source() )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.EditScope )
-		self.assertTrue( inspection.editable() )
+		self.assertTrue( inspection.canAcquireEdit() )

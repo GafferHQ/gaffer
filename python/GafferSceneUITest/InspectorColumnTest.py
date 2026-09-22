@@ -732,7 +732,7 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		path = GafferScene.ScenePath( customAttributes["out"], Gaffer.Context(), "/plane" )
 		inspection = column.inspect( path )
 		self.assertIsInstance( inspection, GafferSceneUI.Private.Inspector.Result )
-		self.assertEqual( inspection.source(), customAttributes["attributes"][0] )
+		self.assertEqual( inspection.source(), customAttributes["out"] )
 		self.assertEqual( inspection.value(), IECore.IntData( 10 ) )
 
 	def testInspectorFromPath( self ) :

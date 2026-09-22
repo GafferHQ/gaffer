@@ -32,6 +32,10 @@ Fixes
 - Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
 - Viewer : Fixed crashes on macOS when using Arnold, Cycles or 3Delight as the viewport renderer.
 - MetadataAlgo : Fixed crash calling `firstViewableNode()` on a plug without a node.
+- SceneEditors :
+  - Fixed refusal to show pop-up editors for plugs which had been ganged, animated or locked.
+  - Fixed bug that misattributed shader parameter edits to ShaderTweaks nodes when the `shader` plug didn't match the inspected attribute.
+- LightTool : Fixed messaging for parameters which were not editable, for example because they originated in a SceneReader.
 
 API
 ---
