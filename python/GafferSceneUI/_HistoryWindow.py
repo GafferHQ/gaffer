@@ -286,13 +286,11 @@ class _HistoryWindow( GafferUI.Window ) :
 			# expectation that the plug could sensibly be shown to the user?
 			not isinstance( self.__inspectorColumn, _GafferSceneUI._LightEditorSetMembershipColumn )
 		) :
-			editPlug = selectedPath.property( "history:source" )
+			editPlug = selectedPath.property( "history:edit" )
 			if editPlug is not None :
 				if editPlug.direction() == Gaffer.Plug.Direction.In :
 					## \todo It would be nice to implement direct toggling for boolean values here.
-					self.__popup = GafferUI.PlugPopup(
-						[ editPlug ], warning = selectedPath.property( "history:editWarning" )
-					)
+					self.__popup = GafferUI.PlugPopup( [ editPlug ] )
 					if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 						self.__popup.plugValueWidget().setNameVisible( False )
 					self.__popup.popup( parent = self )

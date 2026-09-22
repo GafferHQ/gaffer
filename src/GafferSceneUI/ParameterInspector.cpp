@@ -44,7 +44,9 @@
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/ShaderTweaks.h"
 
+#include "Gaffer/Animation.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Switch.h"
@@ -176,12 +178,12 @@ IECore::ConstObjectPtr ParameterInspector::fallbackValue( const GafferScene::Sce
 	return nullptr;
 }
 
-Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
+Gaffer::ValuePlugPtr ParameterInspector::acquireEdit( const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
 {
 	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );
-	if( !sceneNode || history->scene != sceneNode->outPlug() )
+	if( !sceneNode || history->scene != sceneNode->outPlug() || !sceneNode->enabledPlug()->getValue() )
 	{
-		return nullptr;
+		return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 	}
 
 	if( auto light = runTimeCast<Light>( sceneNode ) )
@@ -190,70 +192,77 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 		{
 			if( auto optionalPlug = light->parametersPlug()->getChild<OptionalValuePlug>( m_parameter.name ) )
 			{
-				return optionalPlug->enabledPlug()->getValue() ? optionalPlug : nullptr;
+				if( createIfNecessary || optionalPlug->enabledPlug()->getValue() )
+				{
+					return optionalPlug;
+				}
 			}
-			return light->parametersPlug()->descendant<ValuePlug>( m_parameter.name );
-		}
-		/// \todo Remove the need to search for a `ShaderPlug` by adding such a plug to
-		/// `GafferScene::Light` itself.
-		for( const auto &plug : Plug::Range( *light ) )
-		{
-			if( const auto shaderPlug = runTimeCast<ShaderPlug>( plug ) )
+			else if( auto parameterPlug = light->parametersPlug()->descendant<ValuePlug>( m_parameter.name ) )
 			{
-				return shaderPlug->parameterSource( m_parameter );
+				return parameterPlug;
+			}
+		}
+		else
+		{
+			/// \todo Remove the need to search for a `ShaderPlug` by adding such a plug to
+			/// `GafferScene::Light` itself.
+			for( const auto &plug : Plug::Range( *light ) )
+			{
+				if( const auto shaderPlug = runTimeCast<ShaderPlug>( plug ) )
+				{
+					if( auto parameterPlug = shaderPlug->parameterSource( m_parameter ) )
+					{
+						return parameterPlug;
+					}
+				}
 			}
 		}
 	}
 	else if( auto lightFilter = runTimeCast<LightFilter>( sceneNode ) )
 	{
-		return lightFilter->parametersPlug()->getChild<ValuePlug>( m_parameter.name );
+		if( auto parameterPlug = lightFilter->parametersPlug()->getChild<ValuePlug>( m_parameter.name ) )
+		{
+			return parameterPlug;
+		}
 	}
 	else if( auto shaderAssignment = runTimeCast<ShaderAssignment>( sceneNode ) )
 	{
-		if( shaderAssignment->globalPlug()->getValue() || !(shaderAssignment->filterPlug()->match( shaderAssignment->inPlug() ) & PathMatcher::ExactMatch) )
+		if( !shaderAssignment->globalPlug()->getValue() && (shaderAssignment->filterPlug()->match( shaderAssignment->inPlug() ) & PathMatcher::ExactMatch) )
 		{
-			return nullptr;
-		}
-
-		if( auto parameterPlug = shaderAssignment->shaderPlug()->parameterSource( m_parameter ) )
-		{
-			/// \todo This is overly conservative. We should test to see if there is more than
-			/// one filter match (but make sure to early-out once two are found, rather than test
-			/// the rest of the scene).
-			const Node *shaderNode = parameterPlug->node();
-			editWarning = fmt::format(
-				"Edits to {} may affect other locations in the scene.",
-				shaderNode->relativeName( shaderNode->scriptNode() )
-			);
-			return parameterPlug;
+			if( auto parameterPlug = shaderAssignment->shaderPlug()->parameterSource( m_parameter ) )
+			{
+				return parameterPlug;
+			}
 		}
 	}
 	else if( auto shaderTweaks = runTimeCast<ShaderTweaks>( sceneNode ) )
 	{
-		if( shaderTweaks->globalPlug()->getValue() || !(shaderTweaks->filterPlug()->match( shaderTweaks->inPlug() ) & PathMatcher::ExactMatch) )
+		if(
+			!shaderTweaks->globalPlug()->getValue() &&
+			(shaderTweaks->filterPlug()->match( shaderTweaks->inPlug() ) & PathMatcher::ExactMatch) &&
+			StringAlgo::matchMultiple( attribute(), shaderTweaks->shaderPlug()->getValue() )
+		)
 		{
-			return nullptr;
-		}
+			const std::string tweakName = (
+				m_parameter.shader.string() +
+				( m_parameter.shader.string().empty() ? "" : "." ) +
+				m_parameter.name.string()
+			);
 
-		const std::string tweakName = (
-			m_parameter.shader.string() +
-			( m_parameter.shader.string().empty() ? "" : "." ) +
-			m_parameter.name.string()
-		);
-
-		for( const auto &tweak : TweakPlug::Range( *shaderTweaks->tweaksPlug() ) )
-		{
-			if( tweak->namePlug()->getValue() == tweakName && tweak->enabledPlug()->getValue() )
+			for( const auto &tweak : TweakPlug::Range( *shaderTweaks->tweaksPlug() ) )
 			{
-				return tweak;
+				if( tweak->namePlug()->getValue() == tweakName && tweak->enabledPlug()->getValue() )
+				{
+					return tweak;
+				}
 			}
 		}
 	}
 
-	return nullptr;
+	return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 }
 
-Inspector::AcquireEditFunctionOrFailure ParameterInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Gaffer::ValuePlugPtr ParameterInspector::acquireEdit( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
 {
 	auto attributeHistory = static_cast<const SceneAlgo::AttributeHistory *>( history );
 
@@ -267,9 +276,21 @@ Inspector::AcquireEditFunctionOrFailure ParameterInspector::acquireEditFunction(
 	if( !v )
 	{
 		// \todo - Now that Inspector itself has handling for missing values, does this special case
-		// still make sense? It's weird to sometimes get this, but sometimes get
-		// "No editable source found in history."
-		return fmt::format( "Parameter \"{}\" does not exist.", m_parameter.name.string() );
+		// still make sense? It's weird to sometimes get this, but sometimes get "No value to edit."
+		throw EditDisallowed( fmt::format( "Parameter \"{}\" does not exist.", m_parameter.name.string() ) );
+	}
+
+	auto plug = EditScopeAlgo::acquireParameterEdit(
+		editScope,
+		history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
+		attributeHistory->attributeName,
+		m_parameter,
+		/* createIfNecessary = */ false
+	);
+
+	if( plug || !createIfNecessary )
+	{
+		return plug;
 	}
 
 	const GraphComponent *readOnlyReason = EditScopeAlgo::parameterEditReadOnlyReason(
@@ -281,30 +302,22 @@ Inspector::AcquireEditFunctionOrFailure ParameterInspector::acquireEditFunction(
 
 	if( readOnlyReason )
 	{
-		// If we don't have an edit and the scope is locked, we error,
-		// as we can't add an edit. Other cases where we already _have_
-		// an edit will have been found by `source()`.
-		return fmt::format(
+		throw EditDisallowed( fmt::format(
 			"{} is locked.",
 			readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
-		);
+		) );
 	}
-	else
+
+	if( dryRun )
 	{
-		return [
-			editScope = EditScopePtr( editScope ),
-			attributeName = attributeHistory->attributeName,
-			context = attributeHistory->context,
-			parameter = m_parameter
-		] ( bool createIfNecessary ) {
-				Context::Scope scope( context.get() );
-				return EditScopeAlgo::acquireParameterEdit(
-					editScope.get(),
-					context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
-					attributeName,
-					parameter,
-					createIfNecessary
-				);
-		};
+		return nullptr;
 	}
+
+	return EditScopeAlgo::acquireParameterEdit(
+		editScope,
+		history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
+		attributeHistory->attributeName,
+		m_parameter,
+		createIfNecessary
+	);
 }

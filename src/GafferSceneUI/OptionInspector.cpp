@@ -211,16 +211,14 @@ IECore::ConstObjectPtr OptionInspector::fallbackValue( const GafferScene::SceneA
 	return nullptr;
 }
 
-Gaffer::ValuePlugPtr OptionInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
+Gaffer::ValuePlugPtr OptionInspector::acquireEdit( const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
 {
 	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );
-	if( !sceneNode || history->scene != sceneNode->outPlug() )
+	if( !sceneNode || history->scene != sceneNode->outPlug() || !sceneNode->enabledPlug()->getValue() )
 	{
-		return nullptr;
+		return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 	}
 
-	/// \todo Should we provide an `editWarning` here for render pass specific
-	/// edits that may affect other render passes?
 	if( auto options = runTimeCast<GafferScene::Options>( sceneNode ) )
 	{
 		for( const auto &plug : NameValuePlug::Range( *options->optionsPlug() ) )
@@ -256,16 +254,29 @@ Gaffer::ValuePlugPtr OptionInspector::source( const GafferScene::SceneAlgo::Hist
 		}
 	}
 
-	return nullptr;
+	return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 }
 
-Inspector::AcquireEditFunctionOrFailure OptionInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Gaffer::ValuePlugPtr OptionInspector::acquireEdit( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
 {
 	// If our history's context contains a non-empty `renderPass` variable,
 	// we'll want to make a specific edit for that render pass.
 	const std::string renderPass = history->context->get<std::string>( g_renderPassContextName, g_emptyString );
+
 	if( !renderPass.empty() )
 	{
+		auto plug = EditScopeAlgo::acquireRenderPassOptionEdit(
+			editScope,
+			renderPass,
+			m_option,
+			/* createIfNecessary = */ false
+		);
+
+		if( plug || !createIfNecessary )
+		{
+			return plug;
+		}
+
 		const GraphComponent *readOnlyReason = EditScopeAlgo::renderPassOptionEditReadOnlyReason(
 			editScope,
 			renderPass,
@@ -274,63 +285,52 @@ Inspector::AcquireEditFunctionOrFailure OptionInspector::acquireEditFunction( Ga
 
 		if( readOnlyReason )
 		{
-			// If we don't have an edit and the scope is locked, we error,
-			// as we can't add an edit. Other cases where we already _have_
-			// an edit will have been found by `source()`.
-			return fmt::format(
+			throw EditDisallowed( fmt::format(
 				"{} is locked.",
 				readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
-			);
+			) );
 		}
-		else
+
+		if( dryRun )
 		{
-			return [
-				editScope = EditScopePtr( editScope ),
-				renderPass,
-				option = m_option,
-				context = history->context
-			] ( bool createIfNecessary ) {
-				Context::Scope scope( context.get() );
-				return EditScopeAlgo::acquireRenderPassOptionEdit(
-					editScope.get(),
-					renderPass,
-					option,
-					createIfNecessary
-				);
-			};
+			return nullptr;
 		}
+
+		return EditScopeAlgo::acquireRenderPassOptionEdit(
+			editScope,
+			renderPass,
+			m_option,
+			createIfNecessary
+		);
 	}
 	else
 	{
-		const GraphComponent *readOnlyReason = EditScopeAlgo::optionEditReadOnlyReason(
+		auto plug = EditScopeAlgo::acquireOptionEdit(
 			editScope,
-			m_option
+			m_option,
+			/* createIfNecessary = */ false
 		);
+
+		if( plug || !createIfNecessary )
+		{
+			return plug;
+		}
+
+		const GraphComponent *readOnlyReason = EditScopeAlgo::optionEditReadOnlyReason( editScope, m_option );
 
 		if( readOnlyReason )
 		{
-			// If we don't have an edit and the scope is locked, we error,
-			// as we can't add an edit. Other cases where we already _have_
-			// an edit will have been found by `source()`.
-			return fmt::format(
+			throw EditDisallowed( fmt::format(
 				"{} is locked.",
 				readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
-			);
+			) );
 		}
-		else
+
+		if( dryRun )
 		{
-			return [
-				editScope = EditScopePtr( editScope ),
-				option = m_option,
-				context = history->context
-			] ( bool createIfNecessary ) {
-				Context::Scope scope( context.get() );
-				return EditScopeAlgo::acquireOptionEdit(
-					editScope.get(),
-					option,
-					createIfNecessary
-				);
-			};
+			return nullptr;
 		}
+
+		return EditScopeAlgo::acquireOptionEdit( editScope, m_option, createIfNecessary );
 	}
 }

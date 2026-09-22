@@ -168,6 +168,8 @@ Plug *activeValuePlug( Plug *sourcePlug )
 	return sourcePlug;
 }
 
+/// \todo We should be using `Inspector::edit()` to edit values, but
+/// that doesn't currently support animation.
 void setValueOrAddKey( FloatPlug *plug, float time, float value )
 {
 	if( Animation::isAnimated( plug ) )
@@ -565,52 +567,49 @@ void drawSelectionTips(
 	const GafferUI::Style *style
 )
 {
-	std::vector<GraphComponent *> parameterSources;
+	std::vector<GraphComponent *> sources;
 	std::vector<std::string> warningTips;
 	for( const auto &inspection : inspections )
 	{
 		if( auto source = inspection->source() )
 		{
-			EditScope *editScope = inspection->editScope();
-			if( !editScope || ( editScope && editScope->isAncestorOf( source ) ) )
+			if( !inspection->canEdit( inspection->value() ) )
 			{
-				parameterSources.push_back( source );
+				warningTips.push_back( inspection->cantEditReason( inspection->value() ) );
 			}
 			else
 			{
-				parameterSources.push_back( editScope );
-			}
-
-			if( inspection->editable() && !inspection->editWarning().empty() )
-			{
-				warningTips.push_back( inspection->editWarning() );
-			}
-			else if( !inspection->editable() )
-			{
-				warningTips.push_back( inspection->nonEditableReason() );
+				if( inspection->editScope() && !inspection->editScope()->isAncestorOf( source ) )
+				{
+					sources.push_back( inspection->editScope() );
+				}
+				else
+				{
+					sources.push_back( source );
+				}
 			}
 		}
 	}
 
 	std::string parameterInfo;
-	if( parameterSources.size() == 1 )
+	if( sources.size() == 1 )
 	{
 		parameterInfo = fmt::format(
 			"Editing : {}",
-			parameterSources.front()->relativeName( parameterSources.front()->ancestor<ScriptNode>() )
+			MetadataAlgo::firstViewableNode( sources.front() )->relativeName( sources.front()->ancestor<ScriptNode>() )
 		);
 	}
-	else if( parameterSources.size() > 1 )
+	else if( sources.size() > 1 )
 	{
-		GraphComponent *commonAncestor = ::commonAncestor( parameterSources );
+		GraphComponent *commonAncestor = ::commonAncestor( sources );
 
-		parameterInfo = fmt::format( "Editing {} {}", parameterSources.size(), multiPlugDescription );
+		parameterInfo = fmt::format( "Editing {} {}", sources.size(), multiPlugDescription );
 
 		if( commonAncestor && (Gaffer::TypeId)commonAncestor->typeId() != Gaffer::TypeId::ScriptNodeTypeId )
 		{
 			parameterInfo += fmt::format(
 				" on {}",
-				commonAncestor->relativeName( commonAncestor->ancestor<ScriptNode>() )
+				MetadataAlgo::firstViewableNode( commonAncestor )->relativeName( commonAncestor->ancestor<ScriptNode>() )
 			);
 		}
 	}
@@ -669,16 +668,19 @@ void drawSelectionTips(
 	glTranslate( V2f( x, y ) );
 	glScalef( g_tipScale, -g_tipScale, g_tipScale );
 
-	IECoreGL::ConstTexturePtr infoTexture = ImageGadget::loadTexture( "infoSmall.png" );
-	glPushMatrix();
-	glTranslate( V2f( 0, g_tipIconOffset ) );
-	style->renderImage( Box2f( V2f( 0 ), V2f( g_tipIconSize ) ), infoTexture.get() );
-	glPopMatrix();
+	if( !parameterInfo.empty() )
+	{
+		IECoreGL::ConstTexturePtr infoTexture = ImageGadget::loadTexture( "infoSmall.png" );
+		glPushMatrix();
+		glTranslate( V2f( 0, g_tipIconOffset ) );
+		style->renderImage( Box2f( V2f( 0 ), V2f( g_tipIconSize ) ), infoTexture.get() );
+		glPopMatrix();
 
-	glPushMatrix();
-	glTranslate( V2f( g_tipIndent, 0 ) );
-	style->renderText( Style::TextType::BodyText, parameterInfo, Style::NormalState, &g_hoverTextColor );
-	glPopMatrix();
+		glPushMatrix();
+		glTranslate( V2f( g_tipIndent, 0 ) );
+		style->renderText( Style::TextType::BodyText, parameterInfo, Style::NormalState, &g_hoverTextColor );
+		glPopMatrix();
+	}
 
 	if( !warningInfo.empty() )
 	{
@@ -1273,7 +1275,7 @@ class LightToolHandle : public Handle
 			bool enabled = true;
 			for( const auto &i : requiredInspections )
 			{
-				enabled &= i && i->editable();
+				enabled &= i && i->canEdit( i->value() );
 			}
 
 			return enabled;

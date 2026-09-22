@@ -178,16 +178,21 @@ AttributeHistoryCache g_attributeHistoryCache(
 
 );
 
-Gaffer::ValuePlugPtr attributePlug( const Gaffer::CompoundDataPlug *parentPlug, const std::string &attributeName )
+Gaffer::ValuePlugPtr acquireAttributePlug( const Gaffer::CompoundDataPlug *parentPlug, const std::string &attributeName, bool createIfNecessary )
 {
 	for( const auto &plug : Gaffer::NameValuePlug::Range( *parentPlug ) )
 	{
-		if(plug->namePlug()->getValue() == attributeName )
+		if( plug->namePlug()->getValue() == attributeName )
 		{
 			return plug;
 		}
 	}
-	return nullptr;
+
+	if( !createIfNecessary )
+	{
+		return nullptr;
+	}
+	throw Inspector::EditDisallowed( "Editing not supported" );
 }
 
 } // namespace
@@ -274,12 +279,12 @@ IECore::ConstObjectPtr AttributeInspector::fallbackValue( const GafferScene::Sce
 	return nullptr;
 }
 
-Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
+Gaffer::ValuePlugPtr AttributeInspector::acquireEdit( const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
 {
 	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );
-	if( !sceneNode || history->scene != sceneNode->outPlug() )
+	if( !sceneNode || history->scene != sceneNode->outPlug() || !sceneNode->enabledPlug()->getValue() )
 	{
-		return nullptr;
+		return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 	}
 
 	if( auto light = runTimeCast<Light>( sceneNode ) )
@@ -288,9 +293,8 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 		{
 			return light->mutePlug();
 		}
-		return attributePlug( light->visualiserAttributesPlug(), m_attribute );
+		return acquireAttributePlug( light->visualiserAttributesPlug(), m_attribute, createIfNecessary );
 	}
-
 	else if( auto lightFilter = runTimeCast<LightFilter>( sceneNode ) )
 	{
 		if( m_attribute == g_filteredLightsAttributeName )
@@ -301,19 +305,16 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 		{
 			return lightFilter->filteredLightsExclusionsPlug();
 		}
-		return nullptr;
 	}
-
 	else if( auto camera = runTimeCast<GafferScene::Camera>( sceneNode ) )
 	{
-		return attributePlug( camera->visualiserAttributesPlug(), m_attribute );
+		return acquireAttributePlug( camera->visualiserAttributesPlug(), m_attribute, createIfNecessary );
 	}
-
 	else if( auto attributes = runTimeCast<GafferScene::Attributes>( sceneNode ) )
 	{
 		if( attributes->globalPlug()->getValue() || !( attributes->filterPlug()->match( attributes->inPlug() ) & PathMatcher::ExactMatch ) )
 		{
-			return nullptr;
+			return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 		}
 
 		for( const auto &plug : NameValuePlug::Range( *attributes->attributesPlug() ) )
@@ -323,23 +324,15 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 				( !plug->enabledPlug() || plug->enabledPlug()->getValue() )
 			)
 			{
-				/// \todo This is overly conservative. We should test to see if there is more than
-				/// one filter match (but make sure to early-out once two are found, rather than test
-				/// the rest of the scene).
-				editWarning = fmt::format(
-					"Edits to \"{}\" may affect other locations in the scene.",
-					m_attribute.string()
-				);
 				return plug;
 			}
 		}
 	}
-
 	else if( auto attributeTweaks = runTimeCast<AttributeTweaks>( sceneNode ) )
 	{
 		if( attributeTweaks->globalPlug()->getValue() || !( attributeTweaks->filterPlug()->match( attributeTweaks->inPlug() ) & PathMatcher::ExactMatch ) )
 		{
-			return nullptr;
+			return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 		}
 
 		ConstCompoundObjectPtr attributes;
@@ -373,15 +366,27 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 		}
 	}
 
-	return nullptr;
+	return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 }
 
-Inspector::AcquireEditFunctionOrFailure AttributeInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Gaffer::ValuePlugPtr AttributeInspector::acquireEdit( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
 {
 	InternedString attributeName = m_attribute;
 	if( auto attributeHistory = dynamic_cast<const SceneAlgo::AttributeHistory *>( history ) )
 	{
 		attributeName = attributeHistory->attributeName;
+	}
+
+	auto plug = EditScopeAlgo::acquireAttributeEdit(
+		editScope,
+		history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
+		attributeName,
+		/* createIfNecessary = */ false
+	);
+
+	if( plug || !createIfNecessary )
+	{
+		return plug;
 	}
 
 	const GraphComponent *readOnlyReason = EditScopeAlgo::attributeEditReadOnlyReason(
@@ -392,27 +397,22 @@ Inspector::AcquireEditFunctionOrFailure AttributeInspector::acquireEditFunction(
 
 	if( readOnlyReason )
 	{
-		// If we don't have an edit and the scope is locked, we error,
-		// as we can't add an edit. Other cases where we already _have_
-		// an edit will have been found by `source()`.
-		return fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) );
+		throw EditDisallowed(
+			fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) )
+		);
 	}
-	else
+
+	if( dryRun )
 	{
-		return [
-			editScope = EditScopePtr( editScope ),
-			attributeName,
-			context = history->context
-		] ( bool createIfNecessary ) {
-			Context::Scope scope( context.get() );
-			return EditScopeAlgo::acquireAttributeEdit(
-				editScope.get(),
-				context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
-				attributeName,
-				createIfNecessary
-			);
-		};
+		return nullptr;
 	}
+
+	return EditScopeAlgo::acquireAttributeEdit(
+		editScope,
+		history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
+		attributeName,
+		createIfNecessary
+	);
 }
 
 bool AttributeInspector::attributeExists( const bool inheritAttributes ) const

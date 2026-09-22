@@ -36,6 +36,8 @@
 
 #pragma once
 
+#include "Gaffer/TransformPlug.h"
+
 #include "GafferSceneUI/Export.h"
 
 #include "GafferSceneUI/Private/Inspector.h"
@@ -84,10 +86,13 @@ class GAFFERSCENEUI_API TransformInspector : public Inspector
 
 		GafferScene::SceneAlgo::History::ConstPtr history() const override;
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history) const override;
-		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
-		AcquireEditFunctionOrFailure acquireEditFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history ) const override;
+		bool hasEdit( const GafferScene::SceneAlgo::History *history ) const override;
+		Gaffer::ValuePlugPtr acquireEdit( const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const override;
+		Gaffer::ValuePlugPtr acquireEdit( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const override;
 
 	private :
+
+		Gaffer::TransformPlug *transformPlug( const GafferScene::SceneAlgo::History *history ) const;
 
 		const GafferScene::ScenePlugPtr m_scene;
 		const Space m_space;
