@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Set expressions : Fixed potential crash.
+- RenderMan : Fixed handling of `ri:trace:worldorigin` option.
 
 1.7.3.0 (relative to 1.7.2.0)
 =======
