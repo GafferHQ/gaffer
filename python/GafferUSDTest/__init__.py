@@ -39,5 +39,6 @@ from .USDAttributesTest import USDAttributesTest
 from .USDLayerWriterTest import USDLayerWriterTest
 from .USDShaderTest import USDShaderTest
 from .USDLightTest import USDLightTest
+from .USDMeshLightTest import USDMeshLightTest
 from ._PointInstancerAdaptorTest import _PointInstancerAdaptorTest
 from .PromotePointInstancesTest import PromotePointInstancesTest

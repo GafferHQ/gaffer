@@ -84,4 +84,7 @@ IECORERENDERMAN_API VStructAction evaluateVStructConditional( const std::string 
 /// as `convert()` resolves vstructs internally anyway.
 IECORERENDERMAN_API void resolveVStructs( IECoreScene::ShaderNetwork *shaderNetwork );
 
+/// Returns a modified set of attributes conforming to the USDMeshLight specification.
+IECORERENDERMAN_API IECore::ConstCompoundObjectPtr convertUSDMeshLightAttributes( const IECore::CompoundObject *attributes );
+
 } // namespace IECoreRenderMan::ShaderNetworkAlgo

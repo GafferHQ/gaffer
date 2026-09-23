@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,61 +34,54 @@
 #
 ##########################################################################
 
-import unittest
+import Gaffer
+import GafferUSD
 
-import GafferCycles
-import GafferSceneTest
+Gaffer.Metadata.registerNode(
 
-class CyclesRenderTest( GafferSceneTest.RenderTest ) :
+	GafferUSD.USDMeshLight,
 
-	renderer = "Cycles"
-	oslSurfaceSupported = True
+	"description",
+	"""
+	Turns mesh primitives into USD mesh lights by assigning a MeshLight
+	shader and adding the meshes to the default lights set.
+	""",
 
-	def _createDiffuseShader( self ) :
+	plugs = {
 
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "diffuse_bsdf" )
-		return shader, shader["parameters"]["color"], shader["out"]["BSDF"]
+		"parameters" : {
 
-	def _createEmissiveShader( self ) :
+			"layout:section:Basic:collapsed" : False,
 
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "emission" )
-		shader["parameters"]["strength"].setValue( 1.0 )
-		return shader, shader["parameters"]["color"], shader["out"]["emission"]
+			"layout:customWidget:rendererFilter:widgetType" : "GafferUSDUI.USDLightUI._RendererFilter",
+			"layout:customWidget:rendererFilter:index" : 0,
 
-	def _createPointLight( self ) :
+			"layout:customWidget:standardFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:standardFilter:index" : 1,
+			"layout:customWidget:standardFilter:accessory" : True,
 
-		light = GafferCycles.CyclesLight()
-		light.loadShader( "point_light" )
-		return light, light["parameters"]["color"]
+		},
 
-	def _createDistantLight( self ) :
+		"parameters.*" : {
 
-		light = GafferCycles.CyclesLight()
-		light.loadShader( "distant_light" )
-		return light, light["parameters"]["color"]
+			# USD light parameters don't accept connections. `MeshLightUI` forwards
+			# metadata requests to the internal shader, which means `USDShaderUI`
+			# is supplying metadata for `USDMeshLight`. The USD schemas used there
+			# don't supply connectability metadata, so we force nodules to be removed
+			# here. ( For `USDLight`, this is handled in `LightUI` ).
+			"nodule:type" : "",
 
-	def _cameraVisibilityAttribute( self ) :
+		},
 
-		return "cycles:visibility:camera"
+		# \todo Remove this when we use the `shaderType:shaderName:parameter` pattern
+		# for accessing shader metadata everywhere. Currently we get metadata registered
+		# directly to plugs (via `GafferScene.MeshLightUI`).
+		"parameters.arnold:*" : {
 
-	def _createOptions( self ) :
+			"description" : "Refer to Arnold's documentation for further details.",
 
-		# Options that speed up the render, which can otherwise take
-		# longer than we might want.
+		},
 
-		options = GafferCycles.CyclesOptions()
+	}
 
-		options["options"]["cycles:integrator:max_bounce"]["enabled"].setValue( True )
-		options["options"]["cycles:integrator:max_bounce"]["value"].setValue( 0 )
-
-		options["options"]["cycles:session:samples"]["enabled"].setValue( True )
-		options["options"]["cycles:session:samples"]["value"].setValue( 8 )
-
-		return options
-
-	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our Cycles backend" )
-	def testInstanceIDOutput( self ) :
-
-		pass
+)

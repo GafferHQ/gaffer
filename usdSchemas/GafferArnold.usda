@@ -37,7 +37,7 @@ over "GLOBAL" (
 
 class "GafferArnoldLightAPI" (
 	customData = {
-		token[] apiSchemaAutoApplyTo = [ "CylinderLight", "DistantLight", "DiskLight", "DomeLight", "RectLight", "SphereLight" ]
+		token[] apiSchemaAutoApplyTo = [ "CylinderLight", "DistantLight", "DiskLight", "DomeLight", "RectLight", "SphereLight", "MeshLightAPI" ]
 		string apiSchemaType = "singleApply"
 		string className = "GafferArnoldLightAPI"
 	}

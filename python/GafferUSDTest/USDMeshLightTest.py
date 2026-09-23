@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2024, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,59 +36,52 @@
 
 import unittest
 
-import GafferCycles
+import IECore
+
+import Gaffer
+import GafferScene
 import GafferSceneTest
+import GafferUSD
 
-class CyclesRenderTest( GafferSceneTest.RenderTest ) :
+class USDMeshLightTest( GafferSceneTest.SceneTestCase ) :
 
-	renderer = "Cycles"
-	oslSurfaceSupported = True
+	def testParameters( self ) :
 
-	def _createDiffuseShader( self ) :
+		light = GafferUSD.USDMeshLight()
 
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "diffuse_bsdf" )
-		return shader, shader["parameters"]["color"], shader["out"]["BSDF"]
+		# Should have all the parameters of a MeshLight shader.
 
-	def _createEmissiveShader( self ) :
+		shader = GafferUSD.USDShader()
+		shader.loadShader( "MeshLight" )
+		self.assertEqual( light["parameters"].keys(), shader["parameters"].keys() )
 
-		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "emission" )
-		shader["parameters"]["strength"].setValue( 1.0 )
-		return shader, shader["parameters"]["color"], shader["out"]["emission"]
+		# Parameters should drive a light shader in the scene.
 
-	def _createPointLight( self ) :
+		sphere = GafferScene.Sphere()
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		light["in"].setInput( sphere["out"] )
+		light["filter"].setInput( sphereFilter["out"] )
 
-		light = GafferCycles.CyclesLight()
-		light.loadShader( "point_light" )
-		return light, light["parameters"]["color"]
+		light["parameters"]["exposure"].setValue( 10 )
+		self.assertIn( "light", light["out"].attributes( "/sphere" ) )
+		self.assertEqual( light["out"].attributes( "/sphere" )["light"].outputShader().parameters["exposure"], IECore.FloatData( 10 ) )
 
-	def _createDistantLight( self ) :
+	def testSerialisation( self ) :
 
-		light = GafferCycles.CyclesLight()
-		light.loadShader( "distant_light" )
-		return light, light["parameters"]["color"]
+		script = Gaffer.ScriptNode()
+		script["light"] = GafferUSD.USDMeshLight()
+		script["light"]["parameters"]["intensity"].setValue( 10 )
 
-	def _cameraVisibilityAttribute( self ) :
+		serialisation = script.serialise()
 
-		return "cycles:visibility:camera"
+		script2 = Gaffer.ScriptNode()
+		script2.execute( serialisation )
+		self.assertEqual( script2["light"]["parameters"]["intensity"].getValue(), 10 )
 
-	def _createOptions( self ) :
+		# One for the node. None for plugs, since they are not dynamic.
+		self.assertEqual( serialisation.count( "addChild" ), 1 )
 
-		# Options that speed up the render, which can otherwise take
-		# longer than we might want.
 
-		options = GafferCycles.CyclesOptions()
-
-		options["options"]["cycles:integrator:max_bounce"]["enabled"].setValue( True )
-		options["options"]["cycles:integrator:max_bounce"]["value"].setValue( 0 )
-
-		options["options"]["cycles:session:samples"]["enabled"].setValue( True )
-		options["options"]["cycles:session:samples"]["value"].setValue( 8 )
-
-		return options
-
-	@unittest.skip( "Instance IDs only work with encapsulated instancers. We don't have encapsulation support yet in our Cycles backend" )
-	def testInstanceIDOutput( self ) :
-
-		pass
+if __name__ == "__main__" :
+	unittest.main()

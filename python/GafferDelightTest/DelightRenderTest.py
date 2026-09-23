@@ -76,7 +76,18 @@ class DelightRenderTest( GafferSceneTest.RenderTest ) :
 
 		pass
 
+	@unittest.skip( "No USDMeshLight support just yet" )
+	def testUSDMeshLight( self ) :
+
+		pass
+
 	def _createConstantShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "Surface/Constant" )
+		return shader, shader["parameters"]["Cs"], shader["out"]["out"]
+
+	def _createDiffuseShader( self ) :
 
 		shader = GafferOSL.OSLShader()
 		shader.loadShader( "Surface/Constant" )
