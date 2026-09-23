@@ -456,6 +456,67 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleRSource ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( swizzleRSource, "shadername" ), "Maths/MixColor" )
 
+	def testShaderInsideAssProcedural( self ) :
+
+		# Make `.ass` file containing a green sphere.
+
+		assFile = str( self.temporaryDirectory() / "test.ass" )
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			assFile
+		)
+
+		renderer.object(
+			"testSphere",
+			IECoreScene.SpherePrimitive( 1 ),
+			renderer.attributes( IECore.CompoundObject( {
+				"ai:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"flat", "surface",
+							{ "color" : imath.Color3f( 0, 1, 0 ) }
+						)
+					},
+					output = ( "output", "out" )
+				),
+			} ) )
+		)
+
+		renderer.render()
+		del renderer
+
+		# Render that via an ExternalProcedural, and make sure we get
+		# a green image.
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		imageFile = str( self.temporaryDirectory() / "test.exr" )
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				imageFile,
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		renderer.object(
+			"testProcedural",
+			IECoreScene.ExternalProcedural( "procedural", parameters = IECore.CompoundData( { "filename" : IECore.StringData( assFile ) } ) ),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+
+		renderer.render()
+		del renderer
+
+		image = OpenImageIO.ImageBuf( imageFile )
+		self.assertEqualWithAbsError( self.__colorAtUV( image, imath.V2f( 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ), 0.01 )
+
 	def testLightNames( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

@@ -1315,7 +1315,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_points( attributes ), m_volume( attributes ), m_allAttributes( attributes )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_surfaceShaderIsDefault( false ),
+				m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ),
+				m_curves( attributes ), m_points( attributes ), m_volume( attributes ), m_allAttributes( attributes )
 		{
 			updateVisibility( m_visibility, g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( m_visibility, g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -1340,6 +1342,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( !m_surfaceShader )
 			{
 				m_surfaceShader = shaderCache->get( g_facingRatio.get(), "", nullptr );
+				m_surfaceShaderIsDefault = true;
 			}
 
 			m_volumeShader = shaderCache->get( g_volumeShaderAttributeNames, attributes );
@@ -1765,6 +1768,12 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
+			// Don't assign default shaders to procedurals, because that clobbers any
+			// shaders assigned to the contents of the procedural.
+			if( AiNodeIs( geometry, g_proceduralArnoldString ) && m_surfaceShaderIsDefault )
+			{
+				return nullptr;
+			}
 			// Otherwise use the surface shader. We use this even for volume geometry,
 			// because Gaffer historically assigned volume shaders as `ai:surface`.
 			return m_surfaceShader->root();
@@ -2328,6 +2337,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
 		ArnoldShaderPtr m_surfaceShader;
+		bool m_surfaceShaderIsDefault;
 		ArnoldShaderPtr m_volumeShader;
 		ArnoldShaderPtr m_filterMap;
 		ArnoldShaderPtr m_uvRemap;
