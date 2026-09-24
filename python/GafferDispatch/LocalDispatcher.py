@@ -120,6 +120,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__statusChangedSignal = Gaffer.Signal1()
 
 			self.__currentProcess = None
+			self.__statisticsProcesses = {}
 			self.__status = self.Status.Waiting
 			self.__backgroundTask = None
 
@@ -160,23 +161,40 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def memoryUsage( self ) :
 
-			if self.__currentProcess is None :
-				return None
-
-			try :
-				return self.__currentProcess.memory_info().rss
-			except psutil.NoSuchProcess :
-				return None
+			return self.__processStatistic( lambda p : p.memory_info().rss )
 
 		def cpuUsage( self ) :
 
-			if self.__currentProcess is None :
+			return self.__processStatistic( lambda p : p.cpu_percent() )
+
+		def __processStatistic( self, statistic ) :
+
+			process = self.__currentProcess
+			if process is None :
+				self.__statisticsProcesses = {}
 				return None
 
 			try :
-				return self.__currentProcess.cpu_percent()
+				processes = [ process ] + process.children( recursive = True )
 			except psutil.NoSuchProcess :
+				self.__statisticsProcesses = {}
 				return None
+			except psutil.AccessDenied :
+				# The launcher may still be queryable even if its children aren't.
+				processes = [ process ]
+
+			# Retain Process instances so cpu_percent() can compare successive samples.
+			self.__statisticsProcesses = {
+				p : self.__statisticsProcesses.get( p, p ) for p in processes
+			}
+			result = 0
+			for p in self.__statisticsProcesses.values() :
+				try :
+					result += statistic( p )
+				except ( psutil.NoSuchProcess, psutil.AccessDenied ) :
+					pass
+
+			return result
 
 		def status( self ) :
 
