@@ -112,14 +112,19 @@ def canPasteRows( objectMatrix, rowsPlug ) :
 	if not isinstance( objectMatrix, IECore.ObjectMatrix ) :
 		return False
 
-	if Gaffer.MetadataAlgo.readOnly( rowsPlug ) :
+	if objectMatrix.numRows() == 0 or objectMatrix.numColumns() == 0 :
+		return False
+
+	if rowsPlug.getInput() is not None or Gaffer.MetadataAlgo.readOnly( rowsPlug ) :
 		return False
 
 	for rowIndex in range( objectMatrix.numRows() ) :
 		if not __rowPlugMatchingCells( rowsPlug.defaultRow(), objectMatrix[rowIndex, 0] ) :
 			return False
 
-	return canPasteCells( objectMatrix, [ [ rowsPlug.defaultRow() ] ] )
+	# Validate a new row, without the default row's connections or read-only state.
+	row = rowsPlug.defaultRow().createCounterpart( "row", Gaffer.Plug.Direction.In )
+	return canPasteCells( objectMatrix, [ [ row ] for i in range( objectMatrix.numRows() ) ] )
 
 # Pastes the supplied data as new rows at the end of the supplied rows plug.
 # Columns are matched by name (and type), allowing rows to be copied
