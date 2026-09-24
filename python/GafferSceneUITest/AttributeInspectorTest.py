@@ -757,7 +757,14 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		light = GafferSceneTest.TestLight()
 		light.loadShader( "simpleLight" )
-		self.assertIsNone( self.__inspect( light["out"], "/light", "bad:attribute" ) )
+
+		self.__assertExpectedResult(
+			self.__inspect( light["out"], "/light", "bad:attribute" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "No editable source found in history."
+		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testReadOnlyMetadataSignalling( self ) :
@@ -959,7 +966,13 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			fallbackDescription = "Default value"
 		)
 
-		self.assertIsNone( self.__inspect( s["editScope"]["out"], "/lightFilter", "bogusAttribute" ) )
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope"]["out"], "/lightFilter", "bogusAttribute" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "No editable source found in history."
+		)
 
 		inspection = self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights", s["editScope"] )
 		edit = inspection.acquireEdit()

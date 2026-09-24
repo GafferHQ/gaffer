@@ -309,7 +309,7 @@ Inspector::ResultPtr Inspector::inspect() const
 	SceneAlgo::History::ConstPtr history = this->history();
 	if( !history )
 	{
-		return nullptr;
+		return nullptr; // TODO
 	}
 
 	ResultPtr result = new Result( this->value( history.get() ), targetEditScope() );
@@ -323,17 +323,11 @@ Inspector::ResultPtr Inspector::inspect() const
 	}
 	inspectHistoryWalk( history.get(), result.get(), Context::current()->canceller() );
 
-	if( !result->m_value && !result->m_fallbackValue && !result->editable() )
-	{
-		// The property doesn't exist, and there's no
-		// way of making it.
-		return nullptr;
-	}
-
 	// If we failed to initialise our editors, then initialise with failures
 	// explaining why.
 	if( !result->m_editors )
 	{
+		fmt::print( "OOOH! {} {}\n", (bool)result->m_source, result->m_editScopeInHistory );
 		std::string formatString;
 		if( result->m_editScope && !result->m_editScopeInHistory )
 		{

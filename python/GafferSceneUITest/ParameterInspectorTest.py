@@ -810,8 +810,21 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		self.assertIn( "test", editScope["out"].attributes( "/light" ) )
 
-		self.assertIsNone( self.__inspect( editScope["out"], "/light", "nothingHere", None, attribute = "test" ) )
-		self.assertIsNone( self.__inspect( editScope["out"], "/light", "nothingHere", editScope, attribute = "test" ) )
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/light", "nothingHere", None, attribute = "test" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "No editable source found in history."
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/light", "nothingHere", editScope, attribute = "test" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = 'Parameter "nothingHere" does not exist.'
+		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testReadOnlyMetadataSignalling( self ) :
@@ -1599,7 +1612,13 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["assign"]["in"].setInput( s["cube"]["out"] )
 		s["assign"]["shader"].setInput( s["srf"]["out"] )
 
-		self.assertIsNone( self.__inspect( s["assign"]["out"], "/cube", ( "bogusShader", "a" ), attribute = "test:surface" ) )
+		self.__assertExpectedResult(
+			self.__inspect( s["assign"]["out"], "/cube", ( "bogusShader", "a" ), attribute = "test:surface" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "No editable source found in history."
+		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testConnectionSource( self ) :
