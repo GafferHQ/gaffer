@@ -48,3 +48,4 @@ from .InteractiveRenderManRenderTest import InteractiveRenderManRenderTest, Inte
 from .RenderPassAdaptorTest import RenderPassAdaptorTest, XPURenderPassAdaptorTest
 from .RenderManLightFilterTest import RenderManLightFilterTest
 from .StylizedAOVAdaptorTest import StylizedAOVAdaptorTest
+from .WorldOriginAdaptorTest import WorldOriginAdaptorTest
