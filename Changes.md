@@ -6,6 +6,7 @@ Fixes
 
 - Set expressions : Fixed potential crash.
 - RenderMan : Fixed handling of `ri:trace:worldorigin` option.
+- Dispatch : Fixed use of `imath` values in command line settings (#3046).
 
 1.7.3.0 (relative to 1.7.2.0)
 =======
