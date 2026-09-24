@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Cycles : Fixed bug introduced in 1.7.0.0 causing the environment texture of a rotated background light to lose its orientation when the light is modified during an interactive render.
+- Local Jobs : Fixed CPU and memory usage not including child processes, which could leave statistics unchanged on Windows (#5713).
 
 1.7.3.1 (relative to 1.7.3.0)
 =======
