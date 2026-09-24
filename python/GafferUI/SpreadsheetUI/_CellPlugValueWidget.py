@@ -51,8 +51,26 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plugOrPlugs )
+		self.__buildWidgets()
+
+	def setPlugs( self, plugs ) :
+
+		plugs = set( plugs )
+		if plugs == self.getPlugs() :
+			return
+
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
+		self.__buildWidgets()
+		self._requestUpdateFromValues()
+
+	def __buildWidgets( self ) :
+
+		del self.__row[:]
+		self.__enabledPlugValueWidget = None
 
 		plugs = self.getPlugs()
+		if not plugs :
+			return
 
 		# If all cells have enabled plugs, we need to add a switch for them.
 		# If cells adopt the enabled plug from their value plug, we rely on the
@@ -187,7 +205,9 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# lists of long scene locations. When that is the case, we want
 			# to make sure the editor is equally wide, so that it shows at least
 			# as much content as the spreadsheet itself.
-			columnWidth = Gaffer.Metadata.value( plugValueWidget.getPlug().parent(), "spreadsheet:columnWidth" ) or 0
+			columnWidth = max(
+				Gaffer.Metadata.value( p.parent(), "spreadsheet:columnWidth" ) or 0 for p in plugValueWidget.getPlugs()
+			)
 			plugValueWidget._qtWidget().setFixedWidth( max( columnWidth, 250 ) )
 			if isinstance( plugValueWidget, GafferUI.StringPlugValueWidget ) :
 				plugValueWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
