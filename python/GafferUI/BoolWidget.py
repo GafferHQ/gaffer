@@ -72,6 +72,19 @@ class BoolWidget( GafferUI.Widget ) :
 
 		return str( self._qtWidget().text() )
 
+	## Controls user editing without disabling context menus or programmatic updates.
+	def setEditable( self, editable ) :
+
+		if editable == self.getEditable() :
+			return
+
+		self._qtWidget().setProperty( "readOnly", not editable )
+		self._repolish()
+
+	def getEditable( self ) :
+
+		return not self._qtWidget().property( "readOnly" )
+
 	def setImage( self, image ) :
 
 		if isinstance( image, str ) :
@@ -183,6 +196,11 @@ class _CheckBox( QtWidgets.QCheckBox ) :
 			return QtWidgets.QAbstractButton.hitButton( self, pos )
 		else :
 			return QtWidgets.QCheckBox.hitButton( self, pos )
+
+	def nextCheckState( self ) :
+
+		if not self.property( "readOnly" ) :
+			QtWidgets.QCheckBox.nextCheckState( self )
 
 ## \todo Backwards compatibility - remove for version 1.0
 CheckBox = BoolWidget
