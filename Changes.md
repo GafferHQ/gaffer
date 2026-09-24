@@ -6,6 +6,7 @@ Fixes
 
 - Set expressions : Fixed potential crash.
 - RenderMan : Fixed handling of `ri:trace:worldorigin` option.
+- Local Jobs : Fixed CPU and memory usage not including child processes, which could leave statistics unchanged on Windows (#5713).
 
 1.7.3.0 (relative to 1.7.2.0)
 =======
