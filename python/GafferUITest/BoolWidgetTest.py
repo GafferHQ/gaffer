@@ -38,6 +38,9 @@ import weakref
 
 import GafferUI
 import GafferUITest
+import GafferTest
+
+from Qt import QtCore, QtGui, QtWidgets
 
 class BoolWidgetTest( GafferUITest.TestCase ) :
 
@@ -51,6 +54,23 @@ class BoolWidgetTest( GafferUITest.TestCase ) :
 		del w
 
 		self.assertTrue( r() is None )
+
+	def testEditable( self ) :
+
+		for mode in GafferUI.BoolWidget.DisplayMode :
+			w = GafferUI.BoolWidget( displayMode = mode )
+			w._setStyleSheet()
+			w.setEditable( False )
+			menuRequests = GafferTest.CapturingSlot( w.contextMenuSignal() )
+			QtWidgets.QApplication.sendEvent(
+				w._qtWidget(), QtGui.QContextMenuEvent( QtGui.QContextMenuEvent.Mouse, QtCore.QPoint( 0, 0 ) )
+			)
+			self.assertEqual( len( menuRequests ), 1 )
+			w._qtWidget().click()
+			self.assertFalse( w.getState() )
+			w.setEditable( True )
+			w._qtWidget().click()
+			self.assertTrue( w.getState() )
 
 	def testStateChangedSignal( self ) :
 
