@@ -275,7 +275,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	def setRole( self, role ) :
 
-		if role == self.getRole() :
+		if role.name == GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferRole" ) ) :
 			return
 
 		self._qtWidget().setProperty( "gafferRole", GafferUI._Variant.toVariant( role.name ) )
