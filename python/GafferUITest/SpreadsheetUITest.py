@@ -49,6 +49,21 @@ from Qt import QtCore
 
 class SpreadsheetUITest( GafferUITest.TestCase ) :
 
+	def testCellWidgetSetPlugs( self ) :
+
+		s = self.__createSpreadsheet()
+		first = s["rows"][1]["cells"][0]
+		second = s["rows"][2]["cells"][0]
+		w = GafferUI.PlugValueWidget.create( first )
+		w.setPlug( second )
+		self.assertEqual( w.childPlugValueWidget( second["value"] ).getPlugs(), { second["value"] } )
+		self.assertEqual( w.childPlugValueWidget( second["enabled"] ).getPlugs(), { second["enabled"] } )
+
+		w.setPlugs( { first, second } )
+		self.assertEqual( w.childPlugValueWidget( first["value"] ).getPlugs(), { first["value"], second["value"] } )
+		w.setPlugs( [] )
+		self.assertIsNone( w.childPlugValueWidget( first["value"] ) )
+
 	@staticmethod
 	def __createSpreadsheet( numRows = 10 ) :
 
