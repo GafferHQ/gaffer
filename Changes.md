@@ -18,6 +18,11 @@ Breaking Changes
 - ImageAlgo : Removed `image()` method.
 - ImageGadget, Image : Removed constructors taking an `IECoreImage::ImagePrimitive`.
 
+Fixes
+-----
+
+- Help : Fixed opening local documentation on Windows when the installation path contains spaces.
+
 1.7.x.x (relative to 1.7.3.0)
 =======
 
