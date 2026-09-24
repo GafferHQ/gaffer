@@ -6,6 +6,7 @@ Fixes
 
 - Set expressions : Fixed potential crash.
 - RenderMan : Fixed handling of `ri:trace:worldorigin` option.
+- Spreadsheet : Fixed pasting rows when the default row contains input connections or is read-only (#5644).
 
 1.7.3.0 (relative to 1.7.2.0)
 =======
