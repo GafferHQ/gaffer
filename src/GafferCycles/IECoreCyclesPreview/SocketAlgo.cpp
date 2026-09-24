@@ -633,23 +633,11 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 				return ccl::ParamValue( name.string(), ccl::TypeFloat4, 1, &result );
 			}
 			break;
-		case M44fDataTypeId :
-			{
-				const M44fData *data = static_cast<const M44fData *>( value );
-				const ccl::Transform result = setTransform( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeMatrix, 1, &result );
-			}
-			break;
-		case M44dDataTypeId :
-			{
-				const M44dData *data = static_cast<const M44dData *>( value );
-				const ccl::Transform result = setTransform( data->readable() );
-				return ccl::ParamValue( name.string(), ccl::TypeMatrix, 1, &result );
-			}
-			break;
 		default :
 			{
-				// A ParamValue that we can test with .data() to see if it's a nullptr.
+				// Don't check with nullptr as OpenImageIO's implementation will store the value
+				// directly if it is small enough and won't be a pointer of null when using
+				// .data(), instead check for .nvalues() > 0 on the return ParamValue struct.
 				return ccl::ParamValue();
 			}
 	}
