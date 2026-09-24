@@ -136,7 +136,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
-			GafferSceneUI.Private.Inspector.Result.SourceType.Other
+			GafferSceneUI.Private.Inspector.Result.SourceType.None_
 		)
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /" )
 
@@ -146,7 +146,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value().value, True )
 		self.assertEqual(
 			inspection.sourceType(),
-			GafferSceneUI.Private.Inspector.Result.SourceType.Other
+			GafferSceneUI.Private.Inspector.Result.SourceType.None_
 		)
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
@@ -422,7 +422,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["plane"]["out"], "/plane", "planeSet" ),
 			source = s["plane"]["sets"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			fallbackDescription = "Default value",
 			editable = True
 		)

@@ -61,6 +61,7 @@ const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = 
 { (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },
 { (int)Inspector::Result::SourceType::Other, nullptr },
 { (int)Inspector::Result::SourceType::External, new Color4fData( Imath::Color4f( 121, 77, 56, 120 ) / 255.0f ) },
+{ (int)Inspector::Result::SourceType::None, nullptr },
 };
 const Color4fDataPtr g_fallbackValueForegroundColor = new Color4fData( Imath::Color4f( 163, 163, 163, 255 ) / 255.0f );
 const ConstStringDataPtr g_missingOutputShader = new StringData( "Missing output shader" );
