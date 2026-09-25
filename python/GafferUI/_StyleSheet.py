@@ -1121,7 +1121,8 @@ _styleSheet = string.Template(
 		image: url(:/checkBoxUncheckedHover.png);
 	}
 
-	QCheckBox::indicator:unchecked:disabled {
+	QCheckBox::indicator:unchecked:disabled,
+	QCheckBox[readOnly="true"]::indicator:unchecked {
 		image: url(:/checkBoxUncheckedDisabled.png);
 	}
 
@@ -1138,7 +1139,8 @@ _styleSheet = string.Template(
 		image: url(:/checkBoxCheckedHover.png);
 	}
 
-	QCheckBox::indicator:checked:disabled {
+	QCheckBox::indicator:checked:disabled,
+	QCheckBox[readOnly="true"]::indicator:checked {
 		image: url(:/checkBoxCheckedDisabled.png);
 	}
 
@@ -1155,7 +1157,8 @@ _styleSheet = string.Template(
 		image: url(:/checkBoxIndeterminateHover.png);
 	}
 
-	QCheckBox::indicator:indeterminate:disabled {
+	QCheckBox::indicator:indeterminate:disabled,
+	QCheckBox[readOnly="true"]::indicator:indeterminate {
 		image: url(:/checkBoxIndeterminateDisabled.png);
 	}
 
@@ -1186,7 +1189,8 @@ _styleSheet = string.Template(
 		image: url(:/toggleOffHover.png);
 	}
 
-	QCheckBox[gafferDisplayMode="Switch"]::indicator:unchecked:disabled {
+	QCheckBox[gafferDisplayMode="Switch"]::indicator:unchecked:disabled,
+	QCheckBox[gafferDisplayMode="Switch"][readOnly="true"]::indicator:unchecked {
 		image: url(:/toggleOffDisabled.png);
 	}
 
@@ -1203,7 +1207,8 @@ _styleSheet = string.Template(
 		image: url(:/toggleOnHover.png);
 	}
 
-	QCheckBox[gafferDisplayMode="Switch"]::indicator:checked:disabled {
+	QCheckBox[gafferDisplayMode="Switch"]::indicator:checked:disabled,
+	QCheckBox[gafferDisplayMode="Switch"][readOnly="true"]::indicator:checked {
 		image: url(:/toggleOnDisabled.png);
 	}
 
@@ -1220,7 +1225,8 @@ _styleSheet = string.Template(
 		image: url(:/toggleIndeterminateHover.png);
 	}
 
-	QCheckBox[gafferDisplayMode="Switch"]::indicator:indeterminate:disabled {
+	QCheckBox[gafferDisplayMode="Switch"]::indicator:indeterminate:disabled,
+	QCheckBox[gafferDisplayMode="Switch"][readOnly="true"]::indicator:indeterminate {
 		image: url(:/toggleIndeterminateDisabled.png);
 	}
 
@@ -1253,6 +1259,12 @@ _styleSheet = string.Template(
 		border-color: $brightColor;
 		border-width: 2px;
 		padding-left: 3px;
+	}
+
+	QCheckBox[gafferDisplayMode="Tool"][readOnly="true"]:hover {
+		border-color: $backgroundDark;
+		border-width: 1px;
+		padding-left: 4px;
 	}
 
 	/* frame */

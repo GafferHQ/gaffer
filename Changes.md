@@ -7,6 +7,12 @@ Fixes
 - Arnold : Fixed unwanted overrides of shaders inside `.ass` procedurals (#7163).
 - Set expressions : Fixed potential crash.
 - RenderMan : Fixed handling of `ri:trace:worldorigin` option.
+- NodeEditor : Fixed unavailable context menus on connected checkboxes, switches and preset menus (#7105, #5722).
+
+API
+---
+
+- BoolWidget : Added `setEditable()` and `getEditable()` methods.
 
 1.7.3.0 (relative to 1.7.2.0)
 =======
