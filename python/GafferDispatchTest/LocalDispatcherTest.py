@@ -50,6 +50,8 @@ import tempfile
 import threading
 import weakref
 
+import psutil
+
 import imath
 
 import IECore
@@ -620,6 +622,60 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# make sure it never wrote the file
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
+
+	def testKillProcessTree( self ) :
+
+		marker = self.temporaryDirectory() / "grandchild.pid"
+		grandchildCode = (
+			"import os, pathlib, time; "
+			f"marker = pathlib.Path({str(marker)!r}); "
+			"marker.with_suffix('.tmp').write_text(str(os.getpid())); "
+			"marker.with_suffix('.tmp').replace(marker); time.sleep(30)"
+		)
+		childCode = f"import subprocess, sys; subprocess.run([sys.executable, '-c', {grandchildCode!r}])"
+		script = Gaffer.ScriptNode()
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue(
+			f"import subprocess, sys; subprocess.run([sys.executable, '-c', {childCode!r}])"
+		)
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher["tasks"][0].setInput( script["command"]["task"] )
+		dispatcher["task"].execute()
+		job = dispatcher.jobPool().jobs()[0]
+		processes = []
+		try :
+			deadline = time.monotonic() + 15
+			while not marker.exists() and time.monotonic() < deadline :
+				time.sleep( 0.05 )
+			self.assertTrue( marker.exists() )
+			root = psutil.Process( job.processID() )
+			processes = root.children( recursive = True ) + [ root ]
+			self.assertIn( int( marker.read_text() ), [ p.pid for p in processes ] )
+			self.assertGreaterEqual( len( processes ), 3 )
+			job.kill()
+			_, alive = psutil.wait_procs( processes, timeout = 5 )
+			self.assertEqual( [ p for p in alive if self.__processIsRunning( p ) ], [] )
+			dispatcher.jobPool().waitForAll()
+			self.assertEqual( job.status(), job.Status.Killed )
+		finally :
+			job.kill()
+			for process in processes :
+				try :
+					process.kill()
+				except psutil.NoSuchProcess :
+					pass
+			psutil.wait_procs( processes, timeout = 5 )
+			dispatcher.jobPool().waitForAll()
+
+	@staticmethod
+	def __processIsRunning( process ) :
+
+		try :
+			# Orphaned zombies have exited, but aren't ours to reap.
+			return process.is_running() and process.status() != psutil.STATUS_ZOMBIE
+		except psutil.NoSuchProcess :
+			return False
 
 	def testSpacesInContext( self ) :
 
