@@ -18,14 +18,21 @@ Breaking Changes
 - ImageAlgo : Removed `image()` method.
 - ImageGadget, Image : Removed constructors taking an `IECoreImage::ImagePrimitive`.
 
-1.7.x.x (relative to 1.7.3.0)
+1.7.x.x (relative to 1.7.3.1)
+=======
+
+
+
+1.7.3.1 (relative to 1.7.3.0)
 =======
 
 Fixes
 -----
 
+- Arnold : Fixed unwanted overrides of shaders inside `.ass` procedurals (#7163).
 - Set expressions : Fixed potential crash.
 - RenderMan : Fixed handling of `ri:trace:worldorigin` option.
+- SceneAlgo : Fixed potential deadlock in `parallelGatherLocations()`.
 
 1.7.3.0 (relative to 1.7.2.0)
 =======

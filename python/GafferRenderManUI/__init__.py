@@ -46,5 +46,6 @@ from . import RenderManIntegratorUI
 from . import RenderManOutputFilterUI
 from . import RenderManDisplayFilterUI
 from . import RenderManSampleFilterUI
+from . import _WorldOriginAdaptorUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderManUI" )

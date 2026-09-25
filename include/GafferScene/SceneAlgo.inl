@@ -189,77 +189,65 @@ void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher
 template <class LocationFunctor, class GatherFunctor>
 void parallelGatherLocations( const ScenePlug *scene, LocationFunctor &&locationFunctor, GatherFunctor &&gatherFunctor, const ScenePlug::ScenePath &root )
 {
-	// We use `parallelTraverse()` to run `locationFunctor`, passing the results to
-	// `gatherFunctor` on the current thread via a queue. In testing, this proved to
-	// have lower overhead than using TBB's `parallel_pipeline()`.
-
+	// We use `parallelTraverse()` to run `locationFunctor`, with workers taking
+	// turns to run `gatherFunctor` serially over the queued results. In testing,
+	// this proved to have lower overhead than using TBB's `parallel_pipeline()`.
 	using LocationResult = std::invoke_result_t<LocationFunctor, const ScenePlug *, const ScenePlug::ScenePath &>;
-	using QueueValue = std::variant<std::monostate, LocationResult, std::exception_ptr>;
+	// LocationResult might not be default-constructible, but our queue value
+	// must be for use with `try_pop()`. Wrapping in a variant gives us
+	// this property.
+	using QueueValue = std::variant<std::monostate, LocationResult>;
+	// We bound the queue capacity to limit potential memory spikes caused
+	// by LocationFunctor generating data faster than it can be consumed
+	// by GatherFunctor.
 	tbb::concurrent_bounded_queue<QueueValue> queue;
 	queue.set_capacity( tbb::this_task_arena::max_concurrency() );
 
-	IECore::Canceller traverseCanceller;
-	auto locationFunctorWrapper = [&] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
-		IECore::Canceller::check( &traverseCanceller );
-		queue.push( std::move( locationFunctor( scene, path ) ) );
-		return true;
+	// Functor that flushes the queue.
+	auto gatherFromQueue = [&] () {
+		QueueValue v;
+		while( queue.try_pop( v ) )
+		{
+			gatherFunctor( std::get<LocationResult>( v ) );
+		}
 	};
 
-	tbb::task_arena( tbb::task_arena::attach() ).enqueue(
-
-		[&, &threadState = Gaffer::ThreadState::current()] () {
-
-			Gaffer::ThreadState::Scope threadStateScope( threadState );
-			try
-			{
-				SceneAlgo::parallelTraverse( scene, locationFunctorWrapper, root );
-			}
-			catch( ... )
-			{
-				queue.push( std::current_exception() );
-				return;
-			}
-			queue.push( std::monostate() );
-		}
-
-	);
-
-	while( true )
+	std::mutex gatherMutex;
+	const Gaffer::Context *globalContext = Gaffer::Context::current();
+	auto locationFunctorWrapper = [&] ( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 	{
-		QueueValue value;
-		queue.pop( value );
-		if( auto locationResult = std::get_if<LocationResult>( &value ) )
+		auto locationResult = locationFunctor( scene, path );
+
+		// Try to delegate responsibility for running `gatherFunctor`
+		// by pushing the result into the queue.
+		if( !queue.try_push( locationResult ) )
 		{
-			try
-			{
-				gatherFunctor( *locationResult );
-			}
-			catch( ... )
-			{
-				// We can't rethrow until the `parallelTraverse()` has
-				// completed, as it references the `queue` and
-				// `traverseCanceller` from this stack frame.
-				traverseCanceller.cancel();
-				while( true )
-				{
-					queue.pop( value );
-					if( std::get_if<std::exception_ptr>( &value ) || std::get_if<std::monostate>( &value ) )
-					{
-						throw;
-					}
-				}
-			}
-		}
-		else if( auto exception = std::get_if<std::exception_ptr>( &value ) )
-		{
-			std::rethrow_exception( *exception );
+			// Queue is full. It's definitely on us to flush it, or
+			// we can't make progress.
+			std::unique_lock gatherLock( gatherMutex );
+			Gaffer::Context::Scope globalScope( globalContext );
+			gatherFromQueue();
+			gatherFunctor( locationResult );
 		}
 		else
 		{
-			// We use `monostate` to signal completion.
-			break;
+			// Successfully pushed to queue. Try to flush it, but if
+			// someone else is doing that already just carry on so we
+			// can process another location.
+			std::unique_lock gatherLock( gatherMutex, std::try_to_lock );
+			if( gatherLock.owns_lock() )
+			{
+				Gaffer::Context::Scope globalScope( globalContext );
+				gatherFromQueue();
+			}
 		}
-	}
+
+		return true;
+	};
+
+	SceneAlgo::parallelTraverse( scene, locationFunctorWrapper, root );
+	// Flush any stragglers from the queue.
+	gatherFromQueue();
 }
 
 template<typename Predicate>

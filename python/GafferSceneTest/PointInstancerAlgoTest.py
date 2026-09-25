@@ -720,3 +720,57 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 			# intact, rather than being corrupted by the zero-scaled axis.
 			expectedOrientation = imath.Quatf().setAxisAngle( imath.V3f( 0, 0, 1 ), math.radians( 90 ) )
 			self.assertEqualWithAbsError( flattened.getOrientation()[0], expectedOrientation, 0.00001 )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testFlattenWithMorePrototypesThanWorkerConcurrency( self ) :
+
+		# Exercises a deadlock that was possible when the number of
+		# prototypes to flatten was greater than the available concurrency.
+		# If the test runs to completion then we are happy.
+
+		prototype = GafferScene.SceneReader()
+		prototype["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
+
+		numMeshesInPrototype = GafferScene.SceneAlgo.findAll(
+			prototype["out"], lambda scene, path : isinstance( scene.object( path ), IECoreScene.MeshPrimitive )
+		).size()
+
+		prototypeFilter = GafferScene.PathFilter()
+		prototypeFilter["paths"].setValue( IECore.StringVectorData( [ "/GAFFERBOT" ] ) )
+
+		numPrototypes = 1000
+		self.assertGreater( numPrototypes, IECore.hardwareConcurrency() )
+
+		prototypes = GafferScene.Duplicate()
+		prototypes["in"].setInput( prototype["out"] )
+		prototypes["filter"].setInput( prototypeFilter["out"] )
+		prototypes["copies"].setValue( numPrototypes - 1 )
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		# Note : We're not actually assigning all the prototypes to points here, but
+		# our final assertion checks that `flatten()` has flattened all prototypes
+		# regardless. If `flatten()` got smarter and only processed the prototypes
+		# that are referenced, then we'd have to update the test.
+
+		instancer = GafferScene.PointInstancer()
+		instancer["in"].setInput( sphere["out"] )
+		instancer["filter"].setInput( sphereFilter["out"] )
+		instancer["prototypes"].setInput( prototypes["out"] )
+		instancer["prototypesList"].setValue( IECore.StringVectorData( [ f"/{x}" for x in prototypes["out"].childNames( "/" ) ] ) )
+
+		with Gaffer.Context() as context :
+
+			context["scene:path"] = GafferScene.ScenePlug.stringToPath( "/sphere" )
+			pointInstancer = instancer["out"]["object"].getValue()
+
+			flattened = GafferScene.Private.PointInstancerAlgo.flatten(
+				pointInstancer, GafferScene.Private.RendererAlgo.RenderOptions(), instancer["out"]
+			)
+
+			self.assertEqual(
+				len( flattened.getPrototypes() ), numPrototypes * numMeshesInPrototype
+			)
