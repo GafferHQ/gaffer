@@ -3418,4 +3418,3 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertFalse( subdivObject.attributes( maxLevel2Attributes ) )
 
 		del polygonObject, subdivObject
-
