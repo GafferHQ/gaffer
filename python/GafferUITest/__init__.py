@@ -134,5 +134,6 @@ from .AnnotationsGadgetTest import AnnotationsGadgetTest
 from .PopupWindowTest import PopupWindowTest
 from .ColorChooserTest import ColorChooserTest
 from .ContextTrackerTest import ContextTrackerTest
+from .ArrayDataWidgetTest import ArrayDataWidgetTest
 from .MetadataAlgoTest import MetadataAlgoTest
 from .BreadCrumbsWidgetTest import BreadCrumbsWidgetTest
