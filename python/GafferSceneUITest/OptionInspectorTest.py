@@ -358,7 +358,13 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 	def testNonExistentOption( self ) :
 
 		plane = GafferScene.Plane()
-		self.assertIsNone( self.__inspect( plane["out"], "not:an:option" ) )
+
+		self.__assertExpectedResult(
+			self.__inspect( plane["out"], "not:an:option" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+			editable = False, nonEditableReason = "No value to edit."
+		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDirtiedSignal( self ) :
@@ -852,9 +858,14 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s["editScope"]["in"].setInput( s["customOptions"]["out"] )
 
 		# Inspecting the "test:enabled" option without an active EditScope
-		# returns `None` as we have no upstream nodes capable of editing it.
+		# results in  `SourceType.None_` as we have no upstream nodes capable of editing it.
 
-		self.assertIsNone( self.__inspect( s["editScope"]["out"], "test:enabled" ) )
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope"]["out"], "test:enabled" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+			editable = False, nonEditableReason = "No value to edit."
+		)
 
 		# Providing an EditScope does not allow an edit as the option does not
 		# exist and we don't have a default value to base the edit on
@@ -871,7 +882,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.addCleanup( Gaffer.Metadata.deregisterValue, "option:test:enabled", "defaultValue" )
 		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		self.assertEqual( inspection.value(), IECore.BoolData( 1 ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
 		# If the option does exist, then its value is returned as normal
@@ -888,7 +899,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		optionPlug["enabled"].setValue( False )
 		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		self.assertEqual( inspection.value(), IECore.BoolData( 1 ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
 		# Updates to "defaultValue" are reflected in new inspections
@@ -987,7 +998,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", None )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "No editable source found in history." )
+		self.assertEqual( inspection.nonDisableableReason(), "No value to edit." )
 
 		cameraEdit = GafferScene.EditScopeAlgo.acquireOptionEdit(
 			s["editScope1"], "render:camera", createIfNecessary = True

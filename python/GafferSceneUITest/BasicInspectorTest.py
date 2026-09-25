@@ -236,17 +236,17 @@ class BasicInspectorTest( GafferUITest.TestCase ) :
 		assertExpectedSource( script["primitiveVariables2"]["out"], "beforeEditScope", script["primitiveVariables1"]["out"]["object"], SourceType.Other )
 		assertExpectedSource( script["primitiveVariables2"]["out"], "beforeEditScope", script["primitiveVariables1"]["out"]["object"], SourceType.Upstream, editScope = script["editScope"] )
 
-		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.Other )
-		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.Other, editScope = script["editScope"] )
+		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.None_ )
+		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.None_, editScope = script["editScope"] )
 		assertExpectedSource( script["editScope"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["out"]["object"], SourceType.Other )
 		assertExpectedSource( script["editScope"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["out"]["object"], SourceType.EditScope, editScope = script["editScope"] )
 		assertExpectedSource( script["editScope"]["out"], "beforeEditScope", script["primitiveVariables1"]["out"]["object"], SourceType.Other )
 		assertExpectedSource( script["editScope"]["out"], "beforeEditScope", script["primitiveVariables1"]["out"]["object"], SourceType.Upstream, editScope = script["editScope"] )
 
-		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.Other )
-		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.Other, editScope = script["editScope"] )
-		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.Other )
-		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.Other, editScope = script["editScope"] )
+		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.None_ )
+		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.None_, editScope = script["editScope"] )
+		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.None_ )
+		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.None_, editScope = script["editScope"] )
 		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["out"]["object"], SourceType.Other )
 		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["out"]["object"], SourceType.Upstream, editScope = script["editScope"] )
 

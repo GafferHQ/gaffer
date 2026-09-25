@@ -192,6 +192,7 @@ void GafferSceneUIModule::bindInspector()
 			.value( "Downstream", Inspector::Result::SourceType::Downstream )
 			.value( "Other", Inspector::Result::SourceType::Other )
 			.value( "External", Inspector::Result::SourceType::External )
+			.value( "None_", Inspector::Result::SourceType::None )
 		;
 	}
 

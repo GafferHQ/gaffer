@@ -137,7 +137,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value().value, Gaffer.Metadata.value( "attribute:gl:visualiser:scale", "defaultValue" ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
 		s["globalGlAttributes"] = GafferScene.OpenGLAttributes()
@@ -152,7 +152,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["globalGlAttributes"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
 
 		s["groupFilter"] = GafferScene.PathFilter()
@@ -170,7 +170,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["glAttributes"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
 		# With a "gl:visualiser:scale" attribute created at the inspected location, it is
@@ -761,9 +761,9 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( light["out"], "/light", "bad:attribute" ),
 			source = None,
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = False,
-			nonEditableReason = "No editable source found in history."
+			nonEditableReason = "No value to edit."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -855,7 +855,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["light"]["out"], "/light", "gl:visualiser:scale", None ),
 			source = s["light"]["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = True,
 			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
@@ -865,7 +865,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale", None ),
 			source = s["light"]["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = True,
 			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
@@ -886,7 +886,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "gl:visualiser:scale", None ),
 			source = s["light"]["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = True,
 			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
@@ -960,7 +960,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights" ),
 			source = s["lightFilter"]["filteredLights"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = True,
 			edit = s["lightFilter"]["filteredLights"],
 			fallbackDescription = "Default value"
@@ -969,9 +969,9 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/lightFilter", "bogusAttribute" ),
 			source = None,
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = False,
-			nonEditableReason = "No editable source found in history."
+			nonEditableReason = "No value to edit."
 		)
 
 		inspection = self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights", s["editScope"] )
@@ -1361,7 +1361,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["attributeTweaks"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
-		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.None_ )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
@@ -1371,7 +1371,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["attributeTweaks"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
-		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.None_ )
 		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
 
@@ -1415,6 +1415,6 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		# for any edit at that location.
 		inspection = self.__inspect( s["openGLAttributes"]["out"], "/light", "gl:visualiser:scale", None )
 		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
-		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.None_ )
 		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
