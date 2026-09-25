@@ -49,6 +49,8 @@ import GafferCycles
 class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	renderer = "Cycles"
+	pointInstancerSupported = True
+
 	__extraOptions = {}
 
 	def testShaderEditsWithSVM( self ) :

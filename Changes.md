@@ -1,12 +1,20 @@
 1.7.x.x (relative to 1.7.3.0)
 =======
 
+Improvements
+------------
+
+- Cycles : Added support for rendering PointInstancers.
+
 Fixes
 -----
 
 - Arnold : Fixed unwanted overrides of shaders inside `.ass` procedurals (#7163).
 - Set expressions : Fixed potential crash.
 - RenderMan : Fixed handling of `ri:trace:worldorigin` option.
+- Cycles :
+  - Fixed rendering of identical instances with different shaders in batch renders. This also improves the situation in interactive renders substantially, but incorrect shading is still possible when reassigning shaders.
+  - Fixed interactive displacement edits.
 
 1.7.3.0 (relative to 1.7.2.0)
 =======
