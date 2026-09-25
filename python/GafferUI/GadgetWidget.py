@@ -59,6 +59,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		GafferUI.GLWidget.__init__( self, **kw )
 
+		# See comment in mouseMove
+		self.__overOverlay = False
+
 		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
 
 		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
@@ -230,15 +233,33 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __mouseMove( self, widget, event ) :
 
-		# We get given mouse moves before they're given to the overlay items,
-		# so we must ignore them so they can be used by the overlay.
-		if self._qtWidget().itemAt( event.line.p0.x, event.line.p0.y ) is not None :
-			return False
-
 		if not self._makeCurrent() :
 			return False
 
-		return self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
+		# When the cursor is over the overlay, it is within this Gadget, but for the
+		# contained ViewportGadget, we want to present things as if the cursor is outside
+		# it when it is over an overlay ( ie. it gets a leaveSignal when the cursor enters
+		# an overlay, an enterSignal when the cursor leave an overlay, and no mouseMove
+		# signals while the cursor is over an overlay )
+
+		overOverlay = self._qtWidget().itemAt( event.line.p0.x, event.line.p0.y ) is not None
+
+		if self.__overOverlay != overOverlay:
+			if overOverlay:
+				self.__viewportGadget.leaveSignal()( self.__viewportGadget, event )
+			else:
+				self.__viewportGadget.enterSignal()( self.__viewportGadget, event )
+			self.__overOverlay = overOverlay
+
+		if overOverlay:
+			return False
+
+		self.__viewportGadget.mouseMoveSignal()( self.__viewportGadget, event )
+
+		# we always return false so that any overlay items will get appropriate
+		# move/enter/leave events, otherwise highlighting for buttons etc can go
+		# awry.
+		return False
 
 	def __dragBegin( self, widget, event ) :
 
