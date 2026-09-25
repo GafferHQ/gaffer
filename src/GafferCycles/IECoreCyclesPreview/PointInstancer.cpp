@@ -178,7 +178,7 @@ PointInstancer::PointInstancer(
 	const IECoreScenePreview::Renderer::PointInstancerSamples &samples,
 	const std::vector<SharedGeometryPtr> &prototypes
 )
-	:	m_scene( scene ), m_nodeDeleter( nodeDeleter ), m_prototypes( prototypes )
+	:	m_scene( scene ), m_prototypes( prototypes )
 {
 	auto prototypeIndices = samples[0]->getPrototypeIndex();
 	IECoreScene::PointInstancer::VisibilityQuery visibilityQuery( *samples[0] );

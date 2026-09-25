@@ -65,7 +65,6 @@ class PointInstancer : public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		ccl::Scene *m_scene;
-		NodeDeleter *m_nodeDeleter;
 		// Keep geometry alive as long as `m_instances` references it.
 		std::vector<SharedGeometryPtr> m_prototypes;
 
