@@ -262,12 +262,16 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __update( self ) :
 
+		activateLayouts = False
+
 		if self.__layoutDirty :
 			self.__updateLayout()
 			self.__layoutDirty = False
+			activateLayouts = True
 
 		if self.__activationsDirty :
-			self.__updateActivations()
+			if self.__updateActivations() :
+				activateLayouts = True
 			self.__activationsDirty = False
 
 		if self.__summariesDirty :
@@ -286,6 +290,12 @@ class PlugLayout( GafferUI.Widget ) :
 				if isinstance( item, Gaffer.Plug ) and widget is not None and widget.getVisible()
 			] ) < 6,
 		)
+
+		if activateLayouts and self.visible() :
+			# Activate all layouts now. This works around flicker caused by widgets changing
+			# size after an initial round of layout. One culprit seems to be the usage
+			# of `QtWidgets.QLayout.SetMinAndMaxSize` by Widget - see comments there.
+			self._activateLayouts()
 
 	def __updateLayout( self ) :
 
@@ -390,12 +400,18 @@ class PlugLayout( GafferUI.Widget ) :
 
 				return result
 
+		visibilityChanged = False
 		for item, widget in self.__widgets.items() :
 			if widget is not None :
 				with self.context() :
 					widget.setEnabled( active( self.__itemMetadataValue( item, "activator" ) ) )
 					visibleByFilters = all( f( item ) for f in self.__filterFunctions.values() if isinstance( item, Gaffer.Plug ) )
-					widget.setVisible( visibleByFilters and active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
+					visible = visibleByFilters and active( self.__itemMetadataValue( item, "visibilityActivator" ) )
+				if visible != widget.getVisible() :
+					widget.setVisible( visible )
+					visibilityChanged = True
+
+		return visibilityChanged
 
 	def __updateSummariesWalk( self, section ) :
 

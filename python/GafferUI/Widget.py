@@ -176,13 +176,12 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			# really need to do is somehow make __qtWidget without a layout, and just have
 			# it's size etc. dictated directly by self.__gafferWidget._qtWidget() somehow.
 			#
-			# See `NodeEditor._updateFromSet()` where we work around layout
-			# flicker caused by this. Our theory is that when the layout first
-			# runs, it sets the minimum and maximum sizes of the widget, causing
-			# a second layout event to be posted to the event loop. Before that
-			# is dealt with, a paint event draws a layout computed without the
-			# right constraints and we get flicker when the second round of
-			# layout completes.
+			# See `_activateLayouts()` where we work around layout flicker caused
+			# by this. Our theory is that when the layout first runs, it sets the
+			# minimum and maximum sizes of the widget, causing a second layout
+			# event to be posted to the event loop. Before that is dealt with, a
+			# paint event draws a layout computed without the right constraints
+			# and we get flicker when the second round of layout completes.
 			self.__qtWidget.layout().setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 			self.__qtWidget.layout().setContentsMargins( 0, 0, 0, 0 )
 			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
@@ -908,6 +907,28 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			if isinstance( child, QtWidgets.QWidget ) :
 				self._repolish( child )
 		style.polish( qtWidget )
+
+	def _activateLayouts( self ) :
+
+		# Bottom-up activation of the layout of this widget and
+		# its descendants. This works around flicker when widgets
+		# using the SetMinAndMaxSize constraint are shown.
+		qtWidget = self._qtWidget()
+		for widget in reversed( [ qtWidget ] + qtWidget.findChildren( QtWidgets.QWidget ) ) :
+			layout = widget.layout()
+			if layout is not None :
+				layout.activate()
+
+		# Also activate the ancestors. If our size has changed,
+		# the deferred layout of an ancestor would also flicker.
+		ancestor = qtWidget.parentWidget()
+		while ancestor is not None :
+			layout = ancestor.layout()
+			if layout is not None :
+				layout.activate()
+			if ancestor.isWindow() :
+				break
+			ancestor = ancestor.parentWidget()
 
 	def _setStyleSheet( self ):
 
