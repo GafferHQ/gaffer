@@ -3334,6 +3334,23 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( gathered, [] )
 
+	def testParallelGatherContext( self ) :
+
+		plane = GafferScene.Plane()
+
+		gatheredContexts = []
+		GafferScene.SceneAlgo.parallelGatherLocations(
+
+			plane["out"],
+			lambda scene, path : Gaffer.Context( Gaffer.Context.current() ),
+			lambda locationContext : gatheredContexts.append( ( locationContext, Gaffer.Context( Gaffer.Context.current() ) ) )
+
+		)
+
+		self.assertEqual( len( gatheredContexts ), 2 )
+		self.assertEqual( [ GafferScene.ScenePlug.pathToString( g[0].get( "scene:path" ) ) for g in gatheredContexts ], [ "/", "/plane" ] )
+		self.assertEqual( [ g[1].get( "scene:path" ) for g in gatheredContexts ], [ None, None ] )
+
 	def testIssue6923( self ) :
 
 		cube = GafferScene.Cube()
