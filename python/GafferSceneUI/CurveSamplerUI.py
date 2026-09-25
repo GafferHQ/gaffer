@@ -36,27 +36,28 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CurveSampler,
 
 	"description",
-	"""
+	_("""
 	Samples primitive variables from parametric positions on some
 	source curves. The positions are specified using the index of
 	the curve and its `v` parameter.
-	""",
+	"""),
 
 	plugs = {
 
 		"curveIndex" : {
 
 			"description" :
-			"""
+			_("""
 			The name of an integer primitive variable that specifies the index of
 			the curve to be sampled. If left unspecified, the first curve will be sampled.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Input",
 			# Put the Input section before the Output section
@@ -67,7 +68,7 @@ Gaffer.Metadata.registerNode(
 		"v" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a float primitive variable that specifies the parametric
 			position on the curve to be sampled. A value of 0 corresponds to
 			the start of the curve, and a value of 1 corresponds to the end.
@@ -76,7 +77,7 @@ Gaffer.Metadata.registerNode(
 			> Note : Values outside the `0-1` range are invalid and cannot
 			> be sampled. In this case, the `status` output primitive variable
 			> will contain `False` to indicate failure.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Input",
 

@@ -36,28 +36,29 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.DeleteObject,
 
 	"description",
-	"""
+	_("""
 	Deletes the object at a location, keeping the location itself
 	intact. This is most useful when a location contains an unwanted object,
 	but the location also has children which need to be preserved.
-	""",
+	"""),
 
 	plugs = {
 
 		"adjustBounds" : {
 
 			"description" :
-			"""
+			_("""
 			Computes new tightened bounding boxes taking into account
 			the removed objects. This can be an expensive operation -
 			turn on with care.
-			""",
+			"""),
 
 		},
 

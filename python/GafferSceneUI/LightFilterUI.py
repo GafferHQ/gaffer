@@ -40,6 +40,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 def __parameterUserDefault( plug ) :
 
@@ -70,9 +71,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.LightFilter,
 
 	"description",
-	"""
+	_("""
 	Creates a scene with a single light filter in it.
-	""",
+	"""),
 
 	plugs = {
 
@@ -85,11 +86,11 @@ Gaffer.Metadata.registerNode(
 		"filteredLights" : {
 
 			"description" :
-			"""
+			_("""
 			The lights that are being filtered. Accepts a SetExpression. You
 			might want to set it to 'defaultLights' to have the filter affect
 			all lights that haven't been excluded from that set.
-			""",
+			"""),
 
 			"layout:index" : 1,
 		},
@@ -104,9 +105,9 @@ Gaffer.Metadata.registerNode(
 		"parameters" : {
 
 			"description" :
-			"""
+			_("""
 			The parameters of the light filter shader - these will vary based on the type.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"nodule:type" : "GafferUI::CompoundNodule",
@@ -148,7 +149,7 @@ def __parameterMetadata( plug, key ) :
 
 for key in [
 	"description",
-	"label",
+	_("label"),
 	"noduleLayout:label",
 	"layout:divider",
 	"layout:section",

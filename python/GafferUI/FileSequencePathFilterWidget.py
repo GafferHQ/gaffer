@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class FileSequencePathFilterWidget( GafferUI.PathFilterWidget ) :
 
@@ -51,7 +52,7 @@ class FileSequencePathFilterWidget( GafferUI.PathFilterWidget ) :
 
 	def _updateFromPathFilter( self ) :
 
-		self.__checkBox.setText( "Show sequences" )
+		self.__checkBox.setText( _("Show sequences") )
 		self.__checkBox.setState( self.pathFilter().getMode() == Gaffer.FileSequencePathFilter.Keep.Concise )
 
 	def __stateChanged( self, checkBox ) :

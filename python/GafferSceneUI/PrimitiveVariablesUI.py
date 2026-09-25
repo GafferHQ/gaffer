@@ -38,29 +38,30 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.PrimitiveVariables,
 
 	"description",
-	"""
+	_("""
 	Adds arbitrary primitive variables to objects. Currently only primitive
 	variables with constant interpolation are supported - see the OSLObject
 	node for a means of creating variables with vertex interpolation.
-	""",
+	"""),
 
 	plugs = {
 
 		"primitiveVariables" : {
 
 			"description" :
-			"""
+			_("""
 			The primitive variables to be applied - arbitrary numbers of user
 			defined primitive variables may be added as children of this plug
 			via the user interface, or using the CompoundDataPlug API via
 			python.
-			""",
+			"""),
 
 		}
 

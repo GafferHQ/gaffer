@@ -36,37 +36,38 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepToFlat,
 
 	"description",
-	"""
+	_("""
 	Converts a deep image into a "flat" image, by compositing all samples in
 	each pixel, resulting in an image with 1 sample for every pixel.
-	""",
+	"""),
 
 	plugs = {
 
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The input image data.
-			""",
+			"""),
 
 		},
 
 		"depthMode" : {
 
 			"description" :
-			"""
+			_("""
 			Controls the contents of the output depth channels.  "Depth Range" outputs the
 			minimum and maximum depth values of any sample in the pixel as Z and ZBack.
 			"Filtered Depth" outputs just a Z channel with the average depth for the pixel,
 			based on the alpha values of the samples.  "None" outputs no Z or ZBack channel.
-			""",
+			"""),
 
 			"preset:Depth Range" : GafferImage.DeepToFlat.DepthMode.Range,
 			"preset:Filtered Depth" : GafferImage.DeepToFlat.DepthMode.Filtered,

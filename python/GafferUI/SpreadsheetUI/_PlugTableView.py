@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -838,7 +839,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		menuDefinition = IECore.MenuDefinition()
 		menuDefinition.append(
-			"/Set Label...",
+			"/" + _("Set Label..."),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setColumnLabel ), cellPlug ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( cellPlug ),
@@ -846,7 +847,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		)
 
 		menuDefinition.append(
-			"/Set Description...",
+			"/" + _("Set Description..."),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setColumnDescription ), cellPlug ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( cellPlug ),
@@ -857,7 +858,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		currentSection = _SectionChooser.getSection( cellPlug )
 		for sectionName in sectionNames :
 			menuDefinition.append(
-				"/Move to Section/{}".format( sectionName ),
+				"/" + _("Move to Section") + "/{}".format( sectionName ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__moveToSection ), cellPlug, sectionName = sectionName ),
 					"active" : not Gaffer.MetadataAlgo.readOnly( cellPlug ) and sectionName != currentSection,
@@ -865,10 +866,10 @@ class _PlugTableView( GafferUI.Widget ) :
 			)
 
 		if sectionNames :
-			menuDefinition.append( "/Move to Section/__divider__", { "divider" : True } )
+			menuDefinition.append( "/" + _("Move to Section") + "/__divider__", { "divider" : True } )
 
 		menuDefinition.append(
-			"/Move to Section/New...",
+			"/" + _("Move to Section") + "/" + _("New..."),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__moveToSection ), cellPlug ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( cellPlug ),
@@ -878,7 +879,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
 		menuDefinition.append(
-			"/Delete Column",
+			"/" + _("Delete Column"),
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteColumn ), cellPlug ),
 				"active" : self.__canDeleteColumn( cellPlug )
@@ -905,21 +906,22 @@ class _PlugTableView( GafferUI.Widget ) :
 		rowsPlug = next( iter( rowPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug )
 
 		widths = [
-			( "Half", GafferUI.PlugWidget.labelWidth() * 0.5 ),
-			( "Single", GafferUI.PlugWidget.labelWidth() ),
-			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
-			( "Triple", GafferUI.PlugWidget.labelWidth() * 3 ),
-			( "Quadruple", GafferUI.PlugWidget.labelWidth() * 4 ),
+			( "Half", GafferUI.PlugWidget.labelWidth() * 0.5, _("Half") ),
+			( "Single", GafferUI.PlugWidget.labelWidth(), _("Single") ),
+			( "Double", GafferUI.PlugWidget.labelWidth() * 2, _("Double") ),
+			( "Triple", GafferUI.PlugWidget.labelWidth() * 3, _("Triple") ),
+			( "Quadruple", GafferUI.PlugWidget.labelWidth() * 4, _("Quadruple") ),
 		]
 
 		currentWidth = self.__getRowNameWidth()
-		for label, width in widths :
+		for label, width, translatedLabel in widths :
 			items.append( (
 				"/Width/{}".format( label ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setRowNameWidth ), width ),
 					"active" : not Gaffer.MetadataAlgo.readOnly( rowsPlug ),
 					"checkBox" : width == currentWidth,
+					"label" : translatedLabel,
 				}
 			) )
 
@@ -934,7 +936,7 @@ class _PlugTableView( GafferUI.Widget ) :
 				"/__DisableRowsDivider__", { "divider" : True }
 			),
 			(
-				( "/Disable Row%s" if currentEnabledState else "/Enable Row%s" ) % pluralSuffix,
+				"/" + ((_( "Disable Row%s") if currentEnabledState else _("Enable Row%s")) % pluralSuffix),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setRowEnabledState ), enabledPlugs, not currentEnabledState ),
 					"active" : canChangeEnabledState
@@ -944,14 +946,14 @@ class _PlugTableView( GafferUI.Widget ) :
 				"/__CopyPasteRowsDivider__", { "divider" : True }
 			),
 			(
-				"Copy Row%s" % pluralSuffix,
+				_("Copy Row%s") % pluralSuffix,
 				{
 					"command" : Gaffer.WeakMethod( self.__copyRows ),
 					"shortCut" : "Ctrl+C"
 				}
 			),
 			(
-				"Paste Row%s" % pasteRowsPluralSuffix,
+				_("Paste Row%s") % pasteRowsPluralSuffix,
 				{
 					"command" : Gaffer.WeakMethod( self.__pasteRows ),
 					"active" : _ClipboardAlgo.canPasteRows( self.__getClipboard(), rowsPlug ),
@@ -962,7 +964,7 @@ class _PlugTableView( GafferUI.Widget ) :
 				"/__DeleteRowDivider__", { "divider" : True }
 			),
 			(
-				"/Delete Row%s" % pluralSuffix,
+				"/" + _("Delete Row%s") % pluralSuffix,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__deleteRows ), rowPlugs ),
 					"active" : self.__canDeleteRows( rowPlugs )
@@ -988,7 +990,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		items = [
 			(
-				( "/Disable Cell%s" if currentEnabledState else "/Enable Cell%s" ) % pluralSuffix,
+				"/" + ((_( "Disable Cell%s") if currentEnabledState else _("Enable Cell%s")) % pluralSuffix),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setPlugValues ), enabledPlugs, not currentEnabledState ),
 					"active" : canChangeEnabledState,
@@ -999,7 +1001,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			( "/__EditCellsDivider__", { "divider" : True } ),
 
 			(
-				"/Edit Cell%s" % pluralSuffix,
+				"/" + _("Edit Cell%s") % pluralSuffix,
 				{
 					"active" : _CellPlugValueWidget.canEdit( cellPlugs ),
 					"command" : functools.partial( Gaffer.WeakMethod( self.__editSelectedPlugs ), False )
@@ -1009,7 +1011,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			( "/__CopyPasteCellsDivider__", { "divider" : True } ),
 
 			(
-				"Copy Cell%s" % pluralSuffix,
+				_("Copy Cell%s") % pluralSuffix,
 				{
 					"command" : Gaffer.WeakMethod( self.__copyCells ),
 					"active" : _ClipboardAlgo.canCopyPlugs( plugMatrix ),
@@ -1017,7 +1019,7 @@ class _PlugTableView( GafferUI.Widget ) :
 				}
 			),
 			(
-				"Paste Cell%s" % pluralSuffix,
+				_("Paste Cell%s") % pluralSuffix,
 				{
 					"command" : Gaffer.WeakMethod( self.__pasteCells ),
 					"active" : _ClipboardAlgo.canPasteCells( self.__getClipboard(), plugMatrix ),
@@ -1141,8 +1143,8 @@ class _PlugTableView( GafferUI.Widget ) :
 	def __setColumnLabel( self, cellPlug ) :
 
 		label = GafferUI.TextInputDialogue(
-			title = "Set Label",
-			confirmLabel = "Set",
+			title = _("Set Label"),
+			confirmLabel = _("Set"),
 			initialText = Gaffer.Metadata.value( cellPlug, "spreadsheet:columnLabel" ) or cellPlug.getName()
 		).waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 
@@ -1153,8 +1155,8 @@ class _PlugTableView( GafferUI.Widget ) :
 	def __setColumnDescription( self, cellPlug ) :
 
 		description = GafferUI.TextInputDialogue(
-			title = "Set Description",
-			confirmLabel = "Set",
+			title = _("Set Description"),
+			confirmLabel = _("Set"),
 			initialText = Gaffer.Metadata.value( cellPlug["value"], "description" ) or "",
 			multiLine = True,
 		).waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
@@ -1283,9 +1285,9 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if sectionName is None :
 			sectionName = GafferUI.TextInputDialogue(
-				initialText = "New Section",
-				title = "Move to Section",
-				confirmLabel = "Move"
+				initialText = _("New Section"),
+				title = _("Move to Section"),
+				confirmLabel = _("Move")
 			).waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if not sectionName :

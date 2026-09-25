@@ -41,6 +41,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -51,13 +52,13 @@ Gaffer.Metadata.registerNode(
 	GafferScene.MergeMeshes,
 
 	"description",
-	"""
+	_("""
 	Merge meshes from all filtered location into a single mesh, or into
 	multiple destinations.
 
 	For primitive variables that are only present on some input locations
 	the missing values will be filled with zeros. This can produce
 	unexpected results when some inputs are missing normals, Cs, or uvs.
-	""",
+	"""),
 
 )

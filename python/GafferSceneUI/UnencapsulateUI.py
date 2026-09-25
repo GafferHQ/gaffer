@@ -38,6 +38,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -48,17 +49,17 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Unencapsulate,
 
 	"description",
-	"""
+	_("""
 	Expands capsules created by Encapsulate back into regular scene hierarchy. This discards the
 	performance advantages of working with capsules, but is useful for debugging, or when it is
 	necessary to alter the internals of a capsule.
-	""",
+	"""),
 
 	plugs = {
 
 		"parent" : {
 
-			"description" : "Deprecated. Use `filter` input instead.",
+			"description" : _("Deprecated. Use `filter` input instead."),
 
 		},
 

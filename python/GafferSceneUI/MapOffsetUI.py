@@ -37,46 +37,47 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.MapOffset,
 
 	"description",
-	"""
+	_("""
 	Adds an offset to object texture coordinates. This provides a convenient way of
 	looking at specific texture UDIMs.
-	""",
+	"""),
 
 	plugs = {
 
 		"offset" : {
 
 			"description" :
-			"""
+			_("""
 			An offset added to the texture coordinates. Note that moving the
 			texture coordinates in the positive direction will move the texture
 			in the negative direction.
-			""",
+			"""),
 
 		},
 
 		"udim" : {
 
 			"description" :
-			"""
+			_("""
 			A specific UDIM to offset the texture coordinates to. The UDIM is
 			converted to an offset which is added to the offset above.
-			""",
+			"""),
 
 		},
 
 		"uvSet" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the primitive variable holding the UV coordinates.
-			""",
+			"""),
 
 		},
 

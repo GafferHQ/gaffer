@@ -36,28 +36,29 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.PrimitiveVariableExists,
 
 	"description",
-	"""
+	_("""
 	Returns true if the given primitive variable exists in the input scene
 	in the current scene path location.
-	""",
+	"""),
 
 	plugs = {
 
 		"in" : {
-			"description" : "The scene to look for variables in.",
+			"description" : _("The scene to look for variables in."),
 		},
 		"primitiveVariable" : {
-			"description" : "The name of the primitive vairable to check for.",
+			"description" : _("The name of the primitive vairable to check for."),
 			"nodule:type" : "",
 		},
 		"out" : {
-			"description" : "True if the given primitive variable exists.",
+			"description" : _("True if the given primitive variable exists."),
 		},
 
 	}

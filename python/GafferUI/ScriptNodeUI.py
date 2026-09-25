@@ -37,16 +37,17 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.ScriptNode,
 
 	"description",
-	"""
+	_("""
 	Defines a "script" - a Gaffer node network which can be
 	saved to disk as a ".gfr" file and reloaded.
-	""",
+	"""),
 
 	"ui:childNodesAreViewable", True,
 
@@ -57,19 +58,19 @@ Gaffer.Metadata.registerNode(
 		"fileName" : {
 
 			"description" :
-			"""
+			_("""
 			Where the script is stored.
-			""",
+			"""),
 
 		},
 
 		"unsavedChanges" : {
 
 			"description" :
-			"""
+			_("""
 			Indicates whether or not the script has been
 			modified since it was last saved.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 
@@ -78,13 +79,13 @@ Gaffer.Metadata.registerNode(
 		"frameRange" : {
 
 			"description" :
-			"""
+			_("""
 			Defines the start and end frames for the script.
 			These don't enforce anything, but are typically
 			used by dispatchers to control default frame
 			ranges, and by the UI to define the range of the
 			time slider.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.CompoundNumericPlugValueWidget",
 
@@ -93,31 +94,31 @@ Gaffer.Metadata.registerNode(
 		"frameRange.start" : {
 
 			"description" :
-			"""
+			_("""
 			The start frame. This doesn't enforce anything,
 			but is typically used by dispatchers to control
 			default frame ranges, and by the UI to define
 			the range of the time slider.
-			""",
+			"""),
 
 		},
 
 		"frameRange.end" : {
 
 			"description" :
-			"""
+			_("""
 			The end frame. This doesn't enforce anything,
 			but is typically used by dispatchers to control
 			default frame ranges, and by the UI to define
 			the range of the time slider.
-			""",
+			"""),
 
 		},
 
 		"frame" : {
 
 			"description" :
-			"""
+			_("""
 			The current frame.
 
 			> Note : To perform a computation at a particular time,
@@ -133,7 +134,7 @@ Gaffer.Metadata.registerNode(
 			> Likewise, you should never refer to this plug from
 			> an expression. Always retrieve the frame with
 			> `context.getFrame()` instead.
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "hidden",
 
@@ -142,20 +143,20 @@ Gaffer.Metadata.registerNode(
 		"framesPerSecond" : {
 
 			"description" :
-			"""
+			_("""
 			The framerate used to convert between the current
 			frame number and the time in seconds.
-			""",
+			"""),
 
 		},
 
 		"variables" : {
 
 			"description" :
-			"""
+			_("""
 			Container for user-defined variables which can
 			be used in expressions anywhere in the script.
-			""",
+			"""),
 
 			"layout:section" : "Variables",
 

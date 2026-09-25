@@ -35,27 +35,28 @@
 ##########################################################################
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.TimeWarp,
 
 	"description",
-	"""
+	_("""
 	Changes the time at which upstream nodes are evaluated using
 	the following formula :
 
 	`upstreamFrame = frame * speed + offset`
-	""",
+	"""),
 
 	plugs = {
 
 		"speed" : {
 
 			"description" :
-			"""
+			_("""
 			Multiplies the current frame value.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -64,9 +65,9 @@ Gaffer.Metadata.registerNode(
 		"offset" : {
 
 			"description" :
-			"""
+			_("""
 			Adds to the current frame value (after multiplication with speed).
-			""",
+			"""),
 
 			"nodule:type" : "",
 

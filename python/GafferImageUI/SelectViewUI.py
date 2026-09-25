@@ -38,23 +38,24 @@ import Gaffer
 import GafferImage
 import GafferUI
 import imath
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.SelectView,
 
 	"description",
-	"""
+	_("""
 	Picks one view from a multi-view image.  Outputs it as an image with a single, default view.
-	""",
+	"""),
 
 	plugs = {
 
 		"view" : {
 			"description" :
-			"""
+			_("""
 			Name of view to select
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
 

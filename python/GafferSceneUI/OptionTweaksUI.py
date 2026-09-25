@@ -39,15 +39,16 @@ import functools
 import Gaffer
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.OptionTweaks,
 
 	"description",
-	"""
+	_("""
 	Makes modifications to options.
-	""",
+	"""),
 
 	"layout:section:Settings.Tweaks:collapsed", False,
 
@@ -56,21 +57,21 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissing" : {
 
 			"description" :
-			"""
+			_("""
 			Ignores tweaks targeting missing options. When off, missing options
 			cause the node to error.
-			"""
+			""")
 
 		},
 
 		"tweaks" : {
 
 			"description" :
-			"""
+			_("""
 			The tweaks to be made to the options. Arbitrary numbers of user defined
 			tweaks may be added as children of this plug via the user interface, or
 			using the OptionTweaks API via python.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Tweaks",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",

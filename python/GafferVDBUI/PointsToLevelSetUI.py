@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferVDB
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferVDB.PointsToLevelSet,
 
 	"description",
-	"""
+	_("""
 	Converts a points primitive to an OpenVDB level set.
-	""",
+	"""),
 
 	"layout:activator:usingVelocity", lambda node : node["useVelocity"].getValue(),
 
@@ -53,45 +54,45 @@ Gaffer.Metadata.registerNode(
 		"width" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a `float` primitive variable specifying the width of each point.
 			The primitive variable may have either `Vertex` or `Constant` interpolation.
 			If the primitive variable doesn't exist, a width of 1.0 is used.
 
 			> Note : A point's width needs to be at least 3x `voxelSize` to contribute to
 			> the level set. Smaller points will be ignored, and reported as a warning.
-			"""
+			""")
 
 		},
 
 		"widthScale" : {
 
 			"description" :
-			"""
+			_("""
 			An additional multiplier on the width of each point.
-			"""
+			""")
 
 		},
 
 		"useVelocity" : {
 
 			"description" :
-			"""
+			_("""
 			Enables the creation of trails behind the points, based
 			on the `velocity` primitive variable.
-			""",
+			"""),
 
 		},
 
 		"velocity" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a `V3f` primitive variable specifying the velocity
 			of each point. Velocity is specified in local-space units per
 			second, and the trail is automatically scaled to represent the
 			motion within a single frame.
-			""",
+			"""),
 
 			"layout:activator" : "usingVelocity",
 
@@ -100,9 +101,9 @@ Gaffer.Metadata.registerNode(
 		"velocityScale" : {
 
 			"description" :
-			"""
+			_("""
 			An additional multiplier applied to the velocity of each point.
-			""",
+			"""),
 
 			"layout:activator" : "usingVelocity",
 
@@ -111,27 +112,27 @@ Gaffer.Metadata.registerNode(
 		"grid" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the level set grid to be created.
-			"""
+			""")
 
 		},
 
 		"voxelSize" : {
 
 			"description" :
-			"""
+			_("""
 			Size of a voxel in the level set grid, specified in local space. Smaller voxel
 			sizes will increase resolution, but take more memory and computation time.
-			"""
+			""")
 		},
 
 		"halfBandwidth" : {
 
 			"description" :
-			"""
+			_("""
 			Defines the exterior and interior width of the level set in voxel units.
-			"""
+			""")
 
 		},
 

@@ -37,45 +37,46 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.CopyImageMetadata,
 
 	"description",
-	"""
+	_("""
 	Copies metadata entries from the second image to the first image
 	based on name. If those entries already exist in the incoming
 	image metadata, their values will be overwritten.
-	""",
+	"""),
 
 	plugs = {
 
 		"copyFrom" : {
 
 			"description" :
-			"""
+			_("""
 			The image to copy the metadata entries from.
-			""",
+			"""),
 
 		},
 
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			The names of metadata entries to be copied. This is a space separated
 			list of entry names, which accepts Gaffer's standard string wildcards.
-			""",
+			"""),
 
 		},
 
 		"invertNames" : {
 
 			"description" :
-			"""
+			_("""
 			When on, matching names are ignored, and non-matching names are copied instead.
-			""",
+			"""),
 
 		},
 

@@ -36,26 +36,27 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ShuffleImageMetadata,
 
 	"description",
-	"""
+	_("""
 	Shuffles image metadata, allowing entries to be copied and/or renamed.
-	""",
+	"""),
 
 	plugs = {
 
 		"shuffles" : {
 
 			"description" :
-			"""
+			_("""
 			The definition of the shuffling to be performed - an
 			arbitrary number of metadata edits can be made by adding
 			ShufflePlugs as children of this plug.
-			""",
+			"""),
 
 		},
 

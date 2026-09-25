@@ -36,35 +36,36 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepRecolor,
 
 	"description",
-	"""
+	_("""
 	Recolors deep data so that the flattened image will match the color of a provided flat image.
 	Keeps the same depth data, and mostly the same alpha ( with a small adjustment if you select
 	useColorSourceAlpha ).
-	""",
+	"""),
 
 	plugs = {
 
 		"colorSource" : {
 
 			"description" :
-			"""
+			_("""
 			This image ( which must be flat ) drives the color of the output image.
-			""",
+			"""),
 
 		},
 		"useColorSourceAlpha" : {
 
 			"description" :
-			"""
+			_("""
 			If selected, adjusts the alpha of each deep sample so that the composited result will match
 			the alpha of colorSource.
-			""",
+			"""),
 		},
 
 	}

@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CoordinateSystem,
 
 	"description",
-	"""
+	_("""
 	Produces scenes containing a coordinate system. Coordinate systems
 	have two main uses :
 
@@ -52,6 +53,6 @@ Gaffer.Metadata.registerNode(
 	  render time. This is useful for defining projections or procedural
 	  solid textures. The full path to the location of the coordinate
 	  system should be used to refer to it within shaders.
-	""",
+	"""),
 
 )

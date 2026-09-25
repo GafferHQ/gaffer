@@ -39,13 +39,14 @@ import imath
 import Gaffer
 import GafferUI
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.ImageSelectionTool,
 
 	"description",
-	"""
+	_("""
 	Tool for selecting objects based on image data.  Requires one of the following :
 
 	- An `id` image layer with associated render manifest (enabled using the StandardOptions node).
@@ -59,7 +60,7 @@ Gaffer.Metadata.registerNode(
 	- Drag and drop selected objects
 		- Drag to Python Editor to get their names
 		- Drag to PathFilter or Set node to add/remove their paths
-	""",
+	"""),
 
 	"viewer:shortCut", "Q",
 	"order", 1,
@@ -89,18 +90,18 @@ Gaffer.Metadata.registerNode(
 		"selectMode" : {
 
 			"description" :
-			"""
+			_("""
 			The standard mode selects locations based on an `id` layer with a corresponding manifest.
 			`Instance` mode instead picks instance ids based on an `instanceID` layer ( this will only
 			contain information for encapsulated instancers, which don't pass multiple locations to the
 			renderer, but do set up special instance id information ).
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Standard" : "standard",
 			"preset:Instance" : "instance",
 
-			"label" : "Select",
+			"label" : _("Select"),
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 80,

@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 ## A function suitable as the postCreator in a NodeMenu.append() call. It
 # sets the region of interest for the node to cover the entire format.
@@ -55,27 +56,27 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Text,
 
 	"description",
-	"""
+	_("""
 	Renders text over an input image.
-	""",
+	"""),
 
 	plugs = {
 
 		"color" : {
 
 			"description" :
-			"""
+			_("""
 			The colour of the text.
-			""",
+			"""),
 
 		},
 
 		"text" : {
 
 			"description" :
-			"""
+			_("""
 			The text to be rendered.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.MultiLineStringPlugValueWidget",
 			"multiLineStringPlugValueWidget:continuousUpdate" : True,
@@ -85,11 +86,11 @@ Gaffer.Metadata.registerNode(
 		"font" : {
 
 			"description" :
-			"""
+			_("""
 			The font to render the text with. This should be a .ttf font file which
 			is located on the paths specified by the IECORE_FONT_PATHS
 			environment variable.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:bookmarks" : "font",
@@ -102,35 +103,35 @@ Gaffer.Metadata.registerNode(
 		"size" : {
 
 			"description" :
-			"""
+			_("""
 			The size of the font in pixels. For best quality results
 			for constant sized text prefer this over the scale setting
 			on the transform, which is better suited for smoothly animating
 			the size.
-			""",
+			"""),
 
 		},
 
 		"area" : {
 
 			"description" :
-			"""
+			_("""
 			The area of the image within which the text is rendered.
 			The text will be word wrapped to fit within the area and
 			justified as specified by the justification setting. If the
 			area is empty, then the full display window will be used
 			instead.
-			""",
+			"""),
 
 		},
 
 		"horizontalAlignment" : {
 
 			"description" :
-			"""
+			_("""
 			Determines whether the text is aligned to the left or
 			right of the text area, or centered within it.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
@@ -143,10 +144,10 @@ Gaffer.Metadata.registerNode(
 		"verticalAlignment" : {
 
 			"description" :
-			"""
+			_("""
 			Determines whether the text is aligned to the bottom or
 			top of the text area, or centered within it.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 
@@ -159,12 +160,12 @@ Gaffer.Metadata.registerNode(
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			A transformation applied to the entire text area after
 			layout has been performed. The translate and pivot values
 			are specified in pixels, and the rotate value is specified
 			in degrees.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layout:section" : "Transform",

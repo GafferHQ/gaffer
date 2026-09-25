@@ -46,6 +46,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 from Qt import QtGui
@@ -574,8 +575,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			self.__pinningWidget = _PinningWidget()
 
 			layoutButton = GafferUI.MenuButton( image="layoutButton.png", hasFrame=False )
-			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ), title = "Layout" ) )
-			layoutButton.setToolTip( "Click to modify the layout" )
+			layoutButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__layoutMenuDefinition ), title = _("Layout") ) )
+			layoutButton.setToolTip( _("Click to modify the layout") )
 			layoutButton._qtWidget().setFixedHeight( 15 )
 
 		cornerWidget._qtWidget().setObjectName( "gafferCompoundEditorTools" )
@@ -694,11 +695,11 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		detatchItemAdded = False
 
 		if currentTab is not None :
-			m.append( "/Detach " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__detachTab ) } )
+			m.append( "/" + _("Detach") + " " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__detachTab ) } )
 			detatchItemAdded = True
 
 		if isinstance( splitContainerParent, _SplitContainer ) :
-			m.append( "/Detach Panel", { "command" : Gaffer.WeakMethod( self.__detachPanel ) } )
+			m.append( "/" + _("Detach Panel"), { "command" : Gaffer.WeakMethod( self.__detachPanel ) } )
 			detatchItemAdded = True
 
 		if detatchItemAdded :
@@ -707,11 +708,11 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		removeItemAdded = False
 
 		if currentTab is not None :
-			m.append( "/Remove " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeTab ) } )
+			m.append( "/" + _("Remove") + " " + self.getLabel( currentTab ), { "command" : Gaffer.WeakMethod( self.__removeTab ) } )
 			removeItemAdded = True
 
 		if isinstance( splitContainerParent, _SplitContainer ) :
-			m.append( "Remove Panel", { "command" : Gaffer.WeakMethod( self.__removePanel ) } )
+			m.append( "/" + _("Remove Panel"), { "command" : Gaffer.WeakMethod( self.__removePanel ) } )
 			removeItemAdded = True
 
 		if removeItemAdded :
@@ -720,13 +721,13 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		tabsVisible = self.getTabsVisible()
 		# Because the menu isn't visible most of the time, the Ctrl+T shortcut doesn't work - it's just there to let
 		# users know it exists. It is actually implemented directly in __keyPress.
-		m.append( "/Hide Tabs" if tabsVisible else "/Show Tabs", { "command" : functools.partial( Gaffer.WeakMethod( self.setTabsVisible ), not tabsVisible ), "shortCut" : "Ctrl+T" } )
+		m.append( "/" + _("Hide Tabs") if tabsVisible else "/" + _("Show Tabs"), { "command" : functools.partial( Gaffer.WeakMethod( self.setTabsVisible ), not tabsVisible ), "shortCut" : "Ctrl+T" } )
 		m.append( "/TabsDivider", { "divider" : True } )
 
-		m.append( "/Split Left", { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Horizontal, 0 ) } )
-		m.append( "/Split Right", { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Horizontal, 1 ) } )
-		m.append( "/Split Bottom", { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
-		m.append( "/Split Top", { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )
+		m.append( "/" + _("Split Left"), { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Horizontal, 0 ) } )
+		m.append( "/" + _("Split Right"), { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Horizontal, 1 ) } )
+		m.append( "/" + _("Split Bottom"), { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
+		m.append( "/" + _("Split Top"), { "command" : functools.partial( Gaffer.WeakMethod( splitContainer.split ), GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )
 
 		return m
 
@@ -768,10 +769,10 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		tabIndex = self._qtWidget().tabBar().tabAt( pos )
 
 		m = IECore.MenuDefinition()
-		m.append( '/Detach', { "command" : functools.partial( Gaffer.WeakMethod( self.__detachTab ), tabIndex ) } )
-		m.append( '/Remove', { "command" : functools.partial( Gaffer.WeakMethod( self.__removeTab ), tabIndex ) } )
+		m.append( '/' + _('Detach'), { "command" : functools.partial( Gaffer.WeakMethod( self.__detachTab ), tabIndex ) } )
+		m.append( '/' + _('Remove'), { "command" : functools.partial( Gaffer.WeakMethod( self.__removeTab ), tabIndex ) } )
 
-		self.__popupMenu = GafferUI.Menu( m, title = "Tab Actions" )
+		self.__popupMenu = GafferUI.Menu( m, title = _("Tab Actions") )
 		self.__popupMenu.popup( parent = self )
 
 	def __dragEnter( self, tabbedContainer, event ) :
@@ -1569,20 +1570,20 @@ class _PinningWidget( _Frame ) :
 		nodeSet = editor.getNodeSet()
 		if nodeSet == editor.scriptNode().selection() :
 			toolTipElements.append( "" )
-			toolTipElements.append( "Following the node selection." )
+			toolTipElements.append( _("Following the node selection.") )
 		if nodeSet == editor.scriptNode().focusSet() :
 			toolTipElements.append( "" )
-			toolTipElements.append( "Following the Focus Node." )
+			toolTipElements.append( _("Following the Focus Node.") )
 		elif isinstance( nodeSet, Gaffer.NumericBookmarkSet ) :
 			toolTipElements.append( "" )
-			toolTipElements.append( "Following Numeric Bookmark %d." % nodeSet.getBookmark()  )
+			toolTipElements.append( _("Following Numeric Bookmark %d.") % nodeSet.getBookmark()  )
 		elif isinstance( nodeSet, Gaffer.StandardSet ) :
 			toolTipElements.append( "" )
 			n = len(nodeSet)
 			if n == 0 :
-				s = "Pinned to nothing."
+				s = _("Pinned to nothing.")
 			else :
-				s = "Pinned to %d node%s." % ( n, "" if n == 1 else "s" )
+				s = _("Pinned to %d node(s).") % n
 			toolTipElements.append( s )
 
 		return "\n".join( toolTipElements )
@@ -1620,7 +1621,7 @@ class _PinningWidget( _Frame ) :
 		self.__addStandardItems( e, m )
 		CompoundEditor.nodeSetMenuSignal()( e, m )
 
-		self.__pinningMenu = GafferUI.Menu( m, title = "Editor Focus" )
+		self.__pinningMenu = GafferUI.Menu( m, title = _("Editor Focus") )
 
 		buttonBound = self.__icon.bound()
 		self.__pinningMenu.popup(
@@ -1635,27 +1636,27 @@ class _PinningWidget( _Frame ) :
 		selection = editor.scriptNode().selection()
 
 		if len(selection) == 0 :
-			label = "Pin To Nothing"
+			label = _("Pin To Nothing")
 		elif len(selection) == 1 :
-			label = "Pin %s" % selection[0].getName()
+			label = _("Pin %s") % selection[0].getName()
 		else :
-			label = "Pin %d Selected Nodes" % len(selection)
+			label = _("Pin %d Selected Nodes") % len(selection)
 
-		m.append( "/Pin Node Selection", {
+		m.append( "/" + _("Pin Node Selection"), {
 			"command" : functools.partial( self.__pinToNodeSelection, weakref.ref( editor ) ),
 			"label" : label,
 			"shortCut" : "p"
 		} )
 
-		m.append( "/Follow Divider", { "divider" : True, "label" : "Follow" } )
+		m.append( "/Follow Divider", { "divider" : True, "label" : _("Follow") } )
 
-		m.append( "/Focus Node", {
+		m.append( "/" + _("Focus Node"), {
 			"command" : functools.partial( self.__followFocusNode, weakref.ref( editor ) ),
 			"checkBox" : editor.getNodeSet().isSame( editor.scriptNode().focusSet() ),
 			"shortCut" : "`"
 		} )
 
-		m.append( "/Node Selection", {
+		m.append( "/" + _("Node Selection"), {
 			"command" : functools.partial( self.__followNodeSelection, weakref.ref( editor ) ),
 			"checkBox" : editor.getNodeSet().isSame( editor.scriptNode().selection() ),
 			"shortCut" : "n"

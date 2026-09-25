@@ -37,6 +37,7 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -47,19 +48,19 @@ Gaffer.Metadata.registerNode(
 	GafferScene.ObjectToScene,
 
 	"description",
-	"""
+	_("""
 	Converts objects to be used with the nodes in the
 	GafferScene module.
-	""",
+	"""),
 
 	plugs = {
 
 		"object" : {
 
 			"description" :
-			"""
+			_("""
 			The object to be placed in the output scene.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 

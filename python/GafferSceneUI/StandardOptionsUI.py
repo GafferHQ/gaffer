@@ -45,6 +45,7 @@ import GafferScene
 import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -56,7 +57,7 @@ def __cameraSummary( plug ) :
 	if plug["render:camera"]["enabled"].getValue() :
 		info.append( plug["render:camera"]["value"].getValue() )
 	if plug["render:filmFit"]["enabled"].getValue() :
-		info.append( "Fit Mode %s" %
+		info.append( _("Fit Mode %s") %
 			IECoreScene.Camera.FilmFit.values[ plug["render:filmFit"]["value"].getValue() ].name
 		)
 	if plug["render:resolution"]["enabled"].getValue() :
@@ -64,17 +65,17 @@ def __cameraSummary( plug ) :
 		info.append( "%dx%d" % ( resolution[0], resolution[1] ) )
 	if plug["render:pixelAspectRatio"]["enabled"].getValue() :
 		pixelAspectRatio = plug["render:pixelAspectRatio"]["value"].getValue()
-		info.append( "Aspect %s" % GafferUI.NumericWidget.valueToString( pixelAspectRatio ) )
+		info.append( _("Aspect %s") % GafferUI.NumericWidget.valueToString( pixelAspectRatio ) )
 	if plug["render:resolutionMultiplier"]["enabled"].getValue() :
 		resolutionMultiplier = plug["render:resolutionMultiplier"]["value"].getValue()
-		info.append( "Mult %s" % GafferUI.NumericWidget.valueToString( resolutionMultiplier ) )
+		info.append( _("Mult %s") % GafferUI.NumericWidget.valueToString( resolutionMultiplier ) )
 	if plug["render:cropWindow"]["enabled"].getValue() :
 		crop = plug["render:cropWindow"]["value"].getValue()
-		info.append( "Crop %s,%s-%s,%s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( crop.min().x, crop.min().y, crop.max().x, crop.max().y ) ) )
+		info.append( _("Crop %s,%s-%s,%s") % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( crop.min().x, crop.min().y, crop.max().x, crop.max().y ) ) )
 	if plug["render:overscan"]["enabled"].getValue() :
-		info.append( "Overscan %s" % ( "On" if plug["render:overscan"]["value"].getValue() else "Off" ) )
+		info.append( _("Overscan %s") % ( _("On") if plug["render:overscan"]["value"].getValue() else _("Off") ) )
 	if plug["render:depthOfField"]["enabled"].getValue() :
-		info.append( "DOF " + ( "On" if plug["render:depthOfField"]["value"].getValue() else "Off" ) )
+		info.append( _("DOF") + " " + ( _("On") if plug["render:depthOfField"]["value"].getValue() else _("Off") ) )
 
 	return ", ".join( info )
 
@@ -92,13 +93,13 @@ def __renderSetSummary( plug ) :
 	info = []
 	if plug["render:includedPurposes"]["enabled"].getValue() :
 		purposes = plug["render:includedPurposes"]["value"].getValue()
-		info.append( "Purposes {}".format( " / ".join( [ p.capitalize() for p in purposes ] ) if purposes else "None" ) )
+		info.append( _("Purposes {}").format( " / ".join( [ p.capitalize() for p in purposes ] ) if purposes else _("None") ) )
 	if plug["render:inclusions"]["enabled"].getValue() :
-		info.append( "Inclusions {}".format( plug["render:inclusions"]["value"].getValue() ) )
+		info.append( _("Inclusions {}").format( plug["render:inclusions"]["value"].getValue() ) )
 	if plug["render:exclusions"]["enabled"].getValue() :
-		info.append( "Exclusions {}".format( plug["render:exclusions"]["value"].getValue() ) )
+		info.append( _("Exclusions {}").format( plug["render:exclusions"]["value"].getValue() ) )
 	if plug["render:additionalLights"]["enabled"].getValue() :
-		info.append( "Lights {}".format( plug["render:additionalLights"]["value"].getValue() ) )
+		info.append( _("Lights {}").format( plug["render:additionalLights"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -106,11 +107,11 @@ def __motionBlurSummary( plug ) :
 
 	info = []
 	if plug["render:transformBlur"]["enabled"].getValue() :
-		info.append( "Transform " + ( "On" if plug["render:transformBlur"]["value"].getValue() else "Off" ) )
+		info.append( _("Transform") + " " + ( _("On") if plug["render:transformBlur"]["value"].getValue() else _("Off") ) )
 	if plug["render:deformationBlur"]["enabled"].getValue() :
-		info.append( "Deformation " + ( "On" if plug["render:deformationBlur"]["value"].getValue() else "Off" ) )
+		info.append( _("Deformation") + " " + ( _("On") if plug["render:deformationBlur"]["value"].getValue() else _("Off") ) )
 	if plug["render:shutter"]["enabled"].getValue() :
-		info.append( "Shutter " + str( plug["render:shutter"]["value"].getValue() ) )
+		info.append( _("Shutter") + " " + str( plug["render:shutter"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -118,7 +119,7 @@ def __statisticsSummary( plug ) :
 
 	info = []
 	if plug["render:performanceMonitor"]["enabled"].getValue() :
-		info.append( "Performance Monitor " + ( "On" if plug["render:performanceMonitor"]["value"].getValue() else "Off" ) )
+		info.append( _("Performance Monitor") + " " + ( _("On") if plug["render:performanceMonitor"]["value"].getValue() else _("Off") ) )
 
 	return ", ".join( info )
 
@@ -127,10 +128,10 @@ Gaffer.Metadata.registerNode(
 	GafferScene.StandardOptions,
 
 	"description",
-	"""
+	_("""
 	Specifies the standard options (global settings) for the
 	scene. These should be respected by all renderers.
-	""",
+	"""),
 
 	plugs = {
 

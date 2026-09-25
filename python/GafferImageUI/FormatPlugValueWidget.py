@@ -40,6 +40,7 @@ import imath
 import IECore
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 
 from GafferUI.PlugValueWidget import sole
@@ -58,15 +59,15 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 
 		with grid.nextRow() :
-			self.__minLabel = GafferUI.Label( "Min", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
+			self.__minLabel = GafferUI.Label( _("Min"), parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
 			self.__minWidget = GafferUI.CompoundNumericPlugValueWidget( plugs = [] )
 
 		with grid.nextRow() :
-			self.__maxLabel = GafferUI.Label( "Max", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
+			self.__maxLabel = GafferUI.Label( _("Max"), parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
 			self.__maxWidget = GafferUI.CompoundNumericPlugValueWidget( plugs = [] )
 
 		with grid.nextRow() :
-			self.__pixelAspectLabel = GafferUI.Label( "Pixel Aspect", parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
+			self.__pixelAspectLabel = GafferUI.Label( _("Pixel Aspect"), parenting = { "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } )
 			self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plugs = [] )
 
 		self._addPopupMenu( self.__menuButton )
@@ -96,7 +97,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 				custom = True
 
 		self.__menuButton.setText(
-			"Custom" if custom
+			_("Custom") if custom
 			else
 			( _formatLabel( self.__currentFormat, self.context() ) if self.__currentFormat is not None else "---" )
 		)
@@ -108,7 +109,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for widget in ( self.__maxLabel, self.__maxWidget, self.__pixelAspectLabel, self.__pixelAspectWidget ) :
 			widget.setVisible( custom )
 
-		self.__maxLabel.setText( "Max" if nonZeroOrigin else "Size" )
+		self.__maxLabel.setText( _("Max") if nonZeroOrigin else _("Size") )
 
 		self.__menuButton.setErrored( exception is not None )
 
@@ -157,7 +158,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append( "/CustomDivider", { "divider" : True } )
 
 		result.append(
-			"/Custom",
+			"/" + _("Custom"),
 			{
 				"command" : Gaffer.WeakMethod( self.__applyCustomFormat ),
 				"checkBox" : modeIsCustom or self.__currentFormat not in formats,

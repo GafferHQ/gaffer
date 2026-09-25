@@ -36,25 +36,26 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.DependencyNode,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes where input plugs have an
 	effect on output plugs.
-	""",
+	"""),
 
 	plugs = {
 
 		"enabled" : {
 
 			"description" :
-			"""
+			_("""
 			Turns the node on and off.
-			""",
+			"""),
 
 			"layout:index" : -2, # Last but one
 			"layout:section" : "Node",

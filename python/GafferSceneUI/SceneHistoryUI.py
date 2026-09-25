@@ -41,6 +41,7 @@ import IECoreScene
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 
@@ -52,6 +53,7 @@ def appendViewContextMenuItems( viewer, view, menuDefinition ) :
 	menuDefinition.append(
 		"/History",
 		{
+			"label" : _("History"),
 			"subMenu" : functools.partial(
 				__historySubMenu,
 				context = view.context(),
@@ -84,6 +86,7 @@ def __historySubMenu( menu, context, scene, selectedPath ) :
 			"active" : selectedPath is not None,
 			"command" : functools.partial( __editSourceNode, context, scene, selectedPath ),
 			"shortCut" : "Alt+E",
+			"label" : _("Edit Source..."),
 		}
 	)
 
@@ -93,6 +96,7 @@ def __historySubMenu( menu, context, scene, selectedPath ) :
 			"active" : selectedPath is not None,
 			"command" : functools.partial( __editTweaksNode, context, scene, selectedPath ),
 			"shortCut" : "Alt+Shift+E",
+			"label" : _("Edit Tweaks..."),
 		}
 	)
 

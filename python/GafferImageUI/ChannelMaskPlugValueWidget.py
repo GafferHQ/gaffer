@@ -44,6 +44,7 @@ import IECore
 import Gaffer
 import GafferImage
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -96,7 +97,7 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__stringPlugValueWidget.setVisible( custom )
 
 		if custom :
-			self.__menuButton.setText( "Custom" )
+			self.__menuButton.setText( _("Custom") )
 		elif self.__currentValue is None :
 			self.__menuButton.setText( "---" )
 		else :
@@ -118,7 +119,7 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if labels :
 				self.__menuButton.setText( ", ".join( labels ) )
 			else :
-				self.__menuButton.setText( "None" )
+				self.__menuButton.setText( _("None") )
 
 		self.__menuButton.setErrored( exception is not None )
 
@@ -162,8 +163,8 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
-		result.append( "/All", menuItem( "*" ) )
-		result.append( "/None", menuItem( None ) )
+		result.append( "/" + _("All"), dict( label = _("All"), **menuItem( "*" ) ) )
+		result.append( "/" + _("None"), dict( label = _("None"), **menuItem( None ) ) )
 
 		for i, layerName in enumerate( sorted( availableChannels.layers.keys() ) ) :
 

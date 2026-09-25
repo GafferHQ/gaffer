@@ -36,25 +36,26 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ShuffleOptions,
 
 	"description",
-	"""
+	_("""
 	Shuffles options in the scene globals by copying and/or renaming them.
-	""",
+	"""),
 
 	plugs = {
 
 		"shuffles" : {
 
 			"description" :
-			"""
+			_("""
 			Defines the shuffling to be performed. Add shuffles by pressing `+`
 			in the UI, or adding `ShufflePlug` children using the API.
-			""",
+			"""),
 
 		},
 

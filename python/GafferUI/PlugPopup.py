@@ -38,6 +38,8 @@ import imath
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
+from GafferUI import i18n as _i18n
 
 from GafferUI.PlugValueWidget import sole
 
@@ -68,9 +70,8 @@ class PlugPopup( GafferUI.PopupWindow ) :
 
 				if len( plugs ) > 1 :
 					nodes = { Gaffer.MetadataAlgo.firstViewableNode( plug ) for plug in plugs }
-					plugSummary = "{} plugs{}".format(
-						len( plugs ),
-						" on {} nodes".format( len( nodes ) ) if len( nodes ) > 1 else ""
+					plugSummary = _("{} plugs").format( len( plugs ) ) + (
+						_(" on {} nodes").format( len( nodes ) ) if len( nodes ) > 1 else ""
 					)
 
 					for plug in plugs[1:] :
@@ -81,7 +82,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 					plugSummary = ""
 
 				target = "<b>{}</b>".format( commonNode.relativeName( script ) ) if script.isAncestorOf( commonNode ) else ""
-				title = "Editing {}{}".format(
+				title = _("Editing {}{}").format(
 					target,
 					" ({})".format( plugSummary ) if plugSummary != "" and target != "" else plugSummary
 				)
@@ -114,7 +115,7 @@ class PlugPopup( GafferUI.PopupWindow ) :
 					GafferUI.PlugValueWidget.MultiplePlugTypesError
 				) as e :
 					self.__plugValueWidget = None
-					GafferUI.Label( "Unable to edit plugs with mixed types" )
+					GafferUI.Label( _("Unable to edit plugs with mixed types") )
 					e.__traceback__ = None
 
 		# If we have a ColorPlugValueWidget, expand it to show the chooser.

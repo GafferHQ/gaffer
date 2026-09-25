@@ -39,6 +39,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -49,11 +50,11 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Duplicate,
 
 	"description",
-	"""
+	_("""
 	Duplicates a part of the scene. The duplicates
 	are parented alongside the original, and have
 	a transform applied to them.
-	""",
+	"""),
 
 	"layout:activator:targetInUse", lambda node : not node["target"].isSetToDefault(),
 
@@ -62,9 +63,9 @@ Gaffer.Metadata.registerNode(
 		"parent" : {
 
 			"description" :
-			"""
+			_("""
 			For internal use only.
-			""",
+			"""),
 
 			# we hide the parent (which comes from the base class) because
 			# the value for it is computed from the target plug automatically.
@@ -75,11 +76,11 @@ Gaffer.Metadata.registerNode(
 		"target" : {
 
 			"description" :
-			"""
+			_("""
 			The part of the scene to be duplicated.
 
 			> Caution : Deprecated. Please connect a filter instead.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			# We want people to use filters rather than the `target` plug. So
@@ -91,16 +92,16 @@ Gaffer.Metadata.registerNode(
 		"copies" : {
 
 			"description" :
-			"""
+			_("""
 			The number of copies to be made.
-			""",
+			"""),
 
 		},
 
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name given to the copies. If this
 			is left empty, the name from the target
 			will be used instead. The names will have
@@ -109,28 +110,28 @@ Gaffer.Metadata.registerNode(
 			single copy is being made. Even in the case
 			of a single copy, a suffix will be applied
 			if necessary to keep the names unique.
-			""",
+			"""),
 
 		},
 
 		"transform" : {
 
 			"description" :
-			"""
+			_("""
 			The transform to be applied to the copies. The transform
 			is applied iteratively, so the second copy is transformed
 			twice, the third copy is transformed three times and so on.
-			""",
+			"""),
 
 		},
 
 		"destination" : {
 
 			"description" :
-			"""
+			_("""
 			The location where the copies will be placed in the output scene.
 			The default value places them alongside the original.
-			""",
+			"""),
 
 		},
 

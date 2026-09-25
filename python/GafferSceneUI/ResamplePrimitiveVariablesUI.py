@@ -41,13 +41,14 @@ import IECoreScene
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ResamplePrimitiveVariables,
 
 	"description",
-	"""
+	_("""
 	<p>Resamples the list of primitive variables in <i>Names</i> for either mesh, curves or point primitives.</p>
 
 	<p>The reampling algorithm either expands or reduces each primitive variable's data based on the primitive type, primitive variable source interpolation and target interpolation as detailed in the tables below</p>
@@ -163,16 +164,16 @@ Gaffer.Metadata.registerNode(
 	<p><i>copy</i> : expand source values to target based on topology </p>
 	<p><i>average</i> : calculate the mean of the primitive variable (either for the whole primitive, for face / curve or vertex)</p>
 
-	""",
+	"""),
 
 	plugs = {
 
 		"interpolation" : {
 
 			"description" :
-			"""
+			_("""
 			Target interpolation for the primitive variables
-			""",
+			"""),
 
 			"preset:Constant" : IECoreScene.PrimitiveVariable.Interpolation.Constant,
 			"preset:Uniform" : IECoreScene.PrimitiveVariable.Interpolation.Uniform,

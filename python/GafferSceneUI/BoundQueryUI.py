@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.BoundQuery,
 
 	"description",
-	"""
+	_("""
 	Queries a particular location in a scene and outputs the bound.
-	""",
+	"""),
 
 	"layout:activator:spaceIsRelative", lambda node : node["space"].getValue() == GafferScene.BoundQuery.Space.Relative,
 
@@ -53,20 +54,20 @@ Gaffer.Metadata.registerNode(
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query the bounds for.
-			"""
+			""")
 
 		},
 
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene to query the bound at.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -77,9 +78,9 @@ Gaffer.Metadata.registerNode(
 		"space" : {
 
 			"description" :
-			"""
+			_("""
 			The space to query the bound in.
-			""",
+			"""),
 
 			"preset:Local" : GafferScene.BoundQuery.Space.Local,
 			"preset:World" : GafferScene.BoundQuery.Space.World,
@@ -92,11 +93,11 @@ Gaffer.Metadata.registerNode(
 		"relativeLocation" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene to use for relative space mode.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -108,9 +109,9 @@ Gaffer.Metadata.registerNode(
 		"bound" : {
 
 			"description" :
-			"""
+			_("""
 			Bounding box at specified location in specified space.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 
@@ -119,9 +120,9 @@ Gaffer.Metadata.registerNode(
 		"center" : {
 
 			"description" :
-			"""
+			_("""
 			Center point vector of the requested bound.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 
@@ -130,9 +131,9 @@ Gaffer.Metadata.registerNode(
 		"size" : {
 
 			"description" :
-			"""
+			_("""
 			Size vector of the requested bound.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 

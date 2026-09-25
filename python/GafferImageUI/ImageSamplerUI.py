@@ -36,33 +36,34 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageSampler,
 
 	"description",
-	"""
+	_("""
 	Samples image colour at a specified pixel location.
-	""",
+	"""),
 
 	plugs = {
 
 		"image" : {
 
 			"description" :
-			"""
+			_("""
 			The image to be sampled.
-			""",
+			"""),
 
 		},
 
 		"view" : {
 
 			"description" :
-			"""
+			_("""
 			The view to be sampled.
-			""",
+			"""),
 
 			"nodule:type" : "",
 			"plugValueWidget:type" : "GafferImageUI.ViewPlugValueWidget",
@@ -73,9 +74,9 @@ Gaffer.Metadata.registerNode(
 		"channels" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the four channels to be sampled.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.RGBAChannelsPlugValueWidget",
 
@@ -84,7 +85,7 @@ Gaffer.Metadata.registerNode(
 		"pixel" : {
 
 			"description" :
-			"""
+			_("""
 			The coordinates of the pixel to sample. These can have
 			fractional values and bilinear interpolation will be used
 			to interpolate between adjacent pixels.
@@ -92,17 +93,17 @@ Gaffer.Metadata.registerNode(
 			Note though that the coordinates at pixel centres are not integers.
 			For example, the centre of the bottom left pixel of an image is
 			at 0.5, 0.5.
-			""",
+			"""),
 
 		},
 
 		"interpolate" : {
 
 			"description" :
-			"""
+			_("""
 			Turn on to blend with adjacent pixels when sampling away from the center of the pixel at 0.5, 0.5.
 			If off, you always sample exactly one pixel.
-			""",
+			"""),
 
 			"userDefault" : False,
 
@@ -111,9 +112,9 @@ Gaffer.Metadata.registerNode(
 		"color" : {
 
 			"description" :
-			"""
+			_("""
 			The sampled colour.
-			""",
+			"""),
 
 		}
 

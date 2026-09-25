@@ -37,26 +37,27 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.UnionFilter,
 
 	"description",
-	"""
+	_("""
 	Combines several input filters, matching the union
 	of all the locations matched by them.
-	""",
+	"""),
 
 	plugs = {
 
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The filters to be combined. Any number
 			of inputs may be added here.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::CompoundNodule",
 			"plugValueWidget:type" : "",

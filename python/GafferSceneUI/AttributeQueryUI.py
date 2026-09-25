@@ -40,6 +40,7 @@ import GafferUI
 import imath
 
 from GafferSceneUI._GafferSceneUI import __showSetupMenu as showSetupMenu
+from GafferUI.i18n import _
 
 ## \todo Replace with PlugCreationWidget, figuring out how that relates to
 # the menu on the PlugAdder used in the GraphEditor. Do we want to have menus
@@ -82,9 +83,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.AttributeQuery,
 
 	"description",
-	"""
+	_("""
 	Query a particular location in a scene and outputs attribute.
-	""",
+	"""),
 
 	"layout:customWidget:setupButton:widgetType", "GafferSceneUI.AttributeQueryUI._SetupButton",
 	"layout:customWidget:setupButton:section", "Settings",
@@ -98,20 +99,20 @@ Gaffer.Metadata.registerNode(
 		"scene" : {
 
 			"description" :
-			"""
+			_("""
 			The scene to query the attribute for.
-			"""
+			""")
 
 		},
 
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The location within the scene to query the attribute at.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 			"scenePathPlugValueWidget:scene" : "scene",
@@ -122,11 +123,11 @@ Gaffer.Metadata.registerNode(
 		"attribute" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the attribute to query.
 			> Note : If the attribute does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
-			""",
+			"""),
 
 			"nodule:type" : ""
 
@@ -135,10 +136,10 @@ Gaffer.Metadata.registerNode(
 		"inherit" : {
 
 			"description" :
-			"""
+			_("""
 			When on, the query includes attributes inherited from ancestor locations
 			and the scene globals if a local attribute is not found.
-			""",
+			"""),
 
 			"nodule:type" : ""
 
@@ -147,18 +148,18 @@ Gaffer.Metadata.registerNode(
 		"default" : {
 
 			"description" :
-			"""
+			_("""
 			Default value to use if attribute or location does not exist.
-			"""
+			""")
 
 		},
 
 		"exists" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs true if both attribute and location exist, otherwise false.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 
@@ -167,9 +168,9 @@ Gaffer.Metadata.registerNode(
 		"value" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs the value of the specified attribute.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Outputs"
 

@@ -37,34 +37,35 @@
 import Gaffer
 import GafferUI
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeleteImageMetadata,
 
 	"description",
-	"""
+	_("""
 	Deletes metadata entries from an image based on name.
-	""",
+	"""),
 
 	plugs = {
 
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			The names of metadata entries to be removed. This is a space separated
 			list of entry names, which accepts Gaffer's standard string wildcards.
-			""",
+			"""),
 
 		},
 
 		"invertNames" : {
 
 			"description" :
-			"""
+			_("""
 			When on, matching names are kept, and non-matching names are removed.
-			""",
+			"""),
 
 		},
 

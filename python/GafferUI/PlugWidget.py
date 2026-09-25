@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import warnings
 
 import Gaffer
@@ -42,6 +43,8 @@ import GafferUI
 
 from Qt import QtCore
 from Qt import QtWidgets
+
+_GAFFER_LANG = os.environ.get( "GAFFER_LANG", "en" )
 
 ## The PlugWidget combines a LabelPlugValueWidget with a second PlugValueWidget
 ## suitable for editing the plug.
@@ -117,6 +120,8 @@ class PlugWidget( GafferUI.Widget ) :
 	@staticmethod
 	def labelWidth() :
 
+		if _GAFFER_LANG != "en" :
+			return 195
 		return 150
 
 	## Ensures that the specified plug has a visible PlugWidget,

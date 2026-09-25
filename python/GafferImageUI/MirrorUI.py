@@ -36,35 +36,36 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Mirror,
 
 	"description",
-	"""
+	_("""
 	Mirrors the image, flipping it in the horizontal and/or
 	vertical directions. Unlike the ImageTransform node, this
 	performs no filtering, so pixel values are not changed.
-	""",
+	"""),
 
 	plugs = {
 
 		"horizontal" : {
 
 			"description" :
-			"""
+			_("""
 			Mirrors horizontally, flopping the image left to right.
-			""",
+			"""),
 
 		},
 
 		"vertical" : {
 
 			"description" :
-			"""
+			_("""
 			Mirrors vertically, flipping the image top to bottom.
-			""",
+			"""),
 
 		},
 

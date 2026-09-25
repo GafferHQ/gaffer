@@ -42,6 +42,7 @@ import imath
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferDispatch
 
 from GafferUI._StyleSheet import _styleColors
@@ -53,10 +54,10 @@ Gaffer.Metadata.registerNode(
 	GafferDispatch.Dispatcher,
 
 	"description",
-	"""
+	_("""
 	Used to schedule the execution of a network
 	of TaskNodes.
-	""",
+	"""),
 
 	"layout:activator:framesModeIsCustomRange", lambda node : node["framesMode"].getValue() == GafferDispatch.Dispatcher.FramesMode.CustomRange,
 	"layout:customWidget:dispatchButton:widgetType", "GafferDispatchUI.DispatcherUI._DispatchButton",
@@ -72,9 +73,9 @@ Gaffer.Metadata.registerNode(
 		"tasks" : {
 
 			"description" :
-			"""
+			_("""
 			The tasks to be executed by this dispatcher.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::CompoundNodule",
 			"noduleLayout:spacing" : 0.4,
@@ -94,7 +95,7 @@ Gaffer.Metadata.registerNode(
 		"framesMode" : {
 
 			"description" :
-			"""
+			_("""
 			Determines the active frame range to be dispatched as
 			follows :
 
@@ -105,7 +106,7 @@ Gaffer.Metadata.registerNode(
 			    context variables.
 			  - CustomRange uses a user defined range, as specified by
 			    the `frameRange` plug.
-			""",
+			"""),
 
 			"preset:Current Frame" : GafferDispatch.Dispatcher.FramesMode.CurrentFrame,
 			"preset:Full Range" : GafferDispatch.Dispatcher.FramesMode.FullRange,
@@ -118,9 +119,9 @@ Gaffer.Metadata.registerNode(
 		"frameRange" : {
 
 			"description" :
-			"""
+			_("""
 			The frame range to be used when framesMode is "CustomRange".
-			""",
+			"""),
 
 			"layout:visibilityActivator" : "framesModeIsCustomRange",
 
@@ -129,18 +130,18 @@ Gaffer.Metadata.registerNode(
 		"jobName" : {
 
 			"description" :
-			"""
+			_("""
 			A descriptive name for the job.
-			"""
+			""")
 
 		},
 
 		"jobsDirectory" : {
 
 			"description" :
-			"""
+			_("""
 			A directory to store temporary files used by the dispatcher.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : False,
@@ -170,7 +171,7 @@ def _dispatch( dispatcher, parentWindow  ) :
 
 	with dispatcher.scriptNode().context() :
 		with GafferUI.ErrorDialogue.ErrorHandler(
-			title = "Errors Occurred During Dispatch",
+			title = _("Errors Occurred During Dispatch"),
 			parentWindow = parentWindow
 		) :
 			dispatcher["task"].execute()
@@ -231,10 +232,10 @@ Gaffer.Metadata.registerNode(
 		"dispatcher.batchSize" : {
 
 			"description" :
-			"""
+			_("""
 			Maximum number of frames to batch together when dispatching tasks.
 			If the node requires sequence execution `batchSize` will be ignored.
-			""",
+			"""),
 
 			"layout:activator" : "doesNotRequireSequenceExecution",
 
@@ -243,7 +244,7 @@ Gaffer.Metadata.registerNode(
 		"dispatcher.immediate" : {
 
 			"description" :
-			"""
+			_("""
 			Causes this node to be executed immediately upon dispatch,
 			rather than have its execution be scheduled normally by
 			the dispatcher. For instance, when using the LocalDispatcher,
@@ -252,18 +253,18 @@ Gaffer.Metadata.registerNode(
 
 			When a node is made immediate, all upstream nodes are automatically
 			considered to be immediate too, regardless of their settings.
-			"""
+			""")
 
 		},
 
 		"dispatcher.isolated" : {
 
 			"description" :
-			"""
+			_("""
 			Causes this node to be executed from a script containing *only* this node.
 			This is a useful optimisation when the load time for the full script is
 			high compared to the time taken to execute the task.
-			""",
+			"""),
 
 			"layout:activator" : "immediateIsOff",
 

@@ -38,27 +38,28 @@ import Gaffer
 import GafferUI
 import GafferImage
 import GafferImageUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ChannelDataProcessor,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which process a subset of the image channels,
 	while leaving the format and data window unchanged.
-	""",
+	"""),
 
 	plugs = {
 
 		"channels" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the channels to operate on. Names should be
 			separated by spaces and can use Gaffer's standard
 			wildcards.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 
@@ -67,11 +68,11 @@ Gaffer.Metadata.registerNode(
 		"processUnpremultiplied" : {
 
 			"description" :
-			"""
+			_("""
 			Unpremultiplies data before processing, and premultiply again after processing.  This allows
 			accurate processing of nodes that deal with color, when running on partially transparent or
 			deep images.
-			""",
+			"""),
 
 		},
 

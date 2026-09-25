@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 import IECoreGL
 
@@ -302,10 +303,10 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		text = None
 		icon = None
 		if self.getNodeSet() == self.scriptNode().focusSet() :
-			text = "Focus a node to view"
+			text = _("Focus a node to view")
 			icon = "viewerFocusPrompt.png"
 		elif self.getNodeSet() == self.scriptNode().selection() :
-			text = "Select a node to view"
+			text = _("Select a node to view")
 			icon = "viewerSelectPrompt.png"
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
@@ -396,14 +397,14 @@ class _ToolChooser( GafferUI.Frame ) :
 
 				for tool in self.tools :
 
-					toolTip = tool.getName()
+					toolTip = _( tool.getName() )
 					description = Gaffer.Metadata.value( tool, "description" )
 					if description :
-						toolTip += "\n\n" + IECore.StringUtil.wrap( description, 80 )
+						toolTip += "\n\n" + IECore.StringUtil.wrap( _( description.strip() ), 80 )
 
 					shortCut = Gaffer.Metadata.value( tool, "viewer:shortCut" )
 					if shortCut is not None :
-						toolTip += "\n\nShortcut : " + shortCut
+						toolTip += "\n\n" + _("Shortcut") + " : " + shortCut
 
 					widget = GafferUI.BoolPlugValueWidget( tool["active"], toolTip = toolTip )
 

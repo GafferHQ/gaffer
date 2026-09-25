@@ -38,27 +38,28 @@ import Gaffer
 import GafferImage
 import GafferUI
 import imath
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.CopyViews,
 
 	"description",
-	"""
+	_("""
 	Copies views from the secondary input images onto the primary input image.
 	Only works with multi-view images.
-	""",
+	"""),
 
 	plugs = {
 
 		"views" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the views to copy. Names should be
 			separated by spaces and can use Gaffer's standard
 			wildcards.
-			""",
+			"""),
 
 		},
 

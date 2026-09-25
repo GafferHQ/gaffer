@@ -36,14 +36,15 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.FlatImageSource,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which create a flat image.
-	""",
+	"""),
 
 )

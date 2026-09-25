@@ -38,6 +38,7 @@ import imath
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 __modePresets = {
 	"preset:Euler" : GafferScene.Orientation.Mode.Euler,
@@ -61,7 +62,7 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Orientation,
 
 	"description",
-	"""
+	_("""
 	Converts between different representations of orientation, stored as
 	primitive variables on an object. Supported representations include
 	euler angles, quaternions, axis-angle form, aim vectors and matrices.
@@ -69,7 +70,7 @@ Gaffer.Metadata.registerNode(
 	Typically used to prepare points for instancing, as the Instancer node
 	requires orientation to be provided as a quaternion, but it is often
 	more convenient to prepare orientations in another representation.
-	""",
+	"""),
 
 	"layout:activator:inModeIsEuler", lambda node : node["inMode"].getValue() == GafferScene.Orientation.Mode.Euler,
 	"layout:activator:inModeIsQuaternion", lambda node : node["inMode"].getValue() in ( GafferScene.Orientation.Mode.Quaternion, GafferScene.Orientation.Mode.QuaternionXYZW ),
@@ -98,9 +99,9 @@ Gaffer.Metadata.registerNode(
 		"inMode" : {
 
 			"description" :
-			"""
+			_("""
 			The method used to define the input orientations.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Input",
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
@@ -114,12 +115,12 @@ Gaffer.Metadata.registerNode(
 		"deleteInputs" : {
 
 			"description" :
-			"""
+			_("""
 			Deletes the input primitive variables, so that they are
 			not present on the output object.
-			""",
+			"""),
 
-			"label" : "Delete",
+			"label" : _("Delete"),
 			"layout:section" : "Settings.Input",
 			"layout:index" : -1,
 
@@ -131,13 +132,13 @@ Gaffer.Metadata.registerNode(
 		"inEuler" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that defines the input orientation
 			as euler angles, measured in degrees. This variable should contain
 			V3fVectorData.
-			""",
+			"""),
 
-			"label" : "Euler",
+			"label" : _("Euler"),
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsEuler",
 
@@ -146,11 +147,11 @@ Gaffer.Metadata.registerNode(
 		"inOrder" : {
 
 			"description" :
-			"""
+			_("""
 			The rotation order of the input euler angles.
-			""",
+			"""),
 
-			"label" : "Order",
+			"label" : _("Order"),
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsEuler",
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
@@ -163,12 +164,12 @@ Gaffer.Metadata.registerNode(
 		"inQuaternion" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that defines the input orientation
 			as quaternions. This variable should contain QuatfVectorData.
-			""",
+			"""),
 
-			"label" : "Quaternion",
+			"label" : _("Quaternion"),
 
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsQuaternion",
@@ -181,12 +182,12 @@ Gaffer.Metadata.registerNode(
 		"inAxis" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that defines the axis component of
 			the input orientations. This variable should contain V3fVectorData.
-			""",
+			"""),
 
-			"label" : "Axis",
+			"label" : _("Axis"),
 
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsAxisAngle",
@@ -196,12 +197,12 @@ Gaffer.Metadata.registerNode(
 		"inAngle" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that defines the angle component of
 			the input orientations. This variable should contain FloatVectorData.
-			""",
+			"""),
 
-			"label" : "Angle",
+			"label" : _("Angle"),
 
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsAxisAngle",
@@ -214,12 +215,12 @@ Gaffer.Metadata.registerNode(
 		"inXAxis" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that defines the direction in which the
 			X axis will be aimed. This variable should contain V3fVectorData.
-			""",
+			"""),
 
-			"label" : "X Axis",
+			"label" : _("X Axis"),
 
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsAim",
@@ -229,12 +230,12 @@ Gaffer.Metadata.registerNode(
 		"inYAxis" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that defines the direction in which the
 			Y axis will be aimed. This variable should contain V3fVectorData.
-			""",
+			"""),
 
-			"label" : "Y Axis",
+			"label" : _("Y Axis"),
 
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsAim",
@@ -244,12 +245,12 @@ Gaffer.Metadata.registerNode(
 		"inZAxis" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that defines the direction in which the
 			Z axis will be aimed. This variable should contain V3fVectorData.
-			""",
+			"""),
 
-			"label" : "Z Axis",
+			"label" : _("Z Axis"),
 
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsAim",
@@ -262,12 +263,12 @@ Gaffer.Metadata.registerNode(
 		"inMatrix" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that defines the input orientations as
 			a matrix. This variable should contain M33fVectorData.
-			""",
+			"""),
 
-			"label" : "Matrix",
+			"label" : _("Matrix"),
 
 			"layout:section" : "Settings.Input",
 			"layout:visibilityActivator" : "inModeIsMatrix",
@@ -280,24 +281,24 @@ Gaffer.Metadata.registerNode(
 		"randomEnabled" : {
 
 			"description" :
-			"""
+			_("""
 			Enables randomisation of the orientations. Randomisation
 			is applied as a pre-transform of the input orientation.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Random",
-			"label" : "Enabled",
+			"label" : _("Enabled"),
 
 		},
 
 		"randomAxis" : {
 
 			"description" :
-			"""
+			_("""
 			A reference axis which the randomisation is specified relative
 			to. Typically this would be the primary axis of the model being
 			instanced.
-			""",
+			"""),
 
 			"preset:X" : imath.V3f( 1, 0, 0 ),
 			"preset:Y" : imath.V3f( 0, 1, 0 ),
@@ -307,7 +308,7 @@ Gaffer.Metadata.registerNode(
 			"presetsPlugValueWidget:allowCustom" : True,
 
 			"layout:section" : "Settings.Random",
-			"label" : "Axis",
+			"label" : _("Axis"),
 			"layout:activator" : "randomEnabled",
 
 		},
@@ -315,14 +316,14 @@ Gaffer.Metadata.registerNode(
 		"randomSpread" : {
 
 			"description" :
-			"""
+			_("""
 			Applies a random rotation away from the axis, specified in
 			degrees. The maximum spread of 180 degrees gives a uniform
 			randomisation over all possible directions.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Random",
-			"label" : "Spread",
+			"label" : _("Spread"),
 			"layout:activator" : "randomEnabled",
 
 		},
@@ -330,13 +331,13 @@ Gaffer.Metadata.registerNode(
 		"randomTwist" : {
 
 			"description" :
-			"""
+			_("""
 			Applies a random rotation around the axis, specified in
 			degrees.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Random",
-			"label" : "Twist",
+			"label" : _("Twist"),
 			"layout:activator" : "randomEnabled",
 
 		},
@@ -344,7 +345,7 @@ Gaffer.Metadata.registerNode(
 		"randomSpace" : {
 
 			"description" :
-			"""
+			_("""
 			The space in which the randomisation is specified. This defines
 			how it is combined with the input orientations.
 
@@ -360,10 +361,10 @@ Gaffer.Metadata.registerNode(
 				When using the Instancer, this is equivalent to randomising
 				the instances after they are positioned.
 
-			""",
+			"""),
 
 			"layout:section" : "Settings.Random",
-			"label" : "Space",
+			"label" : _("Space"),
 			"preset:Local" : GafferScene.Orientation.Space.Local,
 			"preset:Parent" : GafferScene.Orientation.Space.Parent,
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
@@ -376,11 +377,11 @@ Gaffer.Metadata.registerNode(
 		"outMode" : {
 
 			"description" :
-			"""
+			_("""
 			The method used to define the output orientations. When
 			creating orientations for the Instancer, the Quaternion
 			mode should be used.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Output",
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
@@ -393,12 +394,12 @@ Gaffer.Metadata.registerNode(
 		"outEuler" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that will be created to store
 			the output orientations as euler angles, measured in degrees.
-			""",
+			"""),
 
-			"label" : "Euler",
+			"label" : _("Euler"),
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsEuler",
 
@@ -407,11 +408,11 @@ Gaffer.Metadata.registerNode(
 		"outOrder" : {
 
 			"description" :
-			"""
+			_("""
 			The rotation order of the output euler angles.
-			""",
+			"""),
 
-			"label" : "Order",
+			"label" : _("Order"),
 
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsEuler",
@@ -425,12 +426,12 @@ Gaffer.Metadata.registerNode(
 		"outQuaternion" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that will be created to store
 			the output orientations as quaternions.
-			""",
+			"""),
 
-			"label" : "Quaternion",
+			"label" : _("Quaternion"),
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsQuaternion",
 
@@ -442,12 +443,12 @@ Gaffer.Metadata.registerNode(
 		"outAxis" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that will be created to store
 			the axis component of the output orientation.
-			""",
+			"""),
 
-			"label" : "Axis",
+			"label" : _("Axis"),
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsAxisAngle",
 
@@ -456,12 +457,12 @@ Gaffer.Metadata.registerNode(
 		"outAngle" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that will be created to store
 			the angle component of the output orientation.
-			""",
+			"""),
 
-			"label" : "Angle",
+			"label" : _("Angle"),
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsAxisAngle",
 
@@ -473,12 +474,12 @@ Gaffer.Metadata.registerNode(
 		"outXAxis" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that will be created to store
 			the x-axis aim vector of the output orientation.
-			""",
+			"""),
 
-			"label" : "X Axis",
+			"label" : _("X Axis"),
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsAim",
 
@@ -487,12 +488,12 @@ Gaffer.Metadata.registerNode(
 		"outYAxis" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that will be created to store
 			the y-axis aim vector of the output orientation.
-			""",
+			"""),
 
-			"label" : "Y Axis",
+			"label" : _("Y Axis"),
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsAim",
 
@@ -501,12 +502,12 @@ Gaffer.Metadata.registerNode(
 		"outZAxis" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that will be created to store
 			the z-axis aim vector of the output orientation.
-			""",
+			"""),
 
-			"label" : "Z Axis",
+			"label" : _("Z Axis"),
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsAim",
 
@@ -518,13 +519,13 @@ Gaffer.Metadata.registerNode(
 		"outMatrix" : {
 
 			"description" :
-			"""
+			_("""
 			Name of the primitive variable that will be created to store
 			the output orientations as matrices. The matrices will be
 			stored as M33fVectorData.
-			""",
+			"""),
 
-			"label" : "Matrix",
+			"label" : _("Matrix"),
 			"layout:section" : "Settings.Output",
 			"layout:visibilityActivator" : "outModeIsMatrix",
 

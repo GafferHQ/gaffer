@@ -38,6 +38,7 @@ import Gaffer
 import GafferImage
 import GafferUI
 import imath
+from GafferUI.i18n import _
 
 ## A function suitable as the postCreator in a NodeMenu.append() call. It
 # sets up the default "left" and "right" views
@@ -52,15 +53,15 @@ Gaffer.Metadata.registerNode(
 	GafferImage.CreateViews,
 
 	"description",
-	"""
+	_("""
 	Creates a multi-view image by combining multiple input images.
-	""",
+	"""),
 
 	plugs = {
 
 		"views" : {
 			"description" :
-			"Views to add.  In the case of multiple views with the same name, the last one will override.",
+			_("Views to add.  In the case of multiple views with the same name, the last one will override."),
 
 			"nodule:type" : "GafferUI::CompoundNodule",
 			"noduleLayout:spacing" : 2.0,
@@ -81,11 +82,11 @@ Gaffer.Metadata.registerNode(
 
 		"views.*.name" : {
 			"description" :
-			"""
+			_("""
 			The name of the view to be created from this input. Usually "left" or "right" for a
 			stereo workflow, but can be any name, allowing arbitrary numbers of views to be created
 			in a single image stream.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -93,9 +94,9 @@ Gaffer.Metadata.registerNode(
 
 		"views.*.enabled" : {
 			"description" :
-			"""
+			_("""
 			Enables this view.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -103,10 +104,10 @@ Gaffer.Metadata.registerNode(
 
 		"views.*.value" : {
 			"description" :
-			"""
+			_("""
 			Provides the image to be used to create this view. The connected image should not itself
 			be a multi-view image.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.ConnectionPlugValueWidget",
 			"noduleLayout:label" : lambda plug : plug.parent()["name"].getValue(),

@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from Qt import QtCore
 from Qt import QtWidgets
@@ -156,7 +157,7 @@ class Editor( GafferUI.Widget ) :
 			c = c.__bases__[0]
 
 		# otherwise we default to using the classname
-		return IECore.CamelCase.toSpaced( self.__class__.__name__ )
+		return _( IECore.CamelCase.toSpaced( self.__class__.__name__ ) )
 
 	## A signal emitted whenever the title changes.
 	def titleChangedSignal( self ) :

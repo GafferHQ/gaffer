@@ -44,6 +44,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 ## \deprecated. Remove in version 1.7.
 def appendPlugCreationMenuDefinitions( plugParent, menuDefinition, prefix = "" ) :
 
@@ -118,7 +120,7 @@ class __PlugCreationWidget( GafferUI.Widget ) :
 				image="plus.png",
 				hasFrame=False,
 				menu=GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
-				toolTip = "Click to add plugs"
+				toolTip = _("Click to add plugs")
 			)
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 

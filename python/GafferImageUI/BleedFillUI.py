@@ -36,23 +36,24 @@
 import IECore
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.BleedFill,
 
 	"description",
-	"Fills in areas of low alpha in the image by blurring in contributions from nearby pixels.",
+	_("Fills in areas of low alpha in the image by blurring in contributions from nearby pixels."),
 
 	plugs = {
 		"expandDataWindow" : {
 
 			"description" :
-			"""
+			_("""
 			Expand the data window to cover the display window.  The new data will be filled
 			with blurred contributions from nearby pixels ( the same as any regions of low
 			alpha within the original data window ).
-			""",
+			"""),
 
 		},
 	}

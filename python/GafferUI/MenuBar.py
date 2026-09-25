@@ -40,6 +40,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
@@ -104,7 +106,7 @@ class MenuBar( GafferUI.Widget ) :
 					# hasShortCuts as the definition it was on is lost here.
 					menu = GafferUI.Menu( subMenuDefinition, _qtParent=self._qtWidget() )
 					menu.__hasShortCuts = getattr( item, 'hasShortCuts', True )
-					menu._qtWidget().setTitle( name )
+					menu._qtWidget().setTitle( _( name ) )
 					self._qtWidget().addMenu( menu._qtWidget() )
 					self.__subMenus.append( menu )
 

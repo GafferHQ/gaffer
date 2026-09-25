@@ -41,6 +41,7 @@ import IECore
 import IECoreScene
 
 import GafferUI
+from GafferUI.i18n import _
 import GafferSceneUI
 
 import collections
@@ -181,11 +182,11 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 		self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.FaceVarying] = listContainer(
 			self.__dataWidgets[IECoreScene.PrimitiveVariable.Interpolation.FaceVarying] )
 
-		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Constant], "Constant" )
-		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Uniform], "Uniform" )
-		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Vertex], "Vertex" )
-		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Varying], "Varying" )
-		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.FaceVarying], "FaceVarying" )
+		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Constant], _("Constant") )
+		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Uniform], _("Uniform") )
+		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Vertex], _("Vertex") )
+		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Varying], _("Varying") )
+		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.FaceVarying], _("FaceVarying") )
 
 		self.__selectedPathsChangedConnection = GafferSceneUI.ScriptNodeAlgo.selectedPathsChangedSignal( scriptNode ).connect(
 			Gaffer.WeakMethod( self.__selectedPathsChanged )
@@ -281,7 +282,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 				t = toolTips.get( interpolation, [] )
 
 				self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation],
-					str( interpolation ) + ( " ({0})".format( len( pv ) ) if pv else "" ) )
+					_( str( interpolation ) ) + ( " ({0})".format( len( pv ) ) if pv else "" ) )
 
 				self.__dataWidgets[interpolation].setToolTips( t )
 				self.__dataWidgets[interpolation].setHeader( h )
@@ -293,7 +294,7 @@ class PrimitiveInspector( GafferSceneUI.SceneEditor ) :
 
 				self.__dataWidgets[interpolation].setData( None )
 				self.__dataWidgets[interpolation].setToolTips( [] )
-				self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation], str( interpolation ) )
+				self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation], _( str( interpolation ) ) )
 
 GafferUI.Editor.registerType( "PrimitiveInspector", PrimitiveInspector )
 
@@ -309,10 +310,10 @@ Gaffer.Metadata.registerNode(
 		"location" : {
 
 			"description" :
-			"""
+			_("""
 			The scene location to inspect. Defaults to the currently selected location. Use
 			the HierarchyView or Viewer to select a location.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.SceneInspector._LocationPlugValueWidget",
 

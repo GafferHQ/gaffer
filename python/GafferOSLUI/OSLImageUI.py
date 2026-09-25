@@ -37,6 +37,7 @@
 import IECore
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 import GafferOSL
 
@@ -77,9 +78,9 @@ class _ChannelsFooter( GafferUI.PlugValueWidget ) :
 					hasFrame = False,
 					menu = GafferUI.Menu(
 						Gaffer.WeakMethod( self.__menuDefinition ),
-						title = "Add Input"
+						title = _("Add Input")
 					),
-					toolTip = "Add Input"
+					toolTip = _("Add Input")
 				)
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
@@ -178,11 +179,11 @@ Gaffer.Metadata.registerNode(
 	GafferOSL.OSLImage,
 
 	"description",
-	"""
+	_("""
 	Executes OSL shaders to perform image processing. Use the shaders from
 	the OSL/ImageProcessing menu to read values from the input image and
 	then write values back to it.
-	""",
+	"""),
 
 	"plugAdderOptions", IECore.CompoundData( _channelNamesOptions ),
 
@@ -191,21 +192,21 @@ Gaffer.Metadata.registerNode(
 	plugs = {
 		"defaultFormat" : {
 			"description" :
-			"""
+			_("""
 			The resolution and aspect ratio to output when there is no input image provided.
-			""",
+			"""),
 			"layout:activator" : "defaultFormatActive",
 		},
 		"channels" : {
 			"description" :
-			"""
+			_("""
 			Define image channels to output by adding child plugs and connecting
 			corresponding OSL shaders.  You can drive RGB layers with a color,
 			or connect individual channels to a float.
 
 			If you want to add multiple channels at once, you can also add a closure plug,
 			which can accept a connection from an OSLCode with a combined output closure.
- 			""",
+ 			"""),
 			"layout:customWidget:footer:widgetType" : "GafferOSLUI.OSLImageUI._ChannelsFooter",
 			"layout:customWidget:footer:index" : -1,
 			"nodule:type" : "GafferUI::CompoundNodule",

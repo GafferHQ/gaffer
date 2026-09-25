@@ -38,6 +38,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -48,22 +49,22 @@ Gaffer.Metadata.registerNode(
 	GafferScene.ParentConstraint,
 
 	"description",
-	"""
+	_("""
 	Constrains objects from one part of the scene hierarchy as if they were
 	children of another part of the hierarchy.
-	""",
+	"""),
 
 	plugs = {
 
 		"relativeTransform" : {
 
 			"description" :
-			"""
+			_("""
 			Transforms the constrained object relative to the target location.
 
 			> Note : This is ignored when `keepReferencePosition` is on. In this case it is easier
 			> to modify the reference position instead.
-			""",
+			"""),
 
 			"layout:section" : "Transform",
 			"layout:activator" : "keepReferencePositionIsOff",

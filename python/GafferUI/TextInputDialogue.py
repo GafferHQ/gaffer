@@ -37,10 +37,11 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 class TextInputDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, initialText="", title="Enter text", cancelLabel="Cancel", confirmLabel="OK", multiLine = False, **kw ) :
+	def __init__( self, initialText="", title=_("Enter text"), cancelLabel=_("Cancel"), confirmLabel=_("OK"), multiLine = False, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
 

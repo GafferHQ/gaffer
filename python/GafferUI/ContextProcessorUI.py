@@ -35,16 +35,17 @@
 ##########################################################################
 
 import Gaffer
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.ContextProcessor,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which allow the user to make modifications to
 	the upstream evaluation Context.
-	""",
+	"""),
 
 	# Add + buttons for creating new plugs in the GraphEditor
 	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.ContextProcessorUI.PlugAdder",

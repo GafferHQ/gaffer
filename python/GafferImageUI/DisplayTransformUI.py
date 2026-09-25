@@ -42,6 +42,7 @@ import Gaffer
 import GafferUI
 import GafferImage
 from . import OpenColorIOTransformUI
+from GafferUI.i18n import _
 
 def __displayPresetNames( plug ) :
 
@@ -72,18 +73,18 @@ Gaffer.Metadata.registerNode(
 	GafferImage.DisplayTransform,
 
 	"description",
-	"""
+	_("""
 	Applies an OpenColorIO display transform to an image.
-	""",
+	"""),
 
 	plugs = {
 
 		"inputColorSpace" : {
 
 			"description" :
-			"""
+			_("""
 			The colour space of the input image.
-			""",
+			"""),
 
 			"presetNames" : OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues" : OpenColorIOTransformUI.colorSpacePresetValues,
@@ -96,10 +97,10 @@ Gaffer.Metadata.registerNode(
 		"display" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the display to use. Defaults to the default display as
 			defined by the current OpenColorIO config.
-			""",
+			"""),
 
 			"presetNames" : __displayPresetNames,
 			"presetValues" : __displayPresetValues,
@@ -111,10 +112,10 @@ Gaffer.Metadata.registerNode(
 		"view" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the view to use. Defaults to the default view for the
 			display, as defined by the current OpenColorIO config.
-			""",
+			"""),
 
 			"presetNames" : __viewPresetNames,
 			"presetValues" : __viewPresetValues,

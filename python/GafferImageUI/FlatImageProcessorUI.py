@@ -36,15 +36,16 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.FlatImageProcessor,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which process only flat image data
 	and so will error on non-flat data.
-	""",
+	"""),
 
 )

@@ -47,6 +47,7 @@ from GafferUI.PlugValueWidget import sole
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -57,22 +58,22 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Outputs,
 
 	"description",
-	"""
+	_("""
 	Defines the image outputs to be created by the renderer. Arbitrary
 	outputs can be defined within the UI and also via the
 	`Outputs::addOutput()` API. Commonly used outputs may also
 	be predefined at startup via a config file - see
 	$GAFFER_ROOT/startup/gui/outputs.py for an example.
-	""",
+	"""),
 
 	plugs = {
 
 		"outputs" : {
 
 			"description" :
-			"""
+			_("""
 			The outputs defined by this node.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.OutputsUI.OutputsPlugValueWidget",
 
@@ -87,9 +88,9 @@ Gaffer.Metadata.registerNode(
 		"outputs.*.parameters.quantize.value" : {
 
 			"description" :
-			"""
+			_("""
 			The bit depth of the image.
-			""",
+			"""),
 
 			"preset:8 bit" : IECore.IntVectorData( [ 0, 255, 0, 255 ] ),
 			"preset:16 bit" : IECore.IntVectorData( [ 0, 65535, 0, 65535 ] ),
@@ -174,7 +175,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if len( registeredOutputs ) :
 			m.append( "/BlankDivider", { "divider" : True } )
 
-		m.append( "/Blank", { "command" : functools.partial( node.addOutput, "", IECoreScene.Output( "", "", "" ) ) } )
+		m.append( "/" + _("Blank"), { "command" : functools.partial( node.addOutput, "", IECoreScene.Output( "", "", "" ) ) } )
 
 		return m
 

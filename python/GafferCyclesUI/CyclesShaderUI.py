@@ -45,6 +45,7 @@ import GafferUI
 import GafferCycles
 import GafferImage
 import GafferImageUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Build a registry of information retrieved from GafferCycles metadata.
@@ -123,12 +124,12 @@ def __nodeDescription( node ) :
 	if isinstance( node, GafferCycles.CyclesShader ) :
 		return __metadata[node["name"].getValue()].get(
 			"description",
-			"""Loads shaders for use in Cycles renders. Use the ShaderAssignment node to assign shaders to objects in the scene.""",
+			_("""Loads shaders for use in Cycles renders. Use the ShaderAssignment node to assign shaders to objects in the scene."""),
 		)
 	else :
 		return __metadata[node["__shader"]["name"].getValue()].get(
 			"description",
-			"""Loads an Cycles light shader and uses it to output a scene with a single light."""
+			_("""Loads an Cycles light shader and uses it to output a scene with a single light.""")
 		)
 
 def __nodeMetadata( node, name ) :

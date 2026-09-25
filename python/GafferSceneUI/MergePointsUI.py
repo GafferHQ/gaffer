@@ -41,6 +41,7 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -51,9 +52,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.MergePoints,
 
 	"description",
-	"""
+	_("""
 	Merge points from all filtered location into a single points primitive, or into
 	multiple destinations.
-	""",
+	"""),
 
 )

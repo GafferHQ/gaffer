@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 ##########################################################################
 # Metadata
@@ -46,22 +47,22 @@ Gaffer.Metadata.registerNode(
 	GafferScene.DeleteAttributes,
 
 	"description",
-	"""
+	_("""
 	Deletes attributes from locations within the scene.
 	Those locations will then inherit the attribute
 	values from ancestor locations instead, or will fall
 	back to using the default attribute value.
-	""",
+	"""),
 
 	plugs = {
 
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			The names of attributes to be removed. Names should be
 			separated by spaces and can use Gaffer's standard wildcards.
-			""",
+			"""),
 
 			"ui:scene:acceptsAttributeNames" : True,
 
@@ -70,9 +71,9 @@ Gaffer.Metadata.registerNode(
 		"invertNames" : {
 
 			"description" :
-			"""
+			_("""
 			When on, matching names are kept, and non-matching names are removed.
-			""",
+			"""),
 
 		},
 

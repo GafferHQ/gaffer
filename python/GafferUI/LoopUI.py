@@ -38,19 +38,20 @@ import functools
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Loop,
 
 	"description",
-	"""
+	_("""
 	Applies a node network to an input iteratively.
 
 	> Caution : This should _not_ be your first choice of tool.
 	> For many use cases the Instancer, CollectScenes and CollectImages
 	> nodes are more suitable and offer _significantly_ better performance.
-	""",
+	"""),
 
 	# Add + buttons for creating new plugs in the GraphEditor
 	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.LoopUI.PlugAdder",
@@ -63,46 +64,46 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"The initial starting point for the loop."
+			_("The initial starting point for the loop.")
 
 		},
 
 		"out" : {
 
 			"description" :
-			"The final result of the loop.",
+			_("The final result of the loop."),
 
 		},
 
 		"previous" : {
 
 			"description" :
-			"""
+			_("""
 			The result from the previous iteration of the loop, or
 			the primary input if no iterations have been performed yet.
 			The content of the loop is defined by feeding this previous
 			result through the processing nodes of choice and back
 			around into the next plug.
-			""",
+			"""),
 
 		},
 
 		"next" : {
 
 			"description" :
-			"""
+			_("""
 			The input to be used as the start of the next iteration of
 			the loop.
-			""",
+			"""),
 
 		},
 
 		"iterations" : {
 
 			"description" :
-			"""
+			_("""
 			The number of times the loop is applied to form the output.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -111,12 +112,12 @@ Gaffer.Metadata.registerNode(
 		"indexVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a Context Variable used to specify the index
 			of the current iteration. This can be referenced from
 			expressions within the loop network to modify the operations
 			performed during each iteration of the loop.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -168,7 +169,7 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 		return
 
 	menuDefinition.append(
-		"/Connect to {0}".format( "Previous" if plug == node["next"] else "Next" ),
+		"/" + _("Connect to {0}").format( _("Previous") if plug == node["next"] else _("Next") ),
 		{
 			"command" : functools.partial( __createLoop, node = node ),
 			"active" : (

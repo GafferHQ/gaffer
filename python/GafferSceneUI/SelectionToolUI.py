@@ -42,13 +42,14 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.SelectionTool,
 
 	"description",
-	"""
+	_("""
 	Tool for selecting objects.
 
 	- Click or drag to set selection
@@ -56,7 +57,7 @@ Gaffer.Metadata.registerNode(
 	- Drag and drop selected objects
 		- Drag to Python Editor to get their names
 		- Drag to PathFilter or Set node to add/remove their paths
-	""",
+	"""),
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
@@ -78,14 +79,14 @@ Gaffer.Metadata.registerNode(
 		"selectMode" : {
 
 			"description" :
-			"""
+			_("""
 			Determines the scene location that is ultimately selected or deselected,
 			which may differ from what is originally selected.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.SelectionToolUI.SelectModePlugValueWidget",
 
-			"label" : "Select",
+			"label" : _("Select"),
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 150,
@@ -127,7 +128,7 @@ class SelectModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			if values[0] in modes :
 				self.__menuButton.setText( values[0].partition( "/" )[-1] )
 			else :
-				self.__menuButton.setText( "Invalid" )
+				self.__menuButton.setText( _("Invalid") )
 
 		self.__menuButton.setErrored( exception is not None )
 

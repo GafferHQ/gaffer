@@ -36,25 +36,26 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeepMerge,
 
 	"description",
-	"""
+	_("""
 	Merges the samples from two or more images into a single deep image.
 	The source images may be deep or flat.
-	""",
+	"""),
 
 	plugs = {
 
 		"in.*" : {
 
 			"description" :
-			"""
+			_("""
 			A deep or flat image input.
-			""",
+			"""),
 
 		},
 

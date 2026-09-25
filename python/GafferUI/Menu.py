@@ -46,6 +46,8 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
+from GafferUI import i18n as _i18n
 
 from Qt import QtCore
 from Qt import QtGui
@@ -235,7 +237,7 @@ class Menu( GafferUI.Widget ) :
 			self.__searchLine.textEdited.connect( Gaffer.WeakMethod( self.__updateSearchMenu ) )
 			self.__searchLine.returnPressed.connect( Gaffer.WeakMethod( self.__searchReturnPressed ) )
 			self.__searchLine.setObjectName( "gafferSearchField" )
-			self.__searchLine.setPlaceholderText( "Search..." )
+			self.__searchLine.setPlaceholderText( _("Search...") )
 			if self.__lastAction :
 				self.__searchLine.setText( self.__lastAction.text() )
 				self.__searchMenu.setDefaultAction( self.__lastAction )
@@ -303,7 +305,7 @@ class Menu( GafferUI.Widget ) :
 					# it's an intermediate submenu we need to make
 					# to construct the path to something else
 
-					subMenu = _Menu( qtMenu, name )
+					subMenu = _Menu( qtMenu, _(name) )
 					qtMenu.addMenu( subMenu )
 
 					subMenu.__definition = definition.reRooted( "/" + name + "/" )
@@ -323,7 +325,7 @@ class Menu( GafferUI.Widget ) :
 						if forShortCuts and not getattr( item, 'hasShortCuts', True ) :
 							continue
 
-						subMenu = _Menu( qtMenu, name )
+						subMenu = _Menu( qtMenu, _(name) )
 						active = self.__evaluateItemValue( item.active )
 						subMenu.setEnabled( active )
 
@@ -363,7 +365,7 @@ class Menu( GafferUI.Widget ) :
 		# add a title if required.
 		if self.__title is not None and qtMenu is self._qtWidget() :
 
-			titleWidget = QtWidgets.QLabel( self.__title )
+			titleWidget = QtWidgets.QLabel( _(self.__title) )
 			titleWidget.setIndent( 0 )
 			titleWidget.setObjectName( "gafferMenuTitle" )
 			titleWidgetAction = QtWidgets.QWidgetAction( qtMenu )
@@ -386,7 +388,7 @@ class Menu( GafferUI.Widget ) :
 		if item.divider :
 			qtAction = _DividerAction( item, parent )
 		else :
-			qtAction = _Action( item, label, parent )
+			qtAction = _Action( item, _(label), parent )
 
 		if item.checkBox is not None :
 			qtAction.setCheckable( True )
@@ -576,7 +578,7 @@ class Menu( GafferUI.Widget ) :
 				else :
 					if overflowMenu is None :
 						self.__searchMenu.addSeparator()
-						overflowMenu = _Menu( self.__searchMenu, "More Results" )
+						overflowMenu = _Menu( self.__searchMenu, _("More Results") )
 						self.__searchMenu.addMenu( overflowMenu )
 					overflowMenu.addAction( action )
 
@@ -622,6 +624,24 @@ class Menu( GafferUI.Widget ) :
 
 			match = matcher.search( name )
 
+			# Also try matching against the full category path
+			# so that e.g. "3D" finds nodes under "/3Delight/..."
+			if not match :
+				for _item, _path in self.__searchStructure[name] :
+					match = matcher.search( _path )
+					if match :
+						break
+
+			# Bilingual search: also try the translated label
+			if not match and _i18n.translateNodeNames() :
+				for _item, _path in self.__searchStructure[name] :
+					leafName = _path.rstrip( "/" ).rsplit( "/", 1 )[-1]
+					translatedName = _( leafName )
+					if translatedName != leafName :
+						match = matcher.search( translatedName )
+						if match :
+							break
+
 			if match :
 
 				weight = 0
@@ -651,10 +671,20 @@ class Menu( GafferUI.Widget ) :
 
 				for item, path in self.__searchStructure[name] :
 
+					if _i18n.translateNodeNames() and _i18n.language() != "en" :
+						displayName = path.rstrip( "/" ).rsplit( "/", 1 )[-1]
+					else :
+						displayName = name
+
 					action = self.__cachedSearchActions.get( path )
 					if action is None :
-						action = self.__buildAction( item, name, self.__searchMenu )
+						action = self.__buildAction( item, displayName, self.__searchMenu )
 						self.__cachedSearchActions[path] = action
+					else :
+						# Cached actions may have been created before translation was fully
+						# initialised, so make sure the visible text reflects current locale.
+						with IECore.IgnoredExceptions( Exception ) :
+							action.setText( _( displayName ) )
 
 					if name not in results :
 						results[name] = { "pos" : pos, "weight" : weight, "actions" : [], 'grp' : match.groups() }
@@ -775,7 +805,7 @@ class _DividerAction( QtWidgets.QWidgetAction ) :
 		QtWidgets.QWidgetAction.__init__( self, *args, **kwarg )
 
 		if hasattr( item, 'label' ) and item.label :
-			titleWidget = QtWidgets.QLabel( item.label )
+			titleWidget = QtWidgets.QLabel( _(item.label) )
 			titleWidget.setIndent( 0 )
 			titleWidget.setObjectName( "gafferMenuLabeledDivider" )
 			titleWidget.setEnabled( False )

@@ -42,6 +42,7 @@ import Gaffer
 import GafferUI
 
 import GafferImage
+from GafferUI.i18n import _
 
 ## \todo Add buttons for removing existing ChannelPlugs, and for adding
 # extras. This is probably best done as part of a concerted effort to
@@ -54,17 +55,17 @@ Gaffer.Metadata.registerNode(
 	GafferImage.Shuffle,
 
 	"description",
-	"""
+	_("""
 	Shuffles data between image channels, for instance by copying R
 	into G or a constant white into A.
-	""",
+	"""),
 
 	plugs = {
 
 		"missingSourceMode" : {
 
 			"description" :
-			"""
+			_("""
 			Determines behaviour when the source channel doesn't exist :
 
 			- Ignore : No change is made to the destination channel.
@@ -72,7 +73,7 @@ Gaffer.Metadata.registerNode(
 			- Black : Black is shuffled into the destination channel.
 
 			> Note : Does not apply when source contains wildcards.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"preset:Ignore" : GafferImage.Shuffle.MissingSourceMode.Ignore,
@@ -86,11 +87,11 @@ Gaffer.Metadata.registerNode(
 		"shuffles" : {
 
 			"description" :
-			"""
+			_("""
 			The definition of the shuffling to be performed - an
 			arbitrary number of channel edits can be made by adding
 			ShufflePlugs as children of this plug.
-			""",
+			"""),
 
 		},
 

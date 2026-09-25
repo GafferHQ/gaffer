@@ -39,15 +39,16 @@ import functools
 import Gaffer
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.AttributeTweaks,
 
 	"description",
-	"""
+	_("""
 	Makes modifications to attributes.
-	""",
+	"""),
 
 	"layout:section:Settings.Tweaks:collapsed", False,
 
@@ -56,33 +57,33 @@ Gaffer.Metadata.registerNode(
 		"localise" : {
 
 			"description" :
-			"""
+			_("""
 			Turn on to allow location-specific tweaks to be made to attributes
 			inherited from ancestors or the scene globals. Attributes will be
 			localised to locations matching the node's filter prior to tweaking.
 			The original inherited attributes will remain untouched.
-			"""
+			""")
 
 		},
 
 		"ignoreMissing" : {
 
 			"description" :
-			"""
+			_("""
 			Ignores tweaks targeting missing attributes. When off, missing attributes
 			cause the node to error.
-			"""
+			""")
 
 		},
 
 		"tweaks" : {
 
 			"description" :
-			"""
+			_("""
 			The tweaks to be made to the attributes. Arbitrary numbers of user defined
 			tweaks may be added as children of this plug via the user interface, or
 			using the AttributeTweaks API via python.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Tweaks",
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",

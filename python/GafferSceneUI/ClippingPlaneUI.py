@@ -38,27 +38,28 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ClippingPlane,
 
 	"description",
-	"""
+	_("""
 	Creates an arbitrary clipping plane. This is like the near
 	and far clipping planes provided by the Camera node, but
 	can be positioned arbitrarily in space. All geometry on
 	the positive Z side of the plane is clipped away.
-	""",
+	"""),
 
 	plugs = {
 
 		"name" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the clipping plane to be created.
-			""",
+			"""),
 
 		},
 

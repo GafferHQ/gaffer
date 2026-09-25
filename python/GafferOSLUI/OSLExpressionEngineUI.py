@@ -39,6 +39,8 @@ import functools
 import Gaffer
 import GafferUI
 
+from GafferUI.i18n import _
+
 from . import _CodeMenu
 from . import _CodeWidget
 
@@ -52,7 +54,7 @@ def __oslPopupMenu( menuDefinition, widget ) :
 		menuDefinition.append( "/InsertOSLDivider", { "divider" : True } )
 
 	menuDefinition.append(
-		"/Insert OSL",
+		"/" + _("Insert OSL"),
 		{
 			"subMenu" : functools.partial(
 				_CodeMenu.commonFunctionMenu,

@@ -39,15 +39,16 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.SceneProcessor,
 
 	"description",
-	"""
+	_("""
 	The base type for all nodes which take an input scene and process it in some way.
-	""",
+	"""),
 
 	plugs = {
 
@@ -63,18 +64,18 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The processed output scene.
-			""",
+			"""),
 
 		},
 
 		"enabled" : {
 
 			"description" :
-			"""
+			_("""
 			The on/off state of the node. When it is off, the node outputs the input scene unchanged.
-			""",
+			"""),
 
 		},
 

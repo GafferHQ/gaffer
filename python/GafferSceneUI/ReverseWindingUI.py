@@ -36,17 +36,18 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.ReverseWinding,
 
 	"description",
-	"""
+	_("""
 	Reverses the winding order of each face of a mesh; this has the effect
 	of flipping the geometric normal. In Gaffer, a face is considered to
 	be front-facing if its vertices are wound in counter-clockwise order
 	relative to the viewer.
-	""",
+	"""),
 
 )

@@ -36,13 +36,14 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CollectScenes,
 
 	"description",
-	"""
+	_("""
 	Builds a scene by bundling multiple input scenes together, each
 	under their own root location. Instead of using an array of inputs
 	like the Group node, a single input is used instead, and a Context
@@ -54,7 +55,7 @@ Gaffer.Metadata.registerNode(
 	Since merging globals from multiple scenes often doesn't make sense,
 	the output globals are taken directly from the scene corresponding to
 	`rootNames[0]`.
-	""",
+	"""),
 
 	"ui:spreadsheet:enabledRowNamesConnection", "rootNames",
 	"ui:spreadsheet:selectorContextVariablePlug", "rootNameVariable",
@@ -64,33 +65,33 @@ Gaffer.Metadata.registerNode(
 		"rootNames" : {
 
 			"description" :
-			"""
+			_("""
 			The paths to the root locations to create in the output scene.
 			The input scene is copied underneath each of these root locations.
 
 			Often the rootNames will be driven by an expression that generates
 			a dynamic number of root locations, perhaps by querying an asset
 			management system or listing cache files on disk.
-			""",
+			"""),
 
 		},
 
 		"rootNameVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The name of a Context Variable that is set to the current
 			root location when evaluating the input scene. This can be used
 			in upstream expressions and string substitutions to generate
 			a different hierarchy under each root location.
-			""",
+			"""),
 
 		},
 
 		"sourceRoot" : {
 
 			"description" :
-			"""
+			_("""
 			Specifies the root of the subtree to be copied from the input
 			scene. The default value causes the whole scene to be collected.
 
@@ -101,7 +102,7 @@ Gaffer.Metadata.registerNode(
 			> Tip :
 			> By specifying a leaf location as the root, it is possible to
 			> collect single objects from the input scene.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.ScenePathPlugValueWidget",
 
@@ -110,13 +111,13 @@ Gaffer.Metadata.registerNode(
 		"mergeGlobals" : {
 
 			"description" :
-			"""
+			_("""
 			Controls how the output globals are generated from the collected
 			scenes. By default, the globals from the first scene alone
 			are passed through. When `mergeGlobals` is on, the globals from
 			all collected scenes are merged, with the last scene winning
 			in the case of multiple scenes specifying the same global.
-			""",
+			"""),
 
 		},
 

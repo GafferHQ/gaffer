@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferScene
 import GafferSceneUI
 
@@ -196,7 +197,7 @@ def __pruneSelection( editor ) :
 
 	readOnlyReason = GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScope )
 	if readOnlyReason is not None :
-		GafferUI.PopupWindow.showWarning( "{} is read-only.".format( readOnlyReason ), parent = editor )
+		GafferUI.PopupWindow.showWarning( _("{} is read-only.").format( readOnlyReason ), parent = editor )
 		return True
 
 	with editor.context() :
@@ -204,7 +205,7 @@ def __pruneSelection( editor ) :
 		# to interact with processors directly.
 		pruningProcessor = editScope.acquireProcessor( "PruningEdits", createIfNecessary = False )
 		if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
-			GafferUI.PopupWindow.showWarning( "{} is disabled.".format( pruningProcessor.relativeName( editScope.parent() ) ), parent = editor )
+			GafferUI.PopupWindow.showWarning( _("{} is disabled.").format( pruningProcessor.relativeName( editScope.parent() ) ), parent = editor )
 			return True
 
 	## \todo Maybe we might want to ask if we can prune a common ancestor
@@ -259,7 +260,7 @@ def __editSelectionVisibility( editor, makeVisible = False ) :
 		# to interact with processors directly.
 		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
 		if attributeEdits is not None and not attributeEdits["enabled"].getValue() :
-			GafferUI.PopupWindow.showWarning( "{} is disabled.".format( attributeEdits.relativeName( editScope.parent() ) ), parent = editor )
+			GafferUI.PopupWindow.showWarning( _("{} is disabled.").format( attributeEdits.relativeName( editScope.parent() ) ), parent = editor )
 			return True
 
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
@@ -284,8 +285,8 @@ def __selectInvisibleAncestorsPopup( editor, ancestors ) :
 	with GafferUI.PopupWindow() as editor.__selectInvisibleAncestorsPopup :
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 			GafferUI.Image( "warningSmall.png" )
-			GafferUI.Label( "<h4>Location(s) have been unhidden, but are still not visible because they have invisible ancestors.</h4>" )
-			button = GafferUI.Button( image = "selectInvisibleAncestors.png", hasFrame = False, toolTip = "Select invisible ancestors" )
+			GafferUI.Label( "<h4>" + _("Location(s) have been unhidden, but are still not visible because they have invisible ancestors.") + "</h4>" )
+			button = GafferUI.Button( image = "selectInvisibleAncestors.png", hasFrame = False, toolTip = _("Select invisible ancestors") )
 			button.clickedSignal().connect( functools.partial( __selectAncestorsClicked, scriptNode = editor.scriptNode(), ancestors = ancestors ) )
 
 	editor.__selectInvisibleAncestorsPopup.popup( parent = editor )
@@ -354,7 +355,7 @@ class __LocationEditsWidget( _SceneProcessorWidget ) :
 			return "None"
 
 		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
-		return " and ".join( summaries )
+		return (" " + _("and") + " ").join( summaries )
 
 GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "AttributeEdits TransformEdits *LightEdits *SurfaceEdits *FilterEdits", __LocationEditsWidget )
 
@@ -436,7 +437,7 @@ class __RenderPassOptionEditsWidget( GafferUI.EditScopeUI.SimpleProcessorWidget 
 			return "None"
 
 		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
-		return " and ".join( summaries )
+		return (" " + _("and") + " ").join( summaries )
 
 
 GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "RenderPassOptionEdits", __RenderPassOptionEditsWidget )
@@ -458,13 +459,13 @@ class __SetMembershipEditsWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
 
 		summaries = []
 		if enabledSetCount > 0 :
-			summaries.append( "edits to {} set{}".format( enabledSetCount, "s" if enabledSetCount > 1 else "" ) )
+			summaries.append( _("edits to {} set{}").format( enabledSetCount, "s" if enabledSetCount > 1 else "" ) )
 		if disabledSetCount > 0 :
-			summaries.append( "disabled edits to {} set{}".format( disabledSetCount, "s" if disabledSetCount > 1 else "" ) )
+			summaries.append( _("disabled edits to {} set{}").format( disabledSetCount, "s" if disabledSetCount > 1 else "" ) )
 
 		if not summaries :
 			return None
 		summaries[0] = summaries[0][0].upper() + summaries[0][1:]
-		return " and ".join( summaries )
+		return (" " + _("and") + " ").join( summaries )
 
 GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "SetMembershipEdits", __SetMembershipEditsWidget )

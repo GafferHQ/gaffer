@@ -37,6 +37,7 @@
 import Gaffer
 import GafferScene
 import IECoreScene
+from GafferUI.i18n import _
 
 
 Gaffer.Metadata.registerNode(
@@ -44,9 +45,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.MeshNormals,
 
 	"description",
-	"""
+	_("""
 	Creates a normal primitive variable on a mesh, using the positions of adjacent vertices.
-	""",
+	"""),
 
 	"layout:activator:weighting", lambda parent : parent["interpolation"].getValue() != int(IECoreScene.PrimitiveVariable.Interpolation.Uniform),
 	"layout:activator:thresholdAngle", lambda parent : parent["interpolation"].getValue() == int(IECoreScene.PrimitiveVariable.Interpolation.FaceVarying),
@@ -55,9 +56,9 @@ Gaffer.Metadata.registerNode(
 
 		"interpolation" : {
 			"description" :
-			"""
+			_("""
 			The interpolation of the normal primitive variable we are creating. Affects the shape of the resulting normals, because Uniform ( Per-Face ) normals are inherently faceted, whereas Vertex normals are always smooth.
-			""",
+			"""),
 
 			"preset:Uniform (Faceted)" : IECoreScene.PrimitiveVariable.Interpolation.Uniform,
 			"preset:Vertex (Smooth)" : IECoreScene.PrimitiveVariable.Interpolation.Vertex,
@@ -68,12 +69,12 @@ Gaffer.Metadata.registerNode(
 
 		"weighting" : {
 			"description" :
-			"""
+			_("""
 			How to weight the multiple faces that contribute to the normal of a vertex.
 			"Equal" averages all faces connected to the vertex - simple to compute, but low quality.
 			"Angle" gives good results for most meshes.
 			"Area" may give good results on hard edge models with tight chamfers and large flat faces.
-			""",
+			"""),
 
 			"preset:Equal" : IECoreScene.MeshAlgo.NormalWeighting.Equal,
 			"preset:Angle" : IECoreScene.MeshAlgo.NormalWeighting.Angle,
@@ -86,28 +87,28 @@ Gaffer.Metadata.registerNode(
 
 		"thresholdAngle" : {
 			"description" :
-			"""
+			_("""
 			Used to decide whether edges are smooth or sharp when generating a normal primvar with FaceVarying
 			interpolation. FaceVertices with normals that differ by less than this angle will be averaged
 			together into a smooth normal.
-			""",
+			"""),
 
 			"layout:activator" : "thresholdAngle",
 		},
 
 		"position" : {
 			"description" :
-			"""
+			_("""
 			The name of the position primitive variable that drives everything.
-			""",
+			"""),
 			"divider" : True,
 		},
 
 		"normal" : {
 			"description" :
-			"""
+			_("""
 			The name of the normal primitive variable to output.
-			""",
+			"""),
 		}
 	}
 

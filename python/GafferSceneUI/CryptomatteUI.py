@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 import GafferImage
 import GafferScene
 import GafferSceneUI
@@ -142,9 +143,9 @@ Gaffer.Metadata.registerNode(
 	GafferScene.Cryptomatte,
 
 	"description",
-	"""
+	_("""
 	Outputs a matte channel generated from IDs selected from Cryptomatte AOVs.
-	""",
+	"""),
 
 	"layout:activator:metadataManifest", lambda node : node["manifestSource"].getValue() == GafferScene.Cryptomatte.ManifestSource.Metadata,
 	"layout:activator:sidecarManifest", lambda node : node["manifestSource"].getValue() == GafferScene.Cryptomatte.ManifestSource.Sidecar,
@@ -154,27 +155,27 @@ Gaffer.Metadata.registerNode(
 		"in" : {
 
 			"description" :
-			"""
+			_("""
 			The input image containing Cryptomatte image layers and optional metadata.
-			""",
+			"""),
 
 		},
 
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The resulting image.
-			""",
+			"""),
 
 		},
 
 		"layer" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the Cryptomatte layer to use.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"presetNames" : __layerPresetNames,
@@ -185,7 +186,7 @@ Gaffer.Metadata.registerNode(
 		"manifestSource" : {
 
 			"description" :
-			"""
+			_("""
 			The source of the Cryptomatte manifest.
 
 			 - None: No manifest will be loaded.
@@ -195,7 +196,7 @@ Gaffer.Metadata.registerNode(
 			   - `manif_file` : The name of a JSON manifest file stored in a
 			   directory specified on the `manifestDirectory` plug.
 			 - Sidecar File: From a JSON file specified on the `sidecarFile` plug.
-			""",
+			"""),
 
 			"preset:None" : GafferScene.Cryptomatte.ManifestSource.None_,
 			"preset:Metadata" : GafferScene.Cryptomatte.ManifestSource.Metadata,
@@ -207,7 +208,7 @@ Gaffer.Metadata.registerNode(
 		"manifestDirectory" : {
 
 			"description" :
-			"""
+			_("""
 			A directory of JSON files containing Cryptomatte manifests.
 
 			If a `manif_file` metadata entry exists for the selected Cryptomatte
@@ -217,7 +218,7 @@ Gaffer.Metadata.registerNode(
 			If this is not specified, the directory will be inferred from the
 			image's `filePath` metadata.
 
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : False,
@@ -227,12 +228,12 @@ Gaffer.Metadata.registerNode(
 		"sidecarFile" : {
 
 			"description" :
-			"""
+			_("""
 			A JSON file containing a Cryptomatte manifest.
 
 			File sequences with arbitrary padding may be specified using the '#' character
 			as a placeholder for the frame numbers.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf" : True,
@@ -245,7 +246,7 @@ Gaffer.Metadata.registerNode(
 		"matteNames" : {
 
 			"description" :
-			"""
+			_("""
 			The list of names to be extracted as a matte.
 
 			Names are matched against entries in the Cryptomatte manifest and
@@ -272,7 +273,7 @@ Gaffer.Metadata.registerNode(
 			angle brackets.
 
 			 - `<value>`.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferSceneUI.CryptomatteUI._CryptomatteNamesPlugValueWidget",
 		},
@@ -280,18 +281,18 @@ Gaffer.Metadata.registerNode(
 		"outputChannel" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the output channel containing the extracted matte.
-			""",
+			"""),
 
 		},
 
 		"manifestScene" : {
 
 			"description" :
-			"""
+			_("""
 			A scene containing locations representing the contents of the Cryptomatte manifest.
-			""",
+			"""),
 
 		},
 
@@ -443,7 +444,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/CryptomatteDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, graphEditor.context() ) } )
+	menuDefinition.append( "/" + _("Select Affected Objects"), { "command" : functools.partial( __selectAffected, node, graphEditor.context() ), "label" : _("Select Affected Objects") } )
 
 ##########################################################################
 # NodeEditor tool menu
@@ -455,4 +456,4 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/CryptomatteDivider", { "divider" : True } )
-	menuDefinition.append( "/Select Affected Objects", { "command" : functools.partial( __selectAffected, node, nodeEditor.context() ) } )
+	menuDefinition.append( "/" + _("Select Affected Objects"), { "command" : functools.partial( __selectAffected, node, nodeEditor.context() ), "label" : _("Select Affected Objects") } )

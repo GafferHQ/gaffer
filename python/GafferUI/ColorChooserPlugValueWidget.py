@@ -42,6 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 from GafferUI.PlugValueWidget import sole
+from GafferUI.i18n import _
 
 class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -170,10 +171,10 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __colorChooserOptionsMenu( self, colorChooser, menuDefinition ) :
 
-		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": "Defaults" } )
+		menuDefinition.append( "/__saveDefaultOptions__", { "divider": True, "label": _("Defaults") } )
 
 		menuDefinition.append(
-			"/Save Default Inline Layout",
+			"/" + _("Save Default Inline Layout"),
 			{
 				"command": functools.partial(
 					saveDefaultOptions,

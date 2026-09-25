@@ -37,26 +37,27 @@
 import Gaffer
 import GafferUI
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Filter,
 
 	"description",
-	"""
+	_("""
 	The base type for all nodes which are capable of choosing which
 	scene locations a FilteredSceneProcessor applies to.
-	""",
+	"""),
 
 	plugs = {
 
 		"enabled" : {
 
 			"description" :
-			"""
+			_("""
 			The on/off state of the filter. When it is off, the
 			filter does not match any locations.
-			""",
+			"""),
 
 			"nodule:type" : "",
 
@@ -65,10 +66,10 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			The result of the filter. This should be connected into
 			the "filter" plug of a FilteredSceneProcessor.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "",
 

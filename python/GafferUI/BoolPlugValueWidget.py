@@ -39,6 +39,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from GafferUI.PlugValueWidget import sole
 
@@ -110,7 +111,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 			firstPlug = next( iter( self.getPlugs() ) )
 			label = Gaffer.Metadata.value( firstPlug, "label" )
 			label = label if label else IECore.CamelCase.toSpaced( firstPlug.getName() )
-			self.__boolWidget.setText( label )
+			self.__boolWidget.setText( _( label ) )
 		else :
 			self.__boolWidget.setText( "" )
 

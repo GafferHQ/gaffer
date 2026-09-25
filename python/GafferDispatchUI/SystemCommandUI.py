@@ -36,35 +36,36 @@
 
 import Gaffer
 import GafferDispatch
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.SystemCommand,
 
 	"description",
-	"""
+	_("""
 	Runs system commands via a shell.
-	""",
+	"""),
 
 	plugs = {
 
 		"command" : {
 
 			"description" :
-			"""
+			_("""
 			The command to be run. This may reference values
 			from substitutions with '{substitutionName}' syntax.
-			""",
+			"""),
 
 		},
 
 		"substitutions" : {
 
 			"description" :
-			"""
+			_("""
 			An arbitrary set of name/value pairs which can be
 			referenced in command with '{substitutionsName}' syntax.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Substitutions",
 
@@ -73,10 +74,10 @@ Gaffer.Metadata.registerNode(
 		"environmentVariables" : {
 
 			"description" :
-			"""
+			_("""
 			An arbitrary set of name/value pairs which will be set as
 			environment variables when running the command.
-			""",
+			"""),
 
 			"layout:section" : "Settings.Environment Variables",
 
@@ -85,7 +86,7 @@ Gaffer.Metadata.registerNode(
 		"shell" : {
 
 			"description" :
-			"""
+			_("""
 			When enabled, the specified command is interpreted as a shell
 			command and run in a child shell. This allows semantics such
 			as pipes to be used.  Otherwise the supplied command is invoked
@@ -96,7 +97,7 @@ Gaffer.Metadata.registerNode(
 			> process. If the executable you are running relies on this,
 			> disabling _shell_ should allow it to inherit the full Gaffer
 			> environment.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 

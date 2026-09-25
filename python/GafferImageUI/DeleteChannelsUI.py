@@ -38,27 +38,28 @@ import Gaffer
 import GafferUI
 import GafferImage
 import GafferImageUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeleteChannels,
 
 	"description",
-	"""
+	_("""
 	Deletes channels from an image.
-	""",
+	"""),
 
 	plugs = {
 
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			Defines how the channels listed in the channels
 			plug are treated. Delete mode deletes the listed
 			channels. Keep mode keeps the listed channels,
 			deleting all others.
-			""",
+			"""),
 
 			"preset:Delete" : GafferImage.DeleteChannels.Mode.Delete,
 			"preset:Keep" : GafferImage.DeleteChannels.Mode.Keep,
@@ -70,12 +71,12 @@ Gaffer.Metadata.registerNode(
 		"channels" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the channels to be deleted (or kept
 			if the mode is set to Keep). Names should be separated
 			by spaces and may contain any of Gaffer's standard
 			wildcards.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelMaskPlugValueWidget",
 

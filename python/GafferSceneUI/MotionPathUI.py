@@ -38,16 +38,17 @@ import Gaffer
 import GafferScene
 
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.MotionPath,
 
 	"description",
-	"""
+	_("""
 	Creates a motion path curve over the specified frame range for each filtered location.
 	Note the output scene will be isolated to the matching locations only.
-	""",
+	"""),
 
 	"layout:activator:variableSampling", lambda node : node["samplingMode"].getValue() == GafferScene.MotionPath.SamplingMode.Variable,
 	"layout:activator:fixedSampling", lambda node : node["samplingMode"].getValue() == GafferScene.MotionPath.SamplingMode.Fixed,
@@ -57,9 +58,9 @@ Gaffer.Metadata.registerNode(
 		"start" : {
 
 			"description" :
-			"""
+			_("""
 			The first frame of motion tracking can be specified relative to the current frame or as an absolute value.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layoutPlugValueWidget:orientation" : "horizontal",
@@ -69,9 +70,9 @@ Gaffer.Metadata.registerNode(
 		"start.mode" : {
 
 			"description" :
-			"""
+			_("""
 			Controls whether `start.frame` is relative to the current frame or an absolute value.
-			""",
+			"""),
 
 			"preset:Relative" : GafferScene.MotionPath.FrameMode.Relative,
 			"preset:Absolute" : GafferScene.MotionPath.FrameMode.Absolute,
@@ -84,9 +85,9 @@ Gaffer.Metadata.registerNode(
 		"start.frame" : {
 
 			"description" :
-			"""
+			_("""
 			The first frame of motion tracking.
-			""",
+			"""),
 
 			"layout:label" : "",
 
@@ -95,9 +96,9 @@ Gaffer.Metadata.registerNode(
 		"end" : {
 
 			"description" :
-			"""
+			_("""
 			The last frame of motion tracking can be specified relative to the current frame or as an absolute value.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
 			"layoutPlugValueWidget:orientation" : "horizontal",
@@ -107,9 +108,9 @@ Gaffer.Metadata.registerNode(
 		"end.mode" : {
 
 			"description" :
-			"""
+			_("""
 			Controls whether `end.frame` is relative to the current frame or an absolute value.
-			""",
+			"""),
 
 			"preset:Relative" : GafferScene.MotionPath.FrameMode.Relative,
 			"preset:Absolute" : GafferScene.MotionPath.FrameMode.Absolute,
@@ -122,9 +123,9 @@ Gaffer.Metadata.registerNode(
 		"end.frame" : {
 
 			"description" :
-			"""
+			_("""
 			The last frame of motion tracking.
-			""",
+			"""),
 
 			"layout:label" : "",
 
@@ -133,7 +134,7 @@ Gaffer.Metadata.registerNode(
 		"samplingMode" : {
 
 			"description" :
-			"""
+			_("""
 			Use "Fixed" mode for a curve with a constant vertex count.
 
 			Use "Variable" mode for a curve sampled at regular `step` intervals.
@@ -143,7 +144,7 @@ Gaffer.Metadata.registerNode(
 			> Caution : In "Variable" mode it may not be possible to render with
 			deformation blur enabled. Be sure to disable it via `StandardAttributes`
 			if you want to render a variable sampled curve.
-			""",
+			"""),
 
 			"preset:Variable" : GafferScene.MotionPath.SamplingMode.Variable,
 			"preset:Fixed" : GafferScene.MotionPath.SamplingMode.Fixed,
@@ -155,7 +156,7 @@ Gaffer.Metadata.registerNode(
 		"step" : {
 
 			"description" :
-			"""
+			_("""
 			The sampling rate between `start.frame` and `end.frame`.
 
 			> Note : `start.frame` and `end.frame` will always be sampled
@@ -163,7 +164,7 @@ Gaffer.Metadata.registerNode(
 
 			> Caution : With a small `step` size it may not be possible to render
 			with deformation blur enabled.
-			""",
+			"""),
 
 			"layout:activator" : "variableSampling",
 
@@ -172,9 +173,9 @@ Gaffer.Metadata.registerNode(
 		"samples" : {
 
 			"description" :
-			"""
+			_("""
 			The exact number of samples (including `start.frame` and `end.frame`) when using a "Fixed" `samplingMode`.
-			""",
+			"""),
 
 			"layout:activator" : "fixedSampling",
 
@@ -183,9 +184,9 @@ Gaffer.Metadata.registerNode(
 		"adjustBounds" : {
 
 			"description" :
-			"""
+			_("""
 			Opt in or out of bounds calculations.
-			""",
+			"""),
 
 		},
 

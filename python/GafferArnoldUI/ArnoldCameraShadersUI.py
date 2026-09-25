@@ -36,16 +36,17 @@
 
 import Gaffer
 import GafferArnold
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldCameraShaders,
 
 	"description",
-	"""
+	_("""
 	Creates shaders for use with Arnold cameras. Use a ShaderAssignment
 	node to assign the shaders to the cameras they should affect.
-	""",
+	"""),
 
 	plugs = {
 
@@ -58,14 +59,14 @@ Gaffer.Metadata.registerNode(
 		"filterMap" : {
 
 			"description" :
-			"""
+			_("""
 			A shader used to weight the samples taken by an
 			Arnold camera. This can be used to create vignetting effects
 			or to completely mask out areas of the render, causing no
 			rays to be fired for those pixels. The shader is evaluated
 			across a 0-1 UV range that is mapped to the camera's screen
 			space.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 			"noduleLayout:section" : "left",
@@ -75,12 +76,12 @@ Gaffer.Metadata.registerNode(
 		"uvRemap" : {
 
 			"description" :
-			"""
+			_("""
 			A shader used to simulate lens distortion effects. The shader
 			is evaluated across a 0-1 UV range that is mapped to the camera's
 			screen space, and should output a red/green UV image of distorted
 			UV positions.
-			""",
+			"""),
 
 			"nodule:type" : "GafferUI::StandardNodule",
 			"noduleLayout:section" : "left",

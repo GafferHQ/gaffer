@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 from ._SectionChooser import _SectionChooser
 
@@ -151,17 +152,17 @@ def connectPlugToRowNames( enabledRowNamesConnection, selectorContextVariablePlu
 	existingSelector = spreadsheet["selector"].getValue()
 	if existingSelector and selectorValue and existingSelector != selectorValue :
 
-		message = "{sheetName}'s selector is set to: '{sheetSelector}'.\n\n" + \
+		message = _("{sheetName}'s selector is set to: '{sheetSelector}'.\n\n" + \
 			"The '{plugName}' plug requires a different selector to work\n" + \
-			"properly. Continuing will reset the selector to '{selector}'."
+			"properly. Continuing will reset the selector to '{selector}'.")
 
 		confirm = GafferUI.ConfirmationDialogue(
-			"Invalid Selector",
+			_("Invalid Selector"),
 			message.format(
 				sheetName = spreadsheet.getName(), sheetSelector = existingSelector,
 				plugName = enabledRowNamesConnection.getName(), selector = selectorValue
 			),
-			confirmLabel = "Continue"
+			confirmLabel = _("Continue")
 		)
 
 		if not confirm.waitForConfirmation( parentWindow = menu.ancestor( GafferUI.Window ) ) :

@@ -49,6 +49,7 @@ from . import _GafferUI
 from ._HeaderView import _HeaderView
 from ._StyleSheet import _styleColors
 import GafferUI
+from GafferUI.i18n import _
 
 import Qt
 from Qt import QtCore
@@ -65,9 +66,9 @@ class PathListingWidget( GafferUI.Widget ) :
 	IconColumn = _GafferUI.IconPathColumn
 
 	## A collection of handy column definitions for FileSystemPaths
-	defaultNameColumn = StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
-	defaultFileSystemOwnerColumn = StandardColumn( "Owner", "fileSystem:owner" )
-	defaultFileSystemModificationTimeColumn = StandardColumn( "Modified", "fileSystem:modificationTime" )
+	defaultNameColumn = StandardColumn( _("Name"), "name", GafferUI.PathColumn.SizeMode.Stretch )
+	defaultFileSystemOwnerColumn = StandardColumn( _("Owner"), "fileSystem:owner" )
+	defaultFileSystemModificationTimeColumn = StandardColumn( _("Modified"), "fileSystem:modificationTime" )
 	defaultFileSystemIconColumn = GafferUI.FileIconPathColumn()
 
 	defaultFileSystemColumns = (

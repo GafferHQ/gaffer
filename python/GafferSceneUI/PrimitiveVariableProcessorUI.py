@@ -36,38 +36,39 @@
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.PrimitiveVariableProcessor,
 
 	"description",
-	"""
+	_("""
 	Base class for nodes which modify PrimitiveVariables
 	on objects in the scene hierarchy.
-	""",
+	"""),
 
 	plugs = {
 
 		"names" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the primitive variables to be affected.
 			Names should be separated by spaces, and Gaffer's
 			standard wildcard characters may be used.
-			""",
+			"""),
 
 		},
 
 		"invertNames" : {
 
 			"description" :
-			"""
+			_("""
 			When on, the primitive variables matched by names
 			are unaffected, and the non-matching primitive
 			variables are affected instead.
-			""",
+			"""),
 
 		},
 

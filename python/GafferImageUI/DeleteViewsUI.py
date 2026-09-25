@@ -38,27 +38,28 @@ import Gaffer
 import GafferImage
 import GafferUI
 import imath
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.DeleteViews,
 
 	"description",
-	"""
+	_("""
 	Deletes views from an image.
-	""",
+	"""),
 
 	plugs = {
 
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			Defines how the views listed in the views
 			plug are treated. Delete mode deletes the listed
 			views. Keep mode keeps the listed views,
 			deleting all others.
-			""",
+			"""),
 
 			"preset:Delete" : GafferImage.DeleteViews.Mode.Delete,
 			"preset:Keep" : GafferImage.DeleteViews.Mode.Keep,
@@ -70,7 +71,7 @@ Gaffer.Metadata.registerNode(
 		"views" : {
 
 			"description" :
-			"""
+			_("""
 			The names of the views to be deleted (or kept
 			if the mode is set to Keep). Names should be separated
 			by spaces and may contain any of Gaffer's standard
@@ -79,7 +80,7 @@ Gaffer.Metadata.registerNode(
 			Note that if you delete all views from an image, you will
 			be unable to evaluate attributes of the image,  because it
 			will have no data left.
-			""",
+			"""),
 
 		},
 

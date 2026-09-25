@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+from GafferUI.i18n import _
 
 def __renderPassTypes() :
 
@@ -61,29 +62,29 @@ Gaffer.Metadata.registerNode(
 	GafferScene.RenderPassTypeAdaptor,
 
 	"description",
-	"""
+	_("""
 	Adapts render pass types to a client and renderer. The behaviour of
 	how each render pass type is adapted is defined by one or more type
 	processors registered to this node.
-	""",
+	"""),
 
 	plugs = {
 
 		"client" : {
 
 			"description" :
-			"""
+			_("""
 			The client to adapt render pass types to.
-			""",
+			"""),
 
 		},
 
 		"renderer" : {
 
 			"description" :
-			"""
+			_("""
 			The renderer to adapt render pass types to.
-			""",
+			"""),
 
 		},
 

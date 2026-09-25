@@ -40,27 +40,28 @@ import Gaffer
 import GafferUI
 import GafferImage
 from . import OpenColorIOTransformUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ColorSpace,
 
 	"description",
-	"""
+	_("""
 	Applies colour transformations provided by
 	OpenColorIO. Configs are loaded from the
 	configuration specified by the OCIO environment
 	variable.
-	""",
+	"""),
 
 	plugs = {
 
 		"inputSpace" : {
 
 			"description" :
-			"""
+			_("""
 			The colour space of the input image.
-			""",
+			"""),
 
 			"presetNames" : OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues" : OpenColorIOTransformUI.colorSpacePresetValues,
@@ -74,9 +75,9 @@ Gaffer.Metadata.registerNode(
 		"outputSpace" : {
 
 			"description" :
-			"""
+			_("""
 			The colour space of the output image.
-			""",
+			"""),
 
 			"presetNames" : OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues" : OpenColorIOTransformUI.colorSpacePresetValues,

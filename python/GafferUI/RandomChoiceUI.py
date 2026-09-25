@@ -41,20 +41,21 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	Gaffer.RandomChoice,
 
 	"description",
-	"""
+	_("""
 	Chooses random values from a list of choices, with optional weights
 	to specify the relative probability of each choice.
 
 	The randomness is generated from a seed and a context
 	variable; to get useful variation either the seed or the
 	value of the context variable must be varied too.
-	""",
+	"""),
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"auxiliaryNodeGadget:label", "r",
@@ -83,26 +84,26 @@ Gaffer.Metadata.registerNode(
 		"seed" : {
 
 			"description" :
-			"""
+			_("""
 			Seed for the random number generator. Different seeds
 			produce different random numbers. When controlling two
 			different properties using the same context variable,
 			different seeds may be used to ensure that the generated
 			values are different.
-			""",
+			"""),
 
 		},
 
 		"seedVariable" : {
 
 			"description" :
-			"""
+			_("""
 			The most important plug for achieving interesting variation.
 			Should be set to the name of a context variable which will
 			be different for each evaluation of the node. Good examples
 			are `scene:path` to generate a different value per scene
 			location, or `frame` to generate a different value per frame.
-			""",
+			"""),
 
 			"preset:Time" : "frame",
 			"preset:Scene Location" : "scene:path",
@@ -112,9 +113,9 @@ Gaffer.Metadata.registerNode(
 		"choices" : {
 
 			"description" :
-			"""
+			_("""
 			The choices that will be randomly selected between based on the seed.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferUI.VectorDataPlugValueWidget",
 
@@ -125,10 +126,10 @@ Gaffer.Metadata.registerNode(
 		"choices.values" : {
 
 			"description" :
-			"""
+			_("""
 			The list of values for the choices. Use the `choices.weights` plug
 			to assign a relative probability to each choice.
-			""",
+			"""),
 
 			"vectorDataPlugValueWidget:header" : "Value",
 
@@ -137,10 +138,10 @@ Gaffer.Metadata.registerNode(
 		"choices.weights" : {
 
 			"description" :
-			"""
+			_("""
 			The list of weights for the choices. Choices with a higher weight
 			have a greater chance of being chosen.
-			""",
+			"""),
 
 			"vectorDataPlugValueWidget:header" : "Weight",
 			"vectorDataPlugValueWidget:index" : -1,
@@ -151,9 +152,9 @@ Gaffer.Metadata.registerNode(
 		"out" : {
 
 			"description" :
-			"""
+			_("""
 			Outputs a random choice from the `choices` plug.
-			""",
+			"""),
 
 		}
 
@@ -200,9 +201,9 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	item = { "command" : functools.partial( __createRandomChoice, list( plugValueWidget.getPlugs() ) ) }
 
 	try :
-		menuDefinition.insertAfter( "/Randomise (Choice)...", item, "/Randomise..." )
+		menuDefinition.insertAfter( "/" + _("Randomise (Choice)..."), item, "/" + _("Randomise...") )
 	except KeyError :
 		menuDefinition.prepend( "/RandomiseDivider", { "divider" : True } )
-		menuDefinition.prepend( "/Randomise...", item )
+		menuDefinition.prepend( "/" + _("Randomise..."), item )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )

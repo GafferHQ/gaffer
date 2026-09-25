@@ -39,6 +39,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferCycles
+from GafferUI.i18n import _
 
 def __deviceSummary( plug ) :
 
@@ -187,7 +188,7 @@ def __denoisingSummary( plug ) :
 	info = []
 
 	if plug["cycles:denoise_device"]["enabled"].getValue() :
-		info.append( "Device {}".format( __deviceSummary( plug["cycles:denoise_device"]["value"] ) ) )
+		info.append( _("Device {}").format( __deviceSummary( plug["cycles:denoise_device"]["value"] ) ) )
 
 	options = [
 		"integrator:denoiser_type",
@@ -214,7 +215,7 @@ def __backgroundSummary( plug ) :
 
 	for childName in ( "camera", "diffuse", "glossy", "transmission", "shadow", "scatter" ) :
 		if plug[f"cycles:background:visibility:{childName}"]["enabled"].getValue() :
-			info.append( childName.capitalize() + ( " On" if plug[f"cycles:background:visibility:{childName}"]["value"].getValue() else " Off" ) )
+			info.append( childName.capitalize() + ( " " + _("On") if plug[f"cycles:background:visibility:{childName}"]["value"].getValue() else " " + _("Off") ) )
 
 	return ", ".join( info )
 
@@ -322,11 +323,11 @@ Gaffer.Metadata.registerNode(
 	GafferCycles.CyclesOptions,
 
 	"description",
-	"""
+	_("""
 	Sets global scene options applicable to the Cycles
 	renderer. Use the StandardOptions node to set
 	global options applicable to all renderers.
-	""",
+	"""),
 
 	plugs = {
 

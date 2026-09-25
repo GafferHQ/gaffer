@@ -39,16 +39,17 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferScene.AttributeVisualiser,
 
 	"description",
-	"""
+	_("""
 	Visualises attribute values by applying a constant
 	shader to display them as a colour.
-	""",
+	"""),
 
 	"layout:activator:modeIsColorOrFalseColor", lambda node : node["mode"].getValue() in ( node.Mode.Color, node.Mode.FalseColor ),
 	"layout:activator:modeIsFalseColor", lambda node : node["mode"].getValue() == node.Mode.FalseColor,
@@ -58,18 +59,18 @@ Gaffer.Metadata.registerNode(
 		"attributeName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the attribute to be visualised. The value of the
 			attribute will be converted to a colour using the chosen mode
 			and then assigned using a constant shader.
-			""",
+			"""),
 
 		},
 
 		"mode" : {
 
 			"description" :
-			"""
+			_("""
 			The method used to turn the attribute value into a colour for
 			visualisation.
 
@@ -82,7 +83,7 @@ Gaffer.Metadata.registerNode(
 			  for each unique attribute value.
 			- Shader Node Color : This only works when visualising a shader attribute. It
 			  uses the node colour for the shader node which is assigned.
-			""",
+			"""),
 
 			"preset:Color" : GafferScene.AttributeVisualiser.Mode.Color,
 			"preset:FalseColor" : GafferScene.AttributeVisualiser.Mode.FalseColor,
@@ -96,10 +97,10 @@ Gaffer.Metadata.registerNode(
 		"min" : {
 
 			"description" :
-			"""
+			_("""
 			Used in the Color and False Color modes to define the value which is mapped
 			to black or the left end of the spline respectively.
-			""",
+			"""),
 
 			"layout:activator" : "modeIsColorOrFalseColor",
 
@@ -108,10 +109,10 @@ Gaffer.Metadata.registerNode(
 		"max" : {
 
 			"description" :
-			"""
+			_("""
 			Used in the Color and False Color modes to define the value which is mapped
 			to white or the right end of the spline respectively.
-			""",
+			"""),
 
 			"layout:activator" : "modeIsColorOrFalseColor",
 
@@ -120,10 +121,10 @@ Gaffer.Metadata.registerNode(
 		"ramp" : {
 
 			"description" :
-			"""
+			_("""
 			Provides the colour mapping for the False Color mode. Values between min and
 			max are remapped using the colours from the ramp (left to right).
-			""",
+			"""),
 
 			"layout:activator" : "modeIsFalseColor",
 
@@ -132,12 +133,12 @@ Gaffer.Metadata.registerNode(
 		"shaderType" : {
 
 			"description" :
-			"""
+			_("""
 			The type of shader used to perform the visualisation. The default value
 			is for an OpenGL shader which will be used in the viewport. It's possible
 			to perform a visualisation for other renderers by entering a different
 			shader type here.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 
@@ -146,12 +147,12 @@ Gaffer.Metadata.registerNode(
 		"shaderName" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the shader used to perform the visualisation. The default value
 			is for an OpenGL shader which will be used in the viewport. It's possible
 			to perform a visualisation for other renderers by entering a different
 			shader name here.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 
@@ -160,10 +161,10 @@ Gaffer.Metadata.registerNode(
 		"shaderParameter" : {
 
 			"description" :
-			"""
+			_("""
 			The name of the shader parameter used to perform the visualisation. The default
 			value is for an OpenGL shader which will be used in the viewport.
-			""",
+			"""),
 
 			"layout:section" : "Advanced",
 

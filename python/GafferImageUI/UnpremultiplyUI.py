@@ -37,31 +37,32 @@
 
 import Gaffer
 import GafferImage
+from GafferUI.i18n import _
 
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Unpremultiply,
 
 	"description",
-	"""
+	_("""
 	Divides selected channels by a specified alpha channel.
 	If the alpha channel on a pixel is 0, then that pixel will remain
 	the same as the input.
-	""",
+	"""),
 
 	plugs = {
 
 		"alphaChannel" : {
 
 			"description" :
-			"""
+			_("""
 			The channel to use as the alpha channel.
 			The selected channel does not have to be 'A', but whichever
 			channel is chosen will act as the alpha for the sake of this
 			node.
 			This channel will never be divided by itself - it will
 			remain the same as the input.
-			""",
+			"""),
 
 			"plugValueWidget:type" : "GafferImageUI.ChannelPlugValueWidget",
 
@@ -70,10 +71,10 @@ Gaffer.Metadata.registerNode(
 		"ignoreMissingAlpha" : {
 
 			"description" :
-			"""
+			_("""
 			If set, this node will do nothing if the specified `alphaChannel`
 			is not found, instead of throwing an error.
-			""",
+			"""),
 
 		},
 

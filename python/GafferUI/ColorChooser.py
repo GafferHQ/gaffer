@@ -51,6 +51,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+from GafferUI.i18n import _
 
 __tmiToRGBMatrix = imath.M33f(
 	-1.0 / 2.0, 0.0, 1.0 / 2.0,
@@ -980,8 +981,13 @@ class ColorChooser( GafferUI.Widget ) :
 						# the icons connect without gaps.
 						self.__channelFrames[component]._qtWidget().setProperty( "gafferBorderStyle", GafferUI._Variant.toVariant( None ) )
 
+						_channelLabelMap = {
+							"r" : "R", "g" : "V", "b" : "A", "a" : "\u03b1",
+							"h" : "T", "s" : "S", "v" : "V",
+							"t" : "T", "m" : "M", "i" : "I",
+						}
 						self.__channelLabels[component] = GafferUI.Label(
-							component.capitalize(),
+							_channelLabelMap.get( component, component.capitalize() ),
 							toolTip = self.__componentToolTip if component != "a" else "",
 							parenting = { "index" : ( 1, row ), "alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Center ) }
 						)
@@ -1237,7 +1243,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 		result = IECore.MenuDefinition()
 
-		result.append( "/__widgetsDivider__", { "divider": True, "label": "Visible Controls" } )
+		result.append( "/__widgetsDivider__", { "divider": True, "label": _("Visible Controls") } )
 
 		for channels in [ "rgb", "hsv", "tmi" ] :
 			result.append(
@@ -1249,14 +1255,14 @@ class ColorChooser( GafferUI.Widget ) :
 			)
 
 		result.append(
-			"/Color Field",
+			"/" + _("Color Field") + "",
 			{
 				"command": functools.partial( Gaffer.WeakMethod( self.__toggleColorField ) ),
 				"checkBox": self.__colorField.getVisible()
 			}
 		)
 
-		result.append( "/__colorField__", { "divider": True, "label": "Color Field" } )
+		result.append( "/__colorField__", { "divider": True, "label": _("Color Field") } )
 
 		weakSet = Gaffer.WeakMethod( self.setColorFieldStaticComponent )
 		for label, component in [
@@ -1280,7 +1286,7 @@ class ColorChooser( GafferUI.Widget ) :
 				}
 			)
 
-		result.append( "/__sliders__", { "divider": True, "label": "Sliders" } )
+		result.append( "/__sliders__", { "divider": True, "label": _("Sliders") } )
 
 		result.append(
 			"/Dynamic Backgrounds",
@@ -1305,7 +1311,7 @@ position. When disabled, a static range of values is displayed."""
 		yCandidates = { "r": "gb", "g": "rb", "b": "rg", "h": "sv", "s": "hv", "v": "hs", "t": "mi", "m": "ti", "i" : "tm" }[component]
 
 		menuDefinition = IECore.MenuDefinition()
-		menuDefinition.append( "/__colorField__", { "divider" : True, "label": "Color Field" } )
+		menuDefinition.append( "/__colorField__", { "divider" : True, "label": _("Color Field") } )
 
 		currentComponents = sorted( list( self.__colorField.xyAxes() ), key = lambda c : "rgbhsvtmi".index( c ) )
 
