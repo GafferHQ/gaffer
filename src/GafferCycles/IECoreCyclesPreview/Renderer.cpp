@@ -489,6 +489,7 @@ class GeometryCache
 			}
 			h.append( times.data(), times.size() );
 			cyclesAttributes->hashGeometry( samples.front().get(), h );
+			cyclesAttributes->hashShader( h );
 
 			Geometry::const_accessor readAccessor;
 			if( m_geometry.find( readAccessor, h ) )
