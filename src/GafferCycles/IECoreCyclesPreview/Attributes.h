@@ -99,8 +99,7 @@ class ShaderCache
 			const IECoreScene::ShaderNetwork *surfaceShader,
 			const IECoreScene::ShaderNetwork *displacementShader,
 			const IECoreScene::ShaderNetwork *volumeShader,
-			const IECore::CompoundObject *attributes,
-			IECore::MurmurHash &h
+			const IECore::CompoundObject *attributes
 		);
 
 		// Must not be called concurrently with anything.
@@ -169,31 +168,9 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 
 		};
 
-		/// \todo Implementing this functionality here prevents us from properly
-		/// encapsulating the work of `ShaderCache::get()`, forcing us to pass an
-		/// extra hash for the things that we'll do to the shader _after_ we get
-		/// it from the cache. Instead, `ShaderCache` should apply these attributes
-		/// itself internally, and afterwards there should only be const access to
-		/// the `ccl::Shader`.
-		struct ShaderAttributes
-		{
-			ShaderAttributes( const IECore::CompoundObject *attributes );
-
-			IECore::ConstDataPtr emissionSamplingMethod;
-			std::optional<bool> useTransparentShadow;
-			IECore::ConstDataPtr volumeSamplingMethod;
-			IECore::ConstDataPtr volumeInterpolationMethod;
-			std::optional<float> volumeStepRate;
-
-			void hash( IECore::MurmurHash &h, const IECore::CompoundObject *attributes ) const;
-			bool apply( ccl::Shader *shader ) const;
-
-		};
-
 		IECoreScene::ConstShaderNetworkPtr m_lightAttribute;
 		ShaderPtr m_lightShader;
 		ShaderPtr m_shader;
-		IECore::MurmurHash m_shaderHash;
 		int m_visibility;
 		bool m_useHoldout;
 		bool m_isShadowCatcher;
@@ -204,7 +181,6 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		std::string m_adaptiveSpace;
 		Imath::Color3f m_color;
 		Volume m_volume;
-		ShaderAttributes m_shaderAttributes;
 		IECore::InternedString m_assetName;
 		IECore::InternedString m_lightGroup;
 		bool m_isCausticsCaster;

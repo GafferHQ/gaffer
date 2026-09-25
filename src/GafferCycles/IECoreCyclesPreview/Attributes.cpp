@@ -353,23 +353,33 @@ ShaderCache::ShaderCache( ccl::Scene *scene )
 
 ShaderPtr ShaderCache::get( const IECoreScene::ShaderNetwork *surfaceShader )
 {
-	IECore::MurmurHash h = IECore::MurmurHash();
-	return get( surfaceShader, nullptr, nullptr, nullptr, h );
+	return get( surfaceShader, nullptr, nullptr, nullptr );
 }
 
 ShaderPtr ShaderCache::get(
 	const IECoreScene::ShaderNetwork *surfaceShader,
 	const IECoreScene::ShaderNetwork *displacementShader,
 	const IECoreScene::ShaderNetwork *volumeShader,
-	const IECore::CompoundObject *attributes,
-	IECore::MurmurHash &h
+	const IECore::CompoundObject *attributes
 )
 {
+	IECore::MurmurHash h; // Cache key
 	IECore::MurmurHash hSubst;
 	IECore::MurmurHash hSubstDisp;
 	IECore::MurmurHash hSubstVol;
 	vector<IECore::MurmurHash> hSubstAovs;
 	vector<const IECoreScene::ShaderNetwork*> aovShaders;
+
+	// Attributes hash
+
+	std::optional<bool> useTransparentShadow = optionalAttribute<bool>( g_shaderUseTransparentShadowAttributeName, attributes );
+	IECore::ConstDataPtr emissionSamplingMethod = attribute<IECore::StringData>( g_shaderEmissionSamplingMethodAttributeName, attributes, g_shaderEmissionSamplingMethodAttributeDefault.get() );
+
+	if( useTransparentShadow )
+	{
+		h.append( *useTransparentShadow );
+	}
+	emissionSamplingMethod->hash( h );
 
 	// Surface hash
 
@@ -407,6 +417,11 @@ ShaderPtr ShaderCache::get(
 	}
 
 	// Volume hash
+
+	IECore::ConstDataPtr volumeSamplingMethod = attribute<IECore::StringData>( g_shaderVolumeSamplingMethodAttributeName, attributes, g_shaderVolumeSamplingMethodAttributeDefault.get() );
+	IECore::ConstDataPtr volumeInterpolationMethod =  attribute<IECore::StringData>( g_shaderVolumeInterpolationMethodAttributeName, attributes, g_shaderVolumeInterpolationMethodAttributeDefault.get() );
+	std::optional<float> volumeStepRate = optionalAttribute<float>( g_shaderVolumeStepRateAttributeName, attributes );
+
 	if( volumeShader )
 	{
 		IECore::MurmurHash volh = volumeShader->Object::hash();
@@ -416,6 +431,12 @@ ShaderPtr ShaderCache::get(
 			volh.append( hSubstVol );
 		}
 		h.append( volh );
+		volumeSamplingMethod->hash( h );
+		volumeInterpolationMethod->hash( h );
+		if( volumeStepRate )
+		{
+			h.append( *volumeStepRate );
+		}
 	}
 
 	// AOV hash
@@ -490,6 +511,17 @@ ShaderPtr ShaderCache::get(
 			}
 
 			writeAccessor->second = new Shader( surfaceShader, displacementShader, volumeShader, m_scene, namePrefix, h, singleSided, displacementMethod, aovShaders );
+			ccl::Shader *shader = writeAccessor->second->shader();
+
+			SocketAlgo::setSocket( shader, shader->get_emission_sampling_method_socket(), emissionSamplingMethod.get() );
+			shader->set_use_transparent_shadow( useTransparentShadow ? useTransparentShadow.value() : true );
+
+			if( volumeShader )
+			{
+				SocketAlgo::setSocket( shader, shader->get_volume_sampling_method_socket(), volumeSamplingMethod.get() );
+				SocketAlgo::setSocket( shader, shader->get_volume_interpolation_method_socket(), volumeInterpolationMethod.get() );
+				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.value() : 1.0f );
+			}
 		}
 	}
 
@@ -509,8 +541,7 @@ void ShaderCache::clearUnused()
 //////////////////////////////////////////////////////////////////////////
 
 Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-	:	m_shaderHash( IECore::MurmurHash() ),
-		m_visibility( ~0 ),
+	:	m_visibility( ~0 ),
 		m_useHoldout( false ),
 		m_isShadowCatcher( false ),
 		m_shadowTerminatorShadingOffset( 0.0f ),
@@ -520,7 +551,6 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *s
 		m_adaptiveSpace( "pixel" ),
 		m_color( Color3f( 1.0f ) ),
 		m_volume( attributes ),
-		m_shaderAttributes( attributes ),
 		m_assetName( "" ),
 		m_lightGroup( "" ),
 		m_isCausticsCaster( false ),
@@ -559,13 +589,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *s
 	}
 	const IECoreScene::ShaderNetwork *displacementShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesDisplacementShaderAttributeName, attributes );
 
-	// Hash shader attributes first
-	m_shaderAttributes.hash( m_shaderHash, attributes );
-	// Create the shader
-	m_shader = shaderCache->get( surfaceShaderAttribute, displacementShaderAttribute, volumeShaderAttribute, attributes, m_shaderHash );
-	// Then apply the shader attributes
-	/// \todo Why not let ShaderCache handle this for us?
-	m_shaderAttributes.apply( m_shader->shader() );
+	m_shader = shaderCache->get( surfaceShaderAttribute, displacementShaderAttribute, volumeShaderAttribute, attributes );
 
 	// Light shader
 
@@ -579,8 +603,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *s
 		m_lightAttribute = converted;
 
 		IECoreScene::ShaderNetworkPtr lightShader = ShaderNetworkAlgo::convertLightShader( m_lightAttribute.get() );
-		IECore::MurmurHash h;
-		m_lightShader = shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
+		m_lightShader = shaderCache->get( lightShader.get(), nullptr, nullptr, attributes );
 
 		// Cycles requires lights to be set as shadow catchers in order to contribute shadows to the
 		// shadow pass, so we disregard the attribute and override lights to always be shadow catchers.
@@ -885,37 +908,3 @@ void Attributes::Volume::apply( ccl::Volume *volume ) const
 	}
 }
 
-Attributes::ShaderAttributes::ShaderAttributes( const IECore::CompoundObject *attributes )
-{
-	emissionSamplingMethod = attribute<IECore::StringData>( g_shaderEmissionSamplingMethodAttributeName, attributes, g_shaderEmissionSamplingMethodAttributeDefault.get() );
-	useTransparentShadow = optionalAttribute<bool>( g_shaderUseTransparentShadowAttributeName, attributes );
-	volumeSamplingMethod = attribute<IECore::StringData>( g_shaderVolumeSamplingMethodAttributeName, attributes, g_shaderVolumeSamplingMethodAttributeDefault.get() );
-	volumeInterpolationMethod = attribute<IECore::StringData>( g_shaderVolumeInterpolationMethodAttributeName, attributes, g_shaderVolumeInterpolationMethodAttributeDefault.get() );
-	volumeStepRate = optionalAttribute<float>( g_shaderVolumeStepRateAttributeName, attributes );
-}
-
-void Attributes::ShaderAttributes::hash( IECore::MurmurHash &h, const IECore::CompoundObject *attributes ) const
-{
-	emissionSamplingMethod->hash( h );
-
-	// Volume-related attributes hash
-	auto it = attributes->members().find( g_cyclesVolumeShaderAttributeName );
-	if( it != attributes->members().end() )
-	{
-		volumeSamplingMethod->hash( h );
-		volumeInterpolationMethod->hash( h );
-		if( volumeStepRate && volumeStepRate.value() != 1.0f )
-			h.append( volumeStepRate.value() );
-	}
-}
-
-bool Attributes::ShaderAttributes::apply( ccl::Shader *shader ) const
-{
-	SocketAlgo::setSocket( shader, shader->get_emission_sampling_method_socket(), emissionSamplingMethod.get() );
-	shader->set_use_transparent_shadow( useTransparentShadow ? useTransparentShadow.value() : true );
-	SocketAlgo::setSocket( shader, shader->get_volume_sampling_method_socket(), volumeSamplingMethod.get() );
-	SocketAlgo::setSocket( shader, shader->get_volume_interpolation_method_socket(), volumeInterpolationMethod.get() );
-	shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.value() : 1.0f );
-
-	return true;
-}
