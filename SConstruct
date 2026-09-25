@@ -1402,7 +1402,7 @@ libraries = {
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "oslcomp$OSL_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX",
 				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "openpgl", "zstd",
 			],
-			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
+			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ] + ( [ "-msse4.2" ] if sys.platform == "linux" else [] ),
 			"CPPDEFINES" : cyclesDefines,
 			"FRAMEWORKS" : [ "Foundation", "Metal", "IOKit" ],
 		},
