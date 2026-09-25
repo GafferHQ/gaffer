@@ -132,6 +132,8 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		// Applies attributes relevant to `geometry`.
 		void applyGeometry( ccl::Geometry *geometry, ccl::Scene *scene ) const;
 
+		// Generates a signature for the work done by `applyShader()`.
+		void hashShader( IECore::MurmurHash &h ) const;
 		// Applies the shader to the geometry.
 		void applyShader( ccl::Geometry *geometry, ccl::Scene *scene ) const;
 

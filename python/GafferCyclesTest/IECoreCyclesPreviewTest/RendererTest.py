@@ -131,6 +131,54 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane
 
+	def testInstancesWithDifferentShaders( self ) :
+
+			renderer = self.createRenderer()
+
+			fileName = self.temporaryDirectory() / "test.exr"
+			renderer.output(
+				"testOutput",
+				IECoreScene.Output(
+					str( fileName ),
+					"exr",
+					"rgba",
+					{}
+				)
+			)
+
+			meshPrimitive = IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			)
+
+			for name, colour, translation in [
+				( "plane1", imath.Color3f( 1, 0, 0 ), imath.V3f( -1, 0, -1 ) ),
+				( "plane2", imath.Color3f( 0, 1, 0 ), imath.V3f( 1, 0, -1 ) ),
+			] :
+
+				plane = renderer.object(
+					name, meshPrimitive,
+					renderer.attributes( IECore.CompoundObject ( {
+						"cycles:surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"output" : IECoreScene.Shader( "emission", "cycles:surface", { "strength" : 1, "color" : colour } ),
+							},
+							output = "output",
+						)
+					} ) )
+				)
+				plane.transform( imath.M44f().translate( translation ) )
+				del plane
+
+			renderer.render()
+
+			image = OpenImageIO.ImageBuf( str( fileName ) )
+
+			plane1Color = self.__colorAtUV( image, imath.V2f( 0.25, 0.5 ) )
+			self.assertEqualWithAbsError( plane1Color, imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
+
+			plane2Color = self.__colorAtUV( image, imath.V2f( 0.75, 0.5 ) )
+			self.assertEqualWithAbsError( plane2Color, imath.Color4f( 0, 1, 0, 1 ), error = 0.01 )
+
 	def testQuadLightColorTexture( self ) :
 
 		renderer = self.createRenderer()

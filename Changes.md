@@ -7,6 +7,7 @@ Fixes
 - Arnold : Fixed unwanted overrides of shaders inside `.ass` procedurals (#7163).
 - Set expressions : Fixed potential crash.
 - RenderMan : Fixed handling of `ri:trace:worldorigin` option.
+- Cycles : Fixed rendering of identical instances with different shaders in batch renders. This also improves the situation in interactive renders substantially, but incorrect shading is still possible when reassigning shaders.
 
 1.7.3.0 (relative to 1.7.2.0)
 =======

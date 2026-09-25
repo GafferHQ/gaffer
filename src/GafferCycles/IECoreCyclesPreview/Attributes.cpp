@@ -741,6 +741,11 @@ void Attributes::applyGeometry( ccl::Geometry *geometry, ccl::Scene *scene ) con
 	}
 }
 
+void Attributes::hashShader( IECore::MurmurHash &h ) const
+{
+	m_shader->hash( h );
+}
+
 void Attributes::applyShader( ccl::Geometry *geometry, ccl::Scene *scene ) const
 {
 	const ccl::array<ccl::Node *> oldShaders = geometry->get_used_shaders();
