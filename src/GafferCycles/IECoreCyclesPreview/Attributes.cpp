@@ -278,53 +278,9 @@ IECoreScene::ConstShaderNetworkPtr g_facingRatio = []() {
 // Shader implementation
 //////////////////////////////////////////////////////////////////////////
 
-Shader::Shader(
-	const IECoreScene::ShaderNetwork *surfaceShader,
-	const IECoreScene::ShaderNetwork *displacementShader,
-	const IECoreScene::ShaderNetwork *volumeShader,
-	ccl::Scene *scene,
-	const std::string &name,
-	const IECore::MurmurHash &h,
-	const bool singleSided,
-	ccl::DisplacementMethod displacementMethod,
-	std::vector<const IECoreScene::ShaderNetwork *> &aovShaders
-)
-	:	m_hash( h )
+Shader::Shader( ccl::Shader *shader, const IECore::MurmurHash &h )
+	:	m_shader( shader ), m_hash( h )
 {
-	std::unique_ptr<ccl::ShaderGraph> graph = ShaderNetworkAlgo::convertGraph(
-		surfaceShader, displacementShader, volumeShader,
-		scene,
-		name
-	);
-	if( surfaceShader && singleSided )
-	{
-		ShaderNetworkAlgo::setSingleSided( graph.get() );
-	}
-
-	for( const IECoreScene::ShaderNetwork *aovShader : aovShaders )
-	{
-		ShaderNetworkAlgo::convertAOV(
-			aovShader, graph.get(),
-			scene,
-			name
-		);
-	}
-
-	m_shader = SceneAlgo::createNodeWithLock<ccl::Shader>( scene );
-	if( surfaceShader )
-	{
-		string shaderName( name + surfaceShader->getOutput().shader.string() );
-		m_shader->name = ccl::ustring( shaderName.c_str() );
-	}
-	else
-	{
-		string shaderName( name + volumeShader->getOutput().shader.string() );
-		m_shader->name = ccl::ustring( shaderName.c_str() );
-	}
-	m_shader->set_displacement_method( displacementMethod );
-	m_shader->set_graph( std::move( graph ) );
-
-	SceneAlgo::tagUpdateWithLock( m_shader, scene );
 }
 
 Shader::~Shader()
@@ -510,9 +466,33 @@ ShaderPtr ShaderCache::get(
 				}
 			}
 
-			writeAccessor->second = new Shader( surfaceShader, displacementShader, volumeShader, m_scene, namePrefix, h, singleSided, displacementMethod, aovShaders );
-			ccl::Shader *shader = writeAccessor->second->shader();
+			// Make the `ccl::ShaderGraph`.
 
+			std::unique_ptr<ccl::ShaderGraph> graph = ShaderNetworkAlgo::convertGraph(
+				surfaceShader, displacementShader, volumeShader, m_scene, namePrefix
+			);
+
+			if( surfaceShader && singleSided )
+			{
+				ShaderNetworkAlgo::setSingleSided( graph.get() );
+			}
+
+			for( const IECoreScene::ShaderNetwork *aovShader : aovShaders )
+			{
+				ShaderNetworkAlgo::convertAOV( aovShader, graph.get(), m_scene, namePrefix );
+			}
+
+			// Make the `ccl::Shader` to house the graph. We reference this via
+			// raw pointer, because Cycles doesn't support the deletion of
+			// Shader nodes.
+
+			ccl::Shader *shader = SceneAlgo::createNodeWithLock<ccl::Shader>( m_scene );
+			if( auto nameSource = surfaceShader ? surfaceShader : volumeShader )
+			{
+				shader->name = ccl::ustring( namePrefix + nameSource->getOutput().shader.string() );
+			}
+
+			shader->set_displacement_method( displacementMethod );
 			SocketAlgo::setSocket( shader, shader->get_emission_sampling_method_socket(), emissionSamplingMethod.get() );
 			shader->set_use_transparent_shadow( useTransparentShadow ? useTransparentShadow.value() : true );
 
@@ -522,6 +502,12 @@ ShaderPtr ShaderCache::get(
 				SocketAlgo::setSocket( shader, shader->get_volume_interpolation_method_socket(), volumeInterpolationMethod.get() );
 				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.value() : 1.0f );
 			}
+
+			shader->set_graph( std::move( graph ) );
+
+			SceneAlgo::tagUpdateWithLock( shader, m_scene );
+
+			writeAccessor->second = new IECoreCycles::Shader( shader, h );
 		}
 	}
 
