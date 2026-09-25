@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from Qt import QtWidgets
 
@@ -137,12 +138,12 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		self.__nameLabel.setGraphComponent( node )
 		self.__nameWidget.setGraphComponent( node )
-		self.__typeLabel.setText( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
+		self.__typeLabel.setText( "<h4>" + _translate( node.typeName().rpartition( ":" )[-1] ) + "</h4>" )
 
 		toolTip = "# " + node.typeName().rpartition( ":" )[2]
 		description = Gaffer.Metadata.value( node, "description" )
 		if description :
-			toolTip += "\n\n" + description
+			toolTip += "\n\n" + _translate( description )
 		self.__infoSection.setToolTip( toolTip )
 
 		self.__header.setVisible( True )

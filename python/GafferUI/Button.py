@@ -39,6 +39,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from Qt import QtGui
 from Qt import QtWidgets
@@ -83,11 +84,12 @@ class Button( GafferUI.Widget ) :
 
 		assert( isinstance( text, str ) )
 
-		self._qtWidget().setText( text )
+		self.__text = text
+		self._qtWidget().setText( _translate( text ) )
 
 	def getText( self ) :
 
-		return self._qtWidget().text()
+		return self.__text
 
 	def setImage( self, imageOrImageFileName ) :
 

@@ -46,6 +46,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from Qt import QtCore
 from Qt import QtGui
@@ -303,7 +304,7 @@ class Menu( GafferUI.Widget ) :
 					# it's an intermediate submenu we need to make
 					# to construct the path to something else
 
-					subMenu = _Menu( qtMenu, name )
+					subMenu = _Menu( qtMenu, _translate( name ) )
 					qtMenu.addMenu( subMenu )
 
 					subMenu.__definition = definition.reRooted( "/" + name + "/" )
@@ -323,7 +324,7 @@ class Menu( GafferUI.Widget ) :
 						if forShortCuts and not getattr( item, 'hasShortCuts', True ) :
 							continue
 
-						subMenu = _Menu( qtMenu, name )
+						subMenu = _Menu( qtMenu, _translate( name ) )
 						active = self.__evaluateItemValue( item.active )
 						subMenu.setEnabled( active )
 
@@ -363,7 +364,7 @@ class Menu( GafferUI.Widget ) :
 		# add a title if required.
 		if self.__title is not None and qtMenu is self._qtWidget() :
 
-			titleWidget = QtWidgets.QLabel( self.__title )
+			titleWidget = QtWidgets.QLabel( _translate( self.__title ) )
 			titleWidget.setIndent( 0 )
 			titleWidget.setObjectName( "gafferMenuTitle" )
 			titleWidgetAction = QtWidgets.QWidgetAction( qtMenu )
@@ -386,7 +387,7 @@ class Menu( GafferUI.Widget ) :
 		if item.divider :
 			qtAction = _DividerAction( item, parent )
 		else :
-			qtAction = _Action( item, label, parent )
+			qtAction = _Action( item, _translate( label ), parent )
 
 		if item.checkBox is not None :
 			qtAction.setCheckable( True )
@@ -775,7 +776,7 @@ class _DividerAction( QtWidgets.QWidgetAction ) :
 		QtWidgets.QWidgetAction.__init__( self, *args, **kwarg )
 
 		if hasattr( item, 'label' ) and item.label :
-			titleWidget = QtWidgets.QLabel( item.label )
+			titleWidget = QtWidgets.QLabel( _translate( item.label ) )
 			titleWidget.setIndent( 0 )
 			titleWidget.setObjectName( "gafferMenuLabeledDivider" )
 			titleWidget.setEnabled( False )

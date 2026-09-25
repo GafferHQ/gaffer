@@ -121,6 +121,8 @@ __import__( "Gaffer" )
 
 from ._GafferUI import *
 
+from . import i18n
+
 # general ui stuff first
 
 from .Enums import *

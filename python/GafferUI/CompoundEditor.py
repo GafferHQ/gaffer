@@ -46,6 +46,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from Qt import QtCore
 from Qt import QtGui
@@ -615,7 +616,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.insert( len( self ), editor )
 		self.setCurrent( editor )
 
-		self.setLabel( editor, editor.getTitle() )
+		self.setLabel( editor, _translate( editor.getTitle() ) )
 		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ), scoped = True )
 		editor.__keyPressConnection = editor.keyPressSignal().connect( self.__pinningWidget.editorKeyPress, scoped = True )
 
@@ -736,7 +737,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		if not GafferUI._qtObjectIsValid( self._qtWidget() ) :
 			return
 
-		self.setLabel( editor, editor.getTitle() )
+		self.setLabel( editor, _translate( editor.getTitle() ) )
 
 	def __currentTabChanged( self, tabbedContainer, currentEditor ) :
 

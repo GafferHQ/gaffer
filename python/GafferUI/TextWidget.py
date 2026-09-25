@@ -40,6 +40,7 @@ import warnings
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from Qt import QtCore
 from Qt import QtGui
@@ -175,7 +176,7 @@ class TextWidget( GafferUI.Widget ) :
 	## Sets what text is displayed when the main text is empty.
 	def setPlaceholderText( self, text ) :
 
-		self._qtWidget().setPlaceholderText( text )
+		self._qtWidget().setPlaceholderText( _translate( text ) )
 
 	def getPlaceholderText( self ) :
 

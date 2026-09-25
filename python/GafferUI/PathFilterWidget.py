@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 ## This class forms the base class for all uis which manipulate PathFilters.
 class PathFilterWidget( GafferUI.Widget ) :
@@ -120,7 +121,7 @@ class BasicPathFilterWidget( PathFilterWidget ) :
 		label = str( self.pathFilter() )
 		with IECore.IgnoredExceptions( KeyError ) :
 			label = self.pathFilter().userData()["UI"]["label"].value
-		self.__checkBox.setText( label )
+		self.__checkBox.setText( _translate( label ) )
 
 		invertEnabled = False
 		with IECore.IgnoredExceptions( KeyError ) :
