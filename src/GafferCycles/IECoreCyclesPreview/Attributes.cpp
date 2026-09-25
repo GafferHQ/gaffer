@@ -697,6 +697,7 @@ void Attributes::hashGeometry( const IECore::Object *object, IECore::MurmurHash 
 	{
 		m_volume.hash( h );
 	}
+	h.append( m_shader->shader()->graph->displacement_hash );
 }
 
 void Attributes::hashGeometry( const ccl::Geometry *geometry, IECore::MurmurHash &h ) const
@@ -712,6 +713,7 @@ void Attributes::hashGeometry( const ccl::Geometry *geometry, IECore::MurmurHash
 	{
 		m_volume.hash( h );
 	}
+	h.append( m_shader->shader()->graph->displacement_hash );
 }
 
 void Attributes::hashSubdivision( IECore::MurmurHash &h ) const

@@ -2614,6 +2614,109 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 		del plane
 
+	def testDisplacementEdit( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+
+		camera = renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 256, 256 ),
+					"projection" : "orthographic",
+					"aperture" : imath.V2f( 1, 1 )
+				}
+			)
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testDisplacementEdit",
+				}
+			)
+		)
+
+		planePrimitive = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -0.1 ), imath.V2f( 0.1 ) ),
+		)
+
+		plane = renderer.object( "/plane", planePrimitive, renderer.attributes( IECore.CompoundObject() ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+		renderer.render()
+
+		displacementDirections = [
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( -1, 0, 0 ),
+			imath.V3f( 0, -1, 0 ),
+		]
+
+		def imageUV( displacementDirection ) :
+
+			return imath.V2f( 0.5 ) + imath.V2f( displacementDirection.x, -displacementDirection.y ) * 0.49
+
+		for direction in displacementDirections :
+
+			# Assign displacement shader.
+
+			renderer.pause()
+
+			displacementAttributes = renderer.attributes(
+				IECore.CompoundObject( {
+					"cycles:displacement" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader( "displacement", "cycles:displacement", { "height" : 1.0 } ),
+							"normal" : IECoreScene.Shader( "convert_color_to_normal", "cycles:shader", { "value_color" : imath.Color3f( direction.x, direction.y, 0 ) } ),
+						},
+						connections = [
+							( ( "normal", "value_normal" ), ( "output", "normal" ) ),
+						],
+						output = "output",
+					),
+					"cycles:shader:displacement_method" : IECore.StringData( "true" ),
+				} )
+			)
+
+			# Edit should fail, requesting geometry to be resent.
+
+			self.assertFalse( plane.attributes( displacementAttributes ) )
+
+			# Resend geometry
+
+			del plane
+			plane = renderer.object( "/plane", planePrimitive, displacementAttributes )
+			plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+			renderer.render()
+
+			# Check the plane has been displaced to where we expect it to be.
+
+			self.assertEventually(
+				lambda : self.assertEqualWithAbsError( self.__colorAtUV( "testDisplacementEdit", imageUV( direction ) ), imath.Color4f( 1 ), 1e-6 )
+			)
+
+			# And that it doesn't appear in any of the other positions.
+
+			for otherDirection in displacementDirections :
+
+				if otherDirection == direction :
+					continue
+
+				self.assertEventually(
+					lambda : self.assertEqualWithAbsError( self.__colorAtUV( "testDisplacementEdit", imageUV( otherDirection ) ), imath.Color4f( 0 ), 1e-6 )
+				)
+
+		renderer.pause()
+		del plane, camera
+
 	def testUnsupportedSessionEdit( self ) :
 
 		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
