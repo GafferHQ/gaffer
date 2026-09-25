@@ -7,6 +7,7 @@ Fixes
 - Arnold : Fixed unwanted overrides of shaders inside `.ass` procedurals (#7163).
 - Set expressions : Fixed potential crash.
 - RenderMan : Fixed handling of `ri:trace:worldorigin` option.
+- SceneAlgo : Fixed potential deadlock in `parallelGatherLocations()`.
 
 1.7.3.0 (relative to 1.7.2.0)
 =======
