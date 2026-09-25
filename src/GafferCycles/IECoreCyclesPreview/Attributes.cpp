@@ -900,4 +900,3 @@ void Attributes::Volume::apply( ccl::Volume *volume ) const
 		volume->set_velocity_scale( velocityScale.value() );
 	}
 }
-
