@@ -55,24 +55,18 @@ class Shader : public IECore::RefCounted
 
 	public :
 
-		Shader(
-			const IECoreScene::ShaderNetwork *surfaceShader,
-			const IECoreScene::ShaderNetwork *displacementShader,
-			const IECoreScene::ShaderNetwork *volumeShader,
-			ccl::Scene *scene,
-			const std::string &name,
-			const IECore::MurmurHash &h,
-			const bool singleSided,
-			ccl::DisplacementMethod displacementMethod,
-			std::vector<const IECoreScene::ShaderNetwork *> &aovShaders
-		);
-
 		~Shader() override;
 
 		void hash( IECore::MurmurHash &h ) const;
 		ccl::Shader *shader() const;
 
 	private :
+
+		friend class ShaderCache;
+
+		/// Private constructor so only ShaderCache can create shaders. This
+		/// gives us guarantees that the hash matches.
+		Shader( ccl::Shader *shader, const IECore::MurmurHash &h );
 
 		/// Note : `ccl::Scene::delete_nodes()` doesn't actually delete shader
 		/// nodes, and `ShaderCache::clearUnused()` is a no-op, so we don't
