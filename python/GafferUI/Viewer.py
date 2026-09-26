@@ -366,6 +366,10 @@ class _Toolbar( GafferUI.Frame ) :
 			toolbar = self.__nodeToolbarCache.get( ( self.__node, self.__edge ) )
 			self.setChild( toolbar )
 			self.setVisible( True )
+			# Activate all layouts now. This works around flicker caused by widgets changing
+			# size after an initial round of layout. One culprit seems to be the usage
+			# of `QtWidgets.QLayout.SetMinAndMaxSize` by Widget - see comments there.
+			self._activateLayouts()
 		else :
 			self.setVisible( False )
 			self.setChild( None )

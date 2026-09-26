@@ -5,6 +5,7 @@ Fixes
 -----
 
 - PlugLayout : Fixed flicker when the visible contents of the layout changes, such as when the layout is filtered or plug visibility activators update.
+- Viewer : Fixed flicker when toolbars are first shown.
 
 1.7.3.1 (relative to 1.7.3.0)
 =======
