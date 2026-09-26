@@ -1812,31 +1812,8 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times ) override
 		{
-			// Set environment map rotation
-			/// \todo There are a few problems here :
-			///
-			/// - We're clobbering the `tex_mapping.rotation` parameter, which is exposed to users
-			///   but now has no effect for them. This also prevents us getting the orientation of USD
-			///   DomeLights correct - see ShaderNetworkAlgo.
-			/// - The light shader was created via `ShaderCache::get()`, and could therefore be shared
-			///   between several lights, so we're not at liberty to clobber the shader anyway.
-			if( m_light->get_light_type() == ccl::LIGHT_BACKGROUND && m_light->get_used_shaders().size() != 0 )
-			{
-				ccl::Shader *shader = (ccl::Shader*)m_light->get_used_shaders()[0];
-				for( ccl::ShaderNode *node : shader->graph->nodes )
-				{
-					if( node->type == ccl::EnvironmentTextureNode::get_node_type() )
-					{
-						ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
-						Imath::Eulerf euler( samples[0], Imath::Eulerf::Order::XZY );
-						env->tex_mapping.rotation = ccl::make_float3( -euler.x, -euler.y, -euler.z );
-						shader->tag_update( m_scene );
-						break;
-					}
-				}
-			}
-
 			m_object->set_tfm( SocketAlgo::setTransform( samples[0] ) );
+			applyEnvironmentMapRotation();
 			SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 		}
 
@@ -1846,6 +1823,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			if( cyclesAttributes->applyObject( m_object.get(), m_attributes.get(), m_scene ) )
 			{
 				m_attributes = cyclesAttributes;
+				applyEnvironmentMapRotation();
 				SceneAlgo::tagUpdateWithLock( m_light.get(), m_scene );
 				SceneAlgo::tagUpdateWithLock( m_object.get(), m_scene );
 				return true;
@@ -1886,6 +1864,35 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		}
 
 	private :
+
+		void applyEnvironmentMapRotation()
+		{
+			if( m_light->get_light_type() != ccl::LIGHT_BACKGROUND || m_light->get_used_shaders().size() == 0 )
+			{
+				return;
+			}
+
+			// Set environment map rotation
+			/// \todo There are a few problems here :
+			///
+			/// - We're clobbering the `tex_mapping.rotation` parameter, which is exposed to users
+			///   but now has no effect for them. This also prevents us getting the orientation of USD
+			///   DomeLights correct - see ShaderNetworkAlgo.
+			/// - The light shader was created via `ShaderCache::get()`, and could therefore be shared
+			///   between several lights, so we're not at liberty to clobber the shader anyway.
+			ccl::Shader *shader = (ccl::Shader*)m_light->get_used_shaders()[0];
+			for( ccl::ShaderNode *node : shader->graph->nodes )
+			{
+				if( node->type == ccl::EnvironmentTextureNode::get_node_type() )
+				{
+					ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
+					Imath::Eulerf euler( SocketAlgo::getTransform( m_object->get_tfm() ), Imath::Eulerf::Order::XZY );
+					env->tex_mapping.rotation = ccl::make_float3( -euler.x, -euler.y, -euler.z );
+					shader->tag_update( m_scene );
+					break;
+				}
+			}
+		}
 
 		ccl::Scene *m_scene;
 		using UniqueLightPtr = std::unique_ptr<ccl::Light, NodeDeleter::GeometryDeleter>;
