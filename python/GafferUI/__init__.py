@@ -158,6 +158,7 @@ from .Image import Image
 from .ErrorDialogue import ErrorDialogue
 from ._Variant import _Variant
 from .VectorDataWidget import VectorDataWidget
+from .ArrayDataWidget import ArrayDataWidget
 from .PathVectorDataWidget import PathVectorDataWidget
 from .ProgressBar import ProgressBar
 from .SelectionMenu import SelectionMenu
@@ -203,6 +204,7 @@ from .BoolPlugValueWidget import BoolPlugValueWidget
 from .PathPlugValueWidget import PathPlugValueWidget
 from .FileSystemPathPlugValueWidget import FileSystemPathPlugValueWidget
 from .VectorDataPlugValueWidget import VectorDataPlugValueWidget
+from .ArrayPlugValueWidget import ArrayPlugValueWidget
 from .PathVectorDataPlugValueWidget import PathVectorDataPlugValueWidget
 from .FileSystemPathVectorDataPlugValueWidget import FileSystemPathVectorDataPlugValueWidget
 from .PlugWidget import PlugWidget
