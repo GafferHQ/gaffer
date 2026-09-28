@@ -929,3 +929,57 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertNotIn( "A", columnNames )
 		self.assertNotIn( "B", columnNames )
 		self.assertNotIn( "C", columnNames )
+
+	def testColumnFilter( self ) :
+
+		for columnName, section, parameter in [ ( "A", None, True ), ( "B", "Main", False ), ( "C", "Other", True ), ( "D", "Other", False ) ] :
+			if parameter :
+				GafferSceneUI.LightEditor.registerParameter( "ColumnFilterTest", columnName, section )
+			else :
+				GafferSceneUI.LightEditor.registerAttribute( "ColumnFilterTest", columnName, section )
+			self.addCleanup( GafferSceneUI.LightEditor.deregisterColumn, "ColumnFilterTest", columnName, section )
+
+		script = Gaffer.ScriptNode()
+
+		editor = GafferSceneUI.LightEditor( script )
+		editor.settings()["attribute"].setValue( "ColumnFilterTest" )
+
+		pathListing = editor.sceneListing()
+		path = pathListing.getPath()
+
+		def assertColumns( sections, currentSection, columns ) :
+
+			GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
+
+			self.assertEqual(
+				Gaffer.Metadata.value( editor.settings()["section"], "sectionPlugValueWidget:sections" ),
+				IECore.StringVectorData( sections )
+			)
+			self.assertEqual( editor.settings()["section"].getValue(), currentSection )
+			self.assertEqual(
+				[
+					c.headerData( path ).value for c in pathListing.getColumns()
+					if isinstance( c, GafferSceneUI.Private.InspectorColumn ) and not isinstance( c, ( GafferSceneUI.Private.VisibilityColumn, _GafferSceneUI._LightEditorMuteColumn, _GafferSceneUI._LightEditorSetMembershipColumn ) )
+				],
+				columns
+			)
+
+		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A", "B" ] )
+
+		editor.settings()["columnFilter"].setValue( "A" )
+		assertColumns( [ "Main" ], "Main", [ "A" ] )
+
+		editor.settings()["columnFilter"].setValue( "A C" )
+		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A" ] )
+
+		editor.settings()["columnFilter"].setValue( "C" )
+		assertColumns( [ "Other" ], "Other", [ "C" ] )
+
+		editor.settings()["columnFilter"].setValue( "C D" )
+		assertColumns( [ "Other" ], "Other", [ "C", "D" ] )
+
+		editor.settings()["columnFilter"].setValue( "NOMATCH" )
+		assertColumns( [], "Other", [] )
+
+		editor.settings()["columnFilter"].setValue( "" )
+		assertColumns( [ "Main", "Other", "All" ], "Other", [ "C", "D" ] )
