@@ -57,7 +57,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		def __init__( self ) :
 
-			GafferSceneUI.SceneEditor.Settings.__init__( self )
+			GafferSceneUI.SceneEditor.Settings.__init__( self, withHierarchyFilter = True )
 
 			self["attribute"] = Gaffer.StringPlug( defaultValue = "light" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "" )
@@ -70,8 +70,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self["__isolate"]["in"].setInput( self["__adaptedIn"] )
 			self["__isolate"]["filter"].setInput( self["__setFilter"]["out"] )
 
-			self["__filteredIn"] = GafferScene.ScenePlug()
-			self["__filteredIn"].setInput( self["__isolate"]["out"] )
+			self["__hierarchyFilter"]["in"].setInput( self["__isolate"]["out"] )
 
 	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::LightEditor::Settings" )
 
@@ -105,6 +104,12 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				self.settings(),
 				orientation = GafferUI.ListContainer.Orientation.Horizontal,
 				rootSection = "Settings"
+			)
+
+			GafferUI.PlugLayout(
+				self.settings(),
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				rootSection = "Filter"
 			)
 
 			self.__pathListing = GafferUI.PathListingWidget(
@@ -364,7 +369,7 @@ Gaffer.Metadata.registerNode(
 	# want to add space around, in the same way we use `divider` to add a divider?
 	"layout:customWidget:spacer:widgetType", "GafferSceneUI.LightEditor._Spacer",
 	"layout:customWidget:spacer:section", "Settings",
-	"layout:customWidget:spacer:index", 3,
+	"layout:customWidget:spacer:index", 5,
 
 	plugs = {
 
@@ -384,6 +389,12 @@ Gaffer.Metadata.registerNode(
 		"section" : {
 
 			"plugValueWidget:type" : "GafferSceneUI.LightEditor._SectionPlugValueWidget",
+
+		},
+
+		"setFilter" : {
+
+			"setFilterPlugValueWidget:excludedSetNames" : IECore.StringVectorData( [ "__cameras", "__coordinateSystems" ] ),
 
 		},
 
