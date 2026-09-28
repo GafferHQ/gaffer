@@ -280,8 +280,11 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		sectionColumns = []
 
 		for rendererKey, sections in self.__columnRegistry.items() :
-			if IECore.StringAlgo.match( attribute, rendererKey ) :
-				section = sections.get( currentSection or None, {} )
+			if not IECore.StringAlgo.match( attribute, rendererKey ) :
+				continue
+
+			matchingSections = sections.values() if currentSection == "All" and not sections.get( "All" ) else [ sections.get( currentSection or None, {} ) ]
+			for section in matchingSections :
 				for columnCreator in section.values() :
 					column = self.__acquireColumn( columnCreator, currentSection )
 					if self._columnFilterMatch( pattern, column.headerData( rootPath ).value ) :
@@ -469,10 +472,15 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			attribute = self.getPlug().node()["attribute"].getValue()
 
+			sectionNames = set()
 			for rendererKey, sections in LightEditor._LightEditor__columnRegistry.items() :
 				if IECore.StringAlgo.match( attribute, rendererKey ) :
 					for section in sections.keys() :
 						self._qtWidget().addTab( section or "Main" )
+					sectionNames.update( sections.keys() )
+
+			if "All" not in sectionNames and len( sectionNames ) > 1 :
+				self._qtWidget().addTab( "All" )
 		finally :
 			self.__ignoreCurrentChanged = False
 
