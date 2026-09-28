@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.5.0)
 =======
 
+Improvements
+------------
 
+- LightEditor : Added hierarchy filter.
 
 1.7.5.0 (relative to 1.7.4.1)
 =======
