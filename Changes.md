@@ -21,7 +21,10 @@ Breaking Changes
 1.7.x.x (relative to 1.7.3.1)
 =======
 
+Fixes
+-----
 
+- Cycles : Fixed bug introduced in 1.7.0.0 causing the environment texture of a rotated background light to lose its orientation when the light is modified during an interactive render.
 
 1.7.3.1 (relative to 1.7.3.0)
 =======
