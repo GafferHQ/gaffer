@@ -414,6 +414,13 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		self.assertFalse( _ClipboardAlgo.canPasteRows( rowData, s2["rows"] ) )
 
+		Gaffer.MetadataAlgo.setReadOnly( s["rows"], True )
+		self.assertFalse( _ClipboardAlgo.canPasteRows( rowData, s["rows"] ) )
+		Gaffer.MetadataAlgo.setReadOnly( s["rows"], False )
+		s2 = Gaffer.Spreadsheet()
+		s2["rows"].setInput( s["rows"] )
+		self.assertFalse( _ClipboardAlgo.canPasteRows( rowData, s2["rows"] ) )
+
 	def testPasteRows( self ) :
 
 		s = self.__createSpreadsheet( numRows = 5 )
@@ -421,6 +428,10 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		sourceRows = [ [ s["rows"][r] ] for r in range( 2, 4 ) ]
 		sourceHashes = self.__cellPlugHashes( sourceRows )
 		rowData = _ClipboardAlgo._objectMatrixFromPlugMatrix( sourceRows )
+
+		s["rows"][0]["cells"][0]["value"].setInput( s["rows"][1]["cells"][0]["value"] )
+		Gaffer.MetadataAlgo.setReadOnly( s["rows"][0], True )
+		self.assertTrue( _ClipboardAlgo.canPasteRows( rowData, s["rows"] ) )
 
 		self.assertEqual( len( s["rows"].children() ), 6 )
 		existingHashes = self.__cellPlugHashes( [ [ s["rows"][r] ] for r in range( 6 ) ] )
