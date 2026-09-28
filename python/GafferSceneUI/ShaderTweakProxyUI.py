@@ -231,7 +231,9 @@ def _pathsFromAffected( context, nodes ) :
 	pathMatcher = IECore.PathMatcher()
 	with context:
 		for node in nodes:
-			GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
+			scenePaths = IECore.PathMatcher()
+			GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], scenePaths )
+			pathMatcher.addPaths( scenePaths )
 
 	return pathMatcher.paths()
 

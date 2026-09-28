@@ -148,9 +148,11 @@ def _selectAffected( pathMatcher, scenes ) :
 	result = IECore.PathMatcher()
 	for scene in scenes :
 		with GafferUI.ContextTracker.acquireForFocus( scene ).context( scene ) :
+			scenePaths = IECore.PathMatcher()
 			GafferScene.SceneAlgo.matchingPaths(
-				pathMatcher, scene, result
+				pathMatcher, scene, scenePaths
 			)
+			result.addPaths( scenePaths )
 
 	GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( scenes[0].ancestor( Gaffer.ScriptNode ), result )
 
@@ -306,7 +308,9 @@ def __dropPaths( paths, pathsPlug ) :
 		rootPaths = IECore.PathMatcher()
 		for node in GafferScene.SceneAlgo.filteredNodes( pathFilter ) :
 			scene = node["in"][0] if isinstance( node["in"], Gaffer.ArrayPlug ) else node["in"]
-			GafferScene.SceneAlgo.matchingPaths( pathFilter["roots"], scene, rootPaths )
+			scenePaths = IECore.PathMatcher()
+			GafferScene.SceneAlgo.matchingPaths( pathFilter["roots"], scene, scenePaths )
+			rootPaths.addPaths( scenePaths )
 
 	paths = IECore.PathMatcher( paths )
 	relativePaths = IECore.PathMatcher()
