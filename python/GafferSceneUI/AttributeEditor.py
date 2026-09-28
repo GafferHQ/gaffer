@@ -45,8 +45,6 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-from . import _GafferSceneUI
-
 class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 	class Settings( GafferSceneUI.SceneEditor.Settings ) :
