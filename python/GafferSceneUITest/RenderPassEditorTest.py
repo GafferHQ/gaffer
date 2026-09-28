@@ -566,3 +566,60 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 			[ ( "A", None ), ( "B", 0 ), ( "C", 0 ), ( "D", 0 ), ( "E", 1 ) ],
 			[ "B", "C", "D", "E", "A" ]
 		)
+
+	def testColumnFilter( self ) :
+
+		for columnName, section in [ ( "A", "Main" ), ( "B", "Main" ), ( "C", "Other" ), ( "D", "Other" ) ] :
+			GafferSceneUI.RenderPassEditor.registerOption( "ColumnFilterTest", columnName, section )
+			self.addCleanup( GafferSceneUI.RenderPassEditor.deregisterColumn, "ColumnFilterTest", columnName, section )
+
+		script = Gaffer.ScriptNode()
+
+		editor = GafferSceneUI.RenderPassEditor( script )
+		editor.settings()["tabGroup"].setValue( "ColumnFilterTest" )
+		editor.settings()["favouriteColumns"].setValue( IECore.StringVectorData( [ "option:A", "option:C" ] ) )
+
+		pathListing = editor._RenderPassEditor__pathListing
+		path = pathListing.getPath()
+		header = pathListing._qtWidget().header()
+
+		def assertColumns( sections, currentSection, columns ) :
+
+			GafferSceneUI.RenderPassEditor._RenderPassEditor__updateColumnsAndSections.flush( editor )
+
+			self.assertEqual(
+				Gaffer.Metadata.value( editor.settings()["section"], "sectionPlugValueWidget:sections" ),
+				IECore.StringVectorData( sections )
+			)
+			self.assertEqual( editor.settings()["section"].getValue(), currentSection )
+			self.assertEqual(
+				[ c.headerData( path ).value for c in pathListing.getColumns() if isinstance( c, GafferSceneUI.Private.InspectorColumn ) ],
+				columns
+			)
+
+		assertColumns( [ "Main", "Other", "All", "Favourites" ], "Main", [ "A", "B" ] )
+
+		editor.settings()["columnFilter"].setValue( "A" )
+		assertColumns( [ "Main", "Favourites" ], "Main", [ "A" ] )
+
+		# Favourites are filtered, and can't be reordered while some are hidden.
+
+		editor.settings()["section"].setValue( "Favourites" )
+		assertColumns( [ "Main", "Favourites" ], "Favourites", [ "A" ] )
+		self.assertFalse( header.sectionsMovable() )
+
+		editor.settings()["columnFilter"].setValue( "A C" )
+		assertColumns( [ "Main", "Other", "All", "Favourites" ], "Favourites", [ "A", "C" ] )
+		self.assertTrue( header.sectionsMovable() )
+
+		editor.settings()["section"].setValue( "All" )
+		assertColumns( [ "Main", "Other", "All", "Favourites" ], "All", [ "A", "C" ] )
+
+		editor.settings()["columnFilter"].setValue( "B" )
+		assertColumns( [ "Main" ], "Main", [ "B" ] )
+
+		editor.settings()["columnFilter"].setValue( "NOMATCH" )
+		assertColumns( [], "Main", [] )
+
+		editor.settings()["columnFilter"].setValue( "" )
+		assertColumns( [ "Main", "Other", "All", "Favourites" ], "Main", [ "A", "B" ] )

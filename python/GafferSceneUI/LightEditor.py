@@ -59,6 +59,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 			self["attribute"] = Gaffer.StringPlug( defaultValue = "light" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "Main" )
+			self["columnFilter"] = Gaffer.StringPlug()
 			self["editScope"] = Gaffer.Plug()
 
 			self["__setFilter"] = GafferScene.SetFilter()
@@ -260,7 +261,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug in ( self.settings()["section"], self.settings()["attribute"] ) :
+		if plug in ( self.settings()["section"], self.settings()["attribute"], self.settings()["columnFilter"] ) :
 			self.__updateColumnsAndSections()
 
 	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
@@ -272,24 +273,30 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 	def __updateColumnsAndSections( self ) :
 
 		attribute = self.settings()["attribute"].getValue()
-		currentSection = self.settings()["section"].getValue()
+		filterActive = self.settings()._columnFilterActive()
+		rootPath = self.__pathListing.getPath()
 
-		sectionNames = []
-		sectionColumns = []
-
+		sectionCreators = collections.OrderedDict()
 		for rendererKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( attribute, rendererKey ) :
-				matchingSections = sections.values() if currentSection == "All" else [ sections.get( currentSection, {} ) ]
-				for section in matchingSections :
-					sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
-				sectionNames.extend( s for s in sections.keys() if s not in sectionNames )
+				for section, creators in sections.items() :
+					sectionCreators.setdefault( section, [] ).extend( [
+						c for c in creators.values()
+						if not filterActive or self.settings()._columnVisible( self.__acquireColumn( c, section ), rootPath )
+					] )
 
+		sectionNames = [ s for s, creators in sectionCreators.items() if creators or not filterActive ]
 		if "All" not in sectionNames and len( sectionNames ) > 1 :
 			sectionNames.append( "All" )
 
 		sectionsData = IECore.StringVectorData( sectionNames )
 		if Gaffer.Metadata.value( self.settings()["section"], "sectionPlugValueWidget:sections" ) != sectionsData :
 			Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", sectionsData, persistent = False )
+
+		currentSection = self.settings()["section"].getValue()
+		sectionColumns = []
+		for creators in sectionCreators.values() if currentSection == "All" else [ sectionCreators.get( currentSection, [] ) ] :
+			sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in creators ]
 
 		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
 
@@ -404,6 +411,7 @@ Gaffer.Metadata.registerNode(
 		"setFilter" : {
 
 			"setFilterPlugValueWidget:excludedSetNames" : IECore.StringVectorData( [ "__cameras", "__coordinateSystems" ] ),
+			"layout:divider" : True,
 
 		},
 
