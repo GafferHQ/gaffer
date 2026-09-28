@@ -45,8 +45,6 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-from . import _GafferSceneUI
-
 from Qt import QtWidgets
 
 class AttributeEditor( GafferSceneUI.SceneEditor ) :
