@@ -38,6 +38,7 @@ import sys
 import traceback
 import pathlib
 
+import imath
 import IECore
 
 import Gaffer
