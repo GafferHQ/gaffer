@@ -261,7 +261,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug in ( self.settings()["section"], self.settings()["attribute"] ) :
+		if plug in ( self.settings()["section"], self.settings()["attribute"] ) or Gaffer.Metadata.value( plug, "columnFilter:sectionName" ) == self.settings()["section"].getValue() :
 			self.__updateColumns()
 
 	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
@@ -274,13 +274,18 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		attribute = self.settings()["attribute"].getValue()
 		currentSection = self.settings()["section"].getValue()
+		rootPath = self.__pathListing.getPath()
+		pattern = self._acquireColumnFilterPlug( currentSection ).getValue()
 
 		sectionColumns = []
 
 		for rendererKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( attribute, rendererKey ) :
 				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
+				for columnCreator in section.values() :
+					column = self.__acquireColumn( columnCreator, currentSection )
+					if self._columnFilterMatch( pattern, column.headerData( rootPath ).value ) :
+						sectionColumns.append( column )
 
 		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
 
@@ -395,6 +400,7 @@ Gaffer.Metadata.registerNode(
 		"setFilter" : {
 
 			"setFilterPlugValueWidget:excludedSetNames" : IECore.StringVectorData( [ "__cameras", "__coordinateSystems" ] ),
+			"layout:divider" : True,
 
 		},
 

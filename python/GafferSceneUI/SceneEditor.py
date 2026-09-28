@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import re
 
 import IECore
 
@@ -88,6 +89,7 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 		GafferUI.NodeSetEditor.__init__( self, topLevelWidget, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
 		self.__parentingConnections = {}
+		self.__columnFilterPlugs = {}
 
 		self.__globalEditTargetLinked = False
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
@@ -156,6 +158,40 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 			_ellipsis = False
 		)
 
+	def _acquireColumnFilterPlug( self, section ) :
+
+		plug = self.__columnFilterPlugs.get( section )
+		if plug is not None :
+			return plug
+
+		if not "columnFilters" in self.settings() :
+			self.settings()["columnFilters"] = Gaffer.Plug()
+
+		plug = Gaffer.StringPlug( IECore.CamelCase.fromSpaced( re.sub( "[^A-Za-z0-9_:]+", " ", section or "Main" ) ) )
+		Gaffer.Metadata.registerValue( plug, "columnFilter:sectionName", section )
+		self.settings()["columnFilters"].addChild( plug )
+		Gaffer.NodeAlgo.applyUserDefault( plug )
+		self.__columnFilterPlugs[section] = plug
+
+		return plug
+
+	@staticmethod
+	def _columnFilterMatch( pattern, headerValue ) :
+
+		if not isinstance( headerValue, str ) :
+			return False
+
+		filterTokens = pattern.lower().split()
+		if not filterTokens or "*" in filterTokens :
+			return True
+
+		filterPattern = " ".join(
+			token if IECore.StringAlgo.hasWildcards( token ) else f"*{token}*"
+			for token in filterTokens
+		)
+
+		return IECore.StringAlgo.matchMultiple( headerValue.lower(), filterPattern )
+
 	def __parentChanged( self, widget ) :
 
 		if self.__globalEditTargetLinked or not "editScope" in self.settings() :
@@ -209,7 +245,7 @@ Gaffer.Metadata.registerNode(
 			# since it has no effect on the filtering, and hints that wildcards
 			# are available.
 			"togglePlugValueWidget:defaultToggleValue" : "*",
-			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"stringPlugValueWidget:placeholderText" : "Filter locations...",
 			"layout:section" : "Filter"
 
 		},
@@ -225,6 +261,47 @@ Gaffer.Metadata.registerNode(
 			"label" : "",
 			"plugValueWidget:type" : "GafferSceneUI.SceneEditor._SetFilterPlugValueWidget",
 			"layout:section" : "Filter"
+
+		},
+
+		"columnFilters" : {
+
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:section" : "Filter",
+			"layout:width" : 160,
+
+		},
+
+		"columnFilters.*" : {
+
+			"description" :
+			"""
+			Filters the columns of the current section to show only those with
+			matching names. Matching is case-insensitive, and is performed
+			against a fragment of the name or a pattern containing any of
+			Gaffer's standard wildcards. Multiple space separated terms may be
+			entered, columns matching any one of them are shown.
+
+			Examples
+			--------
+
+			- `color` : Only show columns with `color` anywhere in their name.
+			- `color shadow` : Only show columns with `color` or `shadow` anywhere in their name.
+			- `shadow*` : Only show columns starting with `shadow`.
+			- `diff* *spec` : Only show columns starting with `diff` or ending with `spec`.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
+			# We need a non-default value to toggle to, so that the first
+			# toggling can highlight the icon. `*` seems like a reasonable value
+			# since it has no effect on the filtering, and hints that wildcards
+			# are available.
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter columns...",
+
+			"layout:visibilityActivator" : lambda plug : Gaffer.Metadata.value( plug, "columnFilter:sectionName" ) == plug.node()["section"].getValue()
 
 		},
 

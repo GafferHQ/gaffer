@@ -5,11 +5,17 @@ Improvements
 ------------
 
 - LightEditor : Added hierarchy filter.
+- LightEditor, RenderPassEditor, AttributeEditor : Added column filter. When enabled, only columns matching the search text are shown.
 
 Fixes
 -----
 
 - Cycles : Fixed bug introduced in 1.7.0.0 causing the environment texture of a rotated background light to lose its orientation when the light is modified during an interactive render.
+
+API
+---
+
+- SceneEditor : Added `_acquireColumnFilterPlug()` method and `_columnFilterMatch()` static method.
 
 1.7.3.1 (relative to 1.7.3.0)
 =======

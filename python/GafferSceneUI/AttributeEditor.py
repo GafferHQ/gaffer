@@ -195,7 +195,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
+		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) or Gaffer.Metadata.value( plug, "columnFilter:sectionName" ) == self.settings()["section"].getValue() :
 			self.__updateColumns()
 
 	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
@@ -208,17 +208,21 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		tabGroup = self.settings()["tabGroup"].getValue()
 		currentSection = self.settings()["section"].getValue()
+		rootPath = self.__pathListing.getPath()
+		pattern = self._acquireColumnFilterPlug( currentSection ).getValue()
 
 		sectionColumns = []
 
 		for groupKey, sections in self.__columnRegistry.items() :
-			if IECore.StringAlgo.match( tabGroup, groupKey ) :
-				if currentSection == "All" and not sections.get( "All" ) :
-					for section in sections.values() :
-						sectionColumns += [ self.__acquireColumn( c, "All" ) for c in section.values() ]
-				else :
-					section = sections.get( currentSection or None, {} )
-					sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
+			if not IECore.StringAlgo.match( tabGroup, groupKey ) :
+				continue
+
+			matchingSections = sections.values() if currentSection == "All" and not sections.get( "All" ) else [ sections.get( currentSection or None, {} ) ]
+			for section in matchingSections :
+				for columnCreator in section.values() :
+					column = self.__acquireColumn( columnCreator, currentSection )
+					if self._columnFilterMatch( pattern, column.headerData( rootPath ).value ) :
+						sectionColumns.append( column )
 
 		self.__pathListing.setColumns( [ self.__locationNameColumn, self.__visibilityColumn ] + sectionColumns )
 
@@ -316,6 +320,12 @@ Gaffer.Metadata.registerNode(
 		"section" : {
 
 			"plugValueWidget:type" : "GafferSceneUI.AttributeEditor._SectionPlugValueWidget",
+
+		},
+
+		"setFilter" : {
+
+			"layout:divider" : True,
 
 		},
 

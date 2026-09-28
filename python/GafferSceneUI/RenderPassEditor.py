@@ -370,7 +370,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
+		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) or Gaffer.Metadata.value( plug, "columnFilter:sectionName" ) == self.settings()["section"].getValue() :
 			self.__updateColumns()
 		elif plug == self.settings()["favouriteColumns"] and self.__currentSectionEditable() :
 			self.__updateColumns()
@@ -389,13 +389,23 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 		tabGroup = self.settings()["tabGroup"].getValue()
 		currentSection = self.settings()["section"].getValue()
+		rootPath = self.__pathListing.getPath()
+		pattern = self._acquireColumnFilterPlug( currentSection ).getValue()
+		sectionsMovable = currentSection == "Favourites"
 
 		sectionColumns = []
 
 		if currentSection == "Favourites" :
-			for ( index, favouriteName ) in enumerate( self.settings()["favouriteColumns"].getValue() ) :
+			index = 0
+			for favouriteName in self.settings()["favouriteColumns"].getValue() :
 				if favouriteName.startswith( "option:" ) :
-					sectionColumns.append( ( self.__acquireColumn( favouriteName, currentSection ), index ) )
+					column = self.__acquireColumn( favouriteName, currentSection )
+					if self._columnFilterMatch( pattern, column.headerData( rootPath ).value ) :
+						sectionColumns.append( ( column, index ) )
+						index += 1
+					else :
+						# Prevent reordering of sections when not all are visible.
+						sectionsMovable = False
 				else :
 					IECore.msg( IECore.Msg.Level.Warning, "RenderPassEditor", "Unknown favourite \"{}\". Option favourites should start with \"option:\".".format( favouriteName ) )
 
@@ -417,10 +427,13 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			for groupKey, sections in self.__columnRegistry.items() :
 				if IECore.StringAlgo.match( tabGroup, groupKey ) :
 					section = sections.get( currentSection or None, {} )
-					sectionColumns += [ ( self.__acquireColumn( c, currentSection ), index ) for ( c, index ) in section.values() ]
+					for ( columnCreator, index ) in section.values() :
+						column = self.__acquireColumn( columnCreator, currentSection )
+						if self._columnFilterMatch( pattern, column.headerData( rootPath ).value ) :
+							sectionColumns.append( ( column, index ) )
 
 		self.__pathListing.setColumns( self.__commonColumns + self.__orderedColumns( sectionColumns ) )
-		self.__pathListing._qtWidget().header().setSectionsMovable( currentSection == "Favourites" )
+		self.__pathListing._qtWidget().header().setSectionsMovable( sectionsMovable )
 
 	def __acquireColumn( self, columnCreator, section ) :
 
@@ -1101,7 +1114,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix" : "search",
 			"togglePlugValueWidget:defaultToggleValue" : "*",
-			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"stringPlugValueWidget:placeholderText" : "Filter render passes...",
 			"layout:section" : "Filter",
 
 		},
@@ -1115,6 +1128,7 @@ Gaffer.Metadata.registerNode(
 
 			"boolPlugValueWidget:labelVisible" : True,
 			"layout:section" : "Filter",
+			"layout:divider" : True,
 
 		},
 
