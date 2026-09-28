@@ -267,6 +267,7 @@ Gaffer.Metadata.registerNode(
 		"columnFilters" : {
 
 			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation" : "horizontal",
 			"layout:section" : "Filter",
 			"layout:width" : 160,
 
