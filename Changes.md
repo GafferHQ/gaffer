@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Cycles : Fixed bug introduced in 1.7.0.0 causing the environment texture of a rotated background light to lose its orientation when the light is modified during an interactive render.
+- Spreadsheet : Fixed cell editors not updating when their plugs are changed using `setPlug()` or `setPlugs()` (#4415).
 
 1.7.3.1 (relative to 1.7.3.0)
 =======
