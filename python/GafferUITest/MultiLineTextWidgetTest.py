@@ -143,6 +143,7 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 
 		w = GafferUI.MultiLineTextWidget()
 		self.assertEqual( w.getRole(), w.Role.Text )
+		self.assertEqual( GafferUI._Variant.fromVariant( w._qtWidget().property( "gafferRole" ) ), "Text" )
 
 		w.setRole( w.Role.Code )
 		self.assertEqual( w.getRole(), w.Role.Code )
