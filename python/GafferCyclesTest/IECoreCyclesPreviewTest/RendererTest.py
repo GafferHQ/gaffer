@@ -2810,6 +2810,123 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 		del light, plane
 
+	def testBackgroundLightEnvironmentTextureOrientation( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 320, 240 ),
+					"projection" : "perspective",
+					"fieldOfView" : 170,
+				}
+			)
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+		renderer.option( "cycles:background:transparent", IECore.BoolData( False ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testEnvironmentTexture",
+				}
+			)
+		)
+
+		def lightAttributes( exposure ) :
+
+			return renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"texture" : IECoreScene.Shader( "environment_texture", "cycles:shader", {
+							# Our texture has a green side, a red side, and a blue strip across the top.
+							"filename" : IECore.StringData( str( pathlib.Path( __file__ ).parent.parent / "images" / "background.exr" ) ),
+							# Reproduce the flip introduced by userDefault metadata in `startup/GafferCyclesUI/metadata.py`
+							"tex_mapping__scale" : IECore.V3fData( imath.V3f( -1, 1, 1 ) ),
+							"tex_mapping__y_mapping" : IECore.StringData( "z" ),
+							"tex_mapping__z_mapping" : IECore.StringData( "y" ),
+						} ),
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "exposure" : exposure } ),
+					},
+					connections = [
+						( ( "texture", "color" ), ( "output", "color" ) ),
+					],
+					output = "output",
+				),
+			} ) )
+
+		light = renderer.light( "/light", None, lightAttributes( 0.0 ) )
+		light.transform( imath.M44f() )
+
+		def assertGreen( handle, exposure ) :
+
+			# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+			self.assertEqualWithAbsError(
+				self.__colorAtUV( IECoreImage.ImageDisplayDriver.storedImage( handle ), imath.V2f( 0.55 ) ),
+				imath.Color4f( 0, pow( 2, exposure ), 0, 1 ), error = 0.01
+			)
+
+		def assertBlueTop( handle, exposure ) :
+
+			self.assertEqualWithAbsError(
+				self.__colorAtUV( IECoreImage.ImageDisplayDriver.storedImage( handle ), imath.V2f( 0.5, 0.05 ) ),
+				imath.Color4f( 0, 0, pow( 2, exposure ), 1 ), error = 0.01
+			)
+
+		renderer.render()
+
+		# We should begin viewing the green side of the environment texture, with blue at the top.
+		self.assertEventually( lambda : assertGreen( "testEnvironmentTexture", 0 ) )
+		self.assertEventually( lambda : assertBlueTop( "testEnvironmentTexture", 0 ) )
+
+		renderer.pause()
+
+		# Adjust light attributes and ensure we're still viewing the green side.
+		light.attributes( lightAttributes( 1.0 ) )
+
+		renderer.render()
+
+		self.assertEventually( lambda : assertGreen( "testEnvironmentTexture", 1 ) )
+		self.assertEventually( lambda : assertBlueTop( "testEnvironmentTexture", 1 ) )
+
+		renderer.pause()
+
+		# Rotate the light so we now see the red side of the environment texture.
+		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
+		def assertRed( handle, exposure ) :
+
+			# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+			self.assertEqualWithAbsError(
+				self.__colorAtUV( IECoreImage.ImageDisplayDriver.storedImage( handle ), imath.V2f( 0.55 ) ),
+				imath.Color4f( pow( 2, exposure ), 0, 0, 1 ), error = 0.01
+			)
+
+		renderer.render()
+
+		self.assertEventually( lambda : assertRed( "testEnvironmentTexture", 1 ) )
+		self.assertEventually( lambda : assertBlueTop( "testEnvironmentTexture", 1 ) )
+
+		renderer.pause()
+
+		# Adjust light attributes and ensure we're still viewing the red side of the light.
+		light.attributes( lightAttributes( 2.0 ) )
+
+		renderer.render()
+
+		self.assertEventually( lambda : assertRed( "testEnvironmentTexture", 2 ) )
+		self.assertEventually( lambda : assertBlueTop( "testEnvironmentTexture", 2 ) )
+
+		renderer.pause()
+		del light
+
 	def testVDB( self ) :
 
 		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
