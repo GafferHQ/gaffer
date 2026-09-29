@@ -21,7 +21,7 @@ Fixes
 - NodeEditor : Fixed unavailable context menus on connected checkboxes, switches and preset menus (#7105, #5722).
 - Spreadsheet : Fixed editability of preset menus for plugs with inputs. The menu items are now disabled, since the value can not be edited.
 - PlugLayout : Fixed flicker when the layout is first shown or contents of the layout changes, such as when the layout is filtered, plug visibility activators update, or when Viewer toolbars are first displayed.
-- Arnold : Fixed crash rendering a PointInstancer with a non-leaf prototype and no prototype indices.
+- Arnold, RenderMan : Fixed crash rendering a PointInstancer with a non-leaf prototype and no prototype indices.
 
 API
 ---

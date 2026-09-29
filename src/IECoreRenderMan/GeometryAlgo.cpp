@@ -392,6 +392,11 @@ void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, RtPrimV
 
 RtUString IECoreRenderMan::GeometryAlgo::convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &sampleTimes, RtPrimVarList &primVars, const std::string &messageContext )
 {
+	if( samples.empty() )
+	{
+		return RtUString();
+	}
+
 	Registry &r = registry();
 	auto it = r.find( samples.front()->typeId() );
 	if( it == r.end() )
