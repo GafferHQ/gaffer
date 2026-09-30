@@ -101,8 +101,8 @@ const std::string g_headerPrefix( "header:" );
 namespace IECoreCycles
 {
 
-OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, const IECore::CompoundDataMap &layers )
-	: m_displayWindow( displayWindow ), m_dataWindow( dataWindow )
+OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, const IECore::CompoundDataMap &layers, const ErrorFunction &errorFunction )
+	: m_displayWindow( displayWindow ), m_dataWindow( dataWindow ), m_errorFunction( errorFunction )
 {
 	const ccl::NodeEnum &typeEnum = *ccl::Pass::get_type_enum();
 	std::vector<std::string> channelNames;
@@ -200,6 +200,11 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 	for( Layer layer : m_layers )
 	{
 		std::unique_ptr<OIIO::ImageOutput> imageOutput( OIIO::ImageOutput::create( layer.path ) );
+		if( !imageOutput )
+		{
+			m_errorFunction( OIIO::geterror() );
+			return;
+		}
 
 		OIIO::ImageSpec spec( w, h, layer.numChannels, layer.typeDesc );
 		spec.channelnames.clear();
@@ -259,7 +264,7 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 
 		if( !imageOutput->open( layer.path, spec ) )
 		{
-			IECore::msg( IECore::Msg::Error, "OIIOOutputDriver:write_render_tile", "Failed to create image file." );
+			m_errorFunction( imageOutput->geterror() );
 			return;
 		}
 
@@ -273,7 +278,7 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 			{
 				if( !tile.get_pass_pixels( ccl::string_printf( "%s%02d", layer.name.c_str(), i ), 4, &pixels[0] ) )
 				{
-					IECore::msg( IECore::Msg::Error, "OIIOOutputDriver:write_render_tile", "Failed to read render pass pixels." );
+					m_errorFunction( "OIIOOutputDriver::write_render_tile : Failed to read render pass pixels." );
 					return;
 				}
 				outChannelOffset = interleave( &pixels[0], w, h, 4, layer.numChannels, outChannelOffset, &interleavedData[0] );
@@ -286,7 +291,7 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 			pixels.resize( w * h * layer.numChannels );
 			if( !tile.get_pass_pixels( layer.name, layer.numChannels, &pixels[0] ) )
 			{
-				IECore::msg( IECore::Msg::Error, "OIIOOutputDriver:write_render_tile", "Failed to read render pass pixels." );
+				m_errorFunction( "OIIOOutputDriver::write_render_tile : Failed to read render pass pixels." );
 				return;
 			}
 
@@ -305,9 +310,15 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 			imageData = &pixels[0];
 		}
 
-		imageOutput->write_image( OIIO::TypeDesc::FLOAT, imageData );
+		if( !imageOutput->write_image( OIIO::TypeDesc::FLOAT, imageData ) )
+		{
+			m_errorFunction( imageOutput->geterror() );
+		}
 
-		imageOutput->close();
+		if( !imageOutput->close() )
+		{
+			m_errorFunction( imageOutput->geterror() );
+		}
 	}
 }
 
