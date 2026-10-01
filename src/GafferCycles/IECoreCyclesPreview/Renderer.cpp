@@ -2528,6 +2528,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Free up caches, Cycles now owns the data.
 			resetCaches();
 			m_session->wait();
+			if( m_session->progress.get_error() )
+			{
+				throw IECore::Exception( m_session->progress.get_error_message() );
+			}
 			m_rendering = false;
 		}
 
@@ -3101,7 +3105,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, layersData->readable() ) );
+				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>(
+					displayWindow, dataWindow, layersData->readable(),
+					[progress = &m_session->progress] ( const std::string &error ) { progress->set_error( error ); }
+				) );
 				// In auto-tiled renders Cycles writes tiles to a temporary EXR in
 				// `SessionParams.temp_dir` and invokes this callback once all
 				// tiles are complete. The host is then responsible for telling the
