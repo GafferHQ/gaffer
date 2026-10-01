@@ -46,6 +46,9 @@ Gaffer will launch in a new window.
 > Note :
 > Gaffer requires the [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) to be installed on Windows. If you see errors related to missing `VCRUNTIME` files such as `VCRUNTIME140.dll`, the redestributable will need to be [downloaded](https://aka.ms/vs/17/release/vc_redist.x64.exe) and installed before Gaffer can be launched.
 
+> Caution :
+> Some NVIDIA drivers have a `Threaded Optimization` 3D Setting that can cause Gaffer's UI to become slow over time. It is recommended to disable `Threaded Optimization`. This can be found in the NVIDIA Control Panel's `Manage 3D Settings` pane.
+
 ## Launching in macOS ##
 
 To launch Gaffer for the first time in macOS:
