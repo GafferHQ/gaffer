@@ -142,7 +142,24 @@ class Button( GafferUI.Widget ) :
 
 		return self.__clickedSignal
 
+	## Controls clicking without disabling context menus.
+	def setClickable( self, clickable ) :
+
+		if clickable == self.getClickable() :
+			return
+
+		self._qtWidget().setProperty( "gafferUnclickable", not clickable )
+		self._qtWidget().setDown( False )
+		self._repolish()
+
+	def getClickable( self ) :
+
+		return not self._qtWidget().property( "gafferUnclickable" )
+
 	def __clicked( self, *unusedArgs ) : # currently PyQt passes a "checked" argument and PySide doesn't
+
+		if not self.getClickable() :
+			return
 
 		# workaround problem whereby not all text fields will have committed their contents
 		# into plugs when the button is pressed - this occurs particularly in the OpDialogue, and causes

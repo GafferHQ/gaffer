@@ -41,6 +41,9 @@ import IECore
 
 import GafferUI
 import GafferUITest
+import GafferTest
+
+from Qt import QtCore, QtGui, QtWidgets
 
 class ButtonTest( GafferUITest.TestCase ) :
 
@@ -86,6 +89,26 @@ class ButtonTest( GafferUITest.TestCase ) :
 
 		self.assertRaises( Exception, b.setText, 1 )
 		self.assertRaises( Exception, b.setImage, 1 )
+
+	def testClickable( self ) :
+
+		for buttonType in ( GafferUI.Button, GafferUI.MenuButton ) :
+			b = buttonType()
+			b.setEnabled( True )
+			clicks = GafferTest.CapturingSlot( b.clickedSignal() )
+			menus = GafferTest.CapturingSlot( b.contextMenuSignal() )
+			self.assertTrue( b.getClickable() )
+			b.setClickable( False )
+			b._qtWidget().click()
+			self.assertEqual( len( clicks ), 0 )
+			position = QtCore.QPoint( 0, 0 )
+			QtWidgets.QApplication.sendEvent(
+				b._qtWidget(), QtGui.QContextMenuEvent( QtGui.QContextMenuEvent.Mouse, position, b._qtWidget().mapToGlobal( position ) )
+			)
+			self.assertEqual( len( menus ), 1 )
+			b.setClickable( True )
+			b._qtWidget().click()
+			self.assertEqual( len( clicks ), 1 )
 
 	def testImageSize( self ) :
 

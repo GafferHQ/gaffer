@@ -119,7 +119,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromEditable( self ) :
 
-		self.__menuButton.setEnabled( self._editable() )
+		self.__menuButton.setClickable( self._editable() )
 
 	def __menuDefinition( self ) :
 
@@ -143,7 +143,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# Build menu. We'll list every preset we found, but disable
 		# any which aren't available for all plugs.
 		isCustom = self.__isCustom()
-		readOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for p in self.getPlugs() )
+		readOnly = not self._editable()
 		for preset in presets :
 
 			menuPath = preset if preset.startswith( "/" ) else "/" + preset
