@@ -73,7 +73,9 @@
 
 #include "fmt/format.h"
 
+#include <chrono>
 #include <filesystem>
+#include <thread>
 #include <tuple>
 #include <unordered_map>
 
@@ -1270,6 +1272,9 @@ IECore::InternedString g_dicingCameraOptionName( "cycles:dicing_camera" );
 // Cryptomatte
 IECore::InternedString g_cryptomatteDepthOptionName( "cycles:film:cryptomatte_depth");
 
+// Status reported by `ccl::Progress::get_status()` when the session is paused.
+const string g_renderPausedStatus( "Rendering Paused" );
+
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
 
 class CyclesRenderer final : public IECoreScenePreview::Renderer
@@ -1444,6 +1449,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			updateBackground();
 
 			{
+				/// \todo Now that `pause()` actually blocks until the session
+				/// thread is idle, we should be able to drop usage of `m_scene->mutex`
+				/// in `render()`.
 				std::lock_guard sceneLock( m_scene->mutex );
 				const std::string cameraName = optionValue<string>( g_cameraOptionName, "" );
 				updateCamera( cameraName, m_scene->camera );
@@ -1490,10 +1498,58 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		void pause() override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-			if( m_rendering )
+			if( !m_rendering || m_renderType != Interactive )
 			{
-				m_session->set_pause( true );
+				return;
 			}
+
+			// This requests an eventual pause, but doesn't block until the render
+			// has actually paused. It also doesn't cancel any in-flight work.
+			m_session->set_pause( true );
+			// Resetting the session _does_ cancel the in-flight work, so we use that
+			// to get to the paused state faster. This does mean that resuming without
+			// making an edit will restart from sample 0, but that's less important than
+			// a responsive pause.
+			m_session->reset( m_session->params, m_bufferParams );
+			// Wait for the session to actually pause (or cancel due to an error).
+			// This could take a while, so report a warning every 10 seconds we wait.
+			const auto startTime = std::chrono::steady_clock::now();
+			auto nextWarningTime = startTime + std::chrono::seconds( 10 );
+			string status, subStatus;
+			while( true )
+			{
+				m_session->progress.get_status( status, subStatus );
+				if( status == g_renderPausedStatus || m_session->progress.get_cancel() )
+				{
+					break;
+				}
+
+				const auto now = std::chrono::steady_clock::now();
+				if( now >= nextWarningTime )
+				{
+					IECore::msg(
+						IECore::Msg::Warning, "CyclesRenderer::pause",
+						"Still waiting for Cycles to pause after {} seconds (status \"{}\")",
+						std::chrono::duration_cast<std::chrono::seconds>( now - startTime ).count(), status
+					);
+					nextWarningTime += std::chrono::seconds( 10 );
+				}
+
+				std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
+			}
+
+			if( m_session->progress.get_cancel() )
+			{
+				// The session thread won't pause but will exit the
+				// render loop instead. Wait for it to finish in case
+				// it accesses the scene as it winds down.
+				m_session->wait();
+			}
+
+			// Finally, we can be sure that the session thread won't access the
+			// scene, and we can make edits. We still use `m_scene->mutex`, but
+			// that is to synchronise our own multithreaded edits, _not_ to
+			// protect against concurrent access with Cycles itself.
 		}
 
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
@@ -2037,14 +2093,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				layersData->writable()[name] = layer;
 			}
 
-			// When we reset the session, it cancels the internal PathTrace and
-			// waits for it to finish. We need to do this _before_ calling
-			// `set_output_driver()`, because otherwise the rendering threads
-			// may try to send data to an output driver that was just destroyed
-			// on the main thread.
-			/// \todo `Renderer::pause()` really shouldn't return until after
-			/// the PathTrace has been cancelled, so we shouldn't need to worry
-			/// about that here.
+			/// \todo Moving this here was a workaround to avoid pixels being sent to a
+			/// just-deleted output driver. Now `pause()` actually waits for rendering
+			/// to finish, we should be able to move it back to the end of this function.
 			m_session->reset( m_session->params, m_bufferParams );
 
 			film->set_cryptomatte_passes( crypto );
