@@ -143,6 +143,9 @@ class MenuButton( GafferUI.Button ) :
 		if event.button != event.Buttons.Left or self.__menu is None :
 			return False
 
+		if not self.getClickable() :
+			return True
+
 		if self.__immediateAction() is not None :
 			# Only one item, that we want to trigger immediately. Do nothing
 			# now, so we can trigger it directly in `__clicked()` (like a

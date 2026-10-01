@@ -116,7 +116,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromEditable( self ) :
 
-		self.__boolWidget.setEnabled( self._editable( canEditAnimation = True ) )
+		self.__boolWidget.setEditable( self._editable( canEditAnimation = True ) )
 
 	def __stateChanged( self, widget ) :
 
