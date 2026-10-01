@@ -3358,3 +3358,14 @@ class RendererTest( GafferTest.TestCase ) :
 						untiledImage = image
 					else :
 						self.assertFalse( OpenImageIO.ImageBufAlgo.compare( image, untiledImage, failthresh = 0, warnthresh = 0 ).error )
+
+	def testRenderRaisesOnError( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+		renderer.output( "test", IECoreScene.Output( "test", "exr", "rgba", {} ) )
+
+		with self.assertRaisesRegex( RuntimeError, 'OpenImageIO could not find a format writer for "test".' ) :
+			with IECore.CapturingMessageHandler() as mh :
+				renderer.render()
+
+		self.ignoreMessage( IECore.Msg.Level.Error, "Cycles", """OpenImageIO could not find a format writer for "test". Is it a file format that OpenImageIO doesn't know about?""" )
