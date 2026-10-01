@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.7.x.x)
 =======
 
+Improvements
+------------
+
+- BoolPlug : Added support for connections from array-valued plugs such as StringVectorDataPlug. The BoolPlug's value is true when the input array is non-empty, and false when the input array is empty.
+
 Breaking Changes
 ----------------
 

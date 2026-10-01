@@ -279,6 +279,41 @@ class TypedPlugTest( GafferTest.TestCase ) :
 			c["test"] = ""
 			self.assertEqual( n["sum"].getValue(), 0 )
 
+	def testBoolPlugArrayConnections( self ) :
+
+		boolPlug = Gaffer.BoolPlug()
+
+		for plugType in (
+			Gaffer.BoolVectorDataPlug,
+			Gaffer.IntVectorDataPlug,
+			Gaffer.Int64VectorDataPlug,
+			Gaffer.FloatVectorDataPlug,
+			Gaffer.StringVectorDataPlug,
+			Gaffer.InternedStringVectorDataPlug,
+			Gaffer.V2iVectorDataPlug,
+			Gaffer.V3iVectorDataPlug,
+			Gaffer.V2fVectorDataPlug,
+			Gaffer.V3fVectorDataPlug,
+			Gaffer.Color3fVectorDataPlug,
+			Gaffer.Color4fVectorDataPlug,
+			Gaffer.M44fVectorDataPlug,
+			Gaffer.M33fVectorDataPlug,
+			Gaffer.Box2fVectorDataPlug,
+		) :
+
+			with self.subTest( plugType = plugType ) :
+
+				plug = plugType()
+				self.assertTrue( boolPlug.acceptsInput( plug ) )
+
+				boolPlug.setInput( plug )
+				self.assertEqual( boolPlug.getValue(), False )
+
+				value = plug.getValue()
+				value.resize( 1 )
+				plug.setValue( value )
+				self.assertEqual( boolPlug.getValue(), True )
+
 	def testValueType( self ) :
 
 		self.assertIs( Gaffer.BoolPlug.ValueType, bool )
