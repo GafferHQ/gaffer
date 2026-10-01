@@ -1,6 +1,13 @@
 1.7.x.x (relative to 1.7.3.1)
 =======
 
+Improvements
+------------
+
+- LightEditor : Added hierarchy filter.
+- LightEditor, RenderPassEditor, AttributeEditor : Added column filter. When enabled, only columns matching the search text are shown.
+- LightEditor, RenderPassEditor : Added `All` section, which shows the columns from every section at once.
+
 Fixes
 -----
 
@@ -15,6 +22,11 @@ API
 
 - BoolWidget : Added `setEditable()` and `getEditable()` methods.
 - Button : Added `setClickable()` and `getClickable()` methods, also available on MenuButton.
+
+API
+---
+
+- SceneEditor : Added `_acquireColumnFilterPlug()` method and `_columnFilterMatch()` static method.
 
 1.7.3.1 (relative to 1.7.3.0)
 =======

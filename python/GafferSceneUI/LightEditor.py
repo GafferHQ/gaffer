@@ -57,7 +57,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		def __init__( self ) :
 
-			GafferSceneUI.SceneEditor.Settings.__init__( self )
+			GafferSceneUI.SceneEditor.Settings.__init__( self, withHierarchyFilter = True )
 
 			self["attribute"] = Gaffer.StringPlug( defaultValue = "light" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "" )
@@ -70,8 +70,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self["__isolate"]["in"].setInput( self["__adaptedIn"] )
 			self["__isolate"]["filter"].setInput( self["__setFilter"]["out"] )
 
-			self["__filteredIn"] = GafferScene.ScenePlug()
-			self["__filteredIn"].setInput( self["__isolate"]["out"] )
+			self["__hierarchyFilter"]["in"].setInput( self["__isolate"]["out"] )
 
 	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::LightEditor::Settings" )
 
@@ -105,6 +104,12 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				self.settings(),
 				orientation = GafferUI.ListContainer.Orientation.Horizontal,
 				rootSection = "Settings"
+			)
+
+			GafferUI.PlugLayout(
+				self.settings(),
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				rootSection = "Filter"
 			)
 
 			self.__pathListing = GafferUI.PathListingWidget(
@@ -256,7 +261,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug in ( self.settings()["section"], self.settings()["attribute"] ) :
+		if plug in ( self.settings()["section"], self.settings()["attribute"] ) or Gaffer.Metadata.value( plug, "columnFilter:sectionName" ) == self.settings()["section"].getValue() :
 			self.__updateColumns()
 
 	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
@@ -269,13 +274,21 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		attribute = self.settings()["attribute"].getValue()
 		currentSection = self.settings()["section"].getValue()
+		rootPath = self.__pathListing.getPath()
+		pattern = self._acquireColumnFilterPlug( currentSection ).getValue()
 
 		sectionColumns = []
 
 		for rendererKey, sections in self.__columnRegistry.items() :
-			if IECore.StringAlgo.match( attribute, rendererKey ) :
-				section = sections.get( currentSection or None, {} )
-				sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
+			if not IECore.StringAlgo.match( attribute, rendererKey ) :
+				continue
+
+			matchingSections = sections.values() if currentSection == "All" and not sections.get( "All" ) else [ sections.get( currentSection or None, {} ) ]
+			for section in matchingSections :
+				for columnCreator in section.values() :
+					column = self.__acquireColumn( columnCreator, currentSection )
+					if self._columnFilterMatch( pattern, column.headerData( rootPath ).value ) :
+						sectionColumns.append( column )
 
 		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
 
@@ -364,7 +377,7 @@ Gaffer.Metadata.registerNode(
 	# want to add space around, in the same way we use `divider` to add a divider?
 	"layout:customWidget:spacer:widgetType", "GafferSceneUI.LightEditor._Spacer",
 	"layout:customWidget:spacer:section", "Settings",
-	"layout:customWidget:spacer:index", 3,
+	"layout:customWidget:spacer:index", 5,
 
 	plugs = {
 
@@ -384,6 +397,13 @@ Gaffer.Metadata.registerNode(
 		"section" : {
 
 			"plugValueWidget:type" : "GafferSceneUI.LightEditor._SectionPlugValueWidget",
+
+		},
+
+		"setFilter" : {
+
+			"setFilterPlugValueWidget:excludedSetNames" : IECore.StringVectorData( [ "__cameras", "__coordinateSystems" ] ),
+			"layout:divider" : True,
 
 		},
 
@@ -452,10 +472,15 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			attribute = self.getPlug().node()["attribute"].getValue()
 
+			sectionNames = set()
 			for rendererKey, sections in LightEditor._LightEditor__columnRegistry.items() :
 				if IECore.StringAlgo.match( attribute, rendererKey ) :
 					for section in sections.keys() :
 						self._qtWidget().addTab( section or "Main" )
+					sectionNames.update( sections.keys() )
+
+			if "All" not in sectionNames and len( sectionNames ) > 1 :
+				self._qtWidget().addTab( "All" )
 		finally :
 			self.__ignoreCurrentChanged = False
 
