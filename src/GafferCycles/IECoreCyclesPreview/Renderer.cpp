@@ -1448,26 +1448,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			updateOptions();
 			updateBackground();
 
-			{
-				/// \todo Now that `pause()` actually blocks until the session
-				/// thread is idle, we should be able to drop usage of `m_scene->mutex`
-				/// in `render()`.
-				std::lock_guard sceneLock( m_scene->mutex );
-				const std::string cameraName = optionValue<string>( g_cameraOptionName, "" );
-				updateCamera( cameraName, m_scene->camera );
-				updateCamera( optionValue<string>( g_dicingCameraOptionName, cameraName ), m_scene->dicing_camera );
-			}
+			const std::string cameraName = optionValue<string>( g_cameraOptionName, "" );
+			updateCamera( cameraName, m_scene->camera );
+			updateCamera( optionValue<string>( g_dicingCameraOptionName, cameraName ), m_scene->dicing_camera );
 
 			updateOutputs();
 			warnForUnusedOptions();
 
-			if( m_rendering )
+			if( m_rendering && m_scene->need_reset() )
 			{
-				std::lock_guard sceneLock( m_scene->mutex );
-				if( m_scene->need_reset() )
-				{
-					m_session->reset( m_session->params, m_bufferParams );
-				}
+				m_session->reset( m_session->params, m_bufferParams );
 			}
 
 			if( m_rendering )
@@ -1705,8 +1695,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return;
 			}
 
-			std::unique_lock sceneLock( m_scene->mutex );
-
 			// Options that map directly to sockets.
 
 			for( auto &[name, option] : m_options )
@@ -1768,11 +1756,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( it->second.value.get(), "option", g_backgroundShaderOptionName ) )
 					{
-						// Need to release scene mutex temporarily, so that
-						// `ShaderCache::get()` can acquire it.
-						sceneLock.unlock();
 						m_backgroundShader = m_shaderCache->get( d );
-						sceneLock.lock();
 					}
 				}
 
@@ -1838,8 +1822,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// This function is separate because background lights can be
 			// modified without setting `m_optionsChanged`.
 
-			std::lock_guard sceneLock( m_scene->mutex );
-
 			if( !m_backgroundShader )
 			{
 				/// \todo Figure out how we can avoid repeating this check for
@@ -1877,8 +1859,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOutputs()
 		{
-			std::lock_guard sceneLock( m_scene->mutex );
-
 			ccl::Camera *camera = m_scene->camera;
 			int width = camera->get_full_width();
 			int height = camera->get_full_height();
@@ -2093,11 +2073,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				layersData->writable()[name] = layer;
 			}
 
-			/// \todo Moving this here was a workaround to avoid pixels being sent to a
-			/// just-deleted output driver. Now `pause()` actually waits for rendering
-			/// to finish, we should be able to move it back to the end of this function.
-			m_session->reset( m_session->params, m_bufferParams );
-
 			film->set_cryptomatte_passes( crypto );
 			film->set_use_approximate_shadow_catcher( !hasShadowCatcher );
 			m_scene->integrator->set_use_denoise( hasDenoise );
@@ -2124,6 +2099,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				};
 			}
 
+			m_session->reset( m_session->params, m_bufferParams );
 			m_outputsChanged = false;
 		}
 
