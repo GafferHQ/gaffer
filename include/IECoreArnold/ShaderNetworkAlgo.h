@@ -113,6 +113,9 @@ IECOREARNOLD_API void hashSubstitutions( const IECoreScene::ShaderNetwork *shade
 /// \deprecated Use `IECoreScene::ShaderNetworkAlgo::applyRenderAdaptors()` instead.
 IECOREARNOLD_API void applySubstitutions( IECoreScene::ShaderNetwork *shaderNetwork, IECore::InternedString attributeName, const IECore::CompoundObject *attributes );
 
+/// Returns a modified set of attributes conforming to the USDMeshLight specification.
+IECOREARNOLD_API IECore::ConstCompoundObjectPtr convertUSDMeshLightAttributes( const IECore::CompoundObject *attributes );
+
 } // namespace ShaderNetworkAlgo
 
 } // namespace IECoreArnold

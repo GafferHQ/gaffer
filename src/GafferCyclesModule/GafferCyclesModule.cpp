@@ -54,6 +54,18 @@ using namespace GafferBindings;
 using namespace GafferDispatchBindings;
 using namespace GafferCycles;
 
+namespace
+{
+
+IECore::CompoundObjectPtr convertUSDMeshLightAttributesWrapper( const IECore::CompoundObject &attributes, bool copy )
+{
+	IECorePython::ScopedGILRelease r;
+	IECore::ConstCompoundObjectPtr result = IECoreCycles::ShaderNetworkAlgo::convertUSDMeshLightAttributes( &attributes );
+	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundObject>( result );
+}
+
+}  // namespace
+
 BOOST_PYTHON_MODULE( _GafferCycles )
 {
 
@@ -88,6 +100,7 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 		scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
 
 		def( "convertUSDShaders", &IECoreCycles::ShaderNetworkAlgo::convertUSDShaders );
+		def( "convertUSDMeshLightAttributes", &convertUSDMeshLightAttributesWrapper, ( arg_( "_copy" ) = true ) );
 	}
 
 }
