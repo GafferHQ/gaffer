@@ -35,7 +35,6 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 
 import GafferScene
 
@@ -102,7 +101,21 @@ Gaffer.Metadata.registerNode(
 			The transform to be applied.
 			""",
 
-		}
+		},
+
+		"extraTransform" : {
+
+			"description" :
+			"""
+			An additional transform to be applied after the main `transform`.
+			This is specified as a 4x4 matrix rather than separate translate,
+			rotate and scale, which makes it particularly useful when generating
+			the transform using an expression.
+			""",
+
+			"layout:section" : "Extra",
+
+		},
 
 	}
 

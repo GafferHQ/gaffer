@@ -52,6 +52,7 @@ Transform::Transform( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "space", Plug::In, Local, Local, ResetWorld ) );
 	addChild( new TransformPlug( "transform" ) );
+	addChild( new M44fPlug( "extraTransform" ) );
 
 	// Fast pass-throughs for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -82,11 +83,21 @@ const Gaffer::TransformPlug *Transform::transformPlug() const
 	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::M44fPlug *Transform::extraTransformPlug()
+{
+	return getChild<Gaffer::M44fPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::M44fPlug *Transform::extraTransformPlug() const
+{
+	return getChild<Gaffer::M44fPlug>( g_firstPlugIndex + 2 );
+}
+
 void Transform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == spacePlug() || transformPlug()->isAncestorOf( input ) )
+	if( input == spacePlug() || transformPlug()->isAncestorOf( input ) || input == extraTransformPlug() )
 	{
 		outputs.push_back( outPlug()->transformPlug() );
 		outputs.push_back( outPlug()->boundPlug() );
@@ -103,6 +114,7 @@ void Transform::hashProcessedTransform( const ScenePath &path, const Gaffer::Con
 	const Space space = static_cast<Space>( spacePlug()->getValue() );
 	h.append( space );
 	transformPlug()->hash( h );
+	extraTransformPlug()->hash( h );
 
 	switch( space )
 	{
@@ -125,7 +137,7 @@ void Transform::hashProcessedTransform( const ScenePath &path, const Gaffer::Con
 Imath::M44f Transform::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
 	const Space space = static_cast<Space>( spacePlug()->getValue() );
-	const Imath::M44f matrix = transformPlug()->matrix();
+	const Imath::M44f matrix = transformPlug()->matrix() * extraTransformPlug()->getValue();
 
 	switch( space )
 	{

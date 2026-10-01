@@ -68,6 +68,9 @@ class GAFFERSCENE_API Transform : public SceneElementProcessor
 		Gaffer::TransformPlug *transformPlug();
 		const Gaffer::TransformPlug *transformPlug() const;
 
+		Gaffer::M44fPlug *extraTransformPlug();
+		const Gaffer::M44fPlug *extraTransformPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

@@ -387,3 +387,26 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( t["out"] )
 		self.assertEqual( t["out"].bound( "/" ), imath.Box3f( imath.V3f( 0.5 ), imath.V3f( 1.5 ) ) )
+
+	def testExtraTransform( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		transform = GafferScene.Transform()
+		transform["in"].setInput( sphere["out"] )
+		transform["filter"].setInput( sphereFilter["out"] )
+		transform["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+		transform["extraTransform"].setValue( imath.M44f().scale( imath.V3f( 1, 1, -1 ) ) )
+
+		self.assertSceneValid( transform["out"] )
+		self.assertEqual(
+			transform["out"].transform( "/sphere" ),
+			transform["transform"].matrix() * transform["extraTransform"].getValue()
+		)
+		self.assertEqual(
+			imath.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
+			imath.V3f( 1, 2, -3 )
+		)
