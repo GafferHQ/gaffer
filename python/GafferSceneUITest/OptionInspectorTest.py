@@ -44,6 +44,7 @@ import GafferSceneUI
 
 class OptionInspectorTest( GafferUITest.TestCase ) :
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testName( self ) :
 
 		plane = GafferScene.Plane()
@@ -100,6 +101,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			self.assertEqual( result.nonEditableReason(), nonEditableReason )
 			self.assertRaises( RuntimeError, result.acquireEdit )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testValue( self ) :
 
 		options = GafferScene.StandardOptions()
@@ -111,6 +113,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			"/customCamera"
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceAndEdits( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -317,6 +320,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "editScope2.OptionEdits is locked."
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisabledTweaks( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -350,11 +354,19 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			edit = s["options"]["options"]["render:camera"]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonExistentOption( self ) :
 
 		plane = GafferScene.Plane()
-		self.assertIsNone( self.__inspect( plane["out"], "not:an:option" ) )
 
+		self.__assertExpectedResult(
+			self.__inspect( plane["out"], "not:an:option" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+			editable = False, nonEditableReason = "No value to edit."
+		)
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDirtiedSignal( self ) :
 
 		camera = GafferScene.Camera()
@@ -397,6 +409,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		settings["editScope"].setInput( None )
 		self.assertEqual( len( cs ), 4 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testReadOnlyMetadataSignalling( self ) :
 
 		options = GafferScene.StandardOptions()
@@ -425,6 +438,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
 		self.assertEqual( len( cs ), 2 )  # Change affects the result of `inspect().editable()`
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testRegisteredOption( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -467,6 +481,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			edit = edit
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testRenderPassValues( self ) :
 
 		options = GafferScene.StandardOptions()
@@ -511,6 +526,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 				"/defaultCamera"
 			)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testRenderPassSourceAndEdits( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -732,6 +748,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 				nonEditableReason = "editScope2.RenderPassOptionEdits is locked."
 			)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testMultipleRenderPassOptionEdits( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -829,6 +846,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 				with self.subTest( renderPass = renderPass, option = option ) :
 					assertRenderPassEditResults( renderPass, option )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDefaultValueMetadata( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -840,9 +858,14 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		s["editScope"]["in"].setInput( s["customOptions"]["out"] )
 
 		# Inspecting the "test:enabled" option without an active EditScope
-		# returns `None` as we have no upstream nodes capable of editing it.
+		# results in  `SourceType.None_` as we have no upstream nodes capable of editing it.
 
-		self.assertIsNone( self.__inspect( s["editScope"]["out"], "test:enabled" ) )
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope"]["out"], "test:enabled" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+			editable = False, nonEditableReason = "No value to edit."
+		)
 
 		# Providing an EditScope does not allow an edit as the option does not
 		# exist and we don't have a default value to base the edit on
@@ -859,7 +882,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.addCleanup( Gaffer.Metadata.deregisterValue, "option:test:enabled", "defaultValue" )
 		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		self.assertEqual( inspection.value(), IECore.BoolData( 1 ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
 		# If the option does exist, then its value is returned as normal
@@ -876,7 +899,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		optionPlug["enabled"].setValue( False )
 		inspection = self.__inspect( s["editScope"]["out"], "test:enabled", s["editScope"] )
 		self.assertEqual( inspection.value(), IECore.BoolData( 1 ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
 		# Updates to "defaultValue" are reflected in new inspections
@@ -908,6 +931,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			edit = edit
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testAcquireEditCreateIfNecessary( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -934,6 +958,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.assertIsNotNone( edit )
 		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisableEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -973,7 +998,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "render:camera", None )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "No editable source found in history." )
+		self.assertEqual( inspection.nonDisableableReason(), "No value to edit." )
 
 		cameraEdit = GafferScene.EditScopeAlgo.acquireOptionEdit(
 			s["editScope1"], "render:camera", createIfNecessary = True
@@ -1008,6 +1033,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		inspection.disableEdit()
 		self.assertFalse( cameraEdit["enabled"].getValue() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testCanEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1041,6 +1067,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		assertCanEdit( inspection, IECore.FloatData( 123.0 ), "Data of type \"FloatData\" is not compatible." )
 		assertCanEdit( inspection, IECore.IntData( 123 ), "Data of type \"IntData\" is not compatible." )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1104,6 +1131,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( acquiredEdit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( acquiredEdit["value"].getValue(), "/existingCamera" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testExternalSourceType( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1136,6 +1164,7 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "{} is external to the script.".format( externalOptionTweaks.fullName() )
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceForCreateIfMissingTweaks( self ) :
 
 		s = Gaffer.ScriptNode()
