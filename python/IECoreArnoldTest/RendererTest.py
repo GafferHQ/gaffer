@@ -36,6 +36,7 @@
 
 import ctypes
 import json
+import math
 import os
 import pathlib
 import random
@@ -5325,6 +5326,93 @@ class RendererTest( GafferTest.TestCase ) :
 			expectedColor = imath.Color4f( 0.25, 1, 0.5, 1 )
 
 		)
+
+	@unittest.skipIf( [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 5, 2 ], "Not supported by earlier Arnold versions" )
+	def testGaussianSplats( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		splat = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 1.0 ), imath.V3f( 2.0 ) ] ) )
+		splat["type"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.StringData( "gaussianSplat" ) )
+		splat["scales"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData( [ imath.V3f( 1.0 ), imath.V3f( 2.0 ) ] ) )
+		splat["opacities"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.FloatVectorData( [ 0.5, 0.75 ] ) )
+		quat1 = imath.Quatf()
+		quat1.setRotation( imath.V3f( 1.0, 2.0, 3.0 ).normalized(), imath.V3f( -1.0, -2.0, -3.0 ).normalized() )
+		quat2 = imath.Quatf()
+		quat2.setRotation( imath.V3f( 4.0, 5.0, 6.0 ).normalized(), imath.V3f( -4.0, -5.0, -6.0 ).normalized() )
+		splat["orientations"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.QuatfVectorData( [ quat1, quat2 ] ) )
+		splat["radiance:colorSpace"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.StringData( "ACEScg" ) )
+		splat["radiance:sphericalHarmonicsDegree"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.IntData( 3 ) )
+		for i in range( 0, 16 ) :
+			splat[f"radiance:sphericalHarmonicsCoefficients:{i}"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.V3fVectorData( [ imath.V3f( ( i + 1 ) * 2 ), imath.V3f( ( i + 1 ) * 2 + 1 ) ] ) )
+		splat["user:testFloat"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.FloatVectorData( [ 0.125, 0.25 ] ) )
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			r.object( "/splats", splat, r.attributes( IECore.CompoundObject() ) )
+
+			r.render()
+			del r
+
+			self.assertEqual( len( mh.messages ), 0 )
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
+			points = [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "points" ]
+
+			self.assertEqual( len( points ), 1 )
+
+			splats = points[0]
+
+			p = arnold.AiNodeGetArray( splats, "points" )
+			self.assertEqual( arnold.AiArrayGetVec( p, 0 ), arnold.AtVector( 1.0, 1.0, 1.0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( p, 1 ), arnold.AtVector( 2.0, 2.0, 2.0 ) )
+
+			self.assertEqual( arnold.AiNodeGetStr( splats, "mode" ), "gaussian" )
+
+			scales = arnold.AiNodeGetArray( splats, "gs_scale" )
+			self.assertEqual( arnold.AiArrayGetVec( scales, 0 ), arnold.AtVector( 1.0, 1.0, 1.0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( scales, 1 ), arnold.AtVector( 2.0, 2.0, 2.0 ) )
+
+			opacities = arnold.AiNodeGetArray( splats, "gs_opacity" )
+			self.assertEqual( arnold.AiArrayGetFlt( opacities, 0 ), 0.5 )
+			self.assertEqual( arnold.AiArrayGetFlt( opacities, 1 ), 0.75 )
+
+			def assertQuaternionEqual( floatArray, pointIndex, quat ) :
+				self.assertEqual( arnold.AiArrayGetFlt( floatArray, pointIndex * 4 ), quat.v().x )
+				self.assertEqual( arnold.AiArrayGetFlt( floatArray, pointIndex * 4 + 1 ), quat.v().y )
+				self.assertEqual( arnold.AiArrayGetFlt( floatArray, pointIndex * 4 + 2 ), quat.v().z )
+				self.assertEqual( arnold.AiArrayGetFlt( floatArray, pointIndex * 4 + 3 ), quat.r() )
+
+			orientations = arnold.AiNodeGetArray( splats, "gs_rotation" )
+			assertQuaternionEqual( orientations, 0, quat1 )
+			assertQuaternionEqual( orientations, 1, quat2 )
+
+			self.assertEqual( arnold.AiNodeGetStr( splats, "gs_input_color_space" ), "ACEScg" )
+
+			# Cortex takes the USD standard and stores the first coefficient as a raw value.
+			# Arnold needs it to be normalized.
+			C0 = 1.0 / ( 2.0 * math.sqrt( math.pi ) )
+			def normalizedCoefficient( i, c ) :
+				return c * C0 + 0.5 if i == 0 else c
+
+			coefficients = arnold.AiNodeGetArray( splats, "gs_sh" )
+			p1Coefficients = [ normalizedCoefficient( i, arnold.AtRGB( ( i + 1 ) * 2 ) ) for i in range( 0, 16 ) ]
+			p2Coefficients = [ normalizedCoefficient( i, arnold.AtRGB( ( i + 1 ) * 2 + 1 ) ) for i in range( 0, 16 ) ]
+			targetCoefficients = p1Coefficients + p2Coefficients
+			for i in range( 0, len( targetCoefficients ) ) :
+				self.assertEqual( arnold.AiArrayGetRGB( coefficients, i ), targetCoefficients[i] )
+
+			userFloat = arnold.AiNodeGetArray( splats, "user:testFloat" )
+			self.assertEqual( arnold.AiArrayGetFlt( userFloat, 0 ), 0.125 )
+			self.assertEqual( arnold.AiArrayGetFlt( userFloat, 1 ), 0.25 )
 
 	def __testComponentConnections( self, network, expectedColor ) :
 
