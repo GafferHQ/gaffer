@@ -34,14 +34,14 @@
 #
 ##########################################################################
 
-import functools
-
 import IECore
 
 import Gaffer
 import GafferTest
 import GafferUI
 import GafferUITest
+
+from Qt import QtWidgets
 
 class PlugLayoutTest( GafferUITest.TestCase ) :
 
@@ -544,3 +544,69 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 		self.assertIs( l.plugValueWidget( n["b"] ), b )
 		self.assertTrue( l.isAncestorOf( b ) )
+
+	def testPlugValueWidgetGeometryFlicker( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.V3fPlug()
+		n["b"] = Gaffer.Color4fPlug()
+
+		with GafferUI.Window() as w :
+			frame = GafferUI.Frame()
+
+		w._qtWidget().resize( 400, 300 )
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		l = GafferUI.PlugLayout( n )
+		frame.setChild( l )
+		self.assertTrue( l.visible() )
+
+		def plugValueWidgetGeometries() :
+
+			return { plug.fullName() : l.plugValueWidget( plug )._qtWidget().geometry() for plug in n.children() }
+
+		geometries = plugValueWidgetGeometries()
+
+		self.waitForIdle( 1000 )
+
+		# The geometries shouldn't have updated twice in quick
+		# succession, as this would appear as flicker in the UI.
+
+		self.assertEqual( geometries, plugValueWidgetGeometries() )
+
+	def testVisibilityActivatorFlicker( self ) :
+
+		n = Gaffer.Node()
+		n["show"] = Gaffer.BoolPlug()
+		n["a"] = Gaffer.V3fPlug()
+		n["b"] = Gaffer.Color4fPlug()
+
+		Gaffer.Metadata.registerValue( n, "layout:activator:showIsOn", "parent['show'].getValue()" )
+		Gaffer.Metadata.registerValue( n["b"], "layout:visibilityActivator", "showIsOn" )
+
+		with GafferUI.Window() as w :
+			l = GafferUI.PlugLayout( n )
+
+		w._qtWidget().resize( 400, 300 )
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		self.assertFalse( l.plugValueWidget( n["b"] ).visible() )
+
+		n["show"].setValue( True )
+
+		self.assertTrue( l.plugValueWidget( n["b"] ).visible() )
+
+		def childGeometries( widget ) :
+
+			return { x : x.geometry() for x in widget._qtWidget().findChildren( QtWidgets.QWidget ) }
+
+		geometries = childGeometries( w )
+
+		self.waitForIdle( 1000 )
+
+		# The geometries shouldn't have updated twice in quick
+		# succession, as this would appear as flicker in the UI.
+
+		self.assertEqual( geometries, childGeometries( w ) )
