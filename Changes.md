@@ -7,6 +7,9 @@ Fixes
 - Cycles :
   - Fixed bug introduced in 1.7.0.0 causing the environment texture of a rotated background light to lose its orientation when the light is modified during an interactive render.
   - Fixed handling of batch render errors. These now correctly cause `gaffer execute` to return an error status.
+  - Fixed rendering of identical instances with different shaders in batch renders. This also improves the situation in interactive renders substantially, but incorrect shading is still possible when reassigning shaders.
+  - Fixed interactive displacement edits.
+  - Fixed interactive rendering crashes and errors caused by scene edits being made before the render has paused.
 - NodeEditor : Fixed unavailable context menus on connected checkboxes, switches and preset menus (#7105, #5722).
 - Spreadsheet : Fixed editability of preset menus for plugs with inputs. The menu items are now disabled, since the value can not be edited.
 
@@ -18,6 +21,11 @@ API
 
 1.7.3.1 (relative to 1.7.3.0)
 =======
+
+Improvements
+------------
+
+- Cycles : Added support for rendering PointInstancers.
 
 Fixes
 -----

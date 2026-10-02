@@ -131,6 +131,54 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane
 
+	def testInstancesWithDifferentShaders( self ) :
+
+		renderer = self.createRenderer()
+
+		fileName = self.temporaryDirectory() / "test.exr"
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				str( fileName ),
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		meshPrimitive = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+		)
+
+		for name, colour, translation in [
+			( "plane1", imath.Color3f( 1, 0, 0 ), imath.V3f( -1, 0, -1 ) ),
+			( "plane2", imath.Color3f( 0, 1, 0 ), imath.V3f( 1, 0, -1 ) ),
+		] :
+
+			plane = renderer.object(
+				name, meshPrimitive,
+				renderer.attributes( IECore.CompoundObject ( {
+					"cycles:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader( "emission", "cycles:surface", { "strength" : 1, "color" : colour } ),
+						},
+						output = "output",
+					)
+				} ) )
+			)
+			plane.transform( imath.M44f().translate( translation ) )
+			del plane
+
+		renderer.render()
+
+		image = OpenImageIO.ImageBuf( str( fileName ) )
+
+		plane1Color = self.__colorAtUV( image, imath.V2f( 0.25, 0.5 ) )
+		self.assertEqualWithAbsError( plane1Color, imath.Color4f( 1, 0, 0, 1 ), error = 0.01 )
+
+		plane2Color = self.__colorAtUV( image, imath.V2f( 0.75, 0.5 ) )
+		self.assertEqualWithAbsError( plane2Color, imath.Color4f( 0, 1, 0, 1 ), error = 0.01 )
+
 	def testQuadLightColorTexture( self ) :
 
 		renderer = self.createRenderer()
@@ -917,6 +965,55 @@ class RendererTest( GafferTest.TestCase ) :
 
 		color = self.__colorAtUV( image, imath.V2f( 0.5 ) )
 		self.assertEqualWithAbsError( imath.Color3f( color.r, color.g, color.b ), points["N"].data[0].normalize(), 0.0001 )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerWithEmptyPrototype( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		attributes = renderer.attributes( IECore.CompoundObject() )
+
+		prototype = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[], [], attributes
+		)
+
+		# We're just happy if this doesn't crash - no need to assert anything.
+		renderer.pointInstancer( "test", [ pointInstancer ], [ 0.0 ], [ prototype ], attributes )
+		renderer.render()
+
+		del attributes
+		del renderer
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerWithMissingPrototypeIndices( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+
+		attributes = renderer.attributes( IECore.CompoundObject() )
+
+		prototype = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[ IECoreScene.SpherePrimitive() ], [ 0.0 ], attributes
+		)
+
+		# We're just happy if this doesn't crash - no need to assert anything.
+		renderer.pointInstancer( "test", [ pointInstancer ], [ 0.0 ], [ prototype ], attributes )
+		renderer.render()
+
+		del attributes
+		del renderer
 
 	def __testMeshSmoothing( self, cube, smoothingExpected ) :
 
@@ -2566,6 +2663,109 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 		del plane
 
+	def testDisplacementEdit( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+
+		camera = renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 256, 256 ),
+					"projection" : "orthographic",
+					"aperture" : imath.V2f( 1, 1 )
+				}
+			)
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testDisplacementEdit",
+				}
+			)
+		)
+
+		planePrimitive = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -0.1 ), imath.V2f( 0.1 ) ),
+		)
+
+		plane = renderer.object( "/plane", planePrimitive, renderer.attributes( IECore.CompoundObject() ) )
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+		renderer.render()
+
+		displacementDirections = [
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( -1, 0, 0 ),
+			imath.V3f( 0, -1, 0 ),
+		]
+
+		def imageUV( displacementDirection ) :
+
+			return imath.V2f( 0.5 ) + imath.V2f( displacementDirection.x, -displacementDirection.y ) * 0.49
+
+		for direction in displacementDirections :
+
+			# Assign displacement shader.
+
+			renderer.pause()
+
+			displacementAttributes = renderer.attributes(
+				IECore.CompoundObject( {
+					"cycles:displacement" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader( "displacement", "cycles:displacement", { "height" : 1.0 } ),
+							"normal" : IECoreScene.Shader( "convert_color_to_normal", "cycles:shader", { "value_color" : imath.Color3f( direction.x, direction.y, 0 ) } ),
+						},
+						connections = [
+							( ( "normal", "value_normal" ), ( "output", "normal" ) ),
+						],
+						output = "output",
+					),
+					"cycles:shader:displacement_method" : IECore.StringData( "true" ),
+				} )
+			)
+
+			# Edit should fail, requesting geometry to be resent.
+
+			self.assertFalse( plane.attributes( displacementAttributes ) )
+
+			# Resend geometry
+
+			del plane
+			plane = renderer.object( "/plane", planePrimitive, displacementAttributes )
+			plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+			renderer.render()
+
+			# Check the plane has been displaced to where we expect it to be.
+
+			self.assertEventually(
+				lambda : self.assertEqualWithAbsError( self.__colorAtUV( "testDisplacementEdit", imageUV( direction ) ), imath.Color4f( 1 ), 1e-6 )
+			)
+
+			# And that it doesn't appear in any of the other positions.
+
+			for otherDirection in displacementDirections :
+
+				if otherDirection == direction :
+					continue
+
+				self.assertEventually(
+					lambda : self.assertEqualWithAbsError( self.__colorAtUV( "testDisplacementEdit", imageUV( otherDirection ) ), imath.Color4f( 0 ), 1e-6 )
+				)
+
+		renderer.pause()
+		del plane, camera
+
 	def testUnsupportedSessionEdit( self ) :
 
 		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
@@ -3369,3 +3569,29 @@ class RendererTest( GafferTest.TestCase ) :
 				renderer.render()
 
 		self.ignoreMessage( IECore.Msg.Level.Error, "Cycles", """OpenImageIO could not find a format writer for "test". Is it a file format that OpenImageIO doesn't know about?""" )
+
+	def testUnsupportedTesselationEdits( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+
+		polygonSphere = IECoreScene.MeshPrimitive.createSphere( 1 )
+		subdivSphere = polygonSphere.copy()
+		subdivSphere.setInterpolation( "catmullClark" )
+
+		maxLevel1Attributes = renderer.attributes(
+			IECore.CompoundObject( { "cycles:max_level" : IECore.IntData( 1 ) } )
+		)
+		maxLevel2Attributes = renderer.attributes(
+			IECore.CompoundObject( { "cycles:max_level" : IECore.IntData( 2 ) } )
+		)
+
+		polygonObject = renderer.object( "polygonSphere", polygonSphere, maxLevel1Attributes )
+		subdivObject = renderer.object( "subdivSphere", subdivSphere, maxLevel1Attributes )
+
+		self.assertTrue( polygonObject.attributes( maxLevel1Attributes ) )
+		self.assertTrue( polygonObject.attributes( maxLevel2Attributes ) )
+
+		self.assertTrue( subdivObject.attributes( maxLevel1Attributes ) )
+		self.assertFalse( subdivObject.attributes( maxLevel2Attributes ) )
+
+		del polygonObject, subdivObject
