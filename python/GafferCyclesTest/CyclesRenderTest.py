@@ -42,7 +42,27 @@ import GafferSceneTest
 class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 
 	renderer = "Cycles"
+	pointInstancerSupported = True
 	oslSurfaceSupported = True
+
+	@unittest.expectedFailure # No instance ID output available in Cycles
+	def testPointInstancerIDOutputs( self ) :
+
+		GafferSceneTest.RenderTest.testPointInstancerIDOutputs( self )
+
+	def _createConstantShader( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "emission" )
+		shader["parameters"]["strength"].setValue( 1 )
+		return shader, shader["parameters"]["color"], shader["out"]["emission"]
+
+	def _createColorAttributeReader( self, attributeName ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "attribute" )
+		shader["parameters"]["attribute"].setValue( attributeName )
+		return shader, shader["out"]["color"]
 
 	def _createDiffuseShader( self ) :
 
@@ -77,7 +97,7 @@ class CyclesRenderTest( GafferSceneTest.RenderTest ) :
 		options["options"]["cycles:integrator:max_bounce"]["value"].setValue( 0 )
 
 		options["options"]["cycles:session:samples"]["enabled"].setValue( True )
-		options["options"]["cycles:session:samples"]["value"].setValue( 8 )
+		options["options"]["cycles:session:samples"]["value"].setValue( 16 )
 
 		return options
 
