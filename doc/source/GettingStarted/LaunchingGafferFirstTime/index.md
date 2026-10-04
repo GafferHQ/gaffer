@@ -25,6 +25,12 @@ To launch Gaffer for the first time in Linux:
 
 Gaffer will launch in a new window.
 
+> Tip :
+> Create an alias to make it easier to launch by adding the following line to your `~/.bash_aliases` file:
+> `alias gaffer='/opt/gaffer-!GAFFER_VERSION!-linux/bin/gaffer'`
+> and if you have a HiDPI display you can also add QT_SCALE_FACTOR=2 to make the interface scale better to your display:
+> `alias gaffer='QT_SCALE_FACTOR=2 /opt/gaffer-!GAFFER_VERSION!-linux/bin/gaffer'`
+> Refresh by running `source ~/.bash_aliases` and you can now launch by simply typing `gaffer` in the terminal, no matter what folder you're in.
 
 ## Launching in Windows ##
 
