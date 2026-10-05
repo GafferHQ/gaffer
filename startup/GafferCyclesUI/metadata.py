@@ -211,73 +211,83 @@ parameterMetadata = {
 		"model" : {
 			"userDefault" : "Chiang",
 		},
+		"parametrization" : {
+			"layout:index" : 1,
+		},
 		"color" : {
 			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["parametrization"].getValue() == "Direct coloring",
-			"layout:index" : 1,
+			"layout:index" : 2,
 			"noduleLayout:visible" : True,
 		},
 		"absorption_coefficient" : {
 			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["parametrization"].getValue() == "Absorption coefficient",
 			"label" : "Absorption Coefficient",
-			"layout:index" : 2,
+			"layout:index" : 3,
 		},
 		"melanin" : {
 			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["parametrization"].getValue() == "Melanin concentration",
-			"layout:index" : 3,
+			"layout:index" : 4,
 		},
 		"melanin_redness" : {
 			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["parametrization"].getValue() == "Melanin concentration",
 			"label" : "Melanin Redness",
-			"layout:index" : 4,
+			"layout:index" : 5,
 		},
 		"tint" : {
 			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["parametrization"].getValue() == "Melanin concentration",
-			"layout:index" : 5,
+			"layout:index" : 6,
 		},
 		"roughness" : {
-			"layout:index" : 6,
+			"layout:index" : 7,
 			"noduleLayout:visible" : True,
 		},
 		"radial_roughness" : {
 			"label" : "Radial Roughness",
-			"layout:index" : 7,
+			"layout:index" : 8,
 			"noduleLayout:visible" : True,
 		},
 		"coat" : {
-			"layout:index" : 8,
+			"layout:index" : 9,
 			"noduleLayout:visible" : True,
 		},
 		"ior" : {
 			"label" : "IOR",
-			"layout:index" : 9,
+			"layout:index" : 10,
 		},
 		"offset" : {
-			"layout:index" : 10,
+			"layout:index" : 11,
 		},
 		"random_color" : {
 			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["parametrization"].getValue() == "Melanin concentration",
 			"label" : "Random Color",
-			"layout:index" : 11,
+			"layout:index" : 12,
 		},
 		"random_roughness" : {
 			"label" : "Random Roughness",
-			"layout:index" : 12,
-		},
-		"random" : {
 			"layout:index" : 13,
 		},
-		"R" : {
+		"random" : {
 			"layout:index" : 14,
 		},
-		"TT" : {
+		"R" : {
+			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["model"].getValue() == "Huang",
+			"label" : "Reflection",
 			"layout:index" : 15,
 		},
-		"TRT" : {
+		"TT" : {
+			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["model"].getValue() == "Huang",
+			"label" : "Transmission",
 			"layout:index" : 16,
+		},
+		"TRT" : {
+			"layout:visibilityActivator" : lambda plug : plug.node()["parameters"]["model"].getValue() == "Huang",
+			"label" : "Secondary Reflection",
+			"layout:index" : 17,
 		},
 		"aspect_ratio" : {
 			"label" : "Aspect Ratio",
-			"layout:index" : 17,
+			"layout:visibilityActivator" : False,
+			"layout:index" : 18,
 		},
 	},
 	"principled_volume" : {

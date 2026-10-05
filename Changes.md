@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Cycles : Added support for rendering PointInstancers.
+- Cycles : Updated Principled Hair BSDF UI to match Blender 5+.
 
 Fixes
 -----
