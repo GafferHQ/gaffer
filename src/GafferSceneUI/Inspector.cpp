@@ -309,6 +309,8 @@ Inspector::ResultPtr Inspector::inspect() const
 	SceneAlgo::History::ConstPtr history = this->history();
 	if( !history )
 	{
+		// \todo : Now that we no longer return nullptr for any other reason, it might make sense to
+		// change this as well, and always return a valid result.
 		return nullptr;
 	}
 
@@ -323,11 +325,11 @@ Inspector::ResultPtr Inspector::inspect() const
 	}
 	inspectHistoryWalk( history.get(), result.get(), Context::current()->canceller() );
 
-	if( !result->m_value && !result->m_fallbackValue && !result->editable() )
+	if( !result->m_value && result->m_sourceType == Result::SourceType::Other )
 	{
-		// The property doesn't exist, and there's no
-		// way of making it.
-		return nullptr;
+		// Special source type if there's no value, and we didn't find an edit scope that
+		// could be used to create it.
+		result->m_sourceType = Result::SourceType::None;
 	}
 
 	// If we failed to initialise our editors, then initialise with failures
@@ -335,16 +337,16 @@ Inspector::ResultPtr Inspector::inspect() const
 	if( !result->m_editors )
 	{
 		std::string formatString;
-		if( !result->m_source )
-		{
-			formatString = "No editable source found in history.";
-		}
-		else if( result->m_editScope && !result->m_editScopeInHistory )
+		if( result->m_editScope && !result->m_editScopeInHistory )
 		{
 			formatString = fmt::format(
 				"The target edit scope {} is not in the scene history.",
 				result->editScope()->relativeName( result->editScope()->scriptNode() )
 			);
+		}
+		else if( !result->m_source )
+		{
+			formatString = "No editable source found in history.";
 		}
 		else if( !result->m_editScope )
 		{

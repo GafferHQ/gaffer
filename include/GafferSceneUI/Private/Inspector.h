@@ -332,7 +332,9 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 			Other,
 			/// The value is coming from outside the script, such as
 			/// from a node internal to the UI.
-			External
+			External,
+			/// There is no value.
+			None
 		};
 
 		/// The relationship between `source()` and `editScope()`.
