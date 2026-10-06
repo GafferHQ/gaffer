@@ -506,6 +506,12 @@ ShaderPtr ShaderCache::get(
 			shader->set_graph( std::move( graph ) );
 
 			SceneAlgo::tagUpdateWithLock( shader, m_scene );
+			// Cycles defaults `need_update_displacement` to true for new shaders,
+			// which re-tessellates any subdiv mesh the shader is assigned to.
+			// Repeating tessellation on a previously tessellated mesh corrupts
+			// it and can cause Cycles to crash. We can disable this update as we
+			// reissue new geometry whenever displacement changes.
+			shader->need_update_displacement = false;
 
 			writeAccessor->second = new IECoreCycles::Shader( shader, h );
 		}

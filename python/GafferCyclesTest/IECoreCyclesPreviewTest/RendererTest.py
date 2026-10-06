@@ -3595,3 +3595,65 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertFalse( subdivObject.attributes( maxLevel2Attributes ) )
 
 		del polygonObject, subdivObject
+
+	def testCrashWithSubdivShaderEdit( self ) :
+
+		for shadingSystem in [ "OSL", "SVM" ] :
+			with self.subTest( shadingSystem = shadingSystem ) :
+
+				renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+				renderer.option( "cycles:shadingsystem", IECore.StringData( shadingSystem ) )
+
+				renderer.output(
+					"testOutput",
+					IECoreScene.Output(
+						"test",
+						"ieDisplay",
+						"rgba",
+						{
+							"driverType" : "ImageDisplayDriver",
+							"handle" : "testCrashWithSubdivShaderEdit",
+						}
+					)
+				)
+
+				def shaderAttributes( color ) :
+					return renderer.attributes( IECore.CompoundObject ( {
+						"cycles:surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_color" : color, "emission_strength" : 1 } ),
+							},
+							output = "output",
+						)
+					} ) )
+
+				subdivSphere = IECoreScene.MeshPrimitive.createSphere( 1 )
+				subdivSphere.setInterpolation( "catmullClark" )
+				object = renderer.object( "subdivSphere", subdivSphere, shaderAttributes( imath.Color3f( 1 ) ) )
+				object.transform( imath.M44f().translate( imath.V3f( 0, 0, -3 ) ) )
+
+				def assertColor( color ) :
+
+					self.assertEqualWithAbsError(
+						self.__colorAtUV( "testCrashWithSubdivShaderEdit", imath.V2f( 0.5 ) ),
+						imath.Color4f( color.r, color.g, color.b, 1 ), error = 0.01
+					)
+
+				renderer.render()
+
+				self.assertEventually( lambda : assertColor( imath.Color3f( 1 ) ) )
+
+				renderer.pause()
+
+				for testColor in [ imath.Color3f( 1, 0, 0 ), imath.Color3f( 0, 1, 0 ), imath.Color3f( 0, 0, 1 ) ] :
+
+					object.attributes( shaderAttributes( testColor ) )
+
+					renderer.render()
+
+					self.assertEventually( lambda : assertColor( testColor ) )
+
+					renderer.pause()
+
+				del object
+				del renderer
