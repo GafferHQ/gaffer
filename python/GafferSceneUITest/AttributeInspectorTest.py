@@ -46,6 +46,7 @@ import GafferSceneUI
 
 class AttributeInspectorTest( GafferUITest.TestCase ) :
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testName( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -106,6 +107,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			self.assertEqual( result.nonEditableReason(), nonEditableReason )
 			self.assertRaises( RuntimeError, result.acquireEdit )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testValue( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -118,6 +120,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			IECore.FloatData( 2.0 )
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testFallbackValue( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -134,7 +137,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value().value, Gaffer.Metadata.value( "attribute:gl:visualiser:scale", "defaultValue" ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
 		s["globalGlAttributes"] = GafferScene.OpenGLAttributes()
@@ -149,7 +152,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["globalGlAttributes"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
 
 		s["groupFilter"] = GafferScene.PathFilter()
@@ -167,7 +170,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		inspection = self.__inspect( s["glAttributes"]["out"], "/group/light", "gl:visualiser:scale" )
 		self.assertIsNone( inspection.value( useFallbacks = False ) )
 		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
-		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.None_ )
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
 		# With a "gl:visualiser:scale" attribute created at the inspected location, it is
@@ -180,6 +183,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
 		self.assertEqual( inspection.sourceType(), GafferSceneUI.Private.Inspector.Result.SourceType.Other )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceAndEdits( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -451,6 +455,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "editScope2.AttributeEdits is locked."
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testAttributesWarning( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -481,6 +486,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			editWarning = "Edits to \"test:attr\" may affect other locations in the scene."
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEditScopeNotInHistory( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -526,6 +532,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "The target edit scope editScope is not in the scene history."
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisabledTweaks( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -562,6 +569,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = s["light"]["visualiserAttributes"]["scale"]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEditScopeNesting( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -595,6 +603,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		i = self.__inspect( s["editScope1"]["out"], "/light", "gl:visualiser:scale", s["editScope1"] )
 		self.assertEqual( i.acquireEdit()[0].ancestor( Gaffer.EditScope ), s["editScope1"] )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDownstreamSourceType( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -625,6 +634,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			editWarning = "Attribute has edits downstream in attributeTweaks."
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testExternalSourceType( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -667,6 +677,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "{} is external to the script.".format( externalAttributeTweaks.fullName() )
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testLightInsideBox( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -684,6 +695,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = s["box"]["light"]["visualiserAttributes"]["scale"]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDirtiedSignal( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -732,6 +744,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		globalAttributes["attributes"][0]["value"].setValue( 20 )
 		self.assertEqual( len( cs ), 5 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonExistentLocation( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -739,12 +752,21 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		self.assertIsNone( self.__inspect( light["out"], "/nothingHere", "gl:visualiser:scale" ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonExistentAttribute( self ) :
 
 		light = GafferSceneTest.TestLight()
 		light.loadShader( "simpleLight" )
-		self.assertIsNone( self.__inspect( light["out"], "/light", "bad:attribute" ) )
 
+		self.__assertExpectedResult(
+			self.__inspect( light["out"], "/light", "bad:attribute" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+			editable = False,
+			nonEditableReason = "No editable source found in history."
+		)
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testReadOnlyMetadataSignalling( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -773,6 +795,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
 		self.assertEqual( len( cs ), 2 ) # Change affects the result of `inspect().editable()`
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testCameraAttribute( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -787,6 +810,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = s["camera"]["visualiserAttributes"]["scale"]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testAttributes( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -816,6 +840,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			editWarning = "Edits to \"test:attr\" may affect other locations in the scene."
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisabledAttribute( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -830,7 +855,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["light"]["out"], "/light", "gl:visualiser:scale", None ),
 			source = s["light"]["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = True,
 			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
@@ -840,12 +865,13 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["group"]["out"], "/group/light", "gl:visualiser:scale", None ),
 			source = s["light"]["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = True,
 			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testRegisteredAttribute( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -860,7 +886,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "gl:visualiser:scale", None ),
 			source = s["light"]["visualiserAttributes"]["scale"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = True,
 			edit = s["light"]["visualiserAttributes"]["scale"],
 			fallbackDescription = "Default value"
@@ -888,6 +914,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = edit
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDontEditParentOfInspectedLocation( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -919,6 +946,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( row["name"].getValue(), "/parent/child" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testLightFilter( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -932,13 +960,19 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights" ),
 			source = s["lightFilter"]["filteredLights"],
-			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
 			editable = True,
 			edit = s["lightFilter"]["filteredLights"],
 			fallbackDescription = "Default value"
 		)
 
-		self.assertIsNone( self.__inspect( s["editScope"]["out"], "/lightFilter", "bogusAttribute" ) )
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope"]["out"], "/lightFilter", "bogusAttribute" ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+			editable = False,
+			nonEditableReason = "No editable source found in history."
+		)
 
 		inspection = self.__inspect( s["editScope"]["out"], "/lightFilter", "filteredLights", s["editScope"] )
 		edit = inspection.acquireEdit()
@@ -952,6 +986,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = edit
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testAcquireEditCreateIfNecessary( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -978,6 +1013,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertIsNotNone( edit )
 		self.assertEqual( inspection.acquireEdit( createIfNecessary = False ), edit )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisableEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1059,6 +1095,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertFalse( inspection.canDisableEdit() )
 		self.assertEqual( inspection.nonDisableableReason(), "light.visualiserAttributes.scale.enabled is not enabled." )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testCanEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1129,6 +1166,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		assertCanEdit( inspection, IECore.IntData( 123 ), "The target edit scope editScope is disabled." )
 		assertCanEdit( inspection, IECore.StringData( "foo" ), "The target edit scope editScope is disabled." )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEdit( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1215,6 +1253,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( acquiredEdit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( acquiredEdit["value"].getValue(), 123.0 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceForEditScopeAttributeRemoval( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1242,6 +1281,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value(), IECore.FloatData( 1 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Default value" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceForCreateIfMissingTweaks( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1280,6 +1320,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceForLocalisedCreateIfMissingTweaks( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1320,7 +1361,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["attributeTweaks"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
-		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.None_ )
 		self.assertEqual( inspection.value(), IECore.FloatData( 4.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Inherited from /group" )
 
@@ -1330,7 +1371,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["attributeTweaks"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
-		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.None_ )
 		self.assertEqual( inspection.value(), IECore.FloatData( 2.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )
 
@@ -1344,6 +1385,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.value(), IECore.FloatData( 8.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceForAttributeNodeInGlobalMode( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1373,6 +1415,6 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		# for any edit at that location.
 		inspection = self.__inspect( s["openGLAttributes"]["out"], "/light", "gl:visualiser:scale", None )
 		self.assertEqual( inspection.source(), s["light"]["visualiserAttributes"]["scale"] )
-		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
+		self.assertEqual( inspection.sourceType(), inspection.SourceType.None_ )
 		self.assertEqual( inspection.value(), IECore.FloatData( 20.0 ) )
 		self.assertEqual( inspection.fallbackDescription(), "Global attribute" )

@@ -38,12 +38,14 @@ import imath
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferUITest
 import GafferScene
 import GafferSceneUI
 
 class TransformInspectorTest( GafferUITest.TestCase ) :
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testName( self ) :
 
 		sphere = GafferScene.Sphere()
@@ -53,6 +55,7 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 				inspector = GafferSceneUI.Private.TransformInspector( sphere["out"], None, space, component )
 				self.assertEqual( inspector.name(), f"{space} {component}" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testValue( self ) :
 
 		sphere = GafferScene.Sphere()
@@ -142,6 +145,7 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 					self.assertTrue( source.isSame( source.node()["out"]["transform"] ) )
 					self.assertFalse( inspection.editable() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testObjectSourceSource( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -150,6 +154,7 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedSource( s["sphere"]["out"], "/", None )
 		self.__assertExpectedSource( s["sphere"]["out"], "/sphere", s["sphere"]["transform"] )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testGroupSource( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -166,6 +171,7 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedSource( s["group"]["out"], "/", None )
 		self.__assertExpectedSource( s["group"]["out"], "/sphere", s["sphere"]["transform"] )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testTransformSource( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -195,6 +201,7 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 		s["transform"]["enabled"].setValue( False )
 		self.__assertExpectedSource( s["transform"]["out"], "/sphere", s["sphere"]["transform"] )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testGridSource( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -206,6 +213,7 @@ class TransformInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedSource( s["grid"]["out"], "/grid/gridLines", None )
 		self.__assertExpectedSource( s["grid"]["out"], "/grid/borderLines", None )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEditScopes( self ) :
 
 		s = Gaffer.ScriptNode()

@@ -50,6 +50,7 @@ Property = GafferSceneUI.Private.PrimitiveVariableInspector.Property
 
 class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testName( self ) :
 
 		plane = GafferScene.Plane()
@@ -57,6 +58,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 		inspector = GafferSceneUI.Private.PrimitiveVariableInspector( plane["out"], None, "P", Property.Data )
 		self.assertEqual( inspector.name(), "P" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDirtiedSignal( self ) :
 
 		sphere = GafferScene.Sphere()
@@ -79,6 +81,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
 			return inspector.inspect()
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testInspectObject( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -99,16 +102,26 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 		self.assertFalse( inspection.canEdit( inspection.value() ) )
 		self.assertRaises( RuntimeError, inspection.edit, inspection.value() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonExistentLocation( self ) :
 
 		plane = GafferScene.Plane()
 		self.assertIsNone( self.__inspect( plane["out"], "/nothingHere", "P", Property.Data ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonExistentPrimitiveVariable( self ) :
 
 		plane = GafferScene.Plane()
-		self.assertIsNone( self.__inspect( plane["out"], "/plane", "badPrimVar", Property.Data ) )
 
+		self.__assertExpectedResult(
+			self.__inspect( plane["out"], "/plane", "badPrimVar", Property.Data ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+			editable = False,
+			nonEditableReason = "No editable source found in history.",
+		)
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testHistory( self ) :
 
 		cube = GafferScene.Cube()
@@ -166,6 +179,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			[ cube, meshTangents, group ]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSourceAndSourceType( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -202,10 +216,6 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 				scene, "/cube", primitiveVariable, Property.Data, editScope = editScope
 			)
 
-			if source is None :
-				self.assertIsNone( inspection )
-				return
-
 			self.assertIsNotNone( inspection )
 			self.assertEqual( inspection.source(), source )
 			self.assertEqual( inspection.sourceType(), sourceType )
@@ -225,17 +235,17 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 		assertExpectedSource( script["primitiveVariables2"]["out"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Other )
 		assertExpectedSource( script["primitiveVariables2"]["out"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Upstream, editScope = script["editScope"], editable = False )
 
-		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None )
-		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, editScope = script["editScope"] )
+		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.None_, editable = False )
+		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.None_, editScope = script["editScope"], editable = False )
 		assertExpectedSource( script["editScope"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["primitiveVariables"][0], SourceType.Other, editable = False )
 		assertExpectedSource( script["editScope"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["primitiveVariables"][0], SourceType.EditScope, editScope = script["editScope"] )
 		assertExpectedSource( script["editScope"]["out"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Other )
 		assertExpectedSource( script["editScope"]["out"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Upstream, editScope = script["editScope"], editable = False )
 
-		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None )
-		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, editScope = script["editScope"] )
-		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None )
-		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, editScope = script["editScope"] )
+		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.None_, editable = False )
+		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.None_, editScope = script["editScope"], editable = False )
+		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.None_, editable = False )
+		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.None_, editScope = script["editScope"], editable = False )
 		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Other )
 		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Upstream, editScope = script["editScope"], editable = False )
 
@@ -259,6 +269,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			)
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testValue( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -295,43 +306,37 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			IECore.V3fVectorData( [ imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, -0.5, 0 ), imath.V3f( -0.5, 0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ) ], IECore.GeometricData.Interpretation.Point )
 		)
 
-		self.assertIsNone( self.__inspect( s["primitiveVariables"]["out"], "/plane", "P", Property.Indices ) )
+		self.__assertExpectedResult(
+			self.__inspect( s["primitiveVariables"]["out"], "/plane", "P", Property.Indices ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+			editable = False,
+			nonEditableReason = "No editable source found in history.",
+		)
 
 		self.assertEqual(
 			self.__inspect( s["primitiveVariables"]["out"], "/plane", "uv", Property.Indices ).value(),
 			IECore.IntVectorData( [ 0, 1, 3, 2 ] )
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testValueNotFound( self ) :
 
 		s = Gaffer.ScriptNode()
 
 		self.__setupBasicConstant( s )
 
-		self.assertEqual(
-			self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", Property.Interpolation ),
-			None
-		)
+		for property in Property.names.values() :
 
-		self.assertEqual(
-			self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", Property.Type ),
-			None
-		)
+			with self.subTest( property = property ) :
 
-		self.assertEqual(
-			self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", Property.Interpretation ),
-			None
-		)
-
-		self.assertEqual(
-			self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", Property.Data ),
-			None
-		)
-
-		self.assertEqual(
-			self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", Property.Indices ),
-			None
-		)
+				self.__assertExpectedResult(
+					self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", property ),
+					source = None,
+					sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
+					editable = False,
+					nonEditableReason = "No editable source found in history.",
+				)
 
 	def __assertExpectedResult(
 		self,
@@ -373,6 +378,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			self.assertEqual( result.nonEditableReason(), nonEditableReason )
 			self.assertRaises( RuntimeError, result.acquireEdit )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testDisabledTweaks( self ) :
 
 
@@ -417,6 +423,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			edit = scaleTweak1
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testExternalSourceType( self ) :
 
 		s = Gaffer.ScriptNode()
