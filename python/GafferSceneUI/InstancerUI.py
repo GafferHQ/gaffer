@@ -275,6 +275,9 @@ Gaffer.Metadata.registerNode(
 	and attributes, and to modify the context in which the
 	prototypes are evaluated.
 
+	> Caution : The Instancer node is deprecated and will be removed
+	> in a future version. Use the PointInstancer node instead.
+
 	> Note : The target object will be removed from the scene.
 
 	> Tip : Primitive variables with `Varying` interpolation are
