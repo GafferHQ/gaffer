@@ -81,7 +81,6 @@ class PromotePointInstancesTest( GafferSceneTest.SceneTestCase ) :
 			self["promoter"]["in"].setInput( self["primitiveVariables"]["out"] )
 			self["promoter"]["filter"].setInput( self["planeFilter"]["out"] )
 			Gaffer.PlugAlgo.promote( self["promoter"]["idList"] )
-			Gaffer.PlugAlgo.promote( self["promoter"]["name"] )
 			Gaffer.PlugAlgo.promote( self["promoter"]["destination"] )
 
 			self["out"].setInput( self["promoter"]["out"] )
