@@ -1304,6 +1304,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// member data that needs to be intact when that happens.
 			if( m_session )
 			{
+				// `cancel()` unpauses before exiting, but as we've reset the session in
+				// `pause()` we first need to destroy the output driver to prevent `cancel()`'s
+				// unpause from updating the outputs with a low-sample render restarted from 0.
+				pause();
+				m_session->set_output_driver( nullptr );
 				m_session->cancel();
 			}
 		}
