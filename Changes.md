@@ -15,6 +15,11 @@ Improvements
 - PlugAlgo : Added more type coercions to `setValueFromData()`, allowing BoolPlugs and NumericPlugs to be set from StringData.
 - Instancer : Deprecated and removed from the node menu, in preparation for removal in a future release. Use the PointInstancer node instead.
 
+Fixes
+-----
+
+- Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
+
 Breaking Changes
 ----------------
 
