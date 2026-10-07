@@ -10,6 +10,7 @@ Improvements
   - Added node to add necessary attributes to geometry to convert to a USDMeshLight.
   - Added Arnold, RenderMan, 3Delight and Cycles rendering.
 - MeshLight : Added viewport visualisation of textures.
+- SceneReader : Added support for loading ParticleField3DGaussianSplat USD prims.
 
 Fixes
 -----
@@ -36,6 +37,7 @@ Build
 -----
 
 - USD : Fixed build compatibility with USD 25.08.
+- Cortex : Updated to version 10.7.3.1.
 
 1.7.3.1 (relative to 1.7.3.0)
 =======
