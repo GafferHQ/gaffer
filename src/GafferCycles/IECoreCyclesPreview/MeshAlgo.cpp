@@ -234,6 +234,22 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 				break;
 		}
 	}
+
+	// \todo This works around subdivision bugs in Cycles. Remove once bugs are fixed there.
+	if( cmesh->get_subdivision_type() == ccl::Mesh::SUBDIVISION_CATMULL_CLARK )
+	{
+		// A Catmull-Clark mesh shouldn't need vertex normals, but Cycles has a code path
+		// that calls `add_vertex_normals()`, which crashes when run from a previously
+		// tessellated mesh. So we call this up-front to avoid the crash.
+		cmesh->add_vertex_normals();
+		// Add `ATTR_STD_GENERATED` to prevent Cycles from crashing when generating it
+		// from a previously tessellated mesh. If we want to match Blender, this should
+		// be generated from a rest pose and normalised 0-1. The below matches Cycles'
+		// fallback behaviour when `ATTR_STD_GENERATED` is not provided by the host.
+		ccl::Attribute *generated = cmesh->subd_attributes.add( ccl::ATTR_STD_GENERATED );
+		std::copy_n( cmesh->get_verts().data(), cmesh->get_verts().size(), generated->data_float3() );
+	}
+
 	return cmesh;
 }
 
