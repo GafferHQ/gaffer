@@ -3657,3 +3657,62 @@ class RendererTest( GafferTest.TestCase ) :
 
 				del object
 				del renderer
+
+	def testRenderStopPreservesOutput( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+		renderer.option( "cycles:session:samples", IECore.IntData( 64 ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testRenderStopPreservesOutput",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_strength" : 1 } ),
+						"checker" : IECoreScene.Shader( "checker_texture", "cycles:surface", { "color1" : imath.Color3f( 1 ), "color2" : imath.Color3f( 0 ), "scale" : 1000 } ),
+					},
+					connections = [
+						( ( "checker", "color" ), ( "output", "emission_color" ) ),
+					],
+					output = "output",
+				)
+			} ) )
+		)
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+		renderer.render()
+
+		def assertConverged() :
+
+			image = IECoreImage.ImageDisplayDriver.storedImage( "testRenderStopPreservesOutput" )
+			self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+			self.assertLess( sum( abs( r - 0.5 ) for r in image["R"] ) / len( image["R"] ), 0.15 )
+
+		# Give our high-frequency checker time to converge towards 0.5
+		self.assertEventually( lambda : assertConverged() )
+
+		renderer.pause()
+
+		pausedImage = IECoreImage.ImageDisplayDriver.storedImage( "testRenderStopPreservesOutput" )
+
+		del plane
+		del renderer
+
+		assertConverged()
+		self.assertEqual( pausedImage, IECoreImage.ImageDisplayDriver.storedImage( "testRenderStopPreservesOutput" ) )
