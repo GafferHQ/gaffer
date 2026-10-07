@@ -167,3 +167,10 @@ class PromotePointInstancesTest( GafferSceneTest.SceneTestCase ) :
 			set( monitor.combinedStatistics().variableNames() ),
 			{ "scene:path", "frame", "framesPerSecond" }
 		)
+
+	def testInvalidId( self ) :
+
+		network = self.TestNetwork()
+		network["idList"].setValue( IECore.Int64VectorData( [ 100 ] ) )
+
+		self.assertEqual( network["out"].childNames( "/promotedInstances" ), IECore.InternedStringVectorData() )
