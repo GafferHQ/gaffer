@@ -41,6 +41,11 @@ Breaking Changes
   - The `gafferUSD:pointInstancerAdaptor:attributes` and `gafferUSD:pointInstancerAdaptor:enabled` options have been removed.
   - Instance attributes no longer have a `user:` prefix when rendered in Arnold and 3Delight.
 
+Fixes
+-----
+
+- Help : Fixed opening local documentation on Windows when the installation path contains spaces.
+
 1.7.x.x (relative to 1.7.3.1)
 =======
 
