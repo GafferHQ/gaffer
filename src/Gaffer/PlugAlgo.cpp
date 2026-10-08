@@ -646,6 +646,47 @@ IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
 namespace
 {
 
+template<typename NumericType>
+std::optional<NumericType> stringToNumber( const std::string &s )
+{
+	size_t charsProcessed = 0;
+
+	if constexpr( std::is_integral_v<NumericType> )
+	{
+		long v;
+		try
+		{
+			v = std::stol( s, &charsProcessed );
+		}
+		catch( ... )
+		{
+			return std::nullopt;
+		}
+		if( charsProcessed && charsProcessed == s.size() )
+		{
+			return v;
+		}
+	}
+	else
+	{
+		float v;
+		try
+		{
+			v = std::stof( s, &charsProcessed );
+		}
+		catch( ... )
+		{
+			return std::nullopt;
+		}
+		if( charsProcessed && charsProcessed == s.size() )
+		{
+			return v;
+		}
+	}
+
+	return std::nullopt;
+}
+
 template<typename PlugType, typename DataType>
 bool setNumericPlugValueFromVectorData( PlugType *plug, const DataType *value )
 {
@@ -722,6 +763,23 @@ bool setNumericPlugValue( PlugType *plug, const Data *value )
 			return setNumericPlugValueFromVectorData( plug, static_cast<const UInt64VectorData *>( value ) );
 		case BoolVectorDataTypeId :
 			return setNumericPlugValueFromVectorData( plug, static_cast<const BoolVectorData *>( value ) );
+		case StringDataTypeId : {
+			const auto &s = static_cast<const StringData *>( value )->readable();
+			if( std::is_same_v<typename PlugType::ValueType, bool> )
+			{
+				plug->setValue( !s.empty() );
+				return true;
+			}
+			else
+			{
+				if( auto v = stringToNumber<typename PlugType::ValueType>( s ) )
+				{
+					plug->setValue( *v );
+					return true;
+				}
+				return false;
+			}
+		}
 		default :
 			return false;
 	}
@@ -983,6 +1041,7 @@ bool setBoxPlugValue( PlugType *plug, const Data *value )
 	return success;
 }
 
+template<typename PlugType>
 bool canSetNumericPlugValue( const Data *value )
 {
 	if( !value )
@@ -1018,6 +1077,17 @@ bool canSetNumericPlugValue( const Data *value )
 		case UInt64VectorDataTypeId :
 		case BoolVectorDataTypeId :
 			return IECore::size( value ) == 1;
+		case StringDataTypeId :
+			if( std::is_same_v<typename PlugType::ValueType, bool> )
+			{
+				return true;
+			}
+			else
+			{
+				return stringToNumber<typename PlugType::ValueType>(
+					static_cast<const StringData *>( value )->readable()
+				).has_value();
+			}
 		default :
 			return false;
 	}
@@ -1170,9 +1240,11 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 	switch( static_cast<Gaffer::TypeId>( plug->typeId() ) )
 	{
 		case Gaffer::BoolPlugTypeId:
+			return canSetNumericPlugValue<BoolPlug>( value );
 		case Gaffer::FloatPlugTypeId:
+			return canSetNumericPlugValue<FloatPlug>( value );
 		case Gaffer::IntPlugTypeId:
-			return canSetNumericPlugValue( value );
+			return canSetNumericPlugValue<IntPlug>( value );
 		case Gaffer::BoolVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<BoolVectorDataPlug>( value );
 		case Gaffer::FloatVectorDataPlugTypeId:

@@ -37,7 +37,7 @@
 __import__( "GafferScene" )
 
 from ._GafferUSD import *
-from ._PointInstancerAdaptor import _PointInstancerAdaptor
+## \todo Remove for Gaffer 1.9, in favour of GafferScene.PromotePointInstances.
 from .PromotePointInstances import PromotePointInstances
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferUSD" )

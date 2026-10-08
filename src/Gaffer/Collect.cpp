@@ -487,8 +487,14 @@ void Collect::hash( const ValuePlug *output, const Context *context, IECore::Mur
 				Context::EditableScope scope( threadState );
 				for( int index = range.begin(); index < range.end(); ++index )
 				{
-					scope.set( contextVariable, &contextValues[index] );
-					scope.set( indexContextVariable, &index );
+					if( !contextVariable.string().empty() )
+					{
+						scope.set( contextVariable, &contextValues[index] );
+					}
+					if( !indexContextVariable.string().empty() )
+					{
+						scope.set( indexContextVariable, &index );
+					}
 					hash.append( contextValues[index] );
 					enabledPlug()->hash( hash );
 					for( auto &input : ValuePlug::Range( *inPlug() ) )
@@ -562,8 +568,14 @@ void Collect::compute( ValuePlug *output, const Context *context) const
 				Context::EditableScope scope( threadState );
 				for( int index = range.begin(); index < range.end(); ++index )
 				{
-					scope.set( contextVariable, &contextValues[index] );
-					scope.set( indexContextVariable, &index );
+					if( !contextVariable.string().empty() )
+					{
+						scope.set( contextVariable, &contextValues[index] );
+					}
+					if( !indexContextVariable.string().empty() )
+					{
+						scope.set( indexContextVariable, &index );
+					}
 
 					for( auto [input, object] : toCollect )
 					{

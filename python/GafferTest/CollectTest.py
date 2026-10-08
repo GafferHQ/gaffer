@@ -590,3 +590,26 @@ class CollectTest( GafferTest.TestCase ) :
 
 		for i in range( maxIterations ) :
 			self.assertEqual( depth( result[i] ), i )
+
+	def testEmptyContextVariables( self ) :
+
+		add = GafferTest.AddNode()
+
+		collect = Gaffer.Collect()
+		collect.addInput( Gaffer.IntPlug( "test" ) )
+		collect["in"]["test"].setInput( add["sum"] )
+		collect["contextValues"].setValue( IECore.StringVectorData( [ "one", "two", "three" ] ) )
+
+		for variable, indexVariable in [
+			( "v", "" ),
+			( "", "v" ),
+			( "", "" )
+		] :
+
+			collect["contextVariable"].setValue( variable )
+			collect["indexContextVariable"].setValue( indexVariable )
+
+			with Gaffer.ContextMonitor( root = add ) as monitor :
+				collect["out"]["test"].getValue()
+
+			self.assertNotIn( "", monitor.plugStatistics( add["sum"] ).variableNames() )

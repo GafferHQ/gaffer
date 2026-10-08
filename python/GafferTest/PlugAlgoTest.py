@@ -1427,6 +1427,68 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 					value = ord( data.value ) if isinstance( data, IECore.CharData ) else data.value
 					self.assertEqual( plug.getValue(), plugType.ValueType( value ) )
 
+	def testStringDataToNumericPlugConversions( self ) :
+
+		for plugType in [
+			Gaffer.IntPlug,
+			Gaffer.FloatPlug,
+		] :
+
+			plug = plugType()
+
+			for value in [ "0", "1", "2.5" ] :
+
+				with self.subTest( plugType = plugType, value = value ) :
+
+					data = IECore.StringData( value )
+
+					try :
+						expectedValue = plugType.ValueType( value )
+					except ValueError:
+						# We get here when the string represents a float and we have an IntPlug.
+						self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+						continue
+
+					self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+					self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+					self.assertEqual( plug.getValue(), expectedValue )
+
+	def testFailedStringDataToNumericPlugConversions( self ) :
+
+		for plugType in [
+			Gaffer.IntPlug,
+			Gaffer.FloatPlug,
+		] :
+
+			plug = plugType()
+			plug.setValue( 25 )
+
+			for value in [ "", "prefix100", "100suffix", "1.2.3" ] :
+
+				with self.subTest( plugType = plugType, value = value ) :
+
+					data = IECore.StringData( value )
+					self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+
+					self.assertFalse( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+					self.assertEqual( plug.getValue(), 25 )
+
+	def testStringToBoolPlugConversions( self ) :
+
+		plug = Gaffer.BoolPlug()
+
+		# Note : "true" and "false" both create a value of True. The only
+		# value that coerces to False is an empty string.
+		for value in [ "", "anything", "true", "false"] :
+
+			with self.subTest( value = value ) :
+
+				data = IECore.StringData( value )
+				self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+
+				self.assertTrue( Gaffer.PlugAlgo.setValueFromData( plug, data ) )
+				self.assertEqual( plug.getValue(), bool( value ) )
+
 	class CompoundDataNode( Gaffer.Node ) :
 
 		def __init__( self, name = "CompoundDataNode" ) :

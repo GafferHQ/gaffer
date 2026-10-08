@@ -39,7 +39,100 @@
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlugImplementation.h"
+
+using namespace Gaffer;
+
+namespace
+{
+
+/// \todo Collect.cpp has a similar function. Perhaps we can make a
+/// `PlugAlgo::dispatch()` that dispatches _all_ types, and then use that in both
+/// places.
+template<typename F>
+void dispatchArrayPlugFunction( const Plug *plug, F &&functor )
+{
+	switch( (Gaffer::TypeId)plug->typeId() )
+	{
+		case BoolVectorDataPlugTypeId :
+			functor( static_cast<const BoolVectorDataPlug *>( plug ) );
+			break;
+		case IntVectorDataPlugTypeId :
+			functor( static_cast<const IntVectorDataPlug *>( plug ) );
+			break;
+		case Int64VectorDataPlugTypeId :
+			functor( static_cast<const Int64VectorDataPlug *>( plug ) );
+			break;
+		case FloatVectorDataPlugTypeId :
+			functor( static_cast<const FloatVectorDataPlug *>( plug ) );
+			break;
+		case StringVectorDataPlugTypeId :
+			functor( static_cast<const StringVectorDataPlug *>( plug ) );
+			break;
+		case InternedStringVectorDataPlugTypeId :
+			functor( static_cast<const InternedStringVectorDataPlug *>( plug ) );
+			break;
+		case V2iVectorDataPlugTypeId :
+			functor( static_cast<const V2iVectorDataPlug *>( plug ) );
+			break;
+		case V3iVectorDataPlugTypeId :
+			functor( static_cast<const V3iVectorDataPlug *>( plug ) );
+			break;
+		case V2fVectorDataPlugTypeId :
+			functor( static_cast<const V2fVectorDataPlug *>( plug ) );
+			break;
+		case V3fVectorDataPlugTypeId :
+			functor( static_cast<const V3fVectorDataPlug *>( plug ) );
+			break;
+		case Color3fVectorDataPlugTypeId :
+			functor( static_cast<const Color3fVectorDataPlug *>( plug ) );
+			break;
+		case Color4fVectorDataPlugTypeId :
+			functor( static_cast<const Color4fVectorDataPlug *>( plug ) );
+			break;
+		case M44fVectorDataPlugTypeId :
+			functor( static_cast<const M44fVectorDataPlug *>( plug ) );
+			break;
+		case M33fVectorDataPlugTypeId :
+			functor( static_cast<const M33fVectorDataPlug *>( plug ) );
+			break;
+		case Box2fVectorDataPlugTypeId :
+			functor( static_cast<const Box2fVectorDataPlug *>( plug ) );
+			break;
+		default:
+			return;
+	}
+}
+
+bool isArrayValued( const Plug *plug )
+{
+	bool result = false;
+	dispatchArrayPlugFunction(
+		plug,
+		[&]( const auto *typedPlug ) {
+			result = true;
+		}
+	);
+	return result;
+}
+
+bool hasNonEmptyArrayValue( const Plug *plug )
+{
+	std::optional<bool> result;
+	dispatchArrayPlugFunction(
+		plug,
+		[&]( const auto *typedPlug ) {
+			result = !typedPlug->getValue()->readable().empty();
+		}
+	);
+	if( !result ) {
+		throw IECore::Exception( "Unsupported plug type" );
+	}
+	return *result;
+}
+
+} // namespace
 
 namespace Gaffer
 {
@@ -51,7 +144,8 @@ GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicBox2fPlug, AtomicBox2fPlugTypeId
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicBox3fPlug, AtomicBox3fPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicBox2iPlug, AtomicBox2iPlugTypeId )
 
-// Specialise BoolPlug to accept connections from NumericPlugs and StringPlugs
+// Specialise BoolPlug to accept connections from NumericPlugs, StringPlugs and
+// TypedObjectPlugs holding vectors.
 
 template<>
 bool BoolPlug::acceptsInput( const Plug *input ) const
@@ -66,7 +160,8 @@ bool BoolPlug::acceptsInput( const Plug *input ) const
 			input->isInstanceOf( staticTypeId() ) ||
 			input->isInstanceOf( IntPlug::staticTypeId() ) ||
 			input->isInstanceOf( FloatPlug::staticTypeId() ) ||
-			input->isInstanceOf( StringPlug::staticTypeId() )
+			input->isInstanceOf( StringPlug::staticTypeId() ) ||
+			isArrayValued( input )
 		;
 	}
 	return true;
@@ -90,7 +185,8 @@ void BoolPlug::setFrom( const ValuePlug *other )
 			setValue( static_cast<const StringPlug *>( other )->getValue().size() );
 			break;
 		default :
-			throw IECore::Exception( "Unsupported plug type" );
+			setValue( hasNonEmptyArrayValue( other ) );
+			break;
 	}
 }
 
