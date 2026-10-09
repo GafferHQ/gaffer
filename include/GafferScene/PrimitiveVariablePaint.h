@@ -43,44 +43,11 @@
 namespace GafferScene
 {
 
-// Store a bundle of data needed to apply a modification to part of a primitive variable,
-// targeted using opacity or indices.
-// TODO - should go in class namespace?
-class GAFFERSCENE_API PaintOperation : public IECore::Object
-{
-
-	public :
-
-		PaintOperation(
-			IECore::DataPtr valueData = nullptr,
-			IECore::FloatVectorDataPtr opacityData = nullptr,
-			IECore::IntVectorDataPtr indicesData = nullptr
-		);
-
-		~PaintOperation() override;
-
-		IE_CORE_DECLAREEXTENSIONOBJECT( GafferScene::PaintOperation, PaintOperationTypeId, IECore::Object );
-
-		void apply( IECore::DataPtr &resultData, size_t outputSize ) const;
-
-		// We store the value premultiplied, to avoid one multiply when applying it.
-		IECore::DataPtr m_valueData;
-
-		IECore::FloatVectorDataPtr m_opacityData;
-
-		// If present, the indices control which elements of the primvar the values and opacities apply to.
-		// Otherwise, there must be a value and opacity for every element.
-		IECore::IntVectorDataPtr m_indicesData;
-
-};
-
-IE_CORE_DECLAREPTR( PaintOperation );
 
 class GAFFERSCENE_API PrimitiveVariablePaint : public Deformer
 {
 
 	public :
-
 
 		explicit PrimitiveVariablePaint( const std::string &name=defaultName<PrimitiveVariablePaint>() );
 		~PrimitiveVariablePaint() override;
@@ -89,6 +56,10 @@ class GAFFERSCENE_API PrimitiveVariablePaint : public Deformer
 
 		Gaffer::Plug *primitiveVariablesPlug();
 		const Gaffer::Plug *primitiveVariablesPlug() const;
+
+		class PaintOperation;
+		IE_CORE_DECLAREPTR( PaintOperation );
+
 
 	protected :
 
@@ -105,5 +76,36 @@ class GAFFERSCENE_API PrimitiveVariablePaint : public Deformer
 };
 
 IE_CORE_DECLAREPTR( PrimitiveVariablePaint )
+
+// Store a bundle of data needed to apply a modification to part of a primitive variable,
+// targeted using opacity or indices.
+// TODO - should go in class namespace?
+class GAFFERSCENE_API PrimitiveVariablePaint::PaintOperation : public IECore::Object
+{
+
+	public :
+
+		PaintOperation(
+			IECore::DataPtr valueData = nullptr,
+			IECore::FloatVectorDataPtr opacityData = nullptr,
+			IECore::IntVectorDataPtr indicesData = nullptr
+		);
+
+		~PaintOperation() override;
+
+		IE_CORE_DECLAREEXTENSIONOBJECT( GafferScene::PrimitiveVariablePaint::PaintOperation, PaintOperationTypeId, IECore::Object );
+
+		void apply( IECore::DataPtr &resultData, size_t outputSize ) const;
+
+		// We store the value premultiplied, to avoid one multiply when applying it.
+		IECore::DataPtr m_valueData;
+
+		IECore::FloatVectorDataPtr m_opacityData;
+
+		// If present, the indices control which elements of the primvar the values and opacities apply to.
+		// Otherwise, there must be a value and opacity for every element.
+		IECore::IntVectorDataPtr m_indicesData;
+
+};
 
 } // namespace GafferScene

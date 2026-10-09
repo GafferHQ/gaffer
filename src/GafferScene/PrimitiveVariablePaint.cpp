@@ -59,7 +59,7 @@ IndexedIO::EntryID g_indicesDataName( "indicesData" );
 
 GAFFER_NODE_DEFINE_TYPE( PrimitiveVariablePaint );
 
-PaintOperation::PaintOperation(
+PrimitiveVariablePaint::PaintOperation::PaintOperation(
 	IECore::DataPtr valueData,
 	IECore::FloatVectorDataPtr opacityData,
 	IECore::IntVectorDataPtr indicesData
@@ -68,11 +68,11 @@ PaintOperation::PaintOperation(
 {
 }
 
-PaintOperation::~PaintOperation()
+PrimitiveVariablePaint::PaintOperation::~PaintOperation()
 {
 }
 
-bool PaintOperation::isEqualTo( const IECore::Object *other ) const
+bool PrimitiveVariablePaint::PaintOperation::isEqualTo( const IECore::Object *other ) const
 {
 	if( !Object::isEqualTo( other ) )
 	{
@@ -107,7 +107,7 @@ bool PaintOperation::isEqualTo( const IECore::Object *other ) const
 	return true;
 }
 
-void PaintOperation::hash( IECore::MurmurHash &h ) const
+void PrimitiveVariablePaint::PaintOperation::hash( IECore::MurmurHash &h ) const
 {
 	Object::hash( h );
 	if( m_valueData )
@@ -126,7 +126,7 @@ void PaintOperation::hash( IECore::MurmurHash &h ) const
 	}
 }
 
-void PaintOperation::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
+void PrimitiveVariablePaint::PaintOperation::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
 {
 	Object::copyFrom( other, context );
 
@@ -136,7 +136,7 @@ void PaintOperation::copyFrom( const IECore::Object *other, IECore::Object::Copy
 	m_indicesData = operation->m_indicesData;
 }
 
-void PaintOperation::save( IECore::Object::SaveContext *context ) const
+void PrimitiveVariablePaint::PaintOperation::save( IECore::Object::SaveContext *context ) const
 {
 	Object::save( context );
 
@@ -152,7 +152,7 @@ void PaintOperation::save( IECore::Object::SaveContext *context ) const
 	}
 }
 
-void PaintOperation::load( IECore::Object::LoadContextPtr context )
+void PrimitiveVariablePaint::PaintOperation::load( IECore::Object::LoadContextPtr context )
 {
 	Object::load( context );
 
@@ -172,7 +172,7 @@ void PaintOperation::load( IECore::Object::LoadContextPtr context )
 	}
 }
 
-void PaintOperation::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
+void PrimitiveVariablePaint::PaintOperation::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
 {
 	Object::memoryUsage( accumulator );
 	if( m_valueData )
@@ -189,7 +189,7 @@ void PaintOperation::memoryUsage( IECore::Object::MemoryAccumulator &accumulator
 	}
 }
 
-void PaintOperation::apply( IECore::DataPtr &resultData, size_t outputSize ) const
+void PrimitiveVariablePaint::PaintOperation::apply( IECore::DataPtr &resultData, size_t outputSize ) const
 {
 	IECore::dispatch( m_valueData.get(),
 		[outputSize, &resultData, this]( auto *typedValueData )
@@ -327,7 +327,7 @@ void PaintOperation::apply( IECore::DataPtr &resultData, size_t outputSize ) con
 
 }
 
-IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( PaintOperation );
+IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( PrimitiveVariablePaint::PaintOperation );
 
 size_t PrimitiveVariablePaint::g_firstPlugIndex = 0;
 
