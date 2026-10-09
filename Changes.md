@@ -27,6 +27,11 @@ API
 - BoolWidget : Added `setEditable()` and `getEditable()` methods.
 - Button : Added `setClickable()` and `getClickable()` methods, also available on MenuButton.
 
+Build
+-----
+
+- USD : Fixed build compatibility with USD 25.08.
+
 1.7.3.1 (relative to 1.7.3.0)
 =======
 

@@ -434,7 +434,7 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	else
 	{
 		assert( shader );
-#if PXR_VERSION >= 2511
+#if PXR_VERSION >= 2508
 		for( const auto &name : shader->GetShaderInputNames() )
 #else
 		for( const auto &name : shader->GetInputNames() )
@@ -443,7 +443,7 @@ void USDShader::loadShader( const std::string &shaderName, bool keepExistingValu
 			SdrShaderPropertyConstPtr property = shader->GetShaderInput( name );
 			validPlugs.insert( loadShaderProperty( *property, parametersPlug ) );
 		}
-#if PXR_VERSION >= 2511
+#if PXR_VERSION >= 2508
 		for( const auto &name : shader->GetShaderOutputNames() )
 #else
 		for( const auto &name : shader->GetOutputNames() )
