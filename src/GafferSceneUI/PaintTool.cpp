@@ -91,7 +91,7 @@ namespace
 // allocated for the given value type, number of vertices, and opacity if needed ( but don't
 // perform any new allocations if everything is already OK )
 void ensurePaintOperationAllocated(
-	PaintOperation &op, IECore::TypeId variableType, size_t numVerts, bool includeOpacity
+	PrimitiveVariablePaint::PaintOperation &op, IECore::TypeId variableType, size_t numVerts, bool includeOpacity
 )
 {
 	if(
@@ -154,7 +154,7 @@ void ensurePaintOperationAllocated(
 // Preconditions:
 // `a` and `b` have the same valueData type, are the same size, and are both dense, without indices.
 // `b` must have value and opacity.
-void composePaintOperations( const PaintOperation &a, const PaintOperation &b, PaintTool::PaintMode paintMode, float opacity, PaintOperation &result, bool outputOpacity )
+void composePaintOperations( const PrimitiveVariablePaint::PaintOperation &a, const PrimitiveVariablePaint::PaintOperation &b, PaintTool::PaintMode paintMode, float opacity, PrimitiveVariablePaint::PaintOperation &result, bool outputOpacity )
 {
 	const std::vector<float> &bOpacity = static_cast<const FloatVectorData*>( b.m_opacityData.get() )->readable();
 
@@ -256,7 +256,7 @@ void composePaintOperations( const PaintOperation &a, const PaintOperation &b, P
 // Convert a PaintOperation to a sparse PaintOperation with indices, if omitting the elements where
 // value and opacity are zero would save space.
 template< class T >
-void makeSparsePaintOperation( PaintOperation &op )
+void makeSparsePaintOperation( PrimitiveVariablePaint::PaintOperation &op )
 {
 	const typename T::ValueType &sourceValues = IECore::runTimeCast<T>( op.m_valueData.get() )->readable();
 	const std::vector<float> &sourceOpacities = op.m_opacityData->readable();
@@ -692,7 +692,7 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 	private :
 
 		// Set an edit in an EditScope. Used by applyCurrentStroke.
-		void edit( Gaffer::EditScope *editScope, const std::string &variableName, const GafferScene::PaintOperation* value );
+		void edit( Gaffer::EditScope *editScope, const std::string &variableName, const GafferScene::PrimitiveVariablePaint::PaintOperation* value );
 
 		// Used by glBuffers.
 		void updateGLValueBuffer( const Data *valueData );
@@ -705,7 +705,7 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 		// just caching. m_currentStroke is allocated when we get the first
 		// paintToCurrentStroke of a new brushstroke, and freed in
 		// applyCurrentStroke ( when the mouse button is released )
-		GafferScene::PaintOperationPtr m_currentStroke;
+		GafferScene::PrimitiveVariablePaint::PaintOperationPtr m_currentStroke;
 
 		// State maintained by update()
 
@@ -719,14 +719,14 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 		IECoreScene::ConstMeshPrimitivePtr m_sourceMesh;
 
 		IECore::MurmurHash m_initialEditValueHash;
-		GafferScene::ConstPaintOperationPtr m_initialEditValue;
+		GafferScene::PrimitiveVariablePaint::ConstPaintOperationPtr m_initialEditValue;
 
 		// Intermediate state used by glBuffers()
 
 		bool m_composedInputValueDirty;
-		GafferScene::PaintOperationPtr m_composedInputValue;
-		GafferScene::PaintOperationPtr m_composedEditValue;
-		GafferScene::PaintOperationPtr m_composedValue;
+		GafferScene::PrimitiveVariablePaint::PaintOperationPtr m_composedInputValue;
+		GafferScene::PrimitiveVariablePaint::PaintOperationPtr m_composedEditValue;
+		GafferScene::PrimitiveVariablePaint::PaintOperationPtr m_composedValue;
 
 		// Outputs from glBuffers()
 
@@ -754,9 +754,9 @@ PaintTool::LocationCache::LocationCache( const GafferScene::ScenePlug::ScenePath
 		m_editable( false ),
 		m_paintEdit( nullptr ),
 		m_composedInputValueDirty( true ),
-		m_composedInputValue( new PaintOperation ),
-		m_composedEditValue( new PaintOperation ),
-		m_composedValue( new PaintOperation ),
+		m_composedInputValue( new PrimitiveVariablePaint::PaintOperation ),
+		m_composedEditValue( new PrimitiveVariablePaint::PaintOperation ),
+		m_composedValue( new PrimitiveVariablePaint::PaintOperation ),
 		m_valueBufferDirty( true ),
 		m_valueBufferComponents( 0 )
 {
@@ -827,7 +827,7 @@ std::string PaintTool::LocationCache::update(
 		warning = "Target an EditScope in order to create paint.";
 	}
 
-	GafferScene::ConstPaintOperationPtr paintEntry = nullptr;
+	GafferScene::PrimitiveVariablePaint::ConstPaintOperationPtr paintEntry = nullptr;
 
 	if( m_editable && editScope )
 	{
@@ -839,7 +839,7 @@ std::string PaintTool::LocationCache::update(
 			// This should be getting the path from the upstream context, in case the path has been
 			// changed in between the viewed node and the paint edit. But Inspector doesn't currently support
 			// this for non-plug-based edits, so for now we just assume the path hasn't changed.
-			paintEntry = IECore::runTimeCast<const PaintOperation>(
+			paintEntry = IECore::runTimeCast<const PrimitiveVariablePaint::PaintOperation>(
 				m_paintEdit->getEntry( ScenePlug::pathToString( path() ), false )
 			);
 		}
@@ -930,13 +930,13 @@ std::string PaintTool::LocationCache::update(
 
 			if( !paintEntry )
 			{
-				PaintOperationPtr initialEditValue = new PaintOperation();
+				PrimitiveVariablePaint::PaintOperationPtr initialEditValue = new PrimitiveVariablePaint::PaintOperation();
 				ensurePaintOperationAllocated( *initialEditValue, variableType, numVerts, true );
 				m_initialEditValue = initialEditValue;
 			}
 			else if( paintEntry->m_indicesData )
 			{
-				PaintOperationPtr initialEditValue = new PaintOperation();
+				PrimitiveVariablePaint::PaintOperationPtr initialEditValue = new PrimitiveVariablePaint::PaintOperation();
 				ensurePaintOperationAllocated( *initialEditValue, variableType, numVerts, true );
 				paintEntry->apply( initialEditValue->m_valueData, numVerts );
 
@@ -1026,7 +1026,7 @@ PaintTool::LocationCache::glBuffers( const std::string &variableName, IECore::Ty
 
 	if( m_valueBufferDirty )
 	{
-		PaintOperationPtr initialMeshValue = new PaintOperation(
+		PrimitiveVariablePaint::PaintOperationPtr initialMeshValue = new PrimitiveVariablePaint::PaintOperation(
 			m_sourceMesh->expandedVariableData<Data>( variableName, IECoreScene::PrimitiveVariable::Interpolation::Vertex )
 		);
 
@@ -1102,7 +1102,7 @@ void PaintTool::LocationCache::paintToCurrentStroke(
 
 	if( !m_currentStroke )
 	{
-		m_currentStroke = new PaintOperation();
+		m_currentStroke = new PrimitiveVariablePaint::PaintOperation();
 	}
 
 	IECore::TypeId valueTypeId = std::holds_alternative<float>( value ) ? FloatVectorDataTypeId : Color3fVectorDataTypeId;
@@ -1173,7 +1173,7 @@ void PaintTool::LocationCache::applyCurrentStroke( EditScope *editScope, const s
 	}
 
 	// Bake the current stroke together with the current edit value, then apply it as the new edit
-	PaintOperationPtr newVal = new PaintOperation;
+	PrimitiveVariablePaint::PaintOperationPtr newVal = new PrimitiveVariablePaint::PaintOperation;
 	composePaintOperations( *m_initialEditValue, *m_currentStroke, paintMode, opacity, *newVal, true );
 
 	// Use indices to avoid storing zeros in PaintOperation
@@ -1200,7 +1200,7 @@ void PaintTool::LocationCache::applyCurrentStroke( EditScope *editScope, const s
 	m_currentStroke.reset();
 }
 
-void PaintTool::LocationCache::edit( EditScope *editScope, const std::string &variableName, const GafferScene::PaintOperation* value )
+void PaintTool::LocationCache::edit( EditScope *editScope, const std::string &variableName, const GafferScene::PrimitiveVariablePaint::PaintOperation* value )
 {
 	if( !editable() )
 	{
