@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Cycles : Added support for rendering PointInstancers.
+- SceneInspector : Added PointInstancer section to the Statistics tab.
 
 Fixes
 -----
