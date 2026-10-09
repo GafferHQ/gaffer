@@ -55,6 +55,28 @@ IndexedIO::EntryID g_valueDataName( "valueData" );
 IndexedIO::EntryID g_opacityDataName( "opacityData" );
 IndexedIO::EntryID g_indicesDataName( "indicesData" );
 
+template< typename T >
+constexpr bool isSupportedVectorData()
+{
+	if constexpr( TypeTraits::IsVectorTypedData< T >::value )
+	{
+		if constexpr( std::is_same_v< typename T::BaseType, float > )
+		{
+			using ValueType = typename T::ValueType::value_type;
+
+			// Avoid some types that don't support the same interfaces for blending and initializing
+			// to zero. ( If anyone actually needs to paint quaternions or boxes, we could add special
+			// case code to handle this correctly ).
+			if constexpr( !TypeTraits::IsBox<ValueType>::value && !TypeTraits::IsQuat<ValueType>::value )
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 } // namespace
 
 GAFFER_NODE_DEFINE_TYPE( PrimitiveVariablePaint );
@@ -196,127 +218,117 @@ void PrimitiveVariablePaint::PaintOperation::apply( IECore::DataPtr &resultData,
 		{
 			using SourceType = typename std::remove_const_t< std::remove_pointer_t<decltype( typedValueData )> >;
 
-			if constexpr( TypeTraits::IsVectorTypedData< SourceType >::value )
+			if constexpr( isSupportedVectorData<SourceType>() )
 			{
-				if constexpr( std::is_same_v< typename SourceType::BaseType, float > )
+				using ValueType = typename SourceType::ValueType::value_type;
+
+				typename SourceType::Ptr typedResultData = IECore::runTimeCast<SourceType>( resultData );
+				if( !typedResultData )
 				{
-
-					using ValueType = typename SourceType::ValueType::value_type;
-
-					// Avoid some types that don't support the same interfaces for blending and initializing
-					// to zero. ( If anyone actually needs to paint quaternions or boxes, we could add special
-					// case code to handle this correctly ).
-					if constexpr( !TypeTraits::IsBox<ValueType>::value && !TypeTraits::IsQuat<ValueType>::value )
+					if( !resultData )
 					{
-						typename SourceType::Ptr typedResultData = IECore::runTimeCast<SourceType>( resultData );
-						if( !typedResultData )
-						{
-							if( !resultData )
-							{
-								// If the result hasn't been filled with data yet, start from a vector of
-								// zeros
-								typedResultData = new SourceType();
-								typedResultData->writable().resize( outputSize, ValueType( 0.0f ) );
-								resultData = typedResultData;
-							}
-							else
-							{
-								throw IECore::Exception(
-									fmt::format(
-										"Cannot apply PaintOperation with value type {} to variable of type {}",
-										typedValueData->typeName(), resultData->typeName()
-									)
-								);
-							}
-						}
-
-						auto &resultVec = typedResultData->writable();
-						auto &typedValue = typedValueData->readable();
-
-						if( m_indicesData )
-						{
-							const std::vector<int> &indices = m_indicesData->readable();
-
-							if( typedValue.size() != indices.size() )
-							{
-								throw IECore::Exception(
-									fmt::format( "Value size {} does not match indices size {}", typedValue.size(), indices.size() )
-								);
-							}
-
-							if( m_opacityData )
-							{
-								const std::vector<float> &opacity = m_opacityData->readable();
-
-								if( opacity.size() != indices.size() )
-								{
-									throw IECore::Exception(
-										fmt::format( "Opacity size {} does not match indices size {}", opacity.size(), indices.size() )
-									);
-								}
-
-								for( size_t i = 0; i < indices.size(); i++ )
-								{
-									if( (size_t)indices[i] >= resultVec.size() )
-									{
-										throw IECore::Exception(
-											fmt::format( "Invalid index {} in variable size {}", indices[i], outputSize )
-										);
-									}
-									resultVec[ indices[i] ] = ( 1 - opacity[i] ) * resultVec[ indices[i] ] + typedValue[i];
-								}
-							}
-							else
-							{
-								for( size_t i = 0; i < indices.size(); i++ )
-								{
-									if( (size_t)indices[i] >= resultVec.size() )
-									{
-										throw IECore::Exception(
-											fmt::format( "Invalid index {} in variable size {}", indices[i], outputSize )
-										);
-									}
-									resultVec[ indices[i] ] = typedValue[i];
-								}
-							}
-
-						}
-						else
-						{
-							// \todo - should we support some sort of reprojection for loading out of date paint? This
-							// would require storing a reference P in the paint file
-							if( typedValue.size() != outputSize )
-							{
-								throw IECore::Exception(
-									fmt::format( "Value size {} does not match {}", typedValue.size(), outputSize )
-								);
-							}
-
-							if( m_opacityData )
-							{
-								const std::vector<float> &opacity = m_opacityData->readable();
-
-								if( opacity.size() != outputSize )
-								{
-									throw IECore::Exception(
-										fmt::format( "Opacity size {} does not match {}", opacity.size(), outputSize )
-									);
-								}
-
-								for( size_t i = 0; i < resultVec.size(); i++ )
-								{
-									resultVec[i] = ( 1 - opacity[i] ) * resultVec[i] + typedValue[i];
-								}
-							}
-							else
-							{
-								resultVec = typedValue;
-							}
-						}
-
-						return;
+						// If the result hasn't been filled with data yet, start from a vector of
+						// zeros
+						typedResultData = new SourceType();
+						typedResultData->writable().resize( outputSize, ValueType( 0.0f ) );
+						resultData = typedResultData;
+					}
+					else
+					{
+						throw IECore::Exception(
+							fmt::format(
+								"Cannot apply PaintOperation with value type {} to variable of type {}",
+								typedValueData->typeName(), resultData->typeName()
+							)
+						);
 					}
 				}
+
+				auto &resultVec = typedResultData->writable();
+				auto &typedValue = typedValueData->readable();
+
+				if( m_indicesData )
+				{
+					const std::vector<int> &indices = m_indicesData->readable();
+
+					if( typedValue.size() != indices.size() )
+					{
+						throw IECore::Exception(
+							fmt::format( "Value size {} does not match indices size {}", typedValue.size(), indices.size() )
+						);
+					}
+
+					if( m_opacityData )
+					{
+						const std::vector<float> &opacity = m_opacityData->readable();
+
+						if( opacity.size() != indices.size() )
+						{
+							throw IECore::Exception(
+								fmt::format( "Opacity size {} does not match indices size {}", opacity.size(), indices.size() )
+							);
+						}
+
+						for( size_t i = 0; i < indices.size(); i++ )
+						{
+							if( (size_t)indices[i] >= resultVec.size() )
+							{
+								throw IECore::Exception(
+									fmt::format( "Invalid index {} in variable size {}", indices[i], outputSize )
+								);
+							}
+							resultVec[ indices[i] ] = ( 1 - opacity[i] ) * resultVec[ indices[i] ] + typedValue[i];
+						}
+					}
+					else
+					{
+						for( size_t i = 0; i < indices.size(); i++ )
+						{
+							if( (size_t)indices[i] >= resultVec.size() )
+							{
+								throw IECore::Exception(
+									fmt::format( "Invalid index {} in variable size {}", indices[i], outputSize )
+								);
+							}
+							resultVec[ indices[i] ] = typedValue[i];
+						}
+					}
+
+				}
+				else
+				{
+					// \todo - should we support some sort of reprojection for loading out of date paint? This
+					// would require storing a reference P in the paint file
+					if( typedValue.size() != outputSize )
+					{
+						throw IECore::Exception(
+							fmt::format( "Value size {} does not match {}", typedValue.size(), outputSize )
+						);
+					}
+
+					if( m_opacityData )
+					{
+						const std::vector<float> &opacity = m_opacityData->readable();
+
+						if( opacity.size() != outputSize )
+						{
+							throw IECore::Exception(
+								fmt::format( "Opacity size {} does not match {}", opacity.size(), outputSize )
+							);
+						}
+
+						for( size_t i = 0; i < resultVec.size(); i++ )
+						{
+							resultVec[i] = ( 1 - opacity[i] ) * resultVec[i] + typedValue[i];
+						}
+					}
+					else
+					{
+						resultVec = typedValue;
+					}
+				}
+
+				return;
 			}
 
 			throw IECore::Exception( fmt::format(
