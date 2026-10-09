@@ -4465,6 +4465,30 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_default.g"]], 0, delta = 0.001 )
 		self.assertAlmostEqual( layersTopLeftPixel[layerChannelIndices["RGBA_default.b"]], 0, delta = 0.001 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerWithEmptyPrototype( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			self.renderer,
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		attributes = renderer.attributes( IECore.CompoundObject() )
+
+		prototype = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[], [], attributes
+		)
+
+		# This used to crash, so if it doesn't we are happy.
+		renderer.pointInstancer( "test", [ pointInstancer ], [ 0.0 ], [ prototype ], attributes )
+
+		del attributes
+		del renderer
+
 	def __assertParameterEqual( self, paramList, name, data, tolerance = None ) :
 
 		p = next( x for x in paramList if x["info"]["name"] == name )

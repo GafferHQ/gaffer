@@ -2725,7 +2725,10 @@ class PointInstancerCache : public IECore::RefCounted
 				}
 				hash.append( p.times.data(), p.times.size() );
 				auto prototypeAttributes = static_cast<const ArnoldAttributes *>( p.attributes.get() );
-				prototypeAttributes->hashGeometry( p.samples.front().get(), hash );
+				if( p.samples.size() )
+				{
+					prototypeAttributes->hashGeometry( p.samples.front().get(), hash );
+				}
 				/// \todo This is unnecessarily pessimistic - not all attributes affect the prototype.
 				prototypeAttributes->allAttributes()->hash( hash );
 			}

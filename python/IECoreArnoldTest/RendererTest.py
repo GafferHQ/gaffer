@@ -1593,6 +1593,32 @@ class RendererTest( GafferTest.TestCase ) :
 				"instancer1_noInstancing_B",
 			)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerWithEmptyPrototype( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		pointInstancer = IECoreScene.PointInstancer( 1 )
+		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] ) )
+
+		attributes = renderer.attributes( IECore.CompoundObject() )
+
+		prototype = GafferScene.Private.IECoreScenePreview.Renderer.Prototype(
+			[], [], attributes
+		)
+
+		# This used to crash, so if it doesn't we are happy.
+		renderer.pointInstancer( "test", [ pointInstancer ], [ 0.0 ], [ prototype ], attributes )
+		renderer.render()
+
+		del attributes
+		del renderer
+
 	def testTransformTypeAttribute( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
