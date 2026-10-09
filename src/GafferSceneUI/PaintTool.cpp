@@ -622,7 +622,8 @@ void frustumPlanes( const M44f &projectionMatrix, std::vector<V3f> &frustumPlane
 }
 
 // \todo : At some point, this should probably be unified with ColorInspectorTool's renderCircle2D
-// and moved to StandardStyle for consistency with how we do other drawing?
+// and moved to somewhere central. Currently, a lot of this stuff lives in StandardStyle, but John
+// suggests that all the basic drawing stuff should all be moved from StandardStyle to somewhere else.
 void renderCircle( const Imath::V2f &pos, float radius )
 {
     glBegin( GL_LINE_LOOP );
