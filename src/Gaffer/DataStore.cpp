@@ -101,15 +101,7 @@ IECore::ConstObjectPtr loadDataFile( const std::filesystem::path &filePath )
 	return IECore::Object::load( file, "object" );
 }
 
-IECore::MurmurHash initializeNotFoundHash()
-{
-	IECore::MurmurHash h;
-	h.append( std::string( "__CANNOT_BE_STORED_IN_DATASTORE_SPECIAL_STRING__" ) );
-	return h;
-}
-
-IECore::NullObjectPtr g_notFoundMarker = new IECore::NullObject();
-IECore::MurmurHash g_notFoundHash = initializeNotFoundHash();
+IECore::StringDataPtr g_notFoundMarker = new IECore::StringData( "__CANNOT_BE_STORED_IN_DATASTORE_SPECIAL_STRING__" );
 
 } // namespace
 
@@ -454,7 +446,7 @@ void DataStore::setEntryInternal( const std::string &key, const std::optional<En
 	refreshCountPlug()->setValue( refreshCountPlug()->getValue() + 1 );
 }
 
-IECore::ConstObjectPtr DataStore::getEntry( const std::string &key, bool throwExceptions ) const
+IECore::ConstObjectPtr DataStore::getEntry( const std::string &key, bool throwIfMissing ) const
 {
 	IECore::ConstObjectPtr result;
 	try
@@ -468,14 +460,15 @@ IECore::ConstObjectPtr DataStore::getEntry( const std::string &key, bool throwEx
 	}
 	catch( ProcessException &e )
 	{
-		// The throwExceptions flag is about how to handle keys not being found ... if the key
-		// is found, but references an invalid file, then I guess we should always throw for that?
+		// If we get an exception here, it's not from a missing entry ( which would be represented
+		// using g_notFoundMarker ), instead it's an entry that's actually corrupt somehow. We
+		// should always pass that exception.
 		e.rethrowUnwrapped();
 	}
 
 	if( result.get() == g_notFoundMarker.get() )
 	{
-		if( throwExceptions )
+		if( throwIfMissing )
 		{
 			throw IECore::Exception( "Unknown key: " + key );
 		}
@@ -537,7 +530,7 @@ void DataStore::hash( const ValuePlug *output, const Context *context, IECore::M
 		auto it = m_entries.find( key );
 		if( it == m_entries.end() )
 		{
-			h = g_notFoundHash;
+			h = g_notFoundMarker->Object::hash();
 			return;
 		}
 
@@ -551,7 +544,7 @@ void DataStore::hash( const ValuePlug *output, const Context *context, IECore::M
 		s.set( g_dataStoreEvaluationKeyName, &select );
 		h = evaluatePlug()->hash();
 
-		if( h == g_notFoundHash )
+		if( h == g_notFoundMarker->Object::hash() )
 		{
 			h = defaultPlug()->hash();
 		}
