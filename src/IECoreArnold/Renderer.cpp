@@ -1319,6 +1319,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ),
 				m_curves( attributes ), m_points( attributes ), m_volume( attributes ), m_allAttributes( attributes )
 		{
+			IECore::ConstCompoundObjectPtr modifiedAttributes = ShaderNetworkAlgo::convertUSDMeshLightAttributes( attributes );
+			attributes = modifiedAttributes.get();
+
 			updateVisibility( m_visibility, g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( m_visibility, g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
 			updateVisibility( m_visibility, g_diffuseReflectVisibilityAttributeName, AI_RAY_DIFFUSE_REFLECT, attributes );
@@ -2722,7 +2725,10 @@ class PointInstancerCache : public IECore::RefCounted
 				}
 				hash.append( p.times.data(), p.times.size() );
 				auto prototypeAttributes = static_cast<const ArnoldAttributes *>( p.attributes.get() );
-				prototypeAttributes->hashGeometry( p.samples.front().get(), hash );
+				if( p.samples.size() )
+				{
+					prototypeAttributes->hashGeometry( p.samples.front().get(), hash );
+				}
 				/// \todo This is unnecessarily pessimistic - not all attributes affect the prototype.
 				prototypeAttributes->allAttributes()->hash( hash );
 			}

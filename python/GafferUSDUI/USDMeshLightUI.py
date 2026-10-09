@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,54 @@
 #
 ##########################################################################
 
-import GafferUI
-import GafferSceneUI
+import Gaffer
+import GafferUSD
 
-def __toolMenu( nodeEditor, node, menuDefinition ) :
+Gaffer.Metadata.registerNode(
 
-	GafferUI.UIEditor.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
-	GafferUI.BoxUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
-	GafferUI.EditScopeUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
-	GafferSceneUI.FilteredSceneProcessorUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
-	GafferSceneUI.CryptomatteUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
+	GafferUSD.USDMeshLight,
 
-GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu )
+	"description",
+	"""
+	Turns mesh primitives into USD mesh lights by assigning a MeshLight
+	shader and adding the meshes to the default lights set.
+	""",
 
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+	plugs = {
 
-	GafferUI.NodeUI.appendPlugDeletionMenuDefinitions( plugValueWidget, menuDefinition )
+		"parameters" : {
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+			"layout:section:Basic:collapsed" : False,
+
+			"layout:customWidget:rendererFilter:widgetType" : "GafferUSDUI.USDLightUI._RendererFilter",
+			"layout:customWidget:rendererFilter:index" : 0,
+
+			"layout:customWidget:standardFilter:widgetType" : "GafferUI.PlugLayout.StandardFilterWidget",
+			"layout:customWidget:standardFilter:index" : 1,
+			"layout:customWidget:standardFilter:accessory" : True,
+
+		},
+
+		"parameters.*" : {
+
+			# USD light parameters don't accept connections. `MeshLightUI` forwards
+			# metadata requests to the internal shader, which means `USDShaderUI`
+			# is supplying metadata for `USDMeshLight`. The USD schemas used there
+			# don't supply connectability metadata, so we force nodules to be removed
+			# here. ( For `USDLight`, this is handled in `LightUI` ).
+			"nodule:type" : "",
+
+		},
+
+		# \todo Remove this when we use the `shaderType:shaderName:parameter` pattern
+		# for accessing shader metadata everywhere. Currently we get metadata registered
+		# directly to plugs (via `GafferScene.MeshLightUI`).
+		"parameters.arnold:*" : {
+
+			"description" : "Refer to Arnold's documentation for further details.",
+
+		},
+
+	}
+
+)

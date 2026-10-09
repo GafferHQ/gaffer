@@ -157,7 +157,7 @@ class SceneInspector( GafferSceneUI.SceneEditor ) :
 
 			self["__statistics"].addQuery( Gaffer.IntPlug( defaultValue = 1 ), "locationCount" )
 
-			for primitiveType in [ "MeshPrimitive", "CurvesPrimitive", "PointsPrimitive" ] :
+			for primitiveType in [ "MeshPrimitive", "CurvesPrimitive", "PointsPrimitive", "PointInstancer" ] :
 
 				queryPrefix = "{}{}".format( primitiveType[0].lower(), primitiveType[1:] )
 				nodeNamePrefix = f"__{queryPrefix}"
@@ -1271,6 +1271,10 @@ class _StatisticsPath( Gaffer.DictPath ) :
 			"Points Primitives" : {
 				"Primitives" : cls.Statistic( contexts[0], contexts[1], node["out"]["pointsPrimitiveVertex"]["count"] ),
 				"Vertices" : cls.Statistic( contexts[0], contexts[1], node["out"]["pointsPrimitiveVertex"]["sum"] ),
+			},
+			"Point Instancers" : {
+				"Instancers" : cls.Statistic( contexts[0], contexts[1], node["out"]["pointInstancerVertex"]["count"] ),
+				"Instances" : cls.Statistic( contexts[0], contexts[1], node["out"]["pointInstancerVertex"]["sum"] ),
 			}
 		}
 

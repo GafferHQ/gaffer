@@ -1924,6 +1924,146 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		imageReader["refreshCount"].setValue( 1 )
 		self.assertEqual( self.__color4fAtUV( imageReader, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0.5, 0.25, 1 ) )
 
+	def testUSDMeshLight( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 2.207)
+		script["camera"]["fieldOfView"].setValue( 45.0 )
+
+		script["diffuseShader"], diffuseShaderColorPlug, diffuseShaderOut = self._createDiffuseShader()
+
+		script["diffusePlane"] = GafferScene.Plane()
+		# Make the geometry different so Cycles shader assignments work correctly.
+		script["diffusePlane"]["divisions"].setValue( imath.V2i( 2, 2 ) )
+
+		script["diffuseAssignment"] = GafferScene.ShaderAssignment()
+		script["diffuseAssignment"]["in"].setInput( script["diffusePlane"]["out"] )
+		script["diffuseAssignment"]["shader"].setInput( diffuseShaderOut )
+
+		script["meshLightPlane"] = GafferScene.Plane()
+		script["meshLightPlane"]["transform"]["translate"].setValue( imath.V3f( 0.5, 0, 0.5 ) )
+		script["meshLightPlane"]["transform"]["rotate"].setValue( imath.V3f( 0.0, -90.0, 0.0 ) )
+
+		script["emissiveShader"], emissiveShaderColorPlug, emissiveShaderOut = self._createEmissiveShader()
+
+		# The best supported solid color shader across all renderers looks to be a checkerboard
+		# with both colors set to the same value.
+		script["emissiveChecker"], emissiveCheckerColor1, emissiveCheckerColor2, emissiveCheckerOut = self._createCheckerShader()
+		emissiveCheckerColor1.setValue( imath.Color3f( 1.0, 1.0, 0.0 ) )
+		emissiveCheckerColor2.setValue( imath.Color3f( 1.0, 1.0, 0.0 ) )
+
+		script["lightSurfaceAssignment"] = GafferScene.ShaderAssignment()
+		script["lightSurfaceAssignment"]["in"].setInput( script["meshLightPlane"]["out"] )
+		script["lightSurfaceAssignment"]["shader"].setInput( emissiveShaderOut )
+
+		script["meshLight"] = GafferScene.CustomAttributes()
+		script["meshLight"]["in"].setInput( script["lightSurfaceAssignment"]["out"] )
+		# To avoid adding a module dependency on `GafferUSD`, we add attributes
+		# equivalent to what USDMeshLight would add.
+		def setMeshLightAttributes( color ) :
+			script["meshLight"]["extraAttributes"].setValue(
+				IECore.CompoundObject( {
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"__shader" : IECoreScene.Shader(
+								"MeshLight", "light",
+								{ "color" : IECore.Color3fData( color ), "intensity" : 1000.0 },
+							)
+						},
+						output = "__shader",
+					),
+				} )
+			)
+		setMeshLightAttributes( imath.Color3f( 1.0 ) )
+
+		script["planeFilter"] = GafferScene.PathFilter()
+		script["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		script["lightSets"] = GafferScene.Set()
+		script["lightSets"]["in"].setInput( script["meshLight"]["out"] )
+		script["lightSets"]["filter"].setInput( script["planeFilter"]["out"] )
+		script["lightSets"]["name"].setValue( "__lights defaultLights" )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["camera"]["out"] )
+		script["parent"]["children"][0].setInput( script["diffuseAssignment"]["out"] )
+		script["parent"]["children"][1].setInput( script["lightSets"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		imagePath = self.temporaryDirectory() / "test.exr"
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"rgba"
+			)
+		)
+
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( imagePath )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( reader["out"] )
+
+		for emissiveColor in [ emissiveCheckerOut, imath.Color3f( 0.0 ), imath.Color3f( 1.0, 0.0, 1.0 ), imath.Color3f( 1.0 ) ] :
+			for lightColor in [ imath.Color3f( 0.0 ), imath.Color3f( 0.0, 1.0, 1.0 ), imath.Color3f( 1.0 ) ] :
+				if isinstance( emissiveColor, imath.Color3f ) :
+					emissiveShaderColorPlug.setInput( None )
+					emissiveShaderColorPlug.setValue( emissiveColor )
+				else :
+					emissiveShaderColorPlug.setValue( imath.Color3f( 0.0 ) )
+					emissiveShaderColorPlug.setInput( emissiveCheckerOut )
+
+				setMeshLightAttributes( lightColor )
+
+				script["render"]["task"].execute()
+				reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
+
+				with self.subTest( emissiveColor = emissiveColor, lightColor = lightColor ) :
+
+					sampler["pixel"].setValue( imath.V2f( 600, 240 ) )
+					emissivePixelColor = sampler["color"].getValue()
+
+					sampler["pixel"].setValue( imath.V2f( 320, 240 ) )
+
+					planePixelColor = sampler["color"].getValue()
+					emissiveColor = emissiveColor if isinstance( emissiveColor, imath.Color3f ) else emissiveCheckerColor1.getValue()
+					targetColor = emissiveColor * lightColor
+
+					for i in range( 0, 3 ) :
+						with self.subTest( i = i ) :
+							# The surface color (emissive) is not modified.
+							self.assertAlmostEqual( emissivePixelColor[i], emissiveColor[i] )
+
+							if targetColor[i] > 0.0 :
+								# Renderers are not totally consistent about light contribution from
+								# the emissive surface shader. If the target color channel is non-zero
+								# we should have a strong presence of that channel on the diffuse plane.
+								self.assertGreater( planePixelColor[i], 0.5 )
+							else :
+								# We also allow for some emission coming from the surface shader on
+								# the diffuse plane.
+								self.assertLess( planePixelColor[i], 0.1 )
+
 	## Should be implemented by derived classes to return
 	# an appropriate Shader node with a constant surface shader loaded, along
 	# with the plug for the colour parameter and the output plug to be connected
@@ -1939,6 +2079,14 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def _createDiffuseShader( self ) :
 
 		raise NotImplementedError
+
+	## Should be implemented by derived classes to return
+	# an appropriate Shader node with an emissive surface shader loaded, along
+	# with the plug for the colour parameter and the output plug to be connected
+	# to a ShaderAssignment.
+	def _createEmissiveShader( self ) :
+
+		return NotImplementedError
 
 	# Should be implemented by derived classes to return an appropriate Light
 	# node with a distant light loaded, along with the plug for the colour
@@ -1965,6 +2113,15 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def _createOptions( self ) :
 
 		return GafferScene.CustomOptions()
+
+	## Should be implemented by derived classes to return
+	# an appropriate Shader node with a checkerboard texture loaded, along
+	# with the plug for the first colour parameter, the plug for the second
+	# colour parameter and the output plug to be connected to a shader color
+	# plug.
+	def _createCheckerShader( self ) :
+
+		raise NotImplementedError
 
 	def __renderManShuffle( self ) :
 

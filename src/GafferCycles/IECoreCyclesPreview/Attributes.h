@@ -144,6 +144,8 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		int getVolumePrecision() const;
 		float getVolumeClipping() const;
 
+		bool isUSDMeshLight() const;
+
 	private :
 
 		void updateVisibility( const IECore::InternedString &name, int rayType, const IECore::CompoundObject *attributes );
@@ -183,6 +185,8 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		bool m_isCausticsReceiver;
 		bool m_muteLight;
 		bool m_automaticInstancing;
+
+		bool m_isUSDMeshLight;
 
 		using CustomAttributes = ccl::vector<ccl::ParamValue>;
 		CustomAttributes m_custom;

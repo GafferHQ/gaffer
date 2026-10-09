@@ -1784,6 +1784,12 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		shader["parameters"]["Kd"].setValue( 1 )
 		return shader, shader["parameters"]["Kd_color"], shader["out"]
 
+	def _createEmissiveShader( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "flat" )
+		return shader, shader["parameters"]["color"], shader["out"]
+
 	def _createPointLight( self ) :
 
 		light = GafferArnold.ArnoldLight()
@@ -1822,3 +1828,9 @@ class ArnoldRenderTest( GafferSceneTest.RenderTest ) :
 		options["options"]["ai:AA_samples"]["value"].setValue( 3 )
 
 		return options
+
+	def _createCheckerShader( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "checkerboard" )
+		return shader, shader["parameters"]["color1"], shader["parameters"]["color2"], shader["out"]

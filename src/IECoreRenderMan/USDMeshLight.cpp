@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2026, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,26 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "USDMeshLight.h"
 
-#include "GafferUSD/USDAttributes.h"
-#include "GafferUSD/USDLayerWriter.h"
-#include "GafferUSD/USDLight.h"
-#include "GafferUSD/USDMeshLight.h"
-#include "GafferUSD/USDShader.h"
+#include "Light.h"
+#include "Object.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+using namespace std;
+using namespace Imath;
+using namespace IECore;
+using namespace IECoreRenderMan;
 
-using namespace boost::python;
-using namespace GafferUSD;
-
-BOOST_PYTHON_MODULE( _GafferUSD )
+USDMeshLight::USDMeshLight( const std::string &name, const ConstGeometryPrototypePtr &lightGeometryPrototype, const ConstGeometryPrototypePtr &surfaceGeometryPrototype, const Attributes *attributes, MaterialCache *materialCache, LightLinker *lightLinker, Session *session ) :
+	Light( lightGeometryPrototype, attributes, materialCache, lightLinker, session )
 {
+	m_surface = new Object( name, surfaceGeometryPrototype, attributes, lightLinker, session );
+}
 
-	GafferBindings::DependencyNodeClass<USDAttributes>();
-	GafferBindings::DependencyNodeClass<USDShader>();
-	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
-	GafferBindings::DependencyNodeClass<USDLight>();
-	GafferBindings::DependencyNodeClass<USDMeshLight>();
+USDMeshLight::~USDMeshLight()
+{
+}
 
+void USDMeshLight::transform( const IECoreScenePreview::Renderer::TransformSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times )
+{
+	Light::transform( samples, times );
+	m_surface->transform( samples, times );
+}
+
+bool USDMeshLight::attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+{
+	return Light::attributes( attributes ) && m_surface->attributes( attributes );
+}
+
+void USDMeshLight::link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects )
+{
+	Light::link( type, objects );
+	m_surface->link( type, objects );
+}
+
+void USDMeshLight::assignID( uint32_t id )
+{
+	m_surface->assignID( id );
+}
+
+void USDMeshLight::assignInstanceID( uint32_t id )
+{
+	// \todo : This will be needed once our RenderMan backend supports encapsulated instancers
 }

@@ -41,13 +41,26 @@ Breaking Changes
   - The `gafferUSD:pointInstancerAdaptor:attributes` and `gafferUSD:pointInstancerAdaptor:enabled` options have been removed.
   - Instance attributes no longer have a `user:` prefix when rendered in Arnold and 3Delight.
 
-1.7.x.x (relative to 1.7.3.1)
+1.7.x.x (relative to 1.7.4.0)
+=======
+
+
+
+1.7.4.0 (relative to 1.7.3.1)
 =======
 
 Improvements
 ------------
 
 - Cycles : Added support for rendering PointInstancers.
+- SceneInspector : Added PointInstancer section to the Statistics tab.
+- USDMeshLight :
+  - Added node to add necessary attributes to geometry to convert to a USDMeshLight.
+  - Added Arnold, RenderMan, 3Delight and Cycles rendering.
+- MeshLight : Added viewport visualisation of textures.
+- SceneReader : Added support for loading ParticleField3DGaussianSplat USD prims.
+- Arnold : Added support for rendering Gaussian splats. This requires Arnold version `7.5.2` or later.
+- EditScope : Added "Delete Contents" item to NodeEditor tool menu.
 
 Fixes
 -----
@@ -63,12 +76,19 @@ Fixes
 - NodeEditor : Fixed unavailable context menus on connected checkboxes, switches and preset menus (#7105, #5722).
 - Spreadsheet : Fixed editability of preset menus for plugs with inputs. The menu items are now disabled, since the value can not be edited.
 - PlugLayout : Fixed flicker when the layout is first shown or contents of the layout changes, such as when the layout is filtered, plug visibility activators update, or when Viewer toolbars are first displayed.
+- Arnold, RenderMan : Fixed crash rendering a PointInstancer with a non-leaf prototype and no prototype indices.
 
 API
 ---
 
 - BoolWidget : Added `setEditable()` and `getEditable()` methods.
 - Button : Added `setClickable()` and `getClickable()` methods, also available on MenuButton.
+
+Build
+-----
+
+- USD : Fixed build compatibility with USD 25.08.
+- Cortex : Updated to version 10.7.3.1.
 
 1.7.3.1 (relative to 1.7.3.0)
 =======
