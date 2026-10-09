@@ -1386,7 +1386,21 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
-			ObjectInterfacePtr result = new CyclesLight( m_scene, name, m_nodeDeleter.get() );
+			auto typedAttributes = static_cast<const Attributes *>( attributes );
+			ObjectInterfacePtr result;
+			if( typedAttributes->isUSDMeshLight() )
+			{
+				SharedGeometryPtr geometry = m_geometryCache->get( samples, times, attributes, name );
+				if( !geometry )
+				{
+					return nullptr;
+				}
+				result = new CyclesObject( m_scene, geometry, name, &m_lightLinker, m_nodeDeleter.get() );
+			}
+			else
+			{
+				result = new CyclesLight( m_scene, name, m_nodeDeleter.get() );
+			}
 			result->attributes( attributes );
 			return result;
 		}
