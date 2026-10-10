@@ -36,56 +36,41 @@
 
 #pragma once
 
-#include "GafferSceneUI/Export.h"
-
-#include "GafferSceneUI/Private/Inspector.h"
+#include "GafferUI/Gadget.h"
 
 namespace GafferSceneUI
 {
 
-namespace Private
-{
-
-class GAFFERSCENEUI_API PrimitiveVariableInspector : public Inspector
+class GAFFERUI_API DepthRender
 {
 
 	public :
 
-		enum class Property
-		{
-			Interpolation,
-			Type,
-			Interpretation,
-			Data,
-			Indices,
-		};
+		DepthRender( Imath::V2i resolution );
+		~DepthRender();
 
-		PrimitiveVariableInspector(
-			const GafferScene::ScenePlugPtr &scene,
-			const Gaffer::PlugPtr &editScope,
-			IECore::InternedString primitiveVariable,
-			Property property,
-			const std::string &name = ""
-		);
+		void setResolution( const Imath::V2i &resolution );
+		const Imath::V2i &getResolution() const;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::Private::PrimitiveVariableInspector, PrimitiveVariableInspectorTypeId, Inspector );
+		// Start rendering to a depth buffer, with the specified projection matrix.
+		// Once this is called, the GL state is set up so that gadgets can be
+		// rendered, and will go to this depth buffer.
+		void startRendering( const Imath::M44f &projectionMatrix );
 
-	protected :
-
-		GafferScene::SceneAlgo::History::ConstPtr history() const override;
-		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history) const override;
-		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
+		// Finish rendering, and return the depth map as a float pointer to an array
+		// of size resolution.x * resolution.y
+		const float* finishRendering();
 
 	private :
 
-		const GafferScene::ScenePlugPtr m_scene;
-		const IECore::InternedString m_primitiveVariable;
-		const Property m_property;
+		GLuint acquireFramebuffer() const;
 
+		Imath::V2i m_resolution;
+		std::vector<float> m_depthMap;
+
+		mutable GLuint m_framebuffer;
+		mutable Imath::V2i m_framebufferSize;
+		mutable GLuint m_depthBuffer;
 };
 
-IE_CORE_DECLAREPTR( PrimitiveVariableInspector )
-
-}  // namespace Private
-
-}  // namespace GafferSceneUI
+} // namespace GafferSceneUI

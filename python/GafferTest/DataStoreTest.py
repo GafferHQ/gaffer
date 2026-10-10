@@ -132,8 +132,9 @@ class DataStoreTest( GafferTest.TestCase ) :
 			c["contextVar"] = IECore.StringData( "b" )
 			self.assertEqual( s["dataStore"]["out"].getValue(), IECore.FloatData( 123.456 ) )
 			c["contextVar"] = IECore.StringData( "d" )
-			with self.assertRaisesRegex( Gaffer.ProcessException, "Unknown key: d" ) :
-				s["dataStore"]["out"].getValue()
+			self.assertEqual( s["dataStore"]["out"].getValue(), IECore.NullObject() )
+			s["dataStore"]["default"].setValue( IECore.StringData( "Overrode default" ) )
+			self.assertEqual( s["dataStore"]["out"].getValue(), IECore.StringData( "Overrode default" ) )
 
 
 		# After saving, the live values will be cleared, and values will be read from disk
@@ -249,6 +250,23 @@ class DataStoreTest( GafferTest.TestCase ) :
 			loadS.load()
 			self.assertComparisonValid( loadS )
 			del loadS
+
+	def testRemoveDataStore( self ):
+		s = Gaffer.ScriptNode()
+		self.setupComparison( s )
+
+		self.comparisonSetEntry( s, "test", IECore.IntData( 42 ) )
+
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
+		self.assertComparisonValid( s )
+		s.save()
+		self.assertSaved( s )
+
+		del s["dataStore"]
+
+		# This will check that the caches on disk match the empty list ( ie. we should now
+		# have cleaned up and deleted all data stores )
+		self.assertSaved( s )
 
 	def testMovingManyEntriesToRecycleBin( self ):
 		# Just wanted to double check that iterating the data store directory is working properly, by

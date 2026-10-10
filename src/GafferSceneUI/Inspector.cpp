@@ -448,7 +448,6 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 		else if( result->m_editScope && node->ancestor<EditScope>() == result->m_editScope )
 		{
 			result->m_sourceType = Result::SourceType::EditScope;
-			result->m_editScopeInHistory = true;
 		}
 		else
 		{
@@ -540,6 +539,11 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 				downstreamNode->relativeName( downstreamNode->scriptNode() )
 			);
 		}
+	}
+
+	if( source && result->m_editScope && node->ancestor<EditScope>() == result->m_editScope )
+	{
+		result->m_editScopeInHistory = true;
 	}
 
 	// If we haven't found everything we want yet, then recurse up the history
@@ -1118,6 +1122,11 @@ Inspector::Result::SourceType Inspector::Result::sourceType() const
 const std::string &Inspector::Result::fallbackDescription() const
 {
 	return m_fallbackDescription;
+}
+
+bool Inspector::Result::editScopeInHistory() const
+{
+	return m_editScopeInHistory;
 }
 
 bool Inspector::Result::editable() const

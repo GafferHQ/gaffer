@@ -34,70 +34,64 @@
 #
 ##########################################################################
 
-import functools
-
-import imath
-
 import Gaffer
 import GafferUI
 
+import GafferScene
+
 Gaffer.Metadata.registerNode(
 
-	Gaffer.DataStore,
+	GafferScene.PrimitiveVariablePaint,
 
 	"description",
 	"""
-	Stores data that will be saved to disk beside the Gaffer script, instead of stored inside
-	the Gaffer serialisation. The next time the script is opened, the data will be deferred
-	loaded when it is needed.
-
-	Appropriate for any large data associated with a Gaffer script ( for example, if you need
-	to store primitive variable values on large meshes ).
-
-	Values are accessed using the setEntry/getEntry methods, and can also be read using regular
-	plug evaluations.
+	Modify primitive variables using PaintOperation data structures, which
+	store new values with per-element opacities, and may use sparse indices.
+	This structure is designed to support the interactive paint tool.
 	""",
 
 	plugs = {
 
-		"selector" : {
+		"primitiveVariables" : {
 
 			"description" :
 			"""
-			Chooses the entry to be output.
-			Typically this will refer to a Context Variable using
-			the `${variableName}` syntax.
-			The `keys` plug outputs all valid keys you might want to use here.
+			Add an element for each primitive variable you want to edit.
 			""",
-			"nodule:type" : "",
+
+			"plugValueWidget:type" : "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:addButton:widgetType" : "GafferUI.PlugCreationWidget",
+			"layout:customWidget:addButton:index" : -1,
+			"plugCreationWidget:action" : "addNameValuePlug",
+			"plugCreationWidget:includedTypes" : "Gaffer.ObjectPlug",
+
 		},
 
-		"default" : {
+		"primitiveVariables.*" : {
+			"deletable" : True
+		},
 
+		"primitiveVariables.*.name" : {
 			"description" :
 			"""
-			The value that will be used for `out` if `selector` is set to a key
-			without a corresponding entry.
+			The name of the primitive variable to modify.
 			""",
 		},
 
-		"out" : {
-
+		"primitiveVariables.*.enabled" : {
 			"description" :
 			"""
-			Outputs the entry corresponding to `selector`.
+			Enable modifying this primitive variable.
 			""",
-
-			"plugValueWidget:type" : "",
 		},
 
-		"keys" : {
-
+		"primitiveVariables.*.value" : {
 			"description" :
 			"""
-			Outputs all entry keys.
+			How to modify the primitive variable. Must be of type PrimitiveVariablePaint.PaintOperation.
 			""",
 		},
+
 	}
 
 )

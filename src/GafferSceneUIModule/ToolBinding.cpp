@@ -40,6 +40,7 @@
 #include "GafferSceneUI/CropWindowTool.h"
 #include "GafferSceneUI/LightPositionTool.h"
 #include "GafferSceneUI/LightTool.h"
+#include "GafferSceneUI/PaintTool.h"
 #include "GafferSceneUI/RotateTool.h"
 #include "GafferSceneUI/ScaleTool.h"
 #include "GafferSceneUI/SceneView.h"
@@ -128,6 +129,57 @@ boost::python::list selection( const TransformTool &tool )
 }
 
 bool selectionEditable( const TransformTool &tool )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return tool.selectionEditable();
+}
+
+boost::python::object paintEditTargets( PaintTool &tool )
+{
+	std::optional<IECorePython::ScopedGILRelease> gilRelease( std::in_place );
+	std::unordered_set< const GraphComponent* > editTargets = tool.editTargets();
+	gilRelease.reset();
+
+	boost::python::list result;
+	for( const GraphComponent *t : editTargets )
+	{
+		result.append( GraphComponentPtr( const_cast< GraphComponent * >( t ) ) );
+	}
+
+	return boost::python::import("builtins").attr("set")( result );
+}
+
+boost::python::object paintEditTargetPerPath( PaintTool &tool )
+{
+	std::optional<IECorePython::ScopedGILRelease> gilRelease( std::in_place );
+	std::map< std::string, const GraphComponent* > editTargetPerPath = tool.editTargetPerPath();
+	gilRelease.reset();
+
+	boost::python::dict result;
+	for( const auto &i : editTargetPerPath )
+	{
+		result.setdefault( i.first, GraphComponentPtr( const_cast< GraphComponent * >( i.second ) ) );
+	}
+
+	return boost::python::import("builtins").attr("dict")( result );
+}
+
+boost::python::object paintWarnings( const PaintTool &tool )
+{
+	std::optional<IECorePython::ScopedGILRelease> gilRelease( std::in_place );
+	std::unordered_set< std::string > warnings = tool.warnings();
+	gilRelease.reset();
+
+	boost::python::list result;
+	for( const std::string &w : warnings )
+	{
+		result.append( w );
+	}
+
+	return boost::python::import("builtins").attr("set")( result );
+}
+
+bool paintSelectionEditable( PaintTool &tool )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return tool.selectionEditable();
@@ -240,6 +292,37 @@ boost::python::list registeredSelectModesWrapper()
 	}
 	return result;
 }
+
+struct ColorChooserFunctionWrapper
+{
+    ColorChooserFunctionWrapper( object fn )
+        :   m_fn( fn )
+    {
+    }
+
+    void operator()( PlugPtr plug )
+    {
+        IECorePython::ScopedGILLock gilock;
+        try
+        {
+            m_fn( plug );
+        }
+        catch( const error_already_set & )
+        {
+            IECorePython::ExceptionAlgo::translatePythonException();
+        }
+    }
+
+    private:
+
+        object m_fn;
+};
+
+void registerColorChooserFunctionWrapper( object f )
+{
+    PaintTool::registerColorChooserFunction( ColorChooserFunctionWrapper( f ) );
+}
+
 
 } // namespace
 
@@ -364,5 +447,25 @@ void GafferSceneUIModule::bindTools()
 		;
 
 		GafferBindings::SignalClass<ImageSelectionTool::StatusChangedSignal, GafferBindings::DefaultSignalCaller<ImageSelectionTool::StatusChangedSignal>, ImageSelectionToolStatusChangedSlotCaller>( "StatusChangedSignal" );
+	}
+
+	{
+		scope s = GafferBindings::NodeClass<PaintTool>( nullptr, no_init )
+			.def( init<SceneView *>() )
+			.def( "targetVariableTypes", &PaintTool::targetVariableTypes )
+			.def( "editTargets", &paintEditTargets )
+			.def( "editTargetPerPath", &paintEditTargetPerPath )
+			.def( "warnings", &paintWarnings )
+			.def( "selectionEditable", &paintSelectionEditable )
+			.def( "statusChangedSignal", &PaintTool::statusChangedSignal, return_internal_reference<1>() )
+			.def( "registerColorChooserFunction", &registerColorChooserFunctionWrapper )
+		;
+
+		enum_<PaintTool::PaintMode>( "PaintMode" )
+			.value( "Over", PaintTool::PaintMode::Over )
+			.value( "Erase", PaintTool::PaintMode::Erase )
+		;
+
+		GafferBindings::SignalClass<PaintTool::StatusChangedSignal, GafferBindings::DefaultSignalCaller<PaintTool::StatusChangedSignal>, SelectionChangedSlotCaller<PaintTool> >( "StatusChangedSignal" );
 	}
 }

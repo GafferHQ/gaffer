@@ -38,6 +38,7 @@
 
 #include "GafferScene/ScenePlug.h"
 
+#include "Gaffer/DataStore.h"
 #include "Gaffer/EditScope.h"
 #include "Gaffer/TransformPlug.h"
 #include "Gaffer/TweakPlug.h"
@@ -172,6 +173,16 @@ GAFFERSCENE_API const Gaffer::GraphComponent *renderPassesReadOnlyReason( const 
 GAFFERSCENE_API bool renameRenderPass( Gaffer::EditScope *scope, const std::string &oldName, const std::string &newName );
 /// Returns the reason why a render pass could not be renamed to `newName`.
 GAFFERSCENE_API std::optional<std::string> renameRenderPassNonEditableReason( const Gaffer::EditScope *scope, const std::string &newName );
+
+// Paint
+// =====
+//
+// These methods edit primitive variables using DataStores that store PrimitiveVariablePaint::PaintOperations.
+
+GAFFERSCENE_API bool hasPaintEdit( const Gaffer::EditScope *scope, const std::string &variableName );
+GAFFERSCENE_API Gaffer::DataStore *acquirePaintEdit( Gaffer::EditScope *scope, const std::string &variableName, bool createIfNecessary = true );
+GAFFERSCENE_API void removePaintEdit( Gaffer::EditScope *scope, const std::string &variableName );
+GAFFERSCENE_API const Gaffer::GraphComponent *paintEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &variableName );
 
 } // namespace EditScopeAlgo
 
