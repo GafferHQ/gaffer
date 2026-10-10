@@ -236,7 +236,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		if not self._makeCurrent() :
 			return False
 
-		# When the cursor is over the overlay, it is within this Gadget, but for the
+		# When the cursor is over the overlay, it is within this Widget, but for the
 		# contained ViewportGadget, we want to present things as if the cursor is outside
 		# it when it is over an overlay ( ie. it gets a leaveSignal when the cursor enters
 		# an overlay, an enterSignal when the cursor leave an overlay, and no mouseMove
