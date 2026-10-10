@@ -344,6 +344,8 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// value. Otherwise returns an empty string.
 		const std::string &fallbackDescription() const;
 
+		bool editScopeInHistory() const;
+
 		/// Editing
 		/// =======
 
@@ -380,8 +382,6 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// Calls `acquireEdit()` to ensure a plug exists to
 		/// receive the value.
 		void edit( const IECore::Object *value ) const;
-
-		bool editScopeInHistory() const;
 
 	private :
 

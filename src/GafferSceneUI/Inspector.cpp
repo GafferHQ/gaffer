@@ -1124,6 +1124,11 @@ const std::string &Inspector::Result::fallbackDescription() const
 	return m_fallbackDescription;
 }
 
+bool Inspector::Result::editScopeInHistory() const
+{
+	return m_editScopeInHistory;
+}
+
 bool Inspector::Result::editable() const
 {
 	return m_editors && std::holds_alternative<AcquireEditFunction>( m_editors->acquireEditFunction );
@@ -1227,9 +1232,4 @@ void Inspector::Result::edit( const IECore::Object *value ) const
 	}
 
 	m_editors->editFunction( acquireEdit( /* createIfNecessary = */ true ).get(), value );
-}
-
-bool Inspector::Result::editScopeInHistory() const
-{
-	return m_editScopeInHistory;
 }
