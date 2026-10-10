@@ -1647,7 +1647,10 @@ PaintTool::PaintTool( SceneView *view, const std::string &name )
 	view->viewportGadget()->dragBeginSignal().connect( boost::bind( &PaintTool::dragBegin, this, ::_1, ::_2 ) );
 	view->viewportGadget()->dragEnterSignal().connect( boost::bind( &PaintTool::dragEnter, this, ::_1, ::_2 ) );
 	view->viewportGadget()->dragMoveSignal().connect( boost::bind( &PaintTool::dragMove, this, ::_2 ) );
-	view->viewportGadget()->dragEndSignal().connect( boost::bind( &PaintTool::dragEnd, this, ::_2 ) );
+
+	// We connectFront() to dragEndSignal so that we can update the modifier state after a drag that
+	// we're not handling ( we return false when it's not our drag, so the correct handler will still run )
+	view->viewportGadget()->dragEndSignal().connectFront( boost::bind( &PaintTool::dragEnd, this, ::_2 ) );
 
 	plugDirtiedSignal().connect( boost::bind( &PaintTool::plugDirtied, this, ::_1 ) );
 	view->contextChangedSignal().connect( boost::bind( &PaintTool::contextChanged, this ) );
