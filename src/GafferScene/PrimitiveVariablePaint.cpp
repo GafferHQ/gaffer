@@ -377,19 +377,18 @@ void PrimitiveVariablePaint::hashProcessedObject( const ScenePath &path, const G
 {
 	Deformer::hashProcessedObject( path, context, h );
 
-	for( NameValuePlug::Iterator it( primitiveVariablesPlug() ); !it.done(); ++it )
+	for( const auto &primVarPlug : NameValuePlug::Range( *primitiveVariablesPlug() ) )
 	{
-		const NameValuePlug *primVarPlug = it->get();
-		bool active = true;
 		if( auto enabledPlug = primVarPlug->enabledPlug() )
 		{
-			active = enabledPlug->getValue();
+			if( !enabledPlug->getValue() )
+			{
+				continue;
+			}
 		}
-		if( active )
-		{
-			primVarPlug->namePlug()->hash( h );
-			primVarPlug->valuePlug<Gaffer::ObjectPlug>()->hash( h );
-		}
+
+		primVarPlug->namePlug()->hash( h );
+		primVarPlug->valuePlug<Gaffer::ObjectPlug>()->hash( h );
 	}
 }
 
@@ -407,17 +406,14 @@ IECore::ConstObjectPtr PrimitiveVariablePaint::computeProcessedObject( const Sce
 	}
 
 	PrimitivePtr result;
-	for( NameValuePlug::Iterator it( primitiveVariablesPlug() ); !it.done(); ++it )
+	for( const auto &primVarPlug : NameValuePlug::Range( *primitiveVariablesPlug() ) )
 	{
-		const NameValuePlug *primVarPlug = it->get();
-		bool active = true;
 		if( auto enabledPlug = primVarPlug->enabledPlug() )
 		{
-			active = enabledPlug->getValue();
-		}
-		if( !active )
-		{
-			continue;
+			if( !enabledPlug->getValue() )
+			{
+				continue;
+			}
 		}
 
 		IECore::ConstObjectPtr value = primVarPlug->valuePlug<Gaffer::ObjectPlug>()->getValue();
