@@ -1,7 +1,12 @@
 1.7.x.x (relative to 1.7.4.0)
 =======
 
+Fixes
+-----
 
+- Viewer :
+  - Fixed <kbd>Home</kbd> shortcut displaying images enlarged on high DPI displays, instead of at a 1:1 pixel scale (#6382).
+  - Fixed <kbd>Home</kbd> shortcut enlarging images very slightly when the width and height of the Viewer were both an odd number of pixels.
 
 1.7.4.0 (relative to 1.7.3.1)
 =======
