@@ -36,6 +36,7 @@
 
 import os
 import json
+import datetime
 
 class About :
 
@@ -84,8 +85,8 @@ class About :
 
 	@staticmethod
 	def copyright() :
-
-		return "Copyright (c) 2011-2019 John Haddon, Copyright (c) 2011-2019 Image Engine Design Inc."
+		current_year = datetime.datetime.now().year
+		return f"Copyright (c) 2011-{current_year} John Haddon, Copyright (c) 2011-{current_year} Image Engine Design Inc."
 
 	@staticmethod
 	def license() :
