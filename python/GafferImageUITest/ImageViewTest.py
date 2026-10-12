@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -42,6 +44,8 @@ import GafferUI
 import GafferUITest
 import GafferImage
 import GafferImageUI
+
+import OpenGL.GL as GL
 
 class ImageViewTest( GafferUITest.TestCase ) :
 
@@ -89,3 +93,27 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		view = GafferImageUI.ImageView( script )
 		self.assertIsInstance( view.imageGadget(), GafferImageUI.ImageGadget )
 		self.assertTrue( view.viewportGadget().isAncestorOf( view.imageGadget() ) )
+
+	def testHomeUsesPhysicalPixels( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["image"] = GafferImage.Constant()
+		view = GafferImageUI.ImageView( script )
+		view["in"].setInput( script["image"]["out"] )
+		viewportGadget = view.viewportGadget()
+
+		with GafferUI.Window() as window :
+			gadgetWidget = GafferUI.GadgetWidget( viewportGadget )
+		window.setVisible( True )
+		self.waitForIdle( 1000 )
+		self.assertTrue( gadgetWidget._makeCurrent() )
+
+		viewport = viewportGadget.getViewport()
+		for scale in ( 1, 2 ) :
+			# Simulate a high DPI display, where the GL viewport is
+			# measured in physical pixels.
+			GL.glViewport( 0, 0, viewport.x * scale, viewport.y * scale )
+			viewportGadget.keyPressSignal()( viewportGadget, GafferUI.KeyEvent( "Home" ) )
+			p0 = viewportGadget.worldToRasterSpace( imath.V3f( 0 ) )
+			p1 = viewportGadget.worldToRasterSpace( imath.V3f( 1, 0, 0 ) )
+			self.assertAlmostEqual( ( p1.x - p0.x ) * scale, 1, places = 4 )

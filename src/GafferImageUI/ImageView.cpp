@@ -58,6 +58,7 @@
 #include "Gaffer/NameSwitch.h"
 #include "Gaffer/ScriptNode.h"
 
+#include "IECoreGL/GL.h"
 #include "IECoreGL/IECoreGL.h"
 #include "IECoreGL/Shader.h"
 #include "IECoreGL/ShaderLoader.h"
@@ -815,8 +816,11 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 	}
 	else if( event.key == "Home" && !event.modifiers )
 	{
-		V2i viewport = viewportGadget()->getViewport();
-		V3f halfViewportSize(viewport.x / 2, viewport.y / 2, 0);
+		// We can't use `ViewportGadget::getViewport()` because it isn't
+		// measured in physical pixels on high DPI displays.
+		GLint viewport[4];
+		glGetIntegerv( GL_VIEWPORT, viewport );
+		V3f halfViewportSize( viewport[2] / 2.0f, viewport[3] / 2.0f, 0 );
 		V3f imageCenter = m_imageGadgets[0]->bound().center();
 		viewportGadget()->frame(
 			Box3f(
