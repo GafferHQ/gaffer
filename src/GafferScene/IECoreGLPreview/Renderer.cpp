@@ -882,6 +882,10 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_selection = ::option<IECore::PathMatcher>( value, name, IECore::PathMatcher() );
 			}
+			else if( name == "gl:hideSelected" )
+			{
+				m_hideSelected = ::option<bool>( value, name, false );
+			}
 			else if(
 				boost::starts_with( name.string(), "gl:primitive:" ) ||
 				boost::starts_with( name.string(), "gl:pointsPrimitive:" ) ||
@@ -1229,6 +1233,19 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				{
 					selector->loadName( i++ );
 				}
+				else if( m_hideSelected )
+				{
+					// If this isn't a selection render, and the hideSelected flag is set,
+					// then someone else is responsible for rendering selected objects, we
+					// can skip them.
+					// TODO - it's a bit of a waste to match against m_selection here,
+					// when we'll also need to match against it inside render()
+					if( o->selected( m_selection ) )
+					{
+						continue;
+					}
+				}
+
 				o->render( currentState, m_selection, colorSpace );
 			}
 		}
@@ -1375,6 +1392,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		RenderType m_renderType;
 		string m_camera;
 		IECore::PathMatcher m_selection;
+		bool m_hideSelected;
 		IECore::CompoundObjectPtr m_baseStateOptions;
 		IECoreGL::StatePtr m_baseState;
 		bool m_renderObjects;
