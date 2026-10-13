@@ -6,6 +6,14 @@ Fixes
 
 - Cycles : Fixed bug causing lights with input shader networks to occasionally turn black after being modified during an interactive render.
 
+API
+---
+
+- MCP : Added classes to support the [Model Context Protocol](https://modelcontextprotocol.io).
+  - Gaffer.MCP.Server : Abstract base class for MCP servers.
+  - Gaffer.MCP.HTTPServer : Concrete server implementation using HTTP transport.
+  - Gaffer.MCP.Tool, Gaffer.MCP.BasicTool : Base classes for adding custom tools to the server.
+
 1.7.4.0 (relative to 1.7.3.1)
 =======
 
