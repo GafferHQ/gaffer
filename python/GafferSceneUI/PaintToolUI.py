@@ -105,6 +105,8 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			The size of the brush.
+
+			Shortcut : `S`
 			""",
 
 			"toolbarLayout:section" : "Bottom",
@@ -116,23 +118,28 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Specifies the color of the brush.
+
+			Shortcut : `V`
 			""",
 
 			"toolbarLayout:section" : "Bottom",
-			"toolbarLayout:width" : 100,
+			"colorPlugValueWidget:colorChooserButtonVisible" : False,
 			"toolbarLayout:visibilityActivator" : "colorValue",
 
+		},
+		"colorValue.*" : {
+			 "numericPlugValueWidget:fixedCharacterWidth" : 5,
 		},
 		"colorBackground" : {
 
 			"description" :
 			"""
-			An alternate color. Press `G` to swap colors.
+			An alternate color. Press `X` to swap colors.
 			""",
 
 			"label" : "",
 			"toolbarLayout:section" : "Bottom",
-			"toolbarLayout:width" : 10,
+			"toolbarLayout:width" : 20,
 			"plugValueWidget:type" : "GafferUI.ColorSwatchPlugValueWidget",
 		},
 		"floatValue" : {
@@ -155,6 +162,8 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			The opacity of the brush.
+
+			Shortcut : `G`
 			""",
 
 			"toolbarLayout:section" : "Bottom",
@@ -166,6 +175,8 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			The hardness of the brush. 1 is completely hard, 0 means the whole brush is a smooth fade.
+
+			Shortcut : `H`
 			""",
 
 			"toolbarLayout:section" : "Bottom",
@@ -415,7 +426,7 @@ class ColorChooserWindow( GafferUI.PopupWindow ) :
 
 
 	def __keyRelease( self, qObject, event ):
-		if event.key == "J" :
+		if event.key == "V" :
 
 			if isinstance( self.__colorPlug, Gaffer.FloatPlug ):
 				self.__colorPlug.setValue( self.__colorChooserWidget.getColor().dot( imath.Color3f( 1.0/3.0 ) ) )

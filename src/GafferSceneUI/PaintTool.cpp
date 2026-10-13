@@ -2271,7 +2271,7 @@ bool PaintTool::keyPress( const GafferUI::KeyEvent &event )
 	{
 		sizePlug()->setValue( max( sizePlug()->getValue() - 0.2, 0.2 ) );
 	}
-	else if( event.key == "J" )
+	else if( event.key == "V" )
 	{
 		const IECore::TypeId variableType = (IECore::TypeId)variableTypePlug()->getValue();
 		if( variableType == FloatVectorData::staticTypeId() )
@@ -2283,7 +2283,7 @@ bool PaintTool::keyPress( const GafferUI::KeyEvent &event )
 			colorChooserFunction()( colorValuePlug() );
 		}
 	}
-	else if( event.key == "B" )
+	else if( event.key == "S" )
 	{
 		if( m_mouseMoveMode != MouseMoveMode::Size )
 		{
@@ -2301,7 +2301,7 @@ bool PaintTool::keyPress( const GafferUI::KeyEvent &event )
 		}
 		return true;
 	}
-	else if( event.key == "O" )
+	else if( event.key == "G" )
 	{
 		if( m_mouseMoveMode != MouseMoveMode::Opacity )
 		{
@@ -2310,7 +2310,7 @@ bool PaintTool::keyPress( const GafferUI::KeyEvent &event )
 		}
 		return true;
 	}
-	else if( event.key == "G" )
+	else if( event.key == "X" )
 	{
 		Color3f temp = colorValuePlug()->getValue();
 		colorValuePlug()->setValue( colorBackgroundPlug()->getValue() );
@@ -2326,7 +2326,7 @@ bool PaintTool::keyRelease( const GafferUI::KeyEvent &event )
 	m_eventModifiers = event.modifiers;
 	updateCursor();
 
-	if( event.key == "B" || event.key == "H" || event.key == "O" )
+	if( event.key == "S" || event.key == "H" || event.key == "G" )
 	{
 		m_mouseMoveMode = MouseMoveMode::Default;
 	}
