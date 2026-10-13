@@ -120,3 +120,4 @@ from .DiskBlurTest import DiskBlurTest
 from .DataWindowQueryTest import DataWindowQueryTest
 from .SATBlurTest import SATBlurTest
 from .MetadataOverlayTest import MetadataOverlayTest
+from .MCPTest import MCPTest
