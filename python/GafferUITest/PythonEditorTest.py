@@ -34,9 +34,11 @@
 #
 ##########################################################################
 
+import inspect
 import weakref
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
@@ -99,3 +101,84 @@ class PythonEditorTest( GafferUITest.TestCase ) :
 
 		del editor
 		self.assertIsNone( weakEditor() )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "mcp" } )
+	def testMCPEnabled( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( "testFile.gfr" )
+		editor = GafferUI.PythonEditor( script )
+
+		server = Gaffer.MCP.HTTPServer.acquireDefaultServer()
+		self.assertEqual( len( server.targets() ), 0 )
+
+		editor.settings()["mcpEnabled"].setValue( True )
+		self.assertEqual( len( server.targets() ), 1 )
+		self.assertIs( server.targets()[0].namespace(), editor.namespace() )
+
+		editor.settings()["mcpEnabled"].setValue( False )
+		self.assertEqual( len( server.targets() ), 0 )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "mcp" } )
+	def testMCPEditorLifetime( self ) :
+
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.PythonEditor( script )
+		editor.settings()["mcpEnabled"].setValue( True )
+
+		weakEditor = weakref.ref( editor )
+		weakScript = weakref.ref( script )
+		del editor, script
+
+		# Target is removed automatically.
+		self.assertEqual( Gaffer.MCP.HTTPServer.acquireDefaultServer().targets(), [] )
+
+		# So nothing should be holding on to the Editor or the ScriptNode.
+		self.assertIsNone( weakEditor() )
+		self.assertIsNone( weakScript() )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "mcp" } )
+	def testMCPExecute( self ) :
+
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.PythonEditor( script )
+		editor.settings()["mcpEnabled"].setValue( True )
+
+		server = Gaffer.MCP.HTTPServer.acquireDefaultServer()
+		client = GafferTest.MCPTest.TestClient( port = server.port() )
+		client.executePython( "print( 'hello' )\na = 1\na + 1" )
+
+		# The namespace is shared with the editor.
+		self.assertEqual( editor.namespace()["a"], 1 )
+
+		# The code and output are shown in the editor.
+		self.assertEqual(
+			editor.outputWidget().getText().strip(),
+			inspect.cleandoc(
+				"""
+				MCP : Called `executePython`
+				print( 'hello' )
+				a = 1
+				a + 1
+				hello
+				2
+				"""
+			)
+		)
+
+		# Errors are also shown in the editor.
+		editor.outputWidget().setText( "" )
+		client.executePython( "nonExistentVariable" )
+
+		self.assertEqual(
+			editor.outputWidget().getText().strip(),
+			inspect.cleandoc(
+				"""
+				MCP : Called `executePython`
+				nonExistentVariable
+				Traceback (most recent call last):
+				  File "<string>", line 1, in <module>
+				NameError: name 'nonExistentVariable' is not defined
+				"""
+			)
+		)

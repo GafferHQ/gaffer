@@ -238,6 +238,10 @@ class ExecutePythonTool( BasicTool ) :
 			`imath`. Variables persist between calls. If the last statement is
 			an expression, its `repr()` is returned. `stdout`, `stderr` and
 			IECore messages are captured. Each call is a single undoable step.
+
+			In the GUI, the code and its output are shown to the user in the
+			target's PythonEditor, and the user can access variables created
+			by the code.
 			""",
 
 			parameterDescriptions = {
