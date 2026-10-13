@@ -38,6 +38,10 @@ import imath
 import unittest
 import os
 
+import OpenGL.GL as GL
+
+from Qt import QtGui
+
 import IECore
 
 import Gaffer
@@ -175,3 +179,25 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 			{ ( m.level, m.context, m.message ) for m in mh.messages },
 			{ ( IECore.Msg.Level.Error, "GLWidget", "Draw Exception" ) }
 		)
+
+	def testGrab( self ) :
+
+		class TestWidget( GafferUI.GLWidget ) :
+
+			def _draw( self ) :
+
+				GL.glClearColor( 1, 0, 0, 1 )
+				GL.glClear( GL.GL_COLOR_BUFFER_BIT )
+
+		with GafferUI.Window() as window :
+			with GafferUI.Frame() as frame :
+				glWidget = TestWidget()
+
+		for widget in ( window, frame, glWidget ) :
+
+			image = widget._qtWidget().grab().toImage()
+
+			self.assertEqual(
+				image.pixelColor( image.width() // 2, image.height() // 2 ),
+				QtGui.QColor( 255, 0, 0, 255 )
+			)
