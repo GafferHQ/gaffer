@@ -1,7 +1,13 @@
 1.7.x.x (relative to 1.7.4.1)
 =======
 
+API
+---
 
+- MCP : Added classes to support the [Model Context Protocol](https://modelcontextprotocol.io).
+  - Gaffer.MCP.Server : Abstract base class for MCP servers.
+  - Gaffer.MCP.HTTPServer : Concrete server implementation using HTTP transport.
+  - Gaffer.MCP.Tool, Gaffer.MCP.BasicTool : Base classes for adding custom tools to the server.
 
 1.7.4.1 (relative to 1.7.4.0)
 =======

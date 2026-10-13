@@ -56,6 +56,7 @@ from .SequencePath import SequencePath
 from .GraphComponentPath import GraphComponentPath
 from .OutputRedirection import OutputRedirection
 from .Monitor import Monitor
+from . import MCP
 
 from . import NodeAlgo
 from . import ExtensionAlgo

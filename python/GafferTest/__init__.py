@@ -144,6 +144,7 @@ from .ParallelAlgoTest import ParallelAlgoTest
 from .BackgroundTaskTest import BackgroundTaskTest
 from .ProcessMessageHandlerTest import ProcessMessageHandlerTest
 from .MonitorAlgoTest import MonitorAlgoTest
+from .MCPTest import MCPTest
 from .NameValuePlugTest import NameValuePlugTest
 from .ExtensionAlgoTest import ExtensionAlgoTest
 from .ModuleTest import ModuleTest
