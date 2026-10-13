@@ -4,6 +4,7 @@
 Features
 --------
 
+- PythonEditor : Added `mcpEnabled` setting, allowing an AI assistant or large language model to interact with Gaffer.
 - `gaffer mcp` : Added application to allow AI assistants and large language models to launch and control a headless Gaffer session.
 
 Fixes
