@@ -87,6 +87,18 @@ API
 - BoolWidget : Added `setEditable()` and `getEditable()` methods.
 - Button : Added `setClickable()` and `getClickable()` methods, also available on MenuButton.
 
+API
+---
+
+- GafferUITest.TestCase :
+  - Added `uiThreadCallHandler` member. This should be used by any tests which need to handle calls to the UI thread.
+  - Added `waitForPlugValueWidgetUpdate()` method.
+
+Breaking Changes
+----------------
+
+- PlugValueWidgetTest : Removed `waitForUpdate()` method. Use `GafferUITest.TestCase.waitForPlugValueWidgetUpdate()` instead.
+
 Build
 -----
 
