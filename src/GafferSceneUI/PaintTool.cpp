@@ -626,16 +626,16 @@ void frustumPlanes( const M44f &projectionMatrix, std::vector<V3f> &frustumPlane
 // suggests that all the basic drawing stuff should all be moved from StandardStyle to somewhere else.
 void renderCircle( const Imath::V2f &pos, float radius )
 {
-    glBegin( GL_LINE_LOOP );
+	glBegin( GL_LINE_LOOP );
 
-    const int numDivisions = 100;
-    for( int i = 0; i < numDivisions; ++i )
-    {
-        const float angle = 2 * M_PI * (float)i/(float)(numDivisions-1);
-        glVertex2f( radius * cos( angle ) + pos.x, radius * sin( angle ) + pos.y );
-    }
+	const int numDivisions = 100;
+	for( int i = 0; i < numDivisions; ++i )
+	{
+		const float angle = 2 * M_PI * (float)i/(float)(numDivisions-1);
+		glVertex2f( radius * cos( angle ) + pos.x, radius * sin( angle ) + pos.y );
+	}
 
-    glEnd();
+	glEnd();
 }
 
 } // namespace
@@ -1803,24 +1803,24 @@ std::unordered_set< const Gaffer::GraphComponent* > PaintTool::editTargets()
 
 std::map< std::string, const Gaffer::GraphComponent* > PaintTool::editTargetPerPath()
 {
-    std::map< std::string, const Gaffer::GraphComponent* > result;
+	std::map< std::string, const Gaffer::GraphComponent* > result;
 
-    for( const auto &l : locationCaches() )
-    {
-        const Gaffer::GraphComponent* target = nullptr;
-        if( l->paintEdit() )
-        {
-            target = l->paintEdit()->parent();
-        }
-        else if( view()->editScope() )
-        {
-            target = view()->editScope();
-        }
+	for( const auto &l : locationCaches() )
+	{
+		const Gaffer::GraphComponent* target = nullptr;
+		if( l->paintEdit() )
+		{
+			target = l->paintEdit()->parent();
+		}
+		else if( view()->editScope() )
+		{
+			target = view()->editScope();
+		}
 
-        result[ ScenePlug::pathToString( l->path() ) ] = target;
-    }
+		result[ ScenePlug::pathToString( l->path() ) ] = target;
+	}
 
-    return result;
+	return result;
 }
 
 bool PaintTool::selectionEditable()

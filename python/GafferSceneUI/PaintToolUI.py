@@ -128,7 +128,7 @@ Gaffer.Metadata.registerNode(
 
 		},
 		"colorValue.*" : {
-			 "numericPlugValueWidget:fixedCharacterWidth" : 5,
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 		},
 		"colorBackground" : {
 

@@ -295,32 +295,32 @@ boost::python::list registeredSelectModesWrapper()
 
 struct ColorChooserFunctionWrapper
 {
-    ColorChooserFunctionWrapper( object fn )
-        :   m_fn( fn )
-    {
-    }
+	ColorChooserFunctionWrapper( object fn )
+		: m_fn( fn )
+	{
+	}
 
-    void operator()( PlugPtr plug )
-    {
-        IECorePython::ScopedGILLock gilock;
-        try
-        {
-            m_fn( plug );
-        }
-        catch( const error_already_set & )
-        {
-            IECorePython::ExceptionAlgo::translatePythonException();
-        }
-    }
+	void operator()( PlugPtr plug )
+	{
+		IECorePython::ScopedGILLock gilock;
+		try
+		{
+			m_fn( plug );
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
 
-    private:
+	private:
 
-        object m_fn;
+		object m_fn;
 };
 
 void registerColorChooserFunctionWrapper( object f )
 {
-    PaintTool::registerColorChooserFunction( ColorChooserFunctionWrapper( f ) );
+	PaintTool::registerColorChooserFunction( ColorChooserFunctionWrapper( f ) );
 }
 
 
