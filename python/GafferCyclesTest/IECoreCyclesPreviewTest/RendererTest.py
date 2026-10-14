@@ -3127,6 +3127,91 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.pause()
 		del light
 
+	def testBackgroundLightShaderReuse( self ) :
+
+		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 320, 240 ),
+					"projection" : "perspective",
+					"fieldOfView" : 170,
+				}
+			)
+		)
+
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+		renderer.option( "cycles:background:transparent", IECore.BoolData( False ) )
+		renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testBackgroundLightReuse",
+				}
+			)
+		)
+
+		def lightAttributes( exposure, sunDisc ) :
+
+			return renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"texture" : IECoreScene.Shader( "sky_texture", "cycles:shader", { "tex_mapping__rotation" : imath.V3f( -1.5707, 0, 0 ), "sun_size" : 0.1, "sun_intensity" : 0.1, "sun_elevation" : 0.1, "sun_disc" : sunDisc } ),
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "exposure" : exposure } ),
+					},
+					connections = [
+						( ( "texture", "color" ), ( "output", "color" ) ),
+					],
+					output = "output",
+				),
+			} ) )
+
+		light = renderer.light( "/light", None, lightAttributes( 0.0, True ) )
+
+		def assertSunDisc( handle, exposure, sunDisc ) :
+
+			if sunDisc :
+				sunColor = imath.Color3f( 773.754, 524.97, 194.75 ) * pow( 2, exposure )
+			else :
+				sunColor = imath.Color3f( 52.26, 42.93, 21.85 ) * pow( 2, exposure )
+
+			self.assertEqualWithAbsError(
+				self.__colorAtUV( IECoreImage.ImageDisplayDriver.storedImage( handle ), imath.V2f( 0.5, 0.45 ) ),
+				imath.Color4f( sunColor.r, sunColor.g, sunColor.b, 1 ),
+				error = 0.1
+			)
+
+		renderer.render()
+		self.assertEventually( lambda : assertSunDisc( "testBackgroundLightReuse", 0.0, True ) )
+
+		# Test various combinations of shader parameters, ensuring we revisit
+		# previously rendered combinations to reuse their cached shaders.
+		for exposure, sunDisc in [
+			( 0.0, False ),
+			( 0.0, True ),
+			( 2.0, True ),
+			( 0.0, True ),
+			( 2.0, True ),
+			( 0.0, False ),
+		] :
+			with self.subTest( exposure = exposure, sunDisc = sunDisc ) :
+
+				renderer.pause()
+				light.attributes( lightAttributes( exposure, sunDisc ) )
+				renderer.render()
+				self.assertEventually( lambda : assertSunDisc( "testBackgroundLightReuse", exposure, sunDisc ) )
+
+		renderer.pause()
+		del light
+
 	def testVDB( self ) :
 
 		renderer = self.createRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive )

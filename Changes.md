@@ -44,7 +44,10 @@ Breaking Changes
 1.7.x.x (relative to 1.7.4.0)
 =======
 
+Fixes
+-----
 
+- Cycles : Fixed bug causing lights with input shader networks to occasionally turn black after being modified during an interactive render.
 
 1.7.4.0 (relative to 1.7.3.1)
 =======
