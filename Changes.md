@@ -6,7 +6,9 @@ Improvements
 
 - LightEditor : Added hierarchy filter.
 - LightEditor, RenderPassEditor : Added `All` section, which shows the columns from every section at once.
-- LightEditor, RenderPassEditor, AttributeEditor : Added column filter. When enabled, only columns matching the search text are shown, and sections without any matching columns are hidden.
+- LightEditor, RenderPassEditor, AttributeEditor :
+  - Added column filter. When enabled, only columns matching the search text are shown, and sections without any matching columns are hidden.
+  - Section tabs are now sized to fit their names, rather than expanding to fill the available space.
 
 Fixes
 -----

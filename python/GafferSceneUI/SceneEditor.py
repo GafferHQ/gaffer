@@ -531,6 +531,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, QtWidgets.QTabBar(), plug, **kw )
 
 		self._qtWidget().setDrawBase( False )
+		self._qtWidget().setExpanding( False )
 
 		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		self.__ignoreCurrentChanged = False
