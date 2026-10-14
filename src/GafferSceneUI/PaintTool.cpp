@@ -87,25 +87,25 @@ using namespace GafferSceneUI;
 namespace
 {
 
-// Given a PaintOperation which may have already been allocated, make sure it is correctly
+// Given a PrimitiveVariablePaint::Operation which may have already been allocated, make sure it is correctly
 // allocated for the given value type, number of vertices, and opacity if needed ( but don't
 // perform any new allocations if everything is already OK )
 void ensurePaintOperationAllocated(
-	PrimitiveVariablePaint::PaintOperation &op, IECore::TypeId variableType, size_t numVerts, bool includeOpacity
+	PrimitiveVariablePaint::Operation &op, IECore::TypeId variableType, size_t numVerts, bool includeOpacity
 )
 {
 	if(
-		!op.m_valueData ||
-		op.m_valueData->typeId() != variableType
+		!op.valueData ||
+		op.valueData->typeId() != variableType
 	)
 	{
 		if( variableType == FloatVectorData::staticTypeId() )
 		{
-			op.m_valueData = new FloatVectorData();
+			op.valueData = new FloatVectorData();
 		}
 		else if( variableType == Color3fVectorData::staticTypeId() )
 		{
-			op.m_valueData = new Color3fVectorData();
+			op.valueData = new Color3fVectorData();
 		}
 		else
 		{
@@ -113,10 +113,10 @@ void ensurePaintOperationAllocated(
 		}
 	}
 
-	if( IECore::size( op.m_valueData.get() ) != numVerts )
+	if( IECore::size( op.valueData.get() ) != numVerts )
 	{
 		IECore::dispatch(
-			op.m_valueData.get(),
+			op.valueData.get(),
 			[numVerts]( auto *typedData )
 			{
 				using DataType = std::remove_pointer_t<decltype( typedData )>;
@@ -134,14 +134,14 @@ void ensurePaintOperationAllocated(
 
 	if( includeOpacity )
 	{
-		if( !op.m_opacityData )
+		if( !op.opacityData )
 		{
-			op.m_opacityData = new FloatVectorData();
+			op.opacityData = new FloatVectorData();
 		}
 
-		if( IECore::size( op.m_opacityData.get() ) != numVerts )
+		if( IECore::size( op.opacityData.get() ) != numVerts )
 		{
-			op.m_opacityData->writable().resize( numVerts, 0.0f );
+			op.opacityData->writable().resize( numVerts, 0.0f );
 		}
 	}
 }
@@ -154,40 +154,40 @@ void ensurePaintOperationAllocated(
 // Preconditions:
 // `a` and `b` have the same valueData type, are the same size, and are both dense, without indices.
 // `b` must have value and opacity.
-void composePaintOperations( const PrimitiveVariablePaint::PaintOperation &a, const PrimitiveVariablePaint::PaintOperation &b, PaintTool::PaintMode paintMode, float opacity, PrimitiveVariablePaint::PaintOperation &result, bool outputOpacity )
+void composePaintOperations( const PrimitiveVariablePaint::Operation &a, const PrimitiveVariablePaint::Operation &b, PaintTool::PaintMode paintMode, float opacity, PrimitiveVariablePaint::Operation &result, bool outputOpacity )
 {
-	const std::vector<float> &bOpacity = static_cast<const FloatVectorData*>( b.m_opacityData.get() )->readable();
+	const std::vector<float> &bOpacity = static_cast<const FloatVectorData*>( b.opacityData.get() )->readable();
 
-	ensurePaintOperationAllocated( result, b.m_valueData->typeId(), IECore::size( b.m_valueData.get() ), outputOpacity );
+	ensurePaintOperationAllocated( result, b.valueData->typeId(), IECore::size( b.valueData.get() ), outputOpacity );
 
-	if( !a.m_valueData )
+	if( !a.valueData )
 	{
 		if( paintMode == PaintTool::PaintMode::Over )
 		{
-			result.m_valueData->Object::copyFrom( b.m_valueData.get() );
+			result.valueData->Object::copyFrom( b.valueData.get() );
 		}
 	}
 	else
 	{
 		IECore::dispatch(
-			b.m_valueData.get(),
+			b.valueData.get(),
 			[&result, &a, &bOpacity, paintMode, opacity]( const auto *typedBValueData )
 			{
 				using DataType = std::remove_const_t< std::remove_pointer_t<decltype( typedBValueData )> >;
 				if constexpr ( std::is_same_v< DataType, FloatVectorData > || std::is_same_v< DataType, Color3fVectorData > )
 				{
-					const DataType *typedAValueData = IECore::runTimeCast<const DataType>( a.m_valueData.get() );
+					const DataType *typedAValueData = IECore::runTimeCast<const DataType>( a.valueData.get() );
 					if( !typedAValueData )
 					{
 						throw IECore::Exception( fmt::format(
-							"Type mismatch : {} != {}", a.m_valueData->typeName(), typedBValueData->typeName()
+							"Type mismatch : {} != {}", a.valueData->typeName(), typedBValueData->typeName()
 						) );
 					}
 
 					const auto &aValue = typedAValueData->readable();
 					const auto &bValue = typedBValueData->readable();
 
-					DataType* resultValueData = IECore::runTimeCast<DataType >( result.m_valueData.get() );
+					DataType* resultValueData = IECore::runTimeCast<DataType >( result.valueData.get() );
 					auto &resultValue = resultValueData->writable();
 
 					if( paintMode == PaintTool::PaintMode::Erase )
@@ -218,23 +218,23 @@ void composePaintOperations( const PrimitiveVariablePaint::PaintOperation &a, co
 		return;
 	}
 
-	if( !a.m_opacityData )
+	if( !a.opacityData )
 	{
 		if( paintMode == PaintTool::PaintMode::Over )
 		{
-			result.m_opacityData->Object::copyFrom( b.m_opacityData.get() );
+			result.opacityData->Object::copyFrom( b.opacityData.get() );
 		}
 	}
 	else
 	{
-		const std::vector<float> &aOpacity = static_cast<const FloatVectorData*>( a.m_opacityData.get() )->readable();
+		const std::vector<float> &aOpacity = static_cast<const FloatVectorData*>( a.opacityData.get() )->readable();
 
-		if( !result.m_opacityData )
+		if( !result.opacityData )
 		{
-			result.m_opacityData = new FloatVectorData();
+			result.opacityData = new FloatVectorData();
 		}
 
-		std::vector<float> &resultOpacity = result.m_opacityData->writable();
+		std::vector<float> &resultOpacity = result.opacityData->writable();
 
 		if( paintMode == PaintTool::PaintMode::Erase )
 		{
@@ -253,13 +253,13 @@ void composePaintOperations( const PrimitiveVariablePaint::PaintOperation &a, co
 	}
 }
 
-// Convert a PaintOperation to a sparse PaintOperation with indices, if omitting the elements where
+// Convert a PrimitiveVariablePaint::Operation to a sparse PrimitiveVariablePaint::Operation with indices, if omitting the elements where
 // value and opacity are zero would save space.
 template< class T >
-void makeSparsePaintOperation( PrimitiveVariablePaint::PaintOperation &op )
+void makeSparsePaintOperation( PrimitiveVariablePaint::Operation &op )
 {
-	const typename T::ValueType &sourceValues = IECore::runTimeCast<T>( op.m_valueData.get() )->readable();
-	const std::vector<float> &sourceOpacities = op.m_opacityData->readable();
+	const typename T::ValueType &sourceValues = IECore::runTimeCast<T>( op.valueData.get() )->readable();
+	const std::vector<float> &sourceOpacities = op.opacityData->readable();
 
 	const typename T::ValueType::value_type zeroValue( 0.0f );
 
@@ -302,9 +302,9 @@ void makeSparsePaintOperation( PrimitiveVariablePaint::PaintOperation &op )
 		}
 	}
 
-	op.m_valueData = newValueData;
-	op.m_opacityData = newOpacityData;
-	op.m_indicesData = newIndicesData;
+	op.valueData = newValueData;
+	op.opacityData = newOpacityData;
+	op.indicesData = newIndicesData;
 }
 
 // Uniform block structure (std140 layout)
@@ -692,7 +692,7 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 	private :
 
 		// Set an edit in an EditScope. Used by applyCurrentStroke.
-		void edit( Gaffer::EditScope *editScope, const std::string &variableName, const GafferScene::PrimitiveVariablePaint::PaintOperation* value );
+		void edit( Gaffer::EditScope *editScope, const std::string &variableName, const GafferScene::PrimitiveVariablePaint::Operation* value );
 
 		// Used by glBuffers.
 		void updateGLValueBuffer( const Data *valueData );
@@ -705,7 +705,7 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 		// just caching. m_currentStroke is allocated when we get the first
 		// paintToCurrentStroke of a new brushstroke, and freed in
 		// applyCurrentStroke ( when the mouse button is released )
-		GafferScene::PrimitiveVariablePaint::PaintOperationPtr m_currentStroke;
+		GafferScene::PrimitiveVariablePaint::OperationPtr m_currentStroke;
 
 		// State maintained by update()
 
@@ -719,14 +719,14 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 		IECoreScene::ConstMeshPrimitivePtr m_sourceMesh;
 
 		IECore::MurmurHash m_initialEditValueHash;
-		GafferScene::PrimitiveVariablePaint::ConstPaintOperationPtr m_initialEditValue;
+		GafferScene::PrimitiveVariablePaint::ConstOperationPtr m_initialEditValue;
 
 		// Intermediate state used by glBuffers()
 
 		bool m_composedInputValueDirty;
-		GafferScene::PrimitiveVariablePaint::PaintOperationPtr m_composedInputValue;
-		GafferScene::PrimitiveVariablePaint::PaintOperationPtr m_composedEditValue;
-		GafferScene::PrimitiveVariablePaint::PaintOperationPtr m_composedValue;
+		GafferScene::PrimitiveVariablePaint::OperationPtr m_composedInputValue;
+		GafferScene::PrimitiveVariablePaint::OperationPtr m_composedEditValue;
+		GafferScene::PrimitiveVariablePaint::OperationPtr m_composedValue;
 
 		// Outputs from glBuffers()
 
@@ -754,9 +754,9 @@ PaintTool::LocationCache::LocationCache( const GafferScene::ScenePlug::ScenePath
 		m_editable( false ),
 		m_paintEdit( nullptr ),
 		m_composedInputValueDirty( true ),
-		m_composedInputValue( new PrimitiveVariablePaint::PaintOperation ),
-		m_composedEditValue( new PrimitiveVariablePaint::PaintOperation ),
-		m_composedValue( new PrimitiveVariablePaint::PaintOperation ),
+		m_composedInputValue( new PrimitiveVariablePaint::Operation ),
+		m_composedEditValue( new PrimitiveVariablePaint::Operation ),
+		m_composedValue( new PrimitiveVariablePaint::Operation ),
 		m_valueBufferDirty( true ),
 		m_valueBufferComponents( 0 )
 {
@@ -827,7 +827,7 @@ std::string PaintTool::LocationCache::update(
 		warning = "Target an EditScope in order to create paint.";
 	}
 
-	GafferScene::PrimitiveVariablePaint::ConstPaintOperationPtr paintEntry = nullptr;
+	GafferScene::PrimitiveVariablePaint::ConstOperationPtr paintEntry = nullptr;
 
 	if( m_editable && editScope )
 	{
@@ -839,7 +839,7 @@ std::string PaintTool::LocationCache::update(
 			// This should be getting the path from the upstream context, in case the path has been
 			// changed in between the viewed node and the paint edit. But Inspector doesn't currently support
 			// this for non-plug-based edits, so for now we just assume the path hasn't changed.
-			paintEntry = IECore::runTimeCast<const PrimitiveVariablePaint::PaintOperation>(
+			paintEntry = IECore::runTimeCast<const PrimitiveVariablePaint::Operation>(
 				m_paintEdit->getEntry( ScenePlug::pathToString( path() ), false )
 			);
 		}
@@ -930,19 +930,19 @@ std::string PaintTool::LocationCache::update(
 
 			if( !paintEntry )
 			{
-				PrimitiveVariablePaint::PaintOperationPtr initialEditValue = new PrimitiveVariablePaint::PaintOperation();
+				PrimitiveVariablePaint::OperationPtr initialEditValue = new PrimitiveVariablePaint::Operation();
 				ensurePaintOperationAllocated( *initialEditValue, variableType, numVerts, true );
 				m_initialEditValue = initialEditValue;
 			}
-			else if( paintEntry->m_indicesData )
+			else if( paintEntry->indicesData )
 			{
-				PrimitiveVariablePaint::PaintOperationPtr initialEditValue = new PrimitiveVariablePaint::PaintOperation();
+				PrimitiveVariablePaint::OperationPtr initialEditValue = new PrimitiveVariablePaint::Operation();
 				ensurePaintOperationAllocated( *initialEditValue, variableType, numVerts, true );
-				paintEntry->apply( initialEditValue->m_valueData, numVerts );
+				paintEntry->apply( initialEditValue->valueData, numVerts );
 
-				const std::vector<int> &sourceIndices = paintEntry->m_indicesData->readable();
-				const std::vector<float> &sourceOpacities = paintEntry->m_opacityData->readable();
-				std::vector<float> &expandedOpacities = initialEditValue->m_opacityData->writable();
+				const std::vector<int> &sourceIndices = paintEntry->indicesData->readable();
+				const std::vector<float> &sourceOpacities = paintEntry->opacityData->readable();
+				std::vector<float> &expandedOpacities = initialEditValue->opacityData->writable();
 				for( size_t i = 0; i < sourceIndices.size(); i++ )
 				{
 					expandedOpacities[ sourceIndices[i] ] = sourceOpacities[i];
@@ -952,7 +952,7 @@ std::string PaintTool::LocationCache::update(
 			else
 			{
 				m_initialEditValue = paintEntry;
-				if( !paintEntry->m_opacityData )
+				if( !paintEntry->opacityData )
 				{
 					throw IECore::Exception( "Internal error : stored paint has no opacity" );
 				}
@@ -1026,7 +1026,7 @@ PaintTool::LocationCache::glBuffers( const std::string &variableName, IECore::Ty
 
 	if( m_valueBufferDirty )
 	{
-		PrimitiveVariablePaint::PaintOperationPtr initialMeshValue = new PrimitiveVariablePaint::PaintOperation(
+		PrimitiveVariablePaint::OperationPtr initialMeshValue = new PrimitiveVariablePaint::Operation(
 			m_sourceMesh->expandedVariableData<Data>( variableName, IECoreScene::PrimitiveVariable::Interpolation::Vertex )
 		);
 
@@ -1049,7 +1049,7 @@ PaintTool::LocationCache::glBuffers( const std::string &variableName, IECore::Ty
 				composePaintOperations( *initialMeshValue, *m_composedEditValue, PaintMode::Over, 1.0f, *m_composedValue, false );
 
 			}
-			updateGLValueBuffer( m_composedValue->m_valueData.get() );
+			updateGLValueBuffer( m_composedValue->valueData.get() );
 		}
 		else
 		{
@@ -1059,7 +1059,7 @@ PaintTool::LocationCache::glBuffers( const std::string &variableName, IECore::Ty
 				composePaintOperations( *initialMeshValue, *m_initialEditValue, PaintMode::Over, 1.0f, *m_composedInputValue, true );
 				m_composedInputValueDirty = false;
 			}
-			updateGLValueBuffer( m_composedInputValue->m_valueData.get() );
+			updateGLValueBuffer( m_composedInputValue->valueData.get() );
 		}
 
 		m_valueBufferDirty = false;
@@ -1102,7 +1102,7 @@ void PaintTool::LocationCache::paintToCurrentStroke(
 
 	if( !m_currentStroke )
 	{
-		m_currentStroke = new PrimitiveVariablePaint::PaintOperation();
+		m_currentStroke = new PrimitiveVariablePaint::Operation();
 	}
 
 	IECore::TypeId valueTypeId = std::holds_alternative<float>( value ) ? FloatVectorDataTypeId : Color3fVectorDataTypeId;
@@ -1121,11 +1121,11 @@ void PaintTool::LocationCache::paintToCurrentStroke(
 	frustumPlanes( localPaintMatrix, frustumPlaneNormals, frustumPlaneOrigins );
 
 	const std::vector<V3f> &pVar = m_kdTreePointsData->readable();
-	std::vector<float> &opacity = m_currentStroke->m_opacityData->writable();
+	std::vector<float> &opacity = m_currentStroke->opacityData->writable();
 	opacity.resize( pVar.size(), 0.0f );
 	if( std::holds_alternative<float>( value ) )
 	{
-		FloatVectorData* valueData = IECore::runTimeCast<FloatVectorData>( m_currentStroke->m_valueData.get() );
+		FloatVectorData* valueData = IECore::runTimeCast<FloatVectorData>( m_currentStroke->valueData.get() );
 		std::vector<float> &valueBuffer = valueData->writable();
 		valueBuffer.resize( pVar.size(), float( 0.0f ) );
 
@@ -1145,7 +1145,7 @@ void PaintTool::LocationCache::paintToCurrentStroke(
 	}
 	else
 	{
-		Color3fVectorData* valueData = IECore::runTimeCast<Color3fVectorData>( m_currentStroke->m_valueData.get() );
+		Color3fVectorData* valueData = IECore::runTimeCast<Color3fVectorData>( m_currentStroke->valueData.get() );
 		std::vector<Color3f> &valueBuffer = valueData->writable();
 		valueBuffer.resize( pVar.size(), Color3f( 0.0f ) );
 
@@ -1173,12 +1173,12 @@ void PaintTool::LocationCache::applyCurrentStroke( EditScope *editScope, const s
 	}
 
 	// Bake the current stroke together with the current edit value, then apply it as the new edit
-	PrimitiveVariablePaint::PaintOperationPtr newVal = new PrimitiveVariablePaint::PaintOperation;
+	PrimitiveVariablePaint::OperationPtr newVal = new PrimitiveVariablePaint::Operation;
 	composePaintOperations( *m_initialEditValue, *m_currentStroke, paintMode, opacity, *newVal, true );
 
-	// Use indices to avoid storing zeros in PaintOperation
+	// Use indices to avoid storing zeros in Operation
 	IECore::dispatch(
-		newVal->m_valueData.get(),
+		newVal->valueData.get(),
 		[&newVal]( auto *typedData )
 		{
 			using DataType = std::remove_pointer_t<decltype( typedData )>;
@@ -1200,7 +1200,7 @@ void PaintTool::LocationCache::applyCurrentStroke( EditScope *editScope, const s
 	m_currentStroke.reset();
 }
 
-void PaintTool::LocationCache::edit( EditScope *editScope, const std::string &variableName, const GafferScene::PrimitiveVariablePaint::PaintOperation* value )
+void PaintTool::LocationCache::edit( EditScope *editScope, const std::string &variableName, const GafferScene::PrimitiveVariablePaint::Operation* value )
 {
 	if( !editable() )
 	{
