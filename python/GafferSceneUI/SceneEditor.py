@@ -43,6 +43,8 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+from Qt import QtWidgets
+
 ## Base class to simplify the creation of Editors which operate on ScenePlugs.
 class SceneEditor( GafferUI.NodeSetEditor ) :
 
@@ -446,3 +448,70 @@ class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( value )
 
 SceneEditor._SetFilterPlugValueWidget = _SetFilterPlugValueWidget
+
+# _SectionPlugValueWidget
+# =========================
+
+# Supported plug metadata :
+#
+#  - "sectionPlugValueWidget:sections" : A list of section names that will be displayed as tabs.
+class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferUI.PlugValueWidget.__init__( self, QtWidgets.QTabBar(), plug, **kw )
+
+		self._qtWidget().setDrawBase( False )
+
+		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
+		self.__ignoreCurrentChanged = False
+
+		# Borrow the styling from the Spreadsheet's section chooser.
+		## \todo Should we be introducing a `GafferUI.TabBar` class which can be used in
+		# both?
+		self._qtWidget().setProperty( "gafferClass", "GafferUI.SpreadsheetUI._SectionChooser" )
+
+	def _updateFromMetadata( self ) :
+
+		sections = list( Gaffer.Metadata.value( self.getPlug(), "sectionPlugValueWidget:sections" ) or [] )
+
+		try :
+			self.__ignoreCurrentChanged = True
+			while self._qtWidget().count() :
+				self._qtWidget().removeTab( 0 )
+			for section in sections :
+				self._qtWidget().addTab( section )
+		finally :
+			self.__ignoreCurrentChanged = False
+
+		currentSection = self.getPlug().getValue()
+		if sections and currentSection not in sections :
+			self.__setSection( sections[0] )
+		else :
+			self._updateFromValues( [ currentSection ], None )
+
+	def _updateFromValues( self, values, exception ) :
+
+		for i in range( 0, self._qtWidget().count() ) :
+			if self._qtWidget().tabText( i ) == values[0] :
+				try :
+					self.__ignoreCurrentChanged = True
+					self._qtWidget().setCurrentIndex( i )
+				finally :
+					self.__ignoreCurrentChanged = False
+				break
+
+	def __currentChanged( self, index ) :
+
+		if self.__ignoreCurrentChanged :
+			return
+
+		self.__setSection( self._qtWidget().tabText( index ) )
+
+	def __setSection( self, section ) :
+
+		with self._blockedUpdateFromValues() :
+			self.getPlug().setValue( section )
+		self._updateFromValues( [ section ], None )
+
+SceneEditor._SectionPlugValueWidget = _SectionPlugValueWidget

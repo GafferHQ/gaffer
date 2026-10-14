@@ -47,8 +47,6 @@ import GafferSceneUI
 
 from . import _GafferSceneUI
 
-from Qt import QtWidgets
-
 class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 	class Settings( GafferSceneUI.SceneEditor.Settings ) :
@@ -113,7 +111,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		self._updateFromSet()
 		self.__transferSelectionFromScriptNode()
-		self.__updateColumns()
+		self.__updateColumnsAndSections()
 
 	__columnRegistry = collections.OrderedDict()
 
@@ -166,7 +164,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 		assert( isinstance( columnKey, str ) )
 
 		sections = cls.__columnRegistry.setdefault( groupKey, collections.OrderedDict() )
-		section = sections.setdefault( section, collections.OrderedDict() )
+		section = sections.setdefault( section or "Main", collections.OrderedDict() )
 
 		section[columnKey] = inspectorFunction
 
@@ -178,6 +176,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 
 		assert( isinstance( columnKey, str ) )
 
+		section = section or "Main"
 		sections = cls.__columnRegistry.get( groupKey )
 		if sections is not None and section in sections.keys() and columnKey in sections[section].keys() :
 			del sections[section][columnKey]
@@ -196,7 +195,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 	def _updateFromSettings( self, plug ) :
 
 		if plug in ( self.settings()["section"], self.settings()["tabGroup"] ) :
-			self.__updateColumns()
+			self.__updateColumnsAndSections()
 
 	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
 	def __lazyUpdateFromContext( self ) :
@@ -204,21 +203,30 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 		self.__pathListing.getPath().setContext( self.context() )
 
 	@GafferUI.LazyMethod()
-	def __updateColumns( self ) :
+	def __updateColumnsAndSections( self ) :
 
 		tabGroup = self.settings()["tabGroup"].getValue()
 		currentSection = self.settings()["section"].getValue()
 
+		sectionNames = []
 		sectionColumns = []
 
 		for groupKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
+				sectionNames.extend( s for s in sections.keys() if s not in sectionNames )
 				if currentSection == "All" and not sections.get( "All" ) :
 					for section in sections.values() :
 						sectionColumns += [ self.__acquireColumn( c, "All" ) for c in section.values() ]
 				else :
-					section = sections.get( currentSection or None, {} )
+					section = sections.get( currentSection, {} )
 					sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
+
+		if "All" not in sectionNames and len( sectionNames ) > 1 :
+			sectionNames.append( "All" )
+
+		sectionsData = IECore.StringVectorData( sectionNames )
+		if Gaffer.Metadata.value( self.settings()["section"], "sectionPlugValueWidget:sections" ) != sectionsData :
+			Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", sectionsData, persistent = False )
 
 		self.__pathListing.setColumns( [ self.__locationNameColumn, self.__visibilityColumn ] + sectionColumns )
 
@@ -315,7 +323,7 @@ Gaffer.Metadata.registerNode(
 
 		"section" : {
 
-			"plugValueWidget:type" : "GafferSceneUI.AttributeEditor._SectionPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.SceneEditor._SectionPlugValueWidget",
 
 		},
 
@@ -329,81 +337,6 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-## \todo Consolidate with the equivalent widgets in the LightEditor and RenderPassEditor.
-class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		GafferUI.PlugValueWidget.__init__( self, QtWidgets.QTabBar(), plug, **kw )
-
-		self._qtWidget().setDrawBase( False )
-
-		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
-		self.__ignoreCurrentChanged = False
-
-		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-
-		# Borrow the styling from the Spreadsheet's section chooser.
-		## \todo Should we be introducing a `GafferUI.TabBar` class which can be used in
-		# both?
-		self._qtWidget().setProperty( "gafferClass", "GafferUI.SpreadsheetUI._SectionChooser" )
-
-		self.__updateTabs()
-
-	def _updateFromValues( self, values, exception ) :
-
-		for i in range( 0, self._qtWidget().count() ) :
-			if self._qtWidget().tabText( i ) == values[0] :
-				try :
-					self.__ignoreCurrentChanged = True
-					self._qtWidget().setCurrentIndex( i )
-				finally :
-					self.__ignoreCurrentChanged = False
-				break
-
-	def __currentChanged( self, index ) :
-
-		if self.__ignoreCurrentChanged :
-			return
-
-		index = self._qtWidget().currentIndex()
-		text = self._qtWidget().tabText( index )
-		with self._blockedUpdateFromValues() :
-			self.getPlug().setValue(
-				text if text != "Main" else ""
-			)
-
-	def __updateTabs( self ) :
-
-		try :
-			self.__ignoreCurrentChanged = True
-			while self._qtWidget().count() :
-				self._qtWidget().removeTab( 0 )
-
-			tabGroup = self.getPlug().node()["tabGroup"].getValue()
-
-			for groupKey, sections in AttributeEditor._AttributeEditor__columnRegistry.items() :
-				if IECore.StringAlgo.match( tabGroup, groupKey ) :
-					for section in sections.keys() :
-						self._qtWidget().addTab( section or "Main" )
-					if "All" not in sections.keys() and len( sections.keys() ) > 1 :
-						self._qtWidget().addTab( "All" )
-
-			self._qtWidget().setVisible( self._qtWidget().count() > 1 )
-		finally :
-			self.__ignoreCurrentChanged = False
-
-	def __plugSet( self, plug ) :
-
-		if plug == self.getPlug().node()["tabGroup"] :
-			self.__updateTabs()
-			# Preserve the current section if there is an equivalently
-			# named section registered for the new tabGroup
-			self._updateFromValues( [ self.getPlug().getValue() ], None )
-			self.__currentChanged( self._qtWidget().currentIndex() )
-
-AttributeEditor._SectionPlugValueWidget = _SectionPlugValueWidget
 
 class _Spacer( GafferUI.Spacer ) :
 

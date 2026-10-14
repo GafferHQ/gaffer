@@ -51,7 +51,7 @@ class AttributeEditorTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		editor = GafferSceneUI.AttributeEditor( script )
 		editor.settings()["section"].setValue( "testSection" )
-		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumns.flush( editor )
+		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumnsAndSections.flush( editor )
 
 		columnAttributes = [
 			c.inspector( editor.sceneListing().getPath() ).name() for c in editor.sceneListing().getColumns()
@@ -63,8 +63,8 @@ class AttributeEditorTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.AttributeEditor.deregisterColumn( "Standard", "test:visible", "testSection" )
 
-		editor._AttributeEditor__updateColumns()
-		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumns.flush( editor )
+		editor._AttributeEditor__updateColumnsAndSections()
+		GafferSceneUI.AttributeEditor._AttributeEditor__updateColumnsAndSections.flush( editor )
 
 		columnAttributes = [
 			c.inspector( editor.sceneListing().getPath() ).name() for c in editor.sceneListing().getColumns()
