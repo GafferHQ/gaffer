@@ -480,7 +480,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 
 		secondVarPrimVar = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			secondVarValue
-        )
+		)
 
 		self.assertEqual( primitiveVariablePaint["out"].object( "/plane" )["test"], expected1 )
 		self.assertEqual( primitiveVariablePaint["out"].object( "/plane" )["secondVar"], secondVarPrimVar )
