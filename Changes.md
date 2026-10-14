@@ -6,6 +6,16 @@ Improvements
 
 - LightEditor : Added hierarchy filter.
 
+Fixes
+-----
+
+- AttributeEditor : The section chooser is no longer hidden when only a single section is available.
+
+API
+---
+
+- LightEditor : The default section is now named "Main" rather than "". Columns registered or deregistered with `section = None` or `section = ""` are added to "Main" so existing registrations are unaffected.
+
 1.7.5.0 (relative to 1.7.4.1)
 =======
 
