@@ -153,9 +153,9 @@ void PrimitiveVariablePaint::Operation::copyFrom( const IECore::Object *other, I
 	Object::copyFrom( other, context );
 
 	const Operation *operation = static_cast<const Operation *>( other );
-	valueData = operation->valueData;
-	opacityData = operation->opacityData;
-	indicesData = operation->indicesData;
+	valueData = operation->valueData ? context->copy( operation->valueData.get() ) : nullptr;
+	opacityData = operation->opacityData ? context->copy( operation->opacityData.get() ) : nullptr;
+	indicesData = operation->indicesData ? context->copy( operation->indicesData.get() ) : nullptr;
 }
 
 void PrimitiveVariablePaint::Operation::save( IECore::Object::SaveContext *context ) const
@@ -163,7 +163,10 @@ void PrimitiveVariablePaint::Operation::save( IECore::Object::SaveContext *conte
 	Object::save( context );
 
 	IndexedIOPtr container = context->container( staticTypeName(), 1 );
-	context->save( valueData.get(), container.get(), g_valueDataName );
+	if( valueData )
+	{
+		context->save( valueData.get(), container.get(), g_valueDataName );
+	}
 	if( opacityData )
 	{
 		context->save( opacityData.get(), container.get(), g_opacityDataName );
@@ -181,13 +184,14 @@ void PrimitiveVariablePaint::Operation::load( IECore::Object::LoadContextPtr con
 	unsigned int version = 1;
 	ConstIndexedIOPtr container = context->container( staticTypeName(), version );
 
-	valueData = context->load<Data>( container.get(), g_valueDataName );
-
+	if( container->hasEntry( g_valueDataName ) )
+	{
+		valueData = context->load<Data>( container.get(), g_valueDataName );
+	}
 	if( container->hasEntry( g_opacityDataName ) )
 	{
 		opacityData = context->load<FloatVectorData>( container.get(), g_opacityDataName );
 	}
-
 	if( container->hasEntry( g_indicesDataName ) )
 	{
 		indicesData = context->load<IntVectorData>( container.get(), g_indicesDataName );
