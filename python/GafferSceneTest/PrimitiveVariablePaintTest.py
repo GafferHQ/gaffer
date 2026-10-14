@@ -85,7 +85,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 10, 10, 10, 10, 10, 10, 10, 10 ] ),
 				IECore.FloatVectorData( [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ] )
 			)
@@ -99,7 +99,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 10, 10, 10, 10, 10, 10, 10, 10 ] ),
 				IECore.FloatVectorData( [ 0.5, 0.5, 0.5, 0, 0, 0, 0, 0, 0 ] )
 			)
@@ -114,7 +114,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 
 		# No opacity just overwrites
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ] )
 			)
 		)
@@ -148,7 +148,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.V3fVectorData( [ imath.V3f( 10 ) ] * 4 ),
 				IECore.FloatVectorData( [ 0, 0, 1, 1 ] )
 			)
@@ -165,27 +165,27 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			IECore.StringData( "Not a PaintOperation" )
+			IECore.StringData( "Not an Operation" )
 		)
 
 		with self.assertRaisesRegex( Gaffer.ProcessException,
-			"Paint value must be of type PaintOperation, not StringData"
+			"Paint value must be of type Operation, not StringData"
 		) :
 			primitiveVariablePaint["out"].object( "/plane" )
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 0 ] ),
 			)
 		)
 
 		with self.assertRaisesRegex( Gaffer.ProcessException,
-			"Invalid paint for variable P at location /plane : Cannot apply PaintOperation with value type FloatVectorData to variable of type V3fVectorData"
+			"Invalid paint for variable P at location /plane : Cannot apply Operation with value type FloatVectorData to variable of type V3fVectorData"
 		) :
 			primitiveVariablePaint["out"].object( "/plane" )
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.V3fVectorData( [] ),
 			)
 		)
@@ -196,7 +196,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 			primitiveVariablePaint["out"].object( "/plane" )
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 4 ),
 				IECore.FloatVectorData( [ 0 ] * 10 )
 			)
@@ -240,7 +240,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 
 		# Target just two elements using indices
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 100 ] ),
 				IECore.FloatVectorData( [ 0.5, 0.75 ] ),
 				IECore.IntVectorData( [ 1, 4 ] )
@@ -256,7 +256,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 
 		# Without opacity, we just overwrite
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 100 ] ),
 				None,
 				IECore.IntVectorData( [ 4, 7 ] )
@@ -273,7 +273,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		# Now test the various errors
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 100 ] ),
 				None,
 				IECore.IntVectorData( [ 104, 107 ] )
@@ -286,7 +286,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 			primitiveVariablePaint["out"].object( "/plane" )
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 100 ] ),
 				IECore.FloatVectorData( [ 0.5, 0.75 ] ),
 				IECore.IntVectorData( [ 104, 107 ] )
@@ -299,7 +299,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 			primitiveVariablePaint["out"].object( "/plane" )
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 100, 1000 ] ),
 				None,
 				IECore.IntVectorData( [ 4, 7 ] )
@@ -312,7 +312,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 			primitiveVariablePaint["out"].object( "/plane" )
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 10 ] ),
 				IECore.FloatVectorData( [ 0, 0, 0 ] ),
 				IECore.IntVectorData( [ 4, 7 ] )
@@ -384,7 +384,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		primitiveVariablePaint["primitiveVariables"]["member0"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 10, 10, 10, 10, 0, 0, 0, 0, 0 ] ),
 				IECore.FloatVectorData( [ 0.9, 0.9, 0.9, 0.9, 0, 0, 0, 0, 0 ] )
 			)
@@ -401,7 +401,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		# Check float operation applied to Color3f
 		with self.assertRaisesRegex( Gaffer.ProcessException,
 			"Invalid paint for variable test at location /plane1 : "
-			"Cannot apply PaintOperation with value type FloatVectorData to variable of type Color3fVectorData"
+			"Cannot apply Operation with value type FloatVectorData to variable of type Color3fVectorData"
 		) :
 			primitiveVariablePaint["out"].object( "/plane1" )
 
@@ -424,14 +424,14 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		spreadsheet["rows"][3]["name"].setValue( '/plane2' )
 
 		spreadsheet["rows"][1]["cells"]["testValue"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.FloatVectorData( [ 20, 20, 20, 20, 0, 0, 0, 0, 0 ] ),
 				IECore.FloatVectorData( [ 0.9, 0.9, 0.9, 0.9, 0, 0, 0, 0, 0 ] )
 			)
 		)
 
 		spreadsheet["rows"][2]["cells"]["testValue"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				IECore.Color3fVectorData( [ imath.Color3f(i) for i in [ 20, 20, 20, 20, 0, 0, 0, 0, 0 ] ] ),
 				IECore.FloatVectorData( [ 0.9, 0.9, 0.9, 0.9, 0, 0, 0, 0, 0 ] )
 			)
@@ -472,7 +472,7 @@ class PrimitiveVariablePaintTest( GafferSceneTest.SceneTestCase ) :
 		primitiveVariablePaint["primitiveVariables"].addChild( Gaffer.NameValuePlug( "secondVar", Gaffer.ObjectPlug( "value", defaultValue = IECore.NullObject(), ), True, "member1" ) )
 		secondVarValue = IECore.FloatVectorData( [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ] )
 		primitiveVariablePaint["primitiveVariables"]["member1"]["value"].setValue(
-			GafferScene.PrimitiveVariablePaint.PaintOperation(
+			GafferScene.PrimitiveVariablePaint.Operation(
 				secondVarValue,
 				IECore.FloatVectorData( [ 0.5 ] * 9 )
 			)

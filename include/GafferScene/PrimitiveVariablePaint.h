@@ -57,8 +57,8 @@ class GAFFERSCENE_API PrimitiveVariablePaint : public Deformer
 		Gaffer::Plug *primitiveVariablesPlug();
 		const Gaffer::Plug *primitiveVariablesPlug() const;
 
-		class PaintOperation;
-		IE_CORE_DECLAREPTR( PaintOperation );
+		class Operation;
+		IE_CORE_DECLAREPTR( Operation );
 
 
 	protected :
@@ -79,32 +79,40 @@ IE_CORE_DECLAREPTR( PrimitiveVariablePaint )
 
 // Store a bundle of data needed to apply a modification to part of a primitive variable,
 // targeted using opacity or indices.
-// TODO - should go in class namespace?
-class GAFFERSCENE_API PrimitiveVariablePaint::PaintOperation : public IECore::Object
+class GAFFERSCENE_API PrimitiveVariablePaint::Operation : public IECore::Object
 {
 
 	public :
 
-		PaintOperation(
+		Operation(
 			IECore::DataPtr valueData = nullptr,
 			IECore::FloatVectorDataPtr opacityData = nullptr,
 			IECore::IntVectorDataPtr indicesData = nullptr
 		);
 
-		~PaintOperation() override;
+		~Operation() override;
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( GafferScene::PrimitiveVariablePaint::PaintOperation, PaintOperationTypeId, IECore::Object );
+		IE_CORE_DECLAREEXTENSIONOBJECT( GafferScene::PrimitiveVariablePaint::Operation, PrimitiveVariablePaintOperationTypeId, IECore::Object );
 
-		void apply( IECore::DataPtr &resultData, size_t outputSize ) const;
+		// \todo : In the future, we may want this class to be able to represent different kinds of paint
+		// operations ( including, for example, vector strokes ). That may involve adding more member
+		// functions here, to form a public API that is a good general way of interacting with operations,
+		// and potentially making these data members private. composePaintOperations(), currently in an
+		// anonymous namespace in PaintTool, is a good candidate for becoming part of this interface.
+		// But we won't be sure what the final interface to these functions will be until we add
+		// more operation types, so for now we're taking the simple option, and just exposing this data, and
+		// keeping the more complex functions private.
 
 		// We store the value premultiplied, to avoid one multiply when applying it.
-		IECore::DataPtr m_valueData;
+		IECore::DataPtr valueData;
 
-		IECore::FloatVectorDataPtr m_opacityData;
+		IECore::FloatVectorDataPtr opacityData;
 
 		// If present, the indices control which elements of the primvar the values and opacities apply to.
 		// Otherwise, there must be a value and opacity for every element.
-		IECore::IntVectorDataPtr m_indicesData;
+		IECore::IntVectorDataPtr indicesData;
+
+		void apply( IECore::DataPtr &resultData, size_t outputSize ) const;
 
 };
 

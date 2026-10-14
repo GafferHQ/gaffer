@@ -209,7 +209,7 @@ enum TypeId
 	PrimitiveVariableTypeTypeId = 120164,
 	PointInstancerQueryTypeId = 120165,
 	PrimitiveVariablePaintTypeId = 120166,
-	PaintOperationTypeId = 120167,
+	PrimitiveVariablePaintOperationTypeId = 120167,
 
 	LastTypeId = 120999
 };

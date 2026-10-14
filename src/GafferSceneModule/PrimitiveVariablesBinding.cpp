@@ -164,7 +164,7 @@ void GafferSceneModule::bindPrimitiveVariables()
 
 	{
 		boost::python::scope paintScope = GafferBindings::DependencyNodeClass<PrimitiveVariablePaint>();
-		IECorePython::RunTimeTypedClass<PrimitiveVariablePaint::PaintOperation>()
+		IECorePython::RunTimeTypedClass<PrimitiveVariablePaint::Operation>()
 			.def( boost::python::init<>() )
 			.def( boost::python::init<IECore::DataPtr>() )
 			.def( boost::python::init<IECore::DataPtr, IECore::FloatVectorDataPtr>() )

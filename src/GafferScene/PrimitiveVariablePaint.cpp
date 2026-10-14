@@ -81,46 +81,46 @@ constexpr bool isSupportedVectorData()
 
 GAFFER_NODE_DEFINE_TYPE( PrimitiveVariablePaint );
 
-PrimitiveVariablePaint::PaintOperation::PaintOperation(
+PrimitiveVariablePaint::Operation::Operation(
 	IECore::DataPtr valueData,
 	IECore::FloatVectorDataPtr opacityData,
 	IECore::IntVectorDataPtr indicesData
 )
-	: m_valueData( valueData ), m_opacityData( opacityData ), m_indicesData( indicesData )
+	: valueData( valueData ), opacityData( opacityData ), indicesData( indicesData )
 {
 }
 
-PrimitiveVariablePaint::PaintOperation::~PaintOperation()
+PrimitiveVariablePaint::Operation::~Operation()
 {
 }
 
-bool PrimitiveVariablePaint::PaintOperation::isEqualTo( const IECore::Object *other ) const
+bool PrimitiveVariablePaint::Operation::isEqualTo( const IECore::Object *other ) const
 {
 	if( !Object::isEqualTo( other ) )
 	{
 		return false;
 	}
 
-	const PaintOperation *operation = static_cast<const PaintOperation *>( other );
-	if( m_valueData || operation->m_valueData )
+	const Operation *operation = static_cast<const Operation *>( other );
+	if( valueData || operation->valueData )
 	{
-		if( !( m_valueData && operation->m_valueData && m_valueData->isEqualTo( operation->m_valueData.get() ) ) )
+		if( !( valueData && operation->valueData && valueData->isEqualTo( operation->valueData.get() ) ) )
 		{
 			return false;
 		}
 	}
 
-	if( m_opacityData || operation->m_opacityData )
+	if( opacityData || operation->opacityData )
 	{
-		if( !( m_opacityData && operation->m_opacityData && m_opacityData->isEqualTo( operation->m_opacityData.get() ) ) )
+		if( !( opacityData && operation->opacityData && opacityData->isEqualTo( operation->opacityData.get() ) ) )
 		{
 			return false;
 		}
 	}
 
-	if( m_indicesData || operation->m_indicesData )
+	if( indicesData || operation->indicesData )
 	{
-		if( !( m_indicesData && operation->m_indicesData && m_indicesData->isEqualTo( operation->m_indicesData.get() ) ) )
+		if( !( indicesData && operation->indicesData && indicesData->isEqualTo( operation->indicesData.get() ) ) )
 		{
 			return false;
 		}
@@ -129,91 +129,91 @@ bool PrimitiveVariablePaint::PaintOperation::isEqualTo( const IECore::Object *ot
 	return true;
 }
 
-void PrimitiveVariablePaint::PaintOperation::hash( IECore::MurmurHash &h ) const
+void PrimitiveVariablePaint::Operation::hash( IECore::MurmurHash &h ) const
 {
 	Object::hash( h );
-	if( m_valueData )
+	if( valueData )
 	{
-		m_valueData->hash( h );
+		valueData->hash( h );
 	}
 
-	if( m_opacityData )
+	if( opacityData )
 	{
-		m_opacityData->hash( h );
+		opacityData->hash( h );
 	}
 
-	if( m_indicesData )
+	if( indicesData )
 	{
-		m_indicesData->hash( h );
+		indicesData->hash( h );
 	}
 }
 
-void PrimitiveVariablePaint::PaintOperation::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
+void PrimitiveVariablePaint::Operation::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
 {
 	Object::copyFrom( other, context );
 
-	const PaintOperation *operation = static_cast<const PaintOperation *>( other );
-	m_valueData = operation->m_valueData;
-	m_opacityData = operation->m_opacityData;
-	m_indicesData = operation->m_indicesData;
+	const Operation *operation = static_cast<const Operation *>( other );
+	valueData = operation->valueData;
+	opacityData = operation->opacityData;
+	indicesData = operation->indicesData;
 }
 
-void PrimitiveVariablePaint::PaintOperation::save( IECore::Object::SaveContext *context ) const
+void PrimitiveVariablePaint::Operation::save( IECore::Object::SaveContext *context ) const
 {
 	Object::save( context );
 
 	IndexedIOPtr container = context->container( staticTypeName(), 1 );
-	context->save( m_valueData.get(), container.get(), g_valueDataName );
-	if( m_opacityData )
+	context->save( valueData.get(), container.get(), g_valueDataName );
+	if( opacityData )
 	{
-		context->save( m_opacityData.get(), container.get(), g_opacityDataName );
+		context->save( opacityData.get(), container.get(), g_opacityDataName );
 	}
-	if( m_indicesData )
+	if( indicesData )
 	{
-		context->save( m_indicesData.get(), container.get(), g_indicesDataName );
+		context->save( indicesData.get(), container.get(), g_indicesDataName );
 	}
 }
 
-void PrimitiveVariablePaint::PaintOperation::load( IECore::Object::LoadContextPtr context )
+void PrimitiveVariablePaint::Operation::load( IECore::Object::LoadContextPtr context )
 {
 	Object::load( context );
 
 	unsigned int version = 1;
 	ConstIndexedIOPtr container = context->container( staticTypeName(), version );
 
-	m_valueData = context->load<Data>( container.get(), g_valueDataName );
+	valueData = context->load<Data>( container.get(), g_valueDataName );
 
 	if( container->hasEntry( g_opacityDataName ) )
 	{
-		m_opacityData = context->load<FloatVectorData>( container.get(), g_opacityDataName );
+		opacityData = context->load<FloatVectorData>( container.get(), g_opacityDataName );
 	}
 
 	if( container->hasEntry( g_indicesDataName ) )
 	{
-		m_indicesData = context->load<IntVectorData>( container.get(), g_indicesDataName );
+		indicesData = context->load<IntVectorData>( container.get(), g_indicesDataName );
 	}
 }
 
-void PrimitiveVariablePaint::PaintOperation::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
+void PrimitiveVariablePaint::Operation::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
 {
 	Object::memoryUsage( accumulator );
-	if( m_valueData )
+	if( valueData )
 	{
-		accumulator.accumulate( m_valueData.get() );
+		accumulator.accumulate( valueData.get() );
 	}
-	if( m_opacityData )
+	if( opacityData )
 	{
-		accumulator.accumulate( m_opacityData.get() );
+		accumulator.accumulate( opacityData.get() );
 	}
-	if( m_indicesData )
+	if( indicesData )
 	{
-		accumulator.accumulate( m_indicesData.get() );
+		accumulator.accumulate( indicesData.get() );
 	}
 }
 
-void PrimitiveVariablePaint::PaintOperation::apply( IECore::DataPtr &resultData, size_t outputSize ) const
+void PrimitiveVariablePaint::Operation::apply( IECore::DataPtr &resultData, size_t outputSize ) const
 {
-	IECore::dispatch( m_valueData.get(),
+	IECore::dispatch( valueData.get(),
 		[outputSize, &resultData, this]( auto *typedValueData )
 		{
 			using SourceType = typename std::remove_const_t< std::remove_pointer_t<decltype( typedValueData )> >;
@@ -237,7 +237,7 @@ void PrimitiveVariablePaint::PaintOperation::apply( IECore::DataPtr &resultData,
 					{
 						throw IECore::Exception(
 							fmt::format(
-								"Cannot apply PaintOperation with value type {} to variable of type {}",
+								"Cannot apply Operation with value type {} to variable of type {}",
 								typedValueData->typeName(), resultData->typeName()
 							)
 						);
@@ -247,9 +247,9 @@ void PrimitiveVariablePaint::PaintOperation::apply( IECore::DataPtr &resultData,
 				auto &resultVec = typedResultData->writable();
 				auto &typedValue = typedValueData->readable();
 
-				if( m_indicesData )
+				if( indicesData )
 				{
-					const std::vector<int> &indices = m_indicesData->readable();
+					const std::vector<int> &indices = indicesData->readable();
 
 					if( typedValue.size() != indices.size() )
 					{
@@ -258,9 +258,9 @@ void PrimitiveVariablePaint::PaintOperation::apply( IECore::DataPtr &resultData,
 						);
 					}
 
-					if( m_opacityData )
+					if( opacityData )
 					{
-						const std::vector<float> &opacity = m_opacityData->readable();
+						const std::vector<float> &opacity = opacityData->readable();
 
 						if( opacity.size() != indices.size() )
 						{
@@ -306,9 +306,9 @@ void PrimitiveVariablePaint::PaintOperation::apply( IECore::DataPtr &resultData,
 						);
 					}
 
-					if( m_opacityData )
+					if( opacityData )
 					{
-						const std::vector<float> &opacity = m_opacityData->readable();
+						const std::vector<float> &opacity = opacityData->readable();
 
 						if( opacity.size() != outputSize )
 						{
@@ -339,7 +339,7 @@ void PrimitiveVariablePaint::PaintOperation::apply( IECore::DataPtr &resultData,
 
 }
 
-IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( PrimitiveVariablePaint::PaintOperation );
+IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( PrimitiveVariablePaint::Operation );
 
 size_t PrimitiveVariablePaint::g_firstPlugIndex = 0;
 
@@ -422,16 +422,16 @@ IECore::ConstObjectPtr PrimitiveVariablePaint::computeProcessedObject( const Sce
 			continue;
 		}
 
-		const PaintOperation *typedValue = IECore::runTimeCast<const PaintOperation>( value.get() );
+		const Operation *typedValue = IECore::runTimeCast<const Operation>( value.get() );
 		if( !typedValue )
 		{
-			throw IECore::Exception( fmt::format( "Paint value must be of type PaintOperation, not {}.", value->typeName() ) );
+			throw IECore::Exception( fmt::format( "Paint value must be of type Operation, not {}.", value->typeName() ) );
 		}
 
 		std::string varName = primVarPlug->namePlug()->getValue();
 
 		// TODO : Should we support interpolations other than Vertex? Should it be a plug on PrimitiveVariablePaint?
-		// Or stored inside PaintOperation?
+		// Or stored inside Operation?
 		PrimitiveVariable::Interpolation interp = PrimitiveVariable::Vertex;
 
 		size_t variableSize = inputPrimitive->variableSize( interp );
