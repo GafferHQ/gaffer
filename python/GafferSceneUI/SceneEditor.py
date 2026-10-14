@@ -535,6 +535,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		self.__ignoreCurrentChanged = False
+		self.__dormantSection = None
 
 		# Borrow the styling from the Spreadsheet's section chooser.
 		## \todo Should we be introducing a `GafferUI.TabBar` class which can be used in
@@ -554,9 +555,17 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		finally :
 			self.__ignoreCurrentChanged = False
 
+		# We've changed which sections are available, which might invalidate the current selection.
 		currentSection = self.getPlug().getValue()
-		if sections and currentSection not in sections :
+		if self.__dormantSection in sections :
+			# The previously chosen section has become available again. Restore it.
+			self.__setSection( self.__dormantSection )
+		elif sections and currentSection not in sections :
+			# The current section is unavailable. Remember it so we can restore
+			# it later.
+			dormantSection = self.__dormantSection or currentSection
 			self.__setSection( sections[0] )
+			self.__dormantSection = dormantSection
 		else :
 			self._updateFromValues( [ currentSection ], None )
 
@@ -580,6 +589,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setSection( self, section ) :
 
+		self.__dormantSection = None
 		self.getPlug().setValue( section )
 
 SceneEditor._SectionPlugValueWidget = _SectionPlugValueWidget

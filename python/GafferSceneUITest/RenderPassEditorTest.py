@@ -622,4 +622,4 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		assertColumns( [], "Main", [] )
 
 		editor.settings()["columnFilter"].setValue( "" )
-		assertColumns( [ "Main", "Other", "All", "Favourites" ], "Main", [ "A", "B" ] )
+		assertColumns( [ "Main", "Other", "All", "Favourites" ], "All", [ "A", "B", "C", "D" ] )

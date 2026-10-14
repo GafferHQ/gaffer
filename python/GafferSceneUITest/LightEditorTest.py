@@ -982,4 +982,4 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		assertColumns( [], "Other", [] )
 
 		editor.settings()["columnFilter"].setValue( "" )
-		assertColumns( [ "Main", "Other", "All" ], "Other", [ "C", "D" ] )
+		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A", "B" ] )
