@@ -74,11 +74,11 @@ void DepthRender::startRendering( const M44f &projectionMatrix )
 {
 	glViewport(	0, 0, m_resolution.x, m_resolution.y );
 
-    glMatrixMode( GL_PROJECTION );
-    glLoadMatrixf( projectionMatrix.getValue() );
+	glMatrixMode( GL_PROJECTION );
+	glLoadMatrixf( projectionMatrix.getValue() );
 
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
 
 
 	glClearColor( 0.26f, 0.26f, 0.26f, 0.0f );
