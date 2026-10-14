@@ -817,9 +817,11 @@ void Attributes::applyLight( ccl::Light *light, ccl::Scene *scene ) const
 		ccl::array<ccl::Node *> shaders;
 		shaders.push_back_slow( m_lightShader->shader() );
 		{
-			// We need the scene lock for `set_used_shaders()`, to protect
+			// We need the scene lock because `tag_used()` will modify the
+			// scene. We also need it for `set_used_shaders()`, to protect
 			// the non-atomic increment made in `ccl::Node::reference()`.
 			std::scoped_lock sceneLock( scene->mutex );
+			m_lightShader->shader()->tag_used( scene );
 			light->set_used_shaders( shaders );
 		}
 
