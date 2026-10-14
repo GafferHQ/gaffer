@@ -129,4 +129,4 @@ class AttributeEditorTest( GafferUITest.TestCase ) :
 		assertColumns( [], "Main", [] )
 
 		editor.settings()["columnFilter"].setValue( "" )
-		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A", "B" ] )
+		assertColumns( [ "Main", "Other", "All" ], "All", [ "A", "B", "C", "D" ] )

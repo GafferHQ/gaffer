@@ -535,6 +535,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		self.__ignoreCurrentChanged = False
+		self.__previousSectionChoice = None
 
 		# Borrow the styling from the Spreadsheet's section chooser.
 		## \todo Should we be introducing a `GafferUI.TabBar` class which can be used in
@@ -555,8 +556,12 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__ignoreCurrentChanged = False
 
 		currentSection = self.getPlug().getValue()
-		if sections and currentSection not in sections :
+		if self.__previousSectionChoice in sections :
+			self.__setSection( self.__previousSectionChoice )
+		elif sections and currentSection not in sections :
+			previousSection = self.__previousSectionChoice or currentSection
 			self.__setSection( sections[0] )
+			self.__previousSectionChoice = previousSection
 		else :
 			self._updateFromValues( [ currentSection ], None )
 
@@ -580,6 +585,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setSection( self, section ) :
 
+		self.__previousSectionChoice = None
 		with self._blockedUpdateFromValues() :
 			self.getPlug().setValue( section )
 		self._updateFromValues( [ section ], None )
