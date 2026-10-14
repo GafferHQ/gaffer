@@ -234,6 +234,14 @@ void PrimitiveVariablePaint::Operation::apply( IECore::DataPtr &resultData, size
 						// If the result hasn't been filled with data yet, start from a vector of
 						// zeros
 						typedResultData = new SourceType();
+
+						// We're currently expecting this to be used on colors and floats where this will
+						// do nothing, but in theory, we could run on types that have interpretations.
+						IECore::setGeometricInterpretation(
+							typedResultData.get(),
+							IECore::getGeometricInterpretation( typedValueData )
+						);
+
 						typedResultData->writable().resize( outputSize, ValueType( 0.0f ) );
 						resultData = typedResultData;
 					}
