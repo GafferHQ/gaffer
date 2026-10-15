@@ -318,6 +318,10 @@ class _StatusWidget( GafferUI.Frame ) :
 		with self :
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 ) :
 
+				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__warningRow :
+					GafferUI.Image( "warningSmall.png" )
+					self.__warningLabel = GafferUI.Label( "" )
+
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__infoRow :
 					GafferUI.Image( "infoSmall.png" )
 					GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
@@ -325,9 +329,6 @@ class _StatusWidget( GafferUI.Frame ) :
 					self.__nameLabel = GafferUI.NameLabel( graphComponent = None, numComponents = 1000 )
 					self.__nameLabel.setFormatter( _boldFormatter )
 
-				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__warningRow :
-					GafferUI.Image( "warningSmall.png" )
-					self.__warningLabel = GafferUI.Label( "" )
 
 		self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ) )
 
@@ -355,7 +356,11 @@ class _StatusWidget( GafferUI.Frame ) :
 				targetName = target.relativeName( target.ancestor( Gaffer.ScriptNode ) )
 			if result :
 				result += "\n"
-			result += "- Painting {0} using {1}".format( s[0], targetName )
+
+			if target:
+				result += "- Painting {0} using {1}".format( s[0], targetName )
+			else:
+				result += "- Cannot paint {0}".format( s[0] )
 
 		return result
 
@@ -400,14 +405,21 @@ class _StatusWidget( GafferUI.Frame ) :
 			# Update warning row
 
 			if warnings :
+				self.__warningRow.setVisible( True )
+
 				if len( warnings ) == 1 :
 					self.__warningLabel.setText( next( iter( warnings ) ) )
-					self.__warningRow.setToolTip( "" )
+					self.__warningRow.setToolTip( next( iter( warnings ) ) )
 				else :
 					self.__warningLabel.setText( "{} warnings".format( len( warnings ) ) )
 					self.__warningRow.setToolTip( "\n".join( "- " + w for w in warnings ) )
-				self.__warningRow.setVisible( True )
-			else :
+
+				if self.__tool.selectionEditable() :
+					# If there is something editable, we focus on that, the __infoRow will be visible.
+					# We'll still show the warning beside it as a cue, but we don't show any text unless
+					# the user views the tooltip
+					self.__warningLabel.setText( "" )
+			else:
 				self.__warningRow.setVisible( False )
 
 		else :

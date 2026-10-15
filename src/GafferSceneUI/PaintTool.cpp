@@ -1813,13 +1813,16 @@ std::map< std::string, const Gaffer::GraphComponent* > PaintTool::editTargetPerP
 	for( const auto &l : locationCaches() )
 	{
 		const Gaffer::GraphComponent* target = nullptr;
-		if( l->paintEdit() )
+		if( l->editable() )
 		{
-			target = l->paintEdit()->parent();
-		}
-		else if( view()->editScope() )
-		{
-			target = view()->editScope();
+			if( l->paintEdit() )
+			{
+				target = l->paintEdit()->parent();
+			}
+			else if( view()->editScope() )
+			{
+				target = view()->editScope();
+			}
 		}
 
 		result[ ScenePlug::pathToString( l->path() ) ] = target;
@@ -1830,21 +1833,14 @@ std::map< std::string, const Gaffer::GraphComponent* > PaintTool::editTargetPerP
 
 bool PaintTool::selectionEditable()
 {
-	LocationCacheVector &locations = locationCaches();
-
-	if( locations.empty() )
+	for( const auto &e : locationCaches() )
 	{
-		return false;
-	}
-
-	for( const auto &e : locations )
-	{
-		if( !e->editable() )
+		if( e->editable() )
 		{
-			return false;
+			return true;
 		}
 	}
-	return true;
+	return false;
 }
 
 PaintTool::StatusChangedSignal &PaintTool::statusChangedSignal()
