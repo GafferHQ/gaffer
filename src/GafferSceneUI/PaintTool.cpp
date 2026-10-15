@@ -888,15 +888,20 @@ std::string PaintTool::LocationCache::update(
 
 			if( !m_sourceMesh )
 			{
+				// Wipe the hash, so we'll always output the warning
+				m_sourceMeshHash = IECore::MurmurHash();
 				warning = fmt::format( "Cannot paint non-mesh : \"{}\"", ScenePlug::pathToString( m_path ) );
 			}
 			else if( !m_sourceMesh->arePrimitiveVariablesValid() )
 			{
 				m_sourceMesh = nullptr;
+				m_sourceMeshHash = IECore::MurmurHash();
 				warning = fmt::format( "Cannot paint mesh with invalid variables : \"{}\"", ScenePlug::pathToString( m_path ) );
 			}
-
-			m_sourceMeshHash = newHash;
+			else
+			{
+				m_sourceMeshHash = newHash;
+			}
 		}
 	}
 	else
