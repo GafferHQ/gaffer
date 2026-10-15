@@ -118,11 +118,17 @@ class ColorSwatch( GafferUI.Widget ) :
 
 		displayTransform = self.displayTransform()
 
-		opaqueDisplayColor = self._qtColor( displayTransform( self.__color ) )
+		if not hasattr( self.__color, "r" ):
+			dimensions = 1
+			opaqueDisplayColor = self._qtColor( imath.Color3f( self.__color ) )
+		else:
+			dimensions = self.__color.dimensions()
+			opaqueDisplayColor = self._qtColor( displayTransform( self.__color ) )
+
 		self.__opaqueChecker.color0 = self.__opaqueChecker.color1 = opaqueDisplayColor
-		if self.__color.dimensions()==3 :
+		if dimensions:
 			self.__transparentChecker.color0 = self.__transparentChecker.color1 = opaqueDisplayColor
-		else :
+		else:
 			c = self.__color
 			color0 = self.__linearBackgroundColor0 * ( 1.0 - c.a ) + imath.Color3f( c.r, c.g, c.b ) * c.a
 			color1 = self.__linearBackgroundColor1 * ( 1.0 - c.a ) + imath.Color3f( c.r, c.g, c.b ) * c.a
