@@ -272,8 +272,8 @@ void makeSparsePaintOperation( PrimitiveVariablePaint::Operation &op )
 		}
 	}
 
-	constexpr int valueSize = sizeof( typename T::ValueType::value_type );
-	if( numOccupied * ( valueSize + sizeof( float ) ) >= sourceValues.size() * valueSize )
+	constexpr int valueAndOpacitySize = sizeof( typename T::ValueType::value_type ) + sizeof( float );
+	if( numOccupied * ( valueAndOpacitySize + sizeof( int ) ) >= sourceValues.size() * valueAndOpacitySize )
 	{
 		// If converting to sparse and adding indices wouldn't save any size, then
 		// just return.
@@ -1395,12 +1395,6 @@ class PaintTool::PaintGadget : public Gadget
 				glEnable( GL_DEPTH_TEST );
 			}
 
-			const GLboolean blendEnabled = glIsEnabled( GL_BLEND );
-			if( !blendEnabled )
-			{
-				glEnable( GL_BLEND );
-			}
-
 			// Enable shader program
 
 			GLint shaderProgram;
@@ -2420,6 +2414,7 @@ bool PaintTool::dragMove( const GafferUI::DragDropEvent &event )
 
 bool PaintTool::dragEnd( const GafferUI::DragDropEvent &event )
 {
+	bool isOurs = m_buttonPressIsOurs;
 	if( m_buttonPressIsOurs )
 	{
 		applyCurrentStroke();
@@ -2442,7 +2437,7 @@ bool PaintTool::dragEnd( const GafferUI::DragDropEvent &event )
 	m_eventButtons = ButtonEvent::Buttons( 0 );
 	updateCursor();
 
-	return m_buttonPressIsOurs;
+	return isOurs;
 }
 
 void PaintTool::updateCursor()
