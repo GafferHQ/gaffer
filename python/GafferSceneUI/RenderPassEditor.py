@@ -392,6 +392,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				sectionNames.extend( s for s in sections.keys() if s not in sectionNames )
 
+		if "All" not in sectionNames and len( sectionNames ) > 1 :
+			sectionNames.append( "All" )
+
 		sectionNames.append( "Favourites" )
 
 		Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", IECore.StringVectorData( sectionNames ), persistent = False )
@@ -423,8 +426,9 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		else :
 			for groupKey, sections in self.__columnRegistry.items() :
 				if IECore.StringAlgo.match( tabGroup, groupKey ) :
-					section = sections.get( currentSection, {} )
-					sectionColumns += [ ( self.__acquireColumn( c, currentSection ), index ) for ( c, index ) in section.values() ]
+					matchingSections = sections.values() if currentSection == "All" else [ sections.get( currentSection, {} ) ]
+					for section in matchingSections :
+						sectionColumns += [ ( self.__acquireColumn( c, currentSection ), index ) for ( c, index ) in section.values() ]
 
 		self.__pathListing.setColumns( self.__commonColumns + self.__orderedColumns( sectionColumns ) )
 		self.__pathListing._qtWidget().header().setSectionsMovable( currentSection == "Favourites" )
