@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - LightEditor : Added hierarchy filter.
+- LightEditor, RenderPassEditor : Added `All` section, which shows the columns from every section at once.
 
 Fixes
 -----

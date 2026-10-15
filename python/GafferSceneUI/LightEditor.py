@@ -279,9 +279,13 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		for rendererKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( attribute, rendererKey ) :
-				section = sections.get( currentSection, {} )
-				sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
+				matchingSections = sections.values() if currentSection == "All" else [ sections.get( currentSection, {} ) ]
+				for section in matchingSections :
+					sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in section.values() ]
 				sectionNames.extend( s for s in sections.keys() if s not in sectionNames )
+
+		if "All" not in sectionNames and len( sectionNames ) > 1 :
+			sectionNames.append( "All" )
 
 		sectionsData = IECore.StringVectorData( sectionNames )
 		if Gaffer.Metadata.value( self.settings()["section"], "sectionPlugValueWidget:sections" ) != sectionsData :
