@@ -141,11 +141,9 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 20,
 			"plugValueWidget:type" : "GafferUI.ColorSwatchPlugValueWidget",
+			"toolbarLayout:visibilityActivator" : "colorValue",
 		},
 		"floatValue" : {
-
-			#TODO : After thinking about this, I think it might be clearer if this plug doesn't exist.
-			# We could just use the average of colorValue when painting a float primvar?
 
 			"description" :
 			"""
@@ -153,9 +151,24 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"toolbarLayout:section" : "Bottom",
-			"toolbarLayout:width" : 100,
 			"toolbarLayout:visibilityActivator" : "floatValue",
+			"plugValueWidget:type" : "GafferUI.ColorPlugValueWidget",
+			"numericPlugValueWidget:fixedCharacterWidth" : 5,
+			"colorPlugValueWidget:colorChooserButtonVisible" : False,
 
+		},
+		"floatBackground" : {
+
+			"description" :
+			"""
+			An alternate value. Press `X` to swap values.
+			""",
+
+			"label" : "",
+			"toolbarLayout:section" : "Bottom",
+			"toolbarLayout:width" : 20,
+			"plugValueWidget:type" : "GafferUI.ColorSwatchPlugValueWidget",
+			"toolbarLayout:visibilityActivator" : "floatValue",
 		},
 		"opacity" : {
 

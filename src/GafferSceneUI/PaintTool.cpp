@@ -1622,6 +1622,7 @@ PaintTool::PaintTool( SceneView *view, const std::string &name )
 
 	addChild( new FloatPlug( "size", Plug::In, 30.0f, 0.0f ) );
 	addChild( new FloatPlug( "floatValue", Plug::In, 1.0f ) );
+	addChild( new FloatPlug( "floatBackground", Plug::In, 0.0f ) );
 	addChild( new Color3fPlug( "colorValue", Plug::In, Imath::Color3f( 1.0f ) ) );
 	addChild( new Color3fPlug( "colorBackground", Plug::In, Imath::Color3f( 0.0f ) ) );
 	addChild( new FloatPlug( "opacity", Plug::In, 1.0f, 0.0f, 1.0f ) );
@@ -1731,44 +1732,54 @@ const Gaffer::FloatPlug *PaintTool::floatValuePlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
+Gaffer::FloatPlug *PaintTool::floatBackgroundPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 6 );
+}
+
+const Gaffer::FloatPlug *PaintTool::floatBackgroundPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 6 );
+}
+
 Gaffer::Color3fPlug *PaintTool::colorValuePlug()
 {
-	return getChild<Color3fPlug>( g_firstPlugIndex + 6 );
+	return getChild<Color3fPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::Color3fPlug *PaintTool::colorValuePlug() const
 {
-	return getChild<Color3fPlug>( g_firstPlugIndex + 6 );
+	return getChild<Color3fPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::Color3fPlug *PaintTool::colorBackgroundPlug()
 {
-	return getChild<Color3fPlug>( g_firstPlugIndex + 7 );
+	return getChild<Color3fPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::Color3fPlug *PaintTool::colorBackgroundPlug() const
 {
-	return getChild<Color3fPlug>( g_firstPlugIndex + 7 );
+	return getChild<Color3fPlug>( g_firstPlugIndex + 8 );
 }
 
 Gaffer::FloatPlug *PaintTool::opacityPlug()
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 8 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 9 );
 }
 
 const Gaffer::FloatPlug *PaintTool::opacityPlug() const
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 8 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 9 );
 }
 
 Gaffer::FloatPlug *PaintTool::hardnessPlug()
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 9 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 10 );
 }
 
 const Gaffer::FloatPlug *PaintTool::hardnessPlug() const
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 9 );
+	return getChild<FloatPlug>( g_firstPlugIndex + 10 );
 }
 
 const std::unordered_set< std::string > &PaintTool::warnings() const
@@ -2306,9 +2317,14 @@ bool PaintTool::keyPress( const GafferUI::KeyEvent &event )
 	}
 	else if( event.key == "X" )
 	{
-		Color3f temp = colorValuePlug()->getValue();
+		float tempFloat = floatValuePlug()->getValue();
+		floatValuePlug()->setValue( floatBackgroundPlug()->getValue() );
+		floatBackgroundPlug()->setValue( tempFloat );
+
+		Color3f tempColor = colorValuePlug()->getValue();
 		colorValuePlug()->setValue( colorBackgroundPlug()->getValue() );
-		colorBackgroundPlug()->setValue( temp );
+		colorBackgroundPlug()->setValue( tempColor );
+
 		return true;
 	}
 

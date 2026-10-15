@@ -95,6 +95,9 @@ class GAFFERSCENEUI_API PaintTool : public GafferSceneUI::SelectionTool
 		Gaffer::FloatPlug *floatValuePlug();
 		const Gaffer::FloatPlug *floatValuePlug() const;
 
+		Gaffer::FloatPlug *floatBackgroundPlug();
+		const Gaffer::FloatPlug *floatBackgroundPlug() const;
+
 		Gaffer::Color3fPlug *colorValuePlug();
 		const Gaffer::Color3fPlug *colorValuePlug() const;
 
