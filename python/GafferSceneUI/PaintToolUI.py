@@ -106,11 +106,11 @@ Gaffer.Metadata.registerNode(
 			"""
 			The size of the brush.
 
-			Shortcut : `S`
+			Can be adjusted by pressing `S` and moving the mouse cursor, or using the `+` and `-` keys.
 			""",
 
 			"toolbarLayout:section" : "Bottom",
-			"toolbarLayout:width" : 45,
+			"toolbarLayout:width" : 55,
 
 		},
 		"colorValue" : {
@@ -119,7 +119,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			Specifies the color of the brush.
 
-			Shortcut : `V`
+			Press `V` to adjust with a popup color chooser.
 			""",
 
 			"toolbarLayout:section" : "Bottom",
@@ -176,7 +176,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The opacity of the brush.
 
-			Shortcut : `G`
+			Can be adjusted by pressing `G` and moving the mouse cursor.
 			""",
 
 			"toolbarLayout:section" : "Bottom",
@@ -189,7 +189,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The hardness of the brush. 1 is completely hard, 0 means the whole brush is a smooth fade.
 
-			Shortcut : `H`
+			Can be adjusted by pressing `H` and moving the mouse cursor.
 			""",
 
 			"toolbarLayout:section" : "Bottom",

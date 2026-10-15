@@ -2147,6 +2147,12 @@ bool PaintTool::leave( const ButtonEvent &event )
 bool PaintTool::mouseMove( const ButtonEvent &event )
 {
 	V2f cursorPos( event.line.p1.x, event.line.p1.y );
+
+	// Depending on m_mouseMoveMode, we may not be updating the real cursor pos, but we
+	// may want to start using the real cursor pos again in keyRelease ( which doesn't
+	// receive the mouse's current position ), so we stash it here.
+	m_restoreCursorPos = cursorPos;
+
 	if( m_mouseMoveMode == MouseMoveMode::Size )
 	{
 		float brushCurSize = pow( 2, ( cursorPos.x - m_cursorPos.x ) * 0.03f ) * m_mouseMoveStartValue;
@@ -2159,7 +2165,7 @@ bool PaintTool::mouseMove( const ButtonEvent &event )
 	}
 	else if( m_mouseMoveMode == MouseMoveMode::Hardness )
 	{
-		float curHardness = std::max( 0.0f, std::min( 1.0f, ( cursorPos.x - m_cursorPos.x ) * 0.03f + m_mouseMoveStartValue ) );
+		float curHardness = std::max( 0.0f, std::min( 1.0f, ( cursorPos.x - m_cursorPos.x ) * 0.01f + m_mouseMoveStartValue ) );
 		hardnessPlug()->setValue( curHardness );
 	}
 	else
@@ -2200,6 +2206,12 @@ bool PaintTool::buttonPress( const GafferUI::ButtonEvent &event )
 	if( !selectionEditable() )
 	{
 		// We're not editable, but we should still consume the event
+		return true;
+	}
+
+	if( m_mouseMoveMode != MouseMoveMode::Default )
+	{
+		// Ignore clicks or drags that occur while using a hotkey to adjust brush size or opacity
 		return true;
 	}
 
@@ -2270,11 +2282,11 @@ bool PaintTool::keyPress( const GafferUI::KeyEvent &event )
 
 	if( event.key == "Plus" || event.key == "Equal" )
 	{
-		sizePlug()->setValue( sizePlug()->getValue() + 0.2 );
+		sizePlug()->setValue( sizePlug()->getValue() / 0.95f );
 	}
 	else if( event.key == "Minus" || event.key == "Underscore" )
 	{
-		sizePlug()->setValue( max( sizePlug()->getValue() - 0.2, 0.2 ) );
+		sizePlug()->setValue( sizePlug()->getValue() * 0.95f );
 	}
 	else if( event.key == "V" )
 	{
@@ -2339,6 +2351,8 @@ bool PaintTool::keyRelease( const GafferUI::KeyEvent &event )
 	if( event.key == "S" || event.key == "H" || event.key == "G" )
 	{
 		m_mouseMoveMode = MouseMoveMode::Default;
+		m_cursorPos = m_restoreCursorPos;
+		m_brushOutline->setPos( m_restoreCursorPos );
 	}
 
 	return false;

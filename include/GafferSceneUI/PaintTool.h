@@ -215,6 +215,7 @@ class GAFFERSCENEUI_API PaintTool : public GafferSceneUI::SelectionTool
 		MouseMoveMode m_mouseMoveMode;
 		float m_mouseMoveStartValue;
 		Imath::V2f m_cursorPos;
+		Imath::V2f m_restoreCursorPos;
 
 		GafferSceneUI::Private::PrimitiveVariableInspectorPtr m_inspector;
 
