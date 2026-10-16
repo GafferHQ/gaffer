@@ -38,6 +38,7 @@
 import ast
 import contextlib
 import functools
+import inspect
 import sys
 import traceback
 import weakref
@@ -55,36 +56,55 @@ from Qt import QtCore
 ## \todo Standard way for users to customise all menus
 class PythonEditor( GafferUI.Editor ) :
 
+	class Settings( GafferUI.Editor.Settings ) :
+
+		def __init__( self ) :
+
+			GafferUI.Editor.Settings.__init__( self )
+
+			self["mcpEnabled"] = Gaffer.BoolPlug()
+
+	IECore.registerRunTimeTyped( Settings, "GafferUI::PythonEditor::Settings" )
+
 	def __init__( self, scriptNode, **kw ) :
 
-		self.__splittable = GafferUI.SplitContainer( borderWidth = 2 )
+		self.__column = GafferUI.ListContainer( borderWidth = 2, spacing = 2 )
 
-		GafferUI.Editor.__init__( self, self.__splittable, scriptNode, **kw )
+		GafferUI.Editor.__init__( self, self.__column, scriptNode, **kw )
 
-		self.__outputWidget = GafferUI.MultiLineTextWidget(
-			editable = False,
-			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
-			role = GafferUI.MultiLineTextWidget.Role.Code,
-		)
-		self.__outputWidget._qtWidget().setObjectName( "gafferPythonEditorOutputWidget" )
-		self.__outputWidget.contextMenuSignal().connect(
-			Gaffer.WeakMethod( self.__contextMenu )
-		)
+		self.__mcpTarget = None
 
-		self.__inputWidget = GafferUI.CodeWidget( lineNumbersVisible = True )
+		with self.__column :
 
-		self.__splittable.append( self.__outputWidget )
-		self.__splittable.append( self.__inputWidget )
+			GafferUI.PlugLayout(
+				self.settings(),
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				rootSection = "Settings"
+			)
 
-		self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
-		self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
-		self.__inputWidget.contextMenuSignal().connect(
-			Gaffer.WeakMethod( self.__contextMenu )
-		)
-		GafferUI.WidgetAlgo.joinEdges(
-			[ self.__outputWidget, self.__inputWidget ],
-			orientation = GafferUI.ListContainer.Orientation.Vertical
-		)
+			with GafferUI.SplitContainer( parenting = { "expand" : True } ) :
+
+				self.__outputWidget = GafferUI.MultiLineTextWidget(
+					editable = False,
+					wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
+					role = GafferUI.MultiLineTextWidget.Role.Code,
+				)
+				self.__outputWidget._qtWidget().setObjectName( "gafferPythonEditorOutputWidget" )
+				self.__outputWidget.contextMenuSignal().connect(
+					Gaffer.WeakMethod( self.__contextMenu )
+				)
+
+				self.__inputWidget = GafferUI.CodeWidget( lineNumbersVisible = True )
+
+				self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
+				self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+				self.__inputWidget.contextMenuSignal().connect(
+					Gaffer.WeakMethod( self.__contextMenu )
+				)
+				GafferUI.WidgetAlgo.joinEdges(
+					[ self.__outputWidget, self.__inputWidget ],
+					orientation = GafferUI.ListContainer.Orientation.Vertical
+				)
 
 		self.__executionDict = {
 			"imath" : imath,
@@ -96,6 +116,13 @@ class PythonEditor( GafferUI.Editor ) :
 		self.__inputWidget.setCompleter( GafferUI.CodeWidget.PythonCompleter( self.__executionDict ) )
 		self.__inputWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
 		self.__inputWidget.setCommentPrefix( "#" )
+
+	def __del__( self ) :
+
+		GafferUI.Editor.__del__( self )
+
+		if self.__mcpTarget is not None :
+			Gaffer.MCP.HTTPServer.acquireDefaultServer().removeTarget( self.__mcpTarget )
 
 	def inputWidget( self ) :
 
@@ -147,6 +174,22 @@ class PythonEditor( GafferUI.Editor ) :
 	def namespace( self ) :
 
 		return self.__executionDict
+
+	def _updateFromSettings( self, plug ) :
+
+		if plug == self.settings()["mcpEnabled"] :
+			if plug.getValue() :
+				try :
+					server = Gaffer.MCP.HTTPServer.acquireDefaultServer()
+				except :
+					# Failure will be reported for us by _MCPEnabledPlugValueWidget
+					return
+				self.__mcpTarget = Gaffer.MCP.Server.Target( self.scriptNode(), self.namespace() )
+				self.__mcpTarget.toolCalledSignal().connect( Gaffer.WeakMethod( self.__mcpToolCalledSignal ) )
+				server.addTarget( self.__mcpTarget )
+			elif self.__mcpTarget is not None :
+				Gaffer.MCP.HTTPServer.acquireDefaultServer().removeTarget( self.__mcpTarget )
+				self.__mcpTarget = None
 
 	def __repr__( self ) :
 
@@ -301,7 +344,103 @@ class PythonEditor( GafferUI.Editor ) :
 
 		return True
 
+	def __mcpToolCalledSignal( self, tool, arguments, result ) :
+
+		self.__outputWidget.appendText( f"MCP : Called `{tool}`" )
+		if tool == "executePython" :
+			self.__outputWidget.appendHTML( self.__codeToHTML( arguments["code"] ) )
+		for content in result["content"] :
+			text = content.get( "text" )
+			if text :
+				self.__outputWidget.appendText( text )
+			## \todo It would be quite nice to be able to show thumbnails of
+			# any images that get captured.
+
 GafferUI.Editor.registerType( "PythonEditor", PythonEditor )
+
+Gaffer.Metadata.registerNode(
+
+	PythonEditor.Settings,
+
+	plugs = {
+
+		"mcpEnabled" : {
+
+			"description" :
+			"""
+			Enables a Model Context Protocol server, allowing AI assistants
+			and large language models to connect to Gaffer and perform actions
+			such as :
+
+			- Executing Python code.
+			- Capturing images of the UI.
+			- Capturing the output of image nodes.
+
+			Actions performed are displayed in the output section of the PythonEditor.
+			When Python code is executed, it shares variables with the PythonEditor
+			so that users can collaborate with the AI assistant.
+
+			> Caution : The execution of arbitrary Python code allows full access
+			> to the machine. It is not limited to actions within Gaffer alone.
+			""",
+
+			"label" : "MCP Enabled",
+			"boolPlugValueWidget:displayMode" : "switch",
+			"plugValueWidget:type" : "GafferUI.PythonEditor._MCPEnabledPlugValueWidget"
+
+		},
+
+	}
+
+)
+
+class _MCPEnabledPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		row = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		GafferUI.PlugValueWidget.__init__( self, row, plugs, **kw )
+
+		with row :
+
+			GafferUI.BoolPlugValueWidget( plugs )
+
+			with GafferUI.Frame( borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None_, ) as self.__statusFrame :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					self.__statusIcon = GafferUI.Image( "infoSmall.png" )
+					self.__statusLabel = GafferUI.Label( "", textSelectable = True )
+
+			## \todo Add public "role" property to Frame widget and use that to determine styling.
+			self.__statusFrame._qtWidget().setProperty( "gafferDiff", "Other" )
+
+	__urlToolTip = inspect.cleandoc(
+		"""
+		The URL for the server. The port number is controlled by the GAFFER_MCP_PORT
+		environment variable.
+
+		To connect Claude Code :
+
+		`claude mcp add --transport http gaffer {url}`
+		"""
+	)
+
+	def _updateFromValues( self, values, exception ) :
+
+		if len( values ) and all( values ) :
+			try :
+				url = Gaffer.MCP.HTTPServer.acquireDefaultServer().url()
+				self.__statusIcon.updateImage( "infoSmall.png" )
+				self.__statusLabel.setText( url )
+				self.__statusFrame.setToolTip( self.__urlToolTip.format( url = url ) )
+			except Exception as e :
+				self.__statusIcon.updateImage( "warningSmall.png" )
+				self.__statusLabel.setText( "Couldn't start server" )
+				self.__statusFrame.setToolTip( str( e ) )
+			self.__statusFrame.setVisible( True )
+		else :
+			self.__statusFrame.setVisible( False )
+
+PythonEditor._MCPEnabledPlugValueWidget = _MCPEnabledPlugValueWidget
 
 class _MessageHandler( IECore.MessageHandler ) :
 

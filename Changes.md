@@ -1,10 +1,25 @@
 1.7.x.x (relative to 1.7.4.0)
 =======
 
+Features
+--------
+
+- PythonEditor : Added `mcpEnabled` setting, allowing an AI assistant or large language model to interact with Gaffer. Models can execute arbitrary Python and screenshot the UI or capture the output of image nodes for feedback.
+- `gaffer mcp` : Added application to allow AI assistants and large language models to launch and control a headless Gaffer session.
+
 Fixes
 -----
 
 - Cycles : Fixed bug causing lights with input shader networks to occasionally turn black after being modified during an interactive render.
+
+API
+---
+
+- MCP : Added classes to support the [Model Context Protocol](https://modelcontextprotocol.io).
+  - Gaffer.MCP.Server : Abstract base class for MCP servers.
+  - Gaffer.MCP.HTTPServer : Concrete server implementation using HTTP transport.
+  - Gaffer.MCP.StreamServer : Concrete server implementation using stream (stdio) transport.
+  - Gaffer.MCP.Tool, Gaffer.MCP.BasicTool : Base classes for adding custom tools to the server.
 
 1.7.4.0 (relative to 1.7.3.1)
 =======
