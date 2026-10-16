@@ -112,7 +112,10 @@ class GAFFERSCENEUI_API PaintTool : public GafferSceneUI::SelectionTool
 
 		const std::unordered_set< std::string > &warnings() const;
 
+		// The nodes that can be used to edit the current selection
 		std::unordered_set< const Gaffer::GraphComponent* > editTargets();
+
+		// For each location, the node that can be used to edit it, or null if it cannot be edited
 		std::map< std::string, const Gaffer::GraphComponent* > editTargetPerPath();
 
 		/// Returns true only if the selection is non-empty

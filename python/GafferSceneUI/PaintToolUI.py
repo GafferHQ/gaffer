@@ -419,6 +419,21 @@ class _StatusWidget( GafferUI.Frame ) :
 					# We'll still show the warning beside it as a cue, but we don't show any text unless
 					# the user views the tooltip
 					self.__warningLabel.setText( "" )
+			elif not self.__tool.selectionEditable():
+				# If there are editTargets, but we're not editable, and there were no warnings
+				# then the remaining possibility is that none of the locations are a mesh.
+				# This is the one invalid case we don't usually warn for, because it could
+				# result in too many unneeded warnings when selecting the root of an asset to
+				# paint. But if all the locations selected don't have meshes, then we do want
+				# to warn about that.
+				self.__warningRow.setVisible( True )
+				self.__warningLabel.setText( "No meshes found in selected locations" )
+				self.__warningRow.setToolTip(
+					"\n".join( [
+						"- Location {} is not mesh".format( i[0] ) for i in
+						self.__tool.editTargetPerPath().items()
+					] )
+				)
 			else:
 				self.__warningRow.setVisible( False )
 

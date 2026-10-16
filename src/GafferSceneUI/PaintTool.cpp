@@ -781,6 +781,12 @@ std::string PaintTool::LocationCache::update(
 	m_editable = false;
 	std::string warning = "";
 
+	if( m_currentStroke )
+	{
+		m_currentStroke.reset();
+		warning = "Internal error : Paint Tool caches invalidated during stroke";
+	}
+
 	EditScope *editScope = nullptr;
 
 	if( m_inspectorResult )
@@ -886,22 +892,13 @@ std::string PaintTool::LocationCache::update(
 		{
 			m_sourceMesh = IECore::runTimeCast< const IECoreScene::MeshPrimitive>( sourceScene->objectPlug()->getValue( &newHash ) );
 
-			if( !m_sourceMesh )
-			{
-				// Wipe the hash, so we'll always output the warning
-				m_sourceMeshHash = IECore::MurmurHash();
-				warning = fmt::format( "Cannot paint non-mesh : \"{}\"", ScenePlug::pathToString( m_path ) );
-			}
-			else if( !m_sourceMesh->arePrimitiveVariablesValid() )
+			if( m_sourceMesh && !m_sourceMesh->arePrimitiveVariablesValid() )
 			{
 				m_sourceMesh = nullptr;
-				m_sourceMeshHash = IECore::MurmurHash();
 				warning = fmt::format( "Cannot paint mesh with invalid variables : \"{}\"", ScenePlug::pathToString( m_path ) );
 			}
-			else
-			{
-				m_sourceMeshHash = newHash;
-			}
+
+			m_sourceMeshHash = newHash;
 		}
 	}
 	else
@@ -910,26 +907,20 @@ std::string PaintTool::LocationCache::update(
 		m_sourceMeshHash = IECore::MurmurHash();
 	}
 
-	IECore::MurmurHash initialEditValueHash;
-	if( paintEntry )
-	{
-		paintEntry->hash( initialEditValueHash );
-	}
-
 	if( m_sourceMesh )
 	{
+		IECore::MurmurHash initialEditValueHash;
+		if( paintEntry )
+		{
+			paintEntry->hash( initialEditValueHash );
+		}
+
 		size_t numVerts = m_sourceMesh->variableSize( IECoreScene::PrimitiveVariable::Interpolation::Vertex );
 		initialEditValueHash.append( numVerts );
-	}
-	initialEditValueHash.append( variableType );
 
-	if( m_initialEditValueHash != initialEditValueHash || !m_initialEditValue )
-	{
-		if( !m_sourceMesh )
-		{
-			m_initialEditValue.reset();
-		}
-		else
+		initialEditValueHash.append( variableType );
+
+		if( m_initialEditValueHash != initialEditValueHash || !m_initialEditValue )
 		{
 			size_t numVerts = m_sourceMesh->variableSize( IECoreScene::PrimitiveVariable::Interpolation::Vertex );
 
@@ -966,18 +957,16 @@ std::string PaintTool::LocationCache::update(
 
 		m_initialEditValueHash = initialEditValueHash;
 	}
+	else
+	{
+		m_initialEditValue.reset();
+	}
 
 	// These only need to be dirtied if the m_initialEditValueHash has changed, or variableName
 	// has changed. But we don't track variableName, and in the important case for performance,
 	// m_initialEditValueHash will have changed anyway, so we can just dirty these.
 	m_valueBufferDirty = true;
 	m_composedInputValueDirty = true;
-
-	if( m_currentStroke )
-	{
-		m_currentStroke.reset();
-		warning = "Internal error : Paint Tool caches invalidated during stroke";
-	}
 
 	return warning;
 }
@@ -2067,7 +2056,8 @@ void PaintTool::plugDirtied( const Gaffer::Plug *plug )
 	{
 		bool active = activePlug()->getValue();
 
-		view()->getChild<Plug>( "drawingMode" )->getChild<BoolPlug>( "hideSelected" )->setValue( active );
+		static PathMatcherDataPtr emptyPathMatcherData = new PathMatcherData();
+		view()->getChild<Plug>( "drawingMode" )->getChild<PathMatcherDataPlug>( "drawingExclusions" )->setValue( emptyPathMatcherData );
 		if( active )
 		{
 			m_preRenderConnection = view()->viewportGadget()->preRenderSignal().connect( boost::bind( &PaintTool::preRender, this ) );
@@ -2123,11 +2113,27 @@ void PaintTool::metadataChanged( IECore::InternedString key )
 
 void PaintTool::preRender()
 {
-	// Call the non-const version of locationCaches() to ensure it will be safe to call
-	// the const version during rendering.
-	// \todo - this is pretty ugly, should we just make the whole of m_locationCaches mutable
-	// instead of worrying about tracking any sort of const-ness?
-	locationCaches();
+	// We need to set drawing exclusions on the view(), so that the default selection wireframes don't
+	// get rendered over the objects we're painting on
+	PathMatcherDataPtr drawingExclusionsData = new PathMatcherData();
+	PathMatcher &drawingExclusions = drawingExclusionsData->writable();
+
+	// In addition to it's obvious purpose in preparing drawingExclusions, this call to locationCaches()
+	// has an important side effect: we're calling the non-const version of locationCaches() here, which
+	// ensures everything is up to date, and it's safe to call the const version during rendering.
+	// \todo - Relying on this side effect is kinda ugly, should we just make the whole of m_locationCaches
+	// mutable instead of worrying about tracking any sort of const-ness?
+	for( auto &l : locationCaches() )
+	{
+		if( l->hasMesh() )
+		{
+			drawingExclusions.addPath( l->path() );
+		}
+	}
+
+	view()->getChild<Plug>( "drawingMode" )->getChild<PathMatcherDataPlug>( "drawingExclusions" )->setValue(
+		drawingExclusionsData
+	);
 }
 
 bool PaintTool::enter( const ButtonEvent &event )
