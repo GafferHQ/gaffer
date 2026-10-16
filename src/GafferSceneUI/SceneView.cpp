@@ -301,7 +301,7 @@ class SceneView::DrawingMode : public Signals::Trackable
 			drawingMode->addChild( new BoolPlug( "solid", Plug::In, true ) );
 			drawingMode->addChild( new BoolPlug( "wireframe" ) );
 			drawingMode->addChild( new BoolPlug( "points" ) );
-			drawingMode->addChild( new BoolPlug( "hideSelected" ) );
+			drawingMode->addChild( new PathMatcherDataPlug( "drawingExclusions" ) );
 
 			ValuePlugPtr curves = new ValuePlug( "curvesPrimitive" );
 			drawingMode->addChild( curves );
@@ -442,7 +442,9 @@ class SceneView::DrawingMode : public Signals::Trackable
 				"forGLPoints"
 			);
 
-			options->members()["gl:hideSelected"] = new BoolData( drawingModePlug()->getChild<BoolPlug>( "hideSelected" )->getValue() );
+			// const_cast is safe here because we treat options as const once it's constructed
+			// ( setOpenGLOptions takes a const )
+			options->members()["gl:drawingExclusions"] = const_cast<PathMatcherData*>( drawingModePlug()->getChild<PathMatcherDataPlug>( "drawingExclusions" )->getValue().get() );
 
 			sceneGadget()->setOpenGLOptions( options.get() );
 		}
