@@ -57,9 +57,9 @@ class CaptureImageTool( Gaffer.MCP.BasicTool ) :
 			"captureImage",
 
 			"""
- 			Captures the image output from a node and returns it as a PNG.
- 			Doesn't modify the script.
- 			""",
+			Captures the image output from a node and returns it as a PNG.
+			Doesn't modify the script.
+			""",
 
 			{
 				"plug" :
