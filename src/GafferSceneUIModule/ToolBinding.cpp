@@ -452,12 +452,12 @@ void GafferSceneUIModule::bindTools()
 	{
 		scope s = GafferBindings::NodeClass<PaintTool>( nullptr, no_init )
 			.def( init<SceneView *>() )
-			.def( "targetVariableTypes", &PaintTool::targetVariableTypes )
+			.def( "warnings", &paintWarnings )
 			.def( "editTargets", &paintEditTargets )
 			.def( "editTargetPerPath", &paintEditTargetPerPath )
-			.def( "warnings", &paintWarnings )
 			.def( "selectionEditable", &paintSelectionEditable )
 			.def( "statusChangedSignal", &PaintTool::statusChangedSignal, return_internal_reference<1>() )
+			.def( "targetVariableTypes", &PaintTool::targetVariableTypes )
 			.def( "registerColorChooserFunction", &registerColorChooserFunctionWrapper )
 		;
 
