@@ -5440,6 +5440,37 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetFlt( userFloat, 0 ), 0.125 )
 			self.assertEqual( arnold.AiArrayGetFlt( userFloat, 1 ), 0.25 )
 
+	def testCustomCameraParameters( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		camera = IECoreScene.Camera()
+		camera.setProjection( "perspective" )
+		camera.parameters()["ai:aperture_blades"] = 10
+		camera.parameters()["ai:aperture_rotation"] = 20.0
+		camera.parameters()["rolling_shutter"] = "top"
+		camera.parameters()["rolling_shutter_duration"] = 0.5
+
+		r.camera( "camera", camera, r.attributes( IECore.CompoundObject() ) )
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			cam = arnold.AiNodeLookUpByName( universe, "camera" )
+			self.assertTrue( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( cam ) ), arnold.AI_NODE_CAMERA )
+
+			self.assertEqual( arnold.AiNodeGetInt( cam, "aperture_blades" ), 10 )
+			self.assertEqual( arnold.AiNodeGetFlt( cam, "aperture_rotation" ), 20.0 )
+			self.assertEqual( arnold.AiNodeGetStr( cam, "rolling_shutter" ), "top" )
+			self.assertEqual( arnold.AiNodeGetFlt( cam, "rolling_shutter_duration" ), 0.5 )
+
 	def __testComponentConnections( self, network, expectedColor ) :
 
 		# This should render directly without special treatment, because Arnold
