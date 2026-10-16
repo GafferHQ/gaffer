@@ -442,8 +442,8 @@ class MCPTest( GafferTest.TestCase ) :
 		result = client.executePython( "1", target = "duplicated" )
 		self.assertTrue( result["isError"] )
 		self.assertEqual(
-			 result["content"][0]["text"],
-			 "Multiple targets named \"duplicated\". Please save each target with a unique name."
+			result["content"][0]["text"],
+			"Multiple targets named \"duplicated\". Please save each target with a unique name."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "mcp" } )
