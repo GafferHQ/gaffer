@@ -603,7 +603,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			return selection.match( m_name ) & ( PathMatcher::AncestorMatch | PathMatcher::ExactMatch );
 		}
 
-		void render( IECoreGL::State *currentState, bool isSelected, Visualisation::ColorSpace colorSpace ) const
+		void render( IECoreGL::State *currentState, const IECore::PathMatcher &selection, Visualisation::ColorSpace colorSpace ) const
 		{
 			const Visualisations &attrVis = visualisations( *m_attributes );
 			const bool haveVisualisations = attrVis.size() > 0 || m_objectVisualisations.size() > 0;
@@ -612,6 +612,8 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				return;
 			}
+
+			const bool isSelected = selected( selection );
 
 			// In order to minimize z-fighting, we draw non-geometric visualisations
 			// first and real geometry last, so that they sit on top. This is
@@ -879,10 +881,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			else if( name == "gl:selection" )
 			{
 				m_selection = ::option<IECore::PathMatcher>( value, name, IECore::PathMatcher() );
-			}
-			else if( name == "gl:hideSelected" )
-			{
-				m_hideSelected = ::option<bool>( value, name, false );
 			}
 			else if(
 				boost::starts_with( name.string(), "gl:primitive:" ) ||
@@ -1227,22 +1225,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			GLuint i = 1;
 			for( const auto &o : m_objects )
 			{
-
-				bool isSelected = o->selected( m_selection );
-
 				if( selector )
 				{
 					selector->loadName( i++ );
 				}
-				else if( m_hideSelected && isSelected )
-				{
-					// If this isn't a selection render, and the hideSelected flag is set,
-					// then someone else is responsible for rendering selected objects, we
-					// can skip them.
-					continue;
-				}
-
-				o->render( currentState, isSelected, colorSpace );
+				o->render( currentState, m_selection, colorSpace );
 			}
 		}
 
@@ -1388,7 +1375,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		RenderType m_renderType;
 		string m_camera;
 		IECore::PathMatcher m_selection;
-		bool m_hideSelected;
 		IECore::CompoundObjectPtr m_baseStateOptions;
 		IECoreGL::StatePtr m_baseState;
 		bool m_renderObjects;
