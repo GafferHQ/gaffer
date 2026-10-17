@@ -65,15 +65,18 @@ namespace
 // Must match the definition in ScriptNode.cpp
 const IECore::InternedString g_serialiserTargetFileContextName( "serialiser:targetFile" );
 
+// For each Serialisation, store which DataStores have been serialised as part of that serialisation
+using DataStoresMap = tbb::concurrent_hash_map< const Serialisation*, std::unique_ptr<std::set<const DataStore*> > >;
+DataStoresMap g_serialisationDataStores;
+
 } // namespace
 
 namespace GafferModule
 {
 
-struct DataStoreSerialisationTracker : public Signals::Trackable
+struct DataStorePostSerialisationSignalHandler
 {
-	DataStoreSerialisationTracker( Serialisation &serialisation, const std::filesystem::path &targetPath )
-		: m_scriptPath( targetPath )
+	DataStorePostSerialisationSignalHandler()
 	{
 		// Our handling of the postSerialisation signal is really part of the serialisation finishing.
 		// It must always run ( so that the DataStoreSerialisationTracker instance gets cleaned up ),
@@ -83,23 +86,27 @@ struct DataStoreSerialisationTracker : public Signals::Trackable
 		// signal.
 		// We don't yet have anything else using the postSerialisation signal, but if there is something
 		// else, it should come after us, so we use a connectFront.
-		serialisation.postSerialisationSignal().connectFront( boost::bind( &DataStoreSerialisationTracker::finishSerialisation, this, ::_1, ::_2 ) );
+		GafferBindings::Serialisation::postSerialisationSignal().connectFront( &DataStorePostSerialisationSignalHandler::finishSerialisation );
 	}
 
-	void finishSerialisation( const Serialisation *serialisation, bool success )
+	static void finishSerialisation( const Serialisation *serialisation, bool success )
 	{
-		TrackersMap::accessor mapEntry;
-		g_serialisationTrackers.find( mapEntry, serialisation );
-		if( !mapEntry->second )
+		const std::string *targetPathString = Context::current()->getIfExists<std::string>( g_serialiserTargetFileContextName );
+		if( !targetPathString )
 		{
-			throw IECore::Exception( "DataStoreSerialisationTracker accounting has gone wrong, this should never happen" );
+			return;
 		}
 
-		// This tracker should be destructed, now that the corresponding Serialisation is finished.
-		// Take ownership of our own entry in the g_serialisationTrackers map as a local variable,
-		// so that we will be freed as soon as this function exits.
-		std::unique_ptr<DataStoreSerialisationTracker> keepAlive = std::move( mapEntry->second );
-		g_serialisationTrackers.erase( mapEntry );
+		DataStoresMap::accessor mapEntry;
+		g_serialisationDataStores.find( mapEntry, serialisation );
+
+		std::unique_ptr< std::set<const DataStore*> > dataStoreForSerialisation;
+
+		if( !mapEntry.empty() )
+		{
+			dataStoreForSerialisation = std::move( mapEntry->second );
+			g_serialisationDataStores.erase( mapEntry );
+		}
 
 		if( success )
 		{
@@ -107,28 +114,18 @@ struct DataStoreSerialisationTracker : public Signals::Trackable
 			// during this serialisation
 			std::unordered_set< IECore::MurmurHash > usedDataHashes;
 
-			for( auto node : m_nodesToSave )
+			if( dataStoreForSerialisation )
 			{
-				node->save( m_scriptPath, serialisation->parent(), usedDataHashes );
+				for( auto node : *dataStoreForSerialisation )
+				{
+					node->save( *targetPathString, serialisation->parent(), usedDataHashes );
+				}
 			}
 
-			DataStore::finaliseDirectory( m_scriptPath, serialisation->parent(), usedDataHashes );
+			DataStore::finaliseDirectory( *targetPathString, serialisation->parent(), usedDataHashes );
 		}
-
 	}
-
-	std::filesystem::path m_scriptPath;
-
-	std::set<const DataStore*> m_nodesToSave;
-
-	// We associate a SerialisationTracker with each serialisation that writes any DataStores. It tracks values
-	// that have been written, and triggers cleanup of unused values when the serialisation finishes.
-	using TrackersMap = tbb::concurrent_hash_map< const Serialisation*, std::unique_ptr<DataStoreSerialisationTracker> >;
-	static TrackersMap g_serialisationTrackers;
-
 };
-
-DataStoreSerialisationTracker::TrackersMap DataStoreSerialisationTracker::g_serialisationTrackers;
 
 class DataStoreSerialiser : public NodeSerialiser
 {
@@ -147,15 +144,13 @@ class DataStoreSerialiser : public NodeSerialiser
 		{
 			std::filesystem::path targetPath = *targetPathString;
 
-			DataStoreSerialisationTracker::TrackersMap::accessor tracker;
-			if( GafferModule::DataStoreSerialisationTracker::g_serialisationTrackers.emplace(
-				tracker, &serialisation, nullptr
-			) )
+			DataStoresMap::accessor tracker;
+			if( g_serialisationDataStores.emplace( tracker, &serialisation, nullptr ) )
 			{
-				tracker->second = std::make_unique<DataStoreSerialisationTracker>( serialisation, targetPath );
+				tracker->second = std::make_unique< std::set<const DataStore*> >();
 			}
 
-			tracker->second->m_nodesToSave.insert( node );
+			tracker->second->insert( node );
 		}
 		else
 		{
@@ -220,6 +215,8 @@ struct DataStoreWrapperFunctionContainer
 
 namespace
 {
+
+GafferModule::DataStorePostSerialisationSignalHandler g_postSerialisationSignalHandler;
 
 IECore::ObjectPtr getEntryWrapper( const DataStore &dataStore, const std::string &key, bool throwExceptions )
 {

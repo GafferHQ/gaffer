@@ -52,11 +52,11 @@ namespace GafferModule
 {
 
 // Forward declaration for friendship declared below.
-// We don't include DataSToreBinding.h because we don't want
+// We don't include DataStoreBinding.h because we don't want
 // python involved in any way when building the pure C++
 // modules.
 struct DataStoreWrapperFunctionContainer;
-struct DataStoreSerialisationTracker;
+struct DataStorePostSerialisationSignalHandler;
 class DataStoreSerialiser;
 
 } // namespace GafferModule
@@ -149,8 +149,8 @@ class GAFFER_API DataStore : public ComputeNode
 		// everything is already saved.
 		void checkSaved() const;
 
-		// DataStoreSerialisationTracker needs access to these private functions
-		friend struct GafferModule::DataStoreSerialisationTracker;
+		// DataStorePostSerialisationSignalHandler needs access to these private functions
+		friend struct GafferModule::DataStorePostSerialisationSignalHandler;
 
 		// Implement the actual saving of all entries for this node, and update usedDataHashes
 		void save( const std::filesystem::path &scriptPath, const GraphComponent *serialisationParent, std::unordered_set< IECore::MurmurHash > &usedDataHashes ) const;
