@@ -266,6 +266,7 @@ class DataStoreTest( GafferTest.TestCase ) :
 
 		# This will check that the caches on disk match the empty list ( ie. we should now
 		# have cleaned up and deleted all data stores )
+		s.save()
 		self.assertSaved( s )
 
 	def testMovingManyEntriesToRecycleBin( self ):
