@@ -137,6 +137,8 @@ std::string modulePathInternal( const boost::python::object &o )
 	return sanitisedModulePath;
 }
 
+Serialisation::PostSerialisationSignal g_postSerialisationSignal;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -168,11 +170,13 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 	{
 		// Signal that serialisation failed
 		m_postSerialisationSignal( this, false );
+		g_postSerialisationSignal( this, false );
 		throw;
 	}
 
 	// Signal that serialisation succeeded
 	m_postSerialisationSignal( this, true );
+	g_postSerialisationSignal( this, true );
 }
 
 const Gaffer::GraphComponent *Serialisation::parent() const
@@ -521,6 +525,11 @@ IECore::ObjectPtr Serialisation::objectFromBase64( const std::string &base64 )
 
 	MemoryIndexedIOPtr io = new MemoryIndexedIO( buffer, {}, IECore::IndexedIO::Read );
 	return Object::load( io, "o" );
+}
+
+Serialisation::PostSerialisationSignal &Serialisation::staticPostSerialisationSignal()
+{
+	return g_postSerialisationSignal;
 }
 
 Serialisation::PostSerialisationSignal &Serialisation::postSerialisationSignal()

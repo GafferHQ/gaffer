@@ -101,9 +101,15 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		static IECore::ObjectPtr objectFromBase64( const std::string &base64 );
 
 		using PostSerialisationSignal = Gaffer::Signals::Signal<void ( const Serialisation *, bool ) >;
+
 		/// This signal is emitted when Serialisation is finished. The bool argument indicates whether
 		/// the serialisation was successful.
+		/// \deprecated This will be renamed to postSerialisationSignal() in the next major version
+		static PostSerialisationSignal &staticPostSerialisationSignal();
+
+		/// \deprecated This will be removed
 		PostSerialisationSignal &postSerialisationSignal();
+
 
 		/// The Serialiser class may be implemented differently for specific types to customise
 		/// their serialisation.
@@ -177,6 +183,7 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 
 		void walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser, const IECore::Canceller *canceller );
 
+		// \deprecated
 		PostSerialisationSignal m_postSerialisationSignal;
 
 		using SerialiserMap = std::map<IECore::TypeId, SerialiserPtr>;
