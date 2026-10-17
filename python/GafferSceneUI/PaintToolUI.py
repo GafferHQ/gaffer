@@ -152,7 +152,7 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:visibilityActivator" : "floatValue",
-			"plugValueWidget:type" : "GafferUI.ColorPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.PaintToolUI._FloatWithSwatchPlugValueWidget",
 			"numericPlugValueWidget:fixedCharacterWidth" : 5,
 			"colorPlugValueWidget:colorChooserButtonVisible" : False,
 
@@ -167,7 +167,7 @@ Gaffer.Metadata.registerNode(
 			"label" : "",
 			"toolbarLayout:section" : "Bottom",
 			"toolbarLayout:width" : 20,
-			"plugValueWidget:type" : "GafferUI.ColorSwatchPlugValueWidget",
+			"plugValueWidget:type" : "GafferSceneUI.PaintToolUI._FloatSwatchPlugValueWidget",
 			"toolbarLayout:visibilityActivator" : "floatValue",
 		},
 		"opacity" : {
@@ -483,3 +483,43 @@ def colorChooserFunction( plug ):
 	__colorChooserPopup.popup( plug )
 
 GafferSceneUI.PaintTool.registerColorChooserFunction( colorChooserFunction )
+
+class _FloatSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__swatch = GafferUI.ColorSwatch()
+
+		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plugs, **kw )
+
+		## \todo How do set maximum height with a public API?
+		self.__swatch._qtWidget().setMaximumHeight( 20 )
+		self.__swatch._qtWidget().setFixedWidth( 40 )
+
+	def setHighlighted( self, highlighted ) :
+
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+
+		self.__swatch.setHighlighted( highlighted )
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__swatch.setErrored( exception is not None )
+		# \todo : Since this is internal, currently assuming we're attached to exactly one
+		# plug. If this was public, we should average across values
+		self.__swatch.setColor( imath.Color4f( values[0] ) )
+
+class _FloatWithSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__column, plugs, **kw )
+
+		with self.__column :
+
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				GafferUI.NumericPlugValueWidget( plugs )
+				_FloatSwatchPlugValueWidget( plugs, parenting = { "expand" : True } )
