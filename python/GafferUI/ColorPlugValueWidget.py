@@ -56,10 +56,7 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-				if sole( [ type( p ) for p in self.getPlugs() ] ) == Gaffer.FloatPlug:
-					self.__compoundNumericWidget = GafferUI.NumericPlugValueWidget( plugs )
-				else:
-					self.__compoundNumericWidget = GafferUI.CompoundNumericPlugValueWidget( plugs )
+				self.__compoundNumericWidget = GafferUI.CompoundNumericPlugValueWidget( plugs )
 
 				self.__swatch = GafferUI.ColorSwatchPlugValueWidget( plugs, parenting = { "expand" : True } )
 				self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__swatchButtonRelease ) )
@@ -140,9 +137,6 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __swatchButtonRelease( self, widget, event ) :
 
 		if not self._editable() :
-
-			if type( self.__compoundNumericWidget ) != GafferUI.CompoundNumericPlugValueWidget:
-				return False
 
 			# The swatch will have been unable to display a colour chooser, so we
 			# draw the user's attention to the components which are preventing that.
