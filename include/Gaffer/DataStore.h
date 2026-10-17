@@ -52,11 +52,11 @@ namespace GafferModule
 {
 
 // Forward declaration for friendship declared below.
-// We don't include DataSToreBinding.h because we don't want
+// We don't include DataStoreBinding.h because we don't want
 // python involved in any way when building the pure C++
 // modules.
 struct DataStoreWrapperFunctionContainer;
-struct DataStoreSerialisationTracker;
+struct DataStorePostSerialisationSignalHandler;
 class DataStoreSerialiser;
 
 } // namespace GafferModule
@@ -78,6 +78,9 @@ class GAFFER_API DataStore : public ComputeNode
 		StringPlug *selectorPlug();
 		const StringPlug *selectorPlug() const;
 
+		ObjectPlug *defaultPlug();
+		const ObjectPlug *defaultPlug() const;
+
 		ObjectPlug *outPlug();
 		const ObjectPlug *outPlug() const;
 
@@ -89,7 +92,7 @@ class GAFFER_API DataStore : public ComputeNode
 		// The data is stored as key/value pairs called entries. They can be set, removed, and gotten.
 		void setEntry( const std::string &key, IECore::ConstObjectPtr value );
 		void removeEntry( const std::string &key );
-		IECore::ConstObjectPtr getEntry( const std::string &key, bool throwExceptions = true ) const;
+		IECore::ConstObjectPtr getEntry( const std::string &key, bool throwIfMissing = true ) const;
 
 		// Check whether the value for this key is being held in dedicated memory by this DataStore.
 		// If false, it is stored on disk, and only held in memory by the standard ValuePlug cache,
@@ -146,8 +149,8 @@ class GAFFER_API DataStore : public ComputeNode
 		// everything is already saved.
 		void checkSaved() const;
 
-		// DataStoreSerialisationTracker needs access to these private functions
-		friend struct GafferModule::DataStoreSerialisationTracker;
+		// DataStorePostSerialisationSignalHandler needs access to these private functions
+		friend struct GafferModule::DataStorePostSerialisationSignalHandler;
 
 		// Implement the actual saving of all entries for this node, and update usedDataHashes
 		void save( const std::filesystem::path &scriptPath, const GraphComponent *serialisationParent, std::unordered_set< IECore::MurmurHash > &usedDataHashes ) const;

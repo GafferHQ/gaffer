@@ -344,6 +344,8 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 		/// value. Otherwise returns an empty string.
 		const std::string &fallbackDescription() const;
 
+		bool editScopeInHistory() const;
+
 		/// Editing
 		/// =======
 
