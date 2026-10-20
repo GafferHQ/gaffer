@@ -610,3 +610,30 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		# succession, as this would appear as flicker in the UI.
 
 		self.assertEqual( geometries, childGeometries( w ) )
+
+	def testHideWhileInvisibleInTabs( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.V3fPlug()
+
+		with GafferUI.Window() as w :
+			tabs = GafferUI.TabbedContainer()
+
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+		w.setVisible( False )
+
+		first = GafferUI.Frame()
+		tabs.append( first, "first" )
+		l = GafferUI.PlugLayout( n )
+		tabs.append( l, "second" )
+		self.assertFalse( l.visible() )
+
+		# Switching tabs sends a hide event to the layout
+		# even though it has never been shown.
+		tabs.setCurrent( l )
+		tabs.setCurrent( first )
+
+		w.setVisible( True )
+		tabs.setCurrent( l )
+		self.assertTrue( l.visible() )
