@@ -2478,62 +2478,15 @@ class PrototypeCache : public IECore::RefCounted
 		{
 		}
 
-		// Converts `samples` to an appropriate Arnold node, reusing previous
-		// conversions when the same samples are passed more than once. Does not
-		// respect `ArnoldAttributes::canInstanceGeometry()` - all conversions
-		// are cached and reused where possible. The result must therefore always
-		// be used with a `ginstance` node.
-		SharedAtNodePtr get( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &messageContext )
+		// Converts `prototype`, reusing previous conversions whenever they exist.
+		SharedAtNodePtr acquirePointInstancerPrototype( const IECoreScenePreview::Renderer::Prototype &prototype, const std::string &messageContext )
 		{
-			if( samples.empty() )
-			{
-				return nullptr;
-			}
-
-			IECore::MurmurHash h;
-			for( const auto &sample : samples )
-			{
-				sample->hash( h );
-			}
-			h.append( times.data(), times.size() );
-
-			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			arnoldAttributes->hashGeometry( samples.front().get(), h );
-
-			SharedAtNodePtr node;
-			Cache::const_accessor readAccessor;
-			if( m_cache.find( readAccessor, h ) )
-			{
-				return readAccessor->second;
-			}
-			else
-			{
-				Cache::accessor writeAccessor;
-				if( m_cache.insert( writeAccessor, h ) )
-				{
-					try
-					{
-						writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString(), messageContext );
-						if( writeAccessor->second )
-						{
-							AiNodeSetByte( writeAccessor->second.get(), g_visibilityArnoldString, 0 );
-						}
-					}
-					catch( const IECore::Cancelled & )
-					{
-						// Procedural expansion was cancelled. Erase `nullptr`
-						// result from the cache so that we redo the expansion
-						// if given the same procedural another time.
-						m_cache.erase( writeAccessor );
-						throw;
-					}
-				}
-				return writeAccessor->second;
-			}
+			return acquireInternal( prototype.samples, prototype.times, prototype.attributes.get(), messageContext, /* forPointInstancer = */ true );
 		}
 
-		// Creates an Instance, using `get()` where `ArnoldAttributes::canInstanceGeometry()` allows it,
-		// otherwise creating a unique shape node.
+		// Creates an Instance, reusing previously converted shapes where
+		// `ArnoldAttributes::canInstanceGeometry()` allows it, and otherwise
+		// creating a unique shape node.
 		Instance createInstance( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
 		{
 			if( samples.empty() )
@@ -2548,7 +2501,10 @@ class PrototypeCache : public IECore::RefCounted
 			}
 			else
 			{
-				return Instance( get( samples, times, attributes, nodeName ), m_nodeDeleter, m_universe, nodeName, m_parentNode );
+				return Instance(
+					acquireInternal( samples, times, attributes, nodeName, /* forPointInstancer = */ false  ),
+					m_nodeDeleter, m_universe, nodeName, m_parentNode
+				);
 			}
 		}
 
@@ -2584,6 +2540,68 @@ class PrototypeCache : public IECore::RefCounted
 		}
 
 	private :
+
+		SharedAtNodePtr acquireInternal( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &messageContext, bool forPointInstancer )
+		{
+			if( samples.empty() )
+			{
+				return nullptr;
+			}
+
+			IECore::MurmurHash h;
+			for( const auto &sample : samples )
+			{
+				sample->hash( h );
+			}
+			h.append( times.data(), times.size() );
+
+			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+			arnoldAttributes->hashGeometry( samples.front().get(), h );
+			if( forPointInstancer )
+			{
+				/// \todo This is overly pessimistic. We'd need a hash
+				/// corresponding exactly to `ArnoldAttributes::apply()` to be
+				/// more accurate.
+				arnoldAttributes->allAttributes()->hash( h );
+			}
+
+			SharedAtNodePtr node;
+			Cache::const_accessor readAccessor;
+			if( m_cache.find( readAccessor, h ) )
+			{
+				return readAccessor->second;
+			}
+			else
+			{
+				Cache::accessor writeAccessor;
+				if( m_cache.insert( writeAccessor, h ) )
+				{
+					try
+					{
+						writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString(), messageContext );
+						if( writeAccessor->second )
+						{
+							if( forPointInstancer )
+							{
+								// Apply the instance-level attributes in addition to the geometry
+								// attributes already applied by `convert()`.
+								arnoldAttributes->apply( writeAccessor->second.get(), nullptr );
+							}
+							AiNodeSetByte( writeAccessor->second.get(), g_visibilityArnoldString, 0 );
+						}
+					}
+					catch( const IECore::Cancelled & )
+					{
+						// Procedural expansion was cancelled. Erase `nullptr`
+						// result from the cache so that we redo the expansion
+						// if given the same procedural another time.
+						m_cache.erase( writeAccessor );
+						throw;
+					}
+				}
+				return writeAccessor->second;
+			}
+		}
 
 		SharedAtNodePtr convert( const IECoreScenePreview::Renderer::ObjectSamples &samples, const IECoreScenePreview::Renderer::SampleTimes &times, const ArnoldAttributes *attributes, const std::string &nodeName, const std::string &messageContext )
 		{
@@ -2768,8 +2786,8 @@ class PointInstancerCache : public IECore::RefCounted
 			for( size_t prototypeIndex = 0; prototypeIndex < prototypes.size(); prototypeIndex++ ) // TODO : parallel_for
 			{
 				const auto &prototype = prototypes[prototypeIndex];
-				prototypeNodes.push_back( m_prototypeCache->get(
-					prototype.samples, prototype.times, prototype.attributes.get(),
+				prototypeNodes.push_back( m_prototypeCache->acquirePointInstancerPrototype(
+					prototype,
 					/* messageContext = */ fmt::format( "{}:prototype{}", nodeName, prototypeIndex ) )
 				);
 				AiArraySetPtr( prototypesArray, prototypeIndex, prototypeNodes[prototypeIndex].get() );
