@@ -214,7 +214,7 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 		for groupKey, sections in self.__columnRegistry.items() :
 			if IECore.StringAlgo.match( tabGroup, groupKey ) :
 				sectionNames.extend( s for s in sections.keys() if s not in sectionNames )
-				if currentSection == "All" and not sections.get( "All" ) :
+				if currentSection == "All" :
 					for section in sections.values() :
 						sectionColumns += [ self.__acquireColumn( c, "All" ) for c in section.values() ]
 				else :

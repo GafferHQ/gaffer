@@ -10,7 +10,9 @@ Improvements
 Fixes
 -----
 
-- AttributeEditor : The section chooser is no longer hidden when only a single section is available.
+- AttributeEditor :
+  - The section chooser is no longer hidden when only a single section is available.
+  - Fixed bug preventing the `All` section from showing columns from all sections after a column had been registered to `section = "All"`.
 
 API
 ---
