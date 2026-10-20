@@ -2749,9 +2749,6 @@ class PointInstancerCache : public IECore::RefCounted
 			}
 		}
 
-		/// \todo Experiment with Arnold's new `instance_matrix` feature, where you can add an
-		/// array of instancing matrices directly onto a `polymesh`. This could potentially give
-		/// much better time to first pixel.
 		InstancerNodesSharedPtr convert(
 			const IECoreScenePreview::Renderer::PointInstancerSamples &samples,
 			const IECoreScenePreview::Renderer::SampleTimes &times,
