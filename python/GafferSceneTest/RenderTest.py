@@ -1689,6 +1689,104 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( sampler["color"].getValue(), expectedColor )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
+	def testPointInstancerPrototypeAttributes( self ) :
+
+		if not self.pointInstancerSupported :
+			raise unittest.SkipTest( "PointInstancer not supported" )
+
+		script = Gaffer.ScriptNode()
+
+		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancer.setPosition(
+			IECore.V3fVectorData( [
+				imath.V3f( -1, 0, 0 ), imath.V3f( 1, 0, 0 ),
+			] )
+		)
+		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0, 1 ] ) )
+		pointInstancer.setPrototypes( IECore.StringVectorData( [ "./sphere", "./sphere1" ] ) )
+
+		script["pointInstancer"] = GafferScene.ObjectToScene()
+		script["pointInstancer"]["name"].setValue( "instancer" )
+		script["pointInstancer"]["object"].setValue( pointInstancer )
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["radius"].setValue( 0.5 )
+
+		script["attributeReader"], attributeReaderOut = self._createColorAttributeReader( "user:myColor" )
+		script["constantShader"], colorPlug, constantShaderOut = self._createConstantShader()
+		colorPlug.setInput( attributeReaderOut )
+
+		script["shaderAssignment"] = GafferScene.ShaderAssignment()
+		script["shaderAssignment"]["in"].setInput( script["sphere"]["out"] )
+		script["shaderAssignment"]["shader"].setInput( constantShaderOut )
+
+		script["redAttributes"] = GafferScene.CustomAttributes()
+		script["redAttributes"]["in"].setInput( script["shaderAssignment"]["out"] )
+		script["redAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "user:myColor", imath.Color3f( 1, 0, 0 ) ) )
+
+		script["greenAttributes"] = GafferScene.CustomAttributes()
+		script["greenAttributes"]["in"].setInput( script["shaderAssignment"]["out"] )
+		script["greenAttributes"]["attributes"].addChild( Gaffer.NameValuePlug( "user:myColor", imath.Color3f( 0, 1, 0 ) ) )
+
+		script["prototypeParent"] = GafferScene.Parent()
+		script["prototypeParent"]["in"].setInput( script["pointInstancer"]["out"] )
+		script["prototypeParent"]["children"][0].setInput( script["redAttributes"]["out"] )
+		script["prototypeParent"]["children"][1].setInput( script["greenAttributes"]["out"] )
+		script["prototypeParent"]["parent"].setValue( "/instancer" )
+
+		script["camera"] = GafferScene.Camera()
+		script["camera"]["transform"]["translate"]["z"].setValue( 5 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["prototypeParent"]["out"] )
+		script["parent"]["children"][0].setInput( script["camera"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		imagePath = self.temporaryDirectory() / "test.exr"
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				imagePath.as_posix(),
+				"exr",
+				"rgba"
+			)
+		)
+
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+		script["options"]["options"]["render:camera"]["enabled"].setValue( True )
+		script["options"]["options"]["render:camera"]["value"].setValue( "/camera" )
+
+		script["rendererOptions"] = self._createOptions()
+		script["rendererOptions"]["in"].setInput( script["options"]["out"] )
+
+		script["render"] = GafferScene.Render()
+		script["render"]["in"].setInput( script["rendererOptions"]["out"] )
+		script["render"]["renderer"].setValue( self.renderer )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( imagePath )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( reader["out"] )
+
+		script["render"]["task"].execute()
+
+		# Assert we picked up the colour attributes from the prototypes.
+		for centre, expectedColor in [
+			[ imath.V2f( 180, 240 ), imath.Color4f( 1, 0, 0, 1 ) ],
+			[ imath.V2f( 456, 240 ), imath.Color4f( 0, 1, 0, 1 ) ],
+		] :
+
+			with self.subTest( centre = centre ) :
+				sampler["pixel"].setValue( centre )
+				self.assertEqual( sampler["color"].getValue(), expectedColor )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "pointInstancer" } )
 	def testPointInstancerIDOutputs( self ) :
 
 		if not self.pointInstancerSupported :
