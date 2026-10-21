@@ -41,13 +41,20 @@ Breaking Changes
   - The `gafferUSD:pointInstancerAdaptor:attributes` and `gafferUSD:pointInstancerAdaptor:enabled` options have been removed.
   - Instance attributes no longer have a `user:` prefix when rendered in Arnold and 3Delight.
 
-1.7.x.x (relative to 1.7.4.0)
+1.7.x.x (relative to 1.7.4.1)
+=======
+
+
+
+1.7.4.1 (relative to 1.7.4.0)
 =======
 
 Fixes
 -----
 
+- Arnold : Fixed PointInstancer bug where attributes were not being applied to the prototypes.
 - Cycles : Fixed bug causing lights with input shader networks to occasionally turn black after being modified during an interactive render.
+- PlugLayout : Fixed error when a layout which had not yet been shown was hidden, for instance because it was in a non-current tab.
 
 1.7.4.0 (relative to 1.7.3.1)
 =======
