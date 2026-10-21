@@ -1197,7 +1197,7 @@ void ViewportGadget::render() const
 	camera->setTransform( getCameraTransform() );
 	camera->render( nullptr );
 
-	glClearColor( 0.26f, 0.26f, 0.26f, 0.0f );
+	glClearColor( 0.26f, 0.26f, 0.26f, 1.0f );
 	glClearDepth( 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 

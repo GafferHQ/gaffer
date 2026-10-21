@@ -129,6 +129,7 @@ from .ToolTest import ToolTest
 from .StandardNodeToolbarTest import StandardNodeToolbarTest
 from .LabelPlugValueWidgetTest import LabelPlugValueWidgetTest
 from .PythonEditorTest import PythonEditorTest
+from .MCPTest import MCPTest
 from .BoxIOUITest import BoxIOUITest
 from .AnnotationsGadgetTest import AnnotationsGadgetTest
 from .PopupWindowTest import PopupWindowTest

@@ -1096,7 +1096,7 @@ libraries = {
 			"LIBS" : [ "GafferTest", "GafferBindings" ],
 		},
 		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferTest/*/*/*" ),
-		"apps" : [ "cli", "env", "license", "python", "stats", "test" ],
+		"apps" : [ "cli", "env", "license", "mcp", "python", "stats", "test" ],
 	},
 
 	"GafferUI" : {
