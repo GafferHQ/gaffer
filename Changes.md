@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Cycles : Fixed bug causing lights with input shader networks to occasionally turn black after being modified during an interactive render.
+- PlugLayout : Fixed error when a layout which had not yet been shown was hidden, for instance because it was in a non-current tab.
 
 1.7.4.0 (relative to 1.7.3.1)
 =======

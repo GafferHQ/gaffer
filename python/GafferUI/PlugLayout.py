@@ -453,8 +453,12 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __visibilityChanged( self, widget ) :
 
-		# We were invisible when we made the connection, so any change should mean we're visible now.
-		assert( self.visible() )
+		# We were invisible when we made the connection,
+		# but Qt also sends hide events to widgets which have never been shown.
+		# Stay connected until we're really visible.
+		if not self.visible() :
+			return
+
 		self.__activateQtLayouts()
 		# Disable signal handling until we need it again, at which
 		# point we'll reconnect.
