@@ -128,23 +128,21 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 	openvdb::GridBase::Ptr newGrid;
 	Interrupter interrupter( context->canceller() );
 
-	if ( openvdb::FloatGrid::ConstPtr floatGrid = openvdb::GridBase::constGrid<openvdb::FloatGrid>( gridBase ) )
+	gridBase->apply<openvdb::RealGridTypes>(
+
+		[&]( auto &grid ) {
+			using GridType = std::remove_cv_t<std::remove_reference_t<decltype( grid )>>;
+			auto newTypedGrid = openvdb::deepCopyTypedGrid<GridType>( grid );
+			openvdb::tools::LevelSetFilter<GridType, GridType, Interrupter> filter( *newTypedGrid, &interrupter );
+			filter.offset( offsetPlug()->getValue() );
+			newGrid = newTypedGrid;
+		}
+
+	);
+
+	if( !newGrid )
 	{
-		openvdb::FloatGrid::Ptr newFloatGrid = openvdb::GridBase::grid<openvdb::FloatGrid> ( floatGrid->deepCopyGrid() );
-		newGrid = newFloatGrid;
-		openvdb::tools::LevelSetFilter<openvdb::FloatGrid, openvdb::FloatGrid, Interrupter> filter( *newFloatGrid, &interrupter );
-		filter.offset( offsetPlug()->getValue() );
-	}
-	else if ( openvdb::DoubleGrid::ConstPtr doubleGrid = openvdb::GridBase::constGrid<openvdb::DoubleGrid>( gridBase ) )
-	{
-		openvdb::DoubleGrid::Ptr newDoubleGrid = openvdb::GridBase::grid<openvdb::DoubleGrid>( doubleGrid->deepCopyGrid() );
-		newGrid = newDoubleGrid;
-		openvdb::tools::LevelSetFilter<openvdb::DoubleGrid, openvdb::DoubleGrid, Interrupter> filter( *newDoubleGrid, &interrupter );
-		filter.offset( offsetPlug()->getValue() );
-	}
-	else
-	{
-		throw IECore::Exception( fmt::format( "Unable to Offset LevelSet grid: '{}' with type: {}", gridName, gridBase->type() ) );
+		throw IECore::Exception( fmt::format( "Unable to offset grid '{}' with type {}", gridName, gridBase->type() ) );
 	}
 
 	// If the interrupter has stopped the VDB operation, throw
