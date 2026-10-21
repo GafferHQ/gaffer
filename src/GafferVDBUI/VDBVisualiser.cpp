@@ -67,11 +67,16 @@ public:
 	//! dispatch a base grid to a typed grid
 	void collect( openvdb::GridBase::ConstPtr grid )
 	{
+		/// \todo Remove when we upgrade to OpenVDB 13.
+		using HalfTree = openvdb::tree::Tree4<openvdb::math::half, 5, 4, 3>::Type;
+		using HalfGrid = openvdb::Grid<HalfTree>;
+
 		static const std::map<std::string, std::function<void(GeometryCollector&, openvdb::GridBase::ConstPtr)> > collectors =
 		{
 			{ openvdb::typeNameAsString<bool>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::BoolGrid>( grid ); } },
 			{ openvdb::typeNameAsString<double>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::DoubleGrid>( grid ); } },
 			{ openvdb::typeNameAsString<float>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::FloatGrid>( grid ); } },
+			{ openvdb::typeNameAsString<openvdb::math::half>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<HalfGrid>( grid ); } },
 			{ openvdb::typeNameAsString<int32_t>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::Int32Grid>( grid ); } },
 			{ openvdb::typeNameAsString<int64_t>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Int64Grid>( grid ); } },
 			{ openvdb::typeNameAsString<openvdb::ValueMask>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::MaskGrid>( grid ); } },
