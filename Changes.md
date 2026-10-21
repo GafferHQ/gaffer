@@ -21,6 +21,7 @@ API
   - Gaffer.MCP.HTTPServer : Concrete server implementation using HTTP transport.
   - Gaffer.MCP.StreamServer : Concrete server implementation using stream (stdio) transport.
   - Gaffer.MCP.Tool, Gaffer.MCP.BasicTool : Base classes for adding custom tools to the server.
+- SceneAlgo : Added visitVisibleLocations.
 
 1.7.4.1 (relative to 1.7.4.0)
 =======
