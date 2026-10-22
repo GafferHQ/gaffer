@@ -72,6 +72,11 @@ DataPtr dataFromVDB( const openvdb::math::Vec3<T> &value )
 	);
 }
 
+DataPtr dataFromVDB( const openvdb::math::half &value )
+{
+	return new HalfData( (float)value );
+}
+
 openvdb::GridBase::ConstPtr grid( const ObjectPlug &objectPlug, const std::string &gridName )
 {
 	ConstVDBObjectPtr vdbObject = runTimeCast<const VDBObject>( objectPlug.getValue() );
@@ -250,7 +255,10 @@ DataPtr gridMinMaxValue( const ObjectPlug &objectPlug, const std::string &gridNa
 
 			CompoundDataPtr result;
 
-			using SupportedGridTypes = openvdb::NumericGridTypes::Append<openvdb::Vec3GridTypes>;
+			/// \todo Remove when we upgrade to OpenVDB 13.
+			using HalfTree = openvdb::tree::Tree4<openvdb::math::half, 5, 4, 3>::Type;
+			using HalfGrid = openvdb::Grid<HalfTree>;
+			using SupportedGridTypes = openvdb::NumericGridTypes::Append<openvdb::Vec3GridTypes>::Append<HalfGrid>;
 
 			grid->apply<SupportedGridTypes>(
 

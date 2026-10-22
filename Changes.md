@@ -41,7 +41,12 @@ Breaking Changes
   - The `gafferUSD:pointInstancerAdaptor:attributes` and `gafferUSD:pointInstancerAdaptor:enabled` options have been removed.
   - Instance attributes no longer have a `user:` prefix when rendered in Arnold and 3Delight.
 
-1.7.x.x (relative to 1.7.4.1)
+1.7.x.x (relative to 1.7.5.0)
+=======
+
+
+
+1.7.5.0 (relative to 1.7.4.1)
 =======
 
 Features
@@ -49,6 +54,25 @@ Features
 
 - PythonEditor : Added `mcpEnabled` setting, allowing an AI assistant or large language model to interact with Gaffer. Models can execute arbitrary Python and screenshot the UI or capture the output of image nodes for feedback.
 - `gaffer mcp` : Added application to allow AI assistants and large language models to launch and control a headless Gaffer session.
+- PrimitiveVariablePaint : Added node for partially modifying primitive variable values.
+- PaintTool : Added vertex paint tool that can be used to paint colors and masks into vertex primitive variables.
+
+Improvements
+------------
+
+- DataStore : Added `default` plug.
+- Viewer, SceneInspector : Added support for half-typed OpenVDB grids.
+- Viewer : Improved choice of grids for VDB visualisation. `density` is now preferred, and if mip-maps are present, the highest level is chosen.
+- Arnold : Added support for rendering VDB volume LODs.
+- SceneReader :
+  - Added support for reading half-typed OpenVDB grids.
+  - Added support for writing ParticleField3DGaussianSplat USD prims.
+  - All radiance:sphericalHarmonicsCoefficients are now loaded from ParticleField3DGaussianSplat USD prims, regardless of their radiance:sphericalHarmonicsDegree.
+
+Fixes
+-----
+
+- Arnold : Fixed deadlocks caused by instancing in-memory OpenVDB grids (#7209).
 
 API
 ---
@@ -58,6 +82,12 @@ API
   - Gaffer.MCP.HTTPServer : Concrete server implementation using HTTP transport.
   - Gaffer.MCP.StreamServer : Concrete server implementation using stream (stdio) transport.
   - Gaffer.MCP.Tool, Gaffer.MCP.BasicTool : Base classes for adding custom tools to the server.
+- SceneAlgo : Added `visitVisibleLocations()`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.4.0.
 
 1.7.4.1 (relative to 1.7.4.0)
 =======
@@ -475,10 +505,18 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.21.x (relative to 1.6.21.6)
+1.6.21.x (relative to 1.6.21.7)
 ========
 
 
+
+1.6.21.7 (relative to 1.6.21.6)
+========
+
+Fixes
+-----
+
+- Arnold : Fixed deadlocks caused by instancing in-memory OpenVDB grids (#7209).
 
 1.6.21.6 (relative to 1.6.21.5)
 ========

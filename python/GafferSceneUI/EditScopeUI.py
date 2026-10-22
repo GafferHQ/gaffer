@@ -468,3 +468,24 @@ class __SetMembershipEditsWidget( GafferUI.EditScopeUI.SimpleProcessorWidget ) :
 		return " and ".join( summaries )
 
 GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "SetMembershipEdits", __SetMembershipEditsWidget )
+
+class __PaintEditsWidget( _SceneProcessorWidget ) :
+
+	@staticmethod
+	def _summary( processor, linkCreator ) :
+
+		if not "PrimitiveVariablePaint" in processor:
+			return "Corrupt PaintEdits with no PrimitiveVariablePaint node"
+
+		primVars = ", ".join( [ i["name"].getValue() for i in processor["PrimitiveVariablePaint"]["primitiveVariables"] ] )
+
+		paths = IECore.PathMatcher()
+		GafferScene.SceneAlgo.matchingPaths( processor["PrimitiveVariablePaint"]["filter"], processor["PrimitiveVariablePaint"]["in"], paths )
+
+		pathLink = linkCreator(
+			"{} location{}".format( paths.size(), "s" if paths.size() != 1 else "" ),
+			paths
+		)
+		return  f"Painting {primVars} on {pathLink}"
+
+GafferUI.EditScopeUI.ProcessorWidget.registerProcessorWidget( "PaintEdits", __PaintEditsWidget )

@@ -225,6 +225,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 				with self.assertRaisesRegex( RuntimeError, "Not editable.*" ) :
 					inspection.acquireEdit()
 			self.assertEqual( inspection.editable(), editable )
+			self.assertEqual( inspection.editScopeInHistory(), not editScope is None )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
 

@@ -71,6 +71,7 @@ enum TypeId
 	InspectorPathTypeId = 121027,
 	TransformInspectorTypeId = 121028,
 	PrimitiveVariableInspectorTypeId = 121029,
+	PaintToolTypeId = 121030,
 
 	LastTypeId = 121199
 };

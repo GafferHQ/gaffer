@@ -101,6 +101,8 @@ IECore::ConstObjectPtr loadDataFile( const std::filesystem::path &filePath )
 	return IECore::Object::load( file, "object" );
 }
 
+IECore::StringDataPtr g_notFoundMarker = new IECore::StringData( "__CANNOT_BE_STORED_IN_DATASTORE_SPECIAL_STRING__" );
+
 } // namespace
 
 
@@ -239,11 +241,13 @@ public:
 			if( std::filesystem::exists( m_recycleBinDirectory ) )
 			{
 				throw IECore::Exception( fmt::format(
-					"Cannot save DataStore, old recycle bin found for this file. There are two possible causes: "
+					"Cannot clean up after saving DataStore, old recycle bin found for this file."
+					"There are two possible causes: "
 					"either this file was written by another Gaffer process which is still open ( you should "
 					"close it before trying to save here to avoid possible data loss ), or the previous Gaffer "
 					"to write this file crashed without cleaning up ( In this case, you should "
-					"manually delete the recycle bin folder {} )",
+					"manually delete the recycle bin folder {} )."
+					"In the meantime, cleaning up out of date caches has been halted to avoid losing data.",
 					m_recycleBinDirectory
 				) );
 			}
@@ -325,6 +329,7 @@ DataStore::DataStore( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "selector", Plug::In ) );
+	addChild( new ObjectPlug( "default", Plug::In, new IECore::NullObject() ) );
 	addChild( new ObjectPlug( "out", Plug::Out, new IECore::NullObject() ) );
 	addChild( new StringVectorDataPlug( "keys", Plug::Out ) );
 	addChild( new IntPlug( "__refreshCount", Plug::In, 0, Plug::Default & ~Plug::Serialisable ) );
@@ -345,44 +350,54 @@ const StringPlug *DataStore::selectorPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 0 );
 }
 
-ObjectPlug *DataStore::outPlug()
+ObjectPlug *DataStore::defaultPlug()
 {
 	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+const ObjectPlug *DataStore::defaultPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+ObjectPlug *DataStore::outPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 const ObjectPlug *DataStore::outPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 StringVectorDataPlug *DataStore::keysPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
 const StringVectorDataPlug *DataStore::keysPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
 IntPlug *DataStore::refreshCountPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 3 );
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
 const IntPlug *DataStore::refreshCountPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 3 );
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
 ObjectPlug *DataStore::evaluatePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
 }
 
 const ObjectPlug *DataStore::evaluatePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
 }
 
 void DataStore::setEntry( const std::string &key, IECore::ConstObjectPtr value )
@@ -431,8 +446,9 @@ void DataStore::setEntryInternal( const std::string &key, const std::optional<En
 	refreshCountPlug()->setValue( refreshCountPlug()->getValue() + 1 );
 }
 
-IECore::ConstObjectPtr DataStore::getEntry( const std::string &key, bool throwExceptions ) const
+IECore::ConstObjectPtr DataStore::getEntry( const std::string &key, bool throwIfMissing ) const
 {
+	IECore::ConstObjectPtr result;
 	try
 	{
 		// We use an evaluation plug to provide the getEntry() functionality - this means we can
@@ -440,19 +456,29 @@ IECore::ConstObjectPtr DataStore::getEntry( const std::string &key, bool throwEx
 		// queried both via getEntry and via an output plug.
 		Context::EditableScope s( Context::current() );
 		s.set( g_dataStoreEvaluationKeyName, &key );
-		return evaluatePlug()->getValue();
+		result = evaluatePlug()->getValue();
 	}
 	catch( ProcessException &e )
 	{
-		if( throwExceptions )
+		// If we get an exception here, it's not from a missing entry ( which would be represented
+		// using g_notFoundMarker ), instead it's an entry that's actually corrupt somehow. We
+		// should always pass that exception.
+		e.rethrowUnwrapped();
+	}
+
+	if( result.get() == g_notFoundMarker.get() )
+	{
+		if( throwIfMissing )
 		{
-			e.rethrowUnwrapped();
+			throw IECore::Exception( "Unknown key: " + key );
 		}
 		else
 		{
 			return nullptr;
 		}
 	}
+
+	return result;
 }
 
 bool DataStore::isLive( const std::string &key ) const
@@ -487,7 +513,8 @@ void DataStore::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 	}
 
 	if(
-		input == evaluatePlug()
+		input == evaluatePlug() ||
+		input == defaultPlug()
 	)
 	{
 		outputs.push_back( outPlug() );
@@ -503,7 +530,8 @@ void DataStore::hash( const ValuePlug *output, const Context *context, IECore::M
 		auto it = m_entries.find( key );
 		if( it == m_entries.end() )
 		{
-			throw IECore::Exception( "Unknown key: " + key );
+			h = g_notFoundMarker->Object::hash();
+			return;
 		}
 
 		h = it->second.m_hash;
@@ -514,8 +542,13 @@ void DataStore::hash( const ValuePlug *output, const Context *context, IECore::M
 		Context::EditableScope s( context );
 		std::string select = selectorPlug()->getValue();
 		s.set( g_dataStoreEvaluationKeyName, &select );
-
 		h = evaluatePlug()->hash();
+
+		if( h == g_notFoundMarker->Object::hash() )
+		{
+			h = defaultPlug()->hash();
+		}
+
 		return;
 	}
 	else if( output == keysPlug() )
@@ -543,7 +576,8 @@ void DataStore::compute( ValuePlug *output, const Context *context ) const
 		auto it = m_entries.find( key );
 		if( it == m_entries.end() )
 		{
-			throw IECore::Exception( "Unknown key: " + key );
+			static_cast<ObjectPlug *>( output )->setValue( g_notFoundMarker );
+			return;
 		}
 
 		tbb::spin_rw_mutex::scoped_lock liveValueLock( m_entriesLiveValueMutex, /* write = */ false );
@@ -553,43 +587,34 @@ void DataStore::compute( ValuePlug *output, const Context *context ) const
 		}
 		else
 		{
-			auto entryIt = m_entries.find( key );
-			if( entryIt != m_entries.end() )
+			std::string dataStoreFileName = dataStoreFileNameFromHash( it->second.m_hash );
+
+			std::optional<std::filesystem::path> sourcePath;
+			if( m_sourceDirectory )
 			{
-				std::string dataStoreFileName = dataStoreFileNameFromHash( entryIt->second.m_hash );
-
-				std::optional<std::filesystem::path> sourcePath;
-				if( m_sourceDirectory )
+				if( IECore::FileIndexedIO::canRead( ( m_sourceDirectory->dataStoreDirectory() / dataStoreFileName ).generic_string() ) )
 				{
-					if( IECore::FileIndexedIO::canRead( ( m_sourceDirectory->dataStoreDirectory() / dataStoreFileName ).generic_string() ) )
-					{
-						sourcePath = m_sourceDirectory->dataStoreDirectory() / dataStoreFileName;
-					}
-					else if( const std::optional<std::filesystem::path> recycleBinDir = m_sourceDirectory ? m_sourceDirectory->getRecycleBinIfExists() : std::nullopt )
-					{
-						std::filesystem::path recycleBinPath = (*recycleBinDir) / dataStoreFileName;
+					sourcePath = m_sourceDirectory->dataStoreDirectory() / dataStoreFileName;
+				}
+				else if( const std::optional<std::filesystem::path> recycleBinDir = m_sourceDirectory ? m_sourceDirectory->getRecycleBinIfExists() : std::nullopt )
+				{
+					std::filesystem::path recycleBinPath = (*recycleBinDir) / dataStoreFileName;
 
-						if( IECore::FileIndexedIO::canRead( recycleBinPath.generic_string() ) )
-						{
-							sourcePath = recycleBinPath;
-						}
+					if( IECore::FileIndexedIO::canRead( recycleBinPath.generic_string() ) )
+					{
+						sourcePath = recycleBinPath;
 					}
 				}
-
-				if( !sourcePath )
-				{
-					throw IECore::Exception( fmt::format(
-						"Could not locate data store file {} in {}.", dataStoreFileName, m_sourceDirectory->dataStoreDirectory()
-					) );
-				}
-
-				result = loadDataFile( *sourcePath );
 			}
-		}
 
-		if( !result )
-		{
-			throw IECore::Exception( "Unknown key: " + key );
+			if( !sourcePath )
+			{
+				throw IECore::Exception( fmt::format(
+					"Could not locate data store file {} in {}.", dataStoreFileName, m_sourceDirectory->dataStoreDirectory()
+				) );
+			}
+
+			result = loadDataFile( *sourcePath );
 		}
 
 		static_cast<ObjectPlug *>( output )->setValue( result );
@@ -601,8 +626,15 @@ void DataStore::compute( ValuePlug *output, const Context *context ) const
 		Context::EditableScope s( context );
 		std::string select = selectorPlug()->getValue();
 		s.set( g_dataStoreEvaluationKeyName, &select );
+		IECore::ConstObjectPtr result = evaluatePlug()->getValue();
 
-		static_cast<ObjectPlug *>( output )->setValue( evaluatePlug()->getValue() );
+		// Test if address is identical to our flag value
+		if( result.get() == g_notFoundMarker.get() )
+		{
+			result = defaultPlug()->getValue();
+		}
+
+		static_cast<ObjectPlug *>( output )->setValue( result );
 		return;
 	}
 	else if( output == keysPlug() )
