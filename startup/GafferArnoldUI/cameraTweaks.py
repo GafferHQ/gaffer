@@ -69,6 +69,7 @@ GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter Duration", f
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blades", functools.partial( __tweakCreator, "ai:aperture_blades", "ai:aperture_blades", 6 ) )
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blade Curvature", functools.partial( __tweakCreator, "ai:aperture_blade_curvature", "ai:aperture_blade_curvature", 0.0 ) )
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Rotation", functools.partial( __tweakCreator, "ai:aperture_rotation", "ai:aperture_rotation", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Aspect Ratio", functools.partial( __tweakCreator, "ai:aperture_aspect_ratio", "ai:aperture_aspect_ratio", 1.0 ) )
 
 ## \todo Remove these non-prefixed metadata entries when we remove all
 # support for non-prefixed Arnold camera tweaks.
@@ -181,6 +182,10 @@ Gaffer.Metadata.registerNode(
 		},
 
 		"tweaks.ai:aperture_rotation.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_aspect_ratio.name" : {
 			"readOnly" : True,
 		},
 

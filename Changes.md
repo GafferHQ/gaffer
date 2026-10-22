@@ -19,9 +19,11 @@ Improvements
   - CameraQuery :
     - Added `ai:` prefix to query parameter names created from the menu.
     - Added redirection of non-existent, non-prefixed queries to their prefixed equivalent. Queries of a non-existent parameter with a prefix will not be redirected to a non-prefixed parameter, even if it is present.
+    - Added `ai:aperture_aspect_ratio` preset menu item.
   - CameraTweaks :
     - Added `ai:` prefix to tweaks parameter names created from the menu.
     - Changed tweak plug names to match the parameter name it tweaks.
+    - Added `ai:aperture_aspect_ratio` preset menu item.
 
 Fixes
 -----
