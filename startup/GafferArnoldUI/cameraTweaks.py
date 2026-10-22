@@ -69,6 +69,7 @@ GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter Duration", f
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blades", functools.partial( __tweakCreator, "apertureBlades", "ai:aperture_blades", 6 ) )
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blade Curvature", functools.partial( __tweakCreator, "apertureBladeCurvature", "ai:aperture_blade_curvature", 0.0 ) )
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Rotation", functools.partial( __tweakCreator, "apertureRotation", "ai:aperture_rotation", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Aspect Ratio", functools.partial( __tweakCreator, "apertureAspectRatio", "ai:aperture_aspect_ratio", 1.0 ) )
 
 Gaffer.Metadata.registerNode(
 
@@ -123,6 +124,10 @@ Gaffer.Metadata.registerNode(
 		"tweaks.apertureRotation.name" : {
 			"readOnly" : True,
 		},
+
+		"tweaks.apertureAspectRatio.name" : {
+			"readOnly" : True,
+		}
 
 	}
 
