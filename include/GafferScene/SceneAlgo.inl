@@ -36,6 +36,8 @@
 
 #include "Gaffer/Context.h"
 
+#include "GafferScene/Private/RendererAlgo.h"
+
 #include "tbb/concurrent_queue.h"
 #include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
@@ -147,6 +149,16 @@ struct PathMatcherFunctor
 
 };
 
+// Copied from RenderController.cpp
+
+static const InternedString g_visibleAttributeName( "scene:visible" );
+
+inline bool visible( const CompoundObject *attributes )
+{
+	const IECore::BoolData *d = attributes->member<IECore::BoolData>( g_visibleAttributeName );
+	return d ? d->readable() : true;
+}
+
 } // namespace Detail
 
 namespace SceneAlgo
@@ -185,6 +197,41 @@ void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher
 	parallelTraverse( scene, ff, root );
 }
 
+template <class ThreadableFunctor>
+void visitVisibleLocations( const ScenePlug *scene, const GafferScene::VisibleSet &visibleSet, size_t minimumExpansionDepth, ThreadableFunctor &&f )
+{
+	// Set up RenderOptions based on scene->globals() so we can use purposeIncluded()
+	GafferScene::Private::RendererAlgo::RenderOptions renderOptions( scene );
+
+	auto wrapperFunctor = [&f, &visibleSet, &minimumExpansionDepth, &renderOptions](
+		const ScenePlug *scene, const ScenePlug::ScenePath &path
+	)
+	{
+		ConstCompoundObjectPtr attrs = scene->fullAttributes( path );
+
+		if( !Detail::visible( attrs.get() ) )
+		{
+			return false;
+		}
+
+		const auto visibility = visibleSet.visibility( path, minimumExpansionDepth );
+		if(
+			visibility.drawMode == VisibleSet::Visibility::DrawMode::Visible &&
+			renderOptions.purposeIncluded( attrs.get() )
+		)
+		{
+			if( !f( scene, path ) )
+			{
+				return false;
+			}
+		}
+
+		// If there is any descendant or ancestor, we need to continue traversing this branch
+		return visibility.descendantsVisible;
+	};
+
+	SceneAlgo::parallelTraverse( scene, wrapperFunctor );
+}
 
 template <class LocationFunctor, class GatherFunctor>
 void parallelGatherLocations( const ScenePlug *scene, LocationFunctor &&locationFunctor, GatherFunctor &&gatherFunctor, const ScenePlug::ScenePath &root )

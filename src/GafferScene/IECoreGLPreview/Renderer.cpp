@@ -882,6 +882,10 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_selection = ::option<IECore::PathMatcher>( value, name, IECore::PathMatcher() );
 			}
+			else if( name == "gl:drawingExclusions" )
+			{
+				m_drawingExclusions = ::option<IECore::PathMatcher>( value, name, IECore::PathMatcher() );
+			}
 			else if(
 				boost::starts_with( name.string(), "gl:primitive:" ) ||
 				boost::starts_with( name.string(), "gl:pointsPrimitive:" ) ||
@@ -1229,6 +1233,17 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				{
 					selector->loadName( i++ );
 				}
+				else if(
+					!m_drawingExclusions.isEmpty() &&
+					( m_drawingExclusions.match( o->name() ) & PathMatcher::ExactMatch )
+				)
+				{
+					// If this isn't a selection render, and this location is in drawingExclusions,
+					// then we skip it ( this probably indicates that a tool is taking over the
+					// drawing of this object )
+					continue;
+				}
+
 				o->render( currentState, m_selection, colorSpace );
 			}
 		}
@@ -1375,6 +1390,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		RenderType m_renderType;
 		string m_camera;
 		IECore::PathMatcher m_selection;
+		IECore::PathMatcher m_drawingExclusions;
 		IECore::CompoundObjectPtr m_baseStateOptions;
 		IECoreGL::StatePtr m_baseState;
 		bool m_renderObjects;

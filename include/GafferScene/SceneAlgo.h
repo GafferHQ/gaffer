@@ -38,6 +38,7 @@
 
 #include "GafferScene/Filter.h"
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/VisibleSet.h"
 
 #include "GafferImage/ImagePlug.h"
 
@@ -139,6 +140,15 @@ void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterP
 /// As above, but using a PathMatcher as a filter.
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+
+/// As `parallelTraverse()`, but visits only locations which are visible, according to the same logic used
+/// by RenderController.
+template <class ThreadableFunctor>
+void visitVisibleLocations(
+	const ScenePlug *scene, const GafferScene::VisibleSet &visibleSet, size_t minimumExpansionDepth,
+	ThreadableFunctor &&f // Signature : bool f( const ScenePlug *scene, const ScenePath &path )
+);
+
 
 /// Calls `locationFunctor` in parallel for all locations in the scene, passing the results
 /// serially to `gatherFunctor`. Parent locations are guaranteed to be passed to `gatherFunctor`

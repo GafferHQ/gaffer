@@ -36,6 +36,7 @@
 				"pointerPivot",
 				"pointerCut",
 				"pointerNotEditable",
+				"pointerInvisible",
 			]
 		},
 
@@ -207,6 +208,7 @@
 				'gafferSceneUILightTool',
 				'gafferSceneUILightPositionTool',
 				'gafferSceneUIVisualiserTool',
+				'gafferSceneUIPaintTool',
 				'gafferImageUIColorInspectorTool',
 			]
 
