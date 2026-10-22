@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - Viewer, SceneInspector : Added support for half-typed OpenVDB grids.
+- Arnold : Added support for rendering VDB volume LODs.
 
 API
 ---
