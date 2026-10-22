@@ -110,6 +110,15 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
+	"camera:parameter:ai:aperture_aspect_ratio" : {
+
+		"defaultValue" : 1.0,
+		"minValue" : 0.0,
+		"label" : "Aperture Aspect Ratio",
+		"layout:section" : "Arnold",
+
+	},
+
 	"camera:parameter:shutter_type" : {
 
 		"supersededBy" : "camera:parameter:ai:shutter_type",
@@ -149,6 +158,12 @@ Gaffer.Metadata.registerValues( {
 	"camera:parameter:aperture_rotation" : {
 
 		"supersededBy" : "camera:parameter:ai:aperture_rotation",
+
+	},
+
+	"camera:parameter:aperture_aspect_ratio" : {
+
+		"supersededBy" : "camera:parameter:ai:aperture_aspect_ratio",
 
 	},
 
