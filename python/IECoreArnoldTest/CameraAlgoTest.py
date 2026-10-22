@@ -285,7 +285,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 
 			camera = IECoreScene.Camera()
 			camera.setProjection( "perspective" )
-			camera.parameters()["shutter_curve"] = IECore.Rampff(
+			camera.parameters()["ai:shutter_curve"] = IECore.Rampff(
 				[
 					( 0, -0.1 ),
 					( 0.25, 1 ),
@@ -303,7 +303,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetVec2( curve, 2 ), arnold.AtVector2( 0.75, 1 ) )
 			self.assertEqual( arnold.AiArrayGetVec2( curve, 3 ), arnold.AtVector2( 1, 0 ) )
 
-			camera.parameters()["shutter_curve"] = IECore.Rampff(
+			camera.parameters()["ai:shutter_curve"] = IECore.Rampff(
 				[
 					( 0, 0 ),
 					( 0, 0 ),
@@ -321,7 +321,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 			for i in range( 0, 25 ) :
 				point = arnold.AiArrayGetVec2( curve, i )
 				self.assertAlmostEqual(
-					min( camera.parameters()["shutter_curve"].value.evaluator()( point.x ), 1 ),
+					min( camera.parameters()["ai:shutter_curve"].value.evaluator()( point.x ), 1 ),
 					point.y,
 					delta = 0.0001
 				)
@@ -349,3 +349,26 @@ class CameraAlgoTest( unittest.TestCase ) :
 							self.assertGreater( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.01 )
 						else :
 							self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.0 )
+
+	def testParameterPrefix( self ) :
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			camera = IECoreScene.Camera()
+			camera.setProjection( "perspective" )
+			camera.parameters()["aperture_blades"] = 5
+			camera.parameters()["ai:aperture_blades"] = 10
+			camera.parameters()["ai:aperture_rotation"] = 20.0
+			camera.parameters()["rolling_shutter"] = "top"
+			camera.parameters()["rolling_shutter_duration"] = 0.5
+
+			n = IECoreArnold.NodeAlgo.convert( camera, universe, "testCamera" )
+
+			self.assertEqual( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_CAMERA )
+
+			# \todo Is there a way to test that InternedString( "aperture_blades" ) < InternedString( "ai:aperture_blades" )?
+			# That would ensure we're not getting a false positive in this test.
+			self.assertEqual( arnold.AiNodeGetInt( n, "aperture_blades" ), 10 )
+			self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_rotation" ), 20.0 )
+			self.assertEqual( arnold.AiNodeGetStr( n, "rolling_shutter" ), "top" )
+			self.assertEqual( arnold.AiNodeGetFlt( n, "rolling_shutter_duration" ), 0.5 )

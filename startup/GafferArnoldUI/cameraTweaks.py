@@ -50,7 +50,7 @@ def __tweakCreator( plugName, parameterName, parameterValue ) :
 def __shutterCurveTweakCreator() :
 
 	tweak = Gaffer.TweakPlug(
-		"shutter_curve",
+		"ai:shutter_curve",
 		Gaffer.RampffPlug(
 			defaultValue = IECore.Rampff(
 				[ ( 0, 0 ), ( 0.25, 1 ), (0.75, 1 ), ( 1, 0 ) ],
@@ -62,13 +62,13 @@ def __shutterCurveTweakCreator() :
 	tweak.setName( "shutterCurve" )
 	return tweak
 
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Shutter Type", functools.partial( __tweakCreator, "shutterType", "shutter_type", "box" ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Shutter Type", functools.partial( __tweakCreator, "shutterType", "ai:shutter_type", "box" ) )
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Shutter Curve", __shutterCurveTweakCreator )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter", functools.partial( __tweakCreator, "rollingShutter", "rolling_shutter", "off" ) )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter Duration", functools.partial( __tweakCreator, "rollingShutterDuration", "rolling_shutter_duration", 0.0 ) )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blades", functools.partial( __tweakCreator, "apertureBlades", "aperture_blades", 6 ) )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blade Curvature", functools.partial( __tweakCreator, "apertureBladeCurvature", "aperture_blade_curvature", 0.0 ) )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Rotation", functools.partial( __tweakCreator, "apertureRotation", "aperture_rotation", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter", functools.partial( __tweakCreator, "rollingShutter", "ai:rolling_shutter", "off" ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter Duration", functools.partial( __tweakCreator, "rollingShutterDuration", "ai:rolling_shutter_duration", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blades", functools.partial( __tweakCreator, "apertureBlades", "ai:aperture_blades", 6 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blade Curvature", functools.partial( __tweakCreator, "apertureBladeCurvature", "ai:aperture_blade_curvature", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Rotation", functools.partial( __tweakCreator, "apertureRotation", "ai:aperture_rotation", 0.0 ) )
 
 Gaffer.Metadata.registerNode(
 
