@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - Viewer, SceneInspector : Added support for half-typed OpenVDB grids.
+- Viewer : Improved choice of grids for VDB visualisation. `density` is now preferred, and if mip-maps are present, the highest level is chosen.
 - Arnold : Added support for rendering VDB volume LODs.
 
 API

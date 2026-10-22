@@ -325,14 +325,31 @@ class VDBVisualiser : public ObjectVisualiser
 				return m_defaultVisualisations;
 			}
 
-			// todo which grid should be visualised?
-			std::vector<std::string> names = vdbObject->gridNames();
-			if (names.empty())
+			// Choose which grid to visualise.
+
+			const std::vector<std::string> names = vdbObject->gridNames();
+			if( names.empty() )
 			{
 				return m_defaultVisualisations;
 			}
 
-			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( names[0] );
+			string gridName;
+			if( std::find( names.begin(), names.end(), "density" ) != names.end() )
+			{
+				gridName = "density";
+			}
+			else if( std::find( names.begin(), names.end(), "density_level_0" ) != names.end()  )
+			{
+				gridName = "density_level_0";
+			}
+			else
+			{
+				gridName = names[0];
+			}
+
+			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
+
+			// Build the visualisation.
 
 			IECoreGL::Group *rootGroup = new IECoreGL::Group();
 
