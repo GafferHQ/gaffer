@@ -69,11 +69,13 @@ if Qt.__binding__ == "PySide2" :
 	from PySide2 import QtGui
 	from PySide2 import QtWidgets
 	from PySide2.QtWidgets import QOpenGLWidget
+	from PySide2.QtGui import QOpenGLPaintDevice
 	from PySide2 import QtOpenGL
 elif Qt.__binding__ == "PySide6" :
 	from PySide6 import QtGui
 	from PySide6 import QtWidgets
 	from PySide6.QtOpenGLWidgets import QOpenGLWidget
+	from PySide6.QtOpenGL import QOpenGLPaintDevice
 else :
 	raise Exception( "GLWidget : No compatible Qt Python binding found" )
 
@@ -275,13 +277,33 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 		if cls._widgetCreator is not None :
 			return cls._widgetCreator( format )
 
-		glWidget = QOpenGLWidget()
+		glWidget = _GLViewport()
 		# Avoid `QOpenGLFramebufferObject: Framebuffer incomplete attachment`
 		# errors caused by Qt trying to make a framebuffer with zero size.
 		glWidget.setMinimumSize( 1, 1 )
 		glWidget.setFormat( format )
 
 		return glWidget
+
+## The viewport for our _GLGraphicsView. Regular on-screen painting of the viewport
+# is done for us by the QGraphicsView, so ordinarily we could use a plain QOpenGLWidget
+# as the viewport. But `QWidget.grab()` renders offscreen, and uses a different code
+# path that goes via `grabFramebuffer()` and therefore `paintGL()`. So to support
+# `grab()` we must implement `paintGL()`.
+class _GLViewport( QOpenGLWidget ) :
+
+	pass
+
+	# Only called during `grab()`, not for on-screen drawing.
+	def paintGL( self ) :
+
+		paintDevice = QOpenGLPaintDevice( self.size() * self.devicePixelRatio() )
+		paintDevice.setDevicePixelRatio( self.devicePixelRatio() )
+		painter = QtGui.QPainter( paintDevice )
+		graphicsView = self.parentWidget()
+		assert( isinstance( graphicsView, _GLGraphicsView ) )
+		graphicsView.render( painter, QtCore.QRectF( self.rect() ), self.rect() )
+		painter.end()
 
 class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
