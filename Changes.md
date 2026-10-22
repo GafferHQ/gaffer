@@ -1,7 +1,10 @@
 1.6.21.x (relative to 1.6.21.6)
 ========
 
+Fixes
+-----
 
+- Arnold : Fixed deadlocks caused by instancing in-memory OpenVDB grids (#7209).
 
 1.6.21.6 (relative to 1.6.21.5)
 ========
