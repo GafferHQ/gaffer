@@ -143,7 +143,9 @@ CompoundDataPtr createParameters(const IECoreVDB::VDBObject* vdbObject)
 	}
 	else
 	{
-		compoundData[g_filedataParam] = createMemoryBuffer( vdbObject );
+		compoundData[g_filedataParam] = tbb::this_task_arena::isolate(
+			[&] { return createMemoryBuffer( vdbObject ); }
+		);
 	}
 
 	return parameters;

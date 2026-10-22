@@ -25,6 +25,11 @@ Improvements
   - Added support for writing ParticleField3DGaussianSplat USD prims.
   - All radiance:sphericalHarmonicsCoefficients are now loaded from ParticleField3DGaussianSplat USD prims, regardless of their radiance:sphericalHarmonicsDegree.
 
+Fixes
+-----
+
+- Arnold : Fixed deadlocks caused by instancing in-memory OpenVDB grids (#7209).
+
 API
 ---
 
@@ -456,10 +461,18 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.21.x (relative to 1.6.21.6)
+1.6.21.x (relative to 1.6.21.7)
 ========
 
 
+
+1.6.21.7 (relative to 1.6.21.6)
+========
+
+Fixes
+-----
+
+- Arnold : Fixed deadlocks caused by instancing in-memory OpenVDB grids (#7209).
 
 1.6.21.6 (relative to 1.6.21.5)
 ========
