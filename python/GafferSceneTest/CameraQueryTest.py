@@ -632,3 +632,73 @@ class CameraQueryTest( GafferSceneTest.SceneTestCase ):
 		# even if the query is of a mismatched type.
 		self.assertEqual( query["out"][0]["source"].getValue(), GafferScene.CameraQuery.Source.Camera )
 		self.assertEqual( query["out"][0]["value"].getValue(), "" )
+
+	def testParameterSupersededBy( self ) :
+
+		camera = GafferScene.Camera()
+		camera["fStop"].setValue( 16.0 )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/camera"] ) )
+
+		tweaks = GafferScene.CameraTweaks()
+		tweaks["in"].setInput( camera["out"] )
+		tweaks["filter"].setInput( filter["out"] )
+
+		query = GafferScene.CameraQuery()
+		query["scene"].setInput( tweaks["out"] )
+		query["cameraMode"].setValue( GafferScene.CameraQuery.CameraMode.Location )
+		query["location"].setValue( "/camera" )
+
+		query.addQuery( Gaffer.FloatPlug( defaultValue = 64.0), "fStop" )
+		query.addQuery( Gaffer.FloatPlug( defaultValue = 32.0), "fStoppe" )
+
+		# Parameter exists on camera, but we don't have any delegate setup.
+		self.assertEqual( query["out"][0]["source"].getValue(), GafferScene.CameraQuery.Source.Camera )
+		self.assertEqual( query["out"][0]["value"].getValue(), 16.0 )
+		self.assertEqual( query["out"][1]["source"].getValue(), GafferScene.CameraQuery.Source.None_ )
+		self.assertEqual( query["out"][1]["value"].getValue(), 32.0 )
+
+		# Forward requests from one parameter to another
+		Gaffer.Metadata.registerValues( {
+			"camera:parameter:fStoppe" : {
+				"supersededBy" : "camera:parameter:fStop",
+			}
+		} )
+		camera["fStop"].setValue( 8.0 )  # Make sure we don't fetch cached values
+
+		self.assertEqual( query["out"][0]["source"].getValue(), GafferScene.CameraQuery.Source.Camera )
+		self.assertEqual( query["out"][0]["value"].getValue(), 8.0 )
+		self.assertEqual( query["out"][1]["source"].getValue(), query["out"][0]["source"].getValue() )
+		self.assertEqual( query["out"][1]["value"].getValue(), query["out"][0]["value"].getValue() )
+
+		# Delete the target parameter so the fallback value from metadata is used.
+		tweaks["tweaks"].addChild(
+			Gaffer.TweakPlug(
+				"fStop",
+				nameDefault = "fStop",
+				modeDefault = Gaffer.TweakPlug.Mode.Remove,
+				valuePlug = Gaffer.FloatPlug()
+			)
+		)
+
+		self.assertEqual( query["out"][0]["source"].getValue(), GafferScene.CameraQuery.Source.Fallback )
+		self.assertEqual( query["out"][0]["value"].getValue(), 0.0 )
+		self.assertEqual( query["out"][1]["source"].getValue(), query["out"][0]["source"].getValue() )
+		self.assertEqual( query["out"][1]["value"].getValue(), query["out"][0]["value"].getValue() )
+
+		# If the alternative parameter has a value, it should be used.
+
+		tweaks["tweaks"].addChild(
+			Gaffer.TweakPlug(
+				"fStoppe",
+				nameDefault = "fStoppe",
+				modeDefault = Gaffer.TweakPlug.Mode.Create,
+				valuePlug = Gaffer.FloatPlug( "fStoppe", Gaffer.Plug.Direction.In, 4.0 )
+			)
+		)
+
+		self.assertEqual( query["out"][0]["source"].getValue(), GafferScene.CameraQuery.Source.Fallback )
+		self.assertEqual( query["out"][0]["value"].getValue(), 0.0 )
+		self.assertEqual( query["out"][1]["source"].getValue(), GafferScene.CameraQuery.Source.Camera )
+		self.assertEqual( query["out"][1]["value"].getValue(), 4.0 )

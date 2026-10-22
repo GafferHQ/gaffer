@@ -14,6 +14,7 @@ Improvements
 - BoolPlug : Added support for connections from array-valued plugs such as StringVectorDataPlug. The BoolPlug's value is true when the input array is non-empty, and false when the input array is empty.
 - PlugAlgo : Added more type coercions to `setValueFromData()`, allowing BoolPlugs and NumericPlugs to be set from StringData.
 - Instancer : Deprecated and removed from the node menu, in preparation for removal in a future release. Use the PointInstancer node instead.
+- Arnold : Added recognition of Arnold-specific camera parameters prefixed with `ai:`. Currently both prefixed and non-prefixed parameters are supported, but prefixed parameters should be preferred in anticipation of future removal of non-prefixed parameters.
 
 Fixes
 -----

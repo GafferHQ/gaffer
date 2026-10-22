@@ -58,6 +58,7 @@ const size_t g_valuePlugIndex = 1;
 const InternedString g_renderCameraOption( "option:render:camera" );
 const InternedString g_renderShutterOption( "option:render:shutter" );
 const InternedString g_defaultValue( "defaultValue" );
+const InternedString g_supersededByValue( "supersededBy" );
 const InternedString g_source( "source" );
 const InternedString g_value( "value" );
 const InternedString g_shutter( "shutter" );
@@ -418,8 +419,15 @@ void CameraQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 		const CompoundData *parameterData = parameters->member<CompoundData>( parameterName );
 		if( !parameterData )
 		{
-			output->setToDefault();
-			return;
+			if( auto supersededBy = Metadata::value<StringData>( "camera:parameter:" + parameterName, g_supersededByValue ) )
+			{
+				parameterData = parameters->member<CompoundData>( supersededBy->readable().substr( 17 ) );
+			}
+			if( !parameterData )
+			{
+				output->setToDefault();
+				return;
+			}
 		}
 
 		if( output == oPlug->getChild( g_sourcePlugIndex ) )

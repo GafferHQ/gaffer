@@ -349,3 +349,26 @@ class CameraAlgoTest( unittest.TestCase ) :
 							self.assertGreater( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.01 )
 						else :
 							self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.0 )
+
+	def testParameterPrefix( self ) :
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			camera = IECoreScene.Camera()
+			camera.setProjection( "perspective" )
+			camera.parameters()["aperture_blades"] = 5
+			camera.parameters()["ai:aperture_blades"] = 10
+			camera.parameters()["ai:aperture_rotation"] = 20.0
+			camera.parameters()["rolling_shutter"] = "top"
+			camera.parameters()["rolling_shutter_duration"] = 0.5
+
+			n = IECoreArnold.NodeAlgo.convert( camera, universe, "testCamera" )
+
+			self.assertEqual( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_CAMERA )
+
+			# \todo Is there a way to test that InternedString( "aperture_blades" ) < InternedString( "ai:aperture_blades" )?
+			# That would ensure we're not getting a false positive in this test.
+			self.assertEqual( arnold.AiNodeGetInt( n, "aperture_blades" ), 10 )
+			self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_rotation" ), 20.0 )
+			self.assertEqual( arnold.AiNodeGetStr( n, "rolling_shutter" ), "top" )
+			self.assertEqual( arnold.AiNodeGetFlt( n, "rolling_shutter_duration" ), 0.5 )
