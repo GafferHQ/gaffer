@@ -13,10 +13,6 @@ Improvements
 ------------
 
 - DataStore : Added `default` plug.
-
-Improvements
-------------
-
 - Viewer, SceneInspector : Added support for half-typed OpenVDB grids.
 - Viewer : Improved choice of grids for VDB visualisation. `density` is now preferred, and if mip-maps are present, the highest level is chosen.
 - Arnold : Added support for rendering VDB volume LODs.
@@ -38,7 +34,7 @@ API
   - Gaffer.MCP.HTTPServer : Concrete server implementation using HTTP transport.
   - Gaffer.MCP.StreamServer : Concrete server implementation using stream (stdio) transport.
   - Gaffer.MCP.Tool, Gaffer.MCP.BasicTool : Base classes for adding custom tools to the server.
-- SceneAlgo : Added visitVisibleLocations.
+- SceneAlgo : Added `visitVisibleLocations()`.
 
 Build
 -----
