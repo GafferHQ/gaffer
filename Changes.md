@@ -14,6 +14,17 @@ Improvements
 
 - DataStore : Added `default` plug.
 
+Improvements
+------------
+
+- Viewer, SceneInspector : Added support for half-typed OpenVDB grids.
+- Viewer : Improved choice of grids for VDB visualisation. `density` is now preferred, and if mip-maps are present, the highest level is chosen.
+- Arnold : Added support for rendering VDB volume LODs.
+- SceneReader :
+  - Added support for reading half-typed OpenVDB grids.
+  - Added support for writing ParticleField3DGaussianSplat USD prims.
+  - All radiance:sphericalHarmonicsCoefficients are now loaded from ParticleField3DGaussianSplat USD prims, regardless of their radiance:sphericalHarmonicsDegree.
+
 API
 ---
 
@@ -23,6 +34,11 @@ API
   - Gaffer.MCP.StreamServer : Concrete server implementation using stream (stdio) transport.
   - Gaffer.MCP.Tool, Gaffer.MCP.BasicTool : Base classes for adding custom tools to the server.
 - SceneAlgo : Added visitVisibleLocations.
+
+Build
+-----
+
+- Cortex : Updated to version 10.7.4.0.
 
 1.7.4.1 (relative to 1.7.4.0)
 =======

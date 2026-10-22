@@ -67,11 +67,16 @@ public:
 	//! dispatch a base grid to a typed grid
 	void collect( openvdb::GridBase::ConstPtr grid )
 	{
+		/// \todo Remove when we upgrade to OpenVDB 13.
+		using HalfTree = openvdb::tree::Tree4<openvdb::math::half, 5, 4, 3>::Type;
+		using HalfGrid = openvdb::Grid<HalfTree>;
+
 		static const std::map<std::string, std::function<void(GeometryCollector&, openvdb::GridBase::ConstPtr)> > collectors =
 		{
 			{ openvdb::typeNameAsString<bool>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::BoolGrid>( grid ); } },
 			{ openvdb::typeNameAsString<double>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::DoubleGrid>( grid ); } },
 			{ openvdb::typeNameAsString<float>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::FloatGrid>( grid ); } },
+			{ openvdb::typeNameAsString<openvdb::math::half>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<HalfGrid>( grid ); } },
 			{ openvdb::typeNameAsString<int32_t>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::Int32Grid>( grid ); } },
 			{ openvdb::typeNameAsString<int64_t>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Int64Grid>( grid ); } },
 			{ openvdb::typeNameAsString<openvdb::ValueMask>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::MaskGrid>( grid ); } },
@@ -320,14 +325,31 @@ class VDBVisualiser : public ObjectVisualiser
 				return m_defaultVisualisations;
 			}
 
-			// todo which grid should be visualised?
-			std::vector<std::string> names = vdbObject->gridNames();
-			if (names.empty())
+			// Choose which grid to visualise.
+
+			const std::vector<std::string> names = vdbObject->gridNames();
+			if( names.empty() )
 			{
 				return m_defaultVisualisations;
 			}
 
-			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( names[0] );
+			string gridName;
+			if( std::find( names.begin(), names.end(), "density" ) != names.end() )
+			{
+				gridName = "density";
+			}
+			else if( std::find( names.begin(), names.end(), "density_level_0" ) != names.end()  )
+			{
+				gridName = "density_level_0";
+			}
+			else
+			{
+				gridName = names[0];
+			}
+
+			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
+
+			// Build the visualisation.
 
 			IECoreGL::Group *rootGroup = new IECoreGL::Group();
 

@@ -49,6 +49,8 @@
 #include "boost/iostreams/categories.hpp"
 #include "boost/iostreams/stream.hpp"
 
+#include <regex>
+
 using namespace std;
 using namespace Imath;
 
@@ -102,12 +104,38 @@ UCharVectorDataPtr createMemoryBuffer(const IECoreVDB::VDBObject* vdbObject)
 	return buffer;
 }
 
+StringVectorDataPtr gridsParameter( const IECoreVDB::VDBObject *vdbObject )
+{
+	static const std::regex g_mipMapLevelRegex( "(.*)_level_[0-9]+" );
+
+	vector<string> result;
+	for( auto name : vdbObject->gridNames() )
+	{
+		std::smatch match;
+		if( std::regex_match( name, match, g_mipMapLevelRegex ) )
+		{
+			// Strip `_level_N` suffix. When using mip maps, Arnold
+			// just wants to be given the base name.
+			name = match[1];
+		}
+
+		// Add name if not seen yet. We assume the number of names is small
+		// enough that linear search is fine.
+		if( std::find( result.begin(), result.end(), name ) == result.end() )
+		{
+			result.push_back( name );
+		}
+	}
+
+	return new StringVectorData( std::move( result ) );
+}
+
 CompoundDataPtr createParameters(const IECoreVDB::VDBObject* vdbObject)
 {
 	CompoundDataPtr parameters = new CompoundData();
 	CompoundDataMap& compoundData = parameters->writable();
 
-	compoundData[g_gridParam] = new StringVectorData( vdbObject->gridNames() );
+	compoundData[g_gridParam] = gridsParameter( vdbObject );
 
 	if ( vdbObject->unmodifiedFromFile() )
 	{
