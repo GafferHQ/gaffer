@@ -19,6 +19,7 @@ Fixes
 -----
 
 - Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
+- Help : Fixed opening local documentation on Windows when the installation path contains spaces.
 
 Breaking Changes
 ----------------
