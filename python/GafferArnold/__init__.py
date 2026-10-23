@@ -46,5 +46,6 @@ from ._GafferArnold import *
 from .ArnoldShaderBall import ArnoldShaderBall
 from .ArnoldTextureBake import ArnoldTextureBake
 from .ArnoldProcedural import ArnoldProcedural
+from .ArnoldCamera import ArnoldCamera
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnold" )
