@@ -38,16 +38,10 @@ import imath
 import functools
 
 import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
 import GafferSceneUI
-
-from Qt import QtWidgets
-from Qt import QtCore
-
-from GafferUI.PlugValueWidget import sole
 
 Gaffer.Metadata.registerNode(
 

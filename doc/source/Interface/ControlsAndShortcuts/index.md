@@ -238,6 +238,7 @@ Crop Window Tool and crop enabled    | {kbd}`Alt` + {kbd}`C`
 Light Tool                           | {kbd}`A`
 Light Position Tool                  | {kbd}`D`
 Visualiser Tool                      | {kbd}`L`
+Paint Tool                           | {kbd}`Y`
 Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
 Toggle camera / free view            | {kbd}`;`
 
@@ -311,6 +312,21 @@ Increase vertex label size                    | {kbd}`+`
 Decrease vertex label size                    | {kbd}`-`
 Increase vector size                          | {kbd}`Shift` + {kbd}`+`
 Decrease vector size                          | {kbd}`Shift` + {kbd}`-`
+
+### Paint Tool ###
+
+> Note :
+> For the following controls and shortcuts, the Paint Tool must be active.
+
+Action                                        | Control or shortcut
+----------------------------------------------|--------------------
+Increase brush size                           | {kbd}`+`
+Decrease brush size                           | {kbd}`-`
+Adjust brush size                             | Hold {kbd}`S` and move the cursor left/right
+Adjust brush opacity                          | Hold {kbd}`G` and move the cursor left/right
+Adjust brush hardness                         | Hold {kbd}`H` and move the cursor left/right
+Show popup color chooser                      | Hold {kbd}`V`
+Swap foreground and background colors/values  | {kbd}`X`
 
 ### 2D images ###
 
