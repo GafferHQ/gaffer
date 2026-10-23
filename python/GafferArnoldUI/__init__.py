@@ -57,5 +57,6 @@ from . import ArnoldColorManagerUI
 from . import ArnoldImagerUI
 from . import ArnoldProceduralUI
 from . import CacheMenu
+from . import ArnoldCameraUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnoldUI" )

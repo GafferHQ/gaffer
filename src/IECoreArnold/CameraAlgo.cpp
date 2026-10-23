@@ -199,23 +199,36 @@ AtNode *convertStatic( const IECoreScene::Camera *camera, AtUniverse *universe, 
 
 Imath::Box2f screenWindow( const IECoreScene::Camera *camera )
 {
-	Imath::Box2f result = camera->frustum();
-
-	if( camera->getProjection() == "perspective" || camera->getProjection() == "lentil_camera" )
+	if( camera->getProjection() == "cyl_camera" || camera->getProjection() == "spherical_camera" || camera->getProjection() == "vr_camera" )
 	{
-		// Normalise so that Arnold's NDC space goes from 0-1 across the aperture.
-		// This is helpful when using Arnold `uv_remap` shaders.
-		const float width = ( result.max.x - result.min.x ) * 0.5f;
-		result.min *= 1.0f / width;
-		result.max *= 1.0f / width;
+		return Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) );
+	}
+
+	const Imath::V2i resolution = camera->getResolution();
+	const float aspect = camera->getPixelAspectRatio() * (float)resolution.x / (float)resolution.y;
+	Imath::Box2f result;
+	if( camera->getProjection() == "fisheye_camera" )
+	{
+		result = IECoreScene::Camera::fitWindow( Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) ), camera->getFilmFit(), aspect );
+	}
+	else
+	{
+		result = camera->frustum();
+
+		if( camera->getProjection() == "perspective" || camera->getProjection() == "lentil_camera" )
+		{
+			// Normalise so that Arnold's NDC space goes from 0-1 across the aperture.
+			// This is helpful when using Arnold `uv_remap` shaders.
+			const float width = ( result.max.x - result.min.x ) * 0.5f;
+			result.min *= 1.0f / width;
+			result.max *= 1.0f / width;
+		}
 	}
 
 	// Arnold automatically adjusts the vertical dimension to compensate for
 	// the resolution and pixel aspect. This is handy when hand-editing .ass
 	// files, but since we already take care of this ourselves, we have to
 	// reverse their correction by multiplying the y values by aspect.
-	const Imath::V2i resolution = camera->getResolution();
-	const float aspect = camera->getPixelAspectRatio() * (float)resolution.x / (float)resolution.y;
 	result.min.y *= aspect;
 	result.max.y *= aspect;
 
@@ -283,6 +296,9 @@ AtNode *CameraAlgo::convert( const CameraSamples &samples, float motionStart, fl
 	if( samples[0]->getProjection()=="perspective" )
 	{
 		setAnimatedFloat( result, g_fovArnoldString, samples, fieldOfView );
+	}
+	if( samples[0]->getProjection() == "perspective" || samples[0]->getProjection() == "fisheye_camera" )
+	{
 		setAnimatedFloat( result, g_apertureSizeArnoldString, samples, apertureSize );
 		setAnimatedFloat( result, g_focusDistanceArnoldString, samples, []( auto camera ) { return camera->getFocusDistance(); } );
 	}
