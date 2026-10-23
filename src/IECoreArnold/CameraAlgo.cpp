@@ -44,6 +44,8 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/RampData.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "Imath/ImathFun.h"
 
 #include "ai_array.h"
@@ -162,11 +164,15 @@ AtNode *convertStatic( const IECoreScene::Camera *camera, AtUniverse *universe, 
 	const AtNodeEntry *nodeEntry = AiNodeGetNodeEntry( result );
 	for( CompoundDataMap::const_iterator it = camera->parameters().begin(), eIt = camera->parameters().end(); it != eIt; ++it )
 	{
-		AtString paramNameArnold( it->first.c_str() );
-		if( it->first == "mesh" )
+		/// \todo Remove support for non-prefixed Arnold-specific parameters.
+		AtString paramNameArnold( boost::starts_with( it->first.c_str(), "ai:" ) ? it->first.c_str() + 3 : it->first.c_str() );
+		if( it->first == "mesh" || it->first == "projection" )
 		{
 			// We have special handling in the renderer backend to translate a mesh path string
 			// into a node pointer, so don't touch this here
+			// Arnold will output a warning if we attempt to set `projection` on an Arnold VR
+			// camera to one of Gaffer's `projection` values. In Arnold it can be set
+			// via `ai:projection`.
 			continue;
 		}
 		if( AiNodeEntryLookUpParameter( nodeEntry, paramNameArnold ) )
