@@ -586,8 +586,6 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __setSection( self, section ) :
 
 		self.__previousSectionChoice = None
-		with self._blockedUpdateFromValues() :
-			self.getPlug().setValue( section )
-		self._updateFromValues( [ section ], None )
+		self.getPlug().setValue( section )
 
 SceneEditor._SectionPlugValueWidget = _SectionPlugValueWidget
