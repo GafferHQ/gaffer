@@ -43,6 +43,10 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+from . import _GafferSceneUI
+
+from Qt import QtWidgets
+
 ## Base class to simplify the creation of Editors which operate on ScenePlugs.
 class SceneEditor( GafferUI.NodeSetEditor ) :
 
@@ -80,6 +84,39 @@ class SceneEditor( GafferUI.NodeSetEditor ) :
 				self["__filteredIn"].setInput( self["__hierarchyFilter"]["out"] )
 				Gaffer.PlugAlgo.promote( self["__hierarchyFilter"]["filter"] )
 				Gaffer.PlugAlgo.promote( self["__hierarchyFilter"]["setFilter"] )
+
+		def _columnFilterActive( self ) :
+
+			if "columnFilter" not in self :
+				return False
+
+			filterTokens = self["columnFilter"].getValue().split()
+			if not filterTokens or "*" in filterTokens :
+				return False
+
+			return True
+
+		def _columnVisible( self, column, path ) :
+
+			if not self._columnFilterActive() :
+				return True
+
+			filterPattern = " ".join(
+				token if IECore.StringAlgo.hasWildcards( token ) else f"*{token}*"
+				for token in self["columnFilter"].getValue().lower().split()
+			)
+
+			if isinstance( column, _GafferSceneUI._LightEditorSetMembershipColumn ) :
+				# _LightEditorSetMembershipColumn's headerData requires a potentially
+				# expensive compute so we match against the inspected set name.
+				columnName = column.inspector( path ).name()
+			else :
+				columnName = column.headerData( path ).value
+
+			if not isinstance( columnName, str ) :
+				return False
+
+			return IECore.StringAlgo.matchMultiple( columnName.lower(), filterPattern )
 
 	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::SceneEditor::Settings" )
 
@@ -209,7 +246,7 @@ Gaffer.Metadata.registerNode(
 			# since it has no effect on the filtering, and hints that wildcards
 			# are available.
 			"togglePlugValueWidget:defaultToggleValue" : "*",
-			"stringPlugValueWidget:placeholderText" : "Filter...",
+			"stringPlugValueWidget:placeholderText" : "Filter locations...",
 			"layout:section" : "Filter"
 
 		},
@@ -225,6 +262,40 @@ Gaffer.Metadata.registerNode(
 			"label" : "",
 			"plugValueWidget:type" : "GafferSceneUI.SceneEditor._SetFilterPlugValueWidget",
 			"layout:section" : "Filter"
+
+		},
+
+		"columnFilter" : {
+
+			"description" :
+			"""
+			Filters columns to show only those with matching names. Matching
+			is case-insensitive, and is performed against a fragment of the
+			name or a pattern containing any of Gaffer's standard wildcards.
+			Multiple space separated terms may be entered, columns matching
+			any one of them are shown.
+
+			Examples
+			--------
+
+			- `color` : Only show columns with `color` anywhere in their name.
+			- `color shadow` : Only show columns with `color` or `shadow` anywhere in their name.
+			- `shadow*` : Only show columns starting with `shadow`.
+			- `diff* *spec` : Only show columns starting with `diff` or ending with `spec`.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
+			# We need a non-default value to toggle to, so that the first
+			# toggling can highlight the icon. `*` seems like a reasonable value
+			# since it has no effect on the filtering, and hints that wildcards
+			# are available.
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter columns...",
+
+			"layout:width" : 160,
+			"layout:section" : "Filter",
 
 		},
 
@@ -446,3 +517,75 @@ class _SetFilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( value )
 
 SceneEditor._SetFilterPlugValueWidget = _SetFilterPlugValueWidget
+
+# _SectionPlugValueWidget
+# =========================
+
+# Supported plug metadata :
+#
+#  - "sectionPlugValueWidget:sections" : A list of section names that will be displayed as tabs.
+class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferUI.PlugValueWidget.__init__( self, QtWidgets.QTabBar(), plug, **kw )
+
+		self._qtWidget().setDrawBase( False )
+		self._qtWidget().setExpanding( False )
+
+		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
+		self.__ignoreCurrentChanged = False
+		self.__previousSectionChoice = None
+
+		# Borrow the styling from the Spreadsheet's section chooser.
+		## \todo Should we be introducing a `GafferUI.TabBar` class which can be used in
+		# both?
+		self._qtWidget().setProperty( "gafferClass", "GafferUI.SpreadsheetUI._SectionChooser" )
+
+	def _updateFromMetadata( self ) :
+
+		sections = list( Gaffer.Metadata.value( self.getPlug(), "sectionPlugValueWidget:sections" ) or [] )
+
+		try :
+			self.__ignoreCurrentChanged = True
+			while self._qtWidget().count() :
+				self._qtWidget().removeTab( 0 )
+			for section in sections :
+				self._qtWidget().addTab( section )
+		finally :
+			self.__ignoreCurrentChanged = False
+
+		currentSection = self.getPlug().getValue()
+		if self.__previousSectionChoice in sections :
+			self.__setSection( self.__previousSectionChoice )
+		elif sections and currentSection not in sections :
+			previousSection = self.__previousSectionChoice or currentSection
+			self.__setSection( sections[0] )
+			self.__previousSectionChoice = previousSection
+		else :
+			self._updateFromValues( [ currentSection ], None )
+
+	def _updateFromValues( self, values, exception ) :
+
+		for i in range( 0, self._qtWidget().count() ) :
+			if self._qtWidget().tabText( i ) == values[0] :
+				try :
+					self.__ignoreCurrentChanged = True
+					self._qtWidget().setCurrentIndex( i )
+				finally :
+					self.__ignoreCurrentChanged = False
+				break
+
+	def __currentChanged( self, index ) :
+
+		if self.__ignoreCurrentChanged :
+			return
+
+		self.__setSection( self._qtWidget().tabText( index ) )
+
+	def __setSection( self, section ) :
+
+		self.__previousSectionChoice = None
+		self.getPlug().setValue( section )
+
+SceneEditor._SectionPlugValueWidget = _SectionPlugValueWidget

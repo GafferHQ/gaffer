@@ -806,6 +806,10 @@ _styleSheet = string.Template(
 		image: url(:/arrowRightDisabled10.png);
 	}
 
+	QTabBar[gafferClasses~="GafferSceneUI.SceneEditor._SectionPlugValueWidget"]::tab {
+		min-width: 50px;
+	}
+
 	/* Splitters */
 	/* ========= */
 

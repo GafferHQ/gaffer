@@ -1,7 +1,26 @@
 1.7.x.x (relative to 1.7.5.0)
 =======
 
+Improvements
+------------
 
+- LightEditor : Added hierarchy filter.
+- LightEditor, RenderPassEditor : Added `All` section, which shows the columns from every section at once.
+- LightEditor, RenderPassEditor, AttributeEditor :
+  - Added column filter. When enabled, only columns matching the search text are shown, and sections without any matching columns are hidden.
+  - Section tabs are now sized to fit their names, rather than expanding to fill the available space.
+
+Fixes
+-----
+
+- AttributeEditor :
+  - The section chooser is no longer hidden when only a single section is available.
+  - Fixed bug preventing the `All` section from showing columns from all sections after a column had been registered to `section = "All"`.
+
+API
+---
+
+- LightEditor : The default section is now named "Main" rather than "". Columns registered or deregistered with `section = None` or `section = ""` are added to "Main" so existing registrations are unaffected.
 
 1.7.5.0 (relative to 1.7.4.1)
 =======
