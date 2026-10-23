@@ -199,15 +199,28 @@ AtNode *convertStatic( const IECoreScene::Camera *camera, AtUniverse *universe, 
 
 Imath::Box2f screenWindow( const IECoreScene::Camera *camera )
 {
-	Imath::Box2f result = camera->frustum();
-
-	if( camera->getProjection() == "perspective" || camera->getProjection() == "lentil_camera" )
+	if( camera->getProjection() == "cyl_camera" || camera->getProjection() == "spherical_camera" || camera->getProjection() == "vr_camera" )
 	{
-		// Normalise so that Arnold's NDC space goes from 0-1 across the aperture.
-		// This is helpful when using Arnold `uv_remap` shaders.
-		const float width = ( result.max.x - result.min.x ) * 0.5f;
-		result.min *= 1.0f / width;
-		result.max *= 1.0f / width;
+		return Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) );
+	}
+
+	Imath::Box2f result;
+	if( camera->getProjection() == "fisheye_camera" )
+	{
+		result = Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) );
+	}
+	else
+	{
+		result = camera->frustum();
+
+		if( camera->getProjection() == "perspective" || camera->getProjection() == "lentil_camera" )
+		{
+			// Normalise so that Arnold's NDC space goes from 0-1 across the aperture.
+			// This is helpful when using Arnold `uv_remap` shaders.
+			const float width = ( result.max.x - result.min.x ) * 0.5f;
+			result.min *= 1.0f / width;
+			result.max *= 1.0f / width;
+		}
 	}
 
 	// Arnold automatically adjusts the vertical dimension to compensate for

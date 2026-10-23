@@ -57,3 +57,4 @@ from .ArnoldImagerTest import ArnoldImagerTest
 from .USDLightTest import USDLightTest
 from .RenderPassAdaptorTest import RenderPassAdaptorTest
 from .USDProceduralTest import USDProceduralTest
+from .ArnoldCameraTest import ArnoldCameraTest

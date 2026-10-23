@@ -5,6 +5,7 @@ Features
 --------
 
 - PromotePointInstances : Added a new node for promoting point instances to "hero" scene locations. This replaces a similar node previously provided as part of GafferUSD and which is now deprecated.
+- Arnold : Added ArnoldCamera node to make it easier to create non-standard Arnold cameras such as fisheye and spherical cameras.
 
 Improvements
 ------------
