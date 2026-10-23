@@ -289,9 +289,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if "All" not in sectionNames and len( sectionNames ) > 1 :
 			sectionNames.append( "All" )
 
-		sectionsData = IECore.StringVectorData( sectionNames )
-		if Gaffer.Metadata.value( self.settings()["section"], "sectionPlugValueWidget:sections" ) != sectionsData :
-			Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", sectionsData, persistent = False )
+		Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", IECore.StringVectorData( sectionNames ), persistent = False )
 
 		currentSection = self.settings()["section"].getValue()
 		sectionColumns = []

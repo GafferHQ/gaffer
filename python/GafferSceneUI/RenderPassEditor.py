@@ -412,9 +412,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		if visibleFavourites or not filterActive :
 			sectionNames.append( "Favourites" )
 
-		sectionsData = IECore.StringVectorData( sectionNames )
-		if Gaffer.Metadata.value( self.settings()["section"], "sectionPlugValueWidget:sections" ) != sectionsData :
-			Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", sectionsData, persistent = False )
+		Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", IECore.StringVectorData( sectionNames ), persistent = False )
 
 		currentSection = self.settings()["section"].getValue()
 		sectionColumns = []
