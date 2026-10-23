@@ -86,7 +86,7 @@ struct DataStorePostSerialisationSignalHandler
 		// signal.
 		// We don't yet have anything else using the postSerialisation signal, but if there is something
 		// else, it should come after us, so we use a connectFront.
-		GafferBindings::Serialisation::staticPostSerialisationSignal().connectFront( &DataStorePostSerialisationSignalHandler::finishSerialisation );
+		GafferBindings::Serialisation::postSerialisationSignal().connectFront( &DataStorePostSerialisationSignalHandler::finishSerialisation );
 	}
 
 	static void finishSerialisation( const Serialisation *serialisation, bool success )

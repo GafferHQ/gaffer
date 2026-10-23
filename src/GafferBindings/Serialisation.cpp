@@ -169,13 +169,11 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 	catch( ... )
 	{
 		// Signal that serialisation failed
-		m_postSerialisationSignal( this, false );
 		g_postSerialisationSignal( this, false );
 		throw;
 	}
 
 	// Signal that serialisation succeeded
-	m_postSerialisationSignal( this, true );
 	g_postSerialisationSignal( this, true );
 }
 
@@ -527,16 +525,10 @@ IECore::ObjectPtr Serialisation::objectFromBase64( const std::string &base64 )
 	return Object::load( io, "o" );
 }
 
-Serialisation::PostSerialisationSignal &Serialisation::staticPostSerialisationSignal()
+Serialisation::PostSerialisationSignal &Serialisation::postSerialisationSignal()
 {
 	return g_postSerialisationSignal;
 }
-
-Serialisation::PostSerialisationSignal &Serialisation::postSerialisationSignal()
-{
-	return m_postSerialisationSignal;
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 // Serialisation::Serialiser

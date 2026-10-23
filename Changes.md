@@ -40,6 +40,9 @@ Breaking Changes
   - UsdGeomPointInstancers now always render as native PointInstancer objects, rather than via a legacy adaptor.
   - The `gafferUSD:pointInstancerAdaptor:attributes` and `gafferUSD:pointInstancerAdaptor:enabled` options have been removed.
   - Instance attributes no longer have a `user:` prefix when rendered in Arnold and 3Delight.
+- Serialisation :
+  - Removed deprecated `postSerialisationSignal()`.
+  - Renamed `staticPostSerialisationSignal()` to `postSerialisationSignal()`.
 
 1.7.x.x (relative to 1.7.5.0)
 =======
