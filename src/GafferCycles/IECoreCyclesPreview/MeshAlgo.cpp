@@ -121,11 +121,6 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 	const size_t numVerts = points.size();
 
 	ccl::Mesh *cmesh = SceneAlgo::createNodeWithLock<ccl::Mesh>( scene );
-	cmesh->reserve_mesh( numVerts, numFaces );
-	for( size_t i = 0; i < numVerts; i++ )
-	{
-		cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
-	}
 
 	if( mesh->interpolation() == "catmullClark" )
 	{
@@ -137,21 +132,35 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 		{
 			ncorners += vertsPerFace[i];
 		}
-		cmesh->reserve_subd_faces( numFaces, ncorners );
+		cmesh->resize_subd_faces( numFaces, ncorners );
 
-		int indexOffset = 0;
+		cmesh->resize_mesh( numVerts, 0 );
+
+		ccl::Attribute *pos = cmesh->subd_attributes.add( ccl::ATTR_STD_POSITION );
+		std::copy_n( reinterpret_cast<const ccl::packed_float3 *>( points.data() ), points.size(), pos->data_for_write<ccl::packed_float3>() );
+
+		std::copy( vertexIds.begin(), vertexIds.end(), cmesh->get_subd_face_corners().data() );
+
+		int *subdStartCorner = cmesh->get_subd_start_corner().data();
+		int *subdNumCorners = cmesh->get_subd_num_corners().data();
+		int *subdPtexOffset = cmesh->get_subd_ptex_offset().data();
+
+		int cornerIndex = 0;
+		int ptexOffset = 0;
 		for( size_t i = 0; i < vertsPerFace.size(); i++ )
 		{
-			cmesh->add_subd_face(
-				const_cast<int*>(&vertexIds[indexOffset]), vertsPerFace[i],
-				/* shader = */ 0, /* smooth = */ true
-			);
-			indexOffset += vertsPerFace[i];
+			subdStartCorner[i] = cornerIndex;
+			subdNumCorners[i] = vertsPerFace[i];
+			cornerIndex += vertsPerFace[i];
+
+			subdPtexOffset[i] = ptexOffset;
+			const int numPtex = ( vertsPerFace[i] == 4 ) ? 1 : vertsPerFace[i];
+			ptexOffset += numPtex;
 		}
 
 		// Creases
 		size_t numEdges = mesh->cornerIds()->readable().size();
-		for( int length : mesh->creaseLengths()->readable() )
+		for( const int &length : mesh->creaseLengths()->readable() )
 		{
 			numEdges += length - 1;
 		}
@@ -162,37 +171,53 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 
 			auto id = mesh->creaseIds()->readable().begin();
 			auto sharpness = mesh->creaseSharpnesses()->readable().begin();
-			for( int length : mesh->creaseLengths()->readable() )
+			for( const int &length : mesh->creaseLengths()->readable() )
 			{
 				for( int j = 0; j < length - 1; ++j )
 				{
-					int v0 = *id++;
-					int v1 = *id;
-					float weight = (*sharpness) * 0.1f;
-					cmesh->add_edge_crease( v0, v1, weight );
+					const int v0 = *id++;
+					const int v1 = *id;
+					cmesh->add_edge_crease( v0, v1, (*sharpness) * 0.1f );
 				}
 				id++;
 				sharpness++;
 			}
 
 			sharpness = mesh->cornerSharpnesses()->readable().begin();
-			for( int cornerId : mesh->cornerIds()->readable() )
+			for( const int &cornerId : mesh->cornerIds()->readable() )
 			{
 				cmesh->add_vertex_crease( cornerId, (*sharpness) * 0.1f );
 				sharpness++;
 			}
 		}
+
+		std::ranges::fill( cmesh->get_subd_shader(), 0 );
+		std::ranges::fill( cmesh->get_subd_smooth(), true );
+
+		cmesh->tag_position_modified();
+		cmesh->tag_subd_face_corners_modified();
+		cmesh->tag_subd_start_corner_modified();
+		cmesh->tag_subd_num_corners_modified();
+		cmesh->tag_subd_shader_modified();
+		cmesh->tag_subd_smooth_modified();
+		cmesh->tag_subd_ptex_offset_modified();
 	}
 	else
 	{
+		cmesh->resize_mesh( numVerts, numFaces );
+
+		std::copy_n( reinterpret_cast<const ccl::packed_float3 *>( points.data() ), points.size(), cmesh->get_position_for_write() );
+
+		std::copy( vertexIds.begin(), vertexIds.end(), cmesh->get_triangles().data() );
+
 		const bool smooth = hasSmoothNormals( mesh );
-		for( size_t i = 0; i < vertexIds.size(); i+= 3 )
-		{
-			cmesh->add_triangle(
-				vertexIds[i], vertexIds[i+1], vertexIds[i+2],
-				/* shader = */ 0, /* smooth = */ smooth
-			);
-		}
+		std::ranges::fill( cmesh->get_shader(), 0 );
+		std::ranges::fill( cmesh->get_smooth(), smooth );
+
+		cmesh->tag_position_modified();
+		cmesh->tag_triangles_modified();
+		cmesh->tag_shader_modified();
+		cmesh->tag_smooth_modified();
 	}
 
 	// Convert primitive variables.
@@ -211,6 +236,16 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 			PrimitiveVariable resampledN = variable;
 			IECoreScene::MeshAlgo::resamplePrimitiveVariable( mesh, resampledN, PrimitiveVariable::FaceVarying );
 			GeometryAlgo::convertPrimitiveVariable( name, resampledN, attributes, ccl::ATTR_ELEMENT_CORNER );
+			continue;
+		}
+		const V2fVectorData *uv = static_cast<const V2fVectorData *>( variable.data.get() );
+		if( ( name == "uv" || ( uv && uv->getInterpretation() == GeometricData::UV ) ) &&
+			variable.interpolation != PrimitiveVariable::FaceVarying )
+		{
+			// Resample UVs to FaceVarying as Cycles doesn't accept any other for UVs.
+			PrimitiveVariable resampledUV = variable;
+			IECoreScene::MeshAlgo::resamplePrimitiveVariable( mesh, resampledUV, PrimitiveVariable::FaceVarying );
+			GeometryAlgo::convertPrimitiveVariable( name, resampledUV, attributes, ccl::ATTR_ELEMENT_CORNER );
 			continue;
 		}
 		switch( variable.interpolation )
@@ -246,8 +281,11 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 		// from a previously tessellated mesh. If we want to match Blender, this should
 		// be generated from a rest pose and normalised 0-1. The below matches Cycles'
 		// fallback behaviour when `ATTR_STD_GENERATED` is not provided by the host.
-		ccl::Attribute *generated = cmesh->subd_attributes.add( ccl::ATTR_STD_GENERATED );
-		std::copy_n( cmesh->get_verts().data(), cmesh->get_verts().size(), generated->data_float3() );
+		if( ccl::Attribute *positionAttribute = cmesh->subd_attributes.find( ccl::ATTR_STD_POSITION ) )
+		{
+			ccl::Attribute *generated = cmesh->subd_attributes.add( ccl::ATTR_STD_GENERATED );
+			std::copy_n( positionAttribute->data<ccl::packed_float3>(), positionAttribute->element_size( cmesh, ccl::ATTR_ELEMENT_VERTEX, ccl::ATTR_PRIM_SUBD ), generated->data_for_write<ccl::packed_float3>() );
+		}
 	}
 
 	return cmesh;

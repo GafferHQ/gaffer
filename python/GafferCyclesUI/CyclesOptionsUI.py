@@ -97,6 +97,10 @@ def __sceneSummary( plug ) :
 		"scene:hair_subdivisions",
 		"scene:hair_shape",
 		"scene:texture_limit",
+		"scene:texture_resolution",
+		"scene:use_texture_cache",
+		"scene:auto_texture_cache",
+		"scene:texture_cache_path",
 	]
 
 	return ", ".join( __optionSummary( plug, options ) )
@@ -374,7 +378,7 @@ class ViewerDevicePlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 		if plug != self.getPlug() :
 			return
 
-		if plug.getValue() != "CPU" :
+		if plug.getValue() != "CPU" and "OPTIX" not in plug.getValue() :
 			# Switch to SVM shading to prevent CyclesRenderer falling back
 			# to CPU shading due to OSL not being available.
 			## \todo Change CyclesRenderer to fall back to SVM rather than

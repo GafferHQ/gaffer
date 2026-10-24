@@ -144,6 +144,8 @@ class Attributes : public IECoreScenePreview::Renderer::AttributesInterface
 		int getVolumePrecision() const;
 		float getVolumeClipping() const;
 
+		const IECoreScene::ShaderNetwork *lightAttribute() const;
+
 		bool isUSDMeshLight() const;
 
 	private :

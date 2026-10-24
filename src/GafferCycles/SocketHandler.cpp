@@ -205,6 +205,34 @@ boost::container::flat_set<NodeSocket> g_socketBlacklist = {
 	{ ccl::ustring( "image_texture" ), ccl::ustring( "tiles" ) }
 };
 
+const ccl::NodeType *getNodeTypeFromShaderName( const std::string &shaderName )
+{
+	if( shaderName == "distant_light" )
+	{
+		return ccl::NodeType::find( ccl::ustring( "sunlight" ) );
+	}
+	else if( shaderName == "disk_light" ||  shaderName == "quad_light" || shaderName == "portal" )
+	{
+		return ccl::NodeType::find( ccl::ustring( "arealight" ) );
+	}
+	else if( shaderName == "spot_light" )
+	{
+		return ccl::NodeType::find( ccl::ustring( "spotlight" ) );
+	}
+	else if( shaderName == "point_light" )
+	{
+		return ccl::NodeType::find( ccl::ustring( "pointlight" ) );
+	}
+	else if( shaderName == "background_light" )
+	{
+		return ccl::NodeType::find( ccl::ustring( "backgroundlight" ) );
+	}
+	else
+	{
+		return ccl::NodeType::find( ccl::ustring( shaderName ) );
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -528,7 +556,12 @@ void setupLightPlugs( const std::string &shaderName, Gaffer::GraphComponent *plu
 	// Make sure we have a plug to represent each socket, reusing plugs wherever possible.
 
 	std::set<const Plug *> validPlugs;
-	const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( "light" ) );
+	const ccl::NodeType *nodeType = getNodeTypeFromShaderName( shaderName );
+
+	if( !nodeType )
+	{
+		return;
+	}
 
 	if( shaderName != "portal" )
 	{
@@ -548,8 +581,8 @@ void setupLightPlugs( const std::string &shaderName, Gaffer::GraphComponent *plu
 	}
 	else if( shaderName == "spot_light" )
 	{
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
-		const ccl::SocketType *angleSocket = nodeType->find_input( ccl::ustring( "spot_angle" ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "radius" ) )), plugsParent, Gaffer::Plug::In ) );
+		const ccl::SocketType *angleSocket = nodeType->find_input( ccl::ustring( "angle" ) );
 		validPlugs.insert(
 			setupNumericPlug<FloatPlug>(
 				nodeType, *angleSocket, plugsParent, Gaffer::Plug::In,
@@ -558,12 +591,12 @@ void setupLightPlugs( const std::string &shaderName, Gaffer::GraphComponent *plu
 				IECore::radiansToDegrees( *static_cast<const float *>( angleSocket->default_value ) )
 			)
 		);
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_smooth" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "smooth" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "is_sphere" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "point_light" )
 	{
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "radius" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "is_sphere" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "disk_light" )
