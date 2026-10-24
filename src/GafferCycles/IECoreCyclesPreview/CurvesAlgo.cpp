@@ -81,24 +81,30 @@ ccl::Hair *convertPrimary( const IECoreScene::CurvesPrimitive *curve, ccl::Scene
 		numKeys += verticesPerCurve[i];
 	}
 
-	hair->reserve_curves( numCurves, numKeys );
+	hair->resize_curves( numCurves, numKeys );
+
+	int *curveFirstKey = hair->get_curve_first_key().data();
+	float *curveRadius = hair->get_radius_for_write();
 
 	const vector<Imath::V3f> &points = p->readable();
+	std::copy_n( reinterpret_cast<const ccl::packed_float3 *>( points.data() ), points.size(), hair->get_position_for_write() );
+
+	std::ranges::fill( hair->get_curve_shader(), 0 );
+
+	size_t firstKey = 0;
+	for( size_t i = 0; i < numCurves; ++i )
+	{
+		curveFirstKey[i] = firstKey;
+		firstKey += verticesPerCurve[i];
+	}
 
 	if( const FloatVectorData *w = curve->variableData<FloatVectorData>( "width", PrimitiveVariable::Vertex ) )
 	{
 		const vector<float> &width = w->readable();
 
-		size_t key = 0;
-		for( size_t i = 0; i < numCurves; ++i )
+		for( size_t i = 0; i < points.size(); ++i )
 		{
-			size_t firstKey = key;
-			for( int j = 0; j < verticesPerCurve[i]; ++j, ++key )
-			{
-				hair->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), width[key] / 2.0f );
-			}
-
-			hair->add_curve( firstKey, 0 );
+			curveRadius[i] = width[i] / 2.0f;
 		}
 	}
 	else
@@ -110,18 +116,16 @@ ccl::Hair *convertPrimary( const IECoreScene::CurvesPrimitive *curve, ccl::Scene
 			constantWidth = cw->readable();
 		}
 
-		size_t key = 0;
-		for( size_t i = 0; i < numCurves; ++i )
+		for( size_t i = 0; i < points.size(); ++i )
 		{
-			size_t firstKey = key;
-			for( int j = 0; j < verticesPerCurve[i]; ++j, ++key )
-			{
-				hair->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), constantWidth / 2.0f );
-			}
-
-			hair->add_curve( firstKey, 0 );
+			curveRadius[i] = constantWidth / 2.0f;
 		}
 	}
+
+	hair->tag_position_modified();
+	hair->tag_radius_modified();
+	hair->tag_curve_first_key_modified();
+	hair->tag_curve_shader_modified();
 
 	// Convert primitive variables.
 	PrimitiveVariableMap variablesToConvert = curve->variables;

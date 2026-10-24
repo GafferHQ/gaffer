@@ -87,7 +87,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 						"exposure" : 1.1,
 						"color" : imath.Color3f( 1, 2, 3 ),
 						"normalize" : True,
-						"size" : 1.0,
+						"radius" : 1.0,
 					} )
 				),
 
@@ -102,7 +102,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				IECoreScene.Shader(
 					"point_light", "light",
 					expectedLightParameters( {
-						"size" : 0.5,
+						"radius" : 0.5,
 					} )
 				),
 
@@ -122,7 +122,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				IECoreScene.Shader(
 					"point_light", "light",
 					expectedLightParameters( {
-						"size" : 0.0,
+						"radius" : 0.0,
 						"normalize" : True,
 					} )
 				),
@@ -144,9 +144,9 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				IECoreScene.Shader(
 					"spot_light", "light",
 					expectedLightParameters( {
-						"spot_angle" : 40.0,
-						"spot_smooth" : 0.5,
-						"size" : 0.5,
+						"angle" : 40.0,
+						"smooth" : 0.5,
+						"radius" : 0.5,
 					} )
 				),
 
@@ -167,8 +167,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				IECoreScene.Shader(
 					"spot_light", "light",
 					expectedLightParameters( {
-						"spot_angle" : 40.0,
-						"size" : 0.5,
+						"angle" : 40.0,
+						"radius" : 0.5,
 					} )
 				),
 
@@ -416,7 +416,7 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 		output = network.outputShader()
 		self.assertEqual( output.name, "point_light" )
-		self.assertEqual( output.parameters["size"].value, 1.0 )
+		self.assertEqual( output.parameters["radius"].value, 1.0 )
 
 	def testConvertUSDPreviewSurfaceEmission( self ) :
 

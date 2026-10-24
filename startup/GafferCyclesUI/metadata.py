@@ -1065,10 +1065,9 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.normalize",
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.size", "layout:index", 7 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.map_resolution", "layout:index", 7 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_angle", "layout:index", 8 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.angle", "layout:index", 8 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.width", "layout:index", 8 )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_smooth", "layout:index", 9 )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.smooth", "layout:index", 9 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.height", "layout:index", 9 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spread", "layout:index", 10 )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.max_bounces", "layout:index", 11 )
@@ -1080,20 +1079,20 @@ Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.is_sphere",
 
 ### universal sections ###
 
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_angle", "layout:section", "Beam Shape" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_smooth", "layout:section", "Beam Shape" )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.angle", "layout:section", "Beam Shape" )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.smooth", "layout:section", "Beam Shape" )
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spread", "layout:section", "Beam Shape" )
 
 ### universal labels ###
 
 Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.use_mis", "label", "Multiple Importance" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_angle", "label", "Spot Size" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.spot_smooth", "label", "Blend" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.size", "label", "Radius" )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.angle", "label", "Spot Size" )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.smooth", "label", "Blend" )
+Gaffer.Metadata.registerValue( GafferCycles.CyclesLight, "parameters.radius", "label", "Radius" )
 
 ### defaults ###
 
-Gaffer.Metadata.registerValue( "cycles:light:spot_light:spot_smooth", "userDefault", 0.15 )
+Gaffer.Metadata.registerValue( "cycles:light:spot_light:smooth", "userDefault", 0.15 )
 Gaffer.Metadata.registerValue( "cycles:light:disk_light:width", "userDefault", 1 )
 Gaffer.Metadata.registerValue( "cycles:light:quad_light:width", "userDefault", 1 )
 Gaffer.Metadata.registerValue( "cycles:light:quad_light:height", "userDefault", 1 )
