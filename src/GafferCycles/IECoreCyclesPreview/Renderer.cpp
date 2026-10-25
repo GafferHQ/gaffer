@@ -1260,10 +1260,17 @@ const boost::container::flat_map<std::string, ccl::PathRayFlag> g_rayTypes = {
 	{ "scatter", ccl::PATH_RAY_VOLUME_SCATTER }
 };
 
-const boost::container::flat_map<int, ccl::LogLevel> g_logLevels = {
-	{ 0, ccl::LOG_LEVEL_ERROR },
-	{ 1, ccl::LOG_LEVEL_WARNING },
-	{ 2, ccl::LOG_LEVEL_INFO }
+// To keep compatibility these number mappings correspond to the Gaffer UI
+// and not the numbers in Cycles itself which have changed across versions.
+// For Gaffer 1.8 and up this will change to strings directly without the
+// index number mapping.
+const boost::container::flat_map<int, std::string> g_logLevels = {
+	{ 0, "ERROR" },
+	{ 1, "WARNING" },
+	{ 2, "INFO" },
+	{ 3, "FATAL" },
+	{ 4, "DEBUG" },
+	{ 5, "TRACE" }
 };
 
 // Dicing camera
