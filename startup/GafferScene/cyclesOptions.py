@@ -296,7 +296,7 @@ Gaffer.Metadata.registerValues( {
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 		"presetNames" : IECore.StringVectorData( [ "No Limit", "128", "256", "512", "1024", "2048", "4096", "8192" ] ),
-		"presetValues" : IECore.IntVectorData( [ 0, 1, 2, 3, 4, 5, 6, 7 ] ),
+		"presetValues" : IECore.IntVectorData( [ 0, 128, 256, 512, 1024, 2048, 4096, 8192 ] ),
 
 	},
 
