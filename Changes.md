@@ -16,7 +16,9 @@ Fixes
 - AttributeEditor :
   - The section chooser is no longer hidden when only a single section is available.
   - Fixed bug preventing the `All` section from showing columns from all sections after a column had been registered to `section = "All"`.
-- Cycles : Ensure the correct mapping of log levels and added more that have appeared in recent Cycles versions.
+- Cycles :
+  - Ensure the correct mapping of log levels and added more that have appeared in recent Cycles versions.
+  - Fixed Viewer reverting to SVM shading for all non-CPU devices. OSL shading is now available for OptiX devices.
 
 API
 ---
