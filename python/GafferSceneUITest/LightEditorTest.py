@@ -650,8 +650,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			editor = GafferSceneUI.LightEditor( script )
 			editor.settings()["editScope"].setInput( script["editScope"]["out"] )
 
-			editor._LightEditor__updateColumns()
-			GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+			editor._LightEditor__updateColumnsAndSections()
+			GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 			editor.setNodeSet( Gaffer.StandardSet( [ script["editScope"] ] ) )
 			GafferSceneUI.LightEditor._LightEditor__lazyUpdateFromContext.flush( editor )
@@ -704,8 +704,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( attr["gl:visualiser:scale"].value, 5.0 )
 
 		editor = GafferSceneUI.LightEditor( script )
-		editor._LightEditor__updateColumns()
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 		widget = editor._LightEditor__pathListing
 		editor.setNodeSet( Gaffer.StandardSet( [ script["custAttr"] ] ) )
@@ -750,8 +750,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		editor = GafferSceneUI.LightEditor( script )
 		editor.settings()["editScope"].setInput( script["editScope"]["out"] )
 
-		editor._LightEditor__updateColumns()
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 		editor.setNodeSet( Gaffer.StandardSet( [ script["editScope"] ] ) )
 
@@ -807,7 +807,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		editor = GafferSceneUI.LightEditor( script )
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 		widget = editor._LightEditor__pathListing
 		path = widget.getPath()
@@ -821,8 +821,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.LightEditor.deregisterColumn( "light", "P" )
 
-		editor._LightEditor__updateColumns()
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
@@ -833,8 +833,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.LightEditor.deregisterColumn( "light", "P.X" )
 
-		editor._LightEditor__updateColumns()
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
@@ -845,8 +845,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.LightEditor.deregisterColumn( "light", "A" )
 
-		editor._LightEditor__updateColumns()
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
@@ -857,8 +857,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.LightEditor.deregisterColumn( "light", "P.Y" )
 
-		editor._LightEditor__updateColumns()
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
@@ -869,8 +869,8 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.LightEditor.deregisterColumn( "light", "Z" )
 
-		editor._LightEditor__updateColumns()
-		GafferSceneUI.LightEditor._LightEditor__updateColumns.flush( editor )
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
 
 		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
 		self.assertNotIn( "P", columnNames )
@@ -878,3 +878,108 @@ class LightEditorTest( GafferUITest.TestCase ) :
 		self.assertNotIn( "A", columnNames )
 		self.assertNotIn( "Y", columnNames )
 		self.assertNotIn( "Z", columnNames )
+
+	def testColumnRegistrationToDefaultSection( self ) :
+
+		GafferSceneUI.LightEditor.registerParameter( "light", "A" )
+		GafferSceneUI.LightEditor.registerParameter( "light", "B", section = "" )
+		GafferSceneUI.LightEditor.registerAttribute( "light", "C", section = "Main" )
+		for columnName in [ "A", "B", "C" ] :
+			self.addCleanup( GafferSceneUI.LightEditor.deregisterColumn, "light", columnName )
+
+		script = Gaffer.ScriptNode()
+
+		editor = GafferSceneUI.LightEditor( script )
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
+
+		widget = editor._LightEditor__pathListing
+		path = widget.getPath()
+
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
+		self.assertIn( "A", columnNames )
+		self.assertIn( "B", columnNames )
+		self.assertIn( "C", columnNames )
+
+		GafferSceneUI.LightEditor.deregisterColumn( "light", "A", section = "Main" )
+
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
+
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
+		self.assertNotIn( "A", columnNames )
+		self.assertIn( "B", columnNames )
+		self.assertIn( "C", columnNames )
+
+		GafferSceneUI.LightEditor.deregisterColumn( "light", "B", section = "Main" )
+
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
+
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
+		self.assertNotIn( "A", columnNames )
+		self.assertNotIn( "B", columnNames )
+		self.assertIn( "C", columnNames )
+
+		GafferSceneUI.LightEditor.deregisterColumn( "light", "C" )
+
+		editor._LightEditor__updateColumnsAndSections()
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
+
+		columnNames = [ c.headerData( path ).value for c in widget.getColumns() ]
+		self.assertNotIn( "A", columnNames )
+		self.assertNotIn( "B", columnNames )
+		self.assertNotIn( "C", columnNames )
+
+	def testColumnFilter( self ) :
+
+		for columnName, section, parameter in [ ( "A", None, True ), ( "B", "Main", False ), ( "C", "Other", True ), ( "D", "Other", False ) ] :
+			if parameter :
+				GafferSceneUI.LightEditor.registerParameter( "ColumnFilterTest", columnName, section )
+			else :
+				GafferSceneUI.LightEditor.registerAttribute( "ColumnFilterTest", columnName, section )
+			self.addCleanup( GafferSceneUI.LightEditor.deregisterColumn, "ColumnFilterTest", columnName, section )
+
+		script = Gaffer.ScriptNode()
+
+		editor = GafferSceneUI.LightEditor( script )
+		editor.settings()["attribute"].setValue( "ColumnFilterTest" )
+
+		pathListing = editor.sceneListing()
+		path = pathListing.getPath()
+
+		def assertColumns( sections, currentSection, columns ) :
+
+			GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
+
+			self.assertEqual(
+				Gaffer.Metadata.value( editor.settings()["section"], "sectionPlugValueWidget:sections" ),
+				IECore.StringVectorData( sections )
+			)
+			self.assertEqual( editor.settings()["section"].getValue(), currentSection )
+			self.assertEqual(
+				[
+					c.headerData( path ).value for c in pathListing.getColumns()
+					if isinstance( c, GafferSceneUI.Private.InspectorColumn ) and not isinstance( c, ( GafferSceneUI.Private.VisibilityColumn, _GafferSceneUI._LightEditorMuteColumn, _GafferSceneUI._LightEditorSetMembershipColumn ) )
+				],
+				columns
+			)
+
+		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A", "B" ] )
+
+		editor.settings()["columnFilter"].setValue( "A" )
+		assertColumns( [ "Main" ], "Main", [ "A" ] )
+
+		editor.settings()["columnFilter"].setValue( "A C" )
+		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A" ] )
+
+		editor.settings()["columnFilter"].setValue( "C" )
+		assertColumns( [ "Other" ], "Other", [ "C" ] )
+
+		editor.settings()["columnFilter"].setValue( "C D" )
+		assertColumns( [ "Other" ], "Other", [ "C", "D" ] )
+
+		editor.settings()["columnFilter"].setValue( "NOMATCH" )
+		assertColumns( [], "Other", [] )
+
+		editor.settings()["columnFilter"].setValue( "" )
+		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A", "B" ] )
