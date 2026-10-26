@@ -1466,14 +1466,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["planeFilter"] = GafferScene.PathFilter()
 		s["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
 
-		planeShaderAssignment = GafferScene.ShaderAssignment()
-		planeShaderAssignment["in"].setInput( s["groupShaderAssignment"]["out"] )
-		planeShaderAssignment["shader"].setInput( s["planeShader"]["out"] )
-		planeShaderAssignment["filter"].setInput( s["planeFilter"]["out"] )
+		s["planeShaderAssignment"] = GafferScene.ShaderAssignment()
+		s["planeShaderAssignment"]["in"].setInput( s["groupShaderAssignment"]["out"] )
+		s["planeShaderAssignment"]["shader"].setInput( s["planeShader"]["out"] )
+		s["planeShaderAssignment"]["filter"].setInput( s["planeFilter"]["out"] )
 
 		for inherit in [ True, False ] :
 			with self.subTest( inherit = inherit ) :
-				inspection = self.__inspect( planeShaderAssignment["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=inherit )
+				inspection = self.__inspect( s["planeShaderAssignment"]["out"], "/group/plane", "c", None, attribute="test:surface", inheritAttributes=inherit )
 				self.assertEqual( inspection.value().value, imath.Color3f( 4, 5, 6 ) )
 				self.__assertExpectedResult(
 					inspection,

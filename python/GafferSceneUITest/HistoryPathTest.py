@@ -40,6 +40,7 @@ import threading
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneUI
 import GafferSceneTest
@@ -64,6 +65,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		# to be testing on the main thread.
 		self.ignoreMessage( IECore.Msg.Level.Warning, "HistoryPath", "Path evaluated on unexpected thread" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def test( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -178,6 +180,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( c[2].isValid() )
 		self.assertEqual( c[2].property( "name" ), str( c[2][-1] ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testPropertyNames( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -218,6 +221,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testProperties( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -278,6 +282,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[2].property( "history:source" ), edit )
 		self.assertEqual( c[2].property( "history:editWarning" ), "" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testCopy( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -301,6 +306,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( leafCopy.property( "history:node" ), s["testLight"] )
 		self.assertEqual( leafCopy.property( "history:value" ), 3.0 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testInvalidPath( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -317,6 +323,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		historyPath.setFromString( "/missingNode" )
 		self.assertFalse( historyPath.isValid() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testLoop( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -355,6 +362,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( historyPath.children()[i*2].property( "history:node" ), s["tweaks"] )
 			self.assertEqual( historyPath.children()[i*2].property( "history:value" ), i )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testTwoTweaksWithIdenticalSource( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -395,6 +403,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			[ script["light"], script["tweaks1"], script["tweaks2"] ]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testEmptyHistory( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -411,6 +420,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( len( historyPath.children() ), 0 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testAttributeFallbackValues( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -504,6 +514,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c[2].property( "history:source" ), s["openGLAttributes"]["attributes"]["gl:visualiser:maxTextureResolution"] )
 		self.assertEqual( c[2].property( "history:editWarning" ), "Edits to \"gl:visualiser:maxTextureResolution\" may affect other locations in the scene." )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testIsLeafAndIsValid( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -531,6 +542,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( historyPathEdited.isValid() )
 		self.assertFalse( historyPathEdited.isLeaf() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNoPropertiesOnNonLeafPaths( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -554,6 +566,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		historyPathEdited[0] += "foo"
 		self.assertIsNone( historyPathEdited.property( "history:node" ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testInspectionIsDeferred( self ) :
 
 		monitor = Gaffer.PerformanceMonitor()
@@ -574,6 +587,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertGreaterEqual( len( monitor.allStatistics() ), 1 )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testCancellation( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -599,6 +613,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaises( IECore.Cancelled ) :
 			historyPath.property( "history:source", canceller )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testCancellationForEdit( self ) :
 
 		# Make light with expression which loops infinitely unless cancelled.
@@ -648,6 +663,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		backgroundTask.wait()
 		self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testSceneReader( self ) :
 
 		reader = GafferScene.SceneReader()
@@ -663,6 +679,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 			[ reader ]
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testContextVariables( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -700,6 +717,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( children[1].contextProperty( "history:context" ), Gaffer.Context )
 		self.assertEqual( children[1].contextProperty( "history:context" )["scene:path"], IECore.InternedStringVectorData( [ "group", "light" ] ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testHistoryConsolidatesNonViewableInternals( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -795,6 +813,7 @@ class HistoryPathTest( GafferSceneTest.SceneTestCase ) :
 						self.assertEqual( c[1].property( "history:source" ), exposureTweak2 )
 						self.assertEqual( c[1].property( "history:editWarning" ), "" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
 	def testNonViewableInternalsWithVaryingContextVariables( self ) :
 
 		s = Gaffer.ScriptNode()
