@@ -241,6 +241,31 @@ class RandomPrimitiveVariableTest( GafferSceneTest.SceneTestCase ) :
 				interpretation
 			)
 
+	def testBooleanSelection( self ) :
+
+		plane = GafferScene.Plane()
+		plane["divisions"].setValue( imath.V2i( 1000 ) )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		random = GafferScene.RandomPrimitiveVariable()
+		random["in"].setInput( plane["out"] )
+		random["filter"].setInput( planeFilter["out"] )
+		random["distribution"].setValue( random.Distribution.BooleanSelection )
+
+		values = random["out"].object( "/plane" )["random"].data
+		self.assertIsInstance( values, IECore.BoolVectorData )
+		self.assertEqualWithAbsError( sum( values ) / len( values ), 0.5, 0.001 )
+
+		random["selectionProbability"].setValue( 0.0 )
+		values = random["out"].object( "/plane" )["random"].data
+		self.assertFalse( any( values ) )
+
+		random["selectionProbability"].setValue( 1.0 )
+		values = random["out"].object( "/plane" )["random"].data
+		self.assertTrue( all( values ) )
+
 	def testSeed( self ) :
 
 		plane = GafferScene.Plane()
