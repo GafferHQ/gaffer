@@ -77,6 +77,7 @@ Breaking Changes
   - Removed legacy compatibility code for PySide2 and PyQt.
   - Removed `_Variant` class.
 - MeshSegments : Changed behaviour when setting `connectivity` to "". Previously, this used vertex topology, now it passes through the input unchanged. This aligns better with other geometry processing nodes.
+- EditScopeAlgo : Removed `acquireSetEdits()` function.
 
 Build
 -----
