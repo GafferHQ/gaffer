@@ -83,8 +83,11 @@ IECORECYCLES_API bool hasOSL( const ccl::Shader *cshader );
 // combining them in to the single `strength` parameter in Cycles. Where these parameters have input connections,
 // we instead combine them into a Cycles shader suitable for providing emission to the `shader` socket.
 
+// Checks if the light name is compatible with the Cycles light type.
+IECORECYCLES_API bool compatibleLightType( const IECoreScene::ShaderNetwork *light, const ccl::Light *cyclesLight );
+
 // Converts all non-connected light parameters on to the provided `cyclesLight` node.
-IECORECYCLES_API void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLight );
+IECORECYCLES_API ccl::Light *convertLight( const IECoreScene::ShaderNetwork *light, ccl::Scene *scene, ccl::Light *cyclesLight = nullptr );
 // Builds a ShaderNetwork suitable for connection to the `shader` socket on a `ccl::Light`.
 /// \todo It's not 100% clear why we need this separate method rather than having `convertLight()` just
 /// create and assign the shader itself. It _does_ allow CyclesRenderer to reuse shaders between lights via

@@ -559,12 +559,12 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *s
 	IECore::ConstCompoundObjectPtr modifiedAttributes = ShaderNetworkAlgo::convertUSDMeshLightAttributes( attributes );
 	attributes = modifiedAttributes.get();
 
-	updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
-	updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_DIFFUSE,        attributes );
-	updateVisibility( g_glossyVisibilityAttributeName,       (int)ccl::PATH_RAY_GLOSSY,         attributes );
-	updateVisibility( g_transmissionVisibilityAttributeName, (int)ccl::PATH_RAY_TRANSMIT,       attributes );
-	updateVisibility( g_shadowVisibilityAttributeName,       (int)ccl::PATH_RAY_SHADOW,         attributes );
-	updateVisibility( g_scatterVisibilityAttributeName,      (int)ccl::PATH_RAY_VOLUME_SCATTER, attributes );
+	updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_VISIBILITY_CAMERA,         attributes );
+	updateVisibility( g_diffuseVisibilityAttributeName,      (int)ccl::PATH_RAY_VISIBILITY_DIFFUSE,        attributes );
+	updateVisibility( g_glossyVisibilityAttributeName,       (int)ccl::PATH_RAY_VISIBILITY_GLOSSY,         attributes );
+	updateVisibility( g_transmissionVisibilityAttributeName, (int)ccl::PATH_RAY_VISIBILITY_TRANSMIT,       attributes );
+	updateVisibility( g_shadowVisibilityAttributeName,       (int)ccl::PATH_RAY_VISIBILITY_SHADOW,         attributes );
+	updateVisibility( g_scatterVisibilityAttributeName,      (int)ccl::PATH_RAY_VISIBILITY_VOLUME_SCATTER, attributes );
 
 	m_useHoldout = attributeValue<bool>( g_useHoldoutAttributeName, attributes, m_useHoldout );
 	m_isShadowCatcher = attributeValue<bool>( g_isShadowCatcherAttributeName, attributes, m_isShadowCatcher );
@@ -616,7 +616,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *s
 		{
 			// If the light has been converted from a USD light, we override diffuse and glossy visibility
 			// based on the USD light's diffuse and specular parameters. See ShaderNetworkAlgo::transferUSDLightParameters()
-			constexpr int rayMask = (int)( ccl::PATH_RAY_DIFFUSE | ccl::PATH_RAY_GLOSSY );
+			constexpr int rayMask = (int)( ccl::PATH_RAY_VISIBILITY_DIFFUSE | ccl::PATH_RAY_VISIBILITY_GLOSSY );
 			m_visibility = ( m_visibility & ~rayMask ) | ( rayVisibility->readable() & rayMask );
 		}
 	}
@@ -813,7 +813,7 @@ void Attributes::applyLight( ccl::Light *light, ccl::Scene *scene ) const
 {
 	if( m_lightAttribute )
 	{
-		ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
+		ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), scene, light );
 		ccl::array<ccl::Node *> shaders;
 		shaders.push_back_slow( m_lightShader->shader() );
 		{
@@ -853,6 +853,11 @@ int Attributes::getVolumePrecision() const
 float Attributes::getVolumeClipping() const
 {
 	return m_volume.clipping ? m_volume.clipping.value() : 0.001f;
+}
+
+const IECoreScene::ShaderNetwork *Attributes::lightAttribute() const
+{
+	return m_lightAttribute.get();
 }
 
 bool Attributes::isUSDMeshLight() const

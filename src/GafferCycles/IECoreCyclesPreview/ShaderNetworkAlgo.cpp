@@ -39,6 +39,8 @@
 
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+#include "SceneAlgo.h"
+
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
@@ -128,6 +130,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		if( scene->shader_manager->use_osl() )
 		{
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
+			std::scoped_lock lock( scene->mutex );
 			node = ccl::OSLShaderManager::osl_node( shaderGraph, scene, shaderFileName.c_str() );
 		}
 		else
@@ -512,101 +515,261 @@ bool hasOSL( const ccl::Shader *cshader )
 	return false;
 }
 
-void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLight )
+bool compatibleLightType( const IECoreScene::ShaderNetwork *light, const ccl::Light *cyclesLight )
 {
+	if( !light || !cyclesLight )
+	{
+		return false;
+	}
+
+	assert( light->typeId() == IECoreScene::ShaderNetwork::staticTypeId() );
+
+	const IECoreScene::Shader *lightShader = light->outputShader();
+
+	if( !lightShader )
+	{
+		return false;
+	}
+
+	if( lightShader->getName() == "spot_light" )
+	{
+		return ( cyclesLight && cyclesLight->is_spot_light() );
+	}
+	else if( lightShader->getName() == "distant_light" )
+	{
+		return ( cyclesLight && ( cyclesLight->is_sun_light() || cyclesLight->is_distant_light() ) );
+	}
+	else if( lightShader->getName() == "background_light" )
+	{
+		return ( cyclesLight && cyclesLight->is_background_light() );
+	}
+	else if(
+		lightShader->getName() == "quad_light" ||
+		lightShader->getName() == "portal" ||
+		lightShader->getName() == "disk_light"
+	)
+	{
+		return ( cyclesLight && cyclesLight->is_area_light() );
+	}
+	else
+	{
+		return ( cyclesLight && cyclesLight->is_point_light() );
+	}
+
+	return false;
+}
+
+ccl::Light *convertLight( const IECoreScene::ShaderNetwork *light, ccl::Scene *scene, ccl::Light *prevCyclesLight )
+{
+	ccl::Light *cyclesLight = nullptr;
+	if( !light )
+	{
+		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo::convertLight", "No ShaderNetwork" );
+		if( !prevCyclesLight )
+		{
+			// If no previous cycles light was passed, create a dummy disabled one.
+			cyclesLight = static_cast<ccl::Light*>( SceneAlgo::createNodeWithLock<ccl::PointLight>( scene ) );
+			cyclesLight->set_is_enabled( false );
+			return cyclesLight;
+		}
+
+		prevCyclesLight->set_is_enabled( false );
+		return prevCyclesLight;
+	}
+
+	assert( light->typeId() == IECoreScene::ShaderNetwork::staticTypeId() );
+
 	const IECoreScene::Shader *lightShader = light->outputShader();
 	if( !lightShader )
 	{
 		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo::convertLight", "ShaderNetwork has no output shader" );
-		return;
-	}
+		if( !prevCyclesLight )
+		{
+			// If no previous cycles light was passed, create a dummy disabled one.
+			cyclesLight = static_cast<ccl::Light*>( SceneAlgo::createNodeWithLock<ccl::PointLight>( scene ) );
+			cyclesLight->set_is_enabled( false );
+			return cyclesLight;
+		}
 
-	// Convert type
+		prevCyclesLight->set_is_enabled( false );
+		return prevCyclesLight;
+	}
 
 	if( lightShader->getName() == "spot_light" )
 	{
-		cyclesLight->set_light_type( ccl::LIGHT_SPOT );
+		if( prevCyclesLight && !prevCyclesLight->is_spot_light() )
+		{
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo::convertLight", "ShaderNetwork type does not match Cycles light type" );
+			prevCyclesLight->set_is_enabled( false );
+			return prevCyclesLight;
+		}
+
+		ccl::SpotLight *spotLight = prevCyclesLight ? static_cast<ccl::SpotLight*>( prevCyclesLight ) : SceneAlgo::createNodeWithLock<ccl::SpotLight>( scene );
+
+		for( const auto &[name, value] : lightShader->parameters() )
+		{
+			if( contributesToLightStrength( name ) )
+			{
+				continue;
+			}
+
+			// Convert angle-based parameters, where we use degrees and Cycles uses radians.
+			if( name == "angle" )
+			{
+				spotLight->set_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 45.0f ) ) );
+			}
+			// Convert generic parameters.
+			else
+			{
+				SocketAlgo::setSocket( spotLight, name, value.get() );
+			}
+		}
+
+		cyclesLight = spotLight;
 	}
 	else if( lightShader->getName() == "distant_light" )
 	{
-		cyclesLight->set_light_type( ccl::LIGHT_DISTANT );
+		if( prevCyclesLight && ( !prevCyclesLight->is_sun_light() && !prevCyclesLight->is_distant_light() ) )
+		{
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo::convertLight", "ShaderNetwork type does not match Cycles light type" );
+			prevCyclesLight->set_is_enabled( false );
+			return prevCyclesLight;
+		}
+
+		ccl::SunLight *sunLight = prevCyclesLight ? static_cast<ccl::SunLight*>( prevCyclesLight ) : SceneAlgo::createNodeWithLock<ccl::SunLight>( scene );
+
+		for( const auto &[name, value] : lightShader->parameters() )
+		{
+			if( contributesToLightStrength( name ) )
+			{
+				continue;
+			}
+
+			// Convert angle-based parameters, where we use degrees and Cycles uses radians.
+			if( name == "angle" )
+			{
+				sunLight->set_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 45.0f ) ) );
+			}
+			// Convert generic parameters.
+			else
+			{
+				SocketAlgo::setSocket( sunLight, name, value.get() );
+			}
+		}
+
+		cyclesLight = sunLight;
 	}
 	else if( lightShader->getName() == "background_light" )
 	{
-		cyclesLight->set_light_type( ccl::LIGHT_BACKGROUND );
+		if( prevCyclesLight && !prevCyclesLight->is_background_light() )
+		{
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo::convertLight", "ShaderNetwork type does not match Cycles light type" );
+			prevCyclesLight->set_is_enabled( false );
+			return prevCyclesLight;
+		}
+
+		ccl::BackgroundLight *backgroundLight = prevCyclesLight ? static_cast<ccl::BackgroundLight*>( prevCyclesLight ) : SceneAlgo::createNodeWithLock<ccl::BackgroundLight>( scene );
+
+		for( const auto &[name, value] : lightShader->parameters() )
+		{
+			if( contributesToLightStrength( name ) )
+			{
+				continue;
+			}
+
+			// Convert generic parameters.
+			else
+			{
+				SocketAlgo::setSocket( backgroundLight, name, value.get() );
+			}
+		}
+
+		cyclesLight = backgroundLight;
 	}
 	else if(
 		lightShader->getName() == "quad_light" ||
-		lightShader->getName() == "portal"
+		lightShader->getName() == "portal" ||
+		lightShader->getName() == "disk_light"
 	)
 	{
-		cyclesLight->set_light_type( ccl::LIGHT_AREA );
-		cyclesLight->set_size( 1.0f );
-		cyclesLight->set_sizeu( 2.0f );
-		cyclesLight->set_sizev( 2.0f );
+		if( prevCyclesLight && !prevCyclesLight->is_area_light() )
+		{
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo::convertLight", "ShaderNetwork type does not match Cycles light type" );
+			prevCyclesLight->set_is_enabled( false );
+			return prevCyclesLight;
+		}
 
-		cyclesLight->set_ellipse( false );
-	}
-	else if( lightShader->getName() == "disk_light" )
-	{
-		cyclesLight->set_light_type( ccl::LIGHT_AREA );
-		cyclesLight->set_size( 1.0f );
-		cyclesLight->set_sizeu( 2.0f );
-		cyclesLight->set_sizev( 2.0f );
+		ccl::AreaLight *areaLight = prevCyclesLight ? static_cast<ccl::AreaLight*>( prevCyclesLight ) : SceneAlgo::createNodeWithLock<ccl::AreaLight>( scene );
+		areaLight->set_sizeu( 2.0f );
+		areaLight->set_sizev( 2.0f );
 
-		cyclesLight->set_ellipse( true );
+		areaLight->set_is_portal( lightShader->getName() == "portal" ? true : false );
+		areaLight->set_ellipse( lightShader->getName() == "disk_light" ? true : false );
+
+		for( const auto &[name, value] : lightShader->parameters() )
+		{
+			if( contributesToLightStrength( name ) )
+			{
+				continue;
+			}
+
+			if( name == "spread" )
+			{
+				areaLight->set_spread( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 180.0f ) ) );
+			}
+			else if( name == "width" )
+			{
+				areaLight->set_sizeu( parameterValue<float>( value.get(), name, 2.0f ) );
+				// No oval support yet, just apply width to height.
+				if( lightShader->getName() == "disk_light" )
+				{
+					areaLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
+				}
+			}
+			else if( name == "height" )
+			{
+				areaLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
+			}
+			// Convert generic parameters.
+			else
+			{
+				SocketAlgo::setSocket( areaLight, name, value.get() );
+			}
+		}
+
+		cyclesLight = areaLight;
 	}
 	else
 	{
-		cyclesLight->set_light_type( ccl::LIGHT_POINT );
-	}
-
-	// Convert parameters
-
-	for( const auto &[name, value] : lightShader->parameters() )
-	{
-		if( contributesToLightStrength( name ) )
+		if( prevCyclesLight && !prevCyclesLight->is_point_light() )
 		{
-			continue;
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo::convertLight", "ShaderNetwork type does not match Cycles light type" );
+			prevCyclesLight->set_is_enabled( false );
+			return prevCyclesLight;
 		}
 
-		// Convert angle-based parameters, where we use degrees and Cycles uses radians.
-		else if( name == "angle" )
+		ccl::PointLight *pointLight = prevCyclesLight ? static_cast<ccl::PointLight*>( prevCyclesLight ) : SceneAlgo::createNodeWithLock<ccl::PointLight>( scene );
+
+		for( const auto &[name, value] : lightShader->parameters() )
 		{
-			cyclesLight->set_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 0.0f ) ) );
-		}
-		else if( name == "spot_angle" )
-		{
-			cyclesLight->set_spot_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 45.0f ) ) );
-		}
-		else if( name == "spread" )
-		{
-			cyclesLight->set_spread( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 180.0f ) ) );
-		}
-		else if( name == "width" )
-		{
-			cyclesLight->set_sizeu( parameterValue<float>( value.get(), name, 2.0f ) );
-			// No oval support yet, just apply width to height.
-			if( lightShader->getName() == "disk_light" )
+			if( contributesToLightStrength( name ) )
 			{
-				cyclesLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
+				continue;
+			}
+			// Convert generic parameters.
+			else
+			{
+				SocketAlgo::setSocket( pointLight, name, value.get() );
 			}
 		}
-		else if( name == "height" )
-		{
-			cyclesLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
-		}
-		// Convert generic parameters.
-		else
-		{
-			SocketAlgo::setSocket( cyclesLight, name, value.get() );
-		}
+
+		cyclesLight = pointLight;
 	}
 
 	// Convert "virtual" parameters to strength. We can't do this for background
 	// lights because Cycles will ignore it - we deal with that in
 	// `convertLightShader()` instead.
-	if( cyclesLight->get_light_type() != ccl::LIGHT_BACKGROUND )
+	if( !cyclesLight->is_background_light() )
 	{
 		const Imath::Color3f strength = constantLightStrength( light );
 		cyclesLight->set_strength( ccl::make_float3( strength[0], strength[1], strength[2] ) );
@@ -615,6 +778,8 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 	{
 		cyclesLight->set_strength( ccl::one_float3() );
 	}
+
+	return cyclesLight;
 }
 
 IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreScene::ShaderNetwork *light )
@@ -839,6 +1004,7 @@ const InternedString g_heightParameter( "height" );
 const InternedString g_inParameter( "in" );
 const InternedString g_intensityParameter( "intensity" );
 const InternedString g_iorParameter( "ior" );
+const InternedString g_isSphereParameter( "is_sphere" );
 const InternedString g_lengthParameter( "length" );
 const InternedString g_locationParameter( "location" );
 const InternedString g_mappingTypeParameter( "mapping_type" );
@@ -863,14 +1029,13 @@ const InternedString g_roughnessParameter( "roughness" );
 const InternedString g_shadowEnableParameter( "shadow:enable" );
 const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
 const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
-const InternedString g_sizeParameter( "size" );
 const InternedString g_sourceColorSpaceParameter( "sourceColorSpace" );
 const InternedString g_specularParameter( "specular" );
 const InternedString g_specularColorParameter( "specularColor" );
 const InternedString g_specularTintParameter( "specular_tint" );
 const InternedString g_specularIORLevelParameter( "specular_ior_level" );
-const InternedString g_spotAngleParameter( "spot_angle" );
-const InternedString g_spotSmoothParameter( "spot_smooth" );
+const InternedString g_spotAngleParameter( "angle" );
+const InternedString g_spotSmoothParameter( "smooth" );
 const InternedString g_stParameter( "st" );
 const InternedString g_surfaceParameter( "surface" );
 const InternedString g_textureFileParameter( "texture:file" );
@@ -954,14 +1119,14 @@ void transferCommonUSDLightParameters( const Shader *usdShader, Shader *shader )
 	}
 	shader->parameters()[g_colorParameter] = new Color3fData( color );
 
-	int visibility = (int)ccl::PATH_RAY_ALL_VISIBILITY;
+	int visibility = (int)ccl::PATH_RAY_VISIBILITY_ALL;
 	if( parameterValue( usdShader, g_diffuseParameter, 1.0f ) == 0.0f )
 	{
-		visibility &= ~(int)ccl::PATH_RAY_DIFFUSE;
+		visibility &= ~(int)ccl::PATH_RAY_VISIBILITY_DIFFUSE;
 	}
 	if( parameterValue( usdShader, g_specularParameter, 1.0f ) == 0.0f )
 	{
-		visibility &= ~(int)ccl::PATH_RAY_GLOSSY;
+		visibility &= ~(int)ccl::PATH_RAY_VISIBILITY_GLOSSY;
 	}
 	shader->blindData()->writable()[g_USDRayVisibilityBlindDataKey] = new IntData( visibility );
 
@@ -1423,9 +1588,27 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			newShader->parameters()[g_alphaParameter] = new FloatData( opacity );
 
 			// Normal.
-			/// \todo Convert normal parameters once we have a solution for Cycles'
-			/// need for tangents to be provided for the correct use of normal maps.
-			removeInput( shaderNetwork, { handle, g_normalParameter } );
+			if( const ShaderNetwork::Parameter normalInput = shaderNetwork->input( { handle, g_normalParameter } ) )
+			{
+				// Cycles normal_map expects normals to be in 0.0 to 1.0 space and not -1.0 to 1.0, so we transform
+				// the incoming normal back into this form.
+				ShaderPtr addShader = new Shader( "vector_math", "cycles:shader" );
+				addShader->parameters()[g_mathTypeParameter] = new StringData( "add" );
+				addShader->parameters()[g_vector2Parameter] = new Color3fData( Color3f( 1.0f ) );
+				const InternedString addHandle = shaderNetwork->addShader( handle.string() + "Add", std::move( addShader ) );
+				ShaderPtr multiplyShader = new Shader( "vector_math", "cycles:shader" );
+				multiplyShader->parameters()[g_mathTypeParameter] = new StringData( "multiply" );
+				multiplyShader->parameters()[g_vector2Parameter] = new Color3fData( Color3f( 0.5f ) );
+				const InternedString multiplyHandle = shaderNetwork->addShader( handle.string() + "Multiply", std::move( multiplyShader ) );
+
+				ShaderPtr normalmapShader = new Shader( "normal_map", "cycles:shader" );
+				const InternedString normalmapHandle = shaderNetwork->addShader( handle.string() + "NormalMap", std::move( normalmapShader ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( normalInput, { addHandle, g_vector1Parameter } ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( { addHandle, g_vectorParameter }, { multiplyHandle, g_vector1Parameter } ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( { multiplyHandle, g_vectorParameter }, { normalmapHandle, g_colorParameter } ) );
+				shaderNetwork->removeConnection( ShaderNetwork::Connection( normalInput, { handle, g_normalParameter } ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( { normalmapHandle, g_normalParameter }, { handle, g_normalParameter } ) );
+			}
 
 			// Remove occlusion.
 			removeInput( shaderNetwork, { handle, g_occlusionParameter } );
@@ -1476,11 +1659,12 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			newShader = new Shader( "point_light", "cycles:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
-			transferUSDParameter( shaderNetwork, handle, shader.get(), g_radiusParameter, newShader.get(), g_sizeParameter, 0.5f );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_radiusParameter, newShader.get(), g_radiusParameter, 0.5f );
 			if( parameterValue( shader.get(), g_treatAsPointParameter, false ) )
 			{
-				newShader->parameters()[g_sizeParameter] = new FloatData( 0.0 );
+				newShader->parameters()[g_radiusParameter] = new FloatData( 0.0f );
 				newShader->parameters()[g_normalizeParameter] = new BoolData( true );
+				newShader->parameters()[g_isSphereParameter] = new BoolData( false );
 			}
 		}
 		else if( shader->getName() == "DiskLight" )
@@ -1499,7 +1683,7 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			const float radius = parameterValue( shader.get(), g_radiusParameter, 0.5f );
 			const float length = parameterValue( shader.get(), g_lengthParameter, 1.0f );
-			newShader->parameters()[g_sizeParameter] = new FloatData( std::max( radius, length / 2.0f ) );
+			newShader->parameters()[g_radiusParameter] = new FloatData( std::max( radius, length / 2 ) );
 			IECore::msg( IECore::Msg::Warning, "ShaderNetworkAlgo", "Converting USD CylinderLight to Cycles point light" );
 		}
 		else if( shader->getName() == "DistantLight" )

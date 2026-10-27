@@ -5,6 +5,9 @@ Features
 --------
 
 - PromotePointInstances : Added a new node for promoting point instances to "hero" scene locations. This replaces a similar node previously provided as part of GafferUSD and which is now deprecated.
+- Cycles :
+  - Updated to version 5.2.0.
+  - Cycles texture cache is supported and added a toggle to enable or disable it in the viewer settings.
 
 Improvements
 ------------
@@ -14,11 +17,18 @@ Improvements
 - BoolPlug : Added support for connections from array-valued plugs such as StringVectorDataPlug. The BoolPlug's value is true when the input array is non-empty, and false when the input array is empty.
 - PlugAlgo : Added more type coercions to `setValueFromData()`, allowing BoolPlugs and NumericPlugs to be set from StringData.
 - Instancer : Deprecated and removed from the node menu, in preparation for removal in a future release. Use the PointInstancer node instead.
+- Cycles :
+  - Don't revert to SVM shading when OptiX is toggled.
+  - Use primitive variable `Cs` instead of attribute `displayColor` for the viewport if it exists on the object.
+  - Added all the new Cycles log levels which have been added in recent versions.
 
 Fixes
 -----
 
 - Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
+- Cycles :
+  - Texture limit option correctly sets the right value.
+  - Ensure all UVs are converted to face-varying as Cycles expects it to be in this form for any kind of UV.
 
 Breaking Changes
 ----------------
@@ -43,6 +53,9 @@ Breaking Changes
 - Serialisation :
   - Removed deprecated `postSerialisationSignal()`.
   - Renamed `staticPostSerialisationSignal()` to `postSerialisationSignal()`.
+- CyclesLight :
+  - Point light parameter `size` has been renamed to `radius`. This should convert on-load.
+  - Spot light parameters `size`, `spot_angle` and `spot_smooth` are now named `radius`, `angle` and `smooth`. This should convert on-load.
 
 1.7.x.x (relative to 1.7.5.0)
 =======
