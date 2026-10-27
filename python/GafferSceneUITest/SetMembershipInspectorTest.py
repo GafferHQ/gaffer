@@ -185,10 +185,11 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		# If it is in the history though, and we're told to use it, then we will.
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/plane", "planeSet", s["editScope2"] )
-		self.assertIsNone(
-			GafferScene.EditScopeAlgo.acquireSetEdits(
-				s["editScope2"], "planeSet", createIfNecessary = False
-			)
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.getSetMembership(
+				s["editScope2"], "/group/plane", "planeSet"
+			),
+			GafferScene.EditScopeAlgo.SetMembership.Unchanged
 		)
 
 		self.__assertExpectedResult(
@@ -200,10 +201,11 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 
 		inspection.edit( IECore.BoolData( True ) )
 
-		self.assertIsNotNone(
-			GafferScene.EditScopeAlgo.acquireSetEdits(
-				s["editScope2"], "planeSet", createIfNecessary = False
-			)
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.getSetMembership(
+				s["editScope2"], "/group/plane", "planeSet"
+			),
+			GafferScene.EditScopeAlgo.SetMembership.Added
 		)
 
 		# If there's an edit downstream of the EditScope we're asked to use,
@@ -239,9 +241,6 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			IECore.PathMatcher( [ "/plane2" ] ),
 			"planeSet",
 			GafferScene.EditScopeAlgo.SetMembership.Added
-		)
-		plane2Edit = GafferScene.EditScopeAlgo.acquireSetEdits(
-			s["editScope1"], "planeSet", createIfNecessary = False
 		)
 
 		self.__assertExpectedResult(
