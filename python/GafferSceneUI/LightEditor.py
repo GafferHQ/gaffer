@@ -61,6 +61,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self["section"] = Gaffer.StringPlug( defaultValue = "Main" )
 			self["columnFilter"] = Gaffer.StringPlug()
 			self["editScope"] = Gaffer.Plug()
+			self["compactColumns"] = Gaffer.BoolPlug()
 
 			self["__setFilter"] = GafferScene.SetFilter()
 			self["__setFilter"]["setExpression"].setValue( "__lights __lightFilters" )
@@ -118,6 +119,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
+			self.__pathListing.setCompactColumns( self.settings()["compactColumns"].getValue() )
 
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
@@ -263,6 +265,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 		if plug in ( self.settings()["section"], self.settings()["attribute"], self.settings()["columnFilter"] ) :
 			self.__updateColumnsAndSections()
+		elif plug == self.settings()["compactColumns"] :
+			self.__pathListing.setCompactColumns( plug.getValue() )
 
 	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
 	def __lazyUpdateFromContext( self ) :
@@ -417,6 +421,20 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type" : "GafferUI.EditScopeUI.EditScopePlugValueWidget",
 			"layout:width" : 130,
+
+		},
+
+		"compactColumns" : {
+
+			"description" :
+			"""
+			Click to toggle between compact and regular column widths.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "compactColumnsOn.png",
+			"togglePlugValueWidget:image:off" : "compactColumnsOff.png",
+			"layout:section" : "Filter"
 
 		},
 
