@@ -183,7 +183,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter ),
-				columnName if columnName is not None else ""
+				columnName if columnName is not None else "",
+				abbreviation = Gaffer.Metadata.value( "{}:{}".format( rendererKey, ":".join( x for x in [ parameter.shader, parameter.name ] if x ) ), "columnLayout:abbreviation" ) or ""
 			),
 			section
 		)
@@ -204,7 +205,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, shaderAttribute, parameter ),
-				columnName if columnName is not None else ""
+				columnName if columnName is not None else "",
+				abbreviation = Gaffer.Metadata.value( "{}:{}".format( shaderAttribute, ":".join( x for x in [ parameter.shader, parameter.name ] if x ) ), "columnLayout:abbreviation" ) or ""
 			),
 			section
 		)
@@ -218,7 +220,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			attributeName,
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.AttributeInspector( scene, editScope, attributeName ),
-				displayName
+				displayName,
+				abbreviation = Gaffer.Metadata.value( "attribute:" + attributeName, "columnLayout:abbreviation" ) or ""
 			),
 			section
 		)

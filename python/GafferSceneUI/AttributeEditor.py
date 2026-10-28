@@ -150,7 +150,8 @@ class AttributeEditor( GafferSceneUI.SceneEditor ) :
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.AttributeInspector( scene, editScope, attributeName ),
 				columnName,
-				toolTip
+				toolTip,
+				Gaffer.Metadata.value( "attribute:" + attributeName, "columnLayout:abbreviation" ) or ""
 			),
 			section
 		)

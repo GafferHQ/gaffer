@@ -203,7 +203,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 		return lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 			GafferSceneUI.Private.OptionInspector( scene, editScope, optionName ),
 			columnName,
-			toolTip
+			toolTip,
+			Gaffer.Metadata.value( "option:" + optionName, "columnLayout:abbreviation" ) or ""
 		)
 
 	def __dropData( self, event ) :
