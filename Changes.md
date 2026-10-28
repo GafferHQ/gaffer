@@ -62,6 +62,7 @@ Fixes
 - AttributeEditor :
   - The section chooser is no longer hidden when only a single section is available.
   - Fixed bug preventing the `All` section from showing columns from all sections after a column had been registered to `section = "All"`.
+- Cycles : Check parameter length to see if it's empty or not instead of checking if it is a nullptr from the .data() call and print a warning for this correctly.
 
 API
 ---
