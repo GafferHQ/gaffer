@@ -95,9 +95,10 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 				const IECore::ConstDataPtr &background = nullptr,
 				const IECore::ConstDataPtr &toolTip = nullptr,
 				const IECore::ConstDataPtr &sortValue = nullptr,
-				const IECore::ConstDataPtr &foreground = nullptr
+				const IECore::ConstDataPtr &foreground = nullptr,
+				const IECore::ConstDataPtr &abbreviation = nullptr
 			)	:	value( value ), icon( icon ), background( background ), toolTip( toolTip ),
-					sortValue( sortValue ), foreground( foreground ) {}
+					sortValue( sortValue ), foreground( foreground ), abbreviation( abbreviation ) {}
 
 			CellData( const CellData &other ) = default;
 			CellData &operator=( const CellData &other ) = default;
@@ -137,10 +138,15 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			/// - Color3fData
 			/// - Color4fData
 			IECore::ConstDataPtr foreground;
+			/// A short form of `value` that may be displayed when there is
+			/// not enough space to display `value`, such as in a header.
+			/// Supported types :
+			///
+			/// - StringData
+			IECore::ConstDataPtr abbreviation;
 
 			private :
 
-				IECore::ConstDataPtr m_reserved1;
 				IECore::ConstDataPtr m_reserved2;
 
 		};

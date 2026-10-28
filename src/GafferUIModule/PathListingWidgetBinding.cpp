@@ -521,6 +521,7 @@ struct CellVariants
 {
 
 	static constexpr Qt::ItemDataRole SortRole = Qt::UserRole;
+	static constexpr Qt::ItemDataRole AbbreviationRole = (Qt::ItemDataRole)( SortRole + 1 );
 
 	CellVariants( const GafferUI::PathColumn::CellData &cellData )
 		:	m_display( dataToVariant( cellData.value.get(), Qt::DisplayRole ) ),
@@ -529,7 +530,8 @@ struct CellVariants
 			m_background( dataToVariant( cellData.background.get(), Qt::BackgroundRole ) ),
 			m_toolTip( dataToVariant( cellData.toolTip.get(), Qt::ToolTipRole ) ),
 			m_sort( dataToVariant( cellData.sortValue.get(), SortRole ) ),
-			m_foreground( dataToVariant( cellData.foreground.get(), Qt::ForegroundRole ) )
+			m_foreground( dataToVariant( cellData.foreground.get(), Qt::ForegroundRole ) ),
+			m_abbreviation( dataToVariant( cellData.abbreviation.get(), AbbreviationRole ) )
 	{
 		if( !m_sort.isValid() )
 		{
@@ -559,6 +561,8 @@ struct CellVariants
 				return m_sort;
 			case Qt::ForegroundRole :
 				return m_foreground;
+			case AbbreviationRole :
+				return m_abbreviation;
 			default :
 				return QVariant();
 		}
@@ -572,7 +576,8 @@ struct CellVariants
 			m_decoration == rhs.m_decoration &&
 			m_background == rhs.m_background &&
 			m_toolTip == rhs.m_toolTip &&
-			m_foreground == rhs.m_foreground
+			m_foreground == rhs.m_foreground &&
+			m_abbreviation == rhs.m_abbreviation
 		;
 	}
 
@@ -585,6 +590,7 @@ struct CellVariants
 		QVariant m_toolTip;
 		QVariant m_sort;
 		QVariant m_foreground;
+		QVariant m_abbreviation;
 
 };
 

@@ -24,6 +24,7 @@ API
 
 - LightEditor : The default section is now named "Main" rather than "". Columns registered or deregistered with `section = None` or `section = ""` are added to "Main" so existing registrations are unaffected.
 - PathListingWidget : Added `setCompactColumns()` and `getCompactColumns()`, which size columns to only fit their values and disregard their header text.
+- PathColumn : Added `CellData::abbreviation` member.
 
 1.7.5.0 (relative to 1.7.4.1)
 =======
