@@ -6,6 +6,11 @@ Improvements
 
 - MeshSplit : Added `ignoreMissing` plug.
 
+Fixes
+-----
+
+- Cycles : Fixed bug which passed unsupported attribute types to Cycles as empty attributes. Unsupported attributes now emit warnings at render time (#6315).
+
 1.7.7.0 (relative to 1.7.6.0)
 =======
 

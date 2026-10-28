@@ -1155,6 +1155,38 @@ class RendererTest( GafferTest.TestCase ) :
 					"Primitive variable \"test\" has unsupported type \"{}\"".format( data.typeName() )
 				)
 
+	def testUnsupportedAttributes( self ) :
+
+		renderer = self.createRenderer()
+
+		attributes = {
+			"user:testInt" : IECore.IntData( 1 ),
+			"user:testFloat" : IECore.FloatData( 1 ),
+			"user:testColor" : IECore.Color3fData( imath.Color3f( 1 ) ),
+			"user:testV3f" : IECore.V3fData( imath.V3f( 1 ) ),
+		}
+
+		for prefix in [ "user:", "render:" ] :
+
+			for unsupported in [
+				IECore.StringData( "test" ),
+				IECore.StringVectorData( [ "test" ] ),
+				IECore.FloatVectorData( [ 1, 2 ] ),
+				IECore.Box3fData(),
+			] :
+
+				with IECore.CapturingMessageHandler() as mh :
+
+					renderer.attributes( IECore.CompoundObject( attributes | { prefix + "test" : unsupported } ) )
+
+					self.assertEqual( len( mh.messages ), 1 )
+					self.assertRegex(
+						mh.messages[0].message,
+						"Custom attribute \"{}\" has unsupported type \"{}\"".format(
+							"test" if prefix == "render:" else "user:test", unsupported.typeName()
+						)
+					)
+
 	def __testPrimitiveVariableInterpolation( self, primitive, primitiveVariable, expectedPixels, maxDifference = 0.0, attributeName = None ) :
 
 		attributeName = primitiveVariable if attributeName is None else attributeName

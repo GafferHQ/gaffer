@@ -653,7 +653,6 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 			break;
 		default :
 			{
-				// A ParamValue that we can test with .data() to see if it's a nullptr.
 				return ccl::ParamValue();
 			}
 	}
