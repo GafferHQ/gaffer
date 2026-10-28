@@ -93,11 +93,12 @@ void GafferSceneUIModule::bindInspectorColumn()
 	scope privateScope( privateModule );
 
 	RefCountedClass<GafferSceneUI::Private::InspectorColumn, GafferUI::PathColumn>( "InspectorColumn" )
-		.def( init<GafferSceneUI::Private::InspectorPtr, const std::string &, const std::string &, PathColumn::SizeMode>(
+		.def( init<GafferSceneUI::Private::InspectorPtr, const std::string &, const std::string &, const std::string &, PathColumn::SizeMode>(
 			(
 				arg_( "inspector" ),
 				arg_( "label" ) = "",
 				arg_( "toolTip" ) = "",
+				arg_( "abbreviation" ) = "",
 				arg( "sizeMode" ) = PathColumn::Default
 			)
 		) )

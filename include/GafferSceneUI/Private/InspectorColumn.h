@@ -59,7 +59,7 @@ class GAFFERSCENEUI_API InspectorColumn : public GafferUI::PathColumn
 
 		IE_CORE_DECLAREMEMBERPTR( InspectorColumn )
 
-		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const std::string &label, const std::string &toolTip = "", PathColumn::SizeMode sizeMode = Default );
+		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const std::string &label, const std::string &toolTip = "", const std::string &abbreviation = "", PathColumn::SizeMode sizeMode = Default );
 		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const CellData &headerData, PathColumn::SizeMode sizeMode = Default );
 		/// Gets an inspector from the path on a per-cell basis using `path->property( inspectorProperty )`.
 		InspectorColumn( IECore::InternedString inspectorProperty, const CellData &headerData, IECore::InternedString contextProperty = "inspector:context", PathColumn::SizeMode sizeMode = Default );
