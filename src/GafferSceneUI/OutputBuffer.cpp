@@ -45,6 +45,7 @@
 
 #include "boost/lexical_cast.hpp"
 
+#include <limits>
 #include <unordered_set>
 
 using namespace std;
@@ -55,60 +56,20 @@ using namespace GafferScene;
 using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
-// BufferTexture
-//////////////////////////////////////////////////////////////////////////
-
-// IECoreGL::Texture doesn't support buffer textures, so we roll our own.
-class OutputBuffer::BufferTexture
-{
-	public :
-
-		BufferTexture()
-		{
-			glGenTextures( 1, &m_texture );
-			glGenBuffers( 1, &m_buffer );
-		}
-
-		~BufferTexture()
-		{
-			glDeleteBuffers( 1, &m_buffer );
-			glDeleteTextures( 1, &m_texture );
-		}
-
-		GLuint texture() const
-		{
-			return m_texture;
-		}
-
-		void updateBuffer( const vector<uint32_t> &data )
-		{
-			glBindBuffer( GL_TEXTURE_BUFFER, m_buffer );
-			glBufferData( GL_TEXTURE_BUFFER, sizeof( uint32_t ) * data.size(), data.data(), GL_STREAM_DRAW );
-
-			glBindTexture( GL_TEXTURE_BUFFER, m_texture );
-			glTexBuffer( GL_TEXTURE_BUFFER, GL_R32UI, m_buffer );
-		}
-
-	private :
-
-		GLuint m_texture;
-		GLuint m_buffer;
-
-};
-
-//////////////////////////////////////////////////////////////////////////
 // GLSL source
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
+const int g_selectionTextureWidth = 4096;
+
 const char *g_vertexSource = R"(
 
-#version 330 compatibility
+#version 120
 
-in vec2 P; // Receives unit quad
-out vec2 texCoords;
+attribute vec2 P; // Receives unit quad
+varying vec2 texCoords;
 
 void main()
 {
@@ -121,17 +82,19 @@ void main()
 
 const char *g_fragmentSource = R"(
 
-#version 330 compatibility
+#version 120
+#extension GL_EXT_gpu_shader4 : require
 
 // Assumes texture contains sorted values.
-bool contains( usamplerBuffer array, uint value )
+bool contains( usampler2D array, unsigned int value )
 {
-	int high = textureSize( array ) - 1;
+	int width = textureSize2D( array, 0 ).x;
+	int high = width * textureSize2D( array, 0 ).y - 1;
 	int low = 0;
 	while( low != high )
 	{
 		int mid = (low + high + 1) / 2;
-		if( texelFetch( array, mid ).r > value )
+		if( texelFetch2D( array, ivec2( mid % width, mid / width ), 0 ).r > value )
 		{
 			high = mid - 1;
 		}
@@ -140,21 +103,20 @@ bool contains( usamplerBuffer array, uint value )
 			low = mid;
 		}
 	}
-	return texelFetch( array, low ).r == value;
+	return texelFetch2D( array, ivec2( low % width, low / width ), 0 ).r == value;
 }
 
 uniform sampler2D rgbaTexture;
 uniform sampler2D depthTexture;
 uniform usampler2D idTexture;
-uniform usamplerBuffer selectionTexture;
+uniform usampler2D selectionTexture;
 uniform bool renderSelection;
 
-in vec2 texCoords;
-layout( location=0 ) out vec4 outColor;
+varying vec2 texCoords;
 
 void main()
 {
-	outColor = texture( rgbaTexture, texCoords );
+	vec4 outColor = texture2D( rgbaTexture, texCoords );
 	if( outColor.a == 0.0 )
 	{
 		discard;
@@ -163,7 +125,7 @@ void main()
 	// Input depth is absolute in camera space (completely
 	// unrelated to clipping planes). Convert to the screen
 	// space that `GL_fragDepth` needs.
-	float depth = texture( depthTexture, texCoords ).r;
+	float depth = texture2D( depthTexture, texCoords ).r;
 	vec4 Pcamera = vec4( 0.0, 0.0, -depth, 1.0 );
 	vec4 Pclip = gl_ProjectionMatrix * Pcamera;
 	float ndcDepth = Pclip.z / Pclip.w;
@@ -171,9 +133,10 @@ void main()
 
 	if( renderSelection )
 	{
-		uint id = texture( idTexture, texCoords ).r;
+		unsigned int id = texture2D( idTexture, texCoords ).r;
 		outColor = vec4( 0.466, 0.612, 0.741, 1.0 ) * outColor.a * 0.75 * float( contains( selectionTexture, id ) );
 	}
+	gl_FragColor = outColor;
 }
 
 )";
@@ -249,12 +212,13 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 
 	if( !m_rgbaTexture )
 	{
-		GLuint textures[3];
-		glGenTextures( 3, textures );
+		GLuint textures[4];
+		glGenTextures( 4, textures );
 		m_rgbaTexture = new Texture( textures[0] );
 		m_depthTexture = new Texture( textures[1] );
 		m_idTexture = new Texture( textures[2] );
-		for( auto &texture : { m_rgbaTexture, m_depthTexture, m_idTexture } )
+		m_selectionTexture = new Texture( textures[3] );
+		for( auto &texture : { m_rgbaTexture, m_depthTexture, m_idTexture, m_selectionTexture } )
 		{
 			Texture::ScopedBinding binding( *texture );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -262,7 +226,6 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 		}
-		m_selectionTexture = std::make_unique<BufferTexture>();
 	}
 
 	// We only update textures during the main render, so that the selection
@@ -294,7 +257,18 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 			GL_RED_INTEGER, GL_UNSIGNED_INT, m_idBuffer.data()
 		);
 
-		m_selectionTexture->updateBuffer( m_selectionBuffer );
+		const int height = ( m_selectionBuffer.size() + g_selectionTextureWidth - 1 ) / g_selectionTextureWidth;
+
+		// Pad to fill the last row with an ID that shouldn't be provided by `RenderManifest`.
+		vector<uint32_t> paddedSelection( m_selectionBuffer );
+		paddedSelection.resize( g_selectionTextureWidth * height, std::numeric_limits<uint32_t>::max() );
+
+		Texture::ScopedBinding selectionBinding( *m_selectionTexture );
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_R32UI,
+			g_selectionTextureWidth, height, /* border = */ 0,
+			GL_RED_INTEGER, GL_UNSIGNED_INT, paddedSelection.data()
+		);
 	}
 
 	if( !m_shader )
@@ -304,6 +278,7 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 		m_shaderSetup->addUniformParameter( "rgbaTexture", m_rgbaTexture );
 		m_shaderSetup->addUniformParameter( "depthTexture", m_depthTexture );
 		m_shaderSetup->addUniformParameter( "idTexture", m_idTexture );
+		m_shaderSetup->addUniformParameter( "selectionTexture", m_selectionTexture );
 		m_shaderSetup->addVertexAttribute(
 			"P", new V2fVectorData( { V2f( 0, 0 ), V2f( 0, 1 ), V2f( 1, 1 ), V2f( 1, 0 ) } )
 		);
@@ -311,17 +286,6 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 
 	IECoreGL::Shader::Setup::ScopedBinding shaderBinding( *m_shaderSetup );
 
-	const IECoreGL::Shader::Parameter *selectionParameter = m_shader->uniformParameter( "selectionTexture" );
-	GLuint selectionTextureUnit = selectionParameter->textureUnit;
-	if( !selectionTextureUnit )
-	{
-		// Workaround until IECoreGL assigns units to GL_SAMPLER_BUFFER.
-		selectionTextureUnit = 3;
-	}
-
-	glActiveTexture( GL_TEXTURE0 + selectionTextureUnit );
-	glBindTexture( GL_TEXTURE_BUFFER, m_selectionTexture->texture() );
-	glUniform1i( selectionParameter->location, selectionTextureUnit );
 	glUniform1i( m_shader->uniformParameter( "renderSelection" )->location, renderSelection );
 
 	glPushAttrib( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT );
