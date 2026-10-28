@@ -68,6 +68,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self["editScope"] = Gaffer.Plug()
 			self["displayGrouped"] = Gaffer.BoolPlug()
 			self["columnFilter"] = Gaffer.StringPlug()
+			self["compactColumns"] = Gaffer.BoolPlug()
 
 			self["favouriteColumns"] = Gaffer.StringVectorDataPlug()
 
@@ -126,6 +127,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
+			self.__pathListing.setCompactColumns( self.settings()["compactColumns"].getValue() )
 
 			## \todo Provide public API for this in PathListingWidget, we currently use a different approach
 			# for header-only context menus in CatalogueUI.
@@ -377,6 +379,8 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 			self.__displayGroupedChanged()
 		elif plug in ( self.settings()["in"], self.settings()["editScope"] ) :
 			self.__updateButtonStatus()
+		elif plug == self.settings()["compactColumns"] :
+			self.__pathListing.setCompactColumns( plug.getValue() )
 
 	@GafferUI.LazyMethod( deferUntilVisible = False, deferUntilPlaybackStops = True )
 	def __lazyUpdateFromContext( self ) :
@@ -1142,6 +1146,12 @@ Gaffer.Metadata.registerNode(
 		},
 
 		"columnFilter" : {
+
+			"layout:index" : -2,
+
+		},
+
+		"compactColumns" : {
 
 			"layout:index" : -1,
 

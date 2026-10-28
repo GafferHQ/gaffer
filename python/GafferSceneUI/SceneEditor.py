@@ -299,6 +299,20 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"compactColumns" : {
+
+			"description" :
+			"""
+			Click to toggle between compact and regular column widths.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "compactColumnsOn.png",
+			"togglePlugValueWidget:image:off" : "compactColumnsOff.png",
+			"layout:section" : "Filter"
+
+		},
+
 	}
 
 )
