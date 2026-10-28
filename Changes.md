@@ -9,6 +9,8 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor :
   - Added column filter. When enabled, only columns matching the search text are shown, and sections without any matching columns are hidden.
   - Section tabs are now sized to fit their names, rather than expanding to fill the available space.
+  - Added `compactColumns` toggle. When on, columns are sized based on their values instead of also considering the header text, so that more columns may fit on screen at once. Columns too narrow to show the header display an abbreviated form, such as `Max Bounces` becoming `MB`.
+- PathListingWidget, SpreadsheetUI : Header text is now elided rather than truncated. A default tooltip now shows the full text of the header.
 
 Fixes
 -----
@@ -21,6 +23,8 @@ API
 ---
 
 - LightEditor : The default section is now named "Main" rather than "". Columns registered or deregistered with `section = None` or `section = ""` are added to "Main" so existing registrations are unaffected.
+- PathListingWidget : Added `setCompactColumns()` and `getCompactColumns()`, which size columns to only fit their values and disregard their header text.
+- PathColumn : Added `CellData::abbreviation` member.
 
 1.7.5.0 (relative to 1.7.4.1)
 =======

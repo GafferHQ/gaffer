@@ -158,6 +158,7 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label" : "AA Samples",
 		"layout:section" : "Sampling",
+		"columnLayout:abbreviation" : "AA",
 
 	},
 
@@ -368,6 +369,7 @@ Gaffer.Metadata.registerValues( {
 		""",
 		"label" : "AA Samples Max",
 		"layout:section" : "Adaptive Sampling",
+		"columnLayout:abbreviation" : "AAM",
 
 	},
 

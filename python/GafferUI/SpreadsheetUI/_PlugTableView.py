@@ -81,6 +81,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		self.__horizontalHeader = GafferUI.Widget( _HeaderView( QtCore.Qt.Horizontal, tableView ) )
 		tableView.setHorizontalHeader( self.__horizontalHeader._qtWidget() )
+		tableView.horizontalHeader().setTextElideMode( QtCore.Qt.ElideRight )
 		self.__horizontalHeader.buttonPressSignal().connect( Gaffer.WeakMethod( self.__headerButtonPress ) )
 
 		if mode in ( self.Mode.Cells, self.Mode.Defaults, self.Mode.Outputs ) :

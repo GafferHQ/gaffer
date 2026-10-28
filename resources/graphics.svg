@@ -12095,5 +12095,70 @@
          inkscape:label="linkPlusBig"
          transform="matrix(1.1453401,0,0,1.144021,-31.787822,-3662.1399)" />
     </g>
+    <g
+       id="g26"
+       style="display:inline"
+       transform="translate(-40,-1.7e-5)">
+      <g
+         id="g27"
+         transform="translate(130,2616.3622)">
+        <rect
+           id="compactColumnsOn"
+           x="0"
+           y="0"
+           width="16"
+           height="16"
+           fill="none" />
+        <g
+           stroke="#3c3c3c"
+           stroke-width="1"
+           id="g1-9"
+           style="fill:url(#backgroundLighter)">
+          <rect
+             x="0.5"
+             y="2.5"
+             width="15"
+             height="11"
+             fill="#e0e0e0"
+             id="rect1-7"
+             style="fill:url(#backgroundLighter)" />
+          <path
+             d="m 3.5,2.5 v 11 m 3,-11 v 11 m 3,-11 v 11 m 3,-11 v 11"
+             fill="none"
+             id="path1-3"
+             style="fill:url(#backgroundLighter)" />
+        </g>
+      </g>
+      <g
+         id="g28"
+         transform="translate(150,2616.3622)">
+        <rect
+           id="compactColumnsOff"
+           x="0"
+           y="0"
+           width="16"
+           height="16"
+           fill="none" />
+        <g
+           stroke="#3c3c3c"
+           stroke-width="1"
+           id="g1-6"
+           style="fill:url(#backgroundLighter)">
+          <rect
+             x="0.5"
+             y="2.5"
+             width="15"
+             height="11"
+             fill="#e0e0e0"
+             id="rect1-1"
+             style="fill:url(#backgroundLighter)" />
+          <path
+             d="m 5.5,2.5 v 11 m 5,-11 v 11"
+             fill="none"
+             id="path1-2"
+             style="fill:url(#backgroundLighter)" />
+        </g>
+      </g>
+    </g>
   </g>
 </svg>

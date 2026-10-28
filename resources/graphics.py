@@ -535,6 +535,8 @@
 				"home",
 				"historyBack",
 				"historyForward",
+				"compactColumnsOn",
+				"compactColumnsOff",
 			],
 
 		},

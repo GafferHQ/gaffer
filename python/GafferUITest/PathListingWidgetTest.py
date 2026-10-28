@@ -1444,6 +1444,55 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		widget.setColumns( [ GafferUI.PathListingWidget.StandardColumn( "Test", "test" ) ] )
 		self.assertTrue( widget._qtWidget()._shouldStretchLastColumn() )
 
+	def testCompactColumns( self ) :
+
+		with GafferUI.Window() as window :
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( { "a" : 1, "b" : 2 }, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+				columns = [
+					GafferUI.PathListingWidget.StandardColumn( "A column with a very long name", "test" ),
+					GafferUI.PathListingWidget.StandardColumn( "Stretch", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+				]
+			)
+
+		window._qtWidget().resize( 512, 384 )
+		window.setVisible( True )
+
+		self.waitForIdle( 1000 )
+
+		header = widget._qtWidget().header()
+
+		# By default, the column is wide enough to show its title in full.
+
+		self.assertFalse( widget.getCompactColumns() )
+		self.assertEqual( header.sectionSize( 0 ), header.sectionSizeHint( 0 ) )
+		self.assertGreater( header.sectionSize( 0 ), header.abbreviatedSectionSizeHint( 0 ) )
+		defaultWidth = header.sectionSize( 0 )
+
+		# With compact columns enabled, the column is resized to fit its values instead.
+
+		widget.setCompactColumns( True )
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( widget.getCompactColumns() )
+		self.assertLess( header.sectionSize( 0 ), defaultWidth )
+		self.assertEqual( header.sectionSize( 0 ), header.abbreviatedSectionSizeHint( 0 ) )
+
+		self.assertAlmostEqual( header.length() - header.sectionSize( 1 ), header.sectionSize( 0 ), delta = 1 )
+		self.assertAlmostEqual( header.length(), widget._qtWidget().viewport().width(), delta = 1 )
+
+		# Disabling compact columns should restore the original width.
+
+		widget.setCompactColumns( False )
+		self.waitForIdle( 1000 )
+
+		self.assertFalse( widget.getCompactColumns() )
+		self.assertEqual( header.sectionSize( 0 ), defaultWidth )
+
+		self.assertAlmostEqual( header.length() - header.sectionSize( 1 ), header.sectionSize( 0 ), delta = 1 )
+		self.assertAlmostEqual( header.length(), widget._qtWidget().viewport().width(), delta = 1 )
+
 	def testColumnSizeUpdate( self ) :
 
 		for visible in ( False, True ) :
@@ -2161,6 +2210,82 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			column.cellDataCalls[last-first+1:],
 			[ f"/{i}" for i in range( 0, 100 ) if i < first or i > last ],
 		)
+
+	def testHeaderViewAbbreviations( self ) :
+
+		for text, abbreviation in [
+			( "Max Bounces", "MB" ),
+			( "MaxBounces", "MB" ),
+			( "Shadow Color", "SC" ),
+			( "shadowColor", "SC" ),
+			( "Bounding Box Min", "BBM" ),
+			( "lgt:set:A", "LSA" ),
+			( "snake_case_name", "SCN" ),
+			( "Snake_Case_Name", "SCN" ),
+			( "AOV Name", "AN" ),
+			( "Diffuse 2", "D2" ),
+			( "Exposure", "E" ),
+			( "Expos...", "E" ),
+			( "", "" ),
+		] :
+			self.assertEqual( GafferUI._HeaderView._HeaderView._abbreviation( text ), abbreviation )
+			self.assertEqual( GafferUI._HeaderView._HeaderView._abbreviation( text + "…" ), abbreviation )
+
+	def testSectionAbbreviation( self ) :
+
+		class AbbreviatedColumn( GafferUI.PathColumn ) :
+
+			def __init__( self ) :
+
+				GafferUI.PathColumn.__init__( self )
+
+			def cellData( self, path, canceller = None ) :
+
+				return self.CellData( value = IECore.IntData( 7 ) )
+
+			def headerData( self, path, canceller = None ) :
+
+				return self.CellData(
+					value = IECore.StringData( "Min Bounces" ),
+					abbreviation = IECore.StringData( "Bnc" )
+				)
+
+		with GafferUI.Window() as window :
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( { "a" : 1 }, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+				columns = [
+					GafferUI.PathListingWidget.StandardColumn( "Max Bounces", "test" ),
+					AbbreviatedColumn(),
+					GafferUI.PathListingWidget.StandardColumn( "Other Value", "other", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+				]
+			)
+			widget.setCompactColumns( True )
+
+		window._qtWidget().resize( 512, 384 )
+		window.setVisible( True )
+
+		self.waitForIdle( 1000 )
+
+		header = widget._qtWidget().header()
+
+		def headerText( section ) :
+
+			option = QtWidgets.QStyleOptionHeader()
+			header.initStyleOptionForIndex( option, section )
+
+			return option.text
+
+		self.assertEqual( headerText( 0 ), "MB" )
+		self.assertEqual( headerText( 1 ), "Bnc" )
+		self.assertEqual( headerText( 2 ), "Other Value" )
+
+		# Resize column 1 to show the full title
+		header.resizeSection( 1, 100 )
+
+		self.assertEqual( headerText( 0 ), "MB" )
+		self.assertEqual( headerText( 1 ), "Min Bounces" )
+		self.assertEqual( headerText( 2 ), "Other Value" )
 
 	@staticmethod
 	def __emitPathChanged( widget ) :
