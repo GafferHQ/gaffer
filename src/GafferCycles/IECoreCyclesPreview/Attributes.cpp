@@ -645,7 +645,7 @@ Attributes::Attributes( const IECore::CompoundObject *attributes, ShaderCache *s
 	for( const auto &attr : customMap )
 	{
 		ccl::ParamValue paramValue = SocketAlgo::setParamValue( attr.first, attr.second.get() );
-		if( paramValue.data() )
+		if( paramValue.nvalues() == 1 )
 		{
 			m_custom.push_back( paramValue );
 		}
