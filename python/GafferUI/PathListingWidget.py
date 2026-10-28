@@ -1168,7 +1168,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		for i in range( 0, numColumnsToResize ) :
 			if columns[i].getSizeMode() == GafferUI.PathColumn.SizeMode.Interactive :
 				if self.__compactColumns :
-					idealWidth = max( self.sizeHintForColumn( i ), 50 if self.isSortingEnabled() and header.sortIndicatorSection() == i else 8 )
+					idealWidth = max( header.abbreviatedSectionSizeHint( i ), self.sizeHintForColumn( i ) )
 				else :
 					idealWidth = max( header.sectionSizeHint( i ), self.sizeHintForColumn( i ) )
 				self.__idealColumnWidths[columns[i]] = idealWidth
@@ -1206,6 +1206,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 			return
 
 		self.__compactColumns = compactColumns
+		self.header().setAbbreviateSections( compactColumns )
 		self.updateColumnWidths( columnsChanged = True )
 
 	def getCompactColumns( self ) :

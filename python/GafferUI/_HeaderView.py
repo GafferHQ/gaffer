@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import re
+
 import Gaffer
 from ._StyleSheet import _styleColors
 
@@ -49,7 +51,11 @@ import Qt
 # - Improves visual feedback when interactively moving sections by highlighting the section divider where the dropped section would be inserted.
 # - Supports changing header icons on mouse hover, via PathColumn's { "state:normal" : "normal.png", "state:highlighted" : "highlighted.png" } icon format.
 # - Shows the section header text as a tooltip, for sections that haven't provided their own tooltip.
+# - Supports optionally abbreviated sections, for those too narrow to display their full header text.
 class _HeaderView( QtWidgets.QHeaderView ) :
+
+	AbbreviationRole = QtCore.Qt.UserRole + 1
+	__wordsRE = re.compile( r"[A-Z]?[a-z]+|[A-Z]+(?![a-z])|[0-9]+" )
 
 	def __init__( self, orientation = QtCore.Qt.Horizontal, parent = None ) :
 
@@ -65,6 +71,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 		self.__hoveredSection = None
 		self.__pressedSection = None
 		self.__firstMovableSection = 0
+		self.__abbreviateSections = False
 
 	def setHighlightedSectionDivider( self, index ) :
 
@@ -76,6 +83,30 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 	def setFirstMovableSection( self, index ) :
 
 		self.__firstMovableSection = index
+
+	def setAbbreviateSections( self, abbreviate ) :
+
+		if abbreviate == self.__abbreviateSections :
+			return
+
+		self.__abbreviateSections = abbreviate
+		self.viewport().update()
+
+	## Returns the width needed for a section to show its abbreviated header.
+	# This includes space for padding, an icon, and sort indicator.
+	def abbreviatedSectionSizeHint( self, logicalIndex ) :
+
+		option = QtWidgets.QStyleOptionHeader()
+		self.initStyleOption( option )
+		QtWidgets.QHeaderView.initStyleOptionForIndex( self, option, logicalIndex )
+
+		textWidth = 0
+		if option.text :
+			font = QtGui.QFont( self.font() )
+			font.setBold( True )
+			textWidth = QtGui.QFontMetrics( font ).horizontalAdvance( self.model().headerData( logicalIndex, self.orientation(), self.AbbreviationRole ) or self._abbreviation( option.text ) )
+
+		return textWidth + self.__labelMargin( option )
 
 	## A signal emitted whenever a section header is pressed. Slots can
 	# return `True` to block the Qt mousePressEvent.
@@ -173,6 +204,14 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 			iconSize = self.style().pixelMetric( QtWidgets.QStyle.PM_SmallIconSize )
 			option.icon = option.icon.pixmap( QtCore.QSize( iconSize, iconSize ), QtGui.QIcon.Active )
 
+		if self.__abbreviateSections and option.text :
+			abbreviatedText = self._abbreviation( option.text )
+			labelWidth = self.sectionSize( logicalIndex ) - self.__labelMargin( option )
+			# Only abbreviate if the elided form has lost one or more words. This means we don't abbreviate titles
+			# with a single word, as in that case an elided title seems more useful than a single letter abbreviation.
+			if len( abbreviatedText ) > len( self._abbreviation( option.fontMetrics.elidedText( option.text, QtCore.Qt.ElideRight, labelWidth ) ) ) :
+				option.text = self.model().headerData( logicalIndex, self.orientation(), self.AbbreviationRole ) or abbreviatedText
+
 	def viewportEvent( self, event ) :
 
 		if event.type() == QtCore.QEvent.ToolTip :
@@ -199,6 +238,30 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 			else :
 				x = max( 1, self.sectionViewportPosition( self.__highlightedSectionDivider ) - 1 )
 			painter.drawLine( x, 0, x, self.height() )
+
+	@classmethod
+	def _abbreviation( cls, text ) :
+
+		return "".join( word[0].upper() for word in cls.__wordsRE.findall( text ) )
+
+	def __labelMargin( self, option ) :
+
+		# The margin doesn't vary based on the width of a section, so we can compute it from
+		# a section wider than any reasonable margin and return the difference.
+		sectionWidth = 1000
+		originalRect = option.rect
+		option.rect = QtCore.QRect( 0, 0, sectionWidth, self.sizeHint().height() )
+		labelRect = self.style().subElementRect( QtWidgets.QStyle.SE_HeaderLabel, option, self )
+		if self.isSortIndicatorShown() and self.sortIndicatorSection() == option.section :
+			option.rect = labelRect
+			labelRect.setWidth( labelRect.width() - self.style().subElementRect( QtWidgets.QStyle.SE_HeaderArrow, option, self ).width() )
+		option.rect = originalRect
+
+		margin = sectionWidth - labelRect.width()
+		if not option.icon.isNull() :
+			margin += self.style().pixelMetric( QtWidgets.QStyle.PM_SmallIconSize, option, self ) + self.style().pixelMetric( QtWidgets.QStyle.PM_HeaderMargin, option, self )
+
+		return margin
 
 	def __eventOverSectionResizeHandle( self, event ) :
 
