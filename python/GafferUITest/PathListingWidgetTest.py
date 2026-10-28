@@ -1444,6 +1444,54 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		widget.setColumns( [ GafferUI.PathListingWidget.StandardColumn( "Test", "test" ) ] )
 		self.assertTrue( widget._qtWidget()._shouldStretchLastColumn() )
 
+	def testCompactColumns( self ) :
+
+		with GafferUI.Window() as window :
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( { "a" : 1, "b" : 2 }, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.List,
+				columns = [
+					GafferUI.PathListingWidget.StandardColumn( "A column with a very long name", "test" ),
+					GafferUI.PathListingWidget.StandardColumn( "Stretch", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+				]
+			)
+
+		window._qtWidget().resize( 512, 384 )
+		window.setVisible( True )
+
+		self.waitForIdle( 1000 )
+
+		header = widget._qtWidget().header()
+
+		# By default, the column is wide enough to show its title in full.
+
+		self.assertFalse( widget.getCompactColumns() )
+		self.assertEqual( header.sectionSize( 0 ), header.sectionSizeHint( 0 ) )
+		defaultWidth = header.sectionSize( 0 )
+
+		# With compact columns enabled, the column is resized to fit its values instead.
+
+		widget.setCompactColumns( True )
+		self.waitForIdle( 1000 )
+
+		self.assertTrue( widget.getCompactColumns() )
+		self.assertLess( header.sectionSize( 0 ), defaultWidth )
+		self.assertLess( header.sectionSize( 0 ), header.sectionSizeHint( 0 ) )
+
+		self.assertAlmostEqual( header.length() - header.sectionSize( 1 ), header.sectionSize( 0 ), delta = 1 )
+		self.assertAlmostEqual( header.length(), widget._qtWidget().viewport().width(), delta = 1 )
+
+		# Disabling compact columns should restore the original width.
+
+		widget.setCompactColumns( False )
+		self.waitForIdle( 1000 )
+
+		self.assertFalse( widget.getCompactColumns() )
+		self.assertEqual( header.sectionSize( 0 ), defaultWidth )
+
+		self.assertAlmostEqual( header.length() - header.sectionSize( 1 ), header.sectionSize( 0 ), delta = 1 )
+		self.assertAlmostEqual( header.length(), widget._qtWidget().viewport().width(), delta = 1 )
+
 	def testColumnSizeUpdate( self ) :
 
 		for visible in ( False, True ) :

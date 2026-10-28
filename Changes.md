@@ -20,6 +20,7 @@ API
 ---
 
 - Merge : Renamed `mode` to `inputMode`.
+- PathListingWidget : Added `setCompactColumns()` and `getCompactColumns()`, which size columns to only fit their values and disregard their header text.
 
 1.7.6.0 (relative to 1.7.5.0)
 =======

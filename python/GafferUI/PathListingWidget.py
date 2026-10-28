@@ -340,6 +340,14 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return _GafferUI._pathListingWidgetGetColumns( GafferUI._qtAddress( self._qtWidget() ) )
 
+	def setCompactColumns( self, compactColumns ) :
+
+		self._qtWidget().setCompactColumns( compactColumns )
+
+	def getCompactColumns( self ) :
+
+		return self._qtWidget().getCompactColumns()
+
 	def setHeaderVisible( self, visible ) :
 
 		self._qtWidget().header().setVisible( visible )
@@ -1043,6 +1051,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		self.header().setStretchLastSection( False )
 		# width of the last column after being automatically stretched to use available space
 		self.__lastColumnWidth = 0
+		self.__compactColumns = False
 
 		self.__recalculatingColumnWidths = False
 
@@ -1157,7 +1166,10 @@ class _TreeView( QtWidgets.QTreeView ) :
 		columnWidthsChanged = False
 		for i in range( 0, numColumnsToResize ) :
 			if columns[i].getSizeMode() == GafferUI.PathColumn.SizeMode.Interactive :
-				idealWidth = max( header.sectionSizeHint( i ), self.sizeHintForColumn( i ) )
+				if self.__compactColumns :
+					idealWidth = max( self.sizeHintForColumn( i ), 50 if self.isSortingEnabled() and header.sortIndicatorSection() == i else 8 )
+				else :
+					idealWidth = max( header.sectionSizeHint( i ), self.sizeHintForColumn( i ) )
 				self.__idealColumnWidths[columns[i]] = idealWidth
 				adjustedWidth = idealWidth + self.__columnWidthAdjustments[columns[i]]
 				if i == header.count() - 1  :
@@ -1186,6 +1198,18 @@ class _TreeView( QtWidgets.QTreeView ) :
 			# directly ourselves. That triggers a layout update to account for the
 			# fact that our `sizeHint()` will have changed.
 			self.updateGeometry()
+
+	def setCompactColumns( self, compactColumns ) :
+
+		if compactColumns == self.__compactColumns :
+			return
+
+		self.__compactColumns = compactColumns
+		self.updateColumnWidths( columnsChanged = True )
+
+	def getCompactColumns( self ) :
+
+		return self.__compactColumns
 
 	def keyPressEvent( self, event ) :
 
