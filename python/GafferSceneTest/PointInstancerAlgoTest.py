@@ -385,11 +385,12 @@ class PointInstancerAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		prototype = GafferScene.Sphere()
 
-		pointInstancer = IECoreScene.PointInstancer( 2 )
+		pointInstancer = IECoreScene.PointInstancer( 20 )
 		pointInstancer.setPosition( IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 0, 20 ) ] ) )
 		pointInstancer.setPrototypeIndex( IECore.IntVectorData( [ 0 ] * 20 ) )
 		pointInstancer.setPrototypes( IECore.StringVectorData( [ "sphere" ] ) )
 		pointInstancer.setInvisibleIDs( IECore.Int64VectorData( range( 0, 20, 2 ) ) )
+		self.assertTrue( pointInstancer.arePrimitiveVariablesValid() )
 
 		pointInstancerNode = GafferScene.ObjectToScene()
 		pointInstancerNode["object"].setValue( pointInstancer )
