@@ -1045,6 +1045,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		self.header().geometriesChanged.connect( self.updateGeometry )
 		self.header().sectionResized.connect( self.__sectionResized )
 
+		self.header().setTextElideMode( QtCore.Qt.ElideRight )
 		# Disable Qt's stretchLastSection behaviour as it will claim any available space in the header
 		# before our stretch columns have a chance to resize themselves. We control our own equivalent
 		# behaviour based on the result of _shouldStretchLastColumn()

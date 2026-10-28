@@ -6,6 +6,7 @@ Improvements
 
 - DeepMerge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
 - MeshSegments : Added `ignoreMissing` plug.
+- PathListingWidget, SpreadsheetUI : Header text is now elided rather than truncated.
 
 Fixes
 -----
