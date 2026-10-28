@@ -75,8 +75,8 @@ const InternedString g_shaderNodeName( "gaffer:nodeName" );
 // InspectorColumn
 //////////////////////////////////////////////////////////////////////////
 
-InspectorColumn::InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const std::string &columnName, const std::string &columnToolTip, PathColumn::SizeMode sizeMode )
-	:	InspectorColumn( inspector, PathColumn::CellData( headerValue( columnName != "" ? columnName : inspector->name() ), nullptr, nullptr, new IECore::StringData( columnToolTip ) ), sizeMode )
+InspectorColumn::InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const std::string &columnName, const std::string &columnToolTip, const std::string &columnAbbreviatedLabel, PathColumn::SizeMode sizeMode )
+	:	InspectorColumn( inspector, PathColumn::CellData( headerValue( columnName != "" ? columnName : inspector->name() ), nullptr, nullptr, new IECore::StringData( columnToolTip ), nullptr, nullptr, columnAbbreviatedLabel != "" ? new IECore::StringData( columnAbbreviatedLabel ) : nullptr ), sizeMode )
 {
 }
 
