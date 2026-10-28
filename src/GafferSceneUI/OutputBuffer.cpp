@@ -45,7 +45,6 @@
 
 #include "boost/lexical_cast.hpp"
 
-#include <limits>
 #include <unordered_set>
 
 using namespace std;
@@ -86,10 +85,10 @@ const char *g_fragmentSource = R"(
 #extension GL_EXT_gpu_shader4 : require
 
 // Assumes texture contains sorted values.
-bool contains( usampler2D array, unsigned int value )
+bool contains( usampler2D array, int arraySize, unsigned int value )
 {
 	int width = textureSize2D( array, 0 ).x;
-	int high = width * textureSize2D( array, 0 ).y - 1;
+	int high = arraySize - 1;
 	int low = 0;
 	while( low != high )
 	{
@@ -110,6 +109,7 @@ uniform sampler2D rgbaTexture;
 uniform sampler2D depthTexture;
 uniform usampler2D idTexture;
 uniform usampler2D selectionTexture;
+uniform int selectionSize;
 uniform bool renderSelection;
 
 varying vec2 texCoords;
@@ -134,7 +134,7 @@ void main()
 	if( renderSelection )
 	{
 		unsigned int id = texture2D( idTexture, texCoords ).r;
-		outColor = vec4( 0.466, 0.612, 0.741, 1.0 ) * outColor.a * 0.75 * float( contains( selectionTexture, id ) );
+		outColor = vec4( 0.466, 0.612, 0.741, 1.0 ) * outColor.a * 0.75 * float( contains( selectionTexture, selectionSize, id ) );
 	}
 	gl_FragColor = outColor;
 }
@@ -148,7 +148,7 @@ void main()
 //////////////////////////////////////////////////////////////////////////
 
 OutputBuffer::OutputBuffer( IECoreScenePreview::Renderer *renderer )
-	:	m_texturesDirty( false )
+	:	m_texturesDirty( false ), m_selectionTextureSize( 0 )
 {
 	IECoreScene::OutputPtr outputTemplate = new IECoreScene::Output( "", "ieDisplay", "" );
 	outputTemplate->parameters()["driverType"] = new IECore::StringData( "OutputBuffer::DisplayDriver" );
@@ -259,9 +259,9 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 
 		const int height = ( m_selectionBuffer.size() + g_selectionTextureWidth - 1 ) / g_selectionTextureWidth;
 
-		// Pad to fill the last row with an ID that shouldn't be provided by `RenderManifest`.
+		// Pad to fill the last row.
 		vector<uint32_t> paddedSelection( m_selectionBuffer );
-		paddedSelection.resize( g_selectionTextureWidth * height, std::numeric_limits<uint32_t>::max() );
+		paddedSelection.resize( g_selectionTextureWidth * height );
 
 		Texture::ScopedBinding selectionBinding( *m_selectionTexture );
 		glTexImage2D(
@@ -269,6 +269,7 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 			g_selectionTextureWidth, height, /* border = */ 0,
 			GL_RED_INTEGER, GL_UNSIGNED_INT, paddedSelection.data()
 		);
+		m_selectionTextureSize = m_selectionBuffer.size();
 	}
 
 	if( !m_shader )
@@ -287,6 +288,7 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 	IECoreGL::Shader::Setup::ScopedBinding shaderBinding( *m_shaderSetup );
 
 	glUniform1i( m_shader->uniformParameter( "renderSelection" )->location, renderSelection );
+	glUniform1i( m_shader->uniformParameter( "selectionSize" )->location, m_selectionTextureSize );
 
 	glPushAttrib( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT );
 
