@@ -48,6 +48,7 @@ import Qt
 # - Adds `blockingSectionPressedSignal()`, which can block Qt's mousePressEvent, useful for preventing changes to sort order when clicking.
 # - Improves visual feedback when interactively moving sections by highlighting the section divider where the dropped section would be inserted.
 # - Supports changing header icons on mouse hover, via PathColumn's { "state:normal" : "normal.png", "state:highlighted" : "highlighted.png" } icon format.
+# - Shows the section header text as a tooltip, for sections that haven't provided their own tooltip.
 class _HeaderView( QtWidgets.QHeaderView ) :
 
 	def __init__( self, orientation = QtCore.Qt.Horizontal, parent = None ) :
@@ -171,6 +172,18 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 		if logicalIndex == self.__hoveredSection and isinstance( option.icon, QtGui.QIcon ) :
 			iconSize = self.style().pixelMetric( QtWidgets.QStyle.PM_SmallIconSize )
 			option.icon = option.icon.pixmap( QtCore.QSize( iconSize, iconSize ), QtGui.QIcon.Active )
+
+	def viewportEvent( self, event ) :
+
+		if event.type() == QtCore.QEvent.ToolTip :
+			section = self.logicalIndexAt( event.pos() )
+			if section >= 0 and not self.model().headerData( section, self.orientation(), QtCore.Qt.ToolTipRole ) :
+				headerText = self.model().headerData( section, self.orientation(), QtCore.Qt.DisplayRole )
+				if headerText :
+					QtWidgets.QToolTip.showText( event.globalPos(), headerText, self )
+					return True
+
+		return QtWidgets.QHeaderView.viewportEvent( self, event )
 
 	def paintEvent( self, event ) :
 

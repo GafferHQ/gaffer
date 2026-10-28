@@ -9,7 +9,7 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor :
   - Added column filter. When enabled, only columns matching the search text are shown, and sections without any matching columns are hidden.
   - Section tabs are now sized to fit their names, rather than expanding to fill the available space.
-- PathListingWidget, SpreadsheetUI : Header text is now elided rather than truncated.
+- PathListingWidget, SpreadsheetUI : Header text is now elided rather than truncated. A default tooltip now shows the full text of the header.
 
 Fixes
 -----
