@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.6.0)
 =======
 
+Improvements
+------------
+
+- DeepMerge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
+
 Fixes
 -----
 
