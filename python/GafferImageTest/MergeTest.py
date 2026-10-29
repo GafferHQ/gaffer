@@ -539,7 +539,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
 
-		self.assertRaisesRegex( RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, collectMerge["out"] )
+		self.assertRaisesRegex( RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.tiles, collectMerge["out"] )
 
 	def testDefaultFormat( self ) :
 
