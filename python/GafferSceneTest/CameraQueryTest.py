@@ -665,6 +665,7 @@ class CameraQueryTest( GafferSceneTest.SceneTestCase ):
 				"supersededBy" : "camera:parameter:fStop",
 			}
 		} )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, "camera:parameter:fStoppe", "supersededBy" )
 		camera["fStop"].setValue( 8.0 )  # Make sure we don't fetch cached values
 
 		self.assertEqual( query["out"][0]["source"].getValue(), GafferScene.CameraQuery.Source.Camera )
