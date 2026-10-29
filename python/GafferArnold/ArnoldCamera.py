@@ -179,7 +179,8 @@ class ArnoldCamera( GafferScene.SceneNode ) :
 		] :
 			Gaffer.PlugAlgo.promote( p, excludeMetadata = "" )
 
-		Gaffer.PlugAlgo.promoteWithName( self["NameSwitch"]["selector"], "type", excludeMetadata = "layout:* preset* divider" )
+		self["type"] = Gaffer.StringPlug( "type", defaultValue = "spherical" )
+		self["NameSwitch"]["selector"].setInput( self["type"] )
 
 		self["CameraTweaksEnablerExpression"] = Gaffer.Expression()
 		self["CameraTweaksEnablerExpression"].setExpression(

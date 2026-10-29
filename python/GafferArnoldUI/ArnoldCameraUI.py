@@ -65,7 +65,6 @@ Gaffer.Metadata.registerNode(
 			"""
 			The type of camera to create.
 			""",
-			"userDefault" : "cylindrical",
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 			"presetNames" : IECore.StringVectorData( [ "Cylindrical", "Fisheye", "Spherical", "VR" ] ),
 			"presetValues" : IECore.StringVectorData( [ "cylindrical", "fisheye", "spherical", "vr" ] ),
