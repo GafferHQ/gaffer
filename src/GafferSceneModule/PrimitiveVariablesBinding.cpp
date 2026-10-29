@@ -132,6 +132,7 @@ void GafferSceneModule::bindPrimitiveVariables()
 			.value( "Gaussian", RandomPrimitiveVariable::Distribution::Gaussian )
 			.value( "WeightedChoice", RandomPrimitiveVariable::Distribution::WeightedChoice )
 			.value( "HollowSphere", RandomPrimitiveVariable::Distribution::HollowSphere )
+			.value( "BooleanSelection", RandomPrimitiveVariable::Distribution::BooleanSelection )
 		;
 
 		randomClass.def( "setup", &setupBinding );
