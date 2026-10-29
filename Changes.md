@@ -20,6 +20,7 @@ Fixes
   - Ensure the correct mapping of log levels and added more that have appeared in recent Cycles versions.
   - Fixed Viewer reverting to SVM shading for all non-CPU devices. OSL shading is now available for OptiX devices.
   - Texture limit option correctly sets the right value.
+  - Ensure all UVs are converted to face-varying as Cycles expects it to be in this form for any kind of UV.
 
 API
 ---

@@ -213,6 +213,16 @@ ccl::Mesh *convertPrimary( const IECoreScene::MeshPrimitive *mesh, ccl::Scene *s
 			GeometryAlgo::convertPrimitiveVariable( name, resampledN, attributes, ccl::ATTR_ELEMENT_CORNER );
 			continue;
 		}
+		const V2fVectorData *uv = static_cast<const V2fVectorData *>( variable.data.get() );
+		if( ( name == "uv" || ( uv && uv->getInterpretation() == GeometricData::UV ) ) &&
+			variable.interpolation != PrimitiveVariable::FaceVarying )
+		{
+			// Resample UVs to FaceVarying as Cycles doesn't accept any other for UVs.
+			PrimitiveVariable resampledUV = variable;
+			IECoreScene::MeshAlgo::resamplePrimitiveVariable( mesh, resampledUV, PrimitiveVariable::FaceVarying );
+			GeometryAlgo::convertPrimitiveVariable( name, resampledUV, attributes, ccl::ATTR_ELEMENT_CORNER );
+			continue;
+		}
 		switch( variable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
