@@ -374,6 +374,25 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		sampler["image"].setInput( merge["out"] )
 		sampler["pixel"].setValue( imath.V2f( 10 ) )
 
+		# We should get the same result as using two inputs if we use one input connected switch driven by
+		# Collect mode
+		switch = Gaffer.Switch()
+		switch.setup( a["out"] )
+		switch["in"][0].setInput( b["out"] )
+		switch["in"][1].setInput( a["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.Merge()
+		collectMerge["in"][0].setInput( switch["out"] )
+		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "b", "a" ] ) )
+
+		collectSampler = GafferImage.ImageSampler()
+		collectSampler["image"].setInput( collectMerge["out"] )
+		collectSampler["pixel"].setValue( imath.V2f( 10 ) )
+
 		self.longMessage = True
 		for operation, expected in [
 			( GafferImage.Merge.Operation.Add, imath.Color4f( 1.1, 0.5, 0.4, 0.6 ) ),
@@ -393,7 +412,9 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		] :
 
 			merge["operation"].setValue( operation )
+			collectMerge["operation"].setValue( operation )
 			self.assertEqualWithAbsError( sampler["color"].getValue(), expected, error = 1e-6, message = operation )
+			self.assertEqualWithAbsError( collectSampler["color"].getValue(), expected, error = 1e-6, message = operation )
 
 	def testDifferenceExceptionalValues( self ) :
 
@@ -498,6 +519,27 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		merge["in"][0].setInput( flat["out"] )
 		merge["in"][1].setInput( deep["out"] )
 		self.assertRaisesRegex( RuntimeError, 'Deep data not supported in input "in.in1"', GafferImage.ImageAlgo.tiles, merge["out"] )
+
+		switch = Gaffer.Switch()
+		switch.setup( flat["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.Merge()
+		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		collectMerge["in"][0].setInput( switch["out"] )
+
+		switch["in"][0].setInput( flat["out"] )
+		switch["in"][1].setInput( deep["out"] )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0" ] ) )
+
+		self.assertImagesEqual( collectMerge["out"], flat["out"] )
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
+
+		self.assertRaisesRegex( RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, collectMerge["out"] )
 
 	def testDefaultFormat( self ) :
 
@@ -870,12 +912,28 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		merge = GafferImage.Merge()
 		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
+		# Also set up a Merge in Collect mode that should give the same result
+		switch = Gaffer.Switch()
+		switch.setup( c1["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.Merge()
+		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		collectMerge["in"][0].setInput( switch["out"] )
+
 		referenceMerge = GafferImage.Merge()
 		referenceMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
 		# Test a default view over multiple views
 		merge["in"][0].setInput( createViews1["out"] )
 		merge["in"][1].setInput( c3["out"] )
+
+		switch["in"][0].setInput( createViews1["out"] )
+		switch["in"][1].setInput( c3["out"] )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
 
 		referenceMerge["in"][0].setInput( c1["out"] )
 		referenceMerge["in"][1].setInput( c3["out"] )
@@ -888,9 +946,13 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "right" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
 
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
 		# No default view in first input
 		with self.assertRaisesRegex( RuntimeError, '.*No view "default"' ):
 			GafferImage.ImageAlgo.tiles( merge["out"], True, "default" )
+		with self.assertRaisesRegex( RuntimeError, '.*No view "default"' ):
+			GafferImage.ImageAlgo.tiles( collectMerge["out"], True, "default" )
 
 		# Merge stereo
 		merge["in"][1].setInput( createViews2["out"] )
@@ -903,22 +965,271 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		referenceMerge["in"][1].setInput( c4["out"] )
 		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "right" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
 
+		switch["in"][1].setInput( createViews2["out"] )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
 		# Test functionality of default
 		createViews1["views"][0]["name"].setValue( "default" )
 		self.assertEqual( merge["out"].viewNames(), IECore.StringVectorData( [ "default", "right" ] ) )
 		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "default" ), GafferImage.ImageAlgo.tiles( c1["out"] ) )
 		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "undeclared" ), GafferImage.ImageAlgo.tiles( c1["out"] ) )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
 
 		createViews2["views"][1]["name"].setValue( "default" )
 		referenceMerge["in"][0].setInput( c1["out"] )
 		referenceMerge["in"][1].setInput( c4["out"] )
 		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "default" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
 		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "undeclared" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
 
 		# Test merging in views that aren't in the first image, which does nothing
 		createViews2["views"][1]["name"].setValue( "right" )
 		merge["in"][0].setInput( c1["out"] )
 		self.assertImagesEqual( merge["out"], c1["out"] )
+		switch["in"][0].setInput( c1["out"] )
+		self.assertImagesEqual( collectMerge["out"], c1["out"] )
+
+	def testCollectComparison( self ) :
+		# Compare a merge in Collect mode with one that does the same merge in Standard mode
+
+		cRaw = GafferImage.ImageReader()
+		cRaw["fileName"].setValue( self.checkerPath )
+
+		c = GafferImage.Offset()
+		c["in"].setInput( cRaw["out"] )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.rPath )
+
+		g = GafferImage.ImageReader()
+		g["fileName"].setValue( self.gPath )
+
+		b = GafferImage.ImageReader()
+		b["fileName"].setValue( self.bPath )
+
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.checkerRGBPath )
+
+		merge = GafferImage.Merge()
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		merge["in"][0].setInput( c["out"] )
+		merge["in"][1].setInput( r["out"] )
+		merge["in"][2].setInput( g["out"] )
+		merge["in"][3].setInput( b["out"] )
+
+		# Reproduce this basic over test using Collect mode with an input switch
+		switch = Gaffer.Switch()
+		switch.setup( c["out"] )
+		switch["in"][0].setInput( c["out"] )
+		switch["in"][1].setInput( r["out"] )
+		switch["in"][2].setInput( g["out"] )
+		switch["in"][3].setInput( b["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.Merge()
+		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		collectMerge["in"][0].setInput( switch["out"] )
+		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "c", "r", "g", "b" ] ) )
+
+		self.assertImagesEqual( merge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
+		self.assertImagesEqual( collectMerge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
+
+		# The result from a standard Merge vs a Merge in Collect mode with the same inputs should be actually identical
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		# Test some random offsets of one layer to make sure we handle data windows OK
+		c["offset"].setValue( imath.V2i( 10, 10 ) )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+		c["offset"].setValue( imath.V2i( -10, -10 ) )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+		c["offset"].setValue( imath.V2i( 513, 1003 ) )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+		c["offset"].setValue( imath.V2i( -513, -1003 ) )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+
+		# Actually use merge:value instead of an index
+		rgbReader = GafferImage.ImageReader()
+		rgbReader["fileName"].setValue( GafferImageTest.ImageTestCase.imagesPath() / "${merge:value}WithDataWindow.100x100.exr" )
+
+		collectMerge["in"][0].setInput( rgbReader["out"] )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "red", "green", "blue" ] ) )
+
+		merge["in"][0].setInput( r["out"] )
+		merge["in"][1].setInput( g["out"] )
+		merge["in"][2].setInput( b["out"] )
+		merge["in"][3].setInput( None )
+
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "blue", "green", "red" ] ) )
+		merge["in"][0].setInput( b["out"] )
+		merge["in"][1].setInput( g["out"] )
+		merge["in"][2].setInput( r["out"] )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "blue", "red" ] ) )
+		merge["in"][0].setInput( b["out"] )
+		merge["in"][1].setInput( r["out"] )
+		merge["in"][2].setInput( None )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "blue" ] ) )
+		merge["in"][0].setInput( b["out"] )
+		merge["in"][1].setInput( None )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [] ) )
+		merge["in"][0].setInput( None )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+	def testCollectWithMultipleInputs( self ) :
+		# Compare a merge in Collect mode with one that does the same merge in Standard mode
+
+		cRaw = GafferImage.ImageReader()
+		cRaw["fileName"].setValue( self.checkerPath )
+
+		c = GafferImage.Offset()
+		c["in"].setInput( cRaw["out"] )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.rPath )
+
+		g = GafferImage.ImageReader()
+		g["fileName"].setValue( self.gPath )
+
+		b = GafferImage.ImageReader()
+		b["fileName"].setValue( self.bPath )
+
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.checkerRGBPath )
+
+		# Feed the 4 inputs through two inputs, each of which is evaluated in 2 contexts
+		switch1 = Gaffer.Switch()
+		switch1.setup( c["out"] )
+		switch1["in"][0].setInput( c["out"] )
+		switch1["in"][1].setInput( r["out"] )
+		switch1["expression"] = Gaffer.Expression()
+		switch1["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		switch2 = Gaffer.Switch()
+		switch2.setup( c["out"] )
+		switch2["in"][0].setInput( g["out"] )
+		switch2["in"][1].setInput( b["out"] )
+		switch2["expression"] = Gaffer.Expression()
+		switch2["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.Merge()
+		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		collectMerge["in"][0].setInput( switch1["out"] )
+		collectMerge["in"][1].setInput( switch2["out"] )
+		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
+
+		self.assertImagesEqual( collectMerge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
+
+	def testMissingChannels( self ) :
+		# Test combining images with different channels
+
+		c = GafferImage.ImageReader()
+		c["fileName"].setValue( self.checkerPath )
+		cChannels = GafferImage.DeleteChannels()
+		cChannels["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+		cChannels["in"].setInput( c["out"] )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.rPath )
+		rChannels = GafferImage.DeleteChannels()
+		rChannels["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+		rChannels["in"].setInput( r["out"] )
+
+		g = GafferImage.ImageReader()
+		g["fileName"].setValue( self.gPath )
+		gChannels = GafferImage.DeleteChannels()
+		gChannels["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+		gChannels["in"].setInput( g["out"] )
+
+		b = GafferImage.ImageReader()
+		b["fileName"].setValue( self.bPath )
+		bChannels = GafferImage.DeleteChannels()
+		bChannels["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+		bChannels["in"].setInput( b["out"] )
+
+		merge = GafferImage.Merge()
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		merge["in"][0].setInput( cChannels["out"] )
+		merge["in"][1].setInput( rChannels["out"] )
+		merge["in"][2].setInput( gChannels["out"] )
+		merge["in"][3].setInput( bChannels["out"] )
+
+		switch = Gaffer.Switch()
+		switch.setup( c["out"] )
+		switch["in"][0].setInput( cChannels["out"] )
+		switch["in"][1].setInput( rChannels["out"] )
+		switch["in"][2].setInput( gChannels["out"] )
+		switch["in"][3].setInput( bChannels["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.Merge()
+		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		collectMerge["in"][0].setInput( switch["out"] )
+		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "c", "r", "g", "b" ] ) )
+
+		for channels, combinedChannels in [
+			( ( "RGBA", "RGBA", "RGBA", "RGBA" ), "RGBA" ),
+			( ( "", "R", "G", "B" ), "RGB" ),
+			( ( "", "R", "GA", "B" ), "RGAB" ),
+			( ( "A", "RA", "GA", "BA" ), "RAGB" ),
+			( ( "", "RGBA", "RGBA", "RGBA" ), "RGBA" ),
+			( ( "RA", "RGBA", "RGBA", "RGBA" ), "RGBA" ),
+			( ( "", "", "A", "" ), "A" ),
+			( ( "", "", "", "" ), "" ),
+		]:
+			cChannels["channels"].setValue( "[" + channels[0] + "]" )
+			rChannels["channels"].setValue( "[" + channels[1] + "]" )
+			gChannels["channels"].setValue( "[" + channels[2] + "]" )
+			bChannels["channels"].setValue( "[" + channels[3] + "]" )
+
+			# Check that using a collect produces the same results as using multiple inputs
+			self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+			# Check that we accumulate channels as they're used
+			self.assertEqual( list( merge["out"].channelNames() ), list( combinedChannels ) )
+
+	def testFromFirstInput( self ) :
+		# Format and metadata come from the first context of the first input
+
+		firstImage = GafferImage.Constant()
+		firstImage["format"].setValue( GafferImage.Format( 1003, 1004, 1.000 ) )
+
+		firstMetadata = GafferImage.ImageMetadata( "ImageMetadata1" )
+		firstMetadata["in"].setInput( firstImage["out"] )
+		firstMetadata["metadata"].addChild( Gaffer.NameValuePlug( "test", Gaffer.StringPlug( "value", defaultValue = 'val', ), True ) )
+
+		unusedImage = GafferImage.Constant()
+
+		switch = Gaffer.Switch()
+		switch.setup( firstImage["out"] )
+		switch["in"][0].setInput( firstMetadata["out"] )
+		switch["in"][1].setInput( unusedImage["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.Merge()
+		collectMerge["in"][0].setInput( switch["out"] )
+		collectMerge["in"][1].setInput( unusedImage["out"] )
+		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
+
+		self.assertEqual( collectMerge["out"].format(), GafferImage.Format( 1003, 1004, 1.000 ) )
+		self.assertEqual( collectMerge["out"].metadata(), IECore.CompoundData( { "test" : "val" }  ) )
 
 	def mergePerf( self, operation, mismatch ):
 		r = GafferImage.Checkerboard( "Checkerboard" )

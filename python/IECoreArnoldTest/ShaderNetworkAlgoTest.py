@@ -37,6 +37,8 @@
 import ctypes
 import unittest
 import math
+import os
+import subprocess
 
 import arnold
 
@@ -1710,3 +1712,104 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					self.assertEqual( lightNetwork.input( ( "tint", "input1" ) ), ( "correct", "out" ) )
 					self.assertEqual( lightNetwork.input( ( "correct", "input" ) ), ( "texture", "out" ) )
 					self.assertEqual( lightNetwork.input( ( "tint", "input2" ) ), ( "lightTexture", "out" ) )
+
+	def testUSDConformantOSLRampParameter( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"ramp" : IECoreScene.Shader(
+					# In a live Gaffer session this would currently be `"Pattern/ColorRamp", "osl:shader"`.
+					# But after round-tripping through USD it is just `"ColorRamp", "surface"`. Here we're
+					# testing that we can still process ramps correctly in this form.
+					"ColorRamp", "surface",
+					{
+						"ramp" : IECore.RampfColor3fData( IECore.RampfColor3f(
+							[
+								( 0, imath.Color3f( 1, 0, 0 ) ),
+								( 1, imath.Color3f( 0, 0, 1 ) ),
+							],
+							IECore.RampInterpolation.Linear
+						) )
+					}
+				),
+				"flat" : IECoreScene.Shader( "flat", "ai:surface" )
+			},
+			connections = [
+				( ( "ramp", "c" ), ( "flat", "color" ) )
+			],
+			output = "flat"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiNodeSetStr(
+				arnold.AiUniverseGetOptions( universe ), "plugin_searchpath",
+				os.environ["OSL_SHADER_PATHS"]
+			)
+
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
+			self.assertEqual( len( nodes ), 2 )
+			rampNode = nodes[0]
+
+			alternateTestEnv = os.environ.copy()
+			if arnold.AiNodeIs( rampNode, "osl" ) :
+				# This is how we expect things to work in production, and how this
+				# test operates in isolation. We create an `osl` node pointing
+				# at the `ColorRamp` file on disk.
+				self.assertEqual( arnold.AiNodeGetStr( rampNode, "shadername" ), "ColorRamp" )
+				paramPrefix = "param_"
+				alternateTestEnv["ARNOLD_PLUGIN_PATH"] = os.environ["OSL_SHADER_PATHS"]
+				alternateTestEnv["IECOREARNOLDTEST_SHADERNETWORKALGOTEST_EXPECTED_NODE_TYPE"] = "ColorRamp"
+			else :
+				# This covers the case where ColorRamp has been placed on the
+				# plugin path and therefore has its own node registration.
+				# This can occur for two reasons :
+				#
+				# 1. Another test has previously generated an `.ass` file
+				#    via Renderer, and loaded it with `AiSceneLoad()`. Unfortunately,
+				#    `AiSceneLoad()` loads all plugins found on the `options.plugin_searchpath`
+				#    in this file. We only set that searchpath for the `osl` node to be able
+				#    to find the `.oso` files, but on load this turns all the `.oso` files into
+				#    their own node definitions. Ideally there would be a separate `osl_searchpath`,
+				#    but there isn't.
+				# 2. A pipeline has deliberately placed all `.oso` files on the
+				#    ARNOLD_PLUGIN_PATH before loading Gaffer. We know of at least
+				#    one studio where this is the case, as it can aid interoperability
+				#    with other DCCs.
+				self.assertTrue( arnold.AiNodeIs( rampNode, "ColorRamp" ) )
+				paramPrefix = ""
+				del alternateTestEnv["ARNOLD_PLUGIN_PATH"]
+				alternateTestEnv["IECOREARNOLDTEST_SHADERNETWORKALGOTEST_EXPECTED_NODE_TYPE"] = "osl"
+
+			self.assertEqual( arnold.AiNodeGetStr( rampNode, f"{paramPrefix}rampBasis" ), "linear" )
+
+			# Our 2 ramp positions are duplicated out to 4 because OSL discards the first and
+			# last segment of linear curves "To maintain consistency with the other spline types".
+			positionsArray = arnold.AiNodeGetArray( rampNode, f"{paramPrefix}rampPositions" )
+			self.assertEqual( arnold.AiArrayGetNumElements( positionsArray ), 4 )
+			self.assertEqual( arnold.AiArrayGetFlt( positionsArray, 0 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( positionsArray, 1 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( positionsArray, 2 ), 1 )
+			self.assertEqual( arnold.AiArrayGetFlt( positionsArray, 3 ), 1 )
+
+			valuesArray = arnold.AiNodeGetArray( rampNode, f"{paramPrefix}rampValues" )
+			self.assertEqual( arnold.AiArrayGetNumElements( valuesArray ), 4 )
+			self.assertEqual( arnold.AiArrayGetRGB( valuesArray, 0 ), arnold.AtRGB( 1, 0, 0 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( valuesArray, 1 ), arnold.AtRGB( 1, 0, 0 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( valuesArray, 2 ), arnold.AtRGB( 0, 0, 1 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( valuesArray, 3 ), arnold.AtRGB( 0, 0, 1 ) )
+
+			# Run this test again in a separate process with an environment that
+			# will exercise the other `AiNodeIs()` branch above.
+			if "IECOREARNOLDTEST_SHADERNETWORKALGOTEST_EXPECTED_NODE_TYPE" not in os.environ :
+				try :
+					subprocess.check_output(
+						[ "gaffer" if os.name != "nt" else "gaffer.cmd", "test", "IECoreArnoldTest.ShaderNetworkAlgoTest.testUSDConformantOSLRampParameter" ],
+						env = alternateTestEnv, stderr = subprocess.STDOUT
+					)
+				except subprocess.CalledProcessError as e :
+					self.fail( e.output )
+			else :
+				# We're in a subprocess already. Check we're exercising the
+				# branch we think we are.
+				self.assertTrue( arnold.AiNodeIs( rampNode, os.environ["IECOREARNOLDTEST_SHADERNETWORKALGOTEST_EXPECTED_NODE_TYPE"] ) )

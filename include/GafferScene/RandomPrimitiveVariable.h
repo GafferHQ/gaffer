@@ -62,6 +62,7 @@ class GAFFERSCENE_API RandomPrimitiveVariable : public Deformer
 			Gaussian,
 			WeightedChoice,
 			HollowSphere,
+			BooleanSelection
 		};
 
 		Gaffer::StringPlug *namePlug();
@@ -107,6 +108,9 @@ class GAFFERSCENE_API RandomPrimitiveVariable : public Deformer
 
 		Gaffer::IntPlug *interpretationPlug();
 		const Gaffer::IntPlug *interpretationPlug() const;
+
+		Gaffer::FloatPlug *selectionProbabilityPlug();
+		const Gaffer::FloatPlug *selectionProbabilityPlug() const;
 
 		/// Sets up the `choicesValuesPlug()`. The name of this
 		/// function isn't ideal, but is needed for compatibility

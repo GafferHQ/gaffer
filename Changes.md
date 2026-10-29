@@ -44,7 +44,10 @@ Breaking Changes
   - Removed deprecated `postSerialisationSignal()`.
   - Renamed `staticPostSerialisationSignal()` to `postSerialisationSignal()`.
 
-1.7.x.x (relative to 1.7.5.0)
+1.7.x.x (relative to 1.7.6.0)
+=======
+
+1.7.6.0 (relative to 1.7.5.0)
 =======
 
 Improvements
@@ -55,13 +58,17 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor :
   - Added column filter. When enabled, only columns matching the search text are shown, and sections without any matching columns are hidden.
   - Section tabs are now sized to fit their names, rather than expanding to fill the available space.
+- Merge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
+- RandomPrimitiveVariable : Added `BooleanSelection` mode, which is useful for decimating geometry in conjunction with DeletePoints, DeleteCurves and DeleteFaces nodes.
 
 Fixes
 -----
 
+- PointInstancer : Fixed bug handling invisible objects within prototypes (they were being rendered).
 - AttributeEditor :
   - The section chooser is no longer hidden when only a single section is available.
   - Fixed bug preventing the `All` section from showing columns from all sections after a column had been registered to `section = "All"`.
+- Arnold : Fixed rendering of OSL ramps after exporting to USD and reimporting.
 
 API
 ---

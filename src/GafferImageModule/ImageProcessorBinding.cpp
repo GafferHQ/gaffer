@@ -131,6 +131,11 @@ void GafferImageModule::bindImageProcessor()
 			.value( "Min", Merge::Min )
 			.value( "Max", Merge::Max )
 		;
+
+		enum_<Merge::Mode>( "Mode" )
+			.value( "Standard", Merge::Mode::Standard )
+			.value( "Collect", Merge::Mode::Collect )
+		;
 	}
 
 	{

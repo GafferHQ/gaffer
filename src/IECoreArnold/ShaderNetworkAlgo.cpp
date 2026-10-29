@@ -373,6 +373,7 @@ ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNe
 	/// specific outputs, and can stop needing to duplicate shaders when more than 1 output
 	/// is used.
 	IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( result.get(), 10900 );
+	IECoreScene::ShaderNetworkAlgo::expandRamps( result.get() );
 	IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( result.get() );
 
 	/// Convert `quad_light` width and height, if needed.

@@ -206,6 +206,21 @@ struct HollowSphereDistribution
 
 };
 
+struct BooleanSelectionDistribution
+{
+
+	using ResultType = BoolVectorData;
+
+	const float probability;
+
+	bool operator() ( const IECore::MurmurHash &seed ) const
+	{
+		const float f = unitFloat( seed.h1() );
+		return f < probability;
+	}
+
+};
+
 // Technically we could support any VectorTypedData for the seed, but this leads
 // to code bloat, so we just support the subset we think is likely to actually
 // be useful.
@@ -272,22 +287,26 @@ DataPtr dispatchDistribution( const Distribution &distribution, size_t size, int
 	writableData.resize( size );
 
 	SeedFunction seedFunction = createSeedFunction( seed, seedVariable );
+	const tbb::blocked_range<size_t> range( 0, size );
 
-	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-	tbb::parallel_for(
+	auto body = [&] ( const tbb::blocked_range<size_t> &range ) {
+		for( size_t i = range.begin(); i < range.end(); ++i )
+		{
+			writableData[i] = distribution( seedFunction( i ) );
+		}
+	};
 
-		tbb::blocked_range<size_t>( 0, size ),
-		[&] ( const tbb::blocked_range<size_t> &range ) {
-
-			for( size_t i = range.begin(); i < range.end(); ++i )
-			{
-				writableData[i] = distribution( seedFunction( i ) );
-			}
-		},
-
-		taskGroupContext
-
-	);
+	if constexpr( std::is_same_v<typename Distribution::ResultType, BoolVectorData> )
+	{
+		// Writes to different elements of `vector<bool>` are not threadsafe,
+		// so run serially.
+		body( range );
+	}
+	else
+	{
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+		tbb::parallel_for( range, body, taskGroupContext );
+	}
 
 	return data;
 }
@@ -347,7 +366,7 @@ RandomPrimitiveVariable::RandomPrimitiveVariable( const std::string &name )
 	addChild( new IntPlug( "interpolation", Plug::In, (int)PrimitiveVariable::Vertex, (int)PrimitiveVariable::Uniform, (int)PrimitiveVariable::Vertex ) );
 	addChild( new IntPlug( "seed", Plug::In, 0 ) );
 	addChild( new StringPlug( "seedPrimitiveVariable" ) );
-	addChild( new IntPlug( "distribution", Plug::In, (int)UniformFloat, (int)UniformInt, (int)HollowSphere ) );
+	addChild( new IntPlug( "distribution", Plug::In, (int)UniformFloat, (int)UniformInt, (int)BooleanSelection ) );
 	addChild( new V2iPlug( "intRange", Plug::In, V2i( 0, 10 ) ) );
 	addChild( new V2fPlug( "floatRange", Plug::In, V2f( 0, 1 ) ) );
 	addChild( new FloatPlug( "mean", Plug::In, 0.5f ) );
@@ -356,6 +375,7 @@ RandomPrimitiveVariable::RandomPrimitiveVariable( const std::string &name )
 	choicesPlug()->addChild( new FloatVectorDataPlug( "weights" ) );
 	addChild( new FloatPlug( "radius", Plug::In, 1.0f, 0.0f ) );
 	addChild( new IntPlug( "interpretation", Plug::In, (int)GeometricData::Vector, (int)GeometricData::Point, (int)GeometricData::Vector ) );
+	addChild( new FloatPlug( "selectionProbability", Plug::In, 0.5f, 0.0f, 1.0f ) );
 }
 
 RandomPrimitiveVariable::~RandomPrimitiveVariable()
@@ -492,6 +512,16 @@ const Gaffer::IntPlug *RandomPrimitiveVariable::interpretationPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 11 );
 }
 
+Gaffer::FloatPlug *RandomPrimitiveVariable::selectionProbabilityPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 12 );
+}
+
+const Gaffer::FloatPlug *RandomPrimitiveVariable::selectionProbabilityPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 12 );
+}
+
 void RandomPrimitiveVariable::setup( const Gaffer::ValuePlug *plug )
 {
 	choicesPlug()->setChild( "values", plug->createCounterpart( "values", Plug::In ) );
@@ -517,7 +547,8 @@ bool RandomPrimitiveVariable::affectsProcessedObject( const Gaffer::Plug *input 
 		input == deviationPlug() ||
 		input->parent<Plug>() == choicesPlug() ||
 		input == radiusPlug() ||
-		input == interpretationPlug()
+		input == interpretationPlug() ||
+		input == selectionProbabilityPlug()
 	;
 }
 
@@ -550,6 +581,9 @@ void RandomPrimitiveVariable::hashProcessedObject( const ScenePath &path, const 
 		case HollowSphere :
 			radiusPlug()->hash( h );
 			interpretationPlug()->hash( h );
+			break;
+		case BooleanSelection :
+			selectionProbabilityPlug()->hash( h );
 			break;
 	}
 }
@@ -638,6 +672,14 @@ IECore::ConstObjectPtr RandomPrimitiveVariable::computeProcessedObject( const Sc
 			);
 			static_cast<V3fVectorData *>( primitiveVariable.data.get() )->setInterpretation(
 				(GeometricData::Interpretation)interpretationPlug()->getValue()
+			);
+			break;
+		}
+		case BooleanSelection :
+		{
+			primitiveVariable.data = dispatchDistribution(
+				BooleanSelectionDistribution{ selectionProbabilityPlug()->getValue() },
+				variableSize, seed, seedVariable
 			);
 			break;
 		}

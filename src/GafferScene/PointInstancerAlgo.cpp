@@ -218,42 +218,66 @@ M44f flattenedTransform( const ScenePlug *scene, ScenePlug::ScenePath path, size
 	return result;
 }
 
+const IECore::InternedString g_sceneVisible( "scene:visible" );
+
 FlattenedPrototype flattenedPrototype( const Private::RendererAlgo::RenderOptions &renderOptions, const ScenePlug *scene, const string &rootPath, const ScenePlug::ScenePath &fullRootPath )
 {
+	std::mutex resultMutex;
 	FlattenedPrototype result;
-	SceneAlgo::parallelGatherLocations(
-		scene,
-		[&]( const ScenePlug *scene, const ScenePlug::ScenePath &path ) -> std::optional<PrototypeLocation> {
 
-			ConstCompoundObjectPtr fullAttributes = scene->fullAttributes( path );
-			if( !renderOptions.purposeIncluded( fullAttributes.get() ) )
+	auto locationFunctor = [&]( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+
+		ConstCompoundObjectPtr localAttributes = scene->attributesPlug()->getValue();
+		if( auto visible = localAttributes->member<BoolData>( g_sceneVisible ) )
+		{
+			if( !visible->readable() )
 			{
-				return std::nullopt;
+				// Prune traversal.
+				return false;
 			}
+		}
 
-			ConstObjectPtr o = scene->objectPlug()->getValue();
-			if( runTimeCast<const IECore::NullObject>( o.get() ) )
-			{
-				return std::nullopt;
-			}
+		ConstCompoundObjectPtr fullAttributes = scene->fullAttributes( path );
+		if( !renderOptions.purposeIncluded( fullAttributes.get() ) )
+		{
+			// Skip this object and continue traversal (purpose can be
+			// overridden lower in the hierarchy to make the children visible
+			// again).
+			return true;
+		}
 
-			ScenePlug::ScenePath relativePath( path.begin() + fullRootPath.size(), path.end() );
-			// Note : `PrototypeLocation::index` is filled later.
-			return PrototypeLocation{
-				relativePath.size() ? rootPath + ScenePlug::pathToString( relativePath ) : rootPath,
-				flattenedTransform( scene, path, fullRootPath.size() )
-			};
-		},
-		[&]( std::optional<PrototypeLocation> location ) {
-			if( location )
-			{
-				result.push_back( *location );
-			}
-		},
-		fullRootPath
-	);
+		ConstObjectPtr o = scene->objectPlug()->getValue();
+		if( runTimeCast<const IECore::NullObject>( o.get() ) )
+		{
+			return true;
+		}
 
-	// `parallelGatherLocations()` doesn't guarantee order - sort so we
+		ScenePlug::ScenePath relativePath( path.begin() + fullRootPath.size(), path.end() );
+		PrototypeLocation prototypeLocation = {
+			relativePath.size() ? rootPath + ScenePlug::pathToString( relativePath ) : rootPath,
+			flattenedTransform( scene, path, fullRootPath.size() )
+		};
+
+		std::lock_guard resultLock( resultMutex );
+		result.push_back( prototypeLocation );
+
+		return true;
+
+	};
+
+	/// \todo It would be great to use `SceneAlgo::visitVisibleLocations()` here
+	/// instead of managing visibility ourselves in `locationFunctor`. There are
+	/// currently two obstacles to that :
+	///
+	/// 1. `visitVisibleLocations()` doesn't take a `root` argument.
+	/// 2. `visitVisibleLocations()` constructs its own RenderOptions, and we
+	///    have one already. And RenderOptions is currently private.
+	///
+	/// Maybe we can optionally pass the globals to `visitVisibleLocations()`
+	/// and use that to construct the RenderOptions internally?
+	SceneAlgo::parallelTraverse( scene, locationFunctor, fullRootPath );
+
+	// `parallelTraverse()` doesn't guarantee order - sort so we
 	// have a deterministic order for testing and debugging.
 	std::sort(
 		result.begin(), result.end(),
