@@ -421,7 +421,7 @@ void CameraQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 		{
 			if( auto supersededBy = Metadata::value<StringData>( "camera:parameter:" + parameterName, g_supersededByValue ) )
 			{
-				parameterData = parameters->member<CompoundData>( supersededBy->readable().substr( 17 ) );
+				parameterData = parameters->member<CompoundData>( supersededBy->readable() );
 			}
 			if( !parameterData )
 			{

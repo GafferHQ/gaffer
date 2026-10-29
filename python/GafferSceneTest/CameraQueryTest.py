@@ -662,7 +662,7 @@ class CameraQueryTest( GafferSceneTest.SceneTestCase ):
 		# Forward requests from one parameter to another
 		Gaffer.Metadata.registerValues( {
 			"camera:parameter:fStoppe" : {
-				"supersededBy" : "camera:parameter:fStop",
+				"supersededBy" : "fStop",
 			}
 		} )
 		self.addCleanup( Gaffer.Metadata.deregisterValue, "camera:parameter:fStoppe", "supersededBy" )

@@ -121,49 +121,49 @@ Gaffer.Metadata.registerValues( {
 
 	"camera:parameter:shutter_type" : {
 
-		"supersededBy" : "camera:parameter:ai:shutter_type",
+		"supersededBy" : "ai:shutter_type",
 
 	},
 
 	"camera:parameter:shutter_curve" : {
 
-		"supersededBy" : "camera:parameter:ai:shutter_curve",
+		"supersededBy" : "ai:shutter_curve",
 
 	},
 
 	"camera:parameter:rolling_shutter" : {
 
-		"supersededBy" : "camera:parameter:ai:rolling_shutter",
+		"supersededBy" : "ai:rolling_shutter",
 
 	},
 
 	"camera:parameter:rolling_shutter_duration" : {
 
-		"supersededBy" : "camera:parameter:ai:rolling_shutter_duration",
+		"supersededBy" : "ai:rolling_shutter_duration",
 
 	},
 
 	"camera:parameter:aperture_blades" : {
 
-		"supersededBy" : "camera:parameter:ai:aperture_blades",
+		"supersededBy" : "ai:aperture_blades",
 
 	},
 
 	"camera:parameter:aperture_blade_curvature" : {
 
-		"supersededBy" : "camera:parameter:ai:aperture_blade_curvature",
+		"supersededBy" : "ai:aperture_blade_curvature",
 
 	},
 
 	"camera:parameter:aperture_rotation" : {
 
-		"supersededBy" : "camera:parameter:ai:aperture_rotation",
+		"supersededBy" : "ai:aperture_rotation",
 
 	},
 
 	"camera:parameter:aperture_aspect_ratio" : {
 
-		"supersededBy" : "camera:parameter:ai:aperture_aspect_ratio",
+		"supersededBy" : "ai:aperture_aspect_ratio",
 
 	},
 
