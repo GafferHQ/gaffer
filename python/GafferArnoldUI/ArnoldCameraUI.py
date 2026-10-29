@@ -364,7 +364,7 @@ Gaffer.Metadata.registerNode(
 
 		"renderSettingOverrides.filmFit" : {
 
-			"plugValueWidget:type" : "",
+			"layout:visibilityActivator" : lambda plug : plug.node()["type"].getValue() == "fisheye",
 
 		},
 

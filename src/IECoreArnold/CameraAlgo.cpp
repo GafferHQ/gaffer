@@ -204,10 +204,12 @@ Imath::Box2f screenWindow( const IECoreScene::Camera *camera )
 		return Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) );
 	}
 
+	const Imath::V2i resolution = camera->getResolution();
+	const float aspect = camera->getPixelAspectRatio() * (float)resolution.x / (float)resolution.y;
 	Imath::Box2f result;
 	if( camera->getProjection() == "fisheye_camera" )
 	{
-		result = Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) );
+		result = camera->fitWindow( Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) ), camera->getFilmFit(), aspect );
 	}
 	else
 	{
@@ -227,8 +229,6 @@ Imath::Box2f screenWindow( const IECoreScene::Camera *camera )
 	// the resolution and pixel aspect. This is handy when hand-editing .ass
 	// files, but since we already take care of this ourselves, we have to
 	// reverse their correction by multiplying the y values by aspect.
-	const Imath::V2i resolution = camera->getResolution();
-	const float aspect = camera->getPixelAspectRatio() * (float)resolution.x / (float)resolution.y;
 	result.min.y *= aspect;
 	result.max.y *= aspect;
 

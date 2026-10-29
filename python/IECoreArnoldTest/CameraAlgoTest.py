@@ -110,6 +110,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 						"projection" : "fisheye_camera",
 						"ai:fov" : 270.0,
 						"resolution" : imath.V2i( 256, 128 ),
+						"filmFit" : IECoreScene.Camera.FilmFit.Horizontal,
 					}
 				),
 				universe,
@@ -118,13 +119,13 @@ class CameraAlgoTest( unittest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( n ) ), "fisheye_camera" )
 			self.assertEqual( arnold.AiNodeGetFlt( n, "fov" ), 270.0 )
-			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).x, -1.0 )
-			# We want the final screen window to span [-1, 1] to show the full fisheye circle.
 			# Arnold corrects the screen window based on the rendered image aspect ratio, so
-			# we compensate for that in the window we pass to Arnold.
-			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).y, -2.0 )
+			# we compensate for that in the window we pass to Arnold. That results in the
+			# screen window always being [-1, 1].
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).x, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).y, -1.0 )
 			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).x, 1.0 )
-			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).y, 2.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).y, 1.0 )
 
 			n = IECoreArnold.NodeAlgo.convert(
 				IECoreScene.Camera(

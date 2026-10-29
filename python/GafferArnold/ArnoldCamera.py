@@ -158,16 +158,6 @@ class ArnoldCamera( GafferScene.SceneNode ) :
 		self["CameraTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( name = "apertureTweak", nameDefault = "aperture", modeDefault = Gaffer.TweakPlug.Mode.Remove, valuePlug = Gaffer.V2fPlug() ) )
 		self["CameraTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( name = "apertureOffsetTweak", nameDefault = "apertureOffset", modeDefault = Gaffer.TweakPlug.Mode.Remove, valuePlug = Gaffer.V2fPlug() ) )
 
-		self["CameraTweaksEnablerExpression"] = Gaffer.Expression()
-		self["CameraTweaksEnablerExpression"].setExpression(
-			inspect.cleandoc(
-				"""
-				parent["CameraTweaks"]["tweaks"]["shutterCurveTweak"]["enabled"] = parent["CameraTweaks"]["tweaks"]["shutterTypeTweak"]["value"] == "curve"
-				parent["CameraTweaks"]["tweaks"]["rollingShutterDurationTweak"]["enabled"] = parent["CameraTweaks"]["tweaks"]["rollingShutterTweak"]["value"] != "off"
-				"""
-			)
-		)
-
 		self["ArnoldCameraShaders"] = GafferArnold.ArnoldCameraShaders( "ArnoldCameraShaders" )
 
 		self["ShaderAssignment"] = GafferScene.ShaderAssignment( "ShaderAssignment" )
@@ -190,6 +180,17 @@ class ArnoldCamera( GafferScene.SceneNode ) :
 			Gaffer.PlugAlgo.promote( p, excludeMetadata = "" )
 
 		Gaffer.PlugAlgo.promoteWithName( self["NameSwitch"]["selector"], "type", excludeMetadata = "layout:* preset* divider" )
+
+		self["CameraTweaksEnablerExpression"] = Gaffer.Expression()
+		self["CameraTweaksEnablerExpression"].setExpression(
+			inspect.cleandoc(
+				"""
+				parent["CameraTweaks"]["tweaks"]["shutterCurveTweak"]["enabled"] = parent["CameraTweaks"]["tweaks"]["shutterTypeTweak"]["value"] == "curve"
+				parent["CameraTweaks"]["tweaks"]["rollingShutterDurationTweak"]["enabled"] = parent["CameraTweaks"]["tweaks"]["rollingShutterTweak"]["value"] != "off"
+				parent["CameraTweaks"]["tweaks"]["filmFitTweak"]["enabled"] = parent["type"] != "fisheye"
+				"""
+			)
+		)
 
 		excludeMetadata = "layout:* nodule:type"
 		Gaffer.PlugAlgo.promoteWithName( self["CylindricalTweaks"]["tweaks"]["horizontalFOVTweak"]["value"], "cylindricalHorizontalFOV", excludeMetadata = excludeMetadata )

@@ -71,7 +71,8 @@ class ArnoldCameraTest( GafferSceneTest.SceneTestCase ) :
 			"fisheye" : {
 				"ai:fov", "ai:autocrop", "ai:aperture_aspect_ratio", "ai:aperture_blade_curvature",
 				"ai:aperture_blades", "ai:aperture_rotation", "ai:rolling_shutter", "ai:shutter_type",
-				"clippingPlanes", "fStop", "focalLength", "focalLengthWorldScale", "focusDistance", "projection"
+				"clippingPlanes", "fStop", "focalLength", "focalLengthWorldScale", "focusDistance",
+				"projection", "filmFit",
 			},
 			"spherical" : { "ai:rolling_shutter", "ai:shutter_type", "clippingPlanes", "projection" },
 			"vr" : {
@@ -82,6 +83,7 @@ class ArnoldCameraTest( GafferSceneTest.SceneTestCase ) :
 		}.items() :
 			with self.subTest( projection = projection ) :
 				arnoldCamera = GafferArnold.ArnoldCamera()
+				arnoldCamera["renderSettingOverrides"]["filmFit"]["enabled"].setValue( True )
 
 				arnoldCamera["type"].setValue( projection )
 				self.assertEqual( set( arnoldCamera["out"].object( "/camera" ).parameters().keys() ), parameters )
