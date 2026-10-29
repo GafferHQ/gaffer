@@ -424,8 +424,6 @@ class CameraAlgoTest( unittest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_CAMERA )
 
-			# \todo Is there a way to test that InternedString( "aperture_blades" ) < InternedString( "ai:aperture_blades" )?
-			# That would ensure we're not getting a false positive in this test.
 			self.assertEqual( arnold.AiNodeGetInt( n, "aperture_blades" ), 10 )
 			self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_rotation" ), 20.0 )
 			self.assertEqual( arnold.AiNodeGetStr( n, "rolling_shutter" ), "top" )
