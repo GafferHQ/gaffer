@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Catalogue : Fixed `imageNames` plug not handling renaming of promoted images (#7234).
+- ImageAlgo : Fixed handling of empty data window in `tiles()`.
 
 1.7.6.0 (relative to 1.7.5.0)
 =======

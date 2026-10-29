@@ -152,6 +152,24 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		GafferImage.ImageAlgo.image( crop["out"] )
 		GafferImage.ImageAlgo.imageHash( crop["out"] )
 
+	def testTilesForEmptyDataWindow( self ) :
+
+		constant = GafferImage.Constant()
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), imath.Box2i() )
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.tiles( crop["out"] ),
+			IECore.CompoundObject({
+				'tileOrigins' : IECore.V2iVectorData( [  ] ),
+				'R' : IECore.ObjectVector(),
+				'G' : IECore.ObjectVector(),
+				'B' : IECore.ObjectVector(),
+				'A' : IECore.ObjectVector()
+			})
+		)
+
 	def testLayerNames( self ) :
 
 		self.assertEqual(
