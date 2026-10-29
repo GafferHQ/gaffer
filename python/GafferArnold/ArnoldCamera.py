@@ -193,11 +193,11 @@ class ArnoldCamera( GafferScene.SceneNode ) :
 		)
 
 		excludeMetadata = "layout:* nodule:type"
-		Gaffer.PlugAlgo.promoteWithName( self["CylindricalTweaks"]["tweaks"]["horizontalFOVTweak"]["value"], "cylindricalHorizontalFOV", excludeMetadata = excludeMetadata )
-		Gaffer.PlugAlgo.promoteWithName( self["CylindricalTweaks"]["tweaks"]["verticalFOVTweak"]["value"], "cylindricalVerticalFOV", excludeMetadata = excludeMetadata )
+		Gaffer.PlugAlgo.promoteWithName( self["CylindricalTweaks"]["tweaks"]["horizontalFOVTweak"]["value"], "horizontalFOV", excludeMetadata = excludeMetadata )
+		Gaffer.PlugAlgo.promoteWithName( self["CylindricalTweaks"]["tweaks"]["verticalFOVTweak"]["value"], "verticalFOV", excludeMetadata = excludeMetadata )
 		Gaffer.PlugAlgo.promoteWithName( self["CylindricalTweaks"]["tweaks"]["projectiveTweak"]["value"], "projective", excludeMetadata = excludeMetadata )
 
-		Gaffer.PlugAlgo.promoteWithName( self["FisheyeTweaks"]["tweaks"]["fovTweak"]["value"], "fisheyeFOV", excludeMetadata = excludeMetadata )
+		Gaffer.PlugAlgo.promoteWithName( self["FisheyeTweaks"]["tweaks"]["fovTweak"]["value"], "fov", excludeMetadata = excludeMetadata )
 		Gaffer.PlugAlgo.promoteWithName( self["FisheyeTweaks"]["tweaks"]["autocropTweak"]["value"], "autocrop", excludeMetadata = excludeMetadata )
 		Gaffer.PlugAlgo.promoteWithName( self["FisheyeTweaks"]["tweaks"]["apertureBladesTweak"]["value"], "apertureBlades", excludeMetadata = excludeMetadata )
 		Gaffer.PlugAlgo.promoteWithName( self["FisheyeTweaks"]["tweaks"]["apertureBladeCurvatureTweak"]["value"], "apertureBladeCurvature", excludeMetadata = excludeMetadata )

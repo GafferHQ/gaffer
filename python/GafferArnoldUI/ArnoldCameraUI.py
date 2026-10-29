@@ -72,7 +72,7 @@ Gaffer.Metadata.registerNode(
 
 		},
 
-		"cylindricalHorizontalFOV" : {
+		"horizontalFOV" : {
 
 			"description" :
 			"""
@@ -83,7 +83,7 @@ Gaffer.Metadata.registerNode(
 
 		},
 
-		"cylindricalVerticalFOV" : {
+		"verticalFOV" : {
 
 			"description" :
 			"""
@@ -106,7 +106,7 @@ Gaffer.Metadata.registerNode(
 
 		},
 
-		"fisheyeFOV" : {
+		"fov" : {
 
 			"description" :
 			"""
