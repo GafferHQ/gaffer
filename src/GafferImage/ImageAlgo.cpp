@@ -109,6 +109,14 @@ class CopyTile
 // When that gets implemented, it should replace these private functions.
 Imath::Box2i tileRangeFromDataWindow( const Imath::Box2i &dataWindow )
 {
+	if( BufferAlgo::empty( dataWindow ) )
+	{
+		return Imath::Box2i(
+			Imath::V2i( std::numeric_limits<int>::max() ),
+			Imath::V2i( std::numeric_limits<int>::min() )
+		);
+	}
+
 	return Imath::Box2i(
 		ImagePlug::tileOrigin( dataWindow.min ) / ImagePlug::tileSize(),
 		ImagePlug::tileOrigin( dataWindow.max - Imath::V2i( 1 ) ) / ImagePlug::tileSize()
@@ -117,6 +125,12 @@ Imath::Box2i tileRangeFromDataWindow( const Imath::Box2i &dataWindow )
 
 int tileIndex( const Imath::V2i &tileOrigin, const Imath::Box2i &tileRange )
 {
+	if( tileRange.isEmpty() )
+	{
+		// This index is chosen specifically so that `numTiles = maxIndex + 1 = 0` when
+		// the tile range is empty.
+		return -1;
+	}
 	Imath::V2i offset = tileOrigin / ImagePlug::tileSize() - tileRange.min;
 	return offset.y * ( tileRange.size().x + 1 ) + offset.x;
 }
