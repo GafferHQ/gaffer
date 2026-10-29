@@ -47,7 +47,7 @@ class ArnoldCameraTest( GafferSceneTest.SceneTestCase ) :
 			( "cylindrical", "cyl_camera", [ ( "cylindricalHorizontalFOV", "ai:horizontal_fov", 110.0 ), ( "rollingShutter", "ai:rolling_shutter", "bottom" ) ] ),
 			( "fisheye", "fisheye_camera", [ ( "fisheyeFOV", "ai:fov", 360 ), ( "apertureBlades", "ai:aperture_blades", 11 ) ] ),
 			( "spherical", "spherical_camera", [ ( "shutterType", "ai:shutter_type", "triangle" ) ] ),
-			( "vr", "vr_camera", [ ( "projection", "ai:projection", "cubemap_6_1" ), ( "mode", "ai:mode", "over_under" ), ( "rollingShutter", "ai:rolling_shutter", "left" ) ] ),
+			( "vr", "vr_camera", [ ( "projection", "ai:projection", "cubemap_6x1" ), ( "mode", "ai:mode", "over_under" ), ( "rollingShutter", "ai:rolling_shutter", "left" ) ] ),
 		] :
 			with self.subTest( projection = projection ) :
 				arnoldCamera = GafferArnold.ArnoldCamera()
