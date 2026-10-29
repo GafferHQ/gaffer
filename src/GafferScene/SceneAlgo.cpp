@@ -1489,20 +1489,22 @@ IECore::PathMatcher GafferScene::SceneAlgo::linkedLights( const ScenePlug *scene
 	IECore::PathMatcher result;
 	tbb::concurrent_unordered_set<std::string> processed;
 
-	auto functor = [&resultMutex, &result, &processed] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
-		IECore::ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
-		const string linkedLights = linkedLightsExpression( attributes.get() );
-		if( processed.insert( linkedLights ).second )
-		{
-			ScenePlug::GlobalScope globalScope( Context::current() );
-			IECore::PathMatcher linkedPaths = SetAlgo::evaluateSetExpression( linkedLights, scene );
-			tbb::spin_mutex::scoped_lock resultLock( resultMutex );
-			result.addPaths( linkedPaths );
+	filteredParallelTraverse(
+		scene, objects,
+		[&resultMutex, &result, &processed] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+			IECore::ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+			const string linkedLights = linkedLightsExpression( attributes.get() );
+			if( processed.insert( linkedLights ).second )
+			{
+				ScenePlug::GlobalScope globalScope( Context::current() );
+				IECore::PathMatcher linkedPaths = SetAlgo::evaluateSetExpression( linkedLights, scene );
+				tbb::spin_mutex::scoped_lock resultLock( resultMutex );
+				result.addPaths( linkedPaths );
+			}
+			return true;
 		}
-		return true;
-	};
+	);
 
-	filteredParallelTraverse( scene, objects, functor );
 	return result.intersection( scene->set( g_lights )->readable() );
 }
 

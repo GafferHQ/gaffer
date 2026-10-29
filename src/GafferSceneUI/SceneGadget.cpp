@@ -152,15 +152,16 @@ PathMatcher findTypedObjects( const ScenePlug *scene, const PathMatcher &paths, 
 
 	vector<IECore::TypeId> typeIds = typeIdsFromTypeNames( typeNames );
 
-	auto f = [&typeIds, &threadResults] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
-		if( isObjectInstanceOf( scene, typeIds ) )
-		{
-			threadResults.local().addPath( path );
+	SceneAlgo::filteredParallelTraverse(
+		scene, paths,
+		[&typeIds, &threadResults] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+			if( isObjectInstanceOf( scene, typeIds ) )
+			{
+				threadResults.local().addPath( path );
+			}
+			return true;
 		}
-		return true;
-	};
-
-	SceneAlgo::filteredParallelTraverse( scene, paths, f );
+	);
 
 	return threadResults.combine(
 		[] ( const PathMatcher &a, const PathMatcher &b ) {

@@ -500,14 +500,16 @@ void SceneStats::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *c
 		ComputeNode::hash( output, context, h );
 
 		std::atomic<uint64_t> h1( 0 ), h2( 0 );
-		auto functor = [&]( const ScenePlug *scene, const ScenePlug::ScenePath &path ) -> bool
-		{
-			IECore::MurmurHash locationHash = StatsData::hash( queriesPlug() );
-			h1 += locationHash.h1();
-			h2 += locationHash.h2();
-			return true;
-		};
-		SceneAlgo::filteredParallelTraverse( scenePlug(), filterPlug(), functor );
+		SceneAlgo::filteredParallelTraverse(
+			scenePlug(), filterPlug(),
+			[&]( const ScenePlug *scene, const ScenePlug::ScenePath &path ) -> bool
+			{
+				IECore::MurmurHash locationHash = StatsData::hash( queriesPlug() );
+				h1 += locationHash.h1();
+				h2 += locationHash.h2();
+				return true;
+			}
+		);
 		h.append( IECore::MurmurHash( h1.load(), h2.load() ) );
 	}
 	else if( outPlug()->isAncestorOf( output ) )
@@ -529,18 +531,20 @@ void SceneStats::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 	{
 		tbb::enumerable_thread_specific<StatsData> threadStats;
 
-		auto functor = [&]( const ScenePlug *scene, const ScenePlug::ScenePath &path ) -> bool
-		{
-			threadStats.local().update( queriesPlug() );
-			return true;
-		};
 		/// \todo Because we're computing stats for all locations in one go,
 		/// we lose all the work done so far if we're cancelled part way through.
 		/// Consider instead computing aggregate stats for each location (and its
 		/// descendants) using an internal plug. Then when restarting after cancellation,
 		/// we can reuse cached results for any locations that were processed fully the
 		/// first time.
-		SceneAlgo::filteredParallelTraverse( scenePlug(), filterPlug(), functor );
+		SceneAlgo::filteredParallelTraverse(
+			scenePlug(), filterPlug(),
+			[&]( const ScenePlug *scene, const ScenePlug::ScenePath &path ) -> bool
+			{
+				threadStats.local().update( queriesPlug() );
+				return true;
+			}
+		);
 
 		StatsData::Ptr result = new StatsData;
 		for( const auto &statsData : threadStats )

@@ -165,14 +165,14 @@ namespace SceneAlgo
 {
 
 template <class ThreadableFunctor>
-void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
+void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &&f, const ScenePlug::ScenePath &root )
 {
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
 	Detail::parallelProcessLocationsWalk( scene, Gaffer::ThreadState::current(), root, f, taskGroupContext );
 }
 
 template <class ThreadableFunctor>
-void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
+void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &&f, const ScenePlug::ScenePath &root )
 {
 	// `parallelProcessLocations()` takes a copy of the functor at each location, whereas
 	// `parallelTraverse()` is intended to use the same functor for all locations. Wrap the
@@ -184,14 +184,14 @@ void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const Scene
 }
 
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::FilterPlug *filterPlug, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
+void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::FilterPlug *filterPlug, ThreadableFunctor &&f, const ScenePlug::ScenePath &root )
 {
 	Detail::ThreadableFilteredFunctor<ThreadableFunctor> ff( f, filterPlug );
 	parallelTraverse( scene, ff, root );
 }
 
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
+void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &&f, const ScenePlug::ScenePath &root )
 {
 	Detail::PathMatcherFunctor<ThreadableFunctor> ff( f, filter );
 	parallelTraverse( scene, ff, root );

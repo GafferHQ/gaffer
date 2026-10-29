@@ -225,48 +225,8 @@ FlattenedPrototype flattenedPrototype( const Private::RendererAlgo::RenderOption
 	std::mutex resultMutex;
 	FlattenedPrototype result;
 
-	auto locationFunctor = [&]( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
-
-		ConstCompoundObjectPtr localAttributes = scene->attributesPlug()->getValue();
-		if( auto visible = localAttributes->member<BoolData>( g_sceneVisible ) )
-		{
-			if( !visible->readable() )
-			{
-				// Prune traversal.
-				return false;
-			}
-		}
-
-		ConstCompoundObjectPtr fullAttributes = scene->fullAttributes( path );
-		if( !renderOptions.purposeIncluded( fullAttributes.get() ) )
-		{
-			// Skip this object and continue traversal (purpose can be
-			// overridden lower in the hierarchy to make the children visible
-			// again).
-			return true;
-		}
-
-		ConstObjectPtr o = scene->objectPlug()->getValue();
-		if( runTimeCast<const IECore::NullObject>( o.get() ) )
-		{
-			return true;
-		}
-
-		ScenePlug::ScenePath relativePath( path.begin() + fullRootPath.size(), path.end() );
-		PrototypeLocation prototypeLocation = {
-			relativePath.size() ? rootPath + ScenePlug::pathToString( relativePath ) : rootPath,
-			flattenedTransform( scene, path, fullRootPath.size() )
-		};
-
-		std::lock_guard resultLock( resultMutex );
-		result.push_back( prototypeLocation );
-
-		return true;
-
-	};
-
 	/// \todo It would be great to use `SceneAlgo::visitVisibleLocations()` here
-	/// instead of managing visibility ourselves in `locationFunctor`. There are
+	/// instead of managing visibility ourselves in a `parallelTraverse()`. There are
 	/// currently two obstacles to that :
 	///
 	/// 1. `visitVisibleLocations()` doesn't take a `root` argument.
@@ -275,7 +235,49 @@ FlattenedPrototype flattenedPrototype( const Private::RendererAlgo::RenderOption
 	///
 	/// Maybe we can optionally pass the globals to `visitVisibleLocations()`
 	/// and use that to construct the RenderOptions internally?
-	SceneAlgo::parallelTraverse( scene, locationFunctor, fullRootPath );
+	SceneAlgo::parallelTraverse(
+		scene,
+		[&]( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+
+			ConstCompoundObjectPtr localAttributes = scene->attributesPlug()->getValue();
+			if( auto visible = localAttributes->member<BoolData>( g_sceneVisible ) )
+			{
+				if( !visible->readable() )
+				{
+					// Prune traversal.
+					return false;
+				}
+			}
+
+			ConstCompoundObjectPtr fullAttributes = scene->fullAttributes( path );
+			if( !renderOptions.purposeIncluded( fullAttributes.get() ) )
+			{
+				// Skip this object and continue traversal (purpose can be
+				// overridden lower in the hierarchy to make the children visible
+				// again).
+				return true;
+			}
+
+			ConstObjectPtr o = scene->objectPlug()->getValue();
+			if( runTimeCast<const IECore::NullObject>( o.get() ) )
+			{
+				return true;
+			}
+
+			ScenePlug::ScenePath relativePath( path.begin() + fullRootPath.size(), path.end() );
+			PrototypeLocation prototypeLocation = {
+				relativePath.size() ? rootPath + ScenePlug::pathToString( relativePath ) : rootPath,
+				flattenedTransform( scene, path, fullRootPath.size() )
+			};
+
+			std::lock_guard resultLock( resultMutex );
+			result.push_back( prototypeLocation );
+
+			return true;
+
+		},
+		fullRootPath
+	);
 
 	// `parallelTraverse()` doesn't guarantee order - sort so we
 	// have a deterministic order for testing and debugging.

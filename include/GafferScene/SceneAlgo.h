@@ -126,21 +126,20 @@ GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const IECore::PathMatcher 
 /// };
 /// ```
 template <class ThreadableFunctor>
-void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &&f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Calls a functor on all locations in the scene. This differs from `parallelProcessLocations()` in that a single instance
 /// of the functor is used for all locations.
 /// The functor must take `( const ScenePlug *, const ScenePlug::ScenePath & )`, and can return false to prune traversal.
-/// \todo Pass `ThreadableFunctor &&`, so callers aren't forced to pass an l-value.
 template <class ThreadableFunctor>
-void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &&f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// As for `parallelTraverse()`, but only calling the functor for locations matched by the filter.
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterPlug, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterPlug, ThreadableFunctor &&f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 /// As above, but using a PathMatcher as a filter.
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &&f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// As `parallelTraverse()`, but visits only locations which are visible, according to the same logic used
 /// by RenderController.

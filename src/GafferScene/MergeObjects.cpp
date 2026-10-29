@@ -144,15 +144,17 @@ class TreeData : public IECore::Data
 		TreeData( const ScenePlug *inPlug, const FilterPlug *filterPlug, const StringPlug *destinationPlug )
 			:	m_root( new Location() )
 		{
-			auto f = [this, destinationPlug]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &sourcePath )
-			{
-				if( sourcePath.size() )
+			SceneAlgo::filteredParallelTraverse(
+				inPlug, filterPlug,
+				[this, destinationPlug]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &sourcePath )
 				{
-					addDestination( destinationPlug, sourcePath );
+					if( sourcePath.size() )
+					{
+						addDestination( destinationPlug, sourcePath );
+					}
+					return true;
 				}
-				return true;
-			};
-			SceneAlgo::filteredParallelTraverse( inPlug, filterPlug, f );
+			);
 		}
 
 		static bool affectedBy( const ScenePlug *inPlug, const FilterPlug *filterPlug, const StringPlug *destinationPlug, const Plug *input )
@@ -171,15 +173,17 @@ class TreeData : public IECore::Data
 		{
 			// See `SceneAlgo::matchingPathsHash()` for documentation of this hashing strategy.
 			std::atomic<uint64_t> h1( 0 ), h2( 0 );
-			auto f = [destinationPlug, &h1, &h2]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &sourcePath )
-			{
-				IECore::MurmurHash h;
-				hashDestination( destinationPlug, sourcePath, h );
-				h1 += h.h1();
-				h2 += h.h2();
-				return true;
-			};
-			SceneAlgo::filteredParallelTraverse( inPlug, filterPlug, f );
+			SceneAlgo::filteredParallelTraverse(
+				inPlug, filterPlug,
+				[destinationPlug, &h1, &h2]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &sourcePath )
+				{
+					IECore::MurmurHash h;
+					hashDestination( destinationPlug, sourcePath, h );
+					h1 += h.h1();
+					h2 += h.h2();
+					return true;
+				}
+			);
 			h.append( MurmurHash( h1, h2 ) );
 		}
 
