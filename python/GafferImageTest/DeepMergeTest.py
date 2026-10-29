@@ -40,6 +40,7 @@ import imath
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferImage
 import GafferImageTest
@@ -358,6 +359,194 @@ class DeepMergeTest( GafferImageTest.ImageTestCase ) :
 						channelData = merge["out"].channelData( channelName, tileOrigin )
 
 						self.assertEqual( channelData, self.__getExpectedChannelData( tileOrigin, crop1Area, values1[channelName], crop2Area, values2[channelName] ) )
+
+	def __collectTestInputs( self, parent ) :
+
+		ts = GafferImage.ImagePlug.tileSize()
+		sourceFormat = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( ts * 3 ) ), 1 )
+
+		result = []
+		for i, ( color, depth, thickness, area, deleteChannels ) in enumerate( [
+			( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ), 1.0, None, imath.Box2i( imath.V2i( 10 ), imath.V2i( 150 ) ), "" ),
+			( imath.Color4f( 0.5, 0.6, 0.7, 0.8 ), 2.0, 0.5, imath.Box2i( imath.V2i( 50, 0 ), imath.V2i( 300, 70 ) ), "" ),
+			( imath.Color4f( 0.9, 1.0, 1.1, 1.0 ), 3.0, 1.0, imath.Box2i( imath.V2i( 0, 100 ), imath.V2i( 20, 384 ) ), "G" ),
+			( imath.Color4f( 1.2, 1.3, 1.4, 0.2 ), 4.0, None, imath.Box2i( imath.V2i( 140 ), imath.V2i( 260 ) ), "A" ),
+		] ) :
+
+			constant = GafferImage.Constant( "Constant{}".format( i ) )
+			parent.addChild( constant )
+			constant["format"].setValue( sourceFormat )
+			constant["color"].setValue( color )
+
+			flatToDeep = GafferImage.FlatToDeep( "FlatToDeep{}".format( i ) )
+			parent.addChild( flatToDeep )
+			flatToDeep["in"].setInput( constant["out"] )
+			flatToDeep["depth"].setValue( depth )
+			if thickness is not None :
+				flatToDeep["zBackMode"].setValue( GafferImage.FlatToDeep.ZBackMode.Thickness )
+				flatToDeep["thickness"].setValue( thickness )
+
+			crop = GafferImage.Crop( "Crop{}".format( i ) )
+			parent.addChild( crop )
+			crop["in"].setInput( flatToDeep["out"] )
+			crop["affectDisplayWindow"].setValue( False )
+			crop["area"].setValue( area )
+
+			delete = GafferImage.DeleteChannels( "DeleteChannels{}".format( i ) )
+			parent.addChild( delete )
+			delete["in"].setInput( crop["out"] )
+			delete["channels"].setValue( deleteChannels )
+
+			result.append( ( constant, flatToDeep, crop, delete ) )
+
+		return result
+
+	def testCollectComparison( self ) :
+
+		script = Gaffer.ScriptNode()
+		images = [ i[-1] for i in self.__collectTestInputs( script ) ]
+
+		merge = GafferImage.DeepMerge()
+		for i, image in enumerate( images ) :
+			merge["in"][i].setInput( image["out"] )
+
+		switch = Gaffer.Switch()
+		switch.setup( images[0]["out"] )
+		for i, image in enumerate( images ) :
+			switch["in"][i].setInput( image["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.DeepMerge()
+		collectMerge["in"][0].setInput( switch["out"] )
+		collectMerge["mode"].setValue( GafferImage.DeepMerge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "a", "b", "c", "d" ] ) )
+
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		# Subsets of the inputs
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "a", "b" ] ) )
+		merge["in"][2].setInput( None )
+		merge["in"][3].setInput( None )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "a" ] ) )
+		merge["in"][1].setInput( None )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData() )
+		merge["in"][0].setInput( None )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+		# Custom variable names
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "a", "b", "c", "d" ] ) )
+		collectMerge["indexContextVariable"].setValue( "myIndex" )
+		switch["expression"].setExpression( 'parent["index"] = context.get( "myIndex" )', "python" )
+		for i, image in enumerate( images ) :
+			merge["in"][i].setInput( image["out"] )
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+	def testCollectContextValue( self ) :
+
+		script = Gaffer.ScriptNode()
+		constant, flatToDeep, crop, delete = self.__collectTestInputs( script )[1]
+
+		flatToDeep["expression"] = Gaffer.Expression()
+		flatToDeep["expression"].setExpression( 'parent["depth"] = float( context.get( "merge:value", "0" ) )', "python" )
+
+		collectMerge = GafferImage.DeepMerge()
+		collectMerge["in"][0].setInput( delete["out"] )
+		collectMerge["mode"].setValue( GafferImage.DeepMerge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "3", "1", "2" ] ) )
+
+		ts = GafferImage.ImagePlug.tileSize()
+		depths = collectMerge["out"].channelData( "Z", imath.V2i( ts, 0 ) )
+		self.assertEqual( depths[:3], IECore.FloatVectorData( [ 3, 1, 2 ] ) )
+		zBacks = collectMerge["out"].channelData( "ZBack", imath.V2i( ts, 0 ) )
+		self.assertEqual( zBacks[:3], IECore.FloatVectorData( [ 3.5, 1.5, 2.5 ] ) )
+
+		collectMerge["contextVariable"].setValue( "notUsed" )
+		depths = collectMerge["out"].channelData( "Z", imath.V2i( ts, 0 ) )
+		self.assertEqual( depths[:3], IECore.FloatVectorData( [ 0, 0, 0 ] ) )
+
+	def testCollectWithMultipleInputs( self ) :
+
+		script = Gaffer.ScriptNode()
+		images = [ i[-1] for i in self.__collectTestInputs( script ) ]
+
+		merge = GafferImage.DeepMerge()
+		for i, image in enumerate( images ) :
+			merge["in"][i].setInput( image["out"] )
+
+		# Feed the 4 inputs through two inputs, each of which is evaluated in 2 contexts
+
+		collectMerge = GafferImage.DeepMerge()
+		collectMerge["mode"].setValue( GafferImage.DeepMerge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
+
+		for i in range( 2 ) :
+			switch = Gaffer.Switch( "switch{}".format( i ) )
+			switch.setup( images[0]["out"] )
+			switch["in"][0].setInput( images[i*2]["out"] )
+			switch["in"][1].setInput( images[i*2+1]["out"] )
+			switch["expression"] = Gaffer.Expression()
+			switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+			collectMerge["in"][i].setInput( switch["out"] )
+			collectMerge.addChild( switch )
+
+		self.assertImagesEqual( collectMerge["out"], merge["out"] )
+
+	def testCollectFromFirstInput( self ) :
+
+		# Format and metadata come from the first context of the first input
+
+		firstImage = GafferImage.Constant()
+		firstImage["format"].setValue( GafferImage.Format( 1003, 1004, 1.000 ) )
+
+		firstMetadata = GafferImage.ImageMetadata()
+		firstMetadata["in"].setInput( firstImage["out"] )
+		firstMetadata["metadata"].addChild( Gaffer.NameValuePlug( "test", Gaffer.StringPlug( "value", defaultValue = "val" ), True ) )
+
+		unusedImage = GafferImage.Constant()
+
+		switch = Gaffer.Switch()
+		switch.setup( firstImage["out"] )
+		switch["in"][0].setInput( firstMetadata["out"] )
+		switch["in"][1].setInput( unusedImage["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		collectMerge = GafferImage.DeepMerge()
+		collectMerge["in"][0].setInput( switch["out"] )
+		collectMerge["in"][1].setInput( unusedImage["out"] )
+		collectMerge["mode"].setValue( GafferImage.DeepMerge.Mode.Collect )
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
+
+		self.assertEqual( collectMerge["out"].format(), GafferImage.Format( 1003, 1004, 1.000 ) )
+		self.assertEqual( collectMerge["out"].metadata(), IECore.CompoundData( { "test" : "val" } ) )
+
+		switch["expression"].setExpression( 'parent["index"] = int( context.get( "merge:value" ) )', "python" )
+		self.assertEqual( collectMerge["out"].format(), GafferImage.Format( 1003, 1004, 1.000 ) )
+
+		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "1", "0" ] ) )
+		self.assertEqual( collectMerge["out"].format(), unusedImage["out"].format() )
+		self.assertEqual( collectMerge["out"].metadata(), IECore.CompoundData() )
+
+	def testCollectAffects( self ) :
+
+		merge = GafferImage.DeepMerge()
+
+		for name in [ "mode", "contextValues", "contextVariable", "indexContextVariable" ] :
+			affected = { p.relativeName( merge ) for p in merge.affects( merge[name] ) }
+			self.assertIn( "__offsetsCache", affected )
+			for output in [ "channelData", "dataWindow", "channelNames", "viewNames", "format", "metadata" ] :
+				self.assertIn( "out." + output, affected )
+
+		self.assertIn( merge["out"]["sampleOffsets"], merge.affects( merge["__offsetsCache"] ) )
 
 	def __getExpectedChannelData( self, tileOrigin, area1, area1Value, area2, area2Value ) :
 

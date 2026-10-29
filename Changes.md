@@ -14,6 +14,7 @@ Improvements
   - Section tabs are now sized to fit their names, rather than expanding to fill the available space.
 - Merge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
 - RandomPrimitiveVariable : Added `BooleanSelection` mode, which is useful for decimating geometry in conjunction with DeletePoints, DeleteCurves and DeleteFaces nodes.
+- DeepMerge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
 
 Fixes
 -----

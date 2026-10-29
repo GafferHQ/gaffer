@@ -43,11 +43,80 @@
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/DeepMerge.h"
 
+#include <optional>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
+
+namespace
+{
+
+class MergeContextHandler
+{
+public:
+	MergeContextHandler( const DeepMerge* mergeNode, const Context *context )
+		:	m_mode( (DeepMerge::Mode)mergeNode->modePlug()->getValue() )
+	{
+		if( m_mode == DeepMerge::Mode::Collect )
+		{
+			m_contextValuesData = mergeNode->contextValuesPlug()->getValue();
+			m_contextValues = &m_contextValuesData->readable();
+			m_contextVariable = mergeNode->contextVariablePlug()->getValue();
+			m_indexContextVariable = mergeNode->indexContextVariablePlug()->getValue();
+
+			m_numContexts = m_contextValues->size();
+
+			m_scope.emplace( context );
+
+			m_context = m_scope->context();
+		}
+		else
+		{
+			m_numContexts = 1;
+			m_context = context;
+		}
+	}
+
+	int numContexts()
+	{
+		return m_numContexts;
+	}
+
+	void setContextForIndex( int index )
+	{
+		if( m_mode == DeepMerge::Mode::Collect )
+		{
+			m_index = index;
+			m_scope->set( m_contextVariable, &( (*m_contextValues)[m_index] ) );
+			m_scope->set( m_indexContextVariable, &m_index );
+		}
+	}
+
+	const Context *context()
+	{
+		return m_context;
+	}
+
+private:
+
+	const DeepMerge::Mode m_mode;
+	ConstStringVectorDataPtr m_contextValuesData;
+	const std::vector<std::string> *m_contextValues;
+	std::string m_contextVariable;
+	std::string m_indexContextVariable;
+
+	int m_numContexts;
+	const Context *m_context;
+
+	int m_index;
+
+	std::optional<Context::EditableScope> m_scope;
+};
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( DeepMerge );
 
@@ -58,26 +127,75 @@ DeepMerge::DeepMerge( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntVectorDataPlug( "__offsetsCache", Gaffer::Plug::Out, new IntVectorData() ) );
+	addChild(
+		new IntPlug(
+			"mode",         // name
+			Plug::In,       // direction
+			(int)Mode::Standard, // default
+			(int)Mode::Standard, // min
+			(int)Mode::Collect   // max
+		)
+	);
 
-	// We don't ever want to change these, so we make pass-through connections.
-	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
-	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
-	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
+	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
+	addChild( new StringPlug( "indexContextVariable", Plug::In, "merge:index" ) );
+
+	addChild( new IntVectorDataPlug( "__offsetsCache", Gaffer::Plug::Out, new IntVectorData() ) );
 }
 
 DeepMerge::~DeepMerge()
 {
 }
 
+Gaffer::IntPlug *DeepMerge::modePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::IntPlug *DeepMerge::modePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+Gaffer::StringVectorDataPlug *DeepMerge::contextValuesPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringVectorDataPlug *DeepMerge::contextValuesPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::StringPlug *DeepMerge::contextVariablePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *DeepMerge::contextVariablePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *DeepMerge::indexContextVariablePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *DeepMerge::indexContextVariablePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
 Gaffer::IntVectorDataPlug *DeepMerge::offsetsCachePlug()
 {
-	return getChild<IntVectorDataPlug>( g_firstPlugIndex );
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::IntVectorDataPlug *DeepMerge::offsetsCachePlug() const
 {
-	return getChild<IntVectorDataPlug>( g_firstPlugIndex );
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 4 );
 }
 
 
@@ -89,6 +207,19 @@ void DeepMerge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 		outputs.push_back( outPlug()->sampleOffsetsPlug() );
+	}
+	else if(
+		input == modePlug() || input == contextValuesPlug() ||
+		input == contextVariablePlug() || input == indexContextVariablePlug()
+	)
+	{
+		outputs.push_back( offsetsCachePlug() );
+		outputs.push_back( outPlug()->channelDataPlug() );
+		outputs.push_back( outPlug()->dataWindowPlug() );
+		outputs.push_back( outPlug()->channelNamesPlug() );
+		outputs.push_back( outPlug()->viewNamesPlug() );
+		outputs.push_back( outPlug()->formatPlug() );
+		outputs.push_back( outPlug()->metadataPlug() );
 	}
 	else if( const ImagePlug *inputImage = input->parent<ImagePlug>() )
 	{
@@ -123,6 +254,22 @@ void DeepMerge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 				outputs.push_back( outPlug()->dataWindowPlug() );
 				outputs.push_back( offsetsCachePlug() );
 			}
+
+			if( inputImage == inPlug() )
+			{
+				if( input == inputImage->viewNamesPlug() )
+				{
+					outputs.push_back( outPlug()->viewNamesPlug() );
+				}
+				else if( input == inputImage->formatPlug() )
+				{
+					outputs.push_back( outPlug()->formatPlug() );
+				}
+				else if( input == inputImage->metadataPlug() )
+				{
+					outputs.push_back( outPlug()->metadataPlug() );
+				}
+			}
 		}
 
 	}
@@ -140,13 +287,30 @@ void DeepMerge::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
+	MergeContextHandler contextHandler( this, context );
+
+	// The layer indices stored in the offsets cache depend on the number of contexts
+	h.append( contextHandler.numContexts() );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+
+			if( !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				continue;
+			}
+
 			Box2i dataWindow;
 			{
-				ImagePlug::GlobalScope c( context );
+				ImagePlug::GlobalScope c( contextHandler.context() );
 				dataWindow = (*it)->dataWindowPlug()->getValue();
 			}
 			Box2i validBound = BufferAlgo::intersection( tileBound, dataWindow );
@@ -175,35 +339,45 @@ void DeepMerge::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
+	MergeContextHandler contextHandler( this, context );
+	const int numContexts = contextHandler.numContexts();
+
+	// Each layer is an input plug evaluated in a particular context. We identify
+	// them with a single index : `plugIndex * numContexts + contextIndex`.
 	struct InputStruct
 	{
-		unsigned int plugIndex;
+		unsigned int layerIndex;
 		Box2i boundInTile;
 	};
 	std::vector<InputStruct> inputs;
 
+	for( unsigned int j = 0; j < inPlugs()->children().size(); j++ )
 	{
-		ImagePlug::GlobalScope c( context );
-		for( unsigned int j = 0; j < inPlugs()->children().size(); j++ )
+		const ImagePlug *inP = inPlugs()->getChild<ImagePlug>( j );
+		if( !inP || !inP->getInput<ValuePlug>() )
 		{
-			const ImagePlug *inP = inPlugs()->getChild<ImagePlug>( j );
-			if( inP && inP->getInput<ValuePlug>() )
+			continue;
+		}
+
+		for( int i = 0; i < numContexts; i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			ImagePlug::GlobalScope c( contextHandler.context() );
+
+			if( !ImageAlgo::viewIsValid( context, inP->viewNames()->readable() ) )
 			{
-				if( !ImageAlgo::viewIsValid( context, inP->viewNames()->readable() ) )
-				{
-					continue;
-				}
-
-				Box2i dataWindow = inP->dataWindowPlug()->getValue();
-				Box2i validBound = BufferAlgo::intersection( tileBound, dataWindow );
-
-				if( BufferAlgo::empty( validBound ) )
-				{
-					continue;
-				}
-				Box2i boundInTile( validBound.min - tileOrigin, validBound.max - tileOrigin );
-				inputs.push_back( { j, boundInTile } );
+				continue;
 			}
+
+			Box2i dataWindow = inP->dataWindowPlug()->getValue();
+			Box2i validBound = BufferAlgo::intersection( tileBound, dataWindow );
+
+			if( BufferAlgo::empty( validBound ) )
+			{
+				continue;
+			}
+			Box2i boundInTile( validBound.min - tileOrigin, validBound.max - tileOrigin );
+			inputs.push_back( { j * numContexts + i, boundInTile } );
 		}
 	}
 
@@ -213,7 +387,7 @@ void DeepMerge::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	std::vector<int> &result = resultData->writable();
 
 	// This internal data structure is a bunch of stuff packed in an int vector.  We want to store all the data
-	// necessary to merge N inputs into the channel data.  It starts with N plug indices, for the plugs
+	// necessary to merge N inputs into the channel data.  It starts with N layer indices, for the layers
 	// where the inputs are coming from ( some inputs may not be connected, or have empty data windows,
 	// and won't be included ).  This is followed N * tilePixels() PAIRs of offset.  Each pair of offsets
 	// contains where a sequence of samples starts in the source channelData, and where it ends in the
@@ -223,10 +397,11 @@ void DeepMerge::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	result.resize( ( 1 + 2 * ImagePlug::tilePixels() ) * numInputs, 0 );
 	for( unsigned int k = 0; k < numInputs; k++ )
 	{
-		int plugIndex = inputs[k].plugIndex;
-		result[k] = plugIndex;
+		const int layerIndex = inputs[k].layerIndex;
+		result[k] = layerIndex;
 
-		const ImagePlug *inP = inPlugs()->getChild<ImagePlug>( plugIndex );
+		contextHandler.setContextForIndex( layerIndex % numContexts );
+		const ImagePlug *inP = inPlugs()->getChild<ImagePlug>( layerIndex / numContexts );
 		ConstIntVectorDataPtr sampleOffsetsData = inP->sampleOffsetsPlug()->getValue();
 		const std::vector<int> &sampleOffsets = sampleOffsetsData->readable();
 
@@ -271,15 +446,107 @@ void DeepMerge::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	static_cast<IntVectorDataPlug *>( output )->setValue( resultData );
 }
 
+void DeepMerge::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		h = inPlug()->viewNamesPlug()->defaultHash();
+		return;
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	h = inPlug()->viewNamesPlug()->hash();
+}
+
+IECore::ConstStringVectorDataPtr DeepMerge::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		return inPlug()->viewNamesPlug()->defaultValue();
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	return inPlug()->viewNamesPlug()->getValue();
+}
+
+void DeepMerge::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		h = inPlug()->formatPlug()->defaultHash();
+		return;
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	h = inPlug()->formatPlug()->hash();
+}
+
+GafferImage::Format DeepMerge::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		return inPlug()->formatPlug()->defaultValue();
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	return inPlug()->formatPlug()->getValue();
+}
+
+void DeepMerge::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		h = inPlug()->metadataPlug()->defaultHash();
+		return;
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	h = inPlug()->metadataPlug()->hash();
+}
+
+IECore::ConstCompoundDataPtr DeepMerge::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		return inPlug()->metadataPlug()->defaultValue();
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	return inPlug()->metadataPlug()->getValue();
+}
+
 void DeepMerge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashDataWindow( output, context, h );
 
+	MergeContextHandler contextHandler( this, context );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			(*it)->dataWindowPlug()->hash( h );
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				(*it)->dataWindowPlug()->hash( h );
+			}
 		}
 	}
 }
@@ -287,12 +554,23 @@ void DeepMerge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaff
 Imath::Box2i DeepMerge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i dataWindow;
+
+	MergeContextHandler contextHandler( this, context );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
-			dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
+			}
 		}
 	}
 
@@ -303,31 +581,53 @@ void DeepMerge::hashChannelNames( const GafferImage::ImagePlug *output, const Ga
 {
 	ImageProcessor::hashChannelNames( output, context, h );
 
+	MergeContextHandler contextHandler( this, context );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			(*it)->channelNamesPlug()->hash( h );
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				(*it)->channelNamesPlug()->hash( h );
+			}
 		}
 	}
 }
 
 IECore::ConstStringVectorDataPtr DeepMerge::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	MergeContextHandler contextHandler( this, context );
+
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			IECore::ConstStringVectorDataPtr inChannelStrVectorData((*it)->channelNamesPlug()->getValue() );
-			const std::vector<std::string> &inChannels( inChannelStrVectorData->readable() );
-			for ( std::vector<std::string>::const_iterator cIt( inChannels.begin() ); cIt != inChannels.end(); ++cIt )
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
 			{
-				if ( std::find( outChannels.begin(), outChannels.end(), *cIt ) == outChannels.end() )
+				IECore::ConstStringVectorDataPtr inChannelStrVectorData((*it)->channelNamesPlug()->getValue() );
+				const std::vector<std::string> &inChannels( inChannelStrVectorData->readable() );
+				for ( std::vector<std::string>::const_iterator cIt( inChannels.begin() ); cIt != inChannels.end(); ++cIt )
 				{
-					outChannels.push_back( *cIt );
+					if ( std::find( outChannels.begin(), outChannels.end(), *cIt ) == outChannels.end() )
+					{
+						outChannels.push_back( *cIt );
+					}
 				}
 			}
 		}
@@ -346,6 +646,7 @@ void DeepMerge::hashChannelData( const GafferImage::ImagePlug *output, const Gaf
 	ImageProcessor::hashChannelData( output, context, h );
 
 	const std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 
 	{
 		ImagePlug::ChannelDataScope reusedScope( context );
@@ -356,92 +657,90 @@ void DeepMerge::hashChannelData( const GafferImage::ImagePlug *output, const Gaf
 		offsetsCachePlug()->hash( h );
 	}
 
+	MergeContextHandler contextHandler( this, context );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( !(*it)->getInput<ValuePlug>() || !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
 			continue;
 		}
 
-		ConstStringVectorDataPtr channelNamesData = (*it)->channelNames();
-		const std::vector<std::string> &channelNames = channelNamesData->readable();
-		if( ImageAlgo::channelExists( channelNames, channelName ) )
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
 		{
-			(*it)->channelDataPlug()->hash( h );
-		}
-		else if( channelName == "ZBack" && ImageAlgo::channelExists( channelNames, "Z" ) )
-		{
-			h.append( (*it)->channelDataHash( "Z", context->get<Imath::V2i>( ImagePlug::tileOriginContextName ) ) );
+			contextHandler.setContextForIndex( i );
+
+			if( !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				continue;
+			}
+
+			ConstStringVectorDataPtr channelNamesData = (*it)->channelNames();
+			const std::vector<std::string> &channelNames = channelNamesData->readable();
+			if( ImageAlgo::channelExists( channelNames, channelName ) )
+			{
+				(*it)->channelDataPlug()->hash( h );
+			}
+			else if( channelName == "ZBack" && ImageAlgo::channelExists( channelNames, "Z" ) )
+			{
+				h.append( (*it)->channelDataHash( "Z", tileOrigin ) );
+			}
 		}
 	}
 }
 
 IECore::ConstFloatVectorDataPtr DeepMerge::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ImagePlug::ChannelDataScope reusedScope( context );
-	FloatVectorDataPtr resultData = new FloatVectorData;
-	std::vector<float> &result = resultData->writable();
+	ConstIntVectorDataPtr offsetsCacheData;
+	{
+		ImagePlug::ChannelDataScope offsetsScope( context );
+		offsetsScope.remove( ImagePlug::channelNameContextName );
+		offsetsCacheData = offsetsCachePlug()->getValue();
+	}
 
-	reusedScope.remove( ImagePlug::channelNameContextName );
-
-	ConstIntVectorDataPtr offsetsCacheData = offsetsCachePlug()->getValue();
 	const std::vector<int> &offsetsCache = offsetsCacheData->readable();
 	if( !offsetsCache.size() )
 	{
 		return ImagePlug::emptyTile();
 	}
 
+	FloatVectorDataPtr resultData = new FloatVectorData;
+	std::vector<float> &result = resultData->writable();
 	result.resize( offsetsCache.back(), 0.0f );
 
 	int numInputs = offsetsCache.size() / ( 1 + 2 * ImagePlug::tilePixels() );
-	reusedScope.remove( ImagePlug::tileOriginContextName );
 
-	// In a global global context, check if the channel exists in each input
-	std::vector<int> channelExists( numInputs );
-	for( int j = 0; j < numInputs; j++ )
-	{
-		int plugIndex = offsetsCache[j];
-		const ImagePlug *inP = inPlugs()->getChild<ImagePlug>( plugIndex );
-		if( !ImageAlgo::viewIsValid( context, inP->viewNames()->readable() ) )
-		{
-			channelExists[j] = 0;
-			continue;
-		}
-		ConstStringVectorDataPtr channelNamesData = inP->channelNamesPlug()->getValue();
-		const std::vector<std::string> &channelNames = channelNamesData->readable();
-		channelExists[j] = ImageAlgo::channelExists( channelNames, channelName );
-		if( channelExists[j] == 0 && channelName == "ZBack" && ImageAlgo::channelExists( channelNames, "Z" ) )
-		{
-			channelExists[j] = -1;
-		}
-	}
+	MergeContextHandler contextHandler( this, context );
+	const int numContexts = contextHandler.numContexts();
 
-	// In a per-tile and per-channel context, get a ptr to the channel data of each input
-	reusedScope.setTileOrigin( &tileOrigin );
-	reusedScope.setChannelName( &channelName );
+	// Get a ptr to the channel data of each layer that has the channel
 	std::vector< ConstFloatVectorDataPtr > channelDatas( numInputs );
 	std::vector< const float* > channelPtrs( numInputs, nullptr );
 	for( int j = 0; j < numInputs; j++ )
 	{
-		int plugIndex = offsetsCache[j];
-		const ImagePlug *inP = inPlugs()->getChild<ImagePlug>( plugIndex );
-		if( channelExists[j] == 0 )
+		const int layerIndex = offsetsCache[j];
+		contextHandler.setContextForIndex( layerIndex % numContexts );
+		const ImagePlug *inP = inPlugs()->getChild<ImagePlug>( layerIndex / numContexts );
+		if( !ImageAlgo::viewIsValid( context, inP->viewNames()->readable() ) )
 		{
 			continue;
 		}
 
-		if( channelExists[j] == -1 )
+		ConstStringVectorDataPtr channelNamesData = inP->channelNames();
+		const std::vector<std::string> &channelNames = channelNamesData->readable();
+		if( ImageAlgo::channelExists( channelNames, channelName ) )
+		{
+			channelDatas[j] = inP->channelDataPlug()->getValue();
+		}
+		else if( channelName == "ZBack" && ImageAlgo::channelExists( channelNames, "Z" ) )
 		{
 			// Special case to copy Z to ZBack when combining images where some have ZBack
 			// and some don't
-			reusedScope.setChannelName( &ImageAlgo::channelNameZ );
-			channelDatas[j] = inP->channelDataPlug()->getValue();
-			reusedScope.setChannelName( &channelName );
+			channelDatas[j] = inP->channelData( ImageAlgo::channelNameZ, tileOrigin );
 		}
 		else
 		{
-			channelDatas[j] = inP->channelDataPlug()->getValue();
+			continue;
 		}
 		channelPtrs[j] = &channelDatas[j]->readable()[0];
 	}

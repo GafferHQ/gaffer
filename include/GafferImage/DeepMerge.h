@@ -39,6 +39,9 @@
 
 #include "GafferImage/ImageProcessor.h"
 
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+
 namespace GafferImage
 {
 
@@ -55,12 +58,38 @@ class GAFFERIMAGE_API DeepMerge : public ImageProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepMerge, DeepMergeTypeId, ImageProcessor );
 
+		enum class Mode
+		{
+			Standard,
+			Collect
+		};
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		Gaffer::StringVectorDataPlug *contextValuesPlug();
+		const Gaffer::StringVectorDataPlug *contextValuesPlug() const;
+
+		Gaffer::StringPlug *contextVariablePlug();
+		const Gaffer::StringPlug *contextVariablePlug() const;
+
+		Gaffer::StringPlug *indexContextVariablePlug();
+		const Gaffer::StringPlug *indexContextVariablePlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+		/// These hash just the first input, but we can't use a passthrough because in Collect mode they need
+		/// to set the first context.
+		void hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstStringVectorDataPtr computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+		void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundDataPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
 		/// Reimplemented to hash the connected input plugs
 		void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
