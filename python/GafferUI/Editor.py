@@ -230,7 +230,7 @@ class Editor( GafferUI.Widget ) :
 		if s is not None :
 			return s
 
-		s = Gaffer.Signals.Signal1()
+		s = Gaffer.Signals.Signal1( Gaffer.Signals.CatchingCombiner( "Emitting {}.instanceCreatedSignal".format( cls.__name__ ) ) )
 		setattr( cls, "__instanceCreatedSignal", s )
 		return s
 
