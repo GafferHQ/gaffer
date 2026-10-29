@@ -23,6 +23,7 @@ Improvements
     - Added `ai:aperture_aspect_ratio` preset menu item.
   - CameraTweaks :
     - Added `ai:` prefix to tweaks parameter names created from the menu.
+    - Changed tweak plug names to match the parameter name it tweaks.
     - Added `ai:aperture_aspect_ratio` preset menu item.
 
 Fixes
