@@ -639,6 +639,68 @@ struct MergeDataWindowFunctor
 
 };
 
+class MergeContextHandler
+{
+public:
+	MergeContextHandler( const Merge* mergeNode, const Context *context )
+		:	m_mode( (Merge::Mode)mergeNode->modePlug()->getValue() )
+	{
+		if( m_mode == Merge::Mode::Collect )
+		{
+			m_contextValuesData = mergeNode->contextValuesPlug()->getValue();
+			m_contextValues = &m_contextValuesData->readable();
+			m_contextVariable = mergeNode->contextVariablePlug()->getValue();
+			m_indexContextVariable = mergeNode->indexContextVariablePlug()->getValue();
+
+			m_numContexts = m_contextValues->size();
+
+			m_scope.emplace( context );
+
+			m_context = m_scope->context();
+		}
+		else
+		{
+			m_numContexts = 1;
+			m_context = context;
+		}
+	}
+
+	int numContexts()
+	{
+		return m_numContexts;
+	}
+
+	void setContextForIndex( int index )
+	{
+		if( m_mode == Merge::Mode::Collect )
+		{
+			m_index = index;
+			m_scope->set( m_contextVariable, &( (*m_contextValues)[m_index] ) );
+			m_scope->set( m_indexContextVariable, &m_index );
+		}
+	}
+
+	const Context *context()
+	{
+		return m_context;
+	}
+
+private:
+
+	const Merge::Mode m_mode;
+	ConstStringVectorDataPtr m_contextValuesData;
+	const std::vector<std::string> *m_contextValues;
+	std::string m_contextVariable;
+	std::string m_indexContextVariable;
+
+	int m_numContexts;
+	const Context *m_context;
+
+	int m_index;
+
+	std::optional<Context::EditableScope> m_scope;
+};
+
 } // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Merge );
@@ -659,11 +721,19 @@ Merge::Merge( const std::string &name )
 		)
 	);
 
-	// We don't ever want to change these, so we make pass-through connections.
-	// Note that they are hard-coded to take the first input
-	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
-	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
-	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	addChild(
+		new IntPlug(
+			"mode",         // name
+			Plug::In,       // direction
+			(int)Mode::Standard, // default
+			(int)Mode::Standard, // min
+			(int)Mode::Collect   // max
+		)
+	);
+
+	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
+	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
+	addChild( new StringPlug( "indexContextVariable", Plug::In, "merge:index" ) );
 }
 
 Merge::~Merge()
@@ -680,6 +750,46 @@ const Gaffer::IntPlug *Merge::operationPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
+Gaffer::IntPlug *Merge::modePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *Merge::modePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::StringVectorDataPlug *Merge::contextValuesPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringVectorDataPlug *Merge::contextValuesPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *Merge::contextVariablePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *Merge::contextVariablePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::StringPlug *Merge::indexContextVariablePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *Merge::indexContextVariablePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
 void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FlatImageProcessor::affects( input, outputs );
@@ -688,6 +798,19 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 		outputs.push_back( outPlug()->dataWindowPlug() );
+	}
+	else if(
+		input == modePlug() || input == contextValuesPlug() ||
+		input == contextVariablePlug() || input == indexContextVariablePlug()
+	)
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );
+		outputs.push_back( outPlug()->dataWindowPlug() );
+		outputs.push_back( outPlug()->channelNamesPlug() );
+		outputs.push_back( outPlug()->viewNamesPlug() );
+		outputs.push_back( outPlug()->formatPlug() );
+		outputs.push_back( outPlug()->metadataPlug() );
+		outputs.push_back( outPlug()->deepPlug() );
 	}
 	else if( const ImagePlug *inputImage = input->parent<ImagePlug>() )
 	{
@@ -710,21 +833,167 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
+void Merge::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		h = inPlug()->viewNamesPlug()->defaultHash();
+		return;
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	h = inPlug()->viewNamesPlug()->hash();
+}
+
+IECore::ConstStringVectorDataPtr Merge::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		return inPlug()->viewNamesPlug()->defaultValue();
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	return inPlug()->viewNamesPlug()->getValue();
+}
+
+
+void Merge::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		h = inPlug()->formatPlug()->defaultHash();
+		return;
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	h = inPlug()->formatPlug()->hash();
+}
+
+
+GafferImage::Format Merge::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		return inPlug()->formatPlug()->defaultValue();
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	return inPlug()->formatPlug()->getValue();
+}
+
+
+void Merge::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		h = inPlug()->metadataPlug()->defaultHash();
+		return;
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	h = inPlug()->metadataPlug()->hash();
+}
+
+IECore::ConstCompoundDataPtr Merge::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	MergeContextHandler contextHandler( this, context );
+
+	if( contextHandler.numContexts() == 0 )
+	{
+		return inPlug()->metadataPlug()->defaultValue();
+	}
+
+	contextHandler.setContextForIndex( 0 );
+	return inPlug()->metadataPlug()->getValue();
+}
+
+void Merge::hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashDeep( parent, context, h );
+
+	MergeContextHandler contextHandler( this, context );
+
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
+	{
+		if( !(*it)->getInput<ValuePlug>() )
+		{
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				h.append( (*it)->deepPlug()->hash() );
+			}
+		}
+	}
+}
+
+bool Merge::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+
+	MergeContextHandler contextHandler( this, context );
+
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
+	{
+		if( !(*it)->getInput<ValuePlug>() )
+		{
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			if(
+				ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) &&
+				(*it)->deepPlug()->getValue()
+			)
+			{
+				throw IECore::Exception( "Deep data not supported in input \"" + (*it)->relativeName( this ) + "\"" );
+			}
+		}
+	}
+	return false;
+}
+
 void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FlatImageProcessor::hashDataWindow( output, context, h );
 
-
 	operationPlug()->hash( h );
+
+	MergeContextHandler contextHandler( this, context );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		// It's technically a bit wasteful to be running this on the first iteration - we don't
-		// need to check viewNames on the first iteration, since the output viewNames are identical to
-		// the first iteration viewNames, so the view is guaranteed to be valid, unless the downstream
-		// node has a bug
-		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			(*it)->dataWindowPlug()->hash( h );
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			// It's technically a bit wasteful to be running this on the first iteration - we don't
+			// need to check viewNames on the first iteration, since the output viewNames are identical to
+			// the first iteration viewNames, so the view is guaranteed to be valid, unless the downstream
+			// node has a bug
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				(*it)->dataWindowPlug()->hash( h );
+			}
 		}
 	}
 }
@@ -734,12 +1003,25 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 	Imath::Box2i dataWindow;
 	Operation op = (Operation)operationPlug()->getValue();
 	bool first = true;
+
+	MergeContextHandler contextHandler( this, context );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			dispatchOperation( op, MergeDataWindowFunctor(), dataWindow, (*it)->dataWindowPlug()->getValue(), first );
-			first = false;
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				dispatchOperation( op, MergeDataWindowFunctor(), dataWindow, (*it)->dataWindowPlug()->getValue(), first );
+				first = false;
+			}
 		}
 	}
 
@@ -750,30 +1032,52 @@ void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer
 {
 	FlatImageProcessor::hashChannelNames( output, context, h );
 
+	MergeContextHandler contextHandler( this, context );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			(*it)->channelNamesPlug()->hash( h );
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				(*it)->channelNamesPlug()->hash( h );
+			}
 		}
 	}
 }
 
 IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	MergeContextHandler contextHandler( this, context );
+
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			IECore::ConstStringVectorDataPtr inChannelStrVectorData((*it)->channelNamesPlug()->getValue() );
-			for ( const std::string &c : inChannelStrVectorData->readable() )
+			continue;
+		}
+
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
+		{
+			contextHandler.setContextForIndex( i );
+			if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
 			{
-				if ( std::find( outChannels.begin(), outChannels.end(), c ) == outChannels.end() )
+				IECore::ConstStringVectorDataPtr inChannelStrVectorData((*it)->channelNamesPlug()->getValue() );
+				for ( const std::string &c : inChannelStrVectorData->readable() )
 				{
-					outChannels.push_back( c );
+					if ( std::find( outChannels.begin(), outChannels.end(), c ) == outChannels.end() )
+					{
+						outChannels.push_back( c );
+					}
 				}
 			}
 		}
@@ -811,75 +1115,87 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 		finalTileDataWindowLocal = boxIntersection( fullBound, finalDataWindowLocal );
 	}
 
+	MergeContextHandler contextHandler( this, context );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( !(*it)->getInput<ValuePlug>() || !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
 			continue;
 		}
 
-		IECore::ConstStringVectorDataPtr channelNamesData;
-		Box2i dataWindow;
-
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
 		{
-			ImagePlug::GlobalScope c( context );
-			channelNamesData = (*it)->channelNamesPlug()->getValue();
-			dataWindow = (*it)->dataWindowPlug()->getValue();
+			contextHandler.setContextForIndex( i );
+
+			if( !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				continue;
+			}
+
+			IECore::ConstStringVectorDataPtr channelNamesData;
+			Box2i dataWindow;
+
+			{
+				ImagePlug::GlobalScope c( contextHandler.context() );
+				channelNamesData = (*it)->channelNamesPlug()->getValue();
+				dataWindow = (*it)->dataWindowPlug()->getValue();
+			}
+
+			// The hash of the channel data we do below represents just the data in
+			// the tile itself, and takes no account of the possibility that parts of the
+			// tile may be outside of the data window. This simplifies the implementation of
+			// nodes like Constant (where all tiles are identical, even the edge tiles) and
+			// Crop (which does no processing of tiles at all). For most nodes this doesn't
+			// matter, because they don't change the data window, or they use a Sampler to
+			// deal with invalid pixels. But because our data window is the union of all
+			// input data windows, we may be using/revealing the invalid parts of a tile. We
+			// deal with this in computeChannelData() by treating the invalid parts as black,
+			// and must therefore hash in the valid bound here to take that into account.
+			//
+			// Working with a "local" dataWindow ( relative to the current tileOrigin ) is consistent with
+			// what we need to do in the compute, and also has this advantage:  the valid bound could be
+			// identical for two tiles with different origins, in which case it's OK to reuse the hash
+			// For example, if performing a merge of two large constants, any tiles that are fully inside
+			// the dataWindow of both can be reused.
+			Box2i dataWindowLocal( dataWindow.min - tileOrigin, dataWindow.max - tileOrigin );
+			const Box2i validBound = boxIntersection( finalTileDataWindowLocal, dataWindowLocal );
+			h.append( validBound );
+
+			const MurmurHash &blackTileHash = ImagePlug::blackTile()->Object::hash();
+			MurmurHash channelHash = blackTileHash;
+			MurmurHash alphaHash = blackTileHash;
+
+			bool partialBound = false;
+			if( !BufferAlgo::empty( validBound ) )
+			{
+				const std::vector<std::string> &channelNames = channelNamesData->readable();
+
+				if( ImageAlgo::channelExists( channelNames, channelName ) )
+				{
+					channelHash = (*it)->channelDataPlug()->hash();
+					h.append( channelHash );
+				}
+
+				if( ImageAlgo::channelExists( channelNames, "A" ) )
+				{
+					alphaHash =  (*it)->channelDataHash( "A", tileOrigin );
+					h.append( alphaHash );
+
+					// Make sure we differentiate this hash from the hash above, so that an image with just RGB
+					// and an image with just alpha don't hash the same
+					h.append( true );
+				}
+
+				if( validBound != finalTileDataWindowLocal )
+				{
+					partialBound = true;
+				}
+			}
+
+			// Try computing a passthrough hash if it's possible
+			dispatchOperation( op, PassthroughHashFunctor(), passthroughHash, passthroughAlphaHash, channelHash, alphaHash, partialBound, passthroughValid );
 		}
-
-		// The hash of the channel data we do below represents just the data in
-		// the tile itself, and takes no account of the possibility that parts of the
-		// tile may be outside of the data window. This simplifies the implementation of
-		// nodes like Constant (where all tiles are identical, even the edge tiles) and
-		// Crop (which does no processing of tiles at all). For most nodes this doesn't
-		// matter, because they don't change the data window, or they use a Sampler to
-		// deal with invalid pixels. But because our data window is the union of all
-		// input data windows, we may be using/revealing the invalid parts of a tile. We
-		// deal with this in computeChannelData() by treating the invalid parts as black,
-		// and must therefore hash in the valid bound here to take that into account.
-		//
-		// Working with a "local" dataWindow ( relative to the current tileOrigin ) is consistent with
-		// what we need to do in the compute, and also has this advantage:  the valid bound could be
-		// identical for two tiles with different origins, in which case it's OK to reuse the hash
-		// For example, if performing a merge of two large constants, any tiles that are fully inside
-		// the dataWindow of both can be reused.
-		Box2i dataWindowLocal( dataWindow.min - tileOrigin, dataWindow.max - tileOrigin );
-		const Box2i validBound = boxIntersection( finalTileDataWindowLocal, dataWindowLocal );
-		h.append( validBound );
-
-		const MurmurHash &blackTileHash = ImagePlug::blackTile()->Object::hash();
-		MurmurHash channelHash = blackTileHash;
-		MurmurHash alphaHash = blackTileHash;
-
-		bool partialBound = false;
-		if( !BufferAlgo::empty( validBound ) )
-		{
-			const std::vector<std::string> &channelNames = channelNamesData->readable();
-
-			if( ImageAlgo::channelExists( channelNames, channelName ) )
-			{
-				channelHash = (*it)->channelDataPlug()->hash();
-				h.append( channelHash );
-			}
-
-			if( ImageAlgo::channelExists( channelNames, "A" ) )
-			{
-				alphaHash =  (*it)->channelDataHash( "A", tileOrigin );
-				h.append( alphaHash );
-
-				// Make sure we differentiate this hash from the hash above, so that an image with just RGB
-				// and an image with just alpha don't hash the same
-				h.append( true );
-			}
-
-			if( validBound != finalTileDataWindowLocal )
-			{
-				partialBound = true;
-			}
-		}
-
-		// Try computing a passthrough hash if it's possible
-		dispatchOperation( op, PassthroughHashFunctor(), passthroughHash, passthroughAlphaHash, channelHash, alphaHash, partialBound, passthroughValid );
 	}
 
 	if( passthroughValid )
@@ -918,70 +1234,81 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 
 	bool partialBound = false;
 
+	MergeContextHandler contextHandler( this, context );
+
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( !(*it)->getInput<ValuePlug>() || !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
 			continue;
 		}
 
-		IECore::ConstStringVectorDataPtr channelNamesData;
-		Box2i dataWindow;
+		for( int i = 0; i < contextHandler.numContexts(); i++ )
 		{
-			ImagePlug::GlobalScope c( Context::current() );
-			channelNamesData = (*it)->channelNamesPlug()->getValue();
-			dataWindow = (*it)->dataWindowPlug()->getValue();
+			contextHandler.setContextForIndex( i );
+
+			if( !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+			{
+				continue;
+			}
+
+			IECore::ConstStringVectorDataPtr channelNamesData;
+			Box2i dataWindow;
+			{
+				ImagePlug::GlobalScope c( contextHandler.context() );
+				channelNamesData = (*it)->channelNamesPlug()->getValue();
+				dataWindow = (*it)->dataWindowPlug()->getValue();
+			}
+			Box2i dataWindowLocal( dataWindow.min - tileOrigin, dataWindow.max - tileOrigin );
+
+			const std::vector<std::string> &channelNames = channelNamesData->readable();
+
+			ConstFloatVectorDataPtr channelData;
+			ConstFloatVectorDataPtr alphaData;
+
+			const Box2i validBound = boxIntersection( finalTileDataWindowLocal, dataWindowLocal );
+
+			// \todo : There is opportunity for optimizing using pass-throughs for missing channel cases.
+			// If both channel and alpha are missing, we could check for SingleInputMode::Copy.  If one or
+			// the other is missing, we would need extra information about the Op to know how to proceed.
+			// For the moment, I'm assuming that optimizing for merging channels that don't exist is not
+			// a performance priority.
+			if( ImageAlgo::channelExists( channelNames, channelName ) && !BufferAlgo::empty( validBound ) )
+			{
+				channelData = (*it)->channelDataPlug()->getValue();
+			}
+			else
+			{
+				channelData = ImagePlug::blackTile();
+			}
+
+			if( ImageAlgo::channelExists( channelNames, "A" ) && !BufferAlgo::empty( validBound ) )
+			{
+				alphaData = (*it)->channelData( "A", tileOrigin );
+			}
+			else
+			{
+				alphaData = ImagePlug::blackTile();
+			}
+
+			if( (int)alphaData->readable().size() != ImagePlug::tilePixels()  )
+			{
+				throw IECore::Exception( "Merge::computeChannelData : Cannot process deep data." );
+			}
+			if( (int)channelData->readable().size() != ImagePlug::tilePixels() )
+			{
+				throw IECore::Exception( "Merge::computeChannelData : Cannot process deep data." );
+			}
+
+			partialBound |= !BufferAlgo::empty( validBound ) && validBound != finalTileDataWindowLocal;
+
+			// MergeFunctor contains all the complexity, we just pass in the bounds and channel data,
+			// and it will either point resultChannelData to something we can pass through, or allocate
+			// the merge buffers, operate in there, and then point resultChannelData to that
+			bool first = !resultChannelData;
+			dispatchOperation( op, MergeFunctor(), resultBound, resultChannelData, resultAlphaData, validBound, channelData, alphaData, mergeChannelBuffer, mergeAlphaBuffer, partialBound );
+			dispatchOperation( op, MergeDataWindowFunctor(), resultBound, validBound, first );
 		}
-		Box2i dataWindowLocal( dataWindow.min - tileOrigin, dataWindow.max - tileOrigin );
-
-		const std::vector<std::string> &channelNames = channelNamesData->readable();
-
-		ConstFloatVectorDataPtr channelData;
-		ConstFloatVectorDataPtr alphaData;
-
-		const Box2i validBound = boxIntersection( finalTileDataWindowLocal, dataWindowLocal );
-
-		// \todo : There is opportunity for optimizing using pass-throughs for missing channel cases.
-		// If both channel and alpha are missing, we could check for SingleInputMode::Copy.  If one or
-		// the other is missing, we would need extra information about the Op to know how to proceed.
-		// For the moment, I'm assuming that optimizing for merging channels that don't exist is not
-		// a performance priority.
-		if( ImageAlgo::channelExists( channelNames, channelName ) && !BufferAlgo::empty( validBound ) )
-		{
-			channelData = (*it)->channelDataPlug()->getValue();
-		}
-		else
-		{
-			channelData = ImagePlug::blackTile();
-		}
-
-		if( ImageAlgo::channelExists( channelNames, "A" ) && !BufferAlgo::empty( validBound ) )
-		{
-			alphaData = (*it)->channelData( "A", tileOrigin );
-		}
-		else
-		{
-			alphaData = ImagePlug::blackTile();
-		}
-
-		if( (int)alphaData->readable().size() != ImagePlug::tilePixels()  )
-		{
-			throw IECore::Exception( "Merge::computeChannelData : Cannot process deep data." );
-		}
-		if( (int)channelData->readable().size() != ImagePlug::tilePixels() )
-		{
-			throw IECore::Exception( "Merge::computeChannelData : Cannot process deep data." );
-		}
-
-		partialBound |= !BufferAlgo::empty( validBound ) && validBound != finalTileDataWindowLocal;
-
-		// MergeFunctor contains all the complexity, we just pass in the bounds and channel data,
-		// and it will either point resultChannelData to something we can pass through, or allocate
-		// the merge buffers, operate in there, and then point resultChannelData to that
-		bool first = !resultChannelData;
-		dispatchOperation( op, MergeFunctor(), resultBound, resultChannelData, resultAlphaData, validBound, channelData, alphaData, mergeChannelBuffer, mergeAlphaBuffer, partialBound );
-		dispatchOperation( op, MergeDataWindowFunctor(), resultBound, validBound, first );
-
 	}
 
 	return resultChannelData;

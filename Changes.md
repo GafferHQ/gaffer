@@ -9,6 +9,7 @@ Improvements
 - LightEditor, RenderPassEditor, AttributeEditor :
   - Added column filter. When enabled, only columns matching the search text are shown, and sections without any matching columns are hidden.
   - Section tabs are now sized to fit their names, rather than expanding to fill the available space.
+- Merge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
 
 Fixes
 -----
