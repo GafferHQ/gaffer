@@ -20,6 +20,11 @@ Fixes
 
 - Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
 
+API
+---
+
+- SceneAlgo : Functions for parallel scene traversal no longer require functors to be l-values, allowing lambdas to be passed inline.
+
 Breaking Changes
 ----------------
 

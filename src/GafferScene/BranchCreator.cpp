@@ -230,12 +230,14 @@ class BranchCreator::BranchesData : public IECore::Data
 		BranchesData( const BranchCreator *branchCreator, const Context *context )
 			:	m_root( new Location( 0, true ) )
 		{
-			auto f = [this, branchCreator]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
-			{
-				addBranch( branchCreator, path );
-				return true;
-			};
-			SceneAlgo::filteredParallelTraverse( branchCreator->inPlug(), branchCreator->filterPlug(), f );
+			SceneAlgo::filteredParallelTraverse(
+				branchCreator->inPlug(), branchCreator->filterPlug(),
+				[this, branchCreator]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
+				{
+					addBranch( branchCreator, path );
+					return true;
+				}
+			);
 
 			if( !branchCreator->filterPlug()->getInput() )
 			{
@@ -293,15 +295,17 @@ class BranchCreator::BranchesData : public IECore::Data
 		{
 			// See `SceneAlgo::matchingPathsHash()` for documentation of this hashing strategy.
 			std::atomic<uint64_t> h1( 0 ), h2( 0 );
-			auto f = [branchCreator, &h1, &h2]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
-			{
-				IECore::MurmurHash h;
-				hashBranch( branchCreator, path, h );
-				h1 += h.h1();
-				h2 += h.h2();
-				return true;
-			};
-			SceneAlgo::filteredParallelTraverse( branchCreator->inPlug(), branchCreator->filterPlug(), f );
+			SceneAlgo::filteredParallelTraverse(
+				branchCreator->inPlug(), branchCreator->filterPlug(),
+				[branchCreator, &h1, &h2]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
+				{
+					IECore::MurmurHash h;
+					hashBranch( branchCreator, path, h );
+					h1 += h.h1();
+					h2 += h.h2();
+					return true;
+				}
+			);
 			h.append( MurmurHash( h1, h2 ) );
 
 			if( !branchCreator->filterPlug()->getInput() )
