@@ -1,6 +1,11 @@
 1.7.x.x (relative to 1.7.6.0)
 =======
 
+Improvements
+------------
+
+- Editor : Exceptions thrown by slots connected to `instanceCreatedSignal()` are now caught and reported, rather than stopping execution.
+
 1.7.6.0 (relative to 1.7.5.0)
 =======
 
