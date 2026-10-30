@@ -71,6 +71,8 @@ GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blade Curvature", f
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Rotation", functools.partial( __tweakCreator, "ai:aperture_rotation", "ai:aperture_rotation", 0.0 ) )
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Aspect Ratio", functools.partial( __tweakCreator, "ai:aperture_aspect_ratio", "ai:aperture_aspect_ratio", 1.0 ) )
 
+## \todo Remove these non-prefixed metadata entries when we remove all
+# support for non-prefixed Arnold camera tweaks.
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CameraTweaks,
@@ -125,9 +127,67 @@ Gaffer.Metadata.registerNode(
 			"readOnly" : True,
 		},
 
-		"tweaks.apertureAspectRatio.name" : {
+	}
+
+)
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.CameraTweaks,
+
+	plugs = {
+
+		"tweaks.ai:shutter_type.name" : {
 			"readOnly" : True,
-		}
+		},
+
+		"tweaks.ai:shutter_type.value" : {
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Box" : "box",
+			"preset:Triangle" : "triangle",
+			"preset:Curve" : "curve",
+
+		},
+
+		"tweaks.ai:shutter_curve.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:rolling_shutter.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:rolling_shutter.value" : {
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Off" : "off",
+			"preset:Top" : "top",
+			"preset:Bottom" : "bottom",
+			"preset:Left" : "left",
+			"preset:Right" : "right",
+
+		},
+
+		"tweaks.ai:rolling_shutter_duration.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_blades.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_blade_curvature.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_rotation.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_aspect_ratio.name" : {
+			"readOnly" : True,
+		},
 
 	}
 
