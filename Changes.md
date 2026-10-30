@@ -14,6 +14,7 @@ Improvements
   - Section tabs are now sized to fit their names, rather than expanding to fill the available space.
 - Merge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
 - RandomPrimitiveVariable : Added `BooleanSelection` mode, which is useful for decimating geometry in conjunction with DeletePoints, DeleteCurves and DeleteFaces nodes.
+- DeepMerge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
 
 Fixes
 -----
@@ -23,6 +24,7 @@ Fixes
   - The section chooser is no longer hidden when only a single section is available.
   - Fixed bug preventing the `All` section from showing columns from all sections after a column had been registered to `section = "All"`.
 - Arnold : Fixed rendering of OSL ramps after exporting to USD and reimporting.
+- ImageAlgo::tiles() : Fixed bug when data window is empty.
 
 API
 ---
