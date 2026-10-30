@@ -491,7 +491,10 @@ Build
 1.6.21.x (relative to 1.6.21.7)
 ========
 
+Fixes
+-----
 
+- Catalogue : Fixed `imageNames` plug not handling renaming of promoted images.
 
 1.6.21.7 (relative to 1.6.21.6)
 ========
