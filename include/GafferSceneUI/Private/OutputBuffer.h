@@ -115,8 +115,9 @@ class OutputBuffer
 		mutable IECoreGL::TexturePtr m_rgbaTexture;
 		mutable IECoreGL::TexturePtr m_depthTexture;
 		mutable IECoreGL::TexturePtr m_idTexture;
-		class BufferTexture;
-		mutable std::unique_ptr<BufferTexture> m_selectionTexture;
+		/// \todo Use a buffer texture once we can use more modern GL on macOS.
+		mutable IECoreGL::TexturePtr m_selectionTexture;
+		mutable int m_selectionTextureSize;
 		mutable IECoreGL::ShaderPtr m_shader;
 		mutable IECoreGL::Shader::SetupPtr m_shaderSetup;
 
