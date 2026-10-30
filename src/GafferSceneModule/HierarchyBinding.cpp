@@ -141,6 +141,10 @@ void GafferSceneModule::bindHierarchy()
 			.value( "Replace", MergeScenes::Mode::Replace )
 			.value( "Merge", MergeScenes::Mode::Merge )
 		;
+		enum_<MergeScenes::MergeMode>( "MergeMode" )
+			.value( "Standard", MergeScenes::MergeMode::Standard )
+			.value( "Collect", MergeScenes::MergeMode::Collect )
+		;
 	}
 
 	{

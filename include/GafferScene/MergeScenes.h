@@ -38,6 +38,8 @@
 
 #include "GafferScene/SceneProcessor.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include <bitset>
 
 namespace GafferScene
@@ -74,6 +76,24 @@ class GAFFERSCENE_API MergeScenes : public SceneProcessor
 
 		Gaffer::BoolPlug *adjustBoundsPlug();
 		const Gaffer::BoolPlug *adjustBoundsPlug() const;
+
+		enum class MergeMode
+		{
+			Standard,
+			Collect
+		};
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		Gaffer::StringVectorDataPlug *contextValuesPlug();
+		const Gaffer::StringVectorDataPlug *contextValuesPlug() const;
+
+		Gaffer::StringPlug *contextVariablePlug();
+		const Gaffer::StringPlug *contextVariablePlug() const;
+
+		Gaffer::StringPlug *indexContextVariablePlug();
+		const Gaffer::StringPlug *indexContextVariablePlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
@@ -142,12 +162,12 @@ class GAFFERSCENE_API MergeScenes : public SceneProcessor
 		};
 
 		VisitOrder visitOrder( Mode mode, VisitOrder replaceOrder = VisitOrder::LastOnly ) const;
-		InputMask connectedInputs() const;
+		InputMask connectedInputs( const Gaffer::Context *context ) const;
 
 		// Calls `visitor( inputType, inputIndex, input )` for all inputs specified by `inputMask`.
 		// Visitor may return `true` to continue to subsequent inputs or `false` to stop iteration.
 		template<typename Visitor>
-		void visit( InputMask inputMask, Visitor &&visitor, VisitOrder order = VisitOrder::Forwards ) const;
+		void visit( InputMask inputMask, const Gaffer::Context *context, Visitor &&visitor, VisitOrder order = VisitOrder::Forwards ) const;
 
 		static size_t g_firstPlugIndex;
 

@@ -61,6 +61,10 @@ Gaffer.Metadata.registerNode(
 	> not using these operations, or turning off `adjustBounds`.
 	""",
 
+	"layout:activator:modeCollect", lambda node : node["mode"].getValue() == GafferScene.MergeScenes.MergeMode.Collect,
+	"ui:spreadsheet:enabledRowNamesConnection", "contextValues",
+	"ui:spreadsheet:selectorContextVariablePlug", "contextVariable",
+
 	plugs = {
 
 		"transformMode" : {
@@ -139,6 +143,62 @@ Gaffer.Metadata.registerNode(
 			> Caution : This has considerable overhead when the `objectsMode` and/or
 			> `transformsMode` is not `Keep`.
 			""",
+
+		},
+
+		"mode" : {
+
+			"description" :
+			"""
+			Defines how inputs are selected for merging :
+
+			- Standard : Each input plug is used once.
+			- Collect : Each input plug is evaluated for each value in `contextValues`.
+			""",
+
+			"preset:Standard" : GafferScene.MergeScenes.MergeMode.Standard,
+			"preset:Collect" : GafferScene.MergeScenes.MergeMode.Collect,
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+
+		},
+
+		"contextValues" : {
+
+			"description" :
+			"""
+			The values to use for the `contextVariable` when in `Collect` mode. Multiple scenes
+			will be taken from each input, by evaluating it for
+			each value. This value will be passed to `contextVariable` and
+			the length of this list determines the number of times each input is evaluated.
+			""",
+
+			"layout:visibilityActivator" : "modeCollect",
+
+		},
+
+		"contextVariable" : {
+
+			"description" :
+			"""
+			Name of the context variable that takes values from `contextValues` in Collect mode. May be used
+			upstream to vary the multiple scenes being taken from each input.
+			""",
+
+			"layout:visibilityActivator" : "modeCollect",
+
+		},
+
+		"indexContextVariable" : {
+
+			"description" :
+			"""
+			Name of the context variable that contains the index of the current context value when in Collect
+			mode. Ranges from 0 to `len( contextValues ) - 1`. May be used upstream to vary the multiple
+			layers being taken from each input.
+			""",
+
+			"layout:visibilityActivator" : "modeCollect",
 
 		},
 
