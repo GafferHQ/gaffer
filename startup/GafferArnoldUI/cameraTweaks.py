@@ -50,7 +50,7 @@ def __tweakCreator( plugName, parameterName, parameterValue ) :
 def __shutterCurveTweakCreator() :
 
 	tweak = Gaffer.TweakPlug(
-		"shutter_curve",
+		"ai:shutter_curve",
 		Gaffer.RampffPlug(
 			defaultValue = IECore.Rampff(
 				[ ( 0, 0 ), ( 0.25, 1 ), (0.75, 1 ), ( 1, 0 ) ],
@@ -59,17 +59,20 @@ def __shutterCurveTweakCreator() :
 		),
 		Gaffer.TweakPlug.Mode.Create
 	)
-	tweak.setName( "shutterCurve" )
+	tweak.setName( "ai:shutter_curve" )
 	return tweak
 
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Shutter Type", functools.partial( __tweakCreator, "shutterType", "shutter_type", "box" ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Shutter Type", functools.partial( __tweakCreator, "ai:shutter_type", "ai:shutter_type", "box" ) )
 GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Shutter Curve", __shutterCurveTweakCreator )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter", functools.partial( __tweakCreator, "rollingShutter", "rolling_shutter", "off" ) )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter Duration", functools.partial( __tweakCreator, "rollingShutterDuration", "rolling_shutter_duration", 0.0 ) )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blades", functools.partial( __tweakCreator, "apertureBlades", "aperture_blades", 6 ) )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blade Curvature", functools.partial( __tweakCreator, "apertureBladeCurvature", "aperture_blade_curvature", 0.0 ) )
-GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Rotation", functools.partial( __tweakCreator, "apertureRotation", "aperture_rotation", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter", functools.partial( __tweakCreator, "ai:rolling_shutter", "ai:rolling_shutter", "off" ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Rolling Shutter Duration", functools.partial( __tweakCreator, "ai:rolling_shutter_duration", "ai:rolling_shutter_duration", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blades", functools.partial( __tweakCreator, "ai:aperture_blades", "ai:aperture_blades", 6 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Blade Curvature", functools.partial( __tweakCreator, "ai:aperture_blade_curvature", "ai:aperture_blade_curvature", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Rotation", functools.partial( __tweakCreator, "ai:aperture_rotation", "ai:aperture_rotation", 0.0 ) )
+GafferSceneUI.CameraTweaksUI.registerTweak( "Arnold/Aperture Aspect Ratio", functools.partial( __tweakCreator, "ai:aperture_aspect_ratio", "ai:aperture_aspect_ratio", 1.0 ) )
 
+## \todo Remove these non-prefixed metadata entries when we remove all
+# support for non-prefixed Arnold camera tweaks.
 Gaffer.Metadata.registerNode(
 
 	GafferScene.CameraTweaks,
@@ -121,6 +124,68 @@ Gaffer.Metadata.registerNode(
 		},
 
 		"tweaks.apertureRotation.name" : {
+			"readOnly" : True,
+		},
+
+	}
+
+)
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.CameraTweaks,
+
+	plugs = {
+
+		"tweaks.ai:shutter_type.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:shutter_type.value" : {
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Box" : "box",
+			"preset:Triangle" : "triangle",
+			"preset:Curve" : "curve",
+
+		},
+
+		"tweaks.ai:shutter_curve.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:rolling_shutter.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:rolling_shutter.value" : {
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+			"preset:Off" : "off",
+			"preset:Top" : "top",
+			"preset:Bottom" : "bottom",
+			"preset:Left" : "left",
+			"preset:Right" : "right",
+
+		},
+
+		"tweaks.ai:rolling_shutter_duration.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_blades.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_blade_curvature.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_rotation.name" : {
+			"readOnly" : True,
+		},
+
+		"tweaks.ai:aperture_aspect_ratio.name" : {
 			"readOnly" : True,
 		},
 

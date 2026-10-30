@@ -5,6 +5,7 @@ Features
 --------
 
 - PromotePointInstances : Added a new node for promoting point instances to "hero" scene locations. This replaces a similar node previously provided as part of GafferUSD and which is now deprecated.
+- Arnold : Added ArnoldCamera node to make it easier to create non-standard Arnold cameras such as fisheye and spherical cameras.
 
 Improvements
 ------------
@@ -14,6 +15,16 @@ Improvements
 - BoolPlug : Added support for connections from array-valued plugs such as StringVectorDataPlug. The BoolPlug's value is true when the input array is non-empty, and false when the input array is empty.
 - PlugAlgo : Added more type coercions to `setValueFromData()`, allowing BoolPlugs and NumericPlugs to be set from StringData.
 - Instancer : Deprecated and removed from the node menu, in preparation for removal in a future release. Use the PointInstancer node instead.
+- Arnold :
+  - Added recognition of Arnold-specific camera parameters prefixed with `ai:`. Currently both prefixed and non-prefixed parameters are supported, but prefixed parameters should be preferred in anticipation of future removal of non-prefixed parameters. If equivalent prefixed and non-prefixed parameter names are present, the prefixed parameter will be used.
+  - CameraQuery :
+    - Added `ai:` prefix to query parameter names created from the menu.
+    - Added redirection of non-existent, non-prefixed queries to their prefixed equivalent. Queries of a non-existent parameter with a prefix will not be redirected to a non-prefixed parameter, even if it is present.
+    - Added `ai:aperture_aspect_ratio` preset menu item.
+  - CameraTweaks :
+    - Added `ai:` prefix to tweaks parameter names created from the menu.
+    - Changed tweak plug names to match the parameter name it tweaks.
+    - Added `ai:aperture_aspect_ratio` preset menu item.
 
 Fixes
 -----
