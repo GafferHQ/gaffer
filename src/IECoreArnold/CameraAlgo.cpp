@@ -209,7 +209,7 @@ Imath::Box2f screenWindow( const IECoreScene::Camera *camera )
 	Imath::Box2f result;
 	if( camera->getProjection() == "fisheye_camera" )
 	{
-		result = camera->fitWindow( Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) ), camera->getFilmFit(), aspect );
+		result = IECoreScene::Camera::fitWindow( Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) ), camera->getFilmFit(), aspect );
 	}
 	else
 	{
