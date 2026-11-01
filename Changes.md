@@ -4,7 +4,7 @@
 Fixes
 -----
 
-- Catalogue : Fixed `imageNames` plug not handling renaming of promoted images.
+- Catalogue : Fixed `imageNames` plug not handling renaming of promoted images (#7234).
 
 1.6.21.7 (relative to 1.6.21.6)
 ========
