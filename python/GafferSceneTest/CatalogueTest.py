@@ -365,6 +365,9 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			s3["b"]["imageIndex"].setValue( i )
 			self.assertImagesEqual( readers[i]["out"], s3["b"]["out"] )
 
+		promotedImages[1].setName( "testRename" )
+		self.assertEqual( s["b"]["c"]["imageNames"].getValue(), IECore.StringVectorData( [ "checker", "testRename", "noisyRamp" ] ) )
+
 	def testDisplayDriverAndPromotion( self ) :
 
 		s = Gaffer.ScriptNode()
