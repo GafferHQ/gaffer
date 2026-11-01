@@ -1526,7 +1526,7 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 		StringVectorDataPtr result = new StringVectorData;
 		for( const auto &image : Image::Range( *imagesPlug() ) )
 		{
-			result->writable().push_back( image->getName().string() );
+			result->writable().push_back( image->namePlug()->getValue() );
 		}
 		static_cast<StringVectorDataPlug *>( output )->setValue( result );
 	}
