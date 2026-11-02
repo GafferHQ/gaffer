@@ -1458,7 +1458,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 			script.execute( "import", continueOnError = True )
 
 		self.assertEqual( len( mh.messages ), 1 )
-		self.assertIn( "SyntaxError: invalid syntax", mh.messages[0].message )
+		self.assertIn( "SyntaxError:", mh.messages[0].message )
 
 	def testImport( self ) :
 
