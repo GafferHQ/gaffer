@@ -128,16 +128,9 @@ jobs:
       with:
         ref: ${{ env.GAFFER_NIGHTLY == '1' && 'pendingNightly' || '' }}
 
-    - name: Install Windows SDK
-      run: |
-        curl.exe -L --output winsdksetup.exe --url https://download.microsoft.com/download/9/7/9/97982c1d-d687-41be-9dd3-6d01e52ceb68/windowssdk/winsdksetup.exe
-        Start-Process ./winsdksetup.exe -ArgumentList "/Features OptionId.DesktopCPPx64 /Quiet /NoRestart" -NoNewWindow -Wait
-      shell: pwsh
-      if: runner.os == 'Windows'
-
     - uses: TheMrMilchmann/setup-msvc-dev@368ef7d1ee4d1171b31d4a7f67f4d954f903f5a9 # v4.1.0
       with:
-        sdk: 10.0.20348.0
+        sdk: 10.0.22621.0
         arch: x64
       if: runner.os == 'Windows'
 

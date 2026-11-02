@@ -84,6 +84,7 @@ Build
 - Qt : Updated to version 6.8.5.
 - TBB : Updated to version 2022.3.0.
 - ZLib : Updated to version 1.3.1.
+- Windows : Updated Windows SDK to version 10.0.22621.0.
 
 1.7.x.x (relative to 1.7.6.0)
 =======
