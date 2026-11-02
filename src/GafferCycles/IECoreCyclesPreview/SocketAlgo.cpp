@@ -152,7 +152,7 @@ void setFloat2ArraySocket( ccl::Node *node, const ccl::SocketType &socket, const
 template<typename T>
 void setFloat3Socket( ccl::Node *node, const ccl::SocketType &socket, const T &value )
 {
-	node->set( socket, ccl::make_float3( value[0], value[1], value[2] ) );
+	node->set( socket, ccl::packed_float3( ccl::make_float3( value[0], value[1], value[2] ) ) );
 }
 
 void setFloat3Socket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
@@ -187,10 +187,10 @@ void setFloat3Socket( ccl::Node *node, const ccl::SocketType &socket, const IECo
 template<typename T>
 void setFloat3ArraySocket( ccl::Node *node, const ccl::SocketType &socket, const T &value )
 {
-	ccl::array<ccl::float3> array( value.size() );
+	ccl::array<ccl::packed_float3> array( value.size() );
 	for( size_t i = 0; i < value.size(); ++i )
 	{
-		array[i] = ccl::make_float3( value[i][0], value[i][1], value[i][2] );
+		array[i] = ccl::packed_float3( ccl::make_float3( value[i][0], value[i][1], value[i][2] ) );
 	}
 	node->set( socket, array );
 }
@@ -537,11 +537,11 @@ void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore
 {
 	IECore::SplinefColor3f evaluator = ramp.evaluator();
 
-	ccl::array<ccl::float3> rampTable( RAMP_TABLE_SIZE );
+	ccl::array<ccl::packed_float3> rampTable( RAMP_TABLE_SIZE );
 	for (int i = 0; i < RAMP_TABLE_SIZE; i++)
 	{
 		Color3f solve = evaluator( (float)i / (float)(RAMP_TABLE_SIZE - 1) );
-		rampTable[i] = ccl::make_float3( solve.x, solve.y, solve.z );
+		rampTable[i] = ccl::packed_float3( ccl::make_float3( solve.x, solve.y, solve.z ) );
 	}
 	node->set( *socket, rampTable );
 }

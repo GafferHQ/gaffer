@@ -40,17 +40,17 @@ import imath
 import Gaffer
 
 Gaffer.Metadata.registerValue( "cycles:light:spot_light", "type", "spot" )
-Gaffer.Metadata.registerValue( "cycles:light:spot_light", "coneAngleParameter", "spot_angle" )
+Gaffer.Metadata.registerValue( "cycles:light:spot_light", "coneAngleParameter", "angle" )
 Gaffer.Metadata.registerValue( "cycles:light:spot_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "cycles:light:spot_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "cycles:light:spot_light", "colorParameter", "color" )
-Gaffer.Metadata.registerValue( "cycles:light:spot_light", "lensRadiusParameter", "size" )
+Gaffer.Metadata.registerValue( "cycles:light:spot_light", "lensRadiusParameter", "radius" )
 
 Gaffer.Metadata.registerValue( "cycles:light:point_light", "type", "point" )
 Gaffer.Metadata.registerValue( "cycles:light:point_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "cycles:light:point_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "cycles:light:point_light", "colorParameter", "color" )
-Gaffer.Metadata.registerValue( "cycles:light:point_light", "radiusParameter", "size" )
+Gaffer.Metadata.registerValue( "cycles:light:point_light", "radiusParameter", "radius" )
 
 Gaffer.Metadata.registerValue( "cycles:light:distant_light", "type", "distant" )
 Gaffer.Metadata.registerValue( "cycles:light:distant_light", "intensityParameter", "intensity" )

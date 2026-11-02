@@ -44,7 +44,7 @@ Gaffer.Metadata.registerValues( {
 
 		"defaultValue" : 0,
 		"minValue" : 0,
-		"maxValue" : 2,
+		"maxValue" : 9,
 		"description" :
 		"""
 		Internal Cycles debugging log-level.
@@ -53,8 +53,8 @@ Gaffer.Metadata.registerValues( {
 		"layout:section" : "Log",
 
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
-		"presetNames" : IECore.StringVectorData( [ "Error", "Warning", "Info" ] ),
-		"presetValues" : IECore.IntVectorData( [ 0, 1, 2 ] ),
+		"presetNames" : IECore.StringVectorData( [ "Fatal", "Debug Fatal", "Error", "Debug Error", "Warning", "Debug Warning", "Info Important", "Info", "Debug", "Verbose Trace" ] ),
+		"presetValues" : IECore.IntVectorData( [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ] ),
 
 	},
 
@@ -297,6 +297,56 @@ Gaffer.Metadata.registerValues( {
 		"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 		"presetNames" : IECore.StringVectorData( [ "No Limit", "128", "256", "512", "1024", "2048", "4096", "8192" ] ),
 		"presetValues" : IECore.IntVectorData( [ 0, 1, 2, 3, 4, 5, 6, 7 ] ),
+
+	},
+
+	"option:cycles:scene:texture_resolution" : {
+
+		"defaultValue" : 1.0,
+		"description" :
+		"""
+		Set the texture resolution bias.
+		""",
+		"label" : "Texture Resolution",
+		"layout:section" : "Scene",
+
+	},
+
+	"option:cycles:scene:use_texture_cache" : {
+
+		"defaultValue" : True,
+		"description" :
+		"""
+		Use texture cache.
+		""",
+		"label" : "Use Texture Cache",
+		"layout:section" : "Scene",
+
+	},
+
+	"option:cycles:scene:auto_texture_cache" : {
+
+		"defaultValue" : False,
+		"description" :
+		"""
+		Auto-create textures for cache.
+		""",
+		"label" : "Auto Texture Cache",
+		"layout:section" : "Scene",
+
+	},
+
+	"option:cycles:scene:texture_cache_path" : {
+
+		"defaultValue" : "",
+		"description" :
+		"""
+		Path to texture cache.
+		""",
+		"label" : "Texture Cache Path",
+		"layout:section" : "Scene",
+
+		"plugValueWidget:type" : "GafferUI.FileSystemPathPlugValueWidget",
 
 	},
 

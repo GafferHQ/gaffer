@@ -74,28 +74,25 @@ ccl::PointCloud *convertPrimary( const IECoreScene::PointsPrimitive *points, ccl
 	PrimitiveVariableMap variablesToConvert = points->variables;
 
 	size_t numPoints = points->getNumPoints();
-	pointcloud->reserve( numPoints );
+	pointcloud->resize( numPoints );
 
 	const vector<Imath::V3f> &pos = p->readable();
+	std::copy_n( reinterpret_cast<const ccl::packed_float3 *>( pos.data() ), pos.size(), pointcloud->get_position_for_write() );
 
 	if( const FloatVectorData *w = points->variableData<FloatVectorData>( "width", PrimitiveVariable::Vertex ) )
 	{
 		const vector<float> &width = w->readable();
-
+		float *radius = pointcloud->get_radius_for_write();
 		for( size_t i = 0; i < numPoints; ++i )
 		{
-			pointcloud->add_point( SocketAlgo::setVector( pos[i] ), width[i] * 0.5f, 0);
+			*radius++ = width[i] * 0.5f;
 		}
 		variablesToConvert.erase( "width" );
 	}
 	else if( const FloatVectorData *w = points->variableData<FloatVectorData>( "radius", PrimitiveVariable::Vertex ) )
 	{
 		const vector<float> &width = w->readable();
-
-		for( size_t i = 0; i < numPoints; ++i )
-		{
-			pointcloud->add_point( SocketAlgo::setVector( pos[i] ), width[i], 0);
-		}
+		std::copy( width.begin(), width.end(), pointcloud->get_radius_for_write() );
 		variablesToConvert.erase( "radius" );
 	}
 	else
@@ -114,11 +111,18 @@ ccl::PointCloud *convertPrimary( const IECoreScene::PointsPrimitive *points, ccl
 			variablesToConvert.erase( "radius" );
 		}
 
+		float *radius = pointcloud->get_radius_for_write();
 		for( size_t i = 0; i < numPoints; ++i )
 		{
-			pointcloud->add_point( SocketAlgo::setVector( pos[i] ), width, 0);
+			*radius++ = width;
 		}
 	}
+
+	std::ranges::fill( pointcloud->get_shader(), 0 );
+
+	pointcloud->tag_position_modified();
+	pointcloud->tag_radius_modified();
+	pointcloud->tag_shader_modified();
 
 	// Convert primitive variables. P is done, and width/radius if found (removed above).
 	variablesToConvert.erase( "P" );

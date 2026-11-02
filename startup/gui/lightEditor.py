@@ -96,9 +96,8 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 	GafferSceneUI.LightEditor.registerAttribute( "cycles:light", "cycles:visibility:scatter", "Contribution" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "max_bounces", "Contribution" )
 
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "size", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spot_angle", "Shape" )
-	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spot_smooth", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "radius", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "smooth", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spread", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "angle", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "is_sphere", "Shape" )

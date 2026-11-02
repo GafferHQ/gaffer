@@ -57,17 +57,17 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		node = GafferCycles.CyclesLight()
 		node.loadShader( "spot_light" )
 
-		self.assertEqual( node["parameters"]["spot_angle"].defaultValue(), 45.0 )
-		self.assertTrue( node["parameters"]["spot_angle"].isSetToDefault() )
-		self.assertEqual( node["parameters"]["spot_smooth"].defaultValue(), 0.0 )
-		self.assertTrue( node["parameters"]["spot_smooth"].isSetToDefault() )
+		self.assertEqual( node["parameters"]["angle"].defaultValue(), 45.0 )
+		self.assertTrue( node["parameters"]["angle"].isSetToDefault() )
+		self.assertEqual( node["parameters"]["smooth"].defaultValue(), 0.0 )
+		self.assertTrue( node["parameters"]["smooth"].isSetToDefault() )
 
 		self.assertNotIn( "penumbraAngle", node["parameters"] )
 		self.assertNotIn( "coneAngle", node["parameters"] )
 
 		shader = node["out"].attributes( "/light" )["cycles:light"].outputShader()
-		self.assertEqual( shader.parameters["spot_angle"].value, 45.0 )
-		self.assertEqual( shader.parameters["spot_smooth"].value, 0.0 )
+		self.assertEqual( shader.parameters["angle"].value, 45.0 )
+		self.assertEqual( shader.parameters["smooth"].value, 0.0 )
 
 		self.assertNotIn( "penumbraAngle", shader.parameters )
 		self.assertNotIn( "coneAngle", shader.parameters )
@@ -102,7 +102,7 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		light["parameters"]["intensity"].setValue( 10 )
 		light["parameters"]["exposure"].setValue( 1 )
 		light["parameters"]["color"].setValue( imath.Color3f( 1, 2, 3 ) )
-		light["parameters"]["size"].setValue( 2 )
+		light["parameters"]["radius"].setValue( 2 )
 
 		attributes = light["out"].attributes( "/light" )
 		self.assertEqual( attributes.keys(), [ "cycles:light" ] )
@@ -115,7 +115,7 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( shader.parameters["intensity"], IECore.FloatData( 10 ) )
 		self.assertEqual( shader.parameters["exposure"], IECore.FloatData( 1 ) )
 		self.assertEqual( shader.parameters["color"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
-		self.assertEqual( shader.parameters["size"], IECore.FloatData( 2 ) )
+		self.assertEqual( shader.parameters["radius"], IECore.FloatData( 2 ) )
 
 	def testQuadSize( self ) :
 
@@ -127,24 +127,24 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( node["parameters"]["height"].defaultValue(), 2.0 )
 		self.assertTrue( node["parameters"]["height"].isSetToDefault() )
 
-		self.assertNotIn( "size", node["parameters"] )
+		self.assertNotIn( "radius", node["parameters"] )
 
 		shader = node["out"].attributes( "/light" )["cycles:light"].outputShader()
 		self.assertEqual( shader.parameters["width"].value, 2.0 )
 		self.assertEqual( shader.parameters["height"].value, 2.0 )
 
-		self.assertNotIn( "size", shader.parameters )
+		self.assertNotIn( "radius", shader.parameters )
 
 	def testLoadShaderRemovesIrrelevantPlugs( self ) :
 
 		node = GafferCycles.CyclesLight()
 
 		node.loadShader( "point_light" )
-		self.assertIn( "size", node["parameters"] )
+		self.assertIn( "radius", node["parameters"] )
 		self.assertNotIn( "width", node["parameters"] )
 		self.assertNotIn( "height", node["parameters"] )
 
 		node.loadShader( "quad_light" )
-		self.assertNotIn( "size", node["parameters"] )
+		self.assertNotIn( "radius", node["parameters"] )
 		self.assertIn( "width", node["parameters"] )
 		self.assertIn( "height", node["parameters"] )
