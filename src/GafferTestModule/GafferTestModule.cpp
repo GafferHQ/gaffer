@@ -73,8 +73,11 @@ static void testConcurrentAccessToSameInstanceWrapper()
 
 static boost::python::tuple countContextHash32CollisionsWrapper( int entries, int mode, int seed )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	auto result = countContextHash32Collisions( entries, mode, seed );
+	std::tuple<int, int, int, int> result;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		result = countContextHash32Collisions( entries, mode, seed );
+	}
 	return boost::python::make_tuple( std::get<0>(result), std::get<1>(result), std::get<2>(result), std::get<3>(result) );
 }
 
