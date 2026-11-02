@@ -58,6 +58,7 @@
 #include "tbb/parallel_for.h"
 
 #include "fmt/format.h"
+#include "fmt/std.h"
 
 using namespace std;
 using namespace boost::placeholders;
