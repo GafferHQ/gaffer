@@ -160,7 +160,7 @@ bool ancestorChildNodesAreReadOnly( const Gaffer::GraphComponent *graphComponent
 	return false;
 }
 
-const std::string g_incorrectMetadataWarning( "Ignoring \"{}\" metadata for target \"{}\" as it has incorrect type \"{}\" (expected {})" );
+constexpr std::string_view g_incorrectMetadataWarning( "Ignoring \"{}\" metadata for target \"{}\" as it has incorrect type \"{}\" (expected {})" );
 
 template<typename T>
 Gaffer::ValuePlugPtr numericValuePlug( const std::string &target, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags, const T *value, const Data *minValue, const Data *maxValue )

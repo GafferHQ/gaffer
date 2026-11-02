@@ -363,7 +363,7 @@ static const ChannelMap g_channelMap = {
 };
 
 const std::string g_firstDataChannelSuffix = "00.R";
-const std::string g_cryptomatteChannelPattern = "^{}[0-9]+\\.[RGBA]";
+constexpr std::string_view g_cryptomatteChannelPattern = "^{}[0-9]+\\.[RGBA]";
 
 Cryptomatte::Cryptomatte( const std::string &name )
 	: GafferImage::FlatImageProcessor( name )

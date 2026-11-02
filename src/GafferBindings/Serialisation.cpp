@@ -195,7 +195,7 @@ std::string Serialisation::result() const
 		Context::current()->get<bool>( "serialiser:includeVersionMetadata", true )
 	)
 	{
-		const std::string formatString( "Gaffer.Metadata.registerValue( {}, \"{}\", {}, persistent=False )\n" );
+		constexpr std::string_view formatString( "Gaffer.Metadata.registerValue( {}, \"{}\", {}, persistent=False )\n" );
 
 		result += "\n";
 		result += fmt::format( formatString, m_parentName, "serialiser:milestoneVersion", GAFFER_MILESTONE_VERSION );
