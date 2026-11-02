@@ -475,6 +475,7 @@ if env["PLATFORM"] != "win32" :
 
 		env.Append(
 			CXXFLAGS = [ "-Wno-unused-local-typedef" ],
+			CPPDEFINES = [ "FMT_SHARED" ],
 		)
 
 		# Turn off the parts of `-Wextra` that we don't like.
