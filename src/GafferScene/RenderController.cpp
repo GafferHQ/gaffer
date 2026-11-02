@@ -90,8 +90,6 @@ const InternedString g_purposeAttributeName( "usd:purpose" );
 const InternedString g_visibleAttributeName( "scene:visible" );
 const InternedString g_rendererContextName( "scene:renderer" );
 
-const std::string g_defaultPurpose( "default" );
-
 bool visible( const CompoundObject *attributes )
 {
 	const IECore::BoolData *d = attributes->member<IECore::BoolData>( g_visibleAttributeName );
