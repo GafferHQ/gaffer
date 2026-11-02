@@ -2495,7 +2495,7 @@ class PrototypeCache : public IECore::RefCounted
 			}
 
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			if( !arnoldAttributes->canInstanceGeometry( samples.front().get() ) )
+			if( !arnoldAttributes || !arnoldAttributes->canInstanceGeometry( samples.front().get() ) )
 			{
 				return Instance( convert( samples, times, arnoldAttributes, nodeName, /* messageContext = */ nodeName ) );
 			}
