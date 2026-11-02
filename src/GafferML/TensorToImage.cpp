@@ -121,7 +121,7 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 			functor( value.GetTensorData<Ort::BFloat16_t>() );
 			break;
 		default :
-			throw IECore::Exception( fmt::format( "Unsupported tensor data type \"{}\"", elementType ) );
+			throw IECore::Exception( fmt::format( "Unsupported tensor data type \"{}\"", fmt::underlying( elementType ) ) );
 	}
 }
 

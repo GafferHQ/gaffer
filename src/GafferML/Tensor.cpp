@@ -143,7 +143,7 @@ void dispatchTensorData( const Ort::Value &value, F &&functor )
 			// > implies that we shouldn't know that, let alone depend on it.
 			[[fallthrough]];
 		default :
-			throw IECore::Exception( fmt::format( "Unsupported element type {}", elementType ) );
+			throw IECore::Exception( fmt::format( "Unsupported element type {}", fmt::underlying( elementType ) ) );
 	}
 }
 

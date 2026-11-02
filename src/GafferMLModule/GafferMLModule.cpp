@@ -154,7 +154,7 @@ object tensorGetItem( const Tensor &tensor, const std::vector<int64_t> &location
 		case ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING :
 			return object( tensor.value().GetStringTensorElement( toLinearIndex( tensor.shape(), location ) ) );
 		default :
-			throw IECore::Exception( fmt::format( "Unsupported element type {}", elementType ) );
+			throw IECore::Exception( fmt::format( "Unsupported element type {}", fmt::underlying( elementType ) ) );
 	}
 }
 
