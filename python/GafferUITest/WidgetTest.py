@@ -417,12 +417,13 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w1.setPosition( imath.V2i( 100 ) )
 		w2.setPosition( imath.V2i( 300 ) )
 
-		self.waitForIdle( 15000 )
+		def assertWidgetsAt() :
+			self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center() ) is t1 )
+			self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center() ) is t2 )
+			self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center(), widgetType=GafferUI.Window ) is w1 )
+			self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center(), widgetType=GafferUI.Window ) is w2 )
 
-		self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center() ) is t1 )
-		self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center() ) is t2 )
-		self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center(), widgetType=GafferUI.Window ) is w1 )
-		self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center(), widgetType=GafferUI.Window ) is w2 )
+		self.assertEventually( lambda : assertWidgetsAt() )
 
 	def testMousePosition( self ) :
 
