@@ -805,9 +805,9 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	def _key( cls, qtKey ) :
 
 		if not cls.__keyMapping :
-			for k in dir( QtCore.Qt ) :
+			for k in dir( QtCore.Qt.Key ) :
 				if k.startswith( "Key_" ) :
-					keyValue = int( getattr( QtCore.Qt, k ) )
+					keyValue = int( getattr( QtCore.Qt.Key, k ) )
 					keyString = k[4:]
 					cls.__keyMapping[keyValue] = keyString
 
