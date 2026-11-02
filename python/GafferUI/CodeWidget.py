@@ -229,7 +229,7 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 				# Every block has a comment prefix. Remove them.
 				for block, match in zip( blocks, matches ) :
 					cursor = QtGui.QTextCursor( block )
-					cursor.movePosition( cursor.Right, n = len( match.group( 1 ) ) )
+					cursor.movePosition( QtGui.QTextCursor.MoveOperation.Right, n = len( match.group( 1 ) ) )
 					for i in range( 0, len( match.group( 2 ) ) ) :
 						cursor.deleteChar()
 
@@ -240,7 +240,7 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 				indent = len( os.path.commonprefix( [ m.group( 1 ) for m in matches ] ) )
 				for block in blocks :
 					cursor = QtGui.QTextCursor( block )
-					cursor.movePosition( cursor.Right, n = indent )
+					cursor.movePosition( QtGui.QTextCursor.MoveOperation.Right, n = indent )
 					cursor.insertText( self.__commentPrefix + " " )
 
 		finally :
@@ -274,20 +274,20 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 			# Extend an existing selection to contain the beginning of the
 			# first selected line through to the end of the last selected line.
 			selectionEnd = cursor.selectionEnd()
-			cursor.setPosition( cursor.selectionStart(), cursor.MoveAnchor )
-			cursor.movePosition( cursor.StartOfLine, cursor.MoveAnchor )
-			cursor.setPosition( selectionEnd, cursor.KeepAnchor )
-			cursor.movePosition( cursor.EndOfLine, cursor.KeepAnchor )
+			cursor.setPosition( cursor.selectionStart(), QtGui.QTextCursor.MoveMode.MoveAnchor )
+			cursor.movePosition( QtGui.QTextCursor.MoveOperation.StartOfLine, QtGui.QTextCursor.MoveMode.MoveAnchor )
+			cursor.setPosition( selectionEnd, QtGui.QTextCursor.MoveMode.KeepAnchor )
+			cursor.movePosition( QtGui.QTextCursor.MoveOperation.EndOfLine, QtGui.QTextCursor.MoveMode.KeepAnchor )
 		else :
 			# Select the entire line where the cursor is currently positioned.
-			cursor.movePosition( cursor.StartOfLine, cursor.MoveAnchor )
-			cursor.movePosition( cursor.EndOfLine, cursor.KeepAnchor )
+			cursor.movePosition( QtGui.QTextCursor.MoveOperation.StartOfLine, QtGui.QTextCursor.MoveMode.MoveAnchor )
+			cursor.movePosition( QtGui.QTextCursor.MoveOperation.EndOfLine, QtGui.QTextCursor.MoveMode.KeepAnchor )
 
 		if not cursor.atEnd() :
 			# Move the cursor to the start of the next line to allow
 			# repeated presses to extend the selection to subsequent lines.
-			cursor.movePosition( cursor.Down, cursor.KeepAnchor )
-			cursor.movePosition( cursor.StartOfLine, cursor.KeepAnchor )
+			cursor.movePosition( QtGui.QTextCursor.MoveOperation.Down, QtGui.QTextCursor.MoveMode.KeepAnchor )
+			cursor.movePosition( QtGui.QTextCursor.MoveOperation.StartOfLine, QtGui.QTextCursor.MoveMode.KeepAnchor )
 
 		self._qtWidget().setTextCursor( cursor )
 

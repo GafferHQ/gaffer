@@ -47,6 +47,8 @@ import GafferUI
 
 import IECoreGL
 
+from Qt import QtWidgets
+
 ##########################################################################
 # Viewer implementation
 ##########################################################################
@@ -351,7 +353,7 @@ class _Toolbar( GafferUI.Frame ) :
 		# Remove the SetMinAndMaxSize constraint that our base class added,
 		# so that we expand to the full width of the viewport, and our toolbar
 		# is centered inside.
-		self._qtWidget().layout().setSizeConstraint( self._qtWidget().layout().SetDefaultConstraint )
+		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 
 		self.__edge = edge
 		self.__node = []

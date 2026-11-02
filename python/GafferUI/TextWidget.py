@@ -415,7 +415,7 @@ class _LineEdit( QtWidgets.QLineEdit ) :
 
 	def event(self, event):
 
-		if event.type() == event.ShortcutOverride :
+		if event.type() == QtCore.QEvent.Type.ShortcutOverride :
 			if event == QtGui.QKeySequence.Undo :
 				if not self.isModified() or not self.isUndoAvailable() :
 					return False

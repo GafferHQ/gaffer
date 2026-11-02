@@ -754,14 +754,14 @@ class _MessageTableView( GafferUI.Widget ) :
 
 		tableView = self._qtWidget()
 
-		tableView.setEditTriggers( tableView.NoEditTriggers )
+		tableView.setEditTriggers( QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers )
 		tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectRows )
 		tableView.setSelectionMode( QtWidgets.QAbstractItemView.ContiguousSelection )
 
 		tableView.verticalHeader().setVisible( False )
 		tableView.horizontalHeader().setVisible( False )
 
-		tableView.setHorizontalScrollMode( tableView.ScrollPerPixel )
+		tableView.setHorizontalScrollMode( QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel )
 
 		tableView.setShowGrid( False )
 

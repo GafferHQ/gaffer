@@ -194,7 +194,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		index = self.__indexForPath( path )
 		if index.isValid() :
-			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )
+			self._qtWidget().scrollTo( index, QtWidgets.QAbstractItemView.ScrollHint.EnsureVisible )
 
 	## Scrolls to the first path found in the provided
 	# `IECore.PathMatcher`.
@@ -1103,7 +1103,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def event( self, event ) :
 
-		if event.type() == event.ShortcutOverride :
+		if event.type() == QtCore.QEvent.Type.ShortcutOverride :
 			if event.key() in ( QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right ) :
 				event.accept()
 				return True

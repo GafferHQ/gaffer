@@ -1027,12 +1027,13 @@ class _EventFilter( QtCore.QObject ) :
 		if qEventType not in self.__eventMask :
 			return False
 
+		eventTypes = QtCore.QEvent.Type
 		# we display tooltips and emit visibility events even on disabled widgets
-		if qEventType==qEvent.ToolTip :
+		if qEventType == eventTypes.ToolTip :
 
 			return self.__toolTip( qObject, qEvent )
 
-		elif qEventType==qEvent.Show or qEventType==qEvent.Hide :
+		elif qEventType == eventTypes.Show or qEventType == eventTypes.Hide :
 
 			return self.__showHide( qObject, qEvent )
 
@@ -1040,63 +1041,63 @@ class _EventFilter( QtCore.QObject ) :
 		if not qObject.isEnabled() :
 			return False
 
-		if qEventType==qEvent.KeyPress :
+		if qEventType == eventTypes.KeyPress :
 
 			return self.__keyPress( qObject, qEvent )
 
-		elif qEventType==qEvent.KeyRelease :
+		elif qEventType == eventTypes.KeyRelease :
 
 			return self.__keyRelease( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonPress :
+		elif qEventType == eventTypes.MouseButtonPress :
 
 			return self.__mouseButtonPress( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonRelease :
+		elif qEventType == eventTypes.MouseButtonRelease :
 
 			return self.__mouseButtonRelease( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonDblClick :
+		elif qEventType == eventTypes.MouseButtonDblClick :
 
 			return self.__mouseButtonDblClick( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseMove :
+		elif qEventType == eventTypes.MouseMove :
 
 			return self.__mouseMove( qObject, qEvent )
 
-		elif qEventType==qEvent.Enter :
+		elif qEventType == eventTypes.Enter :
 
 			return self.__enter( qObject, qEvent )
 
-		elif qEventType==qEvent.Leave :
+		elif qEventType == eventTypes.Leave :
 
 			return self.__leave( qObject, qEvent )
 
-		elif qEventType==qEvent.Wheel :
+		elif qEventType == eventTypes.Wheel :
 
 			return self.__wheel( qObject, qEvent )
 
-		elif qEventType==qEvent.ContextMenu :
+		elif qEventType == eventTypes.ContextMenu :
 
 			return self.__contextMenu( qObject, qEvent )
 
-		elif qEventType==qEvent.ParentChange :
+		elif qEventType == eventTypes.ParentChange :
 
 			return self.__parentChange( qObject, qEvent )
 
-		elif qEventType==qEvent.DragEnter :
+		elif qEventType == eventTypes.DragEnter :
 
 			return self.__foreignDragEnter( qObject, qEvent )
 
-		elif qEventType==qEvent.DragMove :
+		elif qEventType == eventTypes.DragMove :
 
 			return self.__foreignDragMove( qObject, qEvent )
 
-		elif qEventType==qEvent.DragLeave :
+		elif qEventType == eventTypes.DragLeave :
 
 			return self.__foreignDragLeave( qObject, qEvent )
 
-		elif qEventType==qEvent.Drop :
+		elif qEventType == eventTypes.Drop :
 
 			return self.__foreignDrop( qObject, qEvent )
 
@@ -1571,7 +1572,7 @@ class _EventFilter( QtCore.QObject ) :
 
 		if qEvent.mimeData().hasUrls() :
 			data = IECore.StringVectorData( [
-				url.toString( url.PrettyDecoded | url.PreferLocalFile )
+				url.toString( QtCore.QUrl.PrettyDecoded | QtCore.QUrl.PreferLocalFile )
 				for url in qEvent.mimeData().urls()
 			] )
 		elif qEvent.mimeData().hasText() :

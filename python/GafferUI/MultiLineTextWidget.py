@@ -215,7 +215,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		cursor = self._qtWidget().textCursor()
 		cursor.setPosition( start ) # Moves anchor too
-		cursor.setPosition( end, cursor.KeepAnchor )
+		cursor.setPosition( end, QtGui.QTextCursor.MoveMode.KeepAnchor )
 		self._qtWidget().setTextCursor( cursor )
 
 	## Returns a `( start, end )` tuple.
@@ -557,7 +557,7 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 	def event( self, event ) :
 
-		if event.type() == event.ShortcutOverride and event == QtGui.QKeySequence.Copy :
+		if event.type() == QtCore.QEvent.Type.ShortcutOverride and event == QtGui.QKeySequence.Copy :
 			# QPlainTextEdit doesn't accept this when it's
 			# read only. so we accept it ourselves, which is
 			# enough to reenable copying from a read only
