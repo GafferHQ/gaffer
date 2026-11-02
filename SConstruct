@@ -116,7 +116,7 @@ options.Add(
 options.Add(
 	"CXXSTD",
 	"The C++ standard to build against. A minimum of C++17 is required.",
-	"c++17",
+	"c++20",
 )
 
 options.Add(
