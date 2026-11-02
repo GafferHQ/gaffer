@@ -1321,6 +1321,13 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def __resizeLastColumnToAvailableWidth( self, minimumSuggestedWidth = 0 ) :
 
+		if self.__previousViewportWidth == 0 :
+			# We haven't been laid out yet, so the header doesn't accurately
+			# represent the available width and our stretch columns have yet
+			# to resize. Defer until `resizeEvent()` has been run once the
+			# widget is first shown.
+			return
+
 		header = self.header()
 		availableWidth = header.width()
 		lastColumn = header.count() - 1
