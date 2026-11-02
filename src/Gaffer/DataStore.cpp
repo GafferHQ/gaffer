@@ -45,7 +45,7 @@
 #include "IECore/FileIndexedIO.h"
 #include "IECore/ObjectWriter.h"
 
-#include "fmt/std.h"
+#include "fmt/format.h"
 
 #include "tbb/concurrent_hash_map.h"
 
@@ -246,9 +246,9 @@ public:
 					"either this file was written by another Gaffer process which is still open ( you should "
 					"close it before trying to save here to avoid possible data loss ), or the previous Gaffer "
 					"to write this file crashed without cleaning up ( In this case, you should "
-					"manually delete the recycle bin folder {} )."
+					"manually delete the recycle bin folder \"{}\" )."
 					"In the meantime, cleaning up out of date caches has been halted to avoid losing data.",
-					m_recycleBinDirectory
+					m_recycleBinDirectory.string()
 				) );
 			}
 
@@ -610,7 +610,7 @@ void DataStore::compute( ValuePlug *output, const Context *context ) const
 			if( !sourcePath )
 			{
 				throw IECore::Exception( fmt::format(
-					"Could not locate data store file {} in {}.", dataStoreFileName, m_sourceDirectory->dataStoreDirectory()
+					"Could not locate data store file {} in \"{}\".", dataStoreFileName, m_sourceDirectory->dataStoreDirectory().string()
 				) );
 			}
 
@@ -788,7 +788,7 @@ void DataStore::save( const std::filesystem::path &scriptPath, const Gaffer::Gra
 			{
 				if( !warning.size() )
 				{
-					warning = fmt::format( "During saving, could not create hardlink at {} pointing to {}, falling back to copying file.", destPath, *sourcePath );
+					warning = fmt::format( "During saving, could not create hardlink at \"{}\" pointing to \"{}\", falling back to copying file.", destPath.string(), sourcePath->string() );
 				}
 
 				// If that failed, just copy.
@@ -800,7 +800,7 @@ void DataStore::save( const std::filesystem::path &scriptPath, const Gaffer::Gra
 			// This value does not yet exist on disk, and we need to write it.
 			if( !entry.m_liveValue )
 			{
-				throw IECore::Exception( fmt::format( "Unable to save entry \"{}\" on \"{}\" - no live value, but cannot find on disk in directory {}.", key, fullName(), m_sourceDirectory->dataStoreDirectory() ) );
+				throw IECore::Exception( fmt::format( "Unable to save entry \"{}\" on \"{}\" - no live value, but cannot find on disk in directory \"{}\".", key, fullName(), m_sourceDirectory->dataStoreDirectory().string() ) );
 			}
 
 			// I can't think why the writer would modify the source, I assume this old Cortex stuff just isn't
@@ -888,8 +888,8 @@ void DataStore::finaliseDirectory( const std::filesystem::path &scriptPath, cons
 				{
 					IECore::msg(
 						IECore::Msg::Warning, "Serialisation",
-						fmt::format( "Unexpected file {} in data store directory {}.",
-							directoryEntry.path().filename(), dataStoreDirectory
+						fmt::format( "Unexpected file \"{}\" in data store directory \"{}\".",
+							directoryEntry.path().filename().string(), dataStoreDirectory.string()
 						)
 					);
 				}
