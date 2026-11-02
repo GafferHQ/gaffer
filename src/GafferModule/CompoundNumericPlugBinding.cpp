@@ -66,10 +66,8 @@ std::string serialisationRepr( const T *plug, Serialisation *serialisation = nul
 
 	if( interpretation != IECore::GeometricData::None )
 	{
-		boost::python::object interpretationAsPythonObject( interpretation );
-		boost::python::object interpretationRepr = interpretationAsPythonObject.attr( "__repr__" )();
-		extraArgs = "interpretation = " + std::string( boost::python::extract<std::string>( interpretationRepr ) );
-		boost::replace_first( extraArgs, "_IECore", "GeometricData" );
+		boost::python::object interpretationName = boost::python::object( interpretation ).attr( "name" );
+		extraArgs = "interpretation = IECore.GeometricData.Interpretation." + std::string( boost::python::extract<std::string>( interpretationName ) );
 
 		if( serialisation )
 		{
