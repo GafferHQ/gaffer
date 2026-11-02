@@ -363,7 +363,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		mt = p.property( "fileSystem:modificationTime" )
 		self.assertTrue( isinstance( mt, datetime.datetime ) )
-		self.assertLess( (datetime.datetime.utcnow() - mt).total_seconds(), 2 )
+		self.assertLess( (datetime.datetime.now( datetime.timezone.utc ).replace( tzinfo = None ) - mt).total_seconds(), 2 )
 
 		time.sleep( 1 )
 
@@ -372,7 +372,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		mt = p.property( "fileSystem:modificationTime" )
 		self.assertTrue( isinstance( mt, datetime.datetime ) )
-		self.assertLess( (datetime.datetime.utcnow() - mt).total_seconds(), 2 )
+		self.assertLess( (datetime.datetime.now( datetime.timezone.utc ).replace( tzinfo = None ) - mt).total_seconds(), 2 )
 
 	def testOwner( self ) :
 
@@ -454,7 +454,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 			self.assertEqual( x.property( "fileSystem:owner" ), self.getFileOwner( p.nativeString() ) )
 			self.assertEqual( x.property( "fileSystem:group" ), self.getFileGroup( p.nativeString() ) )
-			self.assertLess( (datetime.datetime.utcnow() - x.property( "fileSystem:modificationTime" )).total_seconds(), 2 )
+			self.assertLess( (datetime.datetime.now( datetime.timezone.utc ).replace( tzinfo = None ) - x.property( "fileSystem:modificationTime" )).total_seconds(), 2 )
 			if "###" not in str( x ) :
 				self.assertFalse( x.isFileSequence() )
 				self.assertEqual( x.fileSequence(), None )
