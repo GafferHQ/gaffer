@@ -521,7 +521,8 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 
 		with self.assertRaisesRegex(
 			Gaffer.ProcessException,
-			r".*Error applying replacement `\{1:\+\}` : format specifier requires numeric argument"
+			## \todo Simplify error message regex once we no longer build with fmt 9.1.0.
+			r".*Error applying replacement `\{1:\+\}` : (?:format specifier requires numeric argument|invalid format specifier)"
 		) :
 			outputName( "abc", find = "(a)", replace = "{1:+}", useRegularExpressions = True )
 
