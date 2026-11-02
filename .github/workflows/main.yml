@@ -181,8 +181,8 @@ jobs:
     - name: Install toolchain (macOS)
       run: |
         # Remove all pre-installed homebrew packages.
+        brew remove --cask --force $(brew list --cask)
         brew remove --force $(brew list --formula)
-        brew remove --cask --force $(brew list)
         # Install build requirements.
         brew install pipx
         pipx install scons==4.10.1
