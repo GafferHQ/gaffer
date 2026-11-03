@@ -200,7 +200,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		self._repolish()
 
 # We inherit from QSplitter purely so that the handles can be created
-# in Python rather than C++. This seems to help PyQt and PySide in tracking
+# in Python rather than C++. This seems to help PySide in tracking
 # the lifetimes of the splitter and handles.
 class _Splitter( QtWidgets.QSplitter ) :
 

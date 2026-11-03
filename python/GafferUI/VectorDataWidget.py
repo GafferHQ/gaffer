@@ -49,7 +49,6 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 from Qt import QtCompat
-import Qt
 
 ## The VectorDataWidget provides a table view for the contents of
 # one or more IECore VectorData instances.
@@ -1469,20 +1468,11 @@ class _ColorDelegate( _Delegate ) :
 		if isinstance( value, float ) :
 			_Delegate.paint( self, painter, option, index )
 		else :
-			# in PyQt, option is passed to us correctly as a QStyleOptionViewItemV4,
-			# but in PySide it is merely a QStyleOptionViewItem and we must "cast" it.
-			if hasattr( QtGui, "QStyleOptionViewItemV4" ) :
-				option = QtGui.QStyleOptionViewItemV4( option )
-
-			# in PyQt, we can access the widget with option.widget, but in PySide it
-			# is always None for some reason, so we jump through some hoops to get the
-			# widget via our parent.
-			widget = QtCore.QObject.parent( self.parent() )
 
 			# draw the background
 
-			widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_ItemViewItem, option, painter, widget )
-			displayTransform = GafferUI.Widget._owner( widget ).displayTransform()
+			option.widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_ItemViewItem, option, painter, option.widget )
+			displayTransform = GafferUI.Widget._owner( option.widget ).displayTransform()
 			transformedColor = displayTransform( value )
 
 			opaqueCheckerColor0 = GafferUI.Widget._qtColor( transformedColor )
@@ -1556,19 +1546,9 @@ class _BoolDelegate( _Delegate ) :
 
 	def paint( self, painter, option, index ) :
 
-		# in PyQt, option is passed to us correctly as a QStyleOptionViewItemV4,
-		# but in PySide it is merely a QStyleOptionViewItem and we must "cast" it.
-		if hasattr( QtGui, "QStyleOptionViewItemV4" ) :
-			option = QtGui.QStyleOptionViewItemV4( option )
-
-		# in PyQt, we can access the widget with option.widget, but in PySide it
-		# is always None for some reason, so we jump through some hoops to get the
-		# widget via our parent.
-		widget = QtCore.QObject.parent( self.parent() )
-
 		# draw the background
 
-		widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_ItemViewItem, option, painter, widget )
+		option.widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_ItemViewItem, option, painter, option.widget )
 
 		# draw the checkbox.
 
@@ -1581,8 +1561,8 @@ class _BoolDelegate( _Delegate ) :
 		else :
 			styleOption.state |= QtWidgets.QStyle.StateFlag.State_Off
 
-		styleOption.rect = self.__checkBoxRect( widget, option.rect )
-		widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_CheckBox, styleOption, painter, widget )
+		styleOption.rect = self.__checkBoxRect( option.widget, option.rect )
+		option.widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_CheckBox, styleOption, painter, option.widget )
 
 	def createEditor( self, parent, option, index ) :
 
@@ -1598,9 +1578,8 @@ class _BoolDelegate( _Delegate ) :
 			return True
 		elif event.type() == QtCore.QEvent.Type.MouseButtonPress :
 			# eat event so row isn't selected
-			widget = QtCore.QObject.parent( self.parent() )
-			rect = self.__checkBoxRect( widget, option.rect )
-			position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+			rect = self.__checkBoxRect( option.widget, option.rect )
+			position = event.position().toPoint()
 			if event.button() == QtCore.Qt.MouseButton.LeftButton and rect.contains( position ) :
 				checked = self.__toBool( index )
 				model.setData( index, not checked, QtCore.Qt.ItemDataRole.EditRole )

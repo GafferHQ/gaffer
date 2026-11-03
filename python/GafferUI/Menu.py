@@ -50,7 +50,6 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
-import Qt
 
 class Menu( GafferUI.Widget ) :
 
@@ -115,10 +114,7 @@ class Menu( GafferUI.Widget ) :
 		self._qtWidget().keyboardMode = _Menu.KeyboardMode.Grab if grabFocus else _Menu.KeyboardMode.Close
 
 		if modal :
-			if Qt.__binding__ == "PySide6" :
-				self._qtWidget().exec( position )
-			else :
-				self._qtWidget().exec_( position )
+			self._qtWidget().exec( position )
 		else :
 			self._qtWidget().popup( position )
 
@@ -411,12 +407,8 @@ class Menu( GafferUI.Widget ) :
 				if s.count() != 1 :
 					continue
 
-				if Qt.__binding__ != "PySide6" :
-					key = s[0] & ~QtCore.Qt.KeyboardModifierMask
-					modifiers = s[0] & QtCore.Qt.KeyboardModifierMask
-				else :
-					key = s[0].key()
-					modifiers = s[0].keyboardModifiers()
+				key = s[0].key()
+				modifiers = s[0].keyboardModifiers()
 
 				# Qt differentiates keys on the keypad by adding the KeypadModifier to
 				# their keypresses. This means that shortcuts that don't specifically

@@ -50,7 +50,6 @@ import GafferUI
 
 from Qt import QtCore
 from Qt import QtWidgets
-import Qt
 
 ## This class provides the event loops used to run GafferUI based applications.
 class EventLoop( object ) :
@@ -107,10 +106,7 @@ class EventLoop( object ) :
 
 		if self.__runStyle == self.__RunStyle.Normal :
 			assert( self.__startCount == 1 )
-			if Qt.__binding__ == "PySide6" :
-				self.__qtEventLoop.exec()
-			else:
-				self.__qtEventLoop.exec_()
+			self.__qtEventLoop.exec()
 		elif self.__runStyle == self.__RunStyle.PumpThread :
 			if self.__pumpThread is None :
 				self.__pumpThread = threading.Thread( target = self.__pumpThreadFn )
@@ -164,11 +160,6 @@ class EventLoop( object ) :
 		# environment, which could mess with our own style (on GNOME for instance,
 		# our icons can come out the wrong size).
 		style = QtWidgets.QApplication.setStyle( "Fusion" )
-
-		if Qt.__binding__ == "PySide2" :
-			# Stop icons/fonts being tiny on high-dpi monitors. Must be set before
-			# the application is created. This is enabled by default with Qt 6.
-			QtWidgets.QApplication.setAttribute( QtCore.Qt.AA_EnableHighDpiScaling )
 
 		# Allow all `GafferUI.GLWidgets` to share OpenGL resources (via the underlying
 		# QOpenGLWidget).
@@ -278,28 +269,26 @@ class EventLoop( object ) :
 		if not cls.__idleTimer.isActive() :
 			cls.__idleTimer.start()
 
-	# This is a staticmethod rather than a classmethod because PySide 1.0.5
-	# doesn't support classmethods as slots.
-	@staticmethod
-	def __qtIdleCallback() :
+	@classmethod
+	def __qtIdleCallback( cls ) :
 
 		assert( QtCore.QThread.currentThread() == EventLoop.__qtApplication.thread() )
 
 		GafferUI.Gadget.idleSignal()()
 
-		for c in EventLoop.__idleCallbacks[:] : # slice takes copy, so we can remove during iteration
+		for c in cls.__idleCallbacks[:] : # slice takes copy, so we can remove during iteration
 			try :
 				if not c() :
-					EventLoop.__idleCallbacks.remove( c )
+					cls.__idleCallbacks.remove( c )
 			except Exception as e :
 				# if the callback throws then we remove it anyway, because
 				# we don't want to keep invoking the same error over and over.
-				EventLoop.__idleCallbacks.remove( c )
+				cls.__idleCallbacks.remove( c )
 				# report the error
 				IECore.msg( IECore.Msg.Level.Error, "EventLoop.__qtIdleCallback", "".join( traceback.format_exc() ) )
 
-		if len( EventLoop.__idleCallbacks )==0 and GafferUI.Gadget.idleSignal().empty() :
-			EventLoop.__idleTimer.stop()
+		if len( cls.__idleCallbacks ) == 0 and GafferUI.Gadget.idleSignal().empty() :
+			cls.__idleTimer.stop()
 
 	@classmethod
 	def _gadgetIdleSignalAccessed( cls ) :

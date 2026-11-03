@@ -55,7 +55,6 @@ from . import _GafferUI
 
 import OpenGL.GL as GL
 
-import Qt
 from Qt import QtCore
 
 # Importing directly rather than via Qt.py because Qt.py won't expose the
@@ -65,19 +64,10 @@ from Qt import QtCore
 ## \todo Now that Qt 4 is long gone, and PySide is an official
 # Qt project, Qt.py isn't much help. Remove across the board, or see
 # if we can coax the project into bridging Qt 5/6 instead of 4/5?
-if Qt.__binding__ == "PySide2" :
-	from PySide2 import QtGui
-	from PySide2 import QtWidgets
-	from PySide2.QtWidgets import QOpenGLWidget
-	from PySide2.QtGui import QOpenGLPaintDevice
-	from PySide2 import QtOpenGL
-elif Qt.__binding__ == "PySide6" :
-	from PySide6 import QtGui
-	from PySide6 import QtWidgets
-	from PySide6.QtOpenGLWidgets import QOpenGLWidget
-	from PySide6.QtOpenGL import QOpenGLPaintDevice
-else :
-	raise Exception( "GLWidget : No compatible Qt Python binding found" )
+from PySide6 import QtGui
+from PySide6 import QtWidgets
+from PySide6.QtOpenGLWidgets import QOpenGLWidget
+from PySide6.QtOpenGL import QOpenGLPaintDevice
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.

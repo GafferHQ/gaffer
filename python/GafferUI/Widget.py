@@ -49,7 +49,6 @@ from ._StyleSheet import _styleSheet
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
-import Qt
 
 class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 
@@ -95,7 +94,7 @@ class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 # point. To avoid this problem a simple rule of thumb is to always connect signals to Gaffer.WeakMethod
 # instances referring to your methods.
 #
-# GafferUI.Widget subclasses are implemented using Qt widgets (using PySide or PyQt), but the public API
+# GafferUI.Widget subclasses are implemented using Qt widgets (using PySide), but the public API
 # exposed by the GafferUI classes never includes Qt functions or classes directly - this
 # allows the implementation to be changed in the future. Furthermore it allows the use
 # of the GafferUI module without learning all the Qt API. To enforce this separation,
@@ -1401,7 +1400,7 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __doDragEnterAndLeave( self, qObject, qEvent ) :
 
-		globalPosition = qEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else qEvent.globalPos()
+		globalPosition = qEvent.globalPosition().toPoint()
 		candidateWidget = Widget.widgetAt( imath.V2i( globalPosition.x(), globalPosition.y() ) )
 
 		newDestinationWidget = None
@@ -1580,16 +1579,16 @@ class _EventFilter( QtCore.QObject ) :
 		else :
 			return False
 
-		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		position = qEvent.position().toPoint()
 		cursorPos = imath.V2i( position.x(), position.y() )
 		dragDropEvent = GafferUI.DragDropEvent(
-			Widget._buttons( qEvent.buttons() if Qt.__binding__ == "PySide6" else qEvent.mouseButtons() ),
-			Widget._buttons( qEvent.buttons() if Qt.__binding__ == "PySide6" else qEvent.mouseButtons() ),
+			Widget._buttons( qEvent.buttons() ),
+			Widget._buttons( qEvent.buttons() ),
 			IECore.LineSegment3f(
 				imath.V3f( cursorPos.x, cursorPos.y, 1 ),
 				imath.V3f( cursorPos.x, cursorPos.y, 0 )
 			),
-			Widget._modifiers( qEvent.modifiers() if Qt.__binding__ == "PySide6" else qEvent.keyboardModifiers() ),
+			Widget._modifiers( qEvent.modifiers() ),
 		)
 		dragDropEvent.data = data
 		dragDropEvent.destinationWidget = None
@@ -1615,7 +1614,7 @@ class _EventFilter( QtCore.QObject ) :
 		if widget is None or widget._dragMoveSignal is None :
 			return False
 
-		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		position = qEvent.position().toPoint()
 		cursorPos = imath.V2i( position.x(), position.y() )
 		self.__foreignDragDropEvent.line = IECore.LineSegment3f(
 			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
@@ -1651,7 +1650,7 @@ class _EventFilter( QtCore.QObject ) :
 		if widget is None or widget._dropSignal is None :
 			return False
 
-		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		position = qEvent.position().toPoint()
 		cursorPos = imath.V2i( position.x(), position.y() )
 		self.__foreignDragDropEvent.line = IECore.LineSegment3f(
 			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
@@ -1680,7 +1679,7 @@ class _EventFilter( QtCore.QObject ) :
 	# long distances.
 	def __widgetSpaceLine( self, qEvent, targetWidget ) :
 
-		globalPosition = qEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else qEvent.globalPos()
+		globalPosition = qEvent.globalPosition().toPoint()
 		cursorPos = imath.V2i( globalPosition.x(), globalPosition.y() )
 		cursorPos -= targetWidget.bound().min()
 

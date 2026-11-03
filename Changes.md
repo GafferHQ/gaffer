@@ -63,6 +63,7 @@ Breaking Changes
 - PySide : Removed `PYSIDE63_OPTION_PYTHON_ENUM=0x08` override at startup.
 - RenderMan : Removed support for RenderMan 26.3 and 26.4.
 - Merge : Renamed `Mode` to `InputMode`.
+- GafferUI : Removed legacy compatibility code for PySide2 and PyQt.
 
 Build
 -----

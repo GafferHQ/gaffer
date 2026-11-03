@@ -156,7 +156,7 @@ class Button( GafferUI.Widget ) :
 
 		return not self._qtWidget().property( "gafferUnclickable" )
 
-	def __clicked( self, *unusedArgs ) : # currently PyQt passes a "checked" argument and PySide doesn't
+	def __clicked( self, *unusedArgs ) : # PySide passes a "checked" argument for checkable buttons
 
 		if not self.getClickable() :
 			return

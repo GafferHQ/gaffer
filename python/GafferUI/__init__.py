@@ -35,16 +35,6 @@
 #
 ##########################################################################
 
-# Work around a bug which causes segfaults if uuid is imported after
-# PyQt. See here for details :
-#
-# https://bugs.gentoo.org/show_bug.cgi?id=317557
-# http://www.riverbankcomputing.com/pipermail/pyqt/2010-December/028773.html
-#
-# Using __import__ rather than import so that we don't pollute the GafferUI
-# namespace.
-__import__( "uuid" )
-
 ##########################################################################
 # Function to return the C++ address of a wrapped Qt object. This can
 # be useful if needing to implement part of the UI in C++ and the rest
@@ -53,12 +43,8 @@ __import__( "uuid" )
 
 def _qtAddress( o ) :
 
-	import Qt
-	if "PyQt" in Qt.__binding__ :
-		import sip
-		return sip.unwrapinstance( o )
-	else :
-		return __shiboken().getCppPointer( o )[0]
+	import shiboken6
+	return shiboken6.getCppPointer( o )[0]
 
 ##########################################################################
 # Function to return a wrapped Qt object from the given C++ address.
@@ -68,12 +54,8 @@ def _qtAddress( o ) :
 
 def _qtObject( address, type ) :
 
-	import Qt
-	if "PyQt" in Qt.__binding__ :
-		import sip
-		return sip.wrapinstance( address, type )
-	else :
-		return __shiboken().wrapInstance( address, type )
+	import shiboken6
+	return shiboken6.wrapInstance( address, type )
 
 ##########################################################################
 # Determines if the wrapped Qt object is still valid
@@ -84,31 +66,8 @@ def _qtObject( address, type ) :
 
 def _qtObjectIsValid( o ) :
 
-	import Qt
-	if "PyQt" in Qt.__binding__ :
-		import sip
-		return not sip.isdeleted( o )
-	else :
-		return __shiboken().isValid( o )
-
-##########################################################################
-# Shiboken lives in a variety of places depending on which PySide it is.
-##########################################################################
-
-def __shiboken() :
-
-	import Qt
-	assert( Qt.__binding__ in ( "PySide2", "PySide6" ) )
-
-	if Qt.__binding__ == "PySide6" :
-		import shiboken6 as shiboken
-	else :
-		try :
-			import PySide2.shiboken2 as shiboken
-		except ImportError :
-			import shiboken2 as shiboken
-
-	return shiboken
+	import shiboken6
+	return shiboken6.isValid( o )
 
 ##########################################################################
 # now import our actual functionality

@@ -40,7 +40,6 @@ from ._StyleSheet import _styleColors
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
-import Qt
 
 # A QHeaderView derived class with custom behaviours we want for
 # GafferUI. This is not part of the public API.
@@ -92,7 +91,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 	def mousePressEvent( self, event ) :
 
 		if not self.__eventOverSectionResizeHandle( event ) :
-			section = self.logicalIndexAt( event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos() )
+			section = self.logicalIndexAt( event.position().toPoint() )
 			if self.__blockingSectionPressedSignal is not None :
 				if self.blockingSectionPressedSignal()( section ) :
 					# Slot has requested to block Qt's mousePressEvent.
@@ -116,7 +115,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 
 		updateRequired = False
 
-		position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+		position = event.position().toPoint()
 		section = self.logicalIndexAt( position )
 
 		if self.__pressedSection is not None :
@@ -189,7 +188,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 
 	def __eventOverSectionResizeHandle( self, event ) :
 
-		position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+		position = event.position().toPoint()
 		section = self.logicalIndexAt( position )
 		relativePosition = position.x() - self.sectionViewportPosition( section )
 		handleMargin = self.style().pixelMetric( QtWidgets.QStyle.PixelMetric.PM_HeaderGripMargin )

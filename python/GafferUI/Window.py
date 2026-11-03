@@ -46,7 +46,6 @@ import Gaffer
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
-import Qt
 
 class Window( GafferUI.ContainerWidget ) :
 
@@ -201,15 +200,8 @@ class Window( GafferUI.ContainerWidget ) :
 		if sys.platform == "win32" :
 			childWindowFlags |= QtCore.Qt.WindowCloseButtonHint
 
-		if sys.platform == "darwin" and Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-			# Alternative order of operations to work around crashes
-			# on OSX with Qt5.
-			childWindow._qtWidget().setParent( self._qtWidget() )
-			childWindow._applyVisibility()
-			childWindow._qtWidget().setWindowFlags( childWindowFlags )
-		else :
-			childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
-			childWindow._applyVisibility()
+		childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
+		childWindow._applyVisibility()
 
 		if removeOnClose :
 
