@@ -60,6 +60,7 @@ Breaking Changes
 - Serialisation :
   - Removed deprecated `postSerialisationSignal()`.
   - Renamed `staticPostSerialisationSignal()` to `postSerialisationSignal()`.
+- PySide : Removed `PYSIDE63_OPTION_PYTHON_ENUM=0x08` override at startup.
 
 1.7.x.x (relative to 1.7.6.0)
 =======
