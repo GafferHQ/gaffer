@@ -88,17 +88,76 @@ class CameraAlgoTest( unittest.TestCase ) :
 				IECoreScene.Camera(
 					parameters = {
 						"projection" : "cyl_camera",
-						"horizontal_fov" : 45.0,
-						"vertical_fov" : 80.0,
+						"ai:horizontal_fov" : 45.0,
+						"ai:vertical_fov" : 80.0,
 					}
 				),
 				universe,
-				"testCamera"
+				"testCameraCylindrical"
 			)
 
-			self.assertTrue( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( n ) ), "cyl_camera" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( n ) ), "cyl_camera" )
 			self.assertEqual( arnold.AiNodeGetFlt( n, "horizontal_fov" ), 45.0 )
 			self.assertEqual( arnold.AiNodeGetFlt( n, "vertical_fov" ), 80.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).x, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).y, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).x, 1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).y, 1.0 )
+
+			n = IECoreArnold.NodeAlgo.convert(
+				IECoreScene.Camera(
+					parameters = {
+						"projection" : "fisheye_camera",
+						"ai:fov" : 270.0,
+						"resolution" : imath.V2i( 256, 128 ),
+						"filmFit" : IECoreScene.Camera.FilmFit.Horizontal,
+					}
+				),
+				universe,
+				"testCameraFisheye"
+			)
+
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( n ) ), "fisheye_camera" )
+			self.assertEqual( arnold.AiNodeGetFlt( n, "fov" ), 270.0 )
+			# Arnold corrects the screen window based on the rendered image aspect ratio, so
+			# we compensate for that in the window we pass to Arnold. That results in the
+			# screen window always being [-1, 1].
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).x, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).y, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).x, 1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).y, 1.0 )
+
+			n = IECoreArnold.NodeAlgo.convert(
+				IECoreScene.Camera(
+					parameters = {
+						"projection" : "spherical_camera",
+					}
+				),
+				universe,
+				"testCameraSpherical"
+			)
+
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( n ) ), "spherical_camera" )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).x, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).y, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).x, 1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).y, 1.0 )
+
+			n = IECoreArnold.NodeAlgo.convert(
+				IECoreScene.Camera(
+					parameters = {
+						"projection" : "vr_camera",
+					}
+				),
+				universe,
+				"testCameraVR"
+			)
+
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( n ) ), "vr_camera" )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).x, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_min" ).y, -1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).x, 1.0 )
+			self.assertEqual( arnold.AiNodeGetVec2( n, "screen_window_max" ).y, 1.0 )
 
 	# This test makes sure that for a camera with no focal length defined, but with a fov, the default
 	# focal length calculation on the camera results in getting the same projection in Arnold that we
@@ -285,7 +344,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 
 			camera = IECoreScene.Camera()
 			camera.setProjection( "perspective" )
-			camera.parameters()["shutter_curve"] = IECore.Rampff(
+			camera.parameters()["ai:shutter_curve"] = IECore.Rampff(
 				[
 					( 0, -0.1 ),
 					( 0.25, 1 ),
@@ -303,7 +362,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetVec2( curve, 2 ), arnold.AtVector2( 0.75, 1 ) )
 			self.assertEqual( arnold.AiArrayGetVec2( curve, 3 ), arnold.AtVector2( 1, 0 ) )
 
-			camera.parameters()["shutter_curve"] = IECore.Rampff(
+			camera.parameters()["ai:shutter_curve"] = IECore.Rampff(
 				[
 					( 0, 0 ),
 					( 0, 0 ),
@@ -321,7 +380,7 @@ class CameraAlgoTest( unittest.TestCase ) :
 			for i in range( 0, 25 ) :
 				point = arnold.AiArrayGetVec2( curve, i )
 				self.assertAlmostEqual(
-					min( camera.parameters()["shutter_curve"].value.evaluator()( point.x ), 1 ),
+					min( camera.parameters()["ai:shutter_curve"].value.evaluator()( point.x ), 1 ),
 					point.y,
 					delta = 0.0001
 				)
@@ -349,3 +408,24 @@ class CameraAlgoTest( unittest.TestCase ) :
 							self.assertGreater( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.01 )
 						else :
 							self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_size" ), 0.0 )
+
+	def testParameterPrefix( self ) :
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			camera = IECoreScene.Camera()
+			camera.setProjection( "perspective" )
+			camera.parameters()["aperture_blades"] = 5
+			camera.parameters()["ai:aperture_blades"] = 10
+			camera.parameters()["ai:aperture_rotation"] = 20.0
+			camera.parameters()["rolling_shutter"] = "top"
+			camera.parameters()["rolling_shutter_duration"] = 0.5
+
+			n = IECoreArnold.NodeAlgo.convert( camera, universe, "testCamera" )
+
+			self.assertEqual( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_CAMERA )
+
+			self.assertEqual( arnold.AiNodeGetInt( n, "aperture_blades" ), 10 )
+			self.assertEqual( arnold.AiNodeGetFlt( n, "aperture_rotation" ), 20.0 )
+			self.assertEqual( arnold.AiNodeGetStr( n, "rolling_shutter" ), "top" )
+			self.assertEqual( arnold.AiNodeGetFlt( n, "rolling_shutter_duration" ), 0.5 )

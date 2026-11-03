@@ -44,6 +44,8 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/RampData.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "Imath/ImathFun.h"
 
 #include "ai_array.h"
@@ -162,11 +164,21 @@ AtNode *convertStatic( const IECoreScene::Camera *camera, AtUniverse *universe, 
 	const AtNodeEntry *nodeEntry = AiNodeGetNodeEntry( result );
 	for( CompoundDataMap::const_iterator it = camera->parameters().begin(), eIt = camera->parameters().end(); it != eIt; ++it )
 	{
-		AtString paramNameArnold( it->first.c_str() );
-		if( it->first == "mesh" )
+		/// \todo Remove support for non-prefixed Arnold-specific parameters.
+		const bool aiPrefixed = boost::starts_with( it->first.c_str(), "ai:" );
+		if( !aiPrefixed && camera->parameters().find( "ai:" + it->first.string() ) != camera->parameters().end() )
+		{
+			// Prefer the parameter with `ai:` prefix over the non-prefixed parameter.
+			continue;
+		}
+		AtString paramNameArnold( aiPrefixed ? it->first.c_str() + 3 : it->first.c_str() );
+		if( it->first == "mesh" || it->first == "projection" )
 		{
 			// We have special handling in the renderer backend to translate a mesh path string
-			// into a node pointer, so don't touch this here
+			// into a node pointer, so don't touch this here.
+			// Arnold will output a warning if we attempt to set `projection` on an Arnold VR
+			// camera to one of Gaffer's `projection` values. Instead it should be set by
+			// `ai:projection`.
 			continue;
 		}
 		if( AiNodeEntryLookUpParameter( nodeEntry, paramNameArnold ) )
@@ -187,23 +199,36 @@ AtNode *convertStatic( const IECoreScene::Camera *camera, AtUniverse *universe, 
 
 Imath::Box2f screenWindow( const IECoreScene::Camera *camera )
 {
-	Imath::Box2f result = camera->frustum();
-
-	if( camera->getProjection() == "perspective" || camera->getProjection() == "lentil_camera" )
+	if( camera->getProjection() == "cyl_camera" || camera->getProjection() == "spherical_camera" || camera->getProjection() == "vr_camera" )
 	{
-		// Normalise so that Arnold's NDC space goes from 0-1 across the aperture.
-		// This is helpful when using Arnold `uv_remap` shaders.
-		const float width = ( result.max.x - result.min.x ) * 0.5f;
-		result.min *= 1.0f / width;
-		result.max *= 1.0f / width;
+		return Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) );
+	}
+
+	const Imath::V2i resolution = camera->getResolution();
+	const float aspect = camera->getPixelAspectRatio() * (float)resolution.x / (float)resolution.y;
+	Imath::Box2f result;
+	if( camera->getProjection() == "fisheye_camera" )
+	{
+		result = IECoreScene::Camera::fitWindow( Imath::Box2f( Imath::V2f( -1.f ), Imath::V2f( 1.f ) ), camera->getFilmFit(), aspect );
+	}
+	else
+	{
+		result = camera->frustum();
+
+		if( camera->getProjection() == "perspective" || camera->getProjection() == "lentil_camera" )
+		{
+			// Normalise so that Arnold's NDC space goes from 0-1 across the aperture.
+			// This is helpful when using Arnold `uv_remap` shaders.
+			const float width = ( result.max.x - result.min.x ) * 0.5f;
+			result.min *= 1.0f / width;
+			result.max *= 1.0f / width;
+		}
 	}
 
 	// Arnold automatically adjusts the vertical dimension to compensate for
 	// the resolution and pixel aspect. This is handy when hand-editing .ass
 	// files, but since we already take care of this ourselves, we have to
 	// reverse their correction by multiplying the y values by aspect.
-	const Imath::V2i resolution = camera->getResolution();
-	const float aspect = camera->getPixelAspectRatio() * (float)resolution.x / (float)resolution.y;
 	result.min.y *= aspect;
 	result.max.y *= aspect;
 
@@ -271,6 +296,9 @@ AtNode *CameraAlgo::convert( const CameraSamples &samples, float motionStart, fl
 	if( samples[0]->getProjection()=="perspective" )
 	{
 		setAnimatedFloat( result, g_fovArnoldString, samples, fieldOfView );
+	}
+	if( samples[0]->getProjection() == "perspective" || samples[0]->getProjection() == "fisheye_camera" )
+	{
 		setAnimatedFloat( result, g_apertureSizeArnoldString, samples, apertureSize );
 		setAnimatedFloat( result, g_focusDistanceArnoldString, samples, []( auto camera ) { return camera->getFocusDistance(); } );
 	}

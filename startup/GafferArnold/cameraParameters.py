@@ -40,7 +40,7 @@ import IECore
 
 Gaffer.Metadata.registerValues( {
 
-	"camera:parameter:shutter_type" : {
+	"camera:parameter:ai:shutter_type" : {
 
 		"defaultValue" : "box",
 		"label" : "Shutter Type",
@@ -51,7 +51,7 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
-	"camera:parameter:shutter_curve" : {
+	"camera:parameter:ai:shutter_curve" : {
 
 		"defaultValue" : IECore.RampffData(),
 		"label" : "Shutter Curve",
@@ -59,7 +59,7 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
-	"camera:parameter:rolling_shutter" : {
+	"camera:parameter:ai:rolling_shutter" : {
 
 		"defaultValue" : "off",
 		"label" : "Rolling Shutter",
@@ -70,7 +70,7 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
-	"camera:parameter:rolling_shutter_duration" : {
+	"camera:parameter:ai:rolling_shutter_duration" : {
 
 		"defaultValue" : 0.0,
 		"minValue" : 0.0,
@@ -80,7 +80,7 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
-	"camera:parameter:aperture_blades" : {
+	"camera:parameter:ai:aperture_blades" : {
 
 		"defaultValue" : 6,
 		"minValue" : 0,
@@ -90,7 +90,7 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
-	"camera:parameter:aperture_blade_curvature" : {
+	"camera:parameter:ai:aperture_blade_curvature" : {
 
 		"defaultValue" : 0.0,
 		"minValue" : -20.0,
@@ -100,13 +100,70 @@ Gaffer.Metadata.registerValues( {
 
 	},
 
-	"camera:parameter:aperture_rotation" : {
+	"camera:parameter:ai:aperture_rotation" : {
 
 		"defaultValue" : 0.0,
 		"minValue" : 0.0,
 		"maxValue" : 360.0,
 		"label" : "Aperture Rotation",
 		"layout:section" : "Arnold",
+
+	},
+
+	"camera:parameter:ai:aperture_aspect_ratio" : {
+
+		"defaultValue" : 1.0,
+		"minValue" : 0.0,
+		"label" : "Aperture Aspect Ratio",
+		"layout:section" : "Arnold",
+
+	},
+
+	"camera:parameter:shutter_type" : {
+
+		"supersededBy" : "ai:shutter_type",
+
+	},
+
+	"camera:parameter:shutter_curve" : {
+
+		"supersededBy" : "ai:shutter_curve",
+
+	},
+
+	"camera:parameter:rolling_shutter" : {
+
+		"supersededBy" : "ai:rolling_shutter",
+
+	},
+
+	"camera:parameter:rolling_shutter_duration" : {
+
+		"supersededBy" : "ai:rolling_shutter_duration",
+
+	},
+
+	"camera:parameter:aperture_blades" : {
+
+		"supersededBy" : "ai:aperture_blades",
+
+	},
+
+	"camera:parameter:aperture_blade_curvature" : {
+
+		"supersededBy" : "ai:aperture_blade_curvature",
+
+	},
+
+	"camera:parameter:aperture_rotation" : {
+
+		"supersededBy" : "ai:aperture_rotation",
+
+	},
+
+	"camera:parameter:aperture_aspect_ratio" : {
+
+		"supersededBy" : "ai:aperture_aspect_ratio",
 
 	},
 
