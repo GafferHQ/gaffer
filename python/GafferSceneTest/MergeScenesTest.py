@@ -557,6 +557,10 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 		spheres = []
 		groups = []
 
+		# The max size of 32 used to be a requirement of the data structures we were using.
+		# Now that we support Collect mode, we support arbitrarily many inputs, and we could
+		# remove the restriction on the size of the in plug. I haven't yet just for consistency,
+		# but maybe it's worth updating.
 		for i in range( 0, merge["in"].maxSize() ) :
 			sphere = GafferScene.Sphere()
 			sphere["name"].setValue( "sphere{}".format( i ) )

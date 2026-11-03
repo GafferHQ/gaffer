@@ -67,30 +67,29 @@ enum class Count
 	MoreThanOne
 };
 
-size_t firstAndCount( const std::bitset<32> &inputs, Count &count )
+size_t firstAndCount( const std::vector<bool> &inputs, Count &count )
 {
-	if( inputs.count() == 0 )
-	{
-		count = Count::Zero;
-	}
-	else if( inputs.count() == 1 )
-	{
-		count = Count::One;
-	}
-	else
-	{
-		count = Count::MoreThanOne;
-	}
+	count = Count::Zero;
+	size_t first = 0;
 
 	for( size_t i = 0; i < inputs.size(); ++i )
 	{
 		if( inputs[i] )
 		{
-			return i;
+			if( count == Count::Zero )
+			{
+				first = i;
+				count = Count::One;
+			}
+			else
+			{
+				count = Count::MoreThanOne;
+				return first;
+			}
 		}
 	}
 
-	return 0;
+	return first;
 }
 
 class MergeContextHandler
@@ -190,7 +189,7 @@ private:
 //////////////////////////////////////////////////////////////////////////
 
 MergeScenes::MergeScenes( const std::string &name )
-	:	SceneProcessor( name, /* minInputs = */ 2, /* maxInputs = */ InputMask().size() )
+	:	SceneProcessor( name, /* minInputs = */ 2, /* maxInputs = */ 32 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -214,7 +213,7 @@ MergeScenes::MergeScenes( const std::string &name )
 	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
 	addChild( new StringPlug( "indexContextVariable", Plug::In, "merge:index" ) );
 
-	addChild( new IntPlug( "__activeInputs", Plug::Out, 0 ) );
+	addChild( new BoolVectorDataPlug( "__activeInputs", Plug::Out ) );
 	addChild( new AtomicBox3fPlug( "__mergedDescendantsBound", Plug::Out ) );
 
 	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
@@ -314,14 +313,14 @@ const Gaffer::StringPlug *MergeScenes::indexContextVariablePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 8 );
 }
 
-Gaffer::IntPlug *MergeScenes::activeInputsPlug()
+Gaffer::BoolVectorDataPlug *MergeScenes::activeInputsPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 9 );
+	return getChild<BoolVectorDataPlug>( g_firstPlugIndex + 9 );
 }
 
-const Gaffer::IntPlug *MergeScenes::activeInputsPlug() const
+const Gaffer::BoolVectorDataPlug *MergeScenes::activeInputsPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 9 );
+	return getChild<BoolVectorDataPlug>( g_firstPlugIndex + 9 );
 }
 
 Gaffer::AtomicBox3fPlug *MergeScenes::mergedDescendantsBoundPlug()
@@ -461,7 +460,7 @@ void MergeScenes::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 {
 	if( output == activeInputsPlug() )
 	{
-		static_cast<IntPlug *>( output )->setValue( computeActiveInputs( context ) );
+		static_cast<BoolVectorDataPlug *>( output )->setValue( computeActiveInputs( context ) );
 	}
 	else if( output == mergedDescendantsBoundPlug() )
 	{
@@ -483,24 +482,30 @@ void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::Murm
 	// `scene->existsPlug()->hash()`. Which means our hash function is actually
 	// _identical_ to our compute, so we might as well just call it rather than
 	// duplicate the code.
-	h.append( computeActiveInputs( context ) );
+	h.append( computeActiveInputs( context )->readable() );
 }
 
-int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
+ConstBoolVectorDataPtr MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 {
 	const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 
-	InputMask result;
+	BoolVectorDataPtr resultData = new BoolVectorData();
+	auto &result = resultData->writable();
+
 	if( scenePath.empty() )
 	{
+
 		// Root. Every input is active here, but there's a wrinkle : the default
 		// value for `ScenePlug.exists` is `true`, and this is the value we'll
 		// get if the input is not from a computed output. This would mean that
 		// the input would claim to be active for _any_ scene location. We deal
 		// with this once here at the root rather than repeat the workaround at
 		// each descendant location;
+
+		std::vector<bool> connectedIns = connectedInputs( context );
+		result.resize( connectedIns.size(), false );
 		visit(
-			connectedInputs( context ), context,
+			connectedIns, context,
 			[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
 				if( scene->childNamesPlug()->getValue()->readable().size() )
 				{
@@ -513,12 +518,14 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 	else
 	{
 		// Get active inputs from the parent.
-		InputMask parentActiveInputs;
+		ConstBoolVectorDataPtr parentActiveInputsData;
 		{
 			ScenePath parentPath = scenePath; parentPath.pop_back();
 			ScenePlug::PathScope parentScope( context, &parentPath );
-			parentActiveInputs = activeInputsPlug()->getValue();
+			parentActiveInputsData = activeInputsPlug()->getValue();
 		}
+
+		const auto &parentActiveInputs = parentActiveInputsData->readable();
 
 		Count parentActiveInputsCount;
 		firstAndCount( parentActiveInputs, parentActiveInputsCount );
@@ -528,10 +535,12 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 			// that doesn't exist. Therefore, if our parent only has
 			// one active input, then that input must still be active for
 			// us.
-			result = parentActiveInputs;
+			return parentActiveInputsData;
 		}
 		else
 		{
+			result.resize( parentActiveInputs.size(), false );
+
 			// Figure out which of those parent inputs are
 			// still active. Using the parent active inputs as
 			// a mask reduces the number of existence queries
@@ -550,7 +559,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 		}
 	}
 
-	return result.to_ulong();
+	return resultData;
 }
 
 void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -558,7 +567,7 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 	#ifndef NDEBUG
 	// mergedDescendantBound is never evaluated when there is a single input
 	Count activeInputsCount;
-	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue(), activeInputsCount );
+	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue()->readable(), activeInputsCount );
 	assert( activeInputsCount == Count::MoreThanOne );
 	#endif
 
@@ -577,7 +586,9 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 	{
 		childPath.back() = childName;
 		contextHandler.setPath( &childPath );
-		const InputMask childActiveInputs( activeInputsPlug()->getValue() );
+		ConstBoolVectorDataPtr childActiveInputsData = activeInputsPlug()->getValue();
+		const auto &childActiveInputs = childActiveInputsData->readable();
+
 		Count childActiveInputsCount;
 		size_t childFirstActiveIndex = firstAndCount( childActiveInputs, childActiveInputsCount );
 
@@ -600,7 +611,7 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 	#ifndef NDEBUG
 	// mergedDescendantBound is never evaluated when there is a single input
 	Count activeInputsCount;
-	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue(), activeInputsCount );
+	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue()->readable(), activeInputsCount );
 	assert( activeInputsCount == Count::MoreThanOne );
 	#endif
 
@@ -621,7 +632,8 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 	{
 		childPath.back() = childName;
 		contextHandler.setPath( &childPath );
-		const InputMask childActiveInputs( activeInputsPlug()->getValue() );
+		ConstBoolVectorDataPtr childActiveInputsData = activeInputsPlug()->getValue();
+		const auto &childActiveInputs = childActiveInputsData->readable();
 		Count childActiveInputsCount;
 		size_t childFirstActiveIndex = firstAndCount( childActiveInputs, childActiveInputsCount );
 
@@ -648,9 +660,8 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 void MergeScenes::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	// Pass through.
-
 	Count activeInputsCount;
-	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue(), activeInputsCount );
+	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue()->readable(), activeInputsCount );
 
 	if( activeInputsCount == Count::Zero )
 	{
@@ -692,7 +703,7 @@ Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Con
 	// Pass through for simple cases.
 
 	Count activeInputsCount;
-	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue(), activeInputsCount );
+	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue()->readable(), activeInputsCount );
 
 	if( activeInputsCount == Count::Zero )
 	{
@@ -732,7 +743,8 @@ Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Con
 
 void MergeScenes::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
+	ConstBoolVectorDataPtr activeInputsData = activeInputsPlug()->getValue();
+	const auto &activeInputs = activeInputsData->readable();
 	Count activeInputsCount;
 	firstAndCount( activeInputs, activeInputsCount );
 
@@ -754,7 +766,8 @@ void MergeScenes::hashTransform( const ScenePath &path, const Gaffer::Context *c
 
 Imath::M44f MergeScenes::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
+	ConstBoolVectorDataPtr activeInputsData = activeInputsPlug()->getValue();
+	const auto &activeInputs = activeInputsData->readable();
 	Count activeInputsCount;
 	firstAndCount( activeInputs, activeInputsCount );
 
@@ -778,7 +791,8 @@ Imath::M44f MergeScenes::computeTransform( const ScenePath &path, const Gaffer::
 
 void MergeScenes::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
+	ConstBoolVectorDataPtr activeInputsData = activeInputsPlug()->getValue();
+	const auto &activeInputs = activeInputsData->readable();
 	Count activeInputsCount;
 	firstAndCount( activeInputs, activeInputsCount );
 
@@ -813,7 +827,8 @@ void MergeScenes::hashAttributes( const ScenePath &path, const Gaffer::Context *
 
 IECore::ConstCompoundObjectPtr MergeScenes::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
+	ConstBoolVectorDataPtr activeInputsData = activeInputsPlug()->getValue();
+	const auto &activeInputs = activeInputsData->readable();
 	Count activeInputsCount;
 	firstAndCount( activeInputs, activeInputsCount );
 
@@ -857,7 +872,8 @@ IECore::ConstCompoundObjectPtr MergeScenes::computeAttributes( const ScenePath &
 
 void MergeScenes::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
+	ConstBoolVectorDataPtr activeInputsData = activeInputsPlug()->getValue();
+	const auto &activeInputs = activeInputsData->readable();
 	Count activeInputsCount;
 	firstAndCount( activeInputs, activeInputsCount );
 
@@ -892,7 +908,8 @@ void MergeScenes::hashObject( const ScenePath &path, const Gaffer::Context *cont
 
 IECore::ConstObjectPtr MergeScenes::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
+	ConstBoolVectorDataPtr activeInputsData = activeInputsPlug()->getValue();
+	const auto &activeInputs = activeInputsData->readable();
 	Count activeInputsCount;
 	firstAndCount( activeInputs, activeInputsCount );
 
@@ -926,7 +943,8 @@ IECore::ConstObjectPtr MergeScenes::computeObject( const ScenePath &path, const 
 
 void MergeScenes::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
+	ConstBoolVectorDataPtr activeInputsData = activeInputsPlug()->getValue();
+	const auto &activeInputs = activeInputsData->readable();
 	Count activeInputsCount;
 	firstAndCount( activeInputs, activeInputsCount );
 
@@ -957,7 +975,8 @@ void MergeScenes::hashChildNames( const ScenePath &path, const Gaffer::Context *
 
 IECore::ConstInternedStringVectorDataPtr MergeScenes::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
+	ConstBoolVectorDataPtr activeInputsData = activeInputsPlug()->getValue();
+	const auto &activeInputs = activeInputsData->readable();
 	Count activeInputsCount;
 	firstAndCount( activeInputs, activeInputsCount );
 
@@ -1008,7 +1027,7 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeChildNames( const S
 
 void MergeScenes::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const InputMask connectedIns( connectedInputs( context ) );
+	const std::vector<bool> connectedIns( connectedInputs( context ) );
 	Count connectedInputsCount;
 	firstAndCount( connectedIns, connectedInputsCount );
 	if( connectedInputsCount == Count::Zero )
@@ -1042,7 +1061,7 @@ void MergeScenes::hashGlobals( const Gaffer::Context *context, const ScenePlug *
 
 IECore::ConstCompoundObjectPtr MergeScenes::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const InputMask connectedIns( connectedInputs( context ) );
+	const std::vector<bool> connectedIns( connectedInputs( context ) );
 	Count connectedInputsCount;
 	firstAndCount( connectedIns, connectedInputsCount );
 	if( connectedInputsCount == Count::Zero )
@@ -1085,7 +1104,7 @@ IECore::ConstCompoundObjectPtr MergeScenes::computeGlobals( const Gaffer::Contex
 
 void MergeScenes::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const InputMask connectedIns( connectedInputs( context ) );
+	const std::vector<bool> connectedIns( connectedInputs( context ) );
 	Count connectedInputsCount;
 	firstAndCount( connectedIns, connectedInputsCount );
 	if( connectedInputsCount == Count::Zero )
@@ -1118,7 +1137,7 @@ void MergeScenes::hashSetNames( const Gaffer::Context *context, const ScenePlug 
 
 IECore::ConstInternedStringVectorDataPtr MergeScenes::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const InputMask connectedIns( connectedInputs( context ) );
+	const std::vector<bool> connectedIns( connectedInputs( context ) );
 	Count connectedInputsCount;
 	firstAndCount( connectedIns, connectedInputsCount );
 	if( connectedInputsCount == Count::Zero )
@@ -1165,7 +1184,7 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeSetNames( const Gaf
 
 void MergeScenes::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const InputMask connectedIns( connectedInputs( context ) );
+	const std::vector<bool> connectedIns( connectedInputs( context ) );
 	Count connectedInputsCount;
 	firstAndCount( connectedIns, connectedInputsCount );
 	if( connectedInputsCount == Count::Zero )
@@ -1200,7 +1219,7 @@ void MergeScenes::hashSet( const IECore::InternedString &setName, const Gaffer::
 
 IECore::ConstPathMatcherDataPtr MergeScenes::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const InputMask connectedIns( connectedInputs( context ) );
+	const std::vector<bool> connectedIns( connectedInputs( context ) );
 	Count connectedInputsCount;
 	firstAndCount( connectedIns, connectedInputsCount );
 	if( connectedInputsCount == Count::Zero )
@@ -1249,13 +1268,17 @@ MergeScenes::VisitOrder MergeScenes::visitOrder( Mode mode, VisitOrder replaceOr
 	}
 }
 
-MergeScenes::InputMask MergeScenes::connectedInputs( const Gaffer::Context *context ) const
+std::vector<bool> MergeScenes::connectedInputs( const Gaffer::Context *context ) const
 {
 	MergeContextHandler contextHandler( this, context );
 	int nContexts = contextHandler.numContexts();
 
-	InputMask result;
-	for( size_t i = 0, e = inPlugs()->children().size(); i < e; ++i )
+	size_t numPlugs = inPlugs()->children().size();
+
+	std::vector<bool> result;
+	result.reserve( numPlugs * nContexts );
+
+	for( size_t i = 0; i < numPlugs; ++i )
 	{
 		bool connected = inPlugs()->getChild<ScenePlug>( i )->getInput();
 		// The connected value is the same across a plug, but we still output an element
@@ -1263,7 +1286,7 @@ MergeScenes::InputMask MergeScenes::connectedInputs( const Gaffer::Context *cont
 		// used in MergeContextHandler and visit()
 		for( int j = 0; j < nContexts; j++ )
 		{
-			result[ i * nContexts + j ] = connected;
+			result.push_back( connected );
 		}
 	}
 
@@ -1271,7 +1294,7 @@ MergeScenes::InputMask MergeScenes::connectedInputs( const Gaffer::Context *cont
 }
 
 template<typename Visitor>
-void MergeScenes::visit( InputMask inputMask, const Gaffer::Context *context, Visitor &&visitor, VisitOrder order ) const
+void MergeScenes::visit( const std::vector<bool> &inputMask, const Gaffer::Context *context, Visitor &&visitor, VisitOrder order ) const
 {
 	Count inputMaskCount;
 	firstAndCount( inputMask, inputMaskCount );

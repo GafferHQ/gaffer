@@ -128,20 +128,16 @@ class GAFFERSCENE_API MergeScenes : public SceneProcessor
 
 	private :
 
-		using InputMask = std::bitset<32>;
-
 		// Plugs used to track which inputs are valid
-		// at the current location. The value can be
-		// converted directly to an `InputMask` for use
-		// with `visit()`.
-		Gaffer::IntPlug *activeInputsPlug();
-		const Gaffer::IntPlug *activeInputsPlug() const;
+		// at the current location.
+		Gaffer::BoolVectorDataPlug *activeInputsPlug();
+		const Gaffer::BoolVectorDataPlug *activeInputsPlug() const;
 
 		Gaffer::AtomicBox3fPlug *mergedDescendantsBoundPlug();
 		const Gaffer::AtomicBox3fPlug *mergedDescendantsBoundPlug() const;
 
 		void hashActiveInputs( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		int computeActiveInputs( const Gaffer::Context *context ) const;
+		IECore::ConstBoolVectorDataPtr computeActiveInputs( const Gaffer::Context *context ) const;
 
 		void hashMergedDescendantsBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		const Imath::Box3f computeMergedDescendantsBound( const Gaffer::Context *context ) const;
@@ -162,12 +158,12 @@ class GAFFERSCENE_API MergeScenes : public SceneProcessor
 		};
 
 		VisitOrder visitOrder( Mode mode, VisitOrder replaceOrder = VisitOrder::LastOnly ) const;
-		InputMask connectedInputs( const Gaffer::Context *context ) const;
+		std::vector<bool> connectedInputs( const Gaffer::Context *context ) const;
 
 		// Calls `visitor( inputType, inputIndex, input )` for all inputs specified by `inputMask`.
 		// Visitor may return `true` to continue to subsequent inputs or `false` to stop iteration.
 		template<typename Visitor>
-		void visit( InputMask inputMask, const Gaffer::Context *context, Visitor &&visitor, VisitOrder order = VisitOrder::Forwards ) const;
+		void visit( const std::vector<bool> &inputMask, const Gaffer::Context *context, Visitor &&visitor, VisitOrder order = VisitOrder::Forwards ) const;
 
 		static size_t g_firstPlugIndex;
 
