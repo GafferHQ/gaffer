@@ -197,7 +197,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		indexes = [ tableView.model().indexForPlug( plug ) for plug in plugs ]
 		assert( all( [ index.isValid() for index in indexes ] ) )
 
-		if not all( [ index.flags() & ( QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable ) for index in indexes ] ) :
+		if not all( [ index.flags() & ( QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsEditable ) for index in indexes ] ) :
 			return
 
 		if scrollTo :
@@ -596,7 +596,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			destinationPlug = self.plugAt( event.line.p0 )
 			self._qtWidget().selectionModel().setCurrentIndex(
 				self._qtWidget().model().indexForPlug( destinationPlug ),
-				QtCore.QItemSelectionModel.SelectCurrent
+				QtCore.QItemSelectionModel.SelectionFlag.SelectCurrent
 			)
 			mode = self.__dropMode( destinationPlug, event )
 			if mode == self.__DropMode.Add :
@@ -728,7 +728,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		index = self._qtWidget().indexAt( point )
 
 		# Disabled items won't show up in the selection model
-		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+		if not index.flags() & QtCore.Qt.ItemFlag.ItemIsEnabled :
 			return True
 
 		if self.__mode == self.Mode.Outputs and event.buttons & ( event.Buttons.Left | event.Buttons.Middle ) :
@@ -811,7 +811,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		)
 		index = self._qtWidget().indexAt( point )
 
-		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+		if not index.flags() & QtCore.Qt.ItemFlag.ItemIsEnabled :
 			return True
 
 		plug = self._qtWidget().model().plugForIndex( index )
@@ -1418,15 +1418,15 @@ class _PlugTableView( GafferUI.Widget ) :
 class _NavigableTable( _TableView ) :
 
 	__protectedKeys = (
-		QtCore.Qt.Key_Left,
-		QtCore.Qt.Key_Right,
-		QtCore.Qt.Key_Up,
-		QtCore.Qt.Key_Down
+		QtCore.Qt.Key.Key_Left,
+		QtCore.Qt.Key.Key_Right,
+		QtCore.Qt.Key.Key_Up,
+		QtCore.Qt.Key.Key_Down
 	)
 
 	def event( self, event ) :
 
-		if event.type() == QtCore.QEvent.ShortcutOverride and event.key() in self.__protectedKeys :
+		if event.type() == QtCore.QEvent.Type.ShortcutOverride and event.key() in self.__protectedKeys :
 			event.accept()
 			return True
 		else :

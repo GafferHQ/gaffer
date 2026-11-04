@@ -113,11 +113,11 @@ class RampWidget( GafferUI.Widget ) :
 	def __paintEvent( self, event ) :
 
 		painter = QtGui.QPainter( self._qtWidget() )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		painter.setRenderHint( QtGui.QPainter.RenderHint.Antialiasing )
 
 		o = QtWidgets.QStyleOption()
 		o.initFrom( self._qtWidget() )
-		self._qtWidget().style().drawPrimitive( QtWidgets.QStyle.PE_Widget, o, painter, self._qtWidget() )
+		self._qtWidget().style().drawPrimitive( QtWidgets.QStyle.PrimitiveElement.PE_Widget, o, painter, self._qtWidget() )
 
 		if self.__drawMode == self.DrawMode.Ramp :
 			self.__paintRamp( painter )

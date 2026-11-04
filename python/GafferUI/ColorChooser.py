@@ -103,7 +103,7 @@ _ranges = {
 
 def _drawIndicator( painter, position ) :
 
-	painter.setBrush( QtCore.Qt.transparent )
+	painter.setBrush( QtCore.Qt.GlobalColor.transparent )
 
 	pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 ) )
 	pen.setWidth( 1 )
@@ -804,8 +804,8 @@ class _ColorField( GafferUI.Widget ) :
 	def __paintEvent( self, event ) :
 
 		painter = QtGui.QPainter( self._qtWidget() )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
-		painter.setRenderHint( QtGui.QPainter.SmoothPixmapTransform)
+		painter.setRenderHint( QtGui.QPainter.RenderHint.Antialiasing )
+		painter.setRenderHint( QtGui.QPainter.RenderHint.SmoothPixmapTransform)
 
 		if self.__useWheel() :
 			mask = QtGui.QPainterPath()

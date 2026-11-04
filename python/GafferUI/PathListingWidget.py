@@ -1104,7 +1104,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 	def event( self, event ) :
 
 		if event.type() == QtCore.QEvent.Type.ShortcutOverride :
-			if event.key() in ( QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right ) :
+			if event.key() in ( QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Right ) :
 				event.accept()
 				return True
 
@@ -1255,7 +1255,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def __drawBranchSelectionHighlight( self, painter, rect, index ) :
 
-		pathMatch = index.model().data( index, QtCore.Qt.UserRole )
+		pathMatch = index.model().data( index, QtCore.Qt.ItemDataRole.UserRole )
 
 		if pathMatch & IECore.PathMatcher.Result.ExactMatch :
 			self.__drawHighlight( painter, rect, 200 )
@@ -1270,7 +1270,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		cellMatches = [
 			index.model().data(
 				index.siblingAtColumn( i ),
-				QtCore.Qt.UserRole
+				QtCore.Qt.ItemDataRole.UserRole
 			) for i in range( 0, header.count() )
 		]
 

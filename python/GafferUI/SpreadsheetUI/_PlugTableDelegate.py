@@ -53,15 +53,15 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 		QtWidgets.QStyledItemDelegate.paint( self, painter, option, index )
 
 		flags = index.flags()
-		enabled = flags & QtCore.Qt.ItemIsEnabled and ( flags & QtCore.Qt.ItemIsEditable if self.__dimNonEditable else True )
+		enabled = flags & QtCore.Qt.ItemFlag.ItemIsEnabled and ( flags & QtCore.Qt.ItemFlag.ItemIsEditable if self.__dimNonEditable else True )
 		cellPlugEnabled = index.data( _PlugTableModel.CellPlugEnabledRole )
 
-		if option.state & QtWidgets.QStyle.State_HasFocus :
+		if option.state & QtWidgets.QStyle.StateFlag.State_HasFocus :
 
-			if option.state & QtWidgets.QStyle.State_Selected :
-				focusColour = QtGui.QColor( QtCore.Qt.white )
+			if option.state & QtWidgets.QStyle.StateFlag.State_Selected :
+				focusColour = QtGui.QColor( QtCore.Qt.GlobalColor.white )
 			else :
-				focusColour = option.palette.color( QtGui.QPalette.Highlight )
+				focusColour = option.palette.color( QtGui.QPalette.ColorRole.Highlight )
 
 			focusColour.setAlpha( 30 )
 			painter.fillRect( option.rect, focusColour )
@@ -77,9 +77,9 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
 		painter.save()
 
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		painter.setRenderHint( QtGui.QPainter.RenderHint.Antialiasing )
 
-		overlayAlpha = 100 if option.state & QtWidgets.QStyle.State_Selected else 200
+		overlayAlpha = 100 if option.state & QtWidgets.QStyle.StateFlag.State_Selected else 200
 		overlayColor = QtGui.QColor( 40, 40, 40, overlayAlpha )
 
 		if not cellPlugEnabled :
@@ -97,11 +97,11 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
 		painter.restore()
 
-	__filteredEvents = ( QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonRelease )
+	__filteredEvents = ( QtCore.QEvent.Type.MouseButtonPress, QtCore.QEvent.Type.MouseButtonRelease )
 
 	def editorEvent( self, event, model, option, index ) :
 
-		if event.type() in self.__filteredEvents and bool( index.flags() & QtCore.Qt.ItemIsUserCheckable ) :
+		if event.type() in self.__filteredEvents and bool( index.flags() & QtCore.Qt.ItemFlag.ItemIsUserCheckable ) :
 			# Prevent checkable items from being editable via single click
 			return False
 		else :

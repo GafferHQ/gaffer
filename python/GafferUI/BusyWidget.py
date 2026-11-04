@@ -103,7 +103,7 @@ class _BusyWidget( QtWidgets.QWidget ) :
 			return
 
 		painter = QtGui.QPainter( self )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		painter.setRenderHint( QtGui.QPainter.RenderHint.Antialiasing )
 
 		width, height = float( self.width() ), float( self.height() )
 		centreX, centreY = width / 2, height / 2

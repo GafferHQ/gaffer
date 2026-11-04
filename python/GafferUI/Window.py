@@ -417,8 +417,8 @@ class _WindowEventFilter( QtCore.QObject ) :
 	def eventFilter( self, qObject, qEvent ) :
 
 		type = qEvent.type()
-
-		if type==QtCore.QEvent.Close :
+		eventTypes = QtCore.QEvent.Type
+		if type == eventTypes.Close :
 			widget = GafferUI.Widget._owner( qObject )
 			closed = widget.close()
 			if closed :
@@ -426,12 +426,12 @@ class _WindowEventFilter( QtCore.QObject ) :
 			else :
 				qEvent.ignore()
 			return True
-		elif type==QtCore.QEvent.LayoutRequest :
+		elif type == eventTypes.LayoutRequest :
 			widget = GafferUI.Widget._owner( qObject )
 			if widget.getSizeMode() == widget.SizeMode.Automatic :
 				widget.resizeToFitChild()
 				return True
-		elif type==QtCore.QEvent.Resize :
+		elif type == eventTypes.Resize :
 			widget = GafferUI.Widget._owner( qObject )
 			widget._Window__sizeValid = True
 

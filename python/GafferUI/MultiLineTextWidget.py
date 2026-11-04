@@ -372,9 +372,9 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		link = self.linkAt( event.line.p0 )
 		if link :
-			self._qtWidget().viewport().setCursor( QtGui.QCursor( QtCore.Qt.PointingHandCursor ) )
+			self._qtWidget().viewport().setCursor( QtGui.QCursor( QtCore.Qt.CursorShape.PointingHandCursor ) )
 		else :
-			self._qtWidget().viewport().setCursor( QtGui.QCursor( QtCore.Qt.IBeamCursor ) )
+			self._qtWidget().viewport().setCursor( QtGui.QCursor( QtCore.Qt.CursorShape.IBeamCursor ) )
 
 		return False
 
@@ -517,7 +517,7 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 					top,
 					width,
 					self.fontMetrics().height(),
-					QtCore.Qt.AlignRight,
+					QtCore.Qt.AlignmentFlag.AlignRight,
 					str( block.blockNumber() + 1 )
 				)
 			block = block.next()
@@ -557,7 +557,7 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 	def event( self, event ) :
 
-		if event.type() == QtCore.QEvent.Type.ShortcutOverride and event == QtGui.QKeySequence.Copy :
+		if event.type() == QtCore.QEvent.Type.ShortcutOverride and event == QtGui.QKeySequence.StandardKey.Copy :
 			# QPlainTextEdit doesn't accept this when it's
 			# read only. so we accept it ourselves, which is
 			# enough to reenable copying from a read only

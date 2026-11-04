@@ -169,8 +169,8 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 		QtWidgets.QHeaderView.initStyleOptionForIndex( self, option, logicalIndex )
 
 		if logicalIndex == self.__hoveredSection and isinstance( option.icon, QtGui.QIcon ) :
-			iconSize = self.style().pixelMetric( QtWidgets.QStyle.PM_SmallIconSize )
-			option.icon = option.icon.pixmap( QtCore.QSize( iconSize, iconSize ), QtGui.QIcon.Active )
+			iconSize = self.style().pixelMetric( QtWidgets.QStyle.PixelMetric.PM_SmallIconSize )
+			option.icon = option.icon.pixmap( QtCore.QSize( iconSize, iconSize ), QtGui.QIcon.Mode.Active )
 
 	def paintEvent( self, event ) :
 
@@ -192,7 +192,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 		position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
 		section = self.logicalIndexAt( position )
 		relativePosition = position.x() - self.sectionViewportPosition( section )
-		handleMargin = self.style().pixelMetric( QtWidgets.QStyle.PM_HeaderGripMargin )
+		handleMargin = self.style().pixelMetric( QtWidgets.QStyle.PixelMetric.PM_HeaderGripMargin )
 
 		if relativePosition < handleMargin or relativePosition > self.sectionSize( section ) - handleMargin :
 			return True

@@ -501,14 +501,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		if topLeft == bottomRight and self.__tableView.selectionModel().isSelected( topLeft ) :
 			self.__propagatingDataChangesToSelection = True
-			valueToPropagate = self.__model.data( topLeft, QtCore.Qt.EditRole )
+			valueToPropagate = self.__model.data( topLeft, QtCore.Qt.ItemDataRole.EditRole )
 			for index in self.__tableView.selectedIndexes() :
 				if index == topLeft :
 					continue
 				# we have to ignore exceptions, as the items we're setting might
 				# have a different data type than the value we're passing.
 				with IECore.IgnoredExceptions( Exception ) :
-					self.__model.setData( index, valueToPropagate, QtCore.Qt.EditRole )
+					self.__model.setData( index, valueToPropagate, QtCore.Qt.ItemDataRole.EditRole )
 			self.__propagatingDataChangesToSelection = False
 
 		self.__emitDataChangedSignal()
@@ -802,12 +802,12 @@ class VectorDataWidget( GafferUI.Widget ) :
 		)
 
 		qEvent = QtGui.QMouseEvent(
-			QtCore.QEvent.MouseButtonPress,
+			QtCore.QEvent.Type.MouseButtonPress,
 			point,
 			self.__tableView.viewport().mapToGlobal( point ),
-			QtCore.Qt.LeftButton,
-			QtCore.Qt.LeftButton,
-			QtCore.Qt.NoModifier
+			QtCore.Qt.MouseButton.LeftButton,
+			QtCore.Qt.MouseButton.LeftButton,
+			QtCore.Qt.KeyboardModifier.NoModifier
 		)
 
 		try :
@@ -927,8 +927,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 			# hope for the best.
 			return None
 
-		if role == QtCore.Qt.DisplayRole :
-			if orientation == QtCore.Qt.Horizontal :
+		if role == QtCore.Qt.ItemDataRole.DisplayRole :
+			if orientation == QtCore.Qt.Orientation.Horizontal :
 				column = self.__columns[section]
 				if self.__header is not None :
 					result = self.__header[self.columnToDataIndex(section)[0]]
@@ -940,8 +940,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 				return GafferUI._Variant.toVariant( result )
 			else :
 				return GafferUI._Variant.toVariant( section )
-		elif role == QtCore.Qt.ToolTipRole :
-			if orientation == QtCore.Qt.Horizontal and self.__toolTips is not None :
+		elif role == QtCore.Qt.ItemDataRole.ToolTipRole :
+			if orientation == QtCore.Qt.Orientation.Horizontal and self.__toolTips is not None :
 				return GafferUI._Variant.toVariant( self.__toolTips[self.columnToDataIndex(section)[0]] )
 
 		return GafferUI._Variant.toVariant( None )
@@ -949,21 +949,21 @@ class _Model( QtCore.QAbstractTableModel ) :
 	def flags( self, index ) :
 
 		result = (
-			QtCore.Qt.ItemIsSelectable |
-			QtCore.Qt.ItemIsEnabled |
-			QtCore.Qt.ItemIsDragEnabled
+			QtCore.Qt.ItemFlag.ItemIsSelectable |
+			QtCore.Qt.ItemFlag.ItemIsEnabled |
+			QtCore.Qt.ItemFlag.ItemIsDragEnabled
 		)
 
 		if self.__editable :
 			if self.__columnEditability is None or self.__columnEditability[index.column()] :
-				result |= QtCore.Qt.ItemIsEditable
+				result |= QtCore.Qt.ItemFlag.ItemIsEditable
 
 		return result
 
 	def data( self, index, role ) :
 
 		column = self.__columns[index.column()]
-		if role == QtCore.Qt.BackgroundRole :
+		if role == QtCore.Qt.ItemDataRole.BackgroundRole :
 
 			if self.columnToDataIndex( index.column() )[0] % 2 == 0:
 				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("background")  )
@@ -971,8 +971,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("backgroundAlt") )
 
 		if (
-			role == QtCore.Qt.DisplayRole or
-			role == QtCore.Qt.EditRole
+			role == QtCore.Qt.ItemDataRole.DisplayRole or
+			role == QtCore.Qt.ItemDataRole.EditRole
 		) :
 			if index.row() < len( column.accessor.data() ) :
 				return column.accessor.getElement( index.row(), column.relativeColumnIndex )
@@ -981,10 +981,10 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 	def setData( self, index, value, role ) :
 
-		if role == QtCore.Qt.EditRole :
+		if role == QtCore.Qt.ItemDataRole.EditRole :
 			column = self.__columns[index.column()]
 			column.accessor.setElement( index.row(), column.relativeColumnIndex, value )
-			self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
+			self.dataChanged.emit( index, index, [ QtCore.Qt.ItemDataRole.DisplayRole, QtCore.Qt.ItemDataRole.EditRole ] )
 
 		return True
 
@@ -1342,7 +1342,7 @@ class _Delegate( QtWidgets.QStyledItemDelegate ) :
 	def setModelData( self, editor, model, index ) :
 
 		if self.__editor is not None :
-			model.setData( index, GafferUI._Variant.toVariant( self.__editor.getValue() ), QtCore.Qt.EditRole )
+			model.setData( index, GafferUI._Variant.toVariant( self.__editor.getValue() ), QtCore.Qt.ItemDataRole.EditRole )
 		else :
 			QtWidgets.QStyledItemDelegate.setModelData( self, editor, model, index )
 
@@ -1481,7 +1481,7 @@ class _ColorDelegate( _Delegate ) :
 
 			# draw the background
 
-			widget.style().drawControl( QtWidgets.QStyle.CE_ItemViewItem, option, painter, widget )
+			widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_ItemViewItem, option, painter, widget )
 			displayTransform = GafferUI.Widget._owner( widget ).displayTransform()
 			transformedColor = displayTransform( value )
 
@@ -1539,11 +1539,11 @@ class _ColorDelegate( _Delegate ) :
 		if self.__colorChooser is None :
 			_Delegate.setModelData( self, editor, model, index )
 		else :
-			model.setData( index, self.__colorChooser.getColor(), QtCore.Qt.EditRole )
+			model.setData( index, self.__colorChooser.getColor(), QtCore.Qt.ItemDataRole.EditRole )
 
 	def __colorData( self, index ) :
 
-		return index.model().data( index, QtCore.Qt.DisplayRole )
+		return index.model().data( index, QtCore.Qt.ItemDataRole.DisplayRole )
 
 _Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _ColorDelegate )
 _Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _ColorDelegate )
@@ -1568,21 +1568,21 @@ class _BoolDelegate( _Delegate ) :
 
 		# draw the background
 
-		widget.style().drawControl( QtWidgets.QStyle.CE_ItemViewItem, option, painter, widget )
+		widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_ItemViewItem, option, painter, widget )
 
 		# draw the checkbox.
 
 		styleOption = QtWidgets.QStyleOptionButton()
 		styleOption.state = option.state
-		styleOption.state |= QtWidgets.QStyle.State_Enabled
+		styleOption.state |= QtWidgets.QStyle.StateFlag.State_Enabled
 
 		if self.__toBool( index ) :
-			styleOption.state |= QtWidgets.QStyle.State_On
+			styleOption.state |= QtWidgets.QStyle.StateFlag.State_On
 		else :
-			styleOption.state |= QtWidgets.QStyle.State_Off
+			styleOption.state |= QtWidgets.QStyle.StateFlag.State_Off
 
 		styleOption.rect = self.__checkBoxRect( widget, option.rect )
-		widget.style().drawControl( QtWidgets.QStyle.CE_CheckBox, styleOption, painter, widget )
+		widget.style().drawControl( QtWidgets.QStyle.ControlElement.CE_CheckBox, styleOption, painter, widget )
 
 	def createEditor( self, parent, option, index ) :
 
@@ -1590,25 +1590,25 @@ class _BoolDelegate( _Delegate ) :
 
 	def editorEvent( self, event, model, option, index ) :
 
-		if not ( index.flags() & QtCore.Qt.ItemIsEditable ) :
+		if not ( index.flags() & QtCore.Qt.ItemFlag.ItemIsEditable ) :
 			return False
 
-		if event.type()==QtCore.QEvent.MouseButtonDblClick :
+		if event.type() == QtCore.QEvent.Type.MouseButtonDblClick :
 			# eat event so an editor doesn't get created
 			return True
-		elif event.type()==QtCore.QEvent.MouseButtonPress :
+		elif event.type() == QtCore.QEvent.Type.MouseButtonPress :
 			# eat event so row isn't selected
 			widget = QtCore.QObject.parent( self.parent() )
 			rect = self.__checkBoxRect( widget, option.rect )
 			position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
-			if event.button() == QtCore.Qt.LeftButton and rect.contains( position ) :
+			if event.button() == QtCore.Qt.MouseButton.LeftButton and rect.contains( position ) :
 				checked = self.__toBool( index )
-				model.setData( index, not checked, QtCore.Qt.EditRole )
+				model.setData( index, not checked, QtCore.Qt.ItemDataRole.EditRole )
 				return True
-		elif event.type()==QtCore.QEvent.KeyPress :
-			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter ) :
+		elif event.type() == QtCore.QEvent.Type.KeyPress :
+			if event.key() in ( QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter ) :
 				checked = self.__toBool( index )
-				model.setData( index, not checked, QtCore.Qt.EditRole )
+				model.setData( index, not checked, QtCore.Qt.ItemDataRole.EditRole )
 				return True
 
 		return False
@@ -1616,7 +1616,7 @@ class _BoolDelegate( _Delegate ) :
 	def __checkBoxRect( self, widget, viewItemRect ) :
 
 		checkBoxStyleOption = QtWidgets.QStyleOptionButton()
-		r = widget.style().subElementRect( QtWidgets.QStyle.SE_CheckBoxIndicator, checkBoxStyleOption )
+		r = widget.style().subElementRect( QtWidgets.QStyle.SubElement.SE_CheckBoxIndicator, checkBoxStyleOption )
 
 		return QtCore.QRect(
 			viewItemRect.center() - ( QtCore.QPoint( r.width(), r.height() ) / 2 ),
@@ -1625,7 +1625,7 @@ class _BoolDelegate( _Delegate ) :
 
 	def __toBool( self, index ) :
 
-		return GafferUI._Variant.fromVariant( index.model().data( index, QtCore.Qt.DisplayRole ) )
+		return GafferUI._Variant.fromVariant( index.model().data( index, QtCore.Qt.ItemDataRole.DisplayRole ) )
 
 _Delegate.registerType( IECore.BoolVectorData.staticTypeId(), _BoolDelegate )
 
