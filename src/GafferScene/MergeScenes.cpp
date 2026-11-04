@@ -138,6 +138,11 @@ public:
 		}
 	}
 
+	bool hasContextOverrides() const
+	{
+		return m_scope.has_value();
+	}
+
 	const Context *context()
 	{
 		return m_context;
@@ -150,20 +155,9 @@ public:
 		if( !m_scope )
 		{
 			m_scope.emplace( m_context );
+			m_context = m_scope->context();
 		}
-
-		// \todo : We should be getting the name of this variable from ScenePlug, but
-		// the only current mechanism for doing that is using PathScope.
-		// The problem is that PathScope wipes out the setName context variable. It's
-		// true that path and setName should never be set simultaneously, but
-		// currently when construct this class, we don't know whether scope is being
-		// used for something that needs a path context variable, or something that
-		// needs a setName context variable. We could do something where we pass in
-		// extra information to the constructor, and use it to decide whether to
-		// construct an EditableScope or a PathScope, but that feels more complicated
-		// than just copying the name of this context var.
-		static IECore::InternedString scenePathContextName( "scene:path" );
-		m_scope->set( scenePathContextName, scenePath );
+		m_scope->set( ScenePlug::scenePathContextName, scenePath );
 	}
 
 private:
@@ -567,7 +561,7 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 	#ifndef NDEBUG
 	// mergedDescendantBound is never evaluated when there is a single input
 	Count activeInputsCount;
-	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue()->readable(), activeInputsCount );
+	firstAndCount( activeInputsPlug()->getValue()->readable(), activeInputsCount );
 	assert( activeInputsCount == Count::MoreThanOne );
 	#endif
 
@@ -582,27 +576,47 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 
 	MergeContextHandler contextHandler( this, context );
 
+	// Make a PathScope independent from the context handler, so we can alternate evaluations
+	// that don't include Collect context variables.
+	ScenePlug::PathScope pathScope( context );
+
 	for( const auto &childName : childNamesData->readable() )
 	{
 		childPath.back() = childName;
-		contextHandler.setPath( &childPath );
+		pathScope.setPath( &childPath );
+
 		ConstBoolVectorDataPtr childActiveInputsData = activeInputsPlug()->getValue();
 		const auto &childActiveInputs = childActiveInputsData->readable();
-
 		Count childActiveInputsCount;
 		size_t childFirstActiveIndex = firstAndCount( childActiveInputs, childActiveInputsCount );
 
+		// Get ready to evaluate the first active input
 		int plugIndex = contextHandler.setContextAndGetPlugIndex( childFirstActiveIndex );
 		const ScenePlug *childScene = inPlugs()->getChild<ScenePlug>( plugIndex );
 
-		childScene->boundPlug()->hash( h );
+		if( contextHandler.hasContextOverrides() )
+		{
+			// If the contextHandler has context overrides, we need to do some extra work here
+			// since we're not using its context directly. Set the correct path on its context,
+			// and then explicitly scope it using Context::Scope
+			contextHandler.setPath( &childPath );
+			Context::Scope handlerScope( contextHandler.context() );
+
+			childScene->boundPlug()->hash( h );
+
+			childScene->transformPlug()->hash( h );
+		}
+		else
+		{
+			childScene->boundPlug()->hash( h );
+			childScene->transformPlug()->hash( h );
+		}
 
 		if( childActiveInputsCount == Count::MoreThanOne )
 		{
 			mergedDescendantsBoundPlug()->hash( h );
 		}
 
-		childScene->transformPlug()->hash( h );
 	};
 }
 
@@ -611,7 +625,7 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 	#ifndef NDEBUG
 	// mergedDescendantBound is never evaluated when there is a single input
 	Count activeInputsCount;
-	const size_t firstActiveIndex = firstAndCount( activeInputsPlug()->getValue()->readable(), activeInputsCount );
+	firstAndCount( activeInputsPlug()->getValue()->readable(), activeInputsCount );
 	assert( activeInputsCount == Count::MoreThanOne );
 	#endif
 
@@ -627,22 +641,48 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 
 	MergeContextHandler contextHandler( this, context );
 
+	// Make a PathScope independent from the context handler, so we can alternate evaluations
+	// that don't include Collect context variables.
+	ScenePlug::PathScope pathScope( context );
+
 	Box3f result;
 	for( const auto &childName : childNamesData->readable() )
 	{
 		childPath.back() = childName;
-		contextHandler.setPath( &childPath );
+		pathScope.setPath( &childPath );
+
 		ConstBoolVectorDataPtr childActiveInputsData = activeInputsPlug()->getValue();
 		const auto &childActiveInputs = childActiveInputsData->readable();
 		Count childActiveInputsCount;
 		size_t childFirstActiveIndex = firstAndCount( childActiveInputs, childActiveInputsCount );
 
+		M44f childTransform;
+		Box3f bound;
+
+		// Get ready to evaluate the first active input
 		int plugIndex = contextHandler.setContextAndGetPlugIndex( childFirstActiveIndex );
 		const ScenePlug *childScene = inPlugs()->getChild<ScenePlug>( plugIndex );
 
-		// We always need to include the bound from the active child, which will include the bound
-		// of any object present at that location.
-		Box3f bound = childScene->boundPlug()->getValue();
+		if( contextHandler.hasContextOverrides() )
+		{
+			// If the contextHandler has context overrides, we need to do some extra work here
+			// since we're not using its context directly. Set the correct path on its context,
+			// and then explicitly scope it using Context::Scope
+			contextHandler.setPath( &childPath );
+			Context::Scope handlerScope( contextHandler.context() );
+
+			// We always need to include the bound from the active child, which will include the bound
+			// of any object present at that location.
+			bound = childScene->boundPlug()->getValue();
+
+			childTransform = childScene->transformPlug()->getValue();
+		}
+		else
+		{
+			bound = childScene->boundPlug()->getValue();
+
+			childTransform = childScene->transformPlug()->getValue();
+		}
 
 		if( childActiveInputsCount == Count::MoreThanOne )
 		{
@@ -652,7 +692,7 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 			bound.extendBy( mergedDescendantsBoundPlug()->getValue() );
 		}
 
-		result.extendBy( transform( bound, childScene->transformPlug()->getValue() ) );
+		result.extendBy( transform( bound, childTransform ) );
 	};
 	return result;
 }

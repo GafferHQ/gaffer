@@ -743,6 +743,64 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 		refM.translate( imath.V3f( 2, 1, 0 ) )
 		self.assertEqual( merge["out"].transform( "/sphere" ), refM )
 
+	def testComplexBounds( self ):
+
+		iterations = 7
+
+		cube = GafferScene.Cube()
+		cube["transform"]["translate"].setValue( imath.V3f( 0, 0.5, 0 ) )
+		cube["transform"]["scale"].setValue( imath.V3f( 0.300000012, 1, 0.300000012 ) )
+
+		loop = Gaffer.Loop()
+		loop.setup( cube["out"] )
+		loop["iterations"].setValue( iterations )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( loop["previous"] )
+		group["in"][1].setInput( cube["out"] )
+		group["transform"]["translate"].setValue( imath.V3f( 0, 1, 0 ) )
+
+		loop["next"].setInput( group["out"] )
+
+		group["expression"] = Gaffer.Expression()
+		group["expression"].setExpression( inspect.cleandoc( """
+			i = context.get( "loop:index" )
+			directionMask = context.get( "merge:index" )
+
+			dir = ( 1 << i ) & directionMask;
+			r = imath.V3f( 0 )
+			r[(i % 2)*2] = 35 * ( 1 if dir else -1 );
+			parent["transform"]["rotate"] = r;
+			parent["name"] = "flop" if dir else "flip";
+		""" ), 'python' )
+
+		mergeScenes = GafferScene.MergeScenes()
+		mergeScenes["in"][0].setInput( loop["out"] )
+		mergeScenes["mode"].setValue( GafferScene.MergeScenes.MergeMode.Collect )
+		mergeScenes["contextValues"].setValue( IECore.StringVectorData( [str(i) for i in range( 2 ** iterations ) ] ) )
+
+		self.assertSceneValid( mergeScenes["out"] )
+
+		# Check the root bound against a hardcoded bound checked manually, to make sure things are working
+		self.assertEqual(
+			mergeScenes["out"].bound( "/" ),
+			imath.Box3f(
+				imath.V3f(-5.9230752, -2.24406743, -7.95698738),
+				imath.V3f(5.9230752, 9.76359081, 7.95698738)
+			)
+		)
+
+		# The bound we output should be identical to a downstream node recomputing the bound
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/...' ] ) )
+
+		shufflePrimitiveVariables = GafferScene.ShufflePrimitiveVariables()
+		shufflePrimitiveVariables["shuffles"].addChild( Gaffer.ShufflePlug( "P", "P" ) )
+		shufflePrimitiveVariables["filter"].setInput( pathFilter["out"] )
+		shufflePrimitiveVariables["in"].setInput( mergeScenes["out"] )
+
+		self.assertScenesEqual( mergeScenes["out"], shufflePrimitiveVariables["out"] )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testBasicPerf( self ):
 
