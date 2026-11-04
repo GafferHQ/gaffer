@@ -44,8 +44,6 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtWidgets
-
 class BreadCrumbsWidget( GafferUI.Widget ) :
 
 	def __init__( self, path, **kw ) :

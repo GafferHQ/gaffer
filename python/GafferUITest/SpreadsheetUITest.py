@@ -45,7 +45,7 @@ import itertools
 import GafferUI.SpreadsheetUI._ClipboardAlgo as _ClipboardAlgo
 from GafferUI.SpreadsheetUI._OutPlugTableModel import _OutPlugTableModel
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 class SpreadsheetUITest( GafferUITest.TestCase ) :
 

@@ -47,7 +47,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ## A class for laying out widgets to represent all the plugs held on a particular parent.
 #

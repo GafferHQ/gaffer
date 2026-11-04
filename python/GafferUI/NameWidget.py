@@ -40,8 +40,7 @@ import re
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
+from PySide6 import QtGui
 
 class NameWidget( GafferUI.TextWidget ) :
 

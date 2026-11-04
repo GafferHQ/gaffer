@@ -47,9 +47,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 class CompoundEditor( GafferUI.Editor ) :
 
@@ -650,7 +650,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 			else :
 				# Undo the above
-				QWIDGETSIZE_MAX = 16777215 # Macro not exposed by Qt.py, but needed to remove fixed height
+				QWIDGETSIZE_MAX = 16777215 # Macro not exposed by PySide, but needed to remove fixed height
 				self._qtWidget().setFixedHeight( QWIDGETSIZE_MAX )
 				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
 

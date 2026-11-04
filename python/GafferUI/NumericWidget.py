@@ -45,7 +45,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtGui
+from PySide6 import QtGui
 
 ## \todo Fix bug when pressing up arrow with cursor to left of minus sign
 class NumericWidget( GafferUI.TextWidget ) :

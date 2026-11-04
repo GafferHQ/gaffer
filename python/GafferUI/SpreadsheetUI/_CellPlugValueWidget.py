@@ -39,7 +39,7 @@ import GafferUI
 
 import IECore
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 from GafferUI.PlugValueWidget import sole
 

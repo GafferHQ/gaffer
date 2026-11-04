@@ -38,7 +38,7 @@ import enum
 
 import GafferUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 ## \todo Move other enums here - ListContainer.Orientation for instance.
 __all__ = [ "HorizontalAlignment", "VerticalAlignment", "Edge", "ScrollMode" ]

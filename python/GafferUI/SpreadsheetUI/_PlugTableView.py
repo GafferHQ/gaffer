@@ -46,9 +46,8 @@ import GafferUI
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtCore
-from Qt import QtWidgets
-from Qt import QtCompat
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 from . import _Algo
 from . import _ClipboardAlgo
@@ -74,7 +73,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		# Headers and column sizing
 
-		QtCompat.setSectionResizeMode( tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )
+		tableView.verticalHeader().setSectionResizeMode( QtWidgets.QHeaderView.Fixed )
 		tableView.verticalHeader().setDefaultSectionSize( 25 )
 		tableView.verticalHeader().setVisible( False )
 		tableView.setAlternatingRowColors( True )
@@ -326,8 +325,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		if self.__mode in ( self.Mode.Cells, self.Mode.Defaults, self.Mode.Outputs ) :
 
 			self._qtWidget().horizontalHeader().setSectionsMovable( not readOnly )
-			QtCompat.setSectionResizeMode(
-				self._qtWidget().horizontalHeader(),
+			self._qtWidget().horizontalHeader().setSectionResizeMode(
 				QtWidgets.QHeaderView.Fixed if readOnly else QtWidgets.QHeaderView.Interactive
 			)
 

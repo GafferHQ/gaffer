@@ -36,7 +36,7 @@
 
 import imath
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 import Gaffer
 import GafferImage

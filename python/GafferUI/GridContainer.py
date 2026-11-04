@@ -40,8 +40,8 @@ import imath
 
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 ## The GridContainer holds a series of Widgets in a grid format, and provides
 # indexing using python's multidimensional array syntax to complement the list

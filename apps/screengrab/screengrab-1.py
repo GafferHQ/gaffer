@@ -45,8 +45,6 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-from Qt import QtGui
-
 class screengrab( Gaffer.Application ) :
 
 	def __init__( self ) :

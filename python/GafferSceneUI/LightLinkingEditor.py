@@ -45,7 +45,7 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 from . import _GafferSceneUI
 

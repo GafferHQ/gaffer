@@ -38,8 +38,8 @@
 import os
 import string
 
-from Qt import QtCore
-from Qt import QtGui
+from PySide6 import QtCore
+from PySide6 import QtGui
 
 # Load resource file containing all the files referenced by the stylesheet. In
 # an ideal world we'd be able to trust Qt to load regular `.png` files directly

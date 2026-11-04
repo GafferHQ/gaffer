@@ -48,9 +48,7 @@ import GafferImageUI
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtGui
-from Qt import QtWidgets
-from Qt import QtCore
+from PySide6 import QtWidgets
 
 ##########################################################################
 # Metadata registration.

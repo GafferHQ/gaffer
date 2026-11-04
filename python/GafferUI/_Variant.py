@@ -37,7 +37,7 @@
 
 import GafferUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 ## PyQt and PySide differ in their bindings of functions using the
 # QVariant type. PySide doesn't expose QVariant and instead uses

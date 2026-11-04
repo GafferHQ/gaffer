@@ -53,7 +53,7 @@ from GafferUI.PlugValueWidget import sole
 
 from . import _GafferSceneUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 

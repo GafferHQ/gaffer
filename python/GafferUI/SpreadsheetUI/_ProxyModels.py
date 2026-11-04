@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 from ._OutPlugTableModel import _OutPlugTableModel
 from ._PlugTableModel import _PlugTableModel

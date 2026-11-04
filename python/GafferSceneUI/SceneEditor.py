@@ -45,7 +45,7 @@ import GafferSceneUI
 
 from . import _GafferSceneUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ## Base class to simplify the creation of Editors which operate on ScenePlugs.
 class SceneEditor( GafferUI.NodeSetEditor ) :

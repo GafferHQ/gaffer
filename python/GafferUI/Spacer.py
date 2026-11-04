@@ -37,7 +37,7 @@
 
 import GafferUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ## \todo Size accessors
 class Spacer( GafferUI.Widget ) :

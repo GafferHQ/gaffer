@@ -38,7 +38,7 @@ import Gaffer
 
 import IECore
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 import collections
 import pathlib

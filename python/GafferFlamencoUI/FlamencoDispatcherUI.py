@@ -46,7 +46,7 @@ import GafferFlamenco
 
 from GafferUI._StyleSheet import _styleColors
 
-from Qt import QtGui
+from PySide6 import QtGui
 
 Gaffer.Metadata.registerNode(
 

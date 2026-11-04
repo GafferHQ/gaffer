@@ -39,7 +39,7 @@ import GafferUI
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ## A simple PlugValueWidget which just displays the name of the plug,
 # with the popup action menu for the plug.

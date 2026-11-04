@@ -43,7 +43,7 @@ import GafferUI
 import GafferUITest
 import GafferTest
 
-from Qt import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 class ButtonTest( GafferUITest.TestCase ) :
 

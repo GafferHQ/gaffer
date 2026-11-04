@@ -43,8 +43,7 @@ import OpenImageIO
 import GafferUI
 import GafferUITest
 
-import Qt
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 class WidgetAlgoTest( GafferUITest.TestCase ) :
 

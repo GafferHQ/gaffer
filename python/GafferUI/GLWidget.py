@@ -55,15 +55,7 @@ from . import _GafferUI
 
 import OpenGL.GL as GL
 
-from Qt import QtCore
-
-# Importing directly rather than via Qt.py because Qt.py won't expose the
-# Qt-5-only QOpenGLWidget and QSurfaceFormat classes that we need. Their mantra
-# is to provide only what is available in Qt4/PySide1 - see
-# https://github.com/mottosso/Qt.py/issues/341.
-## \todo Now that Qt 4 is long gone, and PySide is an official
-# Qt project, Qt.py isn't much help. Remove across the board, or see
-# if we can coax the project into bridging Qt 5/6 instead of 4/5?
+from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
 from PySide6.QtOpenGLWidgets import QOpenGLWidget

@@ -42,8 +42,8 @@ import imath
 import IECore
 import GafferUI
 
-from Qt import QtWidgets
-from Qt import QtCore
+from PySide6 import QtWidgets
+from PySide6 import QtCore
 
 class _WidgetItem( QtWidgets.QWidgetItem ) :
 	# A customized `QWidgetItem` to return a `maximumSize()` without taking

@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ##########################################################################
 # ShufflePlug Widget

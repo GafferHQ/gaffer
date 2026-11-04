@@ -47,8 +47,7 @@ import GafferDispatch
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtCore
-from Qt import QtGui
+from PySide6 import QtCore
 
 class _LocalJobsPath( Gaffer.Path ) :
 

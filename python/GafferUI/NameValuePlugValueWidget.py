@@ -44,8 +44,6 @@ import GafferUI.SpreadsheetUI
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtWidgets
-
 ## Supported plug metadata :
 #
 # - "nameValuePlugPlugValueWidget:ignoreNamePlug", set to True to ignore the name plug and instead show a

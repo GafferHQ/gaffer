@@ -41,7 +41,7 @@ import GafferTest
 import GafferUI
 import GafferUITest
 
-from Qt import QtGui
+from PySide6 import QtGui
 
 class MCPTest( GafferUITest.TestCase ) :
 

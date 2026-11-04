@@ -51,7 +51,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtGui
+from PySide6 import QtGui
 
 class CodeWidget( GafferUI.MultiLineTextWidget ) :
 

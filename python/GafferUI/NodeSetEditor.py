@@ -40,8 +40,6 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-
 import weakref
 
 ## The NodeSetEditor is a base class for all Editors which focus their

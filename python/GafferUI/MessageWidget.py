@@ -45,9 +45,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 from ._TableView import _TableView
 
@@ -430,7 +430,7 @@ class _MessageTableSearchWidget( GafferUI.Widget ) :
 		# Though Qt provides clearButtonEnabled(), this seems to be missing its icon on macOS, resulting in a
 		# clickable-but-not-visible clear button. As such we need to make our own. Icons need to be 16x16 exactly.
 		clearImage = GafferUI.Image( "clearSearch.png" )
-		self.__clearAction = QtWidgets.QAction( clearImage._qtIcon(), "Clear Search", None )
+		self.__clearAction = QtGui.QAction( clearImage._qtIcon(), "Clear Search", None )
 		self.__clearAction.triggered.connect( Gaffer.WeakMethod( self.__clear ) )
 		self.__searchField._qtWidget().addAction( self.__clearAction, QtWidgets.QLineEdit.TrailingPosition )
 

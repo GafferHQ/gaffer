@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 class _ProxySelectionModel( QtCore.QItemSelectionModel ) :
 

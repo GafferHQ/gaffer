@@ -47,7 +47,7 @@ import Gaffer
 import GafferUI
 import GafferSceneUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 # Conceptually this is an embedded context-sensitive SceneInspector for the
 # SceneView. In practice it is implemented completely separately from the

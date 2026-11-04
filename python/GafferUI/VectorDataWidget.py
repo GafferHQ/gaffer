@@ -45,10 +45,9 @@ import GafferUI
 from GafferUI.ColorSwatch import _Checker
 from ._TableView import _TableView
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
-from Qt import QtCompat
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 ## The VectorDataWidget provides a table view for the contents of
 # one or more IECore VectorData instances.
@@ -102,7 +101,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 
 		self.__tableView.verticalHeader().setVisible( showIndices )
-		QtCompat.setSectionResizeMode( self.__tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )
+		self.__tableView.verticalHeader().setSectionResizeMode( QtWidgets.QHeaderView.Fixed )
 
 		self.__tableView.setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( horizontalScrollMode ) )
 		self.__tableView.setVerticalScrollBarPolicy( GafferUI.ScrollMode._toQt( verticalScrollMode ) )
@@ -244,8 +243,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 					haveResizeableContents = haveResizeableContents or canStretch
 					columnIndex += 1
 
-			QtCompat.setSectionResizeMode(
-				self.__tableView.horizontalHeader(),
+			self.__tableView.horizontalHeader().setSectionResizeMode(
 				QtWidgets.QHeaderView.ResizeToContents if haveResizeableContents else QtWidgets.QHeaderView.Fixed
 			)
 

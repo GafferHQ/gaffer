@@ -51,7 +51,7 @@ import GafferUI
 from GafferUI import _GafferUI
 import GafferUITest
 
-from Qt import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 class PathListingWidgetTest( GafferUITest.TestCase ) :
 

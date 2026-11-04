@@ -40,7 +40,7 @@ import imath
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 from . import _Formatting
 from ._PlugTableModel import _PlugTableModel

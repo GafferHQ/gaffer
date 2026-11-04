@@ -42,7 +42,7 @@ import GafferUI
 
 import GafferOSL
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 import imath
 import functools

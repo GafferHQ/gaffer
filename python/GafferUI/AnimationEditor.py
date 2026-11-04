@@ -41,7 +41,7 @@ from GafferUI.PlugValueWidget import sole
 
 import imath
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 # In order to have Widgets that depend on this filter update properly, we
 # conceptually treat all selected nodes as part of the filter. That makes sense

@@ -45,8 +45,6 @@ import GafferUI
 
 from ._TableView import _TableView
 
-from Qt import QtCore
-
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Collect,
