@@ -379,19 +379,17 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 
 void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	#ifndef NDEBUG
+	// mergedDescendantBound is never evaluated when activeInputs.count() == 1
 	const InputMask activeInputs( activeInputsPlug()->getValue() );
-	if( activeInputs.count() == 1 )
-	{
-		return;
-	}
+	assert( activeInputs.count() != 1 );
+	#endif
 
 	ConstInternedStringVectorDataPtr childNamesData = outPlug()->childNamesPlug()->getValue();
 	if( childNamesData->readable().empty() )
 	{
 		return;
 	}
-
-	const size_t firstActiveIndex = first( activeInputs );
 
 	ScenePath childPath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 	childPath.push_back( InternedString() ); // Room for child name
@@ -402,18 +400,12 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 		childPath.back() = childName;
 		childScope.setPath( &childPath );
 		const InputMask childActiveInputs( activeInputsPlug()->getValue() );
-		if( childActiveInputs.count() == 1 && childActiveInputs[firstActiveIndex] )
-		{
-			continue;
-		}
 
 		const ScenePlug *childScene = inPlugs()->getChild<ScenePlug>( first( childActiveInputs ) );
 
-		if( childActiveInputs.count() == 1 )
-		{
-			childScene->boundPlug()->hash( h );
-		}
-		else
+		childScene->boundPlug()->hash( h );
+
+		if( childActiveInputs.count() > 1 )
 		{
 			mergedDescendantsBoundPlug()->hash( h );
 		}
@@ -424,12 +416,11 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 
 const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Context *context ) const
 {
+	#ifndef NDEBUG
+	// mergedDescendantBound is never evaluated when activeInputs.count() == 1
 	const InputMask activeInputs( activeInputsPlug()->getValue() );
-	if( activeInputs.count() == 1 )
-	{
-		// All children coming from the first input. There can be no descendants to merge.
-		return Box3f();
-	}
+	assert( activeInputs.count() != 1 );
+	#endif
 
 	ConstInternedStringVectorDataPtr childNamesData = outPlug()->childNamesPlug()->getValue();
 	if( childNamesData->readable().empty() )
@@ -437,8 +428,6 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 		// No children. There can be no descendants to merge.
 		return Box3f();
 	}
-
-	const size_t firstActiveIndex = first( activeInputs );
 
 	ScenePath childPath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 	childPath.push_back( InternedString() ); // Room for child name
@@ -450,27 +439,19 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 		childPath.back() = childName;
 		childScope.setPath( &childPath );
 		const InputMask childActiveInputs( activeInputsPlug()->getValue() );
-		if( childActiveInputs.count() == 1 && childActiveInputs[firstActiveIndex] )
-		{
-			// Child coming from first input only.
-			// There can be no descendants to merge.
-			continue;
-		}
 
 		const ScenePlug *childScene = inPlugs()->getChild<ScenePlug>( first( childActiveInputs ) );
 
-		Box3f bound;
-		if( childActiveInputs.count() == 1 )
+		// We always need to include the bound from the active child, which will include the bound
+		// of any object present at that location.
+		Box3f bound = childScene->boundPlug()->getValue();
+
+		if( childActiveInputs.count() > 1 )
 		{
-			// Child being merged in from another input.
-			bound = childScene->boundPlug()->getValue();
-		}
-		else
-		{
-			// No child being merged in at this point, but
-			// there may still be a descendant merge lower
-			// in the hierarchy. Recurse.
-			bound = mergedDescendantsBoundPlug()->getValue();
+			// If there are multiple inputs, then the bound from the first active input may not
+			// include other descendants being merged in lower in the hierarchy, and we need to
+			// recurse.
+			bound.extendBy( mergedDescendantsBoundPlug()->getValue() );
 		}
 
 		result.extendBy( transform( bound, childScene->transformPlug()->getValue() ) );

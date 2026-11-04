@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Catalogue : Fixed `imageNames` plug not handling renaming of promoted images (#7234).
+- MergeScenes : Fixed bound computation.
 
 1.7.6.0 (relative to 1.7.5.0)
 =======

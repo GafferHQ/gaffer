@@ -376,6 +376,40 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( merge["out"].bound( "/" ), sphere["out"].bound( "/" ) )
 		self.assertEqual( merge["out"].bound( "/sphere" ), sphere["out"].bound( "/sphere" ) )
 
+	def testBoundsFailureCase( self ):
+
+		# Test simplified from a more complex and general case to highlight a specific situation
+		# where we previously failed to take into account one of the two cubes.
+		cube = GafferScene.Cube()
+
+		groupA = GafferScene.Group()
+		groupA["in"][0].setInput( cube["out"] )
+		groupA["name"].setValue( 'a' )
+		groupA["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
+
+		group1 = GafferScene.Group()
+		group1["in"][0].setInput( groupA["out"] )
+
+		groupB = GafferScene.Group()
+		groupB["in"][0].setInput( cube["out"] )
+		groupB["name"].setValue( 'b' )
+		groupB["transform"]["translate"].setValue( imath.V3f( -1, 0, 0 ) )
+
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( groupB["out"] )
+
+		mergeScenes = GafferScene.MergeScenes()
+		mergeScenes["in"][0].setInput( group1["out"] )
+		mergeScenes["in"][1].setInput( group2["out"] )
+		# Connect one input twice - previously, we would leave an object out of mergedDescendantsBound
+		# if it was present in multiple inputs.
+		mergeScenes["in"][2].setInput( group2["out"] )
+
+		self.assertEqual(
+			mergeScenes["out"].bound( "/group" ),
+			imath.Box3f( imath.V3f(-1.5, -0.5, -0.5),  imath.V3f(1.5, 0.5, 0.5) )
+		)
+
 	def testBoundDoesntDependOnObjectsUnnecessarily( self ) :
 
 		# Input 0      Input 1
