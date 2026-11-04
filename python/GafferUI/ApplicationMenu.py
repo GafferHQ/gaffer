@@ -47,7 +47,7 @@ def appendDefinitions( menuDefinition, prefix ) :
 
 	menuDefinition.append( prefix + "/About Gaffer...", { "command" : about } )
 	menuDefinition.append( prefix + "/Preferences...", { "command" : preferences } )
-	menuDefinition.append( prefix + "/Documentation...", { "command" : functools.partial( GafferUI.showURL, os.path.expandvars( "$GAFFER_ROOT/doc/gaffer/html/index.html" ) ) } )
+	menuDefinition.append( prefix + "/Documentation...", { "command" : functools.partial( GafferUI.showURL, os.path.expandvars( "file://$GAFFER_ROOT/doc/gaffer/html/index.html" ) ) } )
 	menuDefinition.append( prefix + "/Quit", { "command" : quit, "shortCut" : "Ctrl+Q" } )
 
 def quit( menu ) :

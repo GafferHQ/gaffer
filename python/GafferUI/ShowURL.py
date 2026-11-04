@@ -35,8 +35,7 @@
 #
 ##########################################################################
 
-import os
-import shutil
+import re
 import sys
 
 from Qt import QtCore
@@ -44,20 +43,21 @@ from Qt import QtGui
 
 def showURL( url ) :
 
-	opener = None
-	if sys.platform == "darwin" :
-		opener = "open"
-	elif "linux" in sys.platform :
-		opener = shutil.which( "xdg-open" )
-
-	if opener :
-		os.system( "{0} \"{1}\"".format( opener, url ) )
+	if re.match( r"^file://[a-zA-Z]:[/\\]", url ) :
+		# Gaffer's legacy Windows links prefix an unencoded drive path
+		# with file://. Standard file URIs must instead be parsed as URLs,
+		# preserving their percent encoding and authority (UNC server).
+		# Keep the fragment separate so fromLocalFile() doesn't
+		# encode it as part of the file name.
+		path, separator, fragment = url[7:].partition( "#" )
+		url = QtCore.QUrl.fromLocalFile( path )
+		if separator :
+			url.setFragment( fragment )
 	else :
-		if sys.platform == "win32" and url.startswith( "file://" ) :
-			# Windows doesn't let us reliably open "file://" URLs but
-			# yet has no problem with opening the file itself. This
-			# means we can't support anchors in file URLs on Windows
-			# as we need to strip them to produce a valid file path.
-			url = url[7:].partition( "#" )[0]
+		url = QtCore.QUrl( url, QtCore.QUrl.TolerantMode )
 
-		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
+	if sys.platform == "win32" and url.isLocalFile() and url.toLocalFile().startswith( "//" ) :
+		# UNC files must be opened without a fragment on Windows.
+		url.setFragment( None )
+
+	QtGui.QDesktopServices.openUrl( url )
