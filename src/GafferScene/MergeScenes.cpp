@@ -95,7 +95,8 @@ class MergeContextHandler
 {
 public:
 	MergeContextHandler( const MergeScenes *mergeNode, const Context *context )
-		: m_mode( (MergeScenes::InputMode)mergeNode->inputModePlug()->getValue() )
+		: m_mode( (MergeScenes::InputMode)mergeNode->inputModePlug()->getValue() ),
+		m_mergeNode( mergeNode )
 	{
 		if( m_mode == MergeScenes::InputMode::Collect )
 		{
@@ -122,7 +123,7 @@ public:
 		return m_numContexts;
 	}
 
-	int setContextAndGetPlugIndex( int index )
+	const ScenePlug* setContextAndGetPlug( int index )
 	{
 		if( m_mode == MergeScenes::InputMode::Collect )
 		{
@@ -135,11 +136,11 @@ public:
 			{
 				m_scope->set( m_indexContextVariable, &m_contextIndex );
 			}
-			return index / m_numContexts;
+			return m_mergeNode->inPlugs()->getChild<ScenePlug>( index / m_numContexts );
 		}
 		else
 		{
-			return index;
+			return m_mergeNode->inPlugs()->getChild<ScenePlug>( index );
 		}
 	}
 
@@ -164,6 +165,8 @@ public:
 private:
 
 	const MergeScenes::InputMode m_mode;
+	const MergeScenes* m_mergeNode;
+
 	ConstStringVectorDataPtr m_contextValuesData;
 	const std::vector<std::string> *m_contextValues;
 	std::string m_contextVariable;
@@ -596,8 +599,7 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 		auto [ childFirstActiveIndex, childActiveInputsCount ] = firstAndCount( childActiveInputsData->readable()  );
 
 		// Get ready to evaluate the first active input
-		int plugIndex = contextHandler.setContextAndGetPlugIndex( childFirstActiveIndex );
-		const ScenePlug *childScene = inPlugs()->getChild<ScenePlug>( plugIndex );
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( childFirstActiveIndex );
 
 		if( contextHandler.hasContextOverrides() )
 		{
@@ -662,8 +664,7 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 		Box3f bound;
 
 		// Get ready to evaluate the first active input
-		int plugIndex = contextHandler.setContextAndGetPlugIndex( childFirstActiveIndex );
-		const ScenePlug *childScene = inPlugs()->getChild<ScenePlug>( plugIndex );
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( childFirstActiveIndex );
 
 		if( contextHandler.hasContextOverrides() )
 		{
@@ -713,8 +714,8 @@ void MergeScenes::hashBound( const ScenePath &path, const Gaffer::Context *conte
 	{
 		// Pass through.
 		MergeContextHandler contextHandler( this, context );
-		int plugIndex = contextHandler.setContextAndGetPlugIndex( firstActiveIndex );
-		h = inPlugs()->getChild<ScenePlug>( plugIndex )->boundPlug()->hash();
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( firstActiveIndex );
+		h = childScene->boundPlug()->hash();
 		return;
 	}
 
@@ -727,8 +728,8 @@ void MergeScenes::hashBound( const ScenePath &path, const Gaffer::Context *conte
 		mergedDescendantsBoundPlug()->hash( h );
 
 		MergeContextHandler contextHandler( this, context );
-		int plugIndex = contextHandler.setContextAndGetPlugIndex( firstActiveIndex );
-		inPlugs()->getChild<ScenePlug>( plugIndex )->boundPlug()->hash( h );
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( firstActiveIndex );
+		childScene->boundPlug()->hash( h );
 		return;
 	}
 
@@ -752,8 +753,8 @@ Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Con
 	{
 		// Pass through for simple cases.
 		MergeContextHandler contextHandler( this, context );
-		int plugIndex = contextHandler.setContextAndGetPlugIndex( firstActiveIndex );
-		return inPlugs()->getChild<ScenePlug>( plugIndex )->boundPlug()->getValue();
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( firstActiveIndex );
+		return childScene->boundPlug()->getValue();
 	}
 
 	// If objects and transforms always come from the first active input,
@@ -766,8 +767,8 @@ Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Con
 		Box3f result = mergedDescendantsBoundPlug()->getValue();
 
 		MergeContextHandler contextHandler( this, context );
-		int plugIndex = contextHandler.setContextAndGetPlugIndex( firstActiveIndex );
-		result.extendBy( inPlugs()->getChild<ScenePlug>( plugIndex )->boundPlug()->getValue() );
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( firstActiveIndex );
+		result.extendBy( childScene->boundPlug()->getValue() );
 		return result;
 	}
 
@@ -1281,8 +1282,8 @@ void MergeScenes::visit( const std::vector<bool> &inputMask, const Gaffer::Conte
 	{
 		if( inputMask[i] )
 		{
-			int plugIndex = contextHandler.setContextAndGetPlugIndex( i );
-			const bool c = visitor( type, i, inPlugs()->getChild<ScenePlug>( plugIndex ) );
+			const ScenePlug *childScene = contextHandler.setContextAndGetPlug( i );
+			const bool c = visitor( type, i, childScene );
 			if( !c || order == VisitOrder::FirstOnly || order == VisitOrder::LastOnly )
 			{
 				break;
