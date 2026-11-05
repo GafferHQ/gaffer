@@ -68,7 +68,14 @@ void GafferImageModule::bindDeepNodes()
 			.value( "Channel", FlatToDeep::ZBackMode::Channel )
 		;
 	}
-	DependencyNodeClass<DeepMerge>();
+	{
+		scope s = DependencyNodeClass<DeepMerge>();
+
+		enum_<DeepMerge::InputMode>( "InputMode" )
+			.value( "Standard", DeepMerge::InputMode::Standard )
+			.value( "Collect", DeepMerge::InputMode::Collect )
+		;
+	}
 	{
 		scope s = DependencyNodeClass<DeepState>();
 
