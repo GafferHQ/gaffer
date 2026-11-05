@@ -41,6 +41,7 @@ import IECore
 import Gaffer
 import GafferScene
 import GafferSceneTest
+import GafferTest
 
 class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 
@@ -497,3 +498,35 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 			list( merge["out"].setNames() ),
 			[ "set{}".format( i ) for i in range( 0, merge["in"].maxSize() ) ]
 		)
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testBasicPerf( self ):
+
+		cube = GafferScene.Cube()
+		group1 = GafferScene.Group()
+		group1["in"][0].setInput( cube["out"] )
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( group1["out"] )
+		group3 = GafferScene.Group()
+		group3["in"][0].setInput( group2["out"] )
+		group4 = GafferScene.Group()
+		group4["in"][0].setInput( group3["out"] )
+		group5 = GafferScene.Group()
+		group5["in"][0].setInput( group4["out"] )
+
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/group' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( group5["out"] )
+		duplicate["filter"].setInput( pathFilter["out"] )
+		duplicate["copies"].setValue( 1000 )
+
+		mergeScenes = GafferScene.MergeScenes()
+		for i in range( 32 ):
+			mergeScenes["in"][i].setInput( duplicate["out"] )
+
+		GafferSceneTest.traverseScene( duplicate["out"] )
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferSceneTest.traverseScene( mergeScenes["out"] )
