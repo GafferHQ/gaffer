@@ -74,7 +74,9 @@ Gaffer.Metadata.registerNode(
 			Defines how inputs are selected for merging :
 
 			- Standard : Each input plug is used once.
-			- Collect : Each input plug is evaluated for each value in `contextValues`.
+			- Collect : Each input plug is evaluated for each value in `contextValues`. This can
+			  be used in setups like a SceneReader with the file path driven by a context
+			  variable, to merge a list of filenames into one scene.
 			""",
 
 			"preset:Standard" : GafferScene.MergeScenes.InputMode.Standard,
@@ -103,7 +105,7 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Name of the context variable that takes values from `contextValues` in Collect mode. May be used
-			upstream to vary the multiple scenes being taken from each input.
+			upstream to vary the scenes being taken from each input.
 			""",
 
 			"layout:visibilityActivator" : "modeCollect",
@@ -115,8 +117,8 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Name of the context variable that contains the index of the current context value when in Collect
-			mode. Ranges from 0 to `len( contextValues ) - 1`. May be used upstream to vary the multiple
-			layers being taken from each input.
+			mode. Ranges from 0 to `len( contextValues ) - 1`. May be used upstream to vary the scenes being
+			taken from each input.
 			""",
 
 			"layout:visibilityActivator" : "modeCollect",
