@@ -47,6 +47,10 @@ Gaffer.Metadata.registerNode(
 	The source images may be deep or flat.
 	""",
 
+	"layout:activator:inputModeIsCollect", lambda node : node["inputMode"].getValue() == GafferImage.DeepMerge.InputMode.Collect,
+	"ui:spreadsheet:enabledRowNamesConnection", "contextValues",
+	"ui:spreadsheet:selectorContextVariablePlug", "contextVariable",
+
 	plugs = {
 
 		"in.*" : {
@@ -55,6 +59,59 @@ Gaffer.Metadata.registerNode(
 			"""
 			A deep or flat image input.
 			""",
+
+		},
+
+		"inputMode" : {
+
+			"description" :
+			"""
+			Defines how inputs are selected for merging :
+
+			- Standard : Each input plug is used once.
+			- Collect : Each input plug is evaluated for each value in `contextValues`.
+			""",
+
+			"preset:Standard" : GafferImage.DeepMerge.InputMode.Standard,
+			"preset:Collect" : GafferImage.DeepMerge.InputMode.Collect,
+
+			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
+		},
+
+		"contextValues" : {
+
+			"description" :
+			"""
+			The values to use for the `contextVariable` when in `Collect` mode. Each input will be evaluated for
+			each value, forming multiple layers in the merge. This value will be passed to `contextVariable`, and
+			the length of this list determines the number of times each input is evaluated.
+			""",
+
+			"layout:visibilityActivator" : "inputModeIsCollect",
+		},
+
+		"contextVariable" : {
+
+			"description" :
+			"""
+			Name of the context variable that takes values from `contextValues` in Collect mode. May be used
+			upstream to vary the multiple layers being taken from each input.
+			""",
+
+			"layout:visibilityActivator" : "inputModeIsCollect",
+
+		},
+
+		"indexContextVariable" : {
+
+			"description" :
+			"""
+			Name of the context variable that contains the index of the current context value when in Collect
+			mode. Ranges from 0 to `len( contextValues ) - 1`. May be used upstream to vary the multiple
+			layers being taken from each input.
+			""",
+
+			"layout:visibilityActivator" : "inputModeIsCollect",
 
 		},
 
