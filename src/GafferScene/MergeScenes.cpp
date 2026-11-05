@@ -94,7 +94,7 @@ std::pair< size_t, Count> firstAndCount( const std::vector<bool> &inputs )
 class MergeContextHandler
 {
 public:
-	MergeContextHandler( const MergeScenes* mergeNode, const Context *context )
+	MergeContextHandler( const MergeScenes *mergeNode, const Context *context )
 		: m_mode( (MergeScenes::MergeMode)mergeNode->modePlug()->getValue() )
 	{
 		if( m_mode == MergeScenes::MergeMode::Collect )
@@ -117,7 +117,7 @@ public:
 		}
 	}
 
-	int numContexts()
+	size_t numContexts() const
 	{
 		return m_numContexts;
 	}
@@ -142,20 +142,16 @@ public:
 		return m_scope.has_value();
 	}
 
-	const Context *context()
+	const Context *context() const
 	{
 		return m_context;
 	}
 
-	// If we need to set a path, we should do it in the same scope that is already
-	// being allocated in Collect mode.
+	// Allow setting a path on our internal context in order to keep it in sync.
+	// Must only be called when hasContextOverrides is true.
 	void setPath( const ScenePlug::ScenePath *scenePath )
 	{
-		if( !m_scope )
-		{
-			m_scope.emplace( m_context );
-			m_context = m_scope->context();
-		}
+		assert( !m_scope );
 		m_scope->set( ScenePlug::scenePathContextName, scenePath );
 	}
 
@@ -182,7 +178,7 @@ private:
 //////////////////////////////////////////////////////////////////////////
 
 MergeScenes::MergeScenes( const std::string &name )
-	:	SceneProcessor( name, /* minInputs = */ 2, /* maxInputs = */ 32 )
+	:	SceneProcessor( name, /* minInputs = */ 2 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -192,15 +188,7 @@ MergeScenes::MergeScenes( const std::string &name )
 	addChild( new IntPlug( "globalsMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Merge ) );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, true ) );
 
-	addChild(
-		new IntPlug(
-			"mode",              // name
-			Plug::In,            // direction
-			(int)MergeMode::Standard, // default
-			(int)MergeMode::Standard, // min
-			(int)MergeMode::Collect   // max
-		)
-	);
+	addChild( new IntPlug( "mode", Plug::In, (int)MergeMode::Standard, (int)MergeMode::Standard, (int)MergeMode::Collect) );
 
 	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
 	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
@@ -330,27 +318,18 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 {
 	SceneProcessor::affects( input, outputs );
 
-	if(
-		input == modePlug() || input == contextValuesPlug() ||
-		input == contextVariablePlug() || input == indexContextVariablePlug()
-	)
-	{
-		// Changing the context we evaluate the input in affects everything
-		outputs.push_back( activeInputsPlug() );
-		outputs.push_back( outPlug()->transformPlug() );
-		outputs.push_back( mergedDescendantsBoundPlug() );
-		outputs.push_back( outPlug()->boundPlug() );
-		outputs.push_back( outPlug()->attributesPlug() );
-		outputs.push_back( outPlug()->objectPlug() );
-		outputs.push_back( outPlug()->childNamesPlug() );
-		outputs.push_back( outPlug()->globalsPlug() );
-		outputs.push_back( outPlug()->setNamesPlug() );
-		outputs.push_back( outPlug()->setPlug() );
-	}
+	const bool affectsInputContext =
+		input == modePlug() ||
+		input == contextValuesPlug() ||
+		input == contextVariablePlug() ||
+		input == indexContextVariablePlug();
 
 	const ScenePlug *scene = inPlugs()->isAncestorOf( input ) ? input->parent<ScenePlug>() : nullptr;
 
-	if( scene && input == scene->existsPlug() )
+	if(
+		( scene && input == scene->existsPlug() ) ||
+		affectsInputContext
+	)
 	{
 		outputs.push_back( activeInputsPlug() );
 	}
@@ -358,7 +337,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	if(
 		( scene && input == scene->transformPlug() ) ||
 		input == transformModePlug() ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->transformPlug() );
@@ -367,7 +347,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	if(
 		( scene && input == scene->boundPlug() ) ||
 		( scene && input == scene->transformPlug() ) ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( mergedDescendantsBoundPlug() );
@@ -383,7 +364,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 		input == activeInputsPlug() ||
 		input == mergedDescendantsBoundPlug() ||
 		input == outPlug()->objectPlug() ||
-		input == outPlug()->childBoundsPlug()
+		input == outPlug()->childBoundsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->boundPlug() );
@@ -392,7 +374,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	if(
 		( scene && input == scene->attributesPlug() ) ||
 		input == attributesModePlug() ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
@@ -401,7 +384,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	if(
 		( scene && input == scene->objectPlug() ) ||
 		input == objectModePlug() ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
@@ -409,7 +393,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 	if(
 		( scene && input == scene->childNamesPlug() ) ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
@@ -417,18 +402,25 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 	if(
 		( scene && input == scene->globalsPlug() ) ||
-		input == globalsModePlug()
+		input == globalsModePlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
 	}
 
-	if( scene && input == scene->setNamesPlug() )
+	if(
+		( scene && input == scene->setNamesPlug() ) ||
+		affectsInputContext
+	)
 	{
 		outputs.push_back( outPlug()->setNamesPlug() );
 	}
 
-	if( scene && input == scene->setPlug() )
+	if(
+		( scene && input == scene->setPlug() ) ||
+		affectsInputContext
+	)
 	{
 		outputs.push_back( outPlug()->setPlug() );
 	}
