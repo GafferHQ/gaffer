@@ -75,8 +75,8 @@ Gaffer.Metadata.registerNode(
 
 			- Standard : Each input plug is used once.
 			- Collect : Each input plug is evaluated for each value in `contextValues`. This can
-			  be used in setups like a SceneReader with the file path driven by a context
-			  variable, to merge a list of filenames into one scene.
+			be used in setups like a SceneReader with the file path driven by a context
+			variable, to merge a list of filenames into one scene.
 			""",
 
 			"preset:Standard" : GafferScene.MergeScenes.InputMode.Standard,
