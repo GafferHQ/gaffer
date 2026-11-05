@@ -689,6 +689,38 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 			self.assertSceneValid( merge["out"] )
 			self.assertScenesEqual( merge["out"], refMerge["out"] )
 
+
+	def testEmptyContextVariables( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		mergeScenes = GafferScene.MergeScenes()
+		mergeScenes["in"][0].setInput( sphere["out"] )
+		mergeScenes["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
+		mergeScenes["contextValues"].setValue( IECore.StringVectorData( [ "a", "b" ] ) )
+
+		for contextVariable, indexContextVariable in [
+			( "merge:value", "merge:index" ),
+			( "", "merge:index" ),
+			( "merge:value", "" ),
+			( "", "" ),
+		] :
+
+			with self.subTest( contextVariable = contextVariable, indexContextVariable = indexContextVariable ) :
+
+				mergeScenes["contextVariable"].setValue( contextVariable )
+				mergeScenes["indexContextVariable"].setValue( indexContextVariable )
+
+				with Gaffer.ContextMonitor( sphere["out"] ) as monitor :
+					GafferSceneTest.traverseScene( mergeScenes["out"] )
+
+				self.assertEqual(
+					set( monitor.combinedStatistics().variableNames() ),
+					{
+						"scene:path", "frame", "framesPerSecond"
+					} | { v for v in ( contextVariable, indexContextVariable ) if v }
+				)
+
 	def testCollectWithMultipleInputs( self ) :
 
 		sphereFilter = GafferScene.PathFilter()
