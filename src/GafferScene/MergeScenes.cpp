@@ -158,7 +158,7 @@ public:
 	// Must only be called when hasContextOverrides is true.
 	void setPath( const ScenePlug::ScenePath *scenePath )
 	{
-		assert( !m_scope );
+		assert( m_scope );
 		m_scope->set( ScenePlug::scenePathContextName, scenePath );
 	}
 
