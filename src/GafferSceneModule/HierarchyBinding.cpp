@@ -136,6 +136,10 @@ void GafferSceneModule::bindHierarchy()
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<MergeScenes>();
+		enum_<MergeScenes::InputMode>( "InputMode" )
+			.value( "Standard", MergeScenes::InputMode::Standard )
+			.value( "Collect", MergeScenes::InputMode::Collect )
+		;
 		enum_<MergeScenes::Mode>( "Mode" )
 			.value( "Keep", MergeScenes::Mode::Keep )
 			.value( "Replace", MergeScenes::Mode::Replace )

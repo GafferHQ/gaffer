@@ -35,12 +35,14 @@
 ##########################################################################
 
 import imath
+import inspect
 
 import IECore
 
 import Gaffer
 import GafferScene
 import GafferSceneTest
+import GafferTest
 
 class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 
@@ -375,6 +377,40 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( merge["out"].bound( "/" ), sphere["out"].bound( "/" ) )
 		self.assertEqual( merge["out"].bound( "/sphere" ), sphere["out"].bound( "/sphere" ) )
 
+	def testBoundsFailureCase( self ):
+
+		# Test simplified from a more complex and general case to highlight a specific situation
+		# where we previously failed to take into account one of the two cubes.
+		cube = GafferScene.Cube()
+
+		groupA = GafferScene.Group()
+		groupA["in"][0].setInput( cube["out"] )
+		groupA["name"].setValue( 'a' )
+		groupA["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
+
+		group1 = GafferScene.Group()
+		group1["in"][0].setInput( groupA["out"] )
+
+		groupB = GafferScene.Group()
+		groupB["in"][0].setInput( cube["out"] )
+		groupB["name"].setValue( 'b' )
+		groupB["transform"]["translate"].setValue( imath.V3f( -1, 0, 0 ) )
+
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( groupB["out"] )
+
+		mergeScenes = GafferScene.MergeScenes()
+		mergeScenes["in"][0].setInput( group1["out"] )
+		mergeScenes["in"][1].setInput( group2["out"] )
+		# Connect one input twice - previously, we would leave an object out of mergedDescendantsBound
+		# if it was present in multiple inputs.
+		mergeScenes["in"][2].setInput( group2["out"] )
+
+		self.assertEqual(
+			mergeScenes["out"].bound( "/group" ),
+			imath.Box3f( imath.V3f(-1.5, -0.5, -0.5),  imath.V3f(1.5, 0.5, 0.5) )
+		)
+
 	def testBoundDoesntDependOnObjectsUnnecessarily( self ) :
 
 		# Input 0      Input 1
@@ -472,13 +508,59 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( sphere["out"], merge["out"] )
 		self.assertSceneHashesEqual( sphere["out"], merge["out"] )
 
+	def testCollectEmptyScenes( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "A" )
+
+		switch = Gaffer.Switch()
+		switch.setup( sphere["out"] )
+		switch["in"].resize( 2 )
+		switch["in"][1].setInput( sphere["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		merge = GafferScene.MergeScenes()
+		merge["in"][1].setInput( switch["out"] )
+		merge["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
+		merge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1", "2" ] ) )
+
+		self.assertSceneValid( merge["out"] )
+
+		# The only valid input scene is the sphere, the rest are empty, and don't affect
+		# the result
+		self.assertScenesEqual( sphere["out"], merge["out"] )
+
+		# We can't check self.assertSceneHashesEqual( sphere["out"], merge["out"] )
+		# here, however, because the empty scene we get from the switch for unused
+		# contexts is still "connected", so it still affects the hash.
+
+	def testNoContexts( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "A" )
+
+		merge = GafferScene.MergeScenes()
+		merge["in"][0].setInput( sphere["out"] )
+		merge["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
+
+		unconnectedScene = GafferScene.ScenePlug()
+
+		self.assertSceneValid( merge["out"] )
+		self.assertScenesEqual( merge["out"], unconnectedScene )
+		self.assertSceneHashesEqual( merge["out"], unconnectedScene )
+
 	def testMaxInputs( self ) :
 
 		merge = GafferScene.MergeScenes()
 		spheres = []
 		groups = []
 
-		for i in range( 0, merge["in"].maxSize() ) :
+		# The max size is no longer limited, test with an arbitrarily chosen 100, which is bigger
+		# than the old max.
+		testSize = 100
+		for i in range( 0, testSize ):
 			sphere = GafferScene.Sphere()
 			sphere["name"].setValue( "sphere{}".format( i ) )
 			sphere["sets"].setValue( "set{}".format( i ) )
@@ -491,9 +573,261 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( merge["out"] )
 		self.assertEqual(
 			list( merge["out"].childNames( "/group" ) ),
-			[ "sphere{}".format( i ) for i in range( 0, merge["in"].maxSize() ) ]
+			[ "sphere{}".format( i ) for i in range( 0, testSize ) ]
 		)
 		self.assertEqual(
 			list( merge["out"].setNames() ),
-			[ "set{}".format( i ) for i in range( 0, merge["in"].maxSize() ) ]
+			[ "set{}".format( i ) for i in range( 0, testSize ) ]
 		)
+
+	def testCollectMode( self ) :
+		# Run all the tests from test() again, but checking that using Collect mode to read the
+		# inputs from a switch has identical results to connecting to the inputs of the SceneMerge
+		# in Standard mode
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "sphere both" )
+
+		sphereAttributes = GafferScene.CustomAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( sphereFilter["out"] )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "testAttr1", 1 ) )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "testAttr2", 2 ) )
+
+		bigSphere = GafferScene.Sphere()
+		bigSphere["radius"].setValue( 2 )
+		bigSphere["transform"]["translate"]["x"].setValue( 1 )
+		bigSphere["sets"].setValue( "bigSphere" )
+
+		bigSphereAttributes = GafferScene.CustomAttributes()
+		bigSphereAttributes["in"].setInput( bigSphere["out"] )
+		bigSphereAttributes["filter"].setInput( sphereFilter["out"] )
+		bigSphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "testAttr2", 4 ) )
+		bigSphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "testAttr3", 3 ) )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "cube both" )
+
+		refMerge = GafferScene.MergeScenes()
+		refMerge["in"][0].setInput( sphereAttributes["out"] )
+		refMerge["in"][1].setInput( cube["out"] )
+		refMerge["in"][2].setInput( bigSphereAttributes["out"] )
+
+		switch = Gaffer.Switch()
+		switch.setup( sphere["out"] )
+		switch["in"].resize( 2 )
+		switch["in"][0].setInput( sphereAttributes["out"] )
+		switch["in"][1].setInput( cube["out"] )
+		switch["in"][2].setInput( bigSphereAttributes["out"] )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = "abc".find( context.get( "merge:value" ) )', "python" )
+
+		merge = GafferScene.MergeScenes()
+		merge["in"][0].setInput( switch["out"] )
+		merge["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
+		merge["contextValues"].setValue( IECore.StringVectorData( [ "a", "b", "c" ] ) )
+
+		self.assertSceneValid( merge["out"] )
+		self.assertScenesEqual( merge["out"], refMerge["out"] )
+		self.assertSceneHashesEqual( merge["out"], refMerge["out"] )
+
+		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
+
+		self.assertSceneValid( merge["out"] )
+		self.assertScenesEqual( merge["out"], refMerge["out"] )
+		self.assertSceneHashesEqual( merge["out"], refMerge["out"] )
+
+		merge["transformMode"].setValue( merge.Mode.Replace )
+		refMerge["transformMode"].setValue( merge.Mode.Replace )
+
+		self.assertSceneValid( merge["out"] )
+		self.assertScenesEqual( merge["out"], refMerge["out"] )
+		self.assertSceneHashesEqual( merge["out"], refMerge["out"] )
+
+		merge["objectMode"].setValue( merge.Mode.Replace )
+		refMerge["objectMode"].setValue( merge.Mode.Replace )
+
+		self.assertSceneValid( merge["out"] )
+		self.assertScenesEqual( merge["out"], refMerge["out"] )
+		self.assertSceneHashesEqual( merge["out"], refMerge["out"] )
+
+		merge["attributesMode"].setValue( merge.Mode.Merge )
+		refMerge["attributesMode"].setValue( merge.Mode.Merge )
+
+		self.assertSceneValid( merge["out"] )
+		self.assertScenesEqual( merge["out"], refMerge["out"] )
+		self.assertSceneHashesEqual( merge["out"], refMerge["out"] )
+
+		merge["attributesMode"].setValue( merge.Mode.Replace )
+		refMerge["attributesMode"].setValue( merge.Mode.Replace )
+
+		self.assertSceneValid( merge["out"] )
+		self.assertScenesEqual( merge["out"], refMerge["out"] )
+		self.assertSceneHashesEqual( merge["out"], refMerge["out"] )
+
+		# Try disconnecting each of the 3 inputs
+		for i in range( 3 ):
+			refMerge["in"][0].setInput( sphereAttributes["out"] )
+			refMerge["in"][1].setInput( cube["out"] )
+			refMerge["in"][2].setInput( bigSphereAttributes["out"] )
+
+			switch["in"][0].setInput( sphereAttributes["out"] )
+			switch["in"][1].setInput( cube["out"] )
+			switch["in"][2].setInput( bigSphereAttributes["out"] )
+
+			refMerge["in"][i].setInput( None )
+			switch["in"][i].setInput( None )
+
+			# The hashes don't match with a missing input ( since on the reference merge
+			# it skips a disconnected input, but the switch is still connected for every
+			# context, even if there's no input on the switch ), but all the computed values
+			# should still match
+			self.assertSceneValid( merge["out"] )
+			self.assertScenesEqual( merge["out"], refMerge["out"] )
+
+	def testCollectWithMultipleInputs( self ) :
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		sphere = GafferScene.Sphere()
+
+		sphere["expression"] = Gaffer.Expression()
+		sphere["expression"].setExpression( inspect.cleandoc( """
+			parent["transform"]["translate"] = imath.V3f(
+				context.get( "merge:index" ),
+				1 if context.get( "isSecondInput", "" ) else 0,
+				0
+			)
+		""" ), "python" )
+
+		sphereAttributes = GafferScene.CustomAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( sphereFilter["out"] )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "test${merge:value}:${isSecondInput}", 1 ) )
+
+		contextVariables = Gaffer.ContextVariables()
+		contextVariables["variables"].addChild( Gaffer.NameValuePlug( "isSecondInput", "second" ) )
+
+		contextVariables.setup( sphereAttributes["out"] )
+		contextVariables["in"].setInput( sphereAttributes["out"] )
+
+		merge = GafferScene.MergeScenes()
+		merge["in"][0].setInput( sphereAttributes["out"] )
+		merge["in"][1].setInput( contextVariables["out"] )
+		merge["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
+		merge["contextValues"].setValue( IECore.StringVectorData( [ "A", "B", "C" ] ) )
+
+		self.assertEqual( merge["out"].attributes( "/sphere" ), IECore.CompoundObject({'testA:':IECore.IntData( 1 )}) )
+
+		merge["attributesMode"].setValue( merge.Mode.Replace )
+
+		self.assertEqual( merge["out"].attributes( "/sphere" ), IECore.CompoundObject({'testC:second':IECore.IntData( 1 )}) )
+
+		merge["attributesMode"].setValue( merge.Mode.Merge )
+
+		self.assertEqual( merge["out"].attributes( "/sphere" ), IECore.CompoundObject(
+			{ "test" + i + ":" + j : IECore.IntData( 1 ) for i in "ABC" for j in [ "", "second" ] }
+		) )
+
+		self.assertEqual( merge["out"].transform( "/sphere" ), imath.M44f() )
+
+		merge["transformMode"].setValue( merge.Mode.Replace )
+
+		refM = imath.M44f()
+		refM.translate( imath.V3f( 2, 1, 0 ) )
+		self.assertEqual( merge["out"].transform( "/sphere" ), refM )
+
+	def testComplexBounds( self ):
+
+		iterations = 7
+
+		cube = GafferScene.Cube()
+		cube["transform"]["translate"].setValue( imath.V3f( 0, 0.5, 0 ) )
+		cube["transform"]["scale"].setValue( imath.V3f( 0.300000012, 1, 0.300000012 ) )
+
+		loop = Gaffer.Loop()
+		loop.setup( cube["out"] )
+		loop["iterations"].setValue( iterations )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( loop["previous"] )
+		group["in"][1].setInput( cube["out"] )
+		group["transform"]["translate"].setValue( imath.V3f( 0, 1, 0 ) )
+
+		loop["next"].setInput( group["out"] )
+
+		group["expression"] = Gaffer.Expression()
+		group["expression"].setExpression( inspect.cleandoc( """
+			i = context.get( "loop:index" )
+			directionMask = context.get( "merge:index" )
+
+			dir = ( 1 << i ) & directionMask;
+			r = imath.V3f( 0 )
+			r[(i % 2)*2] = 35 * ( 1 if dir else -1 );
+			parent["transform"]["rotate"] = r;
+			parent["name"] = "flop" if dir else "flip";
+		""" ), 'python' )
+
+		mergeScenes = GafferScene.MergeScenes()
+		mergeScenes["in"][0].setInput( loop["out"] )
+		mergeScenes["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
+		mergeScenes["contextValues"].setValue( IECore.StringVectorData( [str(i) for i in range( 2 ** iterations ) ] ) )
+
+		self.assertSceneValid( mergeScenes["out"] )
+
+		# Check the root bound against a hardcoded bound checked manually, to make sure things are working
+		self.assertEqual(
+			mergeScenes["out"].bound( "/" ),
+			imath.Box3f(
+				imath.V3f(-5.9230752, -2.24406743, -7.95698738),
+				imath.V3f(5.9230752, 9.76359081, 7.95698738)
+			)
+		)
+
+		# The bound we output should be identical to a downstream node recomputing the bound
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/...' ] ) )
+
+		shufflePrimitiveVariables = GafferScene.ShufflePrimitiveVariables()
+		shufflePrimitiveVariables["shuffles"].addChild( Gaffer.ShufflePlug( "P", "P" ) )
+		shufflePrimitiveVariables["filter"].setInput( pathFilter["out"] )
+		shufflePrimitiveVariables["in"].setInput( mergeScenes["out"] )
+
+		self.assertScenesEqual( mergeScenes["out"], shufflePrimitiveVariables["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testBasicPerf( self ):
+
+		cube = GafferScene.Cube()
+		group1 = GafferScene.Group()
+		group1["in"][0].setInput( cube["out"] )
+		group2 = GafferScene.Group()
+		group2["in"][0].setInput( group1["out"] )
+		group3 = GafferScene.Group()
+		group3["in"][0].setInput( group2["out"] )
+		group4 = GafferScene.Group()
+		group4["in"][0].setInput( group3["out"] )
+		group5 = GafferScene.Group()
+		group5["in"][0].setInput( group4["out"] )
+
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/group' ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( group5["out"] )
+		duplicate["filter"].setInput( pathFilter["out"] )
+		duplicate["copies"].setValue( 1000 )
+
+		mergeScenes = GafferScene.MergeScenes()
+		for i in range( 32 ):
+			mergeScenes["in"][i].setInput( duplicate["out"] )
+
+		GafferSceneTest.traverseScene( duplicate["out"] )
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferSceneTest.traverseScene( mergeScenes["out"] )

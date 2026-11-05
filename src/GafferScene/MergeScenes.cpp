@@ -60,21 +60,125 @@ GAFFER_NODE_DEFINE_TYPE( MergeScenes );
 namespace
 {
 
-size_t first( const std::bitset<32> &inputs )
+enum class Count
 {
+	Zero,
+	One,
+	MoreThanOne
+};
+
+std::pair< size_t, Count> firstAndCount( const std::vector<bool> &inputs )
+{
+	Count count = Count::Zero;
+	size_t first = 0;
+
 	for( size_t i = 0; i < inputs.size(); ++i )
 	{
 		if( inputs[i] )
 		{
-			return i;
+			if( count == Count::Zero )
+			{
+				first = i;
+				count = Count::One;
+			}
+			else
+			{
+				return { first, Count::MoreThanOne };
+			}
 		}
 	}
 
-	// We shouldn't get here, because all valid locations should
-	// have at least one active input.
-	assert( false );
-	return 0;
+	return { first, count };
 }
+
+class MergeContextHandler
+{
+public:
+	MergeContextHandler( const MergeScenes *mergeNode, const Context *context )
+		: m_mode( (MergeScenes::InputMode)mergeNode->inputModePlug()->getValue() ),
+		m_mergeNode( mergeNode )
+	{
+		if( m_mode == MergeScenes::InputMode::Collect )
+		{
+			m_contextValuesData = mergeNode->contextValuesPlug()->getValue();
+			m_contextValues = &m_contextValuesData->readable();
+			m_contextVariable = mergeNode->contextVariablePlug()->getValue();
+			m_indexContextVariable = mergeNode->indexContextVariablePlug()->getValue();
+
+			m_numContexts = m_contextValues->size();
+
+			m_scope.emplace( context );
+
+			m_context = m_scope->context();
+		}
+		else
+		{
+			m_numContexts = 1;
+			m_context = context;
+		}
+	}
+
+	size_t numContexts() const
+	{
+		return m_numContexts;
+	}
+
+	const ScenePlug* setContextAndGetPlug( int index )
+	{
+		if( m_mode == MergeScenes::InputMode::Collect )
+		{
+			m_contextIndex = index % m_numContexts;
+			if( m_contextVariable.size() )
+			{
+				m_scope->set( m_contextVariable, &( (*m_contextValues)[m_contextIndex] ) );
+			}
+			if( m_indexContextVariable.size() )
+			{
+				m_scope->set( m_indexContextVariable, &m_contextIndex );
+			}
+			return m_mergeNode->inPlugs()->getChild<ScenePlug>( index / m_numContexts );
+		}
+		else
+		{
+			return m_mergeNode->inPlugs()->getChild<ScenePlug>( index );
+		}
+	}
+
+	bool hasContextOverrides() const
+	{
+		return m_scope.has_value();
+	}
+
+	const Context *context() const
+	{
+		return m_context;
+	}
+
+	// Allow setting a path on our internal context in order to keep it in sync.
+	// Must only be called when hasContextOverrides is true.
+	void setPath( const ScenePlug::ScenePath *scenePath )
+	{
+		assert( !m_scope );
+		m_scope->set( ScenePlug::scenePathContextName, scenePath );
+	}
+
+private:
+
+	const MergeScenes::InputMode m_mode;
+	const MergeScenes* m_mergeNode;
+
+	ConstStringVectorDataPtr m_contextValuesData;
+	const std::vector<std::string> *m_contextValues;
+	std::string m_contextVariable;
+	std::string m_indexContextVariable;
+
+	int m_numContexts;
+	const Context *m_context;
+
+	int m_contextIndex;
+
+	std::optional<Context::EditableScope> m_scope;
+};
 
 } // namespace
 
@@ -83,16 +187,24 @@ size_t first( const std::bitset<32> &inputs )
 //////////////////////////////////////////////////////////////////////////
 
 MergeScenes::MergeScenes( const std::string &name )
-	:	SceneProcessor( name, /* minInputs = */ 2, /* maxInputs = */ InputMask().size() )
+	:	SceneProcessor( name, /* minInputs = */ 2 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new IntPlug( "inputMode", Plug::In, (int)InputMode::Standard, (int)InputMode::Standard, (int)InputMode::Collect) );
+
+	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
+	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
+	addChild( new StringPlug( "indexContextVariable", Plug::In, "merge:index" ) );
 
 	addChild( new IntPlug( "transformMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Replace ) );
 	addChild( new IntPlug( "attributesMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Merge ) );
 	addChild( new IntPlug( "objectMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Replace ) );
 	addChild( new IntPlug( "globalsMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Merge ) );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, true ) );
-	addChild( new IntPlug( "__activeInputs", Plug::Out, 0 ) );
+
+
+	addChild( new BoolVectorDataPlug( "__activeInputs", Plug::Out ) );
 	addChild( new AtomicBox3fPlug( "__mergedDescendantsBound", Plug::Out ) );
 
 	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
@@ -102,83 +214,132 @@ MergeScenes::~MergeScenes()
 {
 }
 
+Gaffer::IntPlug *MergeScenes::inputModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 0 );
+}
+
+const Gaffer::IntPlug *MergeScenes::inputModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 0 );
+}
+
+Gaffer::StringVectorDataPlug *MergeScenes::contextValuesPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringVectorDataPlug *MergeScenes::contextValuesPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::StringPlug *MergeScenes::contextVariablePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *MergeScenes::contextVariablePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *MergeScenes::indexContextVariablePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *MergeScenes::indexContextVariablePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
 Gaffer::IntPlug *MergeScenes::transformModePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::IntPlug *MergeScenes::transformModePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::IntPlug *MergeScenes::attributesModePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::IntPlug *MergeScenes::attributesModePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::IntPlug *MergeScenes::objectModePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+	return getChild<IntPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::IntPlug *MergeScenes::objectModePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+	return getChild<IntPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::IntPlug *MergeScenes::globalsModePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 3 );
+	return getChild<IntPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::IntPlug *MergeScenes::globalsModePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 3 );
+	return getChild<IntPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::BoolPlug *MergeScenes::adjustBoundsPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::BoolPlug *MergeScenes::adjustBoundsPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 8 );
 }
 
-Gaffer::IntPlug *MergeScenes::activeInputsPlug()
+Gaffer::BoolVectorDataPlug *MergeScenes::activeInputsPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 5 );
+	return getChild<BoolVectorDataPlug>( g_firstPlugIndex + 9 );
 }
 
-const Gaffer::IntPlug *MergeScenes::activeInputsPlug() const
+const Gaffer::BoolVectorDataPlug *MergeScenes::activeInputsPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 5 );
+	return getChild<BoolVectorDataPlug>( g_firstPlugIndex + 9 );
 }
 
 Gaffer::AtomicBox3fPlug *MergeScenes::mergedDescendantsBoundPlug()
 {
-	return getChild<AtomicBox3fPlug>( g_firstPlugIndex + 6 );
+	return getChild<AtomicBox3fPlug>( g_firstPlugIndex + 10 );
 }
 
 const Gaffer::AtomicBox3fPlug *MergeScenes::mergedDescendantsBoundPlug() const
 {
-	return getChild<AtomicBox3fPlug>( g_firstPlugIndex + 6 );
+	return getChild<AtomicBox3fPlug>( g_firstPlugIndex + 10 );
 }
 
 void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
 
+	const bool affectsInputContext =
+		input == inputModePlug() ||
+		input == contextValuesPlug() ||
+		input == contextVariablePlug() ||
+		input == indexContextVariablePlug();
+
 	const ScenePlug *scene = inPlugs()->isAncestorOf( input ) ? input->parent<ScenePlug>() : nullptr;
 
-	if( scene && input == scene->existsPlug() )
+	if(
+		( scene && input == scene->existsPlug() ) ||
+		affectsInputContext
+	)
 	{
 		outputs.push_back( activeInputsPlug() );
 	}
@@ -186,7 +347,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	if(
 		( scene && input == scene->transformPlug() ) ||
 		input == transformModePlug() ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->transformPlug() );
@@ -195,7 +357,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	if(
 		( scene && input == scene->boundPlug() ) ||
 		( scene && input == scene->transformPlug() ) ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( mergedDescendantsBoundPlug() );
@@ -211,7 +374,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 		input == activeInputsPlug() ||
 		input == mergedDescendantsBoundPlug() ||
 		input == outPlug()->objectPlug() ||
-		input == outPlug()->childBoundsPlug()
+		input == outPlug()->childBoundsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->boundPlug() );
@@ -220,7 +384,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	if(
 		( scene && input == scene->attributesPlug() ) ||
 		input == attributesModePlug() ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
@@ -229,7 +394,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	if(
 		( scene && input == scene->objectPlug() ) ||
 		input == objectModePlug() ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
@@ -237,7 +403,8 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 	if(
 		( scene && input == scene->childNamesPlug() ) ||
-		input == activeInputsPlug()
+		input == activeInputsPlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
@@ -245,18 +412,25 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 	if(
 		( scene && input == scene->globalsPlug() ) ||
-		input == globalsModePlug()
+		input == globalsModePlug() ||
+		affectsInputContext
 	)
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
 	}
 
-	if( scene && input == scene->setNamesPlug() )
+	if(
+		( scene && input == scene->setNamesPlug() ) ||
+		affectsInputContext
+	)
 	{
 		outputs.push_back( outPlug()->setNamesPlug() );
 	}
 
-	if( scene && input == scene->setPlug() )
+	if(
+		( scene && input == scene->setPlug() ) ||
+		affectsInputContext
+	)
 	{
 		outputs.push_back( outPlug()->setPlug() );
 	}
@@ -281,7 +455,7 @@ void MergeScenes::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 {
 	if( output == activeInputsPlug() )
 	{
-		static_cast<IntPlug *>( output )->setValue( computeActiveInputs( context ) );
+		static_cast<BoolVectorDataPlug *>( output )->setValue( computeActiveInputs( context ) );
 	}
 	else if( output == mergedDescendantsBoundPlug() )
 	{
@@ -303,25 +477,36 @@ void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::Murm
 	// `scene->existsPlug()->hash()`. Which means our hash function is actually
 	// _identical_ to our compute, so we might as well just call it rather than
 	// duplicate the code.
-	h.append( computeActiveInputs( context ) );
+	h.append( computeActiveInputs( context )->readable() );
 }
 
-int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
+ConstBoolVectorDataPtr MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 {
 	const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 
-	InputMask result;
+	BoolVectorDataPtr resultData = new BoolVectorData();
+	auto &result = resultData->writable();
+
 	if( scenePath.empty() )
 	{
+
 		// Root. Every input is active here, but there's a wrinkle : the default
 		// value for `ScenePlug.exists` is `true`, and this is the value we'll
 		// get if the input is not from a computed output. This would mean that
 		// the input would claim to be active for _any_ scene location. We deal
 		// with this once here at the root rather than repeat the workaround at
 		// each descendant location;
+
+		std::vector<bool> connectedIns = connectedInputs( context );
+		result.resize( connectedIns.size(), false );
 		visit(
-			connectedInputs(),
+			connectedIns, context,
 			[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
+				if( type == InputType::None )
+				{
+					return false;
+				}
+
 				if( scene->childNamesPlug()->getValue()->readable().size() )
 				{
 					result[index] = true;
@@ -329,41 +514,46 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 				return true;
 			}
 		);
-		if( result.none() )
-		{
-			// Make sure that at least one input is active, so we have
-			// something to use as a pass-through.
-			result[0] = true;
-		}
 	}
 	else
 	{
 		// Get active inputs from the parent.
-		InputMask parentActiveInputs;
+		ConstBoolVectorDataPtr parentActiveInputsData;
 		{
 			ScenePath parentPath = scenePath; parentPath.pop_back();
 			ScenePlug::PathScope parentScope( context, &parentPath );
-			parentActiveInputs = activeInputsPlug()->getValue();
+			parentActiveInputsData = activeInputsPlug()->getValue();
 		}
 
-		if( parentActiveInputs.count() == 1 )
+		const auto &parentActiveInputs = parentActiveInputsData->readable();
+
+		auto [ unusedFirst, parentActiveInputsCount ] = firstAndCount( parentActiveInputs );
+		if( parentActiveInputsCount == Count::One )
 		{
 			// It is forbidden for anyone to evaluate us for a location
 			// that doesn't exist. Therefore, if our parent only has
 			// one active input, then that input must still be active for
 			// us.
-			result = parentActiveInputs;
+			return parentActiveInputsData;
 		}
 		else
 		{
+			result.resize( parentActiveInputs.size(), false );
+
 			// Figure out which of those parent inputs are
 			// still active. Using the parent active inputs as
 			// a mask reduces the number of existence queries
 			// we must make when merging many sparsely overlapping
 			// scenes.
 			visit(
-				parentActiveInputs,
+				parentActiveInputs, context,
 				[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
+
+					if( type == InputType::None )
+					{
+						return false;
+					}
+
 					if( scene->existsPlug()->getValue() )
 					{
 						result[index] = true;
@@ -374,16 +564,16 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 		}
 	}
 
-	return result.to_ulong();
+	return resultData;
 }
 
 void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
-	if( activeInputs.count() == 1 )
-	{
-		return;
-	}
+	#ifndef NDEBUG
+	// mergedDescendantBound is never evaluated when there is a single input
+	auto [ unusedFirst, activeInputsCount ] = firstAndCount( activeInputsPlug()->getValue()->readable() );
+	assert( activeInputsCount == Count::MoreThanOne );
+	#endif
 
 	ConstInternedStringVectorDataPtr childNamesData = outPlug()->childNamesPlug()->getValue();
 	if( childNamesData->readable().empty() )
@@ -391,45 +581,59 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 		return;
 	}
 
-	const size_t firstActiveIndex = first( activeInputs );
-
 	ScenePath childPath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 	childPath.push_back( InternedString() ); // Room for child name
-	ScenePlug::PathScope childScope( context );
+
+	MergeContextHandler contextHandler( this, context );
+
+	// Make a PathScope independent from the context handler, so we can alternate evaluations
+	// that don't include Collect context variables.
+	ScenePlug::PathScope pathScope( context );
 
 	for( const auto &childName : childNamesData->readable() )
 	{
 		childPath.back() = childName;
-		childScope.setPath( &childPath );
-		const InputMask childActiveInputs( activeInputsPlug()->getValue() );
-		if( childActiveInputs.count() == 1 && childActiveInputs[firstActiveIndex] )
-		{
-			continue;
-		}
+		pathScope.setPath( &childPath );
 
-		const ScenePlug *childScene = inPlugs()->getChild<ScenePlug>( first( childActiveInputs ) );
+		ConstBoolVectorDataPtr childActiveInputsData = activeInputsPlug()->getValue();
+		auto [ childFirstActiveIndex, childActiveInputsCount ] = firstAndCount( childActiveInputsData->readable()  );
 
-		if( childActiveInputs.count() == 1 )
+		// Get ready to evaluate the first active input
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( childFirstActiveIndex );
+
+		if( contextHandler.hasContextOverrides() )
 		{
+			// If the contextHandler has context overrides, we need to do some extra work here
+			// since we're not using its context directly. Set the correct path on its context,
+			// and then explicitly scope it using Context::Scope
+			contextHandler.setPath( &childPath );
+			Context::Scope handlerScope( contextHandler.context() );
+
 			childScene->boundPlug()->hash( h );
+
+			childScene->transformPlug()->hash( h );
 		}
 		else
+		{
+			childScene->boundPlug()->hash( h );
+			childScene->transformPlug()->hash( h );
+		}
+
+		if( childActiveInputsCount == Count::MoreThanOne )
 		{
 			mergedDescendantsBoundPlug()->hash( h );
 		}
 
-		childScene->transformPlug()->hash( h );
 	};
 }
 
 const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Context *context ) const
 {
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
-	if( activeInputs.count() == 1 )
-	{
-		// All children coming from the first input. There can be no descendants to merge.
-		return Box3f();
-	}
+	#ifndef NDEBUG
+	// mergedDescendantBound is never evaluated when there is a single input
+	auto [ unusedFirst, activeInputsCount ] = firstAndCount( activeInputsPlug()->getValue()->readable() );
+	assert( activeInputsCount == Count::MoreThanOne );
+	#endif
 
 	ConstInternedStringVectorDataPtr childNamesData = outPlug()->childNamesPlug()->getValue();
 	if( childNamesData->readable().empty() )
@@ -438,54 +642,80 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 		return Box3f();
 	}
 
-	const size_t firstActiveIndex = first( activeInputs );
-
 	ScenePath childPath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 	childPath.push_back( InternedString() ); // Room for child name
-	ScenePlug::PathScope childScope( context );
+
+	MergeContextHandler contextHandler( this, context );
+
+	// Make a PathScope independent from the context handler, so we can alternate evaluations
+	// that don't include Collect context variables.
+	ScenePlug::PathScope pathScope( context );
 
 	Box3f result;
 	for( const auto &childName : childNamesData->readable() )
 	{
 		childPath.back() = childName;
-		childScope.setPath( &childPath );
-		const InputMask childActiveInputs( activeInputsPlug()->getValue() );
-		if( childActiveInputs.count() == 1 && childActiveInputs[firstActiveIndex] )
-		{
-			// Child coming from first input only.
-			// There can be no descendants to merge.
-			continue;
-		}
+		pathScope.setPath( &childPath );
 
-		const ScenePlug *childScene = inPlugs()->getChild<ScenePlug>( first( childActiveInputs ) );
+		ConstBoolVectorDataPtr childActiveInputsData = activeInputsPlug()->getValue();
+		auto [ childFirstActiveIndex, childActiveInputsCount ] = firstAndCount( childActiveInputsData->readable() );
 
+		M44f childTransform;
 		Box3f bound;
-		if( childActiveInputs.count() == 1 )
+
+		// Get ready to evaluate the first active input
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( childFirstActiveIndex );
+
+		if( contextHandler.hasContextOverrides() )
 		{
-			// Child being merged in from another input.
+			// If the contextHandler has context overrides, we need to do some extra work here
+			// since we're not using its context directly. Set the correct path on its context,
+			// and then explicitly scope it using Context::Scope
+			contextHandler.setPath( &childPath );
+			Context::Scope handlerScope( contextHandler.context() );
+
+			// We always need to include the bound from the active child, which will include the bound
+			// of any object present at that location.
 			bound = childScene->boundPlug()->getValue();
+
+			childTransform = childScene->transformPlug()->getValue();
 		}
 		else
 		{
-			// No child being merged in at this point, but
-			// there may still be a descendant merge lower
-			// in the hierarchy. Recurse.
-			bound = mergedDescendantsBoundPlug()->getValue();
+			bound = childScene->boundPlug()->getValue();
+
+			childTransform = childScene->transformPlug()->getValue();
 		}
 
-		result.extendBy( transform( bound, childScene->transformPlug()->getValue() ) );
+		if( childActiveInputsCount == Count::MoreThanOne )
+		{
+			// If there are multiple inputs, then the bound from the first active input may not
+			// include other descendants being merged in lower in the hierarchy, and we need to
+			// recurse.
+			bound.extendBy( mergedDescendantsBoundPlug()->getValue() );
+		}
+
+		result.extendBy( transform( bound, childTransform ) );
 	};
 	return result;
 }
 
 void MergeScenes::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	// Pass through.
+	auto [ firstActiveIndex, activeInputsCount ] = firstAndCount( activeInputsPlug()->getValue()->readable() );
 
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
-	if( activeInputs.count() == 1 || !adjustBoundsPlug()->getValue() )
+	if( activeInputsCount == Count::Zero )
 	{
-		h = inPlugs()->getChild<ScenePlug>( first( activeInputs ) )->boundPlug()->hash();
+		h = inPlugs()->getChild<ScenePlug>( 0 )->boundPlug()->defaultHash();
+		return;
+	}
+
+	if( activeInputsCount == Count::One || !adjustBoundsPlug()->getValue() )
+	{
+		// Pass through.
+		MergeContextHandler contextHandler( this, context );
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( firstActiveIndex );
+		h = childScene->boundPlug()->hash();
 		return;
 	}
 
@@ -494,8 +724,12 @@ void MergeScenes::hashBound( const ScenePath &path, const Gaffer::Context *conte
 	if( objectModePlug()->getValue() == (int)Mode::Keep && transformModePlug()->getValue() == (int)Mode::Keep )
 	{
 		SceneProcessor::hashBound( path, context, parent, h );
-		inPlugs()->getChild<ScenePlug>( first( activeInputs ) )->boundPlug()->hash( h );
+
 		mergedDescendantsBoundPlug()->hash( h );
+
+		MergeContextHandler contextHandler( this, context );
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( firstActiveIndex );
+		childScene->boundPlug()->hash( h );
 		return;
 	}
 
@@ -508,12 +742,19 @@ void MergeScenes::hashBound( const ScenePath &path, const Gaffer::Context *conte
 
 Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	// Pass through for simple cases.
+	auto [ firstActiveIndex, activeInputsCount ] = firstAndCount( activeInputsPlug()->getValue()->readable() );
 
-	const InputMask activeInputs( activeInputsPlug()->getValue() );
-	if( activeInputs.count() == 1 || !adjustBoundsPlug()->getValue() )
+	if( activeInputsCount == Count::Zero )
 	{
-		return inPlugs()->getChild<ScenePlug>( first( activeInputs ) )->boundPlug()->getValue();
+		return inPlugs()->getChild<ScenePlug>( 0 )->boundPlug()->defaultValue();
+	}
+
+	if( activeInputsCount == Count::One || !adjustBoundsPlug()->getValue() )
+	{
+		// Pass through for simple cases.
+		MergeContextHandler contextHandler( this, context );
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( firstActiveIndex );
+		return childScene->boundPlug()->getValue();
 	}
 
 	// If objects and transforms always come from the first active input,
@@ -523,8 +764,11 @@ Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Con
 
 	if( objectModePlug()->getValue() == (int)Mode::Keep && transformModePlug()->getValue() == (int)Mode::Keep )
 	{
-		Box3f result = inPlugs()->getChild<ScenePlug>( first( activeInputs ) )->boundPlug()->getValue();
-		result.extendBy( mergedDescendantsBoundPlug()->getValue() );
+		Box3f result = mergedDescendantsBoundPlug()->getValue();
+
+		MergeContextHandler contextHandler( this, context );
+		const ScenePlug *childScene = contextHandler.setContextAndGetPlug( firstActiveIndex );
+		result.extendBy( childScene->boundPlug()->getValue() );
 		return result;
 	}
 
@@ -540,8 +784,15 @@ Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Con
 void MergeScenes::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	visit(
-		activeInputsPlug()->getValue(),
+		activeInputsPlug()->getValue()->readable(), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
+
+			if( type == InputType::None )
+			{
+				h = inPlugs()->getChild<ScenePlug>( 0 )->transformPlug()->defaultHash();
+				return false;
+			}
+
 			h = scene->transformPlug()->hash();
 			return false;
 		},
@@ -553,8 +804,14 @@ Imath::M44f MergeScenes::computeTransform( const ScenePath &path, const Gaffer::
 {
 	M44f result;
 	visit(
-		activeInputsPlug()->getValue(),
-		[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
+		activeInputsPlug()->getValue()->readable(), context,
+		[&result, this] ( InputType type, size_t index, const ScenePlug *scene ) {
+			if( type == InputType::None )
+			{
+				result = inPlugs()->getChild<ScenePlug>( 0 )->transformPlug()->defaultValue();
+				return false;
+			}
+
 			result = scene->transformPlug()->getValue();
 			return false;
 		},
@@ -567,10 +824,14 @@ Imath::M44f MergeScenes::computeTransform( const ScenePath &path, const Gaffer::
 void MergeScenes::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	visit(
-		activeInputsPlug()->getValue(),
+		activeInputsPlug()->getValue()->readable(), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					// Pass hash through unchanged
+					h = inPlugs()->getChild<ScenePlug>( 0 )->attributesPlug()->defaultHash();
+					break;
 				case InputType::Sole :
 					// Pass hash through unchanged
 					h = scene->attributesPlug()->hash();
@@ -594,10 +855,13 @@ IECore::ConstCompoundObjectPtr MergeScenes::computeAttributes( const ScenePath &
 	ConstCompoundObjectPtr result;
 	CompoundObjectPtr merged;
 	visit(
-		activeInputsPlug()->getValue(),
+		activeInputsPlug()->getValue()->readable(), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					result = inPlugs()->getChild<ScenePlug>( 0 )->attributesPlug()->defaultValue();
+					break;
 				case InputType::Sole :
 					// Pass input through unchanged.
 					result = scene->attributesPlug()->getValue();
@@ -627,10 +891,13 @@ IECore::ConstCompoundObjectPtr MergeScenes::computeAttributes( const ScenePath &
 void MergeScenes::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	visit(
-		activeInputsPlug()->getValue(),
+		activeInputsPlug()->getValue()->readable(), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					h = inPlugs()->getChild<ScenePlug>( 0 )->objectPlug()->defaultHash();
+					break;
 				case InputType::Sole :
 					// Pass hash through unchanged.
 					h = scene->objectPlug()->hash();
@@ -653,8 +920,13 @@ IECore::ConstObjectPtr MergeScenes::computeObject( const ScenePath &path, const 
 {
 	ConstObjectPtr result = IECore::NullObject::defaultNullObject();
 	visit(
-		activeInputsPlug()->getValue(),
-		[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
+		activeInputsPlug()->getValue()->readable(), context,
+		[&result, this] ( InputType type, size_t index, const ScenePlug *scene ) {
+			if( type == InputType::None )
+			{
+				result = inPlugs()->getChild<ScenePlug>( 0 )->objectPlug()->defaultValue();
+				return false;
+			}
 			ConstObjectPtr o = scene->objectPlug()->getValue();
 			if( runTimeCast<const NullObject>( o.get() ) )
 			{
@@ -677,10 +949,13 @@ IECore::ConstObjectPtr MergeScenes::computeObject( const ScenePath &path, const 
 void MergeScenes::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	visit(
-		activeInputsPlug()->getValue(),
+		activeInputsPlug()->getValue()->readable(), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					h = inPlugs()->getChild<ScenePlug>( 0 )->childNamesPlug()->defaultHash();
+					break;
 				case InputType::Sole :
 					h = scene->childNamesPlug()->hash();
 					break;
@@ -702,10 +977,13 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeChildNames( const S
 	unordered_set<InternedString> visited;
 
 	visit(
-		activeInputsPlug()->getValue(),
+		activeInputsPlug()->getValue()->readable(), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					result = inPlugs()->getChild<ScenePlug>( 0 )->childNamesPlug()->defaultValue();
+					break;
 				case InputType::Sole :
 				case InputType::First :
 					result = scene->childNamesPlug()->getValue();
@@ -740,10 +1018,13 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeChildNames( const S
 void MergeScenes::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	visit(
-		connectedInputs(),
+		connectedInputs( context ), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					h = inPlugs()->getChild<ScenePlug>( 0 )->globalsPlug()->defaultHash();
+					break;
 				case InputType::Sole :
 					// Pass hash through unchanged.
 					h = scene->globalsPlug()->hash();
@@ -767,10 +1048,13 @@ IECore::ConstCompoundObjectPtr MergeScenes::computeGlobals( const Gaffer::Contex
 	ConstCompoundObjectPtr result;
 	CompoundObjectPtr merged;
 	visit(
-		connectedInputs(),
+		connectedInputs( context ), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					result = inPlugs()->getChild<ScenePlug>( 0 )->globalsPlug()->defaultValue();
+					break;
 				case InputType::Sole :
 					// Pass input through unchanged.
 					result = scene->globalsPlug()->getValue();
@@ -800,10 +1084,13 @@ IECore::ConstCompoundObjectPtr MergeScenes::computeGlobals( const Gaffer::Contex
 void MergeScenes::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	visit(
-		connectedInputs(),
+		connectedInputs( context ), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					h = inPlugs()->getChild<ScenePlug>( 0 )->setNamesPlug()->defaultHash();
+					break;
 				case InputType::Sole :
 					// Pass hash through unchanged.
 					h = scene->setNamesPlug()->hash();
@@ -826,10 +1113,13 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeSetNames( const Gaf
 	ConstInternedStringVectorDataPtr result;
 	InternedStringVectorDataPtr merged;
 	visit(
-		connectedInputs(),
+		connectedInputs( context ), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					result = inPlugs()->getChild<ScenePlug>( 0 )->setNamesPlug()->defaultValue();
+					break;
 				case InputType::Sole :
 					// Pass input through unchanged.
 					result = scene->setNamesPlug()->getValue();
@@ -865,10 +1155,13 @@ void MergeScenes::hashSet( const IECore::InternedString &setName, const Gaffer::
 	/// \todo It might be a good idea to implement a pass-through for
 	/// the cases where the set only exists in one of the inputs.
 	visit(
-		connectedInputs(),
+		connectedInputs( context ), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					h = inPlugs()->getChild<ScenePlug>( 0 )->setPlug()->defaultHash();
+					break;
 				case InputType::Sole :
 					// Pass hash through unchanged.
 					h = scene->setPlug()->hash();
@@ -891,10 +1184,13 @@ IECore::ConstPathMatcherDataPtr MergeScenes::computeSet( const IECore::InternedS
 	ConstPathMatcherDataPtr result;
 	PathMatcherDataPtr merged;
 	visit(
-		connectedInputs(),
+		connectedInputs( context ), context,
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
 			switch( type )
 			{
+				case InputType::None :
+					result = inPlugs()->getChild<ScenePlug>( 0 )->setPlug()->defaultValue();
+					break;
 				case InputType::Sole :
 					// Pass input through unchanged.
 					result = scene->setPlug()->getValue();
@@ -929,34 +1225,51 @@ MergeScenes::VisitOrder MergeScenes::visitOrder( Mode mode, VisitOrder replaceOr
 	}
 }
 
-MergeScenes::InputMask MergeScenes::connectedInputs() const
+std::vector<bool> MergeScenes::connectedInputs( const Gaffer::Context *context ) const
 {
-	InputMask result;
-	for( size_t i = 0, e = inPlugs()->children().size(); i < e; ++i )
-	{
-		result[i] = (bool)inPlugs()->getChild<ScenePlug>( i )->getInput();
-	}
+	MergeContextHandler contextHandler( this, context );
+	int nContexts = contextHandler.numContexts();
 
-	if( !result.count() )
+	size_t numPlugs = inPlugs()->children().size();
+
+	std::vector<bool> result;
+	result.reserve( numPlugs * nContexts );
+
+	for( size_t i = 0; i < numPlugs; ++i )
 	{
-		result[0] = true;
+		bool connected = inPlugs()->getChild<ScenePlug>( i )->getInput();
+		// The connected value is the same across a plug, but we still output an element
+		// per context per plug - that keeps these indices matching up with the indices
+		// used in MergeContextHandler and visit()
+		for( int j = 0; j < nContexts; j++ )
+		{
+			result.push_back( connected );
+		}
 	}
 
 	return result;
 }
 
 template<typename Visitor>
-void MergeScenes::visit( InputMask inputMask, Visitor &&visitor, VisitOrder order ) const
+void MergeScenes::visit( const std::vector<bool> &inputMask, const Gaffer::Context *context, Visitor &&visitor, VisitOrder order ) const
 {
-	assert( inputMask.count() );
+	auto [ unusedFirst, inputMaskCount ] = firstAndCount( inputMask );
+	if( inputMaskCount == Count::Zero )
+	{
+		visitor( InputType::None, 0, nullptr );
+		return;
+	}
+
+	MergeContextHandler contextHandler( this, context );
+	int nContexts = contextHandler.numContexts();
 
 	const bool backwards = order == VisitOrder::Backwards || order == VisitOrder::LastOnly;
-	const int startIndex = backwards ? inPlugs()->children().size() - 1 : 0;
-	const int endIndex = backwards ? -1 : inPlugs()->children().size();
+	const int startIndex = backwards ? inPlugs()->children().size() * nContexts - 1 : 0;
+	const int endIndex = backwards ? -1 : inPlugs()->children().size() * nContexts;
 	const int increment = backwards ? -1 : 1;
 
 	InputType type;
-	if( order == VisitOrder::FirstOnly || order == VisitOrder::LastOnly || inputMask.count() == 1 )
+	if( order == VisitOrder::FirstOnly || order == VisitOrder::LastOnly || inputMaskCount == Count::One )
 	{
 		type = InputType::Sole;
 	}
@@ -969,7 +1282,8 @@ void MergeScenes::visit( InputMask inputMask, Visitor &&visitor, VisitOrder orde
 	{
 		if( inputMask[i] )
 		{
-			const bool c = visitor( type, i, inPlugs()->getChild<ScenePlug>( i ) );
+			const ScenePlug *childScene = contextHandler.setContextAndGetPlug( i );
+			const bool c = visitor( type, i, childScene );
 			if( !c || order == VisitOrder::FirstOnly || order == VisitOrder::LastOnly )
 			{
 				break;
