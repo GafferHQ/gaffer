@@ -95,9 +95,9 @@ class MergeContextHandler
 {
 public:
 	MergeContextHandler( const MergeScenes *mergeNode, const Context *context )
-		: m_mode( (MergeScenes::MergeMode)mergeNode->modePlug()->getValue() )
+		: m_mode( (MergeScenes::InputMode)mergeNode->inputModePlug()->getValue() )
 	{
-		if( m_mode == MergeScenes::MergeMode::Collect )
+		if( m_mode == MergeScenes::InputMode::Collect )
 		{
 			m_contextValuesData = mergeNode->contextValuesPlug()->getValue();
 			m_contextValues = &m_contextValuesData->readable();
@@ -124,11 +124,17 @@ public:
 
 	int setContextAndGetPlugIndex( int index )
 	{
-		if( m_mode == MergeScenes::MergeMode::Collect )
+		if( m_mode == MergeScenes::InputMode::Collect )
 		{
 			m_contextIndex = index % m_numContexts;
-			m_scope->set( m_contextVariable, &( (*m_contextValues)[m_contextIndex] ) );
-			m_scope->set( m_indexContextVariable, &m_contextIndex );
+			if( m_contextVariable.size() )
+			{
+				m_scope->set( m_contextVariable, &( (*m_contextValues)[m_contextIndex] ) );
+			}
+			if( m_indexContextVariable.size() )
+			{
+				m_scope->set( m_indexContextVariable, &m_contextIndex );
+			}
 			return index / m_numContexts;
 		}
 		else
@@ -157,7 +163,7 @@ public:
 
 private:
 
-	const MergeScenes::MergeMode m_mode;
+	const MergeScenes::InputMode m_mode;
 	ConstStringVectorDataPtr m_contextValuesData;
 	const std::vector<std::string> *m_contextValues;
 	std::string m_contextVariable;
@@ -182,17 +188,18 @@ MergeScenes::MergeScenes( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
+	addChild( new IntPlug( "inputMode", Plug::In, (int)InputMode::Standard, (int)InputMode::Standard, (int)InputMode::Collect) );
+
+	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
+	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
+	addChild( new StringPlug( "indexContextVariable", Plug::In, "merge:index" ) );
+
 	addChild( new IntPlug( "transformMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Replace ) );
 	addChild( new IntPlug( "attributesMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Merge ) );
 	addChild( new IntPlug( "objectMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Replace ) );
 	addChild( new IntPlug( "globalsMode", Plug::In, (int)Mode::Keep, (int)Mode::Keep, (int)Mode::Merge ) );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, true ) );
 
-	addChild( new IntPlug( "mode", Plug::In, (int)MergeMode::Standard, (int)MergeMode::Standard, (int)MergeMode::Collect) );
-
-	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
-	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
-	addChild( new StringPlug( "indexContextVariable", Plug::In, "merge:index" ) );
 
 	addChild( new BoolVectorDataPlug( "__activeInputs", Plug::Out ) );
 	addChild( new AtomicBox3fPlug( "__mergedDescendantsBound", Plug::Out ) );
@@ -204,94 +211,94 @@ MergeScenes::~MergeScenes()
 {
 }
 
-Gaffer::IntPlug *MergeScenes::transformModePlug()
+Gaffer::IntPlug *MergeScenes::inputModePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<IntPlug>( g_firstPlugIndex + 0 );
 }
 
-const Gaffer::IntPlug *MergeScenes::transformModePlug() const
+const Gaffer::IntPlug *MergeScenes::inputModePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
-
-Gaffer::IntPlug *MergeScenes::attributesModePlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::IntPlug *MergeScenes::attributesModePlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
-}
-
-Gaffer::IntPlug *MergeScenes::objectModePlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 2 );
-}
-
-const Gaffer::IntPlug *MergeScenes::objectModePlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 2 );
-}
-
-Gaffer::IntPlug *MergeScenes::globalsModePlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 3 );
-}
-
-const Gaffer::IntPlug *MergeScenes::globalsModePlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 3 );
-}
-
-Gaffer::BoolPlug *MergeScenes::adjustBoundsPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
-}
-
-const Gaffer::BoolPlug *MergeScenes::adjustBoundsPlug() const
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
-}
-
-Gaffer::IntPlug *MergeScenes::modePlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 5 );
-}
-
-const Gaffer::IntPlug *MergeScenes::modePlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 5 );
+	return getChild<IntPlug>( g_firstPlugIndex + 0 );
 }
 
 Gaffer::StringVectorDataPlug *MergeScenes::contextValuesPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 6 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::StringVectorDataPlug *MergeScenes::contextValuesPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 6 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::StringPlug *MergeScenes::contextVariablePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::StringPlug *MergeScenes::contextVariablePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::StringPlug *MergeScenes::indexContextVariablePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 8 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::StringPlug *MergeScenes::indexContextVariablePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 8 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::IntPlug *MergeScenes::transformModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::IntPlug *MergeScenes::transformModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::IntPlug *MergeScenes::attributesModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::IntPlug *MergeScenes::attributesModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
+}
+
+Gaffer::IntPlug *MergeScenes::objectModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 6 );
+}
+
+const Gaffer::IntPlug *MergeScenes::objectModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 6 );
+}
+
+Gaffer::IntPlug *MergeScenes::globalsModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 7 );
+}
+
+const Gaffer::IntPlug *MergeScenes::globalsModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 7 );
+}
+
+Gaffer::BoolPlug *MergeScenes::adjustBoundsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 8 );
+}
+
+const Gaffer::BoolPlug *MergeScenes::adjustBoundsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 8 );
 }
 
 Gaffer::BoolVectorDataPlug *MergeScenes::activeInputsPlug()
@@ -319,7 +326,7 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	SceneProcessor::affects( input, outputs );
 
 	const bool affectsInputContext =
-		input == modePlug() ||
+		input == inputModePlug() ||
 		input == contextValuesPlug() ||
 		input == contextVariablePlug() ||
 		input == indexContextVariablePlug();

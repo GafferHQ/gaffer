@@ -523,7 +523,7 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		merge = GafferScene.MergeScenes()
 		merge["in"][1].setInput( switch["out"] )
-		merge["mode"].setValue( GafferScene.MergeScenes.MergeMode.Collect )
+		merge["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
 		merge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1", "2" ] ) )
 
 		self.assertSceneValid( merge["out"] )
@@ -543,7 +543,7 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		merge = GafferScene.MergeScenes()
 		merge["in"][0].setInput( sphere["out"] )
-		merge["mode"].setValue( GafferScene.MergeScenes.MergeMode.Collect )
+		merge["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
 
 		unconnectedScene = GafferScene.ScenePlug()
 
@@ -628,7 +628,7 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		merge = GafferScene.MergeScenes()
 		merge["in"][0].setInput( switch["out"] )
-		merge["mode"].setValue( GafferScene.MergeScenes.MergeMode.Collect )
+		merge["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
 		merge["contextValues"].setValue( IECore.StringVectorData( [ "a", "b", "c" ] ) )
 
 		self.assertSceneValid( merge["out"] )
@@ -719,7 +719,7 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 		merge = GafferScene.MergeScenes()
 		merge["in"][0].setInput( sphereAttributes["out"] )
 		merge["in"][1].setInput( contextVariables["out"] )
-		merge["mode"].setValue( GafferScene.MergeScenes.MergeMode.Collect )
+		merge["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
 		merge["contextValues"].setValue( IECore.StringVectorData( [ "A", "B", "C" ] ) )
 
 		self.assertEqual( merge["out"].attributes( "/sphere" ), IECore.CompoundObject({'testA:':IECore.IntData( 1 )}) )
@@ -775,7 +775,7 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		mergeScenes = GafferScene.MergeScenes()
 		mergeScenes["in"][0].setInput( loop["out"] )
-		mergeScenes["mode"].setValue( GafferScene.MergeScenes.MergeMode.Collect )
+		mergeScenes["inputMode"].setValue( GafferScene.MergeScenes.InputMode.Collect )
 		mergeScenes["contextValues"].setValue( IECore.StringVectorData( [str(i) for i in range( 2 ** iterations ) ] ) )
 
 		self.assertSceneValid( mergeScenes["out"] )
