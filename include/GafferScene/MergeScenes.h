@@ -146,7 +146,8 @@ class GAFFERSCENE_API MergeScenes : public SceneProcessor
 		{
 			Sole,
 			First,
-			Other
+			Other,
+			None
 		};
 
 		enum VisitOrder
