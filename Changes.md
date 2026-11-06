@@ -34,6 +34,7 @@ Fixes
 - Viewer : Fixed crashes on macOS when using Arnold, Cycles or 3Delight as the viewport renderer.
 - Enums : Fixed conversion of `QtCore.Qt.AlignmentFlag.AlignJustify`.
 - Arnold, Cycles, 3Delight : Fixed fallback value for USD DistantLight intensity.
+- MetadataAlgo : Fixed crash calling `firstViewableNode()` on a plug without a node.
 
 API
 ---
