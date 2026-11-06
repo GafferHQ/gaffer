@@ -1011,7 +1011,10 @@ GraphComponent *firstViewableAncestor( Gaffer::GraphComponent *graphComponent, I
 		Gaffer::GraphComponent *nodeParent = nullptr;
 		if( auto p = runTimeCast<Gaffer::Plug>( graphComponent ) )
 		{
-			nodeParent = p->node()->ancestor<Gaffer::Node>();
+			if( auto n = p->node() )
+			{
+				nodeParent = n->ancestor<Gaffer::Node>();
+			}
 		}
 		else
 		{

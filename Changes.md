@@ -31,6 +31,7 @@ Fixes
 
 - Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
 - Viewer : Fixed crashes on macOS when using Arnold, Cycles or 3Delight as the viewport renderer.
+- MetadataAlgo : Fixed crash calling `firstViewableNode()` on a plug without a node.
 
 API
 ---
