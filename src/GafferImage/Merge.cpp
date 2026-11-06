@@ -643,9 +643,9 @@ class InputScope
 {
 public:
 	InputScope( const Merge* mergeNode, const Context *context )
-		:	m_mode( (Merge::Mode)mergeNode->inputModePlug()->getValue() )
+		:	m_mode( (Merge::InputMode)mergeNode->inputModePlug()->getValue() )
 	{
-		if( m_mode == Merge::Mode::Collect )
+		if( m_mode == Merge::InputMode::Collect )
 		{
 			m_contextValuesData = mergeNode->contextValuesPlug()->getValue();
 			m_contextValues = &m_contextValuesData->readable();
@@ -672,7 +672,7 @@ public:
 
 	void setContextForIndex( int index )
 	{
-		if( m_mode == Merge::Mode::Collect )
+		if( m_mode == Merge::InputMode::Collect )
 		{
 			m_index = index;
 			if( !m_contextVariable.string().empty() )
@@ -693,7 +693,7 @@ public:
 
 private:
 
-	const Merge::Mode m_mode;
+	const Merge::InputMode m_mode;
 	ConstStringVectorDataPtr m_contextValuesData;
 	const std::vector<std::string> *m_contextValues;
 	IECore::InternedString m_contextVariable;
@@ -718,7 +718,9 @@ Merge::Merge( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntPlug( "inputMode", Plug::In, (int)Mode::Standard, (int)Mode::Standard, (int)Mode::Collect) );
+	addChild( new IntPlug(
+		"inputMode", Plug::In, (int)InputMode::Standard, (int)InputMode::Standard, (int)InputMode::Collect
+	) );
 
 	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
 	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
