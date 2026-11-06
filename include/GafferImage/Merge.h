@@ -66,6 +66,25 @@ class GAFFERIMAGE_API Merge : public FlatImageProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Merge, MergeTypeId, FlatImageProcessor );
 
+		// \deprecated - Will be renamed to InputMode in Gaffer 1.8
+		enum class Mode
+		{
+			Standard,
+			Collect
+		};
+
+		Gaffer::IntPlug *inputModePlug();
+		const Gaffer::IntPlug *inputModePlug() const;
+
+		Gaffer::StringVectorDataPlug *contextValuesPlug();
+		const Gaffer::StringVectorDataPlug *contextValuesPlug() const;
+
+		Gaffer::StringPlug *contextVariablePlug();
+		const Gaffer::StringPlug *contextVariablePlug() const;
+
+		Gaffer::StringPlug *indexContextVariablePlug();
+		const Gaffer::StringPlug *indexContextVariablePlug() const;
+
 		enum Operation
 		{
 			Add,       // A + B
@@ -87,22 +106,6 @@ class GAFFERIMAGE_API Merge : public FlatImageProcessor
 		Gaffer::IntPlug *operationPlug();
 		const Gaffer::IntPlug *operationPlug() const;
 
-		enum class Mode
-		{
-			Standard,
-			Collect
-		};
-		Gaffer::IntPlug *modePlug();
-		const Gaffer::IntPlug *modePlug() const;
-
-		Gaffer::StringVectorDataPlug *contextValuesPlug();
-		const Gaffer::StringVectorDataPlug *contextValuesPlug() const;
-
-		Gaffer::StringPlug *contextVariablePlug();
-		const Gaffer::StringPlug *contextVariablePlug() const;
-
-		Gaffer::StringPlug *indexContextVariablePlug();
-		const Gaffer::StringPlug *indexContextVariablePlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

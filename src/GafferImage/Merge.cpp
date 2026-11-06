@@ -639,11 +639,11 @@ struct MergeDataWindowFunctor
 
 };
 
-class MergeContextHandler
+class InputScope
 {
 public:
-	MergeContextHandler( const Merge* mergeNode, const Context *context )
-		:	m_mode( (Merge::Mode)mergeNode->modePlug()->getValue() )
+	InputScope( const Merge* mergeNode, const Context *context )
+		:	m_mode( (Merge::Mode)mergeNode->inputModePlug()->getValue() )
 	{
 		if( m_mode == Merge::Mode::Collect )
 		{
@@ -675,8 +675,14 @@ public:
 		if( m_mode == Merge::Mode::Collect )
 		{
 			m_index = index;
-			m_scope->set( m_contextVariable, &( (*m_contextValues)[m_index] ) );
-			m_scope->set( m_indexContextVariable, &m_index );
+			if( !m_contextVariable.string().empty() )
+			{
+				m_scope->set( m_contextVariable, &( (*m_contextValues)[m_index] ) );
+			}
+			if( !m_indexContextVariable.string().empty() )
+			{
+				m_scope->set( m_indexContextVariable, &m_index );
+			}
 		}
 	}
 
@@ -690,8 +696,8 @@ private:
 	const Merge::Mode m_mode;
 	ConstStringVectorDataPtr m_contextValuesData;
 	const std::vector<std::string> *m_contextValues;
-	std::string m_contextVariable;
-	std::string m_indexContextVariable;
+	IECore::InternedString m_contextVariable;
+	IECore::InternedString m_indexContextVariable;
 
 	int m_numContexts;
 	const Context *m_context;
@@ -711,6 +717,13 @@ Merge::Merge( const std::string &name )
 	:	FlatImageProcessor( name, 2 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new IntPlug( "inputMode", Plug::In, (int)Mode::Standard, (int)Mode::Standard, (int)Mode::Collect) );
+
+	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
+	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
+	addChild( new StringPlug( "indexContextVariable", Plug::In, "merge:index" ) );
+
 	addChild(
 		new IntPlug(
 			"operation", // name
@@ -721,74 +734,62 @@ Merge::Merge( const std::string &name )
 		)
 	);
 
-	addChild(
-		new IntPlug(
-			"mode",         // name
-			Plug::In,       // direction
-			(int)Mode::Standard, // default
-			(int)Mode::Standard, // min
-			(int)Mode::Collect   // max
-		)
-	);
-
-	addChild( new StringVectorDataPlug( "contextValues", Plug::In ) );
-	addChild( new StringPlug( "contextVariable", Plug::In, "merge:value" ) );
-	addChild( new StringPlug( "indexContextVariable", Plug::In, "merge:index" ) );
 }
 
 Merge::~Merge()
 {
 }
 
-Gaffer::IntPlug *Merge::operationPlug()
+Gaffer::IntPlug *Merge::inputModePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<IntPlug>( g_firstPlugIndex + 0 );
 }
 
-const Gaffer::IntPlug *Merge::operationPlug() const
+const Gaffer::IntPlug *Merge::inputModePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
-
-Gaffer::IntPlug *Merge::modePlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::IntPlug *Merge::modePlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex + 0 );
 }
 
 Gaffer::StringVectorDataPlug *Merge::contextValuesPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::StringVectorDataPlug *Merge::contextValuesPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::StringPlug *Merge::contextVariablePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::StringPlug *Merge::contextVariablePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::StringPlug *Merge::indexContextVariablePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::StringPlug *Merge::indexContextVariablePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
+
+Gaffer::IntPlug *Merge::operationPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::IntPlug *Merge::operationPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
 
 void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
@@ -800,7 +801,7 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 		outputs.push_back( outPlug()->dataWindowPlug() );
 	}
 	else if(
-		input == modePlug() || input == contextValuesPlug() ||
+		input == inputModePlug() || input == contextValuesPlug() ||
 		input == contextVariablePlug() || input == indexContextVariablePlug()
 	)
 	{
@@ -835,7 +836,7 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 void Merge::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	if( contextHandler.numContexts() == 0 )
 	{
@@ -849,7 +850,7 @@ void Merge::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::C
 
 IECore::ConstStringVectorDataPtr Merge::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	if( contextHandler.numContexts() == 0 )
 	{
@@ -863,7 +864,7 @@ IECore::ConstStringVectorDataPtr Merge::computeViewNames( const Gaffer::Context 
 
 void Merge::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	if( contextHandler.numContexts() == 0 )
 	{
@@ -878,7 +879,7 @@ void Merge::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Cont
 
 GafferImage::Format Merge::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	if( contextHandler.numContexts() == 0 )
 	{
@@ -892,7 +893,7 @@ GafferImage::Format Merge::computeFormat( const Gaffer::Context *context, const 
 
 void Merge::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	if( contextHandler.numContexts() == 0 )
 	{
@@ -906,7 +907,7 @@ void Merge::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Co
 
 IECore::ConstCompoundDataPtr Merge::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	if( contextHandler.numContexts() == 0 )
 	{
@@ -921,7 +922,7 @@ void Merge::hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Contex
 {
 	ImageProcessor::hashDeep( parent, context, h );
 
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -944,7 +945,7 @@ void Merge::hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Contex
 bool Merge::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -974,7 +975,7 @@ void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::
 
 	operationPlug()->hash( h );
 
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -1004,7 +1005,7 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 	Operation op = (Operation)operationPlug()->getValue();
 	bool first = true;
 
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -1032,7 +1033,7 @@ void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer
 {
 	FlatImageProcessor::hashChannelNames( output, context, h );
 
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -1054,7 +1055,7 @@ void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer
 
 IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
@@ -1115,7 +1116,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 		finalTileDataWindowLocal = boxIntersection( fullBound, finalDataWindowLocal );
 	}
 
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -1234,7 +1235,7 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 
 	bool partialBound = false;
 
-	MergeContextHandler contextHandler( this, context );
+	InputScope contextHandler( this, context );
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
