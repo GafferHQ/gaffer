@@ -106,6 +106,32 @@ class EditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( editorsCreated, [ e1, e2, e3 ] )
 		self.assertEqual( pythonEditorsCreated, [ e2 ] )
 
+	def testBadInstanceCreatedSlot( self ) :
+
+		def badSlot( editor ) :
+
+			raise RuntimeError( "Ooops" )
+
+		badConnection = GafferUI.PythonEditor.instanceCreatedSignal().connect( badSlot, scoped = True )
+		capturingSlot = GafferTest.CapturingSlot( GafferUI.PythonEditor.instanceCreatedSignal() )
+
+		with IECore.CapturingMessageHandler() as mh :
+			editor = GafferUI.PythonEditor( Gaffer.ScriptNode() )
+
+		# We should have caught the exception from the bad slot
+		# and printed a message about it.
+
+		self.assertEqual( len( mh.messages ), 1 )
+
+		self.assertEqual( mh.messages[0].level, mh.Level.Error )
+		self.assertEqual( mh.messages[0].context, "Emitting PythonEditor.instanceCreatedSignal" )
+		self.assertRegex( mh.messages[0].message, "Ooops" )
+
+		# And the good slot should have run as normal.
+
+		self.assertEqual( len( capturingSlot ), 1 )
+		self.assertEqual( capturingSlot[0], ( editor, ) )
+
 	def testIssue5877( self ) :
 
 		# This test models the bug reported in #5877. First we have

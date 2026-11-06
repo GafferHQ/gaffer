@@ -1086,6 +1086,37 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		merge["in"][0].setInput( None )
 		self.assertImagesEqual( collectMerge["out"], merge["out"] )
 
+	def testEmptyContextVariables( self ) :
+
+		constant = GafferImage.Constant()
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( constant["out"] )
+		merge["inputMode"].setValue( GafferImage.DeepMerge.InputMode.Collect )
+		merge["contextValues"].setValue( IECore.StringVectorData( [ "a", "b" ] ) )
+
+		for contextVariable, indexContextVariable in [
+			( "merge:value", "merge:index" ),
+			( "", "merge:index" ),
+			( "merge:value", "" ),
+			( "", "" ),
+		] :
+
+			with self.subTest( contextVariable = contextVariable, indexContextVariable = indexContextVariable ) :
+
+				merge["contextVariable"].setValue( contextVariable )
+				merge["indexContextVariable"].setValue( indexContextVariable )
+
+				with Gaffer.ContextMonitor( constant["out"] ) as monitor :
+					GafferImage.ImageAlgo.tiles( merge["out"] )
+
+				self.assertEqual(
+					set( monitor.combinedStatistics().variableNames() ),
+					{
+						"image:channelName", "image:tileOrigin", "frame", "framesPerSecond"
+					} | { v for v in ( contextVariable, indexContextVariable ) if v }
+				)
+
 	def testCollectWithMultipleInputs( self ) :
 		# Compare a merge in Collect mode with one that does the same merge in Standard mode
 
