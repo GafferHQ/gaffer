@@ -704,11 +704,11 @@ void Globals::output( const IECore::InternedString &name, const Output *output )
 				IECore::msg( IECore::Msg::Warning, "RenderManRenderer", fmt::format( "Ignoring unsupported parameter \"{}\" on output \"{}\". Filters must be specified via global options.", n.string(), name.string() ) );
 			}
 		}
-		m_outputs[name] = copy;
+		m_outputs[name.string()] = copy;
 	}
 	else
 	{
-		m_outputs.erase( name );
+		m_outputs.erase( name.string() );
 	}
 
 	deleteRenderView();
