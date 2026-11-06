@@ -194,6 +194,11 @@ class MeshSegmentsTest( GafferSceneTest.SceneTestCase ) :
 		s["connectivity"].setValue( "" )
 		self.assertEqual( s["out"].object( "/object" )["segment"].data, IECore.IntVectorData( [0, 1] ) )
 
+		# Or get vertex connectivity by specifying a bad primvar using `ignoreMissing`
+		s["connectivity"].setValue( "doesNotExist" )
+		s["ignoreMissing"].setValue( True )
+		self.assertEqual( s["out"].object( "/object" )["segment"].data, IECore.IntVectorData( [0, 1] ) )
+
 		# And segmenting by a const primvar always puts everything in one segment
 		s["connectivity"].setValue( "const" )
 		self.assertEqual( s["out"].object( "/object" )["segment"].data, IECore.IntVectorData( [0, 0] ) )

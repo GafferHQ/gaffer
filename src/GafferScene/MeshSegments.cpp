@@ -171,6 +171,7 @@ MeshSegments::MeshSegments( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "connectivity", Plug::In, "P" ) );
+	addChild( new BoolPlug( "ignoreMissing", Plug::In, false ) );
 	addChild( new StringPlug( "segment", Plug::In, "segment" ) );
 }
 
@@ -188,14 +189,24 @@ const Gaffer::StringPlug *MeshSegments::connectivityPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *MeshSegments::ignoreMissingPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *MeshSegments::ignoreMissingPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::StringPlug *MeshSegments::segmentPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::StringPlug *MeshSegments::segmentPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 bool MeshSegments::affectsProcessedObject( const Gaffer::Plug *input ) const
@@ -203,6 +214,7 @@ bool MeshSegments::affectsProcessedObject( const Gaffer::Plug *input ) const
 	return
 		ObjectProcessor::affectsProcessedObject( input ) ||
 		input == connectivityPlug() ||
+		input == ignoreMissingPlug() ||
 		input == segmentPlug()
 	;
 }
@@ -212,12 +224,14 @@ void MeshSegments::hashProcessedObject( const ScenePath &path, const Gaffer::Con
 	ObjectProcessor::hashProcessedObject( path, context, h );
 
 	connectivityPlug()->hash( h );
+	ignoreMissingPlug()->hash( h );
 	segmentPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr MeshSegments::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
 	const std::string segmentPrimVar = segmentPlug()->getValue();
+	const bool ignoreMissing = ignoreMissingPlug()->getValue();
 	const std::string connectivityPrimVar = connectivityPlug()->getValue();
 	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject );
 	if( !mesh || !segmentPrimVar.size() )
@@ -240,14 +254,18 @@ IECore::ConstObjectPtr MeshSegments::computeProcessedObject( const ScenePath &pa
 	else
 	{
 		auto it = mesh->variables.find( connectivityPrimVar );
-		if( it == mesh->variables.end() )
+		if( it == mesh->variables.end() && !ignoreMissing )
 		{
 			throw IECore::Exception( "No primitive variable named \"" + connectivityPrimVar + "\"" );
 		}
 
-		if( it->second.interpolation == PrimitiveVariable::Interpolation::Vertex || it->second.interpolation == PrimitiveVariable::Interpolation::Varying )
+		if(
+			( it == mesh->variables.end() && ignoreMissing ) ||
+			it->second.interpolation == PrimitiveVariable::Interpolation::Vertex ||
+			it->second.interpolation == PrimitiveVariable::Interpolation::Varying
+		)
 		{
-			if( it->second.indices )
+			if( it != mesh->variables.end() && it->second.indices )
 			{
 				throw IECore::Exception( "Vertex primitive variable " + connectivityPrimVar + " has indices.  Indices are not supported on vertex primitive variables." );
 			}

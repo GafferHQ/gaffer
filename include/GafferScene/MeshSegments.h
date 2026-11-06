@@ -57,6 +57,9 @@ class GAFFERSCENE_API MeshSegments : public ObjectProcessor
 		Gaffer::StringPlug *connectivityPlug();
 		const Gaffer::StringPlug *connectivityPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingPlug();
+		const Gaffer::BoolPlug *ignoreMissingPlug() const;
+
 		Gaffer::StringPlug *segmentPlug();
 		const Gaffer::StringPlug *segmentPlug() const;
 
