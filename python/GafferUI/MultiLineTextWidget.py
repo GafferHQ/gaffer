@@ -160,12 +160,12 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		if errored == self.getErrored() :
 			return
 
-		self._qtWidget().setProperty( "gafferError", GafferUI._Variant.toVariant( bool( errored ) ) )
+		self._qtWidget().setProperty( "gafferError", bool( errored ) )
 		self._repolish()
 
 	def getErrored( self ) :
 
-		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferError" ) ) or False
+		return self._qtWidget().property( "gafferError" ) or False
 
 	def setCursorPosition( self, position ) :
 
@@ -278,12 +278,12 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		if role == self.getRole() :
 			return
 
-		self._qtWidget().setProperty( "gafferRole", GafferUI._Variant.toVariant( role.name ) )
+		self._qtWidget().setProperty( "gafferRole", role.name )
 		self._repolish()
 
 	def getRole( self ) :
 
-		role = GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferRole" ) )
+		role = self._qtWidget().property( "gafferRole" )
 		if role is None :
 			return self.Role.Text
 

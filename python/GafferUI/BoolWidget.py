@@ -143,9 +143,7 @@ class BoolWidget( GafferUI.Widget ) :
 
 		return getattr(
 			self.DisplayMode,
-			GafferUI._Variant.fromVariant(
-				self._qtWidget().property( "gafferDisplayMode" )
-			)
+			self._qtWidget().property( "gafferDisplayMode" )
 		)
 
 	def setErrored( self, errored ) :
@@ -153,12 +151,12 @@ class BoolWidget( GafferUI.Widget ) :
 		if errored == self.getErrored() :
 			return
 
-		self._qtWidget().setProperty( "gafferError", GafferUI._Variant.toVariant( bool( errored ) ) )
+		self._qtWidget().setProperty( "gafferError", bool( errored ) )
 		self._repolish()
 
 	def getErrored( self ) :
 
-		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferError" ) ) or False
+		return self._qtWidget().property( "gafferError" ) or False
 
 	def stateChangedSignal( self ) :
 

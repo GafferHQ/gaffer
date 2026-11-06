@@ -199,7 +199,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if valueChanged == self.__getValueChanged() :
 			return
 
-		self.__label._qtWidget().setProperty( "gafferValueChanged", GafferUI._Variant.toVariant( valueChanged ) )
+		self.__label._qtWidget().setProperty( "gafferValueChanged", valueChanged )
 		self.__label._repolish()
 
 	def __getValueChanged( self ) :
@@ -207,7 +207,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if "gafferValueChanged" not in self.__label._qtWidget().dynamicPropertyNames() :
 			return False
 
-		return GafferUI._Variant.fromVariant( self.__label._qtWidget().property( "gafferValueChanged" ) )
+		return self.__label._qtWidget().property( "gafferValueChanged" )
 
 	def __dragBegin( self, widget, event ) :
 

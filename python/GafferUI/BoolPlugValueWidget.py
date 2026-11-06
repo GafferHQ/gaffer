@@ -85,9 +85,9 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		animated = any( Gaffer.Animation.isAnimated( p ) for p in self.getPlugs() )
 		## \todo Perhaps this styling should be provided by the BoolWidget itself?
-		widgetAnimated = GafferUI._Variant.fromVariant( self.__boolWidget._qtWidget().property( "gafferAnimated" ) ) or False
+		widgetAnimated = self.__boolWidget._qtWidget().property( "gafferAnimated" ) or False
 		if widgetAnimated != animated :
-			self.__boolWidget._qtWidget().setProperty( "gafferAnimated", GafferUI._Variant.toVariant( bool( animated ) ) )
+			self.__boolWidget._qtWidget().setProperty( "gafferAnimated", bool( animated ) )
 			self.__boolWidget._repolish()
 
 	def _updateFromMetadata( self ) :

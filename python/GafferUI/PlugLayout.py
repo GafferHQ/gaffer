@@ -982,7 +982,7 @@ class _CollapsibleLayout( _Layout ) :
 
 			currentValueChanged = collapsible._qtWidget().property( "gafferValueChanged" )
 			if subsection.valuesChanged != currentValueChanged :
-				collapsible._qtWidget().setProperty( "gafferValueChanged", GafferUI._Variant.toVariant( subsection.valuesChanged ) )
+				collapsible._qtWidget().setProperty( "gafferValueChanged", subsection.valuesChanged )
 				collapsible._repolish()
 
 			widgets.append( collapsible )

@@ -381,7 +381,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		if highlighted == self.getHighlighted() :
 			return
 
-		self._qtWidget().setProperty( "gafferHighlighted", GafferUI._Variant.toVariant( highlighted ) )
+		self._qtWidget().setProperty( "gafferHighlighted", highlighted )
 		self._repolish()
 
 	def getHighlighted( self ) :
@@ -389,7 +389,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		if "gafferHighlighted" not in self._qtWidget().dynamicPropertyNames() :
 			return False
 
-		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferHighlighted" ) )
+		return self._qtWidget().property( "gafferHighlighted" )
 
 	## Returns the GafferUI.Widget which is the parent for this
 	# Widget, or None if it has no parent.

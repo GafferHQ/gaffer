@@ -978,7 +978,7 @@ class ColorChooser( GafferUI.Widget ) :
 						)
 						# Remove the `gafferBorderStyle` property to remove padding that `_StyleSheet` adds. This way
 						# the icons connect without gaps.
-						self.__channelFrames[component]._qtWidget().setProperty( "gafferBorderStyle", GafferUI._Variant.toVariant( None ) )
+						self.__channelFrames[component]._qtWidget().setProperty( "gafferBorderStyle", None )
 
 						self.__channelLabels[component] = GafferUI.Label(
 							component.capitalize(),

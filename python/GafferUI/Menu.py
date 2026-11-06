@@ -73,7 +73,7 @@ class Menu( GafferUI.Widget ) :
 
 		self.__title = title
 		# this property is used by the stylesheet to fix up menu padding bugs
-		self._qtWidget().setProperty( "gafferHasTitle", GafferUI._Variant.toVariant( title is not None ) )
+		self._qtWidget().setProperty( "gafferHasTitle", title is not None )
 
 		self._qtWidget().__definition = definition
 		self._qtWidget().aboutToShow.connect( Gaffer.WeakMethod( self.__show ) )
@@ -339,7 +339,7 @@ class Menu( GafferUI.Widget ) :
 							if len( qtMenu.actions() ) :
 								qtMenu.addAction( _SpacerAction( qtMenu ) )
 							elif action.hasText :
-								qtMenu.setProperty( "gafferHasLeadingLabelledDivider", GafferUI._Variant.toVariant( True ) )
+								qtMenu.setProperty( "gafferHasLeadingLabelledDivider", True )
 								needsBottomSpacer = True
 
 						qtMenu.addAction( action )
@@ -490,14 +490,14 @@ class Menu( GafferUI.Widget ) :
 
 	def __getSearchBoxErrorState(self):
 
-		return GafferUI._Variant.fromVariant( self.__searchLine.property( "gafferError" ) ) or False
+		return self.__searchLine.property( "gafferError" ) or False
 
 	def __setSearchBoxErrorState(self, errored):
 
 		if errored is self.__getSearchBoxErrorState():
 			return
 
-		self.__searchLine.setProperty( "gafferError", GafferUI._Variant.toVariant( errored ) )
+		self.__searchLine.setProperty( "gafferError", errored )
 		self._repolish()
 
 	def __updateSearchMenu( self, text ) :

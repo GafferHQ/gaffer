@@ -586,7 +586,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		tabBar = self._qtWidget().tabBar()
-		tabBar.setProperty( "gafferHasTabCloseButtons", GafferUI._Variant.toVariant( True ) )
+		tabBar.setProperty( "gafferHasTabCloseButtons", True )
 		tabBar.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
 		tabBar.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__tabContextMenu ) )
 
@@ -657,7 +657,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	def __updateStyles( self ) :
 
 		# Had issues using ints
-		self._qtWidget().setProperty( "gafferNumChildren", GafferUI._Variant.toVariant( "%d" % len(self) ) )
+		self._qtWidget().setProperty( "gafferNumChildren", "%d" % len( self ) )
 		self._repolish()
 
 	def __configureTab( self, editor ) :

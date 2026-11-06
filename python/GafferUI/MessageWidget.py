@@ -1252,7 +1252,7 @@ class _MessageTableExpandedViewProxy( QtCore.QAbstractProxyModel ) :
 				return "%s\n" % source.data( sourceIndex, role )
 
 			elif role == QtCore.Qt.ItemDataRole.ForegroundRole :
-				return GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "foreground" ) )
+				return GafferUI._StyleSheet.styleColor( "foreground" )
 
 		return source.data( sourceIndex, role )
 
@@ -1293,7 +1293,7 @@ class _MessageTableExpandedViewProxy( QtCore.QAbstractProxyModel ) :
 		if not hasattr( self, "_colorMap" ) :
 			self._colorMap = {}
 			for l in _messageLevels :
-				self._colorMap[ int(l) ] = GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "foreground%s" % l ) )
+				self._colorMap[ int(l) ] = GafferUI._StyleSheet.styleColor( "foreground%s" % l )
 
 		return self._colorMap[ levelData ]
 
@@ -1463,4 +1463,4 @@ class _MessageTableModel( QtCore.QAbstractTableModel ) :
 			message = self.__messages[ index.row() ]
 			# Keep info level messages white
 			suffix = "" if message.level == IECore.MessageHandler.Level.Info else str( message.level )
-			return GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "foreground%s" % suffix ) )
+			return GafferUI._StyleSheet.styleColor( "foreground%s" % suffix )

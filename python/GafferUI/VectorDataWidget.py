@@ -187,7 +187,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if highlighted == self.getHighlighted() :
 			return
 
-		self.__tableView.setProperty( "gafferHighlighted", GafferUI._Variant.toVariant( highlighted ) )
+		self.__tableView.setProperty( "gafferHighlighted", highlighted )
 
 		GafferUI.Widget.setHighlighted( self, highlighted )
 
@@ -196,12 +196,12 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if errored == self.getErrored() :
 			return
 
-		self.__tableView.setProperty( "gafferError", GafferUI._Variant.toVariant( bool( errored ) ) )
+		self.__tableView.setProperty( "gafferError", bool( errored ) )
 		self._repolish()
 
 	def getErrored( self ) :
 
-		return GafferUI._Variant.fromVariant( self.__tableView.property( "gafferError" ) ) or False
+		return self.__tableView.property( "gafferError" ) or False
 
 	def addButton( self ) :
 
@@ -934,14 +934,14 @@ class _Model( QtCore.QAbstractTableModel ) :
 						result += ( "." + suffix ) if suffix is not None else ""
 				else :
 					result = column.accessor.headerLabel( column.relativeColumnIndex )
-				return GafferUI._Variant.toVariant( result )
+				return result
 			else :
-				return GafferUI._Variant.toVariant( section )
+				return section
 		elif role == QtCore.Qt.ItemDataRole.ToolTipRole :
 			if orientation == QtCore.Qt.Orientation.Horizontal and self.__toolTips is not None :
-				return GafferUI._Variant.toVariant( self.__toolTips[self.columnToDataIndex(section)[0]] )
+				return self.__toolTips[self.columnToDataIndex(section)[0]]
 
-		return GafferUI._Variant.toVariant( None )
+		return None
 
 	def flags( self, index ) :
 
@@ -963,9 +963,9 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if role == QtCore.Qt.ItemDataRole.BackgroundRole :
 
 			if self.columnToDataIndex( index.column() )[0] % 2 == 0:
-				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("background")  )
+				return  GafferUI._StyleSheet.styleColor( "background" )
 			else:
-				return  GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor("backgroundAlt") )
+				return  GafferUI._StyleSheet.styleColor( "backgroundAlt" )
 
 		if (
 			role == QtCore.Qt.ItemDataRole.DisplayRole or
@@ -974,7 +974,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 			if index.row() < len( column.accessor.data() ) :
 				return column.accessor.getElement( index.row(), column.relativeColumnIndex )
 
-		return GafferUI._Variant.toVariant( None )
+		return None
 
 	def setData( self, index, value, role ) :
 
@@ -1012,11 +1012,11 @@ class _DataAccessor( object ) :
 
 	def setElement( self, rowIndex, columnIndex, value ) :
 
-		self.data()[rowIndex] = GafferUI._Variant.fromVariant( value )
+		self.data()[rowIndex] = value
 
 	def getElement( self, rowIndex, columnIndex ) :
 
-		return GafferUI._Variant.toVariant( self.data()[rowIndex] )
+		return self.data()[rowIndex]
 
 	# Factory methods
 	#################################
@@ -1070,12 +1070,12 @@ class _CompoundDataAccessor( _DataAccessor ) :
 	def setElement( self, rowIndex, columnIndex, value ) :
 
 		element = self.data()[rowIndex]
-		element[columnIndex] = GafferUI._Variant.fromVariant( value )
+		element[columnIndex] = value
 		self.data()[rowIndex] = element
 
 	def getElement( self, rowIndex, columnIndex ) :
 
-		return GafferUI._Variant.toVariant( self.data()[rowIndex][columnIndex] )
+		return self.data()[rowIndex][columnIndex]
 
 _DataAccessor.registerType( IECore.V2iVectorData.staticTypeId(), _CompoundDataAccessor )
 _DataAccessor.registerType( IECore.V2fVectorData.staticTypeId(), _CompoundDataAccessor )
@@ -1096,14 +1096,14 @@ class _ColorDataAccessor( _CompoundDataAccessor ) :
 		if columnIndex < self.numColumns() - 1 :
 			_CompoundDataAccessor.setElement( self, rowIndex, columnIndex, value )
 		else :
-			self.data()[rowIndex] = GafferUI._Variant.fromVariant( value )
+			self.data()[rowIndex] = value
 
 	def getElement( self, rowIndex, columnIndex ) :
 
 		if columnIndex < self.numColumns() - 1 :
 			return _CompoundDataAccessor.getElement( self, rowIndex, columnIndex )
 		else :
-			return GafferUI._Variant.toVariant( self.data()[rowIndex] )
+			return self.data()[rowIndex]
 
 class _Color3fDataAccessor( _ColorDataAccessor ) :
 
@@ -1154,13 +1154,13 @@ class _QuatDataAccessor( _CompoundDataAccessor ) :
 
 		v = self.data()[rowIndex]
 		if columnIndex == 0:
-			return GafferUI._Variant.toVariant( v.r() )
+			return v.r()
 		if columnIndex == 1:
-			return GafferUI._Variant.toVariant( v.v()[0] )
+			return v.v()[0]
 		if columnIndex == 2:
-			return GafferUI._Variant.toVariant( v.v()[1] )
+			return v.v()[1]
 		if columnIndex == 3:
-			return GafferUI._Variant.toVariant( v.v()[2] )
+			return v.v()[2]
 
 _DataAccessor.registerType( IECore.QuatfVectorData.staticTypeId(), _QuatDataAccessor )
 _DataAccessor.registerType( IECore.QuatdVectorData.staticTypeId(), _QuatDataAccessor )
@@ -1186,7 +1186,7 @@ class _BoxDataAccessor( _CompoundDataAccessor ) :
 	def setElement( self, rowIndex, columnIndex, value ) :
 
 		element = self.data()[rowIndex]
-		element[columnIndex] = GafferUI._Variant.fromVariant( value )
+		element[columnIndex] = value
 		self.data()[rowIndex] = element
 
 	def getElement( self, rowIndex, columnIndex ) :
@@ -1197,9 +1197,9 @@ class _BoxDataAccessor( _CompoundDataAccessor ) :
 		minMax = (columnIndex - index) / dimension
 		item = self.data()[rowIndex]
 		if minMax == 0:
-			return GafferUI._Variant.toVariant( item.min()[index] )
+			return item.min()[index]
 		else:
-			return GafferUI._Variant.toVariant( item.max()[index] )
+			return item.max()[index]
 
 _DataAccessor.registerType( IECore.Box2iVectorData.staticTypeId(), _BoxDataAccessor )
 _DataAccessor.registerType( IECore.Box2fVectorData.staticTypeId(), _BoxDataAccessor )
@@ -1231,7 +1231,7 @@ class _MatrixDataAccessor( _DataAccessor ) :
 	def setElement( self, rowIndex, columnIndex, value ) :
 
 		element = self.data()[rowIndex]
-		element[columnIndex] = GafferUI._Variant.fromVariant( value )
+		element[columnIndex] = value
 		self.data()[rowIndex] = element
 
 	def getElement( self, rowIndex, columnIndex ) :
@@ -1245,7 +1245,7 @@ class _MatrixDataAccessor( _DataAccessor ) :
 		x = (columnIndex - y) // dimension
 		item = self.data()[rowIndex]
 
-		return GafferUI._Variant.toVariant( item[x][y] )
+		return item[x][y]
 
 _DataAccessor.registerType( IECore.M33fVectorData.staticTypeId(), _MatrixDataAccessor )
 _DataAccessor.registerType( IECore.M33dVectorData.staticTypeId(), _MatrixDataAccessor )
@@ -1272,7 +1272,7 @@ class _InternedStringDataAccessor( _StringDataAccessor ) :
 
 	def getElement( self, rowIndex, columnIndex ) :
 
-		return GafferUI._Variant.toVariant( self.data()[rowIndex].value() )
+		return self.data()[rowIndex].value()
 
 _DataAccessor.registerType( IECore.InternedStringVectorData.staticTypeId(), _InternedStringDataAccessor )
 
@@ -1332,14 +1332,14 @@ class _Delegate( QtWidgets.QStyledItemDelegate ) :
 	def setEditorData( self, editor, index ) :
 
 		if self.__editor is not None :
-			self.__editor.setValue( GafferUI._Variant.fromVariant( index.data() ) )
+			self.__editor.setValue( index.data() )
 		else :
 			QtWidgets.QStyledItemDelegate.setEditorData( self, editor, index )
 
 	def setModelData( self, editor, model, index ) :
 
 		if self.__editor is not None :
-			model.setData( index, GafferUI._Variant.toVariant( self.__editor.getValue() ), QtCore.Qt.ItemDataRole.EditRole )
+			model.setData( index, self.__editor.getValue(), QtCore.Qt.ItemDataRole.EditRole )
 		else :
 			QtWidgets.QStyledItemDelegate.setModelData( self, editor, model, index )
 
@@ -1406,7 +1406,7 @@ class _NumericDelegate( _Delegate ) :
 
 	def _createEditorInternal( self, index ) :
 
-		return GafferUI.NumericWidget( GafferUI._Variant.fromVariant( index.data() ) )
+		return GafferUI.NumericWidget( index.data() )
 
 _Delegate.registerType( IECore.HalfVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate )
@@ -1602,7 +1602,7 @@ class _BoolDelegate( _Delegate ) :
 
 	def __toBool( self, index ) :
 
-		return GafferUI._Variant.fromVariant( index.model().data( index, QtCore.Qt.ItemDataRole.DisplayRole ) )
+		return index.model().data( index, QtCore.Qt.ItemDataRole.DisplayRole )
 
 _Delegate.registerType( IECore.BoolVectorData.staticTypeId(), _BoolDelegate )
 
