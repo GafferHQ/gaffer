@@ -515,6 +515,22 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 		{
 			result->m_sourceType = Result::SourceType::Downstream;
 		}
+
+		// If we initialised the editors, but any edits they make will be invisible
+		// due to being overridden downstream, then disallow those edits.
+		if( result->m_editors && result->m_sourceType == Result::SourceType::Downstream )
+		{
+			const Node *downstreamNode = result->m_source->node();
+			const auto *downstreamEditScope = downstreamNode->ancestor<EditScope>();
+			downstreamNode = downstreamEditScope ? downstreamEditScope : downstreamNode;
+			const std::string type = this->type().size() ? this->type() : "Value";
+			const std::string reason = fmt::format(
+				"{} has edits downstream in {}.",
+				std::string( 1, std::toupper( type[0] ) ) + type.substr( 1 ),
+				downstreamNode->relativeName( downstreamNode->scriptNode() )
+			);
+			result->m_editors = Result::Editors( reason );
+		}
 	}
 
 	// If we haven't found everything we want yet, then recurse up the history

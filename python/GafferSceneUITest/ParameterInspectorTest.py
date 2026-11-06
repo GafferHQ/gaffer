@@ -81,8 +81,8 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		if canAcquireEdit :
 
-			self.assertEqual( cantAcquireEditReason, "" )
 			self.assertEqual( result.cantAcquireEditReason(), "" )
+			self.assertEqual( cantAcquireEditReason, "" )
 
 			acquiredEdit = result.acquireEdit()
 			self.assertIsNotNone( acquiredEdit )
@@ -185,19 +185,15 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		)
 
 		# If there's an edit downstream of the EditScope we're asked to use,
-		# then we're allowed to be editable still
+		# then we disallow editing, because it is super confusing to be editing
+		# something and not see the results.
+
+		lightEditScope2Edit["enabled"].setValue( True )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "intensity", s["editScope1"] )
-		self.assertTrue( inspection.canAcquireEdit() )
-		self.assertEqual( inspection.cantAcquireEditReason(), "" )
-		lightEditScope1Edit = inspection.acquireEdit()
-		self.assertIsNotNone( lightEditScope1Edit )
-		self.assertEqual(
-			lightEditScope1Edit,
-			GafferScene.EditScopeAlgo.acquireParameterEdit(
-				s["editScope1"], "/group/light", "light", ( "", "intensity" ), createIfNecessary = False
-			)
-		)
+		self.assertFalse( inspection.canAcquireEdit() )
+		self.assertEqual( inspection.cantAcquireEditReason(), "Parameter has edits downstream in editScope2." )
+		self.assertRaises( RuntimeError, inspection.acquireEdit )
 
 		# If there is a source node inside an edit scope, make sure we use that
 
@@ -208,7 +204,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["editScope1"]["parentLight2"]["parent"].setValue( "/" )
 		s["editScope1"]["parentLight2"]["children"][0].setInput( s["editScope1"]["light2"]["out"] )
 		s["editScope1"]["parentLight2"]["in"].setInput( s["editScope1"]["BoxIn"]["out"] )
-		s["editScope1"]["LightEdits"]["in"].setInput( s["editScope1"]["parentLight2"]["out"] )
+		s["editScope1"].acquireProcessor( "LightEdits" )["in"].setInput( s["editScope1"]["parentLight2"]["out"] )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "/light2", "intensity", s["editScope1"] ),
@@ -297,19 +293,20 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			canAcquireEdit = True, edit = exposureTweak
 		)
 
-		# Check nonEditableReasons
+		# Check cantAcquireEditReasons
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/group/light", "intensity", s["editScope2"] ),
 			source = s["independentLightTweak"]["out"], sourceType = SourceType.Downstream,
-			canAcquireEdit = True, edit = lightEditScope2Edit
+			canAcquireEdit = False, cantAcquireEditReason = "Parameter has edits downstream in independentLightTweak."
 		)
 
+		independentLightTweakPlug["enabled"].setValue( False )
 		s["editScope2"]["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentLightTweak"]["out"], "/group/light", "intensity", s["editScope2"] ),
-			source = s["independentLightTweak"]["out"], sourceType = SourceType.Downstream,
+			source = s["light"]["out"], sourceType = SourceType.Upstream,
 			canAcquireEdit = False, cantAcquireEditReason = "The target edit scope editScope2 is disabled."
 		)
 
@@ -461,12 +458,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.assertFalse( inspection.canDisableEdit() )
 		self.assertEqual( inspection.cantDisableEditReason(), "The target edit scope editScope2 is not in the scene history." )
 
+		lightEdit["enabled"].setValue( False )
 		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", None )
 		self.assertTrue( inspection.acquireEdit( False ).isSame( s["light"]["parameters"]["exposure"] ) )
 		self.assertFalse( inspection.canDisableEdit() )
 		self.assertEqual( inspection.cantDisableEditReason(), "Disabling edits not supported for this plug." )
 		self.assertRaisesRegex( IECore.Exception, "Disabling edits not supported for this plug.", inspection.disableEdit )
 
+		lightEdit["enabled"].setValue( True )
 		inspection = self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope2"] )
 		self.assertFalse( inspection.canDisableEdit() )
 		self.assertEqual( inspection.cantDisableEditReason(), "There is no edit in editScope2." )
@@ -587,7 +586,6 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		i = self.__inspect( s["editScope1"]["out"], "/light", "intensity", editScope2 )
 		scope2Edit = i.acquireEdit()
-		scope2Edit["enabled"].setValue( True )
 		self.assertEqual( scope2Edit.ancestor( Gaffer.EditScope ), editScope2 )
 
 		# Check we still find the edit in scope 1
@@ -620,7 +618,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( s["shaderTweaks"]["out"], "/light", "exposure", s["editScope"] ),
 			source = s["shaderTweaks"]["out"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
-			canAcquireEdit = True, edit = None,
+			canAcquireEdit = False, cantAcquireEditReason = "Parameter has edits downstream in shaderTweaks."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1210,6 +1208,16 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["editScope2"].setup( s["editScope1"]["out"] )
 		s["editScope2"]["in"].setInput( s["editScope1"]["out"] )
 
+		# Check that we can edit in EditScope1.
+
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope1"] ),
+			source = light["out"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			canAcquireEdit = True,
+			edit = light["parameters"]["exposure"]
+		)
+
 		# Make edit in EditScope2.
 
 		i = self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope2"] )
@@ -1218,15 +1226,15 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		scope2Edit["enabled"].setValue( True )
 		scope2Edit["value"].setValue( 2 )
 
-		# Check that we can still edit in EditScope1, even though
-		# it will be overridden downstream.
+		# Check that we can't edit in EditScope1, because it is overridden
+		# downstream.
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "/light", "exposure", s["editScope1"] ),
 			source = scope2Edit.node()["out"].source(),
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
-			canAcquireEdit = True,
-			edit = light["parameters"]["exposure"]
+			canAcquireEdit = False,
+			cantAcquireEditReason = "Parameter has edits downstream in editScope2."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1249,15 +1257,14 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		scopeEdit["enabled"].setValue( True )
 		scopeEdit["value"].setValue( 2 )
 
-		# Check that we can still edit the source, accompanied by
-		# a suitable warning.
+		# Check that we can't edit the source.
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope"]["out"], "/light", "exposure", editScope = None ),
 			source = s["editScope"]["LightEdits"]["out"].source(),
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
-			canAcquireEdit = True,
-			edit = s["light"]["parameters"]["exposure"]
+			canAcquireEdit = False,
+			cantAcquireEditReason = "Parameter has edits downstream in editScope."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
