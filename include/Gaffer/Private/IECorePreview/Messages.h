@@ -40,6 +40,7 @@
 #include "IECore/MurmurHash.h"
 
 #include <array>
+#include <memory>
 #include <optional>
 #include <vector>
 
