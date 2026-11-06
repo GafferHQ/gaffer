@@ -11,6 +11,7 @@ Fixes
 
 - Catalogue : Fixed `imageNames` plug not handling renaming of promoted images (#7234).
 - ImageAlgo : Fixed handling of empty data window in `tiles()`.
+- Editor : Exceptions thrown by slots connected to `instanceCreatedSignal()` are now caught and reported, rather than stopping execution.
 
 API
 ---
