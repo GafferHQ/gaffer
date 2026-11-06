@@ -72,6 +72,7 @@
 #include "boost/tokenizer.hpp"
 
 #include "fmt/format.h"
+#include "fmt/ranges.h"
 
 #include <unordered_map>
 
@@ -1700,7 +1701,6 @@ void paintProcessorUpdatePathFilter( SceneProcessor *processor )
 	}
 	exprLines.push_back( fmt::format( R"(parent["{}"]["paths"] = result;)", pathFilter->getName() ) );
 
-	//std::string expr =
 	newExpression->setExpression( fmt::format( "{}", fmt::join( exprLines, "\n" ) ), "python" );
 }
 

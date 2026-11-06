@@ -130,7 +130,7 @@ void setPosition( Animation::Tangent &t, const Imath::V2d& position, const bool 
 
 std::string slopeRepr( const double slope )
 {
-	return fmt::format( std::isinf( slope ) ? "float( '{:.9g}' )" : "{:.9g}", slope );
+	return std::isinf( slope ) ? fmt::format( "float( '{:.9g}' )", slope ) : fmt::format( "{:.9g}", slope );
 }
 
 void setTieMode( Animation::Key &k, const Animation::TieMode mode )

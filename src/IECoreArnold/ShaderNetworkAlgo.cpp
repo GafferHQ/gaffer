@@ -38,6 +38,7 @@
 
 #include "GafferOSL/OSLShader.h"
 
+#include "IECoreArnold/Format.h"
 #include "IECoreArnold/ParameterAlgo.h"
 
 #include "IECoreScene/Shader.h"

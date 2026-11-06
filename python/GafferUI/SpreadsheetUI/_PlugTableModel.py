@@ -168,9 +168,9 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 	def headerData( self, section, orientation, role ) :
 
-		if role == QtCore.Qt.DisplayRole :
+		if role == QtCore.Qt.ItemDataRole.DisplayRole :
 
-			if orientation == QtCore.Qt.Horizontal :
+			if orientation == QtCore.Qt.Orientation.Horizontal :
 
 				if section < 2 :
 					label = ( "Name", "Enabled" )[ section ]
@@ -187,9 +187,9 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 				# a big enough section to use for drag and drop.
 				return " "
 
-		elif role == QtCore.Qt.ToolTipRole :
+		elif role == QtCore.Qt.ItemDataRole.ToolTipRole :
 
-			if orientation == QtCore.Qt.Horizontal :
+			if orientation == QtCore.Qt.Orientation.Horizontal :
 
 				cellPlug = self.__rowsPlug.defaultRow()["cells"][ section - 2 ]
 				description = Gaffer.Metadata.value( cellPlug["value"], "description" )
@@ -200,7 +200,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 	def flags( self, index ) :
 
-		result = QtCore.Qt.ItemIsSelectable
+		result = QtCore.Qt.ItemFlag.ItemIsSelectable
 
 		# We use the ItemIsEnabled flag to reflect the state of
 		# `RowPlug::enabledPlug()` for the row `index` is in.
@@ -215,25 +215,25 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 					pass
 
 		if enabled :
-			result |= QtCore.Qt.ItemIsEnabled
+			result |= QtCore.Qt.ItemFlag.ItemIsEnabled
 
 		# We use the ItemIsEditable flag to reflect the state of
 		# readOnly metadata.
 
 		if not Gaffer.MetadataAlgo.readOnly( plug ) :
-			result |= QtCore.Qt.ItemIsEditable
+			result |= QtCore.Qt.ItemFlag.ItemIsEditable
 			if isinstance( plug, Gaffer.BoolPlug ) :
-				result |= QtCore.Qt.ItemIsUserCheckable
+				result |= QtCore.Qt.ItemFlag.ItemIsUserCheckable
 
 		return result
 
 	def data( self, index, role ) :
 
-		if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole :
+		if role == QtCore.Qt.ItemDataRole.DisplayRole or role == QtCore.Qt.ItemDataRole.EditRole :
 
 			return self.__formatValue( index )
 
-		elif role == QtCore.Qt.DecorationRole :
+		elif role == QtCore.Qt.ItemDataRole.DecorationRole :
 
 			plug = self.valuePlugForIndex( index )
 			with self.__context :
@@ -251,7 +251,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 				IECore.msg( IECore.Msg.Level.Error, "Spreadsheet Decoration", "Unsupported type {}".format( type( value ) ) )
 				return None
 
-		elif role == QtCore.Qt.CheckStateRole :
+		elif role == QtCore.Qt.ItemDataRole.CheckStateRole :
 
 			plug = self.__checkStatePlug( index )
 			if plug is not None :
@@ -260,9 +260,9 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 						value = plug.getValue()
 					except :
 						return None
-				return QtCore.Qt.Checked if value else QtCore.Qt.Unchecked
+				return QtCore.Qt.CheckState.Checked if value else QtCore.Qt.CheckState.Unchecked
 
-		elif role == QtCore.Qt.ToolTipRole :
+		elif role == QtCore.Qt.ItemDataRole.ToolTipRole :
 
 			return self.__formatValue( index, forToolTip = True )
 
@@ -309,7 +309,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		# as it is convenient, but all other editing is done
 		# separately via `PlugPopup`.
 
-		assert( role == QtCore.Qt.CheckStateRole )
+		assert( role == QtCore.Qt.ItemDataRole.CheckStateRole )
 		plug = self.__checkStatePlug( index )
 		assert( isinstance( plug, Gaffer.BoolPlug ) )
 
@@ -337,7 +337,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		## \todo Is there any benefit in finer-grained signalling?
 		self.__emitModelReset()
-		self.headerDataChanged.emit( QtCore.Qt.Vertical, 0, self.rowCount() )
+		self.headerDataChanged.emit( QtCore.Qt.Orientation.Vertical, 0, self.rowCount() )
 
 	def __rowRemoved( self, rowsPlug, row ) :
 
@@ -353,7 +353,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		## \todo Is there any benefit in finer-grained signalling?
 		self.__emitModelReset()
-		self.headerDataChanged.emit( QtCore.Qt.Horizontal, 0, self.columnCount() )
+		self.headerDataChanged.emit( QtCore.Qt.Orientation.Horizontal, 0, self.columnCount() )
 
 	def __columnRemoved( self, cellsPlug, cellPlug ) :
 
@@ -386,7 +386,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			return
 
 		if key == "spreadsheet:columnLabel" :
-			self.headerDataChanged.emit( QtCore.Qt.Horizontal, index.column(), index.column() )
+			self.headerDataChanged.emit( QtCore.Qt.Orientation.Horizontal, index.column(), index.column() )
 		elif Gaffer.MetadataAlgo.readOnlyAffectedByChange( key ) :
 			# Read-only metadata is actually reflected in `flags()`, but there's no signal to emit
 			# when they change. Emitting `dataChanged` is enough to kick a redraw off.

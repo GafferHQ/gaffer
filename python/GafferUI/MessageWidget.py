@@ -754,14 +754,14 @@ class _MessageTableView( GafferUI.Widget ) :
 
 		tableView = self._qtWidget()
 
-		tableView.setEditTriggers( tableView.NoEditTriggers )
+		tableView.setEditTriggers( QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers )
 		tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectRows )
 		tableView.setSelectionMode( QtWidgets.QAbstractItemView.ContiguousSelection )
 
 		tableView.verticalHeader().setVisible( False )
 		tableView.horizontalHeader().setVisible( False )
 
-		tableView.setHorizontalScrollMode( tableView.ScrollPerPixel )
+		tableView.setHorizontalScrollMode( QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel )
 
 		tableView.setShowGrid( False )
 
@@ -1134,11 +1134,11 @@ class _MessageTableCollapseColumnsProxy( QtCore.QAbstractProxyModel ) :
 		else :
 			return self.sourceModel().index( proxyIndex.row(), proxyIndex.column() )
 
-	def data( self, index, role = QtCore.Qt.DisplayRole ) :
+	def data( self, index, role = QtCore.Qt.ItemDataRole.DisplayRole ) :
 
 		sourceModel = self.sourceModel()
 
-		if index.column() == 1 and role == QtCore.Qt.DisplayRole :
+		if index.column() == 1 and role == QtCore.Qt.ItemDataRole.DisplayRole :
 			contextIndex = sourceModel.index( index.row(), 1 )
 			messageIndex = sourceModel.index( index.row(), 2 )
 			return "%s : %s" % (
@@ -1225,7 +1225,7 @@ class _MessageTableExpandedViewProxy( QtCore.QAbstractProxyModel ) :
 
 		return self.sourceModel().index( proxyIndex.row() // 2, int(column) )
 
-	def data( self, index, role = QtCore.Qt.DisplayRole ) :
+	def data( self, index, role = QtCore.Qt.ItemDataRole.DisplayRole ) :
 
 		source = self.sourceModel()
 		sourceIndex = self.mapToSource( index )
@@ -1236,22 +1236,22 @@ class _MessageTableExpandedViewProxy( QtCore.QAbstractProxyModel ) :
 
 			levelIndex = source.index( sourceIndex.row(), 0 )
 
-			if role == QtCore.Qt.DisplayRole :
+			if role == QtCore.Qt.ItemDataRole.DisplayRole :
 				# Combine level/context
 				contextIndex = source.index( sourceIndex.row(), 1 )
 				return "%s: %s" % ( source.data( levelIndex, role ), source.data( contextIndex, role ) )
 
-			elif role == QtCore.Qt.ForegroundRole :
+			elif role == QtCore.Qt.ItemDataRole.ForegroundRole :
 				# In expanded mode, only colourise the header
 				return self.__headerColor( source.data( levelIndex, _MessageTableModel.ValueRole ) )
 
 		else :
 
-			if role == QtCore.Qt.DisplayRole :
+			if role == QtCore.Qt.ItemDataRole.DisplayRole :
 				# Add a new line to separate messages out
 				return "%s\n" % source.data( sourceIndex, role )
 
-			elif role == QtCore.Qt.ForegroundRole :
+			elif role == QtCore.Qt.ItemDataRole.ForegroundRole :
 				return GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "foreground" ) )
 
 		return source.data( sourceIndex, role )
@@ -1435,30 +1435,30 @@ class _MessageTableModel( QtCore.QAbstractTableModel ) :
 
 	def headerData( self, section, orientation, role ) :
 
-		if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal :
+		if role == QtCore.Qt.ItemDataRole.DisplayRole and orientation == QtCore.Qt.Orientation.Horizontal :
 			return str( _MessageTableModel.Column( section ) )
 
 	def flags( self, index ) :
 
-		return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+		return QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
 
 	def data( self, index, role ) :
 
 		if not index.isValid() :
 			return None
 
-		if role == QtCore.Qt.DisplayRole or role == _MessageTableModel.ValueRole :
+		if role == QtCore.Qt.ItemDataRole.DisplayRole or role == _MessageTableModel.ValueRole :
 
 			message = self.__messages[ index.row() ]
 
 			if index.column() == int( _MessageTableModel.Column.Level ) :
-				return str(message.level).upper() if role == QtCore.Qt.DisplayRole else message.level
+				return str(message.level).upper() if role == QtCore.Qt.ItemDataRole.DisplayRole else message.level
 			elif index.column() == int( _MessageTableModel.Column.Context ) :
 				return message.context
 			elif index.column() == int( _MessageTableModel.Column.Message ) :
 				return message.message
 
-		elif role == QtCore.Qt.ForegroundRole :
+		elif role == QtCore.Qt.ItemDataRole.ForegroundRole :
 
 			message = self.__messages[ index.row() ]
 			# Keep info level messages white

@@ -51,6 +51,7 @@
 #include "boost/iterator/function_output_iterator.hpp"
 
 #include "fmt/format.h"
+#include "fmt/std.h"
 
 #include <regex>
 #include <unordered_map>

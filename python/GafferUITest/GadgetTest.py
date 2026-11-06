@@ -121,17 +121,19 @@ class GadgetTest( GafferUITest.TestCase ) :
 			gw.getViewportGadget().frame( b )
 
 		w.setVisible( True )
-		self.waitForIdle( 1000 )
 
-		self.assertEqual( set( i[0] for i in mg.layersRendered ), set(layers) )
+		self.assertEventually(
+			lambda : self.assertEqual( set( i[0] for i in mg.layersRendered ), set( layers ) )
+		)
+
 		mg.layersRendered = set()
 
 		s = GafferUI.StandardStyle()
 		c.setStyle( s )
 
-		self.waitForIdle( 5000 )
-
-		self.assertEqual( mg.layersRendered, set( (i,s, GafferUI.Gadget.RenderReason.Draw) for i in layers ) )
+		self.assertEventually(
+			lambda : self.assertEqual( mg.layersRendered, set( (i,s, GafferUI.Gadget.RenderReason.Draw) for i in layers ) )
+		)
 
 	def testStyle( self ) :
 

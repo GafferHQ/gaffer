@@ -131,7 +131,7 @@ class Image( GafferUI.Widget ) :
 			effect.setColor( QtGui.QColor( 119, 156, 189, 255 ) )
 			effect.setStrength( 0.85 )
 			pixmapItem.setGraphicsEffect( effect )
-			pixmapItem.setShapeMode( pixmapItem.BoundingRectShape )
+			pixmapItem.setShapeMode( QtWidgets.QGraphicsPixmapItem.ShapeMode.BoundingRectShape )
 
 			graphicsView = QtWidgets.QGraphicsView()
 			graphicsView.setScene( graphicsScene )
@@ -178,7 +178,7 @@ class Image( GafferUI.Widget ) :
 			effect = QtWidgets.QGraphicsOpacityEffect()
 			effect.setOpacity( 0.4 )
 			pixmapItem.setGraphicsEffect( effect )
-			pixmapItem.setShapeMode( pixmapItem.BoundingRectShape )
+			pixmapItem.setShapeMode( QtWidgets.QGraphicsPixmapItem.ShapeMode.BoundingRectShape )
 
 			graphicsView = QtWidgets.QGraphicsView()
 			graphicsView.setScene( graphicsScene )

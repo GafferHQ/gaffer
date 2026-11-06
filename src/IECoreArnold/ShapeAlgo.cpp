@@ -34,6 +34,7 @@
 
 #include "IECoreArnold/ShapeAlgo.h"
 
+#include "IECoreArnold/Format.h"
 #include "IECoreArnold/ParameterAlgo.h"
 
 #include "IECoreScene/Primitive.h"

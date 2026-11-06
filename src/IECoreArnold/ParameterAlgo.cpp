@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECoreArnold/Format.h"
 #include "IECoreArnold/ParameterAlgo.h"
 
 #include "IECore/DataAlgo.h"

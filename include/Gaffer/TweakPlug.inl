@@ -240,8 +240,6 @@ bool TweakPlug::applyElementwiseTweak(
 	return true;
 }
 
-
-
 template<class GetDataFunctor, class SetDataFunctor>
 bool TweaksPlug::applyTweaks(
 	GetDataFunctor &&getDataFunctor,
@@ -260,6 +258,12 @@ bool TweaksPlug::applyTweaks(
 	}
 
 	return tweakApplied;
+}
+
+/// Allows `TweakPlug::Mode` to be passed directly to `fmt::format()`.
+inline int format_as( TweakPlug::Mode mode )
+{
+	return mode;
 }
 
 } // namespace Gaffer

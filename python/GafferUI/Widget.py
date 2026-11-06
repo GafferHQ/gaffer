@@ -324,7 +324,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	# parent Widgets.
 	def getEnabled( self ) :
 
-		return not self.__qtWidget.testAttribute( QtCore.Qt.WA_ForceDisabled )
+		return not self.__qtWidget.testAttribute( QtCore.Qt.WidgetAttribute.WA_ForceDisabled )
 
 	## Returns True if neither this Widget nor all its parents up to the specified
 	# ancestor have been disabled with setEnabled( False ).
@@ -805,9 +805,9 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	def _key( cls, qtKey ) :
 
 		if not cls.__keyMapping :
-			for k in dir( QtCore.Qt ) :
+			for k in dir( QtCore.Qt.Key ) :
 				if k.startswith( "Key_" ) :
-					keyValue = int( getattr( QtCore.Qt, k ) )
+					keyValue = int( getattr( QtCore.Qt.Key, k ) )
 					keyString = k[4:]
 					cls.__keyMapping[keyValue] = keyString
 
@@ -820,11 +820,11 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	def _buttons( qtButtons ) :
 
 		result = GafferUI.ButtonEvent.Buttons.None_
-		if qtButtons & QtCore.Qt.LeftButton :
+		if qtButtons & QtCore.Qt.MouseButton.LeftButton :
 			result |= GafferUI.ButtonEvent.Buttons.Left
-		if qtButtons & QtCore.Qt.MiddleButton :
+		if qtButtons & QtCore.Qt.MouseButton.MiddleButton :
 			result |= GafferUI.ButtonEvent.Buttons.Middle
-		if qtButtons & QtCore.Qt.RightButton :
+		if qtButtons & QtCore.Qt.MouseButton.RightButton :
 			result |= GafferUI.ButtonEvent.Buttons.Right
 
 		return GafferUI.ButtonEvent.Buttons( result )
@@ -834,11 +834,11 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	def _modifiers( qtModifiers ) :
 
 		modifiers = GafferUI.ModifiableEvent.Modifiers.None_
-		if qtModifiers & QtCore.Qt.ShiftModifier :
+		if qtModifiers & QtCore.Qt.KeyboardModifier.ShiftModifier :
 			modifiers = modifiers | GafferUI.ModifiableEvent.Modifiers.Shift
-		if qtModifiers & QtCore.Qt.ControlModifier :
+		if qtModifiers & QtCore.Qt.KeyboardModifier.ControlModifier :
 			modifiers = modifiers | GafferUI.ModifiableEvent.Modifiers.Control
-		if qtModifiers & QtCore.Qt.AltModifier :
+		if qtModifiers & QtCore.Qt.KeyboardModifier.AltModifier :
 			modifiers = modifiers | GafferUI.ModifiableEvent.Modifiers.Alt
 
 		return GafferUI.ModifiableEvent.Modifiers( modifiers )
@@ -995,24 +995,24 @@ class _EventFilter( QtCore.QObject ) :
 		# best solution is an event filter implemented in c++, which does the early
 		# out based on the mask and then calls through to python only if this fails.
 		self.__eventMask = set( (
-			QtCore.QEvent.ToolTip,
-			QtCore.QEvent.KeyPress,
-			QtCore.QEvent.KeyRelease,
-			QtCore.QEvent.MouseButtonPress,
-			QtCore.QEvent.MouseButtonRelease,
-			QtCore.QEvent.MouseButtonDblClick,
-			QtCore.QEvent.MouseMove,
-			QtCore.QEvent.Enter,
-			QtCore.QEvent.Leave,
-			QtCore.QEvent.Wheel,
-			QtCore.QEvent.Show,
-			QtCore.QEvent.Hide,
-			QtCore.QEvent.ContextMenu,
-			QtCore.QEvent.ParentChange,
-			QtCore.QEvent.DragEnter,
-			QtCore.QEvent.DragMove,
-			QtCore.QEvent.DragLeave,
-			QtCore.QEvent.Drop,
+			QtCore.QEvent.Type.ToolTip,
+			QtCore.QEvent.Type.KeyPress,
+			QtCore.QEvent.Type.KeyRelease,
+			QtCore.QEvent.Type.MouseButtonPress,
+			QtCore.QEvent.Type.MouseButtonRelease,
+			QtCore.QEvent.Type.MouseButtonDblClick,
+			QtCore.QEvent.Type.MouseMove,
+			QtCore.QEvent.Type.Enter,
+			QtCore.QEvent.Type.Leave,
+			QtCore.QEvent.Type.Wheel,
+			QtCore.QEvent.Type.Show,
+			QtCore.QEvent.Type.Hide,
+			QtCore.QEvent.Type.ContextMenu,
+			QtCore.QEvent.Type.ParentChange,
+			QtCore.QEvent.Type.DragEnter,
+			QtCore.QEvent.Type.DragMove,
+			QtCore.QEvent.Type.DragLeave,
+			QtCore.QEvent.Type.Drop,
 		) )
 
 	def currentButtons( self ) :
@@ -1027,12 +1027,13 @@ class _EventFilter( QtCore.QObject ) :
 		if qEventType not in self.__eventMask :
 			return False
 
+		eventTypes = QtCore.QEvent.Type
 		# we display tooltips and emit visibility events even on disabled widgets
-		if qEventType==qEvent.ToolTip :
+		if qEventType == eventTypes.ToolTip :
 
 			return self.__toolTip( qObject, qEvent )
 
-		elif qEventType==qEvent.Show or qEventType==qEvent.Hide :
+		elif qEventType == eventTypes.Show or qEventType == eventTypes.Hide :
 
 			return self.__showHide( qObject, qEvent )
 
@@ -1040,63 +1041,63 @@ class _EventFilter( QtCore.QObject ) :
 		if not qObject.isEnabled() :
 			return False
 
-		if qEventType==qEvent.KeyPress :
+		if qEventType == eventTypes.KeyPress :
 
 			return self.__keyPress( qObject, qEvent )
 
-		elif qEventType==qEvent.KeyRelease :
+		elif qEventType == eventTypes.KeyRelease :
 
 			return self.__keyRelease( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonPress :
+		elif qEventType == eventTypes.MouseButtonPress :
 
 			return self.__mouseButtonPress( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonRelease :
+		elif qEventType == eventTypes.MouseButtonRelease :
 
 			return self.__mouseButtonRelease( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseButtonDblClick :
+		elif qEventType == eventTypes.MouseButtonDblClick :
 
 			return self.__mouseButtonDblClick( qObject, qEvent )
 
-		elif qEventType==qEvent.MouseMove :
+		elif qEventType == eventTypes.MouseMove :
 
 			return self.__mouseMove( qObject, qEvent )
 
-		elif qEventType==qEvent.Enter :
+		elif qEventType == eventTypes.Enter :
 
 			return self.__enter( qObject, qEvent )
 
-		elif qEventType==qEvent.Leave :
+		elif qEventType == eventTypes.Leave :
 
 			return self.__leave( qObject, qEvent )
 
-		elif qEventType==qEvent.Wheel :
+		elif qEventType == eventTypes.Wheel :
 
 			return self.__wheel( qObject, qEvent )
 
-		elif qEventType==qEvent.ContextMenu :
+		elif qEventType == eventTypes.ContextMenu :
 
 			return self.__contextMenu( qObject, qEvent )
 
-		elif qEventType==qEvent.ParentChange :
+		elif qEventType == eventTypes.ParentChange :
 
 			return self.__parentChange( qObject, qEvent )
 
-		elif qEventType==qEvent.DragEnter :
+		elif qEventType == eventTypes.DragEnter :
 
 			return self.__foreignDragEnter( qObject, qEvent )
 
-		elif qEventType==qEvent.DragMove :
+		elif qEventType == eventTypes.DragMove :
 
 			return self.__foreignDragMove( qObject, qEvent )
 
-		elif qEventType==qEvent.DragLeave :
+		elif qEventType == eventTypes.DragLeave :
 
 			return self.__foreignDragLeave( qObject, qEvent )
 
-		elif qEventType==qEvent.Drop :
+		elif qEventType == eventTypes.Drop :
 
 			return self.__foreignDrop( qObject, qEvent )
 
@@ -1355,7 +1356,7 @@ class _EventFilter( QtCore.QObject ) :
 		if self.__lastButtonPressWidget is None :
 			return False
 
-		if qEvent.buttons() == QtCore.Qt.NoButton :
+		if qEvent.buttons() == QtCore.Qt.MouseButton.NoButton :
 			# sometimes Qt can fail to give us a mouse button release event
 			# for the widget that received the mouse button press - in particular
 			# this appears to happen when a context menu is raised in the press
@@ -1504,7 +1505,7 @@ class _EventFilter( QtCore.QObject ) :
 		if self.__updateDragModifiers( qObject, qKeyEvent ) :
 			return True
 
-		if qKeyEvent.key() != QtCore.Qt.Key_G or qKeyEvent.modifiers() :
+		if qKeyEvent.key() != QtCore.Qt.Key.Key_G or qKeyEvent.modifiers() :
 			return False
 
 		if self.__dragDropEvent is None :
@@ -1522,11 +1523,11 @@ class _EventFilter( QtCore.QObject ) :
 				return
 
 			qEvent = QtGui.QMouseEvent(
-				QtCore.QEvent.MouseButtonPress,
+				QtCore.QEvent.Type.MouseButtonPress,
 				qWidget.mapFromGlobal( globalPos ),
 				globalPos,
-				QtCore.Qt.LeftButton,
-				QtCore.Qt.LeftButton,
+				QtCore.Qt.MouseButton.LeftButton,
+				QtCore.Qt.MouseButton.LeftButton,
 				qKeyEvent.modifiers()
 			)
 
@@ -1545,10 +1546,10 @@ class _EventFilter( QtCore.QObject ) :
 			qWidget = self.__dragDropEvent.sourceWidget._qtWidget()
 
 			qEvent = QtGui.QMouseEvent(
-				QtCore.QEvent.MouseButtonRelease,
+				QtCore.QEvent.Type.MouseButtonRelease,
 				qWidget.mapFromGlobal( globalPos ),
 				globalPos,
-				QtCore.Qt.LeftButton,
+				QtCore.Qt.MouseButton.LeftButton,
 				QtCore.Qt.NoButton,
 				qKeyEvent.modifiers()
 			)
@@ -1571,7 +1572,7 @@ class _EventFilter( QtCore.QObject ) :
 
 		if qEvent.mimeData().hasUrls() :
 			data = IECore.StringVectorData( [
-				url.toString( url.PrettyDecoded | url.PreferLocalFile )
+				url.toString( QtCore.QUrl.PrettyDecoded | QtCore.QUrl.PreferLocalFile )
 				for url in qEvent.mimeData().urls()
 			] )
 		elif qEvent.mimeData().hasText() :

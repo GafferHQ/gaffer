@@ -118,15 +118,15 @@ class _OutPlugTableModel( QtCore.QAbstractTableModel ) :
 	def flags( self, index ) :
 
 		# Always selectable and enabled, but never editable.
-		return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+		return QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
 
 	def data( self, index, role ) :
 
-		if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole :
+		if role == QtCore.Qt.ItemDataRole.DisplayRole or role == QtCore.Qt.ItemDataRole.EditRole :
 
 			return self.__formatValue( index )
 
-		elif role == QtCore.Qt.DecorationRole :
+		elif role == QtCore.Qt.ItemDataRole.DecorationRole :
 
 			plug = self.valuePlugForIndex( index )
 			with self.__context :
@@ -144,7 +144,7 @@ class _OutPlugTableModel( QtCore.QAbstractTableModel ) :
 				IECore.msg( IECore.Msg.Level.Error, "Spreadsheet Decoration", "Unsupported type {}".format( type( value ) ) )
 				return None
 
-		elif role == QtCore.Qt.CheckStateRole :
+		elif role == QtCore.Qt.ItemDataRole.CheckStateRole :
 
 			plug = self.valuePlugForIndex( index )
 			if not isinstance( plug, Gaffer.BoolPlug ) :
@@ -156,9 +156,9 @@ class _OutPlugTableModel( QtCore.QAbstractTableModel ) :
 				except :
 					return None
 
-			return QtCore.Qt.Checked if value else QtCore.Qt.Unchecked
+			return QtCore.Qt.CheckState.Checked if value else QtCore.Qt.CheckState.Unchecked
 
-		elif role == QtCore.Qt.ToolTipRole :
+		elif role == QtCore.Qt.ItemDataRole.ToolTipRole :
 
 			return self.__formatValue( index, forToolTip = True )
 

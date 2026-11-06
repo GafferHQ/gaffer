@@ -50,7 +50,6 @@
 
 #include "fmt/format.h"
 #include "fmt/ranges.h"
-#include "fmt/std.h"
 
 using namespace boost::placeholders;
 using namespace boost::python;
@@ -181,9 +180,9 @@ class DataStoreSerialiser : public NodeSerialiser
 				throw IECore::Exception( "Cannot copy DataStore that is not part of a ScriptNode" );
 			}
 
+			const std::string fileNameRepr = extract<std::string>( object( scriptNode->fileNamePlug()->getValue() ).attr( "__repr__" )() );
 			mySerial = fmt::format(
-				"{}._loadEntries( {}, {} )\n", identifier, entriesRepr,
-				std::filesystem::path( scriptNode->fileNamePlug()->getValue() )
+				"{}._loadEntries( {}, {} )\n", identifier, entriesRepr, fileNameRepr
 			);
 		}
 

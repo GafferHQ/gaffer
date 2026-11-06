@@ -601,17 +601,17 @@ class _Widget( QtWidgets.QWidget ) :
 		owner = GafferUI.Widget._owner( self )
 
 		painter = QtGui.QPainter( self )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		painter.setRenderHint( QtGui.QPainter.RenderHint.Antialiasing )
 
 		owner._Slider__draw( painter )
 
 	def event( self, event ) :
 
-		if event.type() == event.ShortcutOverride :
-			if event.key() in ( QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace ) :
+		if event.type() == QtCore.QEvent.Type.ShortcutOverride :
+			if event.key() in ( QtCore.Qt.Key.Key_Delete, QtCore.Qt.Key.Key_Backspace ) :
 				event.accept()
 				return True
-			if event.key() in ( QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right ) :
+			if event.key() in ( QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Right ) :
 				if GafferUI.Widget._owner( self ).getIncrement() != 0 :
 					event.accept()
 					return True

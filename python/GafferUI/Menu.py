@@ -426,8 +426,8 @@ class Menu( GafferUI.Widget ) :
 				# shortcuts, so when we find a shortcut matching a key with an equivalent
 				# key on the keypad we automatically create an additional shortcut that
 				# includes the KeypadModifier.
-				if ( QtCore.Qt.Key_Asterisk <= key <= QtCore.Qt.Key_9 or key == QtCore.Qt.Key_Enter ) and not modifiers & QtCore.Qt.KeypadModifier :
-					keypadSequence = QtGui.QKeySequence( modifiers | QtCore.Qt.KeypadModifier | key )
+				if ( QtCore.Qt.Key.Key_Asterisk <= key <= QtCore.Qt.Key.Key_9 or key == QtCore.Qt.Key.Key_Enter ) and not modifiers & QtCore.Qt.KeyboardModifier.KeypadModifier :
+					keypadSequence = QtGui.QKeySequence( modifiers | QtCore.Qt.KeyboardModifier.KeypadModifier | key )
 					if keypadSequence not in keySequences :
 						keySequences.append( keypadSequence )
 
@@ -438,7 +438,7 @@ class Menu( GafferUI.Widget ) :
 			# Here we're limiting the scope so that conflicts don't occur, deferring
 			# to the code in MenuBar to manage triggering of the action with manual
 			# shortcut processing.
-			qtAction.setShortcutContext( QtCore.Qt.WidgetShortcut )
+			qtAction.setShortcutContext( QtCore.Qt.ShortcutContext.WidgetShortcut )
 
 		# when an icon file path is defined in the menu definition
 		icon = getattr( item, "icon", None )
@@ -767,7 +767,7 @@ class _Menu( QtWidgets.QMenu ) :
 
 	def event( self, qEvent ) :
 
-		if qEvent.type() == QtCore.QEvent.ToolTip :
+		if qEvent.type() == QtCore.QEvent.Type.ToolTip :
 			action = self.actionAt( qEvent.pos() )
 			if action and action.statusTip() :
 				QtWidgets.QToolTip.showText( qEvent.globalPos(), action.statusTip(), self )
@@ -780,7 +780,8 @@ class _Menu( QtWidgets.QMenu ) :
 
 	def keyPressEvent( self, qEvent ) :
 
-		if qEvent.key() == QtCore.Qt.Key_Escape :
+		key = qEvent.key()
+		if key == QtCore.Qt.Key.Key_Escape :
 			parent = self
 			while isinstance( parent, _Menu ) :
 				parent.close()
@@ -790,7 +791,7 @@ class _Menu( QtWidgets.QMenu ) :
 
 		if not self.keyboardMode == _Menu.KeyboardMode.Grab :
 
-			if qEvent.key() == QtCore.Qt.Key_Up or qEvent.key() == QtCore.Qt.Key_Down :
+			if key == QtCore.Qt.Key.Key_Up or key == QtCore.Qt.Key.Key_Down :
 				self.keyboardMode = _Menu.KeyboardMode.Grab
 			else :
 				if self.keyboardMode == _Menu.KeyboardMode.Close :

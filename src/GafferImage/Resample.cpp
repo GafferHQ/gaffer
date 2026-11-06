@@ -1939,7 +1939,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 			V2i oP; // output pixel position
 			int iPy; // input pixel position Y
 
-			int outputSamplePosition = 0;
+			std::vector<float>::iterator outputIt = result.begin();
 
 			for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 			{
@@ -1949,12 +1949,13 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 				Canceller::check( context->canceller() );
 				for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 				{
-					boost::span<const float> channelSamples = sampleOffsetsSampler.sample( *iPxIt, iPy );
-					memcpy( &result[outputSamplePosition], &channelSamples[0], channelSamples.size() * sizeof( float ) );
-					outputSamplePosition += channelSamples.size();
+					const boost::span<const float> channelSamples = sampleOffsetsSampler.sample( *iPxIt, iPy );
+					outputIt = std::copy( channelSamples.begin(), channelSamples.end(), outputIt );
 					++iPxIt;
 				}
 			}
+
+			assert( outputIt == result.end() );
 
 			return resultData;
 
@@ -2004,7 +2005,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 			{
 				for( int ix = support.min.x; ix < support.max.x; ++ix )
 				{
-					channelSamples.push_back( &deepChannelSampler.sample( ix, iy )[0] );
+					channelSamples.push_back( deepChannelSampler.sample( ix, iy ).data() );
 				}
 			}
 

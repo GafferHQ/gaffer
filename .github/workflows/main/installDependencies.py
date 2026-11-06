@@ -49,7 +49,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.7.4.0/cortex-10.7.4.0-{platform}-{vfxPlatform}.{extension}"
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/12.0.0a1/gafferDependencies-12.0.0a1-{platform}-{vfxPlatform}.{extension}"
 
 # Parse command line arguments.
 
@@ -64,8 +64,8 @@ parser.add_argument(
 parser.add_argument(
 	"--vfxPlatform",
 	help = "The VFX platform of the dependencies archive to download.",
-	choices = [ "platform24", "platform25" ],
-	default = "platform25",
+	choices = [ "platform25", "platform26" ],
+	default = "platform26",
 )
 
 parser.add_argument(

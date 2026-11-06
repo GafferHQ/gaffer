@@ -194,7 +194,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		index = self.__indexForPath( path )
 		if index.isValid() :
-			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )
+			self._qtWidget().scrollTo( index, QtWidgets.QAbstractItemView.ScrollHint.EnsureVisible )
 
 	## Scrolls to the first path found in the provided
 	# `IECore.PathMatcher`.
@@ -1103,8 +1103,8 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def event( self, event ) :
 
-		if event.type() == event.ShortcutOverride :
-			if event.key() in ( QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right ) :
+		if event.type() == QtCore.QEvent.Type.ShortcutOverride :
+			if event.key() in ( QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Right ) :
 				event.accept()
 				return True
 
@@ -1255,7 +1255,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def __drawBranchSelectionHighlight( self, painter, rect, index ) :
 
-		pathMatch = index.model().data( index, QtCore.Qt.UserRole )
+		pathMatch = index.model().data( index, QtCore.Qt.ItemDataRole.UserRole )
 
 		if pathMatch & IECore.PathMatcher.Result.ExactMatch :
 			self.__drawHighlight( painter, rect, 200 )
@@ -1270,7 +1270,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		cellMatches = [
 			index.model().data(
 				index.siblingAtColumn( i ),
-				QtCore.Qt.UserRole
+				QtCore.Qt.ItemDataRole.UserRole
 			) for i in range( 0, header.count() )
 		]
 
@@ -1320,6 +1320,13 @@ class _TreeView( QtWidgets.QTreeView ) :
 			self.__resizeLastColumnToAvailableWidth()
 
 	def __resizeLastColumnToAvailableWidth( self, minimumSuggestedWidth = 0 ) :
+
+		if self.__previousViewportWidth == 0 :
+			# We haven't been laid out yet, so the header doesn't accurately
+			# represent the available width and our stretch columns have yet
+			# to resize. Defer until `resizeEvent()` has been run once the
+			# widget is first shown.
+			return
 
 		header = self.header()
 		availableWidth = header.width()

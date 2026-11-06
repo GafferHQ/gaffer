@@ -34,7 +34,7 @@ jobs:
         name: [
           linux,
           linux-debug,
-          linux-platform24,
+          linux-platform25,
           windows,
           macos,
         ]
@@ -45,7 +45,7 @@ jobs:
             os: ubuntu-24.04
             buildType: RELEASE
             publish: true
-            containerImage: ghcr.io/gafferhq/build/build:4.0.0
+            containerImage: ghcr.io/gafferhq/build/build:5.0.0a1
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -58,7 +58,7 @@ jobs:
             os: ubuntu-24.04
             buildType: DEBUG
             publish: false
-            containerImage: ghcr.io/gafferhq/build/build:4.0.0
+            containerImage: ghcr.io/gafferhq/build/build:5.0.0a1
             testRunner: runuser -u testUser --
             testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
@@ -66,11 +66,11 @@ jobs:
             sconsCacheMegabytes: 2500
             jobs: 4
 
-          - name: linux-platform24
+          - name: linux-platform25
             os: ubuntu-24.04
             buildType: RELEASE
             publish: false
-            containerImage: ghcr.io/gafferhq/build/build:3.4.0
+            containerImage: ghcr.io/gafferhq/build/build:4.0.0
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -78,8 +78,8 @@ jobs:
             testRunner: runuser -u testUser --
             sconsCacheMegabytes: 400
             jobs: 4
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.4.0/cortex-10.7.4.0-linux-platform24.tar.gz
-            extraBuildArguments: CYCLES_ROOT=""
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.7.4.0/cortex-10.7.4.0-linux-platform25.tar.gz
+            extraBuildArguments: CXXSTD=c++17
 
           - name: windows
             os: windows-2022
@@ -128,16 +128,9 @@ jobs:
       with:
         ref: ${{ env.GAFFER_NIGHTLY == '1' && 'pendingNightly' || '' }}
 
-    - name: Install Windows SDK
-      run: |
-        curl.exe -L --output winsdksetup.exe --url https://download.microsoft.com/download/9/7/9/97982c1d-d687-41be-9dd3-6d01e52ceb68/windowssdk/winsdksetup.exe
-        Start-Process ./winsdksetup.exe -ArgumentList "/Features OptionId.DesktopCPPx64 /Quiet /NoRestart" -NoNewWindow -Wait
-      shell: pwsh
-      if: runner.os == 'Windows'
-
     - uses: TheMrMilchmann/setup-msvc-dev@368ef7d1ee4d1171b31d4a7f67f4d954f903f5a9 # v4.1.0
       with:
-        sdk: 10.0.20348.0
+        sdk: 10.0.22621.0
         arch: x64
       if: runner.os == 'Windows'
 
@@ -303,53 +296,8 @@ jobs:
       # making a pull request from there.
       if: ${{ env.ARNOLD_DOWNLOAD_USER != '' }}
 
-    - name: Install RenderMan 26.3
-      run: ./.github/workflows/main/installRenderMan.py --version 26.3 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
-      shell: bash
-      env:
-        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
-        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
-        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
-      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os != 'macOS' }}
-
-    - name: Build and test against RenderMan 26.3
-      run: |
-        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
-        echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
-        ${{ matrix.testRunner }} ${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }} IECoreRenderManTest GafferRenderManTest GafferRenderManUITest
-        echo "::remove-matcher owner=unittest::"
-      env:
-        PYTHONUTF8: 1
-      if: ${{ env.RMANTREE != '' }}
-
-    - name: Install RenderMan 26.4
-      run: |
-        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
-        ./.github/workflows/main/installRenderMan.py --version 26.4 --dailyBuildDate 2026-08-15 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
-      shell: bash
-      env:
-        RENDERMAN_DOWNLOAD_USER: ${{ secrets.RENDERMAN_DOWNLOAD_USER }}
-        RENDERMAN_DOWNLOAD_PASSWORD: ${{ secrets.RENDERMAN_DOWNLOAD_PASSWORD }}
-        RENDERMAN_LICENSE_PASSPHRASE: ${{ secrets.RENDERMAN_LICENSE_PASSPHRASE }}
-      if: ${{ env.RENDERMAN_DOWNLOAD_USER != '' && runner.os == 'Linux' }}
-
-    - name: Build against RenderMan 26.4
-      run: |
-        scons -j ${{ matrix.jobs }} build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions ${{ matrix.extraBuildArguments }}
-      env:
-        PYTHONUTF8: 1
-      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' }}
-
-    - name: Test against RenderMan 26.4
-      # See comments for RenderMan 27.2.
-      run: |
-        podman run -e CI -e RMANTREE -e GITHUB_WORKSPACE -e GAFFER_BUILD_DIR -v /opt/pixar:/opt/pixar -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE --mac-address a4:bb:6d:cf:40:7a --shm-size 4g --entrypoint=sh -w $GITHUB_WORKSPACE rockylinux:9.3-minimal -c .github/workflows/main/testGafferRenderMan.sh
-        df -H
-      if: ${{ env.RMANTREE != '' && runner.os != 'Windows' }}
-
     - name: Install RenderMan 27.2
       run: |
-        rm -r "$RMANTREE" # Free up precious disk space from the previous installation
         ./.github/workflows/main/installRenderMan.py --version 27.2 --outputFormat "RMANTREE={rmanTree}" >> $GITHUB_ENV
       shell: bash
       env:

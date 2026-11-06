@@ -282,8 +282,11 @@ bool renameRenderPassWrapper( Gaffer::EditScope &scope, const std::string &oldNa
 
 object renameRenderPassNonEditableReasonWrapper( Gaffer::EditScope &scope, const std::string &newName )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	std::optional<std::string> result = EditScopeAlgo::renameRenderPassNonEditableReason( &scope, newName );
+	std::optional<std::string> result;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		result = EditScopeAlgo::renameRenderPassNonEditableReason( &scope, newName );
+	}
 	return result ? object( result.value() ) : object();
 }
 

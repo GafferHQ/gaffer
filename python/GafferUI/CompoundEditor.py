@@ -1004,9 +1004,9 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		QtCore.QObject.__init__( self )
 
 		self.__eventMask = set( (
-			QtCore.QEvent.MouseButtonPress,
-			QtCore.QEvent.MouseButtonRelease,
-			QtCore.QEvent.MouseMove
+			QtCore.QEvent.Type.MouseButtonPress,
+			QtCore.QEvent.Type.MouseButtonRelease,
+			QtCore.QEvent.Type.MouseMove
 		) )
 
 		self.__tabbedContainer = weakref.ref( tabbedContainer )
@@ -1056,15 +1056,16 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		if qEventType not in self.__eventMask :
 			return False
 
-		if qEventType == qEvent.MouseButtonPress :
+		eventTypes = QtCore.QEvent.Type
+		if qEventType == eventTypes.MouseButtonPress :
 
 			return self.__mousePress( qObject, qEvent )
 
-		elif qEventType == qEvent.MouseMove :
+		elif qEventType == eventTypes.MouseMove :
 
 			return self.__mouseMove( qObject, qEvent )
 
-		elif qEventType == qEvent.MouseButtonRelease :
+		elif qEventType == eventTypes.MouseButtonRelease :
 
 			return self.__mouseRelease( qObject, qEvent )
 
@@ -1078,7 +1079,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		if not isinstance( qTabBar, QtWidgets.QTabBar ) :
 			return False
 
-		if event.button() != QtCore.Qt.LeftButton :
+		if event.button() != QtCore.Qt.MouseButton.LeftButton :
 			return False
 
 		self.__initializeDragState( qTabBar )
@@ -1113,7 +1114,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 	def __mouseRelease( self, _, event ) :
 
-		if event.button() != QtCore.Qt.LeftButton :
+		if event.button() != QtCore.Qt.MouseButton.LeftButton :
 			return False
 
 		if not self.__qTabBar :
@@ -1182,7 +1183,7 @@ class _TabDragBehaviour( QtCore.QObject ) :
 
 	def __mouseMove( self, _, event ):
 
-		if not event.buttons() & QtCore.Qt.LeftButton :
+		if not event.buttons() & QtCore.Qt.MouseButton.LeftButton :
 			return False
 
 		if not self.__qTabBar :
@@ -1305,11 +1306,11 @@ class _TabDragBehaviour( QtCore.QObject ) :
 		# So they will already be in their correct places.
 
 		fakeReleaseEvent = QtGui.QMouseEvent(
-			QtCore.QEvent.MouseButtonRelease,
+			QtCore.QEvent.Type.MouseButtonRelease,
 			self.__constrainGlobalPosTo( moveEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else moveEvent.globalPos(), self.__qTabBar ),
 			moveEvent.globalPosition() if Qt.__binding__ == "PySide6" else moveEvent.screenPos(),
-			QtCore.Qt.LeftButton, QtCore.Qt.LeftButton,
-			QtCore.Qt.NoModifier
+			QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.LeftButton,
+			QtCore.Qt.KeyboardModifier.NoModifier
 		)
 		self.__qTabBar.mouseReleaseEvent( fakeReleaseEvent )
 

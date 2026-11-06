@@ -97,7 +97,7 @@ class PopupWindow( GafferUI.Window ) :
 	def __paintEvent( self, event ) :
 
 		painter = QtGui.QPainter( self._qtWidget() )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		painter.setRenderHint( QtGui.QPainter.RenderHint.Antialiasing )
 
 		painter.setBrush( QtGui.QColor( 35, 35, 35 ) )
 		painter.setPen( QtGui.QColor( 0, 0, 0, 0 ) )

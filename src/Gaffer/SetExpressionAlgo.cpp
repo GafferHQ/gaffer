@@ -253,7 +253,7 @@ struct AstSerialiser
 				}
 			}
 
-			return fmt::format( needParens ? "({}{}{})" : "{}{}{}", left, info.repr, right );
+			return needParens ? fmt::format( "({}{}{})", left, info.repr, right ) : fmt::format( "{}{}{}", left, info.repr, right );
 		}
 
 		return "";

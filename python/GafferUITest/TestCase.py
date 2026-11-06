@@ -38,6 +38,7 @@ import os
 import sys
 import functools
 import inspect
+import time
 import weakref
 
 from Qt import QtCore
@@ -199,6 +200,19 @@ class TestCase( GafferTest.TestCase ) :
 
 		app = Gaffer.Application()
 		app._executeStartupFiles( "gui" )
+
+	def assertEventually( self, fn, timeout = 10.0, interval = 0.1 ) :
+
+		GafferTest.TestCase.assertEventually( self, fn, timeout, interval, self.__runEventLoop )
+
+	def __runEventLoop( self, duration ) :
+
+		end = time.time() + duration
+		while time.time() < end :
+			# Repeatedly calling `waitForIdle( 1 )` on Windows accumulates
+			# wake-up messages until Qt's message queue exceeds its quota.
+			# Waiting for additional idle events avoids this.
+			self.waitForIdle( 10 )
 
 	@staticmethod
 	def __widgetInstances() :

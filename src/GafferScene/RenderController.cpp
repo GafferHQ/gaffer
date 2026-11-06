@@ -58,6 +58,7 @@
 #include "tbb/parallel_for.h"
 
 #include "fmt/format.h"
+#include "fmt/std.h"
 
 using namespace std;
 using namespace boost::placeholders;
@@ -88,8 +89,6 @@ const InternedString g_includedPurposesOptionName( "option:render:includedPurpos
 const InternedString g_purposeAttributeName( "usd:purpose" );
 const InternedString g_visibleAttributeName( "scene:visible" );
 const InternedString g_rendererContextName( "scene:renderer" );
-
-const std::string g_defaultPurpose( "default" );
 
 bool visible( const CompoundObject *attributes )
 {

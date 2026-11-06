@@ -51,9 +51,6 @@ using namespace GafferImage;
 
 namespace {
 
-// Should we allow choosing the alpha channel for occlusion?
-const std::string g_alphaChannelName = "A";
-
 // Read exactly one pixel back from a Summed Area Table.
 // This should exactly reconstruct the pixel value used to construct the table,
 // aside from floating point error.

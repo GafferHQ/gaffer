@@ -60,6 +60,32 @@ Breaking Changes
 - Serialisation :
   - Removed deprecated `postSerialisationSignal()`.
   - Renamed `staticPostSerialisationSignal()` to `postSerialisationSignal()`.
+- PySide : Removed `PYSIDE63_OPTION_PYTHON_ENUM=0x08` override at startup.
+- RenderMan : Removed support for RenderMan 26.3 and 26.4.
+
+Build
+-----
+
+- C++ : Updated to C++20.
+- GCC : Updated to 14.2.1 for Linux builds.
+- Boost : Updated to version 1.88.0.
+- Fmt : Updated to version 12.1.0.
+- FreeType : Updated to version 2.14.3.
+- Imath : Updated to version 3.2.3.
+- LibFFI : Updated to version 3.8.0.
+- LibPNG : Updated to version 1.6.59.
+- LLVM : Updated to version 20.1.8.
+- MarkupSafe : Updated to version 3.0.4.
+- OpenEXR : Updated to version 3.4.16.
+- OpenShadingLanguage : Updated to version 1.14.11.0.
+- OpenSubdiv : Updated to version 3.7.0.
+- OpenVDB : Updated to version 13.1.0.
+- PySide : Updated to version 6.8.5.
+- Python : Updated to version 3.13.16.
+- Qt : Updated to version 6.8.5.
+- TBB : Updated to version 2022.3.0.
+- ZLib : Updated to version 1.3.1.
+- Windows : Updated Windows SDK to version 10.0.22621.0.
 
 1.7.x.x (relative to 1.7.6.0)
 =======

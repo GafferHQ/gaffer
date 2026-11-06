@@ -146,5 +146,5 @@ class _StepsChangedScrollBar( QtWidgets.QScrollBar ) :
 
 		QtWidgets.QScrollBar.sliderChange( self, change )
 
-		if change == self.SliderStepsChange :
+		if change == QtWidgets.QAbstractSlider.SliderChange.SliderStepsChange :
 			self.stepsChanged.emit( self.pageStep(), self.singleStep() )

@@ -319,7 +319,7 @@ class _TimelineSlider( GafferUI.Slider ) :
 		painter.setFont( font )
 
 		frameText = GafferUI.NumericWidget.valueToString( value )
-		frameTextSize = QtGui.QFontMetrics( painter.font() ).size( QtCore.Qt.TextSingleLine, frameText )
+		frameTextSize = QtGui.QFontMetrics( painter.font() ).size( QtCore.Qt.TextFlag.TextSingleLine, frameText )
 
 		textMargin = 6
 		textX = position - frameTextSize.width() - textMargin

@@ -142,4 +142,10 @@ class GAFFERIMAGE_API Merge : public FlatImageProcessor
 
 IE_CORE_DECLAREPTR( Merge )
 
+/// Allows `Merge::Operation` to be passed directly to `fmt::format()`.
+inline int format_as( Merge::Operation operation )
+{
+	return operation;
+}
+
 } // namespace GafferImage

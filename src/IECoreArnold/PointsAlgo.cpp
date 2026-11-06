@@ -225,7 +225,7 @@ AtNode *convert( const IECoreScenePreview::Renderer::Samples<const IECoreScene::
 			for( int i = 0; i < coefficientCount; ++i )
 			{
 				auto coefficientsData = samples.front()->variableData<const V3fVectorData>(
-					fmt::format( g_radianceSphericalHarmonicsCoefficientsPrefix + ":{}", i ),
+					fmt::format( "{}:{}", g_radianceSphericalHarmonicsCoefficientsPrefix, i ),
 					PrimitiveVariable::Vertex
 				);
 

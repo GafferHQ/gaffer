@@ -139,9 +139,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		# the QTableView itself won't edit anything, and we then implement
 		# our own editing via PlugValueWidgets in _EditWindow.
 
-		tableView.setEditTriggers( tableView.NoEditTriggers )
-		tableView.setSelectionMode( tableView.ExtendedSelection )
-		tableView.setSelectionBehavior( tableView.SelectItems )
+		tableView.setEditTriggers( QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers )
+		tableView.setSelectionMode( QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection )
+		tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems )
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) )
 		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
@@ -155,7 +155,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		tableView.setHorizontalScrollMode( tableView.ScrollPerPixel )
+		tableView.setHorizontalScrollMode( QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel )
 
 		tableView.setSizePolicy(
 			QtWidgets.QSizePolicy.Fixed if mode == self.Mode.RowNames else QtWidgets.QSizePolicy.Maximum,
@@ -197,7 +197,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		indexes = [ tableView.model().indexForPlug( plug ) for plug in plugs ]
 		assert( all( [ index.isValid() for index in indexes ] ) )
 
-		if not all( [ index.flags() & ( QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable ) for index in indexes ] ) :
+		if not all( [ index.flags() & ( QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsEditable ) for index in indexes ] ) :
 			return
 
 		if scrollTo :
@@ -596,7 +596,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			destinationPlug = self.plugAt( event.line.p0 )
 			self._qtWidget().selectionModel().setCurrentIndex(
 				self._qtWidget().model().indexForPlug( destinationPlug ),
-				QtCore.QItemSelectionModel.SelectCurrent
+				QtCore.QItemSelectionModel.SelectionFlag.SelectCurrent
 			)
 			mode = self.__dropMode( destinationPlug, event )
 			if mode == self.__DropMode.Add :
@@ -728,7 +728,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		index = self._qtWidget().indexAt( point )
 
 		# Disabled items won't show up in the selection model
-		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+		if not index.flags() & QtCore.Qt.ItemFlag.ItemIsEnabled :
 			return True
 
 		if self.__mode == self.Mode.Outputs and event.buttons & ( event.Buttons.Left | event.Buttons.Middle ) :
@@ -750,7 +750,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		# (Qt default) then this offers the most consistent experience.
 		selectionModel = self._qtWidget().selectionModel()
 		if not selectionModel.isSelected( index ) :
-			selectionModel.select( index, selectionModel.ClearAndSelect )
+			selectionModel.select( index, QtCore.QItemSelectionModel.ClearAndSelect )
 
 		selectedPlugs = self.selectedPlugs()
 
@@ -811,7 +811,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		)
 		index = self._qtWidget().indexAt( point )
 
-		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+		if not index.flags() & QtCore.Qt.ItemFlag.ItemIsEnabled :
 			return True
 
 		plug = self._qtWidget().model().plugForIndex( index )
@@ -1418,15 +1418,15 @@ class _PlugTableView( GafferUI.Widget ) :
 class _NavigableTable( _TableView ) :
 
 	__protectedKeys = (
-		QtCore.Qt.Key_Left,
-		QtCore.Qt.Key_Right,
-		QtCore.Qt.Key_Up,
-		QtCore.Qt.Key_Down
+		QtCore.Qt.Key.Key_Left,
+		QtCore.Qt.Key.Key_Right,
+		QtCore.Qt.Key.Key_Up,
+		QtCore.Qt.Key.Key_Down
 	)
 
 	def event( self, event ) :
 
-		if event.type() == QtCore.QEvent.ShortcutOverride and event.key() in self.__protectedKeys :
+		if event.type() == QtCore.QEvent.Type.ShortcutOverride and event.key() in self.__protectedKeys :
 			event.accept()
 			return True
 		else :
