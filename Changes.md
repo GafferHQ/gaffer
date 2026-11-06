@@ -25,6 +25,7 @@ Improvements
     - Added `ai:` prefix to tweaks parameter names created from the menu.
     - Changed tweak plug names to match the parameter name it tweaks.
     - Added `ai:aperture_aspect_ratio` preset menu item.
+- SceneEditor : Pop-up editors are no longer provided when a downstream edit would override their action.
 
 Fixes
 -----

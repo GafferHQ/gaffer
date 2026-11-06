@@ -207,21 +207,12 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		)
 
 		# If there's an edit downstream of the EditScope we're asked to use,
-		# then we're allowed to be editable still
-		## \todo This seems bogus. When making direct edits with `edit()` we
-		# make no attempt to explain to the user that the edit is overridden,
-		# so we'd be better off not allowing it.
+		# then we refuse to edit, because it would be confusing when you
+		# didn't see the result.
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/plane", "planeSet", s["editScope1"] )
-		self.assertTrue( inspection.canEdit( IECore.BoolData( True ) ) )
-		self.assertEqual( inspection.cantEditReason( IECore.BoolData( True ) ), "" )
-		inspection.edit( IECore.BoolData( False ) )
-		self.assertEqual(
-			GafferScene.EditScopeAlgo.getSetMembership(
-				s["editScope1"], "/group/plane", "planeSet"
-			),
-			GafferScene.EditScopeAlgo.SetMembership.Removed
-		)
+		self.assertFalse( inspection.canEdit( IECore.BoolData( True ) ) )
+		self.assertEqual( inspection.cantEditReason( IECore.BoolData( True ) ), "SetMembership has edits downstream in editScope2." )
 
 		# If there is a source node inside an edit scope, make sure we use that
 
@@ -232,7 +223,7 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		s["editScope1"]["parentPlane2"]["parent"].setValue( "/" )
 		s["editScope1"]["parentPlane2"]["children"][0].setInput( s["editScope1"]["plane2"]["out"] )
 		s["editScope1"]["parentPlane2"]["in"].setInput( s["editScope1"]["BoxIn"]["out"] )
-		s["editScope1"]["SetMembershipEdits"]["in"].setInput( s["editScope1"]["parentPlane2"]["out"] )
+		s["editScope1"].acquireProcessor( "SetMembershipEdits" )["in"].setInput( s["editScope1"]["parentPlane2"]["out"] )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["editScope2"]["out"], "/plane2", "planeSet", s["editScope1"] ),
@@ -310,21 +301,23 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			cantEditReason = 'Cannot edit nodes of type "GafferScene::Set".'
 		)
 
-		# Check nonEditableRasons
+		# Check cantEditReasons
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentSet"]["out"], "/group/plane", "planeSet", s["editScope2"] ),
 			source = s["independentSet"]["out"],
 			sourceType = SourceType.Downstream,
-			canEdit = True
+			canEdit = False,
+			cantEditReason = "SetMembership has edits downstream in independentSet."
 		)
 
+		s["independentSet"]["enabled"].setValue( False )
 		s["editScope2"]["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentSet"]["out"], "/group/plane", "planeSet", s["editScope2"] ),
-			source = s["independentSet"]["out"],
-			sourceType = SourceType.Downstream,
+			source = s["plane"]["out"],
+			sourceType = SourceType.Upstream,
 			canEdit = False,
 			cantEditReason = "The target edit scope editScope2 is disabled."
 		)
@@ -703,8 +696,8 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 			Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], False )
 			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", None )
 			self.assertFalse( inspection.canDisableEdit() )
-			self.assertEqual( inspection.cantDisableEditReason(), "plane.sets has no edit to disable." )
-			self.assertRaisesRegex( IECore.Exception, "plane.sets has no edit to disable.", inspection.disableEdit )
+			self.assertEqual( inspection.cantDisableEditReason(), "SetMembership has edits downstream in editScope1." )
+			self.assertRaisesRegex( IECore.Exception, "SetMembership has edits downstream in editScope1.", inspection.disableEdit )
 
 			inspection = self.__inspect( s["editScope1"]["out"], "/group/plane", "planeSetEditScope", s["editScope1"] )
 			self.assertTrue( inspection.canDisableEdit() )

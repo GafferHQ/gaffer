@@ -258,17 +258,23 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		)
 
 		# If there's an edit downstream of the EditScope we're asked to use,
-		# then we're allowed to be editable still
+		# then we're not allowed to be editable. It is too confusing to allow
+		# edits that are overridden by downstream edits.
 
-		# This is true even if the downstream edit is enabled and read-only
-		Gaffer.MetadataAlgo.setReadOnly( s["editScope2"], True )
 		lightEditScope2Edit["enabled"].setValue( True )
+
+		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
+		self.assertFalse( inspection.canAcquireEdit() )
+		self.assertEqual( inspection.cantAcquireEditReason(), "Attribute has edits downstream in editScope2." )
+
+		# Disable the downstream edit, and acquire the edit we want.
+
+		lightEditScope2Edit["enabled"].setValue( False )
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
 		self.assertTrue( inspection.canAcquireEdit() )
 		self.assertEqual( inspection.cantAcquireEditReason(), "" )
 		lightEditScope1Edit = inspection.acquireEdit()
-		self.assertIsNotNone( lightEditScope1Edit )
 		self.assertEqual(
 			lightEditScope1Edit,
 			GafferScene.EditScopeAlgo.acquireAttributeEdit(
@@ -276,8 +282,9 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			)
 		)
 
-		# Having now created the edit, we should be able to acquire it again ( this uses a slightly
-		# different code path since now it will be found as a source ).
+		# Having now created the edit, we should be able to acquire it again.
+
+		lightEditScope2Edit["enabled"].setValue
 
 		lightEditScope1Edit["enabled"].setValue( True )
 
@@ -400,16 +407,17 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( s["independentAttributeTweak"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] ),
 			source = s["independentAttributeTweak"]["out"],
 			sourceType = SourceType.Downstream,
-			canAcquireEdit = True,
-			edit = lightEditScope2Edit,
+			canAcquireEdit = False,
+			cantAcquireEditReason = "Attribute has edits downstream in independentAttributeTweak."
 		)
 
+		independentAttributeTweakPlug["enabled"].setValue( False )
 		s["editScope2"]["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentAttributeTweak"]["out"], "/group/light", "gl:visualiser:scale", s["editScope2"] ),
-			source = s["independentAttributeTweak"]["out"],
-			sourceType = SourceType.Downstream,
+			source = s["editScope1"]["AttributeEdits"]["out"].source(),
+			sourceType = SourceType.Upstream,
 			canAcquireEdit = False,
 			cantAcquireEditReason = "The target edit scope editScope2 is disabled."
 		)
@@ -555,7 +563,6 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		i = self.__inspect( s["editScope1"]["out"], "/light", "gl:visualiser:scale", editScope2 )
 		scope2Edit = i.acquireEdit()
-		scope2Edit["enabled"].setValue( True )
 		self.assertEqual( scope2Edit.ancestor( Gaffer.EditScope ), editScope2 )
 
 		# Check we still fin the edit in scope 1
@@ -589,8 +596,8 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( s["attributeTweaks"]["out"], "/light", "gl:visualiser:scale", s["editScope"] ),
 			source = s["attributeTweaks"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Downstream,
-			canAcquireEdit = True,
-			edit = None,
+			canAcquireEdit = False,
+			cantAcquireEditReason = "Attribute has edits downstream in attributeTweaks."
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -1040,6 +1047,12 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 
 		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", None )
 		self.assertFalse( inspection.canDisableEdit() )
+		self.assertEqual( inspection.cantDisableEditReason(), "Attribute has edits downstream in editScope1." )
+		self.assertRaisesRegex( IECore.Exception, "Attribute has edits downstream in editScope1.", inspection.disableEdit )
+
+		lightEdit["enabled"].setValue( False )
+		inspection = self.__inspect( s["editScope2"]["out"], "/group/light", "gl:visualiser:scale", None )
+		self.assertFalse( inspection.canDisableEdit() )
 		self.assertEqual( inspection.cantDisableEditReason(), "light.visualiserAttributes.scale.enabled is not enabled." )
 		self.assertRaisesRegex( IECore.Exception, "light.visualiserAttributes.scale.enabled is not enabled.", inspection.disableEdit )
 
@@ -1048,6 +1061,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.cantDisableEditReason(), "There is no edit in editScope2." )
 		self.assertRaisesRegex( IECore.Exception, "There is no edit in editScope2.", inspection.disableEdit )
 
+		lightEdit["enabled"].setValue( True )
 		Gaffer.MetadataAlgo.setReadOnly( s["editScope1"], True )
 		inspection = self.__inspect( s["editScope1"]["out"], "/group/light", "gl:visualiser:scale", s["editScope1"] )
 		self.assertFalse( inspection.canDisableEdit() )

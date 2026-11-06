@@ -262,22 +262,23 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			edit = s["independentOptions"]["options"]["render:camera"]
 		)
 
-		# Check nonEditableReasons
+		# Check cantAcquireEditReasons
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentOptions"]["out"], "render:camera", s["editScope2"] ),
 			source = s["independentOptions"]["out"],
 			sourceType = SourceType.Downstream,
-			canAcquireEdit = True,
-			edit = optionEditScope2Edit,
+			canAcquireEdit = False,
+			cantAcquireEditReason = "Option has edits downstream in independentOptions."
 		)
 
+		s["independentOptions"]["options"]["render:camera"]["enabled"].setValue( False )
 		s["editScope2"]["enabled"].setValue( False )
 
 		self.__assertExpectedResult(
 			self.__inspect( s["independentOptions"]["out"], "render:camera", s["editScope2"] ),
-			source = s["independentOptions"]["out"],
-			sourceType = SourceType.Downstream,
+			source = s["editScope1"]["standardOptions3"]["out"],
+			sourceType = SourceType.Upstream,
 			canAcquireEdit = False,
 			cantAcquireEditReason = "The target edit scope editScope2 is disabled."
 		)
@@ -666,14 +667,15 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 			)
 
 			# When using no scope, make sure that we don't inadvertently edit the contents of an EditScope.
-			# We should be allowed to edit the source before the scope, but only with a warning about there
-			# being a downstream override.
+			# We're not allowed to make an upstream edit, because it would be confusing not to see the result
+			# due to the downstream edit overriding it.
 
 			self.__assertExpectedResult(
 				self.__inspect( s["editScope2"]["out"], "render:camera", None, context ),
 				source = s["editScope1"]["standardOptions3"]["out"],
 				sourceType = SourceType.Downstream,
-				canAcquireEdit = True,
+				canAcquireEdit = False,
+				cantAcquireEditReason = "Option has edits downstream in editScope1."
 			)
 
 			# If there is a StandardOptions node outside of an edit scope, make sure we use that with no scope
@@ -691,22 +693,23 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 				edit = s["independentOptions"]["options"]["render:camera"]
 			)
 
-			# Check nonEditableReasons
+			# Check cantAcquireEditReasons
 
 			self.__assertExpectedResult(
 				self.__inspect( s["independentOptions"]["out"], "render:camera", s["editScope2"], context ),
 				source = s["independentOptions"]["out"],
 				sourceType = SourceType.Downstream,
-				canAcquireEdit = True,
-				edit = optionEditScope2Edit,
+				canAcquireEdit = False,
+				cantAcquireEditReason = "Option has edits downstream in independentOptions.",
 			)
 
+			s["independentOptions"]["options"]["render:camera"]["enabled"].setValue( False )
 			s["editScope2"]["enabled"].setValue( False )
 
 			self.__assertExpectedResult(
 				self.__inspect( s["independentOptions"]["out"], "render:camera", s["editScope2"], context ),
-				source = s["independentOptions"]["out"],
-				sourceType = SourceType.Downstream,
+				source = s["editScope1"]["standardOptions3"]["out"],
+				sourceType = SourceType.Upstream,
 				canAcquireEdit = False,
 				cantAcquireEditReason = "The target edit scope editScope2 is disabled."
 			)
