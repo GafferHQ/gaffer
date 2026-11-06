@@ -54,8 +54,8 @@ class Button( GafferUI.Widget ) :
 
 		self.__highlightForHover = False
 
-		self._qtWidget().setAttribute( QtCore.Qt.WA_LayoutUsesWidgetRect )
-		self._qtWidget().setFocusPolicy( QtCore.Qt.TabFocus )
+		self._qtWidget().setAttribute( QtCore.Qt.WidgetAttribute.WA_LayoutUsesWidgetRect )
+		self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.TabFocus )
 		# allow return and enter keys to click button
 		self._qtWidget().setAutoDefault( True )
 
@@ -119,8 +119,8 @@ class Button( GafferUI.Widget ) :
 
 		self._qtWidget().setProperty( "gafferWithFrame", hasFrame )
 		self._qtWidget().setSizePolicy(
-			QtWidgets.QSizePolicy.Minimum if hasFrame else QtWidgets.QSizePolicy.Fixed,
-			QtWidgets.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Policy.Minimum if hasFrame else QtWidgets.QSizePolicy.Policy.Fixed,
+			QtWidgets.QSizePolicy.Policy.Fixed
 		)
 		self._repolish()
 

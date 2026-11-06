@@ -985,7 +985,7 @@ class _InputLabelWidget( GafferUI.Widget ) :
 
 		self.__nameLabel = GafferUI.NameLabel( None )
 		self.__nameLabel._qtWidget().setFixedHeight( 20 )
-		self.__nameLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed )
+		self.__nameLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed )
 		GafferUI.Widget.__init__( self, self.__nameLabel, **kw )
 
 	def connectToNodeSetWidget( self, nodeSetWidget ) :
@@ -1100,7 +1100,7 @@ class _CurrentRenderPassWidget( GafferUI.PlugValueWidget ) :
 
 		# Match the size policy of the _RenderPassPlugValueWidget, so they
 		# share space equally.
-		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed )
+		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed )
 		self.__label._qtWidget().setFixedHeight( 20 )
 
 	@staticmethod

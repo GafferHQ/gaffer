@@ -152,11 +152,11 @@ class _ScrollArea( QtWidgets.QScrollArea ) :
 		wSize = w.sizeHint()
 
 		width = self.__marginLeft + self.__marginRight + wSize.width()
-		if self.verticalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOn :
+		if self.verticalScrollBarPolicy() == QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn :
 			width += self.verticalScrollBar().sizeHint().width()
 
 		height = self.__marginTop + self.__marginBottom + wSize.height()
-		if self.horizontalScrollBarPolicy()==QtCore.Qt.ScrollBarAlwaysOn :
+		if self.horizontalScrollBarPolicy() == QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn :
 			height += self.horizontalScrollBar().sizeHint().height()
 
 		return QtCore.QSize( width, height )

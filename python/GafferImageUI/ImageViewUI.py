@@ -523,7 +523,7 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 		widgets = [ w for w in widgets if w ]
 
 		widgets[0]._qtWidget().setFixedWidth( 25 ) # Mode selector is just an icon
-		widgets[0]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		widgets[0]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 
 		self.__row[:] = widgets
 

@@ -53,13 +53,13 @@ class Divider( GafferUI.Widget ) :
 	def setOrientation( self, orientation ) :
 
 		if orientation == self.Orientation.Horizontal :
-			self._qtWidget().setFrameShape( QtWidgets.QFrame.HLine )
+			self._qtWidget().setFrameShape( QtWidgets.QFrame.Shape.HLine )
 		else :
-			self._qtWidget().setFrameShape( QtWidgets.QFrame.VLine )
+			self._qtWidget().setFrameShape( QtWidgets.QFrame.Shape.VLine )
 
 	def getOrientation( self ) :
 
-		if self._qtWidget().frameShape() == QtWidgets.QFrame.HLine :
+		if self._qtWidget().frameShape() == QtWidgets.QFrame.Shape.HLine :
 			return self.Orientation.Horizontal
 		else :
 			return self.Orientation.Vertical

@@ -839,7 +839,7 @@ class _ColorFieldRowLayout( QtWidgets.QLayout ) :
 
 	def expandingDirections( self ) :
 
-		return QtCore.Qt.Orientations( QtCore.Qt.Orientation( 0 ) )
+		return QtCore.Qt.Orientation( 0 )
 
 	def itemAt( self, index ) :
 
@@ -900,7 +900,7 @@ class _ColorFieldRowContainer( GafferUI.ContainerWidget ) :
 		GafferUI.ContainerWidget.__init__( self, QtWidgets.QWidget(), **kw )
 
 		self.__qtLayout = _ColorFieldRowLayout()
-		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 
 		self._qtWidget().setLayout( self.__qtLayout )
 

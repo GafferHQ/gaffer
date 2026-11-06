@@ -129,7 +129,7 @@ class RenderPassEditor( GafferSceneUI.SceneEditor ) :
 
 			## \todo Provide public API for this in PathListingWidget, we currently use a different approach
 			# for header-only context menus in CatalogueUI.
-			self.__pathListing._qtWidget().header().setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+			self.__pathListing._qtWidget().header().setContextMenuPolicy( QtCore.Qt.ContextMenuPolicy.CustomContextMenu )
 			self.__pathListing._qtWidget().header().customContextMenuRequested.connect( Gaffer.WeakMethod( self.__headerContextMenuRequested ) )
 			self.__pathListing._qtWidget().header().blockingSectionPressedSignal().connect( Gaffer.WeakMethod( self.__sectionPressed ) )
 			self.__pathListing._qtWidget().header().sectionMoved.connect( Gaffer.WeakMethod( self.__sectionMoved ) )

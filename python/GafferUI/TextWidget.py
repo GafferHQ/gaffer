@@ -83,16 +83,16 @@ class TextWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setEchoMode(
 			{
-				self.DisplayMode.Normal : QtWidgets.QLineEdit.Normal,
-				self.DisplayMode.Password : QtWidgets.QLineEdit.Password,
+				self.DisplayMode.Normal : QtWidgets.QLineEdit.EchoMode.Normal,
+				self.DisplayMode.Password : QtWidgets.QLineEdit.EchoMode.Password,
 			}[displayMode]
 		)
 
 	def getDisplayMode( self ) :
 
 		return {
-			QtWidgets.QLineEdit.Normal : self.DisplayMode.Normal,
-			QtWidgets.QLineEdit.Password : self.DisplayMode.Password,
+			QtWidgets.QLineEdit.EchoMode.Normal : self.DisplayMode.Normal,
+			QtWidgets.QLineEdit.EchoMode.Password : self.DisplayMode.Password,
 		}[self._qtWidget().echoMode()]
 
 	def setErrored( self, errored ) :
@@ -204,7 +204,7 @@ class TextWidget( GafferUI.Widget ) :
 	## \todo Should this be moved to the Widget class?
 	def grabFocus( self ) :
 
-		self._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
+		self._qtWidget().setFocus( QtCore.Qt.FocusReason.OtherFocusReason )
 
 	## A signal emitted whenever the text changes. If the user is typing
 	# then a signal will be emitted for every character entered.
@@ -376,8 +376,8 @@ class _LineEdit( QtWidgets.QLineEdit ) :
 
 		self.__fixedCharacterWidth = numCharacters
 		self.setSizePolicy(
-			QtWidgets.QSizePolicy.Expanding if self.__fixedCharacterWidth is None else QtWidgets.QSizePolicy.Fixed,
-			QtWidgets.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Policy.Expanding if self.__fixedCharacterWidth is None else QtWidgets.QSizePolicy.Policy.Fixed,
+			QtWidgets.QSizePolicy.Policy.Fixed
 		)
 
 		# we need to make sure that the geometry is up-to-date with the current character width
@@ -404,7 +404,7 @@ class _LineEdit( QtWidgets.QLineEdit ) :
 		options = QtWidgets.QStyleOptionFrame()
 		self.initStyleOption( options )
 		size = self.style().sizeFromContents(
-			QtWidgets.QStyle.CT_LineEdit,
+			QtWidgets.QStyle.ContentsType.CT_LineEdit,
 			options,
 			QtCore.QSize( width, 20 ),
 			self

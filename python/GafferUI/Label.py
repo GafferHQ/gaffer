@@ -55,7 +55,7 @@ class Label( GafferUI.Widget ) :
 		# the same size. it's particularly important that it doesn't accept growth vertically as then vertical ListContainers
 		# don't shrink properly when a child is hidden or shrunk - instead the container would distribute the extra height
 		# among all the labels.
-		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed ) )
+		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed ) )
 
 		self.setAlignment( horizontalAlignment, verticalAlignment )
 		if textSelectable :
@@ -87,15 +87,15 @@ class Label( GafferUI.Widget ) :
 	def setTextSelectable( self, selectable ) :
 
 		flags = self._qtWidget().textInteractionFlags()
-		flags &= ~QtCore.Qt.TextSelectableByMouse
+		flags &= ~QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
 		if selectable :
-			flags |= QtCore.Qt.TextSelectableByMouse
+			flags |= QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
 
 		self._qtWidget().setTextInteractionFlags( flags )
 
 	def getTextSelectable( self ) :
 
-		return bool( self._qtWidget().textInteractionFlags() & QtCore.Qt.TextSelectableByMouse )
+		return bool( self._qtWidget().textInteractionFlags() & QtCore.Qt.TextInteractionFlag.TextSelectableByMouse )
 
 	def linkActivatedSignal( self ) :
 

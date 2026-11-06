@@ -118,11 +118,11 @@ class _RenderPassNameValidator( QtGui.QValidator ) :
 
 		if len( input ) :
 			if re.match( "^[A-Za-z0-9_-]+$", input ) :
-				result = QtGui.QValidator.Acceptable
+				result = QtGui.QValidator.State.Acceptable
 			else :
-				result = QtGui.QValidator.Invalid
+				result = QtGui.QValidator.State.Invalid
 		else :
-			result = QtGui.QValidator.Intermediate
+			result = QtGui.QValidator.State.Intermediate
 
 		return result, input, pos
 

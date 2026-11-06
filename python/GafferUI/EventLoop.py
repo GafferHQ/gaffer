@@ -163,12 +163,12 @@ class EventLoop( object ) :
 
 		# Allow all `GafferUI.GLWidgets` to share OpenGL resources (via the underlying
 		# QOpenGLWidget).
-		QtWidgets.QApplication.setAttribute( QtCore.Qt.AA_ShareOpenGLContexts )
+		QtWidgets.QApplication.setAttribute( QtCore.Qt.ApplicationAttribute.AA_ShareOpenGLContexts )
 		assert( style is not None )
 		__qtApplication = QtWidgets.QApplication( [ "gaffer" ] )
 		# Fixes laggy interaction with tablets, equivalent to the old
 		# QT_COMPRESS_TABLET_EVENTS env var supported in Maya Qt builds.
-		__qtApplication.setAttribute( QtCore.Qt.AA_CompressTabletEvents, True )
+		__qtApplication.setAttribute( QtCore.Qt.ApplicationAttribute.AA_CompressTabletEvents, True )
 
 	__mainEventLoop = None
 	## Returns the main event loop for the application. This should always

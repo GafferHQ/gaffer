@@ -213,8 +213,8 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
 		QtWidgets.QGraphicsView.__init__( self )
 
-		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
+		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff )
+		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff )
 
 		glWidget = self.__createGLWidget( format )
 		self.setViewport( glWidget )
@@ -306,7 +306,7 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 		if widget._qtWidget().layout() is not None :
 			# removing the size constraint is necessary to keep the widget the
 			# size we tell it to be in __updateItemGeometry.
-			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetNoConstraint )
 
 		proxy = _OverlayProxyWidget()
 		proxy.setWidget( widget._qtWidget() )
@@ -356,7 +356,7 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 	def __focusItemChanged( self, newItem, oldItem, reason ) :
 
-		if newItem is None and reason == QtCore.Qt.PopupFocusReason :
+		if newItem is None and reason == QtCore.Qt.FocusReason.PopupFocusReason :
 			# Don't lose the focus item for this view due to a popup menu.
 			# Losing that would prevent the `GLWidget` from forwarding events
 			# to overlay widgets.

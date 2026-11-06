@@ -51,7 +51,7 @@ class MenuBar( GafferUI.Widget ) :
 	def __init__( self, definition, **kw ) :
 
 		menuBar = _MenuBar()
-		menuBar.setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed ) )
+		menuBar.setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed ) )
 		menuBar.setNativeMenuBar( False )
 
 		GafferUI.Widget.__init__( self, menuBar, **kw )

@@ -49,13 +49,13 @@ from PySide6 import QtWidgets
 # - Supports changing header icons on mouse hover, via PathColumn's { "state:normal" : "normal.png", "state:highlighted" : "highlighted.png" } icon format.
 class _HeaderView( QtWidgets.QHeaderView ) :
 
-	def __init__( self, orientation = QtCore.Qt.Horizontal, parent = None ) :
+	def __init__( self, orientation = QtCore.Qt.Orientation.Horizontal, parent = None ) :
 
 		QtWidgets.QHeaderView.__init__( self, orientation, parent )
 
 		self.setMouseTracking( True )
-		if orientation == QtCore.Qt.Horizontal :
-			self.setDefaultAlignment( QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter )
+		if orientation == QtCore.Qt.Orientation.Horizontal :
+			self.setDefaultAlignment( QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter )
 
 		self.__blockingSectionPressedSignal = None
 

@@ -61,7 +61,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		layout = QtWidgets.QHBoxLayout()
 		layout.setContentsMargins( 0, 0, 0, 0 )
-		layout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		layout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 		self._qtWidget().setLayout( layout )
 
 		self.__label = GafferUI.NameLabel(
@@ -147,9 +147,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def setFixedWidth( self, width ) :
 
-		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 		self._qtWidget().setFixedWidth( width )
-		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred )
+		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred )
 
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :

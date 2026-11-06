@@ -165,7 +165,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			# more details:
 			# http://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working
 			if type( topLevelWidget ) == QtWidgets.QWidget :
-				self.__qtWidget.setAttribute( QtCore.Qt.WA_StyledBackground, True )
+				self.__qtWidget.setAttribute( QtCore.Qt.WidgetAttribute.WA_StyledBackground, True )
 		else :
 			self.__gafferWidget = topLevelWidget
 			self.__qtWidget = QtWidgets.QWidget()
@@ -181,7 +181,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			# event to be posted to the event loop. Before that is dealt with, a
 			# paint event draws a layout computed without the right constraints
 			# and we get flicker when the second round of layout completes.
-			self.__qtWidget.layout().setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+			self.__qtWidget.layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 			self.__qtWidget.layout().setContentsMargins( 0, 0, 0, 0 )
 			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
 
@@ -190,7 +190,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		# disable different focus appearance on os x
 		## \todo If we have a style class for Widget at some point, then perhaps
 		# this should go in there.
-		self.__qtWidget.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
+		self.__qtWidget.setAttribute( QtCore.Qt.WidgetAttribute.WA_MacShowFocusRect, False )
 
 		self._keyPressSignal = None
 		self._keyReleaseSignal = None
@@ -1549,7 +1549,7 @@ class _EventFilter( QtCore.QObject ) :
 				qWidget.mapFromGlobal( globalPos ),
 				globalPos,
 				QtCore.Qt.MouseButton.LeftButton,
-				QtCore.Qt.NoButton,
+				QtCore.Qt.MouseButton.NoButton,
 				qKeyEvent.modifiers()
 			)
 
@@ -1571,7 +1571,7 @@ class _EventFilter( QtCore.QObject ) :
 
 		if qEvent.mimeData().hasUrls() :
 			data = IECore.StringVectorData( [
-				url.toString( QtCore.QUrl.PrettyDecoded | QtCore.QUrl.PreferLocalFile )
+				url.toString( QtCore.QUrl.ComponentFormattingOption.PrettyDecoded | QtCore.QUrl.UrlFormattingOption.PreferLocalFile )
 				for url in qEvent.mimeData().urls()
 			] )
 		elif qEvent.mimeData().hasText() :

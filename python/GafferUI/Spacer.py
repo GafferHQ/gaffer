@@ -56,7 +56,7 @@ class Spacer( GafferUI.Widget ) :
 			layout.setContentsMargins( 0, 0, 0, 0 )
 			self._qtWidget().setLayout( layout )
 			layout.addSpacerItem(
-				QtWidgets.QSpacerItem( preferredSize.x, preferredSize.y, QtWidgets.QSizePolicy.Preferred )
+				QtWidgets.QSpacerItem( preferredSize.x, preferredSize.y, QtWidgets.QSizePolicy.Policy.Preferred )
 			)
 
 		self._qtWidget().setMinimumSize( size.x, size.y )

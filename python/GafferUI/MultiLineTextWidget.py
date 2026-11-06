@@ -131,20 +131,20 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setWordWrapMode(
 			{
-				self.WrapMode.None_ : QtGui.QTextOption.NoWrap,
-				self.WrapMode.Word : QtGui.QTextOption.WordWrap,
-				self.WrapMode.Character : QtGui.QTextOption.WrapAnywhere,
-				self.WrapMode.WordOrCharacter : QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere,
+				self.WrapMode.None_ : QtGui.QTextOption.WrapMode.NoWrap,
+				self.WrapMode.Word : QtGui.QTextOption.WrapMode.WordWrap,
+				self.WrapMode.Character : QtGui.QTextOption.WrapMode.WrapAnywhere,
+				self.WrapMode.WordOrCharacter : QtGui.QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere,
 			}[wrapMode]
 		)
 
 	def getWrapMode( self ) :
 
 		return {
-			QtGui.QTextOption.NoWrap : self.WrapMode.None_,
-			QtGui.QTextOption.WordWrap : self.WrapMode.Word,
-			QtGui.QTextOption.WrapAnywhere : self.WrapMode.Character,
-			QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere : self.WrapMode.WordOrCharacter,
+			QtGui.QTextOption.WrapMode.NoWrap : self.WrapMode.None_,
+			QtGui.QTextOption.WrapMode.WordWrap : self.WrapMode.Word,
+			QtGui.QTextOption.WrapMode.WrapAnywhere : self.WrapMode.Character,
+			QtGui.QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere : self.WrapMode.WordOrCharacter,
 		}[self._qtWidget().wordWrapMode()]
 
 	def setFixedLineHeight( self, fixedLineHeight ) :
@@ -465,7 +465,7 @@ class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 		self.setSizePolicy(
 			self.sizePolicy().horizontalPolicy(),
-			QtWidgets.QSizePolicy.Expanding if self.__fixedLineHeight is None else QtWidgets.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Policy.Expanding if self.__fixedLineHeight is None else QtWidgets.QSizePolicy.Policy.Fixed
 		)
 
 		self.updateGeometry()

@@ -75,7 +75,7 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		modeWidget = GafferUI.PlugValueWidget.create( self.__childPlugs( plugs, "mode" ) )
 		modeWidget._qtWidget().setFixedWidth( 135 )
-		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 		self.__row.append( modeWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
 		self.__row.append( valueWidget, expand = True )

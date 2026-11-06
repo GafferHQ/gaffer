@@ -299,10 +299,10 @@ class MenuBarTest( GafferUITest.TestCase ) :
 
 		QtWidgets.QApplication.instance().notify(
 			widget._qtWidget(),
-			QtGui.QKeyEvent( QtCore.QEvent.KeyPress, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
+			QtGui.QKeyEvent( QtCore.QEvent.Type.KeyPress, QtCore.Qt.Key.Key_A, QtCore.Qt.KeyboardModifier.ControlModifier )
 		)
 
 		QtWidgets.QApplication.instance().notify(
 			widget._qtWidget(),
-			QtGui.QKeyEvent( QtCore.QEvent.KeyRelease, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
+			QtGui.QKeyEvent( QtCore.QEvent.Type.KeyRelease, QtCore.Qt.Key.Key_A, QtCore.Qt.KeyboardModifier.ControlModifier )
 		)

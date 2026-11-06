@@ -76,9 +76,9 @@ class _LinkedScrollBar( GafferUI.Widget ) :
 		# by the `scrolledContainers`. Otherwise, showing the scrollbar in `__rangeChanged` can lead to
 		# another change of range, making an infinite loop where the scrollbar flickers on and off.
 		if orientation == GafferUI.ListContainer.Orientation.Vertical :
-			self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Ignored )
+			self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Ignored )
 		else :
-			self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+			self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Fixed )
 
 		self._qtWidget().setValue( self.__scrollBars[1].value() )
 		self._qtWidget().setRange( self.__scrollBars[1].minimum(), self.__scrollBars[1].maximum() )

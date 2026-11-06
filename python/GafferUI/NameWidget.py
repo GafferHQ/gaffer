@@ -134,8 +134,8 @@ class _Validator( QtGui.QValidator ) :
 
 		input = self.__invalidCharacters.sub( "_", input )
 		if len( input ) :
-			result = QtGui.QValidator.Acceptable
+			result = QtGui.QValidator.State.Acceptable
 		else :
-			result = QtGui.QValidator.Intermediate
+			result = QtGui.QValidator.State.Intermediate
 
 		return result, input, pos

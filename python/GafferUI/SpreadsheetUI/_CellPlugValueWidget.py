@@ -175,7 +175,7 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			if isinstance( widget, GafferUI.NumericPlugValueWidget ) :
 				widget._qtWidget().setFixedWidth( cls.__numericFieldWidth )
-				widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+				widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetNoConstraint )
 
 			for childPlug in Gaffer.Plug.Range( next( iter( widget.getPlugs() ) ) ) :
 				childWidget = widget.childPlugValueWidget( childPlug )
@@ -190,7 +190,7 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 			columnWidth = Gaffer.Metadata.value( plugValueWidget.getPlug().parent(), "spreadsheet:columnWidth" ) or 0
 			plugValueWidget._qtWidget().setFixedWidth( max( columnWidth, 250 ) )
 			if isinstance( plugValueWidget, GafferUI.StringPlugValueWidget ) :
-				plugValueWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+				plugValueWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetNoConstraint )
 				plugValueWidget.textWidget().setFixedCharacterWidth( None )
 		else :
 			walk( plugValueWidget )

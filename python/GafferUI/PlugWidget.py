@@ -58,7 +58,7 @@ class PlugWidget( GafferUI.Widget ) :
 		layout = QtWidgets.QHBoxLayout()
 		layout.setContentsMargins( 0, 0, 0, 0 )
 		layout.setSpacing( 4 )
-		layout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		layout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 		self._qtWidget().setLayout( layout )
 
 		if isinstance( plugOrWidget, Gaffer.Plug ) :
@@ -92,7 +92,7 @@ class PlugWidget( GafferUI.Widget ) :
 			)
 			self.__label.label().setToolTip( description )
 
-		layout.addWidget( self.__label._qtWidget(), alignment = QtCore.Qt.AlignTop )
+		layout.addWidget( self.__label._qtWidget(), alignment = QtCore.Qt.AlignmentFlag.AlignTop )
 		layout.addWidget( self.__valueWidget._qtWidget() )
 
 		# The plugValueWidget() may have smarter drop behaviour than the labelPlugValueWidget(),

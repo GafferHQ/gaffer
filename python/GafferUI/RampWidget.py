@@ -59,7 +59,7 @@ class RampWidget( GafferUI.Widget ) :
 		# the stylesheet.
 		GafferUI.Widget.__init__( self, QtWidgets.QFrame(), **kw )
 
-		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding )
+		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding )
 
 		self.setDrawMode( drawMode )
 

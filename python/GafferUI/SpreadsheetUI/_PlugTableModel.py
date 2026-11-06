@@ -50,7 +50,7 @@ from . import _Formatting
 # RowNames/Defaults/Cells views via one of the available proxy models.
 class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
-	CellPlugEnabledRole = QtCore.Qt.UserRole
+	CellPlugEnabledRole = QtCore.Qt.ItemDataRole.UserRole
 	ActiveRole = CellPlugEnabledRole + 1
 
 	def __init__( self, rowsPlug, parent = None ) :

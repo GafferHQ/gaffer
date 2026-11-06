@@ -587,7 +587,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		tabBar = self._qtWidget().tabBar()
 		tabBar.setProperty( "gafferHasTabCloseButtons", True )
-		tabBar.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+		tabBar.setContextMenuPolicy( QtCore.Qt.ContextMenuPolicy.CustomContextMenu )
 		tabBar.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__tabContextMenu ) )
 
 		self.__tabDragBehaviour = _TabDragBehaviour( self )
@@ -647,12 +647,12 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 			if not tabsVisible :
 				# Fix height so timeline is not resizable
 				self._qtWidget().setFixedHeight( self[0]._qtWidget().sizeHint().height() )
-				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Fixed )
 			else :
 				# Undo the above
 				QWIDGETSIZE_MAX = 16777215 # Macro not exposed by PySide, but needed to remove fixed height
 				self._qtWidget().setFixedHeight( QWIDGETSIZE_MAX )
-				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
+				self.parent()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Ignored )
 
 	def __updateStyles( self ) :
 
@@ -674,7 +674,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		)
 
 		tabIndex = self.index( editor )
-		self._qtWidget().tabBar().setTabButton( tabIndex, QtWidgets.QTabBar.RightSide, button._qtWidget() )
+		self._qtWidget().tabBar().setTabButton( tabIndex, QtWidgets.QTabBar.ButtonPosition.RightSide, button._qtWidget() )
 
 	def __layoutMenuDefinition( self ) :
 
@@ -1428,7 +1428,7 @@ def _getWindowState( gafferWindow ) :
 	return {
 		"screen" :  widgetScreenNumber,
 		"fullScreen" : gafferWindow.getFullScreen(),
-		"maximized" : bool(window.windowState() & QtCore.Qt.WindowMaximized),
+		"maximized" : bool(window.windowState() & QtCore.Qt.WindowState.WindowMaximized),
 		# As we're bottom-left not top-left the y values are the other way around
 		"bound" : imath.Box2f( imath.V2f( x, y - h ), imath.V2f( x + w, y ) )
 	}
@@ -1448,11 +1448,11 @@ def _restoreWindowState( gafferWindow, boundData ) :
 			window.setScreen( targetScreen )
 
 	if boundData["fullScreen"] :
-		window.setWindowState( QtCore.Qt.WindowFullScreen )
+		window.setWindowState( QtCore.Qt.WindowState.WindowFullScreen )
 	elif boundData["maximized"] and sys.platform != "darwin" :
-		window.setWindowState( QtCore.Qt.WindowMaximized )
+		window.setWindowState( QtCore.Qt.WindowState.WindowMaximized )
 	else :
-		window.setWindowState( QtCore.Qt.WindowNoState )
+		window.setWindowState( QtCore.Qt.WindowState.WindowNoState )
 		screenGeom = targetScreen.availableGeometry()
 		window.setGeometry(
 			( boundData["bound"].min()[0] * screenGeom.width() ) + screenGeom.x(),

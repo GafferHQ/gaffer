@@ -101,15 +101,15 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 
 		self.__tableView.verticalHeader().setVisible( showIndices )
-		self.__tableView.verticalHeader().setSectionResizeMode( QtWidgets.QHeaderView.Fixed )
+		self.__tableView.verticalHeader().setSectionResizeMode( QtWidgets.QHeaderView.ResizeMode.Fixed )
 
 		self.__tableView.setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( horizontalScrollMode ) )
 		self.__tableView.setVerticalScrollBarPolicy( GafferUI.ScrollMode._toQt( verticalScrollMode ) )
 
-		self.__tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectItems )
+		self.__tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems )
 		self.__tableView.setCornerButtonEnabled( False )
 
-		self.__tableView.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+		self.__tableView.setContextMenuPolicy( QtCore.Qt.ContextMenuPolicy.CustomContextMenu )
 		self.__tableView.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenu ) )
 
 		self.__tableView.verticalHeader().setDefaultSectionSize( 20 )
@@ -244,18 +244,18 @@ class VectorDataWidget( GafferUI.Widget ) :
 					columnIndex += 1
 
 			self.__tableView.horizontalHeader().setSectionResizeMode(
-				QtWidgets.QHeaderView.ResizeToContents if haveResizeableContents else QtWidgets.QHeaderView.Fixed
+				QtWidgets.QHeaderView.ResizeMode.ResizeToContents if haveResizeableContents else QtWidgets.QHeaderView.ResizeMode.Fixed
 			)
 
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
-			horizontalSizePolicy = QtWidgets.QSizePolicy.Expanding
-			if self.__tableView.horizontalScrollMode() == QtCore.Qt.ScrollBarAlwaysOff and not canStretch :
-				horizontalSizePolicy = QtWidgets.QSizePolicy.Fixed
+			horizontalSizePolicy = QtWidgets.QSizePolicy.Policy.Expanding
+			if self.__tableView.horizontalScrollMode() == QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff and not canStretch :
+				horizontalSizePolicy = QtWidgets.QSizePolicy.Policy.Fixed
 
 			self.__tableView.setSizePolicy(
 				QtWidgets.QSizePolicy(
 					horizontalSizePolicy,
-					QtWidgets.QSizePolicy.Maximum
+					QtWidgets.QSizePolicy.Policy.Maximum
 				)
 			)
 
@@ -606,7 +606,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		self.__tableView.selectionModel().select(
 			selection,
-			QtCore.QItemSelectionModel.ClearAndSelect | QtCore.QItemSelectionModel.Rows
+			QtCore.QItemSelectionModel.SelectionFlag.ClearAndSelect | QtCore.QItemSelectionModel.SelectionFlag.Rows
 		)
 
 		# Scroll so the newly added item is visible, and
@@ -614,7 +614,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# be edited with the keyboard immediately.
 
 		self.__tableView.scrollToBottom()
-		self.__tableView.setFocus( QtCore.Qt.OtherFocusReason )
+		self.__tableView.setFocus( QtCore.Qt.FocusReason.OtherFocusReason )
 
 		# Let everyone know about this wondrous event.
 

@@ -60,4 +60,4 @@ def showURL( url ) :
 			# as we need to strip them to produce a valid file path.
 			url = url[7:].partition( "#" )[0]
 
-		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
+		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.ParsingMode.TolerantMode ) )

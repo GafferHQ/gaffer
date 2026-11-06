@@ -272,7 +272,7 @@ class PythonEditor( GafferUI.Editor ) :
 				buffer = ""
 				# Update the GUI so messages are output as they occur, rather
 				# than all getting queued up till the end.
-				QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+				QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents )
 
 		with Gaffer.OutputRedirection( stdOut = __redirect, stdErr = __redirect ) :
 			yield
@@ -465,4 +465,4 @@ class _MessageHandler( IECore.MessageHandler ) :
 		widget.appendHTML( html )
 		# update the gui so messages are output as they occur, rather than all getting queued
 		# up till the end.
-		QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+		QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents )

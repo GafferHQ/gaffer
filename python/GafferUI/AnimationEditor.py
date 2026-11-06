@@ -144,7 +144,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		)
 
 		self.__curveList._qtWidget().setMinimumSize( 160, 0 )
-		self.__curveList._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored )
+		self.__curveList._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Ignored )
 		self.__curveList.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ) )
 		self.__selectionChangedConnection = self.__curveList.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ) )
 

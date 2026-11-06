@@ -68,7 +68,7 @@ class GridContainer( GafferUI.ContainerWidget ) :
 		self.__qtLayout = _GridLayout( self._qtWidget() )
 		self.__qtLayout.setSpacing( spacing )
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 
 		self.__widgets = set()
 

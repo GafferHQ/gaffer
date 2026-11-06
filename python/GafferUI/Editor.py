@@ -84,7 +84,7 @@ class Editor( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
-		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
+		self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.ClickFocus )
 
 		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
 

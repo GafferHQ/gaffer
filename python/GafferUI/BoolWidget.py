@@ -112,17 +112,17 @@ class BoolWidget( GafferUI.Widget ) :
 
 		if state == self.State.Indeterminate :
 			self._qtWidget().setTristate( True )
-			self._qtWidget().setCheckState( QtCore.Qt.PartiallyChecked )
+			self._qtWidget().setCheckState( QtCore.Qt.CheckState.PartiallyChecked )
 		else :
 			self._qtWidget().setTristate( False )
-			self._qtWidget().setCheckState( QtCore.Qt.Checked if state else QtCore.Qt.Unchecked )
+			self._qtWidget().setCheckState( QtCore.Qt.CheckState.Checked if state else QtCore.Qt.CheckState.Unchecked )
 
 	def getState( self ) :
 
 		s = self._qtWidget().checkState()
-		if s == QtCore.Qt.Checked :
+		if s == QtCore.Qt.CheckState.Checked :
 			return True
-		elif s == QtCore.Qt.Unchecked :
+		elif s == QtCore.Qt.CheckState.Unchecked :
 			return False
 		else :
 			return self.State.Indeterminate
@@ -135,7 +135,7 @@ class BoolWidget( GafferUI.Widget ) :
 		)
 
 		if displayMode == self.DisplayMode.Tool :
-			self._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
+			self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.NoFocus )
 		else :
 			self._qtWidget().setFocusPolicy( self.__defaultFocusPolicy )
 
@@ -177,7 +177,7 @@ class _CheckBox( QtWidgets.QCheckBox ) :
 		self.__hitMode = self.HitMode.CheckBox
 
 		self.setSizePolicy( QtWidgets.QSizePolicy(
-			QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
 		) )
 
 	def setHitMode( self, hitMode ) :

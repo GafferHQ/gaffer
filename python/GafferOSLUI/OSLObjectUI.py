@@ -433,7 +433,7 @@ class _SourceLocationsFooter( GafferUI.PlugValueWidget ) :
 			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False, parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top } )
 			spacer = GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 			# Make Expanding in Y, to absorb space that would otherwise be given to the rows above.
-			spacer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding )
+			spacer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Expanding )
 
 		self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
 

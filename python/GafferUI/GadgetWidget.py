@@ -62,7 +62,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		# See comment in mouseMove
 		self.__overOverlay = False
 
-		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
+		self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.ClickFocus )
 
 		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )

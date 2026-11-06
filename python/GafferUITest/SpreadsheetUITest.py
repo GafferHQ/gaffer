@@ -1039,13 +1039,13 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			self.assertEqual( model.valuePlugForIndex( index ), s["out"][column] )
 			self.assertEqual( model.indexForPlug( s["out"][column] ), index )
 
-			self.assertTrue( index.flags() & QtCore.Qt.ItemIsSelectable )
-			self.assertTrue( index.flags() & QtCore.Qt.ItemIsEnabled )
-			self.assertFalse( index.flags() & QtCore.Qt.ItemIsEditable )
+			self.assertTrue( index.flags() & QtCore.Qt.ItemFlag.ItemIsSelectable )
+			self.assertTrue( index.flags() & QtCore.Qt.ItemFlag.ItemIsEnabled )
+			self.assertFalse( index.flags() & QtCore.Qt.ItemFlag.ItemIsEditable )
 
 		s["selector"].setValue( "row2" )
-		self.assertEqual( model.data( model.index( 0, 0 ), QtCore.Qt.DisplayRole ), "s2" )
-		self.assertEqual( model.data( model.index( 0, 3 ), QtCore.Qt.DisplayRole ), "200" )
+		self.assertEqual( model.data( model.index( 0, 0 ), QtCore.Qt.ItemDataRole.DisplayRole ), "s2" )
+		self.assertEqual( model.data( model.index( 0, 3 ), QtCore.Qt.ItemDataRole.DisplayRole ), "200" )
 
 		self.assertIsNone( model.plugForIndex( model.index( 0, numColumns ) ) )
 		self.assertIsNone( model.plugForIndex( model.index( 1, 0 ) ) )

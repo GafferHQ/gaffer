@@ -52,11 +52,11 @@ class Collapsible( GafferUI.ContainerWidget ) :
 
 		layout = _VBoxLayout()
 		self._qtWidget().setLayout( layout )
-		layout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		layout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 		layout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 
 		self.__headerLayout = QtWidgets.QHBoxLayout()
-		self.__headerLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		self.__headerLayout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 		self.__headerLayout.setContentsMargins( 0, 0, 0, 0 )
 		self.__headerLayout.setSpacing(0)
 

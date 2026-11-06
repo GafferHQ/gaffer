@@ -87,7 +87,7 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 		self.__continueButton = self._addButton( "Continue" )
 		self.__cancelButton = self._addButton( "Cancel" )
 		# Make it impossible to accidentally cancel by hitting `Enter`.
-		self.__cancelButton._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
+		self.__cancelButton._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.NoFocus )
 		self.__cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__cancelClicked ) )
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
