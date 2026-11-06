@@ -72,6 +72,16 @@ Gaffer.Metadata.registerNode(
 			"layout:section" : "Settings.Inputs"
 		},
 
+		"ignoreMissing" : {
+
+			"description" :
+			"""
+			When on, setting `connectivity` to a primitive variable that isn't found will default to
+			using vertex topology, instead of erroring.
+			""",
+			"layout:section" : "Settings.Inputs"
+		},
+
 		"segment" : {
 
 			"description" :

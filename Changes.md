@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - DeepMerge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
+- MergeScenes : Added `ignoreMissing` plug.
 
 Fixes
 -----
