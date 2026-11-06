@@ -105,7 +105,7 @@ class Globals : public boost::noncopyable
 		IECoreScene::ConstShaderPtr m_integratorToConvert;
 		IECoreScene::ConstShaderNetworkPtr m_displayFilterToConvert;
 		IECoreScene::ConstShaderNetworkPtr m_sampleFilterToConvert;
-		std::unordered_map<IECore::InternedString, IECoreScene::ConstOutputPtr> m_outputs;
+		std::map<std::string, IECoreScene::ConstOutputPtr> m_outputs;
 		RtUString m_pixelFilter;
 		riley::FilterSize m_pixelFilterSize;
 		float m_pixelVariance;
