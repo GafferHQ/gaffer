@@ -69,6 +69,8 @@
 
 #include "fmt/format.h"
 
+#include "tbb/concurrent_unordered_set.h"
+
 #include <unordered_set>
 
 using namespace std;
@@ -1989,7 +1991,12 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 	// We should only be doing scene queries when we're active
 	assert( activePlug()->getValue() );
 
-	Context::Scope scope( view()->context() );
+	Context::EditableScope scope( view()->context() );
+
+	// Stop Inspector complaining about being run without a canceller
+	IECore::CancellerPtr dummyCanceller = new IECore::Canceller();
+	scope.setCanceller( dummyCanceller.get() );
+
 	if( m_selectionDirty )
 	{
 		// Clear the locationCaches.
@@ -2028,24 +2035,41 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 		const std::string variableName = variableNamePlug()->getValue();
 		const IECore::TypeId variableType = (IECore::TypeId)variableTypePlug()->getValue();
 
-		std::unordered_set<std::string> warnings;
+		tbb::concurrent_unordered_set<std::string> warnings;
 
-		for( auto &l : m_locationCaches )
-		{
-			std::string warning = l->update( m_inspector.get(), view()->context(), variableName, variableType, scenePlug() );
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+		const ThreadState &threadState = ThreadState::current();
 
-			if( !warning.empty() )
+		tbb::parallel_for( tbb::blocked_range<size_t>( 0, m_locationCaches.size() ),
+			[&]( const tbb::blocked_range<size_t> &r )
 			{
-				warnings.insert( warning );
-			}
+				ThreadState::Scope threadStateScope( threadState );
 
-			// \todo : Should be in a separate conditional once we add separate state flag for tracking transforms
-			l->updateTransform( scenePlug() );
-		}
+				for( size_t i = r.begin(); i != r.end(); ++i )
+				{
+					std::string warning = m_locationCaches[i]->update(
+						m_inspector.get(), threadState.context(), variableName, variableType, scenePlug()
+					);
 
-		if( warnings != m_warnings )
+					if( !warning.empty() )
+					{
+						warnings.insert( warning );
+					}
+
+					// \todo : Should be in a separate conditional once we add separate state flag for tracking transforms
+					m_locationCaches[i]->updateTransform( scenePlug() );
+				}
+			},
+
+			taskGroupContext
+		);
+
+		// Convert from concurrent_unordered_set to std::unordered_set for comparison with stored value
+		std::unordered_set<std::string> warningsSimple( warnings.begin(), warnings.end() );
+
+		if( warningsSimple != m_warnings )
 		{
-			m_warnings = warnings;
+			m_warnings = warningsSimple;
 			statusChangedSignal()( *this );
 		}
 
