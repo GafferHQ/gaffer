@@ -732,10 +732,18 @@ def checkQtVersion( context ) :
 	"""
 
 	result = context.TryRun( program, ".cpp" )
-	if result[0] :
-		context.sconf.env["QT_VERSION"] = result[1]
+	if not result[0] :
+		context.Result( False )
+		return False
 
-	context.Result( result[0] )
+	version = int( result[1] )
+	if version < 6 :
+		context.Result( "found Qt {}, but Qt 6 is required".format( version ) )
+		return False
+
+	context.sconf.env["QT_VERSION"] = result[1]
+
+	context.Result( True )
 	return result[0]
 
 conf = Configure(
@@ -759,7 +767,7 @@ if haveInkscape:
 haveSphinx = conf.checkSphinx()
 
 if not conf.checkQtVersion() :
-	sys.stderr.write( "Qt not found\n" )
+	sys.stderr.write( "Qt 6 not found\n" )
 	Exit( 1 )
 
 ###############################################################################################

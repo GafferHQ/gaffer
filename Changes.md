@@ -87,7 +87,9 @@ Build
 - OpenVDB : Updated to version 13.1.0.
 - PySide : Updated to version 6.8.5.
 - Python : Updated to version 3.13.16.
-- Qt : Updated to version 6.8.5.
+- Qt :
+  - Updated to version 6.8.5.
+  - Raised minimum required version to Qt 6.
 - TBB : Updated to version 2022.3.0.
 - ZLib : Updated to version 1.3.1.
 - Windows : Updated Windows SDK to version 10.0.22621.0.
