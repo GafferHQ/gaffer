@@ -661,6 +661,15 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 			const ScenePlug *toolScene
 		);
 
+		void updateTransform( const ScenePlug *toolScene )
+		{
+			// We only access the transform at locations with meshes
+			if( hasMesh() )
+			{
+				m_fullTransform = toolScene->fullTransform( path() );
+			}
+		}
+
 		// Whether we can call applyCurrentStroke successfully
 		bool editable() const;
 
@@ -688,6 +697,11 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 
 		// Update or create an edit in the given EditScope that applies the current stroke.
 		void applyCurrentStroke( EditScope *editScope, const std::string &variableName, PaintMode paintMode, float opacity );
+
+		const M44f &fullTransform()
+		{
+			return m_fullTransform;
+		}
 
 	private :
 
@@ -720,6 +734,8 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 
 		IECore::MurmurHash m_initialEditValueHash;
 		GafferScene::PrimitiveVariablePaint::ConstOperationPtr m_initialEditValue;
+
+		M44f m_fullTransform;
 
 		// Intermediate state used by glBuffers()
 
@@ -1440,11 +1456,6 @@ class PaintTool::PaintGadget : public Gadget
 
 			// Loop through current selection
 
-			const ScenePlug* scene = m_tool->scenePlug();
-
-
-			Context::Scope scope( m_tool->view()->context() );
-
 			try
 			{
 				for( auto &l : m_tool->locationCaches() )
@@ -1455,7 +1466,7 @@ class PaintTool::PaintGadget : public Gadget
 					}
 
 					// Get the object to world transform
-					M44f o2w = scene->fullTransform( l->path() );
+					const M44f &o2w = l->fullTransform();
 
 					// Find opengl named buffer data
 					//
@@ -1875,9 +1886,6 @@ void PaintTool::paint( const IECore::InternedString &variableName, const M44f &p
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 
-	Context::Scope scope( view()->context() );
-	const ScenePlug* scene = scenePlug();
-
 	m_depthRender->startRendering( paintMatrixPadded );
 
 	m_gadget->renderForDepth();
@@ -1889,7 +1897,7 @@ void PaintTool::paint( const IECore::InternedString &variableName, const M44f &p
 		if( l->hasMesh() )
 		{
 			l->paintToCurrentStroke(
-				paintMatrix, scene->fullTransform( l->path() ),
+				paintMatrix, l->fullTransform(),
 				value, hardness, resolution, depthMap
 			);
 		}
@@ -2030,6 +2038,9 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 			{
 				warnings.insert( warning );
 			}
+
+			// \todo : Should be in a separate conditional once we add separate state flag for tracking transforms
+			l->updateTransform( scenePlug() );
 		}
 
 		if( warnings != m_warnings )
@@ -2110,6 +2121,16 @@ void PaintTool::plugDirtied( const Gaffer::Plug *plug )
 		// will completely destroy painting performance. But it's kinda needed if we're populating
 		// m_locationCaches using visitVisibleLocations which depends on attributes.
 		selectionChanged();
+	}
+	else if( plug == scenePlug()->transformPlug() )
+	{
+		// \todo This should be tracked separate from m_locationCachesDirty, with an m_transformsDirty
+		// member. But that would break binary compatibility - and wouldn't make any difference currently,
+		// because we're connected to the preprocessors on the view, and whenever the input transform
+		// changes, the preprocessors on the view convert that to a dirtying of the object, so we get an
+		// inspectorDirtied. But in theory transform changes shouldn't require dirtying the object, and
+		// we should track this separately.
+		m_locationCachesDirty = true;
 	}
 	else if( plug == variableNamePlug() || plug == variableTypePlug() )
 	{

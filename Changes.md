@@ -8,6 +8,7 @@ Improvements
 - MeshSegments : Added `ignoreMissing` plug.
 - PathListingWidget, SpreadsheetUI : Header text is now elided rather than truncated. A default tooltip now shows the full text of the header.
 - LightEditor, RenderPassEditor, AttributeEditor : Added `compactColumns` toggle. When on, columns are sized based on their values instead of also considering the header text, so that more columns may fit on screen at once. Columns too narrow to show the header display an abbreviated form, such as `Max Bounces` becoming `MB`.
+- PaintTool : Improved performance during a paint stroke when painting many objects.
 
 Fixes
 -----
