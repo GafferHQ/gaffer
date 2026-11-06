@@ -386,7 +386,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		collectMerge = GafferImage.Merge()
 		collectMerge["in"][0].setInput( switch["out"] )
-		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["inputMode"].setValue( GafferImage.Merge.InputMode.Collect )
 		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "b", "a" ] ) )
 
 		collectSampler = GafferImage.ImageSampler()
@@ -527,7 +527,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
 
 		collectMerge = GafferImage.Merge()
-		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["inputMode"].setValue( GafferImage.Merge.InputMode.Collect )
 		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
 		collectMerge["in"][0].setInput( switch["out"] )
 
@@ -920,7 +920,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		switch["expression"].setExpression( 'parent["index"] = context.get( "merge:index" )', "python" )
 
 		collectMerge = GafferImage.Merge()
-		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["inputMode"].setValue( GafferImage.Merge.InputMode.Collect )
 		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
 		collectMerge["in"][0].setInput( switch["out"] )
 
@@ -1031,7 +1031,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		collectMerge = GafferImage.Merge()
 		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
 		collectMerge["in"][0].setInput( switch["out"] )
-		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["inputMode"].setValue( GafferImage.Merge.InputMode.Collect )
 		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "c", "r", "g", "b" ] ) )
 
 		self.assertImagesEqual( merge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
@@ -1157,7 +1157,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
 		collectMerge["in"][0].setInput( switch1["out"] )
 		collectMerge["in"][1].setInput( switch2["out"] )
-		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["inputMode"].setValue( GafferImage.Merge.InputMode.Collect )
 		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
 
 		self.assertImagesEqual( collectMerge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
@@ -1209,7 +1209,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		collectMerge = GafferImage.Merge()
 		collectMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
 		collectMerge["in"][0].setInput( switch["out"] )
-		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["inputMode"].setValue( GafferImage.Merge.InputMode.Collect )
 		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "c", "r", "g", "b" ] ) )
 
 		for channels, combinedChannels in [
@@ -1256,7 +1256,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		collectMerge = GafferImage.Merge()
 		collectMerge["in"][0].setInput( switch["out"] )
 		collectMerge["in"][1].setInput( unusedImage["out"] )
-		collectMerge["mode"].setValue( GafferImage.Merge.Mode.Collect )
+		collectMerge["inputMode"].setValue( GafferImage.Merge.InputMode.Collect )
 		collectMerge["contextValues"].setValue( IECore.StringVectorData( [ "0", "1" ] ) )
 
 		self.assertEqual( collectMerge["out"].format(), GafferImage.Format( 1003, 1004, 1.000 ) )

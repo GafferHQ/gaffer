@@ -115,6 +115,11 @@ void GafferImageModule::bindImageProcessor()
 	{
 		scope s = GafferBindings::DependencyNodeClass<Merge>();
 
+		enum_<Merge::InputMode>( "InputMode" )
+			.value( "Standard", Merge::InputMode::Standard )
+			.value( "Collect", Merge::InputMode::Collect )
+		;
+
 		enum_<Merge::Operation>( "Operation" )
 			.value( "Add", Merge::Add )
 			.value( "Atop", Merge::Atop )
@@ -130,11 +135,6 @@ void GafferImageModule::bindImageProcessor()
 			.value( "Under", Merge::Under )
 			.value( "Min", Merge::Min )
 			.value( "Max", Merge::Max )
-		;
-
-		enum_<Merge::Mode>( "Mode" )
-			.value( "Standard", Merge::Mode::Standard )
-			.value( "Collect", Merge::Mode::Collect )
 		;
 	}
 

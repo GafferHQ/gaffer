@@ -77,7 +77,7 @@ Gaffer.Metadata.registerNode(
 	  - Max : max( A, B )
 	""",
 
-	"layout:activator:inputModeCollect", lambda node : node["inputMode"].getValue() == GafferImage.Merge.Mode.Collect,
+	"layout:activator:inputModeCollect", lambda node : node["inputMode"].getValue() == GafferImage.Merge.InputMode.Collect,
 	"ui:spreadsheet:enabledRowNamesConnection", "contextValues",
 	"ui:spreadsheet:selectorContextVariablePlug", "contextVariable",
 
@@ -100,8 +100,8 @@ Gaffer.Metadata.registerNode(
 			- Collect : Each input plug is evaluated for each value in `contextValues`.
 			""",
 
-			"preset:Standard" : GafferImage.Merge.Mode.Standard,
-			"preset:Collect" : GafferImage.Merge.Mode.Collect,
+			"preset:Standard" : GafferImage.Merge.InputMode.Standard,
+			"preset:Collect" : GafferImage.Merge.InputMode.Collect,
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget",
 		},

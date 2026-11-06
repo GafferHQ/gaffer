@@ -66,8 +66,7 @@ class GAFFERIMAGE_API Merge : public FlatImageProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Merge, MergeTypeId, FlatImageProcessor );
 
-		// \deprecated - Will be renamed to InputMode in Gaffer 1.8
-		enum class Mode
+		enum class InputMode
 		{
 			Standard,
 			Collect
