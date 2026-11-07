@@ -661,6 +661,11 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 			const ScenePlug *toolScene
 		);
 
+		void updateTransform( const ScenePlug *toolScene )
+		{
+			m_fullTransform = toolScene->fullTransform( path() );
+		}
+
 		// Whether we can call applyCurrentStroke successfully
 		bool editable() const;
 
@@ -688,6 +693,11 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 
 		// Update or create an edit in the given EditScope that applies the current stroke.
 		void applyCurrentStroke( EditScope *editScope, const std::string &variableName, PaintMode paintMode, float opacity );
+
+		const M44f &fullTransform()
+		{
+			return m_fullTransform;
+		}
 
 	private :
 
@@ -720,6 +730,8 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 
 		IECore::MurmurHash m_initialEditValueHash;
 		GafferScene::PrimitiveVariablePaint::ConstOperationPtr m_initialEditValue;
+
+		M44f m_fullTransform;
 
 		// Intermediate state used by glBuffers()
 
@@ -1440,11 +1452,6 @@ class PaintTool::PaintGadget : public Gadget
 
 			// Loop through current selection
 
-			const ScenePlug* scene = m_tool->scenePlug();
-
-
-			Context::Scope scope( m_tool->view()->context() );
-
 			try
 			{
 				for( auto &l : m_tool->locationCaches() )
@@ -1455,7 +1462,7 @@ class PaintTool::PaintGadget : public Gadget
 					}
 
 					// Get the object to world transform
-					M44f o2w = scene->fullTransform( l->path() );
+					const M44f &o2w = l->fullTransform();
 
 					// Find opengl named buffer data
 					//
@@ -1875,9 +1882,6 @@ void PaintTool::paint( const IECore::InternedString &variableName, const M44f &p
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 
-	Context::Scope scope( view()->context() );
-	const ScenePlug* scene = scenePlug();
-
 	m_depthRender->startRendering( paintMatrixPadded );
 
 	m_gadget->renderForDepth();
@@ -1889,7 +1893,7 @@ void PaintTool::paint( const IECore::InternedString &variableName, const M44f &p
 		if( l->hasMesh() )
 		{
 			l->paintToCurrentStroke(
-				paintMatrix, scene->fullTransform( l->path() ),
+				paintMatrix, l->fullTransform(),
 				value, hardness, resolution, depthMap
 			);
 		}
@@ -1981,7 +1985,14 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 	// We should only be doing scene queries when we're active
 	assert( activePlug()->getValue() );
 
-	Context::Scope scope( view()->context() );
+	Context::EditableScope scope( view()->context() );
+
+	// Inspector will complain about being run not on the main thread without a canceller set.
+	// But this can run during a draw, and we don't support cancelling those. For now, just set
+	// a dummy canceller to suppress the warnings from Inspector.
+	IECore::Canceller dummyCanceller;
+	scope.setCanceller( &dummyCanceller );
+
 	if( m_selectionDirty )
 	{
 		// Clear the locationCaches.
@@ -2021,16 +2032,33 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 		const IECore::TypeId variableType = (IECore::TypeId)variableTypePlug()->getValue();
 
 		std::unordered_set<std::string> warnings;
+		std::mutex warningsMutex;
 
-		for( auto &l : m_locationCaches )
-		{
-			std::string warning = l->update( m_inspector.get(), view()->context(), variableName, variableType, scenePlug() );
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+		const ThreadState &threadState = ThreadState::current();
 
-			if( !warning.empty() )
+		tbb::parallel_for( tbb::blocked_range<size_t>( 0, m_locationCaches.size() ),
+			[&]( const tbb::blocked_range<size_t> &r )
 			{
-				warnings.insert( warning );
+				ThreadState::Scope threadStateScope( threadState );
+
+				for( size_t i = r.begin(); i != r.end(); ++i )
+				{
+					std::string warning = m_locationCaches[i]->update(
+						m_inspector.get(), threadState.context(), variableName, variableType, scenePlug()
+					);
+
+					if( !warning.empty() )
+					{
+						std::unique_lock<std::mutex> warningsLock( warningsMutex );
+						warnings.insert( warning );
+					}
+
+					// \todo : Should be in a separate conditional once we add separate state flag for tracking transforms
+					m_locationCaches[i]->updateTransform( scenePlug() );
+				}
 			}
-		}
+		);
 
 		if( warnings != m_warnings )
 		{
@@ -2110,6 +2138,16 @@ void PaintTool::plugDirtied( const Gaffer::Plug *plug )
 		// will completely destroy painting performance. But it's kinda needed if we're populating
 		// m_locationCaches using visitVisibleLocations which depends on attributes.
 		selectionChanged();
+	}
+	else if( plug == scenePlug()->transformPlug() )
+	{
+		// \todo This should be tracked separate from m_locationCachesDirty, with an m_transformsDirty
+		// member. But that would break binary compatibility - and wouldn't make any difference currently,
+		// because we're connect to the preprocessors on the view, and whenever the input transform
+		// changes, the preprocessors on the view convert that to a dirtying of the object, so we get an
+		// inspectorDirtied. But in theory transform changes shouldn't require dirtying the object, and
+		// we should track this separately.
+		m_locationCachesDirty = true;
 	}
 	else if( plug == variableNamePlug() || plug == variableTypePlug() )
 	{

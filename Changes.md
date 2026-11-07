@@ -94,6 +94,7 @@ Improvements
 ------------
 
 - DeepMerge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
+- PaintTool : Improved performance during a paint stroke when painting many objects.
 
 Fixes
 -----
