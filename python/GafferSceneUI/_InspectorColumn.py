@@ -188,7 +188,6 @@ def __removableAttributeInspections( pathListing ) :
 				source = inspection.source()
 				if (
 					( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
-					( isinstance( source, Gaffer.ValuePlug ) and len( source.children() ) == 2 and "Added" in source and "Removed" in source ) or
 					inspection.editScope() is not None
 				) :
 					inspections.append( inspection )
