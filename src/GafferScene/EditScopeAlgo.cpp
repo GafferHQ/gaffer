@@ -963,11 +963,7 @@ SceneProcessorPtr setMembershipProcessor()
 	return result;
 }
 
-EditScope::ProcessorRegistration g_setMembershipProcessorRegistration( "SetMembershipEdits", setMembershipProcessor );
-
-}  // namespace
-
-Gaffer::ValuePlug *EditScopeAlgo::acquireSetEdits( Gaffer::EditScope *scope, const std::string &set, bool createIfNecessary )
+Gaffer::ValuePlug *acquireSetEdits( Gaffer::EditScope *scope, const std::string &set, bool createIfNecessary = true )
 {
 	Node *processor = scope->acquireProcessor( "SetMembershipEdits", createIfNecessary );
 
@@ -977,7 +973,6 @@ Gaffer::ValuePlug *EditScopeAlgo::acquireSetEdits( Gaffer::EditScope *scope, con
 	}
 
 	auto rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
-
 	auto row = rows->row( set );
 
 	if( !row && createIfNecessary )
@@ -989,9 +984,13 @@ Gaffer::ValuePlug *EditScopeAlgo::acquireSetEdits( Gaffer::EditScope *scope, con
 	return row ? row->cellsPlug() : nullptr;
 }
 
+EditScope::ProcessorRegistration g_setMembershipProcessorRegistration( "SetMembershipEdits", setMembershipProcessor );
+
+}  // namespace
+
 void EditScopeAlgo::setSetMembership( Gaffer::EditScope *scope, const IECore::PathMatcher &paths, const std::string &set, EditScopeAlgo::SetMembership state )
 {
-	auto cells = EditScopeAlgo::acquireSetEdits( scope, set );
+	auto cells = ::acquireSetEdits( scope, set );
 
 	auto addCell = cells->getChild<Spreadsheet::CellPlug>( g_addSetColumnIndex );
 	auto removeCell = cells->getChild<Spreadsheet::CellPlug>( g_removeSetColumnIndex );
@@ -1045,7 +1044,7 @@ void EditScopeAlgo::setSetMembership( Gaffer::EditScope *scope, const IECore::Pa
 
 EditScopeAlgo::SetMembership EditScopeAlgo::getSetMembership( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &set )
 {
-	auto cells = EditScopeAlgo::acquireSetEdits( scope, set, false );
+	auto cells = ::acquireSetEdits( scope, set, false );
 	if( !cells )
 	{
 		return EditScopeAlgo::SetMembership::Unchanged;

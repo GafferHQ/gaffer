@@ -280,23 +280,23 @@ IECore::ConstObjectPtr PrimitiveVariableInspector::value( const GafferScene::Sce
 	throw IECore::Exception( fmt::format( "Unsupported primitive variable Property {}.", (int)m_property ) );
 }
 
-Gaffer::ValuePlugPtr PrimitiveVariableInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
+Gaffer::ValuePlugPtr PrimitiveVariableInspector::acquireEdit( const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
 {
 	if( m_property != Property::Data )
 	{
-		return nullptr;
+		return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 	}
 
 	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );
-	if( !sceneNode || history->scene != sceneNode->outPlug() )
+	if( !sceneNode || history->scene != sceneNode->outPlug() || !sceneNode->enabledPlug()->getValue() )
 	{
-		return nullptr;
+		return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 	}
 	else if( auto primitiveVariablesNode = runTimeCast<GafferScene::PrimitiveVariables>( sceneNode ) )
 	{
 		if( !(primitiveVariablesNode->filterPlug()->match( primitiveVariablesNode->inPlug() ) & PathMatcher::ExactMatch ) )
 		{
-			return nullptr;
+			return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 		}
 
 		for( const auto &plug : NameValuePlug::Range( *primitiveVariablesNode->primitiveVariablesPlug() ) )
@@ -306,13 +306,6 @@ Gaffer::ValuePlugPtr PrimitiveVariableInspector::source( const GafferScene::Scen
 				( !plug->enabledPlug() || plug->enabledPlug()->getValue() )
 			)
 			{
-				/// \todo This is overly conservative. We should test to see if there is more than
-				/// one filter match (but make sure to early-out once two are found, rather than test
-				/// the rest of the scene).
-				editWarning = fmt::format(
-					"Edits to \"{}\" may affect other locations in the scene.",
-					m_primitiveVariable.string()
-				);
 				return plug;
 			}
 		}
@@ -321,7 +314,7 @@ Gaffer::ValuePlugPtr PrimitiveVariableInspector::source( const GafferScene::Scen
 	{
 		if( !( primitiveVariableTweaks->filterPlug()->match( primitiveVariableTweaks->inPlug() ) & PathMatcher::ExactMatch ) )
 		{
-			return nullptr;
+			return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 		}
 
 		for( const auto &tweak : TweakPlug::Range( *primitiveVariableTweaks->tweaksPlug() ) )
@@ -335,19 +328,6 @@ Gaffer::ValuePlugPtr PrimitiveVariableInspector::source( const GafferScene::Scen
 			}
 		}
 	}
-	else if( history->scene->direction() == Plug::Out )
-	{
-		ConstObjectPtr v = value( history );
-		ConstObjectPtr previousValue;
-		if( history->predecessors.size() )
-		{
-			previousValue = value( history->predecessors.front().get() );
-		}
-		if( (bool)v != bool(previousValue) || (v && !v->isEqualTo( previousValue.get() )) )
-		{
-			return sceneNode->outPlug();
-		}
-	}
 
-	return nullptr;
+	return Inspector::acquireEdit( history, createIfNecessary, dryRun );
 }

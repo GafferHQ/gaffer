@@ -183,101 +183,64 @@ IECore::ConstObjectPtr TransformInspector::value( const GafferScene::SceneAlgo::
 	}
 }
 
-Gaffer::ValuePlugPtr TransformInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
+bool TransformInspector::hasEdit( const GafferScene::SceneAlgo::History *history ) const
 {
-	if( m_space == Space::World )
+	if( m_space == Space::Local )
 	{
-		return nullptr;
+		return transformPlug( history ) || Inspector::hasEdit( history );
 	}
-
-	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );
-	if( !sceneNode || history->scene != sceneNode->outPlug() )
+	else
 	{
-		return nullptr;
-	}
-
-	const ScenePlug::ScenePath &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-
-	if( auto *filteredProcessor = runTimeCast<const FilteredSceneProcessor>( sceneNode ) )
-	{
-		if( !( filteredProcessor->filterPlug()->match( filteredProcessor->inPlug() ) & PathMatcher::ExactMatch ) )
-		{
-			return nullptr;
-		}
-	}
-
-	TransformPlug *transformPlug = nullptr;
-	if( const ObjectSource *objectSource = runTimeCast<const ObjectSource>( sceneNode ) )
-	{
-		if( path.size() == 1 )
-		{
-			transformPlug = const_cast<TransformPlug *>( objectSource->transformPlug() );
-		}
-	}
-	else if( const Group *group = runTimeCast<const Group>( sceneNode ) )
-	{
-		if( path.size() == 1 )
-		{
-			transformPlug = const_cast<TransformPlug *>( group->transformPlug() );
-		}
-	}
-	else if( const Grid *grid = runTimeCast<const Grid>( sceneNode ) )
-	{
-		if( path.size() == 1 )
-		{
-			transformPlug = const_cast<TransformPlug *>( grid->transformPlug() );
-		}
-	}
-	else if( const Transform *transform = runTimeCast<const Transform>( sceneNode ) )
-	{
-		if( transform->spacePlug()->getValue() == Transform::ResetLocal )
-		{
-			// Values entered in TransformPlug directly author the values returned
-			// by `value()`, so the TransformPlug is suitable as a user-editable source.
-			transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
-		}
-		else
-		{
-			// This node did author the transform, but there is no user-editable plug
-			// that directly provides the value. Return the output plug as a non-editable
-			// source. We can't return `null` because then the history traversal will
-			// continue upstream and another node will claim to be the source.
-			return const_cast<M44fPlug *>( transform->outPlug()->transformPlug() );
-		}
-	}
-	else if(
-		runTimeCast<const Constraint>( sceneNode ) ||
-		runTimeCast<const FramingConstraint>( sceneNode )
-	)
-	{
-		return sceneNode->outPlug()->transformPlug();
-	}
-
-	if( !transformPlug )
-	{
-		return nullptr;
-	}
-
-	switch( m_component )
-	{
-		case Component::Matrix :
-			return transformPlug;
-		case Component::Translate :
-			return transformPlug->translatePlug();
-		case Component::Rotate :
-			return transformPlug->rotatePlug();
-		case Component::Scale :
-			return transformPlug->scalePlug();
-		default :
-			return nullptr;
+		// The world space transform is derived from the local transforms of
+		// all ancestors, so doesn't have a single source.
+		return false;
 	}
 }
 
-Inspector::AcquireEditFunctionOrFailure TransformInspector::acquireEditFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
+Gaffer::ValuePlugPtr TransformInspector::acquireEdit( const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
 {
 	if( m_space != Space::Local )
 	{
-		return "World space transform cannot be edited.";
+		throw EditDisallowed( "World space transform cannot be edited." );
+	}
+
+	if( TransformPlug *transformPlug = this->transformPlug( history ) )
+	{
+		if( const Transform *transform = runTimeCast<const Transform>( transformPlug->node() ) )
+		{
+			if( transform->spacePlug()->getValue() != Transform::ResetLocal )
+			{
+				// Values entered in `transformPlug()` don't directly correspond to the
+				// values returned by `value()`, not meeting the user's expectations
+				// for an acquired edit.
+				return Inspector::acquireEdit( history, createIfNecessary, dryRun );
+			}
+		}
+
+		switch( m_component )
+		{
+			case Component::Matrix :
+				return transformPlug;
+			case Component::Translate :
+				return transformPlug->translatePlug();
+			case Component::Rotate :
+				return transformPlug->rotatePlug();
+			case Component::Scale :
+				return transformPlug->scalePlug();
+			default :
+				// No plug for shear.
+				break;
+		}
+	}
+
+	return Inspector::acquireEdit( history, createIfNecessary, dryRun );
+}
+
+Gaffer::ValuePlugPtr TransformInspector::acquireEdit( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history, bool createIfNecessary, bool dryRun ) const
+{
+	if( m_space != Space::Local )
+	{
+		throw EditDisallowed( "World space transform cannot be edited." );
 	}
 	// We'd like to use `EditScopeAlgo::acquireTransformEdit()`, but that makes
 	// edits for translate, rotate, and scale all at once. Since we purport to
@@ -289,7 +252,7 @@ Inspector::AcquireEditFunctionOrFailure TransformInspector::acquireEditFunction(
 	/// 2. We then update the Transform node to optionally edit only specific components.
 	/// 3. `acquireTransformEdit()` returns plugs including an `enabledPlug()` to let
 	///    us edit just one component.
-	return "Edit creation not supported yet. Use the transform tools in the Viewer instead.";
+	throw EditDisallowed( "Edit creation not supported yet. Use the transform tools in the Viewer instead." );
 }
 
 const char *TransformInspector::toString( Space space )
@@ -307,4 +270,47 @@ const char *TransformInspector::toString( Component component )
 		case Component::Scale : return "Scale";
 		default : return "Shear";
 	}
+}
+
+Gaffer::TransformPlug *TransformInspector::transformPlug( const GafferScene::SceneAlgo::History *history ) const
+{
+	auto sceneNode = runTimeCast<SceneNode>( history->scene->node() );
+	if( !sceneNode || history->scene != sceneNode->outPlug() || !sceneNode->enabledPlug()->getValue() )
+	{
+		return nullptr;
+	}
+
+	const ScenePlug::ScenePath &path = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+
+	if( const ObjectSource *objectSource = runTimeCast<const ObjectSource>( sceneNode ) )
+	{
+		if( path.size() == 1 )
+		{
+			return const_cast<TransformPlug *>( objectSource->transformPlug() );
+		}
+	}
+	else if( const Group *group = runTimeCast<const Group>( sceneNode ) )
+	{
+		if( path.size() == 1 )
+		{
+			return const_cast<TransformPlug *>( group->transformPlug() );
+		}
+	}
+	else if( const Grid *grid = runTimeCast<const Grid>( sceneNode ) )
+	{
+		if( path.size() == 1 )
+		{
+			return const_cast<TransformPlug *>( grid->transformPlug() );
+		}
+	}
+	else if( const Transform *transform = runTimeCast<const Transform>( sceneNode ) )
+	{
+		if( !( transform->filterPlug()->match( transform->inPlug() ) & PathMatcher::ExactMatch ) )
+		{
+			return nullptr;
+		}
+		return const_cast<TransformPlug *>( transform->transformPlug() );
+	}
+
+	return nullptr;
 }

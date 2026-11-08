@@ -233,6 +233,10 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			Gaffer.MetadataAlgo.firstViewableNode( None )
 
+	def testFirstViewableNodeWithoutNode( self ) :
+
+		self.assertIsNone( Gaffer.MetadataAlgo.firstViewableNode( Gaffer.Plug() ) )
+
 	def testChildNodesAreReadOnly( self ) :
 
 		b = Gaffer.Box()

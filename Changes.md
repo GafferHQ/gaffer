@@ -25,12 +25,18 @@ Improvements
     - Added `ai:` prefix to tweaks parameter names created from the menu.
     - Changed tweak plug names to match the parameter name it tweaks.
     - Added `ai:aperture_aspect_ratio` preset menu item.
+- SceneEditor : Pop-up editors are no longer provided when a downstream edit would override their action.
 
 Fixes
 -----
 
 - Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
 - Viewer : Fixed crashes on macOS when using Arnold, Cycles or 3Delight as the viewport renderer.
+- MetadataAlgo : Fixed crash calling `firstViewableNode()` on a plug without a node.
+- SceneEditors :
+  - Fixed refusal to show pop-up editors for plugs which had been ganged, animated or locked.
+  - Fixed bug that misattributed shader parameter edits to ShaderTweaks nodes when the `shader` plug didn't match the inspected attribute.
+- LightTool : Fixed messaging for parameters which were not editable, for example because they originated in a SceneReader.
 
 API
 ---
@@ -62,6 +68,7 @@ Breaking Changes
   - Renamed `staticPostSerialisationSignal()` to `postSerialisationSignal()`.
 - PySide : Removed `PYSIDE63_OPTION_PYTHON_ENUM=0x08` override at startup.
 - RenderMan : Removed support for RenderMan 26.3 and 26.4.
+- EditScopeAlgo : Removed `acquireSetEdits()` function.
 
 Build
 -----

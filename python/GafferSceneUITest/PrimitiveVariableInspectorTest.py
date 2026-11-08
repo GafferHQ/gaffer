@@ -93,11 +93,11 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 		self.assertEqual( inspection.source(), script["sphere"]["out"] )
 		self.assertEqual( inspection.sourceType(), inspection.SourceType.Other )
 		self.assertEqual( inspection.fallbackDescription(), "" )
-		self.assertFalse( inspection.editable() )
-		self.assertEqual( inspection.nonEditableReason(), "sphere.out is not editable." )
+		self.assertFalse( inspection.canAcquireEdit() )
+		self.assertEqual( inspection.cantAcquireEditReason(), "Editing not supported" )
 		self.assertRaises( RuntimeError, inspection.acquireEdit )
 		self.assertFalse( inspection.canDisableEdit() )
-		self.assertEqual( inspection.nonDisableableReason(), "sphere.out is not editable." )
+		self.assertEqual( inspection.cantDisableEditReason(), "No edit found to disable." )
 		self.assertRaises( RuntimeError, inspection.disableEdit )
 		self.assertFalse( inspection.canEdit( inspection.value() ) )
 		self.assertRaises( RuntimeError, inspection.edit, inspection.value() )
@@ -117,8 +117,8 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( plane["out"], "/plane", "badPrimVar", Property.Data ),
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False,
-			nonEditableReason = "No editable source found in history.",
+			canAcquireEdit = False,
+			cantAcquireEditReason = "No editable source found in history.",
 		)
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -210,7 +210,7 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 		script["primitiveVariables2"]["filter"].setInput( script["cubeFilter"]["out"] )
 		script["primitiveVariables2"]["primitiveVariables"].addChild( Gaffer.NameValuePlug( "afterEditScope", 10 ) )
 
-		def assertExpectedSource( scene, primitiveVariable, source, sourceType = None, editScope = None, editable = True ) :
+		def assertExpectedSource( scene, primitiveVariable, source, sourceType = None, editScope = None, edit = None ) :
 
 			inspection = self.__inspect(
 				scene, "/cube", primitiveVariable, Property.Data, editScope = editScope
@@ -219,38 +219,38 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			self.assertIsNotNone( inspection )
 			self.assertEqual( inspection.source(), source )
 			self.assertEqual( inspection.sourceType(), sourceType )
-			if editable:
-				self.assertEqual( inspection.acquireEdit(), source )
-			else:
-				with self.assertRaisesRegex( RuntimeError, "Not editable.*" ) :
+			if edit is not None :
+				self.assertTrue( inspection.canAcquireEdit() )
+				self.assertEqual( inspection.acquireEdit(), edit )
+			else :
+				self.assertFalse( inspection.canAcquireEdit() )
+				with self.assertRaises( RuntimeError ) :
 					inspection.acquireEdit()
-			self.assertEqual( inspection.editable(), editable )
+
 			self.assertEqual( inspection.editScopeInHistory(), not editScope is None )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
 
-		assertExpectedSource( script["primitiveVariables2"]["out"], "afterEditScope", script["primitiveVariables2"]["primitiveVariables"][0], SourceType.Other )
-		assertExpectedSource( script["primitiveVariables2"]["out"], "afterEditScope", script["primitiveVariables2"]["primitiveVariables"][0], SourceType.Downstream, editScope = script["editScope"], editable = False )
-		assertExpectedSource( script["primitiveVariables2"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["primitiveVariables"][0], SourceType.Other, editable = False )
-		assertExpectedSource( script["primitiveVariables2"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["primitiveVariables"][0], SourceType.EditScope, editScope = script["editScope"] )
-		assertExpectedSource( script["primitiveVariables2"]["out"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Other )
-		assertExpectedSource( script["primitiveVariables2"]["out"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Upstream, editScope = script["editScope"], editable = False )
+		assertExpectedSource( script["primitiveVariables2"]["out"], "afterEditScope", script["primitiveVariables2"]["out"], SourceType.Other, edit = script["primitiveVariables2"]["primitiveVariables"][0] )
+		assertExpectedSource( script["primitiveVariables2"]["out"], "afterEditScope", script["primitiveVariables2"]["out"], SourceType.Downstream, editScope = script["editScope"] )
+		assertExpectedSource( script["primitiveVariables2"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["out"], SourceType.Other )
+		assertExpectedSource( script["primitiveVariables2"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["out"], SourceType.EditScope, editScope = script["editScope"], edit = script["editScope"]["primitiveVariables"]["primitiveVariables"][0] )
+		assertExpectedSource( script["primitiveVariables2"]["out"], "beforeEditScope", script["primitiveVariables1"]["out"], SourceType.Other, edit = script["primitiveVariables1"]["primitiveVariables"][0] )
+		assertExpectedSource( script["primitiveVariables2"]["out"], "beforeEditScope", script["primitiveVariables1"]["out"], SourceType.Upstream, editScope = script["editScope"] )
 
-		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.None_, editable = False )
-		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.None_, editScope = script["editScope"], editable = False )
-		assertExpectedSource( script["editScope"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["primitiveVariables"][0], SourceType.Other, editable = False )
-		assertExpectedSource( script["editScope"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["primitiveVariables"][0], SourceType.EditScope, editScope = script["editScope"] )
-		assertExpectedSource( script["editScope"]["out"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Other )
-		assertExpectedSource( script["editScope"]["out"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Upstream, editScope = script["editScope"], editable = False )
+		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.None_ )
+		assertExpectedSource( script["editScope"]["out"], "afterEditScope", None, SourceType.None_, editScope = script["editScope"] )
+		assertExpectedSource( script["editScope"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["out"], SourceType.Other )
+		assertExpectedSource( script["editScope"]["out"], "insideEditScope", script["editScope"]["primitiveVariables"]["out"], SourceType.EditScope, editScope = script["editScope"], edit = script["editScope"]["primitiveVariables"]["primitiveVariables"][0] )
+		assertExpectedSource( script["editScope"]["out"], "beforeEditScope", script["primitiveVariables1"]["out"], SourceType.Other, edit = script["primitiveVariables1"]["primitiveVariables"][0] )
+		assertExpectedSource( script["editScope"]["out"], "beforeEditScope", script["primitiveVariables1"]["out"], SourceType.Upstream, editScope = script["editScope"] )
 
-		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.None_, editable = False )
-		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.None_, editScope = script["editScope"], editable = False )
-		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.None_, editable = False )
-		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.None_, editScope = script["editScope"], editable = False )
-		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Other )
-		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["primitiveVariables"][0], SourceType.Upstream, editScope = script["editScope"], editable = False )
-
-
+		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.None_ )
+		assertExpectedSource( script["editScope"]["in"], "afterEditScope", None, SourceType.None_, editScope = script["editScope"] )
+		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.None_ )
+		assertExpectedSource( script["editScope"]["in"], "insideEditScope", None, SourceType.None_, editScope = script["editScope"] )
+		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["out"], SourceType.Other, edit = script["primitiveVariables1"]["primitiveVariables"][0] )
+		assertExpectedSource( script["editScope"]["in"], "beforeEditScope", script["primitiveVariables1"]["out"], SourceType.Upstream, editScope = script["editScope"] )
 
 	def __setupBasicConstant( self, parent ):
 		parent["plane"] = GafferScene.Plane()
@@ -311,8 +311,8 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 			self.__inspect( s["primitiveVariables"]["out"], "/plane", "P", Property.Indices ),
 			source = None,
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-			editable = False,
-			nonEditableReason = "No editable source found in history.",
+			canAcquireEdit = False,
+			cantAcquireEditReason = "No editable source found in history.",
 		)
 
 		self.assertEqual(
@@ -335,8 +335,8 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 					self.__inspect( s["primitiveVariables"]["out"], "/plane", "badPrimVar", property ),
 					source = None,
 					sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.None_,
-					editable = False,
-					nonEditableReason = "No editable source found in history.",
+					canAcquireEdit = False,
+					cantAcquireEditReason = "No editable source found in history.",
 				)
 
 	def __assertExpectedResult(
@@ -344,19 +344,18 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 		result,
 		source,
 		sourceType,
-		editable,
-		nonEditableReason = "",
-		edit = None,
-		editWarning = ""
+		canAcquireEdit,
+		cantAcquireEditReason = "",
+		edit = None
 	) :
 		self.assertEqual( result.source(), source )
 		self.assertEqual( result.sourceType(), sourceType )
-		self.assertEqual( result.editable(), editable )
+		self.assertEqual( result.canAcquireEdit(), canAcquireEdit )
 		self.assertEqual( result.fallbackDescription(), "" )
 
-		if editable :
-			self.assertEqual( nonEditableReason, "" )
-			self.assertEqual( result.nonEditableReason(), "" )
+		if canAcquireEdit :
+			self.assertEqual( cantAcquireEditReason, "" )
+			self.assertEqual( result.cantAcquireEditReason(), "" )
 
 			acquiredEdit = result.acquireEdit()
 			self.assertIsNotNone( acquiredEdit )
@@ -369,14 +368,10 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 					edit.fullName() if edit is not None else ""
 				)
 
-			self.assertEqual( result.editWarning(), editWarning )
-
 		else :
 			self.assertIsNone( edit )
-			self.assertEqual( editWarning, "" )
-			self.assertEqual( result.editWarning(), "" )
-			self.assertNotEqual( nonEditableReason, "" )
-			self.assertEqual( result.nonEditableReason(), nonEditableReason )
+			self.assertNotEqual( cantAcquireEditReason, "" )
+			self.assertEqual( result.cantAcquireEditReason(), cantAcquireEditReason )
 			self.assertRaises( RuntimeError, result.acquireEdit )
 
 	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
@@ -408,9 +403,9 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["primitiveVariableTweaks2"]["out"], "/plane", "P", Property.Data ),
-			source = scaleTweak2,
+			source = s["primitiveVariableTweaks2"]["out"],
 			sourceType = SourceType.Other,
-			editable = True,
+			canAcquireEdit = True,
 			edit = scaleTweak2
 		)
 
@@ -418,9 +413,9 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["primitiveVariableTweaks2"]["out"], "/plane", "P", Property.Data ),
-			source = scaleTweak1,
+			source = s["primitiveVariableTweaks1"]["out"],
 			sourceType = SourceType.Other,
-			editable = True,
+			canAcquireEdit = True,
 			edit = scaleTweak1
 		)
 
@@ -439,19 +434,35 @@ class PrimitiveVariableInspectorTest( GafferUITest.TestCase ) :
 
 		self.__assertExpectedResult(
 			self.__inspect( s["primitiveVariables"]["out"], "/plane", "testConstant", Property.Data ),
-			source = s["primitiveVariables"]["primitiveVariables"][0],
+			source = s["primitiveVariables"]["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
-			editable = True,
-			edit = None,
-			editWarning = 'Edits to "testConstant" may affect other locations in the scene.'
+			canAcquireEdit = True,
+			edit = None
 		)
 
 		self.__assertExpectedResult(
 			self.__inspect( externalPrimitiveVariableTweaks["out"], "/plane", "testConstant", Property.Data ),
-			source = tweak2,
+			source = externalPrimitiveVariableTweaks["out"],
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.External,
-			editable = False,
+			canAcquireEdit = False,
 			edit = None,
-			editWarning = "",
-			nonEditableReason = "{} is external to the script.".format( externalPrimitiveVariableTweaks.fullName() )
+			cantAcquireEditReason = "{} is external to the script.".format( externalPrimitiveVariableTweaks.fullName() )
 		)
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "inspector" } )
+	def testDisabledNodeIsNotSource( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["cube"] = GafferScene.Cube()
+
+		script["primitiveVariables1"] = GafferScene.PrimitiveVariables()
+		script["primitiveVariables1"]["in"].setInput( script["cube"]["out"] )
+		script["primitiveVariables1"]["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", 1 ) )
+
+		script["primitiveVariables2"] = GafferScene.PrimitiveVariables()
+		script["primitiveVariables2"]["enabled"].setValue( False )
+		script["primitiveVariables2"]["in"].setInput( script["primitiveVariables1"]["out"] )
+		script["primitiveVariables2"]["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", 2 ) )
+
+		inspection = self.__inspect( script["primitiveVariables2"]["out"], "/cube", "test", Property.Data )
+		self.assertEqual( inspection.source(), script["primitiveVariables1"]["out"] )
