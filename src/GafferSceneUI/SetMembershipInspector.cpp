@@ -218,7 +218,7 @@ bool SetMembershipInspector::hasEdit( const GafferScene::SceneAlgo::History *his
 		return false;
 	}
 
-	if( const auto objectSource = runTimeCast<ObjectSource>( sceneNode ) )
+	if( runTimeCast<ObjectSource>( sceneNode ) )
 	{
 		return true;
 	}

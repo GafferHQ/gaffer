@@ -1205,7 +1205,7 @@ bool Inspector::Result::canAcquireEdit( bool createIfNecessary ) const
 	{
 		m_editors->acquireEditFunction( createIfNecessary, /* dryRun = */ true );
 	}
-	catch( EditDisallowed &e )
+	catch( EditDisallowed & )
 	{
 		return false;
 	}
@@ -1237,7 +1237,7 @@ bool Inspector::Result::canEdit( const IECore::Object *value ) const
 	{
 		m_editors->editFunction( value, /* dryRun = */ true );
 	}
-	catch( EditDisallowed &e )
+	catch( EditDisallowed & )
 	{
 		return false;
 	}
@@ -1269,7 +1269,7 @@ bool Inspector::Result::canDisableEdit() const
 	{
 		m_editors->disableEditFunction( /* dryRun = */ true );
 	}
-	catch( EditDisallowed &e )
+	catch( EditDisallowed & )
 	{
 		return false;
 	}
