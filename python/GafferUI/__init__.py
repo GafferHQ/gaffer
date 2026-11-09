@@ -115,7 +115,6 @@ from .Spacer import Spacer
 from .BoolWidget import BoolWidget, CheckBox
 from .Image import Image
 from .ErrorDialogue import ErrorDialogue
-from ._Variant import _Variant
 from .VectorDataWidget import VectorDataWidget
 from .PathVectorDataWidget import PathVectorDataWidget
 from .ProgressBar import ProgressBar

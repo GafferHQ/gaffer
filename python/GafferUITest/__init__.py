@@ -59,7 +59,6 @@ from .CollapsibleTest import CollapsibleTest
 from .ImageGadgetTest import ImageGadgetTest
 from .StandardNodeGadgetTest import StandardNodeGadgetTest
 from .ColorSwatchTest import ColorSwatchTest
-from .VariantTest import VariantTest
 from .GridContainerTest import GridContainerTest
 from .NoduleTest import NoduleTest
 from .ProgressBarTest import ProgressBarTest
