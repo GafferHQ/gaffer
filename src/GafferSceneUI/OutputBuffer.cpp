@@ -329,7 +329,14 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 		glEnable( GL_DEPTH_TEST );
 		glEnable( GL_BLEND );
 		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-		glDepthFunc( renderSelection ? GL_LEQUAL : GL_LESS );
+		// Using GL_LEQUAL rather than GL_LESS for two reasons :
+		//
+		// 1. Arnold - for one example - renders volumes with maximum depth
+		//    values. We need these to pass the depth test when we render the
+		//    main layer over a freshly cleared depth buffer.
+		// 2. When rendering the selection layer over the top of the main layer,
+		//    we need the depth test to pass.
+		glDepthFunc( GL_LEQUAL );
 
 		glDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
 
