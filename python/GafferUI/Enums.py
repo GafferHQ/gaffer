@@ -58,7 +58,7 @@ def __horizontalFromQt( a ) :
 	elif a == QtCore.Qt.AlignmentFlag.AlignHCenter :
 		return HorizontalAlignment.Center
 	elif a == QtCore.Qt.AlignmentFlag.AlignJustify :
-		return HorizontalAlignment.AlignJustify
+		return HorizontalAlignment.Justify
 
 	return HorizontalAlignment.None_
 
