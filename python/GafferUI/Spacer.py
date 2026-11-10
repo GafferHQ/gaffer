@@ -37,7 +37,7 @@
 
 import GafferUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ## \todo Size accessors
 class Spacer( GafferUI.Widget ) :
@@ -56,7 +56,7 @@ class Spacer( GafferUI.Widget ) :
 			layout.setContentsMargins( 0, 0, 0, 0 )
 			self._qtWidget().setLayout( layout )
 			layout.addSpacerItem(
-				QtWidgets.QSpacerItem( preferredSize.x, preferredSize.y, QtWidgets.QSizePolicy.Preferred )
+				QtWidgets.QSpacerItem( preferredSize.x, preferredSize.y, QtWidgets.QSizePolicy.Policy.Preferred )
 			)
 
 		self._qtWidget().setMinimumSize( size.x, size.y )

@@ -55,29 +55,11 @@ from . import _GafferUI
 
 import OpenGL.GL as GL
 
-import Qt
-from Qt import QtCore
-
-# Importing directly rather than via Qt.py because Qt.py won't expose the
-# Qt-5-only QOpenGLWidget and QSurfaceFormat classes that we need. Their mantra
-# is to provide only what is available in Qt4/PySide1 - see
-# https://github.com/mottosso/Qt.py/issues/341.
-## \todo Now that Qt 4 is long gone, and PySide is an official
-# Qt project, Qt.py isn't much help. Remove across the board, or see
-# if we can coax the project into bridging Qt 5/6 instead of 4/5?
-if Qt.__binding__ == "PySide2" :
-	from PySide2 import QtGui
-	from PySide2 import QtWidgets
-	from PySide2.QtWidgets import QOpenGLWidget
-	from PySide2.QtGui import QOpenGLPaintDevice
-	from PySide2 import QtOpenGL
-elif Qt.__binding__ == "PySide6" :
-	from PySide6 import QtGui
-	from PySide6 import QtWidgets
-	from PySide6.QtOpenGLWidgets import QOpenGLWidget
-	from PySide6.QtOpenGL import QOpenGLPaintDevice
-else :
-	raise Exception( "GLWidget : No compatible Qt Python binding found" )
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
+from PySide6.QtOpenGLWidgets import QOpenGLWidget
+from PySide6.QtOpenGL import QOpenGLPaintDevice
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
@@ -231,8 +213,8 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
 		QtWidgets.QGraphicsView.__init__( self )
 
-		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
-		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
+		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff )
+		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff )
 
 		glWidget = self.__createGLWidget( format )
 		self.setViewport( glWidget )
@@ -324,7 +306,7 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 		if widget._qtWidget().layout() is not None :
 			# removing the size constraint is necessary to keep the widget the
 			# size we tell it to be in __updateItemGeometry.
-			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetNoConstraint )
 
 		proxy = _OverlayProxyWidget()
 		proxy.setWidget( widget._qtWidget() )
@@ -374,7 +356,7 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 	def __focusItemChanged( self, newItem, oldItem, reason ) :
 
-		if newItem is None and reason == QtCore.Qt.PopupFocusReason :
+		if newItem is None and reason == QtCore.Qt.FocusReason.PopupFocusReason :
 			# Don't lose the focus item for this view due to a popup menu.
 			# Losing that would prevent the `GLWidget` from forwarding events
 			# to overlay widgets.

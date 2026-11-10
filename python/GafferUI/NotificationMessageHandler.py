@@ -39,8 +39,6 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtGui
-
 class NotificationMessageHandler( IECore.MessageHandler ) :
 
 	# we want to keep the windows we create alive beyond

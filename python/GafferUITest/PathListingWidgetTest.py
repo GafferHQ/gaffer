@@ -51,7 +51,7 @@ import GafferUI
 from GafferUI import _GafferUI
 import GafferUITest
 
-from Qt import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 class PathListingWidgetTest( GafferUITest.TestCase ) :
 
@@ -357,15 +357,15 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getSelection(), s )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 
-		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
+		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.SortOrder.AscendingOrder )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( w.visualOrder( s ), [ "/1", "/2", "/2/1", "/2/5", "/9" ] )
 
-		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.DescendingOrder )
+		w._qtWidget().header().setSortIndicator( 0, QtCore.Qt.SortOrder.DescendingOrder )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( w.visualOrder( s ), [ "/9", "/2", "/2/5", "/2/1", "/1" ] )
 
-		w._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+		w._qtWidget().header().setSortIndicator( 1, QtCore.Qt.SortOrder.AscendingOrder )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( w.visualOrder( s ), [ "/1", "/2", "/2/1", "/2/5", "/9" ] )
 
@@ -801,8 +801,8 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		model = widget._qtWidget().model()
 		model.rowCount()
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Name" )
-		self.assertEqual( model.headerData( 1, QtCore.Qt.Horizontal ), "Value" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Name" )
+		self.assertEqual( model.headerData( 1, QtCore.Qt.Orientation.Horizontal ), "Value" )
 		index0 = model.index( 0, 0 )
 		self.assertEqual( model.data( index0 ), "child1" )
 		index1 = model.index( 0, 1 )
@@ -811,17 +811,17 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# Reorder the columns, and add a new one. Without waiting for an
 		# update, we should be able to get the values from the columns.
 		widget.setColumns( list( reversed( widget.getColumns() ) ) + [ GafferUI.PathListingWidget.StandardColumn( "Value 2", "dict:value" ) ] )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Value" )
-		self.assertEqual( model.headerData( 1, QtCore.Qt.Horizontal ), "Name" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Value" )
+		self.assertEqual( model.headerData( 1, QtCore.Qt.Orientation.Horizontal ), "Name" )
 		self.assertEqual( model.data( index0 ), 1 )
 		self.assertEqual( model.data( index1 ), "child1" )
 		# But we need to wait for an update to get the value for the
 		# new column.
-		self.assertIsNone( model.headerData( 2, QtCore.Qt.Horizontal ) )
+		self.assertIsNone( model.headerData( 2, QtCore.Qt.Orientation.Horizontal ) )
 		index2 = model.index( 0, 2 )
 		self.assertIsNone( model.data( index2 ) )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
-		self.assertEqual( model.headerData( 2, QtCore.Qt.Horizontal ), "Value 2" )
+		self.assertEqual( model.headerData( 2, QtCore.Qt.Orientation.Horizontal ), "Value 2" )
 		self.assertEqual( model.data( index2 ), 1 )
 
 	def testSortable( self ) :
@@ -1100,7 +1100,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			if sortable :
 				# Sort by "Value" column as sorting by defaultNameColumn
 				# doesn't trigger a data update.
-				widget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+				widget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.SortOrder.AscendingOrder )
 
 			# Make initial child queries to populate the model with
 			# items, but without evaluating data. We should start
@@ -1816,7 +1816,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# likewise, changing the sort order of the `name` column shouldn't result
 		# in data changes
 
-		widget._qtWidget().header().setSortIndicator( 0, QtCore.Qt.DescendingOrder )
+		widget._qtWidget().header().setSortIndicator( 0, QtCore.Qt.SortOrder.DescendingOrder )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( len( changes ), 0 )
 
@@ -1827,7 +1827,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# but sorting by another column should result in data changes as we require
 		# CellData to sort on
 
-		widget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+		widget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.SortOrder.AscendingOrder )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertNotEqual( len( changes ), 0 )
 
@@ -1885,29 +1885,29 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		# When we first query the header, we should get nothing, because it won't
 		# have been evaluated yet.
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), None )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), None )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), None )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal, QtCore.Qt.ItemDataRole.ToolTipRole ), None )
 		# But the query should trigger a background update that should update it
 		# asynchronously.
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
-		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+		self.assertEqual( changes, [ ( QtCore.Qt.Orientation.Horizontal, 0, 0 ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal, QtCore.Qt.ItemDataRole.ToolTipRole ), "/" )
 		# The next query shouldn't trigger any update.
 		del changes[:]
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal, QtCore.Qt.ItemDataRole.ToolTipRole ), "/" )
 		self.assertEqual( changes, [] )
 
 		# Changing the column title should trigger another async update.
 		widget.getColumns()[0].setTitle( "Title 2" )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Title" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal, QtCore.Qt.ItemDataRole.ToolTipRole ), "/" )
 		self.assertEqual( changes, [] )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
-		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+		self.assertEqual( changes, [ ( QtCore.Qt.Orientation.Horizontal, 0, 0 ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal, QtCore.Qt.ItemDataRole.ToolTipRole ), "/" )
 
 		# If the column changes for some other reason, then even though we'll
 		# get an async update happening, it won't find any changes to notify us
@@ -1916,18 +1916,18 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		widget.getColumns()[0].changedSignal()( widget.getColumns()[0] )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( changes, [] )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal, QtCore.Qt.ItemDataRole.ToolTipRole ), "/" )
 
 		# Changing the PathListingWidget's root path should trigger another async update.
 		widget.setPath( self.InfinitePath( "/other" ) )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal, QtCore.Qt.ItemDataRole.ToolTipRole ), "/" )
 		self.assertEqual( changes, [] )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
-		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
-		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal, QtCore.Qt.ToolTipRole ), "/other" )
+		self.assertEqual( changes, [ ( QtCore.Qt.Orientation.Horizontal, 0, 0 ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal ), "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Orientation.Horizontal, QtCore.Qt.ItemDataRole.ToolTipRole ), "/other" )
 
 	def testUpdateFinished( self ) :
 

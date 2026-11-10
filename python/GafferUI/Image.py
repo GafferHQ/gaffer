@@ -40,9 +40,9 @@ import IECore
 
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 ## The Image widget displays an image. This can be specified
 # as either a filename or an IECore.ImagePrimitive.
@@ -54,7 +54,7 @@ class Image( GafferUI.Widget ) :
 
 		# by default the widget would accept both shrinking and growing, but we'd rather it just stubbornly stayed
 		# the same size.
-		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed ) )
+		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed ) )
 
 		self.updateImage( fileName )
 
@@ -76,7 +76,7 @@ class Image( GafferUI.Widget ) :
 		pixmap.fill( QtGui.QColor( 0, 0, 0, 0 ) )
 
 		painter = QtGui.QPainter( pixmap )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		painter.setRenderHint( QtGui.QPainter.RenderHint.Antialiasing )
 		painter.setPen( GafferUI._StyleSheet.styleColor( "backgroundDarkHighlight" ) )
 		painter.setBrush( QtGui.QColor.fromRgbF( color[0], color[1], color[2] ) )
 		painter.drawRoundedRect( QtCore.QRectF( 0.5, 0.5, 13, 13 ), 2, 2 )
@@ -139,7 +139,7 @@ class Image( GafferUI.Widget ) :
 			image = QtGui.QImage(
 				pixmap.width(),
 				pixmap.height(),
-				QtGui.QImage.Format_ARGB32_Premultiplied if pixmap.hasAlpha() else QtGui.QImage.Format_RGB888
+				QtGui.QImage.Format.Format_ARGB32_Premultiplied if pixmap.hasAlpha() else QtGui.QImage.Format.Format_RGB888
 			)
 			image.fill( 0 )
 
@@ -183,7 +183,7 @@ class Image( GafferUI.Widget ) :
 			graphicsView = QtWidgets.QGraphicsView()
 			graphicsView.setScene( graphicsScene )
 
-			image = QtGui.QImage( pixmap.width(), pixmap.height(), QtGui.QImage.Format_ARGB32_Premultiplied )
+			image = QtGui.QImage( pixmap.width(), pixmap.height(), QtGui.QImage.Format.Format_ARGB32_Premultiplied )
 			image.fill( 0 )
 
 			painter = QtGui.QPainter( image )
@@ -211,7 +211,7 @@ class Image( GafferUI.Widget ) :
 	def _qtIcon( self, highlighted = False ) :
 
 		icon = QtGui.QIcon( self._qtPixmapHighlighted() if highlighted else self._qtPixmap() )
-		icon.addPixmap( self._qtPixmapDisabled(), QtGui.QIcon.Disabled )
+		icon.addPixmap( self._qtPixmapDisabled(), QtGui.QIcon.Mode.Disabled )
 		return icon
 
 	__pixmapCache = None

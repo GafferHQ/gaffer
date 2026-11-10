@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 # Widget for TweakPlug, which is used to build tweak nodes such as ShaderTweaks
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
@@ -75,7 +75,7 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		modeWidget = GafferUI.PlugValueWidget.create( self.__childPlugs( plugs, "mode" ) )
 		modeWidget._qtWidget().setFixedWidth( 135 )
-		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 		self.__row.append( modeWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
 		self.__row.append( valueWidget, expand = True )

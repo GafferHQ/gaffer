@@ -36,7 +36,7 @@
 
 import imath
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 import Gaffer
 import GafferImage
@@ -200,8 +200,8 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__startPauseButton._qtWidget().setFixedWidth( 25 )
 		self.__stopButton._qtWidget().setFixedWidth( 25 )
 		# The button retaining focus causes problems when embedding in other UIs
-		self.__startPauseButton._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
-		self.__stopButton._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
+		self.__startPauseButton._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.NoFocus )
+		self.__stopButton._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.NoFocus )
 
 		self.__startPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startPauseClicked ) )
 		self.__stopButton.clickedSignal().connect( Gaffer.WeakMethod( self.__stopClicked ) )

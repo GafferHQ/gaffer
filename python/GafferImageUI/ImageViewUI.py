@@ -48,9 +48,7 @@ import GafferImageUI
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtGui
-from Qt import QtWidgets
-from Qt import QtCore
+from PySide6 import QtWidgets
 
 ##########################################################################
 # Metadata registration.
@@ -525,7 +523,7 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 		widgets = [ w for w in widgets if w ]
 
 		widgets[0]._qtWidget().setFixedWidth( 25 ) # Mode selector is just an icon
-		widgets[0]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		widgets[0]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 
 		self.__row[:] = widgets
 

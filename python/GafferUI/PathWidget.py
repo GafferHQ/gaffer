@@ -45,7 +45,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 class PathWidget( GafferUI.TextWidget ) :
 

@@ -47,10 +47,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
-import Qt
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 class Menu( GafferUI.Widget ) :
 
@@ -74,7 +73,7 @@ class Menu( GafferUI.Widget ) :
 
 		self.__title = title
 		# this property is used by the stylesheet to fix up menu padding bugs
-		self._qtWidget().setProperty( "gafferHasTitle", GafferUI._Variant.toVariant( title is not None ) )
+		self._qtWidget().setProperty( "gafferHasTitle", title is not None )
 
 		self._qtWidget().__definition = definition
 		self._qtWidget().aboutToShow.connect( Gaffer.WeakMethod( self.__show ) )
@@ -115,10 +114,7 @@ class Menu( GafferUI.Widget ) :
 		self._qtWidget().keyboardMode = _Menu.KeyboardMode.Grab if grabFocus else _Menu.KeyboardMode.Close
 
 		if modal :
-			if Qt.__binding__ == "PySide6" :
-				self._qtWidget().exec( position )
-			else :
-				self._qtWidget().exec_( position )
+			self._qtWidget().exec( position )
 		else :
 			self._qtWidget().popup( position )
 
@@ -224,7 +220,7 @@ class Menu( GafferUI.Widget ) :
 			self.__searchMenu = _Menu( self._qtWidget(), "" )
 			self.__searchMenu.aboutToShow.connect( Gaffer.WeakMethod( self.__searchMenuShow ) )
 			self.__searchLine = QtWidgets.QLineEdit()
-			self.__searchLine.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
+			self.__searchLine.setAttribute( QtCore.Qt.WidgetAttribute.WA_MacShowFocusRect, False )
 			self.__searchLine.textEdited.connect( Gaffer.WeakMethod( self.__updateSearchMenu ) )
 			self.__searchLine.returnPressed.connect( Gaffer.WeakMethod( self.__searchReturnPressed ) )
 			self.__searchLine.setObjectName( "gafferSearchField" )
@@ -343,7 +339,7 @@ class Menu( GafferUI.Widget ) :
 							if len( qtMenu.actions() ) :
 								qtMenu.addAction( _SpacerAction( qtMenu ) )
 							elif action.hasText :
-								qtMenu.setProperty( "gafferHasLeadingLabelledDivider", GafferUI._Variant.toVariant( True ) )
+								qtMenu.setProperty( "gafferHasLeadingLabelledDivider", True )
 								needsBottomSpacer = True
 
 						qtMenu.addAction( action )
@@ -376,7 +372,7 @@ class Menu( GafferUI.Widget ) :
 		if item.divider :
 			qtAction = _DividerAction( item, parent )
 		else :
-			qtAction = QtWidgets.QAction( label, parent )
+			qtAction = QtGui.QAction( label, parent )
 			qtAction.__item = item
 
 		if item.checkBox is not None :
@@ -411,12 +407,8 @@ class Menu( GafferUI.Widget ) :
 				if s.count() != 1 :
 					continue
 
-				if Qt.__binding__ != "PySide6" :
-					key = s[0] & ~QtCore.Qt.KeyboardModifierMask
-					modifiers = s[0] & QtCore.Qt.KeyboardModifierMask
-				else :
-					key = s[0].key()
-					modifiers = s[0].keyboardModifiers()
+				key = s[0].key()
+				modifiers = s[0].keyboardModifiers()
 
 				# Qt differentiates keys on the keypad by adding the KeypadModifier to
 				# their keypresses. This means that shortcuts that don't specifically
@@ -498,14 +490,14 @@ class Menu( GafferUI.Widget ) :
 
 	def __getSearchBoxErrorState(self):
 
-		return GafferUI._Variant.fromVariant( self.__searchLine.property( "gafferError" ) ) or False
+		return self.__searchLine.property( "gafferError" ) or False
 
 	def __setSearchBoxErrorState(self, errored):
 
 		if errored is self.__getSearchBoxErrorState():
 			return
 
-		self.__searchLine.setProperty( "gafferError", GafferUI._Variant.toVariant( errored ) )
+		self.__searchLine.setProperty( "gafferError", errored )
 		self._repolish()
 
 	def __updateSearchMenu( self, text ) :

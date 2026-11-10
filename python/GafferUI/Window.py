@@ -43,10 +43,9 @@ import imath
 import GafferUI
 import Gaffer
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
-import Qt
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 class Window( GafferUI.ContainerWidget ) :
 
@@ -56,14 +55,14 @@ class Window( GafferUI.ContainerWidget ) :
 	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=None, child=None, sizeMode=SizeMode.Manual, icon="GafferLogoMini.png", **kw ) :
 
 		GafferUI.ContainerWidget.__init__(
-			self, QtWidgets.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ) ), **kw
+			self, QtWidgets.QWidget( None, QtCore.Qt.WindowType.Window ), **kw
 		)
 
 		self.__child = None
 		self.__childWindows = set()
 		self.__qtLayout = QtWidgets.QGridLayout()
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 
 		# The initial size of a widget in qt "depends on the user's platform and screen geometry".
 		# In other words, it is useless. We use this flag to determine whether or not our size is
@@ -78,7 +77,7 @@ class Window( GafferUI.ContainerWidget ) :
 
 
 		# \todo Does this hurt performance? Maybe keyPressSignal() should set this up when it's called?
-		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
+		self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.ClickFocus )
 
 		self._qtWidget().setLayout( self.__qtLayout )
 
@@ -196,20 +195,13 @@ class Window( GafferUI.ContainerWidget ) :
 		# The Dialog type on the other hand does a much better job. Of
 		# course, this being X11, different window managers will do different
 		# things, but on the whole the Dialog type seems best for X11.
-		childWindowType = QtCore.Qt.Tool if sys.platform == "darwin" else QtCore.Qt.Dialog
-		childWindowFlags = ( childWindow._qtWidget().windowFlags() & ~QtCore.Qt.WindowType_Mask ) | childWindowType
+		childWindowType = QtCore.Qt.WindowType.Tool if sys.platform == "darwin" else QtCore.Qt.WindowType.Dialog
+		childWindowFlags = ( childWindow._qtWidget().windowFlags() & ~QtCore.Qt.WindowType.WindowType_Mask ) | childWindowType
 		if sys.platform == "win32" :
-			childWindowFlags |= QtCore.Qt.WindowCloseButtonHint
+			childWindowFlags |= QtCore.Qt.WindowType.WindowCloseButtonHint
 
-		if sys.platform == "darwin" and Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-			# Alternative order of operations to work around crashes
-			# on OSX with Qt5.
-			childWindow._qtWidget().setParent( self._qtWidget() )
-			childWindow._applyVisibility()
-			childWindow._qtWidget().setWindowFlags( childWindowFlags )
-		else :
-			childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
-			childWindow._applyVisibility()
+		childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
+		childWindow._applyVisibility()
 
 		if removeOnClose :
 
@@ -245,9 +237,9 @@ class Window( GafferUI.ContainerWidget ) :
 
 		self.__sizeMode = sizeMode
 		if sizeMode == self.SizeMode.Manual :
-			self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+			self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 		else :
-			self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetFixedSize )
+			self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetFixedSize )
 
 	def getSizeMode( self ) :
 

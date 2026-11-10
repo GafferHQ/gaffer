@@ -35,8 +35,8 @@
 #
 ##########################################################################
 
-from Qt import QtCore
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 # A QTableView derived class with custom size behaviours we want for
 # GafferUI. This is not part of the public API.
@@ -95,7 +95,7 @@ class _TableView( QtWidgets.QTableView ) :
 			minimumHeight += self.horizontalHeader().sizeHint().height()
 		# allow room for a visible horizontal scrollbar to prevent it overlapping
 		# the last row.
-		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarAlwaysOff and not self.horizontalScrollBar().isHidden() :
+		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff and not self.horizontalScrollBar().isHidden() :
 			minimumHeight += self.horizontalScrollBar().sizeHint().height()
 
 		numRows = self.verticalHeader().count()
@@ -123,7 +123,7 @@ class _TableView( QtWidgets.QTableView ) :
 		# always allow room for a scrollbar even though we don't always need one. we
 		# make sure the background in the stylesheet is transparent so that when the
 		# scrollbar is hidden we don't draw an empty gap where it otherwise would be.
-		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarAlwaysOff :
+		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff :
 			w += self.verticalScrollBar().sizeHint().width()
 
 		h = margins.top() + margins.bottom()
@@ -136,7 +136,7 @@ class _TableView( QtWidgets.QTableView ) :
 			h += self.horizontalHeader().sizeHint().height()
 		# allow room for a visible horizontal scrollbar to prevent it overlapping
 		# the last row.
-		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarAlwaysOff and not self.horizontalScrollBar().isHidden() :
+		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff and not self.horizontalScrollBar().isHidden() :
 			h += self.horizontalScrollBar().sizeHint().height()
 
 		return QtCore.QSize( w, h )

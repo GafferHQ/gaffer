@@ -41,9 +41,8 @@ import sys
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
 
 ## The Timeline presents a time slider which edits the frame
 # entry of a context.
@@ -112,16 +111,16 @@ class Timeline( GafferUI.Editor ) :
 
 		scriptNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptNodePlugSet ) )
 
-		frameIncrementShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Right" ), self._qtWidget() )
+		frameIncrementShortcut = QtGui.QShortcut( QtGui.QKeySequence( "Right" ), self._qtWidget() )
 		frameIncrementShortcut.activated.connect( Gaffer.WeakMethod( self.__incrementFrame ) )
 
-		playForwardsShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Ctrl+Right" ), self._qtWidget() )
+		playForwardsShortcut = QtGui.QShortcut( QtGui.QKeySequence( "Ctrl+Right" ), self._qtWidget() )
 		playForwardsShortcut.activated.connect( Gaffer.WeakMethod( self.__playPausePressed ) )
 
-		frameDecrementShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Left" ), self._qtWidget() )
+		frameDecrementShortcut = QtGui.QShortcut( QtGui.QKeySequence( "Left" ), self._qtWidget() )
 		frameDecrementShortcut.activated.connect( functools.partial( Gaffer.WeakMethod( self.__incrementFrame ), -1 ) )
 
-		playBackwards = QtWidgets.QShortcut( QtGui.QKeySequence( "Ctrl+Left" ), self._qtWidget() )
+		playBackwards = QtGui.QShortcut( QtGui.QKeySequence( "Ctrl+Left" ), self._qtWidget() )
 		playBackwards.activated.connect( functools.partial( Gaffer.WeakMethod( self.__playPausePressed ), False ) )
 
 		self.__playback.setFrameRange( self.__sliderRangeStart.getValue(), self.__sliderRangeEnd.getValue() )

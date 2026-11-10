@@ -41,8 +41,7 @@ import inspect
 import time
 import weakref
 
-from Qt import QtCore
-from Qt import QtCompat
+from PySide6 import QtCore
 
 import IECore
 
@@ -72,8 +71,8 @@ class TestCase( GafferTest.TestCase ) :
 				message
 			)
 
-		QtCompat.qInstallMessageHandler( messageHandler )
-		self.addCleanup( functools.partial( QtCompat.qInstallMessageHandler, None ) )
+		QtCore.qInstallMessageHandler( messageHandler )
+		self.addCleanup( functools.partial( QtCore.qInstallMessageHandler, None ) )
 
 		# The Mesa stack in our Docker build container doesn't currently support
 		# floating point textures. Prevent warning from causing test failures.

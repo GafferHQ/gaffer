@@ -40,8 +40,7 @@ import re
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
+from PySide6 import QtGui
 
 class NameWidget( GafferUI.TextWidget ) :
 
@@ -135,14 +134,8 @@ class _Validator( QtGui.QValidator ) :
 
 		input = self.__invalidCharacters.sub( "_", input )
 		if len( input ) :
-			result = QtGui.QValidator.Acceptable
+			result = QtGui.QValidator.State.Acceptable
 		else :
-			result = QtGui.QValidator.Intermediate
+			result = QtGui.QValidator.State.Intermediate
 
-		if hasattr( QtCore, "QString" ) and isinstance( input, QtCore.QString ) :
-			# PyQt API, where QString type is exposed and we modify it in place
-			return result, pos
-		else :
-			# PySide API, where QString is mapped automatically to python string
-			# and we return a new string.
-			return result, input, pos
+		return result, input, pos

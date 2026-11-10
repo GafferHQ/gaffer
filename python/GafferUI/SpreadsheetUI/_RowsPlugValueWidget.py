@@ -43,8 +43,8 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 from . import _Algo
 from ._LinkedScrollBar import _LinkedScrollBar
@@ -105,7 +105,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__patternWidget.setText( Gaffer.Metadata.value( plug, "spreadsheet:rowFilter" ) )
 				self.__patternWidget.setPlaceholderText( "Filter..." )
 				# Ignore the width in X so that the widget is sized based on the width dictated by `rowNamesTable`.
-				self.__patternWidget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+				self.__patternWidget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Fixed )
 				self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
 
 				self.__refreshFilterButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = "Click to refresh row filter" )
@@ -114,7 +114,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__defaultLabel = GafferUI.Label( "<h4>Default</h4>", horizontalAlignment = GafferUI.HorizontalAlignment.Right )
 				self.__defaultLabel._qtWidget().setObjectName( "gafferDefaultRowLabel" )
 				# Ignore the width in X so that the label is sized based on the width dictated by `rowNamesTable`.
-				self.__defaultLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+				self.__defaultLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Fixed )
 
 				GafferUI.Spacer( imath.V2i( 1, 20 ), maximumSize = imath.V2i( 1, 20 ) )
 
@@ -226,7 +226,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 						"<h4>Output</h4>", horizontalAlignment = GafferUI.HorizontalAlignment.Right,
 					)
 					# Ignore the width in X so that the label is sized based on the width dictated by `rowNamesTable`.
-					self.__outputLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+					self.__outputLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Fixed )
 					GafferUI.Spacer( imath.V2i( 3, 20 ), maximumSize = imath.V2i( 3, 20 ) )
 
 			with GafferUI.ListContainer(
@@ -248,7 +248,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# The status label occupies the same column as `cellsTable`, and has a dynamic width based on the length
 				# of the status text. Ignore the width in X so that the column width is dictated solely by `cellsTable`,
 				# otherwise large status labels can force cells off the screen.
-				self.__statusLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+				self.__statusLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Fixed )
 
 			if isinstance( plug.node(), Gaffer.Reference ) :
 				# Currently we only allow new rows to be added to references

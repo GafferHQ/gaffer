@@ -38,7 +38,7 @@ import enum
 
 import GafferUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 ## \todo Move other enums here - ListContainer.Orientation for instance.
 __all__ = [ "HorizontalAlignment", "VerticalAlignment", "Edge", "ScrollMode" ]
@@ -50,15 +50,15 @@ HorizontalAlignment = enum.Enum( "HorizontalAlignment", [ "None_", "Left", "Righ
 @staticmethod
 def __horizontalFromQt( a ) :
 
-	a = a & QtCore.Qt.AlignHorizontal_Mask
-	if a == QtCore.Qt.AlignLeft :
+	a = a & QtCore.Qt.AlignmentFlag.AlignHorizontal_Mask
+	if a == QtCore.Qt.AlignmentFlag.AlignLeft :
 		return HorizontalAlignment.Left
-	elif a == QtCore.Qt.AlignRight :
+	elif a == QtCore.Qt.AlignmentFlag.AlignRight :
 		return HorizontalAlignment.Right
-	elif a == QtCore.Qt.AlignHCenter :
+	elif a == QtCore.Qt.AlignmentFlag.AlignHCenter :
 		return HorizontalAlignment.Center
-	elif a == QtCore.Qt.AlignJustify :
-		return HorizontalAlignment.AlignJustify
+	elif a == QtCore.Qt.AlignmentFlag.AlignJustify :
+		return HorizontalAlignment.Justify
 
 	return HorizontalAlignment.None_
 
@@ -66,15 +66,15 @@ def __horizontalFromQt( a ) :
 def __horizontalToQt( a ) :
 
 	if a == HorizontalAlignment.Left :
-		return QtCore.Qt.AlignLeft
+		return QtCore.Qt.AlignmentFlag.AlignLeft
 	elif a == HorizontalAlignment.Right :
-		return QtCore.Qt.AlignRight
+		return QtCore.Qt.AlignmentFlag.AlignRight
 	elif a == HorizontalAlignment.Center :
-		return QtCore.Qt.AlignHCenter
+		return QtCore.Qt.AlignmentFlag.AlignHCenter
 	elif a == HorizontalAlignment.Justify :
-		return QtCore.Qt.AlignJustify
+		return QtCore.Qt.AlignmentFlag.AlignJustify
 
-	return QtCore.Qt.Alignment( 0 )
+	return QtCore.Qt.AlignmentFlag( 0 )
 
 HorizontalAlignment._fromQt = __horizontalFromQt
 HorizontalAlignment._toQt = __horizontalToQt
@@ -86,12 +86,12 @@ VerticalAlignment = enum.Enum( "VerticalAlignment", [ "None_", "Top", "Bottom", 
 @staticmethod
 def __verticalFromQt( a ) :
 
-	a = a & QtCore.Qt.AlignVertical_Mask
-	if a == QtCore.Qt.AlignTop :
+	a = a & QtCore.Qt.AlignmentFlag.AlignVertical_Mask
+	if a == QtCore.Qt.AlignmentFlag.AlignTop :
 		return VerticalAlignment.Top
-	elif a == QtCore.Qt.AlignBottom :
+	elif a == QtCore.Qt.AlignmentFlag.AlignBottom :
 		return VerticalAlignment.Bottom
-	elif a == QtCore.Qt.AlignVCenter :
+	elif a == QtCore.Qt.AlignmentFlag.AlignVCenter :
 		return VerticalAlignment.Center
 
 	return VerticalAlignment.None_
@@ -100,13 +100,13 @@ def __verticalFromQt( a ) :
 def __verticalToQt( a ) :
 
 	if a == VerticalAlignment.Top :
-		return QtCore.Qt.AlignTop
+		return QtCore.Qt.AlignmentFlag.AlignTop
 	elif a == VerticalAlignment.Bottom :
-		return QtCore.Qt.AlignBottom
+		return QtCore.Qt.AlignmentFlag.AlignBottom
 	elif a == VerticalAlignment.Center :
-		return QtCore.Qt.AlignVCenter
+		return QtCore.Qt.AlignmentFlag.AlignVCenter
 
-	return QtCore.Qt.Alignment( 0 )
+	return QtCore.Qt.AlignmentFlag( 0 )
 
 VerticalAlignment._fromQt = __verticalFromQt
 VerticalAlignment._toQt = __verticalToQt
@@ -120,15 +120,15 @@ Edge = enum.Enum( "Edge", [ "Top", "Bottom", "Left", "Right" ] )
 ScrollMode = enum.Enum( "ScrollMode", [ "Never", "Always", "Automatic" ] )
 
 __modesToPolicies = {
-	ScrollMode.Never : QtCore.Qt.ScrollBarAlwaysOff,
-	ScrollMode.Always : QtCore.Qt.ScrollBarAlwaysOn,
-	ScrollMode.Automatic : QtCore.Qt.ScrollBarAsNeeded,
+	ScrollMode.Never : QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
+	ScrollMode.Always : QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
+	ScrollMode.Automatic : QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
 }
 
 __policiesToModes = {
-	QtCore.Qt.ScrollBarAlwaysOff : ScrollMode.Never,
-	QtCore.Qt.ScrollBarAlwaysOn : ScrollMode.Always,
-	QtCore.Qt.ScrollBarAsNeeded : ScrollMode.Automatic,
+	QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff : ScrollMode.Never,
+	QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn : ScrollMode.Always,
+	QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded : ScrollMode.Automatic,
 }
 
 @staticmethod

@@ -45,7 +45,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtGui
+from PySide6 import QtGui
 
 ## \todo Fix bug when pressing up arrow with cursor to left of minus sign
 class NumericWidget( GafferUI.TextWidget ) :
@@ -394,18 +394,18 @@ class _ExpressionValidator( QtGui.QValidator ) :
 		## \todo Remove once we've moved to GafferHQ/dependencies 2.0.0, which
 		# contains the relevant PySide fix. Include a grace period for folks
 		# building with their own older dependencies.
-		Intermediate = QtGui.QValidator.Acceptable
+		Intermediate = QtGui.QValidator.State.Acceptable
 
 		match = re.match( self.__expression, text )
 		if match is None :
-			return QtGui.QValidator.Invalid, text, pos
+			return QtGui.QValidator.State.Invalid, text, pos
 
 		# Check first operand
 		try :
 			self.__numericType( match.group( 1 ) )
 		except :
 			return (
-				Intermediate if not match.group( 2 ) else QtGui.QValidator.Invalid,
+				Intermediate if not match.group( 2 ) else QtGui.QValidator.State.Invalid,
 				text, pos
 			)
 
@@ -416,4 +416,4 @@ class _ExpressionValidator( QtGui.QValidator ) :
 			except :
 				return Intermediate, text, pos
 
-		return QtGui.QValidator.Acceptable, text, pos
+		return QtGui.QValidator.State.Acceptable, text, pos

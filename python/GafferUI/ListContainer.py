@@ -42,8 +42,8 @@ import imath
 import IECore
 import GafferUI
 
-from Qt import QtWidgets
-from Qt import QtCore
+from PySide6 import QtWidgets
+from PySide6 import QtCore
 
 class _WidgetItem( QtWidgets.QWidgetItem ) :
 	# A customized `QWidgetItem` to return a `maximumSize()` without taking
@@ -86,7 +86,7 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 		self.__qtLayout.setSpacing( spacing )
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 
 		self._qtWidget().setLayout( self.__qtLayout )
 
@@ -222,17 +222,17 @@ class ListContainer( GafferUI.ContainerWidget ) :
 	def __convertToQtAlignment( self, horizontalAlignment, verticalAlignment):
 
 		if not horizontalAlignment and not verticalAlignment:
-			return QtCore.Qt.Alignment( 0 )
+			return QtCore.Qt.AlignmentFlag( 0 )
 
 		if verticalAlignment:
 			qtVerticalAlignment = GafferUI.VerticalAlignment._toQt( verticalAlignment )
 		else:
-			qtVerticalAlignment = QtCore.Qt.Alignment( 0 )
+			qtVerticalAlignment = QtCore.Qt.AlignmentFlag( 0 )
 
 		if horizontalAlignment:
 			qtHorizontalAlignment = GafferUI.HorizontalAlignment._toQt( horizontalAlignment )
 		else:
-			qtHorizontalAlignment = QtCore.Qt.Alignment( 0 )
+			qtHorizontalAlignment = QtCore.Qt.AlignmentFlag( 0 )
 
 		return qtHorizontalAlignment | qtVerticalAlignment
 

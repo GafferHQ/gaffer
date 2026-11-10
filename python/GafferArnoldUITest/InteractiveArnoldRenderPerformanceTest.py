@@ -53,7 +53,7 @@ import GafferUI
 import GafferUITest
 import GafferImageTest
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 @unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :

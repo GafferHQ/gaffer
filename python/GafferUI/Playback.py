@@ -40,7 +40,7 @@ import math
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 ## The Playback class controls a Context to facilitate animation
 # playback. It provides methods for starting and stopping playback,

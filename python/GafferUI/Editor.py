@@ -42,8 +42,8 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 ## Base class for UI components which display or manipulate a ScriptNode
 # or its children. These make up the tabs in the UI layout.
@@ -84,7 +84,7 @@ class Editor( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
-		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
+		self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.ClickFocus )
 
 		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
 

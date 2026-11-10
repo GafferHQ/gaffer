@@ -43,8 +43,8 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 class _SectionChooser( GafferUI.Widget ) :
 
@@ -61,7 +61,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		tabBar.setExpanding( False )
 		tabBar.setUsesScrollButtons( True )
 
-		tabBar.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
+		tabBar.setContextMenuPolicy( QtCore.Qt.ContextMenuPolicy.CustomContextMenu )
 		tabBar.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenuRequested ) )
 
 		tabBar.currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )

@@ -41,7 +41,7 @@ import GafferTest
 import GafferUI
 import GafferUITest
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 class PlugLayoutTest( GafferUITest.TestCase ) :
 

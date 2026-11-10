@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 from ._OutPlugTableModel import _OutPlugTableModel
 from ._PlugTableModel import _PlugTableModel
@@ -171,7 +171,7 @@ class __PlugTableProxyModel( QtCore.QAbstractProxyModel ) :
 
 	def __headerDataChanged( self, orientation, first, last ) :
 
-		if orientation == QtCore.Qt.Vertical :
+		if orientation == QtCore.Qt.Orientation.Vertical :
 			limit = self.rowCount() - 1
 			offset = self.__startRow
 		else :

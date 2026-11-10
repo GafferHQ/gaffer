@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 class _ProxySelectionModel( QtCore.QItemSelectionModel ) :
 
@@ -139,15 +139,15 @@ class _ProxySelectionModel( QtCore.QItemSelectionModel ) :
 	def __currentChanged( self, index ) :
 
 		sourceIndex = self.mapToSource( index )
-		self.__sourceSelectionModel.setCurrentIndex( sourceIndex, QtCore.QItemSelectionModel.NoUpdate )
+		self.__sourceSelectionModel.setCurrentIndex( sourceIndex, QtCore.QItemSelectionModel.SelectionFlag.NoUpdate )
 
 	def __sourceSelectionChanged( self, selected, deselected ) :
 
 		viewSelected = self.mapSelectionFromSource( selected )
 		viewDeselected = self.mapSelectionFromSource( deselected )
 
-		QtCore.QItemSelectionModel.select( self, viewDeselected, QtCore.QItemSelectionModel.Deselect )
-		QtCore.QItemSelectionModel.select( self, viewSelected, QtCore.QItemSelectionModel.Select )
+		QtCore.QItemSelectionModel.select( self, viewDeselected, QtCore.QItemSelectionModel.SelectionFlag.Deselect )
+		QtCore.QItemSelectionModel.select( self, viewSelected, QtCore.QItemSelectionModel.SelectionFlag.Select )
 
 	def __sourceCurrentChanged( self, current, previous ) :
 
@@ -156,4 +156,4 @@ class _ProxySelectionModel( QtCore.QItemSelectionModel ) :
 
 		viewCurrent = self.mapFromSource( current )
 		if viewCurrent.isValid() :
-			self.setCurrentIndex( viewCurrent, QtCore.QItemSelectionModel.NoUpdate )
+			self.setCurrentIndex( viewCurrent, QtCore.QItemSelectionModel.SelectionFlag.NoUpdate )

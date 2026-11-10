@@ -119,9 +119,9 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		animated = any( Gaffer.Animation.isAnimated( p ) for p in self.getPlugs() )
 		## \todo Perhaps this styling should be provided by the NumericWidget itself?
-		widgetAnimated = GafferUI._Variant.fromVariant( self.__numericWidget._qtWidget().property( "gafferAnimated" ) ) or False
+		widgetAnimated = self.__numericWidget._qtWidget().property( "gafferAnimated" ) or False
 		if widgetAnimated != animated :
-			self.__numericWidget._qtWidget().setProperty( "gafferAnimated", GafferUI._Variant.toVariant( bool( animated ) ) )
+			self.__numericWidget._qtWidget().setProperty( "gafferAnimated", bool( animated ) )
 			self.__numericWidget._repolish()
 
 	def _updateFromEditable( self ) :

@@ -47,7 +47,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ## A class for laying out widgets to represent all the plugs held on a particular parent.
 #
@@ -297,7 +297,7 @@ class PlugLayout( GafferUI.Widget ) :
 			if self.visible() :
 				# Activate all layouts now. This works around flicker caused by widgets changing
 				# size after an initial round of layout. One culprit seems to be the usage
-				# of `QtWidgets.QLayout.SetMinAndMaxSize` by Widget - see comments there.
+				# of `QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize` by Widget - see comments there.
 				self.__activateQtLayouts()
 			else :
 				# Defer activation until the PlugLayout is visible.
@@ -519,7 +519,7 @@ class PlugLayout( GafferUI.Widget ) :
 			widget._qtWidget().setMinimumWidth( minimumWidth )
 
 		if widget._qtWidget().layout() is not None and ( width is not None or minimumWidth is not None ) :
-			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 
 	def __createPlugWidget( self, plug ) :
 
@@ -536,8 +536,8 @@ class PlugLayout( GafferUI.Widget ) :
 				# to the label.
 				## \todo Shift all the label size fixing out of PlugWidget and just fix the
 				# widget here if we're in a vertical orientation.
-				result.labelPlugValueWidget().label()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed )
-				result.labelPlugValueWidget()._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+				result.labelPlugValueWidget().label()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed )
+				result.labelPlugValueWidget()._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 
 		# Store the metadata value that controlled the type created, so we can compare to it
 		# in the future to determine if we can reuse the widget.
@@ -860,9 +860,9 @@ class _TabLayout( _Layout ) :
 			# if the TabLayout is embedded, we want to restrict the maximum width/height depending on the orientation
 			if self.__embedded :
 				if self.orientation() == GafferUI.ListContainer.Orientation.Vertical :
-					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum ) )
+					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Maximum ) )
 				else :
-					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Expanding ) )
+					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Expanding ) )
 
 		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect(
 			Gaffer.WeakMethod( self.__currentTabChanged )
@@ -960,7 +960,7 @@ class _CollapsibleLayout( _Layout ) :
 				collapsible.setCornerWidget( GafferUI.Label(), True )
 				## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
 				# way of controlling size behaviours for all widgets in the public API.
-				collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+				collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Fixed )
 
 				self.__collapsibleStateChangedSignals[name] = collapsible.stateChangedSignal().connect(
 					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection ),
@@ -982,7 +982,7 @@ class _CollapsibleLayout( _Layout ) :
 
 			currentValueChanged = collapsible._qtWidget().property( "gafferValueChanged" )
 			if subsection.valuesChanged != currentValueChanged :
-				collapsible._qtWidget().setProperty( "gafferValueChanged", GafferUI._Variant.toVariant( subsection.valuesChanged ) )
+				collapsible._qtWidget().setProperty( "gafferValueChanged", subsection.valuesChanged )
 				collapsible._repolish()
 
 			widgets.append( collapsible )

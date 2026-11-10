@@ -40,7 +40,7 @@ import GafferUI
 import GafferUITest
 import GafferTest
 
-from Qt import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 class BoolWidgetTest( GafferUITest.TestCase ) :
 
@@ -67,7 +67,7 @@ class BoolWidgetTest( GafferUITest.TestCase ) :
 
 			menuRequests = GafferTest.CapturingSlot( w.contextMenuSignal() )
 			QtWidgets.QApplication.sendEvent(
-				w._qtWidget(), QtGui.QContextMenuEvent( QtGui.QContextMenuEvent.Mouse, QtCore.QPoint( 0, 0 ), w._qtWidget().mapToGlobal( QtCore.QPoint( 0, 0 ) ) )
+				w._qtWidget(), QtGui.QContextMenuEvent( QtGui.QContextMenuEvent.Reason.Mouse, QtCore.QPoint( 0, 0 ), w._qtWidget().mapToGlobal( QtCore.QPoint( 0, 0 ) ) )
 			)
 			self.assertEqual( len( menuRequests ), 1 )
 

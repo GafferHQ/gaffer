@@ -37,10 +37,9 @@
 import Gaffer
 from ._StyleSheet import _styleColors
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
-import Qt
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 # A QHeaderView derived class with custom behaviours we want for
 # GafferUI. This is not part of the public API.
@@ -50,13 +49,13 @@ import Qt
 # - Supports changing header icons on mouse hover, via PathColumn's { "state:normal" : "normal.png", "state:highlighted" : "highlighted.png" } icon format.
 class _HeaderView( QtWidgets.QHeaderView ) :
 
-	def __init__( self, orientation = QtCore.Qt.Horizontal, parent = None ) :
+	def __init__( self, orientation = QtCore.Qt.Orientation.Horizontal, parent = None ) :
 
 		QtWidgets.QHeaderView.__init__( self, orientation, parent )
 
 		self.setMouseTracking( True )
-		if orientation == QtCore.Qt.Horizontal :
-			self.setDefaultAlignment( QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter )
+		if orientation == QtCore.Qt.Orientation.Horizontal :
+			self.setDefaultAlignment( QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter )
 
 		self.__blockingSectionPressedSignal = None
 
@@ -92,7 +91,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 	def mousePressEvent( self, event ) :
 
 		if not self.__eventOverSectionResizeHandle( event ) :
-			section = self.logicalIndexAt( event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos() )
+			section = self.logicalIndexAt( event.position().toPoint() )
 			if self.__blockingSectionPressedSignal is not None :
 				if self.blockingSectionPressedSignal()( section ) :
 					# Slot has requested to block Qt's mousePressEvent.
@@ -116,7 +115,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 
 		updateRequired = False
 
-		position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+		position = event.position().toPoint()
 		section = self.logicalIndexAt( position )
 
 		if self.__pressedSection is not None :
@@ -189,7 +188,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 
 	def __eventOverSectionResizeHandle( self, event ) :
 
-		position = event.position().toPoint() if Qt.__binding__ == "PySide6" else event.pos()
+		position = event.position().toPoint()
 		section = self.logicalIndexAt( position )
 		relativePosition = position.x() - self.sectionViewportPosition( section )
 		handleMargin = self.style().pixelMetric( QtWidgets.QStyle.PixelMetric.PM_HeaderGripMargin )

@@ -43,9 +43,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 class TabbedContainer( GafferUI.ContainerWidget ) :
 
@@ -68,7 +68,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		self.__tabBarDragState = self.__DragState.None_
 
 		self._qtWidget().setTabBar( self.__tabBar._qtWidget() )
-		self._qtWidget().setElideMode( QtCore.Qt.ElideNone )
+		self._qtWidget().setElideMode( QtCore.Qt.TextElideMode.ElideNone )
 
 		# Corner widget and scrolling
 		# ---------------------------

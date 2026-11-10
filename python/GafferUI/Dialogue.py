@@ -38,7 +38,7 @@
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 class Dialogue( GafferUI.Window ) :
 
@@ -47,7 +47,7 @@ class Dialogue( GafferUI.Window ) :
 
 		GafferUI.Window.__init__( self, title, borderWidth, resizeable, sizeMode=sizeMode, **kw )
 
-		self._qtWidget().setWindowFlags( QtCore.Qt.WindowFlags( QtCore.Qt.Dialog ) )
+		self._qtWidget().setWindowFlags( QtCore.Qt.WindowType.Dialog )
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
 
@@ -77,10 +77,10 @@ class Dialogue( GafferUI.Window ) :
 					# the reparenting above removes the focus, so we reclaim it.
 					# this is important for PathChooserWidget, which puts the focus
 					# in the right place in waitForPath(), then calls waitForButton().
-					focusWidget.setFocus( QtCore.Qt.ActiveWindowFocusReason )
+					focusWidget.setFocus( QtCore.Qt.FocusReason.ActiveWindowFocusReason )
 
 			self.setVisible( False )
-			self._qtWidget().setWindowModality( QtCore.Qt.ApplicationModal )
+			self._qtWidget().setWindowModality( QtCore.Qt.WindowModality.ApplicationModal )
 			self.setVisible( True )
 
 			self.__closeConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__close ), scoped = True )

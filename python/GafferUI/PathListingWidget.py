@@ -50,10 +50,9 @@ from ._HeaderView import _HeaderView
 from ._StyleSheet import _styleColors
 import GafferUI
 
-import Qt
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 ## The PathListingWidget displays the contents of a Path, updating the Path to represent the
 # current directory as the user navigates around. It supports both a list and a tree view,
@@ -108,13 +107,13 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setAlternatingRowColors( True )
 		self._qtWidget().setUniformRowHeights( True )
-		self._qtWidget().setEditTriggers( QtWidgets.QTreeView.NoEditTriggers )
+		self._qtWidget().setEditTriggers( QtWidgets.QTreeView.EditTrigger.NoEditTriggers )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( horizontalScrollMode ) )
 
 		self._qtWidget().header().setSectionsMovable( False )
 
-		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
+		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.SortOrder.AscendingOrder )
 		self._qtWidget().setSortingEnabled( sortable )
 
 		# Install an empty model. We'll update the model contents shortly in setPath().
@@ -126,7 +125,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		# hazards so we rely entirely on our own PathMatcher instead. We update the PathMatcher
 		# directly in `__buttonPress`, `__buttonRelease` and `__keyPress`.
 
-		self._qtWidget().setSelectionMode( QtWidgets.QAbstractItemView.NoSelection )
+		self._qtWidget().setSelectionMode( QtWidgets.QAbstractItemView.SelectionMode.NoSelection )
 		self.__selectionMode = selectionMode
 		self.__lastSelectedIndex = None
 
@@ -135,8 +134,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		# behaviour to be per-item rather than per-row (even though we're not using Qt selection),
 		# because otherwise Qt sets `State_MouseOver` for entire rows.
 
-		self._qtWidget().viewport().setAttribute( QtCore.Qt.WA_Hover )
-		self._qtWidget().setSelectionBehavior( QtWidgets.QAbstractItemView.SelectItems )
+		self._qtWidget().viewport().setAttribute( QtCore.Qt.WidgetAttribute.WA_Hover )
+		self._qtWidget().setSelectionBehavior( QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems )
 
 		# Set up our various signals.
 
@@ -1031,7 +1030,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.__init__( self )
 
-		self.setHeader( _HeaderView( QtCore.Qt.Horizontal, self ) )
+		self.setHeader( _HeaderView( QtCore.Qt.Orientation.Horizontal, self ) )
 		# Our `sizeHint()` depends on the header's size, so we need to
 		# ask for a geometry update any time it changes.
 		self.header().geometriesChanged.connect( self.updateGeometry )

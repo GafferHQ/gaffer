@@ -45,9 +45,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 from ._TableView import _TableView
 
@@ -430,9 +430,9 @@ class _MessageTableSearchWidget( GafferUI.Widget ) :
 		# Though Qt provides clearButtonEnabled(), this seems to be missing its icon on macOS, resulting in a
 		# clickable-but-not-visible clear button. As such we need to make our own. Icons need to be 16x16 exactly.
 		clearImage = GafferUI.Image( "clearSearch.png" )
-		self.__clearAction = QtWidgets.QAction( clearImage._qtIcon(), "Clear Search", None )
+		self.__clearAction = QtGui.QAction( clearImage._qtIcon(), "Clear Search", None )
 		self.__clearAction.triggered.connect( Gaffer.WeakMethod( self.__clear ) )
-		self.__searchField._qtWidget().addAction( self.__clearAction, QtWidgets.QLineEdit.TrailingPosition )
+		self.__searchField._qtWidget().addAction( self.__clearAction, QtWidgets.QLineEdit.ActionPosition.TrailingPosition )
 
 		self.__table = weakref.ref( tableView )
 		tableView.searchTextChangedSignal().connect( Gaffer.WeakMethod( self.__searchTextChanged ) )
@@ -733,7 +733,7 @@ class _MessageTableView( GafferUI.Widget ) :
 		self.__filterModel.setSourceModel( self.__model )
 
 		self.__searchModel = QtCore.QSortFilterProxyModel()
-		self.__searchModel.setFilterCaseSensitivity( QtCore.Qt.CaseInsensitive )
+		self.__searchModel.setFilterCaseSensitivity( QtCore.Qt.CaseSensitivity.CaseInsensitive )
 		self.__searchModel.setFilterKeyColumn( -1 )
 		self.__searchModel.setSourceModel( self.__filterModel )
 		searchResultsChangedSlot = Gaffer.WeakMethod( self.__searchResultsChanged )
@@ -755,8 +755,8 @@ class _MessageTableView( GafferUI.Widget ) :
 		tableView = self._qtWidget()
 
 		tableView.setEditTriggers( QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers )
-		tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectRows )
-		tableView.setSelectionMode( QtWidgets.QAbstractItemView.ContiguousSelection )
+		tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows )
+		tableView.setSelectionMode( QtWidgets.QAbstractItemView.SelectionMode.ContiguousSelection )
 
 		tableView.verticalHeader().setVisible( False )
 		tableView.horizontalHeader().setVisible( False )
@@ -767,20 +767,20 @@ class _MessageTableView( GafferUI.Widget ) :
 
 		if expandRows :
 
-			tableView.horizontalHeader().setSectionResizeMode( 0, QtWidgets.QHeaderView.Stretch )
-			tableView.verticalHeader().setSectionResizeMode( QtWidgets.QHeaderView.ResizeToContents )
+			tableView.horizontalHeader().setSectionResizeMode( 0, QtWidgets.QHeaderView.ResizeMode.Stretch )
+			tableView.verticalHeader().setSectionResizeMode( QtWidgets.QHeaderView.ResizeMode.ResizeToContents )
 			tableView.setWordWrap( True )
 
 		else :
 
-			tableView.verticalHeader().setSectionResizeMode( QtWidgets.QHeaderView.Fixed )
+			tableView.verticalHeader().setSectionResizeMode( QtWidgets.QHeaderView.ResizeMode.Fixed )
 			tableView.verticalHeader().setDefaultSectionSize( 14 )
 
 			# Fortunately we have a fixed set of known message levels so its ok to hard code this here
 			tableView.setColumnWidth( 0, 75 )
-			tableView.horizontalHeader().setSectionResizeMode( 1, QtWidgets.QHeaderView.ResizeToContents )
+			tableView.horizontalHeader().setSectionResizeMode( 1, QtWidgets.QHeaderView.ResizeMode.ResizeToContents )
 
-			tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAsNeeded )
+			tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded )
 
 			tableView.setWordWrap( False )
 
@@ -815,7 +815,7 @@ class _MessageTableView( GafferUI.Widget ) :
 		if not index.isValid() :
 			return
 
-		selectionMode = QtCore.QItemSelectionModel.ClearAndSelect | QtCore.QItemSelectionModel.Rows
+		selectionMode = QtCore.QItemSelectionModel.SelectionFlag.ClearAndSelect | QtCore.QItemSelectionModel.SelectionFlag.Rows
 		selection = self._qtWidget().selectionModel()
 
 		if self.__displayTransform is not None :
@@ -1252,7 +1252,7 @@ class _MessageTableExpandedViewProxy( QtCore.QAbstractProxyModel ) :
 				return "%s\n" % source.data( sourceIndex, role )
 
 			elif role == QtCore.Qt.ItemDataRole.ForegroundRole :
-				return GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "foreground" ) )
+				return GafferUI._StyleSheet.styleColor( "foreground" )
 
 		return source.data( sourceIndex, role )
 
@@ -1293,7 +1293,7 @@ class _MessageTableExpandedViewProxy( QtCore.QAbstractProxyModel ) :
 		if not hasattr( self, "_colorMap" ) :
 			self._colorMap = {}
 			for l in _messageLevels :
-				self._colorMap[ int(l) ] = GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "foreground%s" % l ) )
+				self._colorMap[ int(l) ] = GafferUI._StyleSheet.styleColor( "foreground%s" % l )
 
 		return self._colorMap[ levelData ]
 
@@ -1463,4 +1463,4 @@ class _MessageTableModel( QtCore.QAbstractTableModel ) :
 			message = self.__messages[ index.row() ]
 			# Keep info level messages white
 			suffix = "" if message.level == IECore.MessageHandler.Level.Info else str( message.level )
-			return GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "foreground%s" % suffix ) )
+			return GafferUI._StyleSheet.styleColor( "foreground%s" % suffix )

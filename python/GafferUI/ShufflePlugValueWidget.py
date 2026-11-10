@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ##########################################################################
 # ShufflePlug Widget
@@ -62,7 +62,7 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 		sourceWidget = GafferUI.PlugValueWidget.create( { p["source"] for p in self.getPlugs() } )
 		sourceWidget._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		if sourceWidget._qtWidget().layout() is not None :
-			sourceWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+			sourceWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 
 		self.__row.append( sourceWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
@@ -77,7 +77,7 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 		destinationWidget = GafferUI.PlugValueWidget.create( { p["destination"] for p in self.getPlugs() } )
 		destinationWidget._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		if destinationWidget._qtWidget().layout() is not None :
-			destinationWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+			destinationWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 		self.__row.append( destinationWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
 		deleteSourceWidget = GafferUI.BoolPlugValueWidget( { p["deleteSource"] for p in self.getPlugs() } )

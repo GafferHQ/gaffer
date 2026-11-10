@@ -45,7 +45,7 @@ import GafferUI
 import GafferImage
 import GafferImageUI
 
-from Qt import QtGui
+from PySide6 import QtGui
 
 Gaffer.Metadata.registerNode(
 

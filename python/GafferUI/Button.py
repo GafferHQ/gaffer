@@ -40,9 +40,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtGui
-from Qt import QtWidgets
-from Qt import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
+from PySide6 import QtCore
 
 class Button( GafferUI.Widget ) :
 
@@ -54,8 +54,8 @@ class Button( GafferUI.Widget ) :
 
 		self.__highlightForHover = False
 
-		self._qtWidget().setAttribute( QtCore.Qt.WA_LayoutUsesWidgetRect )
-		self._qtWidget().setFocusPolicy( QtCore.Qt.TabFocus )
+		self._qtWidget().setAttribute( QtCore.Qt.WidgetAttribute.WA_LayoutUsesWidgetRect )
+		self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.TabFocus )
 		# allow return and enter keys to click button
 		self._qtWidget().setAutoDefault( True )
 
@@ -119,8 +119,8 @@ class Button( GafferUI.Widget ) :
 
 		self._qtWidget().setProperty( "gafferWithFrame", hasFrame )
 		self._qtWidget().setSizePolicy(
-			QtWidgets.QSizePolicy.Minimum if hasFrame else QtWidgets.QSizePolicy.Fixed,
-			QtWidgets.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Policy.Minimum if hasFrame else QtWidgets.QSizePolicy.Policy.Fixed,
+			QtWidgets.QSizePolicy.Policy.Fixed
 		)
 		self._repolish()
 
@@ -156,7 +156,7 @@ class Button( GafferUI.Widget ) :
 
 		return not self._qtWidget().property( "gafferUnclickable" )
 
-	def __clicked( self, *unusedArgs ) : # currently PyQt passes a "checked" argument and PySide doesn't
+	def __clicked( self, *unusedArgs ) : # PySide passes a "checked" argument for checkable buttons
 
 		if not self.getClickable() :
 			return

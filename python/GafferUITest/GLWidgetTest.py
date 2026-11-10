@@ -40,7 +40,7 @@ import os
 
 import OpenGL.GL as GL
 
-from Qt import QtGui
+from PySide6 import QtGui
 
 import IECore
 

@@ -39,9 +39,9 @@ import enum
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 class BoolWidget( GafferUI.Widget ) :
 
@@ -112,17 +112,17 @@ class BoolWidget( GafferUI.Widget ) :
 
 		if state == self.State.Indeterminate :
 			self._qtWidget().setTristate( True )
-			self._qtWidget().setCheckState( QtCore.Qt.PartiallyChecked )
+			self._qtWidget().setCheckState( QtCore.Qt.CheckState.PartiallyChecked )
 		else :
 			self._qtWidget().setTristate( False )
-			self._qtWidget().setCheckState( QtCore.Qt.Checked if state else QtCore.Qt.Unchecked )
+			self._qtWidget().setCheckState( QtCore.Qt.CheckState.Checked if state else QtCore.Qt.CheckState.Unchecked )
 
 	def getState( self ) :
 
 		s = self._qtWidget().checkState()
-		if s == QtCore.Qt.Checked :
+		if s == QtCore.Qt.CheckState.Checked :
 			return True
-		elif s == QtCore.Qt.Unchecked :
+		elif s == QtCore.Qt.CheckState.Unchecked :
 			return False
 		else :
 			return self.State.Indeterminate
@@ -135,7 +135,7 @@ class BoolWidget( GafferUI.Widget ) :
 		)
 
 		if displayMode == self.DisplayMode.Tool :
-			self._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
+			self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.NoFocus )
 		else :
 			self._qtWidget().setFocusPolicy( self.__defaultFocusPolicy )
 
@@ -143,9 +143,7 @@ class BoolWidget( GafferUI.Widget ) :
 
 		return getattr(
 			self.DisplayMode,
-			GafferUI._Variant.fromVariant(
-				self._qtWidget().property( "gafferDisplayMode" )
-			)
+			self._qtWidget().property( "gafferDisplayMode" )
 		)
 
 	def setErrored( self, errored ) :
@@ -153,12 +151,12 @@ class BoolWidget( GafferUI.Widget ) :
 		if errored == self.getErrored() :
 			return
 
-		self._qtWidget().setProperty( "gafferError", GafferUI._Variant.toVariant( bool( errored ) ) )
+		self._qtWidget().setProperty( "gafferError", bool( errored ) )
 		self._repolish()
 
 	def getErrored( self ) :
 
-		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferError" ) ) or False
+		return self._qtWidget().property( "gafferError" ) or False
 
 	def stateChangedSignal( self ) :
 
@@ -179,7 +177,7 @@ class _CheckBox( QtWidgets.QCheckBox ) :
 		self.__hitMode = self.HitMode.CheckBox
 
 		self.setSizePolicy( QtWidgets.QSizePolicy(
-			QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
 		) )
 
 	def setHitMode( self, hitMode ) :

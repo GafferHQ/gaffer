@@ -39,8 +39,8 @@ import enum
 
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 ## \todo Support other list operations for child access
 class SplitContainer( GafferUI.ContainerWidget ) :
@@ -61,14 +61,14 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	def getOrientation( self ) :
 
 		o = self._qtWidget().orientation()
-		if o == QtCore.Qt.Horizontal :
+		if o == QtCore.Qt.Orientation.Horizontal :
 			return self.Orientation.Horizontal
 		else :
 			return self.Orientation.Vertical
 
 	def setOrientation( self, orientation ) :
 
-		v = QtCore.Qt.Horizontal if orientation == self.Orientation.Horizontal else QtCore.Qt.Vertical
+		v = QtCore.Qt.Orientation.Horizontal if orientation == self.Orientation.Horizontal else QtCore.Qt.Orientation.Vertical
 		self._qtWidget().setOrientation( QtCore.Qt.Orientation( v ) )
 
 	def append( self, child ) :
@@ -191,16 +191,16 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		# stay at a minimum size and then suddenly collapse to nothing when moving the splitter all
 		# the way. we store the original size policy on the widget and reapply it in removeChild().
 		widget.__originalSizePolicy = widget._qtWidget().sizePolicy()
-		widget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
+		widget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Ignored )
 
 	def __updateStyles( self ) :
 
 		# Had issues using ints
-		self._qtWidget().setProperty( "gafferNumChildren", GafferUI._Variant.toVariant( "%d" % len(self) ) )
+		self._qtWidget().setProperty( "gafferNumChildren", "%d" % len( self ) )
 		self._repolish()
 
 # We inherit from QSplitter purely so that the handles can be created
-# in Python rather than C++. This seems to help PyQt and PySide in tracking
+# in Python rather than C++. This seems to help PySide in tracking
 # the lifetimes of the splitter and handles.
 class _Splitter( QtWidgets.QSplitter ) :
 

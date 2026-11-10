@@ -43,7 +43,7 @@ import GafferUI
 import GafferUITest
 import GafferTest
 
-from Qt import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 class ButtonTest( GafferUITest.TestCase ) :
 
@@ -103,7 +103,7 @@ class ButtonTest( GafferUITest.TestCase ) :
 			self.assertEqual( len( clicks ), 0 )
 			position = QtCore.QPoint( 0, 0 )
 			QtWidgets.QApplication.sendEvent(
-				b._qtWidget(), QtGui.QContextMenuEvent( QtGui.QContextMenuEvent.Mouse, position, b._qtWidget().mapToGlobal( position ) )
+				b._qtWidget(), QtGui.QContextMenuEvent( QtGui.QContextMenuEvent.Reason.Mouse, position, b._qtWidget().mapToGlobal( position ) )
 			)
 			self.assertEqual( len( menus ), 1 )
 			b.setClickable( True )

@@ -46,9 +46,9 @@ import GafferTest
 import GafferUI
 import GafferUITest
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 class TestWidget( GafferUI.Widget ) :
 
@@ -180,7 +180,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		WidgetTest.signalsEmitted = 0
 
-		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 0, 0 ), QtCore.QPoint( 0, 0 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
+		event = QtGui.QMouseEvent( QtCore.QEvent.Type.MouseButtonPress, QtCore.QPoint( 0, 0 ), QtCore.QPoint( 0, 0 ), QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.KeyboardModifier.NoModifier )
 
 		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
 		self.assertEqual( WidgetTest.signalsEmitted, 1 )
@@ -614,6 +614,6 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		w.buttonPressSignal().connect( f )
 
-		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 10, 10 ), QtCore.QPoint( 10, 10 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
+		event = QtGui.QMouseEvent( QtCore.QEvent.Type.MouseButtonPress, QtCore.QPoint( 10, 10 ), QtCore.QPoint( 10, 10 ), QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.KeyboardModifier.NoModifier )
 
 		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )

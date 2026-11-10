@@ -42,8 +42,6 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-from Qt import QtGui
-
 class GridContainerTest( GafferUITest.TestCase ) :
 
 	def testSimpleSetItem( self ) :

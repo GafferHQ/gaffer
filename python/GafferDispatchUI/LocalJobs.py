@@ -47,8 +47,7 @@ import GafferDispatch
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtCore
-from Qt import QtGui
+from PySide6 import QtCore
 
 class _LocalJobsPath( Gaffer.Path ) :
 
@@ -221,7 +220,7 @@ class LocalJobs( GafferUI.Editor ) :
 					),
 					selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				)
-				self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+				self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.SortOrder.AscendingOrder )
 				self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ) )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=5 ) :

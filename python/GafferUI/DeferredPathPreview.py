@@ -43,7 +43,7 @@ import IECore
 
 import GafferUI
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 ## This abstract class provides a base for all PathPreviewWidgets which may
 # take some time in generating the preview, and would therefore like to do it

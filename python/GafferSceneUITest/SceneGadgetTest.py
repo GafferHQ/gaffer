@@ -54,8 +54,6 @@ import GafferUITest
 import GafferScene
 import GafferSceneUI
 
-import Qt
-
 class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	renderer = "OpenGL"
@@ -149,7 +147,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			while time.time() < timeout :
 				self.waitForIdle( 10 )
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
+	@unittest.skipIf( GafferTest.inCI(), "GL issues on CI with Qt 6" )
 	def testObjectVisibility( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -290,7 +288,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			s["p"]["dimensions"]["x"].setValue( i )
 			self.waitForIdle( 10 )
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
+	@unittest.skipIf( GafferTest.inCI(), "GL issues on CI with Qt 6" )
 	def testExceptionsDuringCompute( self ) :
 
 		# Make this scene
@@ -453,7 +451,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			[]
 		)
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
+	@unittest.skipIf( GafferTest.inCI(), "GL issues on CI with Qt 6" )
 	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	@unittest.skipIf( sys.platform == "darwin", "Depth buffer issues on macOS" )
 	def testObjectAtLine( self ) :
@@ -583,7 +581,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.setSelectionMask( None )
 		self.assertEqual( sg.getSelectionMask(), None )
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
+	@unittest.skipIf( GafferTest.inCI(), "GL issues on CI with Qt 6" )
 	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	def testSelectionMask( self ) :
 
@@ -711,7 +709,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		return origin + direction * t
 
-	@unittest.skipIf( GafferTest.inCI() and Qt.__binding__ == "PySide6", "GL issues on CI with Qt 6" )
+	@unittest.skipIf( GafferTest.inCI(), "GL issues on CI with Qt 6" )
 	@unittest.skipIf( os.name == "nt", "`objectAt()` fails for `GafferArnoldUITest` on Windows" )
 	@unittest.skipIf( sys.platform == "darwin", "Depth buffer issues on macOS" )
 	def testNormalAt( self ) :

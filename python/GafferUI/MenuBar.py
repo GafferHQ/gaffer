@@ -40,10 +40,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
-import Qt
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 import weakref
 
@@ -52,7 +51,7 @@ class MenuBar( GafferUI.Widget ) :
 	def __init__( self, definition, **kw ) :
 
 		menuBar = _MenuBar()
-		menuBar.setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed ) )
+		menuBar.setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed ) )
 		menuBar.setNativeMenuBar( False )
 
 		GafferUI.Widget.__init__( self, menuBar, **kw )
@@ -215,10 +214,7 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 
 	def __keySequence( self, keyEvent ) :
 
-		if Qt.__binding__ == "PySide6" :
-			return QtGui.QKeySequence( keyEvent.keyCombination() )
-		else :
-			return QtGui.QKeySequence( keyEvent.key() | int( keyEvent.modifiers() ) )
+		return QtGui.QKeySequence( keyEvent.keyCombination() )
 
 	def __matchingAction( self, keySequence, menu ) :
 

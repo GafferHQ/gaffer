@@ -45,8 +45,8 @@ import GafferUI
 
 import OpenGL.GL as GL
 
-from Qt import QtCore
-from Qt import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 ## The GadgetWidget class provides a means of
 # hosting a Gadget within a Widget based interface.
@@ -62,7 +62,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		# See comment in mouseMove
 		self.__overOverlay = False
 
-		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
+		self._qtWidget().setFocusPolicy( QtCore.Qt.FocusPolicy.ClickFocus )
 
 		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )

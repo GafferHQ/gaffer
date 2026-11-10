@@ -32,11 +32,13 @@ Fixes
 
 - Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
 - Viewer : Fixed crashes on macOS when using Arnold, Cycles or 3Delight as the viewport renderer.
+- Enums : Fixed conversion of `QtCore.Qt.AlignmentFlag.AlignJustify`.
 
 API
 ---
 
 - SceneAlgo : Functions for parallel scene traversal no longer require functors to be l-values, allowing lambdas to be passed inline.
+- GafferUI : Qt is now accessed directly via PySide6 rather than via Qt.py. Qt.py is still provided, but will be removed in a future release.
 
 Breaking Changes
 ----------------
@@ -64,6 +66,9 @@ Breaking Changes
 - PySide : Removed `PYSIDE63_OPTION_PYTHON_ENUM=0x08` override at startup.
 - RenderMan : Removed support for RenderMan 26.3 and 26.4.
 - Merge : Renamed `Mode` to `InputMode`.
+- GafferUI :
+  - Removed legacy compatibility code for PySide2 and PyQt.
+  - Removed `_Variant` class.
 
 Build
 -----
@@ -84,7 +89,9 @@ Build
 - OpenVDB : Updated to version 13.1.0.
 - PySide : Updated to version 6.8.5.
 - Python : Updated to version 3.13.16.
-- Qt : Updated to version 6.8.5.
+- Qt :
+  - Updated to version 6.8.5.
+  - Raised minimum required version to Qt 6.
 - TBB : Updated to version 2022.3.0.
 - ZLib : Updated to version 1.3.1.
 - Windows : Updated Windows SDK to version 10.0.22621.0.

@@ -39,8 +39,8 @@ import os
 import shutil
 import sys
 
-from Qt import QtCore
-from Qt import QtGui
+from PySide6 import QtCore
+from PySide6 import QtGui
 
 def showURL( url ) :
 
@@ -60,4 +60,4 @@ def showURL( url ) :
 			# as we need to strip them to produce a valid file path.
 			url = url[7:].partition( "#" )[0]
 
-		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
+		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.ParsingMode.TolerantMode ) )

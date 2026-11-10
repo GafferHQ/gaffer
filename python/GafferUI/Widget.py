@@ -46,10 +46,9 @@ import Gaffer
 import GafferUI
 from ._StyleSheet import _styleSheet
 
-from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
-import Qt
+from PySide6 import QtCore
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 
@@ -95,7 +94,7 @@ class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 # point. To avoid this problem a simple rule of thumb is to always connect signals to Gaffer.WeakMethod
 # instances referring to your methods.
 #
-# GafferUI.Widget subclasses are implemented using Qt widgets (using PySide or PyQt), but the public API
+# GafferUI.Widget subclasses are implemented using Qt widgets (using PySide), but the public API
 # exposed by the GafferUI classes never includes Qt functions or classes directly - this
 # allows the implementation to be changed in the future. Furthermore it allows the use
 # of the GafferUI module without learning all the Qt API. To enforce this separation,
@@ -166,7 +165,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			# more details:
 			# http://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working
 			if type( topLevelWidget ) == QtWidgets.QWidget :
-				self.__qtWidget.setAttribute( QtCore.Qt.WA_StyledBackground, True )
+				self.__qtWidget.setAttribute( QtCore.Qt.WidgetAttribute.WA_StyledBackground, True )
 		else :
 			self.__gafferWidget = topLevelWidget
 			self.__qtWidget = QtWidgets.QWidget()
@@ -182,7 +181,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			# event to be posted to the event loop. Before that is dealt with, a
 			# paint event draws a layout computed without the right constraints
 			# and we get flicker when the second round of layout completes.
-			self.__qtWidget.layout().setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+			self.__qtWidget.layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 			self.__qtWidget.layout().setContentsMargins( 0, 0, 0, 0 )
 			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
 
@@ -191,7 +190,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		# disable different focus appearance on os x
 		## \todo If we have a style class for Widget at some point, then perhaps
 		# this should go in there.
-		self.__qtWidget.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
+		self.__qtWidget.setAttribute( QtCore.Qt.WidgetAttribute.WA_MacShowFocusRect, False )
 
 		self._keyPressSignal = None
 		self._keyReleaseSignal = None
@@ -382,7 +381,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		if highlighted == self.getHighlighted() :
 			return
 
-		self._qtWidget().setProperty( "gafferHighlighted", GafferUI._Variant.toVariant( highlighted ) )
+		self._qtWidget().setProperty( "gafferHighlighted", highlighted )
 		self._repolish()
 
 	def getHighlighted( self ) :
@@ -390,7 +389,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		if "gafferHighlighted" not in self._qtWidget().dynamicPropertyNames() :
 			return False
 
-		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferHighlighted" ) )
+		return self._qtWidget().property( "gafferHighlighted" )
 
 	## Returns the GafferUI.Widget which is the parent for this
 	# Widget, or None if it has no parent.
@@ -1401,7 +1400,7 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __doDragEnterAndLeave( self, qObject, qEvent ) :
 
-		globalPosition = qEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else qEvent.globalPos()
+		globalPosition = qEvent.globalPosition().toPoint()
 		candidateWidget = Widget.widgetAt( imath.V2i( globalPosition.x(), globalPosition.y() ) )
 
 		newDestinationWidget = None
@@ -1550,7 +1549,7 @@ class _EventFilter( QtCore.QObject ) :
 				qWidget.mapFromGlobal( globalPos ),
 				globalPos,
 				QtCore.Qt.MouseButton.LeftButton,
-				QtCore.Qt.NoButton,
+				QtCore.Qt.MouseButton.NoButton,
 				qKeyEvent.modifiers()
 			)
 
@@ -1572,7 +1571,7 @@ class _EventFilter( QtCore.QObject ) :
 
 		if qEvent.mimeData().hasUrls() :
 			data = IECore.StringVectorData( [
-				url.toString( QtCore.QUrl.PrettyDecoded | QtCore.QUrl.PreferLocalFile )
+				url.toString( QtCore.QUrl.ComponentFormattingOption.PrettyDecoded | QtCore.QUrl.UrlFormattingOption.PreferLocalFile )
 				for url in qEvent.mimeData().urls()
 			] )
 		elif qEvent.mimeData().hasText() :
@@ -1580,16 +1579,16 @@ class _EventFilter( QtCore.QObject ) :
 		else :
 			return False
 
-		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		position = qEvent.position().toPoint()
 		cursorPos = imath.V2i( position.x(), position.y() )
 		dragDropEvent = GafferUI.DragDropEvent(
-			Widget._buttons( qEvent.buttons() if Qt.__binding__ == "PySide6" else qEvent.mouseButtons() ),
-			Widget._buttons( qEvent.buttons() if Qt.__binding__ == "PySide6" else qEvent.mouseButtons() ),
+			Widget._buttons( qEvent.buttons() ),
+			Widget._buttons( qEvent.buttons() ),
 			IECore.LineSegment3f(
 				imath.V3f( cursorPos.x, cursorPos.y, 1 ),
 				imath.V3f( cursorPos.x, cursorPos.y, 0 )
 			),
-			Widget._modifiers( qEvent.modifiers() if Qt.__binding__ == "PySide6" else qEvent.keyboardModifiers() ),
+			Widget._modifiers( qEvent.modifiers() ),
 		)
 		dragDropEvent.data = data
 		dragDropEvent.destinationWidget = None
@@ -1615,7 +1614,7 @@ class _EventFilter( QtCore.QObject ) :
 		if widget is None or widget._dragMoveSignal is None :
 			return False
 
-		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		position = qEvent.position().toPoint()
 		cursorPos = imath.V2i( position.x(), position.y() )
 		self.__foreignDragDropEvent.line = IECore.LineSegment3f(
 			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
@@ -1651,7 +1650,7 @@ class _EventFilter( QtCore.QObject ) :
 		if widget is None or widget._dropSignal is None :
 			return False
 
-		position = qEvent.position().toPoint() if Qt.__binding__ == "PySide6" else qEvent.pos()
+		position = qEvent.position().toPoint()
 		cursorPos = imath.V2i( position.x(), position.y() )
 		self.__foreignDragDropEvent.line = IECore.LineSegment3f(
 			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
@@ -1680,7 +1679,7 @@ class _EventFilter( QtCore.QObject ) :
 	# long distances.
 	def __widgetSpaceLine( self, qEvent, targetWidget ) :
 
-		globalPosition = qEvent.globalPosition().toPoint() if Qt.__binding__ == "PySide6" else qEvent.globalPos()
+		globalPosition = qEvent.globalPosition().toPoint()
 		cursorPos = imath.V2i( globalPosition.x(), globalPosition.y() )
 		cursorPos -= targetWidget.bound().min()
 

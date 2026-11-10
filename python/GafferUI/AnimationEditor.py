@@ -41,7 +41,7 @@ from GafferUI.PlugValueWidget import sole
 
 import imath
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 # In order to have Widgets that depend on this filter update properly, we
 # conceptually treat all selected nodes as part of the filter. That makes sense
@@ -144,7 +144,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		)
 
 		self.__curveList._qtWidget().setMinimumSize( 160, 0 )
-		self.__curveList._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored )
+		self.__curveList._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Ignored )
 		self.__curveList.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ) )
 		self.__selectionChangedConnection = self.__curveList.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ) )
 

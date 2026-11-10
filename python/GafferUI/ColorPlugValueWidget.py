@@ -42,7 +42,7 @@ import GafferUI
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtCore
+from PySide6 import QtCore
 
 class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 

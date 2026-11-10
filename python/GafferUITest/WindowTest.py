@@ -49,8 +49,8 @@ import GafferTest
 import GafferUI
 import GafferUITest
 
-from Qt import QtGui
-from Qt import QtWidgets
+from PySide6 import QtGui
+from PySide6 import QtWidgets
 
 class TestWidget( GafferUI.Widget ) :
 

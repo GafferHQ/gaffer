@@ -39,8 +39,8 @@
 import Gaffer
 import GafferUI
 
-from Qt import QtCore
-from Qt import QtGui
+from PySide6 import QtCore
+from PySide6 import QtGui
 
 class CaptureEditorTool( Gaffer.MCP.BasicTool ) :
 
@@ -127,15 +127,15 @@ class CaptureEditorTool( Gaffer.MCP.BasicTool ) :
 		if max( image.width(), image.height() ) > maxSize :
 			image = image.scaled(
 				maxSize, maxSize,
-				QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
+				QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation
 			)
 
 		# We don't want any transparency, which clients might display
 		# inconsistently.
-		image = image.convertToFormat( QtGui.QImage.Format_RGB888 )
+		image = image.convertToFormat( QtGui.QImage.Format.Format_RGB888 )
 
 		buffer = QtCore.QBuffer()
-		buffer.open( QtCore.QIODevice.WriteOnly )
+		buffer.open( QtCore.QIODevice.OpenModeFlag.WriteOnly )
 		image.save( buffer, "PNG" )
 
 		return bytes( buffer.data() ), image.size()

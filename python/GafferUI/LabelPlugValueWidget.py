@@ -39,7 +39,7 @@ import GafferUI
 
 from GafferUI.PlugValueWidget import sole
 
-from Qt import QtWidgets
+from PySide6 import QtWidgets
 
 ## A simple PlugValueWidget which just displays the name of the plug,
 # with the popup action menu for the plug.
@@ -61,7 +61,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		layout = QtWidgets.QHBoxLayout()
 		layout.setContentsMargins( 0, 0, 0, 0 )
-		layout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
+		layout.setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize )
 		self._qtWidget().setLayout( layout )
 
 		self.__label = GafferUI.NameLabel(
@@ -147,9 +147,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def setFixedWidth( self, width ) :
 
-		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SizeConstraint.SetDefaultConstraint )
 		self._qtWidget().setFixedWidth( width )
-		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred )
+		self.__label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred )
 
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
@@ -199,7 +199,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if valueChanged == self.__getValueChanged() :
 			return
 
-		self.__label._qtWidget().setProperty( "gafferValueChanged", GafferUI._Variant.toVariant( valueChanged ) )
+		self.__label._qtWidget().setProperty( "gafferValueChanged", valueChanged )
 		self.__label._repolish()
 
 	def __getValueChanged( self ) :
@@ -207,7 +207,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if "gafferValueChanged" not in self.__label._qtWidget().dynamicPropertyNames() :
 			return False
 
-		return GafferUI._Variant.fromVariant( self.__label._qtWidget().property( "gafferValueChanged" ) )
+		return self.__label._qtWidget().property( "gafferValueChanged" )
 
 	def __dragBegin( self, widget, event ) :
 
