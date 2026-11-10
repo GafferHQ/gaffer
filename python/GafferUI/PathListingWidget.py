@@ -339,6 +339,14 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return _GafferUI._pathListingWidgetGetColumns( GafferUI._qtAddress( self._qtWidget() ) )
 
+	def setCompactColumns( self, compactColumns ) :
+
+		self._qtWidget().setCompactColumns( compactColumns )
+
+	def getCompactColumns( self ) :
+
+		return self._qtWidget().getCompactColumns()
+
 	def setHeaderVisible( self, visible ) :
 
 		self._qtWidget().header().setVisible( visible )
@@ -1036,12 +1044,14 @@ class _TreeView( QtWidgets.QTreeView ) :
 		self.header().geometriesChanged.connect( self.updateGeometry )
 		self.header().sectionResized.connect( self.__sectionResized )
 
+		self.header().setTextElideMode( QtCore.Qt.ElideRight )
 		# Disable Qt's stretchLastSection behaviour as it will claim any available space in the header
 		# before our stretch columns have a chance to resize themselves. We control our own equivalent
 		# behaviour based on the result of _shouldStretchLastColumn()
 		self.header().setStretchLastSection( False )
 		# width of the last column after being automatically stretched to use available space
 		self.__lastColumnWidth = 0
+		self.__compactColumns = False
 
 		self.__recalculatingColumnWidths = False
 
@@ -1185,6 +1195,19 @@ class _TreeView( QtWidgets.QTreeView ) :
 			# directly ourselves. That triggers a layout update to account for the
 			# fact that our `sizeHint()` will have changed.
 			self.updateGeometry()
+
+	def setCompactColumns( self, compactColumns ) :
+
+		if compactColumns == self.__compactColumns :
+			return
+
+		self.__compactColumns = compactColumns
+		self.header().setCompact( compactColumns )
+		self.updateColumnWidths( columnsChanged = True )
+
+	def getCompactColumns( self ) :
+
+		return self.__compactColumns
 
 	def keyPressEvent( self, event ) :
 

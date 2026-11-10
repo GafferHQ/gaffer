@@ -135,18 +135,26 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
 		self.assertEqual( c.headerData( path ).value, "Label" )
 		self.assertEqual( c.headerData( path ).toolTip, "help!" )
+		self.assertEqual( c.headerData( path ).abbreviation, None )
+
+		c = GafferSceneUI.Private.InspectorColumn( inspector, "label", "help!", "Lbl" )
+		self.assertEqual( c.headerData( path ).value, "Label" )
+		self.assertEqual( c.headerData( path ).toolTip, "help!" )
+		self.assertEqual( c.headerData( path ).abbreviation, "Lbl" )
 
 		c = GafferSceneUI.Private.InspectorColumn( inspector, "Fancy ( Label )", "" )
 		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
 		self.assertEqual( c.headerData( path ).value, "Fancy ( Label )" )
 		self.assertEqual( c.headerData( path ).toolTip, "" )
+		self.assertEqual( c.headerData( path ).abbreviation, None )
 
 		c = GafferSceneUI.Private.InspectorColumn( inspector )
 		self.assertEqual( c.inspector( path ), inspector )
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
 		self.assertEqual( c.headerData( path ).value, "Gl:visualiser:scale" )
 		self.assertEqual( c.headerData( path ).toolTip, "" )
+		self.assertEqual( c.headerData( path ).abbreviation, None )
 
 		c = GafferSceneUI.Private.InspectorColumn(
 			inspector,
@@ -157,6 +165,18 @@ class InspectorColumnTest( GafferUITest.TestCase ) :
 		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
 		self.assertEqual( c.headerData( path ).value, "Fancy ( Label )" )
 		self.assertEqual( c.headerData( path ).toolTip, "help!" )
+		self.assertEqual( c.headerData( path ).abbreviation, None )
+
+		c = GafferSceneUI.Private.InspectorColumn(
+			inspector,
+			GafferUI.PathColumn.CellData( value = "Fancy ( Label )", abbreviation = "F" ),
+			GafferUI.PathColumn.SizeMode.Stretch
+		)
+		self.assertEqual( c.inspector( path ), inspector )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
+		self.assertEqual( c.headerData( path ).value, "Fancy ( Label )" )
+		self.assertEqual( c.headerData( path ).toolTip, None )
+		self.assertEqual( c.headerData( path ).abbreviation, "F" )
 
 	def testObjectMatrixFromSelection( self ) :
 

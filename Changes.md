@@ -104,6 +104,8 @@ Improvements
 
 - DeepMerge : Added `Collect` mode to accumulate inputs by evaluating input plugs in multiple contexts.
 - MeshSegments : Added `ignoreMissing` plug.
+- PathListingWidget, SpreadsheetUI : Header text is now elided rather than truncated. A default tooltip now shows the full text of the header.
+- LightEditor, RenderPassEditor, AttributeEditor : Added `compactColumns` toggle. When on, columns are sized based on their values instead of also considering the header text, so that more columns may fit on screen at once. Columns too narrow to show the header display an abbreviated form, such as `Max Bounces` becoming `MB`.
 
 Fixes
 -----
@@ -118,6 +120,8 @@ API
 ---
 
 - Merge : Renamed `mode` to `inputMode`.
+- PathListingWidget : Added `setCompactColumns()` and `getCompactColumns()`, which size columns to only fit their values and disregard their header text.
+- PathColumn : Added `CellData::abbreviation` member.
 
 1.7.6.0 (relative to 1.7.5.0)
 =======
