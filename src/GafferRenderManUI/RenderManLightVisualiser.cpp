@@ -445,6 +445,10 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 	const Color3f gamma = parameterOrDefault( lightParameters, g_colorMapGammaParameter, V3f( 1.f ) );
 
 	const std::string visualiserDrawingMode = parameterOrDefault( attributes, g_glLightDrawingModeString, std::string( "texture" ) );
+	if( visualiserDrawingMode == "none" )
+	{
+		return {};
+	}
 
 	const bool drawShaded = visualiserDrawingMode != "wireframe";
 	const bool drawTextured = visualiserDrawingMode == "texture";

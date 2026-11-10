@@ -221,6 +221,10 @@ Visualisations CookieVisualiser::visualise( const InternedString &attributeName,
 
 	const StringData *visualiserDrawingModeData = attributes->member<StringData>( "gl:light:drawingMode" );
 	const std::string visualiserDrawingMode = visualiserDrawingModeData ? visualiserDrawingModeData->readable() : "texture";
+	if( visualiserDrawingMode == "none" )
+	{
+		return {};
+	}
 
 	const CompoundData *filterParameters = filterShaderNetwork->outputShader()->parametersData();
 

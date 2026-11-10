@@ -163,6 +163,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	const float frustumScale = frustumScaleData ? frustumScaleData->readable() : 1.0;
 	const StringData *visualiserDrawingModeData = attributes->member<StringData>( g_glLightDrawingModeString );
 	const std::string visualiserDrawingMode = visualiserDrawingModeData ? visualiserDrawingModeData->readable() : "texture";
+	if( visualiserDrawingMode == "none" )
+	{
+		return {};
+	}
 
 	const bool drawShaded = visualiserDrawingMode != "wireframe";
 	const bool drawTextured = visualiserDrawingMode == "texture";
