@@ -121,9 +121,9 @@ class MeshSegmentsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( formatUniform( segmentAsGrid, 29 ).splitlines(), [ i[30:59] for i in expected.splitlines()[1:] ] )
 
-		# Instead of using the name of a vertex primvar, we get the same result by passing no prim var
+		# If we pass no prim var, the node has no effect
 		s["connectivity"].setValue( "" )
-		self.assertEqual( s["out"].object( "/plane" )["segment"].data, segment )
+		self.assertEqual( s["out"].object( "/plane" ), s["in"].object( "/plane" ) )
 
 
 		# Test segmenting based on a face-varying primVar
@@ -190,15 +190,15 @@ class MeshSegmentsTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, "Uniform primitive variable unindexedUniform must be indexed in order to use as connectivity." ) :
 			s["out"].object( "/object" )
 
-		# We can segment even this bad mesh by its vertex connectivity specifying no primvar
-		s["connectivity"].setValue( "" )
-		self.assertEqual( s["out"].object( "/object" )["segment"].data, IECore.IntVectorData( [0, 1] ) )
-
 		# And segmenting by a const primvar always puts everything in one segment
 		s["connectivity"].setValue( "const" )
 		self.assertEqual( s["out"].object( "/object" )["segment"].data, IECore.IntVectorData( [0, 0] ) )
 
-		# Using a bad primvar with `ignoreMissing` has no effect on the object
+		# Specifying no primvar means the node has no effect on the object
+		s["connectivity"].setValue( "" )
+		self.assertEqual( s["out"].object( "/object" ), s["in"].object( "/object" ) )
+
+		# Using a bad primvar with `ignoreMissing` also has no effect on the object
 		s["connectivity"].setValue( "doesNotExist" )
 		s["ignoreMissing"].setValue( True )
 		self.assertEqual( s["out"].object( "/object" ), s["in"].object( "/object" ) )

@@ -244,12 +244,7 @@ IECore::ConstObjectPtr MeshSegments::computeProcessedObject( const ScenePath &pa
 
 	if( connectivityPrimVar == "" )
 	{
-		uniformSegmentsData = new IntVectorData();
-		segmentIndices(
-			verticesPerFace, mesh->vertexIds()->readable(),
-			mesh->variableSize( PrimitiveVariable::Interpolation::Vertex ),
-			uniformSegmentsData->writable()
-		);
+		return inputObject;
 	}
 	else
 	{
