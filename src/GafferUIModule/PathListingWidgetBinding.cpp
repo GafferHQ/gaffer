@@ -2691,11 +2691,8 @@ void GafferUIModule::bindPathListingWidget()
 {
 	// Ideally we'd bind PathModel so it could be used in
 	// the normal fashion from Python. But that would mean
-	// using SIP or Shiboken to make bindings compatible
-	// with PyQt or PySide. It would also mean each Gaffer
-	// build would only be compatible with one or the other
-	// of the Qt bindings, whereas we want a single build
-	// to be compatible with either. We therefore simply
+	// using Shiboken to make bindings compatible with PySide.
+	// To avoid complicating our toolchain with that, we simply
 	// bind the minimum set of methods we need as free
 	// functions and then use them from within PathListingWidget.py.
 
