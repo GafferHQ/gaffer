@@ -72,6 +72,16 @@ Gaffer.Metadata.registerNode(
 			"layout:section" : "Settings.Inputs"
 		},
 
+		"ignoreMissing" : {
+
+			"description" :
+			"""
+			Ignores meshes that are missing the `connectivity` primitive variable, leaving them unchanged. When
+			off, missing primitive variables cause the node to error.
+			""",
+			"layout:section" : "Settings.Inputs"
+		},
+
 		"segment" : {
 
 			"description" :
