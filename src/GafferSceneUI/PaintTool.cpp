@@ -1894,16 +1894,29 @@ void PaintTool::paint( const IECore::InternedString &variableName, const M44f &p
 
 	const float* depthMap = m_depthRender->finishRendering();
 
-	for( auto &l : locationCaches() )
-	{
-		if( l->hasMesh() )
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	const ThreadState &threadState = ThreadState::current();
+
+	PaintTool::LocationCacheVector &locations = locationCaches();
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, locations.size() ),
+		[&]( const tbb::blocked_range<size_t> &r )
 		{
-			l->paintToCurrentStroke(
-				paintMatrix, l->fullTransform(),
-				value, hardness, resolution, depthMap
-			);
-		}
-	}
+			ThreadState::Scope threadStateScope( threadState );
+
+			for( size_t i = r.begin(); i != r.end(); ++i )
+			{
+				if( locations[i]->hasMesh() )
+				{
+					locations[i]->paintToCurrentStroke(
+						paintMatrix, locations[i]->fullTransform(),
+						value, hardness, resolution, depthMap
+					);
+				}
+			}
+		},
+
+		taskGroupContext
+	);
 }
 
 void PaintTool::applyCurrentStroke()
