@@ -2108,7 +2108,19 @@ void PaintTool::selectionChanged()
 	{
 		m_selectionDirty = true;
 		statusChangedSignal()( *this );
-		updateCursor();
+
+		// Changing the selection could result in no editable objects being selected,
+		// which should result in the cursor being updated.
+		//
+		// But if we called updateCursor() here, then that would call locationCaches()
+		// and force an immediate compute and clear the dirty flag ... which would mean
+		// that multiple calls to selectionChanged could result in locationCaches()
+		// being computed multiple times, which could be a substantial waste of time.
+		//
+		// The simplest fix for the moment is simply to not call updateCursor here,
+		// since currently any UI interaction that could result in the selection being
+		// changed ( like clicking, pressing a key, moving the mouse to a different UI )
+		// already triggers an updateCursor of its own.
 	}
 }
 
