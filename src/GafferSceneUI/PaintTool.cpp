@@ -1322,7 +1322,7 @@ class PaintTool::PaintGadget : public Gadget
 
 		void renderForDepth() const
 		{
-			renderLayer( Gadget::Layer::MidFront, nullptr, Gadget::RenderReason::Draw );
+			renderLayer( Gadget::Layer::Main, nullptr, Gadget::RenderReason::Draw );
 		}
 
 	protected:
@@ -1330,7 +1330,7 @@ class PaintTool::PaintGadget : public Gadget
 		void renderLayer( Gadget::Layer layer, const Style *style, Gadget::RenderReason reason ) const override
 		{
 			if(
-				( layer != Gadget::Layer::MidFront )
+				( layer != Gadget::Layer::Main )
 				|| Gadget::isSelectionRender( reason )
 			)
 			{
@@ -1343,7 +1343,7 @@ class PaintTool::PaintGadget : public Gadget
 				return;
 			}
 
-			if( layer == Gadget::Layer::MidFront )
+			if( layer == Gadget::Layer::Main )
 			{
 				renderPaintVisualiser();
 			}
@@ -1361,7 +1361,7 @@ class PaintTool::PaintGadget : public Gadget
 
 		unsigned layerMask() const override
 		{
-			return m_tool ? static_cast< unsigned >( Gadget::Layer::MidFront ) : static_cast< unsigned >( 0 );
+			return m_tool ? static_cast< unsigned >( Gadget::Layer::Main ) : static_cast< unsigned >( 0 );
 		}
 
 	private:
