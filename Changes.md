@@ -10,7 +10,7 @@ Features
 Improvements
 ------------
 
-- USD : Registered USD surface shaders as OSL-compatible. Matching plugs can connect, and a `V3f` output still does not connect to a color input.
+- USD : Registered USD surface shaders as OSL-compatible. Matching plugs can connect, including a `V3f` output into a color input.
 - USD : UsdGeomPointInstancers now always render as optimised native PointInstancer objects. The legacy adaptor which rendered them via an Instancer node has been removed, along with the Viewer's "Expand USD Instancers" menu item.
 - Transform : Added an `extraTransform` plug, allowing an expression to specify the transform as an `M44f` rather than separate translate, rotate and scale components.
 - BoolPlug : Added support for connections from array-valued plugs such as StringVectorDataPlug. The BoolPlug's value is true when the input array is non-empty, and false when the input array is empty.

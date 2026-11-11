@@ -294,7 +294,7 @@ class USDShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( floatToColor["parameters"]["r"].acceptsInput( texture["out"]["r"] ) )
 		self.assertTrue( vectorToColor["parameters"]["vec"].acceptsInput( texture["out"]["rgb"] ) )
-		self.assertFalse( constant["parameters"]["Cs"].acceptsInput( texture["out"]["rgb"] ) )
+		self.assertTrue( constant["parameters"]["Cs"].acceptsInput( texture["out"]["rgb"] ) )
 
 		texture["type"].setValue( "not-osl" )
 		self.assertFalse( floatToColor["parameters"]["r"].acceptsInput( texture["out"]["r"] ) )
