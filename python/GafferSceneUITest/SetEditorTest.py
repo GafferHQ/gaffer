@@ -312,6 +312,13 @@ class SetEditorTest( GafferUITest.TestCase ) :
 		with self.assertRaises( IECore.Cancelled ) :
 			path.isLeaf( canceller )
 
+		plane["sets"].setValue( "A" )
+		path.setFromString( "/A" )
+		for name in path.propertyNames() :
+			if name.startswith( "setPath:" ) :
+				with self.assertRaises( IECore.Cancelled ) :
+					path.property( name, canceller )
+
 	def testSearchFilter( self ) :
 
 		plane = GafferScene.Plane()
