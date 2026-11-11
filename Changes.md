@@ -18,6 +18,7 @@ Fixes
 - Editor : Exceptions thrown by slots connected to `instanceCreatedSignal()` are now caught and reported, rather than stopping execution.
 - RenderMan : Fixed non-deterministic ordering of output definitions.
 - Viewer : Fixed rendering of volumes and camera-visible environment lights in the raytraced viewport (#4783).
+- PaintTool : The Viewer's display transform is now correctly applied to the painted values.
 
 API
 ---

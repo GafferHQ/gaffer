@@ -1322,7 +1322,7 @@ class PaintTool::PaintGadget : public Gadget
 
 		void renderForDepth() const
 		{
-			renderLayer( Gadget::Layer::MidFront, nullptr, Gadget::RenderReason::Draw );
+			renderLayer( Gadget::Layer::Main, nullptr, Gadget::RenderReason::Draw );
 		}
 
 	protected:
@@ -1330,7 +1330,7 @@ class PaintTool::PaintGadget : public Gadget
 		void renderLayer( Gadget::Layer layer, const Style *style, Gadget::RenderReason reason ) const override
 		{
 			if(
-				( layer != Gadget::Layer::MidFront )
+				( layer != Gadget::Layer::Main )
 				|| Gadget::isSelectionRender( reason )
 			)
 			{
@@ -1343,7 +1343,7 @@ class PaintTool::PaintGadget : public Gadget
 				return;
 			}
 
-			if( layer == Gadget::Layer::MidFront )
+			if( layer == Gadget::Layer::Main )
 			{
 				renderPaintVisualiser();
 			}
@@ -1361,7 +1361,7 @@ class PaintTool::PaintGadget : public Gadget
 
 		unsigned layerMask() const override
 		{
-			return m_tool ? static_cast< unsigned >( Gadget::Layer::MidFront ) : static_cast< unsigned >( 0 );
+			return m_tool ? static_cast< unsigned >( Gadget::Layer::Main ) : static_cast< unsigned >( 0 );
 		}
 
 	private:
@@ -1894,16 +1894,29 @@ void PaintTool::paint( const IECore::InternedString &variableName, const M44f &p
 
 	const float* depthMap = m_depthRender->finishRendering();
 
-	for( auto &l : locationCaches() )
-	{
-		if( l->hasMesh() )
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	const ThreadState &threadState = ThreadState::current();
+
+	PaintTool::LocationCacheVector &locations = locationCaches();
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, locations.size() ),
+		[&]( const tbb::blocked_range<size_t> &r )
 		{
-			l->paintToCurrentStroke(
-				paintMatrix, l->fullTransform(),
-				value, hardness, resolution, depthMap
-			);
-		}
-	}
+			ThreadState::Scope threadStateScope( threadState );
+
+			for( size_t i = r.begin(); i != r.end(); ++i )
+			{
+				if( locations[i]->hasMesh() )
+				{
+					locations[i]->paintToCurrentStroke(
+						paintMatrix, locations[i]->fullTransform(),
+						value, hardness, resolution, depthMap
+					);
+				}
+			}
+		},
+
+		taskGroupContext
+	);
 }
 
 void PaintTool::applyCurrentStroke()
