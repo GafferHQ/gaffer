@@ -334,8 +334,7 @@ const IECore::InternedString g_surface( "surface" );
 const IECore::InternedString g_displacement( "displacement" );
 
 // USD pattern and surface shaders, including UsdUVTexture, use this type.
-// One registration covers the family. A V3f output can then connect to an
-// OSL color input, because a color plug accepts three floats.
+// One registration covers the family.
 const bool g_oslRegistrationSurface = GafferOSL::OSLShader::registerCompatibleShader( g_surface );
 
 } // namespace
