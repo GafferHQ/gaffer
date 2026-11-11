@@ -306,7 +306,10 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 				return true;
 			}
 
-			return false;
+			// The source is not OSL. Plug compatibility still rejects a
+			// mismatched type, so a USD shader such as UsdUVTexture can
+			// connect to a matching OSL input.
+			return true;
 		}
 	}
 
