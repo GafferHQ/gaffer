@@ -306,10 +306,19 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 				return true;
 			}
 
-			// The source is not OSL. Plug compatibility still rejects a
-			// mismatched type, so a USD shader such as UsdUVTexture can
-			// connect to a matching OSL input.
-			return true;
+			// Accept a color. The 3-float color output is a V3f plug.
+			if(
+				plug->isInstanceOf( Color3fPlug::staticTypeId() ) &&
+				(
+					inputPlug->isInstanceOf( Color3fPlug::staticTypeId() ) ||
+					inputPlug->isInstanceOf( V3fPlug::staticTypeId() )
+				)
+			)
+			{
+				return true;
+			}
+
+			return false;
 		}
 	}
 
