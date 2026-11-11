@@ -300,25 +300,8 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 			{
 				sourceShaderType = sourceShader->typePlug()->getValue();
 			}
-			const ShaderTypeSet &cs = compatibleShaders();
-			if( cs.find( sourceShaderType ) != cs.end() )
-			{
-				return true;
-			}
-
-			// Accept a color. The 3-float color output is a V3f plug.
-			if(
-				plug->isInstanceOf( Color3fPlug::staticTypeId() ) &&
-				(
-					inputPlug->isInstanceOf( Color3fPlug::staticTypeId() ) ||
-					inputPlug->isInstanceOf( V3fPlug::staticTypeId() )
-				)
-			)
-			{
-				return true;
-			}
-
-			return false;
+			const ShaderTypeSet &shaderCompat = compatibleShaders();
+			return shaderCompat.find( sourceShaderType ) != shaderCompat.end();
 		}
 	}
 

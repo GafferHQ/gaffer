@@ -274,3 +274,27 @@ class USDShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( "exposure" in shader["parameters"] )
 		self.assertEqual( shader["out"].typeId(), Gaffer.Plug.staticTypeId() )
+
+	def testOSLConnection( self ) :
+
+		import GafferOSL
+
+		texture = GafferUSD.USDShader()
+		texture.loadShader( "UsdUVTexture" )
+		self.assertEqual( texture["type"].getValue(), "surface" )
+
+		floatToColor = GafferOSL.OSLShader()
+		floatToColor.loadShader( "Conversion/FloatToColor" )
+
+		vectorToColor = GafferOSL.OSLShader()
+		vectorToColor.loadShader( "Conversion/VectorToColor" )
+
+		constant = GafferOSL.OSLShader()
+		constant.loadShader( "Surface/Constant" )
+
+		self.assertTrue( floatToColor["parameters"]["r"].acceptsInput( texture["out"]["r"] ) )
+		self.assertTrue( vectorToColor["parameters"]["vec"].acceptsInput( texture["out"]["rgb"] ) )
+		self.assertFalse( constant["parameters"]["Cs"].acceptsInput( texture["out"]["rgb"] ) )
+
+		texture["type"].setValue( "not-osl" )
+		self.assertFalse( floatToColor["parameters"]["r"].acceptsInput( texture["out"]["r"] ) )
