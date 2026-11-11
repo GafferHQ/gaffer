@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import inspect
+import threading
+
 import imath
 
 import IECore
@@ -443,3 +446,51 @@ class SetEditorTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( script, IECore.PathMatcher( [] ) )
 		self.assertEqual( [ str( c ) for c in path.children() ], [] )
+
+	def testEmptySetFilterCancellation( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		script["slowFilter"] = GafferScene.PathFilter()
+
+		SetEditorTest._slowFilterExpressionStarted = threading.Event()
+
+		script["slowFilterExpression"] = Gaffer.Expression()
+		script["slowFilterExpression"].setExpression( inspect.cleandoc(
+			"""
+			import GafferSceneUITest
+			GafferSceneUITest.SetEditorTest._slowFilterExpressionStarted.set()
+			while True :
+				IECore.Canceller.check( context.canceller() )
+			parent["slowFilter"]["paths"] = IECore.StringVectorData( [ "/plane" ] )
+			"""
+		) )
+
+		script["set"] = GafferScene.Set()
+		script["set"]["in"].setInput( script["plane"]["out"] )
+		script["set"]["filter"].setInput( script["slowFilter"]["out"] )
+		script["set"]["name"].setValue( "A" )
+
+		path = _GafferSceneUI._SetEditor.SetPath( script["set"]["out"], script.context(), "/" )
+
+		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( script )
+		path.setFilter( emptySetFilter )
+
+		canceller = IECore.Canceller()
+
+		# Launch a background task to get the children from the path, using
+		# our canceller.
+
+		task = Gaffer.ParallelAlgo.callOnBackgroundThread( None, lambda : path.children( canceller ) )
+
+		# Wait until we get into `slowFilterExpression`. This will only happen
+		# after `emptySetFilter` has queried the set.
+
+		SetEditorTest._slowFilterExpressionStarted.wait()
+
+		# Cancel, and check it worked.
+
+		canceller.cancel()
+		task.wait()
+		self.assertEqual( task.status(), task.Status.Cancelled )

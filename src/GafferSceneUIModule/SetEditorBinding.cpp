@@ -566,7 +566,7 @@ class VisibleSetInclusionsColumn : public PathColumn
 				return result;
 			}
 
-			const auto setName = runTimeCast<const IECore::StringData>( setPath->property( g_setNamePropertyName ) );
+			const auto setName = runTimeCast<const IECore::StringData>( setPath->property( g_setNamePropertyName, canceller ) );
 			if( !setName )
 			{
 				// We only interact with locations representing sets
@@ -806,7 +806,7 @@ class VisibleSetExclusionsColumn : public PathColumn
 				return result;
 			}
 
-			const auto setName = runTimeCast<const IECore::StringData>( setPath->property( g_setNamePropertyName ) );
+			const auto setName = runTimeCast<const IECore::StringData>( setPath->property( g_setNamePropertyName, canceller ) );
 			if( !setName )
 			{
 				// We only interact with locations representing sets
@@ -1009,26 +1009,26 @@ class SetEditorSearchFilter : public Gaffer::PathFilter
 				std::remove_if(
 					paths.begin(),
 					paths.end(),
-					[this] ( const auto &p ) { return remove( p ); }
+					[this, canceller] ( const auto &p ) { return remove( p, canceller ); }
 				),
 				paths.end()
 			);
 		}
 
-		bool remove( PathPtr path ) const
+		bool remove( PathPtr path, const IECore::Canceller *canceller ) const
 		{
 			if( !path->names().size() )
 			{
 				return true;
 			}
 
-			bool leaf = path->isLeaf();
+			bool leaf = path->isLeaf( canceller );
 			if( !leaf )
 			{
 				std::vector<PathPtr> c;
-				path->children( c );
+				path->children( c, canceller );
 
-				leaf = std::all_of( c.begin(), c.end(), [this] ( const auto &p ) { return remove( p ); } );
+				leaf = std::all_of( c.begin(), c.end(), [this, canceller] ( const auto &p ) { return remove( p, canceller ); } );
 			}
 
 			const bool match = IECore::StringAlgo::matchMultiple( path->names().back().string(), m_wildcardPattern );
@@ -1087,17 +1087,17 @@ class SetEditorEmptySetFilter : public Gaffer::PathFilter
 				return true;
 			}
 
-			bool leaf = path->isLeaf();
+			bool leaf = path->isLeaf( canceller );
 			if( !leaf )
 			{
 				std::vector<PathPtr> c;
-				path->children( c );
+				path->children( c, canceller );
 
 				leaf = std::all_of( c.begin(), c.end(), [this, canceller] ( const auto &p ) { return remove( p, canceller ); } );
 			}
 
 			bool members = false;
-			if( auto set = runTimeCast<const PathMatcherData>( path->property( g_setPropertyName ) ) )
+			if( auto set = runTimeCast<const PathMatcherData>( path->property( g_setPropertyName, canceller ) ) )
 			{
 				if( m_selectedPathsChangedConnection.connected() )
 				{
