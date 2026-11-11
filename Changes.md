@@ -1,7 +1,10 @@
 1.7.x.x (relative to 1.7.7.0)
 =======
 
+Improvements
+------------
 
+- MeshSplit : Added `ignoreMissing` plug.
 
 1.7.7.0 (relative to 1.7.6.0)
 =======

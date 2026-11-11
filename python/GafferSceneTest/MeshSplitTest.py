@@ -294,6 +294,20 @@ class MeshSplitTest( GafferSceneTest.SceneTestCase ) :
 		meshSplit["nameFromSegment"].setValue( True )
 		self.assertEqual( meshSplit["out"].childNames( "/object" ), IECore.InternedStringVectorData( [ "%i"%i for i in range( 0, 800, 2 )] ) )
 
+	def testIgnoreMissing( self ) :
+
+		c = GafferScene.Cube()
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		meshSplit = GafferScene.MeshSplit()
+		meshSplit["in"].setInput( c["out"] )
+		meshSplit["filter"].setInput( f["out"] )
+		meshSplit["ignoreMissing"].setValue( True )
+
+		self.assertScenesEqual( meshSplit["out"], meshSplit["in"] )
+
 	def testWithSegment( self ) :
 
 		r = GafferScene.SceneReader()
