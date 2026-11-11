@@ -61,13 +61,13 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			The name of the primitive variable which will determine the segmentation.
-			You may specify an empty string, or any vertex primitive variable to use
-			the vertex topology to determine segments, or use an indexed face-varying
-			primitive variable - this will segment based on which face-vertices are
-			connected ( for example, using indexed UVs will produce UV islands ).
-			Uniform and constant primitive variables are also supported for consistency,
-			but they just output which faces have the same uniform value, or put all
-			faces in one segment.
+			You may specify any vertex primitive variable to use the vertex topology
+			to determine segments, or use an indexed face-varying primitive variable
+			- this will segment based on which face-vertices are connected ( for
+			example, using indexed UVs will produce UV islands ).  Uniform and constant
+			primitive variables are also supported for consistency, but they just
+			output which faces have the same uniform value, or put all faces in one
+			segment. Using an empty string disables this node.
 			""",
 			"layout:section" : "Settings.Inputs"
 		},
