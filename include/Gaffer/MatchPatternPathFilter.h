@@ -78,7 +78,7 @@ class GAFFER_API MatchPatternPathFilter : public Gaffer::PathFilter
 	private :
 
 		bool invert( bool b ) const;
-		bool remove( PathPtr path ) const;
+		bool remove( PathPtr path, const IECore::Canceller *canceller ) const;
 
 		std::vector<IECore::StringAlgo::MatchPattern> m_patterns;
 		IECore::InternedString m_propertyName;

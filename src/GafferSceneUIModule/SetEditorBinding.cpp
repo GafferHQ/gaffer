@@ -244,7 +244,7 @@ class SetPath : public Gaffer::Path
 
 		bool isValid( const IECore::Canceller *canceller = nullptr ) const override
 		{
-			if( !Path::isValid() )
+			if( !Path::isValid( canceller ) )
 			{
 				return false;
 			}
@@ -682,7 +682,7 @@ class VisibleSetInclusionsColumn : public PathColumn
 					for( IECore::PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 					{
 						selectedSetPath->setFromString( ScenePlug::pathToString( *it ) );
-						const auto selectedSetName = runTimeCast<const IECore::StringData>( selectedSetPath->property( g_setNamePropertyName ) );
+						const auto selectedSetName = runTimeCast<const IECore::StringData>( selectedSetPath->property( g_setNamePropertyName, /* canceller = */ nullptr ) );
 						if( selectedSetName && selectedSetName->readable() != setName->readable() )
 						{
 							pathsToInclude.addPaths( setPath->getScene()->set( selectedSetName->readable() )->readable() );
@@ -896,7 +896,7 @@ class VisibleSetExclusionsColumn : public PathColumn
 					for( IECore::PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 					{
 						selectedSetPath->setFromString( ScenePlug::pathToString( *it ) );
-						const auto selectedSetName = runTimeCast<const IECore::StringData>( selectedSetPath->property( g_setNamePropertyName ) );
+						const auto selectedSetName = runTimeCast<const IECore::StringData>( selectedSetPath->property( g_setNamePropertyName, /* canceller = */ nullptr ) );
 						if( selectedSetName && selectedSetName->readable() != setName->readable() )
 						{
 							pathsToExclude.addPaths( setPath->getScene()->set( selectedSetName->readable() )->readable() );

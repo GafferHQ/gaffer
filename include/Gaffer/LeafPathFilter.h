@@ -60,10 +60,6 @@ class GAFFER_API LeafPathFilter : public Gaffer::PathFilter
 
 		void doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const override;
 
-	private :
-
-		bool remove( PathPtr path ) const;
-
 };
 
 IE_CORE_DECLAREPTR( LeafPathFilter )

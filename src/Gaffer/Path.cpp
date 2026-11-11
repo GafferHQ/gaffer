@@ -254,7 +254,7 @@ void Path::append( const IECore::InternedString &name )
 void Path::truncateUntilValid()
 {
 	bool changed = false;
-	while( m_names.size() && !isValid() )
+	while( m_names.size() && !isValid( /* canceller = */ nullptr ) )
 	{
 		m_names.pop_back();
 		changed = true;

@@ -143,7 +143,7 @@ const Gaffer::Context *ScenePath::getContext() const
 
 bool ScenePath::isValid( const IECore::Canceller *canceller ) const
 {
-	if( !Path::isValid() )
+	if( !Path::isValid( canceller ) )
 	{
 		return false;
 	}
@@ -164,7 +164,7 @@ bool ScenePath::isLeaf( const IECore::Canceller *canceller ) const
 
 void ScenePath::propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller ) const
 {
-	Path::propertyNames( names );
+	Path::propertyNames( names, canceller );
 	names.push_back( g_inspectorContextPropertyName );
 }
 

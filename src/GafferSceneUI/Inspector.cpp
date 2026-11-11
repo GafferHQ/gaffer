@@ -911,7 +911,7 @@ Inspector::HistoryPath::~HistoryPath()
 
 void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, const Canceller *canceller ) const
 {
-	Path::propertyNames( names );
+	Path::propertyNames( names, canceller );
 
 	if( this->names().empty() )
 	{
