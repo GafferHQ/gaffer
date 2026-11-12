@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from GafferUI.PlugValueWidget import sole
 
@@ -327,6 +328,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if graphComponents :
 			label = Gaffer.Metadata.value( graphComponents[-1], "label" )
 			if label is not None :
-				return label
+				return _translate( label )
 
-		return GafferUI.NameLabel.defaultFormatter( graphComponents )
+		result = GafferUI.NameLabel.defaultFormatter( graphComponents )
+		return _translate( result ) if result else result

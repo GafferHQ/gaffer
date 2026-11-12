@@ -38,6 +38,7 @@ import enum
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 from Qt import QtCore
 from Qt import QtGui
@@ -66,7 +67,7 @@ class BoolWidget( GafferUI.Widget ) :
 
 	def setText( self, text ) :
 
-		self._qtWidget().setText( text )
+		self._qtWidget().setText( _translate( text ) )
 
 	def getText( self ) :
 

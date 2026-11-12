@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI import i18n as _i18n
 
 class GraphEditor( GafferUI.Editor ) :
 
@@ -72,6 +73,13 @@ class GraphEditor( GafferUI.Editor ) :
 		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 		self.__dragEnterPointer = None
 		self.__gadgetWidget.getViewportGadget().preRenderSignal().connect( Gaffer.WeakMethod( self.__preRender ) )
+
+		# Translate existing and future nodes
+		if _i18n.isEnabled() :
+			self.__i18nChildAddedConnection = self.scriptNode().childAddedSignal().connect(
+				Gaffer.WeakMethod( self.__childAddedForTranslation ), scoped = True
+			)
+			GafferUI.EventLoop.addIdleCallback( functools.partial( self.__translateExistingNodes ) )
 
 		with GafferUI.ListContainer( borderWidth = 8, spacing = 0 ) as overlay :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
@@ -585,7 +593,33 @@ class GraphEditor( GafferUI.Editor ) :
 
 		return frame
 
+	def __translateExistingNodes( self ) :
+
+		_translateAllNodes( self )
+		return False  # Remove from idle callbacks
+
+	def __childAddedForTranslation( self, parent, child ) :
+
+		if not isinstance( child, Gaffer.Node ) :
+			return
+		# Defer to idle so the nodeGadget is ready
+		GafferUI.EventLoop.addIdleCallback(
+			functools.partial( self.__translateSingleNode, child )
+		)
+
+	def __translateSingleNode( self, node ) :
+
+		graphGadget = self.graphGadget()
+		nodeGadget = graphGadget.nodeGadget( node )
+		if nodeGadget is not None :
+			_translateNodeGadget( node, nodeGadget )
+		return False
+
 	def __rootChanged( self, graphGadget, previousRoot ) :
+
+		# Translate nodes in the new root
+		if _i18n.isEnabled() :
+			GafferUI.EventLoop.addIdleCallback( functools.partial( self.__translateExistingNodes ) )
 
 		# save/restore the current framing so jumping in
 		# and out of Boxes isn't a confusing experience.
@@ -646,6 +680,13 @@ class GraphEditor( GafferUI.Editor ) :
 
 		graphGadget.getLayout().positionNodes( graphGadget, nodes, fallbackPosition )
 		graphGadget.getLayout().layoutNodes( graphGadget, nodes )
+
+		# Translate labels for newly created nodes
+		if _i18n.isEnabled() :
+			for node in nodes :
+				nodeGadget = graphGadget.nodeGadget( node )
+				if nodeGadget is not None :
+					_translateNodeGadget( node, nodeGadget )
 
 		# And then extend the frame to include them, in case the
 		# layout has gone off screen.
@@ -827,5 +868,60 @@ class GraphEditor( GafferUI.Editor ) :
 			return sourceEnabledPlug
 
 		return enabledPlug
+
+# ---------------------------------------------------------------------------
+# i18n: Translate node and nodule labels in the Graph Editor canvas.
+# This runs at the consumer level — source code registers English strings,
+# and translation happens here at display time via metadata overrides.
+# ---------------------------------------------------------------------------
+
+def _translateAllNodes( graphEditor ) :
+	"""Translate node gadget labels and nodule labels for all visible nodes."""
+	if not _i18n.isEnabled() :
+		return
+
+	graphGadget = graphEditor.graphGadget()
+	root = graphGadget.getRoot()
+	for node in root.children( Gaffer.Node ) :
+		nodeGadget = graphGadget.nodeGadget( node )
+		if nodeGadget is None :
+			continue
+		_translateNodeGadget( node, nodeGadget )
+
+def _translateNodeGadget( node, nodeGadget ) :
+	"""Translate a single node's name gadget and its nodule labels."""
+	try :
+		contents = nodeGadget.getContents()
+		label = _i18n.getNodeLabel( node.typeName().rpartition( ":" )[-1], node )
+		safe = _i18n.stripAccents( label )
+		if safe != contents.getText() :
+			nodeGadget.setContents( GafferUI.TextGadget( safe ) )
+	except Exception :
+		pass
+
+	# Translate nodule labels
+	for plug in node.children( Gaffer.Plug ) :
+		_translatePlugNodule( plug )
+		for child in plug.children( Gaffer.Plug ) :
+			_translatePlugNodule( child )
+
+def _translatePlugNodule( plug ) :
+	"""Translate a single plug's nodule label via instance metadata."""
+	label = Gaffer.Metadata.value( plug, "noduleLayout:label" )
+	if label is None :
+		# No label registered — use plug name as source
+		name = plug.getName()
+		spaced = _i18n._camelToSpaced( name )
+		result = _i18n.translateNoduleLabel( spaced )
+		if result is not None :
+			Gaffer.Metadata.registerValue( plug, "noduleLayout:label", result )
+		return
+
+	if not isinstance( label, str ) :
+		return
+
+	result = _i18n.translateNoduleLabel( label )
+	if result is not None :
+		Gaffer.Metadata.registerValue( plug, "noduleLayout:label", result )
 
 GafferUI.Editor.registerType( "GraphEditor", GraphEditor )

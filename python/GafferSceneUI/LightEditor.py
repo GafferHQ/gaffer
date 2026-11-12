@@ -44,6 +44,7 @@ import IECoreScene
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 import GafferScene
 import GafferSceneUI
 
@@ -163,6 +164,17 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			assert( isinstance( parameter, IECoreScene.ShaderNetwork.Parameter ) )
 			return parameter
 
+	@staticmethod
+	def __deriveColumnName( parameterName ) :
+		# Replicate C++ InspectorColumn::headerValue logic:
+		# snake_case → replace _ with space → CamelCase::fromSpaced → CamelCase::toSpaced
+		name = parameterName.split( ":" )[-1]
+		if "_" in name :
+			name = IECore.CamelCase.toSpaced( IECore.CamelCase.fromSpaced( name.replace( "_", " " ) ) )
+		else :
+			name = IECore.CamelCase.toSpaced( name )
+		return name
+
 	# Registers a parameter to be available for editing. `rendererKey` is a pattern
 	# that will be matched against `self.settings()["attribute"]` to determine if
 	# the column should be shown.
@@ -171,13 +183,14 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 	def registerParameter( cls, rendererKey, parameter, section = None, columnName = None ) :
 
 		parameter = cls.__parseParameter( parameter )
+		displayName = columnName if columnName is not None else cls.__deriveColumnName( parameter.name )
 
 		GafferSceneUI.LightEditor.registerColumn(
 			rendererKey,
 			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter ),
-				columnName if columnName is not None else ""
+				_translate( displayName )
 			),
 			section
 		)
@@ -190,6 +203,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 	def registerShaderParameter( cls, rendererKey, parameter, shaderAttribute = None, section = None, columnName = None ) :
 
 		parameter = cls.__parseParameter( parameter )
+		displayName = columnName if columnName is not None else cls.__deriveColumnName( parameter.name )
 
 		shaderAttribute = shaderAttribute if shaderAttribute is not None else rendererKey
 
@@ -198,7 +212,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			".".join( x for x in [ parameter.shader, parameter.name ] if x ),
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.ParameterInspector( scene, editScope, shaderAttribute, parameter ),
-				columnName if columnName is not None else ""
+				_translate( displayName )
 			),
 			section
 		)
@@ -212,7 +226,7 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			attributeName,
 			lambda scene, editScope : GafferSceneUI.Private.InspectorColumn(
 				GafferSceneUI.Private.AttributeInspector( scene, editScope, attributeName ),
-				displayName
+				_translate( displayName )
 			),
 			section
 		)
@@ -408,6 +422,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._qtWidget().currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		self.__ignoreCurrentChanged = False
+		self.__tabOriginalNames = []
 
 		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
 
@@ -422,8 +437,9 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		text = values[0]
 		text = "Main" if text == "" else text
+		translatedText = _translate( text )
 		for i in range( 0, self._qtWidget().count() ) :
-			if self._qtWidget().tabText( i ) == text :
+			if self._qtWidget().tabText( i ) == translatedText :
 				try :
 					self.__ignoreCurrentChanged = True
 					self._qtWidget().setCurrentIndex( i )
@@ -437,10 +453,11 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 
 		index = self._qtWidget().currentIndex()
-		text = self._qtWidget().tabText( index )
+		# Map back from translated tab text to original section name
+		originalName = self.__tabOriginalNames[index] if index < len( self.__tabOriginalNames ) else ""
 		with self._blockedUpdateFromValues() :
 			self.getPlug().setValue(
-				text if text != "Main" else ""
+				originalName if originalName != "Main" else ""
 			)
 
 	def __updateTabs( self ) :
@@ -452,10 +469,13 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			attribute = self.getPlug().node()["attribute"].getValue()
 
+			self.__tabOriginalNames = []
 			for rendererKey, sections in LightEditor._LightEditor__columnRegistry.items() :
 				if IECore.StringAlgo.match( attribute, rendererKey ) :
 					for section in sections.keys() :
-						self._qtWidget().addTab( section or "Main" )
+						name = section or "Main"
+						self.__tabOriginalNames.append( name )
+						self._qtWidget().addTab( _translate( name ) )
 		finally :
 			self.__ignoreCurrentChanged = False
 

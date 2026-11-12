@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+from GafferUI.i18n import translate as _translate
 
 class ScriptWindow( GafferUI.Window ) :
 
@@ -146,15 +147,15 @@ class ScriptWindow( GafferUI.Window ) :
 		f = f.rpartition( "/" )[2] if f else "untitled"
 
 		dialogue = _ChoiceDialogue(
-			"Discard Unsaved Changes?",
-			f"The file \"{f}\" has unsaved changes. Do you want to discard them?",
+			_translate( "Discard Unsaved Changes?" ),
+			_translate( "The file \"{}\" has unsaved changes. Do you want to discard them?" ).format( f ),
 			choices = [ "Cancel", "Save", "Discard" ]
 		)
 		choice = dialogue.waitForChoice( parentWindow=self )
 
-		if choice == "Discard" :
+		if choice == _translate( "Discard" ) :
 			return True
-		elif choice == "Save" :
+		elif choice == _translate( "Save" ) :
 			## \todo Is it a bit odd that ScriptWindow should depend on FileMenu
 			# like this? Should the code be moved somewhere else?
 			GafferUI.FileMenu.save( self.menuBar() )
@@ -264,7 +265,7 @@ class _ChoiceDialogue( GafferUI.Dialogue ) :
 		self._setWidget( column )
 
 		for choice in choices :
-			self.__lastButton = self._addButton( choice )
+			self.__lastButton = self._addButton( _translate( choice ) )
 
 	def waitForChoice( self, **kw ) :
 
