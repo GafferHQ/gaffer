@@ -363,6 +363,213 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
+	def testRectLightTextureEdits( self ) :
+
+		# Quad light texture edits don't currently update correctly in Arnold.
+		# Edits are made to light shaders before USD-to-Arnold conversion, so
+		# we need to check that USD RectLight edits work.
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferScene.Catalogue()
+
+		s["s"] = GafferScene.Sphere()
+
+		s["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
+		s["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		s["ShaderAssignment"] = GafferScene.ShaderAssignment( "ShaderAssignment" )
+		s["ShaderAssignment"]["in"].setInput( s["s"]["out"] )
+		s["ShaderAssignment"]["filter"].setInput( s["PathFilter"]["out"] )
+
+		s["lambert"], _, lambertOut = self._createMatteShader()
+		s["ShaderAssignment"]["shader"].setInput( lambertOut )
+
+		# Add USD RectLight using CustomAttributes to avoid a dependency on GafferUSD.
+		s["Light"] = GafferScene.ObjectToScene()
+		s["Light"]["name"].setValue( "RectLight" )
+		s["Light"]["transform"]["translate"]["z"].setValue( 2 )
+
+		s["LightFilter"] = GafferScene.PathFilter()
+		s["LightFilter"]["paths"].setValue( IECore.StringVectorData( [ "/RectLight"] ) )
+
+		s["LightSet"] = GafferScene.Set()
+		s["LightSet"]["in"].setInput( s["Light"]["out"] )
+		s["LightSet"]["filter"].setInput( s["LightFilter"]["out"] )
+		s["LightSet"]["name"].setValue( "__lights defaultLights" )
+
+		colorTexture = str( pathlib.Path( __file__ ).parent / "images" / "sphereLightBake.exr" )
+
+		def setupLightWithColorInput( attrNode, textureMultiply ) :
+			attrNode["extraAttributes"].setValue(
+				IECore.CompoundObject( {
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"__shader" : IECoreScene.Shader( "RectLight", "light", {
+								"color" : IECore.Color3fData( imath.Color3f( 1, 1, 1 ) ),
+								"exposure" : 6.0,
+								"width" : 2.0,
+								"height" : 2.0,
+								"normalize" : True,
+								"intensity" : 1.0,
+								"arnold:samples" : 6,
+							}, ),
+							"image" : IECoreScene.Shader( "image", "ai:shader", {
+								"filename" : IECore.StringData( colorTexture ),
+								"multiply" : IECore.Color3fData( textureMultiply ),
+							} )
+						},
+						output = "__shader",
+						connections = [ ( ( "image", "" ), ( "__shader", "color" ) ) ],
+					),
+				} )
+			)
+
+		def setupLightWithTextureParameter( attrNode, textureFile, lightColor, lightTemperature ) :
+			attrNode["extraAttributes"].setValue(
+				IECore.CompoundObject( {
+					"light" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"__shader" : IECoreScene.Shader( "RectLight", "light", {
+								"color" : IECore.Color3fData( lightColor ),
+								"exposure" : 6.0,
+								"width" : 2.0,
+								"height" : 2.0,
+								"normalize" : True,
+								"intensity" : 1.0,
+								"arnold:samples" : 6,
+								"texture:file" : IECore.StringData( textureFile ),
+								"enableColorTemperature" : lightTemperature is not None,
+								"colorTemperature" : lightTemperature if lightTemperature is not None else 6500.0
+							}, ),
+						},
+						output = "__shader",
+					),
+				} )
+			)
+
+		s["CustomAttributes"] = GafferScene.CustomAttributes()
+		s["CustomAttributes"]["in"].setInput( s["LightSet"]["out"] )
+		setupLightWithColorInput( s["CustomAttributes"], imath.Color3f( 1, 0, 0 ) )
+
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 2 )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["ShaderAssignment"]["out"] )
+		s["group"]["in"][1].setInput( s["CustomAttributes"]["out"] )
+		s["group"]["in"][2].setInput( s["c"]["out"] )
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferScene::GafferDisplayDriver",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["group"]["out"] )
+
+		s["so"] = GafferScene.StandardOptions()
+		s["so"]["options"]["render:camera"]["value"].setValue( "/group/camera" )
+		s["so"]["options"]["render:camera"]["enabled"].setValue( True )
+		s["so"]["in"].setInput( s["o"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["so"]["out"] )
+
+		# Start rendering and make sure the light is visible on the sphere.
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.58, delta = 0.02 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0.0, delta = 0.01 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).b, 0.0, delta = 0.01 )
+		)
+
+		# Edit texture network and make sure the changes take effect
+
+		setupLightWithColorInput( s["CustomAttributes"], imath.Color3f( 0, 1, 0 ) )
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.0, delta = 0.01 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0.3, delta = 0.02 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).b, 0.0, delta = 0.01 )
+		)
+
+		# Remove the color input and make sure the change takes effect
+
+		setupLightWithTextureParameter( s["CustomAttributes"], "", imath.Color3f( 1, 1, 1 ), None )
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 8.87, delta = 0.02 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 8.87, delta = 0.02 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).b, 8.87, delta = 0.02 )
+		)
+
+		# Change the texture file and make sure the change takes effect
+
+		setupLightWithTextureParameter( s["CustomAttributes"], colorTexture, imath.Color3f( 1, 1, 1 ), None )
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.58, delta = 0.02 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0.3, delta = 0.02 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).b, 0.51, delta = 0.02 )
+		)
+
+		# Change the light color and make sure the change takes effect
+
+		setupLightWithTextureParameter( s["CustomAttributes"], colorTexture, imath.Color3f( 1, 0, 0 ), None )
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 0.58, delta = 0.02 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0.0, delta = 0.01 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).b, 0.0, delta = 0.01 )
+		)
+
+		# Change the color temperature and make sure the change takes effect
+
+		setupLightWithTextureParameter( s["CustomAttributes"], colorTexture, imath.Color3f( 1, 0, 0 ), 10000.0 )
+
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, .51, delta = 0.02 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).g, 0.0, delta = 0.01 )
+		)
+		self.assertEventually(
+			lambda : self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).b, 0.0, delta = 0.01 )
+		)
+
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+
 	def testFlushCache( self ) :
 
 		# Arnold has a shared texture cache. We want to make sure that on a render stop
