@@ -516,7 +516,12 @@ Build
 - TBB : Updated to version 2021.13.0.
 - USD : Updated to version 26.05.
 
-1.6.21.x (relative to 1.6.21.7)
+1.6.21.x (relative to 1.6.21.8)
+========
+
+
+
+1.6.21.8 (relative to 1.6.21.7)
 ========
 
 Fixes
