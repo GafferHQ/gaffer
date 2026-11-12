@@ -69,6 +69,8 @@
 
 #include "fmt/format.h"
 
+#include "tbb/concurrent_unordered_set.h"
+
 #include <unordered_set>
 
 using namespace std;
@@ -661,6 +663,15 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 			const ScenePlug *toolScene
 		);
 
+		void updateTransform( const ScenePlug *toolScene )
+		{
+			// We only access the transform at locations with meshes
+			if( hasMesh() )
+			{
+				m_fullTransform = toolScene->fullTransform( path() );
+			}
+		}
+
 		// Whether we can call applyCurrentStroke successfully
 		bool editable() const;
 
@@ -688,6 +699,11 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 
 		// Update or create an edit in the given EditScope that applies the current stroke.
 		void applyCurrentStroke( EditScope *editScope, const std::string &variableName, PaintMode paintMode, float opacity );
+
+		const M44f &fullTransform()
+		{
+			return m_fullTransform;
+		}
 
 	private :
 
@@ -720,6 +736,8 @@ class PaintTool::LocationCache : public Gaffer::Signals::Trackable
 
 		IECore::MurmurHash m_initialEditValueHash;
 		GafferScene::PrimitiveVariablePaint::ConstOperationPtr m_initialEditValue;
+
+		M44f m_fullTransform;
 
 		// Intermediate state used by glBuffers()
 
@@ -1304,7 +1322,7 @@ class PaintTool::PaintGadget : public Gadget
 
 		void renderForDepth() const
 		{
-			renderLayer( Gadget::Layer::MidFront, nullptr, Gadget::RenderReason::Draw );
+			renderLayer( Gadget::Layer::Main, nullptr, Gadget::RenderReason::Draw );
 		}
 
 	protected:
@@ -1312,7 +1330,7 @@ class PaintTool::PaintGadget : public Gadget
 		void renderLayer( Gadget::Layer layer, const Style *style, Gadget::RenderReason reason ) const override
 		{
 			if(
-				( layer != Gadget::Layer::MidFront )
+				( layer != Gadget::Layer::Main )
 				|| Gadget::isSelectionRender( reason )
 			)
 			{
@@ -1325,7 +1343,7 @@ class PaintTool::PaintGadget : public Gadget
 				return;
 			}
 
-			if( layer == Gadget::Layer::MidFront )
+			if( layer == Gadget::Layer::Main )
 			{
 				renderPaintVisualiser();
 			}
@@ -1343,7 +1361,7 @@ class PaintTool::PaintGadget : public Gadget
 
 		unsigned layerMask() const override
 		{
-			return m_tool ? static_cast< unsigned >( Gadget::Layer::MidFront ) : static_cast< unsigned >( 0 );
+			return m_tool ? static_cast< unsigned >( Gadget::Layer::Main ) : static_cast< unsigned >( 0 );
 		}
 
 	private:
@@ -1440,11 +1458,6 @@ class PaintTool::PaintGadget : public Gadget
 
 			// Loop through current selection
 
-			const ScenePlug* scene = m_tool->scenePlug();
-
-
-			Context::Scope scope( m_tool->view()->context() );
-
 			try
 			{
 				for( auto &l : m_tool->locationCaches() )
@@ -1455,7 +1468,7 @@ class PaintTool::PaintGadget : public Gadget
 					}
 
 					// Get the object to world transform
-					M44f o2w = scene->fullTransform( l->path() );
+					const M44f &o2w = l->fullTransform();
 
 					// Find opengl named buffer data
 					//
@@ -1875,25 +1888,35 @@ void PaintTool::paint( const IECore::InternedString &variableName, const M44f &p
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 
-	Context::Scope scope( view()->context() );
-	const ScenePlug* scene = scenePlug();
-
 	m_depthRender->startRendering( paintMatrixPadded );
 
 	m_gadget->renderForDepth();
 
 	const float* depthMap = m_depthRender->finishRendering();
 
-	for( auto &l : locationCaches() )
-	{
-		if( l->hasMesh() )
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	const ThreadState &threadState = ThreadState::current();
+
+	PaintTool::LocationCacheVector &locations = locationCaches();
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, locations.size() ),
+		[&]( const tbb::blocked_range<size_t> &r )
 		{
-			l->paintToCurrentStroke(
-				paintMatrix, scene->fullTransform( l->path() ),
-				value, hardness, resolution, depthMap
-			);
-		}
-	}
+			ThreadState::Scope threadStateScope( threadState );
+
+			for( size_t i = r.begin(); i != r.end(); ++i )
+			{
+				if( locations[i]->hasMesh() )
+				{
+					locations[i]->paintToCurrentStroke(
+						paintMatrix, locations[i]->fullTransform(),
+						value, hardness, resolution, depthMap
+					);
+				}
+			}
+		},
+
+		taskGroupContext
+	);
 }
 
 void PaintTool::applyCurrentStroke()
@@ -1981,7 +2004,12 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 	// We should only be doing scene queries when we're active
 	assert( activePlug()->getValue() );
 
-	Context::Scope scope( view()->context() );
+	Context::EditableScope scope( view()->context() );
+
+	// Stop Inspector complaining about being run without a canceller
+	IECore::CancellerPtr dummyCanceller = new IECore::Canceller();
+	scope.setCanceller( dummyCanceller.get() );
+
 	if( m_selectionDirty )
 	{
 		// Clear the locationCaches.
@@ -2020,21 +2048,41 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 		const std::string variableName = variableNamePlug()->getValue();
 		const IECore::TypeId variableType = (IECore::TypeId)variableTypePlug()->getValue();
 
-		std::unordered_set<std::string> warnings;
+		tbb::concurrent_unordered_set<std::string> warnings;
 
-		for( auto &l : m_locationCaches )
-		{
-			std::string warning = l->update( m_inspector.get(), view()->context(), variableName, variableType, scenePlug() );
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+		const ThreadState &threadState = ThreadState::current();
 
-			if( !warning.empty() )
+		tbb::parallel_for( tbb::blocked_range<size_t>( 0, m_locationCaches.size() ),
+			[&]( const tbb::blocked_range<size_t> &r )
 			{
-				warnings.insert( warning );
-			}
-		}
+				ThreadState::Scope threadStateScope( threadState );
 
-		if( warnings != m_warnings )
+				for( size_t i = r.begin(); i != r.end(); ++i )
+				{
+					std::string warning = m_locationCaches[i]->update(
+						m_inspector.get(), threadState.context(), variableName, variableType, scenePlug()
+					);
+
+					if( !warning.empty() )
+					{
+						warnings.insert( warning );
+					}
+
+					// \todo : Should be in a separate conditional once we add separate state flag for tracking transforms
+					m_locationCaches[i]->updateTransform( scenePlug() );
+				}
+			},
+
+			taskGroupContext
+		);
+
+		// Convert from concurrent_unordered_set to std::unordered_set for comparison with stored value
+		std::unordered_set<std::string> warningsSimple( warnings.begin(), warnings.end() );
+
+		if( warningsSimple != m_warnings )
 		{
-			m_warnings = warnings;
+			m_warnings = warningsSimple;
 			statusChangedSignal()( *this );
 		}
 
@@ -2073,7 +2121,19 @@ void PaintTool::selectionChanged()
 	{
 		m_selectionDirty = true;
 		statusChangedSignal()( *this );
-		updateCursor();
+
+		// Changing the selection could result in no editable objects being selected,
+		// which should result in the cursor being updated.
+		//
+		// But if we called updateCursor() here, then that would call locationCaches()
+		// and force an immediate compute and clear the dirty flag ... which would mean
+		// that multiple calls to selectionChanged could result in locationCaches()
+		// being computed multiple times, which could be a substantial waste of time.
+		//
+		// The simplest fix for the moment is simply to not call updateCursor here,
+		// since currently any UI interaction that could result in the selection being
+		// changed ( like clicking, pressing a key, moving the mouse to a different UI )
+		// already triggers an updateCursor of its own.
 	}
 }
 
@@ -2110,6 +2170,16 @@ void PaintTool::plugDirtied( const Gaffer::Plug *plug )
 		// will completely destroy painting performance. But it's kinda needed if we're populating
 		// m_locationCaches using visitVisibleLocations which depends on attributes.
 		selectionChanged();
+	}
+	else if( plug == scenePlug()->transformPlug() )
+	{
+		// \todo This should be tracked separate from m_locationCachesDirty, with an m_transformsDirty
+		// member. But that would break binary compatibility - and wouldn't make any difference currently,
+		// because we're connected to the preprocessors on the view, and whenever the input transform
+		// changes, the preprocessors on the view convert that to a dirtying of the object, so we get an
+		// inspectorDirtied. But in theory transform changes shouldn't require dirtying the object, and
+		// we should track this separately.
+		m_locationCachesDirty = true;
 	}
 	else if( plug == variableNamePlug() || plug == variableTypePlug() )
 	{
