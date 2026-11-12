@@ -246,7 +246,7 @@ FileSystemPath::~FileSystemPath()
 
 bool FileSystemPath::isValid( const IECore::Canceller *canceller ) const
 {
-	if( !Path::isValid() )
+	if( !Path::isValid( canceller ) )
 	{
 		return false;
 	}
@@ -330,7 +330,7 @@ FileSequencePtr FileSystemPath::fileSequence() const
 
 void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller ) const
 {
-	Path::propertyNames( names );
+	Path::propertyNames( names, canceller );
 
 	names.push_back( g_ownerPropertyName );
 	names.push_back( g_groupPropertyName );
@@ -489,7 +489,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 		return new StringData;
 	}
 
-	return Path::property( name );
+	return Path::property( name, canceller );
 }
 
 PathPtr FileSystemPath::copy() const
