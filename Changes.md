@@ -19,7 +19,7 @@ Fixes
 - RenderMan : Fixed non-deterministic ordering of output definitions.
 - Viewer : Fixed rendering of volumes and camera-visible environment lights in the raytraced viewport (#4783).
 - PaintTool : The Viewer's display transform is now correctly applied to the painted values.
-- Arnold : Fixed interactive updates to USD RectLights when the input network to `color` or the `texture:file` parameter were modified.
+- Arnold : Fixed interactive updates to USD RectLights when the input network to `color` or the `texture:file` parameter were modified (#7247).
 - SetEditor : Fixed UI responsiveness bug when using "Hide Empty Sets".
 
 API
