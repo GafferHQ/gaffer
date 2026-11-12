@@ -48,6 +48,7 @@ API
 
 - SceneAlgo : Functions for parallel scene traversal no longer require functors to be l-values, allowing lambdas to be passed inline.
 - GafferUI : Qt is now accessed directly via PySide6 rather than via Qt.py. Qt.py is still provided, but will be removed in a future release.
+- GraphComponent : Improved exception message when `removeChild()` is called with a GraphComponent that is not a child.
 
 Breaking Changes
 ----------------

@@ -403,9 +403,9 @@ void GraphComponent::addChildInternal( GraphComponentPtr child, size_t index )
 
 void GraphComponent::removeChild( GraphComponentPtr child )
 {
-	if( child->m_parent!=this )
+	if( child->m_parent != this )
 	{
-		throw Exception( "Object is not a child." );
+		throw Exception( fmt::format( "GraphComponent::removeChild : \"{}\" is not a child of \"{}\".", child->fullName(), fullName() ) );
 	}
 
 	if( refCount() )
