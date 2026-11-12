@@ -3132,7 +3132,48 @@ IE_CORE_DECLAREPTR( ArnoldLightFilter )
 namespace
 {
 
+IECore::InternedString g_colorParameter( "color" );
+IECore::InternedString g_colorTemperatureParameter( "colorTemperature" );
+IECore::InternedString g_enableColorTemperatureParameter( "enableColorTemperature" );
 IECore::InternedString g_lightFilters( "lightFilters" );
+IECore::InternedString g_textureFileParameter( "texture:file" );
+
+void hashRectLightColor( const IECoreScene::Shader *light, IECore::MurmurHash &h )
+{
+	const auto textureData = light->parametersData()->member<IECore::StringData>( g_textureFileParameter );
+
+	if( textureData && !textureData->readable().empty() )
+	{
+		h.append( textureData->readable() );
+
+		// This duplicates the color computation from `IECoreArnold::ShaderNetworkAlgo` and needs to be
+		// kept in sync. Alternatives to duplication that don't break API aren't much better.
+		// But if we need to add more shared logic to these two, it's probably worth deduplicating the logic.
+		Imath::Color3f color( 1.f );
+		const auto colorData = light->parametersData()->member<IECore::Color3fData>( g_colorParameter );
+		if( colorData )
+		{
+			color = colorData->readable();
+		}
+		else
+		{
+			// Accommodate USD using V3f for color
+			const auto v3fColorData = light->parametersData()->member<IECore::V3fData>( g_colorParameter );
+			if( v3fColorData )
+			{
+				color = v3fColorData->readable();
+			}
+		}
+		h.append( color );
+
+		const auto useTempData = light->parametersData()->member<IECore::BoolData>( g_enableColorTemperatureParameter );
+		if( useTempData && useTempData->readable() )
+		{
+			const auto tempData = light->parametersData()->member<IECore::FloatData>( g_colorTemperatureParameter );
+			h.append( tempData ? tempData->readable() : 6500.f );
+		}
+	}
+}
 
 class ArnoldLight : public ArnoldObjectBase
 {
@@ -3192,8 +3233,12 @@ class ArnoldLight : public ArnoldObjectBase
 				}
 				else
 				{
+					IECore::MurmurHash oldColorHash;
+					IECore::MurmurHash newColorHash;
+
 					const IECoreScene::Shader* lightOutput = m_attributes->lightShader()->outputShader();
-					if( lightOutput && lightOutput->getName() == "quad_light" )
+
+					if( lightOutput && ( lightOutput->getName() == "quad_light" || lightOutput->getName() == "RectLight" ) )
 					{
 						IECoreScene::ShaderNetwork::Parameter newColorParameter = m_attributes->lightShader()->getOutput();
 						newColorParameter.name = "color";
@@ -3205,19 +3250,30 @@ class ArnoldLight : public ArnoldObjectBase
 
 						if( newColorInput && oldColorInput )
 						{
-							IECore::MurmurHash newColorHash, oldColorHash;
 							hashShaderOutputParameter( m_attributes->lightShader(), newColorInput, newColorHash );
 							hashShaderOutputParameter( oldAttributes->lightShader(), oldColorInput, oldColorHash );
-							if( newColorHash != oldColorHash )
-							{
-								// Arnold currently fails to update quad light shaders during interactive renders
-								// correctly.  ( At least when there is an edit to the color parameter, and it's
-								// driven by a network which contains a texture. )
-								// Until they fix this, we can just throw out and rebuild quad lights whenever
-								// there's a change to a network driving color
-								return false;
-							}
 						}
+					}
+					if( lightOutput && lightOutput->getName() == "RectLight" )
+					{
+						hashRectLightColor( lightOutput, newColorHash );
+					}
+
+					const IECoreScene::Shader *oldLightOutput = oldAttributes->lightShader()->outputShader();
+					if( oldLightOutput && oldLightOutput->getName() == "RectLight" )
+					{
+						hashRectLightColor( oldLightOutput, oldColorHash );
+					}
+
+					if( newColorHash != oldColorHash )
+					{
+						// Arnold currently fails to update quad light shaders during interactive renders
+						// correctly.  ( At least when there is an edit to the color parameter, and it's
+						// driven by a network which contains a texture. ) RectLights become quad lights
+						// when creating the ArnoldShader, so their relevant parameters are also hashed.
+						// Until they fix this, we can just throw out and rebuild quad lights whenever
+						// there's a change to a network driving color
+						return false;
 					}
 
 					bool keptRootShader = m_lightShader->update( m_attributes->lightShader() );

@@ -103,7 +103,7 @@ boost::python::object info( boost::python::object o )
 {
 	boost::python::extract<const T &> e( o );
 	const T &p = e;
-	if( !p.isValid() )
+	if( !p.isValid( /* canceller = */ nullptr ) )
 	{
 		return boost::python::object();
 	}
@@ -140,11 +140,11 @@ boost::python::object info( boost::python::object o )
 	std::vector<IECore::InternedString> propertyNames;
 	if( infoImplementedInPython )
 	{
-		p.T::propertyNames( propertyNames );
+		p.T::propertyNames( propertyNames, /* canceller = */ nullptr );
 	}
 	else
 	{
-		p.propertyNames( propertyNames );
+		p.propertyNames( propertyNames, /* canceller = */ nullptr );
 	}
 
 	boost::python::dict result;
@@ -153,11 +153,11 @@ boost::python::object info( boost::python::object o )
 		IECore::ConstRunTimeTypedPtr a;
 		if( infoImplementedInPython )
 		{
-			a = p.T::property( *it );
+			a = p.T::property( *it, /* canceller = */ nullptr );
 		}
 		else
 		{
-			a = p.property( *it );
+			a = p.property( *it, /* canceller = */ nullptr );
 		}
 		result[it->c_str()] = propertyToPython( a );
 	}

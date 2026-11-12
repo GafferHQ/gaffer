@@ -60,13 +60,8 @@ void LeafPathFilter::doFilter( std::vector<PathPtr> &paths, const IECore::Cancel
 		std::remove_if(
 			paths.begin(),
 			paths.end(),
-			boost::bind( &LeafPathFilter::remove, this, ::_1 )
+			[canceller] ( const PathPtr &path ) { return path->isLeaf( canceller ); }
 		),
 		paths.end()
 	);
-}
-
-bool LeafPathFilter::remove( PathPtr path ) const
-{
-	return path->isLeaf();
 }
