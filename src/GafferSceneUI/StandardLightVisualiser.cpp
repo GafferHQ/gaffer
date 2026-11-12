@@ -372,10 +372,17 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 	if( ornamentWireframePoints->readable().size() > 0 )
 	{
+		IECoreGL::GroupPtr group = new IECoreGL::Group();
+		addWireframeCurveState( group.get() );
+		addConstantShader( group.get(), Color3f( 1.f ) );
+
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, ornamentWireframeVertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, ornamentWireframePoints ) );
 		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( lightWireframeColor( muted ) ) ) );
-		result.push_back( Visualisation::createOrnament( curves, /* affectsFramingBound = */ false ) );
+
+		group->addChild( curves );
+
+		result.push_back( Visualisation::createOrnament( group, /* affectsFramingBound = */ false ) );
 	}
 
 	// Apply orientation corrective matrix if necessary.
