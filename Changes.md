@@ -10,6 +10,7 @@ Fixes
 -----
 
 - Cycles : Fixed bug which passed unsupported attribute types to Cycles as empty attributes. Unsupported attributes now emit warnings at render time (#6315).
+- StandardLightVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when viewing lights with ray visualisations (#7241).
 
 1.7.7.0 (relative to 1.7.6.0)
 =======
