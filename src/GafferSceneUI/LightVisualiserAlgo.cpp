@@ -660,6 +660,12 @@ IECoreGL::ConstRenderablePtr roundedQuadSurface(
 
 IECoreGL::ConstRenderablePtr quadPortal( const V2f &size, float hatchingScale, bool muted )
 {
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	// Compensate for the line width multiplier in order to maintain a final
+	// width of 1.0.
+	addWireframeCurveState( group.get(), 1.f / 1.5f );
+	::addConstantShader( group.get() );
+
 	// Portals visualise differently as they only allow light through
 	// their area. Effectively a hole cut in a big plane. We try to
 	// represent this by shading outside of the quad area.
@@ -758,7 +764,10 @@ IECoreGL::ConstRenderablePtr quadPortal( const V2f &size, float hatchingScale, b
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::Periodic, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : Color3f( 0.07f ) ) ) );
-	return curves;
+
+	group->addChild( curves );
+
+	return group;
 }
 
 IECoreGL::ConstRenderablePtr sphereWireframe( float radius, const Vec3<bool> &axisRings, float lineWidthScale, const V3f &center, bool muted )
