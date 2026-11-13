@@ -9,7 +9,7 @@ Improvements
 Fixes
 -----
 
-- StandardLightVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when viewing lights with ray or portal visualisations (#7241).
+- StandardLightVisualiser, RenderManLightVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when viewing lights with ray or portal visualisations (#7241).
 
 1.7.7.0 (relative to 1.7.6.0)
 =======
