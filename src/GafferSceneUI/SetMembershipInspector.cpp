@@ -37,6 +37,7 @@
 #include "GafferSceneUI/Private/SetMembershipInspector.h"
 
 #include "GafferScene/EditScopeAlgo.h"
+#include "GafferScene/Light.h"
 #include "GafferScene/ObjectSource.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/SceneNode.h"
@@ -64,6 +65,8 @@ using namespace GafferSceneUI::Private;
 
 namespace
 {
+
+const InternedString g_defaultLightsSetName( "defaultLights" );
 
 // This uses the same strategy that ValuePlug uses for the hash cache,
 // using `plug->dirtyCount()` to invalidate previous cache entries when
@@ -162,6 +165,19 @@ bool canEdit( const Gaffer::Plug *plug, const IECore::Object *value, std::string
 
 bool editSetMembership( Gaffer::Plug *plug, const std::string &setName, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership )
 {
+	if( auto boolPlug = runTimeCast<BoolPlug>( plug ) )
+	{
+		if( setMembership == EditScopeAlgo::SetMembership::Unchanged )
+		{
+			boolPlug->setToDefault();
+		}
+		else
+		{
+			boolPlug->setValue( setMembership == EditScopeAlgo::SetMembership::Added );
+		}
+		return true;
+	}
+
 	if( auto objectNode = runTimeCast<ObjectSource>( plug->node() ) )
 	{
 		std::vector<std::string> sets;
@@ -211,6 +227,14 @@ std::string nonDisableableReason( const Gaffer::Plug *plug, const std::string &s
 	if( const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( plug ) )
 	{
 		return fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) );
+	}
+	else if( auto boolPlug = runTimeCast<const BoolPlug>( plug ) )
+	{
+		if( boolPlug->isSetToDefault() )
+		{
+			return fmt::format( "{} has no edit to disable.", plug->relativeName( plug->ancestor<ScriptNode>() ) );
+		}
+		return "";
 	}
 	else if( auto objectNode = runTimeCast<const ObjectSource>( plug->node() ) )
 	{
@@ -298,6 +322,19 @@ Gaffer::ValuePlugPtr SetMembershipInspector::source( const GafferScene::SceneAlg
 		return nullptr;
 	}
 
+	if( auto light = runTimeCast<Light>( sceneNode ) )
+	{
+		if( m_setName == g_defaultLightsSetName )
+		{
+			std::vector<std::string> sets;
+			IECore::StringAlgo::tokenize( light->setsPlug()->getValue(), ' ', sets );
+			if( std::find( sets.begin(), sets.end(), m_setName.string() ) != sets.end() )
+			{
+				return light->setsPlug();
+			}
+			return light->defaultLightPlug();
+		}
+	}
 	if( const auto objectSource = runTimeCast<ObjectSource>( sceneNode ) )
 	{
 		return objectSource->setsPlug();
