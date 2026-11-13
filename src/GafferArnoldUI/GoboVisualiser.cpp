@@ -38,6 +38,7 @@
 
 #include "GafferOSL/ShadingEngineAlgo.h"
 
+#include "GafferSceneUI/Private/LightVisualiserAlgo.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
 #include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
@@ -231,6 +232,8 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 
 	if( visualiserDrawingMode == "wireframe" )
 	{
+		// Compensate for the line width multiplier in order to maintain a final width of 1.0.
+		GafferSceneUI::Private::LightVisualiserAlgo::addWireframeCurveState( result.get(), 1.f / 1.5f );
 		result->addChild( quadWireframe( V2f( 1.0f ) ) );
 	}
 	else
