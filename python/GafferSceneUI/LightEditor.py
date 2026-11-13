@@ -38,6 +38,7 @@ import collections
 
 import functools
 import imath
+import re
 
 import IECore
 import IECoreScene
@@ -429,6 +430,16 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				}
 			)
 
+			menuDefinition.append( "/__lightEditorSetDivider", { "divider" : True } )
+
+			menuDefinition.append(
+				"Add Selection To Set...",
+				{
+					"command" : Gaffer.WeakMethod( self.__addSelectionToSet ),
+					"active" : not self.__pathListing.getSelection()[0].isEmpty(),
+				}
+			)
+
 	def __selectLinked (self, *unused ) :
 
 		context = self.context()
@@ -450,7 +461,120 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if not isinstance( result, Exception ) :
 			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), result )
 
+	def __addSelectionToSet( self, *unused ) :
+
+		paths = self.__pathListing.getSelection()[0].paths()
+		if not paths :
+			return
+
+		dialogue = _SetNamesDialogue()
+		setNames = dialogue.waitForSetNames( parentWindow = self.ancestor( GafferUI.Window ) )
+		if not setNames :
+			return
+
+		nonEditableReason = self.__addToSets( paths, setNames )
+		if nonEditableReason :
+			GafferUI.PopupWindow.showWarning( nonEditableReason, parent = self.__pathListing )
+
+	def __addToSets( self, paths, setNames ) :
+
+		inspections = []
+		with Gaffer.Context( self.context() ) as context :
+			for setName in setNames :
+				inspector = GafferSceneUI.Private.SetMembershipInspector(
+					self.settings()["__adaptedIn"], self.settings()["editScope"], setName
+				)
+				for path in paths :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+					inspection = inspector.inspect()
+					if inspection is None :
+						return "Cannot add \"{}\" to \"{}\".".format( path, setName )
+					elif not inspection.editable() or not inspection.canEdit( IECore.BoolData( True ) ) :
+						return "Cannot add \"{}\" to \"{}\" : {}".format( path, setName, inspection.nonEditableReason( IECore.BoolData( True ) ) )
+					inspections.append( inspection )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for inspection in inspections :
+				inspection.edit( IECore.BoolData( True ) )
+
+		return ""
+
 GafferUI.Editor.registerType( "LightEditor", LightEditor )
+
+# _SetNamesDialogue
+# =================
+
+class _SetNamesDialogue( GafferUI.Dialogue ) :
+
+	def __init__( self, title = "Add to set", cancelLabel = "Cancel", confirmLabel = "Add", **kw ) :
+
+		GafferUI.Dialogue.__init__( self, title, sizeMode = GafferUI.Window.SizeMode.Fixed, **kw )
+
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as column :
+			self.__textWidget = GafferUI.TextWidget()
+			self.__textWidget.setPreferredCharacterWidth( 40 )
+			self.__messageLabel = GafferUI.Label()
+
+		self._setWidget( column )
+
+		self._addButton( cancelLabel )
+		self.__confirmButton = self._addButton( confirmLabel )
+
+		self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
+		self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ) )
+
+		self.__update()
+
+	def waitForSetNames( self, **kw ) :
+
+		self.__textWidget.grabFocus()
+
+		button = self.waitForButton( **kw )
+		if button is self.__confirmButton :
+			return self.__textWidget.getText().split()
+
+		return None
+
+	def __update( self ) :
+
+		invalidReasons = set()
+		setNames = self.__textWidget.getText().split()
+		for setName in setNames :
+			reason = self.__invalidReason( setName )
+			if reason is not None :
+				invalidReasons.add( reason )
+
+		self.__textWidget.setErrored( bool( invalidReasons ) )
+		self.__confirmButton.setEnabled( bool( setNames ) and not invalidReasons )
+		self.__messageLabel.setText(
+			"\n".join( invalidReasons ) if invalidReasons else "Enter one or more set names, separated by spaces."
+		)
+
+	def __textChanged( self, textWidget ) :
+
+		self.__update()
+
+	def __textActivated( self, textWidget ) :
+
+		if self.__confirmButton.getEnabled() :
+			self.__confirmButton.clickedSignal()( self.__confirmButton )
+
+	def __invalidReason( self, setName ) :
+
+		reason = None
+		if setName in ( "in", "containing" ) :
+			reason = "it is a set expression operator"
+
+		invalidCharacters = sorted( set( re.sub( r"[a-zA-Z_0-9:.]", "", setName ) ) )
+		if invalidCharacters :
+			reason = "it contains {}".format( " ".join( "`{}`".format( c ) for c in invalidCharacters ) )
+
+		if reason is not None :
+			return "\"{}\" is not a valid set name : {}.".format( setName, reason )
+
+		return None
+
+LightEditor._SetNamesDialogue = _SetNamesDialogue
 
 ##########################################################################
 # Metadata controlling the settings UI
