@@ -379,7 +379,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				self.settings()["__adaptedIn"],
 				self.settings()["editScope"],
 				setName,
-				setName
+				setName,
+				headerIndicator = False
 			)
 			self.__setColumnCache[setName] = column
 

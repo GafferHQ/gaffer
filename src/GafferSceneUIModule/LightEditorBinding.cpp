@@ -272,8 +272,8 @@ class SetMembershipColumn : public InspectorColumn
 	public :
 		IE_CORE_DECLAREMEMBERPTR( SetMembershipColumn )
 
-		SetMembershipColumn( const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr editScope, const IECore::InternedString &setName, const std::string &columnName )
-			: InspectorColumn( new GafferSceneUI::Private::SetMembershipInspector( scene, editScope, setName ), columnName ), m_setName( setName ), m_scene( scene )
+		SetMembershipColumn( const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr editScope, const IECore::InternedString &setName, const std::string &columnName, const bool headerIndicator )
+			: InspectorColumn( new GafferSceneUI::Private::SetMembershipInspector( scene, editScope, setName ), columnName ), m_setName( setName ), m_scene( scene ), m_headerIndicator( headerIndicator )
 		{
 
 		}
@@ -316,6 +316,10 @@ class SetMembershipColumn : public InspectorColumn
 		CellData headerData( const Gaffer::Path &rootPath, const IECore::Canceller *canceller ) const override
 		{
 			CellData result = InspectorColumn::headerData( rootPath, canceller );
+			if( !m_headerIndicator )
+			{
+				return result;
+			}
 
 			ConstContextPtr context = inspectorContext( rootPath, canceller );
 			if( !context )
@@ -335,6 +339,7 @@ class SetMembershipColumn : public InspectorColumn
 	private :
 		const IECore::InternedString m_setName;
 		const GafferScene::ScenePlugPtr m_scene;
+		const bool m_headerIndicator;
 
 		static IECore::CompoundDataPtr m_setMemberIconData;
 		static IECore::CompoundDataPtr m_setMemberIconFadedData;
@@ -390,12 +395,13 @@ void GafferSceneUIModule::bindLightEditor()
 	;
 
 	IECorePython::RefCountedClass<SetMembershipColumn, GafferSceneUI::Private::InspectorColumn>( "_LightEditorSetMembershipColumn" )
-		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &, const IECore::InternedString &, const std::string &>(
+		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &, const IECore::InternedString &, const std::string &, const bool>(
 			(
 				arg_( "scene" ),
 				arg_( "editScope" ),
 				arg_( "setName" ),
-				arg_( "columnName" )
+				arg_( "columnName" ),
+				arg_( "headerIndicator" ) = true
 			)
 		) )
 	;
