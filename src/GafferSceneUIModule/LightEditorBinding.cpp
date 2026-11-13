@@ -273,7 +273,7 @@ class SetMembershipColumn : public InspectorColumn
 		IE_CORE_DECLAREMEMBERPTR( SetMembershipColumn )
 
 		SetMembershipColumn( const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr editScope, const IECore::InternedString &setName, const std::string &columnName, const bool headerIndicator )
-			: InspectorColumn( new GafferSceneUI::Private::SetMembershipInspector( scene, editScope, setName ), columnName ), m_setName( setName ), m_scene( scene ), m_headerIndicator( headerIndicator )
+			: InspectorColumn( new GafferSceneUI::Private::SetMembershipInspector( scene, editScope, setName ), CellData( new IECore::StringData( columnName != "" ? columnName : setName.string() ) ) ), m_setName( setName ), m_scene( scene ), m_headerIndicator( headerIndicator )
 		{
 
 		}
