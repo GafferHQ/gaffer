@@ -69,6 +69,16 @@ Gaffer.Metadata.registerNode(
 			""",
 		},
 
+		"ignoreMissing" : {
+
+			"description" :
+			"""
+			Ignores meshes that are missing the `segment` primitive variable,
+			leaving them unchanged. When off, missing primitive variables
+			cause the node to error.
+			""",
+		},
+
 		"nameFromSegment" : {
 
 			"description" :

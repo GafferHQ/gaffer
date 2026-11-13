@@ -302,6 +302,7 @@ MeshSplit::MeshSplit( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "segment", Plug::In, "segment" ) );
+	addChild( new BoolPlug( "ignoreMissing", Plug::In, false ) );
 	addChild( new BoolPlug( "nameFromSegment" ) );
 	addChild( new BoolPlug( "preciseBounds" ) );
 
@@ -333,41 +334,54 @@ const Gaffer::StringPlug *MeshSplit::segmentPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::BoolPlug *MeshSplit::nameFromSegmentPlug()
+Gaffer::BoolPlug *MeshSplit::ignoreMissingPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *MeshSplit::ignoreMissingPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::BoolPlug *MeshSplit::nameFromSegmentPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::BoolPlug *MeshSplit::nameFromSegmentPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::BoolPlug *MeshSplit::preciseBoundsPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::BoolPlug *MeshSplit::preciseBoundsPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::ObjectPlug *MeshSplit::meshSplitterPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::ObjectPlug *MeshSplit::meshSplitterPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 void MeshSplit::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
 
-	if( input == segmentPlug() || input == nameFromSegmentPlug() || input == inPlug()->objectPlug() )
+	if(
+		input == segmentPlug() || input == ignoreMissingPlug() ||
+		input == nameFromSegmentPlug() || input == inPlug()->objectPlug()
+	)
 	{
 		outputs.push_back( meshSplitterPlug() );
 	}
@@ -380,6 +394,7 @@ void MeshSplit::hash( const ValuePlug *output, const Context *context, IECore::M
 	if( output == meshSplitterPlug() )
 	{
 		segmentPlug()->hash( h );
+		ignoreMissingPlug()->hash( h );
 		nameFromSegmentPlug()->hash( h );
 
 		inPlug()->objectPlug()->hash( h );
@@ -393,6 +408,7 @@ void MeshSplit::compute( ValuePlug *output, const Context *context ) const
 		MeshSplitterDataPtr splitter = nullptr;
 
 		std::string segmentPrimVarName = segmentPlug()->getValue();
+		bool ignoreMissing = ignoreMissingPlug()->getValue();
 		bool nameFromSegment = nameFromSegmentPlug()->getValue();
 
 		IECore::ConstObjectPtr object = inPlug()->objectPlug()->getValue();
@@ -405,10 +421,15 @@ void MeshSplit::compute( ValuePlug *output, const Context *context ) const
 			auto varIt = mesh->variables.find( segmentPrimVarName );
 			if( varIt == mesh->variables.end() )
 			{
-				throw IECore::Exception( "Cannot find primitive variable \"" + segmentPrimVarName + "\"." );
+				if( !ignoreMissing )
+				{
+					throw IECore::Exception( "Cannot find primitive variable \"" + segmentPrimVarName + "\"." );
+				}
 			}
-
-			splitter = new MeshSplitterData( mesh, varIt->second, nameFromSegment, context->canceller() );
+			else
+			{
+				splitter = new MeshSplitterData( mesh, varIt->second, nameFromSegment, context->canceller() );
+			}
 		}
 
 		static_cast<ObjectPlug *>( output )->setValue( splitter ? (const Object*)splitter.get() : NullObject::defaultNullObject() );
@@ -486,7 +507,7 @@ bool MeshSplit::processesRootObject() const
 
 bool MeshSplit::affectsBranchObject( const Gaffer::Plug *input ) const
 {
-	return input == inPlug()->objectPlug();
+	return input == inPlug()->objectPlug() || input == meshSplitterPlug();
 }
 
 void MeshSplit::hashBranchObject( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -495,6 +516,7 @@ void MeshSplit::hashBranchObject( const ScenePath &sourcePath, const ScenePath &
 
 	if( branchPath.size() == 0 )
 	{
+		meshSplitterPlug()->hash( h );
 		inPlug()->objectPlug()->hash( h );
 		return;
 	}
@@ -510,17 +532,18 @@ IECore::ConstObjectPtr MeshSplit::computeBranchObject( const ScenePath &sourcePa
 {
 	if( branchPath.size() == 0 )
 	{
-		IECore::ConstObjectPtr inObject = inPlug()->objectPlug()->getValue();
-		if( runTimeCast<const MeshPrimitive>( inObject.get() ) )
+		if( meshSplitterPlug()->getValue().get() == NullObject::defaultNullObject() )
 		{
-			// If we're filtered to a mesh, we're going to split into it's children, so we remove
-			// the original mesh.
-			return NullObject::defaultNullObject();
+			// Not splitting at this location, just return the input.
+			// ( This could occur if the source object is not a mesh, or is missing the primvar
+			// when using ignoreMissing )
+			return inPlug()->objectPlug()->getValue();
 		}
 		else
 		{
-			// Not a mesh, pass it unchanged
-			return inObject;
+			// If we're applying to a mesh, we're going to split into it's children, so we remove
+			// the original mesh.
+			return NullObject::defaultNullObject();
 		}
 	}
 
