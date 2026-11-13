@@ -220,6 +220,7 @@ Gaffer.Metadata.registerNode(
 			"description" :
 			"""
 			Controls how lights are presented in the Viewer.
+			`None` draws no OpenGL light geometry.
 			""",
 
 			"label" : "Light Drawing Mode",
@@ -279,6 +280,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Wireframe" : "wireframe",
 			"preset:Color" : "color",
 			"preset:Texture" : "texture",
+			"preset:None" : "none",
 
 			"plugValueWidget:type" : "GafferUI.PresetsPlugValueWidget"
 		},

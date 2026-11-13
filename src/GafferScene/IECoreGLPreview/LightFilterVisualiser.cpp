@@ -43,6 +43,8 @@
 
 #include "IECoreScene/Shader.h"
 
+#include "IECore/SimpleTypedData.h"
+
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/container/flat_map.hpp"
@@ -94,6 +96,15 @@ Visualisations LightFilterVisualiser::allVisualisations( const IECore::CompoundO
 	if( !attributes )
 	{
 		return resultVis;
+	}
+
+	// `None` hides every light-filter gizmo: gobo, barn door, blocker, decay, cookie, rod.
+	if( const auto *drawingMode = attributes->member<IECore::StringData>( "gl:light:drawingMode" ) )
+	{
+		if( drawingMode->readable() == "none" )
+		{
+			return resultVis;
+		}
 	}
 
 	IECoreGL::StatePtr resultState = nullptr;
