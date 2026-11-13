@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - MeshSplit : Added `ignoreMissing` plug.
+- LightEditor : Added Sets section, with columns displaying the light's set membership.
 
 Fixes
 -----

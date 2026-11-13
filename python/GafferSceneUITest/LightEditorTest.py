@@ -964,22 +964,138 @@ class LightEditorTest( GafferUITest.TestCase ) :
 				columns
 			)
 
-		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A", "B" ] )
+		assertColumns( [ "Main", "Other", "All", "Sets" ], "Main", [ "A", "B" ] )
 
 		editor.settings()["columnFilter"].setValue( "A" )
-		assertColumns( [ "Main" ], "Main", [ "A" ] )
+		assertColumns( [ "Main", "Sets" ], "Main", [ "A" ] )
 
 		editor.settings()["columnFilter"].setValue( "A C" )
-		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A" ] )
+		assertColumns( [ "Main", "Other", "All", "Sets" ], "Main", [ "A" ] )
 
 		editor.settings()["columnFilter"].setValue( "C" )
-		assertColumns( [ "Other" ], "Other", [ "C" ] )
+		assertColumns( [ "Other", "Sets" ], "Other", [ "C" ] )
 
 		editor.settings()["columnFilter"].setValue( "C D" )
-		assertColumns( [ "Other" ], "Other", [ "C", "D" ] )
+		assertColumns( [ "Other", "Sets" ], "Other", [ "C", "D" ] )
 
 		editor.settings()["columnFilter"].setValue( "NOMATCH" )
 		assertColumns( [], "Other", [] )
 
 		editor.settings()["columnFilter"].setValue( "" )
-		assertColumns( [ "Main", "Other", "All" ], "Main", [ "A", "B" ] )
+		assertColumns( [ "Main", "Other", "All", "Sets" ], "Main", [ "A", "B" ] )
+
+	def testSetsSection( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["lightA"] = GafferSceneTest.TestLight()
+		script["lightA"].loadShader( "simpleLight" )
+		script["lightA"]["name"].setValue( "lightA" )
+		script["lightA"]["sets"].setValue( "light:A" )
+
+		script["lightB"] = GafferSceneTest.TestLight()
+		script["lightB"].loadShader( "simpleLight" )
+		script["lightB"]["name"].setValue( "lightB" )
+		script["lightB"]["sets"].setValue( "light:B" )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["lightA"]["out"] )
+		script["group"]["in"][1].setInput( script["lightB"]["out"] )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["group"]["out"] )
+		script["editScope"]["in"].setInput( script["group"]["out"] )
+
+		editor = GafferSceneUI.LightEditor( script )
+		editor.settings()["editScope"].setInput( script["editScope"]["out"] )
+		editor.setNodeSet( Gaffer.StandardSet( [ script["editScope"] ] ) )
+		GafferSceneUI.LightEditor._LightEditor__lazyUpdateFromContext.flush( editor )
+
+		pathListing = editor.sceneListing()
+		path = pathListing.getPath()
+
+		def setColumnNames() :
+
+			GafferSceneUI.LightEditor._LightEditor__updateSetNames.flush( editor )
+			self.waitForIdle( 1000 )
+			GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
+			return [
+				c.headerData( path ).value for c in pathListing.getColumns()
+				if isinstance( c, _GafferSceneUI._LightEditorSetMembershipColumn )
+			]
+
+		editor.settings()["section"].setValue( "Sets" )
+		self.assertEqual( setColumnNames(), [ "Solo", "defaultLights", "light:A", "light:B" ] )
+
+		script["lightA"]["sets"].setValue( "lights:key" )
+		self.assertEqual( setColumnNames(), [ "Solo", "defaultLights", "light:B",  "lights:key" ] )
+
+		editor.settings()["setColumnFilter"].setValue( "lights" )
+		self.assertEqual( setColumnNames(), [ "Solo", "defaultLights", "lights:key" ] )
+
+		editor.settings()["setColumnFilter"].setValue( "" )
+		self.assertEqual( setColumnNames(), [ "Solo", "defaultLights", "light:B",  "lights:key" ] )
+
+		editor.settings()["setColumnFilter"].setValue( "*:B" )
+		self.assertEqual( setColumnNames(), [ "Solo", "light:B" ] )
+
+		editor.settings()["setColumnFilter"].setValue( "*" )
+		self.assertEqual( setColumnNames(), [ "Solo", "defaultLights", "light:B",  "lights:key" ] )
+
+	def testSetEdits( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["lightA"] = GafferSceneTest.TestLight()
+		script["lightA"].loadShader( "simpleLight" )
+		script["lightA"]["name"].setValue( "lightA" )
+		script["lightA"]["sets"].setValue( "light:A" )
+
+		script["lightB"] = GafferSceneTest.TestLight()
+		script["lightB"].loadShader( "simpleLight" )
+		script["lightB"]["name"].setValue( "lightB" )
+		script["lightB"]["sets"].setValue( "light:B" )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["lightA"]["out"] )
+		script["group"]["in"][1].setInput( script["lightB"]["out"] )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["group"]["out"] )
+		script["editScope"]["in"].setInput( script["group"]["out"] )
+
+		editor = GafferSceneUI.LightEditor( script )
+		editor.settings()["section"].setValue( "Sets" )
+		editor.settings()["editScope"].setInput( script["editScope"]["out"] )
+		editor.setNodeSet( Gaffer.StandardSet( [ script["editScope"] ] ) )
+
+		GafferSceneUI.LightEditor._LightEditor__updateSetNames.flush( editor )
+		self.waitForIdle( 1000 )
+		GafferSceneUI.LightEditor._LightEditor__updateColumnsAndSections.flush( editor )
+
+		pathListing = editor.sceneListing()
+		path = pathListing.getPath()
+
+		columnNames = [ c.headerData( path ).value for c in pathListing.getColumns() ]
+		selection = [ IECore.PathMatcher() for c in columnNames ]
+		selection[columnNames.index( "light:A" )].addPath( "/group/lightB" )
+		pathListing.setSelection( selection )
+
+		self.assertEqual(
+			set( script["editScope"]["out"].set( "light:A" ).value.paths() ),
+			{ "/group/lightA" }
+		)
+
+		editSelectedCells( pathListing, True )
+
+		self.assertEqual(
+			set( script["editScope"]["out"].set( "light:A" ).value.paths() ),
+			{ "/group/lightA", "/group/lightB" }
+		)
+
+		editSelectedCells( pathListing, True )
+
+		self.assertEqual(
+			set( script["editScope"]["out"].set( "light:A" ).value.paths() ),
+			{ "/group/lightA" }
+		)

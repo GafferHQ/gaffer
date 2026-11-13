@@ -72,6 +72,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 
 			self["__hierarchyFilter"]["in"].setInput( self["__isolate"]["out"] )
 
+			self["setColumnFilter"] = Gaffer.StringPlug()
+
 	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::LightEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
@@ -134,10 +136,13 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		)
 
 		self.__columnCache = {}
+		self.__setColumnCache = {}
+		self.__setNames = []
 
 		self._updateFromSet()
 		self.__transferSelectionFromScriptNode()
 		self.__updateColumnsAndSections()
+		self.__updateSetNames()
 
 	__columnRegistry = collections.OrderedDict()
 
@@ -263,11 +268,15 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 	def _updateFromContext( self, modifiedItems ) :
 
 		self.__lazyUpdateFromContext()
+		self.__updateSetNames()
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug in ( self.settings()["section"], self.settings()["attribute"], self.settings()["columnFilter"] ) :
+		if plug in ( self.settings()["section"], self.settings()["attribute"], self.settings()["columnFilter"], self.settings()["setColumnFilter"] ) :
 			self.__updateColumnsAndSections()
+
+		if plug in ( self.settings()["section"], self.settings()["__adaptedIn"]["setNames"] ) :
+			self.__updateSetNames()
 		elif plug == self.settings()["compactColumns"] :
 			self.__pathListing.setCompactColumns( plug.getValue() )
 
@@ -296,14 +305,80 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if "All" not in sectionNames and len( sectionNames ) > 1 :
 			sectionNames.append( "All" )
 
+		if "Sets" not in sectionNames and ( sectionNames or not filterActive ) :
+			# We don't show the Sets section when `columnFilter` has removed all sections.
+			# Doing so would leave Sets as the current section, hiding `columnFilter` and
+			# providing no way to change it.
+			sectionNames.append( "Sets" )
+
 		Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", IECore.StringVectorData( sectionNames ), persistent = False )
 
 		currentSection = self.settings()["section"].getValue()
 		sectionColumns = []
-		for creators in sectionCreators.values() if currentSection == "All" else [ sectionCreators.get( currentSection, [] ) ] :
-			sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in creators ]
+		if currentSection == "Sets" :
+			sectionColumns = [ self.__acquireSetColumn( setName ) for setName in self.__filteredSetNames() ]
+		else :
+			for creators in sectionCreators.values() if currentSection == "All" else [ sectionCreators.get( currentSection, [] ) ] :
+				sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in creators ]
 
 		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
+
+	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	def __updateSetNames( self ) :
+
+		if self.settings()["section"].getValue() != "Sets" :
+			return
+
+		with self.context() :
+			self.__backgroundSetNames()
+
+	@GafferUI.BackgroundMethod()
+	def __backgroundSetNames( self ) :
+
+		return sorted( { str( n ) for n in self.settings()["__adaptedIn"].setNames() } )
+
+	@__backgroundSetNames.plug
+	def __backgroundSetNamesPlug( self ) :
+
+		return self.settings()["__adaptedIn"]
+
+	@__backgroundSetNames.postCall
+	def __backgroundSetNamesPostCall( self, backgroundResult ) :
+
+		if isinstance( backgroundResult, IECore.Cancelled ) :
+			self.__updateSetNames()
+			return
+
+		self.__setNames = [] if isinstance( backgroundResult, Exception ) else backgroundResult
+		self.__updateColumnsAndSections()
+
+	def __filteredSetNames( self ) :
+
+		filterPattern = " ".join(
+			token if IECore.StringAlgo.hasWildcards( token ) else f"*{token}*"
+			for token in self.settings()["setColumnFilter"].getValue().lower().split()
+		) or "*"
+
+		internalSets = { "soloLights", "__lights", "__lightFilters", "__cameras", "__coordinateSystems" }
+
+		return [
+			n for n in self.__setNames
+			if n not in internalSets and IECore.StringAlgo.matchMultiple( n.lower(), filterPattern )
+		]
+
+	def __acquireSetColumn( self, setName ) :
+
+		column = self.__setColumnCache.get( setName )
+		if column is None :
+			column = _GafferSceneUI._LightEditorSetMembershipColumn(
+				self.settings()["__adaptedIn"],
+				self.settings()["editScope"],
+				setName,
+				setName
+			)
+			self.__setColumnCache[setName] = column
+
+		return column
 
 	def __acquireColumn( self, columnCreator, section ) :
 
@@ -392,6 +467,9 @@ Gaffer.Metadata.registerNode(
 	"layout:customWidget:spacer:section", "Settings",
 	"layout:customWidget:spacer:index", 5,
 
+	"layout:activator:columnFilterActivator", lambda parent : parent["section"].getValue() != "Sets",
+	"layout:activator:setsColumnFilterActivator", lambda parent : parent["section"].getValue() == "Sets",
+
 	plugs = {
 
 		"*" : {
@@ -427,6 +505,39 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"columnFilter" : {
+
+			"layout:visibilityActivator" : "columnFilterActivator",
+
+		},
+
+		"setColumnFilter" : {
+
+			"description" :
+			"""
+			Filters the columns in the Sets section to show only those with
+			matching set names. Matching is case-insensitive, and is performed
+			against a fragment of the name or a pattern containing any of
+			Gaffer's standard wildcards. Multiple space separated terms may
+			be entered, columns matching any one of them are shown.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
+			# We need a non-default value to toggle to, so that the first
+			# toggling can highlight the icon. `*` seems like a reasonable value
+			# since it has no effect on the filtering, and hints that wildcards
+			# are available.
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter sets...",
+
+			"layout:width" : 160,
+			"layout:section" : "Filter",
+			"layout:visibilityActivator" : "setsColumnFilterActivator",
+
+		},
+
 		"compactColumns" : {
 
 			"description" :
@@ -437,7 +548,8 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "compactColumnsOn.png",
 			"togglePlugValueWidget:image:off" : "compactColumnsOff.png",
-			"layout:section" : "Filter"
+			"layout:section" : "Filter",
+			"layout:index" : -1,
 
 		},
 
