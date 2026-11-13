@@ -111,7 +111,7 @@ void MatchPatternPathFilter::doFilter( std::vector<PathPtr> &paths, const IECore
 		std::remove_if(
 			paths.begin(),
 			paths.end(),
-			boost::bind( &MatchPatternPathFilter::remove, this, ::_1 )
+			boost::bind( &MatchPatternPathFilter::remove, this, ::_1, canceller )
 		),
 		paths.end()
 	);
@@ -122,11 +122,11 @@ bool MatchPatternPathFilter::invert( bool b ) const
 	return b != m_inverted;
 }
 
-bool MatchPatternPathFilter::remove( PathPtr path ) const
+bool MatchPatternPathFilter::remove( PathPtr path, const IECore::Canceller *canceller ) const
 {
 	try
 	{
-		if( m_leafOnly && !path->isLeaf() )
+		if( m_leafOnly && !path->isLeaf( canceller ) )
 		{
 			return false;
 		}
@@ -144,7 +144,7 @@ bool MatchPatternPathFilter::remove( PathPtr path ) const
 		}
 		else
 		{
-			propertyData = IECore::runTimeCast<const IECore::StringData>( path->property( m_propertyName ) );
+			propertyData = IECore::runTimeCast<const IECore::StringData>( path->property( m_propertyName, canceller ) );
 			if( !propertyData )
 			{
 				throw IECore::Exception( "Expected StringData" );

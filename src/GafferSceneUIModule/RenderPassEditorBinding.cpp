@@ -294,7 +294,7 @@ class RenderPassPath : public Gaffer::Path
 
 		bool isValid( const IECore::Canceller *canceller = nullptr ) const override
 		{
-			if( !Path::isValid() )
+			if( !Path::isValid( canceller ) )
 			{
 				return false;
 			}
