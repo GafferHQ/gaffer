@@ -6,6 +6,12 @@ Improvements
 
 - MeshSplit : Added `ignoreMissing` plug.
 
+Fixes
+-----
+
+- StandardLightVisualiser, RenderManLightVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when viewing lights with ray or portal visualisations (#7241).
+- GoboVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when the `gl:light:drawingMode` attribute is set to wireframe.
+
 1.7.7.0 (relative to 1.7.6.0)
 =======
 
