@@ -36,6 +36,8 @@
 
 #include "GafferUSD/USDShader.h"
 
+#include "GafferOSL/OSLShader.h"
+
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/OptionalValuePlug.h"
@@ -330,6 +332,10 @@ Plug *loadPrimDefinitionAttribute( const UsdPrimDefinition::Attribute &attribute
 
 const IECore::InternedString g_surface( "surface" );
 const IECore::InternedString g_displacement( "displacement" );
+
+// USD pattern and surface shaders, including UsdUVTexture, use this type.
+// One registration covers the family.
+const bool g_oslRegistrationSurface = GafferOSL::OSLShader::registerCompatibleShader( g_surface );
 
 } // namespace
 

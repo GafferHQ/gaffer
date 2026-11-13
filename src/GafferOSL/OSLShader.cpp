@@ -300,13 +300,8 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 			{
 				sourceShaderType = sourceShader->typePlug()->getValue();
 			}
-			const ShaderTypeSet &cs = compatibleShaders();
-			if( cs.find( sourceShaderType ) != cs.end() )
-			{
-				return true;
-			}
-
-			return false;
+			const ShaderTypeSet &shaderCompat = compatibleShaders();
+			return shaderCompat.find( sourceShaderType ) != shaderCompat.end();
 		}
 	}
 
