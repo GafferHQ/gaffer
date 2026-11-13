@@ -57,6 +57,12 @@ def __worldOriginAdaptor() :
 
 	return wrapper
 
-__import__( "GafferScene" ).SceneAlgo.registerRenderAdaptor( "RenderManWorldOriginAdaptor", __worldOriginAdaptor, "*Render", "RenderMan*" )
+# This render adaptor puts a transform value into the options. This is pretty dangerous for our
+# dirty-tracking mechanisms: if any adaptor after this one has a Switch based on an option, then
+# all children of the ScenePlug will be dirtied, including things like objectPlug and
+# childNamesPlug, which we don't want to be dirtied by a transform changing. I've added a
+# lowercase "z" to the beginning of this name so it sorts last in the list of adaptors, which
+# currently prevents this from happening.
+__import__( "GafferScene" ).SceneAlgo.registerRenderAdaptor( "zRenderManWorldOriginAdaptor", __worldOriginAdaptor, "*Render", "RenderMan*" )
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferRenderMan" )
