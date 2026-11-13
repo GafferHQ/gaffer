@@ -27,6 +27,7 @@ Improvements
     - Added `ai:aperture_aspect_ratio` preset menu item.
 - Outputs : Default output presets are now registered in the modules for each renderer, making them available outside of the GUI (#6403).
 - Cycles : Added render-time translation of `UsdPreviewSurface` normal maps, these require a FaceVarying `uv` primitive variable to render correctly.
+- PaintTool : Fixed performance when transforms are modified while using PaintTool.
 
 Fixes
 -----
