@@ -77,6 +77,12 @@ def _qtObjectIsValid( o ) :
 # to avoid polluting the GafferUI namespace.
 __import__( "IECore" )
 __import__( "Gaffer" )
+# Import PySide modules for the Qt libraries that _GafferUI links to.
+__import__( "PySide6.QtCore" )
+__import__( "PySide6.QtGui" )
+__import__( "PySide6.QtOpenGL" )
+__import__( "PySide6.QtTest" )
+__import__( "PySide6.QtWidgets" )
 
 from ._GafferUI import *
 
