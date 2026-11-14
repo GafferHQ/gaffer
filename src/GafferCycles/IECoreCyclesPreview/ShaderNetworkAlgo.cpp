@@ -1425,22 +1425,17 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			// Normal.
 			if( const ShaderNetwork::Parameter normalInput = shaderNetwork->input( { handle, g_normalParameter } ) )
 			{
-				// Cycles normal_map expects normals to be in 0.0 to 1.0 space and not -1.0 to 1.0, so we transform
-				// the incoming normal back into this form.
-				ShaderPtr addShader = new Shader( "vector_math", "cycles:shader" );
-				addShader->parameters()[g_mathTypeParameter] = new StringData( "add" );
-				addShader->parameters()[g_vector2Parameter] = new Color3fData( Color3f( 1.0f ) );
-				const InternedString addHandle = shaderNetwork->addShader( handle.string() + "Add", std::move( addShader ) );
-				ShaderPtr multiplyShader = new Shader( "vector_math", "cycles:shader" );
-				multiplyShader->parameters()[g_mathTypeParameter] = new StringData( "multiply" );
-				multiplyShader->parameters()[g_vector2Parameter] = new Color3fData( Color3f( 0.5f ) );
-				const InternedString multiplyHandle = shaderNetwork->addShader( handle.string() + "Multiply", std::move( multiplyShader ) );
+				// Cycles' normal_map expects normals in the [0,1] range, so we remap UsdPreviewSurface's [-1,1] range.
+				ShaderPtr multiplyAddShader = new Shader( "vector_math", "cycles:shader" );
+				multiplyAddShader->parameters()[g_mathTypeParameter] = new StringData( "multiply_add" );
+				multiplyAddShader->parameters()[g_vector2Parameter] = new Color3fData( Color3f( 0.5f ) );
+				multiplyAddShader->parameters()[g_vector3Parameter] = new Color3fData( Color3f( 0.5f ) );
+				const InternedString multiplyAddHandle = shaderNetwork->addShader( handle.string() + "NormalMultiplyAdd", std::move( multiplyAddShader ) );
 
 				ShaderPtr normalmapShader = new Shader( "normal_map", "cycles:shader" );
 				const InternedString normalmapHandle = shaderNetwork->addShader( handle.string() + "NormalMap", std::move( normalmapShader ) );
-				shaderNetwork->addConnection( ShaderNetwork::Connection( normalInput, { addHandle, g_vector1Parameter } ) );
-				shaderNetwork->addConnection( ShaderNetwork::Connection( { addHandle, g_vectorParameter }, { multiplyHandle, g_vector1Parameter } ) );
-				shaderNetwork->addConnection( ShaderNetwork::Connection( { multiplyHandle, g_vectorParameter }, { normalmapHandle, g_colorParameter } ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( normalInput, { multiplyAddHandle, g_vector1Parameter } ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( { multiplyAddHandle, g_vectorParameter }, { normalmapHandle, g_colorParameter } ) );
 				shaderNetwork->removeConnection( ShaderNetwork::Connection( normalInput, { handle, g_normalParameter } ) );
 				shaderNetwork->addConnection( ShaderNetwork::Connection( { normalmapHandle, g_normalParameter }, { handle, g_normalParameter } ) );
 			}

@@ -864,6 +864,58 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( len( reader.parameters ), 1 )
 			self.assertEqual( reader.parameters["attribute"].value, "test" )
 
+	def testConvertUSDNormal( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"previewSurface" : IECoreScene.Shader(
+					"UsdPreviewSurface", "surface"
+				),
+				"texture" : IECoreScene.Shader(
+					"UsdUVTexture", "shader",
+					{
+						"scale" : imath.Color4f( 2.0, 2.0, 2.0, 1.0 ),
+						"bias" : imath.Color4f( -1.0, -1.0, -1.0, 0.0 ),
+					}
+				),
+			},
+			connections = [
+				( ( "texture", "rgb" ), ( "previewSurface", "normal" ) ),
+			],
+			output = "previewSurface",
+		)
+
+		convertedNetwork = network.copy()
+		IECoreCycles.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+
+		self.assertEqual( len( convertedNetwork ), 5 )
+
+		normalMap = convertedNetwork.getShader( "previewSurfaceNormalMap" )
+		self.assertEqual( normalMap.name, "normal_map" )
+
+		multiplyAdd = convertedNetwork.getShader( "previewSurfaceNormalMultiplyAdd" )
+		self.assertEqual( multiplyAdd.name, "vector_math" )
+		self.assertEqual( multiplyAdd.parameters["math_type"].value, "multiply_add" )
+		self.assertEqual( multiplyAdd.parameters["vector2"].value, imath.Color3f( 0.5, 0.5, 0.5 ) )
+		self.assertEqual( multiplyAdd.parameters["vector3"].value, imath.Color3f( 0.5, 0.5, 0.5 ) )
+
+		self.assertEqual(
+			convertedNetwork.input( ( "textureMultiplyAdd", "vector1" ) ),
+			( "texture", "color" ),
+		)
+		self.assertEqual(
+			convertedNetwork.input( ( "previewSurfaceNormalMultiplyAdd", "vector1" ) ),
+			( "textureMultiplyAdd", "vector" ),
+		)
+		self.assertEqual(
+			convertedNetwork.input( ( "previewSurfaceNormalMap", "color" ) ),
+			( "previewSurfaceNormalMultiplyAdd", "vector" ),
+		)
+		self.assertEqual(
+			convertedNetwork.input( ( "previewSurface", "normal" ) ),
+			( "previewSurfaceNormalMap", "normal" ),
+		)
+
 	def testUSDMeshLight( self ) :
 
 		attributes = IECore.CompoundObject(
@@ -1291,45 +1343,3 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				shader1.blindData()[k], shader2.blindData()[k],
 				"{}(Blind Data = {})".format( message or "", k )
 			)
-
-	def testConvertUSDNormal( self ) :
-
-		network = IECoreScene.ShaderNetwork(
-			shaders = {
-				"previewSurface" : IECoreScene.Shader(
-					"UsdPreviewSurface", "surface"
-				)
-			},
-			output = "previewSurface",
-		)
-
-		network.addShader( "texture", IECoreScene.Shader( "UsdUVTexture" ) )
-		network.addConnection( ( ( "texture", "color" ), ( "previewSurface", "normal" ) ) )
-
-		convertedNetwork = network.copy()
-		IECoreCycles.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
-
-		self.assertEqual( len( convertedNetwork ), 5 )
-
-		add = convertedNetwork.getShader( "previewSurfaceAdd" )
-		self.assertEqual( add.parameters["math_type"].value, "add" )
-
-		multiply = convertedNetwork.getShader( "previewSurfaceMultiply" )
-		self.assertEqual( multiply.parameters["math_type"].value, "multiply" )
-
-		self.assertEqual(
-			convertedNetwork.input( ( "previewSurfaceAdd", "vector1" ) ),
-			( "texture", "color" ),
-		)
-		self.assertEqual(
-			convertedNetwork.input( ( "previewSurfaceMultiply", "vector1" ) ),
-			( "previewSurfaceAdd", "vector" ),
-		)
-		self.assertEqual(
-			convertedNetwork.input( ( "previewSurfaceNormalMap", "color" ) ),
-			( "previewSurfaceMultiply", "vector" ),
-		)
-		self.assertEqual(
-			convertedNetwork.input( ( "previewSurface", "normal" ) ),
-			( "previewSurfaceNormalMap", "normal" ),
-		)
