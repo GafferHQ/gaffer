@@ -56,6 +56,9 @@ class GAFFERSCENE_API MeshSplit : public BranchCreator
 		Gaffer::StringPlug *segmentPlug();
 		const Gaffer::StringPlug *segmentPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingPlug();
+		const Gaffer::BoolPlug *ignoreMissingPlug() const;
+
 		Gaffer::BoolPlug *nameFromSegmentPlug();
 		const Gaffer::BoolPlug *nameFromSegmentPlug() const;
 
