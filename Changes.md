@@ -45,6 +45,7 @@ Fixes
   - Fixed refusal to edit optional parameters on lights, such as the renderer-specific parameters on USD lights.
   - Fixed bug that misattributed shader parameter edits to ShaderTweaks nodes when the `shader` plug didn't match the inspected attribute.
 - LightTool : Fixed messaging for parameters which were not editable, for example because they originated in a SceneReader.
+- USDMeshLight : Fixed Arnold not applying the color temperature tint to the surface emission color or light input shader.
 
 API
 ---
@@ -86,6 +87,7 @@ Breaking Changes
 - MeshSegments : Changed behaviour when setting `connectivity` to "". Previously, this used vertex topology, now it passes through the input unchanged. This aligns better with other geometry processing nodes.
 - EditScopeAlgo : Removed `acquireSetEdits()` function.
 - RampPlug : Moved point plugs to a `points` child container. Old `.gfr` files are converted automatically on load.
+- USDMeshLight : Lights with `enableColorTemperature` enabled will now tint the resulting light color with the color temperature.
 
 Build
 -----
