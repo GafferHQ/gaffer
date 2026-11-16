@@ -1643,6 +1643,7 @@ PaintTool::PaintTool( SceneView *view, const std::string &name )
 		m_gadget( new PaintGadget( *this ) ),
 		m_selectionDirty( true ),
 		m_locationCachesDirty( true ),
+		m_transformsDirty( true ),
 		m_buttonPressIsOurs( false ),
 		m_mergeGroupId( 0 ),
 		m_depthRender( std::make_unique<DepthRender>( Imath::V2i( 32, 32 ) ) ),
@@ -2039,6 +2040,7 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 		);
 
 		m_locationCachesDirty = true;
+		m_transformsDirty = true;
 		m_selectionDirty = false;
 	}
 
@@ -2068,9 +2070,6 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 					{
 						warnings.insert( warning );
 					}
-
-					// \todo : Should be in a separate conditional once we add separate state flag for tracking transforms
-					m_locationCaches[i]->updateTransform( scenePlug() );
 				}
 			},
 
@@ -2087,6 +2086,28 @@ PaintTool::LocationCacheVector &PaintTool::locationCaches()
 		}
 
 		m_locationCachesDirty = false;
+	}
+
+	if( m_transformsDirty )
+	{
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+		const ThreadState &threadState = ThreadState::current();
+
+		tbb::parallel_for( tbb::blocked_range<size_t>( 0, m_locationCaches.size() ),
+			[&]( const tbb::blocked_range<size_t> &r )
+			{
+				ThreadState::Scope threadStateScope( threadState );
+
+				for( size_t i = r.begin(); i != r.end(); ++i )
+				{
+					m_locationCaches[i]->updateTransform( scenePlug() );
+				}
+			},
+
+			taskGroupContext
+		);
+
+		m_transformsDirty = false;
 	}
 
 	return m_locationCaches;
@@ -2173,13 +2194,7 @@ void PaintTool::plugDirtied( const Gaffer::Plug *plug )
 	}
 	else if( plug == scenePlug()->transformPlug() )
 	{
-		// \todo This should be tracked separate from m_locationCachesDirty, with an m_transformsDirty
-		// member. But that would break binary compatibility - and wouldn't make any difference currently,
-		// because we're connected to the preprocessors on the view, and whenever the input transform
-		// changes, the preprocessors on the view convert that to a dirtying of the object, so we get an
-		// inspectorDirtied. But in theory transform changes shouldn't require dirtying the object, and
-		// we should track this separately.
-		m_locationCachesDirty = true;
+		m_transformsDirty = true;
 	}
 	else if( plug == variableNamePlug() || plug == variableTypePlug() )
 	{

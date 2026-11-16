@@ -189,6 +189,7 @@ class GAFFERSCENEUI_API PaintTool : public GafferSceneUI::SelectionTool
 		LocationCacheVector m_locationCaches;
 		bool m_selectionDirty;
 		bool m_locationCachesDirty;
+		bool m_transformsDirty;
 		StatusChangedSignal m_statusChangedSignal;
 
 		std::unordered_set< std::string > m_warnings;

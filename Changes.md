@@ -27,6 +27,7 @@ Improvements
     - Added `ai:aperture_aspect_ratio` preset menu item.
 - Outputs : Default output presets are now registered in the modules for each renderer, making them available outside of the GUI (#6403).
 - Cycles : Added render-time translation of `UsdPreviewSurface` normal maps, these require a FaceVarying `uv` primitive variable to render correctly.
+- PaintTool : Fixed performance when transforms are modified while using PaintTool.
 
 Fixes
 -----
@@ -34,6 +35,7 @@ Fixes
 - Collect : Fixed creation of context variables with no name, if either `contextVariable` or `indexContextVariable` were empty.
 - Viewer : Fixed crashes on macOS when using Arnold, Cycles or 3Delight as the viewport renderer.
 - Enums : Fixed conversion of `QtCore.Qt.AlignmentFlag.AlignJustify`.
+- Render Adaptors : Reordered a Renderman adaptor to avoid excess dirty signals when modifying transforms.
 
 API
 ---
