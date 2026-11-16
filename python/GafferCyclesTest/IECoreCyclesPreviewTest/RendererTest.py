@@ -2408,6 +2408,75 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane, light
 
+	def testUsdPreviewSurfaceNormal( self ) :
+
+		for testNormal in [
+			imath.V3f( 0.5, 0, 1 ),
+			imath.V3f( 0, 0.5, 1 ),
+			imath.V3f( -0.3, -0.4, 1 ),
+		] :
+
+			with self.subTest( testNormal = testNormal ) :
+
+				renderer = self.createRenderer()
+
+				renderer.output(
+					"testOutput",
+					IECoreScene.Output(
+						"test",
+						"ieDisplay",
+						"normal",
+						{
+							"driverType" : "ImageDisplayDriver",
+							"handle" : "testUsdPreviewSurfaceNormal",
+						}
+					)
+				)
+
+				planePrimitive = IECoreScene.MeshPrimitive.createPlane(
+					imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+				)
+				self.assertEqual( planePrimitive["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.FaceVarying )
+				planePrimitive["testNormal"] = IECoreScene.PrimitiveVariable(
+					IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.V3fData( testNormal.normalized() )
+				)
+
+				plane = renderer.object(
+					"/plane",
+					planePrimitive,
+					renderer.attributes( IECore.CompoundObject ( {
+						"surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"previewSurface" : IECoreScene.Shader( "UsdPreviewSurface", "surface" ),
+								"normalReader" : IECoreScene.Shader( "UsdPrimvarReader_float3", "shader", { "varname" : "testNormal" } ),
+							},
+							connections = [
+								( ( "normalReader", "result" ), ( "previewSurface", "normal" ) ),
+							],
+							output = "previewSurface",
+						)
+					} ) )
+				)
+
+				# Rotate the plane so that tangent space differs from world space.
+				planeTransform = imath.M44f().translate( imath.V3f( 0, 0, -1 ) ).rotate( imath.V3f( 0, 0, math.pi / 2 ) )
+				plane.transform( planeTransform )
+
+				renderer.render()
+
+				image = IECoreImage.ImageDisplayDriver.storedImage( "testUsdPreviewSurfaceNormal" )
+				self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+				# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+				normal = self.__colorAtUV( image, imath.V2f( 0.55 ), "normal" )
+				self.assertEqualWithAbsError(
+					imath.V3f( normal.r, normal.g, normal.b ),
+					planeTransform.multDirMatrix( testNormal.normalized() ),
+					error = 0.01
+				)
+
+				del plane
+
 	def testOSLInSVMShadingSystem( self ) :
 
 		renderer = self.createRenderer()
