@@ -64,26 +64,6 @@ using namespace GafferScene;
 
 namespace
 {
-
-void mergeSetNames( const InternedStringVectorData *toAdd, vector<InternedString> &result )
-{
-	if( !toAdd )
-	{
-		return;
-	}
-
-	// This naive approach to merging set names preserves the order of the incoming names,
-	// but at the expense of using linear search. We assume that the number of sets is small
-	// enough and the InternedString comparison fast enough that this is OK.
-	for( const auto &setName : toAdd->readable() )
-	{
-		if( std::find( result.begin(), result.end(), setName ) == result.end() )
-		{
-			result.push_back( setName );
-		}
-	}
-}
-
 ScenePlug::ScenePath closestExistingPath( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
 	ScenePlug::ScenePath result = path;
@@ -1031,28 +1011,24 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeSetNames( const G
 		return inputSetNamesData;
 	}
 
-	InternedStringVectorDataPtr resultData = new InternedStringVectorData( inputSetNamesData->readable() );
-	vector<InternedString> &result = resultData->writable();
-
 	if( constantBranchSetNames() )
 	{
 		ConstInternedStringVectorDataPtr branchSetNamesData = computeBranchSetNames( ScenePlug::ScenePath(), context );
-		mergeSetNames( branchSetNamesData.get(), result );
+		return SceneAlgo::mergeSetNames( { inputSetNamesData, branchSetNamesData } );
 	}
 	else
 	{
+		vector<ConstInternedStringVectorDataPtr> setNames = { inputSetNamesData };
 		branchesData->visitDestinations(
-			[&context, &result, this] ( const ScenePath &destination, const BranchesData::Location::SourcePaths &sourcePaths ) {
+			[&context, &setNames, this] ( const ScenePath &destination, const BranchesData::Location::SourcePaths &sourcePaths ) {
 				for( const auto &sourcePath : sourcePaths )
 				{
-					ConstInternedStringVectorDataPtr branchSetNamesData = computeBranchSetNames( sourcePath, context );
-					mergeSetNames( branchSetNamesData.get(), result );
+					setNames.push_back( computeBranchSetNames( sourcePath, context ) );
 				}
 			}
 		);
+		return SceneAlgo::mergeSetNames( setNames );
 	}
-
-	return resultData;
 }
 
 void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
