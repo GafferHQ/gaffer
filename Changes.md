@@ -34,6 +34,7 @@ Fixes
 - Viewer : Fixed crashes on macOS when using Arnold, Cycles or 3Delight as the viewport renderer.
 - Enums : Fixed conversion of `QtCore.Qt.AlignmentFlag.AlignJustify`.
 - Arnold, Cycles, 3Delight : Fixed fallback value for USD DistantLight intensity.
+- USDMeshLight : Fixed Arnold not applying the color temperature tint to the surface emission color or light input shader.
 
 API
 ---
@@ -71,6 +72,7 @@ Breaking Changes
   - Removed legacy compatibility code for PySide2 and PyQt.
   - Removed `_Variant` class.
 - MeshSegments : Changed behaviour when setting `connectivity` to "". Previously, this used vertex topology, now it passes through the input unchanged. This aligns better with other geometry processing nodes.
+- USDMeshLight : Lights with `enableColorTemperature` enabled will now tint the resulting light color with the color temperature.
 
 Build
 -----
