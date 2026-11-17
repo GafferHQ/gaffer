@@ -257,7 +257,7 @@ class _HeaderView( QtWidgets.QHeaderView ) :
 		# a section wider than any reasonable margin and return the difference.
 		sectionWidth = 1000
 		originalRect = option.rect
-		option.rect = QtCore.QRect( 0, 0, sectionWidth, self.sizeHint().height() )
+		option.rect = QtCore.QRect( 0, 0, sectionWidth, QtWidgets.QHeaderView.sectionSizeFromContents( self, option.section ).height() )
 		labelRect = self.style().subElementRect( QtWidgets.QStyle.SubElement.SE_HeaderLabel, option, self )
 		if self.isSortIndicatorShown() and self.sortIndicatorSection() == option.section :
 			option.rect = labelRect

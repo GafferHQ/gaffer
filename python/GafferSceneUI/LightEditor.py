@@ -38,6 +38,7 @@ import collections
 
 import functools
 import imath
+import re
 
 import IECore
 import IECoreScene
@@ -71,6 +72,8 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 			self["__isolate"]["filter"].setInput( self["__setFilter"]["out"] )
 
 			self["__hierarchyFilter"]["in"].setInput( self["__isolate"]["out"] )
+
+			self["setColumnFilter"] = Gaffer.StringPlug()
 
 	IECore.registerRunTimeTyped( Settings, "GafferSceneUI::LightEditor::Settings" )
 
@@ -134,10 +137,13 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		)
 
 		self.__columnCache = {}
+		self.__setColumnCache = {}
+		self.__setNames = []
 
 		self._updateFromSet()
 		self.__transferSelectionFromScriptNode()
 		self.__updateColumnsAndSections()
+		self.__updateSetNames()
 
 	__columnRegistry = collections.OrderedDict()
 
@@ -263,11 +269,15 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 	def _updateFromContext( self, modifiedItems ) :
 
 		self.__lazyUpdateFromContext()
+		self.__updateSetNames()
 
 	def _updateFromSettings( self, plug ) :
 
-		if plug in ( self.settings()["section"], self.settings()["attribute"], self.settings()["columnFilter"] ) :
+		if plug in ( self.settings()["section"], self.settings()["attribute"], self.settings()["columnFilter"], self.settings()["setColumnFilter"] ) :
 			self.__updateColumnsAndSections()
+
+		if plug in ( self.settings()["section"], self.settings()["__adaptedIn"]["setNames"] ) :
+			self.__updateSetNames()
 		elif plug == self.settings()["compactColumns"] :
 			self.__pathListing.setCompactColumns( plug.getValue() )
 
@@ -296,14 +306,85 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if "All" not in sectionNames and len( sectionNames ) > 1 :
 			sectionNames.append( "All" )
 
+		if "Sets" not in sectionNames and ( sectionNames or not filterActive ) :
+			# We don't show the Sets section when `columnFilter` has removed all sections.
+			# Doing so would leave Sets as the current section, hiding `columnFilter` and
+			# providing no way to change it.
+			sectionNames.append( "Sets" )
+
 		Gaffer.Metadata.registerValue( self.settings()["section"], "sectionPlugValueWidget:sections", IECore.StringVectorData( sectionNames ), persistent = False )
 
 		currentSection = self.settings()["section"].getValue()
 		sectionColumns = []
-		for creators in sectionCreators.values() if currentSection == "All" else [ sectionCreators.get( currentSection, [] ) ] :
-			sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in creators ]
+		if currentSection == "Sets" :
+			sectionColumns = [ self.__acquireSetColumn( setName ) for setName in self.__filteredSetNames() ]
+		else :
+			for creators in sectionCreators.values() if currentSection == "All" else [ sectionCreators.get( currentSection, [] ) ] :
+				sectionColumns += [ self.__acquireColumn( c, currentSection ) for c in creators ]
 
 		self.__pathListing.setColumns( self.__commonColumns + sectionColumns )
+
+	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	def __updateSetNames( self ) :
+
+		if self.settings()["section"].getValue() != "Sets" :
+			return
+
+		with self.context() :
+			self.__backgroundSetNames()
+
+	@GafferUI.BackgroundMethod()
+	def __backgroundSetNames( self ) :
+
+		return sorted( { str( n ) for n in self.settings()["__adaptedIn"].setNames() } )
+
+	@__backgroundSetNames.plug
+	def __backgroundSetNamesPlug( self ) :
+
+		return self.settings()["__adaptedIn"]
+
+	@__backgroundSetNames.postCall
+	def __backgroundSetNamesPostCall( self, backgroundResult ) :
+
+		if isinstance( backgroundResult, IECore.Cancelled ) :
+			self.__updateSetNames()
+			return
+
+		self.__setNames = [] if isinstance( backgroundResult, Exception ) else backgroundResult
+		self.__updateColumnsAndSections()
+
+	def __filteredSetNames( self ) :
+
+		filterPattern = self.__setColumnFilterPattern()
+
+		internalSets = { "soloLights", "__lights", "__lightFilters", "__cameras", "__coordinateSystems" }
+
+		return [
+			n for n in self.__setNames
+			if n not in internalSets and IECore.StringAlgo.matchMultiple( n.lower(), filterPattern )
+		]
+
+	def __setColumnFilterPattern( self ) :
+
+		return " ".join(
+			token if IECore.StringAlgo.hasWildcards( token ) else f"*{token}*"
+			for token in self.settings()["setColumnFilter"].getValue().lower().split()
+		) or "*"
+
+	def __acquireSetColumn( self, setName ) :
+
+		column = self.__setColumnCache.get( setName )
+		if column is None :
+			column = _GafferSceneUI._LightEditorSetMembershipColumn(
+				self.settings()["__adaptedIn"],
+				self.settings()["editScope"],
+				setName,
+				setName,
+				headerIndicator = False
+			)
+			self.__setColumnCache[setName] = column
+
+		return column
 
 	def __acquireColumn( self, columnCreator, section ) :
 
@@ -354,6 +435,16 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 				}
 			)
 
+			menuDefinition.append( "/__lightEditorSetDivider", { "divider" : True } )
+
+			menuDefinition.append(
+				"Add Selection To Set...",
+				{
+					"command" : Gaffer.WeakMethod( self.__addSelectionToSet ),
+					"active" : not self.__pathListing.getSelection()[0].isEmpty(),
+				}
+			)
+
 	def __selectLinked (self, *unused ) :
 
 		context = self.context()
@@ -375,7 +466,130 @@ class LightEditor( GafferSceneUI.SceneEditor ) :
 		if not isinstance( result, Exception ) :
 			GafferSceneUI.ScriptNodeAlgo.setSelectedPaths( self.scriptNode(), result )
 
+	def __addSelectionToSet( self, *unused ) :
+
+		paths = self.__pathListing.getSelection()[0].paths()
+		if not paths :
+			return
+
+		dialogue = _SetNamesDialogue()
+		setNames = dialogue.waitForSetNames( parentWindow = self.ancestor( GafferUI.Window ) )
+		if not setNames :
+			return
+
+		nonEditableReason = self.__addToSets( paths, setNames )
+		if nonEditableReason :
+			GafferUI.PopupWindow.showWarning( nonEditableReason, parent = self.__pathListing )
+			return
+
+		# Update the column filter so columns for modified sets are visible.
+		filterPattern = self.__setColumnFilterPattern()
+		setColumnFilter = self.settings()["setColumnFilter"].getValue()
+		for setName in setNames :
+			if not IECore.StringAlgo.matchMultiple( setName.lower(), filterPattern ) :
+				setColumnFilter += " " + setName
+
+		self.settings()["setColumnFilter"].setValue( setColumnFilter )
+
+	def __addToSets( self, paths, setNames ) :
+
+		inspections = []
+		with Gaffer.Context( self.context() ) as context :
+			for setName in setNames :
+				inspector = GafferSceneUI.Private.SetMembershipInspector(
+					self.settings()["__adaptedIn"], self.settings()["editScope"], setName
+				)
+				for path in paths :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+					inspection = inspector.inspect()
+					if inspection is None :
+						return "Cannot add \"{}\" to \"{}\".".format( path, setName )
+					elif not inspection.editable() or not inspection.canEdit( IECore.BoolData( True ) ) :
+						return "Cannot add \"{}\" to \"{}\" : {}".format( path, setName, inspection.nonEditableReason( IECore.BoolData( True ) ) )
+					inspections.append( inspection )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for inspection in inspections :
+				inspection.edit( IECore.BoolData( True ) )
+
+		return ""
+
 GafferUI.Editor.registerType( "LightEditor", LightEditor )
+
+# _SetNamesDialogue
+# =================
+
+class _SetNamesDialogue( GafferUI.Dialogue ) :
+
+	def __init__( self, title = "Add to set", cancelLabel = "Cancel", confirmLabel = "Add", **kw ) :
+
+		GafferUI.Dialogue.__init__( self, title, sizeMode = GafferUI.Window.SizeMode.Fixed, **kw )
+
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as column :
+			self.__textWidget = GafferUI.TextWidget()
+			self.__textWidget.setPreferredCharacterWidth( 40 )
+			self.__messageLabel = GafferUI.Label()
+
+		self._setWidget( column )
+
+		self._addButton( cancelLabel )
+		self.__confirmButton = self._addButton( confirmLabel )
+
+		self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
+		self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ) )
+
+		self.__update()
+
+	def waitForSetNames( self, **kw ) :
+
+		self.__textWidget.grabFocus()
+
+		button = self.waitForButton( **kw )
+		if button is self.__confirmButton :
+			return self.__textWidget.getText().split()
+
+		return None
+
+	def __update( self ) :
+
+		invalidReasons = set()
+		setNames = self.__textWidget.getText().split()
+		for setName in setNames :
+			reason = self.__invalidReason( setName )
+			if reason is not None :
+				invalidReasons.add( reason )
+
+		self.__textWidget.setErrored( bool( invalidReasons ) )
+		self.__confirmButton.setEnabled( bool( setNames ) and not invalidReasons )
+		self.__messageLabel.setText(
+			"\n".join( invalidReasons ) if invalidReasons else "Enter one or more set names, separated by spaces."
+		)
+
+	def __textChanged( self, textWidget ) :
+
+		self.__update()
+
+	def __textActivated( self, textWidget ) :
+
+		if self.__confirmButton.getEnabled() :
+			self.__confirmButton.clickedSignal()( self.__confirmButton )
+
+	def __invalidReason( self, setName ) :
+
+		reason = None
+		if setName in ( "in", "containing" ) :
+			reason = "it is a set expression operator"
+
+		invalidCharacters = sorted( set( re.sub( r"[a-zA-Z_0-9:.]", "", setName ) ) )
+		if invalidCharacters :
+			reason = "it contains {}".format( " ".join( "`{}`".format( c ) for c in invalidCharacters ) )
+
+		if reason is not None :
+			return "\"{}\" is not a valid set name : {}.".format( setName, reason )
+
+		return None
+
+LightEditor._SetNamesDialogue = _SetNamesDialogue
 
 ##########################################################################
 # Metadata controlling the settings UI
@@ -391,6 +605,9 @@ Gaffer.Metadata.registerNode(
 	"layout:customWidget:spacer:widgetType", "GafferSceneUI.LightEditor._Spacer",
 	"layout:customWidget:spacer:section", "Settings",
 	"layout:customWidget:spacer:index", 5,
+
+	"layout:activator:columnFilterActivator", lambda parent : parent["section"].getValue() != "Sets",
+	"layout:activator:setsColumnFilterActivator", lambda parent : parent["section"].getValue() == "Sets",
 
 	plugs = {
 
@@ -427,6 +644,39 @@ Gaffer.Metadata.registerNode(
 
 		},
 
+		"columnFilter" : {
+
+			"layout:visibilityActivator" : "columnFilterActivator",
+
+		},
+
+		"setColumnFilter" : {
+
+			"description" :
+			"""
+			Filters the columns in the Sets section to show only those with
+			matching set names. Matching is case-insensitive, and is performed
+			against a fragment of the name or a pattern containing any of
+			Gaffer's standard wildcards. Multiple space separated terms may
+			be entered, columns matching any one of them are shown.
+			""",
+
+			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
+			"togglePlugValueWidget:image:on" : "searchOn.png",
+			"togglePlugValueWidget:image:off" : "search.png",
+			# We need a non-default value to toggle to, so that the first
+			# toggling can highlight the icon. `*` seems like a reasonable value
+			# since it has no effect on the filtering, and hints that wildcards
+			# are available.
+			"togglePlugValueWidget:defaultToggleValue" : "*",
+			"stringPlugValueWidget:placeholderText" : "Filter sets...",
+
+			"layout:width" : 160,
+			"layout:section" : "Filter",
+			"layout:visibilityActivator" : "setsColumnFilterActivator",
+
+		},
+
 		"compactColumns" : {
 
 			"description" :
@@ -437,7 +687,8 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type" : "GafferUI.TogglePlugValueWidget",
 			"togglePlugValueWidget:image:on" : "compactColumnsOn.png",
 			"togglePlugValueWidget:image:off" : "compactColumnsOff.png",
-			"layout:section" : "Filter"
+			"layout:section" : "Filter",
+			"layout:index" : -1,
 
 		},
 
