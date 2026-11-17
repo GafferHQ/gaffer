@@ -1322,7 +1322,7 @@ class PaintTool::PaintGadget : public Gadget
 
 		void renderForDepth() const
 		{
-			renderLayer( Gadget::Layer::Main, nullptr, Gadget::RenderReason::Draw );
+			renderPaintVisualiser( false );
 		}
 
 	protected:
@@ -1389,7 +1389,7 @@ class PaintTool::PaintGadget : public Gadget
 
 		/// Renders the color visualiser for the given `ViewportGadget`. In general, each visualiser
 		/// vary per-object.
-		void renderPaintVisualiser() const
+		void renderPaintVisualiser( bool applyDepthOffset = true ) const
 		{
 			// Get the name of the primitive variable to visualise
 			const std::string variableName = m_tool->variableNamePlug()->getValue();
@@ -1451,7 +1451,18 @@ class PaintTool::PaintGadget : public Gadget
 			GLint arrayBinding;
 			glGetIntegerv( GL_ARRAY_BUFFER_BINDING, &arrayBinding );
 
-			glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
+			if( applyDepthOffset )
+			{
+				// When drawing to the viewport, we offset our drawing forward slightly so it draws on top
+				// of the usual visibility when using a raytraced viewport.
+				glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT | GL_POLYGON_BIT );
+				glEnable( GL_POLYGON_OFFSET_FILL );
+				glPolygonOffset( -1, -1 );
+			}
+			else
+			{
+				glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
+			}
 
 			glVertexAttribDivisor( ATTRIB_GLSL_LOCATION_PS, 0 );
 			glEnableVertexAttribArray( ATTRIB_GLSL_LOCATION_PS );
