@@ -592,7 +592,7 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 
 	transferUSDParameter( network, shaderHandle, usdShader, g_diffuseParameter, shader, g_dlDiffuseParameter, 1.f );
 	transferUSDParameter( network, shaderHandle, usdShader, g_exposureParameter, shader, g_exposureParameter, 0.f );
-	transferUSDParameter( network, shaderHandle, usdShader, g_intensityParameter, shader, g_intensityParameter, 1.f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_intensityParameter, shader, g_intensityParameter, usdShader->getName() == "DistantLight" ? 50000.0f : 1.0f );
 
 	transferUSDParameter(
 		network,

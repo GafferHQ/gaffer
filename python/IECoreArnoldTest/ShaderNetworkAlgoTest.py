@@ -1163,7 +1163,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				IECoreScene.Shader(
 					"distant_light", "light",
 					expectedLightParameters( {
-						"angle" : 1.0
+						"angle" : 1.0,
+						"intensity" : 50000.0,
 					} )
 				),
 
