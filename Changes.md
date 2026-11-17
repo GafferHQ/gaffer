@@ -72,6 +72,7 @@ Breaking Changes
   - Removed legacy compatibility code for PySide2 and PyQt.
   - Removed `_Variant` class.
 - MeshSegments : Changed behaviour when setting `connectivity` to "". Previously, this used vertex topology, now it passes through the input unchanged. This aligns better with other geometry processing nodes.
+- SceneAlgo : Made `context` member of `History` objects const. The Python binding of the `context` property now returns a copy. Use `getContext( _copy = False )` if you need access to the stored context and are confident you're not modifying anything.
 
 Build
 -----

@@ -3459,9 +3459,9 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# We'll only get decent results on performance if we're sharing contexts, but we can also test
 		# explicitly that the contexts are in fact shared
 		h = objectHistory
-		rootContext = h.context
+		rootContext = h.getContext( _copy = False )
 		while h:
-			self.assertTrue( h.context.isSame( rootContext ) )
+			self.assertTrue( h.getContext( _copy = False ).isSame( rootContext ) )
 			h = h.predecessors[0] if len( h.predecessors ) else None
 
 	def testRenderPassNames( self ) :
