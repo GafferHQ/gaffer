@@ -796,6 +796,10 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 
 	if( ornamentWireframePoints->readable().size() > 0 )
 	{
+		IECoreGL::GroupPtr group = new IECoreGL::Group();
+		addWireframeCurveState( group.get() );
+		addConstantShader( group.get(), Color3f( 1.f ) );
+
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive(
 			CubicBasisf::linear(), IECoreScene::CurvesPrimitive::Wrap::NonPeriodic, ornamentWireframeVertsPerCurve
 		);
@@ -807,7 +811,10 @@ Visualisations RenderManLightVisualiser::visualise( const InternedString &attrib
 				new Color3fData( lightWireframeColor( muted ) )
 			)
 		);
-		result.push_back( Visualisation::createOrnament( curves, /* affectsFramingBound = */ false ) );
+
+		group->addChild( curves );
+
+		result.push_back( Visualisation::createOrnament( group, /* affectsFramingBound = */ false ) );
 	}
 
 	return result;
