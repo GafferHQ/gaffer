@@ -101,7 +101,18 @@ Build
 1.7.x.x (relative to 1.7.7.0)
 =======
 
+Improvements
+------------
 
+- MeshSplit : Added `ignoreMissing` plug.
+- Cycles : Added render-time translation of `UsdPreviewSurface` normal maps, these require a FaceVarying `uv` primitive variable to render correctly.
+
+Fixes
+-----
+
+- Cycles : Fixed bug which passed unsupported attribute types to Cycles as empty attributes. Unsupported attributes now emit warnings at render time (#6315).
+- StandardLightVisualiser, RenderManLightVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when viewing lights with ray or portal visualisations (#7241).
+- GoboVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when the `gl:light:drawingMode` attribute is set to wireframe.
 
 1.7.7.0 (relative to 1.7.6.0)
 =======
