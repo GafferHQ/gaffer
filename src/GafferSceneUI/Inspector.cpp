@@ -143,7 +143,7 @@ std::string nonEditableReason( const ValuePlug *plug )
 		return nonAcquireableReason;
 	}
 
-	const ValuePlug *sourcePlug = ( plug && Animation::isAnimated( plug ) ) ? plug->source<ValuePlug>() : plug;
+	const ValuePlug *sourcePlug = Animation::isAnimated( plug ) ? plug->source<ValuePlug>() : plug;
 	const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( sourcePlug );
 	if( readOnlyReason )
 	{
