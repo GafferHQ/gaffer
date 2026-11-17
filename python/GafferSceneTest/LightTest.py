@@ -283,3 +283,11 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 
 		l["mute"]["enabled"].setValue( False )
 		self.assertNotIn( "light:mute", l["out"].attributes( "/light" ) )
+
+	def testNoDuplicateSetNames( self ) :
+
+		light = GafferSceneTest.TestLight()
+		light["sets"].setValue( "defaultLights __lights" )
+
+		setNames = light["out"].setNames()
+		self.assertEqual( len( setNames ), len( set( setNames ) ) )

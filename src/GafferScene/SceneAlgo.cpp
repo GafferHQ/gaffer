@@ -374,6 +374,26 @@ IECore::ConstStringVectorDataPtr GafferScene::SceneAlgo::renderPassNames( const 
 // Sets Algo
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
+ConstInternedStringVectorDataPtr g_emptySetNames = new InternedStringVectorData;
+
+// The default InternedString hash uses the _values_ of the
+// strings, but it is faster to use the _addresses_ instead.
+/// \todo Move to InternedString.
+struct InternedStringAddressHash
+{
+
+	size_t operator()( InternedString s ) const
+	{
+		return std::hash<const std::string *>()( &s.string() );
+	}
+
+};
+
+} // namespace
+
 bool GafferScene::SceneAlgo::setExists( const ScenePlug *scene, const IECore::InternedString &setName )
 {
 	IECore::ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
@@ -422,6 +442,63 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 		result->writable()[setNames[i]] = boost::const_pointer_cast<PathMatcherData>( setsVector[i] );
 	}
 	return result;
+}
+
+IECore::ConstInternedStringVectorDataPtr GafferScene::SceneAlgo::mergeSetNames( const std::vector<IECore::ConstInternedStringVectorDataPtr> &setNames )
+{
+	if( setNames.empty() )
+	{
+		return g_emptySetNames;
+	}
+
+	ConstInternedStringVectorDataPtr result;
+	vector<InternedString> *writableResult = nullptr;
+
+	std::unordered_set<const InternedStringVectorData *> visitedContainers;
+	visitedContainers.reserve( setNames.size() );
+	std::unordered_set<InternedString, InternedStringAddressHash> visitedNames;
+
+	for( const auto &names : setNames )
+	{
+		if( !names || names->readable().empty() )
+		{
+			// Nothing to merge.
+			continue;
+		}
+
+		if( !visitedContainers.insert( names.get() ).second )
+		{
+			// Merged already.
+			continue;
+		}
+
+		if( !result )
+		{
+			// First non-empty container. Be optimistic. If we don't find
+			// anything else to merge, we'll be able to return this one
+			// unmodified.
+			result = names;
+			continue;
+		}
+		else if( !writableResult )
+		{
+			// Optimism was misplaced. Prepare a copy to merge into.
+			InternedStringVectorDataPtr copy = new InternedStringVectorData( result->readable() );
+			result = copy;
+			writableResult = &copy->writable();
+			visitedNames.insert( writableResult->begin(), writableResult->end() );
+		}
+
+		for( auto name : names->readable() )
+		{
+			if( visitedNames.insert( name ).second )
+			{
+				writableResult->push_back( name );
+			}
+		}
+	}
+
+	return result ? result : g_emptySetNames;
 }
 
 //////////////////////////////////////////////////////////////////////////

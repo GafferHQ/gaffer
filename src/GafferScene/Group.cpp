@@ -419,35 +419,17 @@ void Group::hashSetNames( const Gaffer::Context *context, const ScenePlug *paren
 
 IECore::ConstInternedStringVectorDataPtr Group::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	InternedStringVectorDataPtr resultData = new InternedStringVectorData;
-	vector<InternedString> &result = resultData->writable();
+	vector<ConstInternedStringVectorDataPtr> toMerge;
 	for( ScenePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		// This naive approach to merging set names preserves the order of the incoming names,
-		// but at the expense of using linear search. We assume that the number of sets is small
-		// enough and the InternedString comparison fast enough that this is OK.
-		ConstInternedStringVectorDataPtr inputSetNamesData = (*it)->setNamesPlug()->getValue();
-		const vector<InternedString> &inputSetNames = inputSetNamesData->readable();
-		for( vector<InternedString>::const_iterator it = inputSetNames.begin(), eIt = inputSetNames.end(); it != eIt; ++it )
-		{
-			if( std::find( result.begin(), result.end(), *it ) == result.end() )
-			{
-				result.push_back( *it );
-			}
-		}
+		toMerge.push_back( (*it)->setNamesPlug()->getValue() );
 	}
 
-	vector<InternedString> setNames;
-	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames );
-	for( const auto &s : setNames )
-	{
-		if( std::find( result.begin(), result.end(), s ) == result.end() )
-		{
-			result.push_back( s );
-		}
-	}
+	InternedStringVectorDataPtr setNames = new InternedStringVectorData;
+	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames->writable() );
+	toMerge.push_back( setNames );
 
-	return resultData;
+	return SceneAlgo::mergeSetNames( toMerge );
 }
 
 void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
