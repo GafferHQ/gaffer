@@ -1376,3 +1376,30 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			'attr:/C/B1/A1': 'test',
 			'attr:override': '/C/B1/A1',
 		} )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testSetNamesPerformance( self ) :
+
+		cube = GafferScene.Cube()
+
+		collectScenes = GafferScene.CollectScenes()
+		collectScenes["in"].setInput( cube["out"] )
+		collectScenes["rootNames"].setValue( IECore.StringVectorData( [ f"cube{i}" for i in range( 5000 ) ] ) )
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( " ".join( f"set{i}" for i in range( 0, 5000 ) ) )
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( collectScenes["out"] )
+		parent["filter"].setInput( rootFilter["out"] )
+		parent["children"][0].setInput( sphere["out"] )
+		parent["parentVariable"].setValue( "parent" )
+
+		# Pre-cache the stuff we're not interested in measuring.
+		GafferSceneTest.traverseScene( collectScenes["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			parent["out"].setNames()

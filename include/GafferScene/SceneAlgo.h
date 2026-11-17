@@ -230,6 +230,9 @@ GAFFERSCENE_API IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
 /// As above, but returning only the requested sets.
 GAFFERSCENE_API IECore::ConstCompoundDataPtr sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames );
 
+/// Merges multiple lists of set names, maintaining order and avoiding duplicates.
+GAFFERSCENE_API IECore::ConstInternedStringVectorDataPtr mergeSetNames( const std::vector<IECore::ConstInternedStringVectorDataPtr> &setNames );
+
 /// History
 /// =======
 ///

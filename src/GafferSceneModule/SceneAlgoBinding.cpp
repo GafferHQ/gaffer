@@ -234,6 +234,16 @@ IECore::CompoundDataPtr setsWrapper2( const ScenePlug &scene, object pythonSetNa
 	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundData>( result );
 }
 
+IECore::InternedStringVectorDataPtr mergeSetNamesWrapper( object pythonSetNames, bool copy )
+{
+	std::vector<IECore::ConstInternedStringVectorDataPtr> setNames;
+	boost::python::container_utils::extend_container( setNames, pythonSetNames );
+
+	IECorePython::ScopedGILRelease r;
+	ConstInternedStringVectorDataPtr result = SceneAlgo::mergeSetNames( setNames );
+	return copy ? result->copy() : boost::const_pointer_cast<IECore::InternedStringVectorData>( result );
+}
+
 ScenePlugPtr historyGetScene( SceneAlgo::History &h )
 {
 	return h.scene;
@@ -490,6 +500,11 @@ void bindSceneAlgo()
 		"sets",
 		&setsWrapper2,
 		( arg( "scene" ), arg( "setNames" ), arg( "_copy" ) = true )
+	);
+	def(
+		"mergeSetNames",
+		&mergeSetNamesWrapper,
+		( arg( "setNames" ), arg( "_copy" ) = true )
 	);
 
 	// History

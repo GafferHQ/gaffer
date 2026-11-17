@@ -823,41 +823,19 @@ void MergeScenes::hashSetNames( const Gaffer::Context *context, const ScenePlug 
 
 IECore::ConstInternedStringVectorDataPtr MergeScenes::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstInternedStringVectorDataPtr result;
-	InternedStringVectorDataPtr merged;
+	vector<ConstInternedStringVectorDataPtr> toMerge;
 	visit(
 		connectedInputs(),
 		[&] ( InputType type, size_t index, const ScenePlug *scene ) {
-			switch( type )
-			{
-				case InputType::Sole :
-					// Pass input through unchanged.
-					result = scene->setNamesPlug()->getValue();
-					break;
-				case InputType::First :
-					// Initialise merged result and
-					// fall through.
-					merged = new InternedStringVectorData();
-					result = merged;
-					[[fallthrough]];
-				case InputType::Other :
-					// This naive approach to merging set names preserves the order of the incoming names,
-					// but at the expense of using linear search. We assume that the number of sets is small
-					// enough and the InternedString comparison fast enough that this is OK.
-					ConstInternedStringVectorDataPtr setNames = scene->setNamesPlug()->getValue();
-					for( const auto &setName : setNames->readable() )
-					{
-						if( std::find( merged->readable().begin(), merged->readable().end(), setName ) == merged->readable().end() )
-						{
-							merged->writable().push_back( setName );
-						}
-					}
-			}
+			// `mergeSetNames()` is smart enough to return the first
+			// value if there is only one, so we don't need to do anything
+			// special for `InputType::Sole`.
+			toMerge.push_back( scene->setNamesPlug()->getValue() );
 			return true;
 		}
 	);
 
-	return result;
+	return SceneAlgo::mergeSetNames( toMerge );
 }
 
 void MergeScenes::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const

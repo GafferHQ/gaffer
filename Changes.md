@@ -6,6 +6,7 @@ Improvements
 
 - MeshSplit : Added `ignoreMissing` plug.
 - Cycles : Added render-time translation of `UsdPreviewSurface` normal maps, these require a FaceVarying `uv` primitive variable to render correctly.
+- Parent, Duplicate, Instancer, Group, MergeScenes : Improved performance when handling large numbers of sets.
 
 Fixes
 -----
@@ -13,6 +14,12 @@ Fixes
 - Cycles : Fixed bug which passed unsupported attribute types to Cycles as empty attributes. Unsupported attributes now emit warnings at render time (#6315).
 - StandardLightVisualiser, RenderManLightVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when viewing lights with ray or portal visualisations (#7241).
 - GoboVisualiser : Fixed bug where disabling the 3d viewer's "Use GL Lines" option could cause crashes or incorrect drawing when the `gl:light:drawingMode` attribute is set to wireframe.
+- Light : Fixed duplicate set names if `defaultLights` or `__lights` was entered via the `sets` plug.
+
+API
+---
+
+- SceneAlgo : Added `mergeSetNames()` function.
 
 1.7.7.0 (relative to 1.7.6.0)
 =======

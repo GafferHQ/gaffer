@@ -273,14 +273,9 @@ void ObjectSource::hashSetNames( const Gaffer::Context *context, const ScenePlug
 
 IECore::ConstInternedStringVectorDataPtr ObjectSource::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
-	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', result->writable() );
-	IECore::ConstInternedStringVectorDataPtr setNames = computeStandardSetNames();
-	for(unsigned int i = 0; i < setNames->readable().size(); ++i)
-	{
-		result->writable().push_back( setNames->readable()[i] );
-	}
-	return result;
+	IECore::InternedStringVectorDataPtr setNames = new IECore::InternedStringVectorData;
+	IECore::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames->writable() );
+	return SceneAlgo::mergeSetNames( { setNames, computeStandardSetNames() } );
 }
 
 void ObjectSource::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const

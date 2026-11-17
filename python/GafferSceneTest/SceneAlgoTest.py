@@ -3486,6 +3486,59 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			IECore.StringVectorData( [ "disabled" ] )
 		)
 
+	def testMergeSetNames( self ) :
+
+		names = [
+			[ "a", "b", "c" ],
+			[ "c", "d", "a" ],
+			[ "g", "f", "e" ],
+			[ "x", "y", "z", "z" ]
+		]
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.mergeSetNames( [ IECore.InternedStringVectorData( x ) for x in names ] ),
+			# Order preserved and duplicates removed.
+			IECore.InternedStringVectorData( [ "a", "b", "c", "d", "g", "f", "e", "x", "y", "z" ] )
+		)
+
+	def testMergeSetNamesCopiesByDefault( self ) :
+
+		names = IECore.InternedStringVectorData( [ "a", "b", "c" ] )
+		self.assertFalse( GafferScene.SceneAlgo.mergeSetNames( [ names ] ).isSame( names ) )
+
+	def testMergeSetNamesNoOp( self ) :
+
+		emptyNames = IECore.InternedStringVectorData()
+		names = IECore.InternedStringVectorData( [ "a", "b", "c" ] )
+		self.assertTrue(
+			GafferScene.SceneAlgo.mergeSetNames( [ names ], _copy = False ).isSame( names )
+		)
+		self.assertTrue(
+			GafferScene.SceneAlgo.mergeSetNames( [ emptyNames, names ], _copy = False ).isSame( names )
+		)
+		self.assertTrue(
+			GafferScene.SceneAlgo.mergeSetNames( [ names, emptyNames ], _copy = False ).isSame( names )
+		)
+		self.assertTrue(
+			GafferScene.SceneAlgo.mergeSetNames( [ names, names ], _copy = False ).isSame( names )
+		)
+		self.assertTrue(
+			GafferScene.SceneAlgo.mergeSetNames( [ names, names, emptyNames, names, emptyNames ], _copy = False ).isSame( names )
+		)
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testMergeSetNamesPerformance( self ) :
+
+		size = 50000
+
+		names1 = IECore.InternedStringVectorData( [ f"set{i}" for i in range( 0, size ) ] )
+		names2 = IECore.InternedStringVectorData( [ f"set{i}" for i in range( size, size * 2 ) ] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			merged = GafferScene.SceneAlgo.mergeSetNames( [ names1, names2 ], _copy = False )
+
+		self.assertEqual( len( merged ), size * 2 )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

@@ -37,6 +37,7 @@
 #include "GafferScene/Parent.h"
 
 #include "GafferScene/Private/ChildNamesMap.h"
+#include "GafferScene/SceneAlgo.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -379,24 +380,13 @@ IECore::ConstInternedStringVectorDataPtr Parent::computeBranchSetNames( const Sc
 {
 	ParentScope s( this, sourcePath, context );
 
-	InternedStringVectorDataPtr resultData = new InternedStringVectorData;
-	vector<InternedString> &result = resultData->writable();
+	vector<ConstInternedStringVectorDataPtr> childSetNames;
 	for( auto &p : ScenePlug::Range( *childrenPlug() ) )
 	{
-		// This naive approach to merging set names preserves the order of the incoming names,
-		// but at the expense of using linear search. We assume that the number of sets is small
-		// enough and the InternedString comparison fast enough that this is OK.
-		ConstInternedStringVectorDataPtr inputSetNamesData = p->setNamesPlug()->getValue();
-		for( const auto &setName : inputSetNamesData->readable() )
-		{
-			if( std::find( result.begin(), result.end(), setName ) == result.end() )
-			{
-				result.push_back( setName );
-			}
-		}
+		childSetNames.push_back( p->setNamesPlug()->getValue() );
 	}
 
-	return resultData;
+	return SceneAlgo::mergeSetNames( childSetNames );
 }
 
 bool Parent::constantBranchSetNames() const
