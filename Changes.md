@@ -72,6 +72,18 @@ Breaking Changes
   - Removed `_Variant` class.
 - MeshSegments : Changed behaviour when setting `connectivity` to "". Previously, this used vertex topology, now it passes through the input unchanged. This aligns better with other geometry processing nodes.
 
+API
+---
+
+- GafferUITest.TestCase :
+  - Added `uiThreadCallHandler` member. This should be used by any tests which need to handle calls to the UI thread.
+  - Added `waitForPlugValueWidgetUpdate()` method.
+
+Breaking Changes
+----------------
+
+- PlugValueWidgetTest : Removed `waitForUpdate()` method. Use `GafferUITest.TestCase.waitForPlugValueWidgetUpdate()` instead.
+
 Build
 -----
 
