@@ -1297,8 +1297,8 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 		return attributes;
 	}
 
-	const IECoreScene::Shader *outputShader = lightNetwork->outputShader();
-	if( !outputShader || outputShader->getName() != "MeshLight" )
+	const Shader *lightOutputShader = lightNetwork->outputShader();
+	if( !lightOutputShader || lightOutputShader->getName() != "MeshLight" )
 	{
 		return attributes;
 	}
@@ -1311,7 +1311,6 @@ ConstCompoundObjectPtr convertUSDMeshLightAttributes( const CompoundObject *attr
 	const auto &[emissionColorParameter, emissionColorInput] = surfaceGlowParameters( surfaceNetwork );
 
 	ShaderNetwork::Parameter lightOutputParameter = lightNetwork->getOutput();
-	const Shader *lightOutputShader = lightNetwork->outputShader();
 
 	ShaderPtr newLightShader = new Shader( "mesh_light", "ai:light" );
 	transferUSDLightParameters( newLightShaderNetwork.get(), lightOutputParameter.shader, lightOutputShader, newLightShader.get() );
