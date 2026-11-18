@@ -36,6 +36,7 @@
 
 from .FormatPlugValueWidgetTest import FormatPlugValueWidgetTest
 from .ImageViewTest import ImageViewTest
+from .RGBAChannelsPlugValueWidgetTest import RGBAChannelsPlugValueWidgetTest
 from .DocumentationTest import DocumentationTest
 from .ImageGadgetTest import ImageGadgetTest
 from .NodeUITest import NodeUITest
