@@ -403,6 +403,7 @@ ShaderPtr ShaderCache::get(
 
 	struct AOVShader
 	{
+		IECore::InternedString name;
 		const IECoreScene::ShaderNetwork *shader;
 		IECore::MurmurHash substitutionsHash;
 	};
@@ -416,13 +417,20 @@ ShaderPtr ShaderCache::get(
 			{
 				if( auto aovShader = IECore::runTimeCast<IECoreScene::ShaderNetwork>( value.get() ) )
 				{
-					h.append( aovShader->Object::hash() );
-					IECore::MurmurHash hSubstAOV;
-					aovShader->hashSubstitutions( attributes, hSubstAOV );
-					h.append( hSubstAOV );
-					aovShaders.push_back( { aovShader, hSubstAOV } );
+					aovShaders.push_back( { name, aovShader, IECore::MurmurHash() } );
 				}
 			}
+		}
+
+		// CompoundObject iteration order is not stable across processes, and we
+		// need a stable hash for Cryptomatte material IDs. Sort before hashing.
+
+		std::sort( aovShaders.begin(), aovShaders.end(), [] ( const AOVShader &a, const AOVShader &b ) { return a.name.string() < b.name.string(); } );
+		for( auto &aovShader : aovShaders )
+		{
+			h.append( aovShader.shader->Object::hash() );
+			aovShader.shader->hashSubstitutions( attributes, aovShader.substitutionsHash );
+			h.append( aovShader.substitutionsHash );
 		}
 	}
 
@@ -475,7 +483,7 @@ ShaderPtr ShaderCache::get(
 
 		// Add the AOV shaders.
 
-		for( const auto &[aovShader, hSubstAOV] : aovShaders )
+		for( const auto &[name, aovShader, hSubstAOV] : aovShaders )
 		{
 			IECoreScene::ShaderNetworkPtr substitutedAOVShader;
 			if( hSubstAOV != IECore::MurmurHash() )

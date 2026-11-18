@@ -37,6 +37,7 @@
 import pathlib
 import math
 import time
+import subprocess
 
 import imath
 import OpenImageIO
@@ -2102,6 +2103,80 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( testPixel.b, 1 )
 
 		del plane
+
+	@staticmethod
+	def _renderCryptomatteWithAOVShaders( fileName, aovNames ) :
+
+		# We have no real control over the ordering of InternedString
+		# comparisons, which is based on their addresses, which the allocator
+		# alone determines. But in practice - on Linux at least - this test
+		# produced more reliable failures when the strings were interned upfront
+		# here, rather than intermingled with other allocations below when
+		# building `attributes`.
+		for aovName in aovNames :
+			IECore.InternedString( f"cycles:aov:{aovName}" )
+
+		renderer = RendererTest.createRenderer( extraOptions = {
+			"cycles:session:samples" : IECore.IntData( 1 ),
+		} )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output( fileName, "exr", "cryptomatte material", {} )
+		)
+
+		attributes = IECore.CompoundObject( {
+			"cycles:surface" : IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( "principled_bsdf", "cycles:shader" ),
+				},
+				output = "output",
+			),
+		} )
+
+		for aovName in aovNames :
+			attributes[f"cycles:aov:{aovName}"] = IECoreScene.ShaderNetwork(
+				shaders = {
+					"aov" : IECoreScene.Shader(
+						"aov_output", "cycles:shader",
+						{ "name" : aovName, "value" : 1.0 }
+					),
+				},
+				output = "aov",
+			)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( attributes )
+		)
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+		renderer.render()
+
+	def testAOVShaderNamesIndependentOfInternedStringOrder( self ) :
+
+		# Do the same render twice, but creating the InternedStrings for
+		# the `cycles:aov:` attributes in a different order each time.
+		# We should end up with the same cryptomatte manifest from each.
+
+		manifests = []
+		for i, aovNames in enumerate( [ [ "aovA", "aovB" ], [ "aovB", "aovA" ] ] ) :
+
+			fileName = ( self.temporaryDirectory() / f"test{i}.exr" ).as_posix()
+			subprocess.check_call(
+				[ "python", "-c", f"import GafferCyclesTest; GafferCyclesTest.IECoreCyclesPreviewTest.RendererTest._renderCryptomatteWithAOVShaders( '{fileName}', {aovNames} )" ]
+			)
+
+			spec = OpenImageIO.ImageInput.open( fileName ).spec()
+			manifests.append( spec.getattribute( "cryptomatte/7d9af7d/manifest" ) )
+
+		# Both manifests should be the same.
+		self.assertEqual( manifests[0], manifests[1] )
+		# And they should contain an entry for our shader.
+		self.assertIn( "shader:", manifests[0] )
 
 	def __testShaderResults( self, shader, expectedResults, maxDifference = 0.0 ) :
 
