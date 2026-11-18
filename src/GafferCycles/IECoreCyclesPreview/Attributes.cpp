@@ -53,6 +53,7 @@ IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/container/flat_map.hpp"
+#include "boost/container/small_vector.hpp"
 
 using namespace std;
 using namespace Imath;
@@ -328,8 +329,6 @@ ShaderPtr ShaderCache::get(
 	IECore::MurmurHash hSubst;
 	IECore::MurmurHash hSubstDisp;
 	IECore::MurmurHash hSubstVol;
-	vector<IECore::MurmurHash> hSubstAovs;
-	vector<const IECoreScene::ShaderNetwork*> aovShaders;
 
 	// Attributes hash
 
@@ -400,23 +399,28 @@ ShaderPtr ShaderCache::get(
 		}
 	}
 
-	// AOV hash
+	// AOV shaders hash
+
+	struct AOVShader
+	{
+		const IECoreScene::ShaderNetwork *shader;
+		IECore::MurmurHash substitutionsHash;
+	};
+	boost::container::small_vector<AOVShader, 4> aovShaders;
+
 	if( attributes )
 	{
-		for( const auto &member : attributes->members() )
+		for( const auto &[name, value] : attributes->members() )
 		{
-			if( boost::starts_with( member.first.string(), "cycles:aov:" ) )
+			if( boost::starts_with( name.string(), "cycles:aov:" ) )
 			{
-				const IECoreScene::ShaderNetwork *aovShader = IECore::runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
-				if( aovShader )
+				if( auto aovShader = IECore::runTimeCast<IECoreScene::ShaderNetwork>( value.get() ) )
 				{
-					IECore::MurmurHash aovh = aovShader->Object::hash();
-					IECore::MurmurHash hSubstAov;
-					aovShader->hashSubstitutions( attributes, hSubstAov );
-					aovh.append( hSubstAov );
-					h.append( aovh );
-					hSubstAovs.push_back( hSubstAov );
-					aovShaders.push_back( aovShader );
+					h.append( aovShader->Object::hash() );
+					IECore::MurmurHash hSubstAOV;
+					aovShader->hashSubstitutions( attributes, hSubstAOV );
+					h.append( hSubstAOV );
+					aovShaders.push_back( { aovShader, hSubstAOV } );
 				}
 			}
 		}
@@ -457,17 +461,6 @@ ShaderPtr ShaderCache::get(
 			substitutedVolumeShader->applySubstitutions( attributes );
 			volumeShader = substitutedVolumeShader.get();
 		}
-		// Get all the possible AOV shaders
-		vector<IECoreScene::ShaderNetworkPtr> substitutedAOVShaders;
-		for( size_t i = 0; i < hSubstAovs.size(); ++i )
-		{
-			if( hSubstAovs[i] != IECore::MurmurHash() )
-			{
-				substitutedAOVShaders.push_back( aovShaders[i]->copy() );
-				substitutedAOVShaders.back()->applySubstitutions( attributes );
-				aovShaders[i] = substitutedAOVShaders.back().get();
-			}
-		}
 
 		// Make the `ccl::ShaderGraph`.
 
@@ -480,9 +473,20 @@ ShaderPtr ShaderCache::get(
 			ShaderNetworkAlgo::setSingleSided( graph.get() );
 		}
 
-		for( const IECoreScene::ShaderNetwork *aovShader : aovShaders )
+		// Add the AOV shaders.
+
+		for( const auto &[aovShader, hSubstAOV] : aovShaders )
 		{
-			ShaderNetworkAlgo::convertAOV( aovShader, graph.get(), m_scene, namePrefix );
+			IECoreScene::ShaderNetworkPtr substitutedAOVShader;
+			if( hSubstAOV != IECore::MurmurHash() )
+			{
+				substitutedAOVShader = aovShader->copy();
+				substitutedAOVShader->applySubstitutions( attributes );
+			}
+			ShaderNetworkAlgo::convertAOV(
+				substitutedAOVShader ? substitutedAOVShader.get() : aovShader,
+				graph.get(), m_scene, namePrefix
+			);
 		}
 
 		// Make the `ccl::Shader` to house the graph. We reference this via
